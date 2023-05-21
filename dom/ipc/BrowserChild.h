@@ -428,8 +428,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 #ifdef ACCESSIBILITY
   PDocAccessibleChild* AllocPDocAccessibleChild(
       PDocAccessibleChild*, const uint64_t&,
-      const MaybeDiscardedBrowsingContext&, const uint32_t&,
-      const IAccessibleHolder&);
+      const MaybeDiscardedBrowsingContext&);
   bool DeallocPDocAccessibleChild(PDocAccessibleChild*);
 #endif
 

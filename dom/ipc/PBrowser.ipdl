@@ -94,7 +94,6 @@ using nsEventStatus from "mozilla/EventForwards.h";
 using mozilla::Modifiers from "mozilla/EventForwards.h";
 using struct mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 using struct mozilla::FontRange from "ipc/nsGUIEventIPC.h";
-using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using mozilla::dom::EffectsInfo from "mozilla/dom/EffectsInfo.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
@@ -211,13 +210,10 @@ parent:
      * Tell the parent process a new accessible document has been created.
      * aParentDoc is the accessible document it was created in if any, and
      * aParentAcc is the id of the accessible in that document the new document
-     * is a child of. aMsaaID is the MSAA id for this content process, and
-     * is only valid on Windows. Set to 0 on other platforms. aDocCOMProxy
-     * is also Windows-specific and should be set to 0 on other platforms.
+     * is a child of.
      */
     async PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc,
-                         MaybeDiscardedBrowsingContext aBrowsingContext,
-                         uint32_t aMsaaID, IAccessibleHolder aDocCOMProxy);
+                         MaybeDiscardedBrowsingContext aBrowsingContext);
 #endif
 
     async PPaymentRequest();

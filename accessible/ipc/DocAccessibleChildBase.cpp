@@ -40,10 +40,6 @@ void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
                                            nsTArray<AccessibleData>& aData) {
   for (LocalAccessible* acc : aTree) {
     uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
-#if defined(XP_WIN)
-    int32_t msaaId =
-        a11y::IsCacheActive() ? 0 : MsaaAccessible::GetChildIDFor(acc);
-#endif
     a11y::role role = acc->Role();
     uint32_t childCount = acc->IsOuterDoc() ? 0 : acc->ChildCount();
 
@@ -77,17 +73,10 @@ void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
       }
     }
 
-#if defined(XP_WIN)
-    aData.AppendElement(AccessibleData(
-        id, msaaId, role, childCount, static_cast<AccType>(acc->mType),
-        static_cast<AccGenericType>(genericTypes), acc->mRoleMapEntryIndex,
-        fields));
-#else
     aData.AppendElement(
         AccessibleData(id, role, childCount, static_cast<AccType>(acc->mType),
                        static_cast<AccGenericType>(genericTypes),
                        acc->mRoleMapEntryIndex, fields));
-#endif
   }
 }
 

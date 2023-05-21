@@ -7,11 +7,9 @@
 #ifndef mozilla_a11y_DocAccessibleChild_h
 #define mozilla_a11y_DocAccessibleChild_h
 
-#include "mozilla/a11y/COMPtrTypes.h"
 #include "mozilla/a11y/DocAccessibleChildBase.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/mscom/Ptr.h"
 
 namespace mozilla {
 namespace a11y {
@@ -27,24 +25,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   virtual void Shutdown() override;
 
-  virtual ipc::IPCResult RecvParentCOMProxy(
-      const IDispatchHolder& aParentCOMProxy) override;
-  virtual ipc::IPCResult RecvEmulatedWindow(
-      const WindowsHandle& aEmulatedWindowHandle,
-      const IDispatchHolder& aEmulatedWindowCOMProxy) override;
-  virtual ipc::IPCResult RecvTopLevelDocCOMProxy(
-      const IAccessibleHolder& aCOMProxy) override;
   virtual ipc::IPCResult RecvRestoreFocus() override;
-
-  HWND GetNativeWindowHandle() const;
-  IDispatch* GetEmulatedWindowIAccessible() const {
-    return mEmulatedWindowProxy.get();
-  }
-
-  IDispatch* GetParentIAccessible() const { return mParentProxy.get(); }
-  IAccessible* GetTopLevelDocIAccessible() const {
-    return mTopLevelDocProxy.get();
-  }
 
   bool SendEvent(const uint64_t& aID, const uint32_t& type);
   bool SendHideEvent(const uint64_t& aRootID, const bool& aFromUser);
@@ -77,7 +58,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                           const uint32_t& aMaxScrollY);
 
   bool ConstructChildDocInParentProcess(DocAccessibleChild* aNewChildDoc,
-                                        uint64_t aUniqueID, uint32_t aMsaaID);
+                                        uint64_t aUniqueID);
 
   bool SendBindChildDoc(NotNull<DocAccessibleChild*> aChildDoc,
                         const uint64_t& aNewParentID);
@@ -314,21 +295,18 @@ class DocAccessibleChild : public DocAccessibleChildBase {
     SerializedChildDocConstructor(DocAccessibleChild* aIPCDoc,
                                   DocAccessibleChild* aParentIPCDoc,
                                   uint64_t aUniqueID,
-                                  dom::BrowsingContext* aBrowsingContext,
-                                  uint32_t aMsaaID)
+                                  dom::BrowsingContext* aBrowsingContext)
         : DeferredEvent(aParentIPCDoc),
           mIPCDoc(aIPCDoc),
           mUniqueID(aUniqueID),
-          mBrowsingContext(aBrowsingContext),
-          mMsaaID(aMsaaID) {}
+          mBrowsingContext(aBrowsingContext) {}
 
     void Dispatch(DocAccessibleChild* aParentIPCDoc) override {
       auto browserChild =
           static_cast<dom::BrowserChild*>(aParentIPCDoc->Manager());
       MOZ_ASSERT(browserChild);
       Unused << browserChild->SendPDocAccessibleConstructor(
-          mIPCDoc, aParentIPCDoc, mUniqueID, mBrowsingContext, mMsaaID,
-          IAccessibleHolder());
+          mIPCDoc, aParentIPCDoc, mUniqueID, mBrowsingContext);
       mIPCDoc->SetConstructedInParentProcess();
     }
 
@@ -339,7 +317,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
     // wouldn't replay this, but this is tricky because IPDL should manage the
     // lifetime of DocAccessibleChild, which means we must send the constructor.
     dom::MaybeDiscardedBrowsingContext mBrowsingContext;
-    uint32_t mMsaaID;
   };
 
   friend struct SerializedChildDocConstructor;
@@ -380,11 +357,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
     uint64_t mID;
   };
 
-  mscom::ProxyUniquePtr<IDispatch> mParentProxy;
-  mscom::ProxyUniquePtr<IDispatch> mEmulatedWindowProxy;
-  mscom::ProxyUniquePtr<IAccessible> mTopLevelDocProxy;
   nsTArray<UniquePtr<DeferredEvent>> mDeferredEvents;
-  HWND mEmulatedWindowHandle;
 };
 
 }  // namespace a11y

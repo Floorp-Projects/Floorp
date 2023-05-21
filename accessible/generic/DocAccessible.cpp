@@ -1631,22 +1631,8 @@ void DocAccessible::DoInitialUpdate() {
           // top level DocAccessibleChild, so set that as early as possible.
           browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
 
-#if defined(XP_WIN)
-          IAccessibleHolder holder;
-          int32_t childID;
-          if (a11y::IsCacheActive()) {
-            childID = 0;
-          } else {
-            holder = CreateHolderFromAccessible(WrapNotNull(this));
-            MOZ_ASSERT(!holder.IsNull());
-            childID = MsaaAccessible::GetChildIDFor(this);
-          }
-#else
-          int32_t holder = 0, childID = 0;
-#endif
           browserChild->SendPDocAccessibleConstructor(
-              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext(), childID,
-              holder);
+              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext());
 #if !defined(XP_WIN)
           ipcDoc->SendPDocAccessiblePlatformExtConstructor();
 #endif
