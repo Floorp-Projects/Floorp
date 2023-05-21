@@ -144,11 +144,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
           DocAccessibleParent* docParent = static_cast<DocAccessibleParent*>(
               ::GetPropW(hWnd, kPropNameDocAccParent));
           if (docParent) {
-            if (a11y::IsCacheActive()) {
-              msaaAccessible = MsaaAccessible::GetFrom(docParent);
-            } else {
-              docParent->GetCOMInterface(getter_AddRefs(msaaAccessible));
-            }
+            msaaAccessible = MsaaAccessible::GetFrom(docParent);
           }
         }
         if (msaaAccessible) {
