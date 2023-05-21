@@ -30,7 +30,6 @@ const SOURCE_IS_NOT_IGNORED = "none";
 
 // Tests basic functionality for blackbox source and blackbox single and multiple lines
 add_task(async function testAllBlackBox() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   // using the doc-command-click.html as it has a simple js file we can use
   // testing.
   const file = "simple4.js";
@@ -49,7 +48,6 @@ add_task(async function testAllBlackBox() {
 
 // Test that the blackboxed lines are persisted accross reloads and still work accordingly.
 add_task(async function testBlackBoxOnReload() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   const file = "simple4.js";
   const dbg = await initDebugger("doc-command-click.html", file);
 
@@ -125,8 +123,6 @@ add_task(async function testBlackBoxOnReload() {
 });
 
 add_task(async function testBlackBoxOnToolboxRestart() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
-
   const dbg = await initDebugger("doc-command-click.html", "simple4.js");
   const source = findSource(dbg, "simple4.js");
 

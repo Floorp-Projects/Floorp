@@ -678,17 +678,15 @@ class Editor extends PureComponent {
         {highlightedLineRange ? (
           <HighlightLines editor={editor} range={highlightedLineRange} />
         ) : null}
-        {features.blackboxLines ? <BlackboxLines editor={editor} /> : null}
+        <BlackboxLines editor={editor} />
         <Exceptions />
-        {
-          <EditorMenu
-            editor={editor}
-            contextMenu={contextMenu}
-            clearContextMenu={this.clearContextMenu}
-            selectedSource={selectedSource}
-            editorWrappingEnabled={editorWrappingEnabled}
-          />
-        }
+        <EditorMenu
+          editor={editor}
+          contextMenu={contextMenu}
+          clearContextMenu={this.clearContextMenu}
+          selectedSource={selectedSource}
+          editorWrappingEnabled={editorWrappingEnabled}
+        />
         {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
         <ColumnBreakpoints editor={editor} />
         {isPaused && inlinePreviewEnabled ? (

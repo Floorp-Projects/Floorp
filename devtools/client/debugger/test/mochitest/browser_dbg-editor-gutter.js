@@ -31,7 +31,6 @@ add_task(async function testGutterBreakpoints() {
 });
 
 add_task(async function testGutterBreakpointsInIgnoredSource() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   info(
     "Ensure clicking on gutter to add breakpoint should not un-ignore source"
   );
@@ -81,7 +80,6 @@ add_task(async function testGutterBreakpointsInIgnoredSource() {
 });
 
 add_task(async function testGutterBreakpointsForSourceWithIgnoredLines() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   info(
     "Asserts that adding a breakpoint to the gutter of an un-ignored line does not un-ignore other ranges in the source"
   );
