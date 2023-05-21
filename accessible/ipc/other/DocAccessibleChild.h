@@ -14,11 +14,6 @@ namespace a11y {
 
 class LocalAccessible;
 class DocAccessiblePlatformExtChild;
-class HyperTextAccessible;
-class TextLeafAccessible;
-class ImageAccessible;
-class TableAccessible;
-class TableCellAccessible;
 
 /*
  * These objects handle content side communication for an accessible document,
@@ -41,53 +36,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvConstructedInParentProcess() override;
   virtual mozilla::ipc::IPCResult RecvRestoreFocus() override;
 
-  /*
-   * Return the state for the accessible with given ID.
-   */
-  virtual mozilla::ipc::IPCResult RecvState(const uint64_t& aID,
-                                            uint64_t* aState) override;
-
-  /*
-   * Return the native state for the accessible with given ID.
-   */
-  virtual mozilla::ipc::IPCResult RecvNativeState(const uint64_t& aID,
-                                                  uint64_t* aState) override;
-
-  /*
-   * Get the name for the accessible with given id.
-   */
-  virtual mozilla::ipc::IPCResult RecvName(const uint64_t& aID, nsString* aName,
-                                           uint32_t* aFlag) override;
-
-  virtual mozilla::ipc::IPCResult RecvValue(const uint64_t& aID,
-                                            nsString* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvHelp(const uint64_t& aID,
-                                           nsString* aHelp) override;
-
-  /*
-   * Get the description for the accessible with given id.
-   */
-  virtual mozilla::ipc::IPCResult RecvDescription(const uint64_t& aID,
-                                                  nsString* aDesc) override;
-  virtual mozilla::ipc::IPCResult RecvRelationByType(
-      const uint64_t& aID, const uint32_t& aType,
-      nsTArray<uint64_t>* aTargets) override;
-  virtual mozilla::ipc::IPCResult RecvRelations(
-      const uint64_t& aID, nsTArray<RelationTargets>* aRelations) override;
-
-  virtual mozilla::ipc::IPCResult RecvIsSearchbox(const uint64_t& aID,
-                                                  bool* aRetVal) override;
-
-  virtual mozilla::ipc::IPCResult RecvLandmarkRole(
-      const uint64_t& aID, nsString* aLandmark) override;
-
-  virtual mozilla::ipc::IPCResult RecvGroupPosition(
-      const uint64_t& aID, int32_t* aLevel, int32_t* aSimilarItemsInGroup,
-      int32_t* aPositionInGroup) override;
-
-  virtual mozilla::ipc::IPCResult RecvAttributes(
-      const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) override;
   virtual mozilla::ipc::IPCResult RecvScrollToPoint(const uint64_t& aID,
                                                     const uint32_t& aScrollType,
                                                     const int32_t& aX,
@@ -97,87 +45,14 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       const uint64_t& aID, const nsAString& aAnnouncement,
       const uint16_t& aPriority) override;
 
-  virtual mozilla::ipc::IPCResult RecvCaretLineNumber(
-      const uint64_t& aID, int32_t* aLineNumber) override;
-  virtual mozilla::ipc::IPCResult RecvCaretOffset(const uint64_t& aID,
-                                                  int32_t* aOffset) override;
-
-  virtual mozilla::ipc::IPCResult RecvCharacterCount(const uint64_t& aID,
-                                                     int32_t* aCount) override;
-  virtual mozilla::ipc::IPCResult RecvSelectionCount(const uint64_t& aID,
-                                                     int32_t* aCount) override;
-
-  virtual mozilla::ipc::IPCResult RecvTextSubstring(const uint64_t& aID,
-                                                    const int32_t& aStartOffset,
-                                                    const int32_t& aEndOffset,
-                                                    nsString* aText,
-                                                    bool* aValid) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetTextAfterOffset(
-      const uint64_t& aID, const int32_t& aOffset, const int32_t& aBoundaryType,
-      nsString* aText, int32_t* aStartOffset, int32_t* aEndOffset) override;
-  virtual mozilla::ipc::IPCResult RecvGetTextAtOffset(
-      const uint64_t& aID, const int32_t& aOffset, const int32_t& aBoundaryType,
-      nsString* aText, int32_t* aStartOffset, int32_t* aEndOffset) override;
-  virtual mozilla::ipc::IPCResult RecvGetTextBeforeOffset(
-      const uint64_t& aID, const int32_t& aOffset, const int32_t& aBoundaryType,
-      nsString* aText, int32_t* aStartOffset, int32_t* aEndOffset) override;
-
-  virtual mozilla::ipc::IPCResult RecvCharAt(const uint64_t& aID,
-                                             const int32_t& aOffset,
-                                             uint16_t* aChar) override;
-
-  virtual mozilla::ipc::IPCResult RecvTextAttributes(
-      const uint64_t& aID, const bool& aIncludeDefAttrs, const int32_t& aOffset,
-      RefPtr<AccAttributes>* aAttributes, int32_t* aStartOffset,
-      int32_t* aEndOffset) override;
-
-  virtual mozilla::ipc::IPCResult RecvDefaultTextAttributes(
-      const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) override;
-
-  virtual mozilla::ipc::IPCResult RecvTextBounds(
-      const uint64_t& aID, const int32_t& aStartOffset,
-      const int32_t& aEndOffset, const uint32_t& aCoordType,
-      LayoutDeviceIntRect* aRetVal) override;
-
-  virtual mozilla::ipc::IPCResult RecvCharBounds(
-      const uint64_t& aID, const int32_t& aOffset, const uint32_t& aCoordType,
-      LayoutDeviceIntRect* aRetVal) override;
-
-  virtual mozilla::ipc::IPCResult RecvOffsetAtPoint(const uint64_t& aID,
-                                                    const int32_t& aX,
-                                                    const int32_t& aY,
-                                                    const uint32_t& aCoordType,
-                                                    int32_t* aRetVal) override;
-
-  virtual mozilla::ipc::IPCResult RecvSelectionBoundsAt(
-      const uint64_t& aID, const int32_t& aSelectionNum, bool* aSucceeded,
-      nsString* aData, int32_t* aStartOffset, int32_t* aEndOffset) override;
-
-  virtual mozilla::ipc::IPCResult RecvSetSelectionBoundsAt(
-      const uint64_t& aID, const int32_t& aSelectionNum,
-      const int32_t& aStartOffset, const int32_t& aEndOffset,
-      bool* aSucceeded) override;
-
   virtual mozilla::ipc::IPCResult RecvAddToSelection(
       const uint64_t& aID, const int32_t& aStartOffset,
       const int32_t& aEndOffset, bool* aSucceeded) override;
-
-  virtual mozilla::ipc::IPCResult RecvRemoveFromSelection(
-      const uint64_t& aID, const int32_t& aSelectionNum,
-      bool* aSucceeded) override;
-
-  virtual mozilla::ipc::IPCResult RecvScrollSubstringTo(
-      const uint64_t& aID, const int32_t& aStartOffset,
-      const int32_t& aEndOffset, const uint32_t& aScrollType) override;
 
   virtual mozilla::ipc::IPCResult RecvScrollSubstringToPoint(
       const uint64_t& aID, const int32_t& aStartOffset,
       const int32_t& aEndOffset, const uint32_t& aCoordinateType,
       const int32_t& aX, const int32_t& aY) override;
-
-  virtual mozilla::ipc::IPCResult RecvText(const uint64_t& aID,
-                                           nsString* aText) override;
 
   virtual mozilla::ipc::IPCResult RecvReplaceText(
       const uint64_t& aID, const nsAString& aText) override;
@@ -207,192 +82,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                                 const int32_t& aPosition,
                                                 bool* aValid) override;
 
-  virtual mozilla::ipc::IPCResult RecvImagePosition(
-      const uint64_t& aID, const uint32_t& aCoordType,
-      LayoutDeviceIntPoint* aRetVal) override;
-
-  virtual mozilla::ipc::IPCResult RecvImageSize(
-      const uint64_t& aID, LayoutDeviceIntSize* aRetVal) override;
-
-  virtual mozilla::ipc::IPCResult RecvStartOffset(const uint64_t& aID,
-                                                  uint32_t* aRetVal,
-                                                  bool* aOk) override;
-  virtual mozilla::ipc::IPCResult RecvEndOffset(const uint64_t& aID,
-                                                uint32_t* aRetVal,
-                                                bool* aOk) override;
-  virtual mozilla::ipc::IPCResult RecvLinkCount(const uint64_t& aID,
-                                                uint32_t* aCount) override;
-
-  virtual mozilla::ipc::IPCResult RecvLinkIndexAtOffset(
-      const uint64_t& aID, const uint32_t& aOffset, int32_t* aIndex) override;
-
-  virtual mozilla::ipc::IPCResult RecvTableOfACell(const uint64_t& aID,
-                                                   uint64_t* aTableID,
-                                                   bool* aOk) override;
-
-  virtual mozilla::ipc::IPCResult RecvColIdx(const uint64_t& aID,
-                                             uint32_t* aIndex) override;
-
-  virtual mozilla::ipc::IPCResult RecvRowIdx(const uint64_t& aID,
-                                             uint32_t* aIndex) override;
-
-  virtual mozilla::ipc::IPCResult RecvColExtent(const uint64_t& aID,
-                                                uint32_t* aExtent) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetPosition(const uint64_t& aID,
-                                                  uint32_t* aRowIdx,
-                                                  uint32_t* aColIdx) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetColRowExtents(
-      const uint64_t& aID, uint32_t* aColIdx, uint32_t* aRowIdx,
-      uint32_t* aColExtent, uint32_t* aRowExtent) override;
-
-  virtual mozilla::ipc::IPCResult RecvRowExtent(const uint64_t& aID,
-                                                uint32_t* aExtent) override;
-
-  virtual mozilla::ipc::IPCResult RecvColHeaderCells(
-      const uint64_t& aID, nsTArray<uint64_t>* aCells) override;
-
-  virtual mozilla::ipc::IPCResult RecvRowHeaderCells(
-      const uint64_t& aID, nsTArray<uint64_t>* aCells) override;
-
-  virtual mozilla::ipc::IPCResult RecvIsCellSelected(const uint64_t& aID,
-                                                     bool* aSelected) override;
-
-  virtual mozilla::ipc::IPCResult RecvTableCaption(const uint64_t& aID,
-                                                   uint64_t* aCaptionID,
-                                                   bool* aOk) override;
-  virtual mozilla::ipc::IPCResult RecvTableSummary(const uint64_t& aID,
-                                                   nsString* aSummary) override;
-  virtual mozilla::ipc::IPCResult RecvTableColumnCount(
-      const uint64_t& aID, uint32_t* aColCount) override;
-  virtual mozilla::ipc::IPCResult RecvTableRowCount(
-      const uint64_t& aID, uint32_t* aRowCount) override;
-  virtual mozilla::ipc::IPCResult RecvTableCellAt(const uint64_t& aID,
-                                                  const uint32_t& aRow,
-                                                  const uint32_t& aCol,
-                                                  uint64_t* aCellID,
-                                                  bool* aOk) override;
-  virtual mozilla::ipc::IPCResult RecvTableCellIndexAt(
-      const uint64_t& aID, const uint32_t& aRow, const uint32_t& aCol,
-      int32_t* aIndex) override;
-  virtual mozilla::ipc::IPCResult RecvTableColumnIndexAt(
-      const uint64_t& aID, const uint32_t& aCellIndex, int32_t* aCol) override;
-  virtual mozilla::ipc::IPCResult RecvTableRowIndexAt(
-      const uint64_t& aID, const uint32_t& aCellIndex, int32_t* aRow) override;
-  virtual mozilla::ipc::IPCResult RecvTableRowAndColumnIndicesAt(
-      const uint64_t& aID, const uint32_t& aCellIndex, int32_t* aRow,
-      int32_t* aCol) override;
-  virtual mozilla::ipc::IPCResult RecvTableColumnExtentAt(
-      const uint64_t& aID, const uint32_t& aRow, const uint32_t& aCol,
-      uint32_t* aExtent) override;
-  virtual mozilla::ipc::IPCResult RecvTableRowExtentAt(
-      const uint64_t& aID, const uint32_t& aRow, const uint32_t& aCol,
-      uint32_t* aExtent) override;
-  virtual mozilla::ipc::IPCResult RecvTableColumnDescription(
-      const uint64_t& aID, const uint32_t& aCol,
-      nsString* aDescription) override;
-  virtual mozilla::ipc::IPCResult RecvTableRowDescription(
-      const uint64_t& aID, const uint32_t& aRow,
-      nsString* aDescription) override;
-  virtual mozilla::ipc::IPCResult RecvTableColumnSelected(
-      const uint64_t& aID, const uint32_t& aCol, bool* aSelected) override;
-  virtual mozilla::ipc::IPCResult RecvTableRowSelected(
-      const uint64_t& aID, const uint32_t& aRow, bool* aSelected) override;
-  virtual mozilla::ipc::IPCResult RecvTableCellSelected(
-      const uint64_t& aID, const uint32_t& aRow, const uint32_t& aCol,
-      bool* aSelected) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedCellCount(
-      const uint64_t& aID, uint32_t* aSelectedCells) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedColumnCount(
-      const uint64_t& aID, uint32_t* aSelectedColumns) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedRowCount(
-      const uint64_t& aID, uint32_t* aSelectedRows) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedCells(
-      const uint64_t& aID, nsTArray<uint64_t>* aCellIDs) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedCellIndices(
-      const uint64_t& aID, nsTArray<uint32_t>* aCellIndices) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedColumnIndices(
-      const uint64_t& aID, nsTArray<uint32_t>* aColumnIndices) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectedRowIndices(
-      const uint64_t& aID, nsTArray<uint32_t>* aRowIndices) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectColumn(
-      const uint64_t& aID, const uint32_t& aCol) override;
-  virtual mozilla::ipc::IPCResult RecvTableSelectRow(
-      const uint64_t& aID, const uint32_t& aRow) override;
-  virtual mozilla::ipc::IPCResult RecvTableUnselectColumn(
-      const uint64_t& aID, const uint32_t& aCol) override;
-  virtual mozilla::ipc::IPCResult RecvTableUnselectRow(
-      const uint64_t& aID, const uint32_t& aRow) override;
-  virtual mozilla::ipc::IPCResult RecvTableIsProbablyForLayout(
-      const uint64_t& aID, bool* aForLayout) override;
-  virtual mozilla::ipc::IPCResult RecvAtkTableColumnHeader(const uint64_t& aID,
-                                                           const int32_t& aCol,
-                                                           uint64_t* aHeader,
-                                                           bool* aOk) override;
-  virtual mozilla::ipc::IPCResult RecvAtkTableRowHeader(const uint64_t& aID,
-                                                        const int32_t& aRow,
-                                                        uint64_t* aHeader,
-                                                        bool* aOk) override;
-
-  virtual mozilla::ipc::IPCResult RecvSelectedItems(
-      const uint64_t& aID, nsTArray<uint64_t>* aSelectedItemIDs) override;
-
-  virtual mozilla::ipc::IPCResult RecvSelectedItemCount(
-      const uint64_t& aID, uint32_t* aCount) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetSelectedItem(const uint64_t& aID,
-                                                      const uint32_t& aIndex,
-                                                      uint64_t* aSelected,
-                                                      bool* aOk) override;
-
-  virtual mozilla::ipc::IPCResult RecvIsItemSelected(const uint64_t& aID,
-                                                     const uint32_t& aIndex,
-                                                     bool* aSelected) override;
-
-  virtual mozilla::ipc::IPCResult RecvAddItemToSelection(
-      const uint64_t& aID, const uint32_t& aIndex, bool* aSuccess) override;
-
-  virtual mozilla::ipc::IPCResult RecvRemoveItemFromSelection(
-      const uint64_t& aID, const uint32_t& aIndex, bool* aSuccess) override;
-
-  virtual mozilla::ipc::IPCResult RecvSelectAll(const uint64_t& aID,
-                                                bool* aSuccess) override;
-
-  virtual mozilla::ipc::IPCResult RecvUnselectAll(const uint64_t& aID,
-                                                  bool* aSuccess) override;
-
-  virtual mozilla::ipc::IPCResult RecvDoAction(const uint64_t& aID,
-                                               const uint8_t& aIndex,
-                                               bool* aSuccess) override;
-
-  virtual mozilla::ipc::IPCResult RecvActionCount(const uint64_t& aID,
-                                                  uint8_t* aCount) override;
-
-  virtual mozilla::ipc::IPCResult RecvActionNameAt(const uint64_t& aID,
-                                                   const uint8_t& aIndex,
-                                                   nsString* aName) override;
-
-  virtual mozilla::ipc::IPCResult RecvAccessKey(
-      const uint64_t& aID, uint32_t* aKey, uint32_t* aModifierMask) override;
-
-  virtual mozilla::ipc::IPCResult RecvAtkKeyBinding(const uint64_t& aID,
-                                                    nsString* aResult) override;
-
-  virtual mozilla::ipc::IPCResult RecvCurValue(const uint64_t& aID,
-                                               double* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvMinValue(const uint64_t& aID,
-                                               double* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvMaxValue(const uint64_t& aID,
-                                               double* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvStep(const uint64_t& aID,
-                                           double* aStep) override;
-
-  virtual mozilla::ipc::IPCResult RecvLanguage(const uint64_t& aID,
-                                               nsString* aLocale) override;
   virtual mozilla::ipc::IPCResult RecvDocType(const uint64_t& aID,
                                               nsString* aType) override;
   virtual mozilla::ipc::IPCResult RecvMimeType(const uint64_t& aID,
@@ -401,22 +90,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       const uint64_t& aID, nsString* aURL, nsString* aDocType,
       nsString* aMimeType) override;
 
-  virtual mozilla::ipc::IPCResult RecvChildAtPoint(
-      const uint64_t& aID, const int32_t& aX, const int32_t& aY,
-      const uint32_t& aWhich, PDocAccessibleChild** aResultDoc,
-      uint64_t* aResultID) override;
-
-  virtual mozilla::ipc::IPCResult RecvExtents(const uint64_t& aID,
-                                              const bool& aNeedsScreenCoords,
-                                              int32_t* aX, int32_t* aY,
-                                              int32_t* aWidth,
-                                              int32_t* aHeight) override;
-  virtual mozilla::ipc::IPCResult RecvExtentsInCSSPixels(
-      const uint64_t& aID, int32_t* aX, int32_t* aY, int32_t* aWidth,
-      int32_t* aHeight) override;
-  virtual mozilla::ipc::IPCResult RecvDOMNodeID(const uint64_t& aID,
-                                                nsString* aDOMNodeID) override;
-
   virtual bool DeallocPDocAccessiblePlatformExtChild(
       PDocAccessiblePlatformExtChild* aActor) override;
 
@@ -424,14 +97,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       override;
 
   DocAccessiblePlatformExtChild* GetPlatformExtension();
-
- private:
-  LocalAccessible* IdToAccessibleLink(const uint64_t& aID) const;
-  LocalAccessible* IdToAccessibleSelect(const uint64_t& aID) const;
-  TextLeafAccessible* IdToTextLeafAccessible(const uint64_t& aID) const;
-  ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
-  TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
-  TableAccessible* IdToTableAccessible(const uint64_t& aID) const;
 };
 
 }  // namespace a11y

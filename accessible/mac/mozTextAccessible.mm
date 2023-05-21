@@ -190,20 +190,21 @@ inline NSString* ToNSString(id aValue) {
     return;
   }
 
+  HyperTextAccessibleBase* textAcc = mGeckoAccessible->AsHyperTextBase();
+  if (!textAcc) {
+    return;
+  }
   int32_t start = 0, end = 0;
+  textAcc->SelectionBoundsAt(0, &start, &end);
   nsString text;
-  if (mGeckoAccessible->IsLocal()) {
-    if (HyperTextAccessible* textAcc =
-            mGeckoAccessible->AsLocal()->AsHyperText()) {
-      textAcc->SelectionBoundsAt(0, &start, &end);
-      textAcc->DeleteText(start, end - start);
-      nsCocoaUtils::GetStringForNSString(stringValue, text);
-      textAcc->InsertText(text, start);
-    }
+  nsCocoaUtils::GetStringForNSString(stringValue, text);
+  if (LocalAccessible* localAcc = mGeckoAccessible->AsLocal()) {
+    HyperTextAccessible* localTextAcc = localAcc->AsHyperText();
+    MOZ_ASSERT(localTextAcc);
+    localTextAcc->DeleteText(start, end - start);
+    localTextAcc->InsertText(text, start);
   } else {
     RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-    nsString data;
-    proxy->SelectionBoundsAt(0, data, &start, &end);
     proxy->DeleteText(start, end - start);
     nsCocoaUtils::GetStringForNSString(stringValue, text);
     proxy->InsertText(text, start);

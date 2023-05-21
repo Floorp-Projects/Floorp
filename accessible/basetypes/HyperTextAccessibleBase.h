@@ -180,7 +180,7 @@ class HyperTextAccessibleBase {
   /**
    * Return link accessible at the given text offset.
    */
-  virtual int32_t LinkIndexAtOffset(uint32_t aOffset) {
+  int32_t LinkIndexAtOffset(uint32_t aOffset) {
     Accessible* child = GetChildAtOffset(aOffset);
     return child ? LinkIndexOf(child) : -1;
   }

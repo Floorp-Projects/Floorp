@@ -842,42 +842,6 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
     return relation_set;
   }
 
-  if (!a11y::IsCacheActive() && acc->IsRemote()) {
-    RemoteAccessible* proxy = acc->AsRemote();
-    const AtkRelationType typeMap[] = {
-#define RELATIONTYPE(gecko, s, atk, m, i) atk,
-#include "RelationTypeMap.h"
-#undef RELATIONTYPE
-    };
-    nsTArray<RelationType> types;
-    nsTArray<nsTArray<RemoteAccessible*>> targetSets;
-    proxy->Relations(&types, &targetSets);
-
-    size_t relationCount = types.Length();
-    for (size_t i = 0; i < relationCount; i++) {
-      if (typeMap[static_cast<uint32_t>(types[i])] == ATK_RELATION_NULL) {
-        continue;
-      }
-
-      size_t targetCount = targetSets[i].Length();
-      AutoTArray<AtkObject*, 5> wrappers;
-      for (size_t j = 0; j < targetCount; j++) {
-        wrappers.AppendElement(GetWrapperFor(targetSets[i][j]));
-      }
-
-      AtkRelationType atkType = typeMap[static_cast<uint32_t>(types[i])];
-      AtkRelation* atkRelation =
-          atk_relation_set_get_relation_by_type(relation_set, atkType);
-      if (atkRelation) atk_relation_set_remove(relation_set, atkRelation);
-
-      atkRelation =
-          atk_relation_new(wrappers.Elements(), wrappers.Length(), atkType);
-      atk_relation_set_add(relation_set, atkRelation);
-      g_object_unref(atkRelation);
-    }
-    return relation_set;
-  }
-
 #define RELATIONTYPE(geckoType, geckoTypeName, atkType, msaaType, ia2Type) \
   UpdateAtkRelation(RelationType::geckoType, acc, atkType, relation_set);
 

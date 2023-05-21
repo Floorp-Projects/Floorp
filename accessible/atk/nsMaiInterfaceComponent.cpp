@@ -116,12 +116,6 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
     return;
   }
 
-  if (!a11y::IsCacheActive() && acc->IsRemote()) {
-    acc->AsRemote()->Extents(aCoordType == ATK_XY_WINDOW, aX, aY, aWidth,
-                             aHeight);
-    return;
-  }
-
   mozilla::LayoutDeviceIntRect screenRect = acc->Bounds();
   if (screenRect.IsEmpty()) {
     return;
