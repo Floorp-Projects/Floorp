@@ -12,8 +12,6 @@
 #include "nsIAccessibleTypes.h"
 #include "nsIFrame.h"  // only for nsSelectionAmount
 #include "nsISelectionController.h"
-#include "nsDirection.h"
-#include "WordMovementType.h"
 
 class nsFrameSelection;
 class nsIFrame;
@@ -125,37 +123,6 @@ class HyperTextAccessible : public AccessibleWrap,
   //////////////////////////////////////////////////////////////////////////////
   // TextAccessible
 
-  using HyperTextAccessibleBase::CharAt;
-
-  /**
-   * Return true if char at the given offset equals to given char.
-   */
-  bool IsCharAt(int32_t aOffset, char16_t aChar) {
-    return CharAt(aOffset) == aChar;
-  }
-
-  /**
-   * Return true if terminal char is at the given offset.
-   */
-  bool IsLineEndCharAt(int32_t aOffset) { return IsCharAt(aOffset, '\n'); }
-
-  virtual void TextBeforeOffset(int32_t aOffset,
-                                AccessibleTextBoundary aBoundaryType,
-                                int32_t* aStartOffset, int32_t* aEndOffset,
-                                nsAString& aText) override;
-  virtual void TextAtOffset(int32_t aOffset,
-                            AccessibleTextBoundary aBoundaryType,
-                            int32_t* aStartOffset, int32_t* aEndOffset,
-                            nsAString& aText) override;
-  virtual void TextAfterOffset(int32_t aOffset,
-                               AccessibleTextBoundary aBoundaryType,
-                               int32_t* aStartOffset, int32_t* aEndOffset,
-                               nsAString& aText) override;
-
-  virtual already_AddRefed<AccAttributes> TextAttributes(
-      bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
-      int32_t* aEndOffset) override;
-
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
   // HyperTextAccessibleBase provides an overload which takes an Accessible.
@@ -169,13 +136,6 @@ class HyperTextAccessible : public AccessibleWrap,
    * Return an offset at the given point.
    */
   int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType) override;
-
-  LayoutDeviceIntRect TextBounds(
-      int32_t aStartOffset, int32_t aEndOffset,
-      uint32_t aCoordType =
-          nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE) override;
-
-  LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) override;
 
   /**
    * Get/set caret offset, if no caret then -1.
@@ -269,75 +229,6 @@ class HyperTextAccessible : public AccessibleWrap,
 
   // HyperTextAccessible
 
-  /**
-   * Adjust an offset the caret stays at to get a text by line boundary.
-   */
-  uint32_t AdjustCaretOffset(uint32_t aOffset) const;
-
-  /**
-   * Return true if the given offset points to terminal empty line if any.
-   */
-  bool IsEmptyLastLineOffset(int32_t aOffset) {
-    return aOffset == static_cast<int32_t>(CharacterCount()) &&
-           IsLineEndCharAt(aOffset - 1);
-  }
-
-  /**
-   * Return an offset of the found word boundary.
-   */
-  uint32_t FindWordBoundary(uint32_t aOffset, nsDirection aDirection,
-                            EWordMovementType aWordMovementType);
-
-  /**
-   * Used to get begin/end of previous/this/next line. Note: end of line
-   * is an offset right before '\n' character if any, the offset is right after
-   * '\n' character is begin of line. In case of wrap word breaks these offsets
-   * are equal.
-   */
-  enum EWhichLineBoundary {
-    ePrevLineBegin,
-    ePrevLineEnd,
-    eThisLineBegin,
-    eThisLineEnd,
-    eNextLineBegin,
-    eNextLineEnd
-  };
-
-  /**
-   * Return an offset for requested line boundary. See constants above.
-   */
-  uint32_t FindLineBoundary(uint32_t aOffset,
-                            EWhichLineBoundary aWhichLineBoundary);
-
-  /**
-   * Find the start offset for a paragraph , taking into account
-   * inner block elements and line breaks.
-   */
-  int32_t FindParagraphStartOffset(uint32_t aOffset);
-
-  /**
-   * Find the end offset for a paragraph , taking into account
-   * inner block elements and line breaks.
-   */
-  int32_t FindParagraphEndOffset(uint32_t aOffset);
-
-  /**
-   * Return an offset corresponding to the given direction and selection amount
-   * relative the given offset. A helper used to find word or line boundaries.
-   */
-  uint32_t FindOffset(uint32_t aOffset, nsDirection aDirection,
-                      nsSelectionAmount aAmount,
-                      EWordMovementType aWordMovementType = eDefaultBehavior);
-
-  /**
-   * Return the boundaries (in dev pixels) of the substring in case of textual
-   * frame or frame boundaries in case of non textual frame, offsets are
-   * ignored.
-   */
-  LayoutDeviceIntRect GetBoundsInFrame(nsIFrame* aFrame,
-                                       uint32_t aStartRenderedOffset,
-                                       uint32_t aEndRenderedOffset);
-
   // Selection helpers
 
   /**
@@ -356,26 +247,6 @@ class HyperTextAccessible : public AccessibleWrap,
                                                          int32_t aEndPos);
 
   // Helpers
-  nsresult GetDOMPointByFrameOffset(nsIFrame* aFrame, int32_t aOffset,
-                                    LocalAccessible* aAccessible,
-                                    mozilla::a11y::DOMPoint* aPoint);
-
-  /**
-   * Set 'misspelled' text attribute and return range offsets where the
-   * attibute is stretched. If the text is not misspelled at the given offset
-   * then we expose only range offsets where text is not misspelled. The method
-   * is used by TextAttributes() method.
-   *
-   * @param aIncludeDefAttrs  [in] points whether text attributes having default
-   *                          values of attributes should be included
-   * @param aSourceNode       [in] the node we start to traverse from
-   * @param aStartOffset      [in, out] the start offset
-   * @param aEndOffset        [in, out] the end offset
-   * @param aAttributes       [out, optional] result attributes
-   */
-  void GetSpellTextAttr(nsINode* aNode, uint32_t aNodeOffset,
-                        uint32_t* aStartOffset, uint32_t* aEndOffset,
-                        AccAttributes* aAttributes);
 
   /**
    * Set xml-roles attributes for MathML elements.

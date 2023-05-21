@@ -8,6 +8,7 @@
 
 #include "AccAttributes.h"
 #include "nsIAccessibleText.h"
+#include "nsIAccessibleTypes.h"
 
 namespace mozilla::a11y {
 class Accessible;
@@ -75,7 +76,7 @@ class HyperTextAccessibleBase {
   /**
    * Return character count within the hypertext accessible.
    */
-  virtual uint32_t CharacterCount() const;
+  uint32_t CharacterCount() const;
 
   /**
    * Get/set caret offset, if no caret then -1.
@@ -97,8 +98,8 @@ class HyperTextAccessibleBase {
   /**
    * Return text between given offsets.
    */
-  virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
-                             nsAString& aText) const;
+  void TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                     nsAString& aText) const;
 
   /**
    * Get a character at the given offset (don't support magic offsets).
@@ -106,7 +107,7 @@ class HyperTextAccessibleBase {
   bool CharAt(int32_t aOffset, nsAString& aChar,
               int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr);
 
-  virtual char16_t CharAt(int32_t aOffset) {
+  char16_t CharAt(int32_t aOffset) {
     nsAutoString charAtOffset;
     CharAt(aOffset, charAtOffset);
     return charAtOffset.CharAt(0);
@@ -116,15 +117,16 @@ class HyperTextAccessibleBase {
    * Return a rect (in dev pixels) for character at given offset relative
    * given coordinate system.
    */
-  virtual LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
+  LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
   /**
    * Return a rect (in dev pixels) of the given text range relative given
    * coordinate system.
    */
-  virtual LayoutDeviceIntRect TextBounds(int32_t aStartOffset,
-                                         int32_t aEndOffset,
-                                         uint32_t aCoordType);
+  LayoutDeviceIntRect TextBounds(
+      int32_t aStartOffset, int32_t aEndOffset,
+      uint32_t aCoordType =
+          nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
   /**
    * Return the offset of the char that contains the given coordinates.
@@ -143,18 +145,15 @@ class HyperTextAccessibleBase {
    * Return text before/at/after the given offset corresponding to
    * the boundary type.
    */
-  virtual void TextBeforeOffset(int32_t aOffset,
-                                AccessibleTextBoundary aBoundaryType,
-                                int32_t* aStartOffset, int32_t* aEndOffset,
-                                nsAString& aText);
-  virtual void TextAtOffset(int32_t aOffset,
-                            AccessibleTextBoundary aBoundaryType,
-                            int32_t* aStartOffset, int32_t* aEndOffset,
-                            nsAString& aText);
-  virtual void TextAfterOffset(int32_t aOffset,
-                               AccessibleTextBoundary aBoundaryType,
-                               int32_t* aStartOffset, int32_t* aEndOffset,
-                               nsAString& aText);
+  void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                        int32_t* aStartOffset, int32_t* aEndOffset,
+                        nsAString& aText);
+  void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                    int32_t* aStartOffset, int32_t* aEndOffset,
+                    nsAString& aText);
+  void TextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                       int32_t* aStartOffset, int32_t* aEndOffset,
+                       nsAString& aText);
 
   /**
    * Return true if the given offset/range is valid.
@@ -188,10 +187,10 @@ class HyperTextAccessibleBase {
   /**
    * Return text attributes for the given text range.
    */
-  virtual already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
-                                                         int32_t aOffset,
-                                                         int32_t* aStartOffset,
-                                                         int32_t* aEndOffset);
+  already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
+                                                 int32_t aOffset,
+                                                 int32_t* aStartOffset,
+                                                 int32_t* aEndOffset);
 
   /**
    * Return text attributes applied to the accessible.
@@ -242,8 +241,9 @@ class HyperTextAccessibleBase {
   /**
    * Scroll the given text range into view.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void ScrollSubstringTo(
-      int32_t aStartOffset, int32_t aEndOffset, uint32_t aScrollType);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ScrollSubstringTo(int32_t aStartOffset,
+                                                     int32_t aEndOffset,
+                                                     uint32_t aScrollType);
 
  protected:
   virtual const Accessible* Acc() const = 0;

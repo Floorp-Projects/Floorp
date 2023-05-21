@@ -89,17 +89,6 @@ inline void HyperTextAccessible::PasteText(int32_t aPosition) {
   }
 }
 
-inline uint32_t HyperTextAccessible::AdjustCaretOffset(uint32_t aOffset) const {
-  // It is the same character offset when the caret is visually at the very
-  // end of a line or the start of a new line (soft line break). Getting text
-  // at the line should provide the line with the visual caret, otherwise
-  // screen readers will announce the wrong line as the user presses up or
-  // down arrow and land at the end of a line.
-  if (aOffset > 0 && IsCaretAtEndOfLine()) return aOffset - 1;
-
-  return aOffset;
-}
-
 inline bool HyperTextAccessible::IsCaretAtEndOfLine() const {
   RefPtr<nsFrameSelection> frameSelection = FrameSelection();
   return frameSelection && frameSelection->GetHint() == CARET_ASSOCIATE_BEFORE;

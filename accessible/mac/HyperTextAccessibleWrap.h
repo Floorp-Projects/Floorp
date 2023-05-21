@@ -8,6 +8,7 @@
 
 #include "HyperTextAccessible.h"
 #include "PlatformExtTypes.h"
+#include "WordMovementType.h"
 
 namespace mozilla {
 namespace a11y {
