@@ -3990,6 +3990,11 @@
   value: false
   mirror: always
 
+- name: dom.storage.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: dom.workers.pFetch.enabled
   type: RelaxedAtomicBool
   value: true
