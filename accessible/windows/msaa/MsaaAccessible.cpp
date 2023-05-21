@@ -128,21 +128,6 @@ int32_t MsaaAccessible::GetChildIDFor(Accessible* aAccessible) {
 }
 
 /* static */
-uint32_t MsaaAccessible::GetContentProcessIdFor(
-    dom::ContentParentId aIPCContentId) {
-  if (a11y::IsCacheActive()) {
-    return 0;
-  }
-  return sIDGen.GetContentProcessIDFor(aIPCContentId);
-}
-
-/* static */
-void MsaaAccessible::ReleaseContentProcessIdFor(
-    dom::ContentParentId aIPCContentId) {
-  sIDGen.ReleaseContentProcessIDFor(aIPCContentId);
-}
-
-/* static */
 void MsaaAccessible::AssignChildIDTo(NotNull<sdnAccessible*> aSdnAcc) {
   aSdnAcc->SetUniqueID(sIDGen.GetID());
 }
