@@ -77,7 +77,7 @@
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">آخرین بروزرسانی</string>
     <!-- The developer website (Homepage) of the add-on. -->
-    <string name="mozac_feature_addons_home_page">صفحه خانگی</string>
+    <string name="mozac_feature_addons_home_page">صفحهٔ خانگی</string>
     <!-- A link where users can find more information about add-ons permissions. -->
     <string name="mozac_feature_addons_learn_more">درباره مجوزها بیشتر بدانید</string>
     <!-- The rating of the add-on. -->

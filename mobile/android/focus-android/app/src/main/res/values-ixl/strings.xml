@@ -600,7 +600,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s ile’ ni tx’eb’on ve’t see’ aq’al la b’anb’e ta’ne’ tan la ootzi <a href="%2$s">kam yol xo’l tenam ti u Mozilla at sti’</a> as atkan unka’ta yol ti’ unq’a lochb’al tetz uva’ jajlu kan.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Ye’l umaj yol aq’axoj see’ ti’ b’anb’el unq’a texhlale’ uve’ ni xaansale’ ta’n u Mozilla moj tu jalte, echkole’ u texhlale’, vi b’ii u Mozilla, Firefox moj unq’a %1$s. La uch alejat ka’ta yol sti’ <a href="%2$s">tzitza’</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Kat u texhlale’ uve’ tetz %1$s ile’ at ve’te’ ta’n ka’t <a href="%2$s">unq’a tu’aale’</a> uve’ jajlu kan kuxhtu’.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s ni b’anb’e tachul majb’al uva’ ileltu ta’n u Mozilla. Echkole’ unq’a aq’one’ uve’ jatxel ivatz as a’ kuxh ni taq’onvu sijunal ta’n u <a href="%2$s">GNU General Public License v3</a>, as ile’ at ve’t <a href="%3$s">tzitza’</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Ab\'ii la ooksa kan</string>
     <string name="gv_prompt_password_hint">Exhlal axh kuxh la ootzin</string>
     <string name="gv_prompt_clear">Josq\'i</string>
@@ -994,6 +1015,13 @@
  Asoj b’a’nik kuxh tatin u vaa’ b’axa, u vaa’ neel cheel tuk kuxh paloje’.
  ]]></string>
 
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+ <label>At umaj uxchil ni tokch’u’l ib’anat ivatz u atinb’ale’ vaa’ asoj la yakeb’ axh at iva’laxhil.</label>
+ <br><br>
+ <label>%1$s ye’ ni k’ujb’a’ ik’u’l ti’ u <b>%2$s</b> tan ye’ ootzimal ab’il ni aq’onvan, as ankuxhe’ ni b’anb’ela je’ tib’ as ye’ ni taq’ tzan unq’a u’uje’ ti jikil.</label>
+]]></string>
+
      <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string name="cfr_for_toolbar_shield_icon2">B’a’ne’! Aq’al uva’ ye’l axh li ch’itpi’li axh u vaa’. Laa ku’ u tal texhlale’ aq’al la eele’ ab’iste unq’a vee’ ni kumaj ivatz.</string>
@@ -1021,6 +1049,13 @@
 
     <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Kay sotzyu tuuleb’al unq’a aq’on uve’ kat chukpi! 🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Xe’tisa u aq’one’ tu atinb’ale’ uve’ eetz kuxhtu’ as tuk kumaj ivatz unq’a b’anol va’lexhe’ tul naaq’onve’.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Tuk qaq’kan axh uva’ axh kuxh la atin axh tzitza´, oora kuxh ab’ana tuk u widget %1$s tu xe’teb’al u aaq’one’.</string>
 
     <!-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. -->

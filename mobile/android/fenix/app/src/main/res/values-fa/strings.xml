@@ -182,7 +182,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">پایگاه رومیزی</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">افزودن به صفحه خانگی</string>
+    <string name="browser_menu_add_to_homescreen">افزودن به صفحهٔ خانگی</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">نصب</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
@@ -220,7 +220,7 @@
     <string name="browser_menu_customize_home_1">سفارشی‌سازی صفحه خانه</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
-    <string name="browser_toolbar_home">صفحه خانگی</string>
+    <string name="browser_toolbar_home">صفحهٔ خانگی</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -1623,7 +1623,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">نشانی به تخته‌گیره رونوشت شد</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">افزودن به صفحه خانگی</string>
+    <string name="add_to_homescreen_title">افزودن به صفحهٔ خانگی</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">لغو</string>
     <!-- Add button text for the Add to Homescreen dialog -->
@@ -1634,7 +1634,7 @@
     <string name="add_to_homescreen_text_placeholder">نام میانبر</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description_2">شما به راحتی می‌توانید این پایگاه اینترنتی را به صفحه خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریعتی را مانند تجربه کردن یک برنامه داشته باشید.</string>
+    <string name="add_to_homescreen_description_2">شما به راحتی می‌توانید این وبگاه را به صفحهٔ خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریع‌تری را مانند تجربه کردن یک برنامه داشته باشید.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ورودها و گذرواژه‌ها</string>

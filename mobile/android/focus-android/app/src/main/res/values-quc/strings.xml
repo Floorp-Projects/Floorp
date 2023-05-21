@@ -130,6 +130,19 @@
           Do not translate or transliterate Focus Nightly.-->
     <string name="text_selection_search_action_focus_nightly">Chatzukuj pa Focus Nightly</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s kuya´ rilawachixik chi awech.</p>
+<p>Chakojo´ pacha´ nik´ob´al rech echeb´alil:
+  <ul>
+    <li>Chatzukuj chi´l chanik´oj pa le kojkemchak:</li>
+    <li>Che´aq´atej taq tzukub´al (on chak´ak´arisaj taq wiqitajem chech uya´ik b´e chi kech taq tzukub´al)</li>
+    <li>Chayuju´ chech kichupik cookies chi´l utzukuxik chi´l  unik´oxik b´antal kanoq</li>
+  </ul>
+</p>
+<p>%1$s are b´anowinaq le Mozilla. Le qachak are uya´ik  jun utzalaj, ujaqik kemk´atz.<br/>
+<a href="%2$s">Chaweta´maj nik´aj chik</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Echeb\'alil chi\'l chajinem</string>
 
