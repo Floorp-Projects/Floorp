@@ -2229,8 +2229,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     flags |= GetSpacingFlags(f);
     nsTextFrameUtils::CompressionMode compression =
         GetCSSWhitespaceToCompressionMode(f, textStyle);
-    if ((enabledJustification || f->ShouldSuppressLineBreak()) &&
-        !textStyle->WhiteSpaceIsSignificant() && !isSVG) {
+    if ((enabledJustification || f->ShouldSuppressLineBreak()) && !isSVG) {
       flags |= gfx::ShapedTextFlags::TEXT_ENABLE_SPACING;
     }
     fontStyle = f->StyleFont();
@@ -9499,8 +9498,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   // Compute space and letter counts for justification, if required
-  if (!textStyle->WhiteSpaceIsSignificant() &&
-      (lineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
+  if ((lineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
        lineContainer->StyleText()->mTextAlignLast ==
            StyleTextAlignLast::Justify ||
        shouldSuppressLineBreak) &&
