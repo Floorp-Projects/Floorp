@@ -59,7 +59,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   }
 
   uint64_t GetEmbedderAccessibleID() { return mEmbedderAccessibleID; }
-#endif    // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
@@ -113,7 +113,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   // We need to keep track of the embedder accessible id we last sent to the
   // parent process.
   uint64_t mEmbedderAccessibleID = 0;
-#endif    // defined(ACCESSIBILITY)
+#endif  // defined(ACCESSIBILITY)
 };
 
 }  // namespace mozilla::dom
