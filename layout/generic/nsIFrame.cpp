@@ -9527,11 +9527,8 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
           // If the new frame is in a native anonymous subtree, we should treat
           // it as not selectable unless the frame and found frame are in same
           // subtree.
-          if (!aOptions.contains(
-                  PeekOffsetOption::
-                      AllowContentInDifferentNativeAnonymousSubtreeRoot) &&
-              aFrame->GetClosestNativeAnonymousSubtreeRoot() !=
-                  nativeAnonymousSubtreeContent) {
+          if (aFrame->GetClosestNativeAnonymousSubtreeRoot() !=
+              nativeAnonymousSubtreeContent) {
             return false;
           }
           return !aOptions.contains(PeekOffsetOption::ForceEditableRegion) ||
