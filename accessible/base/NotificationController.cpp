@@ -977,9 +977,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       ipcDoc = new DocAccessibleChild(childDoc, parentIPCDoc->Manager());
       childDoc->SetIPCDoc(ipcDoc);
 
-#if defined(XP_WIN)
-      parentIPCDoc->ConstructChildDocInParentProcess(ipcDoc, id);
-#else
       nsCOMPtr<nsIBrowserChild> browserChild =
           do_GetInterface(mDocument->DocumentNode()->GetDocShell());
       if (browserChild) {
@@ -987,9 +984,10 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
             ->SendPDocAccessibleConstructor(
                 ipcDoc, parentIPCDoc, id,
                 childDoc->DocumentNode()->GetBrowsingContext());
+#ifndef XP_WIN
         ipcDoc->SendPDocAccessiblePlatformExtConstructor();
-      }
 #endif
+      }
     }
   }
 

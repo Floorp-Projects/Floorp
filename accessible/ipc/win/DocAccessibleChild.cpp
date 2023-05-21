@@ -6,12 +6,9 @@
 
 #include "DocAccessibleChild.h"
 
-#include "nsAccessibilityService.h"
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/PlatformChild.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/Document.h"
-#include "RootAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -27,87 +24,10 @@ DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
   }
 
   SetManager(aManager);
-  if (a11y::IsCacheActive()) {
-    // If the cache is enabled, we don't need to care whether this is
-    // constructed in the parent process. We must still set this flag because we
-    // defer sending any events unless it is set.
-    SetConstructedInParentProcess();
-  }
 }
 
 DocAccessibleChild::~DocAccessibleChild() {
   MOZ_COUNT_DTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
-}
-
-void DocAccessibleChild::Shutdown() {
-  if (IsConstructedInParentProcess()) {
-    DocAccessibleChildBase::Shutdown();
-    return;
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedShutdown>(this));
-  DetachDocument();
-}
-
-void DocAccessibleChild::PushDeferredEvent(UniquePtr<DeferredEvent> aEvent) {
-  DocAccessibleChild* topLevelIPCDoc = nullptr;
-
-  if (mDoc && mDoc->IsRoot()) {
-    topLevelIPCDoc = this;
-  } else {
-    auto browserChild = static_cast<dom::BrowserChild*>(Manager());
-    if (!browserChild) {
-      return;
-    }
-
-    topLevelIPCDoc = static_cast<DocAccessibleChild*>(
-        browserChild->GetTopLevelDocAccessibleChild());
-  }
-
-  if (topLevelIPCDoc) {
-    topLevelIPCDoc->mDeferredEvents.AppendElement(std::move(aEvent));
-  }
-}
-
-bool DocAccessibleChild::SendEvent(const uint64_t& aID, const uint32_t& aType) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendEvent(aID, aType);
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedEvent>(this, aID, aType));
-  return false;
-}
-
-void DocAccessibleChild::MaybeSendShowEvent(ShowEventData& aData,
-                                            bool aFromUser) {
-  if (IsConstructedInParentProcess()) {
-    Unused << SendShowEvent(aData, aFromUser);
-    return;
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedShow>(this, aData, aFromUser));
-}
-
-bool DocAccessibleChild::SendHideEvent(const uint64_t& aRootID,
-                                       const bool& aFromUser) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendHideEvent(aRootID, aFromUser);
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedHide>(this, aRootID, aFromUser));
-  return true;
-}
-
-bool DocAccessibleChild::SendStateChangeEvent(const uint64_t& aID,
-                                              const uint64_t& aState,
-                                              const bool& aEnabled) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendStateChangeEvent(aID, aState, aEnabled);
-  }
-
-  PushDeferredEvent(
-      MakeUnique<SerializedStateChange>(this, aID, aState, aEnabled));
-  return true;
 }
 
 LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
@@ -131,17 +51,7 @@ LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
 }
 
 bool DocAccessibleChild::SendFocusEvent(const uint64_t& aID) {
-  return SendFocusEvent(aID, GetCaretRectFor(aID));
-}
-
-bool DocAccessibleChild::SendFocusEvent(const uint64_t& aID,
-                                        const LayoutDeviceIntRect& aCaretRect) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendFocusEvent(aID, aCaretRect);
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedFocus>(this, aID, aCaretRect));
-  return true;
+  return PDocAccessibleChild::SendFocusEvent(aID, GetCaretRectFor(aID));
 }
 
 bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
@@ -149,116 +59,9 @@ bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
                                             const bool& aIsSelectionCollapsed,
                                             const bool& aIsAtEndOfLine,
                                             const int32_t& aGranularity) {
-  return SendCaretMoveEvent(aID, GetCaretRectFor(aID), aOffset,
-                            aIsSelectionCollapsed, aIsAtEndOfLine,
-                            aGranularity);
-}
-
-bool DocAccessibleChild::SendCaretMoveEvent(
-    const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect,
-    const int32_t& aOffset, const bool& aIsSelectionCollapsed,
-    const bool& aIsAtEndOfLine, const int32_t& aGranularity) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendCaretMoveEvent(
-        aID, aCaretRect, aOffset, aIsSelectionCollapsed, aIsAtEndOfLine,
-        aGranularity);
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedCaretMove>(
-      this, aID, aCaretRect, aOffset, aIsSelectionCollapsed, aIsAtEndOfLine,
-      aGranularity));
-  return true;
-}
-
-bool DocAccessibleChild::SendTextChangeEvent(
-    const uint64_t& aID, const nsString& aStr, const int32_t& aStart,
-    const uint32_t& aLen, const bool& aIsInsert, const bool& aFromUser,
-    const bool aDoSync) {
-  if (IsConstructedInParentProcess()) {
-    if (aDoSync) {
-      // The AT is going to need to reenter content while the event is being
-      // dispatched synchronously.
-      return PDocAccessibleChild::SendSyncTextChangeEvent(
-          aID, aStr, aStart, aLen, aIsInsert, aFromUser);
-    }
-    return PDocAccessibleChild::SendTextChangeEvent(aID, aStr, aStart, aLen,
-                                                    aIsInsert, aFromUser);
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedTextChange>(
-      this, aID, aStr, aStart, aLen, aIsInsert, aFromUser));
-  return true;
-}
-
-bool DocAccessibleChild::SendSelectionEvent(const uint64_t& aID,
-                                            const uint64_t& aWidgetID,
-                                            const uint32_t& aType) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendSelectionEvent(aID, aWidgetID, aType);
-  }
-
-  PushDeferredEvent(
-      MakeUnique<SerializedSelection>(this, aID, aWidgetID, aType));
-  return true;
-}
-
-bool DocAccessibleChild::SendRoleChangedEvent(const a11y::role& aRole,
-                                              uint8_t aRoleMapEntryIndex) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendRoleChangedEvent(aRole, aRoleMapEntryIndex);
-  }
-
-  PushDeferredEvent(
-      MakeUnique<SerializedRoleChanged>(this, aRole, aRoleMapEntryIndex));
-  return true;
-}
-
-bool DocAccessibleChild::SendScrollingEvent(const uint64_t& aID,
-                                            const uint64_t& aType,
-                                            const uint32_t& aScrollX,
-                                            const uint32_t& aScrollY,
-                                            const uint32_t& aMaxScrollX,
-                                            const uint32_t& aMaxScrollY) {
-  if (IsConstructedInParentProcess()) {
-    return PDocAccessibleChild::SendScrollingEvent(
-        aID, aType, aScrollX, aScrollY, aMaxScrollX, aMaxScrollY);
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedScrolling>(
-      this, aID, aType, aScrollX, aScrollY, aMaxScrollX, aMaxScrollY));
-  return true;
-}
-
-bool DocAccessibleChild::ConstructChildDocInParentProcess(
-    DocAccessibleChild* aNewChildDoc, uint64_t aUniqueID) {
-  if (IsConstructedInParentProcess()) {
-    // We may send the constructor immediately
-    auto browserChild = static_cast<dom::BrowserChild*>(Manager());
-    MOZ_ASSERT(browserChild);
-    bool result = browserChild->SendPDocAccessibleConstructor(
-        aNewChildDoc, this, aUniqueID,
-        aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext());
-    if (result) {
-      aNewChildDoc->SetConstructedInParentProcess();
-    }
-    return result;
-  }
-
-  PushDeferredEvent(MakeUnique<SerializedChildDocConstructor>(
-      aNewChildDoc, this, aUniqueID,
-      aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext()));
-  return true;
-}
-
-bool DocAccessibleChild::SendBindChildDoc(
-    NotNull<DocAccessibleChild*> aChildDoc, const uint64_t& aNewParentID) {
-  if (IsConstructedInParentProcess()) {
-    return DocAccessibleChildBase::SendBindChildDoc(aChildDoc, aNewParentID);
-  }
-
-  PushDeferredEvent(
-      MakeUnique<SerializedBindChildDoc>(this, aChildDoc, aNewParentID));
-  return true;
+  return PDocAccessibleChild::SendCaretMoveEvent(aID, GetCaretRectFor(aID),
+                                                 aOffset, aIsSelectionCollapsed,
+                                                 aIsAtEndOfLine, aGranularity);
 }
 
 ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
@@ -266,22 +69,6 @@ ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
     focusMgr->ForceFocusEvent();
   }
   return IPC_OK();
-}
-
-void DocAccessibleChild::SetEmbedderOnBridge(dom::BrowserBridgeChild* aBridge,
-                                             uint64_t aID) {
-  DocAccessibleChild* doc = aID ? this : nullptr;
-  if (IsConstructedInParentProcess()) {
-    MOZ_ASSERT(CanSend());
-    aBridge->SetEmbedderAccessible(doc, aID);
-    return;
-  }
-  // Even though this doesn't fire an event, we must ensure this is sent in
-  // the correct order with insertions/removals, which are deferred until
-  // we are notified about parent process construction. Otherwise, the
-  // parent process might bind a child document to the wrong accessible if
-  // ids get reused.
-  PushDeferredEvent(MakeUnique<SerializedSetEmbedder>(aBridge, doc, aID));
 }
 
 }  // namespace a11y
