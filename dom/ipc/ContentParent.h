@@ -521,9 +521,6 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvUnstoreAndBroadcastBlobURLUnregistration(
       const nsACString& aURI, nsIPrincipal* aPrincipal);
 
-  mozilla::ipc::IPCResult RecvA11yHandlerControl(
-      const uint32_t& aPid, const IHandlerControlHolder& aHandlerControl);
-
   virtual int32_t Pid() const override;
 
   // PURLClassifierParent.

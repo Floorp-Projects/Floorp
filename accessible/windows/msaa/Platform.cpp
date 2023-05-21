@@ -22,7 +22,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
-#include "nsAccessibilityService.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -184,21 +183,9 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsAString& aStr,
                                 bool) {
   uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
                                : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
-  static const bool useHandler =
-      !a11y::IsCacheActive() &&
-      Preferences::GetBool("accessibility.handler.enabled", false) &&
-      IsHandlerRegistered();
-  if (useHandler) {
-    AccessibleWrap::DispatchTextChangeToHandler(aText, aInsert, aStr, aStart,
-                                                aLen);
-    return;
-  }
-
-  if (a11y::IsCacheActive()) {
-    MOZ_ASSERT(aText->IsHyperText());
-    ia2AccessibleText::UpdateTextChangeData(aText->AsHyperTextBase(), aInsert,
-                                            aStr, aStart, aLen);
-  }
+  MOZ_ASSERT(aText->IsHyperText());
+  ia2AccessibleText::UpdateTextChangeData(aText->AsHyperTextBase(), aInsert,
+                                          aStr, aStart, aLen);
   MsaaAccessible::FireWinEvent(aText, eventType);
 }
 

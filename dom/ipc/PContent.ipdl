@@ -92,7 +92,6 @@ using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using struct OverrideMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using base::ProcessId from "base/process.h";
 using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
-using mozilla::a11y::IHandlerControlHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
@@ -1637,9 +1636,6 @@ parent:
     async UpdateChildKeyedScalars(KeyedScalarAction[] updates);
     async RecordChildEvents(ChildEventData[] events);
     async RecordDiscardedData(DiscardedData data);
-
-    async A11yHandlerControl(uint32_t aPid,
-                             IHandlerControlHolder aHandlerControl);
 
     async AddMemoryReport(MemoryReport aReport);
 

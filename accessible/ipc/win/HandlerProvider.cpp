@@ -543,13 +543,7 @@ HandlerProvider::NewInstance(
 void HandlerProvider::SetHandlerControlOnMainThread(
     DWORD aPid, mscom::ProxyUniquePtr<IHandlerControl> aCtrl) {
   MOZ_ASSERT(NS_IsMainThread());
-
-  auto content = dom::ContentChild::GetSingleton();
-  MOZ_ASSERT(content);
-
-  IHandlerControlHolder holder(
-      CreateHolderFromHandlerControl(std::move(aCtrl)));
-  Unused << content->SendA11yHandlerControl(aPid, holder);
+  // XXX This is no longer used and will soon be removed.
 }
 
 HRESULT

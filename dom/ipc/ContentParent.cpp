@@ -6264,18 +6264,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvA11yHandlerControl(
-    const uint32_t& aPid, const IHandlerControlHolder& aHandlerControl) {
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  MOZ_ASSERT(!aHandlerControl.IsNull());
-  RefPtr<IHandlerControl> proxy(aHandlerControl.Get());
-  a11y::AccessibleWrap::SetHandlerControl(aPid, std::move(proxy));
-  return IPC_OK();
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
 bool ContentParent::HandleWindowsMessages(const Message& aMsg) const {
   MOZ_ASSERT(aMsg.is_sync());
 
