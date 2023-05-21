@@ -140,16 +140,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-BrowserBridgeChild::RecvSetEmbeddedDocAccessibleCOMProxy(
-    const a11y::IDispatchHolder& aCOMProxy) {
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-  MOZ_ASSERT(!aCOMProxy.IsNull());
-  mEmbeddedDocAccessible = aCOMProxy.Get();
-#endif
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvMaybeFireEmbedderLoadEvents(
     EmbedderElementEventType aFireEventAtEmbeddingElement) {
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
