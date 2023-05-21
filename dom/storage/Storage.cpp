@@ -20,6 +20,8 @@
 
 namespace mozilla::dom {
 
+static const char kStorageEnabled[] = "dom.storage.enabled";
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mWindow, mPrincipal,
                                       mStoragePrincipal)
 
@@ -56,7 +58,7 @@ Storage::~Storage() = default;
 
 /* static */
 bool Storage::StoragePrefIsEnabled() {
-  return StaticPrefs::dom_storage_enabled();
+  return mozilla::Preferences::GetBool(kStorageEnabled);
 }
 
 int64_t Storage::GetSnapshotUsage(nsIPrincipal& aSubjectPrincipal,
