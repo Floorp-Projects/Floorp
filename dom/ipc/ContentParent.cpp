@@ -1695,12 +1695,10 @@ void ContentParent::Init() {
 #  if defined(XP_WIN)
     // Don't init content a11y if we detect an incompat version of JAWS in use.
     if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-      Unused << SendActivateA11y(
-          ::GetCurrentThreadId(),
-          a11y::MsaaAccessible::GetContentProcessIdFor(ChildID()));
+      Unused << SendActivateA11y(::GetCurrentThreadId());
     }
 #  else
-    Unused << SendActivateA11y(0, 0);
+    Unused << SendActivateA11y(0);
 #  endif
   }
 #endif  // #ifdef ACCESSIBILITY
@@ -2237,10 +2235,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   }
 
   mBlobURLs.Clear();
-
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  a11y::MsaaAccessible::ReleaseContentProcessIdFor(ChildID());
-#endif
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   AssertNotInPool();
@@ -4079,12 +4073,10 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       // Don't init content a11y if we detect an incompat version of JAWS in
       // use.
       if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-        Unused << SendActivateA11y(
-            ::GetCurrentThreadId(),
-            a11y::MsaaAccessible::GetContentProcessIdFor(ChildID()));
+        Unused << SendActivateA11y(::GetCurrentThreadId());
       }
 #  else
-      Unused << SendActivateA11y(0, 0);
+      Unused << SendActivateA11y(0);
 #  endif
     } else {
       // If possible, shut down accessibility in content process when
@@ -6270,17 +6262,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
   BroadcastBlobURLUnregistration(aURI, aPrincipal, this);
   mBlobURLs.RemoveElement(aURI);
   return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvGetA11yContentId(
-    uint32_t* aContentId) {
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  *aContentId = a11y::MsaaAccessible::GetContentProcessIdFor(ChildID());
-  MOZ_ASSERT(*aContentId);
-  return IPC_OK();
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvA11yHandlerControl(
