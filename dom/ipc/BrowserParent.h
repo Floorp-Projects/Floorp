@@ -430,14 +430,12 @@ class BrowserParent final : public PBrowserParent,
 #ifdef ACCESSIBILITY
   PDocAccessibleParent* AllocPDocAccessibleParent(
       PDocAccessibleParent*, const uint64_t&,
-      const MaybeDiscardedBrowsingContext&, const uint32_t&,
-      const IAccessibleHolder&);
+      const MaybeDiscardedBrowsingContext&);
   bool DeallocPDocAccessibleParent(PDocAccessibleParent*);
   virtual mozilla::ipc::IPCResult RecvPDocAccessibleConstructor(
       PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc,
       const uint64_t& aParentID,
-      const MaybeDiscardedBrowsingContext& aBrowsingContext,
-      const uint32_t& aMsaaID, const IAccessibleHolder& aDocCOMProxy) override;
+      const MaybeDiscardedBrowsingContext& aBrowsingContext) override;
 #endif
 
   already_AddRefed<PSessionStoreParent> AllocPSessionStoreParent();

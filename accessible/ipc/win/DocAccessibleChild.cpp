@@ -19,7 +19,7 @@ namespace a11y {
 static StaticAutoPtr<PlatformChild> sPlatformChild;
 
 DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
-    : DocAccessibleChildBase(aDoc), mEmulatedWindowHandle(nullptr) {
+    : DocAccessibleChildBase(aDoc) {
   MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
   if (!sPlatformChild) {
     sPlatformChild = new PlatformChild();
@@ -47,59 +47,6 @@ void DocAccessibleChild::Shutdown() {
 
   PushDeferredEvent(MakeUnique<SerializedShutdown>(this));
   DetachDocument();
-}
-
-ipc::IPCResult DocAccessibleChild::RecvParentCOMProxy(
-    const IDispatchHolder& aParentCOMProxy) {
-  MOZ_ASSERT(!aParentCOMProxy.IsNull());
-  mParentProxy.reset(const_cast<IDispatchHolder&>(aParentCOMProxy).Release());
-  SetConstructedInParentProcess();
-
-  for (uint32_t i = 0, l = mDeferredEvents.Length(); i < l; ++i) {
-    mDeferredEvents[i]->Dispatch();
-  }
-
-  mDeferredEvents.Clear();
-
-  return IPC_OK();
-}
-
-ipc::IPCResult DocAccessibleChild::RecvEmulatedWindow(
-    const WindowsHandle& aEmulatedWindowHandle,
-    const IDispatchHolder& aEmulatedWindowCOMProxy) {
-  mEmulatedWindowHandle = reinterpret_cast<HWND>(aEmulatedWindowHandle);
-  if (!aEmulatedWindowCOMProxy.IsNull()) {
-    MOZ_ASSERT(!mEmulatedWindowProxy);
-    mEmulatedWindowProxy.reset(
-        const_cast<IDispatchHolder&>(aEmulatedWindowCOMProxy).Release());
-  }
-
-  return IPC_OK();
-}
-
-ipc::IPCResult DocAccessibleChild::RecvTopLevelDocCOMProxy(
-    const IAccessibleHolder& aCOMProxy) {
-  MOZ_ASSERT(!aCOMProxy.IsNull());
-  mTopLevelDocProxy.reset(const_cast<IAccessibleHolder&>(aCOMProxy).Release());
-  return IPC_OK();
-}
-
-HWND DocAccessibleChild::GetNativeWindowHandle() const {
-  if (mEmulatedWindowHandle) {
-    return mEmulatedWindowHandle;
-  }
-
-  auto browser = static_cast<dom::BrowserChild*>(Manager());
-  MOZ_ASSERT(browser);
-  // Iframe documents use the same window handle as their top level document.
-  auto topDoc = static_cast<DocAccessibleChild*>(
-      browser->GetTopLevelDocAccessibleChild());
-  MOZ_ASSERT(topDoc);
-  if (topDoc != this && topDoc->mEmulatedWindowHandle) {
-    return topDoc->mEmulatedWindowHandle;
-  }
-
-  return reinterpret_cast<HWND>(browser->GetNativeWindowHandle());
 }
 
 void DocAccessibleChild::PushDeferredEvent(UniquePtr<DeferredEvent> aEvent) {
@@ -283,15 +230,14 @@ bool DocAccessibleChild::SendScrollingEvent(const uint64_t& aID,
 }
 
 bool DocAccessibleChild::ConstructChildDocInParentProcess(
-    DocAccessibleChild* aNewChildDoc, uint64_t aUniqueID, uint32_t aMsaaID) {
+    DocAccessibleChild* aNewChildDoc, uint64_t aUniqueID) {
   if (IsConstructedInParentProcess()) {
     // We may send the constructor immediately
     auto browserChild = static_cast<dom::BrowserChild*>(Manager());
     MOZ_ASSERT(browserChild);
     bool result = browserChild->SendPDocAccessibleConstructor(
         aNewChildDoc, this, aUniqueID,
-        aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext(), aMsaaID,
-        IAccessibleHolder());
+        aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext());
     if (result) {
       aNewChildDoc->SetConstructedInParentProcess();
     }
@@ -300,7 +246,7 @@ bool DocAccessibleChild::ConstructChildDocInParentProcess(
 
   PushDeferredEvent(MakeUnique<SerializedChildDocConstructor>(
       aNewChildDoc, this, aUniqueID,
-      aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext(), aMsaaID));
+      aNewChildDoc->mDoc->DocumentNode()->GetBrowsingContext()));
   return true;
 }
 

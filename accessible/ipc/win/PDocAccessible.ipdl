@@ -11,8 +11,6 @@ include DocAccessibleTypes;
 include "mozilla/GfxMessageUtils.h";
 
 using mozilla::a11y::role from "mozilla/a11y/IPCTypes.h";
-using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
-using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::AccGenericType from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::CacheUpdateType from "mozilla/a11y/IPCTypes.h";
@@ -27,7 +25,6 @@ namespace a11y {
 struct AccessibleData
 {
   uint64_t ID;
-  int32_t MsaaID;
   role Role;
   uint32_t ChildrenCount;
   AccType Type;
@@ -113,19 +110,6 @@ parent:
   async AccessiblesWillMove(uint64_t[] aIDs);
 
 child:
-  /**
-   * We use IDispatchHolder instead of IAccessibleHolder for the following two
-   * methods because of sandboxing. IAccessible::get_accParent returns the parent
-   * as an IDispatch. COM is not smart enough to understand that IAccessible is
-   * derived from IDispatch, so during marshaling it attempts to QueryInterface
-   * on the parent's proxy for IDispatch. This will fail with E_ACCESSDENIED
-   * thanks to the sandbox. We can avoid this entirely by just giving content
-   * the correct interface to begin with: IDispatch.
-   */
-  async ParentCOMProxy(IDispatchHolder aParentCOMProxy);
-  async EmulatedWindow(WindowsHandle aEmulatedWindowHandle,
-                       IDispatchHolder aEmulatedWindowCOMProxy);
-  async TopLevelDocCOMProxy(IAccessibleHolder aCOMProxy);
   /*
    * Called as a result of focus shifting from chrome to content
    * elements through keyboard navigation.

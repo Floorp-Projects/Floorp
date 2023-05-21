@@ -52,14 +52,7 @@ void DocAccessibleWrap::Shutdown() {
 // DocAccessible public
 
 void* DocAccessibleWrap::GetNativeWindow() const {
-  if (XRE_IsContentProcess()) {
-    DocAccessibleChild* ipcDoc = IPCDoc();
-    if (!ipcDoc) {
-      return nullptr;
-    }
-
-    return ipcDoc->GetNativeWindowHandle();
-  } else if (mHWND) {
+  if (mHWND) {
     return mHWND;
   }
   return DocAccessible::GetNativeWindow();
