@@ -3046,7 +3046,8 @@ void nsLineLayout::ExpandInlineRubyBoxes(PerSpanData* aSpan) {
   }
 }
 
-nscoord nsLineLayout::GetHangFrom(const PerSpanData* aSpan, bool aLineIsRTL) {
+nscoord nsLineLayout::GetHangFrom(const PerSpanData* aSpan,
+                                  bool aLineIsRTL) const {
   const PerFrameData* pfd = aSpan->mLastFrame;
   nscoord result = 0;
   while (pfd) {
@@ -3079,6 +3080,36 @@ nscoord nsLineLayout::GetHangFrom(const PerSpanData* aSpan, bool aLineIsRTL) {
   return result;
 }
 
+gfxTextRun::TrimmableWS nsLineLayout::GetTrimFrom(const PerSpanData* aSpan,
+                                                  bool aLineIsRTL) const {
+  const PerFrameData* pfd = aSpan->mLastFrame;
+  while (pfd) {
+    if (const PerSpanData* childSpan = pfd->mSpan) {
+      return GetTrimFrom(childSpan, aLineIsRTL);
+    }
+    if (pfd->mIsTextFrame) {
+      auto* lastText = static_cast<nsTextFrame*>(pfd->mFrame);
+      auto result = lastText->GetTrimmableWS();
+      if (result.mAdvance) {
+        lastText->EnsureTextRun(nsTextFrame::eInflated);
+        auto* textRun = lastText->GetTextRun(nsTextFrame::eInflated);
+        if (textRun && textRun->IsRightToLeft() != aLineIsRTL) {
+          result.mAdvance = -result.mAdvance;
+        }
+      }
+      return result;
+    }
+    if (!pfd->mSkipWhenTrimmingWhitespace) {
+      // If we hit a frame on the end that's not text and not a placeholder or
+      // <br>, then there is no trailing whitespace to trim. Stop the search.
+      return gfxTextRun::TrimmableWS{};
+    }
+    // Scan back for a preceding frame whose whitespace we can trim.
+    pfd = pfd->mPrev;
+  }
+  return gfxTextRun::TrimmableWS{};
+}
+
 // Align inline frames within the line according to the CSS text-align
 // property.
 void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
@@ -3106,8 +3137,15 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
 
   // Check if there's trailing whitespace we need to "hang" at line-wrap.
   nscoord hang = 0;
+  uint32_t trimCount = 0;
   if (aLine->IsLineWrapped()) {
-    hang = GetHangFrom(mRootSpan, lineWM.IsBidiRTL());
+    if (textAlign == StyleTextAlign::Justify) {
+      auto trim = GetTrimFrom(mRootSpan, lineWM.IsBidiRTL());
+      hang = NSToCoordRound(trim.mAdvance);
+      trimCount = trim.mCount;
+    } else {
+      hang = GetHangFrom(mRootSpan, lineWM.IsBidiRTL());
+    }
   }
 
   bool isSVG = LineContainerFrame()->IsInSVGTextSubtree();
@@ -3144,9 +3182,11 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
     switch (textAlign) {
       case StyleTextAlign::Justify: {
         int32_t opportunities =
-            psd->mFrame->mJustificationInfo.mInnerOpportunities;
+            psd->mFrame->mJustificationInfo.mInnerOpportunities -
+            (hang ? trimCount : 0);
         if (opportunities > 0) {
           int32_t gaps = opportunities * 2 + additionalGaps;
+          remainingISize += std::abs(hang);
           JustificationApplicationState applyState(gaps, remainingISize);
 
           // Apply the justification, and make sure to update our linebox
@@ -3154,11 +3194,29 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
           aLine->ExpandBy(ApplyFrameJustification(psd, applyState),
                           ContainerSizeForSpan(psd));
 
-          MOZ_ASSERT(applyState.mGaps.mHandled == applyState.mGaps.mCount,
+          // If the trimmable trailing whitespace that we want to hang had
+          // reverse-inline directionality, adjust line position to account for
+          // it being at the inline-start side.
+          // On top of the original "hang" amount, justification will have
+          // modified its width, so we include that adjustment here.
+          if (hang < 0) {
+            dx = hang - trimCount * remainingISize / opportunities;
+          }
+
+          // Gaps that belong to trimmed whitespace were not included in the
+          // applyState count, so we need to add them here for the assert.
+          DebugOnly<int32_t> trimmedGaps = hang ? trimCount * 2 : 0;
+          MOZ_ASSERT(applyState.mGaps.mHandled ==
+                         applyState.mGaps.mCount + trimmedGaps,
                      "Unprocessed justification gaps");
-          NS_ASSERTION(
-              applyState.mWidth.mConsumed == applyState.mWidth.mAvailable,
-              "Unprocessed justification width");
+          // Similarly, account for the adjustment applied to the trimmed
+          // whitespace, which is in addition to the adjustment that applies
+          // within the actual width of the line.
+          DebugOnly<int32_t> trimmedAdjustment =
+              trimCount * remainingISize / opportunities;
+          NS_ASSERTION(applyState.mWidth.mConsumed ==
+                           applyState.mWidth.mAvailable + trimmedAdjustment,
+                       "Unprocessed justification width");
           break;
         }
         // Fall through to the default case if we could not justify to fill
