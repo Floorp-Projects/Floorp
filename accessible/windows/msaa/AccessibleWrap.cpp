@@ -8,7 +8,6 @@
 
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "AccEvent.h"
-#include "GeckoCustom.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIWidget.h"
@@ -19,18 +18,12 @@
 #include "sdnAccessible.h"
 #include "LocalAccessible-inl.h"
 
-#include "mozilla/mscom/AsyncInvoker.h"
-#include "nsAccessibilityService.h"
-
 using namespace mozilla;
 using namespace mozilla::a11y;
 
 /* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
-
-StaticAutoPtr<nsTArray<AccessibleWrap::HandlerControllerData>>
-    AccessibleWrap::sHandlerControllers;
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccessibleWrap
@@ -160,131 +153,4 @@ void AccessibleWrap::UpdateSystemCaretFor(
     ::SetCaretPos(aCaretRect.X() - windowRect.left,
                   aCaretRect.Y() - windowRect.top);
   }
-}
-
-/* static */
-void AccessibleWrap::SetHandlerControl(DWORD aPid,
-                                       RefPtr<IHandlerControl> aCtrl) {
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  if (!sHandlerControllers) {
-    sHandlerControllers = new nsTArray<HandlerControllerData>();
-    ClearOnShutdown(&sHandlerControllers);
-  }
-
-  HandlerControllerData ctrlData(aPid, std::move(aCtrl));
-  if (sHandlerControllers->Contains(ctrlData)) {
-    return;
-  }
-
-  sHandlerControllers->AppendElement(std::move(ctrlData));
-}
-
-/* static */
-void AccessibleWrap::InvalidateHandlers() {
-  static const HRESULT kErrorServerDied =
-      HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE);
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
-    return;
-  }
-
-  // We iterate in reverse so that we may safely remove defunct elements while
-  // executing the loop.
-  for (auto& controller : Reversed(*sHandlerControllers)) {
-    MOZ_ASSERT(controller.mPid);
-    MOZ_ASSERT(controller.mCtrl);
-
-    ASYNC_INVOKER_FOR(IHandlerControl)
-    invoker(controller.mCtrl, Some(controller.mIsProxy));
-
-    HRESULT hr = ASYNC_INVOKE(invoker, Invalidate);
-
-    if (hr == CO_E_OBJNOTCONNECTED || hr == kErrorServerDied) {
-      sHandlerControllers->RemoveElement(controller);
-    } else {
-      Unused << NS_WARN_IF(FAILED(hr));
-    }
-  }
-}
-
-/* static */
-bool AccessibleWrap::DispatchTextChangeToHandler(Accessible* aAcc,
-                                                 bool aIsInsert,
-                                                 const nsAString& aText,
-                                                 int32_t aStart,
-                                                 uint32_t aLen) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!a11y::IsCacheActive());
-
-  if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
-    return false;
-  }
-
-  HWND hwnd = MsaaAccessible::GetHWNDFor(aAcc);
-  MOZ_ASSERT(hwnd);
-  if (!hwnd) {
-    return false;
-  }
-
-  long msaaId = MsaaAccessible::GetChildIDFor(aAcc);
-
-  DWORD ourPid = ::GetCurrentProcessId();
-
-  // The handler ends up calling NotifyWinEvent, which should only be done once
-  // since it broadcasts the same event to every process who is subscribed.
-  // OTOH, if our chrome process contains a handler, we should prefer to
-  // broadcast the event from that process, as we want any DLLs injected by ATs
-  // to receive the event synchronously. Otherwise we simply choose the first
-  // handler in the list, for the lack of a better heuristic.
-
-  nsTArray<HandlerControllerData>::index_type ctrlIndex =
-      sHandlerControllers->IndexOf(ourPid);
-
-  if (ctrlIndex == nsTArray<HandlerControllerData>::NoIndex) {
-    ctrlIndex = 0;
-  }
-
-  HandlerControllerData& controller = sHandlerControllers->ElementAt(ctrlIndex);
-  MOZ_ASSERT(controller.mPid);
-  MOZ_ASSERT(controller.mCtrl);
-
-  VARIANT_BOOL isInsert = aIsInsert ? VARIANT_TRUE : VARIANT_FALSE;
-
-  IA2TextSegment textSegment{
-      ::SysAllocStringLen(
-          reinterpret_cast<const wchar_t*>(aText.BeginReading()),
-          aText.Length()),
-      aStart, aStart + static_cast<long>(aLen)};
-
-  ASYNC_INVOKER_FOR(IHandlerControl)
-  invoker(controller.mCtrl, Some(controller.mIsProxy));
-
-  HRESULT hr = ASYNC_INVOKE(invoker, OnTextChange, PtrToLong(hwnd), msaaId,
-                            isInsert, &textSegment);
-
-  ::SysFreeString(textSegment.text);
-
-  return SUCCEEDED(hr);
-}
-
-/* static */
-void AccessibleWrap::SuppressHandlerA11yForClipboardCopy() {
-  if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
-    return;
-  }
-  // The original intent was that AccessibleHandler would be used in any
-  // process that wanted to access Gecko a11y. That didn't work out for various
-  // reasons. In practice, there is only a single AccessibleHandlerControl which
-  // is for our own parent process, used for in-process client calls. That also
-  // means we don't need to worry about async invokation here.
-  auto& controller = sHandlerControllers->ElementAt(0);
-  MOZ_ASSERT(controller.mPid == ::GetCurrentProcessId() &&
-             !controller.mIsProxy);
-  DebugOnly<HRESULT> hr = controller.mCtrl->SuppressA11yForClipboardCopy();
-  MOZ_ASSERT(SUCCEEDED(hr));
 }

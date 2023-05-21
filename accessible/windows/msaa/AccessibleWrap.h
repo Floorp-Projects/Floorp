@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "LocalAccessible.h"
 #include "MsaaAccessible.h"
-#include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
@@ -63,44 +62,10 @@ class AccessibleWrap : public LocalAccessible {
   MsaaAccessible* GetMsaa();
   virtual void GetNativeInterface(void** aOutAccessible) override;
 
-  static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);
-
-  static void InvalidateHandlers();
-
-  static bool DispatchTextChangeToHandler(Accessible* aAcc, bool aIsInsert,
-                                          const nsAString& aText,
-                                          int32_t aStart, uint32_t aLen);
-
-  static void SuppressHandlerA11yForClipboardCopy();
-
  protected:
   virtual ~AccessibleWrap() = default;
 
   RefPtr<MsaaAccessible> mMsaa;
-
-  struct HandlerControllerData final {
-    HandlerControllerData(DWORD aPid, RefPtr<IHandlerControl>&& aCtrl)
-        : mPid(aPid), mCtrl(std::move(aCtrl)) {
-      mIsProxy = mozilla::mscom::IsProxy(mCtrl);
-    }
-
-    HandlerControllerData(HandlerControllerData&& aOther)
-        : mPid(aOther.mPid),
-          mIsProxy(aOther.mIsProxy),
-          mCtrl(std::move(aOther.mCtrl)) {}
-
-    bool operator==(const HandlerControllerData& aOther) const {
-      return mPid == aOther.mPid;
-    }
-
-    bool operator==(const DWORD& aPid) const { return mPid == aPid; }
-
-    DWORD mPid;
-    bool mIsProxy;
-    RefPtr<IHandlerControl> mCtrl;
-  };
-
-  static StaticAutoPtr<nsTArray<HandlerControllerData>> sHandlerControllers;
 };
 
 }  // namespace a11y
