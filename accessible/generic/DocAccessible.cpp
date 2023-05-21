@@ -1637,13 +1637,6 @@ void DocAccessible::DoInitialUpdate() {
           ipcDoc->SendPDocAccessiblePlatformExtConstructor();
 #endif
         }
-#if !defined(XP_WIN)
-        // It's safe for us to mark top level documents as constructed in the
-        // parent process without receiving an explicit message, since we can
-        // never get queries for this document or descendants before parent
-        // process construction is complete.
-        ipcDoc->SetConstructedInParentProcess();
-#endif
       }
     }
   }

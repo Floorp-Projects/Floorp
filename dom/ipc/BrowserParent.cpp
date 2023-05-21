@@ -1189,8 +1189,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
       doc->SetEmulatedWindowHandle(parentDoc->GetEmulatedWindowHandle());
     }
-#  else
-    Unused << aDoc->SendConstructedInParentProcess();
 #  endif
 
     return IPC_OK();

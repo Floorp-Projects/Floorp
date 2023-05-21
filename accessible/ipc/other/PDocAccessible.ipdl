@@ -125,12 +125,6 @@ parent:
   async AccessiblesWillMove(uint64_t[] aIDs);
 
 child:
-  /*
-   * Notify the content process that the PDocAccessible has finished being
-   * constructed in the parent process.
-   */
-  async ConstructedInParentProcess();
-
   async __delete__();
 
   /*

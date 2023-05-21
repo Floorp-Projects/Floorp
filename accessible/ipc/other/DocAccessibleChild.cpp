@@ -162,11 +162,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvURLDocTypeMimeType(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvConstructedInParentProcess() {
-  SetConstructedInParentProcess();
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
   if (FocusManager* focusMgr = FocusMgr()) {
     focusMgr->ForceFocusEvent();
