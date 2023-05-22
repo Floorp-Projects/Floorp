@@ -1312,7 +1312,6 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
   int32_t transaction = nest ? stackTop->TransactionID() : seqno;
   aMsg->set_transaction_id(transaction);
 
-  bool handleWindowsMessages = mListener->HandleWindowsMessages(*aMsg.get());
   AutoEnterTransaction transact(this, seqno, transaction, nestedLevel);
 
   IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
@@ -1340,7 +1339,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
     MOZ_RELEASE_ASSERT(!transact.IsComplete());
     MOZ_RELEASE_ASSERT(mTransactionStack == &transact);
 
-    bool maybeTimedOut = !WaitForSyncNotify(handleWindowsMessages);
+    bool maybeTimedOut = !WaitForSyncNotify();
 
     if (mListener->NeedArtificialSleep()) {
       MonitorAutoUnlock unlock(*mMonitor);
@@ -1828,7 +1827,7 @@ bool MessageChannel::WaitResponse(bool aWaitTimedOut) {
 }
 
 #ifndef OS_WIN
-bool MessageChannel::WaitForSyncNotify(bool /* aHandleWindowsMessages */) {
+bool MessageChannel::WaitForSyncNotify() {
   AssertWorkerThread();
 #  ifdef DEBUG
   // WARNING: We don't release the lock here. We can't because the link

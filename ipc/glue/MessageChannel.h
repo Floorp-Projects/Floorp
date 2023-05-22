@@ -405,7 +405,7 @@ class MessageChannel : HasResultCodes {
   //
   // So in sum: true is a meaningful return value; false isn't,
   // necessarily.
-  bool WaitForSyncNotify(bool aHandleWindowsMessages) MOZ_REQUIRES(*mMonitor);
+  bool WaitForSyncNotify() MOZ_REQUIRES(*mMonitor);
 
   bool WaitResponse(bool aWaitTimedOut);
 
