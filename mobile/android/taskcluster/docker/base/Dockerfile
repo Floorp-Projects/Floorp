@@ -35,8 +35,6 @@ RUN apt-get update -qq \
                           expect \
                           git \
                           curl \
-                          python \
-                          python-pip \
                           python3 \
                           python3-pip \
                           python3-yaml \

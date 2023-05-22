@@ -23,9 +23,8 @@ RUN apt-get update -qq \
     && apt-get install -y openjdk-11-jdk \
                           git \
                           curl \
-                          python \
-                          python-pip \
                           python3 \
+                          python-pip3 \
                           locales \
                           unzip \
 			  mercurial \
