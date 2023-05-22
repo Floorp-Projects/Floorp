@@ -18,6 +18,7 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('audio', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.5;
   assert_equals(receiver.playoutDelay, 0.5);
 }, 'audio playoutDelay accepts posititve values');
@@ -26,16 +27,21 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('audio', {direction:'recvonly'});
-  receiver.playoutDelay = 20.5;
-  assert_equals(receiver.playoutDelay, 20.5);
-}, 'audio playoutDelay accepts large positive values');
+  assert_equals(receiver.playoutDelay, null);
+  receiver.playoutDelay = 4.0;
+  assert_throws_js(RangeError, () => {
+    receiver.playoutDelay = 4.001;
+  }, 'audio playoutDelay doesn\'t accept values greater than 4 seconds');
+  assert_equals(receiver.playoutDelay, 4.0);
+}, 'audio playoutDelay accepts values up to 4 seconds');
 
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('audio', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.7
-  assert_throws_js(TypeError, () => {
+  assert_throws_js(RangeError, () => {
     receiver.playoutDelay = -0.5;
   }, 'audio playoutDelay doesn\'t accept negative values');
   assert_equals(receiver.playoutDelay, 0.7);
@@ -45,6 +51,7 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('audio', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.0;
   assert_equals(receiver.playoutDelay, 0.0);
 }, 'audio playoutDelay allows zero value');
@@ -53,7 +60,9 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('audio', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.5;
+  assert_equals(receiver.playoutDelay, 0.5);
   receiver.playoutDelay = null;
   assert_equals(receiver.playoutDelay, null);
 }, 'audio playoutDelay allows to reset value to null');
@@ -69,6 +78,7 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('video', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.5;
   assert_equals(receiver.playoutDelay, 0.5);
 }, 'video playoutDelay accepts posititve values');
@@ -77,16 +87,21 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('video', {direction:'recvonly'});
-  receiver.playoutDelay = 20.5;
-  assert_equals(receiver.playoutDelay, 20.5);
-}, 'video playoutDelay accepts large posititve values');
+  assert_equals(receiver.playoutDelay, null);
+  receiver.playoutDelay = 4.0;
+  assert_throws_js(RangeError, () => {
+    receiver.playoutDelay = 4.001;
+  }, 'video playoutDelay doesn\'t accept values greater than 4 seconds');
+  assert_equals(receiver.playoutDelay, 4.0);
+}, 'video playoutDelay accepts values up to 4 seconds');
 
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('video', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.7
-  assert_throws_js(TypeError, () => {
+  assert_throws_js(RangeError, () => {
     receiver.playoutDelay = -0.5;
   }, 'video playoutDelay doesn\'t accept negative values');
   assert_equals(receiver.playoutDelay, 0.7);
@@ -96,6 +111,7 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('video', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.0;
   assert_equals(receiver.playoutDelay, 0.0);
 }, 'video playoutDelay allows zero value');
@@ -104,7 +120,9 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   const {receiver} = pc.addTransceiver('video', {direction:'recvonly'});
+  assert_equals(receiver.playoutDelay, null);
   receiver.playoutDelay = 0.5;
+  assert_equals(receiver.playoutDelay, 0.5);
   receiver.playoutDelay = null;
   assert_equals(receiver.playoutDelay, null);
 }, 'video playoutDelay allows to reset value to null');
