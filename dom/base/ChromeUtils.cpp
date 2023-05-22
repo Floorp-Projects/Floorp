@@ -52,6 +52,7 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "mozilla/WheelHandlingHelper.h"
 #include "IOActivityMonitor.h"
 #include "nsNativeTheme.h"
 #include "nsThreadUtils.h"
@@ -1694,6 +1695,15 @@ double ChromeUtils::LastExternalProtocolIframeAllowed(GlobalObject& aGlobal) {
 void ChromeUtils::ResetLastExternalProtocolIframeAllowed(
     GlobalObject& aGlobal) {
   PopupBlocker::ResetLastExternalProtocolIframeAllowed();
+}
+
+/* static */
+void ChromeUtils::EndWheelTransaction(GlobalObject& aGlobal) {
+  // This allows us to end the current wheel transaction from the browser
+  // chrome. We do not need to perform any checks before calling
+  // EndTransaction(), as it should do nothing in the case that there is
+  // no current wheel transaction.
+  WheelTransaction::EndTransaction();
 }
 
 /* static */

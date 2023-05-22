@@ -251,6 +251,8 @@ class ChromeUtils {
 
   static void ResetLastExternalProtocolIframeAllowed(GlobalObject& aGlobal);
 
+  static void EndWheelTransaction(GlobalObject& aGlobal);
+
   static void RegisterWindowActor(const GlobalObject& aGlobal,
                                   const nsACString& aName,
                                   const WindowActorOptions& aOptions,
