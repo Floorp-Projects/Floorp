@@ -33,6 +33,7 @@ if CONFIG['MOZ_WAYLAND']:
   UNIFIED_SOURCES += [
     '../FFmpegVideoFramePool.cpp',
   ]
+  LOCAL_INCLUDES += ["/third_party/drm/drm/include/libdrm/"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
