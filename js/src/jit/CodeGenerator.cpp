@@ -46,6 +46,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
 #include "jit/RangeAnalysis.h"
+#include "jit/RegExpStubConstants.h"
 #include "jit/SafepointIndex.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
@@ -1774,13 +1775,6 @@ void CodeGenerator::visitRegExp(LRegExp* lir) {
   masm.bind(ool->rejoin());
 }
 
-static constexpr size_t InputOutputDataSize = sizeof(irregexp::InputOutputData);
-
-// Amount of space to reserve on the stack when executing RegExps inline.
-static constexpr size_t RegExpReservedStack =
-    InputOutputDataSize + sizeof(MatchPairs) +
-    RegExpObject::MaxPairCount * sizeof(MatchPair);
-
 static constexpr int32_t RegExpPairsVectorStartOffset(
     int32_t inputOutputDataStartOffset) {
   return inputOutputDataStartOffset + int32_t(InputOutputDataSize) +
@@ -2966,9 +2960,6 @@ void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
   masm.freeStack(RegExpReservedStack);
 }
 
-static const int32_t RegExpSearcherResultNotFound = -1;
-static const int32_t RegExpSearcherResultFailed = -2;
-
 JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting RegExpSearcher stub");
 
@@ -3149,8 +3140,6 @@ void CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir) {
 
   masm.freeStack(RegExpReservedStack);
 }
-
-static const int32_t RegExpExecTestResultFailed = -1;
 
 JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting RegExpExecTest stub");
