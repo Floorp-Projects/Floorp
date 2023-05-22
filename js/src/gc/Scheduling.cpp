@@ -69,7 +69,6 @@ GCSchedulingTunables::GCSchedulingTunables()
       nurseryTimeoutForIdleCollection_(TimeDuration::FromMilliseconds(
           TuningDefaults::NurseryTimeoutForIdleCollectionMS)),
       pretenureThreshold_(TuningDefaults::PretenureThreshold),
-      pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold),
       pretenureStringThreshold_(TuningDefaults::PretenureStringThreshold),
       stopPretenureStringThreshold_(
           TuningDefaults::StopPretenureStringThreshold),
@@ -207,12 +206,6 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       pretenureThreshold_ = value / 100.0;
       break;
     }
-    case JSGC_PRETENURE_GROUP_THRESHOLD:
-      if (value <= 0) {
-        return false;
-      }
-      pretenureGroupThreshold_ = value;
-      break;
     case JSGC_PRETENURE_STRING_THRESHOLD:
       // 100 disables pretenuring
       if (value == 0 || value > 100) {
@@ -399,9 +392,6 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
       break;
     case JSGC_PRETENURE_THRESHOLD:
       pretenureThreshold_ = TuningDefaults::PretenureThreshold;
-      break;
-    case JSGC_PRETENURE_GROUP_THRESHOLD:
-      pretenureGroupThreshold_ = TuningDefaults::PretenureGroupThreshold;
       break;
     case JSGC_PRETENURE_STRING_THRESHOLD:
       pretenureStringThreshold_ = TuningDefaults::PretenureStringThreshold;
