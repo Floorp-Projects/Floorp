@@ -11,11 +11,6 @@
 # - ping: A boolean that indicates whether the annotation is allowlisted for
 #   going into the crash ping, if not specified this defaults to false
 
-A11yHandlerRegistered:
-  description: >
-    Set to "true" if the accessibility handler is registered, "false" otherwise.
-  type: string
-
 AbortMessage:
   description: >
     Message passed to NS_DebugBreak().
@@ -36,11 +31,6 @@ AccessibilityInProcClient:
     Hexadecimal mask of in-process accessibility consumers, see
     accessible/windows/msaa/Compatibility.h for the mappings.
   type: string
-
-ActualStreamLen:
-  description: >
-    Actual length of an IPC proxy stream.
-  type: integer
 
 AdapterDeviceID:
   description: >
@@ -301,11 +291,6 @@ EventLoopNestingLevel:
     event loop and indicates the nesting level.
   type: integer
   ping: true
-
-ExpectedStreamLen:
-  description: >
-    Expected length of an IPC proxy stream.
-  type: integer
 
 ExperimentalFeatures:
   description: >
@@ -663,11 +648,6 @@ MainThreadRunnableName:
   type: string
   ping: true
 
-MarshalActCtxManifestPath:
-  description: >
-    Proxy stream marshalling current activation context manifest path.
-  type: string
-
 MozCrashReason:
   description: >
     Plaintext description of why Firefox crashed, this is usually set by
@@ -967,16 +947,6 @@ UnknownNetAddrSocketFamily:
     An unknown network address family was requested to Necko. The value is the
     requested family number.
   type: integer
-
-UnmarshalActCtx:
-  description: >
-    Proxy stream unmarshalling current activation context.
-  type: string
-
-UnmarshalActCtxManifestPath:
-  description: >
-    Proxy stream unmarshalling current activation context manifest path.
-  type: string
 
 UptimeTS:
   description: >

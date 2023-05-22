@@ -59,11 +59,6 @@ bool ShouldA11yBeEnabled();
 
 #if defined(XP_WIN)
 /*
- * Do we have AccessibleHandler.dll registered.
- */
-bool IsHandlerRegistered();
-
-/*
  * Name of platform service that instantiated accessibility
  */
 void SetInstantiator(const uint32_t aInstantiatorPid);

@@ -4,20 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GeckoSharedLibrary("IA2Marshal", linkage=None)
-
-DEFINES["REGISTER_PROXY_DLL"] = True
-
-DEFFILE = "IA2Marshal.def"
-
-OS_LIBS += [
-    "uuid",
-    "kernel32",
-    "rpcrt4",
-    "ole32",
-    "oleaut32",
-]
-
 midl_enums = [
     "AccessibleEventId",
     "AccessibleRole",
@@ -90,42 +76,3 @@ for iface in midl_interfaces:
             SOURCES["!%s" % p].flags += [
                 "-DUserMarshalRoutines=UserMarshalRoutines__%s" % p[:-2]
             ]
-
-# Warning: the build system doesn't know about the dependency of IA2Marshal.rc on
-# IA2Typelib.tlb. We rely on the IA2Typelib.h output forcing the command to run
-# during export, before rc files are treated during compile.
-GeneratedFile(
-    "IA2Typelib.h",
-    "IA2Typelib_i.c",
-    "IA2Typelib.tlb",
-    inputs=["IA2Typelib.idl"],
-    script="/build/midl.py",
-    entry_point="midl",
-    flags=[
-        "-app_config",
-        "-I",
-        TOPSRCDIR + "/other-licenses/ia2",
-        "-D",
-        "_MIDL_DECLARE_WIREM_HANDLE",
-    ],
-)
-
-GeneratedFile(
-    "dlldata.c",
-    inputs=["!" + iface + "_dlldata.c" for iface in midl_interfaces],
-    script="/build/midl.py",
-    entry_point="merge_dlldata",
-)
-
-SOURCES += ["!dlldata.c"]
-
-RCINCLUDE = "IA2Marshal.rc"
-
-# Suppress warnings from the MIDL generated code.
-if CONFIG["CC_TYPE"] == "clang-cl":
-    CFLAGS += [
-        "-Wno-extern-initializer",
-        "-Wno-incompatible-pointer-types",
-        "-Wno-missing-braces",
-        "-Wno-unused-const-variable",
-    ]
