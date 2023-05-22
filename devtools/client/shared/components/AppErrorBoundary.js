@@ -119,8 +119,11 @@ class AppErrorBoundary extends Component {
   getBugLink() {
     const compStack = this.getValidInfo(this.state.errorInfo).componentStack;
     const errorMsg = this.state.errorMsg;
-    const msg = (errorMsg + compStack).replace(/\n/gi, "%0A");
-    return `${bugLink}${this.props.componentName}&comment=${msg}`;
+    const errorStack = this.state.errorStack;
+    const msg = `Error: \n${errorMsg}\n\nReact Component Stack: ${compStack}\n\nStacktrace: \n${errorStack}`;
+    return `${bugLink}${this.props.componentName}&comment=${encodeURIComponent(
+      msg
+    )}`;
   }
 
   render() {
