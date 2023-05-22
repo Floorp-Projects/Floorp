@@ -783,12 +783,6 @@ casts for serialization and parsing).
 """
 
 [[audits.cssparser]]
-who = "Emilio Cobos Álvarez <emilio@crisal.io>"
-criteria = "safe-to-deploy"
-version = "0.31.0@git:6ce91afdf292c4290118843e7421e146f0a4c48b"
-notes = "Local changes authored by me that aren't published yet."
-
-[[audits.cssparser]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.29.6 -> 0.31.0"
@@ -796,6 +790,12 @@ notes = """
 All the changes in this release were authored by Mozilla staff, except the
 uninit_array stuff, which looks fine.
 """
+
+[[audits.cssparser]]
+who = "Tiaan Louw <tlouw@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.31.0 -> 0.31.0@git:8a24b1118747dc76c9ba3a9c88bd2456516c598d"
+notes = "To use unpublished changes."
 
 [[audits.cssparser-macros]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
@@ -807,10 +807,9 @@ to a match expression.
 """
 
 [[audits.cssparser-macros]]
-who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+who = "Tiaan Louw <tlouw@mozilla.com>"
 criteria = "safe-to-deploy"
-version = "0.6.0@git:6ce91afdf292c4290118843e7421e146f0a4c48b"
-notes = "We are pulling this package from a non crates.io source until the changes are published. No changes were made to the code."
+delta = "0.6.0 -> 0.6.0@git:8a24b1118747dc76c9ba3a9c88bd2456516c598d"
 
 [[audits.cstr]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
