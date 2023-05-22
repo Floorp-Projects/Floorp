@@ -334,6 +334,29 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Updates the checked states of the settings menu checkboxes that
+   * pertain to languages.
+   */
+  async #updateSettingsMenuLanguageCheckboxStates() {
+    const docLangTag = await this.#getDocLangTag();
+
+    const alwaysTranslateLanguage =
+      TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
+
+    const { panel } = this.elements;
+    const alwaysTranslateMenuItems = panel.querySelectorAll(
+      ".always-translate-language-menuitem"
+    );
+
+    for (const menuitem of alwaysTranslateMenuItems) {
+      menuitem.setAttribute(
+        "checked",
+        alwaysTranslateLanguage ? "true" : "false"
+      );
+    }
+  }
+
+  /**
    * Populates the language-related settings menuitems by adding the
    * localized display name of the document's detected language tag.
    */
@@ -363,6 +386,8 @@ var TranslationsPanel = new (class {
         language: docLangDisplayName,
       });
     }
+
+    await this.#updateSettingsMenuLanguageCheckboxStates();
   }
 
   /**
@@ -492,6 +517,7 @@ var TranslationsPanel = new (class {
    * A handler for opening the settings context menu.
    */
   openSettingsPopup(button) {
+    this.#updateSettingsMenuLanguageCheckboxStates();
     const popup = button.querySelector("menupopup");
     popup.openPopup(button);
   }
@@ -503,6 +529,17 @@ var TranslationsPanel = new (class {
     const window =
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.openTrustedLinkIn("about:preferences#general-translations", "tab");
+  }
+
+  /**
+   * Updates the always-translate-language menuitem prefs and checked state.
+   * If auto-translate is currently active for the doc language, deactivates it.
+   * If auto-translate is currently inactive for the doc language, activates it.
+   */
+  async onAlwaysTranslateLanguage() {
+    const docLangTag = await this.#getDocLangTag();
+    TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
+    await this.#updateSettingsMenuLanguageCheckboxStates();
   }
 
   /**
@@ -520,7 +557,7 @@ var TranslationsPanel = new (class {
    *
    * @param {CustomEvent} event
    */
-  handleEvent = event => {
+  handleEvent = async event => {
     switch (event.type) {
       case "TranslationsParent:LanguageState":
         const {
