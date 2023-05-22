@@ -142,7 +142,7 @@ use style::values::generics::easing::BeforeFlag;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::{AbsoluteLength, NoCalcLength};
-use style::values::{serialize_percentage, specified, AtomIdent, CustomIdent, KeyframesName};
+use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
 use style_traits::{CssWriter, ParseError, ParsingMode, ToCss};
 use thin_vec::ThinVec;
 use to_shmem::SharedMemoryBuilder;
@@ -7072,94 +7072,6 @@ pub unsafe extern "C" fn Servo_ComputeColor(
 
     let rgba = computed.resolve_to_absolute(&current_color);
     *result_color = style::gecko::values::convert_absolute_color_to_nscolor(&rgba);
-    true
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_ColorTo(
-    from_color: &nsACString,
-    to_color_space: &nsACString,
-    result_color: &mut nsACString,
-    result_components: &mut nsTArray<f32>,
-    result_adjusted: &mut bool,
-    loader: *mut Loader,
-) -> bool {
-    // Figure out the color space.
-    let mut input = ParserInput::new(to_color_space.as_str_unchecked());
-    let mut input = Parser::new(&mut input);
-    let to_color_space = match ColorSpace::parse(&mut input) {
-        Ok(color_space) => color_space,
-        Err(_) => {
-            // Can't parse the color space? Fail the conversion.
-            return false;
-        },
-    };
-
-    let mut input = ParserInput::new(from_color.as_str_unchecked());
-    let mut input = Parser::new(&mut input);
-
-    let reporter = loader.as_mut().and_then(|loader| {
-        // Make an ErrorReporter that will report errors as being "from DOM".
-        ErrorReporter::new(ptr::null_mut(), loader, ptr::null_mut())
-    });
-
-    let context = ParserContext::new(
-        Origin::Author,
-        dummy_url_data(),
-        Some(CssRuleType::Style),
-        ParsingMode::DEFAULT,
-        QuirksMode::NoQuirks,
-        /* namespaces = */ Default::default(),
-        reporter.as_ref().map(|e| e as &dyn ParseErrorReporter),
-        None,
-    );
-
-    let specified = match specified::Color::parse(&context, &mut input) {
-        Ok(color) => color,
-        Err(_) => return false,
-    };
-
-    let color = match specified {
-        specified::Color::Absolute(ref absolute) => &absolute.color,
-        _ => {
-            // Can't do anything with a non-absolute color from here, so we
-            // fail the conversion.
-            return false;
-        },
-    };
-
-    let color = color.to_color_space(to_color_space);
-
-    let mut writer = CssWriter::new(result_color);
-    match color.color_space {
-        ColorSpace::Hsl => {
-            writer.write_str("hsl(").unwrap();
-            style_traits::values::ToCss::to_css(&color.components.0, &mut writer).unwrap();
-            writer.write_char(' ').unwrap();
-            serialize_percentage(color.components.1, &mut writer).unwrap();
-            writer.write_char(' ').unwrap();
-            serialize_percentage(color.components.2, &mut writer).unwrap();
-            // cssparser::serialize_alpha(&mut writer, Some(color.alpha), false).unwrap();
-            writer.write_str(")").unwrap();
-        },
-        ColorSpace::Hwb => {
-            writer.write_str("hwb(").unwrap();
-            style_traits::values::ToCss::to_css(&color.components.0, &mut writer).unwrap();
-            writer.write_char(' ').unwrap();
-            serialize_percentage(color.components.1, &mut writer).unwrap();
-            writer.write_char(' ').unwrap();
-            serialize_percentage(color.components.2, &mut writer).unwrap();
-            // cssparser::serialize_alpha(&mut writer, Some(color.alpha), false).unwrap();
-            writer.write_str(")").unwrap();
-        },
-        _ => color.to_css(&mut writer).unwrap(),
-    }
-
-    result_components.assign_from_iter_pod(color.raw_components().iter().copied());
-
-    // For now we don't do gamut mapping, so always false.
-    *result_adjusted = false;
-
     true
 }
 

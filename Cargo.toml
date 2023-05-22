@@ -153,8 +153,8 @@ moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 rure = { path = "third_party/rust/rure" }
 
 # To-be-published changes.
-cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "8a24b1118747dc76c9ba3a9c88bd2456516c598d" }
-cssparser-macros = { git = "https://github.com/servo/rust-cssparser", rev = "8a24b1118747dc76c9ba3a9c88bd2456516c598d" }
+cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "6ce91afdf292c4290118843e7421e146f0a4c48b" }
+cssparser-macros = { git = "https://github.com/servo/rust-cssparser", rev = "6ce91afdf292c4290118843e7421e146f0a4c48b" }
 
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
