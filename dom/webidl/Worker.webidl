@@ -44,5 +44,5 @@ enum WorkerType { "classic", "module" };
  Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface ChromeWorker : Worker {
   [Throws]
-  constructor(USVString scriptURL);
+  constructor(USVString scriptURL, optional WorkerOptions options = {});
 };
