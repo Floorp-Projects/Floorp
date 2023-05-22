@@ -26,9 +26,10 @@ where
     }
 }
 
+/// Serialize the alpha copmonent of a color according to the specification.
 /// <https://drafts.csswg.org/css-color-4/#serializing-alpha-values>
 #[inline]
-fn serialize_alpha(
+pub fn serialize_color_alpha(
     dest: &mut impl fmt::Write,
     alpha: Option<f32>,
     legacy_syntax: bool,
@@ -146,7 +147,7 @@ impl ToCss for RGBA {
         self.blue.unwrap_or(0).to_css(dest)?;
 
         // Legacy syntax does not allow none components.
-        serialize_alpha(dest, Some(self.alpha.unwrap_or(0.0)), true)?;
+        serialize_color_alpha(dest, Some(self.alpha.unwrap_or(0.0)), true)?;
 
         dest.write_char(')')
     }
@@ -367,7 +368,7 @@ macro_rules! impl_lab_like {
                 serialize_none_or(dest, &self.a)?;
                 dest.write_char(' ')?;
                 serialize_none_or(dest, &self.b)?;
-                serialize_alpha(dest, self.alpha, false)?;
+                serialize_color_alpha(dest, self.alpha, false)?;
                 dest.write_char(')')
             }
         }
@@ -458,7 +459,7 @@ macro_rules! impl_lch_like {
                 serialize_none_or(dest, &self.chroma)?;
                 dest.write_char(' ')?;
                 serialize_none_or(dest, &self.hue)?;
-                serialize_alpha(dest, self.alpha, false)?;
+                serialize_color_alpha(dest, self.alpha, false)?;
                 dest.write_char(')')
             }
         }
@@ -584,7 +585,7 @@ impl ToCss for ColorFunction {
         dest.write_char(' ')?;
         serialize_none_or(dest, &self.c3)?;
 
-        serialize_alpha(dest, self.alpha, false)?;
+        serialize_color_alpha(dest, self.alpha, false)?;
 
         dest.write_char(')')
     }
