@@ -921,6 +921,8 @@ void WebrtcVideoConduit::CreateRecvStream() {
 
   mRecvStream =
       mCall->Call()->CreateVideoReceiveStream(mRecvStreamConfig.Copy());
+  // Ensure that we set the jitter buffer target on this stream.
+  mRecvStream->SetBaseMinimumPlayoutDelayMs(mJitterBufferTargetMs);
 
   CSFLogDebug(LOGTAG, "Created VideoReceiveStream %p for SSRC %u (0x%x)",
               mRecvStream, mRecvStreamConfig.rtp.remote_ssrc,
@@ -1740,6 +1742,20 @@ bool WebrtcVideoConduit::AddFrameHistory(
     return false;
   }
   return true;
+}
+
+void WebrtcVideoConduit::SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) {
+  MOZ_RELEASE_ASSERT(aTargetMs <= std::numeric_limits<uint16_t>::max());
+  MOZ_RELEASE_ASSERT(aTargetMs >= 0);
+
+  MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__,
+      [this, self = RefPtr<WebrtcVideoConduit>(this), targetMs = aTargetMs] {
+        mJitterBufferTargetMs = static_cast<uint16_t>(targetMs);
+        if (mRecvStream) {
+          mRecvStream->SetBaseMinimumPlayoutDelayMs(targetMs);
+        }
+      })));
 }
 
 void WebrtcVideoConduit::DumpCodecDB() const {

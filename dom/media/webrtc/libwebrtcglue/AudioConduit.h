@@ -113,6 +113,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   bool HasCodecPluginID(uint64_t aPluginID) const override { return false; }
 
+  void SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) override;
+
   void DeliverPacket(rtc::CopyOnWriteBuffer packet, PacketType type) override;
 
   RefPtr<GenericPromise> Shutdown() override;
@@ -236,6 +238,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Socket transport service thread. Any thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
+
+  // Target jitter buffer to be applied to the receive stream in milliseconds.
+  uint16_t mJitterBufferTargetMs = 0;
 
   struct Control {
     // Mirrors and events that map to AudioConduitControlInterface for control.

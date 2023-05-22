@@ -57,7 +57,7 @@ class MockConduit : public MediaSessionConduit {
   MOCK_METHOD0(AsAudioSessionConduit, Maybe<RefPtr<AudioSessionConduit>>());
   MOCK_METHOD0(AsVideoSessionConduit, Maybe<RefPtr<VideoSessionConduit>>());
   MOCK_CONST_METHOD0(GetCallStats, Maybe<webrtc::Call::Stats>());
-
+  MOCK_METHOD1(SetJitterBufferTarget, void(DOMHighResTimeStamp));
   MOCK_CONST_METHOD0(GetUpstreamRtpSources, std::vector<webrtc::RtpSource>());
 };
 }  // namespace mozilla

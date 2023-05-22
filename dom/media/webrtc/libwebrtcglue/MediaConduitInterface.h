@@ -184,6 +184,8 @@ class MediaSessionConduit {
 
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
 
+  virtual void SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) = 0;
+
   // test-only: inserts fake CSRCs and audio level data.
   // NB: fake data is only valid during the current main thread task.
   void InsertAudioLevelForContributingSource(const uint32_t aCsrcSource,

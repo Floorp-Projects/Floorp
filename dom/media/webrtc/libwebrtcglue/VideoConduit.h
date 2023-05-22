@@ -181,6 +181,8 @@ class WebrtcVideoConduit
   bool AddFrameHistory(dom::Sequence<dom::RTCVideoFrameHistoryInternal>*
                            outHistories) const override;
 
+  void SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) override;
+
   uint64_t MozVideoLatencyAvg();
 
   void DisableSsrcChanges() override {
@@ -408,6 +410,9 @@ class WebrtcVideoConduit
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;
   static const unsigned int sRoundingPadding = 1024;
+
+  // Target jitter buffer to be applied to the receive stream in milliseconds.
+  uint16_t mJitterBufferTargetMs = 0;
 
   // WEBRTC.ORG Call API
   // Const so can be accessed on any thread. All methods are called on the Call
