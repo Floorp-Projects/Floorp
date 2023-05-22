@@ -181,7 +181,15 @@ AuthPrompt2.prototype = {
   },
 
   asyncPromptAuth: function ap2_async(chan, cb, ctx, lvl, info) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+    let self = this;
+    executeSoon(function () {
+      let ret = self.promptAuth(chan, lvl, info);
+      if (ret) {
+        cb.onAuthAvailable(ctx, info);
+      } else {
+        cb.onAuthCancelled(ctx, true);
+      }
+    });
   },
 };
 
@@ -280,7 +288,12 @@ var listener = {
   },
 };
 
-function makeChan(url, loadingUrl) {
+function makeChan(
+  url,
+  loadingUrl,
+  securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+  contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER
+) {
   var principal = Services.scriptSecurityManager.createContentPrincipal(
     Services.io.newURI(loadingUrl),
     {}
@@ -288,8 +301,8 @@ function makeChan(url, loadingUrl) {
   return NetUtil.newChannel({
     uri: url,
     loadingPrincipal: principal,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    securityFlags,
+    contentPolicyType,
   });
 }
 
@@ -315,6 +328,8 @@ function setup() {
   httpserv.registerPathHandler("/auth/short_digest", authShortDigest);
   httpserv.registerPathHandler("/largeRealm", largeRealm);
   httpserv.registerPathHandler("/largeDomain", largeDomain);
+
+  httpserv.registerPathHandler("/corp-coep", corpAndCoep);
 
   httpserv.start(-1);
 
@@ -510,6 +525,29 @@ add_task(async function test_short_digest() {
   await openAndListen(chan);
 });
 
+// Test that COOP/COEP are processed even though asyncPromptAuth is cancelled.
+add_task(async function test_corp_coep() {
+  var chan = makeChan(
+    URL + "/corp-coep",
+    URL,
+    Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+    Ci.nsIContentPolicy.TYPE_DOCUMENT
+  );
+
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
+  listener.expectedCode = 401; // OK
+  await openAndListen(chan);
+
+  Assert.equal(
+    chan.getResponseHeader("cross-origin-embedder-policy"),
+    "require-corp"
+  );
+  Assert.equal(
+    chan.getResponseHeader("cross-origin-opener-policy"),
+    "same-origin"
+  );
+});
+
 // XXX(valentin): this makes tests fail if it's not run last. Why?
 add_task(async function test_nonascii_xhr() {
   await new Promise(resolve => {
@@ -603,6 +641,13 @@ function authNonascii(metadata, response) {
   }
 
   response.bodyOutputStream.write(body, body.length);
+}
+
+function corpAndCoep(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  response.setHeader("cross-origin-embedder-policy", "require-corp");
+  response.setHeader("cross-origin-opener-policy", "same-origin");
+  response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
 }
 
 //
