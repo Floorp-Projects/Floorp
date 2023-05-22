@@ -34,6 +34,9 @@ const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
+const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
+const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";
+const CONTILE_CACHE_LAST_FETCH_PREF = "browser.topsites.contile.lastFetch";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -1174,6 +1177,30 @@ describe("Top Sites Feed", () => {
 
       assert.notCalled(feed._contile.refresh);
     });
+    it("should reset Contile cache prefs when SHOW_SPONSORED_PREF is false", () => {
+      Services.prefs.setStringPref(CONTILE_CACHE_PREF, "[]");
+      Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, 15 * 60 * 1000);
+      Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, Date.now());
+
+      sandbox.spy(feed._contile, "refresh");
+      const prefChangeAction = {
+        type: at.PREF_CHANGED,
+        data: { name: SHOW_SPONSORED_PREF, value: false },
+      };
+      fakeNimbusFeatures.newtab.getVariable.returns(true);
+      feed.onAction(prefChangeAction);
+
+      assert.calledOnce(feed._contile.refresh);
+
+      // cached pref values should have reset
+      assert.isUndefined(Services.prefs.getStringPref(CONTILE_CACHE_PREF));
+      assert.isUndefined(
+        Services.prefs.getIntPref(CONTILE_CACHE_LAST_FETCH_PREF)
+      );
+      assert.isUndefined(
+        Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_PREF)
+      );
+    });
   });
   describe("#add", () => {
     it("should pin site in first slot of empty pinned list", () => {
@@ -2103,16 +2130,24 @@ describe("Top Sites Feed", () => {
   });
 
   describe("#ContileIntegration", () => {
+    let getStringPrefStub;
+    let getIntPrefStub;
     beforeEach(() => {
       // Turn on sponsored TopSites for testing
       feed.store.state.Prefs.values[SHOW_SPONSORED_PREF] = true;
       fetchStub = sandbox.stub();
       globals.set("fetch", fetchStub);
-      sandbox
-        .stub(global.Services.prefs, "getStringPref")
+
+      getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+      getStringPrefStub
         .withArgs(TOP_SITES_BLOCKED_SPONSORS_PREF)
         .returns(`["foo","bar"]`);
+
+      getIntPrefStub = sandbox.stub(global.Services.prefs, "getIntPref");
+
       fakeNimbusFeatures.newtab.getVariable.returns(true);
+      sandbox.spy(global.Services.prefs, "setStringPref");
+      sandbox.spy(global.Services.prefs, "setIntPref");
     });
     afterEach(() => {
       sandbox.restore();
@@ -2122,6 +2157,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2167,6 +2205,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2225,6 +2266,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2265,6 +2309,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [
@@ -2301,7 +2348,26 @@ describe("Top Sites Feed", () => {
       assert.equal(feed._contile.sites[0].url, "https://www.test.com");
     });
 
-    it("should handle errors properly from Contile", async () => {
+    it("should return false when Contile returns with error status and no values are stored in cache prefs", async () => {
+      fetchStub.resolves({
+        ok: false,
+        status: 500,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(!fetched);
+      assert.ok(!feed._contile.sites.length);
+    });
+
+    it("should return false when Contile returns with error status and cached tiles are expried", async () => {
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_VALID_FOR_PREF)
+        .returns(1000 * 60 * 15);
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_LAST_FETCH_PREF)
+        .returns(Date.now() - 1000 * 60 * 30);
+
       fetchStub.resolves({
         ok: false,
         status: 500,
@@ -2333,6 +2399,9 @@ describe("Top Sites Feed", () => {
       fetchStub.resolves({
         ok: true,
         status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
         json: () =>
           Promise.resolve({
             tiles: [],
@@ -2352,6 +2421,146 @@ describe("Top Sites Feed", () => {
 
       assert.ok(!fetched);
       assert.ok(!feed._contile.sites.length);
+    });
+
+    it("should set Caching Prefs after a sucessful request", async () => {
+      const tiles = [
+        {
+          url: "https://www.test.com",
+          image_url: "images/test-com.png",
+          click_url: "https://www.test-click.com",
+          impression_url: "https://www.test-impression.com",
+          name: "test",
+        },
+        {
+          url: "https://www.test1.com",
+          image_url: "images/test1-com.png",
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ];
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
+        json: () =>
+          Promise.resolve({
+            tiles,
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(fetched);
+      assert.calledOnce(Services.prefs.setStringPref);
+      assert.calledTwice(Services.prefs.setIntPref);
+
+      assert.calledWith(
+        Services.prefs.setStringPref,
+        CONTILE_CACHE_PREF,
+        JSON.stringify(tiles)
+      );
+      assert.calledWith(
+        Services.prefs.setIntPref,
+        CONTILE_CACHE_VALID_FOR_PREF,
+        11322
+      );
+    });
+
+    it("should return cached valid tiles when Contile returns error status", async () => {
+      const tiles = [
+        {
+          url: "https://www.test-cached.com",
+          image_url: "images/test-com.png",
+          click_url: "https://www.test-click.com",
+          impression_url: "https://www.test-impression.com",
+          name: "test",
+        },
+        {
+          url: "https://www.test1-cached.com",
+          image_url: "images/test1-com.png",
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ];
+
+      getStringPrefStub
+        .withArgs(CONTILE_CACHE_PREF)
+        .returns(JSON.stringify(tiles));
+
+      // valid for 15 mins
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_VALID_FOR_PREF)
+        .returns(1000 * 60 * 15);
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_LAST_FETCH_PREF)
+        .returns(Date.now());
+
+      fetchStub.resolves({
+        status: 304,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(fetched);
+      assert.equal(feed._contile.sites.length, 2);
+      assert.equal(feed._contile.sites[0].url, "https://www.test-cached.com");
+      assert.equal(feed._contile.sites[1].url, "https://www.test1-cached.com");
+    });
+
+    it("should not be successful when contile returns an error and no valid tiles are cached", async () => {
+      getStringPrefStub.withArgs(CONTILE_CACHE_PREF).returns("[]");
+
+      getIntPrefStub.withArgs(CONTILE_CACHE_VALID_FOR_PREF).returns(0);
+      getIntPrefStub.withArgs(CONTILE_CACHE_LAST_FETCH_PREF).returns(0);
+
+      fetchStub.resolves({
+        status: 500,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(!fetched);
+    });
+
+    it("should return cached valid tiles filtering blocked tiles when Contile returns error status", async () => {
+      const tiles = [
+        {
+          url: "https://foo.com",
+          image_url: "images/foo-com.png",
+          click_url: "https://www.foo-click.com",
+          impression_url: "https://www.foo-impression.com",
+          name: "foo",
+        },
+        {
+          url: "https://www.test1-cached.com",
+          image_url: "images/test1-com.png",
+          click_url: "https://www.test1-click.com",
+          impression_url: "https://www.test1-impression.com",
+          name: "test1",
+        },
+      ];
+      getStringPrefStub
+        .withArgs(CONTILE_CACHE_PREF)
+        .returns(JSON.stringify(tiles));
+
+      // valid for 15 mins
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_VALID_FOR_PREF)
+        .returns(1000 * 60 * 15);
+      getIntPrefStub
+        .withArgs(CONTILE_CACHE_LAST_FETCH_PREF)
+        .returns(Date.now());
+
+      fetchStub.resolves({
+        status: 304,
+      });
+
+      const fetched = await feed._contile._fetchSites();
+      assert.ok(fetched);
+      assert.equal(feed._contile.sites.length, 1);
+      assert.equal(feed._contile.sites[0].url, "https://www.test1-cached.com");
     });
   });
 
