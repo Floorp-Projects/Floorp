@@ -54,6 +54,11 @@ class MsaaAccessible : public ia2Accessible,
 
   static MsaaAccessible* GetFrom(Accessible* aAcc);
 
+  /**
+   * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.
+   */
+  static ITypeInfo* GetTI(LCID lcid);
+
   DECL_IUNKNOWN
 
   // IAccessible
@@ -180,10 +185,6 @@ class MsaaAccessible : public ia2Accessible,
   };
 
  private:
-  /**
-   * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.
-   */
-  static ITypeInfo* GetTI(LCID lcid);
   static ITypeInfo* gTypeInfo;
 };
 
