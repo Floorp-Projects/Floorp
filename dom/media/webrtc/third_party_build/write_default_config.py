@@ -23,8 +23,8 @@ export MOZ_FASTFORWARD_BUG="$bugnum"
 
 # MOZ_NEXT_LIBWEBRTC_MILESTONE and MOZ_NEXT_FIREFOX_REL_TARGET are
 # not used during fast-forward processing, but facilitate generating this
-# example config.  To generate an example config for the next update, run
-# bash dom/media/webrtc/third_party_build/update_example_config_env.sh
+# default config.  To generate an default config for the next update, run
+# bash dom/media/webrtc/third_party_build/update_default_config_env.sh
 export MOZ_NEXT_LIBWEBRTC_MILESTONE=$m2
 export MOZ_NEXT_FIREFOX_REL_TARGET=$t2
 
@@ -53,7 +53,7 @@ export MOZ_LIBWEBRTC_OFFICIAL_BRANCH="moz-mods-chr$m2-for-rel$t2"
 """
 
 
-def build_example_config_env(bug_number, milestone, target):
+def build_default_config_env(bug_number, milestone, target):
     prior_branch_head = lookup_branch_head.get_branch_head(milestone)
     if prior_branch_head is None:
         sys.exit("error: chromium milestone '{}' is not found.".format(milestone))
@@ -76,7 +76,7 @@ def build_example_config_env(bug_number, milestone, target):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Updates the example_config_env file for new release/milestone"
+        description="Updates the default_config_env file for new release/milestone"
     )
     parser.add_argument(
         "--bug-number",
@@ -99,6 +99,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print(
-        build_example_config_env(args.bug_number, args.milestone, args.release_target),
+        build_default_config_env(args.bug_number, args.milestone, args.release_target),
         end="",
     )
