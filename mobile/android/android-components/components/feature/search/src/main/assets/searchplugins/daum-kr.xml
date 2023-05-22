@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>다음지도</ShortName>
+<ShortName>다음</ShortName>
 <InputEncoding>utf-8</InputEncoding>
 <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAARVBMVEUAAAD5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+flNkP//1Smn3wAoffz9dG7kWlfjngNhtAAke/0gdv9isiRZrCSQTyACAAAACnRSTlMAwwbS+W9sG8/zKHP4TgAAALhJREFUaN7t2ksOwjAMRdGXfzEQoAH2v1QKE6ARIi0yQvTdmSc5Y0cGYKPxopA30WIodaJWlwDrRDFnEUW1CCOqGXhRzUOUI0CAAAECBL4D5MaO+dyPO1TtqyYA/bKBcu3+Wrn1NM0HmjvNB0peN7St2lTtHiJAgAABAgQIECBAgAABApOB1j5cY9/264s4gdfAH/x4jWYCBAiIECCwSMCLaiv9s4cgqgX90xMkRcElDNlgRCUTLHAB68OktAP7gdIAAAAASUVORK5CYII=</Image>
 <Url type="application/x-suggestions+json" method="GET" template="http://sug.search.daum.net/search_nsuggest">
@@ -12,9 +12,10 @@
   <Param name="q" value="{searchTerms}" />
 </Url>
 
-<Url type="text/html" method="GET" template="http://m.map.daum.net/actions/searchPlace">
-  <Param name="query" value="{searchTerms}"/>
+<Url type="text/html" method="GET" template="https://m.search.daum.net/search">
+  <Param name="w" value="tot"/>
   <Param name="nil_ch" value="ffsr"/>
+  <Param name="q" value="{searchTerms}"/>
 </Url>
-<SearchForm>http://m.map.daum.net</SearchForm>
+<SearchForm>http://m.search.daum.net</SearchForm>
 </SearchPlugin>
