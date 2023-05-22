@@ -265,6 +265,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let result;
     switch (suggestion.provider) {
       case "amo":
+      case "AddonSuggestions":
         result = await lazy.QuickSuggest.getFeature(
           "AddonSuggestions"
         ).makeResult(queryContext, suggestion, this._trimmedSearchString);

@@ -16,6 +16,9 @@ ChromeUtils.defineModuleGetter(
   "ExtensionTestCommon",
   "resource://testing-common/ExtensionTestCommon.jsm"
 );
+ChromeUtils.defineESModuleGetters(this, {
+  sinon: "resource://testing-common/Sinon.sys.mjs",
+});
 
 const MERINO_SUGGESTIONS = [
   {
@@ -32,6 +35,59 @@ const MERINO_SUGGESTIONS = [
         guid: "test@addon",
       },
     },
+  },
+];
+
+const REMOTE_SETTINGS_RESULTS = [
+  {
+    type: "amo_suggestion",
+    schema: 1,
+    amo_suggestion: {
+      url: "https://example.com/first-addon",
+      guid: "first@addon",
+      icon: "https://example.com/first-addon.svg",
+      title: "First Addon",
+      rating: "4.7",
+      keywords: ["first", "1st"],
+      description: "Description for the First Addon",
+      number_of_ratings: 1256,
+      is_top_pick: true,
+    },
+    id: "amo_suggestion_1",
+    last_modified: 1,
+  },
+  {
+    type: "amo_suggestion",
+    schema: 1,
+    amo_suggestion: {
+      url: "https://example.com/second-addon",
+      guid: "second@addon",
+      icon: "https://example.com/second-addon.svg",
+      title: "Second Addon",
+      rating: "1.7",
+      keywords: ["second", "2nd"],
+      description: "Description for the Second Addon",
+      number_of_ratings: 256,
+      is_top_pick: false,
+    },
+    id: "amo_suggestion_2",
+    last_modified: 1,
+  },
+  {
+    type: "amo_suggestion",
+    schema: 1,
+    amo_suggestion: {
+      url: "https://example.com/third-addon",
+      guid: "third@addon",
+      icon: "https://example.com/third-addon.svg",
+      title: "Third Addon",
+      rating: "3.7",
+      keywords: ["third", "3rd"],
+      description: "Description for the Third Addon",
+      number_of_ratings: 3,
+    },
+    id: "amo_suggestion_3",
+    last_modified: 1,
   },
 ];
 
@@ -65,8 +121,8 @@ add_task(async function nonsponsoredDisabled() {
     }),
     matches: [
       makeExpectedResult({
-        isBestMatch: true,
-        suggestedIndex: 1,
+        suggestion: MERINO_SUGGESTIONS[0],
+        source: "merino",
       }),
     ],
   });
@@ -98,8 +154,8 @@ add_task(async function addonSuggestionsSpecificPrefDisabled() {
       }),
       matches: [
         makeExpectedResult({
-          isBestMatch: true,
-          suggestedIndex: 1,
+          suggestion: MERINO_SUGGESTIONS[0],
+          source: "merino",
         }),
       ],
     });
@@ -143,8 +199,8 @@ add_task(async function nimbus() {
     }),
     matches: [
       makeExpectedResult({
-        isBestMatch: true,
-        suggestedIndex: 1,
+        suggestion: MERINO_SUGGESTIONS[0],
+        source: "merino",
       }),
     ],
   });
@@ -179,8 +235,8 @@ add_task(async function hideIfAlreadyInstalled() {
     }),
     matches: [
       makeExpectedResult({
-        isBestMatch: true,
-        suggestedIndex: 1,
+        suggestion: MERINO_SUGGESTIONS[0],
+        source: "merino",
       }),
     ],
   });
@@ -208,26 +264,134 @@ add_task(async function hideIfAlreadyInstalled() {
   xpi.remove(false);
 });
 
-function makeExpectedResult({ isBestMatch, suggestedIndex }) {
+add_task(async function remoteSettings() {
+  // Disable addon suggestions to avoid fetching RemoteSettings.
+  UrlbarPrefs.set("suggest.addons", false);
+
+  // Set dummy data.
+  const rs = QuickSuggestRemoteSettings.rs;
+  sinon.stub(rs, "get").callsFake(async query => {
+    return query.filters.type === "amo_suggestion"
+      ? REMOTE_SETTINGS_RESULTS
+      : [];
+  });
+  QuickSuggestRemoteSettings._test_ignoreSettingsSync = false;
+
+  // Make a stub that waits until RemoteSettings data is updated in the feature.
+  const addonSuggestions = QuickSuggest.getFeature("AddonSuggestions");
+  const onRemoteSettings = new Promise(resolve => {
+    const stub = sinon.stub(addonSuggestions, "onRemoteSettingsSync");
+    stub.callsFake(async (...args) => {
+      await stub.wrappedMethod.apply(addonSuggestions, args);
+      resolve();
+    });
+  });
+
+  // Enable to fetch RemoteSettings
+  UrlbarPrefs.set("suggest.addons", true);
+
+  // Wait until onRemoteSettingsSync is called.
+  await onRemoteSettings;
+
+  const testCases = [
+    {
+      input: "first",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].amo_suggestion,
+        source: "remote-settings",
+      }),
+    },
+    {
+      input: "1st",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].amo_suggestion,
+        source: "remote-settings",
+      }),
+    },
+    {
+      input: "second",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[1].amo_suggestion,
+        source: "remote-settings",
+      }),
+    },
+    {
+      input: "2nd",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[1].amo_suggestion,
+        source: "remote-settings",
+      }),
+    },
+    {
+      input: "third",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[2].amo_suggestion,
+        source: "remote-settings",
+      }),
+    },
+    {
+      input: "3rd",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[2].amo_suggestion,
+        source: "remote-settings",
+      }),
+    },
+    {
+      // Merino result.
+      input: "not rs",
+      expected: makeExpectedResult({
+        suggestion: MERINO_SUGGESTIONS[0],
+        source: "merino",
+      }),
+    },
+  ];
+
+  for (const { input, expected } of testCases) {
+    await check_results({
+      context: createContext(input, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [expected],
+    });
+  }
+
+  sinon.restore();
+  QuickSuggestRemoteSettings._test_ignoreSettingsSync = true;
+});
+
+function makeExpectedResult({ suggestion, source }) {
+  const isTopPick = suggestion.is_top_pick ?? true;
+
+  let rating;
+  let number_of_ratings;
+  if (source === "remote-settings") {
+    rating = suggestion.rating;
+    number_of_ratings = suggestion.number_of_ratings;
+  } else {
+    rating = suggestion.custom_details.amo.rating;
+    number_of_ratings = suggestion.custom_details.amo.number_of_ratings;
+  }
+
   return {
-    isBestMatch,
-    suggestedIndex,
+    isBestMatch: isTopPick,
+    suggestedIndex: isTopPick ? 1 : -1,
     type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
       telemetryType: "amo",
       dynamicType: "addons",
-      title: "title",
-      url: "url",
-      displayUrl: "url",
-      icon: "icon",
-      description: "description",
-      rating: 5,
-      reviews: 1234567,
+      title: suggestion.title,
+      url: suggestion.url,
+      displayUrl: suggestion.url.replace(/^https:\/\//, ""),
+      icon: suggestion.icon,
+      description: suggestion.description,
+      rating: Number(rating),
+      reviews: Number(number_of_ratings),
       shouldNavigate: true,
       helpUrl: QuickSuggest.HELP_URL,
-      source: "merino",
+      source,
     },
   };
 }

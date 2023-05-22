@@ -8,6 +8,10 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
+  SuggestionsMap:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -133,14 +137,55 @@ export class AddonSuggestions extends BaseFeature {
     return ["suggest.addons", "suggest.quicksuggest.nonsponsored"];
   }
 
+  enable(enabled) {
+    if (enabled) {
+      lazy.QuickSuggestRemoteSettings.register(this);
+    } else {
+      lazy.QuickSuggestRemoteSettings.unregister(this);
+    }
+  }
+
+  queryRemoteSettings(searchString) {
+    const suggestions = this.#suggestionsMap?.get(searchString);
+    if (!suggestions) {
+      return [];
+    }
+
+    return suggestions.map(suggestion => ({
+      icon: suggestion.icon,
+      url: suggestion.url,
+      title: suggestion.title,
+      description: suggestion.description,
+      rating: suggestion.rating,
+      number_of_ratings: suggestion.number_of_ratings,
+      guid: suggestion.guid,
+      score: suggestion.score,
+      is_top_pick: suggestion.is_top_pick ?? true,
+    }));
+  }
+
+  async onRemoteSettingsSync(rs) {
+    const records = await rs.get({ filters: { type: "amo_suggestion" } });
+    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      return;
+    }
+
+    const suggestions = records.map(r => r.amo_suggestion);
+    this.#suggestionsMap = new lazy.SuggestionsMap();
+    this.#suggestionsMap.add(suggestions);
+  }
+
   async makeResult(queryContext, suggestion, searchString) {
     if (!this.isEnabled || searchString.length < this.#minKeywordLength) {
       return null;
     }
 
-    const addon = await lazy.AddonManager.getAddonByID(
-      suggestion.custom_details.amo.guid
-    );
+    const { guid, rating, number_of_ratings } =
+      suggestion.source === "remote-settings"
+        ? suggestion
+        : suggestion.custom_details.amo;
+
+    const addon = await lazy.AddonManager.getAddonByID(guid);
     if (addon) {
       // Addon suggested is already installed.
       return null;
@@ -152,8 +197,8 @@ export class AddonSuggestions extends BaseFeature {
       url: suggestion.url,
       title: suggestion.title,
       description: suggestion.description,
-      rating: Number(suggestion.custom_details.amo.rating),
-      reviews: Number(suggestion.custom_details.amo.number_of_ratings),
+      rating: Number(rating),
+      reviews: Number(number_of_ratings),
       helpUrl: lazy.QuickSuggest.HELP_URL,
       shouldNavigate: true,
       dynamicType: "addons",
@@ -322,4 +367,6 @@ export class AddonSuggestions extends BaseFeature {
     const cap = lazy.UrlbarPrefs.get("addonsKeywordsMinimumLengthCap") || 0;
     return !cap || this.#minKeywordLength < cap;
   }
+
+  #suggestionsMap = null;
 }
