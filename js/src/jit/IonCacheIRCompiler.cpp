@@ -2115,3 +2115,26 @@ bool IonCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                   uint32_t siteOffset) {
   MOZ_CRASH("NewObject ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitCallRegExpMatcherResult(ObjOperandId regexpId,
+                                                     StringOperandId inputId,
+                                                     Int32OperandId lastIndexId,
+                                                     uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitCallRegExpSearcherResult(
+    ObjOperandId regexpId, StringOperandId inputId, Int32OperandId lastIndexId,
+    uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitRegExpBuiltinExecMatchResult(
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitRegExpBuiltinExecTestResult(
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}

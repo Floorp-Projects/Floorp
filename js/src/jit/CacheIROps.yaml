@@ -298,38 +298,42 @@
     clasp: RawPointerField
 
 - name: CallRegExpMatcherResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
     regexp: ObjId
     input: StringId
     lastIndex: Int32Id
+    stub: JitCodeField
 
 - name: CallRegExpSearcherResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
     regexp: ObjId
     input: StringId
     lastIndex: Int32Id
+    stub: JitCodeField
 
 - name: RegExpBuiltinExecMatchResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
     regexp: ObjId
     input: StringId
+    stub: JitCodeField
 
 - name: RegExpBuiltinExecTestResult
-  shared: true
+  shared: false
   transpile: true
   cost_estimate: 5
   args:
     regexp: ObjId
     input: StringId
+    stub: JitCodeField
 
 - name: RegExpFlagResult
   shared: true

@@ -24,6 +24,7 @@
 #include "jit/CacheIRWriter.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitContext.h"
+#include "jit/JitRealm.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/friend/DOMProxy.h"       // JS::ExpandoAndGeneration
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowIfWindowProxy
@@ -6566,6 +6567,35 @@ static bool HasOptimizableLastIndexSlot(RegExpObject* regexp, JSContext* cx) {
   return true;
 }
 
+// Returns the RegExp stub used by the optimized code path for this intrinsic.
+// We store a pointer to this in the IC stub to ensure GC doesn't discard it.
+static JitCode* GetOrCreateRegExpStub(JSContext* cx, InlinableNative native) {
+  JitCode* code;
+  switch (native) {
+    case InlinableNative::IntrinsicRegExpBuiltinExecForTest:
+    case InlinableNative::IntrinsicRegExpExecForTest:
+      code = cx->realm()->jitRealm()->ensureRegExpExecTestStubExists(cx);
+      break;
+    case InlinableNative::IntrinsicRegExpBuiltinExec:
+    case InlinableNative::IntrinsicRegExpExec:
+      code = cx->realm()->jitRealm()->ensureRegExpExecMatchStubExists(cx);
+      break;
+    case InlinableNative::RegExpMatcher:
+      code = cx->realm()->jitRealm()->ensureRegExpMatcherStubExists(cx);
+      break;
+    case InlinableNative::RegExpSearcher:
+      code = cx->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx);
+      break;
+    default:
+      MOZ_CRASH("Unexpected native");
+  }
+  if (!code) {
+    cx->recoverFromOutOfMemory();
+    return nullptr;
+  }
+  return code;
+}
+
 static void EmitGuardLastIndexIsNonNegativeInt32(CacheIRWriter& writer,
                                                  ObjOperandId regExpId) {
   size_t offset =
@@ -6581,6 +6611,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec(
   MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isObject());
   MOZ_ASSERT(args_[1].isString());
+
+  JitCode* stub = GetOrCreateRegExpStub(cx_, native);
+  if (!stub) {
+    return AttachDecision::NoAction;
+  }
 
   RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
   if (!HasOptimizableLastIndexSlot(re, cx_)) {
@@ -6601,9 +6636,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec(
   StringOperandId inputId = writer.guardToString(arg1Id);
 
   if (native == InlinableNative::IntrinsicRegExpBuiltinExecForTest) {
-    writer.regExpBuiltinExecTestResult(regExpId, inputId);
+    writer.regExpBuiltinExecTestResult(regExpId, inputId, stub);
   } else {
-    writer.regExpBuiltinExecMatchResult(regExpId, inputId);
+    writer.regExpBuiltinExecMatchResult(regExpId, inputId, stub);
   }
   writer.returnFromIC();
 
@@ -6621,6 +6656,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec(
   if (!args_[0].toObject().is<RegExpObject>()) {
     return AttachDecision::NoAction;
   }
+
+  JitCode* stub = GetOrCreateRegExpStub(cx_, native);
+  if (!stub) {
+    return AttachDecision::NoAction;
+  }
+
   RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
   if (!HasOptimizableLastIndexSlot(re, cx_)) {
     return AttachDecision::NoAction;
@@ -6675,9 +6716,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec(
   StringOperandId inputId = writer.guardToString(arg1Id);
 
   if (native == InlinableNative::IntrinsicRegExpExecForTest) {
-    writer.regExpBuiltinExecTestResult(regExpId, inputId);
+    writer.regExpBuiltinExecTestResult(regExpId, inputId, stub);
   } else {
-    writer.regExpBuiltinExecMatchResult(regExpId, inputId);
+    writer.regExpBuiltinExecMatchResult(regExpId, inputId, stub);
   }
   writer.returnFromIC();
 
@@ -6698,6 +6739,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcher(
     return AttachDecision::NoAction;
   }
 
+  JitCode* stub = GetOrCreateRegExpStub(cx_, native);
+  if (!stub) {
+    return AttachDecision::NoAction;
+  }
+
   // Initialize the input operand.
   initializeInputOperand();
 
@@ -6715,13 +6761,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcher(
 
   switch (native) {
     case InlinableNative::RegExpMatcher:
-      writer.callRegExpMatcherResult(reId, inputId, lastIndexId);
+      writer.callRegExpMatcherResult(reId, inputId, lastIndexId, stub);
       writer.returnFromIC();
       trackAttached("RegExpMatcher");
       break;
 
     case InlinableNative::RegExpSearcher:
-      writer.callRegExpSearcherResult(reId, inputId, lastIndexId);
+      writer.callRegExpSearcherResult(reId, inputId, lastIndexId, stub);
       writer.returnFromIC();
       trackAttached("RegExpSearcher");
       break;
