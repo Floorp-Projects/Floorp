@@ -412,13 +412,13 @@ class WebExtensionSupportTest {
         whenever(ext.hasActionHandler(engineSession)).thenReturn(true)
         whenever(ext.hasTabHandler(engineSession)).thenReturn(true)
 
+        actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
+        verify(store, times(2)).dispatch(webExtensionActionCaptor.capture())
+        assertEquals(ext.id, (webExtensionActionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
+
         store.dispatch(ContentAction.UpdateUrlAction(sessionId = "1", url = "https://www.firefox.com")).joinBlocking()
         verify(ext, times(1)).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         verify(ext, times(1)).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
-
-        actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
-        verify(store, times(3)).dispatch(webExtensionActionCaptor.capture())
-        assertEquals(ext.id, (webExtensionActionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
 
         reset(store)
 
