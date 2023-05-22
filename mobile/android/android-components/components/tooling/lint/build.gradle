@@ -5,8 +5,8 @@
 apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
-targetCompatibility = JavaVersion.VERSION_11
-sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_17
 
 dependencies {
   compileOnly ComponentsDependencies.tools_lintapi
@@ -44,6 +44,6 @@ tasks.register("assembleAndroidTest") {
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
   kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
   }
 }
