@@ -26,7 +26,7 @@ set -eEuo pipefail
 rm -f $STATE_DIR/resume_state
 
 # If there is no cache file for the branch-head lookups done in
-# update_example_config.sh, go ahead and copy our small pre-warmed
+# update_default_config.sh, go ahead and copy our small pre-warmed
 # version.
 if [ ! -f $STATE_DIR/milestone.cache ]; then
   cp $SCRIPT_DIR/pre-warmed-milestone.cache $STATE_DIR/milestone.cache

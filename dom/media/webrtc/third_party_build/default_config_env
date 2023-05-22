@@ -13,8 +13,8 @@ export MOZ_FASTFORWARD_BUG="1833237"
 
 # MOZ_NEXT_LIBWEBRTC_MILESTONE and MOZ_NEXT_FIREFOX_REL_TARGET are
 # not used during fast-forward processing, but facilitate generating this
-# example config.  To generate an example config for the next update, run
-# bash dom/media/webrtc/third_party_build/update_example_config_env.sh
+# default config.  To generate an default config for the next update, run
+# bash dom/media/webrtc/third_party_build/update_default_config_env.sh
 export MOZ_NEXT_LIBWEBRTC_MILESTONE=112
 export MOZ_NEXT_FIREFOX_REL_TARGET=116
 
