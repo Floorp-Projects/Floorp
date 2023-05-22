@@ -1261,7 +1261,7 @@ export const LoginHelper = {
   ) {
     // Get currently active tab's origin
     const openedFrom =
-      window.gBrowser.selectedTab.linkedBrowser.currentURI.spec;
+      window.gBrowser?.selectedTab.linkedBrowser.currentURI.spec;
 
     // If no loginGuid is set, get sanitized origin, this will return null for about:* uris
     const preselectedLogin = loginGuid ?? this.getLoginOrigin(openedFrom);
