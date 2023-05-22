@@ -258,6 +258,8 @@ class DMABufSurfaceRGBA : public DMABufSurface {
   DMABufSurfaceRGBA();
 
  private:
+  DMABufSurfaceRGBA(const DMABufSurfaceRGBA&) = delete;
+  DMABufSurfaceRGBA& operator=(const DMABufSurfaceRGBA&) = delete;
   ~DMABufSurfaceRGBA();
 
   bool Create(int aWidth, int aHeight, int aDMABufSurfaceFlags);
@@ -330,6 +332,8 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool VerifyTextureCreation();
 
  private:
+  DMABufSurfaceYUV(const DMABufSurfaceYUV&) = delete;
+  DMABufSurfaceYUV& operator=(const DMABufSurfaceYUV&) = delete;
   ~DMABufSurfaceYUV();
 
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
