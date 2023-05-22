@@ -440,6 +440,16 @@ export class UrlbarView {
       return;
     }
 
+    // The row is no longer selectable. It's necessary to clear the selection
+    // before replacing the row because replacement will likely create a new
+    // `urlbarView-row-inner`, which will interfere with the ability of
+    // `#selectElement()` to clear the old selection after replacement, below.
+    let isSelected = this.#getSelectedRow() == row;
+    if (isSelected) {
+      this.#selectElement(null, { updateInput: false });
+    }
+    this.#setRowSelectable(row, false);
+
     // Replace the row with a dismissal acknowledgment tip.
     let tip = new lazy.UrlbarResult(
       lazy.UrlbarUtils.RESULT_TYPE.TIP,
@@ -453,6 +463,13 @@ export class UrlbarView {
     );
     this.#updateRow(row, tip);
     this.#updateIndices();
+
+    // If the row was selected, move the selection to the tip button.
+    if (isSelected) {
+      this.#selectElement(this.#getNextSelectableElement(row), {
+        updateInput: false,
+      });
+    }
   }
 
   removeAccessibleFocus() {
