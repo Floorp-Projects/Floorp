@@ -161,7 +161,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.browser_style_mv3.supported",
   false
 );
-// Bug 1830710 will set browser_style_mv3.same_as_mv2 to true.
 // Bug 1830711 will then set browser_style_mv3.supported to false.
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
