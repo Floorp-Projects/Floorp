@@ -113,6 +113,9 @@ Review groups
    * - #remote-debugging-reviewers
      - Remote Debugging UI & tools
      - `Member list <https://phabricator.services.mozilla.com/project/members/108/>`__
+   * - #spidermonkey-reviewers
+     - SpiderMonkey JS/Wasm Engine
+     - `Member list <https://phabricator.services.mozilla.com/project/members/173/>`__
    * - #static-analysis-reviewers
      - Changes related to Static Analysis
      - `Member list <https://phabricator.services.mozilla.com/project/members/120/>`__
