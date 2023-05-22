@@ -129,6 +129,11 @@ class VideoFramePool<LIBAV_VER> {
       VADRMPRIMESurfaceDescriptor& aVaDesc, int aWidth, int aHeight,
       AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
       FFmpegLibWrapper* aLib);
+  RefPtr<VideoFrameSurface<LIBAV_VER>> GetVideoFrameSurface(
+      AVDRMFrameDescriptor& aDesc, int aWidth, int aHeight,
+      AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
+      FFmpegLibWrapper* aLib);
+
   void ReleaseUnusedVAAPIFrames();
 
  private:
