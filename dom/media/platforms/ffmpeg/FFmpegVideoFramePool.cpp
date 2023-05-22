@@ -35,7 +35,8 @@ VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
     : mSurface(aSurface),
       mLib(nullptr),
       mAVHWFrameContext(nullptr),
-      mHWAVBuffer(nullptr) {
+      mHWAVBuffer(nullptr),
+      mFFMPEGSurfaceID(-1) {
   // Create global refcount object to track mSurface usage over
   // gects rendering engine. We can't release it until it's used
   // by GL compositor / WebRender.
@@ -60,7 +61,6 @@ void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
   mLib = aLib;
   mAVHWFrameContext = aLib->av_buffer_ref(aAVCodecContext->hw_frames_ctx);
   mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
-  mFFMPEGSurfaceID = (uintptr_t)aAVFrame->data[3];
   DMABUF_LOG(
       "VideoFrameSurface: VAAPI locking dmabuf surface UID %d FFMPEG ID 0x%x "
       "mAVHWFrameContext %p mHWAVBuffer %p",
@@ -74,7 +74,7 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
       mSurface->GetUID(), mFFMPEGSurfaceID, aForFrameRecycle, mLib,
       mAVHWFrameContext, mHWAVBuffer);
   // It's possible to unref GPU data while IsUsed() is still set.
-  // It can happens when VideoFramePool is deleted while decoder shutdown
+  // It can happen when VideoFramePool is deleted while decoder shutdown
   // but related dmabuf surfaces are still used in another process.
   // In such case we don't care as the dmabuf surface will not be
   // recycled for another frame and stays here untill last fd of it
@@ -84,12 +84,13 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
     mLib->av_buffer_unref(&mAVHWFrameContext);
     mLib = nullptr;
   }
-  mFFMPEGSurfaceID = 0;
-  // If we want to recycle the frame, make sure it's not used
-  // by gecko rendering pipeline.
-  if (aForFrameRecycle) {
-    MOZ_DIAGNOSTIC_ASSERT(!IsUsed());
-    mSurface->ReleaseSurface();
+
+  mUsed = false;
+  mFFMPEGSurfaceID = -1;
+  mSurface->ReleaseSurface();
+
+  if (aForFrameRecycle && IsUsed()) {
+    NS_WARNING("VA-API: Reusing live dmabuf surface, visual glitches ahead");
   }
 }
 
@@ -107,7 +108,12 @@ VideoFramePool<LIBAV_VER>::~VideoFramePool() {
 void VideoFramePool<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
   MutexAutoLock lock(mSurfaceLock);
   for (const auto& surface : mDMABufSurfaces) {
-    if (!surface->IsUsed()) {
+#ifdef DEBUG
+    if (!surface->mUsed && surface->IsUsed()) {
+      NS_WARNING("VA-API: Untracked but still used dmabug surface!");
+    }
+#endif
+    if (surface->mUsed && !surface->IsUsed()) {
       surface->ReleaseVAAPIData();
     }
   }
@@ -116,6 +122,9 @@ void VideoFramePool<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
 RefPtr<VideoFrameSurface<LIBAV_VER>>
 VideoFramePool<LIBAV_VER>::GetFreeVideoFrameSurface() {
   for (auto& surface : mDMABufSurfaces) {
+    if (!surface->mUsed) {
+      return surface;
+    }
     if (surface->IsUsed()) {
       continue;
     }
@@ -208,6 +217,8 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
       return nullptr;
     }
   }
+
+  videoSurface->MarkAsUsed(ffmpegSurfaceID);
 
   if (!copySurface) {
     // Check that newly added ffmpeg surface isn't already used by different
