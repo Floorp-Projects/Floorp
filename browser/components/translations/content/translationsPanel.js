@@ -342,16 +342,27 @@ var TranslationsPanel = new (class {
 
     const alwaysTranslateLanguage =
       TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
+    const neverTranslateLanguage =
+      TranslationsParent.shouldNeverTranslateLanguage(docLangTag);
 
     const { panel } = this.elements;
     const alwaysTranslateMenuItems = panel.querySelectorAll(
       ".always-translate-language-menuitem"
+    );
+    const neverTranslateMenuItems = panel.querySelectorAll(
+      ".never-translate-language-menuitem"
     );
 
     for (const menuitem of alwaysTranslateMenuItems) {
       menuitem.setAttribute(
         "checked",
         alwaysTranslateLanguage ? "true" : "false"
+      );
+    }
+    for (const menuitem of neverTranslateMenuItems) {
+      menuitem.setAttribute(
+        "checked",
+        neverTranslateLanguage ? "true" : "false"
       );
     }
   }
@@ -543,6 +554,17 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Updates the never-translate-language menuitem prefs and checked state.
+   * If never-translate is currently active for the doc language, deactivates it.
+   * If never-translate is currently inactive for the doc language, activates it.
+   */
+  async onNeverTranslateLanguage() {
+    const docLangTag = await this.#getDocLangTag();
+    TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
+    await this.#updateSettingsMenuLanguageCheckboxStates();
+  }
+
+  /**
    * Handle the restore button being clicked.
    */
   async onRestore() {
@@ -569,7 +591,14 @@ var TranslationsPanel = new (class {
         const { panel, button, buttonLocale, buttonCircleArrows } =
           this.elements;
 
-        if (detectedLanguages) {
+        if (
+          // Valid languages were detected
+          detectedLanguages &&
+          // The docLangTag is not present in the never-translate list
+          !TranslationsParent.shouldNeverTranslateLanguage(
+            detectedLanguages.docLangTag
+          )
+        ) {
           button.hidden = false;
           if (requestedTranslationPair) {
             // The translation is active, update the urlbar button.
