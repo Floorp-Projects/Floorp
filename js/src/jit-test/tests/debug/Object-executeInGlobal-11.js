@@ -1,19 +1,17 @@
-// evalWithBindings correctly handles optional custom url option
+// executeInGlobalWithBindings correctly handles optional custom url option
 var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
+var debuggee = dbg.getDebuggees()[0];
 var count = 0;
 
 function testUrl (options, expected) {
     count++;
-    dbg.onDebuggerStatement = function (frame) {
-        dbg.onNewScript = function (script) {
-            dbg.onNewScript = undefined;
-            assertEq(script.url, expected);
-            count--;
-        };
-        frame.evalWithBindings("", {}, options);
+    dbg.onNewScript = function(script){
+        dbg.onNewScript = undefined;
+        assertEq(script.url, expected);
+        count--;
     };
-    g.eval("debugger;");
+    debuggee.executeInGlobalWithBindings("", {}, options);
 }
 
 
