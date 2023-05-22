@@ -1237,7 +1237,7 @@ async function expandSourceTree(dbg) {
   // But when there is a project root, it can be directory or group items.
   // Select only expandable in order to ignore source items.
   for (const rootNode of dbg.win.document.querySelectorAll(
-    ".sources-list > .managed-tree > .tree > .tree-node[data-expandable=true]"
+    ".sources-list > .tree > .tree-node[data-expandable=true]"
   )) {
     await expandAllSourceNodes(dbg, rootNode);
   }

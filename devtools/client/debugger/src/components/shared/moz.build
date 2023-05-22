@@ -13,7 +13,6 @@ CompiledModules(
     "Badge.js",
     "BracketArrow.js",
     "Dropdown.js",
-    "ManagedTree.js",
     "Modal.js",
     "Popover.js",
     "PreviewFunction.js",

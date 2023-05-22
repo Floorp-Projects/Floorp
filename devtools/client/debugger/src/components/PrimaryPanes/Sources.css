@@ -30,7 +30,7 @@
   grid-area: custom-root;
 }
 
-.sources-list :is(.managed-tree, .no-sources-message) {
+.sources-list :is(.tree, .no-sources-message) {
   grid-area: sources-tree-or-empty-message;
 }
 
@@ -68,25 +68,58 @@
 /*  Sources tree */
 /*****************/
 
-.sources-list .managed-tree {
-  display: flex;
+.sources-list .tree {
   flex-grow: 1;
-  overflow: auto;
-}
-
-.sources-list .managed-tree .tree {
   padding: 4px 0;
+  user-select: none;
+
+  white-space: nowrap;
+  overflow: auto;
+  min-width: 100%;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+
+  line-height: 1.4em;
 }
 
-.sources-list .managed-tree .tree .node {
+.sources-list .tree .node {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 3px 8px 3px 6px;
+  padding-block: 8px;
+  padding-inline: 6px 8px;
 }
 
-.sources-list .managed-tree .tree .tree-node:not(.focused):hover {
+.sources-list .tree .tree-node:not(.focused):hover {
   background: var(--theme-toolbar-background-hover);
+}
+
+.sources-list .tree button {
+  display: block;
+}
+
+.sources-list .tree .node {
+  padding: 2px 3px;
+  position: relative;
+}
+
+.sources-list .tree .node.focused {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+html:not([dir="rtl"]) .sources-list .tree .node > div {
+  margin-left: 10px;
+}
+
+html[dir="rtl"] .sources-list .tree .node > div {
+  margin-right: 10px;
+}
+
+.sources-list .tree-node button {
+  position: fixed;
 }
 
 .sources-list .img {

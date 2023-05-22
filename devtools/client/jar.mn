@@ -299,7 +299,6 @@ devtools.jar:
     content/debugger/src/components/shared/Button/styles/CommandBarButton.css (debugger/src/components/shared/Button/styles/CommandBarButton.css)
     content/debugger/src/components/shared/Button/styles/PaneToggleButton.css (debugger/src/components/shared/Button/styles/PaneToggleButton.css)
     content/debugger/src/components/shared/Dropdown.css (debugger/src/components/shared/Dropdown.css)
-    content/debugger/src/components/shared/ManagedTree.css (debugger/src/components/shared/ManagedTree.css)
     content/debugger/src/components/shared/menu.css (debugger/src/components/shared/menu.css)
     content/debugger/src/components/shared/Modal.css (debugger/src/components/shared/Modal.css)
     content/debugger/src/components/shared/Popover.css (debugger/src/components/shared/Popover.css)
