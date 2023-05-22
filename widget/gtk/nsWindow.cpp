@@ -339,6 +339,7 @@ static uint32_t gLastTouchID = 0;
 static GUniquePtr<GdkEventCrossing> sStoredLeaveNotifyEvent;
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
+#define kWindowPositionSlop 20
 
 // cursor cache
 static GdkCursor* gCursorCache[eCursorCount];
@@ -819,7 +820,7 @@ void nsWindow::RegisterTouchWindow() {
   mTouches.Clear();
 }
 
-void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
+void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
   if (!mShell || GdkIsWaylandDisplay()) {
     return;
   }
@@ -832,38 +833,52 @@ void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
 
   /* get our playing field. use the current screen, or failing that
     for any reason, use device caps for the default screen. */
+  nsCOMPtr<nsIScreen> screen;
   nsCOMPtr<nsIScreenManager> screenmgr =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (!screenmgr) {
-    return;
+  if (screenmgr) {
+    screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
+                             getter_AddRefs(screen));
   }
-  nsCOMPtr<nsIScreen> screen;
-  screenmgr->ScreenForRect(aPoint.x, aPoint.y, logWidth, logHeight,
-                           getter_AddRefs(screen));
+
   // We don't have any screen so leave the coordinates as is
-  if (!screen) {
-    return;
+  if (!screen) return;
+
+  nsIntRect screenRect;
+  if (mSizeMode != nsSizeMode_Fullscreen) {
+    // For normalized windows, use the desktop work area.
+    screen->GetAvailRectDisplayPix(&screenRect.x, &screenRect.y,
+                                   &screenRect.width, &screenRect.height);
+  } else {
+    // For full screen windows, use the desktop.
+    screen->GetRectDisplayPix(&screenRect.x, &screenRect.y, &screenRect.width,
+                              &screenRect.height);
   }
 
-  // For normalized windows, use the desktop work area.
-  // For full screen windows, use the desktop.
-  DesktopIntRect screenRect = mSizeMode == nsSizeMode_Fullscreen
-                                  ? screen->GetRectDisplayPix()
-                                  : screen->GetAvailRectDisplayPix();
-  // Expand for the decoration size if needed.
-  if (DrawsToCSDTitlebar()) {
-    screenRect.Inflate(mClientOffset.x, mClientOffset.y);
-  }
-  if (aPoint.x < screenRect.x) {
-    aPoint.x = screenRect.x;
-  } else if (aPoint.x >= screenRect.XMost() - logWidth) {
-    aPoint.x = screenRect.XMost() - logWidth;
-  }
+  if (aAllowSlop) {
+    if (*aX < screenRect.x - logWidth + kWindowPositionSlop) {
+      *aX = screenRect.x - logWidth + kWindowPositionSlop;
+    } else if (*aX >= screenRect.XMost() - kWindowPositionSlop) {
+      *aX = screenRect.XMost() - kWindowPositionSlop;
+    }
 
-  if (aPoint.y < screenRect.y) {
-    aPoint.y = screenRect.y;
-  } else if (aPoint.y >= screenRect.YMost() - logHeight) {
-    aPoint.y = screenRect.YMost() - logHeight;
+    if (*aY < screenRect.y - logHeight + kWindowPositionSlop) {
+      *aY = screenRect.y - logHeight + kWindowPositionSlop;
+    } else if (*aY >= screenRect.YMost() - kWindowPositionSlop) {
+      *aY = screenRect.YMost() - kWindowPositionSlop;
+    }
+  } else {
+    if (*aX < screenRect.x) {
+      *aX = screenRect.x;
+    } else if (*aX >= screenRect.XMost() - logWidth) {
+      *aX = screenRect.XMost() - logWidth;
+    }
+
+    if (*aY < screenRect.y) {
+      *aY = screenRect.y;
+    } else if (*aY >= screenRect.YMost() - logHeight) {
+      *aY = screenRect.YMost() - logHeight;
+    }
   }
 }
 
