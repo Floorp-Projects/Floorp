@@ -505,6 +505,28 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Removes the translations button.
+   */
+  #hideTranslationsButton() {
+    const { button, buttonLocale, buttonCircleArrows } = this.elements;
+    button.hidden = true;
+    buttonLocale.hidden = true;
+    buttonCircleArrows.hidden = true;
+    button.removeAttribute("translationsactive");
+  }
+
+  /**
+   * Returns true if translations is currently active, otherwise false.
+   *
+   * @returns {boolean}
+   */
+  #isTranslationsActive() {
+    const { requestedTranslationPair } =
+      this.#getTranslationsActor().languageState;
+    return requestedTranslationPair !== null;
+  }
+
+  /**
    * Handle the translation button being clicked on the default view.
    */
   async onDefaultTranslate() {
@@ -570,8 +592,20 @@ var TranslationsPanel = new (class {
    */
   async onAlwaysTranslateLanguage() {
     const docLangTag = await this.#getDocLangTag();
-    TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
-    await this.#updateSettingsMenuLanguageCheckboxStates();
+    const toggledOn =
+      TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
+    const translationsActive = this.#isTranslationsActive();
+    this.#updateSettingsMenuLanguageCheckboxStates();
+
+    if (toggledOn && !translationsActive) {
+      await this.onDefaultTranslate();
+    } else if (!toggledOn && translationsActive) {
+      await this.onRestore();
+    }
+
+    // If always-translate was activated while translations is active
+    // If always-translate was deactivated while translations is inactive
+    // There is no need to change the state of the page.
   }
 
   /**
@@ -582,7 +616,14 @@ var TranslationsPanel = new (class {
   async onNeverTranslateLanguage() {
     const docLangTag = await this.#getDocLangTag();
     TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
-    await this.#updateSettingsMenuLanguageCheckboxStates();
+    this.#updateSettingsMenuLanguageCheckboxStates();
+
+    if (this.#isTranslationsActive()) {
+      await this.onRestore();
+      return;
+    }
+
+    this.#hideTranslationsButton();
   }
 
   /**
@@ -593,6 +634,13 @@ var TranslationsPanel = new (class {
   async onNeverTranslateSite() {
     await this.#getTranslationsActor().toggleNeverTranslateSitePermissions();
     await this.#updateSettingsMenuSiteCheckboxStates();
+
+    if (this.#isTranslationsActive()) {
+      await this.onRestore();
+      return;
+    }
+
+    this.#hideTranslationsButton();
   }
 
   /**
@@ -654,8 +702,7 @@ var TranslationsPanel = new (class {
             buttonCircleArrows.hidden = true;
           }
         } else {
-          button.removeAttribute("translationsactive");
-          button.hidden = true;
+          this.#hideTranslationsButton();
         }
 
         switch (error) {
