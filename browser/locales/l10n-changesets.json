@@ -411,7 +411,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "48c2cbc418e3bc7be05c5aae2c00d9ec48d9d051"
+        "revision": "2efb8374184b75414c618ac90c4ebe4ca4fe40ab"
     },
     "es-AR": {
         "pin": false,
@@ -465,7 +465,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "5b8ec8eb5904250ced4e321f98a2ec57ea868b34"
+        "revision": "b49086391fd8a3d07ec7cf79ab096a259fece35f"
     },
     "es-MX": {
         "pin": false,
@@ -627,7 +627,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "831ac27364e6aa955c1ee46c99a39009311a333f"
+        "revision": "4a2510e96e5dc6530d9862c70006a149101c393e"
     },
     "ga-IE": {
         "pin": false,
@@ -879,7 +879,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "44c56aaebf9065d73c78103f6b2630159395eec7"
+        "revision": "bf1e6c61c54a6bc3fe451268a14883419350f6ec"
     },
     "it": {
         "pin": false,
@@ -1173,7 +1173,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "307d880f8370c0a113abd0ddf8373febac221190"
+        "revision": "229b6803ff0e4916b4f9bb49cd6b8e0547c6de33"
     },
     "ne-NP": {
         "pin": false,
@@ -1209,7 +1209,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2088214c06508b7d2e1e001aa7d774eea5650c95"
+        "revision": "9d7d6d139ec0ec67344579a0cb74f611914687d8"
     },
     "nn-NO": {
         "pin": false,
@@ -1605,7 +1605,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "5cbc854a86bbaeab1ef17665a48762af1e5a9270"
+        "revision": "89dc5bfe0b9cbfbf2458b3301cadb5c99dab67b5"
     },
     "th": {
         "pin": false,
@@ -1659,7 +1659,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "b24e61f94616e63839bbd8f4fcd48653f008f55e"
+        "revision": "006bd20ccc0677c48cf3b1eb777172b5d9ec891a"
     },
     "trs": {
         "pin": false,
