@@ -32,7 +32,7 @@
 #ifdef LOG
 #undef LOG
 #endif
-//#define LOGGING_ENABLED
+// #define LOGGING_ENABLED
 #ifdef LOGGING_ENABLED
 #define LOG(args...)                                                           \
   __android_log_print(ANDROID_LOG_INFO, "Cubeb_OpenSL", ##args)
@@ -40,7 +40,7 @@
 #define LOG(...)
 #endif
 
-//#define TIMESTAMP_ENABLED
+// #define TIMESTAMP_ENABLED
 #ifdef TIMESTAMP_ENABLED
 #define FILENAME                                                               \
   (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -1182,12 +1182,7 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params)
 
   // Calculate the capacity of input array
   stm->queuebuf_capacity = NBUFS;
-  if (stm->output_enabled) {
-    // Full duplex, update capacity to hold 1 sec of data
-    stm->queuebuf_capacity =
-        1 * stm->output_configured_rate / stm->queuebuf_len;
-  }
-  // Allocate input array
+  // Allocate input arrays
   stm->queuebuf = (void **)calloc(1, sizeof(void *) * stm->queuebuf_capacity);
   for (uint32_t i = 0; i < stm->queuebuf_capacity; ++i) {
     stm->queuebuf[i] = calloc(1, stm->queuebuf_len);
