@@ -98,6 +98,7 @@ void ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
     case StyleCssRuleType::LayerStatement:
     case StyleCssRuleType::FontFace:
     case StyleCssRuleType::Page:
+    case StyleCssRuleType::Property:
     case StyleCssRuleType::Keyframes:
     case StyleCssRuleType::Keyframe:
     case StyleCssRuleType::Namespace:
@@ -144,6 +145,7 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
     case StyleCssRuleType::LayerStatement:
     case StyleCssRuleType::FontFace:
     case StyleCssRuleType::Page:
+    case StyleCssRuleType::Property:
     case StyleCssRuleType::Keyframes:
     case StyleCssRuleType::Keyframe:
     case StyleCssRuleType::Namespace:

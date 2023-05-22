@@ -21,6 +21,7 @@
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
+#include "mozilla/dom/CSSPropertyRule.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/IntegerRange.h"
@@ -83,6 +84,7 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       CASE_RULE(Media, Media)
       CASE_RULE(Namespace, Namespace)
       CASE_RULE(Page, Page)
+      CASE_RULE(Property, Property)
       CASE_RULE(Supports, Supports)
       CASE_RULE(Document, MozDocument)
       CASE_RULE(Import, Import)
@@ -253,6 +255,7 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
       CASE_FOR(Media, Media)
       CASE_FOR(Namespace, Namespace)
       CASE_FOR(Page, Page)
+      CASE_FOR(Property, Property)
       CASE_FOR(Supports, Supports)
       CASE_FOR(Document, MozDocument)
       CASE_FOR(Import, Import)

@@ -34,7 +34,7 @@ use style::gecko::arc_types::{
     LockedDocumentRule, LockedFontFaceRule, LockedFontFeatureValuesRule,
     LockedFontPaletteValuesRule, LockedImportRule, LockedKeyframe, LockedKeyframesRule,
     LockedLayerBlockRule, LockedLayerStatementRule, LockedMediaList, LockedMediaRule,
-    LockedNamespaceRule, LockedPageRule, LockedStyleRule, LockedSupportsRule,
+    LockedNamespaceRule, LockedPageRule, LockedPropertyRule, LockedStyleRule, LockedSupportsRule,
 };
 use style::gecko::data::{
     AuthorStyles, GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl,
@@ -105,6 +105,7 @@ use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonC
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
+use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::PseudoElementCascadeType;
@@ -122,8 +123,8 @@ use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRules,
     CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
     ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule, MediaRule, NamespaceRule,
-    Origin, OriginSet, PageRule, SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
-    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    Origin, OriginSet, PageRule, PropertyRule, SanitizationData, SanitizationKind, StyleRule,
+    StylesheetContents, StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -2266,6 +2267,13 @@ impl_basic_rule_funcs! { (Page, PageRule),
     changed: Servo_StyleSet_PageRuleChanged,
 }
 
+impl_basic_rule_funcs! { (Property, PropertyRule),
+    getter: Servo_CssRules_GetPropertyRuleAt,
+    debug: Servo_PropertyRule_Debug,
+    to_css: Servo_PropertyRule_GetCssText,
+    changed: Servo_StyleSet_PropertyRuleChanged,
+}
+
 impl_group_rule_funcs! { (Supports, SupportsRule),
     get_rules: Servo_SupportsRule_GetRules,
     getter: Servo_CssRules_GetSupportsRuleAt,
@@ -2826,6 +2834,42 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
             },
             Err(_) => false,
         }
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PropertyRule_GetName(rule: &LockedPropertyRule, result: &mut nsACString) {
+    read_locked_arc(rule, |rule: &PropertyRule| {
+        rule.name.to_css(&mut CssWriter::new(result)).unwrap()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PropertyRule_GetSyntax(rule: &LockedPropertyRule, result: &mut nsACString) {
+    read_locked_arc(rule, |rule: &PropertyRule| {
+        if let Some(ref syntax) = rule.syntax {
+            CssWriter::new(result).write_str(syntax.as_str()).unwrap()
+        }
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PropertyRule_GetInherits(rule: &LockedPropertyRule) -> bool {
+    read_locked_arc(rule, |rule: &PropertyRule| {
+        matches!(rule.inherits, Some(PropertyInherits::True))
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PropertyRule_GetInitialValue(
+    rule: &LockedPropertyRule,
+    result: &mut nsACString,
+) -> bool {
+    read_locked_arc(rule, |rule: &PropertyRule| {
+        rule.initial_value
+            .to_css(&mut CssWriter::new(result))
+            .unwrap();
+        rule.initial_value.is_some()
     })
 }
 

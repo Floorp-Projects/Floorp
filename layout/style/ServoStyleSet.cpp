@@ -39,6 +39,7 @@
 #include "mozilla/dom/CSSKeyframeRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
+#include "mozilla/dom/CSSPropertyRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Element.h"
@@ -1014,6 +1015,7 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     CASE_FOR(FontPaletteValues, FontPaletteValues)
     CASE_FOR(FontFace, FontFace)
     CASE_FOR(Page, Page)
+    CASE_FOR(Property, Property)
     CASE_FOR(Document, MozDocument)
     CASE_FOR(Supports, Supports)
     CASE_FOR(LayerBlock, LayerBlock)
