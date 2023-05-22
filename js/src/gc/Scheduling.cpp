@@ -93,18 +93,22 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
     case JSGC_MAX_BYTES:
       gcMaxBytes_ = value;
       break;
-    case JSGC_MIN_NURSERY_BYTES:
-      if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
+    case JSGC_MIN_NURSERY_BYTES: {
+      size_t bytes = Nursery::roundSize(value);
+      if (bytes < SystemPageSize() || bytes >= MaxNurseryBytesParam) {
         return false;
       }
-      gcMinNurseryBytes_ = Nursery::roundSize(value);
+      gcMinNurseryBytes_ = bytes;
       break;
-    case JSGC_MAX_NURSERY_BYTES:
-      if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
+    }
+    case JSGC_MAX_NURSERY_BYTES: {
+      size_t bytes = Nursery::roundSize(value);
+      if (bytes < SystemPageSize() || bytes >= MaxNurseryBytesParam) {
         return false;
       }
-      gcMaxNurseryBytes_ = Nursery::roundSize(value);
+      gcMaxNurseryBytes_ = bytes;
       break;
+    }
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
       break;
