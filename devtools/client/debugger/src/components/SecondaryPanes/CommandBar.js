@@ -113,6 +113,7 @@ class CommandBar extends Component {
       logMethod: PropTypes.string.isRequired,
       setJavascriptTracingLogMethod: PropTypes.func.isRequired,
       setHideOrShowIgnoredSources: PropTypes.func.isRequired,
+      toggleSourceMapIgnoreList: PropTypes.func.isRequired,
     };
   }
 
@@ -363,6 +364,19 @@ class CommandBar extends Component {
             this.props.setHideOrShowIgnoredSources(!prefs.hideIgnoredSources)
           }
         />
+        <MenuItem
+          key="debugger-settings-menu-item-enable-sourcemap-ignore-list"
+          className="menu-item debugger-settings-menu-item-enable-sourcemap-ignore-list"
+          checked={prefs.sourceMapIgnoreListEnabled}
+          label={L10N.getStr("settings.enableSourceMapIgnoreList.label")}
+          tooltip={L10N.getStr("settings.enableSourceMapIgnoreList.tooltip")}
+          onClick={() =>
+            this.props.toggleSourceMapIgnoreList(
+              this.props.cx,
+              !prefs.sourceMapIgnoreListEnabled
+            )
+          }
+        />
       </MenuList>
     );
   }
@@ -415,4 +429,5 @@ export default connect(mapStateToProps, {
   toggleSourceMapsEnabled: actions.toggleSourceMapsEnabled,
   toggleJavaScriptEnabled: actions.toggleJavaScriptEnabled,
   setHideOrShowIgnoredSources: actions.setHideOrShowIgnoredSources,
+  toggleSourceMapIgnoreList: actions.toggleSourceMapIgnoreList,
 })(CommandBar);

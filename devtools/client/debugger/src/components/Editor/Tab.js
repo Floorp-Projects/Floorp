@@ -32,6 +32,8 @@ import {
   getSourcesForTabs,
   isSourceBlackBoxed,
   getContext,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -56,6 +58,7 @@ class Tab extends PureComponent {
       toggleBlackBox: PropTypes.func.isRequired,
       togglePrettyPrint: PropTypes.func.isRequired,
       isBlackBoxed: PropTypes.bool.isRequired,
+      isSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
   }
 
@@ -77,6 +80,7 @@ class Tab extends PureComponent {
       selectedLocation,
       source,
       isBlackBoxed,
+      isSourceOnIgnoreList,
     } = this.props;
 
     const tabCount = tabSources.length;
@@ -153,7 +157,7 @@ class Tab extends PureComponent {
           label: isBlackBoxed
             ? L10N.getStr("ignoreContextItem.unignore")
             : L10N.getStr("ignoreContextItem.ignore"),
-          disabled: !shouldBlackbox(source),
+          disabled: isSourceOnIgnoreList || !shouldBlackbox(source),
           click: () => toggleBlackBox(cx, source),
         },
       },
@@ -253,6 +257,9 @@ const mapStateToProps = (state, { source }) => {
     tabSources: getSourcesForTabs(state),
     selectedLocation: getSelectedLocation(state),
     isBlackBoxed: isSourceBlackBoxed(state, source),
+    isSourceOnIgnoreList:
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, source),
     activeSearch: getActiveSearch(state),
   };
 };

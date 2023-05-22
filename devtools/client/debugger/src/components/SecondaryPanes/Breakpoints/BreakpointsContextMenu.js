@@ -25,6 +25,7 @@ export default function showContextMenu(props) {
     openConditionalPanel,
     contextMenuEvent,
     blackboxedRangesForSource,
+    checkSourceOnIgnoreList,
   } = props;
 
   contextMenuEvent.preventDefault();
@@ -130,7 +131,8 @@ export default function showContextMenu(props) {
     accesskey: enableSelfKey,
     disabled: isLineBlackboxed(
       blackboxedRangesForSource,
-      breakpoint.location.line
+      breakpoint.location.line,
+      checkSourceOnIgnoreList(breakpoint.location.source)
     ),
     click: () => {
       toggleDisabledBreakpoint(cx, breakpoint);
@@ -143,7 +145,8 @@ export default function showContextMenu(props) {
     accesskey: enableAllKey,
     disabled: isLineBlackboxed(
       blackboxedRangesForSource,
-      breakpoint.location.line
+      breakpoint.location.line,
+      checkSourceOnIgnoreList(breakpoint.location.source)
     ),
     click: () => toggleAllBreakpoints(cx, false),
   };
@@ -154,7 +157,8 @@ export default function showContextMenu(props) {
     accesskey: enableOthersKey,
     disabled: isLineBlackboxed(
       blackboxedRangesForSource,
-      breakpoint.location.line
+      breakpoint.location.line,
+      checkSourceOnIgnoreList(breakpoint.location.source)
     ),
     click: () => toggleBreakpoints(cx, false, otherDisabledBreakpoints),
   };

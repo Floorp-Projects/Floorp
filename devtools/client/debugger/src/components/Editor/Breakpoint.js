@@ -26,6 +26,7 @@ class Breakpoint extends PureComponent {
       editorActions: PropTypes.object.isRequired,
       selectedSource: PropTypes.object,
       blackboxedRangesForSelectedSource: PropTypes.array,
+      isSelectedSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
   }
 
@@ -97,6 +98,7 @@ class Breakpoint extends PureComponent {
       selectedSource,
       breakpointActions,
       blackboxedRangesForSelectedSource,
+      isSelectedSourceOnIgnoreList,
     } = this.props;
     event.stopPropagation();
     event.preventDefault();
@@ -109,7 +111,8 @@ class Breakpoint extends PureComponent {
         breakpoint,
         selectedLocation,
         breakpointActions,
-        blackboxedRangesForSelectedSource
+        blackboxedRangesForSelectedSource,
+        isSelectedSourceOnIgnoreList
       )
     );
   };
