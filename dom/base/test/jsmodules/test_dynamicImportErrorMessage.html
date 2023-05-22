@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test the error message from import()</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  async function testLoaded() {
+    await import("./404.js").catch((error) => {
+      ok(error instanceof TypeError, "Should be a TypeError.");
+      ok(error.message.match(/404.js/), "Should have the filename.");
+      SimpleTest.finish();
+    });
+  }
+</script>
+<body onload='testLoaded()'></body>
