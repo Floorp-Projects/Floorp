@@ -514,6 +514,9 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     let actionChain = lazy.action.Chain.fromJSON(this.actionState, actions);
 
     await actionChain.dispatch(this.actionState, this.document.defaultView);
+    // Terminate the current wheel transaction if there is one. Wheel
+    // transactions should not live longer than a single action chain.
+    ChromeUtils.endWheelTransaction();
   }
 
   /**
