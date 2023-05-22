@@ -7,6 +7,7 @@
 #include "gc/Scheduling.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TimeStamp.h"
 
 #include <algorithm>
@@ -43,6 +44,10 @@ static constexpr double MinHeapGrowthFactor =
     1.0f / std::min(HighFrequencyEagerAllocTriggerFactor,
                     LowFrequencyEagerAllocTriggerFactor);
 
+// Limit various parameters to reasonable levels to catch errors.
+static constexpr double MaxHeapGrowthFactor = 100;
+static constexpr size_t MaxNurseryBytesParam = 128 * 1024 * 1024;
+
 GCSchedulingTunables::GCSchedulingTunables()
     : gcMaxBytes_(TuningDefaults::GCMaxBytes),
       gcMinNurseryBytes_(Nursery::roundSize(TuningDefaults::GCMinNurseryBytes)),
@@ -77,12 +82,12 @@ GCSchedulingTunables::GCSchedulingTunables()
       mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
       urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes),
       parallelMarkingThresholdBytes_(
-          TuningDefaults::ParallelMarkingThresholdBytes) {}
+          TuningDefaults::ParallelMarkingThresholdBytes) {
+  checkInvariants();
+}
 
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
-  // Limit various parameters to reasonable levels to catch errors.
-  const double MaxHeapGrowthFactor = 100;
-  const size_t MaxNurseryBytesParam = 128 * 1024 * 1024;
+  auto guard = mozilla::MakeScopeExit([this] { checkInvariants(); });
 
   switch (key) {
     case JSGC_MAX_BYTES:
@@ -293,7 +298,6 @@ void GCSchedulingTunables::setSmallHeapSizeMaxBytes(size_t value) {
   if (smallHeapSizeMaxBytes_ >= largeHeapSizeMinBytes_) {
     largeHeapSizeMinBytes_ = smallHeapSizeMaxBytes_ + 1;
   }
-  MOZ_ASSERT(largeHeapSizeMinBytes_ > smallHeapSizeMaxBytes_);
 }
 
 void GCSchedulingTunables::setLargeHeapSizeMinBytes(size_t value) {
@@ -301,7 +305,6 @@ void GCSchedulingTunables::setLargeHeapSizeMinBytes(size_t value) {
   if (largeHeapSizeMinBytes_ <= smallHeapSizeMaxBytes_) {
     smallHeapSizeMaxBytes_ = largeHeapSizeMinBytes_ - 1;
   }
-  MOZ_ASSERT(largeHeapSizeMinBytes_ > smallHeapSizeMaxBytes_);
 }
 
 void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(double value) {
@@ -309,8 +312,6 @@ void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(double value) {
   if (highFrequencyLargeHeapGrowth_ > highFrequencySmallHeapGrowth_) {
     highFrequencySmallHeapGrowth_ = highFrequencyLargeHeapGrowth_;
   }
-  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ >= MinHeapGrowthFactor);
-  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
 }
 
 void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(double value) {
@@ -318,13 +319,10 @@ void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(double value) {
   if (highFrequencySmallHeapGrowth_ < highFrequencyLargeHeapGrowth_) {
     highFrequencyLargeHeapGrowth_ = highFrequencySmallHeapGrowth_;
   }
-  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ >= MinHeapGrowthFactor);
-  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
 }
 
 void GCSchedulingTunables::setLowFrequencyHeapGrowth(double value) {
   lowFrequencyHeapGrowth_ = value;
-  MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinHeapGrowthFactor);
 }
 
 void GCSchedulingTunables::setHeapGrowthFactor(double value) {
@@ -332,6 +330,8 @@ void GCSchedulingTunables::setHeapGrowthFactor(double value) {
 }
 
 void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
+  auto guard = mozilla::MakeScopeExit([this] { checkInvariants(); });
+
   switch (key) {
     case JSGC_MAX_BYTES:
       gcMaxBytes_ = TuningDefaults::GCMaxBytes;
@@ -413,6 +413,25 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
+}
+
+void GCSchedulingTunables::checkInvariants() {
+  MOZ_ASSERT(gcMinNurseryBytes_ == Nursery::roundSize(gcMinNurseryBytes_));
+  MOZ_ASSERT(gcMaxNurseryBytes_ == Nursery::roundSize(gcMaxNurseryBytes_));
+  MOZ_ASSERT(gcMinNurseryBytes_ <= gcMaxNurseryBytes_);
+  MOZ_ASSERT(gcMinNurseryBytes_ >= SystemPageSize());
+  MOZ_ASSERT(gcMaxNurseryBytes_ <= MaxNurseryBytesParam);
+
+  MOZ_ASSERT(largeHeapSizeMinBytes_ > smallHeapSizeMaxBytes_);
+
+  MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinHeapGrowthFactor);
+  MOZ_ASSERT(lowFrequencyHeapGrowth_ <= MaxHeapGrowthFactor);
+
+  MOZ_ASSERT(highFrequencySmallHeapGrowth_ >= MinHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencySmallHeapGrowth_ <= MaxHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
+  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ >= MinHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencySmallHeapGrowth_ <= MaxHeapGrowthFactor);
 }
 
 void GCSchedulingState::updateHighFrequencyMode(
