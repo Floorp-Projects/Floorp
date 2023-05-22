@@ -34,7 +34,6 @@
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #  include "mozilla/a11y/AccessibleWrap.h"
 #  include "mozilla/a11y/Compatibility.h"
-#  include "mozilla/mscom/ActCtxResource.h"
 #endif
 #include <map>
 #include <utility>
@@ -316,10 +315,6 @@
 #ifdef XP_WIN
 #  include "mozilla/widget/AudioSession.h"
 #  include "mozilla/WinDllServices.h"
-#endif
-
-#ifdef ACCESSIBILITY
-#  include "nsAccessibilityService.h"
 #endif
 
 #ifdef MOZ_CODE_COVERAGE
@@ -2648,20 +2643,6 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // handle and its content length, to minimize the startup time of content
   // processes.
   ::mozilla::ipc::ExportSharedJSInit(*mSubprocess, extraArgs);
-
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-  // Determining the accessibility resource ID causes problems with the sandbox,
-  // so we pass it on the command line as it is required very early in process
-  // start up. It is not required when the caching mechanism is being used.
-  if (!a11y::IsCacheActive()) {
-    // The accessibility resource ID may not be set in some cases, for example
-    // in xpcshell tests.
-    auto resourceId = mscom::ActCtxResource::GetAccessibilityResourceId();
-    if (resourceId) {
-      geckoargs::sA11yResourceId.Put(resourceId, extraArgs);
-    }
-  }
-#endif
 
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
