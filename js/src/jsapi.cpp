@@ -4364,7 +4364,7 @@ JS_PUBLIC_API void JS::DisableSpectreMitigationsAfterInit() {
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && \
-    defined(XP_WIN)
+    defined(XP_WIN) && (defined(MOZ_MEMORY) || !defined(JS_STANDALONE))
 
 #  include "util/WindowsWrapper.h"
 
