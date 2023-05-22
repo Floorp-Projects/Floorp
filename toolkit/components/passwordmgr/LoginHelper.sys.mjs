@@ -1255,13 +1255,27 @@ export const LoginHelper = {
    * @param {string} args.entryPoint
    *                 The name of the entry point, used for telemetry
    */
-  openPasswordManager(window, { filterString = "", entryPoint = "" } = {}) {
+  openPasswordManager(
+    window,
+    { filterString = "", entryPoint = "", loginGuid = null } = {}
+  ) {
+    // Get currently active tab's origin
+    const openedFrom =
+      window.gBrowser.selectedTab.linkedBrowser.currentURI.spec;
+
+    // If no loginGuid is set, get sanitized origin, this will return null for about:* uris
+    const preselectedLogin = loginGuid ?? this.getLoginOrigin(openedFrom);
+
     const params = new URLSearchParams({
       ...(filterString && { filter: filterString }),
       ...(entryPoint && { entryPoint }),
     });
-    const separator = params.toString() ? "?" : "";
-    const destination = `about:logins${separator}${params}`;
+
+    const paramsPart = params.toString() ? `?${params}` : "";
+    const fragmentsPart = preselectedLogin
+      ? `#${window.encodeURIComponent(preselectedLogin)}`
+      : "";
+    const destination = `about:logins${paramsPart}${fragmentsPart}`;
 
     // We assume that managementURL has a '?' already
     window.openTrustedLinkIn(destination, "tab");
