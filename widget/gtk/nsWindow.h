@@ -156,7 +156,7 @@ class nsWindow final : public nsBaseWidget {
   void SetModal(bool aModal) override;
   bool IsVisible() const override;
   bool IsMapped() const override;
-  void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
+  void ConstrainPosition(DesktopIntPoint&) override;
   void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   void LockAspectRatio(bool aShouldLock) override;
   void Move(double aX, double aY) override;
