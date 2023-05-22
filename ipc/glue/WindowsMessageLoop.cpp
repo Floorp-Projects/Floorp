@@ -850,7 +850,7 @@ SuppressedNeuteringRegion::~SuppressedNeuteringRegion() {
 
 bool SuppressedNeuteringRegion::sSuppressNeutering = false;
 
-bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
+bool MessageChannel::WaitForSyncNotify() {
   mMonitor->AssertCurrentThreadOwns();
 
   if (!gUIThreadId) {
@@ -859,8 +859,7 @@ bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
 
   // Use a blocking wait if this channel does not require
   // Windows message deferral behavior.
-  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION) ||
-      !aHandleWindowsMessages) {
+  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
     TimeDuration timeout = (kNoTimeout == mTimeoutMs)
                                ? TimeDuration::Forever()
                                : TimeDuration::FromMilliseconds(mTimeoutMs);

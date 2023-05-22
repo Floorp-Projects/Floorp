@@ -25,9 +25,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIBrowserDOMWindow.h"
 
-#ifdef ACCESSIBILITY
-#  include "mozilla/a11y/PDocAccessible.h"
-#endif
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
@@ -6243,22 +6240,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
   BroadcastBlobURLUnregistration(aURI, aPrincipal, this);
   mBlobURLs.RemoveElement(aURI);
   return IPC_OK();
-}
-
-bool ContentParent::HandleWindowsMessages(const Message& aMsg) const {
-  MOZ_ASSERT(aMsg.is_sync());
-
-#ifdef ACCESSIBILITY
-  // a11y messages can be triggered by windows messages, which means if we
-  // allow handling windows messages while we wait for the response to a sync
-  // a11y message we can reenter the ipc message sending code.
-  if (a11y::PDocAccessible::PDocAccessibleStart < aMsg.type() &&
-      a11y::PDocAccessible::PDocAccessibleEnd > aMsg.type()) {
-    return false;
-  }
-#endif
-
-  return true;
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(
