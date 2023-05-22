@@ -259,9 +259,7 @@ void XPCShellEnvironment::ProcessFile(JSContext* cx, const char* filename,
      * It's not interactive - just execute it.
      *
      * Support the UNIX #! shell hack; gobble the first line if it starts
-     * with '#'.  TODO - this isn't quite compatible with sharp variables,
-     * as a legal js program (using sharp variables) might start with '#'.
-     * But that would require multi-character lookahead.
+     * with '#'.
      */
     int ch = fgetc(file);
     if (ch == '#') {
