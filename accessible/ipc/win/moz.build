@@ -14,19 +14,15 @@ if CONFIG["ACCESSIBILITY"]:
     IPDL_SOURCES += ["PDocAccessible.ipdl"]
 
     EXPORTS.mozilla.a11y += [
-        "COMPtrTypes.h",
         "DocAccessibleChild.h",
         "HandlerProvider.h",
-        "PlatformChild.h",
         "RemoteAccessible.h",
     ]
 
     SOURCES += [
         "!./handler/HandlerData_c.c",
-        "COMPtrTypes.cpp",
         "DocAccessibleChild.cpp",
         "HandlerProvider.cpp",
-        "PlatformChild.cpp",
     ]
 
     # Give some symbols a unique name in each translation unit, to avoid
