@@ -347,6 +347,9 @@ class HTMLTextAreaElement final : public TextControlElement,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
+  void SetDirectionFromValue(bool aNotify,
+                             const nsAString* aKnownValue = nullptr);
+
   /**
    * Return if an element should have a specific validity UI
    * (with :-moz-ui-invalid and :-moz-ui-valid pseudo-classes).
