@@ -505,7 +505,10 @@ void AndroidDataEncoder<ConfigType>::CallbacksSupport::HandleInput(
 template <typename ConfigType>
 void AndroidDataEncoder<ConfigType>::CallbacksSupport::HandleOutput(
     java::Sample::Param aSample, java::SampleBuffer::Param aBuffer) {
-  mEncoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
+  MutexAutoLock lock(mMutex);
+  if (mEncoder) {
+    mEncoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
+  }
 }
 
 template <typename ConfigType>
@@ -515,7 +518,10 @@ void AndroidDataEncoder<ConfigType>::CallbacksSupport::
 template <typename ConfigType>
 void AndroidDataEncoder<ConfigType>::CallbacksSupport::HandleError(
     const MediaResult& aError) {
-  mEncoder->Error(aError);
+  MutexAutoLock lock(mMutex);
+  if (mEncoder) {
+    mEncoder->Error(aError);
+  }
 }
 
 // Force compiler to generate code.
