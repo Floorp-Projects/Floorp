@@ -224,11 +224,6 @@ class MessageChannel : HasResultCodes {
     // that manage child processes which might create native UI, like
     // plugins.
     REQUIRE_DEFERRED_MESSAGE_PROTECTION = 1 << 0,
-    // Windows: When this flag is specified, any wait that occurs during
-    // synchronous IPC will be alertable, thus allowing a11y code in the
-    // chrome process to reenter content while content is waiting on a
-    // synchronous call.
-    REQUIRE_A11Y_REENTRY = 1 << 1,
   };
   void SetChannelFlags(ChannelFlags aFlags) { mFlags = aFlags; }
   ChannelFlags GetChannelFlags() { return mFlags; }
@@ -363,9 +358,6 @@ class MessageChannel : HasResultCodes {
 
  private:
   void SpinInternalEventLoop();
-#  if defined(ACCESSIBILITY)
-  bool WaitForSyncNotifyWithA11yReentry();
-#  endif  // defined(ACCESSIBILITY)
 #endif    // defined(OS_WIN)
 
  private:

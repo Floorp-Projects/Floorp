@@ -850,101 +850,12 @@ SuppressedNeuteringRegion::~SuppressedNeuteringRegion() {
 
 bool SuppressedNeuteringRegion::sSuppressNeutering = false;
 
-#if defined(ACCESSIBILITY)
-static DWORD WaitForSingleObjectExWrapper(HANDLE aEvent, DWORD aTimeout) {
-  return ::WaitForSingleObjectEx(aEvent, aTimeout, TRUE);
-}
-
-static DWORD CoWaitForMultipleHandlesWrapper(HANDLE aEvent, DWORD aTimeout) {
-  DWORD waitResult = 0;
-  ::SetLastError(ERROR_SUCCESS);
-  HRESULT hr = ::CoWaitForMultipleHandles(COWAIT_ALERTABLE, aTimeout, 1,
-                                          &aEvent, &waitResult);
-  if (hr == S_OK) {
-    return waitResult;
-  }
-  if (hr == RPC_S_CALLPENDING) {
-    return WAIT_TIMEOUT;
-  }
-  return WAIT_FAILED;
-}
-
-bool MessageChannel::WaitForSyncNotifyWithA11yReentry() {
-  mMonitor->AssertCurrentThreadOwns();
-  MonitorAutoUnlock unlock(*mMonitor);
-
-  static auto* sWaitForEvent = IsWin32kLockedDown()
-                                   ? WaitForSingleObjectExWrapper
-                                   : CoWaitForMultipleHandlesWrapper;
-
-  const DWORD waitStart = ::GetTickCount();
-  DWORD elapsed = 0;
-  DWORD timeout =
-      mTimeoutMs == kNoTimeout ? INFINITE : static_cast<DWORD>(mTimeoutMs);
-  bool timedOut = false;
-
-  while (true) {
-    {  // Scope for lock
-      MonitorAutoLock lock(*mMonitor);
-      if (!Connected()) {
-        break;
-      }
-    }
-
-    if (timeout != static_cast<DWORD>(kNoTimeout)) {
-      elapsed = ::GetTickCount() - waitStart;
-    }
-
-    if (elapsed >= timeout) {
-      timedOut = true;
-      break;
-    }
-
-    DWORD waitResult = sWaitForEvent(mEvent, timeout - elapsed);
-
-    if (waitResult == WAIT_OBJECT_0) {
-      // mEvent is signaled
-      BOOL success = ::ResetEvent(mEvent);
-      if (!success) {
-        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle)
-            << "WindowsMessageChannel::WaitForSyncNotifyWithA11yReentry "
-               "failed to reset event. GetLastError: "
-            << GetLastError();
-      }
-      break;
-    }
-
-    if (waitResult == WAIT_IO_COMPLETION) {
-      // APC fired, keep waiting
-      continue;
-    }
-
-    if (waitResult == WAIT_TIMEOUT) {
-      timeout = true;
-      break;
-    }
-
-    NS_ERROR("WaitForSyncNotifyWithA11yReentry failed");
-    break;
-  }
-
-  return WaitResponse(timedOut);
-}
-#endif
-
 bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
   mMonitor->AssertCurrentThreadOwns();
 
   if (!gUIThreadId) {
     mozilla::ipc::windows::InitUIThread();
   }
-
-#if defined(ACCESSIBILITY)
-  if (mFlags & REQUIRE_A11Y_REENTRY) {
-    MOZ_ASSERT(!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION));
-    return WaitForSyncNotifyWithA11yReentry();
-  }
-#endif
 
   // Use a blocking wait if this channel does not require
   // Windows message deferral behavior.
