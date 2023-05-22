@@ -171,7 +171,6 @@ async function promiseElementReadyForUserInput(
         capture: true,
         once: true,
       });
-      synthesizeMouseAtCenter(aElement, { type: "mousemove" }, aWindow);
       timeout = aWindow.setInterval(() => {
         if (aLogFunc) {
           aLogFunc("mousemove not received in this 300ms");
@@ -181,6 +180,7 @@ async function promiseElementReadyForUserInput(
         });
         resolve(false);
       }, 300);
+      synthesizeMouseAtCenter(aElement, { type: "mousemove" }, aWindow);
     });
   }
   for (let i = 0; i < 20; i++) {
