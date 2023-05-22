@@ -47,22 +47,6 @@ translations-panel-error-translating = There was a problem translating. Please t
 translations-panel-error-load-languages = Couldn’t load languages
 translations-panel-error-load-languages-hint = Check your internet connection and try again.
 
-# Text displayed for the option to always translate a given language
-# Variables:
-#   $language (string) - The localized display name of the detected language
-translations-panel-settings-always-translate-language =
-  .label = Always translate { $language }
-
-# Text displayed for the option to never translate a given language
-# Variables:
-#   $language (string) - The localized display name of the detected language
-translations-panel-settings-never-translate-language =
-  .label = Never translate { $language }
-
-# Text displayed for the option to never translate this website
-translations-panel-settings-never-translate-site =
-  .label = Never translate this site
-
 ## The translation panel appears from the url bar, and this view is the "dual" translate
 ## view that lets you choose a source language and target language for translation
 
@@ -98,9 +82,6 @@ translations-panel-revisit-translate-button = Translate
 ## Firefox Translations language management in about:preferences.
 
 translations-manage-header = Translations
-translations-manage-settings-button =
-    .label = Settings…
-    .accesskey = t
 translations-manage-description = Download languages for offline translation.
 translations-manage-all-language = All languages
 translations-manage-download-button = Download
@@ -108,31 +89,3 @@ translations-manage-delete-button = Delete
 translations-manage-error-download = There was a problem downloading the language files. Please try again.
 translations-manage-error-delete = There was an error deleting the language files. Please try again.
 translations-manage-error-list = Failed to get the list of available languages for translation. Refresh the page to try again.
-
-translations-settings-title =
-    .title = Translations Settings
-    .style = min-width: 36em
-translations-settings-close-key =
-    .key = w
-translations-settings-always-translate-langs-description = Translation will happen automatically for the following languages
-translations-settings-never-translate-langs-description = Translation will not be offered for the following languages
-translations-settings-never-translate-sites-description = Translation will not be offered for the following sites
-translations-settings-languages-column =
-    .label = Languages
-translations-settings-remove-language-button =
-    .label = Remove Language
-    .accesskey = R
-translations-settings-remove-all-languages-button =
-    .label = Remove All Languages
-    .accesskey = e
-translations-settings-sites-column =
-    .label = Websites
-translations-settings-remove-site-button =
-    .label = Remove Site
-    .accesskey = S
-translations-settings-remove-all-sites-button =
-    .label = Remove All Sites
-    .accesskey = m
-translations-settings-close-dialog =
-    .buttonlabelaccept = Close
-    .buttonaccesskeyaccept = C

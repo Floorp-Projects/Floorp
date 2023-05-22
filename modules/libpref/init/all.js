@@ -3779,13 +3779,6 @@ pref("browser.translations.enable", false);
 // the application logic logs, and not all of the translated messages, which can be
 // slow and overwhelming.
 pref("browser.translations.logLevel", "Error");
-// A comma-separated list of BCP-47 language tags that affect the behavior of translations.
-// Languages listed in the alwaysTranslateLanguages list will trigger auto-translate on page load.
-pref("browser.translations.alwaysTranslateLanguages", "");
-// A comma-separated list of BCP-47 language tags that affect the behavior of translations.
-// Languages listed in the neverTranslateLanguages list will signal that the translations button
-// and menus should not be displayed automatically when visiting pages in those languages.
-pref("browser.translations.neverTranslateLanguages", "");
 // By default the translations engine on about:translations uses text for translation,
 // and the full page translations uses HTML. Set this pref to true to use the HTML
 // translation behavior on about:translations. Requires a page refresh.
