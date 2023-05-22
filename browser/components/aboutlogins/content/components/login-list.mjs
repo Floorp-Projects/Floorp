@@ -105,6 +105,7 @@ export default class LoginList extends HTMLElement {
   _filter = "";
   _selectedGuid = null;
   _blankLoginListItem = LoginListItemFactory.create({});
+  _preselect;
 
   constructor() {
     super();
@@ -148,6 +149,10 @@ export default class LoginList extends HTMLElement {
       activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
 
     return activeDescendant;
+  }
+
+  selectLoginByDomainOrGuid(searchParam) {
+    this._preselectLogin = searchParam;
   }
 
   render() {
@@ -851,16 +856,19 @@ export default class LoginList extends HTMLElement {
    * selection.
    */
   _selectFirstVisibleLogin() {
-    let firstVisibleListItem = this._list.querySelector(
-      ".login-list-item[data-guid]:not([hidden])"
-    );
-    if (firstVisibleListItem) {
-      let { login } = this._logins[firstVisibleListItem.dataset.guid];
+    const selectedLoginGuid =
+      this._loginGuidsSortedOrder.find(guid => guid === this._preselectLogin) ??
+      this.findLoginGuidFromDomain(this._preselectLogin) ??
+      this._loginGuidsSortedOrder[0];
+
+    if (selectedLoginGuid) {
+      let { login } = this._logins[selectedLoginGuid];
       window.dispatchEvent(
         new CustomEvent("AboutLoginsInitialLoginSelected", {
           detail: login,
         })
       );
+      this.updateSelectedLocationHash(selectedLoginGuid);
     }
   }
 
@@ -877,9 +885,23 @@ export default class LoginList extends HTMLElement {
     listItem.setAttribute("aria-selected", "true");
     this._list.setAttribute("aria-activedescendant", listItem.id);
     this._selectedGuid = listItem.dataset.guid;
-
+    this.updateSelectedLocationHash(this._selectedGuid);
     // Scroll item into view if it isn't visible
     listItem.scrollIntoView({ block: "nearest" });
+  }
+
+  updateSelectedLocationHash(guid) {
+    window.location.hash = `#${encodeURIComponent(guid)}`;
+  }
+
+  findLoginGuidFromDomain(domain) {
+    for (let guid of this._loginGuidsSortedOrder) {
+      let login = this._logins[guid].login;
+      if (login.hostname === domain) {
+        return guid;
+      }
+    }
+    return null;
   }
 }
 customElements.define("login-list", LoginList);
