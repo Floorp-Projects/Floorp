@@ -70,6 +70,9 @@ def filter_nonwebrtc(commit):
             line.startswith("diff --git a/" + LIBWEBRTC_DIR)
             and not line.startswith("diff --git a/" + LIBWEBRTC_DIR + "/build")
             and not line.startswith("diff --git a/" + LIBWEBRTC_DIR + "/third_party")
+            and not line.startswith(
+                "diff --git a/" + LIBWEBRTC_DIR + "/moz-patch-stack"
+            )
             and not line.endswith("moz.build")
         ):
             skipping = False
