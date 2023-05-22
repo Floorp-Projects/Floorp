@@ -646,7 +646,6 @@ class MacArtifactJob(ArtifactJob):
         "Contents/MacOS",
         [
             "crashreporter.app/Contents/MacOS/crashreporter",
-            "media-plugin-helper.app/Contents/MacOS/* Media Plugin Helper",
             "{product}",
             "{product}-bin",
             "*.dylib",
