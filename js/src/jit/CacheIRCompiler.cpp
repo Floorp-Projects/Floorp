@@ -1154,6 +1154,9 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
       case StubField::Type::BaseScript:
         InitGCPtr<BaseScript*>(destWords, field.asWord());
         break;
+      case StubField::Type::JitCode:
+        InitGCPtr<JitCode*>(destWords, field.asWord());
+        break;
       case StubField::Type::Id:
         AsGCPtr<jsid>(destWords)->init(jsid::fromRawBits(field.asWord()));
         break;
@@ -1214,6 +1217,10 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::BaseScript:
         TraceEdge(trc, &stubInfo->getStubField<T, BaseScript*>(stub, offset),
                   "cacheir-script");
+        break;
+      case StubField::Type::JitCode:
+        TraceEdge(trc, &stubInfo->getStubField<T, JitCode*>(stub, offset),
+                  "cacheir-jitcode");
         break;
       case StubField::Type::Id:
         TraceEdge(trc, &stubInfo->getStubField<T, jsid>(stub, offset),

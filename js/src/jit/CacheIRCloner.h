@@ -42,6 +42,7 @@ namespace jit {
 
 class CacheIRStubInfo;
 class ICCacheIRStub;
+class JitCode;
 
 class MOZ_RAII CacheIRCloner {
  public:
@@ -65,6 +66,7 @@ class MOZ_RAII CacheIRCloner {
   JSAtom* getAtomField(uint32_t stubOffset);
   JS::Symbol* getSymbolField(uint32_t stubOffset);
   BaseScript* getBaseScriptField(uint32_t stubOffset);
+  JitCode* getJitCodeField(uint32_t stubOffset);
   uint32_t getRawInt32Field(uint32_t stubOffset);
   const void* getRawPointerField(uint32_t stubOffset);
   jsid getIdField(uint32_t stubOffset);

@@ -217,6 +217,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(script);
     addStubField(uintptr_t(script), StubField::Type::BaseScript);
   }
+  void writeJitCodeField(JitCode* code) {
+    MOZ_ASSERT(code);
+    addStubField(uintptr_t(code), StubField::Type::JitCode);
+  }
   void writeRawInt32Field(uint32_t val) {
     addStubField(val, StubField::Type::RawInt32);
   }
