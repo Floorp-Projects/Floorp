@@ -62,10 +62,11 @@ add_task(async function basic_install_test() {
 });
 
 add_task(async function test_install_duplicate_engine() {
-  consoleAllowList.push("An engine with that name already exists");
+  let name = "Plain";
+  consoleAllowList.push(`An engine called ${name} already exists`);
   let extension = await SearchTestUtils.installSearchExtension(
     {
-      name: "Plain",
+      name,
       search_url: "https://example.com/plain",
     },
     { skipUnload: true }
