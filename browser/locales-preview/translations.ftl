@@ -47,6 +47,22 @@ translations-panel-error-translating = There was a problem translating. Please t
 translations-panel-error-load-languages = Couldn’t load languages
 translations-panel-error-load-languages-hint = Check your internet connection and try again.
 
+# Text displayed for the option to always translate a given language
+# Variables:
+#   $language (string) - The localized display name of the detected language
+translations-panel-settings-always-translate-language =
+  .label = Always translate { $language }
+
+# Text displayed for the option to never translate a given language
+# Variables:
+#   $language (string) - The localized display name of the detected language
+translations-panel-settings-never-translate-language =
+  .label = Never translate { $language }
+
+# Text displayed for the option to never translate this website
+translations-panel-settings-never-translate-site =
+  .label = Never translate this site
+
 ## The translation panel appears from the url bar, and this view is the "dual" translate
 ## view that lets you choose a source language and target language for translation
 
