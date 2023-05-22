@@ -550,14 +550,15 @@
 
 /* Status description formatting */
 .statusLabel {
+  display: none;
   padding: 0 10px;
   text-align: center;
   font: message-box;
   font-size: 14px;
 }
 
-.statusLabel {
-  display: none;
+.videocontrols[localedir="rtl"] .statusLabel {
+  direction: rtl;
 }
 
 [status="errorAborted"]         > #errorAborted,
