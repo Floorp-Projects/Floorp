@@ -123,12 +123,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  protected:
   // non-POD options:
 
-  // UTF-8 encoded file name.
   const char* filename_ = nullptr;
-
-  // UTF-8 encoded introducer file name.
   const char* introducerFilename_ = nullptr;
-
   const char16_t* sourceMapURL_ = nullptr;
 
   // POD options:
@@ -237,8 +233,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool deoptimizeModuleGlobalVars = false;
 
   /**
-   * |introductionType| is a statically allocated C string. See JSScript.h
-   * for more information.
+   * |introductionType| is a statically allocated C string: one of "eval",
+   * "Function", or "GeneratorFunction".
    */
   const char* introductionType = nullptr;
 

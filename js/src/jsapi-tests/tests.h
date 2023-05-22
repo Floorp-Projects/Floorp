@@ -168,9 +168,8 @@ class JSAPIRuntimeTest : public JSAPITest {
                 JS::MutableHandleValue vp);
 
   JSAPITestString jsvalToSource(JS::HandleValue v) {
-    JS::Rooted<JSString*> str(cx, JS_ValueToSource(cx, v));
-    if (str) {
-      if (JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, str)) {
+    if (JSString* str = JS_ValueToSource(cx, v)) {
+      if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str)) {
         return JSAPITestString(bytes.get());
       }
     }
@@ -329,7 +328,7 @@ class JSAPIRuntimeTest : public JSAPITest {
       JS::RootedValue v(cx);
       JS_GetPendingException(cx, &v);
       JS_ClearPendingException(cx);
-      JS::Rooted<JSString*> s(cx, JS::ToString(cx, v));
+      JSString* s = JS::ToString(cx, v);
       if (s) {
         if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, s)) {
           message += bytes.get();
@@ -348,13 +347,12 @@ class JSAPIRuntimeTest : public JSAPITest {
   static bool print(JSContext* cx, unsigned argc, JS::Value* vp) {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-    JS::Rooted<JSString*> str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
-      str = JS::ToString(cx, args[i]);
+      JSString* str = JS::ToString(cx, args[i]);
       if (!str) {
         return false;
       }
-      JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
+      JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
       if (!bytes) {
         return false;
       }

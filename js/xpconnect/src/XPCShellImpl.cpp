@@ -164,7 +164,32 @@ static bool GetLocationProperty(JSContext* cx, unsigned argc, Value* vp) {
 #else
   JS::AutoFilename filename;
   if (JS::DescribeScriptedCaller(cx, &filename) && filename.get()) {
+#  if defined(XP_WIN)
+    // convert from the system codepage to UTF-16
+    int bufferSize =
+        MultiByteToWideChar(CP_ACP, 0, filename.get(), -1, nullptr, 0);
+    nsAutoString filenameString;
+    filenameString.SetLength(bufferSize);
+    MultiByteToWideChar(CP_ACP, 0, filename.get(), -1,
+                        (LPWSTR)filenameString.BeginWriting(),
+                        filenameString.Length());
+    // remove the null terminator
+    filenameString.SetLength(bufferSize - 1);
+
+    // replace forward slashes with backslashes,
+    // since nsLocalFileWin chokes on them
+    char16_t* start = filenameString.BeginWriting();
+    char16_t* end = filenameString.EndWriting();
+
+    while (start != end) {
+      if (*start == L'/') {
+        *start = L'\\';
+      }
+      start++;
+    }
+#  elif defined(XP_UNIX)
     NS_ConvertUTF8toUTF16 filenameString(filename.get());
+#  endif
 
     nsCOMPtr<nsIFile> location;
     nsresult rv =
@@ -350,14 +375,28 @@ static bool Load(JSContext* cx, unsigned argc, Value* vp) {
     if (!str) {
       return false;
     }
-    JS::UniqueChars filename = JS_EncodeStringToUTF8(cx, str);
+    JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
     if (!filename) {
       return false;
     }
+    FILE* file = fopen(filename.get(), "r");
+    if (!file) {
+      filename = JS_EncodeStringToUTF8(cx, str);
+      if (!filename) {
+        return false;
+      }
+      JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading",
+                         filename.get());
+      return false;
+    }
     JS::CompileOptions options(cx);
-    options.setIsRunOnce(true).setSkipFilenameValidation(true);
-    JS::Rooted<JSScript*> script(
-        cx, JS::CompileUtf8Path(cx, options, filename.get()));
+    options.setFileAndLine(filename.get(), 1)
+        .setIsRunOnce(true)
+        .setSkipFilenameValidation(true);
+    JS::Rooted<JSScript*> script(cx);
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+    script = JS::CompileUtf8File(cx, options, file);
+    fclose(file);
     if (!script) {
       return false;
     }
@@ -754,7 +793,9 @@ static bool ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file,
      * It's not interactive - just execute it.
      *
      * Support the UNIX #! shell hack; gobble the first line if it starts
-     * with '#'.
+     * with '#'.  TODO - this isn't quite compatible with sharp variables,
+     * as a legal js program (using sharp variables) might start with '#'.
+     * But that would require multi-character lookahead.
      */
     int ch = fgetc(file);
     if (ch == '#') {
@@ -766,15 +807,10 @@ static bool ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file,
     }
     ungetc(ch, file);
 
-    JS::UniqueChars filenameUtf8 = JS::EncodeNarrowToUtf8(jsapi.cx(), filename);
-    if (!filenameUtf8) {
-      return false;
-    }
-
     JS::RootedScript script(cx);
     JS::RootedValue unused(cx);
     JS::CompileOptions options(cx);
-    options.setFileAndLine(filenameUtf8.get(), 1)
+    options.setFileAndLine(filename, 1)
         .setIsRunOnce(true)
         .setNoScriptRval(true)
         .setSkipFilenameValidation(true);

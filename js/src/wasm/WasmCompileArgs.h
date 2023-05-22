@@ -109,7 +109,7 @@ struct FeatureArgs {
 // Describes the JS scripted caller of a request to compile a wasm module.
 
 struct ScriptedCaller {
-  UniqueChars filename;  // UTF-8 encoded
+  UniqueChars filename;
   bool filenameIsURL;
   unsigned line;
 

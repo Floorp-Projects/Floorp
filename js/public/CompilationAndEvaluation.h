@@ -125,8 +125,9 @@ extern JS_PUBLIC_API bool Evaluate(JSContext* cx,
 
 /**
  * Evaluate the UTF-8 contents of the file at the given path, and return the
- * completion value in |rval|.  (The path itself is UTF-8 encoded, too.)  If
- * the contents contain any malformed UTF-8, an error is reported.
+ * completion value in |rval|.  (The path itself is in the system encoding, not
+ * [necessarily] UTF-8.)  If the contents contain any malformed UTF-8, an error
+ * is reported.
  */
 extern JS_PUBLIC_API bool EvaluateUtf8Path(
     JSContext* cx, const ReadOnlyCompileOptions& options, const char* filename,

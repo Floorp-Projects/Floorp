@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -113,20 +113,24 @@ static bool Load(JSContext* cx, unsigned argc, JS::Value* vp) {
 
   for (unsigned i = 0; i < args.length(); i++) {
     JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[i]));
-    if (!str) {
-      return false;
-    }
-    JS::UniqueChars filename = JS_EncodeStringToUTF8(cx, str);
-    if (!filename) {
+    if (!str) return false;
+    JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+    if (!filename) return false;
+    FILE* file = fopen(filename.get(), "r");
+    if (!file) {
+      filename = JS_EncodeStringToUTF8(cx, str);
+      if (!filename) return false;
+      JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading",
+                         filename.get());
       return false;
     }
 
     JS::CompileOptions options(cx);
-    JS::Rooted<JSScript*> script(
-        cx, JS::CompileUtf8Path(cx, options, filename.get()));
-    if (!script) {
-      return false;
-    }
+    options.setFileAndLine(filename.get(), 1);
+
+    JS::Rooted<JSScript*> script(cx, JS::CompileUtf8File(cx, options, file));
+    fclose(file);
+    if (!script) return false;
 
     if (!JS_ExecuteScript(cx, script)) {
       return false;
@@ -255,7 +259,9 @@ void XPCShellEnvironment::ProcessFile(JSContext* cx, const char* filename,
      * It's not interactive - just execute it.
      *
      * Support the UNIX #! shell hack; gobble the first line if it starts
-     * with '#'.
+     * with '#'.  TODO - this isn't quite compatible with sharp variables,
+     * as a legal js program (using sharp variables) might start with '#'.
+     * But that would require multi-character lookahead.
      */
     int ch = fgetc(file);
     if (ch == '#') {
