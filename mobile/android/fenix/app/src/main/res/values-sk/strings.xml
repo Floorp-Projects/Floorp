@@ -125,6 +125,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nová súkromná karta</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Skratka Heslá</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Návrat späť</string>
@@ -1368,7 +1371,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Obdobie, za ktoré vymazať údaje</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Odstráni históriu (vrátane histórie synchronizovanej z iných zariadení), súbory cookie a ďalšie údaje prehliadania.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Odstráni históriu (vrátane histórie synchronizovanej z iných zariadení), súbory cookie a ďalšie údaje prehliadania.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Odstráni históriu (vrátane histórie synchronizovanej z iných zariadení)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Posledná hodina</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

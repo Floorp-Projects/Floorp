@@ -412,13 +412,19 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Požádat o přidání podpory</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">Omezení cookie lišt</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Omezení cookie lišt</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Požádat o podporu této stránky?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text">Žádost o přidání podpory tohoto serveru byla odeslána.</string>
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Žádost o přidání podpory tohoto serveru byla odeslána.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Žádost byla odeslána</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Zapnuto pro tento web</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Žádost o přidání podpory tohoto serveru odeslána</string>
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Žádost o přidání podpory tohoto serveru odeslána</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Žádost o podporu byla odeslána</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Server není aktuálně podporován</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -426,33 +432,21 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Chcete vypnout omezení cookie lišt pro %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Na tomto webu v tuto chvíli není omezení cookie lišt podporováno. Chcete, aby náš tým tuto stránku zkontroloval za účelem budoucího přidání podpory?</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Na tomto webu v tuto chvíli není omezení cookie lišt podporováno. Chcete, aby náš tým tuto stránku zkontroloval za účelem budoucího přidání podpory?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nemůže pro tuto stránku automaticky blokovat lištu s žádostí ohledně souborů cookie. Můžete však poslat žádost o podporu této stránky do budoucna.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s smaže cookies tohoto webu a stránku znovu načte. Vymazání všech cookies může způsobit vaše odhlášení nebo třeba vyprázdnění nákupního koše.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s se pokusí automaticky odmítnout všechny žádosti o povolení cookies na podporovaných serverech.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Povolit Firefox odmítat cookie lišty?</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Povolit aplikaci %1$s odmítat cookie lišty?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Chcete aplikaci %1$s povolit automaticky odmítat požadavky na cookies, kdykoliv je to možné?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_body">%1$s dokáže automaticky odmítat mnoho lišt s žádostmi o povolení cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Teď ne</string>
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Zavírat bannery</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Uvidíte méně požadavků na cookies</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Zobrazovat méně cookie lišt</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Zavírat vyskakovací okna</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Omezení cookie lišt</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Povolit</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">Povolit</string>
@@ -1378,7 +1372,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Časové období mazání</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Odstraní historii (včetně synchronizované historie z ostatních zařízení), cookies a související data.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Odstraní historii (včetně synchronizované historie z ostatních zařízení), cookies a související data.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Odebere historii (včetně synchronizované historie z jiných zařízení)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Poslední hodina</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

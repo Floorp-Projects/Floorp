@@ -124,6 +124,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Novèl onglet de nav. privada</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Acorchi senhals</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Tornar a aqueste onglet</string>
@@ -1376,7 +1379,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Periòde de suprimir</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Suprimís l’istoric (inclutz l’istoric sincronizat d’autres aparelhs), los cookies e las autras donadas de navegacion.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Suprimís l’istoric (inclutz l’istoric sincronizat d’autres aparelhs), los cookies e las autras donadas de navegacion.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Suprimís l’istoric (inclutz l’istoric sincronizat d’autres aparelhs)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">La darrièra ora</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
