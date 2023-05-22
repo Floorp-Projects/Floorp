@@ -3490,8 +3490,8 @@ bool WarpCacheIRTranspiler::emitHasClassResult(ObjOperandId objId,
 }
 
 bool WarpCacheIRTranspiler::emitCallRegExpMatcherResult(
-    ObjOperandId regexpId, StringOperandId inputId,
-    Int32OperandId lastIndexId) {
+    ObjOperandId regexpId, StringOperandId inputId, Int32OperandId lastIndexId,
+    uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
   MDefinition* lastIndex = getOperand(lastIndexId);
@@ -3504,8 +3504,8 @@ bool WarpCacheIRTranspiler::emitCallRegExpMatcherResult(
 }
 
 bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
-    ObjOperandId regexpId, StringOperandId inputId,
-    Int32OperandId lastIndexId) {
+    ObjOperandId regexpId, StringOperandId inputId, Int32OperandId lastIndexId,
+    uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
   MDefinition* lastIndex = getOperand(lastIndexId);
@@ -3518,7 +3518,7 @@ bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
 }
 
 bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
-    ObjOperandId regexpId, StringOperandId inputId) {
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
 
@@ -3530,7 +3530,7 @@ bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
 }
 
 bool WarpCacheIRTranspiler::emitRegExpBuiltinExecTestResult(
-    ObjOperandId regexpId, StringOperandId inputId) {
+    ObjOperandId regexpId, StringOperandId inputId, uint32_t stubOffset) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
 
