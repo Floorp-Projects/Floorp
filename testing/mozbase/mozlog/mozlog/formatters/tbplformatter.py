@@ -118,7 +118,8 @@ class TbplFormatter(BaseFormatter):
 
         else:
             signature = data["signature"] if data["signature"] else "unknown top frame"
-            rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id, signature)]
+            reason = data.get("reason", "application crashed")
+            rv = ["PROCESS-CRASH | %s [%s] | %s " % (reason, signature, id)]
 
             if data.get("reason"):
                 rv.append("Mozilla crash reason: %s" % data["reason"])
