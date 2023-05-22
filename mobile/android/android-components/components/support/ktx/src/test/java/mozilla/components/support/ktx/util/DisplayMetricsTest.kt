@@ -24,7 +24,7 @@ class DisplayMetricsTest {
     fun setUp() {
         metrics = mock(DisplayMetrics::class.java)
         metrics.density = 3f
-        metrics.scaledDensity = 2f
+        metrics.setToDefaults()
 
         val resources: Resources = mock(Resources::class.java)
         `when`(resources.displayMetrics).thenReturn(metrics)
@@ -45,6 +45,7 @@ class DisplayMetricsTest {
 
         val result = floatValue.spToPx(metrics)
 
+        @Suppress("DEPRECATION")
         assertEquals(metrics.scaledDensity * floatValue, result)
     }
 }
