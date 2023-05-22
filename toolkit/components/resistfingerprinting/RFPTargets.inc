@@ -19,17 +19,15 @@ ITEM_VALUE(CSSPrefersReducedMotion, 0x0008)
 
 // `prefers-contrast` CSS media feature
 ITEM_VALUE(CSSPrefersContrast, 0x0009)
+
 // Add random noises to image data extracted from canvas.
 ITEM_VALUE(CanvasRandomization, 0x000A)
 
-// Guard the canvas image data behind a user prompt
+// Canvas Targets. For unusual combinations of these, see comments
+// in IsImageExtractionAllowed
 ITEM_VALUE(CanvasImageExtractionPrompt, 0x000B)
-
-/**
- * Reserving 0x000C and 0x000D for
- *   1. CanvasExtractionFromThirdPartiesIsBlocked
- *   2. CanvasExtractionBeforeUSerInputIsBlocked
- */
+ITEM_VALUE(CanvasExtractionFromThirdPartiesIsBlocked, 0x000C)
+ITEM_VALUE(CanvasExtractionBeforeUserInputIsBlocked, 0x000D)
 
 /*
  * Certain classes (Document, at time of writing) have a cached value for

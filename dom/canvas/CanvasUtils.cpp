@@ -56,10 +56,47 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
     return false;
   }
 
+  /*
+   * There are three RFPTargets that change the behavior here, and they can be
+   * in any combination
+   * - CanvasImageExtractionPrompt - whether or not to prompt the user for
+   * canvas extraction. If enabled, before canvas is extracted we will ensure
+   * the user has granted permission.
+   * - CanvasExtractionBeforeUserInputIsBlocked - if enabled, canvas extraction
+   * before user input has occurred is always blocked, regardless of any other
+   * Target behavior
+   * - CanvasExtractionFromThirdPartiesIsBlocked - if enabled, canvas extraction
+   * by third parties is always blocked, regardless of any other Target behavior
+   *
+   * There are two odd cases:
+   * 1) When CanvasImageExtractionPrompt=false but
+   *    CanvasExtractionBeforeUserInputIsBlocked=true Conceptually this is
+   *    "Always allow canvas extraction in response to user input, and never
+   *     allow it otherwise"
+   *
+   *    That's fine as a concept, but it might be a little confusing, so we
+   *    still want to show the permission icon in the address bar, but never
+   *    the permission doorhanger.
+   * 2) When CanvasExtractionFromThirdPartiesIsBlocked=false - we will prompt
+   *    the user for permission _for the frame_ (maybe with the doorhanger,
+   *    maybe not).  The prompt shows the frame's origin, but it's easy to
+   *    mistake that for the origin of the top-level page and grant it when you
+   *    don't mean to.  This combination isn't likely to be used by anyone
+   *    except those opting in, so that's alright.
+   */
+
+  // We can improve this mechanism when we have this implemented as a bitset
   if (!aDocument->ShouldResistFingerprinting(
-          RFPTarget::CanvasImageExtractionPrompt)) {
+          RFPTarget::CanvasImageExtractionPrompt) &&
+      !aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasExtractionBeforeUserInputIsBlocked) &&
+      !aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasExtractionFromThirdPartiesIsBlocked)) {
     return true;
   }
+
+  // -------------------------------------------------------------------
+  // General Exemptions
 
   // Don't proceed if we don't have a document or JavaScript context.
   if (!aCx || !aPrincipal) {
@@ -96,22 +133,42 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
     return true;
   }
 
-  // Block all third-party attempts to extract canvas.
-  MOZ_ASSERT(aDocument->GetWindowContext());
-  bool isThirdParty =
-      aDocument->GetWindowContext()
-          ? aDocument->GetWindowContext()->GetIsThirdPartyWindow()
-          : false;
-  if (isThirdParty) {
-    nsAutoString message;
-    message.AppendPrintf("Blocked third party %s from extracting canvas data.",
-                         docURISpec.get());
-    nsContentUtils::ReportToConsoleNonLocalized(
-        message, nsIScriptError::warningFlag, "Security"_ns, aDocument);
-    return false;
+  // -------------------------------------------------------------------
+  // Possibly block third parties
+
+  if (aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasExtractionFromThirdPartiesIsBlocked)) {
+    MOZ_ASSERT(aDocument->GetWindowContext());
+    bool isThirdParty =
+        aDocument->GetWindowContext()
+            ? aDocument->GetWindowContext()->GetIsThirdPartyWindow()
+            : false;
+    if (isThirdParty) {
+      nsAutoString message;
+      message.AppendPrintf(
+          "Blocked third party %s from extracting canvas data.",
+          docURISpec.get());
+      nsContentUtils::ReportToConsoleNonLocalized(
+          message, nsIScriptError::warningFlag, "Security"_ns, aDocument);
+      return false;
+    }
   }
 
-  // Load Permission Manager service.
+  // -------------------------------------------------------------------
+  // Check if we will do any further blocking
+
+  if (!aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasImageExtractionPrompt) &&
+      !aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasExtractionBeforeUserInputIsBlocked)) {
+    return true;
+  }
+
+  // -------------------------------------------------------------------
+  // Check a site's permission
+
+  // If the user has previously granted or not granted permission, we can return
+  // immediately. Load Permission Manager service.
   nsresult rv;
   nsCOMPtr<nsIPermissionManager> permissionManager =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
@@ -132,16 +189,36 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
       break;
   }
 
-  // At this point, permission is unknown
-  // (nsIPermissionManager::UNKNOWN_ACTION).
-
-  // Check if the request is in response to user input
-  bool isAutoBlockCanvas =
+  // -------------------------------------------------------------------
+  // At this point, there's only one way to return true: if we are always
+  // allowing canvas in response to user input, and not prompting
+  bool hidePermissionDoorhanger = false;
+  if (!aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasImageExtractionPrompt) &&
       StaticPrefs::
           privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts() &&
+      aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasExtractionBeforeUserInputIsBlocked)) {
+    // If so, see if this is in response to user input.
+    if (dom::UserActivation::IsHandlingUserInput()) {
+      return true;
+    }
+
+    hidePermissionDoorhanger = true;
+  }
+
+  // -------------------------------------------------------------------
+  // Now we know we're going to block it, and log something to the console,
+  // and show some sort of prompt maybe with the doorhanger, maybe not
+
+  hidePermissionDoorhanger |=
+      StaticPrefs::
+          privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts() &&
+      aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasExtractionBeforeUserInputIsBlocked) &&
       !dom::UserActivation::IsHandlingUserInput();
 
-  if (isAutoBlockCanvas) {
+  if (hidePermissionDoorhanger) {
     nsAutoString message;
     message.AppendPrintf(
         "Blocked %s from extracting canvas data because no user input was "
@@ -159,7 +236,8 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
         message, nsIScriptError::warningFlag, "Security"_ns, aDocument);
   }
 
-  // Prompt the user (asynchronous).
+  // Show the prompt to the user (asynchronous) - maybe with the doorhanger,
+  // maybe not
   nsPIDOMWindowOuter* win = aDocument->GetWindow();
   nsAutoCString origin;
   rv = principal->GetOrigin(origin);
@@ -168,13 +246,14 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
   if (XRE_IsContentProcess()) {
     dom::BrowserChild* browserChild = dom::BrowserChild::GetFrom(win);
     if (browserChild) {
-      browserChild->SendShowCanvasPermissionPrompt(origin, isAutoBlockCanvas);
+      browserChild->SendShowCanvasPermissionPrompt(origin,
+                                                   hidePermissionDoorhanger);
     }
   } else {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(win,
-                           isAutoBlockCanvas
+                           hidePermissionDoorhanger
                                ? TOPIC_CANVAS_PERMISSIONS_PROMPT_HIDE_DOORHANGER
                                : TOPIC_CANVAS_PERMISSIONS_PROMPT,
                            NS_ConvertUTF8toUTF16(origin).get());
