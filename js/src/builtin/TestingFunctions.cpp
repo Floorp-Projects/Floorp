@@ -3727,7 +3727,7 @@ bool IterativeFailureTest::testThread(unsigned thread) {
         fprintf(stderr, "  error while trying to print exception, giving up\n");
         return false;
       }
-      UniqueChars bytes(JS_EncodeStringToUTF8(cx, str));
+      UniqueChars bytes(JS_EncodeStringToLatin1(cx, str));
       if (!bytes) {
         return false;
       }
@@ -4173,11 +4173,6 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   FILE* dumpFile = stdout;
-  auto closeFile = mozilla::MakeScopeExit([&dumpFile] {
-    if (dumpFile != stdout) {
-      fclose(dumpFile);
-    }
-  });
 
   if (args.length() > 1) {
     RootedObject callee(cx, &args.callee());
@@ -4191,33 +4186,27 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     if (!fuzzingSafe) {
-      UniqueChars fileNameBytes = JS_EncodeStringToUTF8(cx, str);
+      UniqueChars fileNameBytes = JS_EncodeStringToLatin1(cx, str);
       if (!fileNameBytes) {
         return false;
       }
-#ifdef XP_WIN
-      UniqueWideChars wideFileNameBytes =
-          JS::EncodeUtf8ToWide(cx, fileNameBytes.get());
-      if (!wideFileNameBytes) {
-        return false;
-      }
-      dumpFile = _wfopen(wideFileNameBytes.get(), L"w");
-#else
-      UniqueChars narrowFileNameBytes =
-          JS::EncodeUtf8ToNarrow(cx, fileNameBytes.get());
-      if (!narrowFileNameBytes) {
-        return false;
-      }
-      dumpFile = fopen(narrowFileNameBytes.get(), "w");
-#endif
+      dumpFile = fopen(fileNameBytes.get(), "w");
       if (!dumpFile) {
-        JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.get());
+        fileNameBytes = JS_EncodeStringToLatin1(cx, str);
+        if (!fileNameBytes) {
+          return false;
+        }
+        JS_ReportErrorLatin1(cx, "can't open %s", fileNameBytes.get());
         return false;
       }
     }
   }
 
   js::DumpHeap(cx, dumpFile, js::IgnoreNurseryObjects);
+
+  if (dumpFile != stdout) {
+    fclose(dumpFile);
+  }
 
   args.rval().setUndefined();
   return true;
@@ -4402,8 +4391,7 @@ static bool ReadGeckoInterpProfilingStack(JSContext* cx, unsigned argc,
     }
 
     // Skip fake JS frame pushed for js::RunScript by GeckoProfilerEntryMarker.
-    const char* dynamicStr = frame.dynamicString();
-    if (!dynamicStr) {
+    if (!frame.dynamicString()) {
       continue;
     }
 
@@ -4413,8 +4401,7 @@ static bool ReadGeckoInterpProfilingStack(JSContext* cx, unsigned argc,
     }
 
     Rooted<JSString*> dynamicString(
-        cx, JS_NewStringCopyUTF8Z(
-                cx, JS::ConstUTF8CharsZ(dynamicStr, strlen(dynamicStr))));
+        cx, JS_NewStringCopyZ(cx, frame.dynamicString()));
     if (!dynamicString) {
       return false;
     }
@@ -7532,8 +7519,7 @@ static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str =
-      JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(content.get(), length));
+  JSString* str = JS_NewStringCopyN(cx, content.get(), length);
   if (!str) {
     return false;
   }

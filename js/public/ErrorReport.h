@@ -111,7 +111,7 @@ class JSErrorBase {
   JS::ConstUTF8CharsZ message_;
 
  public:
-  // The UTF-8 encoded source file name, URL, etc., or null.
+  // Source file name, URL, etc., or null.
   const char* filename;
 
   // Unique identifier for the script source.

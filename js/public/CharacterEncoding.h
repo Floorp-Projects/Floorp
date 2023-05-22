@@ -341,40 +341,6 @@ extern JS_PUBLIC_API bool StringIsASCII(const char* s);
  */
 extern JS_PUBLIC_API bool StringIsASCII(mozilla::Span<const char> s);
 
-/**
- * Encode a narrow multibyte character string to a UTF-8 string.
- *
- * NOTE: Should only be used when interacting with POSIX/OS functions and not
- *       for encoding ASCII/Latin-1/etc. strings to UTF-8.
- */
-extern JS_PUBLIC_API JS::UniqueChars EncodeNarrowToUtf8(JSContext* cx,
-                                                        const char* chars);
-
-/**
- * Encode a wide string to a UTF-8 string.
- *
- * NOTE: Should only be used when interacting with Windows API functions.
- */
-extern JS_PUBLIC_API JS::UniqueChars EncodeWideToUtf8(JSContext* cx,
-                                                      const wchar_t* chars);
-
-/**
- * Encode a UTF-8 string to a narrow multibyte character string.
- *
- * NOTE: Should only be used when interacting with POSIX/OS functions and not
- *       for encoding UTF-8 to ASCII/Latin-1/etc. strings.
- */
-extern JS_PUBLIC_API JS::UniqueChars EncodeUtf8ToNarrow(JSContext* cx,
-                                                        const char* chars);
-
-/**
- * Encode a UTF-8 string to a wide string.
- *
- * NOTE: Should only be used when interacting with Windows API functions.
- */
-extern JS_PUBLIC_API JS::UniqueWideChars EncodeUtf8ToWide(JSContext* cx,
-                                                          const char* chars);
-
 }  // namespace JS
 
 inline void JS_free(JS::Latin1CharsZ& ptr) { js_free((void*)ptr.get()); }

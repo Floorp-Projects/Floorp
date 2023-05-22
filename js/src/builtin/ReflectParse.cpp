@@ -267,7 +267,7 @@ class NodeBuilder {
   FrontendContext* fc;
   frontend::Parser<frontend::FullParseHandler, char16_t>* parser;
   bool saveLoc;       /* save source location information?     */
-  char const* src;    /* UTF-8 encoded source filename or null */
+  char const* src;    /* source filename or null               */
   RootedValue srcval; /* source filename JS value or null      */
 
  public:
@@ -276,7 +276,7 @@ class NodeBuilder {
 
   [[nodiscard]] bool init() {
     if (src) {
-      if (!atomValueUtf8(src, &srcval)) {
+      if (!atomValue(src, &srcval)) {
         return false;
       }
     } else {
@@ -292,22 +292,10 @@ class NodeBuilder {
 
  private:
   [[nodiscard]] bool atomValue(const char* s, MutableHandleValue dst) {
-    MOZ_ASSERT(JS::StringIsASCII(s));
-
     /*
      * Bug 575416: instead of Atomize, lookup constant atoms in tbl file
      */
     Rooted<JSAtom*> atom(cx, Atomize(cx, s, strlen(s)));
-    if (!atom) {
-      return false;
-    }
-
-    dst.setString(atom);
-    return true;
-  }
-
-  [[nodiscard]] bool atomValueUtf8(const char* s, MutableHandleValue dst) {
-    Rooted<JSAtom*> atom(cx, AtomizeUTF8Chars(cx, s, strlen(s)));
     if (!atom) {
       return false;
     }
@@ -3654,7 +3642,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
           return false;
         }
 
-        filename = StringToNewUTF8CharsZ(cx, *str);
+        filename = EncodeLatin1(cx, str);
         if (!filename) {
           return false;
         }
