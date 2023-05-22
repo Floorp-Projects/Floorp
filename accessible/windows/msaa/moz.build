@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     "CompatibilityUIA.cpp",
     "DocAccessibleWrap.cpp",
     "EnumVariant.cpp",
+    "GeckoCustom.cpp",
     "HyperTextAccessibleWrap.cpp",
     "IUnknownImpl.cpp",
     "MsaaAccessible.cpp",

@@ -12,5 +12,6 @@ EXPORTS.mozilla.mscom += [
 ]
 
 UNIFIED_SOURCES += [
+    "ActCtxResource.cpp",
     "ProcessRuntimeShared.cpp",
 ]

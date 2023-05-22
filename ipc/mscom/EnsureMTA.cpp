@@ -228,9 +228,15 @@ void EnsureMTA::SyncDispatchToPersistentThread(nsIRunnable* aRunnable) {
     return;
   }
 
+#if defined(ACCESSIBILITY)
+  const BOOL alertable = XRE_IsContentProcess() && NS_IsMainThread();
+#else
+  const BOOL alertable = FALSE;
+#endif  // defined(ACCESSIBILITY)
+
   AUTO_PROFILER_THREAD_SLEEP;
   DWORD waitResult;
-  while ((waitResult = ::WaitForSingleObjectEx(event, INFINITE, FALSE)) ==
+  while ((waitResult = ::WaitForSingleObjectEx(event, INFINITE, alertable)) ==
          WAIT_IO_COMPLETION) {
   }
   MOZ_ASSERT(waitResult == WAIT_OBJECT_0);

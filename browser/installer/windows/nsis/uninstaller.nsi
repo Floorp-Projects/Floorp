@@ -600,7 +600,9 @@ Section "Uninstall"
     ${UnregisterDLL} "$INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
 
-  ${If} ${FileExists} "$INSTDIR\AccessibleHandler.dll"
+  ; Only unregister the dll if the registration points to this installation
+  ReadRegStr $R1 HKCR "CLSID\${AccessibleHandlerCLSID}\InprocHandler32" ""
+  ${If} "$INSTDIR\AccessibleHandler.dll" == "$R1"
     ${UnregisterDLL} "$INSTDIR\AccessibleHandler.dll"
   ${EndIf}
 

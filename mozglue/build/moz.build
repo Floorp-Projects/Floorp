@@ -104,6 +104,18 @@ USE_LIBS += [
     "mfbt",
 ]
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    RCINCLUDE = "/mozglue/mozglue.rc"
+
+    if not CONFIG["HAVE_64BIT_BUILD"]:
+        EXPORTS += [
+            "IAccessible32.manifest",
+        ]
+
+    EXPORTS += [
+        "IAccessible64.manifest",
+    ]
+
 LIBRARY_DEFINES["IMPL_MFBT"] = True
 LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
 

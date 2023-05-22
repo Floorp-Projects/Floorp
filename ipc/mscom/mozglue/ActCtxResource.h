@@ -15,6 +15,23 @@ namespace mscom {
 struct ActCtxResource {
   uint16_t mId;
   HMODULE mModule;
+
+  /**
+   * Set the resource ID used by GetAccessibilityResource. This is so that
+   * sandboxed child processes can use a value passed down from the parent.
+   */
+  static MFBT_API void SetAccessibilityResourceId(uint16_t aResourceId);
+
+  /**
+   * Get the resource ID used by GetAccessibilityResource.
+   */
+  static MFBT_API uint16_t GetAccessibilityResourceId();
+
+  /**
+   * @return ActCtxResource of a11y manifest resource to be passed to
+   * mscom::ActivationContext
+   */
+  static MFBT_API ActCtxResource GetAccessibilityResource();
 };
 
 }  // namespace mscom

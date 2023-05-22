@@ -6,15 +6,25 @@
 
 #include "Platform.h"
 
+#include <olectl.h>
+
 #include "AccEvent.h"
 #include "Compatibility.h"
 #include "HyperTextAccessibleWrap.h"
+#include "nsIWindowsRegKey.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/RemoteAccessible.h"
+#include "mozilla/mscom/ActivationContext.h"
+#include "mozilla/mscom/InterceptorLog.h"
+#include "mozilla/mscom/Registration.h"
+#include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "WinUtils.h"
 #include "ia2AccessibleText.h"
 
@@ -28,17 +38,85 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 using namespace mozilla::mscom;
 
+static StaticAutoPtr<RegisteredProxy> gRegCustomProxy;
+static StaticAutoPtr<RegisteredProxy> gRegProxy;
+static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
+static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
 static StaticRefPtr<nsIFile> gInstantiator;
+
+static bool RegisterHandlerMsix() {
+  // If we're running in an MSIX container, the handler isn't registered in
+  // HKLM. We could do that via registry.dat, but that file is difficult to
+  // manage. Instead, we register it in HKCU if it isn't already. This also
+  // covers the case where we registered in HKCU in a previous run, but the
+  // MSIX was updated and the dll now has a different path. In that case,
+  // IsHandlerRegistered will return false because the paths are different,
+  // RegisterHandlerMsix will get called and it will correct the HKCU entry. We
+  // don't need to unregister because we'll always need this and Windows cleans
+  // up the registry data for an MSIX app when it is uninstalled.
+  nsCOMPtr<nsIFile> handlerPath;
+  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(handlerPath));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  rv = handlerPath->Append(u"AccessibleHandler.dll"_ns);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsAutoString path;
+  rv = handlerPath->GetPath(path);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsModuleHandle handlerDll(LoadLibrary(path.get()));
+  if (!handlerDll.get()) {
+    return false;
+  }
+  auto RegisterMsix = reinterpret_cast<decltype(&DllRegisterServer)>(
+      GetProcAddress(handlerDll, "RegisterMsix"));
+  if (!RegisterMsix) {
+    return false;
+  }
+  if (FAILED(RegisterMsix())) {
+    return false;
+  }
+  return true;
+}
 
 void a11y::PlatformInit() {
   nsWinUtils::MaybeStartWindowEmulation();
   ia2AccessibleText::InitTextChangeData();
+
+  mscom::InterceptorLog::Init();
+  UniquePtr<RegisteredProxy> regCustomProxy(mscom::RegisterProxy());
+  gRegCustomProxy = regCustomProxy.release();
+  UniquePtr<RegisteredProxy> regProxy(mscom::RegisterProxy(L"ia2marshal.dll"));
+  gRegProxy = regProxy.release();
+  UniquePtr<RegisteredProxy> regAccTlb(mscom::RegisterTypelib(
+      L"oleacc.dll", RegistrationFlags::eUseSystemDirectory));
+  gRegAccTlb = regAccTlb.release();
+  UniquePtr<RegisteredProxy> regMiscTlb(
+      mscom::RegisterTypelib(L"Accessible.tlb"));
+  gRegMiscTlb = regMiscTlb.release();
+
+  if (XRE_IsParentProcess() && widget::WinUtils::HasPackageIdentity() &&
+      !IsHandlerRegistered()) {
+    // See the comments at the top of RegisterHandlerMsix regarding why we do
+    // this.
+    RegisterHandlerMsix();
+  }
 }
 
 void a11y::PlatformShutdown() {
   ::DestroyCaret();
 
   nsWinUtils::ShutdownWindowEmulation();
+  gRegCustomProxy = nullptr;
+  gRegProxy = nullptr;
+  gRegAccTlb = nullptr;
+  gRegMiscTlb = nullptr;
 
   if (gInstantiator) {
     gInstantiator = nullptr;
@@ -121,6 +199,60 @@ void a11y::ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible*,
 void a11y::ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible*,
                                uint32_t aType) {
   MsaaAccessible::FireWinEvent(aTarget, aType);
+}
+
+bool a11y::IsHandlerRegistered() {
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsAutoString clsid;
+  GUIDToString(CLSID_AccessibleHandler, clsid);
+
+  nsAutoString subKey;
+  subKey.AppendLiteral(u"SOFTWARE\\Classes\\CLSID\\");
+  subKey.Append(clsid);
+  subKey.AppendLiteral(u"\\InprocHandler32");
+
+  // If we're runnig in an MSIX container, we register this in HKCU, so look
+  // there.
+  const auto rootKey = widget::WinUtils::HasPackageIdentity()
+                           ? nsIWindowsRegKey::ROOT_KEY_CURRENT_USER
+                           : nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE;
+  rv = regKey->Open(rootKey, subKey, nsIWindowsRegKey::ACCESS_READ);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsAutoString handlerPath;
+  rv = regKey->ReadStringValue(nsAutoString(), handlerPath);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIFile> actualHandler;
+  rv = NS_NewLocalFile(handlerPath, false, getter_AddRefs(actualHandler));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIFile> expectedHandler;
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(expectedHandler));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  rv = expectedHandler->Append(u"AccessibleHandler.dll"_ns);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  bool equal;
+  rv = expectedHandler->Equals(actualHandler, &equal);
+  return NS_SUCCEEDED(rv) && equal;
 }
 
 static bool GetInstantiatorExecutable(const DWORD aPid,

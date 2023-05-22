@@ -25,12 +25,16 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIBrowserDOMWindow.h"
 
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/PDocAccessible.h"
+#endif
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #  include "mozilla/a11y/AccessibleWrap.h"
 #  include "mozilla/a11y/Compatibility.h"
+#  include "mozilla/mscom/ActCtxResource.h"
 #endif
 #include <map>
 #include <utility>
@@ -312,6 +316,10 @@
 #ifdef XP_WIN
 #  include "mozilla/widget/AudioSession.h"
 #  include "mozilla/WinDllServices.h"
+#endif
+
+#ifdef ACCESSIBILITY
+#  include "nsAccessibilityService.h"
 #endif
 
 #ifdef MOZ_CODE_COVERAGE
@@ -2640,6 +2648,20 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // handle and its content length, to minimize the startup time of content
   // processes.
   ::mozilla::ipc::ExportSharedJSInit(*mSubprocess, extraArgs);
+
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  // Determining the accessibility resource ID causes problems with the sandbox,
+  // so we pass it on the command line as it is required very early in process
+  // start up. It is not required when the caching mechanism is being used.
+  if (!a11y::IsCacheActive()) {
+    // The accessibility resource ID may not be set in some cases, for example
+    // in xpcshell tests.
+    auto resourceId = mscom::ActCtxResource::GetAccessibilityResourceId();
+    if (resourceId) {
+      geckoargs::sA11yResourceId.Put(resourceId, extraArgs);
+    }
+  }
+#endif
 
   // Register ContentParent as an observer for changes to any pref
   // whose prefix matches the empty string, i.e. all of them.  The
@@ -6240,6 +6262,22 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(
   BroadcastBlobURLUnregistration(aURI, aPrincipal, this);
   mBlobURLs.RemoveElement(aURI);
   return IPC_OK();
+}
+
+bool ContentParent::HandleWindowsMessages(const Message& aMsg) const {
+  MOZ_ASSERT(aMsg.is_sync());
+
+#ifdef ACCESSIBILITY
+  // a11y messages can be triggered by windows messages, which means if we
+  // allow handling windows messages while we wait for the response to a sync
+  // a11y message we can reenter the ipc message sending code.
+  if (a11y::PDocAccessible::PDocAccessibleStart < aMsg.type() &&
+      a11y::PDocAccessible::PDocAccessibleEnd > aMsg.type()) {
+    return false;
+  }
+#endif
+
+  return true;
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetFilesRequest(

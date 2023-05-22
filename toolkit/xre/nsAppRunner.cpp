@@ -1464,6 +1464,17 @@ nsXULAppInfo::GetAccessibilityEnabled(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetAccessibleHandlerUsed(bool* aResult) {
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  *aResult = Preferences::GetBool("accessibility.handler.enabled", false) &&
+             a11y::IsHandlerRegistered();
+#else
+  *aResult = false;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityInstantiator(nsAString& aInstantiator) {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   if (!GetAccService()) {

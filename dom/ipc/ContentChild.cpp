@@ -770,6 +770,9 @@ void ContentChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   // If communications with the parent have broken down, take the process
   // down so it's not hanging around.
   GetIPCChannel()->SetAbortOnError(true);
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
+#endif
 
   // This must be checked before any IPDL message, which may hit sentinel
   // errors due to parent and content processes having different
