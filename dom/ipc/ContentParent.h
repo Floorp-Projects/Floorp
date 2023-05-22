@@ -483,8 +483,6 @@ class ContentParent final : public PContentParent,
   bool DeallocPContentPermissionRequestParent(
       PContentPermissionRequestParent* actor);
 
-  virtual bool HandleWindowsMessages(const Message& aMsg) const override;
-
   void ForkNewProcess(bool aBlocking);
 
   mozilla::ipc::IPCResult RecvCreateWindow(
