@@ -1587,11 +1587,9 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
           GetLine(in, startline == lineno ? "js> " : "");
       if (!line) {
         if (errno) {
-          /*
-           * Use Latin1 variant here because strerror(errno)'s
-           * encoding depends on the user's C locale.
-           */
-          JS_ReportErrorLatin1(cx, "%s", strerror(errno));
+          if (UniqueChars error = SystemErrorMessage(cx, errno)) {
+            JS_ReportErrorLatin1(cx, "%s", error.get());
+          }
           return false;
         }
         hitEOF = true;
@@ -1654,31 +1652,14 @@ enum FileKind {
   FileModule,
 };
 
-static void ReportCantOpenErrorUnknownEncoding(JSContext* cx,
-                                               const char* filename) {
-  /*
-   * Filenames are in some random system encoding.  *Probably* it's UTF-8,
-   * but no guarantees.
-   *
-   * strerror(errno)'s encoding, in contrast, depends on the user's C locale.
-   *
-   * Latin-1 is possibly wrong for both of these -- but at least if it's
-   * wrong it'll produce mojibake *safely*.  Run with Latin-1 til someone
-   * complains.
-   */
-  JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr, JSSMSG_CANT_OPEN,
-                             filename, strerror(errno));
-}
-
 [[nodiscard]] static bool Process(JSContext* cx, const char* filename,
                                   bool forceTTY, FileKind kind) {
   FILE* file;
   if (forceTTY || !filename || strcmp(filename, "-") == 0) {
     file = stdin;
   } else {
-    file = fopen(filename, "rb");
+    file = OpenFile(cx, filename, "rb");
     if (!file) {
-      ReportCantOpenErrorUnknownEncoding(cx, filename);
       return false;
     }
   }
@@ -1825,9 +1806,8 @@ static bool CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  FILE* file = fopen(filename.get(), "rb");
+  FILE* file = OpenFile(cx, filename.get(), "rb");
   if (!file) {
-    ReportCantOpenErrorUnknownEncoding(cx, filename.get());
     return false;
   }
   AutoCloseFile autoClose(file);
@@ -2572,11 +2552,8 @@ JSString* js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr) {
     return nullptr;
   }
 
-  FILE* file;
-
-  file = fopen(pathname.get(), "rb");
+  FILE* file = OpenFile(cx, pathname.get(), "rb");
   if (!file) {
-    ReportCantOpenErrorUnknownEncoding(cx, pathname.get());
     return nullptr;
   }
 
@@ -2593,28 +2570,8 @@ JSString* js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr) {
     return nullptr;
   }
 
-  if (fseek(file, 0, SEEK_END) != 0) {
-    pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
-    if (!pathname) {
-      return nullptr;
-    }
-    JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.get());
-    return nullptr;
-  }
-
-  long endPos = ftell(file);
-  if (endPos < 0) {
-    JS_ReportErrorUTF8(cx, "can't read length of %s", pathname.get());
-    return nullptr;
-  }
-
-  size_t len = endPos;
-  if (fseek(file, 0, SEEK_SET) != 0) {
-    pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
-    if (!pathname) {
-      return nullptr;
-    }
-    JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.get());
+  size_t len;
+  if (!FileSize(cx, pathname.get(), file, &len)) {
     return nullptr;
   }
 
@@ -2624,17 +2581,7 @@ JSString* js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr) {
     return nullptr;
   }
 
-  size_t cc = fread(buf.get(), 1, len, file);
-  if (cc != len) {
-    if (ptrdiff_t(cc) < 0) {
-      ReportCantOpenErrorUnknownEncoding(cx, pathname.get());
-    } else {
-      pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
-      if (!pathname) {
-        return nullptr;
-      }
-      JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.get());
-    }
+  if (!ReadFile(cx, pathname.get(), file, buf.get(), len)) {
     return nullptr;
   }
 
@@ -3436,10 +3383,8 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    FILE* file = fopen(script->filename(), "rb");
+    FILE* file = OpenFile(cx, script->filename(), "rb");
     if (!file) {
-      /* FIXME: script->filename() should become UTF-8 (bug 987069). */
-      ReportCantOpenErrorUnknownEncoding(cx, script->filename());
       return false;
     }
     auto closeFile = MakeScopeExit([file] { fclose(file); });
@@ -10473,9 +10418,8 @@ static bool BindScriptArgs(JSContext* cx, OptionParser* op) {
     }
   }
 
-  const char* scriptPath = op->getStringArg("script");
   RootedValue scriptPathValue(cx);
-  if (scriptPath) {
+  if (const char* scriptPath = op->getStringArg("script")) {
     RootedString scriptPathString(cx, JS_NewStringCopyZ(cx, scriptPath));
     if (!scriptPathString) {
       return false;
@@ -12616,7 +12560,7 @@ bool InitModuleLoader(JSContext* cx, const OptionParser& op) {
 
     moduleLoadPath = js::shell::ResolvePath(cx, jspath, RootRelative);
   } else {
-    UniqueChars cwd = js::shell::GetCWD();
+    UniqueChars cwd = js::shell::GetCWD(cx);
     moduleLoadPath = JS_NewStringCopyZ(cx, cwd.get());
   }
 
