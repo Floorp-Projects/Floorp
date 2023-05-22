@@ -1176,31 +1176,11 @@ else
   MOZ_CHILD_PROCESS_NAME="libplugin-container.so"
 fi
 MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
-MOZ_CHILD_PROCESS_BUNDLENAME="plugin-container.app"
-MOZ_CHILD_PROCESS_APPNAME="${MOZ_APP_DISPLAYNAME}CP"
+MOZ_CHILD_PROCESS_BUNDLENAME="${MOZ_APP_DISPLAYNAME}CP"
 
 AC_SUBST(MOZ_CHILD_PROCESS_NAME)
 AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
-AC_SUBST(MOZ_CHILD_PROCESS_APPNAME)
 AC_SUBST(MOZ_CHILD_PROCESS_BUNDLENAME)
-
-dnl ==========================================================
-dnl = Mac Media Plugin Helper (GMP Child) Process Name for IPC
-dnl ==========================================================
-MOZ_EME_PROCESS_NAME="media-plugin-helper"
-MOZ_EME_PROCESS_NAME_BRANDED="$MOZ_APP_DISPLAYNAME Media Plugin Helper"
-MOZ_EME_PROCESS_BUNDLENAME="${MOZ_EME_PROCESS_NAME}.app"
-# Generate a lower case string with no spaces to be used as the bundle ID
-# for the EME helper .app of the form org.mozilla.<executable-name>.
-MOZ_EME_PROCESS_BUNDLEID=`echo "$MOZ_APP_DISPLAYNAME" | tr ' ' '-'`
-MOZ_EME_PROCESS_BUNDLEID=`echo "$MOZ_EME_PROCESS_BUNDLEID" | tr 'A-Z' 'a-z'`
-MOZ_EME_PROCESS_BUNDLEID=${MOZ_EME_PROCESS_BUNDLEID}-${MOZ_EME_PROCESS_NAME}
-MOZ_EME_PROCESS_BUNDLEID=${MOZ_DISTRIBUTION_ID}.${MOZ_EME_PROCESS_BUNDLEID}
-
-AC_SUBST(MOZ_EME_PROCESS_NAME)
-AC_SUBST(MOZ_EME_PROCESS_NAME_BRANDED)
-AC_SUBST(MOZ_EME_PROCESS_BUNDLENAME)
-AC_SUBST(MOZ_EME_PROCESS_BUNDLEID)
 
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):

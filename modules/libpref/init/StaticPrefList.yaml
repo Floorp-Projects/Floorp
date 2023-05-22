@@ -11016,15 +11016,6 @@
   value: true
   mirror: always
 
-# On Mac, enables using the `<Brand> Media Plugin Helper` executable as the
-# GMP child process instead of the plugin-container executable.
-#if defined(XP_MACOSX)
--   name: media.plugin_helper_process.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-#endif
-
 #---------------------------------------------------------------------------
 # Prefs starting with "midi."
 #---------------------------------------------------------------------------
