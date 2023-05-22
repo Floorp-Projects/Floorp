@@ -79,7 +79,3 @@ export function getSearchOptions(state, searchKey) {
 export function getHideIgnoredSources(state) {
   return state.ui.hideIgnoredSources;
 }
-
-export function isSourceMapIgnoreListEnabled(state) {
-  return state.ui.sourceMapIgnoreListEnabled;
-}

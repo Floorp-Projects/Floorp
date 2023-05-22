@@ -20,7 +20,7 @@ import {
   getBreakpointsForSource,
 } from "../../selectors";
 
-export async function blackboxSourceActorsForSource(
+async function _blackboxSourceActorsForSource(
   thunkArgs,
   source,
   shouldBlackBox,
@@ -82,7 +82,7 @@ export function toggleBlackBox(cx, source, shouldBlackBox, ranges = []) {
         ? shouldBlackBox
         : !isSourceBlackBoxed(getState(), source);
 
-    await blackboxSourceActorsForSource(
+    await _blackboxSourceActorsForSource(
       thunkArgs,
       source,
       shouldBlackBox,
@@ -200,7 +200,7 @@ export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
     }
 
     for (const source of sources) {
-      await blackboxSourceActorsForSource(thunkArgs, source, shouldBlackBox);
+      await _blackboxSourceActorsForSource(thunkArgs, source, shouldBlackBox);
     }
 
     if (shouldBlackBox) {

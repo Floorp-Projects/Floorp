@@ -21,8 +21,6 @@ import {
   getSelectedSource,
   getCurrentThread,
   getContext,
-  isSourceMapIgnoreListEnabled,
-  isSourceOnSourceMapIgnoreList,
 } from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -42,7 +40,6 @@ class Breakpoint extends PureComponent {
       selectedSource: PropTypes.object,
       source: PropTypes.object.isRequired,
       blackboxedRangesForSource: PropTypes.array.isRequired,
-      checkSourceOnIgnoreList: PropTypes.func.isRequired,
     };
   }
 
@@ -122,12 +119,7 @@ class Breakpoint extends PureComponent {
   }
 
   render() {
-    const {
-      breakpoint,
-      editor,
-      blackboxedRangesForSource,
-      checkSourceOnIgnoreList,
-    } = this.props;
+    const { breakpoint, editor, blackboxedRangesForSource } = this.props;
     const text = this.getBreakpointText();
     const labelId = `${breakpoint.id}-label`;
 
@@ -151,8 +143,7 @@ class Breakpoint extends PureComponent {
           checked={!breakpoint.disabled}
           disabled={isLineBlackboxed(
             blackboxedRangesForSource,
-            breakpoint.location.line,
-            checkSourceOnIgnoreList(breakpoint.location.source)
+            breakpoint.location.line
           )}
           onChange={this.handleBreakpointCheckbox}
           onClick={ev => ev.stopPropagation()}
@@ -199,9 +190,6 @@ const mapStateToProps = (state, p) => ({
   cx: getContext(state),
   breakpoints: getBreakpointsList(state),
   frame: getFormattedFrame(state, getCurrentThread(state)),
-  checkSourceOnIgnoreList: source =>
-    isSourceMapIgnoreListEnabled(state) &&
-    isSourceOnSourceMapIgnoreList(state, source),
 });
 
 export default connect(mapStateToProps, {
