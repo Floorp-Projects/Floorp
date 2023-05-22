@@ -7,15 +7,20 @@
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<!DOCTYPE html><title>Blank</title>Blank page";
 
-const URL_PREFIX = "https://example.com/browser/";
+const URL_COM_PREFIX = "https://example.com/browser/";
+const URL_ORG_PREFIX = "https://example.org/browser/";
 const CHROME_URL_PREFIX = "chrome://mochitests/content/browser/";
 const DIR_PATH = "toolkit/components/translations/tests/browser/";
 const TRANSLATIONS_TESTER_EN =
-  URL_PREFIX + DIR_PATH + "translations-tester-en.html";
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-en.html";
 const TRANSLATIONS_TESTER_ES =
-  URL_PREFIX + DIR_PATH + "translations-tester-es.html";
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-es.html";
+const TRANSLATIONS_TESTER_ES_2 =
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-es-2.html";
+const TRANSLATIONS_TESTER_ES_DOT_ORG =
+  URL_ORG_PREFIX + DIR_PATH + "translations-tester-es.html";
 const TRANSLATIONS_TESTER_NO_TAG =
-  URL_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
 
 /**
  * The mochitest runs in the parent process. This function opens up a new tab,
@@ -363,6 +368,7 @@ async function loadTestPage({
   detectedLangTag,
   page,
   prefs,
+  permissionsUrls = [],
 }) {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -372,6 +378,13 @@ async function loadTestPage({
       ...(prefs ?? []),
     ],
   });
+  await SpecialPowers.pushPermissions(
+    permissionsUrls.map(url => ({
+      type: "translations",
+      allow: true,
+      context: url,
+    }))
+  );
 
   // Start the tab at a blank page.
   const tab = await BrowserTestUtils.openNewForegroundTab(
@@ -415,7 +428,10 @@ async function loadTestPage({
     cleanup() {
       removeMocks();
       BrowserTestUtils.removeTab(tab);
-      return SpecialPowers.popPrefEnv();
+      return Promise.all([
+        SpecialPowers.popPrefEnv(),
+        SpecialPowers.popPermissions(),
+      ]);
     },
 
     /**

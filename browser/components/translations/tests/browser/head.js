@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
  * Assert some property about the translations button.
  *
  * @param {Record<string, boolean>} visibleAssertions
- * @param {string} message The messag for the assertion.
+ * @param {string} message The message for the assertion.
  * @returns {HTMLElement}
  */
 async function assertTranslationsButton(visibleAssertions, message) {
@@ -52,11 +52,75 @@ async function assertTranslationsButton(visibleAssertions, message) {
 }
 
 /**
+ * A convenience function to open the settings menu of the
+ * translations panel. Fails the test if the menu cannot be opened.
+ */
+async function openSettingsMenu() {
+  const { button } = await assertTranslationsButton(
+    { button: true },
+    "The button is available."
+  );
+
+  await waitForTranslationsPopupEvent("popupshown", () => {
+    click(button, "Opening the popup");
+  });
+
+  const gearIcon = getByL10nId("translations-panel-settings-button");
+  click(gearIcon, "Open the settings menu");
+}
+
+/**
+ * Simulates the effect of clicking the always-translate-language menuitem.
+ * Requires that the settings menu of the translations panel is open,
+ * otherwise the test will fail.
+ */
+async function toggleAlwaysTranslateLanguage() {
+  const alwaysTranslateLanguage = getByL10nId(
+    "translations-panel-settings-always-translate-language"
+  );
+  info("Toggle the always-translate-language menuitem");
+  await alwaysTranslateLanguage.doCommand();
+}
+
+/**
+ * Simulates the effect of clicking the never-translate-language menuitem.
+ * Requires that the settings menu of the translations panel is open,
+ * otherwise the test will fail.
+ */
+async function toggleNeverTranslateLanguage() {
+  const neverTranslateLanguage = getByL10nId(
+    "translations-panel-settings-never-translate-language"
+  );
+  info("Toggle the never-translate-language menuitem");
+  await neverTranslateLanguage.doCommand();
+}
+
+/**
+ * Simulates the effect of clicking the never-translate-site menuitem.
+ * Requires that the settings menu of the translations panel is open,
+ * otherwise the test will fail.
+ */
+async function toggleNeverTranslateSite() {
+  const neverTranslateSite = getByL10nId(
+    "translations-panel-settings-never-translate-site"
+  );
+  info("Toggle the never-translate-site menuitem");
+  await neverTranslateSite.doCommand();
+}
+
+/**
  * Navigate to a URL and indicate a message as to why.
  */
-function navigate(url, message) {
+async function navigate(url, message) {
   info(message);
+
+  // Load a blank page first to ensure that tests don't hang.
+  // I don't know why this is needed, but it appears to be necessary.
+  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, BLANK_PAGE);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 }
 
 /**
@@ -194,6 +258,8 @@ async function waitForViewShown(callback) {
 
 const ENGLISH_PAGE_URL = TRANSLATIONS_TESTER_EN;
 const SPANISH_PAGE_URL = TRANSLATIONS_TESTER_ES;
+const SPANISH_PAGE_URL_2 = TRANSLATIONS_TESTER_ES_2;
+const SPANISH_PAGE_URL_DOT_ORG = TRANSLATIONS_TESTER_ES_DOT_ORG;
 const LANGUAGE_PAIRS = [
   { fromLang: "es", toLang: "en", isBeta: false },
   { fromLang: "en", toLang: "es", isBeta: false },
