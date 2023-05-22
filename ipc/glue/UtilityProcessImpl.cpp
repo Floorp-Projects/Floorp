@@ -8,6 +8,10 @@
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/GeckoArgs.h"
 
+#if defined(OS_WIN)
+#  include "nsExceptionHandler.h"
+#endif
+
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
 #  include "WMF.h"
@@ -28,6 +32,20 @@ void UtilityProcessImpl::LoadLibraryOrCrash(LPCWSTR aLib) {
   HMODULE module = ::LoadLibraryW(aLib);
   if (!module) {
     DWORD err = ::GetLastError();
+    switch (err) {
+      /* case ERROR_ACCESS_DENIED: */
+      /* case ERROR_BAD_EXE_FORMAT: */
+      /* case ERROR_SHARING_VIOLATION: */
+      case ERROR_MOD_NOT_FOUND:
+      case ERROR_COMMITMENT_LIMIT:
+        // We want to make it explicit in telemetry that this was in fact an
+        // OOM condition, even though we could not detect it on our own
+        CrashReporter::AnnotateOOMAllocationSize(1);
+        break;
+
+      default:
+        break;
+    }
     MOZ_CRASH_UNSAFE_PRINTF("Unable to preload module: 0x%lx", err);
   }
 }
