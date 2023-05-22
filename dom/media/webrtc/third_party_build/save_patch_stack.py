@@ -47,8 +47,11 @@ def save_patch_stack(
         )
 
     # remove the unhelpful first line of the patch files that only
-    # causes diff churn
-    run_shell("sed -i'' -e '1d' {}/*.patch".format(patch_directory))
+    # causes diff churn.  For reasons why we can't skip creating backup
+    # files during the in-place editing, see:
+    # https://stackoverflow.com/questions/5694228/sed-in-place-flag-that-works-both-on-mac-bsd-and-linux
+    run_shell("sed -i'.bak' -e '1d' {}/*.patch".format(patch_directory))
+    run_shell("rm {}/*.patch.bak".format(patch_directory))
 
     # it is also helpful to save the no-op-cherry-pick-msg files from
     # the state directory so that if we're restoring a patch-stack we
