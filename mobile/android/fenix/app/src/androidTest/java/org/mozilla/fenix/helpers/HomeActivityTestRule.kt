@@ -76,7 +76,7 @@ class HomeActivityTestRule(
      */
     fun applySettingsExceptions(settings: (FeatureSettingsHelper) -> Unit) {
         FeatureSettingsHelperDelegate().also {
-            settings(it)
+            settings(this)
             applyFlagUpdates()
         }
     }
