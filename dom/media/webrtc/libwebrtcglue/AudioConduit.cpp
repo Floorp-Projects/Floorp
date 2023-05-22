@@ -918,6 +918,22 @@ void WebrtcAudioConduit::CreateRecvStream() {
   }
 
   mRecvStream = mCall->Call()->CreateAudioReceiveStream(mRecvStreamConfig);
+  // Ensure that we set the jitter buffer target on this stream.
+  mRecvStream->SetBaseMinimumPlayoutDelayMs(mJitterBufferTargetMs);
+}
+
+void WebrtcAudioConduit::SetJitterBufferTarget(DOMHighResTimeStamp aTargetMs) {
+  MOZ_RELEASE_ASSERT(aTargetMs <= std::numeric_limits<uint16_t>::max());
+  MOZ_RELEASE_ASSERT(aTargetMs >= 0);
+
+  MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__,
+      [this, self = RefPtr<WebrtcAudioConduit>(this), targetMs = aTargetMs] {
+        mJitterBufferTargetMs = static_cast<uint16_t>(targetMs);
+        if (mRecvStream) {
+          mRecvStream->SetBaseMinimumPlayoutDelayMs(targetMs);
+        }
+      })));
 }
 
 void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,

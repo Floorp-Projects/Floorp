@@ -75,6 +75,13 @@ class RTCRtpReceiver : public nsISupports,
   nsPIDOMWindowInner* GetParentObject() const;
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal(
       bool aSkipIceStats = false);
+  Nullable<DOMHighResTimeStamp> GetJitterBufferTarget(
+      ErrorResult& aError) const {
+    return mJitterBufferTarget.isSome() ? Nullable(mJitterBufferTarget.value())
+                                        : Nullable<DOMHighResTimeStamp>();
+  }
+  void SetJitterBufferTarget(const Nullable<DOMHighResTimeStamp>& aTargetMs,
+                             ErrorResult& aError);
 
   void Shutdown();
   void BreakCycles();
@@ -170,6 +177,8 @@ class RTCRtpReceiver : public nsISupports,
   // This corresponds to the [[Receptive]] slot on RTCRtpTransceiver.
   // Its only purpose is suppressing unmute events if true.
   bool mReceptive = false;
+  // This is the [[JitterBufferTarget]] internal slot.
+  Maybe<DOMHighResTimeStamp> mJitterBufferTarget;
 
   MediaEventListener mRtcpByeListener;
   MediaEventListener mRtcpTimeoutListener;

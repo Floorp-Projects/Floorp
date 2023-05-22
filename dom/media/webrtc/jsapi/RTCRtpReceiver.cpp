@@ -536,6 +536,28 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal(
   return promises;
 }
 
+void RTCRtpReceiver::SetJitterBufferTarget(
+    const Nullable<DOMHighResTimeStamp>& aTargetMs, ErrorResult& aError) {
+  // Spec says jitter buffer target cannot be negative or larger than 4000
+  // milliseconds and to throw RangeError if it is. If an invalid value is
+  // received we return early to preserve the current JitterBufferTarget
+  // internal slot and jitter buffer values.
+  if (!aTargetMs.IsNull() &&
+      (aTargetMs.Value() < 0.0 || aTargetMs.Value() > 4000.0)) {
+    aError.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>("jitterBufferTarget");
+    return;
+  }
+
+  mJitterBufferTarget.reset();
+
+  if (!aTargetMs.IsNull()) {
+    mJitterBufferTarget = Some(aTargetMs.Value());
+  }
+  // If aJitterBufferTarget is null then we are resetting the jitter buffer so
+  // pass the default target of 0.0.
+  mPipeline->mConduit->SetJitterBufferTarget(mJitterBufferTarget.valueOr(0.0));
+}
+
 void RTCRtpReceiver::GetContributingSources(
     nsTArray<RTCRtpContributingSource>& aSources) {
   // Duplicate code...
