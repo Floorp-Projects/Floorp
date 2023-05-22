@@ -492,6 +492,7 @@ WEBIDL_FILES = [
     "CSSMozDocumentRule.webidl",
     "CSSNamespaceRule.webidl",
     "CSSPageRule.webidl",
+    "CSSPropertyRule.webidl",
     "CSSPseudoElement.webidl",
     "CSSRule.webidl",
     "CSSRuleList.webidl",
