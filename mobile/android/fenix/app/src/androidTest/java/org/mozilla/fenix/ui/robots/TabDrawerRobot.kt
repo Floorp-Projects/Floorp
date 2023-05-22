@@ -15,10 +15,13 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.GeneralLocation
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.swipeLeft
+import androidx.test.espresso.action.ViewActions.swipeRight
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -38,11 +41,13 @@ import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matcher
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -125,20 +130,62 @@ class TabDrawerRobot {
         }
 
     fun swipeTabRight(title: String) {
-        var retries = 0 // number of retries before failing, will stop at 2
-        while (!tabItem(title).waitUntilGone(waitingTimeShort) && retries < 3
-        ) {
-            tab(title).swipeRight(3)
-            retries++
+        for (i in 1..RETRY_COUNT) {
+            try {
+                onView(
+                    allOf(
+                        withId(R.id.tab_item),
+                        hasDescendant(
+                            allOf(
+                                withId(R.id.mozac_browser_tabstray_title),
+                                withText(title),
+                            ),
+                        ),
+                    ),
+                ).perform(swipeRight())
+                assertTrue(
+                    itemWithResIdContainingText(
+                        "$packageName:id/mozac_browser_tabstray_title",
+                        title,
+                    ).waitUntilGone(waitingTimeShort),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                }
+            }
         }
     }
 
     fun swipeTabLeft(title: String) {
-        var retries = 0 // number of retries before failing, will stop at 2
-        while (!tabItem(title).waitUntilGone(waitingTimeShort) && retries < 3
-        ) {
-            tab(title).swipeLeft(3)
-            retries++
+        for (i in 1..RETRY_COUNT) {
+            try {
+                onView(
+                    allOf(
+                        withId(R.id.tab_item),
+                        hasDescendant(
+                            allOf(
+                                withId(R.id.mozac_browser_tabstray_title),
+                                withText(title),
+                            ),
+                        ),
+                    ),
+                ).perform(swipeLeft())
+                assertTrue(
+                    itemWithResIdContainingText(
+                        "$packageName:id/mozac_browser_tabstray_title",
+                        title,
+                    ).waitUntilGone(waitingTimeShort),
+                )
+
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                }
+            }
         }
     }
 
@@ -566,10 +613,6 @@ private fun assertSyncedTabsButtonIsSelected(isSelected: Boolean) {
 
 private val tabsList =
     UiScrollable(UiSelector().className("androidx.recyclerview.widget.RecyclerView"))
-
-// This Espresso tab selector is used for actions that UIAutomator doesn't handle very well: swipe and long-tap
-private fun tab(title: String) =
-    mDevice.findObject(UiSelector().textContains(title))
 
 // This tab selector is used for actions that involve waiting and asserting the existence of the view
 private fun tabItem(title: String) =
