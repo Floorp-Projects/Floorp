@@ -4173,6 +4173,11 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   FILE* dumpFile = stdout;
+  auto closeFile = mozilla::MakeScopeExit([&dumpFile] {
+    if (dumpFile != stdout) {
+      fclose(dumpFile);
+    }
+  });
 
   if (args.length() > 1) {
     RootedObject callee(cx, &args.callee());
@@ -4203,10 +4208,6 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   js::DumpHeap(cx, dumpFile, js::IgnoreNurseryObjects);
-
-  if (dumpFile != stdout) {
-    fclose(dumpFile);
-  }
 
   args.rval().setUndefined();
   return true;
