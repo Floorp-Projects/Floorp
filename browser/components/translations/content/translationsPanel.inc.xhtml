@@ -28,6 +28,21 @@
                        oncommand="TranslationsPanel.openSettingsPopup(this)">
           <image class="translations-panel-gear-icon" />
           <menupopup id="translations-panel-settings-popup">
+            <menuitem class="always-translate-language-menuitem"
+                      data-l10n-id="translations-panel-settings-always-translate-language"
+                      data-l10n-args='{"language": ""}'
+                      type="checkbox"
+                      checked="false"/>
+            <menuitem class="never-translate-language-menuitem"
+                      data-l10n-id="translations-panel-settings-never-translate-language"
+                      data-l10n-args='{"language": ""}'
+                      type="checkbox"
+                      checked="false"/>
+            <menuitem class="never-translate-site-menuitem"
+                      data-l10n-id="translations-panel-settings-never-translate-site"
+                      type="checkbox"
+                      checked="false"/>
+            <menuseparator/>
             <menuitem data-l10n-id="translations-panel-settings-change-source-language"
                       class="translations-panel-change-source"
                       oncommand="TranslationsPanel.showDualView()"/>
