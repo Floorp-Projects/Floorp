@@ -314,6 +314,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
 
 #include "gc/GCEnum.h"
 #include "js/AllocPolicy.h"
@@ -321,6 +322,204 @@
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
 #include "threading/ProtectedData.h"
+
+// Macro to define scheduling tunables for GC parameters. Expands its argument
+// repeatedly with the following arguments:
+//   - key:     the JSGCParamKey value for this parameter
+//   - type:    the storage type
+//   - name:    the name of GCSchedulingTunables getter method
+//   - convert: a helper class defined in Scheduling.cpp that provides
+//              conversion methods
+//   - check:   a helper function defined in Scheduling.cppto check the value is
+//              valid
+//   - default: the initial value and that assigned by resetParameter
+#define FOR_EACH_GC_TUNABLE(_)                                                 \
+  /*                                                                           \
+   * JSGC_MAX_BYTES                                                            \
+   *                                                                           \
+   * Maximum nominal heap before last ditch GC.                                \
+   */                                                                          \
+  _(JSGC_MAX_BYTES, size_t, gcMaxBytes, ConvertSize, NoCheck, 0xffffffff)      \
+                                                                               \
+  /*                                                                           \
+   * JSGC_MIN_NURSERY_BYTES                                                    \
+   * JSGC_MAX_NURSERY_BYTES                                                    \
+   *                                                                           \
+   * Minimum and maximum nursery size for each runtime.                        \
+   */                                                                          \
+  _(JSGC_MIN_NURSERY_BYTES, size_t, gcMinNurseryBytes, ConvertNurseryBytes,    \
+    CheckNurserySize, 256 * 1024)                                              \
+  _(JSGC_MAX_NURSERY_BYTES, size_t, gcMaxNurseryBytes, ConvertNurseryBytes,    \
+    CheckNurserySize, JS::DefaultNurseryMaxBytes)                              \
+                                                                               \
+  /*                                                                           \
+   * JSGC_ALLOCATION_THRESHOLD                                                 \
+   *                                                                           \
+   *                                                                           \
+   * The base value used to compute zone->threshold.bytes(). When              \
+   * gcHeapSize.bytes() exceeds threshold.bytes() for a zone, the zone may be  \
+   * scheduled for a GC, depending on the exact circumstances.                 \
+   */                                                                          \
+  _(JSGC_ALLOCATION_THRESHOLD, size_t, gcZoneAllocThresholdBase, ConvertMB,    \
+    NoCheck, 27 * 1024 * 1024)                                                 \
+                                                                               \
+  /*                                                                           \
+   * JSGC_SMALL_HEAP_SIZE_MAX                                                  \
+   * JSGC_LARGE_HEAP_SIZE_MIN                                                  \
+   *                                                                           \
+   * Used to classify heap sizes into one of small, medium or large. This      \
+   * affects the calcuation of the incremental GC trigger and the heap growth  \
+   * factor in high frequency GC mode.                                         \
+   */                                                                          \
+  _(JSGC_SMALL_HEAP_SIZE_MAX, size_t, smallHeapSizeMaxBytes, ConvertMB,        \
+    NoCheck, 100 * 1024 * 1024)                                                \
+  _(JSGC_LARGE_HEAP_SIZE_MIN, size_t, largeHeapSizeMinBytes, ConvertMB,        \
+    CheckNonZero, 500 * 1024 * 1024)                                           \
+                                                                               \
+  /*                                                                           \
+   * JSGC_SMALL_HEAP_INCREMENTAL_LIMIT                                         \
+   * JSGC_LARGE_HEAP_INCREMENTAL_LIMIT                                         \
+   *                                                                           \
+   * Multiple of threshold.bytes() which triggers a non-incremental GC.        \
+   *                                                                           \
+   * The small heap limit must be greater than 1.3 to maintain performance on  \
+   * splay-latency.                                                            \
+   */                                                                          \
+  _(JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, double, smallHeapIncrementalLimit,      \
+    ConvertTimes100, CheckIncrementalLimit, 1.50)                              \
+  _(JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, double, largeHeapIncrementalLimit,      \
+    ConvertTimes100, CheckIncrementalLimit, 1.10)                              \
+                                                                               \
+  /*                                                                           \
+   * JSGC_HIGH_FREQUENCY_TIME_LIMIT                                            \
+   *                                                                           \
+   * We enter high-frequency mode if we GC a twice within this many            \
+   * millisconds.                                                              \
+   */                                                                          \
+  _(JSGC_HIGH_FREQUENCY_TIME_LIMIT, mozilla::TimeDuration,                     \
+    highFrequencyThreshold, ConvertMillis, NoCheck,                            \
+    mozilla::TimeDuration::FromSeconds(1))                                     \
+                                                                               \
+  /*                                                                           \
+   * JSGC_LOW_FREQUENCY_HEAP_GROWTH                                            \
+   *                                                                           \
+   * When not in |highFrequencyGC| mode, this is the global (stored per-zone)  \
+   * "HeapGrowthFactor".                                                       \
+   */                                                                          \
+  _(JSGC_LOW_FREQUENCY_HEAP_GROWTH, double, lowFrequencyHeapGrowth,            \
+    ConvertTimes100, CheckHeapGrowth, 1.5)                                     \
+                                                                               \
+  /*                                                                           \
+   * JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH                                     \
+   * JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH                                     \
+   *                                                                           \
+   * When in the |highFrequencyGC| mode, these parameterize the per-zone       \
+   * "HeapGrowthFactor" computation.                                           \
+   */                                                                          \
+  _(JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH, double,                             \
+    highFrequencySmallHeapGrowth, ConvertTimes100, CheckHeapGrowth, 3.0)       \
+  _(JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH, double,                             \
+    highFrequencyLargeHeapGrowth, ConvertTimes100, CheckHeapGrowth, 1.5)       \
+                                                                               \
+  /*                                                                           \
+   * JSGC_MALLOC_THRESHOLD_BASE                                                \
+   *                                                                           \
+   * The base value used to compute the GC trigger for malloc allocated        \
+   * memory.                                                                   \
+   */                                                                          \
+  _(JSGC_MALLOC_THRESHOLD_BASE, size_t, mallocThresholdBase, ConvertMB,        \
+    NoCheck, 38 * 1024 * 1024)                                                 \
+                                                                               \
+  /*                                                                           \
+   * Number of bytes to allocate between incremental slices in GCs triggered   \
+   * by the zone allocation threshold.                                         \
+   */                                                                          \
+  _(JSGC_ZONE_ALLOC_DELAY_KB, size_t, zoneAllocDelayBytes, ConvertKB,          \
+    CheckNonZero, 1024 * 1024)                                                 \
+                                                                               \
+  /*                                                                           \
+   * JSGC_URGENT_THRESHOLD_MB                                                  \
+   *                                                                           \
+   * The point before reaching the non-incremental limit at which to start     \
+   * increasing the slice budget and frequency of allocation triggered slices. \
+   */                                                                          \
+  _(JSGC_URGENT_THRESHOLD_MB, size_t, urgentThresholdBytes, ConvertMB,         \
+    NoCheck, 16 * 1024 * 1024)                                                 \
+                                                                               \
+  /*                                                                           \
+   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION                           \
+   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_FRACTION                  \
+   * JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS                               \
+   *                                                                           \
+   * Attempt to run a minor GC in the idle time if the free space falls below  \
+   * this threshold or if it hasn't been collected for too long. The absolute  \
+   * threshold is used when the nursery is large and the percentage when it is \
+   * small. See Nursery::shouldCollect().                                      \
+   */                                                                          \
+  _(JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION, size_t,                   \
+    nurseryFreeThresholdForIdleCollection, ConvertSize, NoCheck,               \
+    ChunkSize / 4)                                                             \
+  _(JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT, double,           \
+    nurseryFreeThresholdForIdleCollectionFraction, ConvertTimes100,            \
+    CheckNonZeroUnitRange, 0.25)                                               \
+  _(JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS, mozilla::TimeDuration,        \
+    nurseryTimeoutForIdleCollection, ConvertMillis, NoCheck,                   \
+    mozilla::TimeDuration::FromSeconds(5))                                     \
+                                                                               \
+  /*                                                                           \
+   * JSGC_BALANCED_HEAP_LIMITS_ENABLED                                         \
+   * JSGC_HEAP_GROWTH_FACTOR                                                   \
+   */                                                                          \
+  _(JSGC_BALANCED_HEAP_LIMITS_ENABLED, bool, balancedHeapLimitsEnabled,        \
+    ConvertBool, NoCheck, false)                                               \
+  _(JSGC_HEAP_GROWTH_FACTOR, double, heapGrowthFactor, ConvertDouble, NoCheck, \
+    50.0)                                                                      \
+                                                                               \
+  /*                                                                           \
+   * JSGC_PRETENURE_THRESHOLD                                                  \
+   *                                                                           \
+   * Fraction of objects tenured to trigger pretenuring (between 0 and 1). If  \
+   * this fraction is met, the GC proceeds to calculate which objects will be  \
+   * tenured. If this is 1.0f (actually if it is not < 1.0f) then pretenuring  \
+   * is disabled.                                                              \
+   */                                                                          \
+  _(JSGC_PRETENURE_THRESHOLD, double, pretenureThreshold, ConvertTimes100,     \
+    CheckNonZeroUnitRange, 0.6)                                                \
+                                                                               \
+  /*                                                                           \
+   * JSGC_PRETENURE_STRING_THRESHOLD                                           \
+   *                                                                           \
+   * If the percentage of the tenured strings exceeds this threshold, string   \
+   * will be allocated in tenured heap instead. (Default is allocated in       \
+   * nursery.)                                                                 \
+   */                                                                          \
+  _(JSGC_PRETENURE_STRING_THRESHOLD, double, pretenureStringThreshold,         \
+    ConvertTimes100, CheckNonZeroUnitRange, 0.55)                              \
+                                                                               \
+  /*                                                                           \
+   * JSGC_STOP_PRETENURE_STRING_THRESHOLD                                      \
+   *                                                                           \
+   * If the finalization rate of the tenured strings exceeds this threshold,   \
+   * string will be allocated in nursery.                                      \
+   */                                                                          \
+  _(JSGC_STOP_PRETENURE_STRING_THRESHOLD, double,                              \
+    stopPretenureStringThreshold, ConvertTimes100, CheckNonZeroUnitRange, 0.9) \
+                                                                               \
+  /*                                                                           \
+   * JSGC_MIN_LAST_DITCH_GC_PERIOD                                             \
+   *                                                                           \
+   * Last ditch GC is skipped if allocation failure occurs less than this many \
+   * seconds from the previous one.                                            \
+   */                                                                          \
+  _(JSGC_MIN_LAST_DITCH_GC_PERIOD, mozilla::TimeDuration,                      \
+    minLastDitchGCPeriod, ConvertSeconds, NoCheck,                             \
+    TimeDuration::FromSeconds(60))                                             \
+                                                                               \
+  /*                                                                           \
+   * JSGC_PARALLEL_MARKING_THRESHOLD_KB                                        \
+   */                                                                          \
+  _(JSGC_PARALLEL_MARKING_THRESHOLD_KB, size_t, parallelMarkingThresholdBytes, \
+    ConvertKB, NoCheck, 10 * 1024 * 1024)
 
 namespace js {
 
@@ -339,55 +538,6 @@ struct Cell;
  * preferences.
  */
 namespace TuningDefaults {
-
-/* JSGC_MAX_BYTES */
-static const size_t GCMaxBytes = 0xffffffff;
-
-/* JSGC_ALLOCATION_THRESHOLD */
-static const size_t GCZoneAllocThresholdBase = 27 * 1024 * 1024;
-
-/*
- * JSGC_MIN_NURSERY_BYTES
- *
- * With some testing (Bug 1532838) we increased this to 256K from 192K
- * which improves performance.  We should try to reduce this for background
- * tabs.
- */
-static const size_t GCMinNurseryBytes = 256 * 1024;
-
-/*
- * JSGC_SMALL_HEAP_INCREMENTAL_LIMIT
- *
- * This must be greater than 1.3 to maintain performance on splay-latency.
- */
-static const double SmallHeapIncrementalLimit = 1.50;
-
-/* JSGC_LARGE_HEAP_INCREMENTAL_LIMIT */
-static const double LargeHeapIncrementalLimit = 1.10;
-
-/* JSGC_ZONE_ALLOC_DELAY_KB */
-static const size_t ZoneAllocDelayBytes = 1024 * 1024;
-
-/* JSGC_HIGH_FREQUENCY_TIME_LIMIT */
-static const auto HighFrequencyThreshold = 1;  // in seconds
-
-/* JSGC_SMALL_HEAP_SIZE_MAX */
-static const size_t SmallHeapSizeMaxBytes = 100 * 1024 * 1024;
-
-/* JSGC_LARGE_HEAP_SIZE_MIN */
-static const size_t LargeHeapSizeMinBytes = 500 * 1024 * 1024;
-
-/* JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH */
-static const double HighFrequencySmallHeapGrowth = 3.0;
-
-/* JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH */
-static const double HighFrequencyLargeHeapGrowth = 1.5;
-
-/* JSGC_LOW_FREQUENCY_HEAP_GROWTH */
-static const double LowFrequencyHeapGrowth = 1.5;
-
-/* JSGC_HEAP_GROWTH_FACTOR */
-static const double HeapGrowthFactor = 50.0;
 
 /* JSGC_MIN_EMPTY_CHUNK_COUNT */
 static const uint32_t MinEmptyChunkCount = 1;
@@ -410,47 +560,14 @@ static const bool CompactingEnabled = true;
 /* JSGC_PARALLEL_MARKING_ENABLED */
 static const bool ParallelMarkingEnabled = false;
 
-/* JSGC_BALANCED_HEAP_LIMITS_ENABLED */
-static const bool BalancedHeapLimitsEnabled = false;
-
 /* JSGC_INCREMENTAL_WEAKMAP_ENABLED */
 static const bool IncrementalWeakMapMarkingEnabled = true;
-
-/* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION */
-static const uint32_t NurseryFreeThresholdForIdleCollection = ChunkSize / 4;
-
-/* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT */
-static const double NurseryFreeThresholdForIdleCollectionFraction = 0.25;
-
-/* JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS */
-static const uint32_t NurseryTimeoutForIdleCollectionMS = 5000;
-
-/* JSGC_PRETENURE_THRESHOLD */
-static const double PretenureThreshold = 0.6;
-
-/* JSGC_PRETENURE_STRING_THRESHOLD */
-static const double PretenureStringThreshold = 0.55;
-
-/* JSGC_STOP_PRETENURE_STRING_THRESHOLD */
-static const double StopPretenureStringThreshold = 0.9;
-
-/* JSGC_MIN_LAST_DITCH_GC_PERIOD */
-static const auto MinLastDitchGCPeriod = 60;  // in seconds
-
-/* JSGC_MALLOC_THRESHOLD_BASE */
-static const size_t MallocThresholdBase = 38 * 1024 * 1024;
 
 /* JSGC_HELPER_THREAD_RATIO */
 static const double HelperThreadRatio = 0.5;
 
 /* JSGC_MAX_HELPER_THREADS */
 static const size_t MaxHelperThreads = 8;
-
-/* JSGC_URGENT_THRESHOLD_MB */
-static const size_t UrgentThresholdBytes = 16 * 1024 * 1024;
-
-/* JSGC_PARALLEL_MARKING_THRESHOLD_KB */
-static const size_t ParallelMarkingThresholdBytes = 10 * 1024 * 1024;
 
 }  // namespace TuningDefaults
 
@@ -459,227 +576,28 @@ static const size_t ParallelMarkingThresholdBytes = 10 * 1024 * 1024;
  * should only be modified by setParameter.
  */
 class GCSchedulingTunables {
-  /*
-   * JSGC_MAX_BYTES
-   *
-   * Maximum nominal heap before last ditch GC.
-   */
-  MainThreadData<size_t> gcMaxBytes_;
-
-  /*
-   * JSGC_MIN_NURSERY_BYTES
-   * JSGC_MAX_NURSERY_BYTES
-   *
-   * Minimum and maximum nursery size for each runtime.
-   */
-  MainThreadData<size_t> gcMinNurseryBytes_;
-  MainThreadData<size_t> gcMaxNurseryBytes_;
-
-  /*
-   * JSGC_ALLOCATION_THRESHOLD
-   *
-   * The base value used to compute zone->threshold.bytes(). When
-   * gcHeapSize.bytes() exceeds threshold.bytes() for a zone, the zone may be
-   * scheduled for a GC, depending on the exact circumstances.
-   */
-  MainThreadData<size_t> gcZoneAllocThresholdBase_;
-
-  /*
-   * JSGC_SMALL_HEAP_INCREMENTAL_LIMIT
-   *
-   * Multiple of threshold.bytes() which triggers a non-incremental GC.
-   */
-  MainThreadData<double> smallHeapIncrementalLimit_;
-
-  /*
-   * JSGC_LARGE_HEAP_INCREMENTAL_LIMIT
-   *
-   * Multiple of threshold.bytes() which triggers a non-incremental GC.
-   */
-  MainThreadData<double> largeHeapIncrementalLimit_;
-
-  /*
-   * Number of bytes to allocate between incremental slices in GCs triggered by
-   * the zone allocation threshold.
-   *
-   * This value does not have a JSGCParamKey parameter yet.
-   */
-  MainThreadData<size_t> zoneAllocDelayBytes_;
-
-  /*
-   * JSGC_HIGH_FREQUENCY_TIME_LIMIT
-   *
-   * We enter high-frequency mode if we GC a twice within this many
-   * microseconds.
-   */
-  MainThreadData<mozilla::TimeDuration> highFrequencyThreshold_;
-
-  /*
-   * JSGC_SMALL_HEAP_SIZE_MAX
-   * JSGC_LARGE_HEAP_SIZE_MIN
-   * JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH
-   * JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH
-   *
-   * When in the |highFrequencyGC| mode, these parameterize the per-zone
-   * "HeapGrowthFactor" computation.
-   */
-  MainThreadData<size_t> smallHeapSizeMaxBytes_;
-  MainThreadData<size_t> largeHeapSizeMinBytes_;
-  MainThreadData<double> highFrequencySmallHeapGrowth_;
-  MainThreadData<double> highFrequencyLargeHeapGrowth_;
-
-  /*
-   * JSGC_LOW_FREQUENCY_HEAP_GROWTH
-   *
-   * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
-   * "HeapGrowthFactor".
-   */
-  MainThreadData<double> lowFrequencyHeapGrowth_;
-
-  /*
-   * JSGC_BALANCED_HEAP_LIMITS_ENABLED
-   */
-  MainThreadOrGCTaskData<bool> balancedHeapLimitsEnabled_;
-
-  /*
-   * JSGC_HEAP_GROWTH_FACTOR
-   */
-  MainThreadOrGCTaskData<double> heapGrowthFactor_;
-
-  /*
-   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION
-   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_FRACTION
-   *
-   * Attempt to run a minor GC in the idle time if the free space falls
-   * below this threshold. The absolute threshold is used when the nursery is
-   * large and the percentage when it is small.  See Nursery::shouldCollect()
-   */
-  MainThreadData<uint32_t> nurseryFreeThresholdForIdleCollection_;
-  MainThreadData<double> nurseryFreeThresholdForIdleCollectionFraction_;
-
-  /* See JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS. */
-  MainThreadData<mozilla::TimeDuration> nurseryTimeoutForIdleCollection_;
-
-  /*
-   * JSGC_PRETENURE_THRESHOLD
-   *
-   * Fraction of objects tenured to trigger pretenuring (between 0 and 1). If
-   * this fraction is met, the GC proceeds to calculate which objects will be
-   * tenured. If this is 1.0f (actually if it is not < 1.0f) then pretenuring
-   * is disabled.
-   */
-  MainThreadData<double> pretenureThreshold_;
-
-  /*
-   * JSGC_PRETENURE_STRING_THRESHOLD
-   *
-   * If the percentage of the tenured strings exceeds this threshold, string
-   * will be allocated in tenured heap instead. (Default is allocated in
-   * nursery.)
-   */
-  MainThreadData<double> pretenureStringThreshold_;
-
-  /*
-   * JSGC_STOP_PRETENURE_STRING_THRESHOLD
-   *
-   * If the finalization rate of the tenured strings exceeds this threshold,
-   * string will be allocated in nursery.
-   */
-  MainThreadData<double> stopPretenureStringThreshold_;
-
-  /*
-   * JSGC_MIN_LAST_DITCH_GC_PERIOD
-   *
-   * Last ditch GC is skipped if allocation failure occurs less than this many
-   * seconds from the previous one.
-   */
-  MainThreadData<mozilla::TimeDuration> minLastDitchGCPeriod_;
-
-  /*
-   * JSGC_MALLOC_THRESHOLD_BASE
-   *
-   * The base value used to compute the GC trigger for malloc allocated memory.
-   */
-  MainThreadOrGCTaskData<size_t> mallocThresholdBase_;
-
-  /*
-   * JSGC_URGENT_THRESHOLD_MB
-   *
-   * The base value used to compute the GC trigger for malloc allocated memory.
-   */
-  MainThreadData<size_t> urgentThresholdBytes_;
-
-  /*
-   * JSGC_PARALLEL_MARKING_THRESHOLD_KB
-   */
-  MainThreadData<size_t> parallelMarkingThresholdBytes_;
+#define DEFINE_TUNABLE_FIELD(key, type, name, convert, check, default) \
+  MainThreadOrGCTaskData<type> name##_;
+  FOR_EACH_GC_TUNABLE(DEFINE_TUNABLE_FIELD)
+#undef DEFINE_TUNABLE_FIELD
 
  public:
   GCSchedulingTunables();
 
-  size_t gcMaxBytes() const { return gcMaxBytes_; }
-  size_t gcMinNurseryBytes() const { return gcMinNurseryBytes_; }
-  size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
-  size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
-  double smallHeapIncrementalLimit() const {
-    return smallHeapIncrementalLimit_;
-  }
-  double largeHeapIncrementalLimit() const {
-    return largeHeapIncrementalLimit_;
-  }
-  size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
-  const mozilla::TimeDuration& highFrequencyThreshold() const {
-    return highFrequencyThreshold_;
-  }
-  size_t smallHeapSizeMaxBytes() const { return smallHeapSizeMaxBytes_; }
-  size_t largeHeapSizeMinBytes() const { return largeHeapSizeMinBytes_; }
-  double highFrequencySmallHeapGrowth() const {
-    return highFrequencySmallHeapGrowth_;
-  }
-  double highFrequencyLargeHeapGrowth() const {
-    return highFrequencyLargeHeapGrowth_;
-  }
-  double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
-  bool balancedHeapLimitsEnabled() const { return balancedHeapLimitsEnabled_; }
-  double heapGrowthFactor() const { return heapGrowthFactor_; }
-  uint32_t nurseryFreeThresholdForIdleCollection() const {
-    return nurseryFreeThresholdForIdleCollection_;
-  }
-  double nurseryFreeThresholdForIdleCollectionFraction() const {
-    return nurseryFreeThresholdForIdleCollectionFraction_;
-  }
-  mozilla::TimeDuration nurseryTimeoutForIdleCollection() const {
-    return nurseryTimeoutForIdleCollection_;
-  }
+#define DEFINE_TUNABLE_ACCESSOR(key, type, name, convert, check, default) \
+  type name() const { return name##_; }
+  FOR_EACH_GC_TUNABLE(DEFINE_TUNABLE_ACCESSOR)
+#undef DEFINE_TUNABLE_ACCESSOR
 
   bool attemptPretenuring() const { return pretenureThreshold_ < 1.0; }
-  double pretenureThreshold() const { return pretenureThreshold_; }
-  double pretenureStringThreshold() const { return pretenureStringThreshold_; }
-  double stopPretenureStringThreshold() const {
-    return stopPretenureStringThreshold_;
-  }
 
-  mozilla::TimeDuration minLastDitchGCPeriod() const {
-    return minLastDitchGCPeriod_;
-  }
-
-  size_t mallocThresholdBase() const { return mallocThresholdBase_; }
-
-  size_t urgentThresholdBytes() const { return urgentThresholdBytes_; }
-
-  size_t parallelMarkingThresholdBytes() const {
-    return parallelMarkingThresholdBytes_;
-  }
-
+  uint32_t getParameter(JSGCParamKey key);
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value);
   void resetParameter(JSGCParamKey key);
 
  private:
   void maintainInvariantsAfterUpdate(JSGCParamKey updated);
   void checkInvariants();
-
-  static bool megabytesToBytes(uint32_t value, size_t* bytesOut);
-  static bool kilobytesToBytes(uint32_t value, size_t* bytesOut);
 };
 
 class GCSchedulingState {

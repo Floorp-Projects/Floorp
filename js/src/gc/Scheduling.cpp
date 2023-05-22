@@ -24,6 +24,8 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::CheckedInt;
+using mozilla::Maybe;
+using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -48,210 +50,154 @@ static constexpr double MinHeapGrowthFactor =
 static constexpr double MaxHeapGrowthFactor = 100;
 static constexpr size_t MaxNurseryBytesParam = 128 * 1024 * 1024;
 
-GCSchedulingTunables::GCSchedulingTunables()
-    : gcMaxBytes_(TuningDefaults::GCMaxBytes),
-      gcMinNurseryBytes_(Nursery::roundSize(TuningDefaults::GCMinNurseryBytes)),
-      gcMaxNurseryBytes_(Nursery::roundSize(JS::DefaultNurseryMaxBytes)),
-      gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
-      smallHeapIncrementalLimit_(TuningDefaults::SmallHeapIncrementalLimit),
-      largeHeapIncrementalLimit_(TuningDefaults::LargeHeapIncrementalLimit),
-      zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
-      highFrequencyThreshold_(
-          TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold)),
-      smallHeapSizeMaxBytes_(TuningDefaults::SmallHeapSizeMaxBytes),
-      largeHeapSizeMinBytes_(TuningDefaults::LargeHeapSizeMinBytes),
-      highFrequencySmallHeapGrowth_(
-          TuningDefaults::HighFrequencySmallHeapGrowth),
-      highFrequencyLargeHeapGrowth_(
-          TuningDefaults::HighFrequencyLargeHeapGrowth),
-      lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
-      balancedHeapLimitsEnabled_(TuningDefaults::BalancedHeapLimitsEnabled),
-      heapGrowthFactor_(TuningDefaults::HeapGrowthFactor),
-      nurseryFreeThresholdForIdleCollection_(
-          TuningDefaults::NurseryFreeThresholdForIdleCollection),
-      nurseryFreeThresholdForIdleCollectionFraction_(
-          TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction),
-      nurseryTimeoutForIdleCollection_(TimeDuration::FromMilliseconds(
-          TuningDefaults::NurseryTimeoutForIdleCollectionMS)),
-      pretenureThreshold_(TuningDefaults::PretenureThreshold),
-      pretenureStringThreshold_(TuningDefaults::PretenureStringThreshold),
-      stopPretenureStringThreshold_(
-          TuningDefaults::StopPretenureStringThreshold),
-      minLastDitchGCPeriod_(
-          TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)),
-      mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
-      urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes),
-      parallelMarkingThresholdBytes_(
-          TuningDefaults::ParallelMarkingThresholdBytes) {
+namespace {
+
+// Helper classes to marshal GC parameter values to/from uint32_t.
+
+template <typename T>
+struct ConvertGeneric {
+  static uint32_t toUint32(T value) {
+    static_assert(std::is_arithmetic_v<T>);
+    if constexpr (std::is_signed_v<T>) {
+      MOZ_ASSERT(value >= 0);
+    }
+    if constexpr (!std::is_same_v<T, bool> &&
+                  std::numeric_limits<T>::max() >
+                      std::numeric_limits<uint32_t>::max()) {
+      MOZ_ASSERT(value <= UINT32_MAX);
+    }
+    return uint32_t(value);
+  }
+  static Maybe<T> fromUint32(uint32_t param) {
+    // Currently we use explicit conversion and don't range check.
+    return Some(T(param));
+  }
+};
+
+using ConvertBool = ConvertGeneric<bool>;
+using ConvertSize = ConvertGeneric<size_t>;
+using ConvertDouble = ConvertGeneric<double>;
+
+struct ConvertTimes100 {
+  static uint32_t toUint32(double value) { return uint32_t(value * 100.0); }
+  static Maybe<double> fromUint32(uint32_t param) {
+    return Some(double(param) / 100.0);
+  }
+};
+
+struct ConvertNurseryBytes : ConvertSize {
+  static Maybe<size_t> fromUint32(uint32_t param) {
+    return Some(Nursery::roundSize(param));
+  }
+};
+
+struct ConvertKB {
+  static uint32_t toUint32(size_t value) { return value / 1024; }
+  static Maybe<size_t> fromUint32(uint32_t param) {
+    // Parameters which represent heap sizes in bytes are restricted to values
+    // which can be represented on 32 bit platforms.
+    CheckedInt<uint32_t> size = CheckedInt<uint32_t>(param) * 1024;
+    return size.isValid() ? Some(size_t(size.value())) : Nothing();
+  }
+};
+
+struct ConvertMB {
+  static uint32_t toUint32(size_t value) { return value / (1024 * 1024); }
+  static Maybe<size_t> fromUint32(uint32_t param) {
+    // Parameters which represent heap sizes in bytes are restricted to values
+    // which can be represented on 32 bit platforms.
+    CheckedInt<uint32_t> size = CheckedInt<uint32_t>(param) * 1024 * 1024;
+    return size.isValid() ? Some(size_t(size.value())) : Nothing();
+  }
+};
+
+struct ConvertMillis {
+  static uint32_t toUint32(TimeDuration value) {
+    return uint32_t(value.ToMilliseconds());
+  }
+  static Maybe<TimeDuration> fromUint32(uint32_t param) {
+    return Some(TimeDuration::FromMilliseconds(param));
+  }
+};
+
+struct ConvertSeconds {
+  static uint32_t toUint32(TimeDuration value) {
+    return uint32_t(value.ToSeconds());
+  }
+  static Maybe<TimeDuration> fromUint32(uint32_t param) {
+    return Some(TimeDuration::FromSeconds(param));
+  }
+};
+
+}  // anonymous namespace
+
+// Helper functions to check GC parameter values
+
+template <typename T>
+static bool NoCheck(T value) {
+  return true;
+}
+
+template <typename T>
+static bool CheckNonZero(T value) {
+  return value != 0;
+}
+
+static bool CheckNurserySize(size_t bytes) {
+  return bytes >= SystemPageSize() && bytes <= MaxNurseryBytesParam;
+}
+
+static bool CheckHeapGrowth(double growth) {
+  return growth >= MinHeapGrowthFactor && growth <= MaxHeapGrowthFactor;
+}
+
+static bool CheckIncrementalLimit(double factor) {
+  return factor >= 1.0 && factor <= MaxHeapGrowthFactor;
+}
+
+static bool CheckNonZeroUnitRange(double value) {
+  return value > 0.0 && value <= 100.0;
+}
+
+GCSchedulingTunables::GCSchedulingTunables() {
+#define INIT_TUNABLE_FIELD(key, type, name, convert, check, default) \
+  name##_ = default;                                                 \
+  MOZ_ASSERT(check(name##_));
+  FOR_EACH_GC_TUNABLE(INIT_TUNABLE_FIELD)
+#undef INIT_TUNABLE_FIELD
+
   checkInvariants();
+}
+
+uint32_t GCSchedulingTunables::getParameter(JSGCParamKey key) {
+  switch (key) {
+#define GET_TUNABLE_FIELD(key, type, name, convert, check, default) \
+  case key:                                                         \
+    return convert::toUint32(name##_);
+    FOR_EACH_GC_TUNABLE(GET_TUNABLE_FIELD)
+#undef GET_TUNABLE_FIELD
+
+    default:
+      MOZ_CRASH("Unknown parameter key");
+  }
 }
 
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
   auto guard = mozilla::MakeScopeExit([this] { checkInvariants(); });
 
   switch (key) {
-    case JSGC_MAX_BYTES:
-      gcMaxBytes_ = value;
-      break;
-    case JSGC_MIN_NURSERY_BYTES: {
-      size_t bytes = Nursery::roundSize(value);
-      if (bytes < SystemPageSize() || bytes >= MaxNurseryBytesParam) {
-        return false;
-      }
-      gcMinNurseryBytes_ = bytes;
-      break;
-    }
-    case JSGC_MAX_NURSERY_BYTES: {
-      size_t bytes = Nursery::roundSize(value);
-      if (bytes < SystemPageSize() || bytes >= MaxNurseryBytesParam) {
-        return false;
-      }
-      gcMaxNurseryBytes_ = bytes;
-      break;
-    }
-    case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-      highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
-      break;
-    case JSGC_SMALL_HEAP_SIZE_MAX: {
-      size_t newLimit;
-      if (!megabytesToBytes(value, &newLimit)) {
-        return false;
-      }
-      smallHeapSizeMaxBytes_ = newLimit;
-      break;
-    }
-    case JSGC_LARGE_HEAP_SIZE_MIN: {
-      size_t newLimit;
-      if (!megabytesToBytes(value, &newLimit) || newLimit == 0) {
-        return false;
-      }
-      largeHeapSizeMinBytes_ = newLimit;
-      break;
-    }
-    case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH: {
-      double newGrowth = value / 100.0;
-      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
-        return false;
-      }
-      highFrequencySmallHeapGrowth_ = newGrowth;
-      break;
-    }
-    case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH: {
-      double newGrowth = value / 100.0;
-      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
-        return false;
-      }
-      highFrequencyLargeHeapGrowth_ = newGrowth;
-      break;
-    }
-    case JSGC_BALANCED_HEAP_LIMITS_ENABLED: {
-      balancedHeapLimitsEnabled_ = bool(value);
-      break;
-    }
-    case JSGC_LOW_FREQUENCY_HEAP_GROWTH: {
-      double newGrowth = value / 100.0;
-      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
-        return false;
-      }
-      lowFrequencyHeapGrowth_ = newGrowth;
-      break;
-    }
-    case JSGC_HEAP_GROWTH_FACTOR: {
-      heapGrowthFactor_ = double(value);
-      break;
-    }
-    case JSGC_ALLOCATION_THRESHOLD: {
-      size_t threshold;
-      if (!megabytesToBytes(value, &threshold)) {
-        return false;
-      }
-      gcZoneAllocThresholdBase_ = threshold;
-      break;
-    }
-    case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT: {
-      double newFactor = value / 100.0;
-      if (newFactor < 1.0f || newFactor > MaxHeapGrowthFactor) {
-        return false;
-      }
-      smallHeapIncrementalLimit_ = newFactor;
-      break;
-    }
-    case JSGC_LARGE_HEAP_INCREMENTAL_LIMIT: {
-      double newFactor = value / 100.0;
-      if (newFactor < 1.0f || newFactor > MaxHeapGrowthFactor) {
-        return false;
-      }
-      largeHeapIncrementalLimit_ = newFactor;
-      break;
-    }
-    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
-      nurseryFreeThresholdForIdleCollection_ = value;
-      break;
-    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
-      if (value == 0 || value > 100) {
-        return false;
-      }
-      nurseryFreeThresholdForIdleCollectionFraction_ = value / 100.0;
-      break;
-    case JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS:
-      nurseryTimeoutForIdleCollection_ = TimeDuration::FromMilliseconds(value);
-      break;
-    case JSGC_PRETENURE_THRESHOLD: {
-      // 100 disables pretenuring
-      if (value == 0 || value > 100) {
-        return false;
-      }
-      pretenureThreshold_ = value / 100.0;
-      break;
-    }
-    case JSGC_PRETENURE_STRING_THRESHOLD:
-      // 100 disables pretenuring
-      if (value == 0 || value > 100) {
-        return false;
-      }
-      pretenureStringThreshold_ = value / 100.0;
-      break;
-    case JSGC_STOP_PRETENURE_STRING_THRESHOLD:
-      if (value == 0 || value > 100) {
-        return false;
-      }
-      stopPretenureStringThreshold_ = value / 100.0;
-      break;
-    case JSGC_MIN_LAST_DITCH_GC_PERIOD:
-      minLastDitchGCPeriod_ = TimeDuration::FromSeconds(value);
-      break;
-    case JSGC_ZONE_ALLOC_DELAY_KB: {
-      size_t delay;
-      if (!kilobytesToBytes(value, &delay) || delay == 0) {
-        return false;
-      }
-      zoneAllocDelayBytes_ = delay;
-      break;
-    }
-    case JSGC_MALLOC_THRESHOLD_BASE: {
-      size_t threshold;
-      if (!megabytesToBytes(value, &threshold)) {
-        return false;
-      }
-      mallocThresholdBase_ = threshold;
-      break;
-    }
-    case JSGC_URGENT_THRESHOLD_MB: {
-      size_t threshold;
-      if (!megabytesToBytes(value, &threshold)) {
-        return false;
-      }
-      urgentThresholdBytes_ = threshold;
-      break;
-    }
-    case JSGC_PARALLEL_MARKING_THRESHOLD_KB: {
-      size_t threshold;
-      if (!kilobytesToBytes(value, &threshold)) {
-        return false;
-      }
-      parallelMarkingThresholdBytes_ = threshold;
-      break;
-    }
+#define SET_TUNABLE_FIELD(key, type, name, convert, check, default) \
+  case key: {                                                       \
+    Maybe<type> converted = convert::fromUint32(value);             \
+    if (!converted || !check(converted.value())) {                  \
+      return false;                                                 \
+    }                                                               \
+    name##_ = converted.value();                                    \
+    break;                                                          \
+  }
+    FOR_EACH_GC_TUNABLE(SET_TUNABLE_FIELD)
+#undef SET_TUNABLE_FIELD
+
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -260,114 +206,18 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
   return true;
 }
 
-/* static */
-bool GCSchedulingTunables::megabytesToBytes(uint32_t value, size_t* bytesOut) {
-  MOZ_ASSERT(bytesOut);
-
-  // Parameters which represent heap sizes in bytes are restricted to values
-  // which can be represented on 32 bit platforms.
-  CheckedInt<uint32_t> size = CheckedInt<uint32_t>(value) * 1024 * 1024;
-  if (!size.isValid()) {
-    return false;
-  }
-
-  *bytesOut = size.value();
-  return true;
-}
-
-/* static */
-bool GCSchedulingTunables::kilobytesToBytes(uint32_t value, size_t* bytesOut) {
-  MOZ_ASSERT(bytesOut);
-  CheckedInt<size_t> size = CheckedInt<size_t>(value) * 1024;
-  if (!size.isValid()) {
-    return false;
-  }
-
-  *bytesOut = size.value();
-  return true;
-}
-
 void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
   auto guard = mozilla::MakeScopeExit([this] { checkInvariants(); });
 
   switch (key) {
-    case JSGC_MAX_BYTES:
-      gcMaxBytes_ = TuningDefaults::GCMaxBytes;
-      break;
-    case JSGC_MIN_NURSERY_BYTES:
-      gcMinNurseryBytes_ = TuningDefaults::GCMinNurseryBytes;
-      break;
-    case JSGC_MAX_NURSERY_BYTES:
-      gcMaxNurseryBytes_ = JS::DefaultNurseryMaxBytes;
-      break;
-    case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-      highFrequencyThreshold_ =
-          TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold);
-      break;
-    case JSGC_SMALL_HEAP_SIZE_MAX:
-      smallHeapSizeMaxBytes_ = TuningDefaults::SmallHeapSizeMaxBytes;
-      break;
-    case JSGC_LARGE_HEAP_SIZE_MIN:
-      largeHeapSizeMinBytes_ = TuningDefaults::LargeHeapSizeMinBytes;
-      break;
-    case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH:
-      highFrequencySmallHeapGrowth_ =
-          TuningDefaults::HighFrequencySmallHeapGrowth;
-      break;
-    case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH:
-      highFrequencyLargeHeapGrowth_ =
-          TuningDefaults::HighFrequencyLargeHeapGrowth;
-      break;
-    case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-      lowFrequencyHeapGrowth_ = TuningDefaults::LowFrequencyHeapGrowth;
-      break;
-    case JSGC_BALANCED_HEAP_LIMITS_ENABLED:
-      balancedHeapLimitsEnabled_ = TuningDefaults::BalancedHeapLimitsEnabled;
-      break;
-    case JSGC_HEAP_GROWTH_FACTOR:
-      heapGrowthFactor_ = TuningDefaults::HeapGrowthFactor;
-      break;
-    case JSGC_ALLOCATION_THRESHOLD:
-      gcZoneAllocThresholdBase_ = TuningDefaults::GCZoneAllocThresholdBase;
-      break;
-    case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT:
-      smallHeapIncrementalLimit_ = TuningDefaults::SmallHeapIncrementalLimit;
-      break;
-    case JSGC_LARGE_HEAP_INCREMENTAL_LIMIT:
-      largeHeapIncrementalLimit_ = TuningDefaults::LargeHeapIncrementalLimit;
-      break;
-    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
-      nurseryFreeThresholdForIdleCollection_ =
-          TuningDefaults::NurseryFreeThresholdForIdleCollection;
-      break;
-    case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
-      nurseryFreeThresholdForIdleCollectionFraction_ =
-          TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction;
-      break;
-    case JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS:
-      nurseryTimeoutForIdleCollection_ = TimeDuration::FromMilliseconds(
-          TuningDefaults::NurseryTimeoutForIdleCollectionMS);
-      break;
-    case JSGC_PRETENURE_THRESHOLD:
-      pretenureThreshold_ = TuningDefaults::PretenureThreshold;
-      break;
-    case JSGC_PRETENURE_STRING_THRESHOLD:
-      pretenureStringThreshold_ = TuningDefaults::PretenureStringThreshold;
-      break;
-    case JSGC_MIN_LAST_DITCH_GC_PERIOD:
-      minLastDitchGCPeriod_ =
-          TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod);
-      break;
-    case JSGC_MALLOC_THRESHOLD_BASE:
-      mallocThresholdBase_ = TuningDefaults::MallocThresholdBase;
-      break;
-    case JSGC_URGENT_THRESHOLD_MB:
-      urgentThresholdBytes_ = TuningDefaults::UrgentThresholdBytes;
-      break;
-    case JSGC_PARALLEL_MARKING_THRESHOLD_KB:
-      parallelMarkingThresholdBytes_ =
-          TuningDefaults::ParallelMarkingThresholdBytes;
-      break;
+#define RESET_TUNABLE_FIELD(key, type, name, convert, check, default) \
+  case key:                                                           \
+    name##_ = default;                                                \
+    MOZ_ASSERT(check(name##_));                                       \
+    break;
+    FOR_EACH_GC_TUNABLE(RESET_TUNABLE_FIELD)
+#undef RESET_TUNABLE_FIELD
+
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
