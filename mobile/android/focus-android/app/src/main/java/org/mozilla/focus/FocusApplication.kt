@@ -98,6 +98,11 @@ open class FocusApplication : LocaleAwareApplication(), Provider, CoroutineScope
         }
     }
 
+    override fun onConfigurationChanged(config: android.content.res.Configuration) {
+        applicationContext.resources.configuration.uiMode = config.uiMode
+        super.onConfigurationChanged(config)
+    }
+
     protected open fun setupLeakCanary() {
         // no-op, LeakCanary is disabled by default
     }
