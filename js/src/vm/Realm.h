@@ -713,6 +713,9 @@ class JS::Realm : public JS::shadow::Realm {
   static constexpr size_t offsetOfRegExps() {
     return offsetof(JS::Realm, regExps);
   }
+  static constexpr size_t offsetOfJitRealm() {
+    return offsetof(JS::Realm, jitRealm_);
+  }
   static constexpr size_t offsetOfDebugModeBits() {
     return offsetof(JS::Realm, debugModeBits_);
   }

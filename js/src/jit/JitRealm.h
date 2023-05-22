@@ -114,9 +114,9 @@ class JitRealm {
     return getStubNoBarrier(RegExpMatcher, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpMatcherStubExists(JSContext* cx) {
-    if (stubs_[RegExpMatcher]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpMatcherStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpMatcher]) {
+      return code;
     }
     stubs_[RegExpMatcher] = generateRegExpMatcherStub(cx);
     return stubs_[RegExpMatcher];
@@ -126,9 +126,9 @@ class JitRealm {
     return getStubNoBarrier(RegExpSearcher, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpSearcherStubExists(JSContext* cx) {
-    if (stubs_[RegExpSearcher]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpSearcherStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpSearcher]) {
+      return code;
     }
     stubs_[RegExpSearcher] = generateRegExpSearcherStub(cx);
     return stubs_[RegExpSearcher];
@@ -138,9 +138,9 @@ class JitRealm {
     return getStubNoBarrier(RegExpExecMatch, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpExecMatchStubExists(JSContext* cx) {
-    if (stubs_[RegExpExecMatch]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpExecMatchStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpExecMatch]) {
+      return code;
     }
     stubs_[RegExpExecMatch] = generateRegExpExecMatchStub(cx);
     return stubs_[RegExpExecMatch];
@@ -150,9 +150,9 @@ class JitRealm {
     return getStubNoBarrier(RegExpExecTest, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpExecTestStubExists(JSContext* cx) {
-    if (stubs_[RegExpExecTest]) {
-      return true;
+  [[nodiscard]] JitCode* ensureRegExpExecTestStubExists(JSContext* cx) {
+    if (JitCode* code = stubs_[RegExpExecTest]) {
+      return code;
     }
     stubs_[RegExpExecTest] = generateRegExpExecTestStub(cx);
     return stubs_[RegExpExecTest];
@@ -167,6 +167,19 @@ class JitRealm {
   void performStubReadBarriers(uint32_t stubsToBarrier) const;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+  static constexpr size_t offsetOfRegExpMatcherStub() {
+    return offsetof(JitRealm, stubs_) + RegExpMatcher * sizeof(uintptr_t);
+  }
+  static constexpr size_t offsetOfRegExpSearcherStub() {
+    return offsetof(JitRealm, stubs_) + RegExpSearcher * sizeof(uintptr_t);
+  }
+  static constexpr size_t offsetOfRegExpExecMatchStub() {
+    return offsetof(JitRealm, stubs_) + RegExpExecMatch * sizeof(uintptr_t);
+  }
+  static constexpr size_t offsetOfRegExpExecTestStub() {
+    return offsetof(JitRealm, stubs_) + RegExpExecTest * sizeof(uintptr_t);
+  }
 };
 
 }  // namespace jit
