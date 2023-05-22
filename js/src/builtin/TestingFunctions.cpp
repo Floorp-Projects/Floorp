@@ -3727,7 +3727,7 @@ bool IterativeFailureTest::testThread(unsigned thread) {
         fprintf(stderr, "  error while trying to print exception, giving up\n");
         return false;
       }
-      UniqueChars bytes(JS_EncodeStringToLatin1(cx, str));
+      UniqueChars bytes(JS_EncodeStringToUTF8(cx, str));
       if (!bytes) {
         return false;
       }
