@@ -397,8 +397,9 @@ class ChromeActions {
   }
 
   reportTelemetry(data) {
-    var probeInfo = JSON.parse(data);
-    switch (probeInfo.type) {
+    const probeInfo = JSON.parse(data);
+    const { type } = probeInfo;
+    switch (type) {
       case "pageInfo":
         lazy.PdfJsTelemetry.onTimeToView(probeInfo.timestamp);
         break;
@@ -406,11 +407,16 @@ class ChromeActions {
         lazy.PdfJsTelemetry.onEditing(probeInfo.data.type);
         break;
       case "buttons":
+      case "gv-buttons":
         const id = probeInfo.data.id.replace(
           /([A-Z])/g,
           c => `_${c.toLowerCase()}`
         );
-        lazy.PdfJsTelemetry.onButtons(id);
+        if (type === "buttons") {
+          lazy.PdfJsTelemetry.onButtons(id);
+        } else {
+          lazy.PdfJsTelemetry.onGeckoview(id);
+        }
         break;
     }
   }

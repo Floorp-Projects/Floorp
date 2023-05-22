@@ -17,6 +17,7 @@ import { GeckoViewActorParent } from "resource://gre/modules/GeckoViewActorParen
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  PdfJsTelemetry: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -186,6 +187,8 @@ class FileSaver {
       return;
     }
 
+    lazy.PdfJsTelemetry.onGeckoview("save_as_pdf_tapped");
+
     this.#callback = aCallback;
     this.#browser.sendMessageToActor(
       "PDFJS:Child:handleEvent",
@@ -230,8 +233,10 @@ class FileSaver {
           requestExternalApp: !!openInExternalApp,
         });
       }
+      lazy.PdfJsTelemetry.onGeckoview("download_succeeded");
       debug`Save a PDF: ${bytes.length} bytes sent.`;
     } catch (e) {
+      lazy.PdfJsTelemetry.onGeckoview("download_failed");
       if (this.#callback) {
         this.#callback?.onError(`Cannot save the pdf: ${e}.`);
       } else {

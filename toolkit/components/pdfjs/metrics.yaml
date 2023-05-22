@@ -63,6 +63,28 @@ pdfjs:
       - cdenizet@mozilla.com
       - mcastelluccio@mozilla.com
     expires: never
+  geckoview:
+    type: labeled_counter
+    labels:
+      - download_tapped
+      - open_in_app_tapped
+      - open_in_app_just_once
+      - open_in_app_always
+      - download_failed
+      - download_succeeded
+      - save_as_pdf_tapped
+    description: >
+      Counts the number of times some actions are executed in the PDF viewer.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829216
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829216#2
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - cdenizet@mozilla.com
+      - mcastelluccio@mozilla.com
+    expires: never
   used:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1566882
