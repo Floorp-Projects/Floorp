@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1684702351141,
+      "derHash": "00pbmBqFygddtiy6xBXvZZ2VM5BAykdoaGJdSqI6mEk=",
+      "subject": "CN=HiPKI OV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgT1YgVExTIENBIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1f90782835d7d7fe81e6d1997c68f9805ae51d6fec679c756a1e0fcc381c8bbc",
+        "size": 2361,
+        "filename": "hWMpQ4xuO_I1s2fKIr56xHfWzraaOM5aZ0fGcwoT160=.pem",
+        "location": "security-state-staging/intermediates/7b957b37-100f-428a-8abe-fbd788e459da.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "hWMpQ4xuO/I1s2fKIr56xHfWzraaOM5aZ0fGcwoT160=",
+      "crlite_enrolled": false,
+      "id": "14c7a35a-1bf0-4851-b69e-26a763d40c8d",
+      "last_modified": 1684702623265
+    },
+    {
       "schema": 1684208871446,
       "derHash": "v2TAbR1I2XegvC38kX6ODWNCvRFZBHFjbXoIBsyN8AM=",
       "subject": "CN=Root Networks CA,O=Root Networks\\, LLC,C=US",
@@ -27649,5 +27667,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1684357023297
+  "timestamp": 1684702623265
 }
