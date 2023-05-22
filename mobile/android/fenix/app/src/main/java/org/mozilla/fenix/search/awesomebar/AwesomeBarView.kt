@@ -525,7 +525,7 @@ class AwesomeBarView(
         filterByCurrentEngine: Boolean = false,
     ): BookmarksStorageSuggestionProvider {
         val searchEngineHostFilter = when (filterByCurrentEngine) {
-            true -> searchEngineSource.searchEngine?.resultsUrl?.host
+            true -> searchEngineSource.searchEngine?.resultsUrl
             false -> null
         }
 
@@ -537,7 +537,7 @@ class AwesomeBarView(
             engine = engineForSpeculativeConnects,
             showEditSuggestion = false,
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsHostFilter = searchEngineHostFilter,
+            resultsUriFilter = searchEngineHostFilter,
         )
     }
 

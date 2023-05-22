@@ -17,6 +17,7 @@ import java.io.IOException
 import java.util.UUID
 
 internal val commonPrefixes = listOf("www.", "mobile.", "m.")
+internal val mobileSubdomains = listOf("mobile", "m")
 
 /**
  * Returns the host without common prefixes like "www" or "m".
@@ -29,6 +30,20 @@ val Uri.hostWithoutCommonPrefixes: String?
         }
         return host
     }
+
+/**
+ * Checks that the Uri has the same host as [other], with mobile subdomains removed.
+ * @param other The Uri to be compared.
+ */
+fun Uri.sameHostWithoutMobileSubdomainAs(other: Uri): Boolean {
+    val thisHost = hostWithoutCommonPrefixes?.let {
+        it.split(".").filter { mobileSubdomains.none(String::equals) }
+    } ?: return false
+    val otherHost = other.hostWithoutCommonPrefixes?.let {
+        it.split(".").filter { mobileSubdomains.none(String::equals) }
+    } ?: return false
+    return thisHost == otherHost
+}
 
 /**
  * Returns true if the [Uri] uses the "http" or "https" protocol scheme.

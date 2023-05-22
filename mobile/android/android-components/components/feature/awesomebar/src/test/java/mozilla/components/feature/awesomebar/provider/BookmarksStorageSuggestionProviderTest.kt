@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -12,7 +13,6 @@ import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.StorageUtils.levenshteinDistance
@@ -179,13 +179,13 @@ class BookmarksStorageSuggestionProviderTest {
         val provider = BookmarksStorageSuggestionProvider(
             bookmarksStorage = bookmarksSpy,
             loadUrlUseCase = mock(),
-            resultsHostFilter = "test",
+            resultsUriFilter = "https://www.test.com".toUri(),
         )
 
         provider.onInputChanged("moz")
 
         verify(bookmarksSpy).searchBookmarks(
-            "test",
+            "moz",
             BOOKMARKS_SUGGESTION_LIMIT * BOOKMARKS_RESULTS_TO_FILTER_SCALE_FACTOR,
         )
     }
@@ -196,7 +196,7 @@ class BookmarksStorageSuggestionProviderTest {
         val provider = BookmarksStorageSuggestionProvider(
             bookmarksStorage = bookmarksSpy,
             loadUrlUseCase = mock(),
-            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+            resultsUriFilter = "https://mozilla.com".toUri(),
         )
 
         bookmarks.addItem("Other", "https://mozilla.com/firefox", newItem.title!!, null)

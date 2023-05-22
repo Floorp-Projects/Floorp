@@ -6,6 +6,7 @@ package org.mozilla.fenix.search.awesomebar
 
 import android.app.Activity
 import android.graphics.drawable.VectorDrawable
+import android.net.Uri
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -735,19 +736,20 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertNull(localSessionsProviders[0].resultsHostFilter)
+        assertNull(localSessionsProviders[0].resultsUriFilter)
     }
 
     @Test
     fun `GIVEN needing to show filtered bookmarks suggestions WHEN configuring providers THEN add the bookmarks provider with an engine filter`() {
         val settings: Settings = mockk(relaxed = true)
+        val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showAllBookmarkSuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
                 mockk(relaxed = true) {
-                    every { resultsUrl.host } returns "test"
+                    every { resultsUrl } returns url
                 },
             ),
         )
@@ -756,7 +758,7 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertEquals("test", localSessionsProviders[0].resultsHostFilter)
+        assertEquals(url, localSessionsProviders[0].resultsUriFilter)
     }
 
     @Test
@@ -794,12 +796,13 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true) {
             every { showUnifiedSearchFeature } returns false
         }
+        val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
         every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             searchEngineSource = SearchEngineSource.Default(
                 mockk(relaxed = true) {
-                    every { resultsUrl.host } returns "test"
+                    every { resultsUrl } returns url
                 },
             ),
         )
@@ -812,18 +815,18 @@ class AwesomeBarViewTest {
         assertNotNull(historyProviders[1].resultsHostFilter) // the filtered history provider
         val bookmarksProviders: List<BookmarksStorageSuggestionProvider> = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
         assertEquals(2, bookmarksProviders.size)
-        assertNull(bookmarksProviders[0].resultsHostFilter) // the general bookmarks provider
-        assertEquals("test", bookmarksProviders[1].resultsHostFilter) // the filtered bookmarks provider
+        assertNull(bookmarksProviders[0].resultsUriFilter) // the general bookmarks provider
+        assertEquals(url, bookmarksProviders[1].resultsUriFilter) // the filtered bookmarks provider
         assertEquals(1, result.filterIsInstance<SearchActionProvider>().size)
         assertEquals(1, result.filterIsInstance<SearchSuggestionProvider>().size)
         val syncedTabsProviders: List<SyncedTabsStorageSuggestionProvider> = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
         assertEquals(2, syncedTabsProviders.size)
         assertNull(syncedTabsProviders[0].resultsHostFilter) // the general synced tabs provider
-        assertEquals("test", syncedTabsProviders[1].resultsHostFilter) // the filtered synced tabs provider
+        assertEquals("www.test.com", syncedTabsProviders[1].resultsHostFilter) // the filtered synced tabs provider
         val localTabsProviders: List<SessionSuggestionProvider> = result.filterIsInstance<SessionSuggestionProvider>()
         assertEquals(2, localTabsProviders.size)
         assertNull(localTabsProviders[0].resultsHostFilter) // the general tabs provider
-        assertEquals("test", localTabsProviders[1].resultsHostFilter) // the filtered tabs provider
+        assertEquals("www.test.com", localTabsProviders[1].resultsHostFilter) // the filtered tabs provider
         assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 

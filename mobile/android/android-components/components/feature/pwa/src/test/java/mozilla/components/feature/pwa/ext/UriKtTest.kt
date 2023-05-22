@@ -7,8 +7,11 @@ package mozilla.components.feature.pwa.ext
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -39,6 +42,14 @@ class UriKtTest {
     fun `preserves missing scheme`() {
         assertNull("example.com".toUri().toOrigin())
         assertNull("/foo/bar".toUri().toOrigin())
+    }
+
+    @Test
+    fun `GIVEN Uris having the same host, one containing mobile subdomains WHEN compared THEN they have the same host without mobile subdomains`() {
+        assertTrue("https://m.youtube.com".toUri().sameHostWithoutMobileSubdomainAs("https://www.youtube.com".toUri()))
+        assertFalse("https://m.en.youtube.com".toUri().sameHostWithoutMobileSubdomainAs("https://www.youtube.com".toUri()))
+        assertFalse("https://en.m.wikipedia.com".toUri().sameHostWithoutMobileSubdomainAs("https://en.wikipedia.com".toUri()))
+        assertFalse("https://en.m.wikipedia.com".toUri().sameHostWithoutMobileSubdomainAs("https://it.wikipedia.com".toUri()))
     }
 
     private fun assertEquals(expected: String, actual: Uri?) = assertEquals(expected.toUri(), actual)
