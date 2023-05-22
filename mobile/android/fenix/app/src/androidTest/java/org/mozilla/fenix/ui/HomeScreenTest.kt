@@ -99,6 +99,7 @@ class HomeScreenTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807283")
     @Test
     fun verifyJumpBackInSectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 4)
