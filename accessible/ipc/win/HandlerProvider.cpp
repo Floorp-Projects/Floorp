@@ -13,6 +13,7 @@
 #include "Accessible2_3.h"
 #include "AccessibleApplication.h"
 #include "AccessibleDocument.h"
+#include "AccessibleDocument_i.c"
 #include "AccessibleEditableText.h"
 #include "AccessibleImage.h"
 #include "AccessibleRelation.h"
