@@ -684,6 +684,8 @@ class GCSchedulingTunables {
   void setMinEmptyChunkCount(uint32_t value);
   void setMaxEmptyChunkCount(uint32_t value);
 
+  void checkInvariants();
+
   static bool megabytesToBytes(uint32_t value, size_t* bytesOut);
   static bool kilobytesToBytes(uint32_t value, size_t* bytesOut);
 };
