@@ -210,6 +210,9 @@ JS::Symbol* CacheIRCloner::getSymbolField(uint32_t stubOffset) {
 BaseScript* CacheIRCloner::getBaseScriptField(uint32_t stubOffset) {
   return reinterpret_cast<BaseScript*>(readStubWord(stubOffset));
 }
+JitCode* CacheIRCloner::getJitCodeField(uint32_t stubOffset) {
+  return reinterpret_cast<JitCode*>(readStubWord(stubOffset));
+}
 uint32_t CacheIRCloner::getRawInt32Field(uint32_t stubOffset) {
   return uint32_t(reinterpret_cast<uintptr_t>(readStubWord(stubOffset)));
 }
