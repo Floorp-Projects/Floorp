@@ -72,6 +72,8 @@
 !define UpdateChannel "@MOZ_UPDATE_CHANNEL@"
 !endif
 
+!define AccessibleHandlerCLSID "@MOZ_HANDLER_CLSID@"
+
 #ifdef MOZ_LAUNCHER_PROCESS
 !define MOZ_LAUNCHER_PROCESS
 !define MOZ_LAUNCHER_SUBKEY "Software\Mozilla\${AppName}\Launcher"

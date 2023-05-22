@@ -113,6 +113,9 @@
 
   RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
+  ; Register AccessibleHandler.dll with COM (this requires write access to HKLM)
+  ${RegisterAccessibleHandler}
+
   ; Register AccessibleMarshal.dll with COM (this requires write access to HKLM)
   ${RegisterAccessibleMarshal}
 
@@ -1128,6 +1131,11 @@ ${RemoveDefaultBrowserAgentShortcut}
 !define AddMaintCertKeys "!insertmacro AddMaintCertKeys"
 !endif
 
+!macro RegisterAccessibleHandler
+  ${RegisterDLL} "$INSTDIR\AccessibleHandler.dll"
+!macroend
+!define RegisterAccessibleHandler "!insertmacro RegisterAccessibleHandler"
+
 !macro RegisterAccessibleMarshal
   ${RegisterDLL} "$INSTDIR\AccessibleMarshal.dll"
 !macroend
@@ -1143,11 +1151,6 @@ ${RemoveDefaultBrowserAgentShortcut}
   ; Remove protocol handler registry keys added by the MS shim
   DeleteRegKey HKLM "Software\Classes\Firefox.URL"
   DeleteRegKey HKCU "Software\Classes\Firefox.URL"
-
-  ; Unregister deprecated AccessibleHandler.dll.
-  ${If} ${FileExists} "$INSTDIR\AccessibleHandler.dll"
-    ${UnregisterDLL} "$INSTDIR\AccessibleHandler.dll"
-  ${EndIf}
 !macroend
 !define RemoveDeprecatedKeys "!insertmacro RemoveDeprecatedKeys"
 
@@ -1478,7 +1481,9 @@ ${RemoveDefaultBrowserAgentShortcut}
   ; should be ${FileMainEXE} so if it is in use the CheckForFilesInUse macro
   ; returns after the first check.
   Push "end"
+  Push "AccessibleHandler.dll"
   Push "AccessibleMarshal.dll"
+  Push "IA2Marshal.dll"
   Push "freebl3.dll"
   Push "nssckbi.dll"
   Push "nspr4.dll"

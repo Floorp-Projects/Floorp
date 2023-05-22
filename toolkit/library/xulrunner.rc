@@ -4,3 +4,6 @@
 
 #include "mozilla-config.h"
 #include "widget.rc"
+#ifdef ACCESSIBILITY
+1 typelib IGeckoCustom.tlb
+#endif
