@@ -18,8 +18,6 @@ import {
   isSourceBlackBoxed,
   canPrettyPrintSource,
   getPrettyPrintMessage,
-  isSourceOnSourceMapIgnoreList,
-  isSourceMapIgnoreListEnabled,
 } from "../../selectors";
 
 import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
@@ -53,7 +51,6 @@ class SourceFooter extends PureComponent {
       toggleBlackBox: PropTypes.func.isRequired,
       togglePaneCollapse: PropTypes.func.isRequired,
       togglePrettyPrint: PropTypes.func.isRequired,
-      isSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
   }
 
@@ -133,20 +130,17 @@ class SourceFooter extends PureComponent {
       isSelectedSourceBlackBoxed,
       toggleBlackBox,
       sourceLoaded,
-      isSourceOnIgnoreList,
     } = this.props;
 
     if (!selectedSource || !shouldBlackbox(selectedSource)) {
       return null;
     }
 
-    let tooltip = isSelectedSourceBlackBoxed
+    const blackboxed = isSelectedSourceBlackBoxed;
+
+    const tooltip = blackboxed
       ? L10N.getStr("sourceFooter.unignore")
       : L10N.getStr("sourceFooter.ignore");
-
-    if (isSourceOnIgnoreList) {
-      tooltip = L10N.getStr("sourceFooter.ignoreList");
-    }
 
     const type = "black-box";
 
@@ -155,12 +149,11 @@ class SourceFooter extends PureComponent {
         onClick={() => toggleBlackBox(cx, selectedSource)}
         className={classnames("action", type, {
           active: sourceLoaded,
-          blackboxed: isSelectedSourceBlackBoxed || isSourceOnIgnoreList,
+          blackboxed,
         })}
         key={type}
         title={tooltip}
         aria-label={tooltip}
-        disabled={isSourceOnIgnoreList}
       >
         <AccessibleImage className="blackBox" />
       </button>
@@ -275,9 +268,6 @@ const mapStateToProps = state => {
     isSelectedSourceBlackBoxed: selectedSource
       ? isSourceBlackBoxed(state, selectedSource)
       : null,
-    isSourceOnIgnoreList:
-      isSourceMapIgnoreListEnabled(state) &&
-      isSourceOnSourceMapIgnoreList(state, selectedSource),
     sourceLoaded: !!sourceTextContent,
     mappedSource: getGeneratedSource(state, selectedSource),
     prettySource: getPrettySource(

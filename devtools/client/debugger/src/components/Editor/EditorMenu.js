@@ -16,8 +16,6 @@ import {
   getThreadContext,
   isSourceWithMap,
   getBlackBoxRanges,
-  isSourceOnSourceMapIgnoreList,
-  isSourceMapIgnoreListEnabled,
 } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
@@ -27,7 +25,6 @@ class EditorMenu extends Component {
     return {
       clearContextMenu: PropTypes.func.isRequired,
       contextMenu: PropTypes.object,
-      isSourceOnIgnoreList: PropTypes.bool,
     };
   }
 
@@ -50,7 +47,6 @@ class EditorMenu extends Component {
       isPaused,
       editorWrappingEnabled,
       contextMenu: event,
-      isSourceOnIgnoreList,
     } = props;
 
     const location = getSourceLocationFromMouseEvent(
@@ -74,7 +70,6 @@ class EditorMenu extends Component {
         selectionText: editor.codeMirror.getSelection().trim(),
         isTextSelected: editor.codeMirror.somethingSelected(),
         editor,
-        isSourceOnIgnoreList,
       })
     );
   }
@@ -98,9 +93,6 @@ const mapStateToProps = (state, props) => {
         isSourceWithMap(state, props.selectedSource.id) ||
         isPretty(props.selectedSource)) &&
       !getPrettySource(state, props.selectedSource.id),
-    isSourceOnIgnoreList:
-      isSourceMapIgnoreListEnabled(state) &&
-      isSourceOnSourceMapIgnoreList(state, props.selectedSource),
   };
 };
 

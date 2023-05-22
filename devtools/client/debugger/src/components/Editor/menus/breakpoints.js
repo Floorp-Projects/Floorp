@@ -88,15 +88,13 @@ export const toggleDisabledBreakpointItem = (
   cx,
   breakpoint,
   breakpointActions,
-  blackboxedRangesForSelectedSource,
-  isSelectedSourceOnIgnoreList
+  blackboxedRangesForSelectedSource
 ) => {
   return {
     accesskey: L10N.getStr("editor.disableBreakpoint.accesskey"),
     disabled: isLineBlackboxed(
       blackboxedRangesForSelectedSource,
-      breakpoint.location.line,
-      isSelectedSourceOnIgnoreList
+      breakpoint.location.line
     ),
     click: () => breakpointActions.toggleDisabledBreakpoint(cx, breakpoint),
     ...(breakpoint.disabled
@@ -146,8 +144,7 @@ export function breakpointItems(
   breakpoint,
   selectedLocation,
   breakpointActions,
-  blackboxedRangesForSelectedSource,
-  isSelectedSourceOnIgnoreList
+  blackboxedRangesForSelectedSource
 ) {
   const items = [
     removeBreakpointItem(cx, breakpoint, breakpointActions),
@@ -155,8 +152,7 @@ export function breakpointItems(
       cx,
       breakpoint,
       breakpointActions,
-      blackboxedRangesForSelectedSource,
-      isSelectedSourceOnIgnoreList
+      blackboxedRangesForSelectedSource
     ),
   ];
 
@@ -180,8 +176,7 @@ export function breakpointItems(
           cx,
           selectedLocation,
           breakpointActions,
-          blackboxedRangesForSelectedSource,
-          isSelectedSourceOnIgnoreList
+          blackboxedRangesForSelectedSource
         )
       : disableBreakpointsOnLineItem(cx, selectedLocation, breakpointActions),
     { type: "separator" }
@@ -238,17 +233,12 @@ export const enableBreakpointsOnLineItem = (
   cx,
   location,
   breakpointActions,
-  blackboxedRangesForSelectedSource,
-  isSelectedSourceOnIgnoreList
+  blackboxedRangesForSelectedSource
 ) => ({
   id: "node-menu-remove-breakpoints-on-line",
   label: L10N.getStr("breakpointMenuItem.enableAllAtLine.label"),
   accesskey: L10N.getStr("breakpointMenuItem.enableAllAtLine.accesskey"),
-  disabled: isLineBlackboxed(
-    blackboxedRangesForSelectedSource,
-    location.line,
-    isSelectedSourceOnIgnoreList
-  ),
+  disabled: isLineBlackboxed(blackboxedRangesForSelectedSource, location.line),
   click: () =>
     breakpointActions.enableBreakpointsAtLine(
       cx,

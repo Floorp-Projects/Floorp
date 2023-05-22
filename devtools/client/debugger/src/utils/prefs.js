@@ -45,7 +45,6 @@ if (isNode()) {
   pref("devtools.debugger.log-event-breakpoints", false);
   pref("devtools.debugger.javascript-tracing-log-method", "console");
   pref("devtools.debugger.hide-ignored-sources", false);
-  pref("devtools.debugger.source-map-ignore-list-enabled", true);
   pref("devtools.debugger.features.wasm", true);
   pref("devtools.debugger.features.map-scopes", true);
   pref("devtools.debugger.features.code-folding", false);
@@ -106,10 +105,6 @@ export const prefs = new PrefsHelper("devtools", {
     "debugger.javascript-tracing-log-method",
   ],
   hideIgnoredSources: ["Bool", "debugger.hide-ignored-sources"],
-  sourceMapIgnoreListEnabled: [
-    "Bool",
-    "debugger.source-map-ignore-list-enabled",
-  ],
 });
 
 // The pref may not be defined. Defaulting to null isn't viable (cursor never blinks).
