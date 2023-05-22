@@ -109,6 +109,94 @@ async function toggleNeverTranslateSite() {
 }
 
 /**
+ * Asserts that the always-translate-language checkbox matches the expected
+ * checked state, and that the langTag is reported as an always-translate language
+ * by the TranslationsParent.
+ *
+ * @param {string} langTag - A BCP-47 language tag
+ * @param {boolean} expectChecked - Whether the checkbox should be checked
+ */
+async function assertIsAlwaysTranslateLanguage(langTag, expectChecked) {
+  await assertCheckboxState(
+    "translations-panel-settings-always-translate-language",
+    expectChecked
+  );
+  is(
+    TranslationsParent.shouldAlwaysTranslateLanguage(langTag),
+    expectChecked,
+    "always-translate is correctly reported for the language"
+  );
+}
+
+/**
+ * Asserts that the never-translate-language checkbox matches the expected
+ * checked state, and that the langTag is reported as a never-translate language
+ * by the TranslationsParent.
+ *
+ * @param {string} langTag - A BCP-47 language tag
+ * @param {boolean} expectChecked - Whether the checkbox should be checked
+ */
+async function assertIsNeverTranslateLanguage(langTag, expectChecked) {
+  is(
+    TranslationsParent.shouldNeverTranslateLanguage(langTag),
+    expectChecked,
+    "never-translate is correctly reported for the language"
+  );
+  await assertCheckboxState(
+    "translations-panel-settings-never-translate-language",
+    expectChecked
+  );
+  is(
+    TranslationsParent.shouldNeverTranslateLanguage(langTag),
+    expectChecked,
+    "never-translate is correctly reported for the language"
+  );
+}
+
+/**
+ * Asserts that the never-translate-site checkbox matches the expected
+ * checked state, and that the url is reported as a never-translate site
+ * by the Translations actor.
+ *
+ * @param {string} url - The url of a website
+ * @param {boolean} expectChecked - Whether the checkbox should be checked
+ */
+async function assertIsNeverTranslateSite(url, expectChecked) {
+  await assertCheckboxState(
+    "translations-panel-settings-never-translate-site",
+    expectChecked
+  );
+  const actor =
+    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "Translations"
+    );
+  is(await actor.shouldNeverTranslateSite(url), expectChecked);
+}
+
+/**
+ * Asserts that the state of a checkbox with a given dataL10nId is
+ * checked or not, based on the value of expected being true or false.
+ *
+ * @param {string} dataL10nId - The data-l10n-id of the checkbox.
+ * @param {boolean} expectChecked - Whether the checkbox should be checked.
+ */
+async function assertCheckboxState(dataL10nId, expectChecked) {
+  const menuItems = getAllByL10nId(dataL10nId);
+  for (const menuItem of menuItems) {
+    await TestUtils.waitForCondition(
+      () =>
+        menuItem.getAttribute("checked") === (expectChecked ? "true" : "false"),
+      "Waiting for checkbox state"
+    );
+    is(
+      menuItem.getAttribute("checked"),
+      expectChecked ? "true" : "false",
+      `Should match expected checkbox state for ${dataL10nId}`
+    );
+  }
+}
+
+/**
  * Navigate to a URL and indicate a message as to why.
  */
 async function navigate(url, message) {
@@ -168,6 +256,7 @@ function isVisible(element) {
  * The `l10nId` represents the text that a user would actually see.
  *
  * @param {string} l10nId
+ * @param {Document} doc
  * @returns {Element}
  */
 function getByL10nId(l10nId, doc = document) {
@@ -181,6 +270,21 @@ function getByL10nId(l10nId, doc = document) {
     }
   }
   throw new Error("The element is not visible in the DOM: " + l10nId);
+}
+
+/**
+ * Get all elements that match the l10n id.
+ *
+ * @param {string} l10nId
+ * @param {Document} doc
+ * @returns {Element}
+ */
+function getAllByL10nId(l10nId, doc = document) {
+  const elements = doc.querySelectorAll(`[data-l10n-id="${l10nId}"]`);
+  if (elements.length === 0) {
+    throw new Error("Could not find the element by l10n id: " + l10nId);
+  }
+  return elements;
 }
 
 /**
