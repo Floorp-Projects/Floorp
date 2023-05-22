@@ -123,11 +123,6 @@ void a11y::ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible*,
   MsaaAccessible::FireWinEvent(aTarget, aType);
 }
 
-bool a11y::IsHandlerRegistered() {
-  // XXX This is no longer useful and will soon be removed.
-  return false;
-}
-
 static bool GetInstantiatorExecutable(const DWORD aPid,
                                       nsIFile** aOutClientExe) {
   nsAutoHandle callingProcess(
