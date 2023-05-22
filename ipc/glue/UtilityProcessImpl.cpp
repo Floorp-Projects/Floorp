@@ -29,25 +29,44 @@ UtilityProcessImpl::~UtilityProcessImpl() = default;
 #if defined(XP_WIN)
 /* static */
 void UtilityProcessImpl::LoadLibraryOrCrash(LPCWSTR aLib) {
-  HMODULE module = ::LoadLibraryW(aLib);
-  if (!module) {
-    DWORD err = ::GetLastError();
-    switch (err) {
-      /* case ERROR_ACCESS_DENIED: */
-      /* case ERROR_BAD_EXE_FORMAT: */
-      /* case ERROR_SHARING_VIOLATION: */
-      case ERROR_MOD_NOT_FOUND:
-      case ERROR_COMMITMENT_LIMIT:
-        // We want to make it explicit in telemetry that this was in fact an
-        // OOM condition, even though we could not detect it on our own
-        CrashReporter::AnnotateOOMAllocationSize(1);
-        break;
+  // re-try a few times depending on the error we get ; inspired by both our
+  // results on content process allocations as well as msys2:
+  // https://github.com/git-for-windows/msys2-runtime/blob/b4fed42af089ab955286343835a97e287496b3f8/winsup/cygwin/autoload.cc#L323-L339
 
-      default:
-        break;
+  const int kMaxRetries = 10;
+  DWORD err;
+
+  for (int i = 0; i < kMaxRetries; i++) {
+    HMODULE module = ::LoadLibraryW(aLib);
+    if (module) {
+      return;
     }
-    MOZ_CRASH_UNSAFE_PRINTF("Unable to preload module: 0x%lx", err);
+
+    err = ::GetLastError();
+
+    if (err != ERROR_NOACCESS && err != ERROR_DLL_INIT_FAILED) {
+      break;
+    }
+
+    PR_Sleep(0);
   }
+
+  switch (err) {
+    /* case ERROR_ACCESS_DENIED: */
+    /* case ERROR_BAD_EXE_FORMAT: */
+    /* case ERROR_SHARING_VIOLATION: */
+    case ERROR_MOD_NOT_FOUND:
+    case ERROR_COMMITMENT_LIMIT:
+      // We want to make it explicit in telemetry that this was in fact an
+      // OOM condition, even though we could not detect it on our own
+      CrashReporter::AnnotateOOMAllocationSize(1);
+      break;
+
+    default:
+      break;
+  }
+
+  MOZ_CRASH_UNSAFE_PRINTF("Unable to preload module: 0x%lx", err);
 }
 #endif  // defined(XP_WIN)
 
