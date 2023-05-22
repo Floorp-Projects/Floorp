@@ -108,15 +108,10 @@ void DrawSegment(const SplineSegment& segment, const bool add, const size_t y,
 void ComputeSegments(const Spline::Point& center, const float intensity,
                      const float color[3], const float sigma,
                      std::vector<SplineSegment>& segments,
-                     std::vector<std::pair<size_t, size_t>>& segments_by_y,
-                     size_t* pixel_limit) {
-  // In worst case zero-sized dot spans over 2 rows / columns.
-  constexpr const float kThinDotSpan = 2.0f;
+                     std::vector<std::pair<size_t, size_t>>& segments_by_y) {
   // Sanity check sigma, inverse sigma and intensity
   if (!(std::isfinite(sigma) && sigma != 0.0f && std::isfinite(1.0f / sigma) &&
         std::isfinite(intensity))) {
-    // Even no-draw should still be accounted.
-    *pixel_limit -= std::min<size_t>(*pixel_limit, kThinDotSpan * kThinDotSpan);
     return;
   }
 #if JXL_HIGH_PRECISION
@@ -142,20 +137,6 @@ void ComputeSegments(const Spline::Point& center, const float intensity,
   segment.inv_sigma = 1.0f / sigma;
   segment.sigma_over_4_times_intensity = .25f * sigma * intensity;
   segment.maximum_distance = maximum_distance;
-  float cost = 2.0f * maximum_distance + kThinDotSpan;
-  // Check cost^2 fits size_t.
-  if (cost >= static_cast<float>(1 << 15)) {
-    // Too much to rasterize.
-    *pixel_limit = 0;
-    return;
-  }
-  size_t area_cost = static_cast<size_t>(cost * cost);
-  if (area_cost > *pixel_limit) {
-    *pixel_limit = 0;
-    return;
-  }
-  // TODO(eustas): perhaps we should charge less: (y1 - y0) <= cost
-  *pixel_limit -= area_cost;
   ssize_t y0 = center.y - maximum_distance + .5f;
   ssize_t y1 = center.y + maximum_distance + 1.5f;  // one-past-the-end
   for (ssize_t y = std::max<ssize_t>(y0, 0); y < y1; y++) {
@@ -184,8 +165,7 @@ void SegmentsFromPoints(
     const Spline& spline,
     const std::vector<std::pair<Spline::Point, float>>& points_to_draw,
     const float arc_length, std::vector<SplineSegment>& segments,
-    std::vector<std::pair<size_t, size_t>>& segments_by_y,
-    size_t* pixel_limit) {
+    std::vector<std::pair<size_t, size_t>>& segments_by_y) {
   const float inv_arc_length = 1.0f / arc_length;
   int k = 0;
   for (const auto& point_to_draw : points_to_draw) {
@@ -201,11 +181,7 @@ void SegmentsFromPoints(
     }
     const float sigma =
         ContinuousIDCT(spline.sigma_dct, (32 - 1) * progress_along_arc);
-    ComputeSegments(point, multiplier, color, sigma, segments, segments_by_y,
-                    pixel_limit);
-    if (*pixel_limit == 0) {
-      return;
-    }
+    ComputeSegments(point, multiplier, color, sigma, segments, segments_by_y);
   }
 }
 }  // namespace
@@ -346,7 +322,7 @@ void DrawCentripetalCatmullRomSpline(std::vector<Spline::Point> points,
 // TODO(eustas): this method always adds the last point, but never the first
 //               (unless those are one); I believe both ends matter.
 template <typename Points, typename Functor>
-bool ForEachEquallySpacedPoint(const Points& points, const Functor& functor) {
+void ForEachEquallySpacedPoint(const Points& points, const Functor& functor) {
   JXL_ASSERT(!points.empty());
   Spline::Point current = points.front();
   functor(current, kDesiredRenderingDistance);
@@ -356,7 +332,8 @@ bool ForEachEquallySpacedPoint(const Points& points, const Functor& functor) {
     float arclength_from_previous = 0.f;
     for (;;) {
       if (next == points.end()) {
-        return functor(*previous, arclength_from_previous);
+        functor(*previous, arclength_from_previous);
+        return;
       }
       const float arclength_to_next =
           std::sqrt((*next - *previous).SquaredNorm());
@@ -366,9 +343,7 @@ bool ForEachEquallySpacedPoint(const Points& points, const Functor& functor) {
             *previous + ((kDesiredRenderingDistance - arclength_from_previous) /
                          arclength_to_next) *
                             (*next - *previous);
-        if (!functor(current, kDesiredRenderingDistance)) {
-          return false;
-        }
+        functor(current, kDesiredRenderingDistance);
         break;
       }
       arclength_from_previous += arclength_to_next;
@@ -376,7 +351,6 @@ bool ForEachEquallySpacedPoint(const Points& points, const Functor& functor) {
       ++next;
     }
   }
-  return true;
 }
 
 }  // namespace
@@ -432,6 +406,7 @@ QuantizedSpline::QuantizedSpline(const Spline& original,
 Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
                                    const int32_t quantization_adjustment,
                                    const float y_to_x, const float y_to_b,
+                                   const uint64_t image_size,
                                    uint64_t* total_estimated_area_reached,
                                    Spline& result) const {
   result.control_points.clear();
@@ -471,6 +446,24 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
     result.color_dct[2][i] += y_to_b * result.color_dct[1][i];
   }
   uint64_t width_estimate = 0;
+
+  uint64_t color[3] = {};
+  for (int c = 0; c < 3; ++c) {
+    for (int i = 0; i < 32; ++i) {
+      color[c] +=
+          static_cast<uint64_t>(ceil(inv_quant * std::abs(color_dct_[c][i])));
+    }
+  }
+  color[0] += static_cast<uint64_t>(ceil(abs(y_to_x))) * color[1];
+  color[2] += static_cast<uint64_t>(ceil(abs(y_to_b))) * color[1];
+  // This is not taking kChannelWeight into account, but up to constant factors
+  // it gives an indication of the influence of the color values on the area
+  // that will need to be rendered.
+  uint64_t logcolor = std::max(
+      uint64_t(1),
+      static_cast<uint64_t>(CeilLog2Nonzero(
+          uint64_t(1) + std::max(color[1], std::max(color[0], color[2])))));
+
   for (int i = 0; i < 32; ++i) {
     const float inv_dct_factor = (i == 0) ? kSqrt0_5 : 1.0f;
     result.sigma_dct[i] =
@@ -479,11 +472,19 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
     // realistic area estimate. We leave it out to simplify the calculations,
     // and understand that this way we underestimate the area by a factor of
     // 1/(0.3333*0.3333). This is taken into account in the limits below.
-    uint64_t weight = static_cast<uint64_t>(
-        static_cast<uint64_t>(ceil(inv_quant) * std::abs(sigma_dct_[i])));
-    width_estimate += weight * weight;
+    uint64_t weight = std::max(
+        uint64_t(1),
+        static_cast<uint64_t>(ceil(inv_quant * std::abs(sigma_dct_[i]))));
+    width_estimate += weight * weight * logcolor;
   }
   *total_estimated_area_reached += (width_estimate * manhattan_distance);
+  if (*total_estimated_area_reached >
+      std::min((1024 * image_size + (uint64_t(1) << 32)),
+               (uint64_t(1) << 42))) {
+    return JXL_FAILURE("Too large total_estimated_area_reached: %" PRIu64,
+                       *total_estimated_area_reached);
+  }
+
   return true;
 }
 
@@ -600,19 +601,15 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
   segment_indices_.clear();
   segment_y_start_.clear();
   std::vector<std::pair<size_t, size_t>> segments_by_y;
-  Spline spline;
-  float pixel_limit = 16.0f * image_xsize * image_ysize + (1 << 16);
-  // Apply some extra cap to avoid overflows.
-  constexpr size_t kHardPixelLimit = 1u << 30;
-  size_t px_limit = (pixel_limit < static_cast<float>(kHardPixelLimit))
-                        ? static_cast<size_t>(pixel_limit)
-                        : kHardPixelLimit;
   std::vector<Spline::Point> intermediate_points;
   uint64_t total_estimated_area_reached = 0;
+  std::vector<Spline> splines;
   for (size_t i = 0; i < splines_.size(); ++i) {
+    Spline spline;
     JXL_RETURN_IF_ERROR(splines_[i].Dequantize(
         starting_points_[i], quantization_adjustment_, cmap.YtoXRatio(0),
-        cmap.YtoBRatio(0), &total_estimated_area_reached, spline));
+        cmap.YtoBRatio(0), image_xsize * image_ysize,
+        &total_estimated_area_reached, spline));
     if (std::adjacent_find(spline.control_points.begin(),
                            spline.control_points.end()) !=
         spline.control_points.end()) {
@@ -621,17 +618,25 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
       return JXL_FAILURE(
           "identical successive control points in spline %" PRIuS, i);
     }
+    splines.push_back(spline);
+  }
+  // TODO(firsching) Change this into a JXL_FAILURE for level 5 codestreams.
+  if (total_estimated_area_reached >
+      std::min((8 * image_xsize * image_ysize + (uint64_t(1) << 25)),
+               (uint64_t(1) << 30))) {
+    JXL_WARNING(
+        "Large total_estimated_area_reached, expect slower decoding: %" PRIu64,
+        total_estimated_area_reached);
+  }
+
+  for (Spline& spline : splines) {
     std::vector<std::pair<Spline::Point, float>> points_to_draw;
-    const auto add_point = [&](const Spline::Point& point,
-                               const float multiplier) -> bool {
+    auto add_point = [&](const Spline::Point& point, const float multiplier) {
       points_to_draw.emplace_back(point, multiplier);
-      return (points_to_draw.size() <= px_limit);
     };
     intermediate_points.clear();
     DrawCentripetalCatmullRomSpline(spline.control_points, intermediate_points);
-    if (!ForEachEquallySpacedPoint(intermediate_points, add_point)) {
-      return JXL_FAILURE("Too many pixels covered with splines");
-    }
+    ForEachEquallySpacedPoint(intermediate_points, add_point);
     const float arc_length =
         (points_to_draw.size() - 2) * kDesiredRenderingDistance +
         points_to_draw.back().second;
@@ -640,25 +645,9 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
       continue;
     }
     HWY_DYNAMIC_DISPATCH(SegmentsFromPoints)
-    (spline, points_to_draw, arc_length, segments_, segments_by_y, &px_limit);
-    if (px_limit == 0) {
-      return JXL_FAILURE("Too many pixels covered with splines");
-    }
+    (spline, points_to_draw, arc_length, segments_, segments_by_y);
   }
-  // TODO(firsching) Change this into a JXL_FAILURE for level 5 codestreams.
-  if (total_estimated_area_reached >
-      std::min((image_xsize * image_ysize + (uint64_t(1) << 18)),
-               (uint64_t(1) << 22))) {
-    JXL_WARNING(
-        "Large total_estimated_area_reached, expect slower decoding: %" PRIu64,
-        total_estimated_area_reached);
-  }
-  if (total_estimated_area_reached >
-      std::min((64 * image_xsize * image_ysize + (uint64_t(1) << 34)),
-               (uint64_t(1) << 38))) {
-    return JXL_FAILURE("Too large total_estimated_area_reached: %" PRIu64,
-                       total_estimated_area_reached);
-  }
+
   // TODO(eustas): consider linear sorting here.
   std::sort(segments_by_y.begin(), segments_by_y.end());
   segment_indices_.resize(segments_by_y.size());

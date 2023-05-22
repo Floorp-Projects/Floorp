@@ -13,7 +13,10 @@
 
 namespace jpegli {
 
-void FinalizeQuantMatrices(j_compress_ptr cinfo);
+void SetQuantMatrices(j_compress_ptr cinfo, float distances[NUM_QUANT_TBLS],
+                      bool add_two_chroma_tables);
+
+void InitQuantizer(j_compress_ptr cinfo);
 
 }  // namespace jpegli
 

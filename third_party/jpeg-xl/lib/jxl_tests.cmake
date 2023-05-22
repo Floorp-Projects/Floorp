@@ -18,7 +18,7 @@ target_include_directories(jxl_testlib-static PUBLIC
 )
 target_link_libraries(jxl_testlib-static
   hwy
-  jxl_extras-static
+  jxl_extras_nocodec-static
   jxl-static
 )
 endif()
@@ -58,6 +58,8 @@ foreach (TESTFILE IN LISTS JPEGXL_INTERNAL_TESTS)
       -s USE_PTHREADS=1 \
       -s NODERAWFS=1 \
     ")
+  else()
+    set_target_properties(${TESTNAME} PROPERTIES LINK_FLAGS "${JPEGXL_COVERAGE_LINK_FLAGS}")
   endif()
   target_compile_options(${TESTNAME} PRIVATE
     ${JPEGXL_INTERNAL_FLAGS}

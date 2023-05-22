@@ -9,10 +9,10 @@
 #include <ImfIO.h>
 #include <ImfRgbaFile.h>
 #include <ImfStandardAttributes.h>
+#include <jxl/codestream_header.h>
 
 #include <vector>
 
-#include "jxl/codestream_header.h"
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/base/byte_order.h"
 
@@ -110,7 +110,7 @@ Status EncodeImageEXR(const PackedImage& image, const JxlBasicInfo& info,
   chromaticities.white =
       Imath::V2f(c_enc.white_point_xy[0], c_enc.white_point_xy[1]);
   OpenEXR::addChromaticities(header, chromaticities);
-  OpenEXR::addWhiteLuminance(header, 255.0f);
+  OpenEXR::addWhiteLuminance(header, info.intensity_target);
 
   auto loadFloat =
       format.endianness == JXL_BIG_ENDIAN ? LoadBEFloat : LoadLEFloat;

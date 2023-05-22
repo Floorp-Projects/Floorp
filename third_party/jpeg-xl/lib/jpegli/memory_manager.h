@@ -12,6 +12,9 @@
 #include <stdlib.h>
 /* clang-format on */
 
+#define JPOOL_PERMANENT_ALIGNED (JPOOL_NUMPOOLS + JPOOL_PERMANENT)
+#define JPOOL_IMAGE_ALIGNED (JPOOL_NUMPOOLS + JPOOL_IMAGE)
+
 namespace jpegli {
 
 void InitMemoryManager(j_common_ptr cinfo);

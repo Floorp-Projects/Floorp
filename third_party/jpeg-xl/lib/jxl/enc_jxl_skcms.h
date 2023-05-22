@@ -11,7 +11,7 @@
 // bundled functions will be renamed from skcms_ to jxl_skcms_
 
 #ifdef SKCMS_API
-#error "Must include jxl_skcms.h and not skcms.h directly"
+#error "Must include enc_jxl_skcms.h and not skcms.h directly"
 #endif  // SKCMS_API
 
 #if JPEGXL_BUNDLE_SKCMS

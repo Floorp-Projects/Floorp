@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef LIB_PROFILER_TSC_TIMER_H_
-#define LIB_PROFILER_TSC_TIMER_H_
+#ifndef LIB_JXL_BASE_TSC_TIMER_H_
+#define LIB_JXL_BASE_TSC_TIMER_H_
 
 // High-resolution (~10 ns) timestamps, using fences to prevent reordering and
 // ensure exactly the desired regions are measured.
@@ -40,6 +40,7 @@
 #include <hwy/base.h>
 #include <hwy/cache_control.h>  // LoadFence
 
+namespace jxl {
 namespace profiler {
 
 // Ticks := platform-specific timer values (CPU cycles on x86). Must be
@@ -166,5 +167,6 @@ static HWY_INLINE HWY_MAYBE_UNUSED Ticks TicksAfter() {
 }
 
 }  // namespace profiler
+}  // namespace jxl
 
-#endif  // LIB_PROFILER_TSC_TIMER_H_
+#endif  // LIB_JXL_BASE_TSC_TIMER_H_

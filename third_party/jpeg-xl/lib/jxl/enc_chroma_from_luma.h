@@ -48,8 +48,8 @@ struct CfLHeuristics {
   void ComputeTile(const Rect& r, const Image3F& opsin,
                    const DequantMatrices& dequant,
                    const AcStrategyImage* ac_strategy,
-                   const Quantizer* quantizer, bool fast, size_t thread,
-                   ColorCorrelationMap* cmap);
+                   const ImageI* raw_quant_field, const Quantizer* quantizer,
+                   bool fast, size_t thread, ColorCorrelationMap* cmap);
 
   void ComputeDC(bool fast, ColorCorrelationMap* cmap);
 

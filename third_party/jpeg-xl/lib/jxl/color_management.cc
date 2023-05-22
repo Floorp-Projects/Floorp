@@ -601,8 +601,7 @@ Status MaybeCreateProfile(const ColorEncoding& c,
   } else {
     if (c.tf.IsGamma()) {
       float gamma = 1.0 / c.tf.GetGamma();
-      JXL_RETURN_IF_ERROR(
-          CreateICCCurvParaTag({gamma, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
+      JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({gamma}, 0, &tags));
     } else if (c.GetColorSpace() != ColorSpace::kXYB) {
       switch (c.tf.GetTransferFunction()) {
         case TransferFunction::kHLG:

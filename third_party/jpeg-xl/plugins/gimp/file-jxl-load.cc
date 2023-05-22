@@ -5,6 +5,9 @@
 
 #include "plugins/gimp/file-jxl-load.h"
 
+#include <jxl/decode.h>
+#include <jxl/decode_cxx.h>
+
 #define _PROFILE_ORIGIN_ JXL_COLOR_PROFILE_TARGET_ORIGINAL
 #define _PROFILE_TARGET_ JXL_COLOR_PROFILE_TARGET_DATA
 #define LOAD_PROC "file-jxl-load"

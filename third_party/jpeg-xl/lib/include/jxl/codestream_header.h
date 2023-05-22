@@ -15,10 +15,9 @@
 #ifndef JXL_CODESTREAM_HEADER_H_
 #define JXL_CODESTREAM_HEADER_H_
 
+#include <jxl/types.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#include "jxl/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -245,7 +244,7 @@ typedef struct {
    */
   uint32_t intrinsic_xsize;
 
-  /** Intrinsic heigth of the image.
+  /** Intrinsic height of the image.
    * The intrinsic size can be different from the actual size in pixels
    * (as given by xsize and ysize) and it denotes the recommended dimensions
    * for displaying the image, i.e. applications are advised to resample the
@@ -380,6 +379,8 @@ typedef struct {
   /** After blending, save the frame as reference frame with this ID (0-3).
    * Special case: if the frame duration is nonzero, ID 0 means "will not be
    * referenced in the future". This value is not used for the last frame.
+   * When encoding, ID 3 is reserved to frames that are generated internally by
+   * the encoder, and should not be used by applications.
    */
   uint32_t save_as_reference;
 } JxlLayerInfo;

@@ -8,10 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cmath>
+
+#include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/size_constraints.h"
 
 namespace jxl {
 namespace extras {
@@ -325,15 +327,14 @@ Span<const uint8_t> MakeSpan(const char* str) {
 }  // namespace
 
 Status DecodeImagePNM(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints,
-                      const SizeConstraints& constraints,
-                      PackedPixelFile* ppf) {
+                      const ColorHints& color_hints, PackedPixelFile* ppf,
+                      const SizeConstraints* constraints) {
   Parser parser(bytes);
   HeaderPNM header = {};
   const uint8_t* pos = nullptr;
   if (!parser.ParseHeader(&header, &pos)) return false;
   JXL_RETURN_IF_ERROR(
-      VerifyDimensions(&constraints, header.xsize, header.ysize));
+      VerifyDimensions(constraints, header.xsize, header.ysize));
 
   if (header.bits_per_sample == 0 || header.bits_per_sample > 32) {
     return JXL_FAILURE("PNM: bits_per_sample invalid");

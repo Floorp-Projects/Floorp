@@ -3,8 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "jxl/thread_parallel_runner.h"
-
+#include <jxl/thread_parallel_runner.h>
 #include <string.h>
 
 #include "lib/threads/thread_parallel_runner_internal.h"

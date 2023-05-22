@@ -6,11 +6,11 @@
 #ifndef LIB_JXL_FAKE_PARALLEL_RUNNER_TESTONLY_H_
 #define LIB_JXL_FAKE_PARALLEL_RUNNER_TESTONLY_H_
 
+#include <jxl/parallel_runner.h>
 #include <stdint.h>
 
 #include <vector>
 
-#include "jxl/parallel_runner.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/random.h"
 

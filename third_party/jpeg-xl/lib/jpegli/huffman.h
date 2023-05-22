@@ -21,16 +21,29 @@ constexpr int kJpegHuffmanRootTableBits = 8;
 constexpr int kJpegHuffmanLutSize = 758;
 
 struct HuffmanTableEntry {
-  // Initialize the value to an invalid symbol so that we can recognize it
-  // when reading the bit stream using a Huffman code with space > 0.
-  HuffmanTableEntry() : bits(0), value(0xffff) {}
-
   uint8_t bits;    // number of bits used for this symbol
   uint16_t value;  // symbol value or table offset
 };
 
 void BuildJpegHuffmanTable(const uint32_t* count, const uint32_t* symbols,
                            HuffmanTableEntry* lut);
+
+// This function will create a Huffman tree.
+//
+// The (data,length) contains the population counts.
+// The tree_limit is the maximum bit depth of the Huffman codes.
+//
+// The depth contains the tree, i.e., how many bits are used for
+// the symbol.
+//
+// See http://en.wikipedia.org/wiki/Huffman_coding
+void CreateHuffmanTree(const uint32_t* data, size_t length, int tree_limit,
+                       uint8_t* depth);
+
+void ValidateHuffmanTable(j_common_ptr cinfo, const JHUFF_TBL* table,
+                          bool is_dc);
+
+void AddStandardHuffmanTables(j_common_ptr cinfo, bool is_dc);
 
 }  // namespace jpegli
 

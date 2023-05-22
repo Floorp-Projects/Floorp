@@ -40,6 +40,8 @@
 
 namespace jxl {
 
+static constexpr size_t kPatchFrameReferenceId = 3;
+
 // static
 void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
                                     BitWriter* writer, size_t layer,
@@ -693,7 +695,7 @@ void FindBestPatchDictionary(const Image3F& opsin,
     ref_pos.ysize = info[i].first.ysize;
     ref_pos.x0 = ref_positions[i].first;
     ref_pos.y0 = ref_positions[i].second;
-    ref_pos.ref = 0;
+    ref_pos.ref = kPatchFrameReferenceId;
     for (size_t y = 0; y < ref_pos.ysize; y++) {
       for (size_t x = 0; x < ref_pos.xsize; x++) {
         for (size_t c = 0; c < 3; c++) {
@@ -718,8 +720,8 @@ void FindBestPatchDictionary(const Image3F& opsin,
   // Recursive application of patches could create very weird issues.
   cparams.patches = Override::kOff;
 
-  RoundtripPatchFrame(&reference_frame, state, 0, cparams, cms, pool, aux_out,
-                      /*subtract=*/true);
+  RoundtripPatchFrame(&reference_frame, state, kPatchFrameReferenceId, cparams,
+                      cms, pool, aux_out, /*subtract=*/true);
 
   // TODO(veluca): this assumes that applying patches is commutative, which is
   // not true for all blending modes. This code only produces kAdd patches, so

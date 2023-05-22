@@ -5,7 +5,7 @@
 
 #include "lib/jxl/base/profiler.h"
 
-#if PROFILER_ENABLED
+#if JXL_PROFILER_ENABLED
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,11 +20,12 @@
 
 // Optionally use SIMD in StreamCacheLine if available.
 #undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "lib/profiler/profiler.cc"
+#define HWY_TARGET_INCLUDE "lib/jxl/base/profiler.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
+namespace jxl {
 namespace profiler {
 namespace HWY_NAMESPACE {
 
@@ -56,16 +57,18 @@ void StreamCacheLine(const Packet* HWY_RESTRICT from, Packet* HWY_RESTRICT to) {
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace profiler
+}  // namespace jxl
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
+namespace jxl {
 namespace profiler {
 
 HWY_EXPORT(StreamCacheLine);
 
 namespace {
 
-// How many mebibytes to allocate (if PROFILER_ENABLED) per thread that
+// How many mebibytes to allocate (if JXL_PROFILER_ENABLED) per thread that
 // enters at least one zone. Once this buffer is full, the thread will analyze
 // packets (two per zone), which introduces observer overhead.
 #ifndef PROFILER_THREAD_STORAGE
@@ -531,6 +534,7 @@ ThreadSpecific* Zone::InitThreadSpecific() {
 }
 
 }  // namespace profiler
+}  // namespace jxl
 
 #endif  // HWY_ONCE
-#endif  // PROFILER_ENABLED
+#endif  // JXL_PROFILER_ENABLED

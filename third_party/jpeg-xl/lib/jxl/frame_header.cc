@@ -13,8 +13,8 @@
 
 namespace jxl {
 
-constexpr uint8_t YCbCrChromaSubsampling::kHShift[];
-constexpr uint8_t YCbCrChromaSubsampling::kVShift[];
+constexpr uint8_t YCbCrChromaSubsampling::kHShift[] = {0, 1, 1, 0};
+constexpr uint8_t YCbCrChromaSubsampling::kVShift[] = {0, 1, 0, 1};
 
 static Status VisitBlendMode(Visitor* JXL_RESTRICT visitor,
                              BlendMode default_value, BlendMode* blend_mode) {
