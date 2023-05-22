@@ -97,15 +97,13 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
         return false;
       }
-      value = Nursery::roundSize(value);
-      setMinNurseryBytes(value);
+      gcMinNurseryBytes_ = Nursery::roundSize(value);
       break;
     case JSGC_MAX_NURSERY_BYTES:
       if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
         return false;
       }
-      value = Nursery::roundSize(value);
-      setMaxNurseryBytes(value);
+      gcMaxNurseryBytes_ = Nursery::roundSize(value);
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
@@ -115,7 +113,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       if (!megabytesToBytes(value, &newLimit)) {
         return false;
       }
-      setSmallHeapSizeMaxBytes(newLimit);
+      smallHeapSizeMaxBytes_ = newLimit;
       break;
     }
     case JSGC_LARGE_HEAP_SIZE_MIN: {
@@ -123,7 +121,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       if (!megabytesToBytes(value, &newLimit) || newLimit == 0) {
         return false;
       }
-      setLargeHeapSizeMinBytes(newLimit);
+      largeHeapSizeMinBytes_ = newLimit;
       break;
     }
     case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH: {
@@ -131,7 +129,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
-      setHighFrequencySmallHeapGrowth(newGrowth);
+      highFrequencySmallHeapGrowth_ = newGrowth;
       break;
     }
     case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH: {
@@ -139,7 +137,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
-      setHighFrequencyLargeHeapGrowth(newGrowth);
+      highFrequencyLargeHeapGrowth_ = newGrowth;
       break;
     }
     case JSGC_BALANCED_HEAP_LIMITS_ENABLED: {
@@ -151,11 +149,11 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
-      setLowFrequencyHeapGrowth(newGrowth);
+      lowFrequencyHeapGrowth_ = newGrowth;
       break;
     }
     case JSGC_HEAP_GROWTH_FACTOR: {
-      setHeapGrowthFactor(double(value));
+      heapGrowthFactor_ = double(value);
       break;
     }
     case JSGC_ALLOCATION_THRESHOLD: {
@@ -257,6 +255,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       MOZ_CRASH("Unknown GC parameter.");
   }
 
+  maintainInvariantsAfterUpdate(key);
   return true;
 }
 
@@ -287,56 +286,6 @@ bool GCSchedulingTunables::kilobytesToBytes(uint32_t value, size_t* bytesOut) {
   return true;
 }
 
-void GCSchedulingTunables::setMinNurseryBytes(size_t value) {
-  gcMinNurseryBytes_ = value;
-  if (gcMaxNurseryBytes_ < gcMinNurseryBytes_) {
-    gcMaxNurseryBytes_ = gcMinNurseryBytes_;
-  }
-}
-
-void GCSchedulingTunables::setMaxNurseryBytes(size_t value) {
-  gcMaxNurseryBytes_ = value;
-  if (gcMinNurseryBytes_ > gcMaxNurseryBytes_) {
-    gcMinNurseryBytes_ = gcMaxNurseryBytes_;
-  }
-}
-
-void GCSchedulingTunables::setSmallHeapSizeMaxBytes(size_t value) {
-  smallHeapSizeMaxBytes_ = value;
-  if (smallHeapSizeMaxBytes_ >= largeHeapSizeMinBytes_) {
-    largeHeapSizeMinBytes_ = smallHeapSizeMaxBytes_ + 1;
-  }
-}
-
-void GCSchedulingTunables::setLargeHeapSizeMinBytes(size_t value) {
-  largeHeapSizeMinBytes_ = value;
-  if (largeHeapSizeMinBytes_ <= smallHeapSizeMaxBytes_) {
-    smallHeapSizeMaxBytes_ = largeHeapSizeMinBytes_ - 1;
-  }
-}
-
-void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(double value) {
-  highFrequencyLargeHeapGrowth_ = value;
-  if (highFrequencyLargeHeapGrowth_ > highFrequencySmallHeapGrowth_) {
-    highFrequencySmallHeapGrowth_ = highFrequencyLargeHeapGrowth_;
-  }
-}
-
-void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(double value) {
-  highFrequencySmallHeapGrowth_ = value;
-  if (highFrequencySmallHeapGrowth_ < highFrequencyLargeHeapGrowth_) {
-    highFrequencyLargeHeapGrowth_ = highFrequencySmallHeapGrowth_;
-  }
-}
-
-void GCSchedulingTunables::setLowFrequencyHeapGrowth(double value) {
-  lowFrequencyHeapGrowth_ = value;
-}
-
-void GCSchedulingTunables::setHeapGrowthFactor(double value) {
-  heapGrowthFactor_ = value;
-}
-
 void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
   auto guard = mozilla::MakeScopeExit([this] { checkInvariants(); });
 
@@ -345,37 +294,37 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
       gcMaxBytes_ = TuningDefaults::GCMaxBytes;
       break;
     case JSGC_MIN_NURSERY_BYTES:
-      setMinNurseryBytes(TuningDefaults::GCMinNurseryBytes);
+      gcMinNurseryBytes_ = TuningDefaults::GCMinNurseryBytes;
       break;
     case JSGC_MAX_NURSERY_BYTES:
-      setMaxNurseryBytes(JS::DefaultNurseryMaxBytes);
+      gcMaxNurseryBytes_ = JS::DefaultNurseryMaxBytes;
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ =
           TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold);
       break;
     case JSGC_SMALL_HEAP_SIZE_MAX:
-      setSmallHeapSizeMaxBytes(TuningDefaults::SmallHeapSizeMaxBytes);
+      smallHeapSizeMaxBytes_ = TuningDefaults::SmallHeapSizeMaxBytes;
       break;
     case JSGC_LARGE_HEAP_SIZE_MIN:
-      setLargeHeapSizeMinBytes(TuningDefaults::LargeHeapSizeMinBytes);
+      largeHeapSizeMinBytes_ = TuningDefaults::LargeHeapSizeMinBytes;
       break;
     case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH:
-      setHighFrequencySmallHeapGrowth(
-          TuningDefaults::HighFrequencySmallHeapGrowth);
+      highFrequencySmallHeapGrowth_ =
+          TuningDefaults::HighFrequencySmallHeapGrowth;
       break;
     case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH:
-      setHighFrequencyLargeHeapGrowth(
-          TuningDefaults::HighFrequencyLargeHeapGrowth);
+      highFrequencyLargeHeapGrowth_ =
+          TuningDefaults::HighFrequencyLargeHeapGrowth;
       break;
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-      setLowFrequencyHeapGrowth(TuningDefaults::LowFrequencyHeapGrowth);
+      lowFrequencyHeapGrowth_ = TuningDefaults::LowFrequencyHeapGrowth;
       break;
     case JSGC_BALANCED_HEAP_LIMITS_ENABLED:
       balancedHeapLimitsEnabled_ = TuningDefaults::BalancedHeapLimitsEnabled;
       break;
     case JSGC_HEAP_GROWTH_FACTOR:
-      setHeapGrowthFactor(TuningDefaults::HeapGrowthFactor);
+      heapGrowthFactor_ = TuningDefaults::HeapGrowthFactor;
       break;
     case JSGC_ALLOCATION_THRESHOLD:
       gcZoneAllocThresholdBase_ = TuningDefaults::GCZoneAllocThresholdBase;
@@ -420,6 +369,45 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
       break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
+  }
+
+  maintainInvariantsAfterUpdate(key);
+}
+
+void GCSchedulingTunables::maintainInvariantsAfterUpdate(JSGCParamKey updated) {
+  switch (updated) {
+    case JSGC_MIN_NURSERY_BYTES:
+      if (gcMaxNurseryBytes_ < gcMinNurseryBytes_) {
+        gcMaxNurseryBytes_ = gcMinNurseryBytes_;
+      }
+      break;
+    case JSGC_MAX_NURSERY_BYTES:
+      if (gcMinNurseryBytes_ > gcMaxNurseryBytes_) {
+        gcMinNurseryBytes_ = gcMaxNurseryBytes_;
+      }
+      break;
+    case JSGC_SMALL_HEAP_SIZE_MAX:
+      if (smallHeapSizeMaxBytes_ >= largeHeapSizeMinBytes_) {
+        largeHeapSizeMinBytes_ = smallHeapSizeMaxBytes_ + 1;
+      }
+      break;
+    case JSGC_LARGE_HEAP_SIZE_MIN:
+      if (largeHeapSizeMinBytes_ <= smallHeapSizeMaxBytes_) {
+        smallHeapSizeMaxBytes_ = largeHeapSizeMinBytes_ - 1;
+      }
+      break;
+    case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH:
+      if (highFrequencySmallHeapGrowth_ < highFrequencyLargeHeapGrowth_) {
+        highFrequencyLargeHeapGrowth_ = highFrequencySmallHeapGrowth_;
+      }
+      break;
+    case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH:
+      if (highFrequencyLargeHeapGrowth_ > highFrequencySmallHeapGrowth_) {
+        highFrequencySmallHeapGrowth_ = highFrequencyLargeHeapGrowth_;
+      }
+      break;
+    default:
+      break;
   }
 }
 
