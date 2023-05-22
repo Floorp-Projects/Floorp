@@ -221,6 +221,7 @@
 .compatibility-node-pane__summary {
   color: var(--theme-comment);
   cursor: pointer;
+  font-variant-numeric: tabular-nums;
   padding-block-end: var(--compatibility-base-unit);
 }
 
