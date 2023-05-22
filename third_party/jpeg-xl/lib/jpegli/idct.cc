@@ -5,12 +5,17 @@
 
 #include "lib/jpegli/idct.h"
 
+#include <cmath>
+
+#include "lib/jpegli/decode_internal.h"
 #include "lib/jxl/base/status.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jpegli/idct.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
+
+#include "lib/jpegli/transpose-inl.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jpegli {
@@ -19,12 +24,10 @@ namespace HWY_NAMESPACE {
 // These templates are not found via ADL.
 using hwy::HWY_NAMESPACE::Abs;
 using hwy::HWY_NAMESPACE::Add;
-using hwy::HWY_NAMESPACE::Clamp;
 using hwy::HWY_NAMESPACE::Gt;
 using hwy::HWY_NAMESPACE::IfThenElseZero;
 using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::MulAdd;
-using hwy::HWY_NAMESPACE::NearestInt;
 using hwy::HWY_NAMESPACE::NegMulAdd;
 using hwy::HWY_NAMESPACE::Rebind;
 using hwy::HWY_NAMESPACE::Sub;
@@ -57,92 +60,6 @@ void DequantBlock(const int16_t* JXL_RESTRICT qblock,
     Store(dequant, d, block + k);
   }
 }
-
-#if HWY_CAP_GE256
-JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
-                                  float* JXL_RESTRICT to) {
-  const D8 d;
-  auto i0 = Load(d, from);
-  auto i1 = Load(d, from + 1 * 8);
-  auto i2 = Load(d, from + 2 * 8);
-  auto i3 = Load(d, from + 3 * 8);
-  auto i4 = Load(d, from + 4 * 8);
-  auto i5 = Load(d, from + 5 * 8);
-  auto i6 = Load(d, from + 6 * 8);
-  auto i7 = Load(d, from + 7 * 8);
-
-  const auto q0 = InterleaveLower(d, i0, i2);
-  const auto q1 = InterleaveLower(d, i1, i3);
-  const auto q2 = InterleaveUpper(d, i0, i2);
-  const auto q3 = InterleaveUpper(d, i1, i3);
-  const auto q4 = InterleaveLower(d, i4, i6);
-  const auto q5 = InterleaveLower(d, i5, i7);
-  const auto q6 = InterleaveUpper(d, i4, i6);
-  const auto q7 = InterleaveUpper(d, i5, i7);
-
-  const auto r0 = InterleaveLower(d, q0, q1);
-  const auto r1 = InterleaveUpper(d, q0, q1);
-  const auto r2 = InterleaveLower(d, q2, q3);
-  const auto r3 = InterleaveUpper(d, q2, q3);
-  const auto r4 = InterleaveLower(d, q4, q5);
-  const auto r5 = InterleaveUpper(d, q4, q5);
-  const auto r6 = InterleaveLower(d, q6, q7);
-  const auto r7 = InterleaveUpper(d, q6, q7);
-
-  i0 = ConcatLowerLower(d, r4, r0);
-  i1 = ConcatLowerLower(d, r5, r1);
-  i2 = ConcatLowerLower(d, r6, r2);
-  i3 = ConcatLowerLower(d, r7, r3);
-  i4 = ConcatUpperUpper(d, r4, r0);
-  i5 = ConcatUpperUpper(d, r5, r1);
-  i6 = ConcatUpperUpper(d, r6, r2);
-  i7 = ConcatUpperUpper(d, r7, r3);
-
-  Store(i0, d, to);
-  Store(i1, d, to + 1 * 8);
-  Store(i2, d, to + 2 * 8);
-  Store(i3, d, to + 3 * 8);
-  Store(i4, d, to + 4 * 8);
-  Store(i5, d, to + 5 * 8);
-  Store(i6, d, to + 6 * 8);
-  Store(i7, d, to + 7 * 8);
-}
-#elif HWY_TARGET != HWY_SCALAR
-JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
-                                  float* JXL_RESTRICT to) {
-  const HWY_CAPPED(float, 4) d;
-  for (size_t n = 0; n < 8; n += 4) {
-    for (size_t m = 0; m < 8; m += 4) {
-      auto p0 = Load(d, from + n * 8 + m);
-      auto p1 = Load(d, from + (n + 1) * 8 + m);
-      auto p2 = Load(d, from + (n + 2) * 8 + m);
-      auto p3 = Load(d, from + (n + 3) * 8 + m);
-      const auto q0 = InterleaveLower(d, p0, p2);
-      const auto q1 = InterleaveLower(d, p1, p3);
-      const auto q2 = InterleaveUpper(d, p0, p2);
-      const auto q3 = InterleaveUpper(d, p1, p3);
-
-      const auto r0 = InterleaveLower(d, q0, q1);
-      const auto r1 = InterleaveUpper(d, q0, q1);
-      const auto r2 = InterleaveLower(d, q2, q3);
-      const auto r3 = InterleaveUpper(d, q2, q3);
-      Store(r0, d, to + m * 8 + n);
-      Store(r1, d, to + (1 + m) * 8 + n);
-      Store(r2, d, to + (2 + m) * 8 + n);
-      Store(r3, d, to + (3 + m) * 8 + n);
-    }
-  }
-}
-#else
-JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
-                                  float* JXL_RESTRICT to) {
-  for (size_t n = 0; n < 8; ++n) {
-    for (size_t m = 0; m < 8; ++m) {
-      to[8 * n + m] = from[8 * m + n];
-    }
-  }
-}
-#endif
 
 template <size_t N>
 void ForwardEvenOdd(const float* JXL_RESTRICT ain, size_t ain_stride,
@@ -266,15 +183,486 @@ void ComputeScaledIDCT(float* JXL_RESTRICT block0, float* JXL_RESTRICT block1,
   IDCT1D<8>(block1, output, output_stride);
 }
 
-void InverseTransformBlock(const int16_t* JXL_RESTRICT qblock,
-                           const float* JXL_RESTRICT dequant,
-                           const float* JXL_RESTRICT biases,
-                           float* JXL_RESTRICT scratch_space,
-                           float* JXL_RESTRICT output, size_t output_stride) {
+void InverseTransformBlock8x8(const int16_t* JXL_RESTRICT qblock,
+                              const float* JXL_RESTRICT dequant,
+                              const float* JXL_RESTRICT biases,
+                              float* JXL_RESTRICT scratch_space,
+                              float* JXL_RESTRICT output, size_t output_stride,
+                              size_t dctsize) {
   float* JXL_RESTRICT block0 = scratch_space;
-  float* JXL_RESTRICT block1 = scratch_space + 64;
+  float* JXL_RESTRICT block1 = scratch_space + DCTSIZE2;
   DequantBlock(qblock, dequant, biases, block0);
   ComputeScaledIDCT(block0, block1, output, output_stride);
+}
+
+// Computes the N-point IDCT of in[], and stores the result in out[]. The in[]
+// array is at most 8 values long, values in[8:N-1] are assumed to be 0.
+void Compute1dIDCT(float* in, float* out, size_t N) {
+  switch (N) {
+    case 3: {
+      static constexpr float kC3[3] = {
+          1.414213562373,
+          1.224744871392,
+          0.707106781187,
+      };
+      float even0 = in[0] + kC3[2] * in[2];
+      float even1 = in[0] - kC3[0] * in[2];
+      float odd0 = kC3[1] * in[1];
+      out[0] = even0 + odd0;
+      out[2] = even0 - odd0;
+      out[1] = even1;
+      break;
+    }
+    case 5: {
+      static constexpr float kC5[5] = {
+          1.414213562373, 1.344997023928, 1.144122805635,
+          0.831253875555, 0.437016024449,
+      };
+      float even0 = in[0] + kC5[2] * in[2] + kC5[4] * in[4];
+      float even1 = in[0] - kC5[4] * in[2] - kC5[2] * in[4];
+      float even2 = in[0] - kC5[0] * in[2] + kC5[0] * in[4];
+      float odd0 = kC5[1] * in[1] + kC5[3] * in[3];
+      float odd1 = kC5[3] * in[1] - kC5[1] * in[3];
+      out[0] = even0 + odd0;
+      out[4] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[3] = even1 - odd1;
+      out[2] = even2;
+      break;
+    }
+    case 6: {
+      static constexpr float kC6[6] = {
+          1.414213562373, 1.366025403784, 1.224744871392,
+          1.000000000000, 0.707106781187, 0.366025403784,
+      };
+      float even0 = in[0] + kC6[2] * in[2] + kC6[4] * in[4];
+      float even1 = in[0] - kC6[0] * in[4];
+      float even2 = in[0] - kC6[2] * in[2] + kC6[4] * in[4];
+      float odd0 = kC6[1] * in[1] + kC6[3] * in[3] + kC6[5] * in[5];
+      float odd1 = kC6[3] * in[1] - kC6[3] * in[3] - kC6[3] * in[5];
+      float odd2 = kC6[5] * in[1] - kC6[3] * in[3] + kC6[1] * in[5];
+      out[0] = even0 + odd0;
+      out[5] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[4] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[3] = even2 - odd2;
+      break;
+    }
+    case 7: {
+      static constexpr float kC7[7] = {
+          1.414213562373, 1.378756275744, 1.274162392264, 1.105676685997,
+          0.881747733790, 0.613604268353, 0.314692122713,
+      };
+      float even0 = in[0] + kC7[2] * in[2] + kC7[4] * in[4] + kC7[6] * in[6];
+      float even1 = in[0] + kC7[6] * in[2] - kC7[2] * in[4] - kC7[4] * in[6];
+      float even2 = in[0] - kC7[4] * in[2] - kC7[6] * in[4] + kC7[2] * in[6];
+      float even3 = in[0] - kC7[0] * in[2] + kC7[0] * in[4] - kC7[0] * in[6];
+      float odd0 = kC7[1] * in[1] + kC7[3] * in[3] + kC7[5] * in[5];
+      float odd1 = kC7[3] * in[1] - kC7[5] * in[3] - kC7[1] * in[5];
+      float odd2 = kC7[5] * in[1] - kC7[1] * in[3] + kC7[3] * in[5];
+      out[0] = even0 + odd0;
+      out[6] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[5] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[4] = even2 - odd2;
+      out[3] = even3;
+      break;
+    }
+    case 9: {
+      static constexpr float kC9[9] = {
+          1.414213562373, 1.392728480640, 1.328926048777,
+          1.224744871392, 1.083350440839, 0.909038955344,
+          0.707106781187, 0.483689525296, 0.245575607938,
+      };
+      float even0 = in[0] + kC9[2] * in[2] + kC9[4] * in[4] + kC9[6] * in[6];
+      float even1 = in[0] + kC9[6] * in[2] - kC9[6] * in[4] - kC9[0] * in[6];
+      float even2 = in[0] - kC9[8] * in[2] - kC9[2] * in[4] + kC9[6] * in[6];
+      float even3 = in[0] - kC9[4] * in[2] + kC9[8] * in[4] + kC9[6] * in[6];
+      float even4 = in[0] - kC9[0] * in[2] + kC9[0] * in[4] - kC9[0] * in[6];
+      float odd0 =
+          kC9[1] * in[1] + kC9[3] * in[3] + kC9[5] * in[5] + kC9[7] * in[7];
+      float odd1 = kC9[3] * in[1] - kC9[3] * in[5] - kC9[3] * in[7];
+      float odd2 =
+          kC9[5] * in[1] - kC9[3] * in[3] - kC9[7] * in[5] + kC9[1] * in[7];
+      float odd3 =
+          kC9[7] * in[1] - kC9[3] * in[3] + kC9[1] * in[5] - kC9[5] * in[7];
+      out[0] = even0 + odd0;
+      out[8] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[7] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[6] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[5] = even3 - odd3;
+      out[4] = even4;
+      break;
+    }
+    case 10: {
+      static constexpr float kC10[10] = {
+          1.414213562373, 1.396802246667, 1.344997023928, 1.260073510670,
+          1.144122805635, 1.000000000000, 0.831253875555, 0.642039521920,
+          0.437016024449, 0.221231742082,
+      };
+      float even0 = in[0] + kC10[2] * in[2] + kC10[4] * in[4] + kC10[6] * in[6];
+      float even1 = in[0] + kC10[6] * in[2] - kC10[8] * in[4] - kC10[2] * in[6];
+      float even2 = in[0] - kC10[0] * in[4];
+      float even3 = in[0] - kC10[6] * in[2] - kC10[8] * in[4] + kC10[2] * in[6];
+      float even4 = in[0] - kC10[2] * in[2] + kC10[4] * in[4] - kC10[6] * in[6];
+      float odd0 =
+          kC10[1] * in[1] + kC10[3] * in[3] + kC10[5] * in[5] + kC10[7] * in[7];
+      float odd1 =
+          kC10[3] * in[1] + kC10[9] * in[3] - kC10[5] * in[5] - kC10[1] * in[7];
+      float odd2 =
+          kC10[5] * in[1] - kC10[5] * in[3] - kC10[5] * in[5] + kC10[5] * in[7];
+      float odd3 =
+          kC10[7] * in[1] - kC10[1] * in[3] + kC10[5] * in[5] + kC10[9] * in[7];
+      float odd4 =
+          kC10[9] * in[1] - kC10[7] * in[3] + kC10[5] * in[5] - kC10[3] * in[7];
+      out[0] = even0 + odd0;
+      out[9] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[8] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[7] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[6] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[5] = even4 - odd4;
+      break;
+    }
+    case 11: {
+      static constexpr float kC11[11] = {
+          1.414213562373, 1.399818907436, 1.356927976287, 1.286413904599,
+          1.189712155524, 1.068791297809, 0.926112931411, 0.764581576418,
+          0.587485545401, 0.398430002847, 0.201263574413,
+      };
+      float even0 = in[0] + kC11[2] * in[2] + kC11[4] * in[4] + kC11[6] * in[6];
+      float even1 =
+          in[0] + kC11[6] * in[2] - kC11[10] * in[4] - kC11[4] * in[6];
+      float even2 =
+          in[0] + kC11[10] * in[2] - kC11[2] * in[4] - kC11[8] * in[6];
+      float even3 = in[0] - kC11[8] * in[2] - kC11[6] * in[4] + kC11[2] * in[6];
+      float even4 =
+          in[0] - kC11[4] * in[2] + kC11[8] * in[4] + kC11[10] * in[6];
+      float even5 = in[0] - kC11[0] * in[2] + kC11[0] * in[4] - kC11[0] * in[6];
+      float odd0 =
+          kC11[1] * in[1] + kC11[3] * in[3] + kC11[5] * in[5] + kC11[7] * in[7];
+      float odd1 =
+          kC11[3] * in[1] + kC11[9] * in[3] - kC11[7] * in[5] - kC11[1] * in[7];
+      float odd2 =
+          kC11[5] * in[1] - kC11[7] * in[3] - kC11[3] * in[5] + kC11[9] * in[7];
+      float odd3 =
+          kC11[7] * in[1] - kC11[1] * in[3] + kC11[9] * in[5] + kC11[5] * in[7];
+      float odd4 =
+          kC11[9] * in[1] - kC11[5] * in[3] + kC11[1] * in[5] - kC11[3] * in[7];
+      out[0] = even0 + odd0;
+      out[10] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[9] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[8] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[7] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[6] = even4 - odd4;
+      out[5] = even5;
+      break;
+    }
+    case 12: {
+      static constexpr float kC12[12] = {
+          1.414213562373, 1.402114769300, 1.366025403784, 1.306562964876,
+          1.224744871392, 1.121971053594, 1.000000000000, 0.860918669154,
+          0.707106781187, 0.541196100146, 0.366025403784, 0.184591911283,
+      };
+      float even0 = in[0] + kC12[2] * in[2] + kC12[4] * in[4] + kC12[6] * in[6];
+      float even1 = in[0] + kC12[6] * in[2] - kC12[6] * in[6];
+      float even2 =
+          in[0] + kC12[10] * in[2] - kC12[4] * in[4] - kC12[6] * in[6];
+      float even3 =
+          in[0] - kC12[10] * in[2] - kC12[4] * in[4] + kC12[6] * in[6];
+      float even4 = in[0] - kC12[6] * in[2] + kC12[6] * in[6];
+      float even5 = in[0] - kC12[2] * in[2] + kC12[4] * in[4] - kC12[6] * in[6];
+      float odd0 =
+          kC12[1] * in[1] + kC12[3] * in[3] + kC12[5] * in[5] + kC12[7] * in[7];
+      float odd1 =
+          kC12[3] * in[1] + kC12[9] * in[3] - kC12[9] * in[5] - kC12[3] * in[7];
+      float odd2 = kC12[5] * in[1] - kC12[9] * in[3] - kC12[1] * in[5] -
+                   kC12[11] * in[7];
+      float odd3 = kC12[7] * in[1] - kC12[3] * in[3] - kC12[11] * in[5] +
+                   kC12[1] * in[7];
+      float odd4 =
+          kC12[9] * in[1] - kC12[3] * in[3] + kC12[3] * in[5] - kC12[9] * in[7];
+      float odd5 = kC12[11] * in[1] - kC12[9] * in[3] + kC12[7] * in[5] -
+                   kC12[5] * in[7];
+      out[0] = even0 + odd0;
+      out[11] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[10] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[9] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[8] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[7] = even4 - odd4;
+      out[5] = even5 + odd5;
+      out[6] = even5 - odd5;
+      break;
+    }
+    case 13: {
+      static constexpr float kC13[13] = {
+          1.414213562373, 1.403902353238, 1.373119086479, 1.322312651445,
+          1.252223920364, 1.163874944761, 1.058554051646, 0.937797056801,
+          0.803364869133, 0.657217812653, 0.501487040539, 0.338443458124,
+          0.170464607981,
+      };
+      float even0 = in[0] + kC13[2] * in[2] + kC13[4] * in[4] + kC13[6] * in[6];
+      float even1 =
+          in[0] + kC13[6] * in[2] + kC13[12] * in[4] - kC13[8] * in[6];
+      float even2 =
+          in[0] + kC13[10] * in[2] - kC13[6] * in[4] - kC13[4] * in[6];
+      float even3 =
+          in[0] - kC13[12] * in[2] - kC13[2] * in[4] + kC13[10] * in[6];
+      float even4 =
+          in[0] - kC13[8] * in[2] - kC13[10] * in[4] + kC13[2] * in[6];
+      float even5 =
+          in[0] - kC13[4] * in[2] + kC13[8] * in[4] - kC13[12] * in[6];
+      float even6 = in[0] - kC13[0] * in[2] + kC13[0] * in[4] - kC13[0] * in[6];
+      float odd0 =
+          kC13[1] * in[1] + kC13[3] * in[3] + kC13[5] * in[5] + kC13[7] * in[7];
+      float odd1 = kC13[3] * in[1] + kC13[9] * in[3] - kC13[11] * in[5] -
+                   kC13[5] * in[7];
+      float odd2 = kC13[5] * in[1] - kC13[11] * in[3] - kC13[1] * in[5] -
+                   kC13[9] * in[7];
+      float odd3 =
+          kC13[7] * in[1] - kC13[5] * in[3] - kC13[9] * in[5] + kC13[3] * in[7];
+      float odd4 = kC13[9] * in[1] - kC13[1] * in[3] + kC13[7] * in[5] +
+                   kC13[11] * in[7];
+      float odd5 = kC13[11] * in[1] - kC13[7] * in[3] + kC13[3] * in[5] -
+                   kC13[1] * in[7];
+      out[0] = even0 + odd0;
+      out[12] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[11] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[10] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[9] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[8] = even4 - odd4;
+      out[5] = even5 + odd5;
+      out[7] = even5 - odd5;
+      out[6] = even6;
+      break;
+    }
+    case 14: {
+      static constexpr float kC14[14] = {
+          1.414213562373, 1.405321284327, 1.378756275744, 1.334852607020,
+          1.274162392264, 1.197448846138, 1.105676685997, 1.000000000000,
+          0.881747733790, 0.752406978226, 0.613604268353, 0.467085128785,
+          0.314692122713, 0.158341680609,
+      };
+      float even0 = in[0] + kC14[2] * in[2] + kC14[4] * in[4] + kC14[6] * in[6];
+      float even1 =
+          in[0] + kC14[6] * in[2] + kC14[12] * in[4] - kC14[10] * in[6];
+      float even2 =
+          in[0] + kC14[10] * in[2] - kC14[8] * in[4] - kC14[2] * in[6];
+      float even3 = in[0] - kC14[0] * in[4];
+      float even4 =
+          in[0] - kC14[10] * in[2] - kC14[8] * in[4] + kC14[2] * in[6];
+      float even5 =
+          in[0] - kC14[6] * in[2] + kC14[12] * in[4] + kC14[10] * in[6];
+      float even6 = in[0] - kC14[2] * in[2] + kC14[4] * in[4] - kC14[6] * in[6];
+      float odd0 =
+          kC14[1] * in[1] + kC14[3] * in[3] + kC14[5] * in[5] + kC14[7] * in[7];
+      float odd1 = kC14[3] * in[1] + kC14[9] * in[3] - kC14[13] * in[5] -
+                   kC14[7] * in[7];
+      float odd2 = kC14[5] * in[1] - kC14[13] * in[3] - kC14[3] * in[5] -
+                   kC14[7] * in[7];
+      float odd3 =
+          kC14[7] * in[1] - kC14[7] * in[3] - kC14[7] * in[5] + kC14[7] * in[7];
+      float odd4 = kC14[9] * in[1] - kC14[1] * in[3] + kC14[11] * in[5] +
+                   kC14[7] * in[7];
+      float odd5 = kC14[11] * in[1] - kC14[5] * in[3] + kC14[1] * in[5] -
+                   kC14[7] * in[7];
+      float odd6 = kC14[13] * in[1] - kC14[11] * in[3] + kC14[9] * in[5] -
+                   kC14[7] * in[7];
+      out[0] = even0 + odd0;
+      out[13] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[12] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[11] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[10] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[9] = even4 - odd4;
+      out[5] = even5 + odd5;
+      out[8] = even5 - odd5;
+      out[6] = even6 + odd6;
+      out[7] = even6 - odd6;
+      break;
+    }
+    case 15: {
+      static constexpr float kC15[15] = {
+          1.414213562373, 1.406466352507, 1.383309602960, 1.344997023928,
+          1.291948376043, 1.224744871392, 1.144122805635, 1.050965490998,
+          0.946293578512, 0.831253875555, 0.707106781187, 0.575212476952,
+          0.437016024449, 0.294031532930, 0.147825570407,
+      };
+      float even0 = in[0] + kC15[2] * in[2] + kC15[4] * in[4] + kC15[6] * in[6];
+      float even1 =
+          in[0] + kC15[6] * in[2] + kC15[12] * in[4] - kC15[12] * in[6];
+      float even2 =
+          in[0] + kC15[10] * in[2] - kC15[10] * in[4] - kC15[0] * in[6];
+      float even3 =
+          in[0] + kC15[14] * in[2] - kC15[2] * in[4] - kC15[12] * in[6];
+      float even4 =
+          in[0] - kC15[12] * in[2] - kC15[6] * in[4] + kC15[6] * in[6];
+      float even5 =
+          in[0] - kC15[8] * in[2] - kC15[14] * in[4] + kC15[6] * in[6];
+      float even6 =
+          in[0] - kC15[4] * in[2] + kC15[8] * in[4] - kC15[12] * in[6];
+      float even7 = in[0] - kC15[0] * in[2] + kC15[0] * in[4] - kC15[0] * in[6];
+      float odd0 =
+          kC15[1] * in[1] + kC15[3] * in[3] + kC15[5] * in[5] + kC15[7] * in[7];
+      float odd1 = kC15[3] * in[1] + kC15[9] * in[3] - kC15[9] * in[7];
+      float odd2 = kC15[5] * in[1] - kC15[5] * in[5] - kC15[5] * in[7];
+      float odd3 = kC15[7] * in[1] - kC15[9] * in[3] - kC15[5] * in[5] +
+                   kC15[11] * in[7];
+      float odd4 = kC15[9] * in[1] - kC15[3] * in[3] + kC15[3] * in[7];
+      float odd5 = kC15[11] * in[1] - kC15[3] * in[3] + kC15[5] * in[5] -
+                   kC15[13] * in[7];
+      float odd6 = kC15[13] * in[1] - kC15[9] * in[3] + kC15[5] * in[5] -
+                   kC15[1] * in[7];
+      out[0] = even0 + odd0;
+      out[14] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[13] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[12] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[11] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[10] = even4 - odd4;
+      out[5] = even5 + odd5;
+      out[9] = even5 - odd5;
+      out[6] = even6 + odd6;
+      out[8] = even6 - odd6;
+      out[7] = even7;
+      break;
+    }
+    case 16: {
+      static constexpr float kC16[16] = {
+          1.414213562373, 1.407403737526, 1.387039845322, 1.353318001174,
+          1.306562964876, 1.247225012987, 1.175875602419, 1.093201867002,
+          1.000000000000, 0.897167586343, 0.785694958387, 0.666655658478,
+          0.541196100146, 0.410524527522, 0.275899379283, 0.138617169199,
+      };
+      float even0 = in[0] + kC16[2] * in[2] + kC16[4] * in[4] + kC16[6] * in[6];
+      float even1 =
+          in[0] + kC16[6] * in[2] + kC16[12] * in[4] - kC16[14] * in[6];
+      float even2 =
+          in[0] + kC16[10] * in[2] - kC16[12] * in[4] - kC16[2] * in[6];
+      float even3 =
+          in[0] + kC16[14] * in[2] - kC16[4] * in[4] - kC16[10] * in[6];
+      float even4 =
+          in[0] - kC16[14] * in[2] - kC16[4] * in[4] + kC16[10] * in[6];
+      float even5 =
+          in[0] - kC16[10] * in[2] - kC16[12] * in[4] + kC16[2] * in[6];
+      float even6 =
+          in[0] - kC16[6] * in[2] + kC16[12] * in[4] + kC16[14] * in[6];
+      float even7 = in[0] - kC16[2] * in[2] + kC16[4] * in[4] - kC16[6] * in[6];
+      float odd0 = (kC16[1] * in[1] + kC16[3] * in[3] + kC16[5] * in[5] +
+                    kC16[7] * in[7]);
+      float odd1 = (kC16[3] * in[1] + kC16[9] * in[3] + kC16[15] * in[5] -
+                    kC16[11] * in[7]);
+      float odd2 = (kC16[5] * in[1] + kC16[15] * in[3] - kC16[7] * in[5] -
+                    kC16[3] * in[7]);
+      float odd3 = (kC16[7] * in[1] - kC16[11] * in[3] - kC16[3] * in[5] +
+                    kC16[15] * in[7]);
+      float odd4 = (kC16[9] * in[1] - kC16[5] * in[3] - kC16[13] * in[5] +
+                    kC16[1] * in[7]);
+      float odd5 = (kC16[11] * in[1] - kC16[1] * in[3] + kC16[9] * in[5] +
+                    kC16[13] * in[7]);
+      float odd6 = (kC16[13] * in[1] - kC16[7] * in[3] + kC16[1] * in[5] -
+                    kC16[5] * in[7]);
+      float odd7 = (kC16[15] * in[1] - kC16[13] * in[3] + kC16[11] * in[5] -
+                    kC16[9] * in[7]);
+      out[0] = even0 + odd0;
+      out[15] = even0 - odd0;
+      out[1] = even1 + odd1;
+      out[14] = even1 - odd1;
+      out[2] = even2 + odd2;
+      out[13] = even2 - odd2;
+      out[3] = even3 + odd3;
+      out[12] = even3 - odd3;
+      out[4] = even4 + odd4;
+      out[11] = even4 - odd4;
+      out[5] = even5 + odd5;
+      out[10] = even5 - odd5;
+      out[6] = even6 + odd6;
+      out[9] = even6 - odd6;
+      out[7] = even7 + odd7;
+      out[8] = even7 - odd7;
+      break;
+    }
+  }
+}
+
+void InverseTransformBlockGeneric(const int16_t* JXL_RESTRICT qblock,
+                                  const float* JXL_RESTRICT dequant,
+                                  const float* JXL_RESTRICT biases,
+                                  float* JXL_RESTRICT scratch_space,
+                                  float* JXL_RESTRICT output,
+                                  size_t output_stride, size_t dctsize) {
+  float* JXL_RESTRICT block0 = scratch_space;
+  float* JXL_RESTRICT block1 = scratch_space + DCTSIZE2;
+  DequantBlock(qblock, dequant, biases, block0);
+  if (dctsize == 1) {
+    *output = *block0;
+  } else if (dctsize == 2 || dctsize == 4) {
+    float* JXL_RESTRICT block2 = scratch_space + 2 * DCTSIZE2;
+    ComputeScaledIDCT(block0, block1, block2, 8);
+    if (dctsize == 4) {
+      for (size_t iy = 0; iy < 4; ++iy) {
+        for (size_t ix = 0; ix < 4; ++ix) {
+          float* block = &block2[16 * iy + 2 * ix];
+          output[iy * output_stride + ix] =
+              0.25f * (block[0] + block[1] + block[8] + block[9]);
+        }
+      }
+    } else {
+      for (size_t iy = 0; iy < 2; ++iy) {
+        for (size_t ix = 0; ix < 2; ++ix) {
+          float* block = &block2[32 * iy + 4 * ix];
+          output[iy * output_stride + ix] =
+              0.0625f *
+              (block[0] + block[1] + block[2] + block[3] + block[8] + block[9] +
+               block[10] + block[11] + block[16] + block[17] + block[18] +
+               block[19] + block[24] + block[25] + block[26] + block[27]);
+        }
+      }
+    }
+  } else {
+    float dctin[DCTSIZE];
+    float dctout[DCTSIZE * 2];
+    size_t insize = std::min<size_t>(dctsize, DCTSIZE);
+    for (size_t ix = 0; ix < insize; ++ix) {
+      for (size_t iy = 0; iy < insize; ++iy) {
+        dctin[iy] = block0[iy * DCTSIZE + ix];
+      }
+      Compute1dIDCT(dctin, dctout, dctsize);
+      for (size_t iy = 0; iy < dctsize; ++iy) {
+        block1[iy * dctsize + ix] = dctout[iy];
+      }
+    }
+    for (size_t iy = 0; iy < dctsize; ++iy) {
+      Compute1dIDCT(block1 + iy * dctsize, output + iy * output_stride,
+                    dctsize);
+    }
+  }
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -285,15 +673,19 @@ HWY_AFTER_NAMESPACE();
 #if HWY_ONCE
 namespace jpegli {
 
-HWY_EXPORT(InverseTransformBlock);
+HWY_EXPORT(InverseTransformBlock8x8);
+HWY_EXPORT(InverseTransformBlockGeneric);
 
-void InverseTransformBlock(const int16_t* JXL_RESTRICT qblock,
-                           const float* JXL_RESTRICT dequant_matrices,
-                           const float* JXL_RESTRICT biases,
-                           float* JXL_RESTRICT scratch_space,
-                           float* JXL_RESTRICT output, size_t output_stride) {
-  return HWY_DYNAMIC_DISPATCH(InverseTransformBlock)(
-      qblock, dequant_matrices, biases, scratch_space, output, output_stride);
+void ChooseInverseTransform(j_decompress_ptr cinfo) {
+  jpeg_decomp_master* m = cinfo->master;
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    if (m->scaled_dct_size[c] == DCTSIZE) {
+      m->inverse_transform[c] = HWY_DYNAMIC_DISPATCH(InverseTransformBlock8x8);
+    } else {
+      m->inverse_transform[c] =
+          HWY_DYNAMIC_DISPATCH(InverseTransformBlockGeneric);
+    }
+  }
 }
 
 }  // namespace jpegli

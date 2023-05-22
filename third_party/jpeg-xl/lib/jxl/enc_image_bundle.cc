@@ -15,7 +15,6 @@
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/profiler.h"
-#include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"

@@ -31,7 +31,6 @@ RUN set -ex; \
     libgoogle-perftools4 \
     libopenexr22 \
     libpng16-16 \
-    libqt5x11extras5 \
     libsdl2-2.0-0 \
     parallel; \
   rm -rf /var/lib/apt/lists/*;

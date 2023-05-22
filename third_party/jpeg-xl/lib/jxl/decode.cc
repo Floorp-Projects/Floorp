@@ -3,7 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "jxl/decode.h"
+#include <jxl/decode.h>
+#include <jxl/types.h>
 
 #include <algorithm>
 #include <array>
@@ -12,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "jxl/types.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
@@ -1112,7 +1112,10 @@ JxlDecoderStatus JxlDecoderProcessSections(JxlDecoder* dec) {
   std::vector<jxl::FrameDecoder::SectionInfo> section_info;
   std::vector<jxl::FrameDecoder::SectionStatus> section_status;
   for (size_t i = dec->next_section; i < toc.size(); ++i) {
-    if (dec->section_processed[i]) continue;
+    if (dec->section_processed[i]) {
+      pos += toc[i].size;
+      continue;
+    }
     size_t id = toc[i].id;
     size_t size = toc[i].size;
     if (OutOfBounds(pos, size, span.size())) {
@@ -1120,7 +1123,7 @@ JxlDecoderStatus JxlDecoderProcessSections(JxlDecoder* dec) {
     }
     auto br =
         new jxl::BitReader(jxl::Span<const uint8_t>(span.data() + pos, size));
-    section_info.emplace_back(jxl::FrameDecoder::SectionInfo{br, id});
+    section_info.emplace_back(jxl::FrameDecoder::SectionInfo{br, id, i});
     section_status.emplace_back();
     pos += size;
   }
@@ -1145,26 +1148,22 @@ JxlDecoderStatus JxlDecoderProcessSections(JxlDecoder* dec) {
   if (!status) {
     return JXL_API_ERROR("frame processing failed");
   }
-  bool found_skipped_section = false;
-  size_t num_done = 0;
-  size_t processed_bytes = 0;
   for (size_t i = 0; i < section_status.size(); ++i) {
     auto status = section_status[i];
     if (status == jxl::FrameDecoder::kDone) {
-      if (!found_skipped_section) {
-        processed_bytes += toc[dec->next_section + i].size;
-        ++num_done;
-      }
-      dec->section_processed[dec->next_section + i] = 1;
-    } else if (status == jxl::FrameDecoder::kSkipped) {
-      found_skipped_section = true;
-    } else {
+      dec->section_processed[section_info[i].index] = 1;
+    } else if (status != jxl::FrameDecoder::kSkipped) {
       return JXL_API_ERROR("unexpected section status");
     }
   }
-  dec->next_section += num_done;
-  dec->remaining_frame_size -= processed_bytes;
-  dec->AdvanceCodestream(processed_bytes);
+  size_t completed_prefix_bytes = 0;
+  while (dec->next_section < dec->section_processed.size() &&
+         dec->section_processed[dec->next_section] == 1) {
+    completed_prefix_bytes += toc[dec->next_section].size;
+    ++dec->next_section;
+  }
+  dec->remaining_frame_size -= completed_prefix_bytes;
+  dec->AdvanceCodestream(completed_prefix_bytes);
   return JXL_DEC_SUCCESS;
 }
 
@@ -1253,11 +1252,8 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
       Span<const uint8_t> span;
       JXL_API_RETURN_IF_ERROR(dec->GetCodestreamInput(&span));
       auto reader = GetBitReader(span);
-      bool output_needed =
-          (dec->preview_frame ? (dec->events_wanted & JXL_DEC_PREVIEW_IMAGE)
-                              : (dec->events_wanted & JXL_DEC_FULL_IMAGE));
       jxl::Status status = dec->frame_dec->InitFrame(
-          reader.get(), dec->ib.get(), dec->preview_frame, output_needed);
+          reader.get(), dec->ib.get(), dec->preview_frame);
       if (!reader->AllReadsWithinBounds() ||
           status.code() == StatusCode::kNotEnoughBytes) {
         return dec->RequestMoreInput();
@@ -1270,6 +1266,12 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
       if (!CheckSizeLimit(dec, frame_dim.xsize_upsampled_padded,
                           frame_dim.ysize_upsampled_padded)) {
         return JXL_API_ERROR("frame is too large");
+      }
+      bool output_needed =
+          (dec->preview_frame ? (dec->events_wanted & JXL_DEC_PREVIEW_IMAGE)
+                              : (dec->events_wanted & JXL_DEC_FULL_IMAGE));
+      if (output_needed) {
+        JXL_API_RETURN_IF_ERROR(dec->frame_dec->InitFrameOutput());
       }
       if (dec->cpu_limit_base != 0) {
         // No overflow, checked in CheckSizeLimit.

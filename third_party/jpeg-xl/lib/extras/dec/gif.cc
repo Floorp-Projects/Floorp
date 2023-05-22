@@ -6,16 +6,16 @@
 #include "lib/extras/dec/gif.h"
 
 #include <gif_lib.h>
+#include <jxl/codestream_header.h>
 #include <string.h>
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-#include "jxl/codestream_header.h"
+#include "lib/extras/size_constraints.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/sanitizers.h"
-#include "lib/jxl/size_constraints.h"
 
 namespace jxl {
 namespace extras {
@@ -57,8 +57,8 @@ void ensure_have_alpha(PackedFrame* frame) {
 }  // namespace
 
 Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      const SizeConstraints& constraints,
-                      PackedPixelFile* ppf) {
+                      PackedPixelFile* ppf,
+                      const SizeConstraints* constraints) {
   int error = GIF_OK;
   ReadState state = {bytes};
   const auto ReadFromSpan = [](GifFileType* const gif, GifByteType* const bytes,
@@ -97,20 +97,20 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
                        sizeof(*gif->SavedImages) * gif->ImageCount);
 
   JXL_RETURN_IF_ERROR(
-      VerifyDimensions<uint32_t>(&constraints, gif->SWidth, gif->SHeight));
+      VerifyDimensions<uint32_t>(constraints, gif->SWidth, gif->SHeight));
   uint64_t total_pixel_count =
       static_cast<uint64_t>(gif->SWidth) * gif->SHeight;
   for (int i = 0; i < gif->ImageCount; ++i) {
     const SavedImage& image = gif->SavedImages[i];
     uint32_t w = image.ImageDesc.Width;
     uint32_t h = image.ImageDesc.Height;
-    JXL_RETURN_IF_ERROR(VerifyDimensions<uint32_t>(&constraints, w, h));
+    JXL_RETURN_IF_ERROR(VerifyDimensions<uint32_t>(constraints, w, h));
     uint64_t pixel_count = static_cast<uint64_t>(w) * h;
     if (total_pixel_count + pixel_count < total_pixel_count) {
       return JXL_FAILURE("Image too big");
     }
     total_pixel_count += pixel_count;
-    if (total_pixel_count > constraints.dec_max_pixels) {
+    if (constraints && (total_pixel_count > constraints->dec_max_pixels)) {
       return JXL_FAILURE("Image too big");
     }
   }

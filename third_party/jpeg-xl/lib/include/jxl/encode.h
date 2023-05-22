@@ -13,12 +13,12 @@
 #ifndef JXL_ENCODE_H_
 #define JXL_ENCODE_H_
 
-#include "jxl/cms_interface.h"
-#include "jxl/codestream_header.h"
-#include "jxl/jxl_export.h"
-#include "jxl/memory_manager.h"
-#include "jxl/parallel_runner.h"
-#include "jxl/version.h"
+#include <jxl/cms_interface.h>
+#include <jxl/codestream_header.h>
+#include <jxl/jxl_export.h>
+#include <jxl/memory_manager.h>
+#include <jxl/parallel_runner.h>
+#include <jxl/version.h>
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {

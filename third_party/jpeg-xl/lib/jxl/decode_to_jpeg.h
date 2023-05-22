@@ -10,13 +10,13 @@
 // of the decoder state needed to parse the JPEG reconstruction box and provide
 // the reconstructed JPEG to the output buffer.
 
+#include <jxl/decode.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #include <memory>
 #include <vector>
 
-#include "jxl/decode.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"  // JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/image_bundle.h"

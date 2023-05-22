@@ -6,6 +6,11 @@
 #ifndef LIB_JXL_IMAGE_TEST_UTILS_H_
 #define LIB_JXL_IMAGE_TEST_UTILS_H_
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 

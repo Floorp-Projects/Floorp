@@ -15,9 +15,9 @@
 #ifndef JXL_THREAD_PARALLEL_RUNNER_CXX_H_
 #define JXL_THREAD_PARALLEL_RUNNER_CXX_H_
 
-#include <memory>
+#include <jxl/thread_parallel_runner.h>
 
-#include "jxl/thread_parallel_runner.h"
+#include <memory>
 
 #if !(defined(__cplusplus) || defined(c_plusplus))
 #error \

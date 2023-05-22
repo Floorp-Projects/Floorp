@@ -32,6 +32,8 @@
 #ifndef LIB_THREADS_THREAD_PARALLEL_RUNNER_INTERNAL_H_
 #define LIB_THREADS_THREAD_PARALLEL_RUNNER_INTERNAL_H_
 
+#include <jxl/memory_manager.h>
+#include <jxl/parallel_runner.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -41,9 +43,6 @@
 #include <mutex>               //NOLINT
 #include <thread>              //NOLINT
 #include <vector>
-
-#include "jxl/memory_manager.h"
-#include "jxl/parallel_runner.h"
 
 namespace jpegxl {
 
@@ -64,11 +63,6 @@ class ThreadParallelRunner {
 
   // Waits for all threads to exit.
   ~ThreadParallelRunner();
-
-  // Returns number of worker threads created (some may be sleeping and never
-  // wake up in time to participate in Run). Useful for characterizing
-  // performance; 0 means "run on main thread".
-  size_t NumWorkerThreads() const { return num_worker_threads_; }
 
   // Returns maximum number of main/worker threads that may call Func. Useful
   // for allocating per-thread storage.

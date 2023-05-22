@@ -5,9 +5,10 @@
 
 #include "lib/extras/dec/jxl.h"
 
-#include "jxl/decode.h"
-#include "jxl/decode_cxx.h"
-#include "jxl/types.h"
+#include <jxl/decode.h>
+#include <jxl/decode_cxx.h>
+#include <jxl/types.h>
+
 #include "lib/extras/dec/color_description.h"
 #include "lib/extras/enc/encode.h"
 #include "lib/jxl/base/printf_macros.h"

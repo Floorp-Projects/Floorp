@@ -23,8 +23,8 @@
 #undef MIN
 #undef CLAMP
 
-#include "jxl/resizable_parallel_runner.h"
-#include "jxl/resizable_parallel_runner_cxx.h"
+#include <jxl/resizable_parallel_runner.h>
+#include <jxl/resizable_parallel_runner_cxx.h>
 
 namespace jxl {
 

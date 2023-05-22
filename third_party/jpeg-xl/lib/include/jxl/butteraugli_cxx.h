@@ -15,9 +15,9 @@
 #ifndef JXL_BUTTERAUGLI_CXX_H_
 #define JXL_BUTTERAUGLI_CXX_H_
 
-#include <memory>
+#include <jxl/butteraugli.h>
 
-#include "jxl/butteraugli.h"
+#include <memory>
 
 #if !(defined(__cplusplus) || defined(c_plusplus))
 #error "This a C++ only header. Use jxl/butteraugli.h from C sources."

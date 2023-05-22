@@ -6,10 +6,10 @@
 #ifndef LIB_JXL_BASE_BYTE_ORDER_H_
 #define LIB_JXL_BASE_BYTE_ORDER_H_
 
+#include <jxl/types.h>
 #include <stdint.h>
 #include <string.h>  // memcpy
 
-#include "jxl/types.h"
 #include "lib/jxl/base/compiler_specific.h"
 
 #if JXL_COMPILER_MSVC

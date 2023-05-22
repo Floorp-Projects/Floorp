@@ -13,7 +13,6 @@
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/common.h"

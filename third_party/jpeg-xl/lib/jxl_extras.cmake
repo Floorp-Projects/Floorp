@@ -42,6 +42,20 @@ target_link_libraries(jxl_extras-static PUBLIC
   jxl_threads-static
 )
 
+# Define an extras library that does not have the image codecs, only the core
+# extras code. This is needed for some of the fuzzers.
+add_library(jxl_extras_nocodec-static STATIC EXCLUDE_FROM_ALL
+  "${JPEGXL_EXTRAS_CORE_SOURCES}"
+  "${JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES}"
+)
+target_compile_options(jxl_extras_nocodec-static PRIVATE "${JPEGXL_INTERNAL_FLAGS}")
+set_property(TARGET jxl_extras_nocodec-static PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(jxl_extras_nocodec-static PUBLIC "${PROJECT_SOURCE_DIR}")
+target_link_libraries(jxl_extras_nocodec-static PUBLIC
+  jxl-static
+  jxl_threads-static
+)
+
 find_package(GIF 5.1)
 if(GIF_FOUND)
   target_sources(jxl_extras_codec-obj PRIVATE

@@ -8,14 +8,14 @@
 
 // Decodes JPEG XL images in memory.
 
+#include <jxl/parallel_runner.h>
+#include <jxl/types.h>
 #include <stdint.h>
 
 #include <limits>
 #include <string>
 #include <vector>
 
-#include "jxl/parallel_runner.h"
-#include "jxl/types.h"
 #include "lib/extras/packed_image.h"
 
 namespace jxl {

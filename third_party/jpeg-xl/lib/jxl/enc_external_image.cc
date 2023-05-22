@@ -5,68 +5,25 @@
 
 #include "lib/jxl/enc_external_image.h"
 
+#include <jxl/types.h>
 #include <string.h>
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <functional>
 #include <utility>
 #include <vector>
 
-#include "jxl/types.h"
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/float.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/common.h"
 
 namespace jxl {
 namespace {
-
-// Based on highway scalar implementation, for testing
-float LoadFloat16(uint16_t bits16) {
-  const uint32_t sign = bits16 >> 15;
-  const uint32_t biased_exp = (bits16 >> 10) & 0x1F;
-  const uint32_t mantissa = bits16 & 0x3FF;
-
-  // Subnormal or zero
-  if (biased_exp == 0) {
-    const float subnormal = (1.0f / 16384) * (mantissa * (1.0f / 1024));
-    return sign ? -subnormal : subnormal;
-  }
-
-  // Normalized: convert the representation directly (faster than ldexp/tables).
-  const uint32_t biased_exp32 = biased_exp + (127 - 15);
-  const uint32_t mantissa32 = mantissa << (23 - 10);
-  const uint32_t bits32 = (sign << 31) | (biased_exp32 << 23) | mantissa32;
-
-  float result;
-  memcpy(&result, &bits32, 4);
-  return result;
-}
-
-float LoadLEFloat16(const uint8_t* p) {
-  uint16_t bits16 = LoadLE16(p);
-  return LoadFloat16(bits16);
-}
-
-float LoadBEFloat16(const uint8_t* p) {
-  uint16_t bits16 = LoadBE16(p);
-  return LoadFloat16(bits16);
-}
-
-typedef uint32_t(LoadFuncType)(const uint8_t* p);
-template <LoadFuncType LoadFunc>
-void JXL_INLINE LoadFloatRow(float* JXL_RESTRICT row_out, const uint8_t* in,
-                             float mul, size_t xsize, size_t bytes_per_pixel) {
-  size_t i = 0;
-  for (size_t x = 0; x < xsize; ++x) {
-    row_out[x] = mul * LoadFunc(in + i);
-    i += bytes_per_pixel;
-  }
-}
-
-uint32_t JXL_INLINE Load8(const uint8_t* p) { return *p; }
 
 size_t JxlDataTypeBytes(JxlDataType data_type) {
   switch (data_type) {
@@ -103,6 +60,8 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
   size_t bytes_per_channel = JxlDataTypeBytes(format.data_type);
   size_t bytes_per_pixel = format.num_channels * bytes_per_channel;
   size_t pixel_offset = c * bytes_per_channel;
+  // Only for uint8/16.
+  float scale = 1. / ((1ull << bits_per_sample) - 1);
 
   const size_t last_row_size = xsize * bytes_per_pixel;
   const size_t align = format.align;
@@ -130,62 +89,27 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
       (format.endianness == JXL_NATIVE_ENDIAN && IsLittleEndian());
 
   const uint8_t* const in = bytes.data();
-  if (format.data_type == JXL_TYPE_FLOAT ||
-      format.data_type == JXL_TYPE_FLOAT16) {
-    JXL_RETURN_IF_ERROR(RunOnPool(
-        pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
-        [&](const uint32_t task, size_t /*thread*/) {
-          const size_t y = task;
-          size_t i = row_size * task + pixel_offset;
-          float* JXL_RESTRICT row_out = channel->Row(y);
-          if (format.data_type == JXL_TYPE_FLOAT16) {
-            if (little_endian) {
-              for (size_t x = 0; x < xsize; ++x) {
-                row_out[x] = LoadLEFloat16(in + i);
-                i += bytes_per_pixel;
-              }
-            } else {
-              for (size_t x = 0; x < xsize; ++x) {
-                row_out[x] = LoadBEFloat16(in + i);
-                i += bytes_per_pixel;
-              }
-            }
-          } else {
-            if (little_endian) {
-              for (size_t x = 0; x < xsize; ++x) {
-                row_out[x] = LoadLEFloat(in + i);
-                i += bytes_per_pixel;
-              }
-            } else {
-              for (size_t x = 0; x < xsize; ++x) {
-                row_out[x] = LoadBEFloat(in + i);
-                i += bytes_per_pixel;
-              }
-            }
-          }
-        },
-        "ConvertExtraChannelFloat"));
-  } else {
-    float mul = 1. / ((1ull << bits_per_sample) - 1);
-    JXL_RETURN_IF_ERROR(RunOnPool(
-        pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
-        [&](const uint32_t task, size_t /*thread*/) {
-          const size_t y = task;
-          size_t i = row_size * task + pixel_offset;
-          float* JXL_RESTRICT row_out = channel->Row(y);
-          if (format.data_type == JXL_TYPE_UINT8) {
-            LoadFloatRow<Load8>(row_out, in + i, mul, xsize, bytes_per_pixel);
-          } else {
-            if (little_endian) {
-              LoadFloatRow<LoadLE16>(row_out, in + i, mul, xsize,
-                                     bytes_per_pixel);
-            } else {
-              LoadFloatRow<LoadBE16>(row_out, in + i, mul, xsize,
-                                     bytes_per_pixel);
-            }
-          }
-        },
-        "ConvertExtraChannelUint"));
+
+  std::atomic<size_t> error_count = {0};
+
+  const auto convert_row = [&](const uint32_t task, size_t /*thread*/) {
+    const size_t y = task;
+    size_t offset = row_size * task + pixel_offset;
+    float* JXL_RESTRICT row_out = channel->Row(y);
+    const auto save_value = [&](size_t index, float value) {
+      row_out[index] = value;
+    };
+    if (!LoadFloatRow(in + offset, xsize, bytes_per_pixel, format.data_type,
+                      little_endian, scale, save_value)) {
+      error_count++;
+    }
+  };
+  JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, static_cast<uint32_t>(ysize),
+                                ThreadPool::NoInit, convert_row,
+                                "ConvertExtraChannel"));
+
+  if (error_count) {
+    JXL_FAILURE("unsupported pixel format data type");
   }
 
   return true;

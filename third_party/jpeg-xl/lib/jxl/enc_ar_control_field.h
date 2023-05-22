@@ -6,16 +6,16 @@
 #ifndef LIB_JXL_ENC_AR_CONTROL_FIELD_H_
 #define LIB_JXL_ENC_AR_CONTROL_FIELD_H_
 
-#include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/common.h"
-#include "lib/jxl/enc_cache.h"
+#include <stddef.h>
+
+#include <vector>
+
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/quant_weights.h"
 
 namespace jxl {
+
+struct PassesEncoderState;
 
 struct ArControlFieldHeuristics {
   struct TempImages {

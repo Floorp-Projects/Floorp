@@ -5,7 +5,6 @@
 
 #include "lib/jxl/base/data_parallel.h"
 
-#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
 

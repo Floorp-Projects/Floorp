@@ -30,6 +30,19 @@
 #elif (defined(__x86_64__) || defined(_M_X64)) && !defined(_MSC_VER)
 #include <immintrin.h>
 
+// manually add _mm512_cvtsi512_si32 definition if missing
+// (e.g. with Xcode on macOS Mojave)
+// copied from gcc 11.1.0 include/avx512fintrin.h line 14367-14373
+#if defined(__clang__) &&                                           \
+    ((!defined(__apple_build_version__) && __clang_major__ < 10) || \
+     (defined(__apple_build_version__) && __apple_build_version__ < 12000032))
+inline int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm512_cvtsi512_si32(__m512i __A) {
+  __v16si __B = (__v16si)__A;
+  return __B[0];
+}
+#endif
+
 // TODO(veluca): MSVC support for dynamic dispatch.
 #if defined(__clang__) || defined(__GNUC__)
 
@@ -39,7 +52,10 @@
 
 #ifndef FJXL_ENABLE_AVX512
 // On clang-7 or earlier, and gcc-10 or earlier, AVX512 seems broken.
-#if (defined(__clang__) && __clang_major__ > 7) || \
+#if (defined(__clang__) &&                                             \
+         (!defined(__apple_build_version__) && __clang_major__ > 7) || \
+     (defined(__apple_build_version__) &&                              \
+      __apple_build_version__ > 10010046)) ||                          \
     (defined(__GNUC__) && __GNUC__ > 10)
 #define FJXL_ENABLE_AVX512 1
 #endif
@@ -266,7 +282,7 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
       output->Write(2, 0b00);  // No extra channel
     }
     output->Write(1, 0);  // Not XYB
-    if (frame->nb_chans > 1) {
+    if (frame->nb_chans > 2) {
       output->Write(1, 1);  // color_encoding.all_default (sRGB)
     } else {
       output->Write(1, 0);     // color_encoding.all_default false
@@ -3355,7 +3371,7 @@ void WriteACSectionPalette(const unsigned char* rgba, size_t x0, size_t y0,
 
   row_encoder.t = &encoder;
   encoder.output = &output;
-  encoder.code = &code[1];
+  encoder.code = &code[is_single_group ? 1 : 0];
   ProcessImageAreaPalette<
       ChannelRowProcessor<ChunkEncoder<UpTo8Bits>, UpTo8Bits>>(
       rgba, x0, y0, xs, 0, ys, row_stride, lookup, nb_chans, &row_encoder);
@@ -3365,17 +3381,17 @@ template <typename BitDepth>
 void CollectSamples(const unsigned char* rgba, size_t x0, size_t y0, size_t xs,
                     size_t row_stride, size_t row_count,
                     uint64_t raw_counts[4][kNumRawSymbols],
-                    uint64_t lz77_counts[4][kNumLZ77], bool palette,
-                    BitDepth bitdepth, size_t nb_chans, bool big_endian,
-                    const int16_t* lookup) {
+                    uint64_t lz77_counts[4][kNumLZ77], bool is_single_group,
+                    bool palette, BitDepth bitdepth, size_t nb_chans,
+                    bool big_endian, const int16_t* lookup) {
   if (palette) {
     ChunkSampleCollector<UpTo8Bits> sample_collectors[4];
     ChannelRowProcessor<ChunkSampleCollector<UpTo8Bits>, UpTo8Bits>
         row_sample_collectors[4];
     for (size_t c = 0; c < nb_chans; c++) {
       row_sample_collectors[c].t = &sample_collectors[c];
-      sample_collectors[c].raw_counts = raw_counts[1];
-      sample_collectors[c].lz77_counts = lz77_counts[1];
+      sample_collectors[c].raw_counts = raw_counts[is_single_group ? 1 : 0];
+      sample_collectors[c].lz77_counts = lz77_counts[is_single_group ? 1 : 0];
     }
     ProcessImageAreaPalette<
         ChannelRowProcessor<ChunkSampleCollector<UpTo8Bits>, UpTo8Bits>>(
@@ -3570,6 +3586,8 @@ JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
   uint64_t raw_counts[4][kNumRawSymbols] = {};
   uint64_t lz77_counts[4][kNumLZ77] = {};
 
+  bool onegroup = num_groups_x == 1 && num_groups_y == 1;
+
   // sample the middle (effort * 2) rows of every group
   for (size_t g = 0; g < num_groups_y * num_groups_x; g++) {
     size_t xg = g % num_groups_x;
@@ -3582,8 +3600,8 @@ JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
     int x_max =
         std::min<size_t>(width - xg * 256, 256) / kChunkSize * kChunkSize;
     CollectSamples(rgba, xg * 256, y_begin, x_max, stride, y_count, raw_counts,
-                   lz77_counts, !collided, bitdepth, nb_chans, big_endian,
-                   lookup.data());
+                   lz77_counts, onegroup, !collided, bitdepth, nb_chans,
+                   big_endian, lookup.data());
   }
 
   // TODO(veluca): can probably improve this and make it bitdepth-dependent.
@@ -3628,8 +3646,6 @@ JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
   for (size_t i = 0; i < 4; i++) {
     hcode[i] = PrefixCode(bitdepth, raw_counts[i], lz77_counts[i]);
   }
-
-  bool onegroup = num_groups_x == 1 && num_groups_y == 1;
 
   size_t num_groups = onegroup ? 1
                                : (2 + num_dc_groups_x * num_dc_groups_y +

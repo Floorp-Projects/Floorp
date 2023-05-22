@@ -9,13 +9,13 @@
 #ifndef LIB_JXL_IMAGE_METADATA_H_
 #define LIB_JXL_IMAGE_METADATA_H_
 
+#include <jxl/codestream_header.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <string>
 #include <vector>
 
-#include "jxl/codestream_header.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/headers.h"

@@ -214,10 +214,8 @@ install_pkgs() {
       libgif7:"${ubarch}"
       libjpeg-dev:"${ubarch}"
       libpng-dev:"${ubarch}"
-      libqt5x11extras5-dev:"${ubarch}"
 
       libstdc++-8-dev:"${ubarch}"
-      qtbase5-dev:"${ubarch}"
 
       # For OpenEXR:
       libilmbase12:"${ubarch}"

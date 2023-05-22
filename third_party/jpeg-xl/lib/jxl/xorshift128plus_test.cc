@@ -16,7 +16,7 @@
 #include <hwy/tests/test_util-inl.h>
 
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/thread_pool_internal.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/xorshift128plus-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -286,7 +286,7 @@ void TestSeedChanges() {
 }
 
 void TestFloat() {
-  ThreadPoolInternal pool(8);
+  test::ThreadPoolForTests pool(8);
 
 #ifdef JXL_DISABLE_SLOW_TESTS
   const uint32_t kMaxSeed = 256;
@@ -332,7 +332,7 @@ void TestFloat() {
 
 // Not more than one 64-bit zero
 void TestNotZero() {
-  ThreadPoolInternal pool(8);
+  test::ThreadPoolForTests pool(8);
 
 #ifdef JXL_DISABLE_SLOW_TESTS
   const uint32_t kMaxSeed = 500;

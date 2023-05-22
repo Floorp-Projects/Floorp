@@ -493,6 +493,42 @@ void DetectTransferFunction(const skcms_ICCProfile& profile,
                             ColorEncoding* JXL_RESTRICT c) {
   if (c->tf.SetImplicit()) return;
 
+  float gamma[3] = {};
+  if (profile.has_trc) {
+    const auto IsGamma = [](const skcms_TransferFunction& tf) {
+      return tf.a == 1 && tf.b == 0 &&
+             /* if b and d are zero, it is fine for c not to be */ tf.d == 0 &&
+             tf.e == 0 && tf.f == 0;
+    };
+    for (int i = 0; i < 3; ++i) {
+      if (profile.trc[i].table_entries == 0 &&
+          IsGamma(profile.trc->parametric)) {
+        gamma[i] = 1.f / profile.trc->parametric.g;
+      } else {
+        skcms_TransferFunction approximate_tf;
+        float max_error;
+        if (skcms_ApproximateCurve(&profile.trc[i], &approximate_tf,
+                                   &max_error)) {
+          if (IsGamma(approximate_tf)) {
+            gamma[i] = 1.f / approximate_tf.g;
+          }
+        }
+      }
+    }
+  }
+  if (gamma[0] != 0 && std::abs(gamma[0] - gamma[1]) < 1e-4f &&
+      std::abs(gamma[1] - gamma[2]) < 1e-4f) {
+    if (c->tf.SetGamma(gamma[0])) {
+      skcms_ICCProfile profile_test;
+      PaddedBytes bytes;
+      if (MaybeCreateProfile(*c, &bytes) &&
+          DecodeProfile(bytes.data(), bytes.size(), &profile_test) &&
+          skcms_ApproximatelyEqualProfiles(&profile, &profile_test)) {
+        return;
+      }
+    }
+  }
+
   for (TransferFunction tf : Values<TransferFunction>()) {
     // Can only create profile from known transfer function.
     if (tf == TransferFunction::kUnknown) continue;
@@ -692,6 +728,43 @@ Status IdentifyPrimaries(const cmsContext context, const Profile& profile,
 void DetectTransferFunction(const cmsContext context, const Profile& profile,
                             ColorEncoding* JXL_RESTRICT c) {
   if (c->tf.SetImplicit()) return;
+
+  float gamma = 0;
+  if (const auto* gray_trc = reinterpret_cast<const cmsToneCurve*>(
+          cmsReadTag(profile.get(), cmsSigGrayTRCTag))) {
+    const double estimated_gamma =
+        cmsEstimateGamma(gray_trc, /*precision=*/1e-4);
+    if (estimated_gamma > 0) {
+      gamma = 1. / estimated_gamma;
+    }
+  } else {
+    float rgb_gamma[3] = {};
+    int i = 0;
+    for (const auto tag :
+         {cmsSigRedTRCTag, cmsSigGreenTRCTag, cmsSigBlueTRCTag}) {
+      if (const auto* trc = reinterpret_cast<const cmsToneCurve*>(
+              cmsReadTag(profile.get(), tag))) {
+        const double estimated_gamma =
+            cmsEstimateGamma(trc, /*precision=*/1e-4);
+        if (estimated_gamma > 0) {
+          rgb_gamma[i] = 1. / estimated_gamma;
+        }
+      }
+      ++i;
+    }
+    if (rgb_gamma[0] != 0 && std::abs(rgb_gamma[0] - rgb_gamma[1]) < 1e-4f &&
+        std::abs(rgb_gamma[1] - rgb_gamma[2]) < 1e-4f) {
+      gamma = rgb_gamma[0];
+    }
+  }
+
+  if (gamma != 0 && c->tf.SetGamma(gamma)) {
+    PaddedBytes icc_test;
+    if (MaybeCreateProfile(*c, &icc_test) &&
+        ProfileEquivalentToICC(context, profile, icc_test, *c)) {
+      return;
+    }
+  }
 
   for (TransferFunction tf : Values<TransferFunction>()) {
     // Can only create profile from known transfer function.

@@ -14,14 +14,10 @@
 #include <vector>
 
 #include "lib/jpegli/encode_internal.h"
-#include "lib/jxl/enc_cluster.h"
 
 namespace jpegli {
 
-void AddStandardHuffmanTables(j_compress_ptr cinfo, bool is_dc);
-
-void CopyHuffmanCodes(j_compress_ptr cinfo,
-                      std::vector<JPEGHuffmanCode>* huffman_codes);
+void CopyHuffmanCodes(j_compress_ptr cinfo, bool* is_baseline);
 
 size_t RestartIntervalForScan(j_compress_ptr cinfo, size_t scan_index);
 
@@ -31,21 +27,18 @@ struct Histogram {
 };
 
 struct JpegClusteredHistograms {
-  std::vector<jxl::Histogram> histograms;
+  std::vector<Histogram> histograms;
   std::vector<uint32_t> histogram_indexes;
   std::vector<uint32_t> slot_ids;
 };
 
-void ClusterJpegHistograms(const Histogram* histo_data, size_t num,
+void ClusterJpegHistograms(const Histogram* histograms, size_t num,
                            JpegClusteredHistograms* clusters);
 
-void AddJpegHuffmanCode(const jxl::Histogram& histogram, size_t slot_id,
-                        std::vector<JPEGHuffmanCode>* huff_codes);
+void AddJpegHuffmanCode(const Histogram& histogram, size_t slot_id,
+                        JPEGHuffmanCode* huff_codes, size_t* num_huff_codes);
 
-void OptimizeHuffmanCodes(
-    j_compress_ptr cinfo,
-    const std::vector<std::vector<jpegli::coeff_t> >& coeffs,
-    std::vector<JPEGHuffmanCode>* huffman_codes);
+void OptimizeHuffmanCodes(j_compress_ptr cinfo, bool* is_baseline);
 
 }  // namespace jpegli
 
