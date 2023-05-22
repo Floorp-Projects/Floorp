@@ -8,6 +8,7 @@
 
 #include "shell/OSObject.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 
@@ -17,6 +18,7 @@
 #  include <direct.h>
 #  include <process.h>
 #  include <string.h>
+#  include <wchar.h>
 #  include <windows.h>
 #elif __wasi__
 #  include <dirent.h>
@@ -95,18 +97,28 @@ bool IsAbsolutePath(JSLinearString* filename) {
 
 static UniqueChars DirectoryName(JSContext* cx, const char* path) {
 #ifdef XP_WIN
-  char dirName[PATH_MAX + 1];
-  char* drive = nullptr;
-  char* fileName = nullptr;
-  char* fileExt = nullptr;
+  UniqueWideChars widePath = JS::EncodeUtf8ToWide(cx, path);
+  if (!widePath) {
+    return nullptr;
+  }
+
+  wchar_t dirName[PATH_MAX + 1];
+  wchar_t* drive = nullptr;
+  wchar_t* fileName = nullptr;
+  wchar_t* fileExt = nullptr;
 
   // The docs say it can return EINVAL, but the compiler says it's void
-  _splitpath(path, drive, dirName, fileName, fileExt);
+  _wsplitpath(widePath.get(), drive, dirName, fileName, fileExt);
 
-  return DuplicateString(cx, dirName);
+  return JS::EncodeWideToUtf8(cx, dirName);
 #else
+  UniqueChars narrowPath = JS::EncodeUtf8ToNarrow(cx, path);
+  if (!narrowPath) {
+    return nullptr;
+  }
+
   char dirName[PATH_MAX + 1];
-  strncpy(dirName, path, PATH_MAX);
+  strncpy(dirName, narrowPath.get(), PATH_MAX);
   if (dirName[PATH_MAX - 1] != '\0') {
     return nullptr;
   }
@@ -140,7 +152,7 @@ static UniqueChars DirectoryName(JSContext* cx, const char* path) {
   memmove(dirName, dirname(dirName), strlen(dirName) + 1);
 #  endif
 
-  return DuplicateString(cx, dirName);
+  return JS::EncodeNarrowToUtf8(cx, dirName);
 #endif
 }
 
@@ -174,7 +186,7 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
     return str;
   }
 
-  UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+  UniqueChars filename = JS_EncodeStringToUTF8(cx, str);
   if (!filename) {
     return nullptr;
   }
@@ -220,15 +232,38 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
   memcpy(result.get() + pathLen + 1, filename.get(), filenameLen);
   result[pathLen + 1 + filenameLen] = '\0';
 
-  return JS_NewStringCopyZ(cx, result.get());
+  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(result.get(), resultLen));
 }
 
 FILE* OpenFile(JSContext* cx, const char* filename, const char* mode) {
-  FILE* file = fopen(filename, mode);
+#ifdef XP_WIN
+  // Maximum valid mode string is "w+xb". Longer strings or strings
+  // containing invalid input lead to undefined behavior.
+  constexpr size_t MaxValidModeLength = 4;
+  wchar_t wideMode[MaxValidModeLength + 1] = {0};
+  for (size_t i = 0; i < MaxValidModeLength && mode[i] != '\0'; i++) {
+    wideMode[i] = mode[i] & 0x7f;
+  }
+
+  UniqueWideChars wideFilename = JS::EncodeUtf8ToWide(cx, filename);
+  if (!wideFilename) {
+    return nullptr;
+  }
+
+  FILE* file = _wfopen(wideFilename.get(), wideMode);
+#else
+  UniqueChars narrowFilename = JS::EncodeUtf8ToNarrow(cx, filename);
+  if (!narrowFilename) {
+    return nullptr;
+  }
+
+  FILE* file = fopen(narrowFilename.get(), mode);
+#endif
+
   if (!file) {
     if (UniqueChars error = SystemErrorMessage(cx, errno)) {
-      JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr,
-                                 JSSMSG_CANT_OPEN, filename, error.get());
+      JS_ReportErrorNumberUTF8(cx, my_GetErrorMessage, nullptr,
+                               JSSMSG_CANT_OPEN, filename, error.get());
     }
     return nullptr;
   }
@@ -241,11 +276,11 @@ bool ReadFile(JSContext* cx, const char* filename, FILE* file, char* buffer,
   if (cc != length) {
     if (ptrdiff_t(cc) < 0) {
       if (UniqueChars error = SystemErrorMessage(cx, errno)) {
-        JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr,
-                                   JSSMSG_CANT_READ, filename, error.get());
+        JS_ReportErrorNumberUTF8(cx, my_GetErrorMessage, nullptr,
+                                 JSSMSG_CANT_READ, filename, error.get());
       }
     } else {
-      JS_ReportErrorLatin1(cx, "can't read %s: short read", filename);
+      JS_ReportErrorUTF8(cx, "can't read %s: short read", filename);
     }
     return false;
   }
@@ -254,13 +289,13 @@ bool ReadFile(JSContext* cx, const char* filename, FILE* file, char* buffer,
 
 bool FileSize(JSContext* cx, const char* filename, FILE* file, size_t* size) {
   if (fseek(file, 0, SEEK_END) != 0) {
-    JS_ReportErrorLatin1(cx, "can't seek end of %s", filename);
+    JS_ReportErrorUTF8(cx, "can't seek end of %s", filename);
     return false;
   }
 
   size_t len = ftell(file);
   if (fseek(file, 0, SEEK_SET) != 0) {
-    JS_ReportErrorLatin1(cx, "can't seek start of %s", filename);
+    JS_ReportErrorUTF8(cx, "can't seek start of %s", filename);
     return false;
   }
 
@@ -269,7 +304,7 @@ bool FileSize(JSContext* cx, const char* filename, FILE* file, size_t* size) {
 }
 
 JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
-  UniqueChars pathname = JS_EncodeStringToLatin1(cx, pathnameStr);
+  UniqueChars pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
   if (!pathname) {
     return nullptr;
   }
@@ -307,10 +342,6 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
     // temporary buffer, read into that, and use a
     // race-safe primitive to copy memory into the
     // buffer.)
-    pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
-    if (!pathname) {
-      return nullptr;
-    }
     JS_ReportErrorUTF8(cx, "can't read %s: shared memory buffer",
                        pathname.get());
     return nullptr;
@@ -328,12 +359,21 @@ JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr) {
  * Return the current working directory or |null| on failure.
  */
 UniqueChars GetCWD(JSContext* cx) {
+#ifdef XP_WIN
+  wchar_t buffer[PATH_MAX + 1];
+  const wchar_t* cwd = _wgetcwd(buffer, PATH_MAX);
+  if (!cwd) {
+    return nullptr;
+  }
+  return JS::EncodeWideToUtf8(cx, buffer);
+#else
   char buffer[PATH_MAX + 1];
   const char* cwd = getcwd(buffer, PATH_MAX);
   if (!cwd) {
     return nullptr;
   }
-  return js::DuplicateString(cx, buffer);
+  return JS::EncodeNarrowToUtf8(cx, buffer);
+#endif
 }
 
 static bool ReadFile(JSContext* cx, unsigned argc, Value* vp,
@@ -417,7 +457,7 @@ static bool ListDir(JSContext* cx, unsigned argc, Value* vp,
     return false;
   }
 
-  UniqueChars pathname = JS_EncodeStringToLatin1(cx, str);
+  UniqueChars pathname = JS_EncodeStringToUTF8(cx, str);
   if (!pathname) {
     JS_ReportErrorASCII(cx, "os.file.listDir cannot convert path to Latin1");
     return false;
@@ -516,7 +556,7 @@ static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
     return false;
   }
 
-  UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+  UniqueChars filename = JS_EncodeStringToUTF8(cx, str);
   if (!filename) {
     return false;
   }
@@ -533,10 +573,6 @@ static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
     // Must opt in to use shared memory.  For now, don't.
     //
     // See further comments in FileAsTypedArray, above.
-    filename = JS_EncodeStringToUTF8(cx, str);
-    if (!filename) {
-      return false;
-    }
     JS_ReportErrorUTF8(cx, "can't write %s: shared memory buffer",
                        filename.get());
     return false;
@@ -545,10 +581,6 @@ static bool osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc,
   size_t length = obj->length();
   if (fwrite(buf, obj->bytesPerElement(), length, file) != length ||
       !autoClose.release()) {
-    filename = JS_EncodeStringToUTF8(cx, str);
-    if (!filename) {
-      return false;
-    }
     JS_ReportErrorUTF8(cx, "can't write %s", filename.get());
     return false;
   }
@@ -657,7 +689,7 @@ static FileObject* redirect(JSContext* cx, HandleString relFilename,
   if (!filename) {
     return nullptr;
   }
-  UniqueChars filenameABS = JS_EncodeStringToLatin1(cx, filename);
+  UniqueChars filenameABS = JS_EncodeStringToUTF8(cx, filename);
   if (!filenameABS) {
     return nullptr;
   }
@@ -852,6 +884,7 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
   // e.g. the drive letter is always reset when an absolute path is appended.
 
   JSStringBuilder buffer(cx);
+  Rooted<JSLinearString*> str(cx);
 
   for (unsigned i = 0; i < args.length(); i++) {
     if (!args[i].isString()) {
@@ -859,8 +892,7 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    Rooted<JSLinearString*> str(cx,
-                                JS_EnsureLinearString(cx, args[i].toString()));
+    str = JS_EnsureLinearString(cx, args[i].toString());
     if (!str) {
       return false;
     }
@@ -868,7 +900,7 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
     if (IsAbsolutePath(str)) {
       MOZ_ALWAYS_TRUE(buffer.resize(0));
     } else if (i != 0) {
-      UniqueChars path = JS_EncodeStringToLatin1(cx, str);
+      UniqueChars path = JS_EncodeStringToUTF8(cx, str);
       if (!path) {
         return false;
       }
@@ -959,21 +991,22 @@ inline char* strerror_message(char* result, char* buffer) { return result; }
 #endif
 
 UniqueChars SystemErrorMessage(JSContext* cx, int errnum) {
-  char buffer[200];
-
 #if defined(XP_WIN)
-  strerror_s(buffer, sizeof(buffer), errno);
-  const char* errstr = buffer;
+  wchar_t buffer[200];
+  const wchar_t* errstr = buffer;
+  if (_wcserror_s(buffer, mozilla::ArrayLength(buffer), errnum) != 0) {
+    errstr = L"unknown error";
+  }
+  return JS::EncodeWideToUtf8(cx, errstr);
 #else
-  const char* errstr =
-      strerror_message(strerror_r(errno, buffer, sizeof(buffer)), buffer);
-#endif
-
+  char buffer[200];
+  const char* errstr = strerror_message(
+      strerror_r(errno, buffer, mozilla::ArrayLength(buffer)), buffer);
   if (!errstr) {
     errstr = "unknown error";
   }
-
-  return DuplicateString(cx, errstr);
+  return JS::EncodeNarrowToUtf8(cx, errstr);
+#endif
 }
 
 #ifndef __wasi__
@@ -981,7 +1014,7 @@ static void ReportSysError(JSContext* cx, const char* prefix) {
   MOZ_ASSERT(JS::StringIsASCII(prefix));
 
   if (UniqueChars error = SystemErrorMessage(cx, errno)) {
-    JS_ReportErrorLatin1(cx, "%s: %s", prefix, error.get());
+    JS_ReportErrorUTF8(cx, "%s: %s", prefix, error.get());
   }
 }
 
