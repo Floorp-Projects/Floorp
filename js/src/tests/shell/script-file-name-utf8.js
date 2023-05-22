@@ -3,6 +3,9 @@
 // Retrieve the script file name through various functions and ensure it's
 // always correctly decoded from UTF-8.
 
+// Special value when filename cannot be retrieved.
+const NOT_SUPPORTED = "*not supported*";
+
 // Return the file name from the Error#fileName property.
 function errorFileName(fileName) {
   return evaluate("new Error().fileName", {fileName});
@@ -162,6 +165,18 @@ function getLcovInfoScriptName(fileName) {
   return scriptFiles[0].substring(3);
 }
 
+// Return the file name from the profiler stack.
+function geckoInterpProfilingStack(fileName) {
+  enableGeckoProfilingWithSlowAssertions();
+  const stack = evaluate(`readGeckoInterpProfilingStack();`, { fileName });
+  if (stack.length === 0) {
+    return NOT_SUPPORTED;
+  }
+  const result = stack[0].dynamicString;
+  disableGeckoProfiling();
+  return result;
+}
+
 const testFunctions = [
   errorFileName,
   errorFileNameParser,
@@ -193,7 +208,11 @@ const fileNames = [
 
 for (const fn of testFunctions) {
   for (const fileName of fileNames) {
-    assertEq(fn(fileName), fileName, `Caller '${fn.name}'`);
+    const result = fn(fileName);
+    if (result === NOT_SUPPORTED) {
+      continue;
+    }
+    assertEq(result, fileName, `Caller '${fn.name}'`);
   }
 }
 
