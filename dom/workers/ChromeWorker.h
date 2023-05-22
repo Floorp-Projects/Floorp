@@ -13,9 +13,9 @@ namespace mozilla::dom {
 
 class ChromeWorker final : public Worker {
  public:
-  static already_AddRefed<ChromeWorker> Constructor(const GlobalObject& aGlobal,
-                                                    const nsAString& aScriptURL,
-                                                    ErrorResult& aRv);
+  static already_AddRefed<ChromeWorker> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aScriptURL,
+      const WorkerOptions& aOptions, ErrorResult& aRv);
 
   static bool WorkerAvailable(JSContext* aCx, JSObject* /* unused */);
 
