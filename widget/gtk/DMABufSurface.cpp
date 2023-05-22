@@ -1630,3 +1630,25 @@ DMABufSurfaceYUV::GetAsSourceSurface() {
 
   return source.forget();
 }
+
+#if 0
+void DMABufSurfaceYUV::ClearPlane(int aPlane) {
+  if (!MapInternal(0, 0, mWidth[aPlane], mHeight[aPlane], nullptr,
+                   GBM_BO_TRANSFER_WRITE, aPlane)) {
+    return;
+  }
+  if ((int)mMappedRegionStride[aPlane] < mWidth[aPlane]) {
+    return;
+  }
+  memset((char*)mMappedRegion[aPlane], 0,
+         mMappedRegionStride[aPlane] * mHeight[aPlane]);
+  Unmap(aPlane);
+}
+
+#  include "gfxUtils.h"
+
+void DMABufSurfaceYUV::DumpToFile(const char* aFile) {
+  RefPtr<gfx::DataSourceSurface> surf = GetAsSourceSurface();
+  gfxUtils::WriteAsPNG(surf, aFile);
+}
+#endif
