@@ -304,7 +304,7 @@ MutableBlobStorage::~MutableBlobStorage() {
 
   if (mFD) {
     RefPtr<Runnable> runnable = new CloseFileRunnable(mFD);
-    Unused << DispatchToIOThread(runnable.forget());
+    (void)DispatchToIOThread(runnable.forget());
   }
 
   if (mTaskQueue) {
@@ -349,7 +349,7 @@ void MutableBlobStorage::GetBlobImplWhenReady(
 
     // If the dispatching fails, we are shutting down and it's fine to do not
     // run the callback.
-    Unused << DispatchToIOThread(runnable.forget());
+    (void)DispatchToIOThread(runnable.forget());
     return;
   }
 
@@ -542,7 +542,7 @@ void MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD) {
 
     // If this dispatching fails, CloseFileRunnable will close the FD in the
     // DTOR on the current thread.
-    Unused << DispatchToIOThread(runnable.forget());
+    (void)DispatchToIOThread(runnable.forget());
 
     // Let's inform the parent that we have nothing else to do.
     mActor->SendOperationFailed();
@@ -582,7 +582,7 @@ void MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD) {
 
     RefPtr<Runnable> runnable =
         new LastRunnable(this, mPendingContentType, mPendingCallback);
-    Unused << DispatchToIOThread(runnable.forget());
+    (void)DispatchToIOThread(runnable.forget());
 
     mPendingCallback = nullptr;
   }
@@ -606,7 +606,7 @@ void MutableBlobStorage::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
   // mFD. The parent will take care of closing the duplicated file descriptor on
   // its side.
   RefPtr<Runnable> runnable = new CloseFileRunnable(mFD);
-  Unused << DispatchToIOThread(runnable.forget());
+  (void)DispatchToIOThread(runnable.forget());
 
   mFD = nullptr;
   mActor = nullptr;

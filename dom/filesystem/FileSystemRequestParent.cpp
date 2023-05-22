@@ -151,8 +151,8 @@ void FileSystemRequestParent::Start() {
 
   nsAutoString path;
   if (NS_WARN_IF(NS_FAILED(mTask->GetTargetPath(path)))) {
-    Unused << Send__delete__(
-        this, FileSystemErrorResponse(NS_ERROR_DOM_SECURITY_ERR));
+    (void)Send__delete__(this,
+                         FileSystemErrorResponse(NS_ERROR_DOM_SECURITY_ERR));
     return;
   }
 

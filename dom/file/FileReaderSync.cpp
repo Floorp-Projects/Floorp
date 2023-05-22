@@ -92,7 +92,7 @@ void FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   }
   // arrayBuffer takes the ownership when it is not null. Otherwise we
   // need to release it explicitly.
-  mozilla::Unused << bufferData.release();
+  (void)bufferData.release();
 
   aRetval.set(arrayBuffer);
 }
