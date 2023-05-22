@@ -7520,7 +7520,8 @@ static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = JS_NewStringCopyN(cx, content.get(), length);
+  JSString* str =
+      JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(content.get(), length));
   if (!str) {
     return false;
   }

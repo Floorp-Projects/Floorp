@@ -1835,7 +1835,7 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
       locationp.setSource(AtomizeChars(cx, displayURL, js_strlen(displayURL)));
     } else {
       const char* filename = iter.filename() ? iter.filename() : "";
-      locationp.setSource(Atomize(cx, filename, strlen(filename)));
+      locationp.setSource(AtomizeUTF8Chars(cx, filename, strlen(filename)));
     }
     if (!locationp.source()) {
       return false;
@@ -1851,8 +1851,7 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
   RootedScript script(cx, iter.script());
   jsbytecode* pc = iter.pc();
 
-  PCKey key(script, pc);
-  PCLocationMap::AddPtr p = pcLocationMap.lookupForAdd(key);
+  PCLocationMap::AddPtr p = pcLocationMap.lookupForAdd(PCKey(script, pc));
 
   if (!p) {
     Rooted<JSAtom*> source(cx);
@@ -1860,7 +1859,7 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
       source = AtomizeChars(cx, displayURL, js_strlen(displayURL));
     } else {
       const char* filename = script->filename() ? script->filename() : "";
-      source = Atomize(cx, filename, strlen(filename));
+      source = AtomizeUTF8Chars(cx, filename, strlen(filename));
     }
     if (!source) {
       return false;
@@ -1871,6 +1870,7 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
     uint32_t line = PCToLineNumber(script, pc, &column);
 
     // Make the column 1-based. See comment above.
+    PCKey key(script, pc);
     LocationValue value(source, sourceId, line, column + 1);
     if (!pcLocationMap.add(p, key, value)) {
       ReportOutOfMemory(cx);
