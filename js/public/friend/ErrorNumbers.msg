@@ -400,6 +400,12 @@ MSG_DEF(JSMSG_BAD_TRAILING_UTF8_UNIT,  1, JSEXN_SYNTAXERR, "bad trailing UTF-8 b
 MSG_DEF(JSMSG_FORBIDDEN_UTF8_CODE_POINT,2,JSEXN_SYNTAXERR, "{0} isn't a valid code point because {1}")
 MSG_DEF(JSMSG_BAD_CODE_UNITS,          1, JSEXN_NOTE, "the code units comprising this invalid code point were: {0}")
 
+// System encoding errors
+MSG_DEF(JSMSG_CANT_CONVERT_TO_NARROW,  0, JSEXN_NOTE, "can't convert to narrow string")
+MSG_DEF(JSMSG_CANT_CONVERT_TO_WIDE,    0, JSEXN_NOTE, "can't convert to wide string")
+MSG_DEF(JSMSG_CANT_CONVERT_WIDE_TO_UTF8, 0, JSEXN_NOTE, "can't convert wide string to UTF-8")
+MSG_DEF(JSMSG_CANT_CONVERT_UTF8_TO_WIDE, 0, JSEXN_NOTE, "can't convert UTF-8 to wide string")
+
 // SmooshMonkey
 MSG_DEF(JSMSG_SMOOSH_COMPILE_ERROR,    1, JSEXN_SYNTAXERR, "{0}")
 MSG_DEF(JSMSG_SMOOSH_UNIMPLEMENTED,    1, JSEXN_INTERNALERR, "{0}")
