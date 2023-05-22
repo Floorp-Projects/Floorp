@@ -16,9 +16,18 @@ option(
 def warnings_as_errors(warnings_as_errors):
     if not warnings_as_errors:
         return ""
-
     return "-Werror"
 
+
+# Turn on clang thread-safety analysis
+option(
+    "--enable-thread-safety-analysis",
+    # Older clangs don't support AutoUnlock, and have other issues
+    default=depends(c_compiler)(
+        lambda c: c.type in ("clang", "clang-cl") and c.version >= "8.0"
+    ),
+    help="{Enable|Disable} thread-safety anaysis",
+)
 
 set_config("WARNINGS_AS_ERRORS", warnings_as_errors)
 
@@ -293,14 +302,7 @@ check_and_add_warning(
     when=depends(c_compiler)(lambda c: c.type == "clang" and c.version < "6.0"),
 )
 
-# Turn on clang thread-safety analysis
-# Older clangs don't support AutoUnlock, and have other issues
-check_and_add_warning(
-    "-Wthread-safety",
-    when=depends(c_compiler)(
-        lambda c: c.type in ("clang", "clang-cl") and c.version >= "8.0"
-    ),
-)
+check_and_add_warning("-Wthread-safety", when="--enable-thread-safety-analysis")
 
 # Warn if APIs are used without available() checks on macOS.
 check_and_add_warning("-Werror=unguarded-availability-new", when=target_is_osx)
