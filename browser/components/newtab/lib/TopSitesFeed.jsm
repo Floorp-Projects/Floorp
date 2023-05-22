@@ -119,6 +119,9 @@ const CONTILE_UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes
 // The maximum number of sponsored top sites to fetch from Contile.
 const CONTILE_MAX_NUM_SPONSORED = 2;
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
+const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
+const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";
+const CONTILE_CACHE_LAST_FETCH_PREF = "browser.topsites.contile.lastFetch";
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -152,6 +155,15 @@ class ContileIntegration {
   }
 
   /**
+   * Clear Contile Cache Prefs.
+   */
+  _resetContileCachePrefs() {
+    Services.prefs.clearUserPref(CONTILE_CACHE_PREF);
+    Services.prefs.clearUserPref(CONTILE_CACHE_LAST_FETCH_PREF);
+    Services.prefs.clearUserPref(CONTILE_CACHE_VALID_FOR_PREF);
+  }
+
+  /**
    * Filter the tiles whose sponsor is on the Top Sites sponsor blocklist.
    *
    * @param {array} tiles
@@ -162,6 +174,53 @@ class ContileIntegration {
       Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
     );
     return tiles.filter(tile => !blocklist.includes(shortURL(tile)));
+  }
+
+  /**
+   * Calculate the time Contile response is valid for based on cache-control header
+   *
+   * @param {string} cacheHeader
+   *   string value of the Contile resposne cache-control header
+   */
+  _extractCacheValidFor(cacheHeader) {
+    if (cacheHeader === undefined) {
+      lazy.log.warn("Contile response cache control header is undefined");
+      return 0;
+    }
+    const [, staleIfError] = cacheHeader.match(/stale-if-error=\s*([0-9]+)/i);
+    const [, maxAge] = cacheHeader.match(/max-age=\s*([0-9]+)/i);
+    const validFor =
+      Number.parseInt(staleIfError, 10) + Number.parseInt(maxAge, 10);
+    return isNaN(validFor) ? 0 : validFor;
+  }
+
+  /**
+   * Load Tiles from Contile Cache Prefs
+   */
+  _loadTilesFromCache() {
+    lazy.log.info("Contile client is trying to load tiles from local cache.");
+    const now = Math.round(Date.now() / 1000);
+    const lastFetch = Services.prefs.getIntPref(
+      CONTILE_CACHE_LAST_FETCH_PREF,
+      0
+    );
+    const validFor = Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_PREF, 0);
+    if (now <= lastFetch + validFor) {
+      try {
+        let cachedTiles = JSON.parse(
+          Services.prefs.getStringPref(CONTILE_CACHE_PREF)
+        );
+        cachedTiles = this._filterBlockedSponsors(cachedTiles);
+        this._sites = cachedTiles;
+        lazy.log.info("Local cache loaded.");
+        return true;
+      } catch (error) {
+        lazy.log.warn(`Failed to load tiles from local cache: ${error}.`);
+        return false;
+      }
+    }
+
+    return false;
   }
 
   async _fetchSites() {
@@ -184,13 +243,26 @@ class ContileIntegration {
         lazy.log.warn(
           `Contile endpoint returned unexpected status: ${response.status}`
         );
+        if (response.status === 304 || response.status >= 500) {
+          return this._loadTilesFromCache();
+        }
       }
 
+      const lastFetch = Math.round(Date.now() / 1000);
+      Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, lastFetch);
+
       // Contile returns 204 indicating there is no content at the moment.
-      // If this happens, just return without signifying the change so that the
-      // existing tiles (`this._sites`) could retain. We might want to introduce
-      // other handling for this in the future.
+      // If this happens, it will clear `this._sites` reset the cached tiles
+      // to an empty array.
       if (response.status === 204) {
+        if (this._sites.length) {
+          this._sites = [];
+          Services.prefs.setStringPref(
+            CONTILE_CACHE_PREF,
+            JSON.stringify(this._sites)
+          );
+          return true;
+        }
         return false;
       }
       const body = await response.json();
@@ -213,12 +285,25 @@ class ContileIntegration {
           tiles.length = CONTILE_MAX_NUM_SPONSORED;
         }
         this._sites = tiles;
+        Services.prefs.setStringPref(
+          CONTILE_CACHE_PREF,
+          JSON.stringify(this._sites)
+        );
+        Services.prefs.setIntPref(
+          CONTILE_CACHE_VALID_FOR_PREF,
+          this._extractCacheValidFor(
+            response.headers.get("cache-control") ||
+              response.headers.get("Cache-Control")
+          )
+        );
+
         return true;
       }
     } catch (error) {
       lazy.log.warn(
         `Failed to fetch data from Contile server: ${error.message}`
       );
+      return this._loadTilesFromCache();
     }
     return false;
   }
@@ -1462,6 +1547,10 @@ class TopSitesFeed {
             } else {
               this.refresh({ broadcast: true });
             }
+            if (!action.data.value) {
+              this._contile._resetContileCachePrefs();
+            }
+
             break;
           case SEARCH_SHORTCUTS_EXPERIMENT:
             if (action.data.value) {
