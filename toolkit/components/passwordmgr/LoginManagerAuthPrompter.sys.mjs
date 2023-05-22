@@ -383,7 +383,7 @@ LoginManagerAuthPrompter.prototype = {
    * Looks up a username and password in the database. Will prompt the user
    * with a dialog, even if a username and password are found.
    */
-  promptUsernameAndPassword(
+  async asyncPromptUsernameAndPassword(
     aDialogTitle,
     aText,
     aPasswordRealm,
@@ -393,7 +393,7 @@ LoginManagerAuthPrompter.prototype = {
   ) {
     if (aSavePassword == Ci.nsIAuthPrompt.SAVE_PASSWORD_FOR_SESSION) {
       throw new Components.Exception(
-        "promptUsernameAndPassword doesn't support SAVE_PASSWORD_FOR_SESSION",
+        "asyncPromptUsernameAndPassword doesn't support SAVE_PASSWORD_FOR_SESSION",
         Cr.NS_ERROR_NOT_IMPLEMENTED
       );
     }
@@ -474,7 +474,7 @@ LoginManagerAuthPrompter.prototype = {
     if (!selectedLogin) {
       // add as new
       this.log(`New login seen for: ${realm}.`);
-      Services.logins.addLogin(newLogin);
+      await Services.logins.addLoginAsync(newLogin);
     } else if (aPassword.value != selectedLogin.password) {
       // update password
       this.log(`Updating password for ${realm}.`);
@@ -500,7 +500,7 @@ LoginManagerAuthPrompter.prototype = {
    * with a dialog with a text field and ok/cancel buttons. If the user
    * allows it, then the password will be saved in the database.
    */
-  promptPassword(
+  async asyncPromptPassword(
     aDialogTitle,
     aText,
     aPasswordRealm,
@@ -560,7 +560,7 @@ LoginManagerAuthPrompter.prototype = {
 
       this.log(`New login seen for ${realm}.`);
 
-      Services.logins.addLogin(newLogin);
+      await Services.logins.addLoginAsync(newLogin);
     }
 
     return ok;
