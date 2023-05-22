@@ -706,7 +706,7 @@ MSG_DEF(JSMSG_MISSING_IMPORT,               0, JSEXN_SYNTAXERR, "import not foun
 MSG_DEF(JSMSG_AMBIGUOUS_IMPORT,             0, JSEXN_SYNTAXERR, "ambiguous import")
 MSG_DEF(JSMSG_MISSING_EXPORT,               1, JSEXN_SYNTAXERR, "local binding for export '{0}' not found")
 MSG_DEF(JSMSG_BAD_MODULE_STATUS,            1, JSEXN_INTERNALERR, "module record has unexpected status: {0}")
-MSG_DEF(JSMSG_DYNAMIC_IMPORT_FAILED,        0, JSEXN_TYPEERR, "error loading dynamically imported module")
+MSG_DEF(JSMSG_DYNAMIC_IMPORT_FAILED,        1, JSEXN_TYPEERR, "error loading dynamically imported module: {0}")
 MSG_DEF(JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED, 0, JSEXN_TYPEERR, "Dynamic import not supported in this context")
 
 // Import maps
