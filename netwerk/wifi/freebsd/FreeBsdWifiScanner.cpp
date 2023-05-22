@@ -25,8 +25,14 @@
 
 #include "FreeBsdWifiScanner.h"
 #include "nsWifiAccessPoint.h"
+#include "nsWifiMonitor.h"
 
 using namespace mozilla;
+
+#define LOG(args) MOZ_LOG(gWifiMonitorLog, mozilla::LogLevel::Debug, args)
+
+WifiScannerImpl::WifiScannerImpl(){};
+WifiScannerImpl::~WifiScannerImpl(){};
 
 nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
     nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints) {
