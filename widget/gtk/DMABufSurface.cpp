@@ -56,6 +56,17 @@ using namespace mozilla::gl;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 
+#ifdef MOZ_LOGGING
+#  include "mozilla/Logging.h"
+#  include "nsTArray.h"
+#  include "Units.h"
+static LazyLogModule gDmabufRefLog("DmabufRef");
+#  define LOGDMABUFREF(args) \
+    MOZ_LOG(gDmabufRefLog, mozilla::LogLevel::Debug, args)
+#else
+#  define LOGDMABUFREF(args)
+#endif /* MOZ_LOGGING */
+
 #define BUFFER_FLAGS 0
 
 static RefPtr<GLContext> sSnapshotContext;
@@ -104,12 +115,14 @@ bool DMABufSurface::IsGlobalRefSet() const {
 }
 
 void DMABufSurface::GlobalRefRelease() {
-  LOGDMABUF(("DMABufSurface::GlobalRefRelease UID %d", mUID));
+  if (!mGlobalRefCountFd) {
+    return;
+  }
+  LOGDMABUFREF(("DMABufSurface::GlobalRefRelease UID %d", mUID));
   uint64_t counter;
-  MOZ_ASSERT(mGlobalRefCountFd);
   if (read(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
     if (errno == EAGAIN) {
-      LOGDMABUF(
+      LOGDMABUFREF(
           ("  GlobalRefRelease failed: already zero reference! UID %d", mUID));
     }
     // EAGAIN means the refcount is already zero. It happens when we release
@@ -123,8 +136,8 @@ void DMABufSurface::GlobalRefRelease() {
 }
 
 void DMABufSurface::GlobalRefAdd() {
-  LOGDMABUF(("DMABufSurface::GlobalRefAdd UID %d", mUID));
-  MOZ_ASSERT(mGlobalRefCountFd);
+  LOGDMABUFREF(("DMABufSurface::GlobalRefAdd UID %d", mUID));
+  MOZ_DIAGNOSTIC_ASSERT(mGlobalRefCountFd);
   uint64_t counter = 1;
   if (write(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
     NS_WARNING(nsPrintfCString("Failed to ref dmabuf global ref count: %s",
@@ -134,7 +147,8 @@ void DMABufSurface::GlobalRefAdd() {
 }
 
 void DMABufSurface::GlobalRefCountCreate() {
-  MOZ_ASSERT(!mGlobalRefCountFd);
+  LOGDMABUFREF(("DMABufSurface::GlobalRefCountCreate UID %d", mUID));
+  MOZ_DIAGNOSTIC_ASSERT(!mGlobalRefCountFd);
   // Create global ref count initialized to 0,
   // i.e. is not referenced after create.
   mGlobalRefCountFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
@@ -148,18 +162,25 @@ void DMABufSurface::GlobalRefCountCreate() {
 }
 
 void DMABufSurface::GlobalRefCountImport(int aFd) {
-  MOZ_ASSERT(!mGlobalRefCountFd);
   mGlobalRefCountFd = aFd;
   if (mGlobalRefCountFd) {
+    LOGDMABUFREF(("DMABufSurface::GlobalRefCountImport UID %d", mUID));
     GlobalRefAdd();
   }
 }
 
-int DMABufSurface::GlobalRefCountExport() { return mGlobalRefCountFd; }
+int DMABufSurface::GlobalRefCountExport() {
+#ifdef MOZ_LOGGING
+  if (mGlobalRefCountFd) {
+    LOGDMABUFREF(("DMABufSurface::GlobalRefCountExport UID %d", mUID));
+  }
+#endif
+  return mGlobalRefCountFd;
+}
 
 void DMABufSurface::GlobalRefCountDelete() {
   if (mGlobalRefCountFd) {
-    GlobalRefRelease();
+    LOGDMABUFREF(("DMABufSurface::GlobalRefCountDelete UID %d", mUID));
     close(mGlobalRefCountFd);
     mGlobalRefCountFd = 0;
   }
@@ -207,6 +228,7 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
 
 DMABufSurface::~DMABufSurface() {
   FenceDelete();
+  GlobalRefRelease();
   GlobalRefCountDelete();
 }
 

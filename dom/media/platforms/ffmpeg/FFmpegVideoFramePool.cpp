@@ -45,6 +45,14 @@ VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
   DMABUF_LOG("VideoFrameSurface: creating surface UID %d", mSurface->GetUID());
 }
 
+VideoFrameSurface<LIBAV_VER>::~VideoFrameSurface() {
+  DMABUF_LOG("~VideoFrameSurface: deleting dmabuf surface UID %d",
+             mSurface->GetUID());
+  mSurface->GlobalRefCountDelete();
+  // We're about to quit, no need to recycle the frames.
+  ReleaseVAAPIData(/* aForFrameRecycle */ false);
+}
+
 void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
     AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
     FFmpegLibWrapper* aLib) {
@@ -83,13 +91,6 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
     MOZ_DIAGNOSTIC_ASSERT(!IsUsed());
     mSurface->ReleaseSurface();
   }
-}
-
-VideoFrameSurface<LIBAV_VER>::~VideoFrameSurface() {
-  DMABUF_LOG("VideoFrameSurface: deleting dmabuf surface UID %d",
-             mSurface->GetUID());
-  // We're about to quit, no need to recycle the frames.
-  ReleaseVAAPIData(/* aForFrameRecycle */ false);
 }
 
 VideoFramePool<LIBAV_VER>::VideoFramePool(int aFFMPEGPoolSize)
