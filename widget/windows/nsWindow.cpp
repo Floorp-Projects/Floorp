@@ -2375,7 +2375,7 @@ void nsWindow::SuppressAnimation(bool aSuppress) {
 // Constrain a potential move to fit onscreen
 // Position (aX, aY) is specified in Windows screen (logical) pixels,
 // except when using per-monitor DPI, in which case it's device pixels.
-void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
+void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
   if (!mIsTopWidgetWindow)  // only a problem for top-level windows
     return;
 
@@ -2400,7 +2400,7 @@ void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   nsCOMPtr<nsIScreen> screen;
   int32_t left, top, width, height;
 
-  screenmgr->ScreenForRect(aPoint.x, aPoint.y, logWidth, logHeight,
+  screenmgr->ScreenForRect(*aX, *aY, logWidth, logHeight,
                            getter_AddRefs(screen));
   if (mFrameState->GetSizeMode() != nsSizeMode_Fullscreen) {
     // For normalized windows, use the desktop work area.
@@ -2420,15 +2420,28 @@ void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   screenRect.top = top;
   screenRect.bottom = top + height;
 
-  if (aPoint.x < screenRect.left)
-    aPoint.x = screenRect.left;
-  else if (aPoint.x >= screenRect.right - logWidth)
-    aPoint.x = screenRect.right - logWidth;
+  if (aAllowSlop) {
+    if (*aX < screenRect.left - logWidth + kWindowPositionSlop)
+      *aX = screenRect.left - logWidth + kWindowPositionSlop;
+    else if (*aX >= screenRect.right - kWindowPositionSlop)
+      *aX = screenRect.right - kWindowPositionSlop;
 
-  if (aPoint.y < screenRect.top)
-    aPoint.y = screenRect.top;
-  else if (aPoint.y >= screenRect.bottom - logHeight)
-    aPoint.y = screenRect.bottom - logHeight;
+    if (*aY < screenRect.top - logHeight + kWindowPositionSlop)
+      *aY = screenRect.top - logHeight + kWindowPositionSlop;
+    else if (*aY >= screenRect.bottom - kWindowPositionSlop)
+      *aY = screenRect.bottom - kWindowPositionSlop;
+
+  } else {
+    if (*aX < screenRect.left)
+      *aX = screenRect.left;
+    else if (*aX >= screenRect.right - logWidth)
+      *aX = screenRect.right - logWidth;
+
+    if (*aY < screenRect.top)
+      *aY = screenRect.top;
+    else if (*aY >= screenRect.bottom - logHeight)
+      *aY = screenRect.bottom - logHeight;
+  }
 }
 
 /**************************************************************

@@ -370,7 +370,6 @@ class nsIWidget : public nsISupports {
   typedef mozilla::CSSToScreenScale CSSToScreenScale;
   typedef mozilla::DesktopIntRect DesktopIntRect;
   typedef mozilla::DesktopPoint DesktopPoint;
-  typedef mozilla::DesktopIntPoint DesktopIntPoint;
   typedef mozilla::DesktopRect DesktopRect;
   typedef mozilla::DesktopSize DesktopSize;
   typedef mozilla::CSSPoint CSSPoint;
@@ -698,8 +697,18 @@ class nsIWidget : public nsISupports {
   /**
    * Perform platform-dependent sanity check on a potential window position.
    * This is guaranteed to work only for top-level windows.
-   */
-  virtual void ConstrainPosition(DesktopIntPoint&) = 0;
+   *
+   * @param aAllowSlop: if true, allow the window to slop offscreen;
+   *                    the window should be partially visible. if false,
+   *                    force the entire window onscreen (or at least
+   *                    the upper-left corner, if it's too large).
+   * @param aX in: an x position expressed in screen coordinates.
+   *           out: the x position constrained to fit on the screen(s).
+   * @param aY in: an y position expressed in screen coordinates.
+   *           out: the y position constrained to fit on the screen(s).
+   *
+   **/
+  virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) = 0;
 
   /**
    * NOTE:

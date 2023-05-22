@@ -253,7 +253,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   virtual void* GetNativeData(uint32_t aDataType) override;
 
-  virtual void ConstrainPosition(DesktopIntPoint&) override;
+  virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   virtual void Move(double aX, double aY) override;
   virtual nsSizeMode SizeMode() override { return mSizeMode; }
