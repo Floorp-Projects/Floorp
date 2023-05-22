@@ -21,6 +21,8 @@ const PIVOT_LANGUAGE = "en";
 
 const ALWAYS_TRANSLATE_LANGS_PREF =
   "browser.translations.alwaysTranslateLanguages";
+const NEVER_TRANSLATE_LANGS_PREF =
+  "browser.translations.neverTranslateLanguages";
 
 const lazy = {};
 
@@ -57,6 +59,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "alwaysTranslateLangTags",
   ALWAYS_TRANSLATE_LANGS_PREF,
+  /* aDefaultValue */ [],
+  /* onUpdate */ null,
+  /* aTransform */ rawLangTags => (rawLangTags ? rawLangTags.split(",") : [])
+);
+
+/**
+ * Returns the never-translate language tags as an array.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "neverTranslateLangTags",
+  NEVER_TRANSLATE_LANGS_PREF,
   /* aDefaultValue */ [],
   /* onUpdate */ null,
   /* aTransform */ rawLangTags => (rawLangTags ? rawLangTags.split(",") : [])
@@ -328,35 +342,26 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:GetLanguagePairs": {
         return this.getLanguagePairs();
       }
-      case "Translations:EngineIsReady":
+      case "Translations:EngineIsReady": {
         this.isEngineReady = true;
         this.languageState.isEngineReady = true;
         break;
-      case "Translations:MaybeAutoTranslate": {
-        if (
-          // The user has not marked this language as always translate.
-          !TranslationsParent.shouldAlwaysTranslateLanguage(data.docLangTag) &&
-          // The pref to always auto-translate is off.
-          !lazy.autoTranslatePagePref
-        ) {
-          return false;
+      }
+      case "Translations:GetTranslationConditions": {
+        const maybeAutoTranslate = TranslationsParent.#maybeAutoTranslate(
+          data.docLangTag
+        );
+        const maybeNeverTranslate =
+          TranslationsParent.shouldNeverTranslateLanguage(data.docLangTag);
+
+        if (maybeAutoTranslate) {
+          this.languageState.requestedTranslationPair = {
+            fromLanguage: data.docLangTag,
+            toLanguage: data.appLangTag,
+          };
         }
 
-        if (TranslationsParent.#isPageRestoredForAutoTranslate) {
-          // The user clicked the restore button. Respect it for one page load.
-          TranslationsParent.#isPageRestoredForAutoTranslate = false;
-
-          // Skip this auto-translation.
-          return false;
-        }
-
-        this.languageState.requestedTranslationPair = {
-          fromLanguage: data.docLangTag,
-          toLanguage: data.appLangTag,
-        };
-
-        // The page can be auto-translated
-        return true;
+        return { maybeAutoTranslate, maybeNeverTranslate };
       }
       case "Translations:ReportDetectedLangTags": {
         this.languageState.detectedLanguages = data.langTags;
@@ -364,6 +369,35 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Returns true if translations should auto-translate from the given
+   * language, otherwise returns false.
+   *
+   * @param {string} langTag - A BCP-47 language tag
+   * @returns {boolean}
+   */
+  static #maybeAutoTranslate(langTag) {
+    if (
+      // The user has not marked this language as always translate.
+      !TranslationsParent.shouldAlwaysTranslateLanguage(langTag) &&
+      // The pref to always auto-translate is off.
+      !lazy.autoTranslatePagePref
+    ) {
+      return false;
+    }
+
+    if (TranslationsParent.#isPageRestoredForAutoTranslate) {
+      // The user clicked the restore button. Respect it for one page load.
+      TranslationsParent.#isPageRestoredForAutoTranslate = false;
+
+      // Skip this auto-translation.
+      return false;
+    }
+
+    // The page can be auto-translated
+    return true;
   }
 
   /**
@@ -1373,16 +1407,27 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Returns true if the given language tag is present in the never-translate
+   * languages preference, otherwise false.
+   *
+   * @param {string} langTag - A BCP-47 language tag
+   * @returns {boolean}
+   */
+  static shouldNeverTranslateLanguage(langTag) {
+    return lazy.neverTranslateLangTags.includes(langTag);
+  }
+
+  /**
    * Removes the given language tag from the given preference.
    *
    * @param {string} langTag - A BCP-47 language tag
    * @param {string} prefName - The pref name
    */
   static #removeLangTagFromPref(langTag, prefName) {
-    if (prefName !== ALWAYS_TRANSLATE_LANGS_PREF) {
-      return;
-    }
-    const langTags = lazy.alwaysTranslateLangTags;
+    const langTags =
+      prefName === ALWAYS_TRANSLATE_LANGS_PREF
+        ? lazy.alwaysTranslateLangTags
+        : lazy.neverTranslateLangTags;
     const newLangTags = langTags.filter(tag => tag !== langTag);
     Services.prefs.setCharPref(prefName, newLangTags.join(","));
   }
@@ -1394,10 +1439,10 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} prefName - The pref name
    */
   static #addLangTagToPref(langTag, prefName) {
-    if (prefName !== ALWAYS_TRANSLATE_LANGS_PREF) {
-      return;
-    }
-    const langTags = lazy.alwaysTranslateLangTags;
+    const langTags =
+      prefName === ALWAYS_TRANSLATE_LANGS_PREF
+        ? lazy.alwaysTranslateLangTags
+        : lazy.neverTranslateLangTags;
     if (!langTags.includes(langTag)) {
       langTags.push(langTag);
     }
@@ -1415,6 +1460,22 @@ export class TranslationsParent extends JSWindowActorParent {
       this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
     } else {
       this.#addLangTagToPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
+      this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+    }
+  }
+
+  /**
+   * Toggles the never-translate language preference by adding the language
+   * to the pref list if it is not present, or removing it if it is present.
+   *
+   * @param {string} langTag - A BCP-47 language tag
+   */
+  static toggleNeverTranslateLanguagePref(langTag) {
+    if (TranslationsParent.shouldNeverTranslateLanguage(langTag)) {
+      this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+    } else {
+      this.#addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+      this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
     }
   }
 }
