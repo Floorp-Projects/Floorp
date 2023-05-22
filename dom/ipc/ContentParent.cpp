@@ -1687,10 +1687,10 @@ void ContentParent::Init() {
 #  if defined(XP_WIN)
     // Don't init content a11y if we detect an incompat version of JAWS in use.
     if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-      Unused << SendActivateA11y(::GetCurrentThreadId());
+      Unused << SendActivateA11y();
     }
 #  else
-    Unused << SendActivateA11y(0);
+    Unused << SendActivateA11y();
 #  endif
   }
 #endif  // #ifdef ACCESSIBILITY
@@ -4051,10 +4051,10 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       // Don't init content a11y if we detect an incompat version of JAWS in
       // use.
       if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
-        Unused << SendActivateA11y(::GetCurrentThreadId());
+        Unused << SendActivateA11y();
       }
 #  else
-      Unused << SendActivateA11y(0);
+      Unused << SendActivateA11y();
 #  endif
     } else {
       // If possible, shut down accessibility in content process when

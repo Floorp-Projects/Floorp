@@ -109,11 +109,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
             "PreXULSkeletonUI.cpp",
         ]
 
-    if CONFIG["ACCESSIBILITY"]:
-        SOURCES += [
-            "/ipc/mscom/ActivationContext.cpp",
-        ]
-
 elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
     SOURCES += [
         "TimeStamp_posix.cpp",
