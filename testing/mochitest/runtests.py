@@ -2705,7 +2705,6 @@ toolbar#nav-bar {
         e10s=True,
         runFailures=False,
         crashAsPass=False,
-        currentManifest=None,
     ):
         """
         Run the app, log the duration it took to execute, return the status code.
@@ -2922,8 +2921,6 @@ toolbar#nav-bar {
 
             # record post-test information
             if status:
-                # no need to keep return code 137, 245, etc.
-                status = 1
                 self.message_logger.dump_buffered()
                 msg = "application terminated with exit code %s" % status
                 # self.message_logger.is_test_running indicates we need to send a test_end
@@ -2943,10 +2940,12 @@ toolbar#nav-bar {
                     # need to send a test_end in order to have mozharness process messages properly
                     # this requires a custom message vs log.error/log.warning/etc.
                     self.message_logger.process_message(message)
+                else:
+                    self.log.error(
+                        "TEST-UNEXPECTED-FAIL | %s | %s" % (self.lastTestSeen, msg)
+                    )
             else:
-                self.lastTestSeen = (
-                    currentManifest or "Main app process exited normally"
-                )
+                self.lastTestSeen = "Main app process exited normally"
 
             self.log.info(
                 "runtests.py | Application ran for: %s"
@@ -2973,13 +2972,12 @@ toolbar#nav-bar {
             )
 
             expected = None
-            if crashAsPass or crash_count > 0:
+            if crashAsPass:
                 # self.message_logger.is_test_running indicates we need a test_end message
-                if self.message_logger.is_test_running:
+                if crash_count > 0 and self.message_logger.is_test_running:
                     # this works for browser-chrome, mochitest-plain has status=0
                     expected = "CRASH"
-                if crashAsPass:
-                    status = 0
+                status = 0
             elif crash_count or zombieProcesses:
                 if self.message_logger.is_test_running:
                     expected = "PASS"
@@ -2996,7 +2994,7 @@ toolbar#nav-bar {
                     "source": "mochitest",
                     "time": int(time.time()) * 1000,
                     "test": self.lastTestSeen,
-                    "message": "application terminated with exit code %s" % status,
+                    "message": "application terminated with exit code 0",
                 }
                 # need to send a test_end in order to have mozharness process messages properly
                 # this requires a custom message vs log.error/log.warning/etc.
@@ -3719,7 +3717,6 @@ toolbar#nav-bar {
                     e10s=options.e10s,
                     runFailures=options.runFailures,
                     crashAsPass=options.crashAsPass,
-                    currentManifest=manifestToFilter,
                 )
                 status = ret or status
         except KeyboardInterrupt:
@@ -3758,15 +3755,13 @@ toolbar#nav-bar {
                 leakThresholds[processType] = sys.maxsize
 
         utilityPath = options.utilityPath or options.xrePath
-        if status == 0:
-            # ignore leak checks for crashes
-            mozleak.process_leak_log(
-                self.leak_report_file,
-                leak_thresholds=leakThresholds,
-                ignore_missing_leaks=ignoreMissingLeaks,
-                log=self.log,
-                stack_fixer=get_stack_fixer_function(utilityPath, options.symbolsPath),
-            )
+        mozleak.process_leak_log(
+            self.leak_report_file,
+            leak_thresholds=leakThresholds,
+            ignore_missing_leaks=ignoreMissingLeaks,
+            log=self.log,
+            stack_fixer=get_stack_fixer_function(utilityPath, options.symbolsPath),
+        )
 
         self.log.info("runtests.py | Running tests: end.")
 
@@ -3992,7 +3987,13 @@ toolbar#nav-bar {
             if message["action"] == "test_start":
                 self.harness.lastTestSeen = message["test"]
             elif message["action"] == "test_end":
-                self.harness.lastTestSeen = "{} (finished)".format(message["test"])
+                if (
+                    self.harness.currentTests
+                    and message["test"] == self.harness.currentTests[-1]
+                ):
+                    self.harness.lastTestSeen = "Last test finished"
+                else:
+                    self.harness.lastTestSeen = "{} (finished)".format(message["test"])
             return message
 
         def dumpScreenOnTimeout(self, message):

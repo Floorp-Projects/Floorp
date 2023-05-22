@@ -51,10 +51,6 @@ export class StructuredLogger {
       status,
     };
 
-    // handle case: known fail
-    if (expected === status && status != "SKIP") {
-      data.status = "PASS";
-    }
     if (expected != status && status != "SKIP") {
       data.expected = expected;
     }
@@ -81,10 +77,6 @@ export class StructuredLogger {
   ) {
     var data = { test: this.#testId(test), status };
 
-    // handle case: known fail
-    if (expected === status && status != "SKIP") {
-      data.status = "OK";
-    }
     if (expected != status && status != "SKIP") {
       data.expected = expected;
     }
