@@ -2014,6 +2014,9 @@ public:
 
     // If possible, provide a heuristic result without instantiation.
     for (const NamedDecl *D : Resolver->resolveMemberExpr(E)) {
+      if (const TemplateDecl *TD = dyn_cast<TemplateDecl>(D)) {
+        D = TD->getTemplatedDecl();
+      }
       if (const FunctionDecl *F = dyn_cast<FunctionDecl>(D)) {
         std::string Mangled = getMangledName(CurMangleContext, F);
         visitIdentifier("use", "function", getQualifiedName(F), Loc, Mangled,
