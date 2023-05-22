@@ -105,7 +105,6 @@ export default class LoginList extends HTMLElement {
   _filter = "";
   _selectedGuid = null;
   _blankLoginListItem = LoginListItemFactory.create({});
-  _preselect;
 
   constructor() {
     super();
@@ -856,12 +855,18 @@ export default class LoginList extends HTMLElement {
    * selection.
    */
   _selectFirstVisibleLogin() {
-    const selectedLoginGuid =
+    const visibleLoginsGuids = this._applyFilter();
+    let selectedLoginGuid =
       this._loginGuidsSortedOrder.find(guid => guid === this._preselectLogin) ??
       this.findLoginGuidFromDomain(this._preselectLogin) ??
       this._loginGuidsSortedOrder[0];
 
-    if (selectedLoginGuid) {
+    selectedLoginGuid = [
+      selectedLoginGuid,
+      ...this._loginGuidsSortedOrder,
+    ].find(guid => visibleLoginsGuids.has(guid));
+
+    if (selectedLoginGuid && this._logins[selectedLoginGuid]) {
       let { login } = this._logins[selectedLoginGuid];
       window.dispatchEvent(
         new CustomEvent("AboutLoginsInitialLoginSelected", {
