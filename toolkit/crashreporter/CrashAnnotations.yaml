@@ -178,12 +178,6 @@ ClassRegistrationInfoParent:
     Microsoft COM class registration annotation for the parent process.
   type: string
 
-CoMarshalInterfaceFailure:
-  description: >
-    Annotation describing the error returned by trying to marshal an object
-    via CoMarshalInterface during the creation of an IPC proxy stream.
-  type: string
-
 ContentSandboxCapabilities:
   description: >
     List of capabilities of the content process sandbox.
@@ -214,12 +208,6 @@ GpuSandboxLevel:
     GPU sandbox level.
   type: integer
 
-CoUnmarshalInterfaceResult:
-  description: >
-    Annotation describing the error returned by trying to unmarshal an object
-    via CoUnmarshalInterface during the creation of an IPC proxy stream.
-  type: integer
-
 CPUMicrocodeVersion:
   description: >
     Version of the CPU microcode.
@@ -236,12 +224,6 @@ CrashTime:
     Crash time in seconds since the Epoch.
   type: string
   ping: true
-
-CreateStreamOnHGlobalFailure:
-  description: >
-    Set when failing to obtain a global memory handle during the creation of an
-    IPC proxy stream.
-  type: string
 
 CycleCollector:
   description: >
@@ -303,12 +285,6 @@ FontName:
     Set before attempting to load a font to help diagnose crashes during loading.
   type: string
   ping: true
-
-GetHGlobalFromStreamFailure:
-  description: >
-    Error returned when invoking GetHGlobalFromStreamFailure() during the
-    creation of an IPC stream proxy.
-  type: string
 
 GMPLibraryPath:
   description: >
@@ -419,16 +395,6 @@ InstallTime:
   description: >
     The time when Firefox was installed expressed as seconds since the Epoch
   type: integer
-
-InterfaceRegistrationInfoChild:
-  description: >
-    Microsoft COM interface registration annotation for the child process.
-  type: string
-
-InterfaceRegistrationInfoParent:
-  description: >
-    Microsoft COM interface registration annotation for the parent process.
-  type: string
 
 ipc_channel_error:
   description: >
@@ -708,28 +674,6 @@ ProfilerChildShutdownPhase:
   type: string
   ping: true
 
-ProxyStreamSize:
-  description: >
-    Size of an IPC proxy stream.
-  type: integer
-
-ProxyStreamSizeFrom:
-  description: >
-    Describes how the size of a proxy stream was obtained. It can be set to
-    either Stream::Stat or GlobalSize.
-  type: string
-
-ProxyStreamUnmarshalStatus:
-  description: >
-    Status of the proxy stream unmarshalling, see ipc/mscom/ProxyStream.cpp for
-    the various value this annotation can take.
-  type: string
-
-ProxyStreamValid:
-  description: >
-    Set to "false" when encountering an invalid IPC proxy stream.
-  type: string
-
 PurgeablePhysicalMemory:
   description: >
     macOS only. Amount of physical memory currently allocated but which may
@@ -833,12 +777,6 @@ StartupTime:
   description: >
     The time when Firefox was launched expressed in seconds since the Epoch.
   type: integer
-
-StatFailure:
-  description: >
-    Error returned when invoking IStream's Stat function during the creation
-    of an IPC proxy stream.
-  type: string
 
 StorageConnectionNotClosed:
   description: >
