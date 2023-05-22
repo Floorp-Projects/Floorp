@@ -11,7 +11,6 @@
 const Cm = Components.manager;
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { FormAutofillContent } from "resource://autofill/FormAutofillContent.sys.mjs";
 
 const lazy = {};
 
@@ -21,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
+  FormAutofillContent: "resource://autofill/FormAutofillContent.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
 });
 
@@ -131,7 +131,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       activeFieldDetail,
       activeHandler,
       savedFieldNames,
-    } = FormAutofillContent;
+    } = lazy.FormAutofillContent;
     this.forceStop = false;
 
     let isAddressField = lazy.FormAutofillUtils.isAddressField(
@@ -211,7 +211,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
           records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
 
           let adaptedRecords = activeSection.getAdaptedProfiles(records);
-          let handler = FormAutofillContent.activeHandler;
+          let handler = lazy.FormAutofillContent.activeHandler;
           let isSecure = lazy.InsecurePasswordUtils.isFormSecure(handler.form);
 
           return new AutocompleteResult(
@@ -332,15 +332,17 @@ export const ProfileAutocomplete = {
   async observe(subject, topic, data) {
     switch (topic) {
       case "autocomplete-will-enter-text": {
-        if (!FormAutofillContent.activeInput) {
+        if (!lazy.FormAutofillContent.activeInput) {
           // The observer notification is for autocomplete in a different process.
           break;
         }
-        FormAutofillContent.autofillPending = true;
+        lazy.FormAutofillContent.autofillPending = true;
         Services.obs.notifyObservers(null, "autofill-fill-starting");
-        await this._fillFromAutocompleteRow(FormAutofillContent.activeInput);
+        await this._fillFromAutocompleteRow(
+          lazy.FormAutofillContent.activeInput
+        );
         Services.obs.notifyObservers(null, "autofill-fill-complete");
-        FormAutofillContent.autofillPending = false;
+        lazy.FormAutofillContent.autofillPending = false;
         break;
       }
     }
@@ -357,7 +359,7 @@ export const ProfileAutocomplete = {
 
   async _fillFromAutocompleteRow(focusedInput) {
     this.debug("_fillFromAutocompleteRow:", focusedInput);
-    let formDetails = FormAutofillContent.activeFormDetails;
+    let formDetails = lazy.FormAutofillContent.activeFormDetails;
     if (!formDetails) {
       // The observer notification is for a different frame.
       return;
@@ -377,24 +379,24 @@ export const ProfileAutocomplete = {
       this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
     );
 
-    await FormAutofillContent.activeHandler.autofillFormFields(profile);
+    await lazy.FormAutofillContent.activeHandler.autofillFormFields(profile);
   },
 
   _clearProfilePreview() {
     if (
       !this.lastProfileAutoCompleteFocusedInput ||
-      !FormAutofillContent.activeSection
+      !lazy.FormAutofillContent.activeSection
     ) {
       return;
     }
 
-    FormAutofillContent.activeSection.clearPreviewedFormFields();
+    lazy.FormAutofillContent.activeSection.clearPreviewedFormFields();
   },
 
   _previewSelectedProfile(selectedIndex) {
     if (
-      !FormAutofillContent.activeInput ||
-      !FormAutofillContent.activeFormDetails
+      !lazy.FormAutofillContent.activeInput ||
+      !lazy.FormAutofillContent.activeFormDetails
     ) {
       // The observer notification is for a different process/frame.
       return;
@@ -411,6 +413,6 @@ export const ProfileAutocomplete = {
     let profile = JSON.parse(
       this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
     );
-    FormAutofillContent.activeSection.previewFormFields(profile);
+    lazy.FormAutofillContent.activeSection.previewFormFields(profile);
   },
 };

@@ -10,8 +10,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { ProfileAutocomplete } from "resource://autofill/AutofillProfileAutoComplete.sys.mjs";
-import { FormStateManager } from "resource://gre/modules/shared/FormStateManager.sys.mjs";
 
 const lazy = {};
 
@@ -19,10 +17,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
+  FormStateManager: "resource://gre/modules/shared/FormStateManager.sys.mjs",
+  ProfileAutocomplete:
+    "resource://autofill/AutofillProfileAutoComplete.sys.mjs",
+  AutofillTelemetry: "resource://autofill/AutofillTelemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -87,13 +85,13 @@ export var FormAutofillContent = {
       (lazy.FormAutofill.isAutofillAddressesEnabled ||
         lazy.FormAutofill.isAutofillCreditCardsEnabled);
     if (autofillEnabled || shouldEnableAutofill) {
-      ProfileAutocomplete.ensureRegistered();
+      lazy.ProfileAutocomplete.ensureRegistered();
     }
 
     /**
      * @type {FormAutofillFieldDetailsManager} handling state management of current forms and handlers.
      */
-    this._fieldDetailsManager = new FormStateManager(
+    this._fieldDetailsManager = new lazy.FormStateManager(
       this.formSubmitted.bind(this),
       this._showPopup.bind(this)
     );
@@ -202,14 +200,14 @@ export var FormAutofillContent = {
           return;
         }
         if (Services.cpmm.sharedData.get("FormAutofill:enabled")) {
-          ProfileAutocomplete.ensureRegistered();
+          lazy.ProfileAutocomplete.ensureRegistered();
           if (this._popupPending) {
             this._popupPending = false;
             this.debug("handleEvent: Opening deferred popup");
             this._showPopup();
           }
         } else {
-          ProfileAutocomplete.ensureUnregistered();
+          lazy.ProfileAutocomplete.ensureUnregistered();
         }
         break;
       }
@@ -292,7 +290,8 @@ export var FormAutofillContent = {
 
   clearForm() {
     let focusedInput =
-      this.activeInput || ProfileAutocomplete._lastAutoCompleteFocusedInput;
+      this.activeInput ||
+      lazy.ProfileAutocomplete._lastAutoCompleteFocusedInput;
     if (!focusedInput) {
       return;
     }
@@ -311,9 +310,9 @@ export var FormAutofillContent = {
 
   previewProfile(doc) {
     let docWin = doc.ownerGlobal;
-    let selectedIndex = ProfileAutocomplete._getSelectedIndex(docWin);
+    let selectedIndex = lazy.ProfileAutocomplete._getSelectedIndex(docWin);
     let lastAutoCompleteResult =
-      ProfileAutocomplete.lastProfileAutoCompleteResult;
+      lazy.ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = this.activeInput;
     let actor = getActorFromWindow(docWin);
 
@@ -325,7 +324,7 @@ export var FormAutofillContent = {
     ) {
       actor.sendAsyncMessage("FormAutofill:UpdateWarningMessage", {});
 
-      ProfileAutocomplete._clearProfilePreview();
+      lazy.ProfileAutocomplete._clearProfilePreview();
     } else {
       let focusedInputDetails = this.activeFieldDetail;
       let profile = JSON.parse(
@@ -347,22 +346,23 @@ export var FormAutofillContent = {
         categories,
       });
 
-      ProfileAutocomplete._previewSelectedProfile(selectedIndex);
+      lazy.ProfileAutocomplete._previewSelectedProfile(selectedIndex);
     }
   },
 
   onPopupClosed(selectedRowStyle) {
     this.debug("Popup has closed.");
-    ProfileAutocomplete._clearProfilePreview();
+    lazy.ProfileAutocomplete._clearProfilePreview();
 
     let lastAutoCompleteResult =
-      ProfileAutocomplete.lastProfileAutoCompleteResult;
+      lazy.ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = FormAutofillContent.activeInput;
     if (
       lastAutoCompleteResult &&
       FormAutofillContent._keyDownEnterForInput &&
       focusedInput === FormAutofillContent._keyDownEnterForInput &&
-      focusedInput === ProfileAutocomplete.lastProfileAutoCompleteFocusedInput
+      focusedInput ===
+        lazy.ProfileAutocomplete.lastProfileAutoCompleteFocusedInput
     ) {
       if (selectedRowStyle == "autofill-footer") {
         let actor = getActorFromWindow(focusedInput.ownerGlobal);
@@ -402,13 +402,14 @@ export var FormAutofillContent = {
   _onKeyDown(e) {
     delete FormAutofillContent._keyDownEnterForInput;
     let lastAutoCompleteResult =
-      ProfileAutocomplete.lastProfileAutoCompleteResult;
+      lazy.ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = FormAutofillContent.activeInput;
     if (
       e.keyCode != e.DOM_VK_RETURN ||
       !lastAutoCompleteResult ||
       !focusedInput ||
-      focusedInput != ProfileAutocomplete.lastProfileAutoCompleteFocusedInput
+      focusedInput !=
+        lazy.ProfileAutocomplete.lastProfileAutoCompleteFocusedInput
     ) {
       return;
     }
