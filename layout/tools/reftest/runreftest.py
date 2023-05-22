@@ -302,7 +302,6 @@ class RefTest(object):
         self.log = None
         self.outputHandler = None
         self.testDumpFile = os.path.join(tempfile.gettempdir(), "reftests.json")
-        self.currentManifest = "No test started"
 
         self.run_by_manifest = True
         if suite in ("crashtest", "jstestbrowser"):
@@ -902,7 +901,7 @@ class RefTest(object):
                 self.lastTestSeen = testid(message["test"])
             elif message["action"] == "test_end":
                 if self.lastTest and message["test"] == self.lastTest:
-                    self.lastTestSeen = self.currentManifest
+                    self.lastTestSeen = "Last test finished"
                 else:
                     self.lastTestSeen = "{} (finished)".format(testid(message["test"]))
 
@@ -980,44 +979,22 @@ class RefTest(object):
         runner.process_handler = None
         self.outputHandler.proc_name = None
 
-        crashed = mozcrash.log_crashes(
-            self.log,
-            os.path.join(profile.profile, "minidumps"),
-            options.symbolsPath,
-            test=self.lastTestSeen,
-        )
-
-        if crashed:
-            # log suite_end to wrap up, this is usually done with in in-browser harness
-            if not self.outputHandler.results:
-                # TODO: while .results is a defaultdict(int), it is proxied via log_actions as data, not type
-                self.outputHandler.results = {
-                    "Pass": 0,
-                    "LoadOnly": 0,
-                    "Exception": 0,
-                    "FailedLoad": 0,
-                    "UnexpectedFail": 1,
-                    "UnexpectedPass": 0,
-                    "AssertionUnexpected": 0,
-                    "AssertionUnexpectedFixed": 0,
-                    "KnownFail": 0,
-                    "AssertionKnown": 0,
-                    "Random": 0,
-                    "Skip": 0,
-                    "Slow": 0,
-                }
-            self.log.suite_end(extra={"results": self.outputHandler.results})
-
-        if not status and crashed:
-            status = 1
-
-        if status and not crashed:
+        if status:
             msg = (
                 "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s"
                 % (self.lastTestSeen, status)
             )
             # use process_output so message is logged verbatim
             self.log.process_output(None, msg)
+
+        crashed = mozcrash.log_crashes(
+            self.log,
+            os.path.join(profile.profile, "minidumps"),
+            options.symbolsPath,
+            test=self.lastTestSeen,
+        )
+        if not status and crashed:
+            status = 1
 
         runner.cleanup()
         self.cleanup(profile.profile)
@@ -1098,15 +1075,13 @@ class RefTest(object):
                 **kwargs
             )
 
-            # do not process leak log when we crash/assert
-            if status == 0:
-                mozleak.process_leak_log(
-                    self.leakLogFile,
-                    leak_thresholds=options.leakThresholds,
-                    stack_fixer=get_stack_fixer_function(
-                        options.utilityPath, options.symbolsPath
-                    ),
-                )
+            mozleak.process_leak_log(
+                self.leakLogFile,
+                leak_thresholds=options.leakThresholds,
+                stack_fixer=get_stack_fixer_function(
+                    options.utilityPath, options.symbolsPath
+                ),
+            )
             return status
 
         if not self.run_by_manifest:
@@ -1128,7 +1103,6 @@ class RefTest(object):
         status = -1
         for manifest, tests in tests_by_manifest.items():
             self.log.info("Running tests in {}".format(manifest))
-            self.currentManifest = manifest
             status = run(tests=tests)
             overall = overall or status
         if status == -1:
