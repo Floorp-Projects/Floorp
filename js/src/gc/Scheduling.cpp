@@ -181,9 +181,6 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       break;
     }
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
-      if (value > gcMaxNurseryBytes()) {
-        value = gcMaxNurseryBytes();
-      }
       nurseryFreeThresholdForIdleCollection_ = value;
       break;
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT:
