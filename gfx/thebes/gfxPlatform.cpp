@@ -2692,11 +2692,15 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetAllowSoftwareWebRenderD3D11(true);
   }
 
+  const bool overlaySupported =
+      IsWin10AnniversaryUpdateOrLater() &&
+      gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR);
+  MOZ_ASSERT_IF(overlaySupported,
+                gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));
+
   bool useVideoOverlay = false;
   if (StaticPrefs::gfx_webrender_dcomp_video_overlay_win_AtStartup()) {
-    if (IsWin10AnniversaryUpdateOrLater() &&
-        gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
-      MOZ_ASSERT(gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));
+    if (overlaySupported) {
       useVideoOverlay = true;
     }
 
@@ -2722,6 +2726,10 @@ void gfxPlatform::InitWebRenderConfig() {
         }
       }
     }
+  } else if (overlaySupported) {
+    FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+    feature.DisableByDefault(FeatureStatus::Blocked, "Disabled by pref",
+                             "FEATURE_FAILURE_DISABLED_BY_PREF"_ns);
   }
 
   if (useVideoOverlay) {
