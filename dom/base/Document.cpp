@@ -15286,6 +15286,15 @@ bool Document::FullscreenElementReadyCheck(FullscreenRequest& aRequest) {
     aRequest.Reject("FullscreenDeniedHTMLDialog");
     return false;
   }
+  // XXXsmaug Note, we don't follow the latest fullscreen spec here.
+  //         This whole check could be probably removed.
+  if (fullscreenElement && !nsContentUtils::ContentIsHostIncludingDescendantOf(
+                               elem, fullscreenElement)) {
+    // If this document is fullscreen, only grant fullscreen requests from
+    // a descendant of the current fullscreen element.
+    aRequest.Reject("FullscreenDeniedNotDescendant");
+    return false;
+  }
   if (!nsContentUtils::IsChromeDoc(this) && !IsInFocusedTab(this)) {
     aRequest.Reject("FullscreenDeniedNotFocusedTab");
     return false;
