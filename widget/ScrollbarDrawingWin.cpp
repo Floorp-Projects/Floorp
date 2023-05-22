@@ -109,6 +109,7 @@ Maybe<nsITheme::Transparency> ScrollbarDrawingWin::GetScrollbarPartTransparency(
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner:
+    case StyleAppearance::Statusbar:
       // Knowing that scrollbars and statusbars are opaque improves
       // performance, because we create layers for them. This better be
       // true across all Windows themes! If it's not true, we should

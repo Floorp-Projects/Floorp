@@ -194,6 +194,7 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     eActiveSourceListSelection,    // bool
     eInactiveSourceListSelection,  // bool
     eTabPanel,
+    eResizer
   };
 
   struct WidgetInfo {
@@ -266,6 +267,7 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
       return WidgetInfo(Widget::eInactiveSourceListSelection, aParams);
     }
     static WidgetInfo TabPanel(bool aParams) { return WidgetInfo(Widget::eTabPanel, aParams); }
+    static WidgetInfo Resizer(bool aParams) { return WidgetInfo(Widget::eResizer, aParams); }
 
     template <typename T>
     T Params() const {
@@ -391,6 +393,7 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
                       const SpinButtonParams& aParams);
   void DrawToolbar(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsMain);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect, bool aIsMain);
+  void DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsFocused);
   void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,
                                bool aSelectionIsActive);
