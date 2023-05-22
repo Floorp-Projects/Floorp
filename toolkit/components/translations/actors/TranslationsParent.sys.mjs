@@ -1487,14 +1487,19 @@ export class TranslationsParent extends JSWindowActorParent {
    * to the pref list if it is not present, or removing it if it is present.
    *
    * @param {string} langTag - A BCP-47 language tag
+   * @returns {boolean} Whether the pref was toggled on for the langTag
    */
   static toggleAlwaysTranslateLanguagePref(langTag) {
     if (TranslationsParent.shouldAlwaysTranslateLanguage(langTag)) {
+      // The pref was toggled off for this langTag
       this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
-    } else {
-      this.#addLangTagToPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
-      this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+      return false;
     }
+
+    // The pref was toggled on for this langTag
+    this.#addLangTagToPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
+    this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+    return true;
   }
 
   /**
@@ -1505,11 +1510,14 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static toggleNeverTranslateLanguagePref(langTag) {
     if (TranslationsParent.shouldNeverTranslateLanguage(langTag)) {
+      // The pref was toggled off for this langTag
       this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-    } else {
-      this.#addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-      this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
+      return;
     }
+
+    // The pref was toggled on for this langTag
+    this.#addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+    this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
   }
 
   /**
