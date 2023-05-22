@@ -341,6 +341,7 @@ class MochiRemote(MochitestDesktop):
         e10s=True,
         runFailures=False,
         crashAsPass=False,
+        currentManifest=None,
     ):
         """
         Run the app, log the duration it took to execute, return the status code.
@@ -383,7 +384,10 @@ class MochiRemote(MochitestDesktop):
             "runtestsremote.py | Application ran for: %s"
             % str(datetime.datetime.now() - startTime)
         )
-        crashed = self.check_for_crashes(symbolsPath, rpm.last_test_seen)
+
+        lastTestSeen = currentManifest or "Main app process exited normally"
+
+        crashed = self.check_for_crashes(symbolsPath, lastTestSeen)
         if crashed:
             status = 1
 
@@ -391,7 +395,7 @@ class MochiRemote(MochitestDesktop):
         self.countfail += rpm.counts["fail"]
         self.counttodo += rpm.counts["todo"]
 
-        return status, rpm.last_test_seen
+        return status, lastTestSeen
 
     def check_for_crashes(self, symbols_path, last_test_seen):
         """

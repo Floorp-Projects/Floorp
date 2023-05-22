@@ -186,7 +186,7 @@ def test_output_crash(flavor, runFailures, runtests, test_name):
 def test_output_asan(flavor, runFailures, runtests, test_name):
     extra_opts = {}
     results = {
-        "status": 245,
+        "status": 1,
         "tbpl_status": TBPL_FAILURE,
         "log_level": ERROR,
         "lines": 0,
