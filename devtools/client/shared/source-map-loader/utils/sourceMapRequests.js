@@ -79,6 +79,13 @@ function setSourceMap(generatedId, request) {
 
       const urlsById = new Map();
       const sources = [];
+      let ignoreListUrls = [];
+
+      if (map.x_google_ignoreList?.length) {
+        ignoreListUrls = map.x_google_ignoreList.map(
+          sourceIndex => map.sources[sourceIndex]
+        );
+      }
 
       for (const url of map.sources) {
         const id = generatedToOriginalId(generatedId, url);
@@ -86,7 +93,7 @@ function setSourceMap(generatedId, request) {
         urlsById.set(id, url);
         sources.push({ id, url });
       }
-      return { map, urlsById, sources };
+      return { map, urlsById, sources, ignoreListUrls };
     })
   );
 }

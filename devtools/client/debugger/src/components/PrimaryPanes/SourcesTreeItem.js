@@ -16,6 +16,8 @@ import {
   getFirstSourceActorForGeneratedSource,
   isSourceOverridden,
   getHideIgnoredSources,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -52,6 +54,7 @@ class SourceTreeItem extends Component {
       removeOverrideSource: PropTypes.func.isRequired,
       isOverridden: PropTypes.bool,
       hideIgnoredSources: PropTypes.bool,
+      isSourceOnIgnoreList: PropTypes.bool,
     };
   }
 
@@ -83,7 +86,7 @@ class SourceTreeItem extends Component {
 
     const menuOptions = [];
 
-    const { item, isOverridden } = this.props;
+    const { item, isOverridden, cx, isSourceOnIgnoreList } = this.props;
     if (item.type == "source") {
       const { source } = item;
       const copySourceUri2 = {
@@ -94,13 +97,12 @@ class SourceTreeItem extends Component {
         click: () => copyToTheClipboard(source.url),
       };
 
-      const { cx } = this.props;
       const ignoreStr = item.isBlackBoxed ? "unignore" : "ignore";
       const blackBoxMenuItem = {
         id: "node-menu-blackbox",
         label: L10N.getStr(`ignoreContextItem.${ignoreStr}`),
         accesskey: L10N.getStr(`ignoreContextItem.${ignoreStr}.accesskey`),
-        disabled: !shouldBlackbox(source),
+        disabled: isSourceOnIgnoreList || !shouldBlackbox(source),
         click: () => this.props.toggleBlackBox(cx, source),
       };
       const downloadFileItem = {
@@ -110,8 +112,8 @@ class SourceTreeItem extends Component {
         disabled: false,
         click: () => this.saveLocalFile(cx, source),
       };
-      const overrideStr = !isOverridden ? "override" : "removeOverride";
 
+      const overrideStr = !isOverridden ? "override" : "removeOverride";
       const overridesItem = {
         id: "node-menu-overrides",
         label: L10N.getStr(`overridesContextItem.${overrideStr}`),
@@ -132,7 +134,7 @@ class SourceTreeItem extends Component {
     if (item.type != "source") {
       this.addCollapseExpandAllOptions(menuOptions, item);
 
-      const { cx, depth, projectRoot } = this.props;
+      const { depth, projectRoot } = this.props;
 
       if (projectRoot == item.uniquePath) {
         menuOptions.push({
@@ -430,6 +432,9 @@ const mapStateToProps = (state, props) => {
         getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
       isOverridden: isSourceOverridden(state, source),
       hideIgnoredSources: getHideIgnoredSources(state),
+      isSourceOnIgnoreList:
+        isSourceMapIgnoreListEnabled(state) &&
+        isSourceOnSourceMapIgnoreList(state, source),
     };
   }
   return {
