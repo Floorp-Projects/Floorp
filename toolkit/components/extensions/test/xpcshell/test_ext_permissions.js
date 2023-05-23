@@ -3,6 +3,9 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
+const { permissionToL10nId } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
+);
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
@@ -696,12 +699,11 @@ add_task(async function test_permissions_have_localization_strings() {
   );
 
   for (const perm of Schemas.getPermissionNames()) {
-    try {
-      const permId = perm.replace(/\./g, "-");
-      const str = await l10n.formatValue(`webext-perms-description-${permId}`);
-
+    const permId = permissionToL10nId(perm);
+    if (permId) {
+      const str = await l10n.formatValue(permId);
       ok(str.length, `Found localization string for '${perm}' permission`);
-    } catch (e) {
+    } else {
       ok(
         GRANTED_WITHOUT_USER_PROMPT.includes(perm),
         `Permission '${perm}' intentionally granted without prompting the user`
