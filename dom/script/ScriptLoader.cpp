@@ -3061,7 +3061,7 @@ nsresult ScriptLoader::SaveSRIHash(ScriptLoadRequest* aRequest,
   }
 
   // Verify that the exported and predicted length correspond.
-  mozilla::DebugOnly<uint32_t> srilen;
+  DebugOnly<uint32_t> srilen{};
   MOZ_ASSERT(NS_SUCCEEDED(SRICheckDataVerifier::DataSummaryLength(
       len, aRequest->mScriptBytecode.begin(), &srilen)));
   MOZ_ASSERT(srilen == len);

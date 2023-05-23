@@ -250,20 +250,48 @@ nsresult SRICheckDataVerifier::VerifyHash(
           base64Hash.get()));
 
   nsAutoCString binaryHash;
-  if (NS_WARN_IF(NS_FAILED(Base64Decode(base64Hash, binaryHash)))) {
-    nsTArray<nsString> params;
-    aReporter->AddConsoleReport(
-        nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
-        nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-        "InvalidIntegrityBase64"_ns,
-        const_cast<const nsTArray<nsString>&>(params));
-    return NS_ERROR_SRI_CORRUPT;
+
+  // We're decoding the supplied hash twice. Trying base64 first.
+  nsresult rv = Base64Decode(base64Hash, binaryHash);
+
+  if (NS_FAILED(rv)) {
+    SRILOG(
+        ("SRICheckDataVerifier::VerifyHash, base64 decoding failed. Trying "
+         "base64url next."));
+    FallibleTArray<uint8_t> decoded;
+    rv = Base64URLDecode(base64Hash, Base64URLDecodePaddingPolicy::Ignore,
+                         decoded);
+    if (NS_FAILED(rv)) {
+      SRILOG(
+          ("SRICheckDataVerifier::VerifyHash, base64url decoding failed too. "
+           "Bailing out."));
+      // if neither succeeded, we can bail out and warn
+      nsTArray<nsString> params;
+      aReporter->AddConsoleReport(
+          nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
+          nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
+          "InvalidIntegrityBase64"_ns,
+          const_cast<const nsTArray<nsString>&>(params));
+      return NS_ERROR_SRI_CORRUPT;
+    }
+    binaryHash.Assign(reinterpret_cast<const char*>(decoded.Elements()),
+                      decoded.Length());
+    SRILOG(
+        ("SRICheckDataVerifier::VerifyHash, decoded supplied base64url hash "
+         "successfully."));
+  } else {
+    SRILOG(
+        ("SRICheckDataVerifier::VerifyHash, decoded supplied base64 hash "
+         "successfully."));
   }
 
   uint32_t hashLength;
   int8_t hashType;
   aMetadata.GetHashType(&hashType, &hashLength);
   if (binaryHash.Length() != hashLength) {
+    SRILOG(
+        ("SRICheckDataVerifier::VerifyHash, supplied base64(url) hash was "
+         "incorrect length after decoding."));
     nsTArray<nsString> params;
     aReporter->AddConsoleReport(
         nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
@@ -273,15 +301,7 @@ nsresult SRICheckDataVerifier::VerifyHash(
     return NS_ERROR_SRI_CORRUPT;
   }
 
-  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
-    nsAutoCString encodedHash;
-    nsresult rv = Base64Encode(mComputedHash, encodedHash);
-    if (NS_SUCCEEDED(rv)) {
-      SRILOG(("SRICheckDataVerifier::VerifyHash, mComputedHash=%s",
-              encodedHash.get()));
-    }
-  }
-
+  // the decoded supplied hash should match our computed binary hash.
   if (!binaryHash.Equals(mComputedHash)) {
     SRILOG(("SRICheckDataVerifier::VerifyHash, hash[%u] did not match",
             aHashIndex));
@@ -330,12 +350,19 @@ nsresult SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
   nsAutoCString alg;
   aMetadata.GetAlgorithm(&alg);
   NS_ConvertUTF8toUTF16 algUTF16(alg);
+  nsAutoCString encodedHash;
+  rv = Base64Encode(mComputedHash, encodedHash);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ConvertUTF8toUTF16 encodedHashUTF16(encodedHash);
+
   nsTArray<nsString> params;
   params.AppendElement(algUTF16);
+  params.AppendElement(encodedHashUTF16);
   aReporter->AddConsoleReport(
       nsIScriptError::errorFlag, "Sub-resource Integrity"_ns,
       nsContentUtils::eSECURITY_PROPERTIES, aSourceFileURI, 0, 0,
-      "IntegrityMismatch"_ns, const_cast<const nsTArray<nsString>&>(params));
+      "IntegrityMismatch2"_ns, const_cast<const nsTArray<nsString>&>(params));
+
   return NS_ERROR_SRI_CORRUPT;
 }
 
@@ -477,7 +504,6 @@ nsresult SRICheckDataVerifier::ExportEmptyDataSummary(uint32_t aDataLen,
   memset(&aData[offset], 0, sizeof(mHashType));
   offset += sizeof(mHashType);
   memset(&aData[offset], 0, sizeof(mHashLength));
-  offset += sizeof(mHashLength);
 
   SRIVERBOSE(
       ("SRICheckDataVerifier::ExportEmptyDataSummary, header {%x, %x, %x, %x, "
