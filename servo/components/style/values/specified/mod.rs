@@ -16,7 +16,7 @@ use super::generics::{self, GreaterThanOrEqualToOne, NonNegative};
 use super::{CSSFloat, CSSInteger};
 use crate::context::QuirksMode;
 use crate::parser::{Parse, ParserContext};
-use crate::values::{serialize_atom_identifier, serialize_number};
+use crate::values::serialize_atom_identifier;
 use crate::values::specified::calc::CalcNode;
 use crate::{Atom, Namespace, One, Prefix, Zero};
 use cssparser::{Parser, Token};
@@ -196,15 +196,15 @@ fn parse_number_with_clamping_mode<'i, 't>(
     match *input.next()? {
         Token::Number { value, .. } if clamping_mode.is_ok(context.parsing_mode, value) => {
             Ok(Number {
-                value,
+                value: value.min(f32::MAX).max(f32::MIN),
                 calc_clamping_mode: None,
             })
         },
         Token::Function(ref name) => {
             let function = CalcNode::math_function(context, name, location)?;
-            let value = CalcNode::parse_number(context, input, function)?;
+            let result = CalcNode::parse_number(context, input, function)?;
             Ok(Number {
-                value,
+                value: result.min(f32::MAX).max(f32::MIN),
                 calc_clamping_mode: Some(clamping_mode),
             })
         },
@@ -299,7 +299,7 @@ impl ToComputedValue for Number {
 
     #[inline]
     fn to_computed_value(&self, _: &Context) -> CSSFloat {
-        crate::values::normalize(self.get())
+        self.get()
     }
 
     #[inline]
@@ -316,7 +316,14 @@ impl ToCss for Number {
     where
         W: Write,
     {
-        serialize_number(self.value, self.calc_clamping_mode.is_some(), dest)
+        if self.calc_clamping_mode.is_some() {
+            dest.write_str("calc(")?;
+        }
+        self.value.to_css(dest)?;
+        if self.calc_clamping_mode.is_some() {
+            dest.write_char(')')?;
+        }
+        Ok(())
     }
 }
 

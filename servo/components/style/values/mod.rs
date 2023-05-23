@@ -96,14 +96,6 @@ fn nan_inf_enabled() -> bool {
     static_prefs::pref!("layout.css.nan-inf.enabled")
 }
 
-/// Serialize a number with calc, and NaN/infinity handling (if enabled)
-pub fn serialize_number<W>(v: f32, was_calc: bool, dest: &mut CssWriter<W>) -> fmt::Result
-where
-    W: Write,
-{
-    serialize_specified_dimension(v, "", was_calc, dest)
-}
-
 /// Serialize a specified dimension with unit, calc, and NaN/infinity handling (if enabled)
 pub fn serialize_specified_dimension<W>(v: f32, unit: &str, was_calc: bool, dest: &mut CssWriter<W>) -> fmt::Result
 where
@@ -120,15 +112,11 @@ where
         // requires an expression like calc(infinity * 1px)."
 
         if v.is_nan() {
-            dest.write_str("NaN")?;
+            dest.write_str("NaN * 1")?;
         } else if v == f32::INFINITY {
-            dest.write_str("infinity")?;
+            dest.write_str("infinity * 1")?;
         } else if v == f32::NEG_INFINITY {
-            dest.write_str("-infinity")?;
-        }
-
-        if !unit.is_empty() {
-            dest.write_str(" * 1")?;
+            dest.write_str("-infinity * 1")?;
         }
     } else {
         v.to_css(dest)?;
