@@ -23,7 +23,7 @@ interface DOMParser {
   [Throws]
   constructor();
 
-  [NewObject, Throws]
+  [NewObject, Throws, UseCounter]
   Document parseFromString(DOMString str, SupportedType type);
 
   [NewObject, ChromeOnly, Throws]

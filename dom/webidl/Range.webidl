@@ -75,7 +75,7 @@ interface Range : AbstractRange {
 
 // http://domparsing.spec.whatwg.org/#dom-range-createcontextualfragment
 partial interface Range {
-  [CEReactions, Throws]
+  [CEReactions, Throws, UseCounter]
   DocumentFragment createContextualFragment(DOMString fragment);
 };
 
