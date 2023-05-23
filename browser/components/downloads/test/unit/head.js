@@ -3,13 +3,9 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
   FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 
 async function createDownloadedFile(pathname, contents) {
   info("createDownloadedFile: " + pathname);

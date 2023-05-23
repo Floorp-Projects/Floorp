@@ -377,11 +377,9 @@ function updateError(arg) {
 /**
  * Utility functions
  */
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+});
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);

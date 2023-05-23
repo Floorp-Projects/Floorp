@@ -2,7 +2,7 @@
  * Provides infrastructure for tests that would require mock document.
  */
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
 export const MockDocument = {
   /**
