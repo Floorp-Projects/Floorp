@@ -436,10 +436,6 @@ FormAutofillUtils = {
     }
   },
 
-  autofillFieldSelector(doc) {
-    return doc.querySelectorAll("input, select");
-  },
-
   /**
    * Determines if an element can be autofilled or not.
    *
@@ -451,23 +447,23 @@ FormAutofillUtils = {
   },
 
   /**
-   *  Determines if an element is visually hidden or not.
-   *
-   * NOTE: this does not encompass every possible way of hiding an element.
-   * Instead, we check some of the more common methods of hiding for performance reasons.
-   * See Bug 1727832 for follow up.
+   * Determines if an element is visually hidden or not.
    *
    * @param {HTMLElement} element
+   * @param {boolean} visibilityCheck true to run visiblity check against
+   *                  element.checkVisibility API. Otherwise, test by only checking
+   *                  `hidden` and `display` attributes
    * @returns {boolean} true if the element is visible
    */
-  isFieldVisible(element) {
-    if (element.hidden) {
-      return false;
+  isFieldVisible(element, visibilityCheck = true) {
+    if (visibilityCheck) {
+      return element.checkVisibility({
+        checkOpacity: true,
+        checkVisibilityCSS: true,
+      });
     }
-    if (element.style.display == "none") {
-      return false;
-    }
-    return true;
+
+    return !element.hidden && element.style.display != "none";
   },
 
   /**
@@ -480,20 +476,13 @@ FormAutofillUtils = {
     if (!element) {
       return false;
     }
+
     if (HTMLInputElement.isInstance(element)) {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
-      if (!ELIGIBLE_INPUT_TYPES.includes(element.type)) {
-        return false;
-      }
-      // If the field is visually invisible, we do not want to autofill into it.
-      if (!this.isFieldVisible(element)) {
-        return false;
-      }
-    } else if (!HTMLSelectElement.isInstance(element)) {
-      return false;
+      return ELIGIBLE_INPUT_TYPES.includes(element.type);
     }
 
-    return true;
+    return HTMLSelectElement.isInstance(element);
   },
 
   loadDataFromScript(url, sandbox = {}) {
@@ -1246,6 +1235,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   null,
   pref => parseFloat(pref)
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "visibilityCheckThreshold",
+  "extensions.formautofill.heuristics.visibilityCheckThreshold",
+  200
 );
 
 // This is only used in iOS
