@@ -4,8 +4,11 @@ import pytest
 
 from webdriver.error import InvalidArgumentException, NoSuchWindowException, StaleElementReferenceException
 
-from tests.perform_actions.support.mouse import get_inview_center, get_viewport_rect
-from tests.perform_actions.support.refine import get_events
+from tests.classic.perform_actions.support.mouse import (
+    get_inview_center,
+    get_viewport_rect,
+)
+from tests.classic.perform_actions.support.refine import get_events
 from tests.support.asserts import assert_move_to_coordinates
 from tests.support.helpers import filter_dict
 from tests.support.sync import Poll
