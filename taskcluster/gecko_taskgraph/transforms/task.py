@@ -848,10 +848,7 @@ def build_generic_worker_payload(config, task, task_def):
         ],
         # behavior for mac iscript
         Optional("mac-behavior"): Any(
-            "mac_notarize_part_1",
-            "mac_notarize_part_3",
             "apple_notarization",
-            "mac_sign",
             "mac_sign_and_pkg",
             "mac_geckodriver",
             "mac_notarize_geckodriver",
@@ -886,21 +883,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
                 )
             )
     task["attributes"]["release_artifacts"] = sorted(list(artifacts))
-
-
-@payload_builder(
-    "notarization-poller",
-    schema={
-        Required("uuid-manifest"): taskref_or_string,
-        # the maximum time to run, in seconds
-        Optional("max-run-time"): int,
-    },
-)
-def notarization_poller_payload(config, task, task_def):
-    worker = task["worker"]
-    task_def["payload"] = {"uuid_manifest": worker["uuid-manifest"]}
-    if "max-run-time" in worker:
-        task_def["payload"]["maxRunTime"] = worker["max-run-time"]
 
 
 @payload_builder(

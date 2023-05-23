@@ -7,16 +7,14 @@ loader: gecko_taskgraph.loader.multi_dep:loader
 group-by: partner-repack-ids
 
 transforms:
+    - gecko_taskgraph.transforms.mac_notarization:transforms
     - gecko_taskgraph.transforms.chunk_partners:transforms
     - gecko_taskgraph.transforms.partner_signing:transforms
     - gecko_taskgraph.transforms.signing:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - release-eme-free-repack-notarization-part-1
-    - release-eme-free-repack-notarization-poller
-
-primary-dependency: release-eme-free-repack-notarization-part-1
+    - release-eme-free-repack-mac-signing
 
 only-for-build-platforms:
     - macosx64-shippable/opt
@@ -24,5 +22,5 @@ only-for-build-platforms:
 job-template:
     shipping-product: firefox
     shipping-phase: promote
-    max-run-time: 3600
+    max-run-time: 1800
     copy-repack-ids: true

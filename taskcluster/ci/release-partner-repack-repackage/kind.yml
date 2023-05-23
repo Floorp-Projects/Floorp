@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
+    - gecko_taskgraph.transforms.repackage_set_upstream_mac_kind:transforms
     - gecko_taskgraph.transforms.chunk_partners:transforms
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.repackage_partner:transforms
@@ -13,7 +14,8 @@ transforms:
 
 kind-dependencies:
     - release-partner-repack
-    - release-partner-repack-signing
+    - release-partner-repack-mac-signing
+    - release-partner-repack-mac-notarization
     - toolchain
 
 only-for-build-platforms:
@@ -23,6 +25,14 @@ only-for-build-platforms:
     - win64-aarch64-shippable/opt
 
 job-template:
+    upstream-mac-kind:
+        by-build-type:
+            debug: release-partner-repack-mac-signing
+            default:
+                by-project:
+                    autoland: release-partner-repack-mac-signing
+                    try: release-partner-repack-mac-signing
+                    default: release-partner-repack-mac-notarization
     mozharness:
         config:
             by-build-platform:

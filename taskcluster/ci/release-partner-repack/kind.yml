@@ -12,7 +12,11 @@ transforms:
 
 kind-dependencies:
     - build-signing
+    - build-mac-signing
+    - build-mac-notarization
     - shippable-l10n-signing
+    - shippable-l10n-mac-signing
+    - shippable-l10n-mac-notarization
 
 job-defaults:
     name: partner-repack

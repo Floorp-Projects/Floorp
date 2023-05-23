@@ -15,8 +15,6 @@ transforms:
 
 kind-dependencies:
     - shippable-l10n
-    - shippable-l10n-notarization-part-1
-    - shippable-l10n-notarization-poller
 
 primary-dependency:
     - shippable-l10n
@@ -24,3 +22,9 @@ primary-dependency:
 only-for-attributes:
     - shippable
     - nightly
+
+not-for-build-platforms:
+    - macosx64-shippable/opt
+    - macosx64-devedition/opt
+    - macosx64/opt
+    - macosx64/debug

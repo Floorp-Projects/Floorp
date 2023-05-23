@@ -364,7 +364,7 @@ def make_job_description(config, jobs):
         for dependency in dependencies.keys():
             if "repackage-signing" in dependency:
                 repackage_signing_task = dependency
-            elif "signing" in dependency:
+            elif "signing" in dependency or "notarization" in dependency:
                 signing_task = dependency
 
         if config.kind == "repackage-msi":

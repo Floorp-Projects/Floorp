@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
+    - gecko_taskgraph.transforms.repackage_set_upstream_mac_kind:transforms
     - gecko_taskgraph.transforms.chunk_partners:transforms
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.repackage_partner:transforms
@@ -13,7 +14,8 @@ transforms:
 
 kind-dependencies:
     - release-eme-free-repack
-    - release-eme-free-repack-signing
+    - release-eme-free-repack-mac-signing
+    - release-eme-free-repack-mac-notarization
     - toolchain
 
 only-for-build-platforms:
@@ -22,6 +24,14 @@ only-for-build-platforms:
     - win64-shippable/opt
 
 job-template:
+    upstream-mac-kind:
+        by-build-type:
+            debug: release-eme-free-repack-mac-signing
+            default:
+                by-project:
+                    autoland: release-eme-free-repack-mac-signing
+                    try: release-eme-free-repack-mac-signing
+                    default: release-eme-free-repack-mac-notarization
     mozharness:
         config:
             by-build-platform:
