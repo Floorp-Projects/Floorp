@@ -3223,8 +3223,14 @@ bool nsGenericHTMLElement::PopoverOpen() const {
 bool nsGenericHTMLElement::CheckPopoverValidity(
     PopoverVisibilityState aExpectedState, Document* aExpectedDocument,
     ErrorResult& aRv) {
-  if (!HasAttr(nsGkAtoms::popover)) {
-    aRv.ThrowNotSupportedError("Element does not have the popover attribute");
+  const PopoverData* data = GetPopoverData();
+  if (!data || data->GetPopoverState() == PopoverState::None ||
+      !HasAttr(nsGkAtoms::popover) /* TODO: revisit this in bug 1831081. */) {
+    aRv.ThrowNotSupportedError("Element is in the no popover state");
+    return false;
+  }
+
+  if (data->GetPopoverVisibilityState() != aExpectedState) {
     return false;
   }
 
@@ -3235,15 +3241,6 @@ bool nsGenericHTMLElement::CheckPopoverValidity(
 
   if (aExpectedDocument && aExpectedDocument != OwnerDoc()) {
     aRv.ThrowInvalidStateError("Element is moved to other document");
-    return false;
-  }
-
-  PopoverData* data = GetPopoverData();
-  if (!data) {
-    return false;
-  }
-  if (data->GetPopoverVisibilityState() != aExpectedState) {
-    aRv.ThrowInvalidStateError("Element has unexpected visibility state");
     return false;
   }
 
