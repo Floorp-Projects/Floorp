@@ -66,7 +66,7 @@ class FilePickerTest {
 
     @Before
     fun setup() {
-        fragment = mock()
+        fragment = spy(PromptContainer.TestPromptContainer(testContext))
         state = mock()
         store = mock()
         whenever(store.state).thenReturn(state)
@@ -112,22 +112,18 @@ class FilePickerTest {
 
     @Test
     fun `handleFilePickerRequest with the required permission will call startActivityForResult`() {
-        val mockFragment: PromptContainer = mock()
         var onRequestPermissionWasCalled = false
-        val context = ApplicationProvider.getApplicationContext<Context>()
 
-        filePicker = FilePicker(mockFragment, store) {
+        filePicker = FilePicker(fragment, store) {
             onRequestPermissionWasCalled = true
         }
-
-        doReturn(context).`when`(mockFragment).context
 
         grantPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
 
         filePicker.handleFileRequest(request)
 
         assertFalse(onRequestPermissionWasCalled)
-        verify(mockFragment).startActivityForResult(any<Intent>(), anyInt())
+        verify(fragment).startActivityForResult(any(), anyInt())
     }
 
     @Test
