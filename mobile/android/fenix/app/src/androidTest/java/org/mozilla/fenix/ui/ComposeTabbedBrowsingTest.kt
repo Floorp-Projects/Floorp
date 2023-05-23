@@ -305,19 +305,20 @@ class ComposeTabbedBrowsingTest {
 //        }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832613")
     @Test
     fun verifyEmptyTabTray() {
-//        navigationToolbar {
-//        }.openTabTray {
-//            verifyNormalBrowsingButtonIsSelected(true)
-//            verifyPrivateBrowsingButtonIsSelected(false)
-//            verifySyncedTabsButtonIsSelected(false)
-//            verifyNoOpenTabsInNormalBrowsing()
-//            verifyNormalBrowsingNewTabButton()
-//            verifyTabTrayOverflowMenu(true)
-//            verifyEmptyTabsTrayMenuButtons()
-//        }
+        homeScreen {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNormalBrowsingButtonIsSelected()
+            verifyPrivateBrowsingButtonIsSelected(false)
+            verifySyncedTabsButtonIsSelected(false)
+            verifyNoOpenTabsInNormalBrowsing()
+            verifyFab()
+            verifyThreeDotButton()
+        }.openThreeDotMenu {
+            verifyTabSettingsButton()
+            verifyRecentlyClosedTabsButton()
+        }
     }
 
     @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832615")

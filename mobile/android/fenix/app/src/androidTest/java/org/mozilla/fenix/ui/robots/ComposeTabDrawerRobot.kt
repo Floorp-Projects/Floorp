@@ -37,6 +37,14 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         }
     }
 
+    fun verifySyncedTabsButtonIsSelected(isSelected: Boolean = true) {
+        if (isSelected) {
+            composeTestRule.syncedTabsButton().assertIsSelected()
+        } else {
+            composeTestRule.syncedTabsButton().assertIsNotSelected()
+        }
+    }
+
     fun verifyExistingOpenTabs(vararg titles: String) {
         titles.forEach { title ->
             tabItem(title).assertExists()
@@ -85,6 +93,14 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
     fun verifyTabSettingsButton() {
         composeTestRule.dropdownMenuItemTabSettings().assertExists()
+    }
+
+    fun verifyThreeDotButton() {
+        composeTestRule.threeDotButton().assertExists()
+    }
+
+    fun verifyFab() {
+        composeTestRule.tabsTrayFab().assertExists()
     }
 
     /**
@@ -154,6 +170,11 @@ private fun ComposeTestRule.normalBrowsingButton() = onNodeWithTag(TabsTrayTestT
  * Obtains the private browsing page button of the Tabs Tray banner.
  */
 private fun ComposeTestRule.privateBrowsingButton() = onNodeWithTag(TabsTrayTestTag.privateTabsPageButton)
+
+/**
+ * Obtains the synced tabs page button of the Tabs Tray banner.
+ */
+private fun ComposeTestRule.syncedTabsButton() = onNodeWithTag(TabsTrayTestTag.syncedTabsPageButton)
 
 /**
  * Obtains the normal tabs list.
