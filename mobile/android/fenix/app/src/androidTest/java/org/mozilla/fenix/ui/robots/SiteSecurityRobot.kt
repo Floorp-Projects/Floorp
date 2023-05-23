@@ -16,6 +16,7 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -26,8 +27,10 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 class SiteSecurityRobot {
 
     fun verifyQuickActionSheet(url: String = "", isConnectionSecure: Boolean) = assertQuickActionSheet(url, isConnectionSecure)
-    fun openSecureConnectionSubMenu(isConnectionSecure: Boolean) =
-        quickActionSheetSecurityInfo(isConnectionSecure).clickAndWaitForNewWindow(waitingTime)
+    fun openSecureConnectionSubMenu(isConnectionSecure: Boolean) {
+        quickActionSheetSecurityInfo(isConnectionSecure).click()
+        mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
+    }
     fun verifySecureConnectionSubMenu(pageTitle: String = "", url: String = "", isConnectionSecure: Boolean) =
         assertSecureConnectionSubMenu(pageTitle, url, isConnectionSecure)
     fun clickQuickActionSheetClearSiteData() = quickActionSheetClearSiteData().click()
