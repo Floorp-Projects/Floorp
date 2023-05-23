@@ -1141,9 +1141,7 @@ void nsCocoaWindow::Enable(bool aState) {}
 
 bool nsCocoaWindow::IsEnabled() const { return true; }
 
-#define kWindowPositionSlop 20
-
-void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
+void nsCocoaWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!mWindow || ![mWindow screen]) {
@@ -1163,7 +1161,7 @@ void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY)
   nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (screenMgr) {
     nsCOMPtr<nsIScreen> screen;
-    screenMgr->ScreenForRect(*aX, *aY, width, height, getter_AddRefs(screen));
+    screenMgr->ScreenForRect(aPoint.x, aPoint.y, width, height, getter_AddRefs(screen));
 
     if (screen) {
       screen->GetRectDisplayPix(&(screenBounds.x), &(screenBounds.y), &(screenBounds.width),
@@ -1171,30 +1169,16 @@ void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY)
     }
   }
 
-  if (aAllowSlop) {
-    if (*aX < screenBounds.x - width + kWindowPositionSlop) {
-      *aX = screenBounds.x - width + kWindowPositionSlop;
-    } else if (*aX >= screenBounds.x + screenBounds.width - kWindowPositionSlop) {
-      *aX = screenBounds.x + screenBounds.width - kWindowPositionSlop;
-    }
+  if (aPoint.x < screenBounds.x) {
+    aPoint.x = screenBounds.x;
+  } else if (aPoint.x >= screenBounds.x + screenBounds.width - width) {
+    aPoint.x = screenBounds.x + screenBounds.width - width;
+  }
 
-    if (*aY < screenBounds.y - height + kWindowPositionSlop) {
-      *aY = screenBounds.y - height + kWindowPositionSlop;
-    } else if (*aY >= screenBounds.y + screenBounds.height - kWindowPositionSlop) {
-      *aY = screenBounds.y + screenBounds.height - kWindowPositionSlop;
-    }
-  } else {
-    if (*aX < screenBounds.x) {
-      *aX = screenBounds.x;
-    } else if (*aX >= screenBounds.x + screenBounds.width - width) {
-      *aX = screenBounds.x + screenBounds.width - width;
-    }
-
-    if (*aY < screenBounds.y) {
-      *aY = screenBounds.y;
-    } else if (*aY >= screenBounds.y + screenBounds.height - height) {
-      *aY = screenBounds.y + screenBounds.height - height;
-    }
+  if (aPoint.y < screenBounds.y) {
+    aPoint.y = screenBounds.y;
+  } else if (aPoint.y >= screenBounds.y + screenBounds.height - height) {
+    aPoint.y = screenBounds.y + screenBounds.height - height;
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
