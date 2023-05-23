@@ -26,10 +26,6 @@
   font-size: 1.25em;
 }
 
-.shortcutKeys {
-  font-family: Courier;
-}
-
 .shortcutKey,
 .shortcutLabel {
   flex: 1;

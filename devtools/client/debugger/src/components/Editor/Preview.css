@@ -5,7 +5,6 @@
 .popover .preview {
   background: var(--theme-body-background);
   width: 350px;
-  min-height: 80px;
   border: 1px solid var(--theme-splitter-color);
   padding: 10px;
   height: auto;
@@ -64,7 +63,6 @@
 .tooltip .preview {
   background: var(--theme-toolbar-background);
   max-width: inherit;
-  min-height: 80px;
   border: 1px solid var(--theme-splitter-color);
   box-shadow: 1px 2px 4px 1px var(--theme-toolbar-background-alt);
   padding: 5px;
