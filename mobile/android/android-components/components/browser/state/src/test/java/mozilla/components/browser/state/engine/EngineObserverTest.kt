@@ -867,7 +867,7 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverHandlesPromptRequest() {
-        val promptRequest: PromptRequest = mock()
+        val promptRequest: PromptRequest = mock<PromptRequest.SingleChoice>()
         val store: BrowserStore = mock()
         val observer = EngineObserver("tab-id", store)
 
@@ -882,7 +882,7 @@ class EngineObserverTest {
 
     @Test
     fun engineObserverHandlesOnPromptUpdate() {
-        val promptRequest: PromptRequest = mock()
+        val promptRequest: PromptRequest = mock<PromptRequest.SingleChoice>()
         val store: BrowserStore = mock()
         val observer = EngineObserver("tab-id", store)
         val previousPromptUID = "prompt-uid"

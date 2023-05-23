@@ -508,7 +508,7 @@ class PromptFeatureTest {
         whenever(loginPickerView.asView().visibility).thenReturn(View.VISIBLE)
 
         feature.loginPicker = loginPicker
-        feature.activePromptRequest = mock()
+        feature.activePromptRequest = mock<SingleChoice>()
         feature.dismissSelectPrompts()
         verify(feature.loginPicker!!, never()).dismissCurrentLoginSelect(any())
 
@@ -617,7 +617,7 @@ class PromptFeatureTest {
             ) { },
         )
         feature.creditCardPicker = creditCardPicker
-        feature.activePromptRequest = mock()
+        feature.activePromptRequest = mock<SingleChoice>()
 
         whenever(creditCardPickerView.asView()).thenReturn(mock())
         whenever(creditCardPickerView.asView().visibility).thenReturn(View.VISIBLE)
@@ -646,7 +646,7 @@ class PromptFeatureTest {
             ) { },
         )
         feature.addressPicker = addressPicker
-        feature.activePromptRequest = mock()
+        feature.activePromptRequest = mock<SingleChoice>()
 
         whenever(addressDelegate.addressPickerView).thenReturn(addressPickerView)
         whenever(addressPickerView.asView()).thenReturn(mock())

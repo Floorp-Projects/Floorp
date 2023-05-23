@@ -30,7 +30,7 @@ class PromptInstanceDismissDelegateTest {
             },
         )
         val basePrompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption> = mock()
-        val prompt: PromptRequest = mock()
+        val prompt: PromptRequest.SingleChoice = mock()
         val delegate = PromptInstanceDismissDelegate(mockSession, prompt)
 
         delegate.onPromptDismiss(basePrompt)

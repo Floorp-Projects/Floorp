@@ -71,7 +71,7 @@ class ChoicePromptDelegateTest {
             },
         )
         val basePrompt: GeckoSession.PromptDelegate.ChoicePrompt = mock()
-        val prompt: PromptRequest = mock()
+        val prompt: PromptRequest.SingleChoice = mock()
         val delegate = ChoicePromptDelegate(mockSession, prompt)
 
         delegate.onPromptDismiss(basePrompt)
