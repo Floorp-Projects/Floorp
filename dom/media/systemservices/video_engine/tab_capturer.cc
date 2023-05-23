@@ -20,6 +20,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
 #include "rtc_base/checks.h"
@@ -76,6 +77,7 @@ std::unique_ptr<webrtc::DesktopCapturer> TabCapturerWebrtc::Create(
 }
 
 TabCapturerWebrtc::~TabCapturerWebrtc() {
+  RTC_DCHECK_RUN_ON(&mCallbackChecker);
   MOZ_ALWAYS_SUCCEEDS(
       mMainThreadWorker->Dispatch(NS_NewRunnableFunction(__func__, [this] {
         for (const auto& req : mRequests) {
@@ -87,7 +89,11 @@ TabCapturerWebrtc::~TabCapturerWebrtc() {
   // outlive them, and libwebrtc only guarantees mCallback outlives us.
   mMainThreadWorker->AwaitShutdownAndIdle();
   mCallbackWorker->BeginShutdown();
-  mCallbackWorker->AwaitShutdownAndIdle();
+  // Spin the underlying thread of mCallbackWorker, which we are currently on,
+  // until it is empty. We have no other way of waiting for mCallbackWorker to
+  // become empty while blocking the current call.
+  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      "~TabCapturerWebrtc"_ns, [&] { return mCallbackWorker->IsEmpty(); });
 }
 
 bool TabCapturerWebrtc::GetSourceList(
