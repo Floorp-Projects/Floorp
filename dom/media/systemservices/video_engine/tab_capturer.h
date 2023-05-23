@@ -79,8 +79,8 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   webrtc::DesktopCapturer::Callback* mCallback
       RTC_GUARDED_BY(mCallbackChecker) = nullptr;
 
-  // mMainThreadWorker only
-  nsRefPtrDeque<CaptureFrameRequest> mRequests;
+  // mCallbackWorker only
+  nsRefPtrDeque<CaptureFrameRequest> mRequests RTC_GUARDED_BY(mCallbackChecker);
 };
 
 }  // namespace mozilla
