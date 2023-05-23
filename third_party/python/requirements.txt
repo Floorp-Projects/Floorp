@@ -272,8 +272,6 @@ pyrsistent==0.16.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3
 python-hglib==2.4 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:693d6ed92a6566e78802c7a03c256cda33d08c63ad3f00fcfa11379b184b9462
-pytoml==0.1.10 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:98399eabd927cd3e12457525315b6abbc5abf9a6f392ab578cbcec327f73890c
 pyyaml==5.4.1 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:08682f6b72c722394747bddaf0aa62277e02557c0fd1c42cb853016a38f8dedf \
     --hash=sha256:0f5f5786c0e09baddcd8b4b45f20a7b5d61a7e7e99846e3c799b05c7c53fa696 \
