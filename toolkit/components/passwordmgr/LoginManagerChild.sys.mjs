@@ -596,21 +596,20 @@ export class LoginFormState {
     }
     const threshold = lazy.LoginHelper.signupDetectionConfidenceThreshold;
     let score = this.#cachedSignUpFormScore.get(formElement);
-    if (score) {
-      return score >= threshold;
-    }
-    TelemetryStopwatch.start("PWMGR_SIGNUP_FORM_DETECTION_MS");
-    try {
-      const { rules, type } = lazy.SignUpFormRuleset;
-      const results = rules.against(formElement);
-      score = results.get(formElement).scoreFor(type);
-      TelemetryStopwatch.finish("PWMGR_SIGNUP_FORM_DETECTION_MS");
-    } finally {
-      if (TelemetryStopwatch.running("PWMGR_SIGNUP_FORM_DETECTION_MS")) {
-        TelemetryStopwatch.cancel("PWMGR_SIGNUP_FORM_DETECTION_MS");
+    if (!score) {
+      TelemetryStopwatch.start("PWMGR_SIGNUP_FORM_DETECTION_MS");
+      try {
+        const { rules, type } = lazy.SignUpFormRuleset;
+        const results = rules.against(formElement);
+        score = results.get(formElement).scoreFor(type);
+        TelemetryStopwatch.finish("PWMGR_SIGNUP_FORM_DETECTION_MS");
+      } finally {
+        if (TelemetryStopwatch.running("PWMGR_SIGNUP_FORM_DETECTION_MS")) {
+          TelemetryStopwatch.cancel("PWMGR_SIGNUP_FORM_DETECTION_MS");
+        }
       }
+      this.#cachedSignUpFormScore.set(formElement, score);
     }
-    this.#cachedSignUpFormScore.set(formElement, score);
     return score > threshold;
   }
 
