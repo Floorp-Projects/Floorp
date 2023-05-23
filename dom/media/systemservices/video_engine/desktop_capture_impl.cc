@@ -386,8 +386,9 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 }
 
 static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-    const DesktopCaptureOptions& options) {
-  std::unique_ptr<DesktopCapturer> capturer = TabCapturerWebrtc::Create();
+    const DesktopCaptureOptions& options, DesktopCapturer::SourceId aSourceId) {
+  std::unique_ptr<DesktopCapturer> capturer =
+      TabCapturerWebrtc::Create(aSourceId);
   if (capturer && options.detect_updated_region()) {
     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
   }
@@ -454,13 +455,11 @@ int32_t DesktopCaptureImpl::EnsureCapturer() {
   } else if (mDeviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
-    mCapturer = CreateTabCapturer(options);
+    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
+    mCapturer = CreateTabCapturer(options, sourceId);
     if (!mCapturer) {
       return -1;
     }
-
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
-    mCapturer->SelectSource(sourceId);
   }
   return 0;
 }
