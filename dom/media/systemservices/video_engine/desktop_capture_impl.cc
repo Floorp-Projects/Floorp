@@ -485,7 +485,6 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
       mDeviceType(aType),
       mControlThread(mozilla::GetCurrentSerialEventTarget()),
       mNextFrameMinimumTime(Timestamp::Zero()),
-      mRunning(false),
       mCallbacks("DesktopCaptureImpl::mCallbacks") {}
 
 DesktopCaptureImpl::~DesktopCaptureImpl() {
@@ -529,7 +528,10 @@ int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& aCapability) {
   MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
 
-  if (mRunning) {
+  if (mRequestedCapability) {
+    // Already initialized
+    MOZ_ASSERT(*mRequestedCapability == aCapability);
+
     return 0;
   }
 
@@ -551,8 +553,6 @@ int32_t DesktopCaptureImpl::StartCapture(
        maxFps = std::max(aCapability.maxFPS, 1)]() mutable {
         InitOnThread(std::move(capturer), maxFps);
       })));
-
-  mRunning = true;
 
   return 0;
 }
@@ -593,7 +593,6 @@ int32_t DesktopCaptureImpl::StopCapture() {
     mCaptureThread = nullptr;
   }
 
-  mRunning = false;
   return 0;
 }
 
