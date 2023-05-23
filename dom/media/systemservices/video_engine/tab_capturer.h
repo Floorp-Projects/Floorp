@@ -28,14 +28,14 @@ class TaskQueue;
 
 class TabCapturerWebrtc : public webrtc::DesktopCapturer {
  protected:
-  TabCapturerWebrtc();
+  explicit TabCapturerWebrtc(SourceId aSourceId);
   ~TabCapturerWebrtc();
 
  public:
   friend class CaptureFrameRequest;
   friend class TabCapturedHandler;
 
-  static std::unique_ptr<webrtc::DesktopCapturer> Create();
+  static std::unique_ptr<webrtc::DesktopCapturer> Create(SourceId aSourceId);
 
   TabCapturerWebrtc(const TabCapturerWebrtc&) = delete;
   TabCapturerWebrtc& operator=(const TabCapturerWebrtc&) = delete;
@@ -44,7 +44,7 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   void Start(Callback* callback) override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
-  bool SelectSource(SourceId id) override;
+  bool SelectSource(SourceId) override;
   bool FocusOnSelectedSource() override;
   bool IsOccluded(const webrtc::DesktopVector& pos) override;
 
@@ -68,6 +68,7 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   void OnCaptureFrameSuccess(UniquePtr<dom::ImageBitmapCloneData> aData);
   void OnCaptureFrameFailure();
 
+  const uint64_t mBrowserId;
   const RefPtr<TaskQueue> mMainThreadWorker;
   webrtc::SequenceChecker mControlChecker;
   webrtc::SequenceChecker mCallbackChecker;
@@ -79,8 +80,6 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   // Set in Start() and guaranteed by the owner of this class to outlive us.
   webrtc::DesktopCapturer::Callback* mCallback
       RTC_GUARDED_BY(mCallbackChecker) = nullptr;
-  // Set before Start() and not changed again.
-  uint64_t mBrowserId = 0;
 
   // mMainThreadWorker only
   nsRefPtrDeque<CaptureFrameRequest> mRequests;

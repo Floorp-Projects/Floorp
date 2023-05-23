@@ -55,17 +55,24 @@ class CaptureFrameRequest {
   MozPromiseRequestHolder<CapturePromise> mRequest;
 };
 
-TabCapturerWebrtc::TabCapturerWebrtc()
-    : mMainThreadWorker(
+TabCapturerWebrtc::TabCapturerWebrtc(SourceId aSourceId)
+    : mBrowserId(aSourceId),
+      mMainThreadWorker(
           TaskQueue::Create(do_AddRef(GetMainThreadSerialEventTarget()),
                             "TabCapturerWebrtc::mMainThreadWorker")) {
   RTC_DCHECK_RUN_ON(&mControlChecker);
+  MOZ_ASSERT(aSourceId != 0);
   mCallbackChecker.Detach();
+
+  MOZ_LOG(gTabShareLog, LogLevel::Debug,
+          ("TabCapturerWebrtc %p: source %" PRIdPTR, this, mBrowserId));
 }
 
 // static
-std::unique_ptr<webrtc::DesktopCapturer> TabCapturerWebrtc::Create() {
-  return std::unique_ptr<webrtc::DesktopCapturer>(new TabCapturerWebrtc());
+std::unique_ptr<webrtc::DesktopCapturer> TabCapturerWebrtc::Create(
+    SourceId aSourceId) {
+  return std::unique_ptr<webrtc::DesktopCapturer>(
+      new TabCapturerWebrtc(aSourceId));
 }
 
 TabCapturerWebrtc::~TabCapturerWebrtc() {
@@ -91,13 +98,8 @@ bool TabCapturerWebrtc::GetSourceList(
   return true;
 }
 
-bool TabCapturerWebrtc::SelectSource(webrtc::DesktopCapturer::SourceId id) {
-  RTC_DCHECK_RUN_ON(&mControlChecker);
-  RTC_DCHECK(mBrowserId == 0);
-  RTC_DCHECK(id != 0);
-  [&]() RTC_NO_THREAD_SAFETY_ANALYSIS { RTC_DCHECK(!mCallback); }();
-  MOZ_LOG(gTabShareLog, LogLevel::Debug, ("TabShare: source %" PRIdPTR, id));
-  mBrowserId = id;
+bool TabCapturerWebrtc::SelectSource(webrtc::DesktopCapturer::SourceId) {
+  MOZ_ASSERT_UNREACHABLE("Source is passed through ctor for constness");
   return true;
 }
 
@@ -280,15 +282,13 @@ auto TabCapturerWebrtc::CaptureFrameNow() -> RefPtr<CapturePromise> {
   MOZ_LOG(gTabShareLog, LogLevel::Debug, ("TabShare: CaptureFrameNow"));
 
   WindowGlobalParent* wgp = nullptr;
-  if (mBrowserId != 0) {
-    RefPtr<BrowsingContext> context =
-        BrowsingContext::GetCurrentTopByBrowserId(mBrowserId);
-    if (context) {
-      wgp = context->Canonical()->GetCurrentWindowGlobal();
-    }
-    // If we can't access the window, we just won't capture anything
+  RefPtr<BrowsingContext> context =
+      BrowsingContext::GetCurrentTopByBrowserId(mBrowserId);
+  if (context) {
+    wgp = context->Canonical()->GetCurrentWindowGlobal();
   }
   if (!wgp) {
+    // If we can't access the window, we just won't capture anything
     return CapturePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
