@@ -191,12 +191,11 @@ export const CustomizableWidgets = [
 
       this._panelMenuView.clearAllContents(panelview);
 
-      let getFragment =
+      const utils = lazy.RecentlyClosedTabsAndWindowsMenuUtils;
+      const fragment =
         panelview.id == this.recentlyClosedTabsPanel
-          ? lazy.RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment
-          : lazy.RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment;
-
-      let fragment = getFragment(window, "toolbarbutton", true);
+          ? utils.getTabsFragment(window, "toolbarbutton", true)
+          : utils.getWindowsFragment(window, "toolbarbutton", true);
       let elementCount = fragment.childElementCount;
       this._panelMenuView._setEmptyPopupStatus(panelview, !elementCount);
       if (!elementCount) {

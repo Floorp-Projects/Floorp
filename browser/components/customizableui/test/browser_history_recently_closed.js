@@ -147,3 +147,52 @@ add_task(async function testRecentlyClosedTabsDisabledPersists() {
   await hideHistoryPanel(newWin.document);
   await BrowserTestUtils.closeWindow(newWin);
 });
+
+add_task(async function testRecentlyClosedWindows() {
+  // We need to make sure the history is cleared before starting the test
+  await Sanitizer.sanitize(["history"]);
+
+  // Open and close a new window.
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+  let loadedPromise = BrowserTestUtils.browserLoaded(
+    newWin.gBrowser.selectedBrowser
+  );
+  BrowserTestUtils.loadURIString(
+    newWin.gBrowser.selectedBrowser,
+    "https://example.com"
+  );
+  await loadedPromise;
+  await BrowserTestUtils.closeWindow(newWin);
+
+  CustomizableUI.addWidgetToArea(
+    "history-panelmenu",
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
+  registerCleanupFunction(() => CustomizableUI.reset());
+  await openHistoryPanel();
+
+  // Open the "Recently closed windows" panel.
+  document.getElementById("appMenuRecentlyClosedWindows").click();
+
+  let winPanel = document.getElementById(
+    "appMenu-library-recentlyClosedWindows"
+  );
+  await BrowserTestUtils.waitForEvent(winPanel, "ViewShown");
+  ok(true, "Opened 'Recently closed windows' panel");
+
+  // Click the first toolbar button in the panel.
+  let panelBody = winPanel.querySelector(".panel-subview-body");
+  let toolbarButton = panelBody.querySelector("toolbarbutton");
+  let newWindowPromise = BrowserTestUtils.waitForNewWindow();
+  EventUtils.sendMouseEvent({ type: "click" }, toolbarButton, window);
+
+  newWin = await newWindowPromise;
+  is(
+    newWin.gBrowser.currentURI.spec,
+    "https://example.com/",
+    "Opened correct URL"
+  );
+  is(gBrowser.tabs.length, 1, "Did not open new tabs");
+
+  await BrowserTestUtils.closeWindow(newWin);
+});
