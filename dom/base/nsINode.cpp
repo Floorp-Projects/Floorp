@@ -345,12 +345,12 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
   nsTHashSet<Selection*> ancestorSelections;
   for (; n; n = GetClosestCommonInclusiveAncestorForRangeInSelection(
                 n->GetParentNode())) {
-    const LinkedList<AbstractRange>* ranges =
+    const LinkedList<nsRange>* ranges =
         n->GetExistingClosestCommonInclusiveAncestorRanges();
     if (!ranges) {
       continue;
     }
-    for (const AbstractRange* range : *ranges) {
+    for (const nsRange* range : *ranges) {
       MOZ_ASSERT(range->IsInAnySelection(),
                  "Why is this range registered with a node?");
       // Looks like that IsInSelection() assert fails sometimes...

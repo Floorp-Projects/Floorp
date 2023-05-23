@@ -20,6 +20,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 class RectCallback;
@@ -35,7 +36,9 @@ class Selection;
 }  // namespace mozilla
 
 class nsRange final : public mozilla::dom::AbstractRange,
-                      public nsStubMutationObserver {
+                      public nsStubMutationObserver,
+                      // For linking together selection-associated ranges.
+                      public mozilla::LinkedListElement<nsRange> {
   using ErrorResult = mozilla::ErrorResult;
   using AbstractRange = mozilla::dom::AbstractRange;
   using DocGroup = mozilla::dom::DocGroup;
@@ -87,6 +90,28 @@ class nsRange final : public mozilla::dom::AbstractRange,
   nsrefcnt GetRefCount() const { return mRefCnt; }
 
   nsINode* GetRoot() const { return mRoot; }
+
+  /**
+   * Return true if this range is part of a Selection object
+   * and isn't detached.
+   */
+  bool IsInAnySelection() const { return !mSelections.IsEmpty(); }
+
+  MOZ_CAN_RUN_SCRIPT void RegisterSelection(
+      mozilla::dom::Selection& aSelection);
+
+  void UnregisterSelection(mozilla::dom::Selection& aSelection);
+
+  /**
+   * Returns a list of all Selections the range is associated with.
+   */
+  const nsTArray<mozilla::WeakPtr<mozilla::dom::Selection>>& GetSelections()
+      const;
+
+  /**
+   * Return true if this range is in |aSelection|.
+   */
+  bool IsInSelection(const mozilla::dom::Selection& aSelection) const;
 
   /**
    * Return true if this range was generated.
@@ -353,6 +378,16 @@ class nsRange final : public mozilla::dom::AbstractRange,
 
  protected:
   /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void RegisterClosestCommonInclusiveAncestor(nsINode* aNode);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void UnregisterClosestCommonInclusiveAncestor(nsINode* aNode,
+                                                bool aIsUnlinking);
+
+  /**
    * DoSetRange() is called when `AbstractRange::SetStartAndEndInternal()` sets
    * mStart and mEnd, or some other internal methods modify `mStart` and/or
    * `mEnd`.  Therefore, this shouldn't be a virtual method.
@@ -413,6 +448,13 @@ class nsRange final : public mozilla::dom::AbstractRange,
 #endif  // #ifdef DEBUG
 
   nsCOMPtr<nsINode> mRoot;
+  // mRegisteredClosestCommonInclusiveAncestor is only non-null when the range
+  // IsInAnySelection().  It's kept alive via mStart/mEnd,
+  // because we update it any time those could become disconnected from it.
+  nsINode* MOZ_NON_OWNING_REF mRegisteredClosestCommonInclusiveAncestor;
+
+  // A Range can be part of multiple |Selection|s. This is a very rare use case.
+  AutoTArray<mozilla::WeakPtr<mozilla::dom::Selection>, 1> mSelections;
 
   // These raw pointers are used to remember a child that is about
   // to be inserted between a CharacterData call and a subsequent

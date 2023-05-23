@@ -12,7 +12,6 @@
 #include "mozilla/RangeUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/StaticRange.h"
-#include "mozilla/dom/Selection.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
@@ -66,73 +65,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AbstractRange)
   // mStart and mEnd may depend on or be depended on some other members in
   // concrete classes so that they should be unlinked in sub classes.
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mSelections.Clear();
-  // Unregistering of the common inclusive ancestors would by design
-  // also happen when the actual implementations unlink `mStart`/`mEnd`.
-  // This may introduce additional overhead which is not needed when unlinking,
-  // therefore this is done here beforehand.
-  if (tmp->mRegisteredClosestCommonInclusiveAncestor) {
-    tmp->UnregisterClosestCommonInclusiveAncestor(
-        tmp->mRegisteredClosestCommonInclusiveAncestor, true);
-  }
-  MOZ_DIAGNOSTIC_ASSERT(!tmp->isInList(),
-                        "Shouldn't be registered now that we're unlinking");
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AbstractRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStart)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEnd)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRegisteredClosestCommonInclusiveAncestor)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-void AbstractRange::MarkDescendants(const nsINode& aNode) {
-  // Set NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection on
-  // aNode's descendants unless aNode is already marked as a range common
-  // ancestor or a descendant of one, in which case all of our descendants have
-  // the bit set already.
-  if (!aNode.IsMaybeSelected()) {
-    // don't set the Descendant bit on |aNode| itself
-    nsINode* node = aNode.GetNextNode(&aNode);
-    while (node) {
-      node->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
-      if (!node->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
-        node = node->GetNextNode(&aNode);
-      } else {
-        // optimize: skip this sub-tree since it's marked already.
-        node = node->GetNextNonChildNode(&aNode);
-      }
-    }
-  }
-}
-
-void AbstractRange::UnmarkDescendants(const nsINode& aNode) {
-  // Unset NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection
-  // on aNode's descendants unless aNode is a descendant of another range common
-  // ancestor. Also, exclude descendants of range common ancestors (but not the
-  // common ancestor itself).
-  if (!aNode
-           .IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
-    // we know |aNode| doesn't have any bit set
-    nsINode* node = aNode.GetNextNode(&aNode);
-    while (node) {
-      node->ClearDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
-      if (!node->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
-        node = node->GetNextNode(&aNode);
-      } else {
-        // We found an ancestor of an overlapping range, skip its descendants.
-        node = node->GetNextNonChildNode(&aNode);
-      }
-    }
-  }
-}
 
 // NOTE: If you need to change default value of members of AbstractRange,
 //       update nsRange::Create(nsINode* aNode) and ClearForReuse() too.
 AbstractRange::AbstractRange(nsINode* aNode, bool aIsDynamicRange)
-    : mRegisteredClosestCommonInclusiveAncestor(nullptr),
-      mIsPositioned(false),
+    : mIsPositioned(false),
       mIsGenerated(false),
       mCalledByJS(false),
       mIsDynamicRange(aIsDynamicRange) {
@@ -260,122 +204,6 @@ nsresult AbstractRange::SetStartAndEndInternal(
   // Otherwise, set the range as specified.
   aRange->DoSetRange(aStartBoundary, aEndBoundary, newStartRoot);
   return NS_OK;
-}
-
-bool AbstractRange::IsInSelection(const Selection& aSelection) const {
-  return mSelections.Contains(&aSelection);
-}
-
-void AbstractRange::RegisterSelection(Selection& aSelection) {
-  if (IsInSelection(aSelection)) {
-    return;
-  }
-  bool isFirstSelection = mSelections.IsEmpty();
-  mSelections.AppendElement(&aSelection);
-  if (isFirstSelection && !mRegisteredClosestCommonInclusiveAncestor) {
-    nsINode* commonAncestor = GetClosestCommonInclusiveAncestor();
-    MOZ_ASSERT(commonAncestor, "unexpected disconnected nodes");
-    RegisterClosestCommonInclusiveAncestor(commonAncestor);
-  }
-}
-
-const nsTArray<WeakPtr<Selection>>& AbstractRange::GetSelections() const {
-  return mSelections;
-}
-
-void AbstractRange::UnregisterSelection(const Selection& aSelection) {
-  mSelections.RemoveElement(&aSelection);
-  if (mSelections.IsEmpty() && mRegisteredClosestCommonInclusiveAncestor) {
-    UnregisterClosestCommonInclusiveAncestor(
-        mRegisteredClosestCommonInclusiveAncestor, false);
-    MOZ_DIAGNOSTIC_ASSERT(
-        !mRegisteredClosestCommonInclusiveAncestor,
-        "How can we have a registered common ancestor when we "
-        "just unregistered?");
-    MOZ_DIAGNOSTIC_ASSERT(
-        !isInList(),
-        "Shouldn't be registered if we have no "
-        "mRegisteredClosestCommonInclusiveAncestor after unregistering");
-  }
-}
-
-void AbstractRange::RegisterClosestCommonInclusiveAncestor(nsINode* aNode) {
-  MOZ_ASSERT(aNode, "bad arg");
-
-  MOZ_DIAGNOSTIC_ASSERT(IsInAnySelection(),
-                        "registering range not in selection");
-
-  mRegisteredClosestCommonInclusiveAncestor = aNode;
-
-  MarkDescendants(*aNode);
-
-  UniquePtr<LinkedList<AbstractRange>>& ranges =
-      aNode->GetClosestCommonInclusiveAncestorRangesPtr();
-  if (!ranges) {
-    ranges = MakeUnique<LinkedList<AbstractRange>>();
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(!isInList());
-  ranges->insertBack(this);
-  aNode->SetClosestCommonInclusiveAncestorForRangeInSelection();
-}
-
-void AbstractRange::UnregisterClosestCommonInclusiveAncestor(
-    nsINode* aNode, bool aIsUnlinking) {
-  MOZ_ASSERT(aNode, "bad arg");
-  NS_ASSERTION(aNode->IsClosestCommonInclusiveAncestorForRangeInSelection(),
-               "wrong node");
-  MOZ_DIAGNOSTIC_ASSERT(aNode == mRegisteredClosestCommonInclusiveAncestor,
-                        "wrong node");
-  LinkedList<AbstractRange>* ranges =
-      aNode->GetExistingClosestCommonInclusiveAncestorRanges();
-  MOZ_ASSERT(ranges);
-
-  mRegisteredClosestCommonInclusiveAncestor = nullptr;
-
-#ifdef DEBUG
-  bool found = false;
-  for (AbstractRange* range : *ranges) {
-    if (range == this) {
-      found = true;
-      break;
-    }
-  }
-  MOZ_ASSERT(found,
-             "We should be in the list on our registered common ancestor");
-#endif  // DEBUG
-
-  remove();
-
-  // We don't want to waste time unmarking flags on nodes that are
-  // being unlinked anyway.
-  if (!aIsUnlinking && ranges->isEmpty()) {
-    aNode->ClearClosestCommonInclusiveAncestorForRangeInSelection();
-    UnmarkDescendants(*aNode);
-  }
-}
-
-void AbstractRange::UpdateCommonAncestorIfNecessary() {
-  nsINode* oldCommonAncestor = mRegisteredClosestCommonInclusiveAncestor;
-  nsINode* newCommonAncestor = GetClosestCommonInclusiveAncestor();
-  if (newCommonAncestor != oldCommonAncestor) {
-    if (oldCommonAncestor) {
-      UnregisterClosestCommonInclusiveAncestor(oldCommonAncestor, false);
-    }
-    if (newCommonAncestor) {
-      RegisterClosestCommonInclusiveAncestor(newCommonAncestor);
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(!mIsPositioned, "unexpected disconnected nodes");
-      mSelections.Clear();
-      MOZ_DIAGNOSTIC_ASSERT(
-          !mRegisteredClosestCommonInclusiveAncestor,
-          "How can we have a registered common ancestor when we "
-          "didn't register ourselves?");
-      MOZ_DIAGNOSTIC_ASSERT(!isInList(),
-                            "Shouldn't be registered if we have no "
-                            "mRegisteredClosestCommonInclusiveAncestor");
-    }
-  }
 }
 
 nsINode* AbstractRange::GetParentObject() const { return mOwner; }
