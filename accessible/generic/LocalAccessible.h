@@ -151,11 +151,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual void Value(nsString& aValue) const override;
 
   /**
-   * Get help string for the accessible.
-   */
-  void Help(nsString& aHelp) const { aHelp.Truncate(); }
-
-  /**
    * Get the name of this accessible.
    */
   virtual ENameValueFlag Name(nsString& aName) const override;
