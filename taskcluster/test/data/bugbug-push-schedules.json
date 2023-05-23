@@ -1254,198 +1254,198 @@
     "testing/web-platform/tests/web-animations": ["test-linux1804-64/opt-*"],
     "testing/web-platform/tests/web-locks": ["test-windows11-64-2009-qr/opt-*"],
     "testing/web-platform/tests/web-share": ["test-linux1804-64-qr/opt-*"],
-    "testing/web-platform/tests/webdriver/tests/accept_alert": [
+    "testing/web-platform/tests/webdriver/tests/classic/accept_alert": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/add_cookie": [
+    "testing/web-platform/tests/webdriver/tests/classic/add_cookie": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/back": [
+    "testing/web-platform/tests/webdriver/tests/classic/back": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/delete_all_cookies": [
+    "testing/web-platform/tests/webdriver/tests/classic/delete_all_cookies": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/delete_cookie": [
+    "testing/web-platform/tests/webdriver/tests/classic/delete_cookie": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/delete_session": [
+    "testing/web-platform/tests/webdriver/tests/classic/delete_session": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/dismiss_alert": [
+    "testing/web-platform/tests/webdriver/tests/classic/dismiss_alert": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/element_clear": [
+    "testing/web-platform/tests/webdriver/tests/classic/element_clear": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/element_click": [
+    "testing/web-platform/tests/webdriver/tests/classic/element_click": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/element_send_keys": [
+    "testing/web-platform/tests/webdriver/tests/classic/element_send_keys": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/execute_async_script": [
+    "testing/web-platform/tests/webdriver/tests/classic/execute_async_script": [
       "test-windows11-64-2009/opt-*-headless"
     ],
-    "testing/web-platform/tests/webdriver/tests/execute_script": [
+    "testing/web-platform/tests/webdriver/tests/classic/execute_script": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/find_element": [
+    "testing/web-platform/tests/webdriver/tests/classic/find_element": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/find_element_from_element": [
+    "testing/web-platform/tests/webdriver/tests/classic/find_element_from_element": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/find_elements": [
+    "testing/web-platform/tests/webdriver/tests/classic/find_elements": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/find_elements_from_element": [
+    "testing/web-platform/tests/webdriver/tests/classic/find_elements_from_element": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/forward": [
+    "testing/web-platform/tests/webdriver/tests/classic/forward": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/fullscreen_window": [
+    "testing/web-platform/tests/webdriver/tests/classic/fullscreen_window": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_active_element": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_active_element": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_alert_text": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_alert_text": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_current_url": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_current_url": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_element_attribute": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_element_attribute": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_element_css_value": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_element_css_value": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_element_property": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_element_property": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_element_rect": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_element_rect": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_element_tag_name": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_element_tag_name": [
       "test-windows11-64-2009/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_element_text": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_element_text": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_named_cookie": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_named_cookie": [
       "test-windows11-64-2009/debug-*",
       "test-windows7-32/opt-*-headless",
       "test-windows11-64-2009/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_page_source": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_page_source": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_timeouts": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_timeouts": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_title": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_title": [
       "test-windows11-64-2009/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/get_window_handles": [
+    "testing/web-platform/tests/webdriver/tests/classic/get_window_handles": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/interface": [
+    "testing/web-platform/tests/webdriver/tests/classic/interface": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/is_element_enabled": [
+    "testing/web-platform/tests/webdriver/tests/classic/is_element_enabled": [
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/is_element_selected": [
+    "testing/web-platform/tests/webdriver/tests/classic/is_element_selected": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/maximize_window": [
+    "testing/web-platform/tests/webdriver/tests/classic/maximize_window": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/new_session": [
+    "testing/web-platform/tests/webdriver/tests/classic/new_session": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/new_window": [
+    "testing/web-platform/tests/webdriver/tests/classic/new_window": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/perform_actions": [
+    "testing/web-platform/tests/webdriver/tests/classic/perform_actions": [
       "test-windows11-64-2009/opt-*-headless"
     ],
-    "testing/web-platform/tests/webdriver/tests/permissions": [
+    "testing/web-platform/tests/webdriver/tests/classic/permissions": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/print": [
+    "testing/web-platform/tests/webdriver/tests/classic/print": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/refresh": [
+    "testing/web-platform/tests/webdriver/tests/classic/refresh": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/release_actions": [
+    "testing/web-platform/tests/webdriver/tests/classic/release_actions": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/send_alert_text": [
+    "testing/web-platform/tests/webdriver/tests/classic/send_alert_text": [
       "test-windows11-64-2009/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/set_timeouts": [
+    "testing/web-platform/tests/webdriver/tests/classic/set_timeouts": [
       "test-windows11-64-2009/opt-*-headless",
       "test-windows11-64-2009/debug-*",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/set_window_rect": [
+    "testing/web-platform/tests/webdriver/tests/classic/set_window_rect": [
       "test-windows11-64-2009/opt-*-headless"
     ],
-    "testing/web-platform/tests/webdriver/tests/status": [
+    "testing/web-platform/tests/webdriver/tests/classic/status": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/switch_to_frame": [
+    "testing/web-platform/tests/webdriver/tests/classic/switch_to_frame": [
       "test-windows11-64-2009/opt-*-headless"
     ],
-    "testing/web-platform/tests/webdriver/tests/switch_to_parent_frame": [
+    "testing/web-platform/tests/webdriver/tests/classic/switch_to_parent_frame": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/switch_to_window": [
+    "testing/web-platform/tests/webdriver/tests/classic/switch_to_window": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/webdriver/tests/take_screenshot": [
+    "testing/web-platform/tests/webdriver/tests/classic/take_screenshot": [
       "test-windows11-64-2009/opt-*"
     ],
     "testing/web-platform/tests/webmessaging/with-options": [
@@ -1832,57 +1832,57 @@
     "/web-animations": 0.57,
     "/web-locks": 0.75,
     "/web-share": 0.57,
-    "/webdriver/tests/accept_alert": 0.86,
-    "/webdriver/tests/add_cookie": 0.73,
-    "/webdriver/tests/back": 0.73,
-    "/webdriver/tests/delete_all_cookies": 0.73,
-    "/webdriver/tests/delete_cookie": 0.76,
-    "/webdriver/tests/delete_session": 0.7,
-    "/webdriver/tests/dismiss_alert": 0.7,
-    "/webdriver/tests/element_clear": 0.71,
-    "/webdriver/tests/element_click": 0.79,
-    "/webdriver/tests/element_send_keys": 0.67,
-    "/webdriver/tests/execute_async_script": 0.82,
-    "/webdriver/tests/execute_script": 0.76,
-    "/webdriver/tests/find_element": 0.62,
-    "/webdriver/tests/find_element_from_element": 0.73,
-    "/webdriver/tests/find_elements": 0.66,
-    "/webdriver/tests/find_elements_from_element": 0.73,
-    "/webdriver/tests/forward": 0.82,
-    "/webdriver/tests/fullscreen_window": 0.76,
-    "/webdriver/tests/get_active_element": 0.67,
-    "/webdriver/tests/get_alert_text": 0.73,
-    "/webdriver/tests/get_current_url": 0.76,
-    "/webdriver/tests/get_element_attribute": 0.56,
-    "/webdriver/tests/get_element_css_value": 0.73,
-    "/webdriver/tests/get_element_property": 0.73,
-    "/webdriver/tests/get_element_rect": 0.79,
-    "/webdriver/tests/get_element_tag_name": 0.79,
-    "/webdriver/tests/get_element_text": 0.52,
-    "/webdriver/tests/get_named_cookie": 0.67,
-    "/webdriver/tests/get_page_source": 0.7,
-    "/webdriver/tests/get_timeouts": 0.79,
-    "/webdriver/tests/get_title": 0.67,
-    "/webdriver/tests/get_window_handles": 0.73,
-    "/webdriver/tests/interface": 0.66,
-    "/webdriver/tests/is_element_enabled": 0.54,
-    "/webdriver/tests/is_element_selected": 0.6,
-    "/webdriver/tests/maximize_window": 0.79,
-    "/webdriver/tests/new_session": 0.54,
-    "/webdriver/tests/new_window": 0.51,
-    "/webdriver/tests/perform_actions": 0.66,
-    "/webdriver/tests/permissions": 0.73,
-    "/webdriver/tests/print": 0.86,
-    "/webdriver/tests/refresh": 0.54,
-    "/webdriver/tests/release_actions": 0.68,
-    "/webdriver/tests/send_alert_text": 0.74,
-    "/webdriver/tests/set_timeouts": 0.53,
-    "/webdriver/tests/set_window_rect": 0.68,
-    "/webdriver/tests/status": 0.74,
-    "/webdriver/tests/switch_to_frame": 0.56,
-    "/webdriver/tests/switch_to_parent_frame": 0.79,
-    "/webdriver/tests/switch_to_window": 0.74,
-    "/webdriver/tests/take_screenshot": 0.67,
+    "/webdriver/tests/classic/accept_alert": 0.86,
+    "/webdriver/tests/classic/add_cookie": 0.73,
+    "/webdriver/tests/classic/back": 0.73,
+    "/webdriver/tests/classic/delete_all_cookies": 0.73,
+    "/webdriver/tests/classic/delete_cookie": 0.76,
+    "/webdriver/tests/classic/delete_session": 0.7,
+    "/webdriver/tests/classic/dismiss_alert": 0.7,
+    "/webdriver/tests/classic/element_clear": 0.71,
+    "/webdriver/tests/classic/element_click": 0.79,
+    "/webdriver/tests/classic/element_send_keys": 0.67,
+    "/webdriver/tests/classic/execute_async_script": 0.82,
+    "/webdriver/tests/classic/execute_script": 0.76,
+    "/webdriver/tests/classic/find_element": 0.62,
+    "/webdriver/tests/classic/find_element_from_element": 0.73,
+    "/webdriver/tests/classic/find_elements": 0.66,
+    "/webdriver/tests/classic/find_elements_from_element": 0.73,
+    "/webdriver/tests/classic/forward": 0.82,
+    "/webdriver/tests/classic/fullscreen_window": 0.76,
+    "/webdriver/tests/classic/get_active_element": 0.67,
+    "/webdriver/tests/classic/get_alert_text": 0.73,
+    "/webdriver/tests/classic/get_current_url": 0.76,
+    "/webdriver/tests/classic/get_element_attribute": 0.56,
+    "/webdriver/tests/classic/get_element_css_value": 0.73,
+    "/webdriver/tests/classic/get_element_property": 0.73,
+    "/webdriver/tests/classic/get_element_rect": 0.79,
+    "/webdriver/tests/classic/get_element_tag_name": 0.79,
+    "/webdriver/tests/classic/get_element_text": 0.52,
+    "/webdriver/tests/classic/get_named_cookie": 0.67,
+    "/webdriver/tests/classic/get_page_source": 0.7,
+    "/webdriver/tests/classic/get_timeouts": 0.79,
+    "/webdriver/tests/classic/get_title": 0.67,
+    "/webdriver/tests/classic/get_window_handles": 0.73,
+    "/webdriver/tests/classic/interface": 0.66,
+    "/webdriver/tests/classic/is_element_enabled": 0.54,
+    "/webdriver/tests/classic/is_element_selected": 0.6,
+    "/webdriver/tests/classic/maximize_window": 0.79,
+    "/webdriver/tests/classic/new_session": 0.54,
+    "/webdriver/tests/classic/new_window": 0.51,
+    "/webdriver/tests/classic/perform_actions": 0.66,
+    "/webdriver/tests/classic/permissions": 0.73,
+    "/webdriver/tests/classic/print": 0.86,
+    "/webdriver/tests/classic/refresh": 0.54,
+    "/webdriver/tests/classic/release_actions": 0.68,
+    "/webdriver/tests/classic/send_alert_text": 0.74,
+    "/webdriver/tests/classic/set_timeouts": 0.53,
+    "/webdriver/tests/classic/set_window_rect": 0.68,
+    "/webdriver/tests/classic/status": 0.74,
+    "/webdriver/tests/classic/switch_to_frame": 0.56,
+    "/webdriver/tests/classic/switch_to_parent_frame": 0.79,
+    "/webdriver/tests/classic/switch_to_window": 0.74,
+    "/webdriver/tests/classic/take_screenshot": 0.67,
     "/webmessaging/with-options": 0.55,
     "/webrtc": 0.9,
     "/websockets": 0.68,
