@@ -396,72 +396,73 @@ static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
   return capturer;
 }
 
-int32_t DesktopCaptureImpl::EnsureCapturer() {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-
-  if (mCapturer) {
-    // Already initialized
-
-    return 0;
-  }
-
-  DesktopCaptureOptions options = CreateDesktopCaptureOptions();
-
+static bool UsePipewire() {
 #if defined(WEBRTC_USE_PIPEWIRE)
-  if ((mDeviceType == CaptureDeviceType::Screen ||
-       mDeviceType == CaptureDeviceType::Window) &&
-      mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
-      webrtc::DesktopCapturer::IsRunningUnderWayland()) {
-    std::unique_ptr<DesktopCapturer> capturer =
-        DesktopCapturer::CreateGenericCapturer(options);
-    if (!capturer) {
-      return -1;
-    }
-
-    mCapturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
-                                                           options);
-
-    return 0;
-  }
+  return mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+         webrtc::DesktopCapturer::IsRunningUnderWayland();
+#else
+  return false;
 #endif
+}
 
-  if (mDeviceType == CaptureDeviceType::Screen) {
-    std::unique_ptr<DesktopCapturer> screenCapturer =
-        DesktopCapturer::CreateScreenCapturer(options);
-    if (!screenCapturer) {
-      return -1;
+static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
+    CaptureDeviceType aDeviceType, DesktopCapturer::SourceId aSourceId,
+    nsIThread** aOutThread) {
+  DesktopCaptureOptions options = CreateDesktopCaptureOptions();
+  std::unique_ptr<DesktopCapturer> capturer;
+
+  if ((aDeviceType == CaptureDeviceType::Screen ||
+       aDeviceType == CaptureDeviceType::Window) &&
+      UsePipewire()) {
+    capturer = DesktopCapturer::CreateGenericCapturer(options);
+    if (!capturer) {
+      return capturer;
     }
 
-    DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
-    screenCapturer->SelectSource(sourceId);
+    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
+  } else if (aDeviceType == CaptureDeviceType::Screen) {
+    capturer = DesktopCapturer::CreateScreenCapturer(options);
+    if (!capturer) {
+      return capturer;
+    }
 
-    mCapturer = std::make_unique<DesktopAndCursorComposer>(
-        std::move(screenCapturer), options);
-  } else if (mDeviceType == CaptureDeviceType::Window) {
+    capturer->SelectSource(aSourceId);
+
+    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
+  } else if (aDeviceType == CaptureDeviceType::Window) {
 #if defined(RTC_ENABLE_WIN_WGC)
     options.set_allow_wgc_capturer_fallback(true);
 #endif
-    std::unique_ptr<DesktopCapturer> windowCapturer =
-        DesktopCapturer::CreateWindowCapturer(options);
-    if (!windowCapturer) {
-      return -1;
+    capturer = DesktopCapturer::CreateWindowCapturer(options);
+    if (!capturer) {
+      return capturer;
     }
 
-    DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
-    windowCapturer->SelectSource(sourceId);
+    capturer->SelectSource(aSourceId);
 
-    mCapturer = std::make_unique<DesktopAndCursorComposer>(
-        std::move(windowCapturer), options);
-  } else if (mDeviceType == CaptureDeviceType::Browser) {
+    capturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                          options);
+  } else if (aDeviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
-    DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
-    mCapturer = CreateTabCapturer(options, sourceId);
-    if (!mCapturer) {
-      return -1;
-    }
+    capturer = CreateTabCapturer(options, aSourceId);
+  } else {
+    MOZ_ASSERT(!capturer);
+    return capturer;
   }
-  return 0;
+
+  MOZ_ASSERT(capturer);
+
+  nsIThreadManager::ThreadCreationOptions threadOptions;
+#ifdef XP_WIN
+  // Windows desktop capture needs a UI thread
+  threadOptions.isUiThread = true;
+#endif
+  NS_NewNamedThread("DesktopCapture", aOutThread, nullptr, threadOptions);
+
+  return capturer;
 }
 
 DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
@@ -529,26 +530,23 @@ int32_t DesktopCaptureImpl::StartCapture(
     return 0;
   }
 
-  if (int32_t err = EnsureCapturer(); err) {
-    return err;
+  DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
+  mCapturer = CreateDesktopCapturerAndThread(mDeviceType, sourceId,
+                                             getter_AddRefs(mCaptureThread));
+
+  MOZ_ASSERT(!mCapturer == !mCaptureThread);
+  if (!mCapturer) {
+    return -1;
   }
 
   mRequestedCapability = aCapability;
-
-  MOZ_DIAGNOSTIC_ASSERT(!mCaptureThread);
   mCaptureThreadChecker.Detach();
-  nsIThreadManager::ThreadCreationOptions options;
-#ifdef XP_WIN
-  // Windows desktop capture needs a UI thread
-  options.isUiThread = true;
-#endif
-  NS_NewNamedThread(
-      "DesktopCapture", getter_AddRefs(mCaptureThread),
-      NS_NewRunnableFunction(
-          "DesktopCaptureImpl::InitOnThread",
-          [this, self = RefPtr(this),
-           maxFps = std::max(aCapability.maxFPS, 1)] { InitOnThread(maxFps); }),
-      options);
+
+  MOZ_ALWAYS_SUCCEEDS(mCaptureThread->Dispatch(NS_NewRunnableFunction(
+      "DesktopCaptureImpl::InitOnThread",
+      [this, self = RefPtr(this), maxFps = std::max(aCapability.maxFPS, 1)] {
+        InitOnThread(maxFps);
+      })));
 
   mRunning = true;
 
@@ -557,7 +555,9 @@ int32_t DesktopCaptureImpl::StartCapture(
 
 bool DesktopCaptureImpl::FocusOnSelectedSource() {
   MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-  if (uint32_t err = EnsureCapturer(); err) {
+  if (!mCapturer) {
+    MOZ_ASSERT_UNREACHABLE(
+        "FocusOnSelectedSource must be called after StartCapture");
     return false;
   }
 
