@@ -2,7 +2,10 @@ import pytest
 
 from webdriver import MoveTargetOutOfBoundsException
 
-from tests.perform_actions.support.mouse import get_inview_center, get_viewport_rect
+from tests.classic.perform_actions.support.mouse import (
+    get_inview_center,
+    get_viewport_rect,
+)
 
 
 def get_click_coordinates(session):

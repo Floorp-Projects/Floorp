@@ -13,7 +13,9 @@ def element_click(session, element):
             element_id=element.id))
 
 def test_event_mousemove(session, url):
-    session.url = url("/webdriver/tests/element_click/support/test_click_wdspec.html")
+    session.url = url(
+        "/webdriver/tests/classic/element_click/support/test_click_wdspec.html"
+    )
 
     element = session.find.css('#outer', all=False)
     response = element_click(session, element)

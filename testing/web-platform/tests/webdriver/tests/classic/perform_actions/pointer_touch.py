@@ -3,8 +3,11 @@
 import pytest
 
 from webdriver.error import NoSuchWindowException, StaleElementReferenceException
-from tests.perform_actions.support.mouse import get_inview_center, get_viewport_rect
-from tests.perform_actions.support.refine import get_events
+from tests.classic.perform_actions.support.mouse import (
+    get_inview_center,
+    get_viewport_rect,
+)
+from tests.classic.perform_actions.support.refine import get_events
 
 
 def test_null_response_value(session, touch_chain):

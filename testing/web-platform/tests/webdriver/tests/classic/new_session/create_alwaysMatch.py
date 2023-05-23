@@ -5,7 +5,7 @@ import pytest
 from .conftest import product, flatten
 
 from tests.support.asserts import assert_success
-from tests.new_session.support.create import valid_data
+from tests.classic.new_session.support.create import valid_data
 
 
 @pytest.mark.parametrize("key,value", flatten(product(*item) for item in valid_data))
