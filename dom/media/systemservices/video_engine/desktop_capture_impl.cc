@@ -386,9 +386,10 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
 }
 
 static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-    const DesktopCaptureOptions& options, DesktopCapturer::SourceId aSourceId) {
+    const DesktopCaptureOptions& options, DesktopCapturer::SourceId aSourceId,
+    nsCOMPtr<nsISerialEventTarget> aCaptureThread) {
   std::unique_ptr<DesktopCapturer> capturer =
-      TabCapturerWebrtc::Create(aSourceId);
+      TabCapturerWebrtc::Create(aSourceId, std::move(aCaptureThread));
   if (capturer && options.detect_updated_region()) {
     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
   }
@@ -410,6 +411,20 @@ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
     nsIThread** aOutThread) {
   DesktopCaptureOptions options = CreateDesktopCaptureOptions();
   std::unique_ptr<DesktopCapturer> capturer;
+
+  auto ensureThread = [&]() {
+    if (*aOutThread) {
+      return *aOutThread;
+    }
+
+    nsIThreadManager::ThreadCreationOptions threadOptions;
+#ifdef XP_WIN
+    // Windows desktop capture needs a UI thread
+    threadOptions.isUiThread = true;
+#endif
+    NS_NewNamedThread("DesktopCapture", aOutThread, nullptr, threadOptions);
+    return *aOutThread;
+  };
 
   if ((aDeviceType == CaptureDeviceType::Screen ||
        aDeviceType == CaptureDeviceType::Window) &&
@@ -447,20 +462,14 @@ static std::unique_ptr<DesktopCapturer> CreateDesktopCapturerAndThread(
   } else if (aDeviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
-    capturer = CreateTabCapturer(options, aSourceId);
+    capturer = CreateTabCapturer(options, aSourceId, ensureThread());
   } else {
     MOZ_ASSERT(!capturer);
     return capturer;
   }
 
   MOZ_ASSERT(capturer);
-
-  nsIThreadManager::ThreadCreationOptions threadOptions;
-#ifdef XP_WIN
-  // Windows desktop capture needs a UI thread
-  threadOptions.isUiThread = true;
-#endif
-  NS_NewNamedThread("DesktopCapture", aOutThread, nullptr, threadOptions);
+  ensureThread();
 
   return capturer;
 }
@@ -534,6 +543,8 @@ int32_t DesktopCaptureImpl::StartCapture(
 
     return 0;
   }
+
+  MOZ_ASSERT(!mCaptureThread);
 
   DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
   std::unique_ptr capturer = CreateDesktopCapturerAndThread(
