@@ -1,5 +1,5 @@
 plugins {
-    id "com.jetbrains.python.envs" version "0.0.26"
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
 }
 
 apply plugin: 'com.android.application'

@@ -31,10 +31,17 @@ buildscript {
         classpath ComponentsDependencies.tools_androidgradle
         classpath ComponentsDependencies.tools_kotlingradle
     }
+
+    // Variables in plugins {} aren't directly supported. Hack around it by setting an
+    // intermediate variable which can pull from FenixDependencies.kt and be used later.
+    ext {
+        detekt_plugin = Versions.detekt
+        python_envs_plugin = Versions.python_envs_plugin
+    }
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.22.0")  // Check version number in `Versions.detekt` (DependenciesPlugin.kt)
+    id("io.gitlab.arturbosch.detekt").version("$detekt_plugin")
 }
 
 allprojects {
@@ -148,7 +155,7 @@ subprojects {
     afterEvaluate {
         if (it.hasProperty('android')) {
             jacoco {
-                toolVersion = "0.8.8"
+                toolVersion = Versions.jacoco
             }
 
             // Format test output
@@ -337,7 +344,7 @@ configurations {
 }
 
 dependencies {
-    ktlint("com.pinterest:ktlint:0.48.2") {
+    ktlint("com.pinterest:ktlint:${Versions.ktlint}") {
         attributes {
             attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
         }

@@ -1,17 +1,9 @@
 import org.apache.tools.ant.util.StringUtils
 import org.mozilla.fenix.gradle.tasks.ApkSizeTask
 
-// Variables in plugins {} aren't directly supported. Hack around it by setting an
-// intermediate variable which can pull from FenixDependencies.kt and be used later.
-buildscript {
-    ext {
-        protobuf_plugin_version = FenixVersions.protobuf_plugin
-    }
-}
-
 plugins {
-    id "com.jetbrains.python.envs" version "0.0.26"
-    id "com.google.protobuf" version "$protobuf_plugin_version"
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
+    id "com.google.protobuf" version "$protobuf_plugin"
 }
 
 apply plugin: 'com.android.application'
@@ -633,9 +625,9 @@ dependencies {
     implementation FenixDependencies.androidx_profileinstaller
 
     androidTestImplementation FenixDependencies.uiautomator
-    androidTestImplementation "tools.fastlane:screengrab:2.0.0"
+    androidTestImplementation FenixDependencies.fastlane
     // This Falcon version is added to maven central now required for Screengrab
-    androidTestImplementation 'com.jraska:falcon:2.2.0'
+    androidTestImplementation FenixDependencies.falcon
 
     androidTestImplementation FenixDependencies.androidx_compose_ui_test
 
@@ -678,7 +670,7 @@ dependencies {
         exclude group: 'org.apache.maven'
     }
 
-    testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
+    testImplementation FenixDependencies.maven_ant_tasks
     implementation project(':support-rusthttp')
 
     androidTestImplementation FenixDependencies.mockk_android
@@ -717,7 +709,7 @@ if (project.hasProperty("coverage")) {
     }
 
     jacoco {
-        toolVersion = "0.8.7"
+        toolVersion = FenixVersions.jacoco
     }
 
     android.applicationVariants.all { variant ->

@@ -32,10 +32,17 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+
+    // Variables in plugins {} aren't directly supported. Hack around it by setting an
+    // intermediate variable which can pull from FocusDependencies.kt and be used later.
+    ext {
+        detekt_plugin = FocusVersions.detekt_version
+        python_envs_plugin = FocusVersions.python_envs_plugin_version
+    }
 }
 
 plugins {
-    id "io.gitlab.arturbosch.detekt" version "1.22.0" // Variables in plugins {} aren't supported
+    id "io.gitlab.arturbosch.detekt" version "$detekt_plugin"
 }
 
 detekt {

@@ -17,11 +17,13 @@ object Versions {
     const val kotlin = "1.8.21"
     const val coroutines = "1.6.4"
     const val serialization = "1.5.1"
+    const val python_envs_plugin = "0.0.26"
 
     const val junit = "4.13.2"
     const val robolectric = "4.10.1"
     const val mockito = "5.3.1"
     const val maven_ant_tasks = "2.1.3"
+    const val jacoco = "0.8.8"
 
     // TO-DO: These could be kept in sync in the future
     const val mockwebserver = "3.10.0"
@@ -33,6 +35,7 @@ object Versions {
     // http://googlesamples.github.io/android-custom-lint-rules/api-guide/example.md.html#example:samplelintcheckgithubproject/lintversion?
     const val lint = "30.4.2"
     const val detekt = "1.22.0"
+    const val ktlint = "0.48.2"
 
     const val sentry_latest = "6.19.0"
 

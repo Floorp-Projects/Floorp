@@ -81,10 +81,18 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+
+    // Variables in plugins {} aren't directly supported. Hack around it by setting an
+    // intermediate variable which can pull from FenixDependencies.kt and be used later.
+    ext {
+        detekt_plugin = FenixVersions.detekt
+        protobuf_plugin = FenixVersions.protobuf_plugin
+        python_envs_plugin = FenixVersions.python_envs_plugin
+    }
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.22.0")
+    id("io.gitlab.arturbosch.detekt").version("$detekt_plugin")
 }
 
 allprojects {
@@ -209,7 +217,7 @@ configurations {
 }
 
 dependencies {
-    ktlint("com.pinterest:ktlint:0.48.2") {
+    ktlint("com.pinterest:ktlint:${FenixVersions.ktlint}") {
         attributes {
             attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
         }

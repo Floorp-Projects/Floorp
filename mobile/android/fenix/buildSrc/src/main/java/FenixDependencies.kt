@@ -8,6 +8,7 @@
 object FenixVersions {
     const val kotlin = "1.8.21"
     const val coroutines = "1.6.4"
+    const val python_envs_plugin = "0.0.26"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3
@@ -18,6 +19,12 @@ object FenixVersions {
     const val leakcanary = "2.11"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.22.0"
+    const val ktlint = "0.48.2"
+
+    const val maven_ant_tasks = "2.1.3"
+    const val jacoco = "0.8.7"
+    const val falcon = "2.2.0"
+    const val fastlane = "2.0.0"
 
     const val androidx_activity = "1.7.1"
     const val androidx_compose = "1.4.3"
@@ -128,6 +135,9 @@ object FenixDependencies {
     const val junit = "junit:junit:${FenixVersions.junit}"
     const val mockk = "io.mockk:mockk:${FenixVersions.mockk}"
     const val mockk_android = "io.mockk:mockk-android:${FenixVersions.mockk}"
+    const val maven_ant_tasks = "org.apache.maven:maven-ant-tasks:${FenixVersions.maven_ant_tasks}"
+    const val falcon = "com.jraska:falcon:${FenixVersions.falcon}"
+    const val fastlane = "tools.fastlane:screengrab:${FenixVersions.fastlane}"
 
     // --- START AndroidX test dependencies --- //
     // N.B.: the versions of these dependencies appear to be pinned together. To avoid bugs, they
