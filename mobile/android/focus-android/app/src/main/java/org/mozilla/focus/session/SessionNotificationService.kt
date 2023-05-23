@@ -134,7 +134,7 @@ class SessionNotificationService : Service() {
 
     private fun createNotificationIntent(): PendingIntent {
         val notificationIntentFlags =
-            IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
+            IntentUtils.defaultIntentPendingFlags() or PendingIntent.FLAG_ONE_SHOT
         val intent = Intent(this, SessionNotificationService::class.java)
         intent.action = ACTION_ERASE
 
@@ -143,7 +143,7 @@ class SessionNotificationService : Service() {
 
     private fun createOpenActionIntent(): PendingIntent {
         val openActionIntentFlags =
-            IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            IntentUtils.defaultIntentPendingFlags() or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
         intent.action = MainActivity.ACTION_OPEN
 
@@ -152,7 +152,7 @@ class SessionNotificationService : Service() {
 
     private fun createOpenAndEraseActionIntent(): PendingIntent {
         val openAndEraseActionIntentFlags =
-            IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
+            IntentUtils.defaultIntentPendingFlags() or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
 
         intent.action = MainActivity.ACTION_ERASE

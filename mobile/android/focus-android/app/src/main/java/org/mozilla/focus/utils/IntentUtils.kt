@@ -19,8 +19,8 @@ object IntentUtils {
      * This additional requirement improves your app's security.
      * FLAG_IMMUTABLE -> Flag indicating that the created PendingIntent should be immutable.
      */
-    val defaultIntentPendingFlags
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    fun defaultIntentPendingFlags(buildVersion: Int = Build.VERSION.SDK_INT): Int =
+        if (buildVersion >= Build.VERSION_CODES.M) {
             PendingIntent.FLAG_IMMUTABLE
         } else {
             0 // No flags. Default behavior.
