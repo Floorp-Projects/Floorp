@@ -18,6 +18,7 @@ def migrate(ctx):
     browser_properties = "browser/chrome/browser/browser.properties"
     browser_ftl = "browser/browser/browser.ftl"
     notifications = "browser/browser/addonNotifications.ftl"
+    extensions_ui = "browser/browser/extensionsUI.ftl"
     extensions = "toolkit/toolkit/global/extensions.ftl"
     permissions = "toolkit/toolkit/global/extensionPermissions.ftl"
 
@@ -431,6 +432,67 @@ def migrate(ctx):
                 value=REPLACE(
                     browser_properties,
                     "addonInstallErrorBlocklisted",
+                    {"%1$S": VARIABLE_REFERENCE("addonName")},
+                ),
+            ),
+        ],
+    )
+
+    ctx.add_transforms(
+        extensions_ui,
+        extensions_ui,
+        [
+            FTL.Message(
+                id=FTL.Identifier("webext-perms-learn-more"),
+                value=COPY(browser_properties, "webextPerms.learnMore2"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webext-default-search-description"),
+                value=REPLACE(
+                    browser_properties,
+                    "webext.defaultSearch.description",
+                    {
+                        "%1$S": VARIABLE_REFERENCE("addonName"),
+                        "%2$S": VARIABLE_REFERENCE("currentEngine"),
+                        "%3$S": VARIABLE_REFERENCE("newEngine"),
+                    },
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webext-default-search-yes"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_properties, "webext.defaultSearchYes.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(
+                            browser_properties, "webext.defaultSearchYes.accessKey"
+                        ),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("webext-default-search-no"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("label"),
+                        value=COPY(browser_properties, "webext.defaultSearchNo.label"),
+                    ),
+                    FTL.Attribute(
+                        id=FTL.Identifier("accesskey"),
+                        value=COPY(
+                            browser_properties, "webext.defaultSearchNo.accessKey"
+                        ),
+                    ),
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("addon-post-install-message"),
+                value=REPLACE(
+                    browser_properties,
+                    "addonPostInstall.message3",
                     {"%1$S": VARIABLE_REFERENCE("addonName")},
                 ),
             ),
