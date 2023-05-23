@@ -2,9 +2,7 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-var EXPORTED_SYMBOLS = ["ConsoleTest"];
-
-var ConsoleTest = {
+export var ConsoleTest = {
   go(dumpFunction) {
     console.log("Hello world!");
     console.createInstance().log("Hello world!");
