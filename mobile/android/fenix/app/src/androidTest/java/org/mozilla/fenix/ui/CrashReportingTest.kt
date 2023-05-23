@@ -77,7 +77,6 @@ class CrashReportingTest {
         }
     }
 
-    @Ignore("Failure: https://bugzilla.mozilla.org/show_bug.cgi?id=1812075")
     @SmokeTest
     @Test
     fun useAppWhileTabIsCrashedTest() {
