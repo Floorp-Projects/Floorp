@@ -31,14 +31,17 @@
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 #include "modules/video_capture/video_capture.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
+#include "tab_capturer.h"
 
 using mozilla::NewRunnableMethod;
+using mozilla::TabCapturerWebrtc;
 using mozilla::TimeDuration;
 using mozilla::camera::CaptureDeviceType;
 using mozilla::camera::CaptureEngine;
@@ -382,6 +385,16 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   return options;
 }
 
+static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
+    const DesktopCaptureOptions& options) {
+  std::unique_ptr<DesktopCapturer> capturer = TabCapturerWebrtc::Create();
+  if (capturer && options.detect_updated_region()) {
+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+  }
+
+  return capturer;
+}
+
 int32_t DesktopCaptureImpl::EnsureCapturer() {
   MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
 
@@ -441,7 +454,7 @@ int32_t DesktopCaptureImpl::EnsureCapturer() {
   } else if (mDeviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
-    mCapturer = DesktopCapturer::CreateTabCapturer(options);
+    mCapturer = CreateTabCapturer(options);
     if (!mCapturer) {
       return -1;
     }
