@@ -105,10 +105,13 @@ var gSearchResultsPane = {
     if (!this.categoriesInitialized) {
       this.categoriesInitialized = true;
       // Each element of gCategoryInits is a name
-      for (let [, /* name */ category] of gCategoryInits) {
-        if (!category.inited) {
-          await category.init();
-        }
+      for (let category of gCategoryInits.values()) {
+        category.init();
+      }
+      if (document.hasPendingL10nMutations) {
+        await new Promise(r =>
+          document.addEventListener("L10nMutationsFinished", r, { once: true })
+        );
       }
     }
   },
