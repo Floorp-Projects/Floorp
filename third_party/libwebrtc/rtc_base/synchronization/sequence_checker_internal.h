@@ -50,7 +50,6 @@ class RTC_EXPORT SequenceCheckerImpl {
   mutable bool attached_ RTC_GUARDED_BY(lock_);
   mutable rtc::PlatformThreadRef valid_thread_ RTC_GUARDED_BY(lock_);
   mutable const TaskQueueBase* valid_queue_ RTC_GUARDED_BY(lock_);
-  mutable const void* valid_system_queue_ RTC_GUARDED_BY(lock_);
 };
 
 // Do nothing implementation, for use in release mode.
