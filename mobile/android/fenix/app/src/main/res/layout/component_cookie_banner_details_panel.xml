@@ -92,7 +92,7 @@
         android:gravity="center"
         android:minHeight="48dp"
         android:layout_marginEnd="16dp"
-        android:text="@string/cookie_banner_handling_details_site_is_not_supported_request_support_button"
+        android:text="@string/cookie_banner_handling_details_site_is_not_supported_request_support_button_2"
         android:textAllCaps="true"
         android:textColor="@color/fx_mobile_text_color_accent"
         android:textSize="14sp"
