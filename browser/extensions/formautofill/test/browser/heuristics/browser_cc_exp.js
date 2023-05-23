@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "heuristics_cc_exp.html",
@@ -55,5 +55,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../fixtures/"
+  "fixtures/"
 );

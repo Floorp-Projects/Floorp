@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "Checkout_ShippingAddress.html",
@@ -84,5 +84,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/Macys/"
+  "fixtures/third_party/Macys/"
 );
