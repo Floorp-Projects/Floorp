@@ -122,7 +122,6 @@ void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* aCallback) {
   mCallback = aCallback;
   mCallbackWorker = TaskQueue::Create(do_AddRef(GetCurrentSerialEventTarget()),
                                       "TabCapturerWebrtc::mCallbackThread");
-  CaptureFrame();
 }
 
 void TabCapturerWebrtc::CaptureFrame() {
