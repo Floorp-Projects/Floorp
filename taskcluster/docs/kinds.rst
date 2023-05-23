@@ -34,27 +34,25 @@ Many builds must be signed. The build-signing task takes the unsigned `build`
 kind artifacts and passes them through signingscriptworker to a signing server
 and returns signed results.
 
-For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
-
-build-notarization-part-1
--------------------------
-
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
-
-build-notarization-poller
--------------------------
-
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
-
 build-mac-signing
 -----------------
 
-Mac signing without notarization
+Mac signing without notarization.
+
+Uses a self-signed certificate on level 1 environments.
+
+Shippable downstream tasks should use artifacts from build-mac-notarization.
 
 build-mac-notarization
 ----------------------
 
-Mac notarization on signinscript (linux) using rcodesign
+Mac notarization on signingscript (linux) using rcodesign.
+
+Only available in production environments, as Apple doesn't offer a test
+endpoint for notarizing apps.
+
+Downstream tasks switch to build-mac-signing in non-shippable builds or level 1
+environments.
 
 artifact-build
 --------------
@@ -96,27 +94,25 @@ passes them to signing servers to have their contents signed appropriately, base
 on an appropriate signing format. One signing job is created for each shippable-l10n
 job (usually chunked).
 
-For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
-
 shippable-l10n-mac-signing
 --------------------------
 
-Mac signing without notarization
+Mac signing without notarization.
+
+Uses a self-signed certificate on level 1 environments.
+
+Shippable downstream tasks should use artifacts from build-mac-notarization.
 
 shippable-l10n-mac-notarization
 -------------------------------
 
-Mac notarization on signinscript (linux) using rcodesign
+Mac notarization on signingscript (linux) using rcodesign.
 
-shippable-l10n-notarization-part-1
-----------------------------------
+Only available in production environments, as Apple doesn't offer a test
+endpoint for notarizing apps.
 
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
-
-shippable-l10n-notarization-poller
-----------------------------------
-
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
+Downstream tasks switch to build-mac-signing in non-shippable builds or level 1
+environments.
 
 source-test
 -----------
@@ -466,17 +462,25 @@ release-partner-repack-signing
 ------------------------------
 Internal signing of partner repacks.
 
-For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
+release-partner-repack-mac-signing
+----------------------------------
 
-release-partner-repack-notarization-part-1
-------------------------------------------
+Mac signing without notarization.
 
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
+Uses a self-signed certificate on level 1 environments.
 
-release-partner-repack-notarization-poller
-------------------------------------------
+Shippable downstream tasks should use artifacts from build-mac-notarization.
 
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
+release-partner-repack-mac-notarization
+---------------------------------------
+
+Mac notarization on signingscript (linux) using rcodesign.
+
+Only available in production environments, as Apple doesn't offer a test
+endpoint for notarizing apps.
+
+Downstream tasks switch to build-mac-signing in non-shippable builds or level 1
+environments.
 
 release-partner-repack-repackage
 --------------------------------
@@ -510,18 +514,6 @@ release-eme-free-repack-signing
 -------------------------------
 Internal signing of eme-free repacks
 
-For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
-
-release-eme-free-repack-notarization-part-1
--------------------------------------------
-
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the first task, which signs the files and submits them for notarization.
-
-release-eme-free-repack-notarization-poller
--------------------------------------------
-
-We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
-
 release-eme-free-repack-repackage
 ---------------------------------
 Repackaging of eme-free repacks.
@@ -537,6 +529,26 @@ Moves the eme-free repacks to S3 buckets.
 release-eme-free-repack-beetmover-checksums
 -------------------------------------------
 Moves the beetmover checksum for eme-free repacks to S3 buckets.
+
+release-eme-free-repack-mac-signing
+-----------------------------------
+
+Mac signing without notarization.
+
+Uses a self-signed certificate on level 1 environments.
+
+Shippable downstream tasks should use artifacts from build-mac-notarization.
+
+release-eme-free-repack-mac-notarization
+----------------------------------------
+
+Mac notarization on signingscript (linux) using rcodesign.
+
+Only available in production environments, as Apple doesn't offer a test
+endpoint for notarizing apps.
+
+Downstream tasks switch to build-mac-signing in non-shippable builds or level 1
+environments.
 
 repackage
 ---------

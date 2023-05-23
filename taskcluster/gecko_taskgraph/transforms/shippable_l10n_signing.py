@@ -19,7 +19,6 @@ transforms = TransformSequence()
 @transforms.add
 def make_signing_description(config, jobs):
     for job in jobs:
-
         dep_job = job["primary-dependency"]
         job["depname"] = dep_job.label
 
@@ -56,7 +55,10 @@ def define_upstream_artifacts(config, jobs):
         upstream_artifacts = []
         for spec in locale_specifications:
             upstream_task_type = "l10n"
-            if "notarization" in upstream_artifact_task.kind:
+            if upstream_artifact_task.kind.endswith(
+                ("-mac-notarization", "-mac-signing")
+            ):
+                # Upstream is mac signing or notarization
                 upstream_task_type = "scriptworker"
             upstream_artifacts.append(
                 {

@@ -53,6 +53,29 @@ transforms = TransformSequence()
 transforms.add_validate(beetmover_description_schema)
 
 
+def get_task_by_suffix(tasks, suffix):
+    """
+    Given tasks<dict>, returns the key to the task with provided suffix<str>
+    Raises exception if more than one task is found
+
+    Args:
+        tasks (Dict): Map of labels to tasks
+        suffix (str): Suffix for the desired task
+
+    Returns
+        str: The key to the desired task
+    """
+    labels = []
+    for label in tasks.keys():
+        if label.endswith(suffix):
+            labels.append(label)
+    if len(labels) > 1:
+        raise Exception(
+            f"There should only be a single task with suffix: {suffix} - found {len(labels)}"
+        )
+    return labels[0]
+
+
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
@@ -95,6 +118,17 @@ def make_task_description(config, jobs):
             mar_signing_name = "mar-signing-l10n"
             attribution_name = "attribution-l10n"
             repackage_deb_name = "repackage-deb-l10n"
+
+        # The upstream "signing" task for macosx is either *-mac-signing or *-mac-notarization
+        if attributes.get("build_platform", "").startswith("macosx"):
+            # We use the signing task on level 1 and notarization on level 3
+            if int(config.params.get("level", 0)) < 3:
+                signing_name = get_task_by_suffix(upstream_deps, "-mac-signing")
+            else:
+                signing_name = get_task_by_suffix(upstream_deps, "-mac-notarization")
+            if not signing_name:
+                raise Exception("Could not find upstream kind for mac signing.")
+
         dependencies = {
             "build": upstream_deps[build_name],
             "repackage": upstream_deps[repackage_name],
