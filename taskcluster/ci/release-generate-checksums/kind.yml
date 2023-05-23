@@ -61,10 +61,10 @@ jobs:
                 by-release-level:
                     production:
                         stage_product: "firefox"
-                        bucket_name: "net-mozaws-prod-delivery-firefox"
+                        bucket_name: "moz-fx-productdelivery-pr-38b5-productdelivery"
                     staging:
                         stage_product: "firefox"
-                        bucket_name: "net-mozaws-stage-delivery-firefox"
+                        bucket_name: "moz-fx-productdelivery-no-7d6a-productdelivery"
         treeherder:
             platform: firefox-release/opt
 
@@ -78,9 +78,9 @@ jobs:
                 by-release-level:
                     production:
                         stage_product: "devedition"
-                        bucket_name: "net-mozaws-prod-delivery-archive"
+                        bucket_name: "moz-fx-productdelivery-pr-38b5-productdelivery"
                     staging:
                         stage_product: "devedition"
-                        bucket_name: "net-mozaws-stage-delivery-archive"
+                        bucket_name: "moz-fx-productdelivery-no-7d6a-productdelivery"
         treeherder:
             platform: devedition-release/opt
