@@ -797,6 +797,7 @@ class ContentHandler {
     Services.ppmm.sharedData.set("SearchTelemetry:ProviderInfo", providerInfo);
 
     Services.obs.addObserver(this, "http-on-examine-response");
+    Services.obs.addObserver(this, "http-on-examine-cached-response");
     Services.obs.addObserver(this, "http-on-stop-request");
   }
 
@@ -805,6 +806,7 @@ class ContentHandler {
    */
   uninit() {
     Services.obs.removeObserver(this, "http-on-examine-response");
+    Services.obs.removeObserver(this, "http-on-examine-cached-response");
     Services.obs.removeObserver(this, "http-on-stop-request");
   }
 
@@ -895,6 +897,7 @@ class ContentHandler {
         this._reportChannelBandwidth(aSubject);
         break;
       case "http-on-examine-response":
+      case "http-on-examine-cached-response":
         this.observeActivity(aSubject);
         break;
     }
