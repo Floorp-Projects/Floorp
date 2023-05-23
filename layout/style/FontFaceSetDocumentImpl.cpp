@@ -145,7 +145,7 @@ uint64_t FontFaceSetDocumentImpl::GetInnerWindowID() {
 }
 
 nsPresContext* FontFaceSetDocumentImpl::GetPresContext() const {
-  MOZ_ASSERT(NS_IsMainThread());
+  mozilla::AssertIsMainThreadOrServoFontMetricsLocked();
   if (!mDocument) {
     return nullptr;
   }
