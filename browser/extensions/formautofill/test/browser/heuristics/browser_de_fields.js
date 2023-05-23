@@ -9,20 +9,20 @@ add_heuristic_tests(
       expectedResult: [
         {
           fields: [
-            { fieldName: "cc-name",      reason: "fathom" },
-            { fieldName: "cc-type",      reason: "regex-heuristic" },
-            { fieldName: "cc-number",    reason: "fathom" },
+            { fieldName: "cc-name", reason: "fathom" },
+            { fieldName: "cc-type", reason: "regex-heuristic" },
+            { fieldName: "cc-number", reason: "fathom" },
             { fieldName: "cc-exp-month", reason: "regex-heuristic" },
-            { fieldName: "cc-exp-year",  reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
           ],
         },
         {
           fields: [
-            { fieldName: "cc-name",      reason: "fathom" },
-            { fieldName: "cc-type",      reason: "regex-heuristic" },
-            { fieldName: "cc-number",    reason: "fathom" },
+            { fieldName: "cc-name", reason: "fathom" },
+            { fieldName: "cc-type", reason: "regex-heuristic" },
+            { fieldName: "cc-number", reason: "fathom" },
             { fieldName: "cc-exp-month", reason: "regex-heuristic" },
-            { fieldName: "cc-exp-year",  reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
           ],
         },
       ],
