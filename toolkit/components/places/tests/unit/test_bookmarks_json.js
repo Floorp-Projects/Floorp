@@ -144,6 +144,49 @@ add_task(async function test_import_bookmarks_disallowed_url() {
   );
 });
 
+add_task(async function test_import_bookmarks_count() {
+  // Ensure the bookmarks count is correct when importing in various cases
+  await PlacesUtils.bookmarks.eraseEverything();
+  let bookmarksFile = PathUtils.join(do_get_cwd().path, "bookmarks.json");
+  bookmarksExportedFile = PathUtils.join(
+    PathUtils.profileDir,
+    "bookmarks.exported.json"
+  );
+
+  let count = await BookmarkJSONUtils.importFromFile(bookmarksFile, {
+    replace: true,
+  });
+  Assert.equal(
+    count,
+    13,
+    "There should be 13 imported bookmarks when importing from an empty database"
+  );
+
+  await BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
+  count = -1;
+  count = await BookmarkJSONUtils.importFromFile(bookmarksExportedFile, {
+    replace: true,
+  });
+  Assert.equal(
+    count,
+    13,
+    "There should be 13 imported bookmarks when replacing existing bookmarks"
+  );
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  count = -1;
+  let bookmarksUrl = PathUtils.toFileURI(bookmarksFile);
+  count = await BookmarkJSONUtils.importFromURL(bookmarksUrl);
+  Assert.equal(
+    count,
+    13,
+    "There should be 13 imported bookmarks when importing from a URL"
+  );
+
+  // Clean up task
+  await PlacesUtils.bookmarks.eraseEverything();
+});
+
 add_task(async function test_import_bookmarks() {
   let bookmarksFile = PathUtils.join(do_get_cwd().path, "bookmarks.json");
 
