@@ -35,8 +35,6 @@ android {
         buildConfigField "String", "GIT_HASH", "\"\""
 
         vectorDrawables.useSupportLibrary = true
-
-        multiDexEnabled true
     }
 
     compileOptions {

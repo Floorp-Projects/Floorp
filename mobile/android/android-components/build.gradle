@@ -105,14 +105,6 @@ subprojects {
             }
         }
 
-        // Enforce that all (transitive) dependencies are using the same support library version as we do.
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'com.android.support'
-                    && !details.requested.name.contains('multidex') ) {
-                details.useVersion Versions.support_libraries
-            }
-        }
-
         resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
             def toBeSelected = candidates.find { it.id instanceof ModuleComponentIdentifier && it.id.module.contains('geckoview') }
             if (toBeSelected != null) {
