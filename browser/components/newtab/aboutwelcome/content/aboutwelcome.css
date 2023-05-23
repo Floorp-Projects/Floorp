@@ -511,6 +511,7 @@ html {
 .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .arrow-icon {
   -moz-context-properties: fill;
   fill: currentColor;
+  text-decoration: none;
 }
 .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .arrow-icon::after {
   content: "";
@@ -528,10 +529,10 @@ html {
   font-size: 0.72em;
   font-weight: 600;
   padding: 8px 16px;
+  text-decoration: none;
   color: var(--in-content-button-text-color);
 }
 .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover {
-  text-decoration: none;
   background-color: var(--in-content-button-background-hover) !important;
   color: var(--in-content-button-text-color-hover);
 }
@@ -623,15 +624,20 @@ html {
   margin: 8px 0;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link {
-  color: var(--in-content-link-color);
   background: none;
   padding: 0;
   font-weight: normal;
   text-decoration: underline;
   cursor: pointer;
+  color: var(--in-content-link-color);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:hover {
+  text-decoration: none;
   color: var(--in-content-link-color-hover);
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
+  text-decoration: none;
+  color: var(--in-content-link-color-active);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.secondary:hover {
   background-color: var(--in-content-button-background-hover);
@@ -652,15 +658,16 @@ html {
   font-size: 0.72em;
   font-weight: 600;
   padding: 8px 16px;
+  text-decoration: none;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover {
-  text-decoration: none;
   background-color: var(--in-content-button-background-hover) !important;
   color: var(--in-content-button-text-color-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon {
   -moz-context-properties: fill;
   fill: currentColor;
+  text-decoration: none;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon::after {
   content: "";
@@ -944,6 +951,19 @@ html {
     text-align: center;
   }
 }
+.onboardingContainer .text-link {
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--in-content-link-color);
+}
+.onboardingContainer .text-link:hover {
+  text-decoration: none;
+  color: var(--in-content-link-color-hover);
+}
+.onboardingContainer .text-link:active {
+  text-decoration: none;
+  color: var(--in-content-link-color-active);
+}
 .onboardingContainer .welcome-text {
   display: flex;
   flex-direction: column;
@@ -1211,9 +1231,18 @@ html {
 .onboardingContainer .mobile-downloads .email-link {
   font-size: 16px;
   font-weight: 400;
-  text-decoration: underline;
-  color: var(--in-content-link-color);
   background: none;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--in-content-link-color);
+}
+.onboardingContainer .mobile-downloads .email-link:hover {
+  text-decoration: none;
+  color: var(--in-content-link-color-hover);
+}
+.onboardingContainer .mobile-downloads .email-link:active {
+  text-decoration: none;
+  color: var(--in-content-link-color-active);
 }
 .onboardingContainer .mobile-downloads .email-link:hover {
   background: none;
