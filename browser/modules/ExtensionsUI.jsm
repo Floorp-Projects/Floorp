@@ -27,10 +27,14 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OriginControls: "resource://gre/modules/ExtensionPermissions.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () => new Localization(["browser/extensionsUI.ftl"], true)
+);
+
 const DEFAULT_EXTENSION_ICON =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-
-const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -288,26 +292,30 @@ var ExtensionsUI = {
       let { browser, name, icon, respond, currentEngine, newEngine } =
         subject.wrappedJSObject;
 
-      let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
+      const [searchDesc, searchYes, searchNo] = lazy.l10n.formatMessagesSync([
+        {
+          id: "webext-default-search-description",
+          args: { addonName: "<>", currentEngine, newEngine },
+        },
+        "webext-default-search-yes",
+        "webext-default-search-no",
+      ]);
 
-      let strings = {};
-      strings.acceptText = bundle.GetStringFromName(
-        "webext.defaultSearchYes.label"
-      );
-      strings.acceptKey = bundle.GetStringFromName(
-        "webext.defaultSearchYes.accessKey"
-      );
-      strings.cancelText = bundle.GetStringFromName(
-        "webext.defaultSearchNo.label"
-      );
-      strings.cancelKey = bundle.GetStringFromName(
-        "webext.defaultSearchNo.accessKey"
-      );
-      strings.addonName = name;
-      strings.text = bundle.formatStringFromName(
-        "webext.defaultSearch.description",
-        ["<>", currentEngine, newEngine]
-      );
+      const strings = { addonName: name, text: searchDesc.value };
+      for (let attr of searchYes.attributes) {
+        if (attr.name === "label") {
+          strings.acceptText = attr.value;
+        } else if (attr.name === "accesskey") {
+          strings.acceptKey = attr.value;
+        }
+      }
+      for (let attr of searchNo.attributes) {
+        if (attr.name === "label") {
+          strings.cancelText = attr.value;
+        } else if (attr.name === "accesskey") {
+          strings.cancelKey = attr.value;
+        }
+      }
 
       this.showDefaultSearchPrompt(browser, strings, icon).then(respond);
     }
@@ -315,13 +323,11 @@ var ExtensionsUI = {
 
   // Create a set of formatted strings for a permission prompt
   _buildStrings(info) {
-    let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-
-    let strings = lazy.ExtensionData.formatPermissionStrings(info, {
+    const strings = lazy.ExtensionData.formatPermissionStrings(info, {
       collapseOrigins: true,
     });
     strings.addonName = info.addon.name;
-    strings.learnMore = bundle.GetStringFromName("webextPerms.learnMore2");
+    strings.learnMore = lazy.l10n.formatValueSync("webext-perms-learn-more");
     return strings;
   },
 
@@ -505,11 +511,10 @@ var ExtensionsUI = {
 
   async showInstallNotification(target, addon) {
     let { window } = getTabBrowser(target);
-    let bundle = window.gNavigatorBundle;
 
-    let message = bundle.getFormattedString("addonPostInstall.message3", [
-      "<>",
-    ]);
+    const message = await lazy.l10n.formatValue("addon-post-install-message", {
+      addonName: "<>",
+    });
     const permissionName = "internal:privateBrowsingAllowed";
     const { permissions } = await lazy.ExtensionPermissions.get(addon.id);
     const hasIncognito = permissions.includes(permissionName);
