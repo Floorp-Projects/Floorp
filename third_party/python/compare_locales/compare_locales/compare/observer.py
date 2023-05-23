@@ -4,15 +4,12 @@
 
 'Mozilla l10n compare locales tool'
 
-from __future__ import absolute_import
-from __future__ import print_function
 from collections import defaultdict
-import six
 
 from .utils import Tree
 
 
-class Observer(object):
+class Observer:
 
     def __init__(self, quiet=0, filter=None):
         '''Create Observer
@@ -40,7 +37,7 @@ class Observer(object):
 
     def _dictify(self, d):
         plaindict = {}
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             plaindict[k] = dict(v)
         return plaindict
 
@@ -61,7 +58,7 @@ class Observer(object):
         if (self.filter is not None and
                 self.filter(file, entity='') == 'ignore'):
             return
-        for category, value in six.iteritems(stats):
+        for category, value in stats.items():
             if category == 'errors':
                 # updateStats isn't called with `errors`, but make sure
                 # we handle this if that changes
@@ -104,7 +101,7 @@ class Observer(object):
 
 class ObserverList(Observer):
     def __init__(self, quiet=0):
-        super(ObserverList, self).__init__(quiet=quiet)
+        super().__init__(quiet=quiet)
         self.observers = []
 
     def __iter__(self):
@@ -117,14 +114,14 @@ class ObserverList(Observer):
         """Check observer for the found data, and if it's
         not to ignore, notify stat_observers.
         """
-        rvs = set(
+        rvs = {
             observer.notify(category, file, data)
             for observer in self.observers
-            )
+            }
         if all(rv == 'ignore' for rv in rvs):
             return 'ignore'
         # our return value doesn't count
-        super(ObserverList, self).notify(category, file, data)
+        super().notify(category, file, data)
         rvs.discard('ignore')
         if 'error' in rvs:
             return 'error'
@@ -137,7 +134,7 @@ class ObserverList(Observer):
         """
         for observer in self.observers:
             observer.updateStats(file, stats)
-        super(ObserverList, self).updateStats(file, stats)
+        super().updateStats(file, stats)
 
     def serializeDetails(self):
 
@@ -187,10 +184,10 @@ class ObserverList(Observer):
             'keys',
         )
         leads = [
-            '{:12}'.format(k) for k in keys
+            f'{k:12}' for k in keys
         ]
         out = []
-        for locale, summaries in sorted(six.iteritems(summaries)):
+        for locale, summaries in sorted(summaries.items()):
             if locale:
                 out.append(locale + ':')
             segment = [''] * len(keys)
@@ -204,9 +201,9 @@ class ObserverList(Observer):
                 if row.strip()
             ]
 
-            total = sum([summaries[-1].get(k, 0)
-                         for k in ['changed', 'unchanged', 'report', 'missing']
-                         ])
+            total = sum(summaries[-1].get(k, 0)
+                        for k in ['changed', 'unchanged', 'report', 'missing']
+                        )
             rate = 0
             if total:
                 rate = (('changed' in summary and summary['changed'] * 100) or

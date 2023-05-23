@@ -66,9 +66,9 @@ click==7.1.2 ; python_version >= "3.7" and python_version < "4.0" \
 colorama==0.4.5 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da \
     --hash=sha256:e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4
-compare-locales==8.2.1 ; python_version >= "3.7" and python_version < "4" \
-    --hash=sha256:470d50d96c68f8e147daa3d70f29a7b750adefea450c5fa07e0f666c8083d854 \
-    --hash=sha256:e6a1610151d357e74ee6c1f5e944f1868e449f83e478c84d92f7b86132f721d7
+compare-locales==9.0.1 ; python_version >= "3.7" and python_version < "4" \
+    --hash=sha256:2de0f1d382749fffa6a482d462daff0d70bbc99d48520a0bf8459b22dc7fe9da \
+    --hash=sha256:eda953796841cbfab508ee35f7613a38ae7fbeed48bd26bf5cda9063bd638f06
 cookies==2.2.1 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:15bee753002dff684987b8df8c235288eb8d45f8191ae056254812dfd42c81d3 \
     --hash=sha256:d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e
@@ -86,11 +86,12 @@ ecdsa==0.15 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277
 esprima==4.0.1 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:08db1a876d3c2910db9cfaeb83108193af5411fc3a3a66ebefacd390d21323ee
-fluent-migrate==0.11 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:3b93fdba9cbc8702d160367ba3a0d5c120707fdde752af35aecf516ce80ed252
-fluent-syntax==0.18.1 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:0e63679fa4f1b3042565220a5127b4bab842424f07d6a13c12299e3b3835486a \
-    --hash=sha256:3a55f5e605d1b029a65cc8b6492c86ec4608e15447e73db1495de11fd46c104f
+fluent-migrate==0.12.0 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:926e69e94975521a974b206e242a479310c2cbca1865ca26bf40fa3c7a357338 \
+    --hash=sha256:e3564c92d1f53700e98792f1be1ff954488d431ff9f5ec290a4ab13b5de69487
+fluent-syntax==0.19.0 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:920326d7f46864b9758f0044e9968e3112198bc826acee16ddd8f11d359004fd \
+    --hash=sha256:b352b3475fac6c6ed5f06527921f432aac073d764445508ee5218aeccc7cc5c4
 giturlparse==0.10.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7 \
     --hash=sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337

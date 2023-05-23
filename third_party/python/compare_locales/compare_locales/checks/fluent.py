@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 from collections import defaultdict
 
@@ -69,18 +67,18 @@ class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
             (ftl.Span, ftl.Annotation, ftl.BaseComment)
         ):
             return
-        super(ReferenceMessageVisitor, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_Message(self, node):
         if node.value is not None:
             self.message_has_value = True
-        super(ReferenceMessageVisitor, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_Attribute(self, node):
         self.attribute_positions[node.id.name] = node.span.start
         old_refs = self.refs
         self.refs = self.entry_refs[node.id.name]
-        super(ReferenceMessageVisitor, self).generic_visit(node)
+        super().generic_visit(node)
         self.refs = old_refs
         if node.id.name != 'style':
             return
@@ -108,7 +106,7 @@ class ReferenceMessageVisitor(Visitor, CSSCheckMixin):
         self.refs['-' + node.id.name] = 'term-ref'
 
 
-class GenericL10nChecks(object):
+class GenericL10nChecks:
     '''Helper Mixin for checks shared between Terms and Messages.'''
     def check_duplicate_attributes(self, node):
         warned = set()
@@ -177,7 +175,7 @@ class GenericL10nChecks(object):
             # `other` is used for all kinds of things.
             check_plurals = known_plurals.copy()
             check_plurals.discard('other')
-            given_plurals = set(serialize_variant_key(v.key) for v in variants)
+            given_plurals = {serialize_variant_key(v.key) for v in variants}
             if given_plurals & check_plurals:
                 missing_plurals = sorted(known_plurals - given_plurals)
                 if missing_plurals:
@@ -193,7 +191,7 @@ class GenericL10nChecks(object):
 
 class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
     def __init__(self, locale, reference):
-        super(L10nMessageVisitor, self).__init__()
+        super().__init__()
         self.locale = locale
         # Overload refs to map to sets, just store what we found
         # References to Messages, their Attributes, and Terms
@@ -209,7 +207,7 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
 
     def visit_Message(self, node):
         self.check_duplicate_attributes(node)
-        super(L10nMessageVisitor, self).visit_Message(node)
+        super().visit_Message(node)
         if self.message_has_value and not self.reference.message_has_value:
             self.messages.append(
                 ('error', node.value.span.start, MSGS['obsolete-value'])
@@ -241,7 +239,7 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
     def visit_Attribute(self, node):
         old_reference_refs = self.reference_refs
         self.reference_refs = self.reference.entry_refs[node.id.name]
-        super(L10nMessageVisitor, self).visit_Attribute(node)
+        super().visit_Attribute(node)
         self.reference_refs = old_reference_refs
         if node.id.name != 'style' or self.css_styles == 'skip':
             return
@@ -258,7 +256,7 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
             self.messages.append((cat, msg, pos))
 
     def visit_SelectExpression(self, node):
-        super(L10nMessageVisitor, self).visit_SelectExpression(node)
+        super().visit_SelectExpression(node)
         self.check_variants(node.variants)
 
     def visit_MessageReference(self, node):
@@ -287,7 +285,7 @@ class L10nMessageVisitor(GenericL10nChecks, ReferenceMessageVisitor):
 
 class TermVisitor(GenericL10nChecks, Visitor):
     def __init__(self, locale):
-        super(TermVisitor, self).__init__()
+        super().__init__()
         self.locale = locale
         self.messages = []
 
@@ -297,17 +295,17 @@ class TermVisitor(GenericL10nChecks, Visitor):
             (ftl.Span, ftl.Annotation, ftl.BaseComment)
         ):
             return
-        super(TermVisitor, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_Message(self, node):
         raise RuntimeError("Should not use TermVisitor for Messages")
 
     def visit_Term(self, node):
         self.check_duplicate_attributes(node)
-        super(TermVisitor, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_SelectExpression(self, node):
-        super(TermVisitor, self).generic_visit(node)
+        super().generic_visit(node)
         self.check_variants(node.variants)
 
 
@@ -338,10 +336,7 @@ class FluentChecker(Checker):
         return l10n_data.messages
 
     def check(self, refEnt, l10nEnt):
-        for encoding_trouble in super(
-            FluentChecker, self
-        ).check(refEnt, l10nEnt):
-            yield encoding_trouble
+        yield from super().check(refEnt, l10nEnt)
         l10n_entry = l10nEnt.entry
         if isinstance(l10n_entry, ftl.Message):
             ref_entry = refEnt.entry

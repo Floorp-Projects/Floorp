@@ -4,8 +4,6 @@
 
 'Commands exposed to commandlines'
 
-from __future__ import absolute_import
-from __future__ import print_function
 import logging
 from argparse import ArgumentParser
 from json import dump as json_dump
@@ -18,7 +16,7 @@ from compare_locales.paths import EnumerateApp, TOMLParser, ConfigNotFound
 from compare_locales.compare import compareProjects
 
 
-class CompareLocales(object):
+class CompareLocales:
     """Check the localization status of gecko applications.
 The first arguments are paths to the l10n.toml or ini files for the
 applications, followed by the base directory of the localization repositories.
@@ -146,7 +144,7 @@ Be careful to specify the right merge directory when using this option.""")
                 l10n_base_dir,
                 quiet=quiet,
                 merge_stage=merge, clobber_merge=clobber)
-        except (OSError, IOError) as exc:
+        except OSError as exc:
             print("FAIL: " + str(exc))
             self.parser.exit(2)
 

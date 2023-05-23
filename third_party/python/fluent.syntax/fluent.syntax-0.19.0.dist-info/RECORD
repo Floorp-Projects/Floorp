@@ -1,0 +1,12 @@
+fluent/syntax/__init__.py,sha256=hSmmHKIWanCOPgJIMAA5qEQqfZLywJRWB6KZsrWjSjA,808
+fluent/syntax/ast.py,sha256=x18U6wwdDEyB2uBFPfHV5Xy01g_TPAPx5I-16eipOXo,11689
+fluent/syntax/errors.py,sha256=CDNTnoys3yzo9z4asXtdTj2tBUODmsLDCXfkLT7Iguo,2636
+fluent/syntax/parser.py,sha256=qSehrK_dthGGn4WKenWSjHSf7O5eg8l5gGaPQ2d1amo,22521
+fluent/syntax/py.typed,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+fluent/syntax/serializer.py,sha256=7cMjxLpEaXPTjoVeJM8622EJj-afPIhjyw4vLKSO9O8,8207
+fluent/syntax/stream.py,sha256=DQHMDWS6vBbCzMXWle7GOlGb41rQqQ5-EwTFlSli8Ao,8638
+fluent/syntax/visitor.py,sha256=1b7ZmfXrbf_1Pwxw__dq3bRbzi1ErBnVdlAlmryvG3M,2164
+fluent.syntax-0.19.0.dist-info/METADATA,sha256=zzu67EEeV4_6dR-AKBmzgFSSKiGFMa3_WH_EXzReCHc,1561
+fluent.syntax-0.19.0.dist-info/WHEEL,sha256=a-zpFRIJzOq5QfuhBzbhiA1eHTzNCJn8OdRvhdNX0Rk,110
+fluent.syntax-0.19.0.dist-info/top_level.txt,sha256=E6y0EXb_8ntRq2470rEss448Ec6wP_-DI3zVECukrn0,7
+fluent.syntax-0.19.0.dist-info/RECORD,,

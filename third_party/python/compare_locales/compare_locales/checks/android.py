@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import re
 from xml.dom import minidom
 
@@ -23,10 +20,7 @@ class AndroidChecker(Checker):
         - tuple of line, column info for the error within the string
         - description string to be shown in the report
         '''
-        for encoding_trouble in super(
-            AndroidChecker, self
-        ).check(refEnt, l10nEnt):
-            yield encoding_trouble
+        yield from super().check(refEnt, l10nEnt)
         refNode = refEnt.node
         l10nNode = l10nEnt.node
         # Apples and oranges, error out.
@@ -38,8 +32,7 @@ class AndroidChecker(Checker):
         if refNode.nodeName != "string":
             yield ("warning", 0, "Unsupported resource type", "android")
             return
-        for report_tuple in self.check_string([refNode], l10nEnt):
-            yield report_tuple
+        yield from self.check_string([refNode], l10nEnt)
 
     def check_string(self, refs, l10nEnt):
         '''Check a single string literal against a list of references.
@@ -79,8 +72,7 @@ class AndroidChecker(Checker):
                 "android"
             )
             return
-        for report_tuple in check_apostrophes(l10nEnt.val):
-            yield report_tuple
+        yield from check_apostrophes(l10nEnt.val)
 
         params, errors = get_params(refs)
         for error, pos in errors:
@@ -91,8 +83,7 @@ class AndroidChecker(Checker):
                 "android"
             )
         if params:
-            for report_tuple in check_params(params, l10nEnt.val):
-                yield report_tuple
+            yield from check_params(params, l10nEnt.val)
 
     def not_translatable(self, *nodes):
         return any(

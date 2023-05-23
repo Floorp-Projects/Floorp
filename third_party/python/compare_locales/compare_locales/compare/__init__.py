@@ -4,8 +4,6 @@
 
 'Mozilla l10n compare locales tool'
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import shutil
 
@@ -54,7 +52,7 @@ def compareProjects(
                                    mergebase=merge_stage)
         if merge_stage is not None:
             if clobber_merge:
-                mergematchers = set(_m.get('merge') for _m in files.matchers)
+                mergematchers = {_m.get('merge') for _m in files.matchers}
                 mergematchers.discard(None)
                 for matcher in mergematchers:
                     clobberdir = matcher.prefix

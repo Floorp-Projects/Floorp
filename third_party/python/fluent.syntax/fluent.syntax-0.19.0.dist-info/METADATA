@@ -1,19 +1,22 @@
-Metadata-Version: 2.0
+Metadata-Version: 2.1
 Name: fluent.syntax
-Version: 0.18.1
+Version: 0.19.0
 Summary: Localization library for expressive translations.
 Home-page: https://github.com/projectfluent/python-fluent
 Author: Mozilla
 Author-email: l10n-drivers@mozilla.org
 License: APL 2
 Keywords: fluent,localization,l10n
-Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: Apache Software License
-Classifier: Programming Language :: Python :: 2.7
-Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3 :: Only
 Description-Content-Type: text/x-rst
+Requires-Dist: typing-extensions (<5,>=3.7)
 
 ``fluent.syntax`` |fluent.syntax|
 ---------------------------------
@@ -37,5 +40,3 @@ Find the full documentation on https://projectfluent.org/python-fluent/fluent.sy
 
 .. _fluent: https://projectfluent.org/
 .. |fluent.syntax| image:: https://github.com/projectfluent/python-fluent/workflows/fluent.syntax/badge.svg
-
-

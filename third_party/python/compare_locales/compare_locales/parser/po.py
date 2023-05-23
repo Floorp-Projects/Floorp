@@ -7,8 +7,6 @@
 Parses gettext po and pot files.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import re
 
@@ -20,7 +18,7 @@ from .base import (
 )
 
 
-class PoEntityMixin(object):
+class PoEntityMixin:
 
     @property
     def val(self):
@@ -77,7 +75,7 @@ class PoParser(Parser):
     reListItem = re.compile(r'[ \t\r\n]*"((?:\\[\\trn"]|[^"\n\\])*)"')
 
     def __init__(self):
-        super(PoParser, self).__init__()
+        super().__init__()
 
     def createEntity(self, ctx, m, current_comment, white_space):
         start = cursor = m.start()

@@ -1,10 +1,6 @@
-# coding=utf8
-from __future__ import absolute_import
-
 import argparse
 import ast
-import six
-from six.moves import zip_longest
+from itertools import zip_longest
 
 from fluent.migrate import transforms
 from fluent.migrate.errors import MigrationError
@@ -36,7 +32,7 @@ def process_assign(node, context):
             context[target.id] = val
 
 
-class Validator(object):
+class Validator:
     """Validate a migration recipe
 
     Extract information from the migration recipe about which files to
@@ -80,7 +76,7 @@ class Validator(object):
                     asname = alias.asname or alias.name
                     dotted = alias.name
                     if module:
-                        dotted = '{}.{}'.format(module, dotted)
+                        dotted = f'{module}.{dotted}'
                     global_assigns[asname] = dotted
         if not migrate_func:
             raise MigrateNotFoundException(
@@ -123,12 +119,12 @@ def full_name(node, global_assigns):
     return '.'.join(reversed(leafs))
 
 
-PATH_TYPES = six.string_types + (ast.Call,)
+PATH_TYPES = (str,) + (ast.Call,)
 
 
 class MigrateAnalyzer(ast.NodeVisitor):
     def __init__(self, ctx_var, global_assigns):
-        super(MigrateAnalyzer, self).__init__()
+        super().__init__()
         self.ctx_var = ctx_var
         self.global_assigns = global_assigns
         self.depth = 0
@@ -137,7 +133,7 @@ class MigrateAnalyzer(ast.NodeVisitor):
 
     def generic_visit(self, node):
         self.depth += 1
-        super(MigrateAnalyzer, self).generic_visit(node)
+        super().generic_visit(node)
         self.depth -= 1
 
     def visit_Assign(self, node):
@@ -202,7 +198,7 @@ class MigrateAnalyzer(ast.NodeVisitor):
             in_reference = self.global_assigns.get(in_reference.id)
         if isinstance(in_reference, ast.Str):
             in_reference = in_reference.s
-        if not isinstance(in_reference, six.string_types):
+        if not isinstance(in_reference, str):
             self.issues.append({
                 'msg': ref_msg,
                 'line': node.args[1].lineno,
@@ -222,7 +218,7 @@ class MigrateAnalyzer(ast.NodeVisitor):
         transform = getattr(transforms, called)
         if not issubclass(transform, transforms.Source):
             return
-        bad_args = '{} takes path and key as first two params'.format(called)
+        bad_args = f'{called} takes path and key as first two params'
         if not self.check_arguments(
             node, ((ast.Str, ast.Name), (ast.Str, ast.Name),),
             allow_more=True, check_kwargs=False
@@ -314,7 +310,7 @@ class MigrateAnalyzer(ast.NodeVisitor):
 
 class TransformsInspector(Visitor):
     def __init__(self):
-        super(TransformsInspector, self).__init__()
+        super().__init__()
         self.issues = []
 
     def generic_visit(self, node):
@@ -324,9 +320,9 @@ class TransformsInspector(Visitor):
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1568199
             if src != mozpath.normpath(src):
                 self.issues.append(
-                    'Source "{}" needs to be a normalized path'.format(src)
+                    f'Source "{src}" needs to be a normalized path'
                 )
-        super(TransformsInspector, self).generic_visit(node)
+        super().generic_visit(node)
 
 
 def cli():

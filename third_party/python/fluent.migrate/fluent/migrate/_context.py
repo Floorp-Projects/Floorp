@@ -1,12 +1,8 @@
-# coding=utf8
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 import os
 import codecs
 from functools import partial
 import logging
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import fluent.syntax.ast as FTL
 from fluent.syntax.parser import FluentParser
@@ -21,7 +17,7 @@ from .errors import (
 )
 
 
-class InternalContext(object):
+class InternalContext:
     """Internal context for merging translation resources.
 
     For the public interface, see `context.MigrationContext`.
@@ -64,7 +60,7 @@ class InternalContext(object):
             contents = f.read()
         except UnicodeDecodeError as err:
             logger = logging.getLogger('migrate')
-            logger.warning('Unable to read file {}: {}'.format(path, err))
+            logger.warning(f'Unable to read file {path}: {err}')
             raise err
         finally:
             f.close()
@@ -82,7 +78,7 @@ class InternalContext(object):
             logger = logging.getLogger('migrate')
             for annot in annots:
                 msg = annot.message
-                logger.warning('Syntax error in {}: {}'.format(path, msg))
+                logger.warning(f'Syntax error in {path}: {msg}')
 
         return ast
 
@@ -105,12 +101,12 @@ class InternalContext(object):
         fullpath = os.path.join(self.reference_dir, path)
         try:
             return self.read_ftl_resource(fullpath)
-        except IOError:
-            error_message = 'Missing reference file: {}'.format(fullpath)
+        except OSError:
+            error_message = f'Missing reference file: {fullpath}'
             logging.getLogger('migrate').error(error_message)
             raise UnreadableReferenceError(error_message)
         except UnicodeDecodeError as err:
-            error_message = 'Error reading file {}: {}'.format(fullpath, err)
+            error_message = f'Error reading file {fullpath}: {err}'
             logging.getLogger('migrate').error(error_message)
             raise UnreadableReferenceError(error_message)
 
@@ -123,7 +119,7 @@ class InternalContext(object):
         fullpath = os.path.join(self.localization_dir, path)
         try:
             return self.read_ftl_resource(fullpath)
-        except IOError:
+        except OSError:
             logger = logging.getLogger('migrate')
             logger.info(
                 'Localization file {} does not exist and '
@@ -150,9 +146,9 @@ class InternalContext(object):
                 collection = self.read_legacy_resource(fullpath)
             else:
                 collection = self.read_ftl_resource(fullpath)
-        except IOError:
+        except OSError:
             logger = logging.getLogger('migrate')
-            logger.warning('Missing localization file: {}'.format(path))
+            logger.warning(f'Missing localization file: {path}')
         else:
             self.localization_resources[path] = collection
 
