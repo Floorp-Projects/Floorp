@@ -155,24 +155,43 @@ var gLastCategory = { category: undefined, subcategory: undefined };
 const gXULDOMParser = new DOMParser();
 var gCategoryModules = new Map();
 var gCategoryInits = new Map();
+function init_category_if_required(category) {
+  let categoryInfo = gCategoryInits.get(category);
+  if (!categoryInfo) {
+    throw new Error(
+      "Unknown in-content prefs category! Can't init " + category
+    );
+  }
+  if (categoryInfo.inited) {
+    return null;
+  }
+  return categoryInfo.init();
+}
 
 function register_module(categoryName, categoryObject) {
   gCategoryModules.set(categoryName, categoryObject);
   gCategoryInits.set(categoryName, {
-    _initted: false,
-    init() {
+    inited: false,
+    async init() {
       let startTime = performance.now();
-      if (this._initted) {
-        return;
-      }
-      this._initted = true;
       let template = document.getElementById("template-" + categoryName);
       if (template) {
         // Replace the template element with the nodes inside of it.
-        template.replaceWith(template.content);
+        let frag = template.content;
+        await document.l10n.translateFragment(frag);
+
+        // Actually insert them into the DOM.
+        document.l10n.pauseObserving();
+        template.replaceWith(frag);
+        document.l10n.resumeObserving();
+
+        // We need to queue an update again because the previous update might
+        // have happened while we awaited on translateFragment.
+        Preferences.queueUpdateOfAllElements();
       }
 
       categoryObject.init();
+      this.inited = true;
       ChromeUtils.addProfilerMarker(
         "Preferences",
         { startTime },
@@ -367,28 +386,24 @@ async function gotoPref(
   }
   window.history.replaceState(category, document.title);
 
-  let categoryInfo = gCategoryInits.get(category);
-  if (!categoryInfo) {
-    let err = new Error(
-      "Unknown in-content prefs category! Can't init " + category
+  try {
+    await init_category_if_required(category);
+  } catch (ex) {
+    console.error(
+      new Error(
+        "Error initializing preference category " + category + ": " + ex
+      )
     );
-    console.error(err);
-    throw err;
+    throw ex;
   }
-  categoryInfo.init();
 
-  if (document.hasPendingL10nMutations) {
-    await new Promise(r =>
-      document.addEventListener("L10nMutationsFinished", r, { once: true })
-    );
-    // Bail out of this goToPref if the category
-    // or subcategory changed during async operation.
-    if (
-      gLastCategory.category !== category ||
-      gLastCategory.subcategory !== subcategory
-    ) {
-      return;
-    }
+  // Bail out of this goToPref if the category
+  // or subcategory changed during async operation.
+  if (
+    gLastCategory.category !== category ||
+    gLastCategory.subcategory !== subcategory
+  ) {
+    return;
   }
 
   search(category, "data-category");
