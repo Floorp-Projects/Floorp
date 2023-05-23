@@ -30,7 +30,7 @@ namespace webrtc_sequence_checker_internal {
 // right version for your build configuration.
 class RTC_EXPORT SequenceCheckerImpl {
  public:
-  SequenceCheckerImpl();
+  explicit SequenceCheckerImpl(bool attach_to_current_thread);
   ~SequenceCheckerImpl() = default;
 
   bool IsCurrent() const;
@@ -59,6 +59,7 @@ class RTC_EXPORT SequenceCheckerImpl {
 // right version for your build configuration.
 class SequenceCheckerDoNothing {
  public:
+  explicit SequenceCheckerDoNothing(bool attach_to_current_thread) {}
   bool IsCurrent() const { return true; }
   void Detach() {}
 };
