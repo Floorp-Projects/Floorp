@@ -2310,14 +2310,13 @@ void nsWindow::Show(bool aState) {
 
 bool nsWindow::IsVisible() const { return mIsVisible; }
 
-void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
-  ALOG("nsWindow[%p]::ConstrainPosition %d [%d %d]", (void*)this, aAllowSlop,
-       *aX, *aY);
+void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
+  ALOG("nsWindow[%p]::ConstrainPosition [%d %d]", (void*)this, aPoint.x.value,
+       aPoint.y.value);
 
-  // constrain toplevel windows; children we don't care about
+  // Constrain toplevel windows; children we don't care about
   if (IsTopLevel()) {
-    *aX = 0;
-    *aY = 0;
+    aPoint = DesktopIntPoint();
   }
 }
 

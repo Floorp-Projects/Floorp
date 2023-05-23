@@ -147,8 +147,7 @@ class nsWindow final : public nsBaseWidget {
   virtual double GetDefaultScaleInternal() override;
   virtual void Show(bool aState) override;
   virtual bool IsVisible() const override;
-  virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
-                                 int32_t* aY) override;
+  virtual void ConstrainPosition(DesktopIntPoint&) override;
   virtual void Move(double aX, double aY) override;
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight,
