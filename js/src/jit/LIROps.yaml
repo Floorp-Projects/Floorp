@@ -317,7 +317,10 @@
   result_type: WordSized
   num_temps: 1
 
-- name: WasmGcObjectIsSubtypeOfAndBranch
+- name: WasmGcObjectIsSubtypeOfConcreteAndBranch
+  gen_boilerplate: false
+
+- name: WasmGcObjectIsSubtypeOfAbstractAndBranch
   gen_boilerplate: false
 
 - name: WasmReinterpret

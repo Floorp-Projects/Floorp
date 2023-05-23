@@ -310,9 +310,7 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
         literal = "arrayref";
         break;
       case RefType::TypeRef: {
-        uint32_t typeIndex = types->indexOf(*type.typeDef());
-        return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
-                           typeIndex);
+        MOZ_CRASH("type ref should not be possible here");
       }
     }
     return DuplicateString(literal);
@@ -349,9 +347,12 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       heapType = "array";
       break;
     case RefType::TypeRef: {
-      uint32_t typeIndex = types->indexOf(*type.typeDef());
-      return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
-                         typeIndex);
+      if (types) {
+        uint32_t typeIndex = types->indexOf(*type.typeDef());
+        return JS_smprintf("(ref %s%d)", type.isNullable() ? "null " : "",
+                           typeIndex);
+      }
+      return JS_smprintf("(ref %s?)", type.isNullable() ? "null " : "");
     }
   }
   return JS_smprintf("(ref %s%s)", type.isNullable() ? "null " : "", heapType);

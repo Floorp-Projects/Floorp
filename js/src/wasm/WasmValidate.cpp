@@ -633,75 +633,96 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                      &nothing, &nothing, &nothing, &nothing));
           }
           case uint16_t(GcOp::RefTestV5): {
-            uint32_t typeIndex;
-            CHECK(iter.readRefTestV5(&typeIndex, &nothing));
+            RefType unusedSourceType;
+            uint32_t unusedTypeIndex;
+            CHECK(iter.readRefTestV5(&unusedSourceType, &unusedTypeIndex,
+                                     &nothing));
           }
           case uint16_t(GcOp::RefCastV5): {
-            uint32_t typeIndex;
-            CHECK(iter.readRefCastV5(&typeIndex, &nothing));
+            RefType unusedSourceType;
+            uint32_t unusedTypeIndex;
+            CHECK(iter.readRefCastV5(&unusedSourceType, &unusedTypeIndex,
+                                     &nothing));
           }
           case uint16_t(GcOp::RefTest): {
-            RefType type;
-            CHECK(iter.readRefTest(false, &type, &nothing));
+            RefType unusedSourceType;
+            RefType unusedDestType;
+            CHECK(iter.readRefTest(false, &unusedSourceType, &unusedDestType,
+                                   &nothing));
           }
           case uint16_t(GcOp::RefTestNull): {
-            RefType type;
-            CHECK(iter.readRefTest(true, &type, &nothing));
+            RefType unusedSourceType;
+            RefType unusedDestType;
+            CHECK(iter.readRefTest(true, &unusedSourceType, &unusedDestType,
+                                   &nothing));
           }
           case uint16_t(GcOp::RefCast): {
-            RefType type;
-            CHECK(iter.readRefCast(false, &type, &nothing));
+            RefType unusedSourceType;
+            RefType unusedDestType;
+            CHECK(iter.readRefCast(false, &unusedSourceType, &unusedDestType,
+                                   &nothing));
           }
           case uint16_t(GcOp::RefCastNull): {
-            RefType type;
-            CHECK(iter.readRefCast(true, &type, &nothing));
+            RefType unusedSourceType;
+            RefType unusedDestType;
+            CHECK(iter.readRefCast(true, &unusedSourceType, &unusedDestType,
+                                   &nothing));
           }
           case uint16_t(GcOp::BrOnCast): {
             bool unusedOnSuccess;
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             RefType unusedDestType;
             CHECK(iter.readBrOnCast(&unusedOnSuccess, &unusedRelativeDepth,
-                                    &unusedDestType, &unusedType, &nothings));
+                                    &unusedSourceType, &unusedDestType,
+                                    &unusedType, &nothings));
           }
           case uint16_t(GcOp::BrOnCastV5): {
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             uint32_t typeIndex;
-            CHECK(iter.readBrOnCastV5(&unusedRelativeDepth, &typeIndex,
-                                      &unusedType, &nothings));
+            CHECK(iter.readBrOnCastV5(&unusedRelativeDepth, &unusedSourceType,
+                                      &typeIndex, &unusedType, &nothings));
           }
           case uint16_t(GcOp::BrOnCastFailV5): {
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             uint32_t typeIndex;
-            CHECK(iter.readBrOnCastFailV5(&unusedRelativeDepth, &typeIndex,
+            CHECK(iter.readBrOnCastFailV5(&unusedRelativeDepth,
+                                          &unusedSourceType, &typeIndex,
                                           &unusedType, &nothings));
           }
           case uint16_t(GcOp::BrOnCastHeapV5): {
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             RefType unusedDestType;
             CHECK(iter.readBrOnCastHeapV5(false, &unusedRelativeDepth,
-                                          &unusedDestType, &unusedType,
-                                          &nothings));
+                                          &unusedSourceType, &unusedDestType,
+                                          &unusedType, &nothings));
           }
           case uint16_t(GcOp::BrOnCastHeapNullV5): {
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             RefType unusedDestType;
             CHECK(iter.readBrOnCastHeapV5(true, &unusedRelativeDepth,
-                                          &unusedDestType, &unusedType,
-                                          &nothings));
+                                          &unusedSourceType, &unusedDestType,
+                                          &unusedType, &nothings));
           }
           case uint16_t(GcOp::BrOnCastFailHeapV5): {
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             RefType unusedDestType;
-            CHECK(iter.readBrOnCastFailHeapV5(false, &unusedRelativeDepth,
-                                              &unusedDestType, &unusedType,
-                                              &nothings));
+            CHECK(iter.readBrOnCastFailHeapV5(
+                false, &unusedRelativeDepth, &unusedSourceType, &unusedDestType,
+                &unusedType, &nothings));
           }
           case uint16_t(GcOp::BrOnCastFailHeapNullV5): {
             uint32_t unusedRelativeDepth;
+            RefType unusedSourceType;
             RefType unusedDestType;
-            CHECK(iter.readBrOnCastFailHeapV5(true, &unusedRelativeDepth,
-                                              &unusedDestType, &unusedType,
-                                              &nothings));
+            CHECK(iter.readBrOnCastFailHeapV5(
+                true, &unusedRelativeDepth, &unusedSourceType, &unusedDestType,
+                &unusedType, &nothings));
           }
           case uint16_t(GcOp::RefAsStructV5): {
             CHECK(iter.readConversion(
