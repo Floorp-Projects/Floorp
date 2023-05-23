@@ -21,6 +21,7 @@ import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.notificationShade
 
 /**
  *  Tests for verifying basic functionality of tabbed browsing
@@ -261,24 +262,23 @@ class ComposeTabbedBrowsingTest {
         }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832611")
     @Test
     fun closePrivateTabsNotificationTest() {
-//        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        homeScreen {
-//        }.togglePrivateBrowsingMode()
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-//            mDevice.openNotification()
-//        }
-//
-//        notificationShade {
-//            verifyPrivateTabsNotification()
-//        }.clickClosePrivateTabsNotification {
-//            verifyHomeScreen()
-//        }
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.openNotification()
+        }
+
+        notificationShade {
+            verifyPrivateTabsNotification()
+        }.clickClosePrivateTabsNotification {
+            verifyHomeScreen()
+        }
     }
 
     @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832612")
