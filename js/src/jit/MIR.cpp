@@ -7226,3 +7226,36 @@ MWasmShuffleSimd128* jit::BuildWasmShuffleSimd128(TempAllocator& alloc,
   return MWasmShuffleSimd128::New(alloc, lhs, rhs, s);
 }
 #endif  // ENABLE_WASM_SIMD
+
+static MDefinition* FoldTrivialWasmCasts(TempAllocator& alloc,
+                                         wasm::RefType sourceType,
+                                         wasm::RefType destType) {
+  // Upcasts are trivially valid.
+  if (wasm::RefType::isSubTypeOf(sourceType, destType)) {
+    return MConstant::New(alloc, Int32Value(1), MIRType::Int32);
+  }
+
+  // If two types are completely disjoint, then all casts between them are
+  // impossible.
+  if (!wasm::RefType::castPossible(destType, sourceType)) {
+    return MConstant::New(alloc, Int32Value(0), MIRType::Int32);
+  }
+
+  return nullptr;
+}
+
+MDefinition* MWasmGcObjectIsSubtypeOfAbstract::foldsTo(TempAllocator& alloc) {
+  MDefinition* folded = FoldTrivialWasmCasts(alloc, sourceType(), destType());
+  if (folded) {
+    return folded;
+  }
+  return this;
+}
+
+MDefinition* MWasmGcObjectIsSubtypeOfConcrete::foldsTo(TempAllocator& alloc) {
+  MDefinition* folded = FoldTrivialWasmCasts(alloc, sourceType(), destType());
+  if (folded) {
+    return folded;
+  }
+  return this;
+}

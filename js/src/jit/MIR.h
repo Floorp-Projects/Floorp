@@ -11390,11 +11390,16 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 
 class MWasmGcObjectIsSubtypeOfAbstract : public MUnaryInstruction,
                                          public NoTypePolicy::Data {
-  wasm::RefType type_;
+  wasm::RefType sourceType_;
+  wasm::RefType destType_;
 
-  MWasmGcObjectIsSubtypeOfAbstract(MDefinition* object, wasm::RefType type)
-      : MUnaryInstruction(classOpcode, object), type_(type) {
-    MOZ_ASSERT(!type.isTypeRef());
+  MWasmGcObjectIsSubtypeOfAbstract(MDefinition* object,
+                                   wasm::RefType sourceType,
+                                   wasm::RefType destType)
+      : MUnaryInstruction(classOpcode, object),
+        sourceType_(sourceType),
+        destType_(destType) {
+    MOZ_ASSERT(!destType.isTypeRef());
     setResultType(MIRType::Int32);
     setMovable();
   }
@@ -11404,18 +11409,24 @@ class MWasmGcObjectIsSubtypeOfAbstract : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  const wasm::RefType& type() const { return type_; };
+  wasm::RefType sourceType() const { return sourceType_; };
+  wasm::RefType destType() const { return destType_; };
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
-           type() == ins->toWasmGcObjectIsSubtypeOfAbstract()->type();
+           sourceType() ==
+               ins->toWasmGcObjectIsSubtypeOfAbstract()->sourceType() &&
+           destType() == ins->toWasmGcObjectIsSubtypeOfAbstract()->destType();
   }
 
   HashNumber valueHash() const override {
     HashNumber hn = MUnaryInstruction::valueHash();
-    hn = addU64ToHash(hn, type().packed().bits());
+    hn = addU64ToHash(hn, sourceType().packed().bits());
+    hn = addU64ToHash(hn, destType().packed().bits());
     return hn;
   }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 // Tests if the WasmGcObject, `object`, is a subtype of `superSuperTypeVector`.
@@ -11423,14 +11434,17 @@ class MWasmGcObjectIsSubtypeOfAbstract : public MUnaryInstruction,
 // subtyping depth of super type depth can be used.
 class MWasmGcObjectIsSubtypeOfConcrete : public MBinaryInstruction,
                                          public NoTypePolicy::Data {
-  wasm::RefType type_;
+  wasm::RefType sourceType_;
+  wasm::RefType destType_;
 
   MWasmGcObjectIsSubtypeOfConcrete(MDefinition* object,
                                    MDefinition* superSuperTypeVector,
-                                   wasm::RefType type)
+                                   wasm::RefType sourceType,
+                                   wasm::RefType destType)
       : MBinaryInstruction(classOpcode, object, superSuperTypeVector),
-        type_(type) {
-    MOZ_ASSERT(type.isTypeRef());
+        sourceType_(sourceType),
+        destType_(destType) {
+    MOZ_ASSERT(destType.isTypeRef());
     setResultType(MIRType::Int32);
     setMovable();
   }
@@ -11440,18 +11454,24 @@ class MWasmGcObjectIsSubtypeOfConcrete : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object), (1, superSuperTypeVector))
 
-  const wasm::RefType& type() const { return type_; };
+  wasm::RefType sourceType() const { return sourceType_; };
+  wasm::RefType destType() const { return destType_; };
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
-           type() == ins->toWasmGcObjectIsSubtypeOfConcrete()->type();
+           sourceType() ==
+               ins->toWasmGcObjectIsSubtypeOfConcrete()->sourceType() &&
+           destType() == ins->toWasmGcObjectIsSubtypeOfConcrete()->destType();
   }
 
   HashNumber valueHash() const override {
     HashNumber hn = MBinaryInstruction::valueHash();
-    hn = addU64ToHash(hn, type().packed().bits());
+    hn = addU64ToHash(hn, sourceType().packed().bits());
+    hn = addU64ToHash(hn, destType().packed().bits());
     return hn;
   }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 #ifdef FUZZING_JS_FUZZILLI

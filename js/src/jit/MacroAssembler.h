@@ -3845,14 +3845,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   // `object` and `superSuperTypeVector` are preserved. Scratch registers are
   // clobbered.
-  void branchWasmGcObjectIsRefType(Register object, const wasm::RefType& type,
-                                   Label* label, bool onSuccess,
+  void branchWasmGcObjectIsRefType(Register object, wasm::RefType sourceType,
+                                   wasm::RefType destType, Label* label,
+                                   bool onSuccess,
                                    Register superSuperTypeVector,
                                    Register scratch1, Register scratch2);
-  static bool needScratch1ForBranchWasmGcRefType(const wasm::RefType& type);
-  static bool needScratch2ForBranchWasmGcRefType(const wasm::RefType& type);
+  static bool needScratch1ForBranchWasmGcRefType(wasm::RefType type);
+  static bool needScratch2ForBranchWasmGcRefType(wasm::RefType type);
   static bool needSuperSuperTypeVectorForBranchWasmGcRefType(
-      const wasm::RefType& type);
+      wasm::RefType type);
 
   // Perform a subtype check that `subSuperTypeVector` is a subtype of
   // `superSuperTypeVector`, branching to `label` depending on `onSuccess`.
