@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const STORAGE_MAX_EVENTS = 1000;
 
 var _consoleStorage = new Map();
@@ -40,7 +38,7 @@ const CONSOLEAPISTORAGE_CID = Components.ID(
  *    // Clear the events for the given inner window ID.
  *    ConsoleAPIStorage.clearEvents(innerWindowID);
  */
-function ConsoleAPIStorageService() {
+export function ConsoleAPIStorageService() {
   this.init();
 }
 
@@ -195,5 +193,3 @@ ConsoleAPIStorageService.prototype = {
     }
   },
 };
-
-var EXPORTED_SYMBOLS = ["ConsoleAPIStorageService"];
