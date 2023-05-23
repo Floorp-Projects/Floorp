@@ -305,6 +305,16 @@ def lto(
         ldflags.append("-flto=%s" % num_cores)
         ldflags.append("-flifetime-dse=1")
 
+    # Tell LTO not to inline functions above a certain size, to mitigate
+    # binary size growth while still getting good performance.
+    # (For hot functions, PGO will put a multiplier on this limit.)
+    if target.os == "WINNT":
+        ldflags.append("-mllvm:-import-instr-limit=10")
+    elif target.os == "OSX":
+        ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
+    elif c_compiler.type == "clang":
+        ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
+
     # If we're using the new pass manager, we can also enable the new PM
     # during LTO. Further we can use the resulting size savings to increase
     # the import limit in hot functions.
