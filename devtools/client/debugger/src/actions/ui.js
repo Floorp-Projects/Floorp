@@ -9,6 +9,9 @@ import {
   getSource,
   getSourceContent,
   getMainThread,
+  getIgnoreListSourceUrls,
+  getSourceByURL,
+  getBreakpointsForSource,
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
 import {
@@ -16,6 +19,8 @@ import {
   getLocationsInViewport,
   updateDocuments,
 } from "../utils/editor";
+import { blackboxSourceActorsForSource } from "./sources/blackbox";
+import { toggleBreakpoints } from "./breakpoints";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
 
@@ -240,5 +245,24 @@ export function setJavascriptTracingLogMethod(value) {
 export function setHideOrShowIgnoredSources(shouldHide) {
   return ({ dispatch, getState }) => {
     dispatch({ type: "HIDE_IGNORED_SOURCES", shouldHide });
+  };
+}
+
+export function toggleSourceMapIgnoreList(cx, shouldEnable) {
+  return async thunkArgs => {
+    const { dispatch, getState } = thunkArgs;
+    const ignoreListSourceUrls = getIgnoreListSourceUrls(getState());
+    // Blackbox the source actors on the server
+    for (const url of ignoreListSourceUrls) {
+      const source = getSourceByURL(getState(), url);
+      await blackboxSourceActorsForSource(thunkArgs, source, shouldEnable);
+      // Disable breakpoints in sources on the ignore list
+      const breakpoints = getBreakpointsForSource(getState(), source.id);
+      await dispatch(toggleBreakpoints(cx, shouldEnable, breakpoints));
+    }
+    await dispatch({
+      type: "ENABLE_SOURCEMAP_IGNORELIST",
+      shouldEnable,
+    });
   };
 }

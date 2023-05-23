@@ -13,3 +13,14 @@ export function isSourceBlackBoxed(state, source) {
   }
   return state.sourceBlackBox.blackboxedSet.has(source.url);
 }
+
+export function isSourceOnSourceMapIgnoreList(state, source) {
+  if (!source) {
+    return false;
+  }
+  return getIgnoreListSourceUrls(state).includes(source.url);
+}
+
+export function getIgnoreListSourceUrls(state) {
+  return state.sourceBlackBox.sourceMapIgnoreListUrls;
+}

@@ -87,6 +87,7 @@ function generateDefaults(overrides = {}, breakpointOverrides = {}) {
     removeBreakpoint: () => {},
     selectSpecificLocation: () => {},
     blackboxedRangesForSource: [],
+    checkSourceOnIgnoreList: () => {},
     source,
     breakpoint,
     selectedSource,

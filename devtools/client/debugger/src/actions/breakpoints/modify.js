@@ -16,6 +16,8 @@ import {
   getPendingBreakpointList,
   isMapScopesEnabled,
   getBlackBoxRanges,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 
 import { setBreakpointPositions } from "./breakpointPositions";
@@ -81,14 +83,19 @@ function clientRemoveBreakpoint(client, state, generatedLocation) {
 export function enableBreakpoint(cx, initialBreakpoint) {
   return thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
-    const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
-    const blackboxedRanges = getBlackBoxRanges(getState());
+    const state = getState();
+    const breakpoint = getBreakpoint(state, initialBreakpoint.location);
+    const blackboxedRanges = getBlackBoxRanges(state);
+    const isSourceOnIgnoreList =
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, breakpoint.location.source);
     if (
       !breakpoint ||
       !breakpoint.disabled ||
       isLineBlackboxed(
         blackboxedRanges[breakpoint.location.source.url],
-        breakpoint.location.line
+        breakpoint.location.line,
+        isSourceOnIgnoreList
       )
     ) {
       return null;

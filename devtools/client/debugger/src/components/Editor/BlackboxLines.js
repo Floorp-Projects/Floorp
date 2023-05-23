@@ -7,7 +7,12 @@ import PropTypes from "prop-types";
 import { Component } from "react";
 import { toEditorLine, fromEditorLine } from "../../utils/editor";
 import { isLineBlackboxed } from "../../utils/source";
-import { getBlackBoxRanges, getSelectedSource } from "../../selectors";
+import {
+  getBlackBoxRanges,
+  getSelectedSource,
+  isSourceMapIgnoreListEnabled,
+  isSourceOnSourceMapIgnoreList,
+} from "../../selectors";
 import { isWasm } from "../../utils/wasm";
 
 // This renders blackbox line highlighting in the editor
@@ -17,12 +22,18 @@ class BlackboxLines extends Component {
       editor: PropTypes.object,
       selectedSource: PropTypes.object,
       blackboxedRangesForSelectedSource: PropTypes.object,
+      isSourceOnIgnoreList: PropTypes.bool,
     };
   }
 
   componentDidMount() {
     const { selectedSource, blackboxedRangesForSelectedSource, editor } =
       this.props;
+
+    if (this.props.isSourceOnIgnoreList) {
+      this.setAllBlackboxLines(editor);
+      return;
+    }
 
     // When `blackboxedRangesForSelectedSource` is undefined, the source isn't blackboxed
     if (!blackboxedRangesForSelectedSource) {
@@ -47,8 +58,17 @@ class BlackboxLines extends Component {
   }
 
   componentDidUpdate() {
-    const { selectedSource, blackboxedRangesForSelectedSource, editor } =
-      this.props;
+    const {
+      selectedSource,
+      blackboxedRangesForSelectedSource,
+      editor,
+      isSourceOnIgnoreList,
+    } = this.props;
+
+    if (this.props.isSourceOnIgnoreList) {
+      this.setAllBlackboxLines(editor);
+      return;
+    }
 
     // when unblackboxed
     if (!blackboxedRangesForSelectedSource) {
@@ -75,7 +95,13 @@ class BlackboxLines extends Component {
           sourceIsWasm
         );
 
-        if (isLineBlackboxed(blackboxedRangesForSelectedSource, line)) {
+        if (
+          isLineBlackboxed(
+            blackboxedRangesForSelectedSource,
+            line,
+            isSourceOnIgnoreList
+          )
+        ) {
           this.setBlackboxLine(editor, lineHandle);
         } else {
           this.clearBlackboxLine(editor, lineHandle);
@@ -128,6 +154,9 @@ const mapStateToProps = state => {
     blackboxedRangesForSelectedSource: selectedSource
       ? getBlackBoxRanges(state)[selectedSource.url]
       : undefined,
+    isSourceOnIgnoreList:
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, selectedSource),
   };
 };
 
