@@ -17142,6 +17142,7 @@
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
+    "releaseChannelCollection": "opt-out",
     "n_buckets": 50,
     "description": "The time spent by WebRender in the Renderer in milliseconds."
   },
@@ -17153,6 +17154,7 @@
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
+    "releaseChannelCollection": "opt-out",
     "n_buckets": 50,
     "description": "The time spent by WebRender in the Renderer in milliseconds for frames with no shader compilation."
   },
