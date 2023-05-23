@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 
 from fluent.syntax import FluentParser as FTLParser
@@ -28,7 +26,7 @@ class WordCounter(Visitor):
             (ftl.Span, ftl.Annotation, ftl.BaseComment)
         ):
             return
-        super(WordCounter, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_SelectExpression(self, node):
         # optimize select expressions to only go through the variants
@@ -160,7 +158,7 @@ class FluentTerm(FluentEntity):
 
 class FluentComment(Comment):
     def __init__(self, ctx, span, entry):
-        super(FluentComment, self).__init__(ctx, span)
+        super().__init__(ctx, span)
         self._val_cache = entry.content
 
 
@@ -168,7 +166,7 @@ class FluentParser(Parser):
     capabilities = CAN_SKIP
 
     def __init__(self):
-        super(FluentParser, self).__init__()
+        super().__init__()
         self.ftl_parser = FTLParser()
 
     def walk(self, only_localizable=False):

@@ -1,4 +1,3 @@
-# coding=utf8
 """Fluent AST helpers.
 
 The functions defined in this module offer a shorthand for defining common AST
@@ -8,8 +7,6 @@ They take a string argument and immediately return a corresponding AST node.
 (As opposed to Transforms which are AST nodes on their own and only return the
 migrated AST nodes when they are evaluated by a MigrationContext.) """
 
-from __future__ import unicode_literals
-from __future__ import absolute_import
 
 from fluent.syntax import FluentParser, ast as FTL
 from fluent.syntax.visitor import Transformer

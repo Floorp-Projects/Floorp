@@ -1,14 +1,14 @@
-from __future__ import unicode_literals
+from typing import Tuple, Union
 
 
 class ParseError(Exception):
-    def __init__(self, code, *args):
+    def __init__(self, code: str, *args: Union[str, None]):
         self.code = code
         self.args = args
         self.message = get_error_message(code, args)
 
 
-def get_error_message(code, args):
+def get_error_message(code: str, args: Tuple[Union[str, None], ...]) -> str:
     if code == 'E00001':
         return 'Generic error'
     if code == 'E0002':

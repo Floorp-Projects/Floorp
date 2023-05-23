@@ -2,12 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 from difflib import SequenceMatcher
-from six.moves import range
-from six.moves import zip
 
 from compare_locales.parser import PropertiesEntity
 from compare_locales import plurals
@@ -33,10 +29,7 @@ class PropertiesChecker(Checker):
     def check(self, refEnt, l10nEnt):
         '''Test for the different variable formats.
         '''
-        for encoding_trouble in super(
-            PropertiesChecker, self
-        ).check(refEnt, l10nEnt):
-            yield encoding_trouble
+        yield from super().check(refEnt, l10nEnt)
         refValue, l10nValue = refEnt.val, l10nEnt.val
         refSpecs = None
         # check for PluralForm.jsm stuff, should have the docs in the
@@ -47,8 +40,7 @@ class PropertiesChecker(Checker):
                 and 'Localization_and_Plurals' in refEnt.pre_comment.all
                 and refEnt.key != 'pluralRule'
                 and not re.match(r'\d+$', refValue)):
-            for msg_tuple in self.check_plural(refValue, l10nValue):
-                yield msg_tuple
+            yield from self.check_plural(refValue, l10nValue)
             return
         # check for lost escapes
         raw_val = l10nEnt.raw_val
@@ -63,8 +55,7 @@ class PropertiesChecker(Checker):
         except PrintfException:
             refSpecs = []
         if refSpecs:
-            for t in self.checkPrintf(refSpecs, l10nValue):
-                yield t
+            yield from self.checkPrintf(refSpecs, l10nValue)
             return
 
     def check_plural(self, refValue, l10nValue):
@@ -83,12 +74,10 @@ class PropertiesChecker(Checker):
                 yield ('warning', 0, msg, 'plural')
             if expected_forms < found_forms:
                 yield ('warning', 0, msg, 'plural')
-        pats = set(int(m.group(1)) for m in re.finditer('#([0-9]+)',
-                                                        refValue))
+        pats = {int(m.group(1)) for m in re.finditer('#([0-9]+)', refValue)}
         if len(pats) == 0:
             return
-        lpats = set(int(m.group(1)) for m in re.finditer('#([0-9]+)',
-                                                         l10nValue))
+        lpats = {int(m.group(1)) for m in re.finditer('#([0-9]+)', l10nValue)}
         if pats - lpats:
             yield ('warning', 0, 'not all variables used in l10n',
                    'plural')

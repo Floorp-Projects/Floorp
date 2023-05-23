@@ -15,14 +15,11 @@ sequences check values. Always try our dict cache `__map` first,
 and fall back to the superclass implementation.
 '''
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 
 class KeyedTuple(tuple):
 
     def __new__(cls, iterable):
-        return super(KeyedTuple, cls).__new__(cls, iterable)
+        return super().__new__(cls, iterable)
 
     def __init__(self, iterable):
         self.__map = {}
@@ -37,14 +34,14 @@ class KeyedTuple(tuple):
                 return True
         except TypeError:
             pass
-        return super(KeyedTuple, self).__contains__(key)
+        return super().__contains__(key)
 
     def __getitem__(self, key):
         try:
             key = self.__map[key]
         except (KeyError, TypeError):
             pass
-        return super(KeyedTuple, self).__getitem__(key)
+        return super().__getitem__(key)
 
     def keys(self):
         for value in self:

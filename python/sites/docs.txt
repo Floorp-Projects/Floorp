@@ -8,7 +8,7 @@ pypi:colorama==0.4.5
 pypi:commonmark==0.9.1
 pypi:docutils==0.17.1
 pypi:fluent.pygments==1.0
-pypi:fluent.syntax==0.18.1
+pypi:fluent.syntax==0.19.0
 pypi:idna==2.10
 pypi:imagesize==1.4.1
 pypi:importlib-resources==5.12.0

@@ -1,20 +1,21 @@
-from __future__ import unicode_literals
+from typing import Callable, Union
+from typing_extensions import Literal
 from .errors import ParseError
 
 
-class ParserStream(object):
-    def __init__(self, string):
+class ParserStream:
+    def __init__(self, string: str):
         self.string = string
         self.index = 0
         self.peek_offset = 0
 
-    def get(self, offset):
+    def get(self, offset: int) -> Union[str, None]:
         try:
             return self.string[offset]
         except IndexError:
             return None
 
-    def char_at(self, offset):
+    def char_at(self, offset: int) -> Union[str, None]:
         # When the cursor is at CRLF, return LF but don't move the cursor. The
         # cursor still points to the EOL position, which in this case is the
         # beginning of the compound CRLF sequence. This ensures slices of
@@ -26,14 +27,14 @@ class ParserStream(object):
         return self.get(offset)
 
     @property
-    def current_char(self):
+    def current_char(self) -> Union[str, None]:
         return self.char_at(self.index)
 
     @property
-    def current_peek(self):
+    def current_peek(self) -> Union[str, None]:
         return self.char_at(self.index + self.peek_offset)
 
-    def next(self):
+    def next(self) -> Union[str, None]:
         self.peek_offset = 0
         # Skip over CRLF as if it was a single character.
         if self.get(self.index) == '\r' \
@@ -42,7 +43,7 @@ class ParserStream(object):
         self.index += 1
         return self.get(self.index)
 
-    def peek(self):
+    def peek(self) -> Union[str, None]:
         # Skip over CRLF as if it was a single character.
         if self.get(self.index + self.peek_offset) == '\r' \
                 and self.get(self.index + self.peek_offset + 1) == '\n':
@@ -50,10 +51,10 @@ class ParserStream(object):
         self.peek_offset += 1
         return self.get(self.index + self.peek_offset)
 
-    def reset_peek(self, offset=0):
+    def reset_peek(self, offset: int = 0) -> None:
         self.peek_offset = offset
 
-    def skip_to_peek(self):
+    def skip_to_peek(self) -> None:
         self.index += self.peek_offset
         self.peek_offset = 0
 
@@ -65,18 +66,18 @@ SPECIAL_LINE_START_CHARS = ('}', '.', '[', '*')
 
 class FluentParserStream(ParserStream):
 
-    def peek_blank_inline(self):
+    def peek_blank_inline(self) -> str:
         start = self.index + self.peek_offset
         while self.current_peek == ' ':
             self.peek()
         return self.string[start:self.index + self.peek_offset]
 
-    def skip_blank_inline(self):
+    def skip_blank_inline(self) -> str:
         blank = self.peek_blank_inline()
         self.skip_to_peek()
         return blank
 
-    def peek_blank_block(self):
+    def peek_blank_block(self) -> str:
         blank = ""
         while True:
             line_start = self.peek_offset
@@ -95,27 +96,27 @@ class FluentParserStream(ParserStream):
             self.reset_peek(line_start)
             return blank
 
-    def skip_blank_block(self):
+    def skip_blank_block(self) -> str:
         blank = self.peek_blank_block()
         self.skip_to_peek()
         return blank
 
-    def peek_blank(self):
+    def peek_blank(self) -> None:
         while self.current_peek in (" ", EOL):
             self.peek()
 
-    def skip_blank(self):
+    def skip_blank(self) -> None:
         self.peek_blank()
         self.skip_to_peek()
 
-    def expect_char(self, ch):
+    def expect_char(self, ch: str) -> Literal[True]:
         if self.current_char == ch:
             self.next()
             return True
 
         raise ParseError('E0003', ch)
 
-    def expect_line_end(self):
+    def expect_line_end(self) -> Literal[True]:
         if self.current_char is EOF:
             # EOF is a valid line end in Fluent.
             return True
@@ -127,29 +128,29 @@ class FluentParserStream(ParserStream):
         # Unicode Character 'SYMBOL FOR NEWLINE' (U+2424)
         raise ParseError('E0003', '\u2424')
 
-    def take_char(self, f):
+    def take_char(self, f: Callable[[str], bool]) -> Union[str, Literal[False], None]:
         ch = self.current_char
-        if ch is EOF:
+        if ch is None:
             return EOF
         if f(ch):
             self.next()
             return ch
         return False
 
-    def is_char_id_start(self, ch):
-        if ch is EOF:
+    def is_char_id_start(self, ch: Union[str, None]) -> bool:
+        if ch is None:
             return False
 
         cc = ord(ch)
         return (cc >= 97 and cc <= 122) or \
                (cc >= 65 and cc <= 90)
 
-    def is_identifier_start(self):
+    def is_identifier_start(self) -> bool:
         return self.is_char_id_start(self.current_peek)
 
-    def is_number_start(self):
+    def is_number_start(self) -> bool:
         ch = self.peek() if self.current_char == '-' else self.current_char
-        if ch is EOF:
+        if ch is None:
             self.reset_peek()
             return False
 
@@ -158,17 +159,17 @@ class FluentParserStream(ParserStream):
         self.reset_peek()
         return is_digit
 
-    def is_char_pattern_continuation(self, ch):
+    def is_char_pattern_continuation(self, ch: Union[str, None]) -> bool:
         if ch is EOF:
             return False
 
         return ch not in SPECIAL_LINE_START_CHARS
 
-    def is_value_start(self):
+    def is_value_start(self) -> bool:
         # Inline Patterns may start with any char.
         return self.current_peek is not EOF and self.current_peek != EOL
 
-    def is_value_continuation(self):
+    def is_value_continuation(self) -> bool:
         column1 = self.peek_offset
         self.peek_blank_inline()
 
@@ -189,7 +190,7 @@ class FluentParserStream(ParserStream):
     #  0 - comment
     #  1 - group comment
     #  2 - resource comment
-    def is_next_line_comment(self, level=-1):
+    def is_next_line_comment(self, level: int = -1) -> bool:
         if self.current_peek != EOL:
             return False
 
@@ -211,7 +212,7 @@ class FluentParserStream(ParserStream):
         self.reset_peek()
         return False
 
-    def is_variant_start(self):
+    def is_variant_start(self) -> bool:
         current_peek_offset = self.peek_offset
         if self.current_peek == '*':
             self.peek()
@@ -222,10 +223,10 @@ class FluentParserStream(ParserStream):
         self.reset_peek(current_peek_offset)
         return False
 
-    def is_attribute_start(self):
+    def is_attribute_start(self) -> bool:
         return self.current_peek == '.'
 
-    def skip_to_next_entry_start(self, junk_start):
+    def skip_to_next_entry_start(self, junk_start: int) -> None:
         last_newline = self.string.rfind(EOL, 0, self.index)
         if junk_start < last_newline:
             # Last seen newline is _after_ the junk start. It's safe to rewind
@@ -249,7 +250,7 @@ class FluentParserStream(ParserStream):
             if (first, peek) == ('/', '/') or (first, peek) == ('[', '['):
                 break
 
-    def take_id_start(self):
+    def take_id_start(self) -> Union[str, None]:
         if self.is_char_id_start(self.current_char):
             ret = self.current_char
             self.next()
@@ -257,8 +258,8 @@ class FluentParserStream(ParserStream):
 
         raise ParseError('E0004', 'a-zA-Z')
 
-    def take_id_char(self):
-        def closure(ch):
+    def take_id_char(self) -> Union[str, Literal[False], None]:
+        def closure(ch: str) -> bool:
             cc = ord(ch)
             return ((cc >= 97 and cc <= 122) or
                     (cc >= 65 and cc <= 90) or
@@ -266,14 +267,14 @@ class FluentParserStream(ParserStream):
                     cc == 95 or cc == 45)
         return self.take_char(closure)
 
-    def take_digit(self):
-        def closure(ch):
+    def take_digit(self) -> Union[str, Literal[False], None]:
+        def closure(ch: str) -> bool:
             cc = ord(ch)
             return (cc >= 48 and cc <= 57)
         return self.take_char(closure)
 
-    def take_hex_digit(self):
-        def closure(ch):
+    def take_hex_digit(self) -> Union[str, Literal[False], None]:
+        def closure(ch: str) -> bool:
             cc = ord(ch)
             return (
                 (cc >= 48 and cc <= 57)   # 0-9

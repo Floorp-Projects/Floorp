@@ -2,16 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import re
 import bisect
 import codecs
 from collections import Counter
 from compare_locales.keyedtuple import KeyedTuple
 from compare_locales.paths import File
-
-import six
 
 __constructors = []
 
@@ -31,7 +27,7 @@ CAN_SKIP = 2
 CAN_MERGE = 4
 
 
-class Entry(object):
+class Entry:
     '''
     Abstraction layer for a localizable entity.
     Currently supported are grammars of the form:
@@ -165,7 +161,7 @@ class LiteralEntity(Entity):
     It's storing string literals for key, raw_val and all instead of spans.
     """
     def __init__(self, key, val, all):
-        super(LiteralEntity, self).__init__(None, None, None, None, None, None)
+        super().__init__(None, None, None, None, None, None)
         self._key = key
         self._raw_val = val
         self._all = all
@@ -187,7 +183,7 @@ class PlaceholderEntity(LiteralEntity):
     """Subclass of Entity to be removed in merges.
     """
     def __init__(self, key):
-        super(PlaceholderEntity, self).__init__(key, "", "\nplaceholder\n")
+        super().__init__(key, "", "\nplaceholder\n")
 
 
 class Comment(Entry):
@@ -221,13 +217,13 @@ class OffsetComment(Comment):
     @property
     def val(self):
         if self._val_cache is None:
-            self._val_cache = ''.join((
+            self._val_cache = ''.join(
                 l[self.comment_offset:] for l in self.all.splitlines(True)
-            ))
+            )
         return self._val_cache
 
 
-class Junk(object):
+class Junk:
     '''
     An almost-Entity, representing junk data that we didn't parse.
     This way, we can signal bad content as stuff we don't understand.
@@ -294,14 +290,14 @@ class BadEntity(ValueError):
     pass
 
 
-class Parser(object):
+class Parser:
     capabilities = CAN_SKIP | CAN_MERGE
     reWhitespace = re.compile('[ \t\r\n]+', re.M)
     Comment = Comment
     # NotImplementedError would be great, but also tedious
     reKey = reComment = None
 
-    class Context(object):
+    class Context:
         "Fixture for content and line numbers"
         def __init__(self, contents):
             self.contents = contents
@@ -332,16 +328,12 @@ class Parser(object):
             file = file.fullpath
         # python 2 has binary input with universal newlines,
         # python 3 doesn't. Let's split code paths
-        if six.PY2:
-            with open(file, 'rbU') as f:
-                self.readContents(f.read())
-        else:
-            with open(
-                file, 'r',
-                encoding=self.encoding, errors='replace',
-                newline=None
-            ) as f:
-                self.readUnicode(f.read())
+        with open(
+            file,
+            encoding=self.encoding, errors='replace',
+            newline=None
+        ) as f:
+            self.readUnicode(f.read())
 
     def readContents(self, contents):
         '''Read contents and create parsing context.
@@ -448,4 +440,4 @@ class Parser(object):
         found = Counter(entity.key for entity in entities)
         for entity_id, cnt in found.items():
             if cnt > 1:
-                yield '{} occurs {} times'.format(entity_id, cnt)
+                yield f'{entity_id} occurs {cnt} times'
