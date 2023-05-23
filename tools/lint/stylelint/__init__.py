@@ -57,7 +57,7 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
         if fileext:
             modified_paths += [path]
         else:
-            modified_paths += [path + "**" + os.path.sep + exts]
+            modified_paths += [os.path.join(path, "**" + os.path.sep + exts)]
 
     # Valid binaries are:
     #  - Any provided by the binary argument.
