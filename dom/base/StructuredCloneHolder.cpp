@@ -510,9 +510,9 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   return false;
 }
 
-/* static */
-bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
-                                       nsString& aString) {
+template <typename char_type>
+static bool ReadTString(JSStructuredCloneReader* aReader,
+                        nsTString<char_type>& aString) {
   uint32_t length, zero;
   if (!JS_ReadUint32Pair(aReader, &length, &zero)) {
     return false;
@@ -521,18 +521,42 @@ bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
   if (NS_WARN_IF(!aString.SetLength(length, fallible))) {
     return false;
   }
-  size_t charSize = sizeof(nsString::char_type);
+  size_t charSize = sizeof(char_type);
   return JS_ReadBytes(aReader, (void*)aString.BeginWriting(),
                       length * charSize);
+}
+
+template <typename char_type>
+static bool WriteTString(JSStructuredCloneWriter* aWriter,
+                         const nsTSubstring<char_type>& aString) {
+  size_t charSize = sizeof(char_type);
+  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
+         JS_WriteBytes(aWriter, aString.BeginReading(),
+                       aString.Length() * charSize);
+}
+
+/* static */
+bool StructuredCloneHolder::ReadString(JSStructuredCloneReader* aReader,
+                                       nsString& aString) {
+  return ReadTString(aReader, aString);
 }
 
 /* static */
 bool StructuredCloneHolder::WriteString(JSStructuredCloneWriter* aWriter,
                                         const nsAString& aString) {
-  size_t charSize = sizeof(nsString::char_type);
-  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
-         JS_WriteBytes(aWriter, aString.BeginReading(),
-                       aString.Length() * charSize);
+  return WriteTString(aWriter, aString);
+}
+
+/* static */
+bool StructuredCloneHolder::ReadCString(JSStructuredCloneReader* aReader,
+                                        nsCString& aString) {
+  return ReadTString(aReader, aString);
+}
+
+/* static */
+bool StructuredCloneHolder::WriteCString(JSStructuredCloneWriter* aWriter,
+                                         const nsACString& aString) {
+  return WriteTString(aWriter, aString);
 }
 
 namespace {
