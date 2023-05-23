@@ -45,7 +45,7 @@ import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.compose.DropdownMenu
+import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -150,7 +150,7 @@ private fun RecentBookmarkItem(
                 style = FirefoxTheme.typography.caption,
             )
 
-            DropdownMenu(
+            ContextualMenu(
                 showMenu = isMenuExpanded,
                 onDismissRequest = { isMenuExpanded = false },
                 menuItems = menuItems.map { item -> MenuItem(item.title) { item.onClick(bookmark) } },

@@ -38,7 +38,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.R.drawable
 import org.mozilla.fenix.R.string
-import org.mozilla.fenix.compose.DropdownMenu
+import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.ext.getIconColor
@@ -141,7 +141,7 @@ fun Collection(
                                 tint = FirefoxTheme.colors.iconPrimary,
                             )
 
-                            DropdownMenu(
+                            ContextualMenu(
                                 showMenu = isMenuExpanded,
                                 menuItems = menuItems,
                                 onDismissRequest = { isMenuExpanded = false },

@@ -48,7 +48,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.DropdownMenu
+import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -226,7 +226,7 @@ private fun SingleSelectBanner(
                     .align(Alignment.CenterVertically)
                     .testTag(TabsTrayTestTag.threeDotButton),
             ) {
-                DropdownMenu(
+                ContextualMenu(
                     menuItems = generateSingleSelectBannerMenuItems(
                         selectedPage,
                         normalTabCount,
@@ -457,7 +457,7 @@ private fun MultiSelectBanner(
                 tint = FirefoxTheme.colors.iconOnColor,
             )
 
-            DropdownMenu(
+            ContextualMenu(
                 menuItems = menuItems,
                 showMenu = showMenu,
                 offset = DpOffset(x = 0.dp, y = -ICON_SIZE),

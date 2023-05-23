@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.DropdownMenu
+import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.ThumbnailCard
@@ -182,7 +182,7 @@ fun RecentSyncedTab(
         }
     }
 
-    DropdownMenu(
+    ContextualMenu(
         showMenu = isDropdownExpanded && tab != null,
         onDismissRequest = { isDropdownExpanded = false },
         menuItems = listOf(

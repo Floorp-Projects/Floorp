@@ -46,8 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Divider
-import org.mozilla.fenix.compose.DropdownMenu
 import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
@@ -202,7 +202,7 @@ private fun RecentlyVisitedHistoryGroup(
             }
         }
 
-        DropdownMenu(
+        ContextualMenu(
             showMenu = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false },
             menuItems = menuItems.map { MenuItem(it.title) { it.onClick(recentVisit) } },
@@ -271,7 +271,7 @@ private fun RecentlyVisitedHistoryHighlight(
             }
         }
 
-        DropdownMenu(
+        ContextualMenu(
             showMenu = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false },
             menuItems = menuItems.map { item -> MenuItem(item.title) { item.onClick(recentVisit) } },
