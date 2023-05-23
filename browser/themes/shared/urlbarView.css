@@ -255,16 +255,21 @@
 }
 
 .urlbarView-row[rich-suggestion=with-icon] > .urlbarView-row-inner > .urlbarView-no-wrap {
-  display: flex;
-  flex-flow: row wrap;
+  display: grid;
+  grid-template-columns: repeat(3, min-content);
   align-items: center;
+  flex-shrink: 1;
+}
+
+.urlbarView-row[rich-suggestion=with-icon]:not(:hover) .urlbarView-action {
+  visibility: collapse;
 }
 
 .urlbarView-description {
   /* We want the description to be last visually but to be after the title
      in the screenreader */
   order: 2;
-  width: 100%
+  grid-area: 2 / 1 / 3 / 4;
 }
 
 /* Favicon */
@@ -696,7 +701,7 @@
 }
 
 .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
-.urlbarView-row:is([type=search], [restyled-search]):not([selected], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
+.urlbarView-row:is([type=search], [restyled-search]):not([selected], [rich-selection], [show-action-text], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView-row:not([has-action], [has-url], [restyled-search]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
