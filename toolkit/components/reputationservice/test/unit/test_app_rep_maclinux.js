@@ -5,11 +5,9 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+});
 
 const gAppRep = Cc[
   "@mozilla.org/reputationservice/application-reputation-service;1"
