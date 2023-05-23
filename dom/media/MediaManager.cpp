@@ -1427,15 +1427,6 @@ class GetUserMediaStreamTask final : public GetUserMediaTask {
         }
       } else {
         mVideoTrackingId.emplace(mVideoDevice->GetTrackingId());
-        if (mCallerType == CallerType::NonSystem) {
-          if (mShouldFocusSource) {
-            rv = mVideoDevice->FocusOnSelectedSource();
-
-            if (NS_FAILED(rv)) {
-              LOG("FocusOnSelectedSource failed");
-            }
-          }
-        }
       }
     }
     if (errorMsg) {
@@ -1676,10 +1667,27 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
           })
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [holder = std::move(mHolder), domStream](
+          [holder = std::move(mHolder), domStream, callerType = mCallerType,
+           shouldFocus = mShouldFocusSource, videoDevice = mVideoDevice](
               const DeviceListener::DeviceListenerPromise::ResolveOrRejectValue&
                   aValue) mutable {
             if (aValue.IsResolve()) {
+              if (auto* mgr = MediaManager::GetIfExists();
+                  mgr && !sHasMainThreadShutdown && videoDevice &&
+                  callerType == CallerType::NonSystem && shouldFocus) {
+                // Device was successfully started. Attempt to focus the
+                // source.
+                MOZ_ALWAYS_SUCCEEDS(
+                    mgr->mMediaThread->Dispatch(NS_NewRunnableFunction(
+                        "GetUserMediaStreamTask::FocusOnSelectedSource",
+                        [videoDevice = std::move(videoDevice)] {
+                          nsresult rv = videoDevice->FocusOnSelectedSource();
+                          if (NS_FAILED(rv)) {
+                            LOG("FocusOnSelectedSource failed");
+                          }
+                        })));
+              }
+
               holder.Resolve(domStream, __func__);
             } else {
               holder.Reject(aValue.RejectValue(), __func__);
