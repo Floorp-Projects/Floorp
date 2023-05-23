@@ -8715,6 +8715,17 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
                                  std::move(atFoundElement));
   }
 
+  // If we reached a block boundary (end of the list item or a child block),
+  // let's put deepest start of the list item or the child block.
+  if (forwardScanFromStartOfListItemResult.ReachedBlockBoundary()) {
+    return InsertParagraphResult(
+        &rightListItemElement,
+        HTMLEditUtils::GetDeepestEditableStartPointOf<EditorDOMPoint>(
+            forwardScanFromStartOfListItemResult.GetContent()
+                ? *forwardScanFromStartOfListItemResult.GetContent()
+                : rightListItemElement));
+  }
+
   // Otherwise, return the point at first visible thing.
   // XXX This may be not meaningful position if it reached block element
   //     in aListItemElement.
