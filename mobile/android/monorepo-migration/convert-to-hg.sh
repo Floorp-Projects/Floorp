@@ -14,7 +14,8 @@ SOURCE_BRANCH=main
 DEST_REPO="$(readlink -f "$1")"
 DEST_SUBDIR=mobile/android
 
-EXPRESSIONS_FILE_PATH="$(dirname $(readlink -f "$0"))/data/message-expressions.txt"
+SCRIPT_DIR="$(dirname $(readlink -f "$0"))"
+EXPRESSIONS_FILE_PATH="${SCRIPT_DIR}/data/message-expressions.txt"
 
 TEMPDIR=$(mktemp -d)
 trap "rm -rf ${TEMPDIR}" EXIT
@@ -23,8 +24,8 @@ SOURCE_REPO_PATH="${TEMPDIR}/${SOURCE_REPO_NAME}"
 
 setup_temporary_repo() {
   git clone "${SOURCE_REPO}" "${SOURCE_REPO_PATH}"
-  git -C "${SOURCE_REPO_PATH}" config user.email=release@mozilla.com
-  git -C "${SOURCe_REPO_PATH}" config user.name="Mozilla Release Engineering"
+  git -C "${SOURCE_REPO_PATH}" config user.email release@mozilla.com
+  git -C "${SOURCE_REPO_PATH}" config user.name "Mozilla Release Engineering"
 }
 
 setup_cinnabar() {
@@ -69,15 +70,12 @@ rewrite_git_history() {
         -- "$SOURCE_BRANCH"
   # to-subdirectory-filter: move everything to $DEST_SUBDIR
   # replace-message: replace references to pull requests with the full URL
-  # preserve-commit-hashes: because the filter-branch step also changes
-  #                         hashes, as does the conversion to hg, rewriting
-  #                         hashes here would only point at temporary commit
-  #                         objects which wouldn't help
-  git -C "${SOURCE_REPO_PATH}" filter-repo \
+  python3 ${SCRIPT_DIR}/filter-repo.py \
+    --source "${SOURCE_REPO_PATH}" \
+    --target "${SOURCE_REPO_PATH}" \
     --force \
     --to-subdirectory-filter "$DEST_SUBDIR/" \
     --replace-message "$EXPRESSIONS_FILE_PATH" \
-    --preserve-commit-hashes \
     --refs "$SOURCE_BRANCH"
 }
 
