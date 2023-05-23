@@ -19,12 +19,6 @@
  */
 const PIVOT_LANGUAGE = "en";
 
-const TRANSLATIONS_PERMISSION = "translations";
-const ALWAYS_TRANSLATE_LANGS_PREF =
-  "browser.translations.alwaysTranslateLanguages";
-const NEVER_TRANSLATE_LANGS_PREF =
-  "browser.translations.neverTranslateLanguages";
-
 const lazy = {};
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -51,30 +45,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "autoTranslatePagePref",
   "browser.translations.autoTranslate"
-);
-
-/**
- * Returns the always-translate language tags as an array.
- */
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "alwaysTranslateLangTags",
-  ALWAYS_TRANSLATE_LANGS_PREF,
-  /* aDefaultValue */ [],
-  /* onUpdate */ null,
-  /* aTransform */ rawLangTags => (rawLangTags ? rawLangTags.split(",") : [])
-);
-
-/**
- * Returns the never-translate language tags as an array.
- */
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "neverTranslateLangTags",
-  NEVER_TRANSLATE_LANGS_PREF,
-  /* aDefaultValue */ [],
-  /* onUpdate */ null,
-  /* aTransform */ rawLangTags => (rawLangTags ? rawLangTags.split(",") : [])
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -343,27 +313,30 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:GetLanguagePairs": {
         return this.getLanguagePairs();
       }
-      case "Translations:EngineIsReady": {
+      case "Translations:EngineIsReady":
         this.isEngineReady = true;
         this.languageState.isEngineReady = true;
         break;
-      }
-      case "Translations:GetTranslationConditions": {
-        const maybeAutoTranslate = TranslationsParent.#maybeAutoTranslate(
-          data.docLangTag
-        );
-        const maybeNeverTranslate =
-          TranslationsParent.shouldNeverTranslateLanguage(data.docLangTag) ||
-          (await this.shouldNeverTranslateSite());
-
-        if (maybeAutoTranslate) {
-          this.languageState.requestedTranslationPair = {
-            fromLanguage: data.docLangTag,
-            toLanguage: data.appLangTag,
-          };
+      case "Translations:MaybeAutoTranslate": {
+        if (!lazy.autoTranslatePagePref) {
+          return false;
         }
 
-        return { maybeAutoTranslate, maybeNeverTranslate };
+        if (TranslationsParent.#isPageRestoredForAutoTranslate) {
+          // The user clicked the restore button. Respect it for one page load.
+          TranslationsParent.#isPageRestoredForAutoTranslate = false;
+
+          // Skip this auto-translation.
+          return false;
+        }
+
+        this.languageState.requestedTranslationPair = {
+          fromLanguage: data.docLangTag,
+          toLanguage: data.appLangTag,
+        };
+
+        // The page can be auto-translated
+        return true;
       }
       case "Translations:ReportDetectedLangTags": {
         this.languageState.detectedLanguages = data.langTags;
@@ -371,35 +344,6 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     }
     return undefined;
-  }
-
-  /**
-   * Returns true if translations should auto-translate from the given
-   * language, otherwise returns false.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   * @returns {boolean}
-   */
-  static #maybeAutoTranslate(langTag) {
-    if (
-      // The user has not marked this language as always translate.
-      !TranslationsParent.shouldAlwaysTranslateLanguage(langTag) &&
-      // The pref to always auto-translate is off.
-      !lazy.autoTranslatePagePref
-    ) {
-      return false;
-    }
-
-    if (TranslationsParent.#isPageRestoredForAutoTranslate) {
-      // The user clicked the restore button. Respect it for one page load.
-      TranslationsParent.#isPageRestoredForAutoTranslate = false;
-
-      // Skip this auto-translation.
-      return false;
-    }
-
-    // The page can be auto-translated
-    return true;
   }
 
   /**
@@ -1330,7 +1274,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // This page has already been translated, restore it and translate it
       // again once the actor has been recreated.
       TranslationsParent.#translateOnPageReload = { fromLanguage, toLanguage };
-      this.restorePage(fromLanguage);
+      this.restorePage();
     } else {
       this.languageState.requestedTranslationPair = {
         fromLanguage,
@@ -1345,14 +1289,9 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * Restore the page to the original language by doing a hard reload.
-   *
-   * @param {string} fromLanguage A BCP-47 language tag
    */
-  restorePage(fromLanguage) {
-    if (
-      lazy.autoTranslatePagePref ||
-      TranslationsParent.shouldAlwaysTranslateLanguage(fromLanguage)
-    ) {
+  restorePage() {
+    if (lazy.autoTranslatePagePref) {
       // Skip auto-translate for one page load.
       TranslationsParent.#isPageRestoredForAutoTranslate = true;
     }
@@ -1395,148 +1334,6 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   getLangTagsForTranslation() {
     return this.sendQuery("Translations:GetLangTagsForTranslation");
-  }
-
-  /**
-   * Returns the principal from the content window's origin.
-   * @returns {nsIPrincipal}
-   */
-  getContentWindowPrincipal() {
-    return this.sendQuery("Translations:GetContentWindowPrincipal");
-  }
-
-  /**
-   * Returns true if the given language tag is present in the always-translate
-   * languages preference, otherwise false.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   * @returns {boolean}
-   */
-  static shouldAlwaysTranslateLanguage(langTag) {
-    return lazy.alwaysTranslateLangTags.includes(langTag);
-  }
-
-  /**
-   * Returns true if the given language tag is present in the never-translate
-   * languages preference, otherwise false.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   * @returns {boolean}
-   */
-  static shouldNeverTranslateLanguage(langTag) {
-    return lazy.neverTranslateLangTags.includes(langTag);
-  }
-
-  /**
-   * Returns true if the current site is denied permissions to translate,
-   * otherwise returns false.
-   *
-   * @returns {Promise<boolean>}
-   */
-  async shouldNeverTranslateSite() {
-    let principal;
-    try {
-      principal = await this.getContentWindowPrincipal();
-    } catch {
-      // Unable to get content window principal.
-      return false;
-    }
-    const perms = Services.perms;
-    const permission = perms.getPermissionObject(
-      principal,
-      TRANSLATIONS_PERMISSION,
-      /* exactHost */ false
-    );
-    return permission?.capability === perms.DENY_ACTION;
-  }
-
-  /**
-   * Removes the given language tag from the given preference.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   * @param {string} prefName - The pref name
-   */
-  static #removeLangTagFromPref(langTag, prefName) {
-    const langTags =
-      prefName === ALWAYS_TRANSLATE_LANGS_PREF
-        ? lazy.alwaysTranslateLangTags
-        : lazy.neverTranslateLangTags;
-    const newLangTags = langTags.filter(tag => tag !== langTag);
-    Services.prefs.setCharPref(prefName, newLangTags.join(","));
-  }
-
-  /**
-   * Adds the given language tag to the given preference.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   * @param {string} prefName - The pref name
-   */
-  static #addLangTagToPref(langTag, prefName) {
-    const langTags =
-      prefName === ALWAYS_TRANSLATE_LANGS_PREF
-        ? lazy.alwaysTranslateLangTags
-        : lazy.neverTranslateLangTags;
-    if (!langTags.includes(langTag)) {
-      langTags.push(langTag);
-    }
-    Services.prefs.setCharPref(prefName, langTags.join(","));
-  }
-
-  /**
-   * Toggles the always-translate language preference by adding the language
-   * to the pref list if it is not present, or removing it if it is present.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   * @returns {boolean} Whether the pref was toggled on for the langTag
-   */
-  static toggleAlwaysTranslateLanguagePref(langTag) {
-    if (TranslationsParent.shouldAlwaysTranslateLanguage(langTag)) {
-      // The pref was toggled off for this langTag
-      this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
-      return false;
-    }
-
-    // The pref was toggled on for this langTag
-    this.#addLangTagToPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
-    this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-    return true;
-  }
-
-  /**
-   * Toggles the never-translate language preference by adding the language
-   * to the pref list if it is not present, or removing it if it is present.
-   *
-   * @param {string} langTag - A BCP-47 language tag
-   */
-  static toggleNeverTranslateLanguagePref(langTag) {
-    if (TranslationsParent.shouldNeverTranslateLanguage(langTag)) {
-      // The pref was toggled off for this langTag
-      this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-      return;
-    }
-
-    // The pref was toggled on for this langTag
-    this.#addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-    this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
-  }
-
-  /**
-   * Toggles the never-translate site permissions by adding DENY_ACTION to
-   * the site principal if it is not present, or removing it if it is present.
-   */
-  async toggleNeverTranslateSitePermissions() {
-    const perms = Services.perms;
-    const principal = await this.getContentWindowPrincipal();
-    const shouldNeverTranslateSite = await this.shouldNeverTranslateSite();
-    if (shouldNeverTranslateSite) {
-      perms.removeFromPrincipal(principal, TRANSLATIONS_PERMISSION);
-    } else {
-      perms.addFromPrincipal(
-        principal,
-        TRANSLATIONS_PERMISSION,
-        perms.DENY_ACTION
-      );
-    }
   }
 }
 

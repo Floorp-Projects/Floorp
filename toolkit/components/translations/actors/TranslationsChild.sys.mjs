@@ -535,16 +535,6 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
-   * Returns the principal from the content window's origin.
-   * @returns {nsIPrincipal}
-   */
-  getContentWindowPrincipal() {
-    return Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      this.contentWindow.location.origin
-    );
-  }
-
-  /**
    * Determine if the page should be translated by checking the App's languages and
    * comparing it to the reported language of the page. If we can translate the page,
    * then return the language pair.
@@ -665,18 +655,15 @@ export class TranslationsChild extends JSWindowActorChild {
     this.#langTags = langTags;
     this.reportDetectedLangTagsToParent(langTags);
 
-    if (langTags) {
-      const { maybeAutoTranslate, maybeNeverTranslate } = await this.sendQuery(
-        "Translations:GetTranslationConditions",
-        langTags
+    if (
+      langTags &&
+      (await this.sendQuery("Translations:MaybeAutoTranslate", langTags))
+    ) {
+      this.translatePage(
+        langTags.docLangTag,
+        langTags.appLangTag,
+        translationsStart
       );
-      if (maybeAutoTranslate && !maybeNeverTranslate) {
-        this.translatePage(
-          langTags.docLangTag,
-          langTags.appLangTag,
-          translationsStart
-        );
-      }
     }
   }
 
@@ -824,8 +811,6 @@ export class TranslationsChild extends JSWindowActorChild {
         break;
       case "Translations:GetLangTagsForTranslation":
         return this.getLangTagsForTranslation();
-      case "Translations:GetContentWindowPrincipal":
-        return this.getContentWindowPrincipal();
       default:
         lazy.console.warn("Unknown message.", name);
     }

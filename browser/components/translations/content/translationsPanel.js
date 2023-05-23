@@ -135,21 +135,6 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Returns the cached, detected language tag of the document if available.
-   * Otherwise, attempts to retrieve the detected language tag for the document.
-   *
-   * @returns {Promise<string | null>} A BCP-47 language tag
-   */
-  async #getDocLangTag() {
-    if (!this.#docLangTag) {
-      const { docLangTag } =
-        await this.#getTranslationsActor().getLangTagsForTranslation();
-      this.#docLangTag = docLangTag;
-    }
-    return this.#docLangTag;
-  }
-
-  /**
    * @type {"initialized" | "error" | "uninitialized"}
    */
   #langListsPhase = "uninitialized";
@@ -334,94 +319,6 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Updates the checked states of the settings menu checkboxes that
-   * pertain to languages.
-   */
-  async #updateSettingsMenuLanguageCheckboxStates() {
-    const docLangTag = await this.#getDocLangTag();
-
-    const alwaysTranslateLanguage =
-      TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
-    const neverTranslateLanguage =
-      TranslationsParent.shouldNeverTranslateLanguage(docLangTag);
-
-    const { panel } = this.elements;
-    const alwaysTranslateMenuItems = panel.querySelectorAll(
-      ".always-translate-language-menuitem"
-    );
-    const neverTranslateMenuItems = panel.querySelectorAll(
-      ".never-translate-language-menuitem"
-    );
-
-    for (const menuitem of alwaysTranslateMenuItems) {
-      menuitem.setAttribute(
-        "checked",
-        alwaysTranslateLanguage ? "true" : "false"
-      );
-    }
-    for (const menuitem of neverTranslateMenuItems) {
-      menuitem.setAttribute(
-        "checked",
-        neverTranslateLanguage ? "true" : "false"
-      );
-    }
-  }
-
-  /**
-   * Updates the checked states of the settings menu checkboxes that
-   * pertain to site permissions.
-   */
-  async #updateSettingsMenuSiteCheckboxStates() {
-    const { panel } = this.elements;
-    const neverTranslateSiteMenuItems = panel.querySelectorAll(
-      ".never-translate-site-menuitem"
-    );
-    const neverTranslateSite =
-      await this.#getTranslationsActor().shouldNeverTranslateSite();
-
-    for (const menuitem of neverTranslateSiteMenuItems) {
-      menuitem.setAttribute("checked", neverTranslateSite ? "true" : "false");
-    }
-  }
-
-  /**
-   * Populates the language-related settings menuitems by adding the
-   * localized display name of the document's detected language tag.
-   */
-  async #populateSettingsMenuItems() {
-    const docLangTag = await this.#getDocLangTag();
-    const displayNames = new Services.intl.DisplayNames(undefined, {
-      type: "language",
-    });
-    const docLangDisplayName = displayNames.of(docLangTag);
-
-    const { panel } = this.elements;
-
-    const alwaysTranslateMenuItems = panel.querySelectorAll(
-      ".always-translate-language-menuitem"
-    );
-    const neverTranslateMenuItems = panel.querySelectorAll(
-      ".never-translate-language-menuitem"
-    );
-
-    for (const menuitem of alwaysTranslateMenuItems) {
-      document.l10n.setArgs(menuitem, {
-        language: docLangDisplayName,
-      });
-    }
-    for (const menuitem of neverTranslateMenuItems) {
-      document.l10n.setArgs(menuitem, {
-        language: docLangDisplayName,
-      });
-    }
-
-    await Promise.all([
-      this.#updateSettingsMenuLanguageCheckboxStates(),
-      this.#updateSettingsMenuSiteCheckboxStates(),
-    ]);
-  }
-
-  /**
    * Configures the panel for the user to reset the page after it has been translated.
    *
    * @param {TranslationPair} translationPair
@@ -497,33 +394,10 @@ var TranslationsPanel = new (class {
       });
     }
 
-    this.#populateSettingsMenuItems();
     PanelMultiView.openPopup(panel, button, {
       position: "bottomright topright",
       triggerEvent: event,
     }).catch(error => this.console.error(error));
-  }
-
-  /**
-   * Removes the translations button.
-   */
-  #hideTranslationsButton() {
-    const { button, buttonLocale, buttonCircleArrows } = this.elements;
-    button.hidden = true;
-    buttonLocale.hidden = true;
-    buttonCircleArrows.hidden = true;
-    button.removeAttribute("translationsactive");
-  }
-
-  /**
-   * Returns true if translations is currently active, otherwise false.
-   *
-   * @returns {boolean}
-   */
-  #isTranslationsActive() {
-    const { requestedTranslationPair } =
-      this.#getTranslationsActor().languageState;
-    return requestedTranslationPair !== null;
   }
 
   /**
@@ -533,8 +407,7 @@ var TranslationsPanel = new (class {
     PanelMultiView.hidePopup(this.elements.panel);
 
     const actor = this.#getTranslationsActor();
-    const docLangTag = await this.#getDocLangTag();
-    actor.translate(docLangTag, this.elements.defaultToMenuList.value);
+    actor.translate(this.#docLangTag, this.elements.defaultToMenuList.value);
   }
 
   /**
@@ -558,8 +431,7 @@ var TranslationsPanel = new (class {
     PanelMultiView.hidePopup(this.elements.panel);
 
     const actor = this.#getTranslationsActor();
-    const docLangTag = await this.#getDocLangTag();
-    actor.translate(docLangTag, this.elements.revisitMenuList.value);
+    actor.translate(this.#docLangTag, this.elements.revisitMenuList.value);
   }
 
   onCancel() {
@@ -570,8 +442,6 @@ var TranslationsPanel = new (class {
    * A handler for opening the settings context menu.
    */
   openSettingsPopup(button) {
-    this.#updateSettingsMenuLanguageCheckboxStates();
-    this.#updateSettingsMenuSiteCheckboxStates();
     const popup = button.querySelector("menupopup");
     popup.openPopup(button);
   }
@@ -586,71 +456,13 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Updates the always-translate-language menuitem prefs and checked state.
-   * If auto-translate is currently active for the doc language, deactivates it.
-   * If auto-translate is currently inactive for the doc language, activates it.
-   */
-  async onAlwaysTranslateLanguage() {
-    const docLangTag = await this.#getDocLangTag();
-    const toggledOn =
-      TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
-    const translationsActive = this.#isTranslationsActive();
-    this.#updateSettingsMenuLanguageCheckboxStates();
-
-    if (toggledOn && !translationsActive) {
-      await this.onDefaultTranslate();
-    } else if (!toggledOn && translationsActive) {
-      await this.onRestore();
-    }
-
-    // If always-translate was activated while translations is active
-    // If always-translate was deactivated while translations is inactive
-    // There is no need to change the state of the page.
-  }
-
-  /**
-   * Updates the never-translate-language menuitem prefs and checked state.
-   * If never-translate is currently active for the doc language, deactivates it.
-   * If never-translate is currently inactive for the doc language, activates it.
-   */
-  async onNeverTranslateLanguage() {
-    const docLangTag = await this.#getDocLangTag();
-    TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
-    this.#updateSettingsMenuLanguageCheckboxStates();
-
-    if (this.#isTranslationsActive()) {
-      await this.onRestore();
-      return;
-    }
-
-    this.#hideTranslationsButton();
-  }
-
-  /**
-   * Updates the never-translate-site menuitem permissions and checked state.
-   * If never-translate is currently active for the site, deactivates it.
-   * If never-translate is currently inactive for the site, activates it.
-   */
-  async onNeverTranslateSite() {
-    await this.#getTranslationsActor().toggleNeverTranslateSitePermissions();
-    await this.#updateSettingsMenuSiteCheckboxStates();
-
-    if (this.#isTranslationsActive()) {
-      await this.onRestore();
-      return;
-    }
-
-    this.#hideTranslationsButton();
-  }
-
-  /**
    * Handle the restore button being clicked.
    */
-  async onRestore() {
+  onRestore() {
     const { panel } = this.elements;
     PanelMultiView.hidePopup(panel);
-    const docLangTag = await this.#getDocLangTag();
-    this.#getTranslationsActor().restorePage(docLangTag);
+
+    this.#getTranslationsActor().restorePage();
   }
 
   /**
@@ -658,7 +470,7 @@ var TranslationsPanel = new (class {
    *
    * @param {CustomEvent} event
    */
-  handleEvent = async event => {
+  handleEvent = event => {
     switch (event.type) {
       case "TranslationsParent:LanguageState":
         const {
@@ -670,16 +482,7 @@ var TranslationsPanel = new (class {
         const { panel, button, buttonLocale, buttonCircleArrows } =
           this.elements;
 
-        if (
-          // Valid languages were detected
-          detectedLanguages &&
-          // The docLangTag is not present in the never-translate list
-          !TranslationsParent.shouldNeverTranslateLanguage(
-            detectedLanguages.docLangTag
-          ) &&
-          // The site not present in the never-translate list
-          !(await this.#getTranslationsActor().shouldNeverTranslateSite())
-        ) {
+        if (detectedLanguages) {
           button.hidden = false;
           if (requestedTranslationPair) {
             // The translation is active, update the urlbar button.
@@ -702,7 +505,8 @@ var TranslationsPanel = new (class {
             buttonCircleArrows.hidden = true;
           }
         } else {
-          this.#hideTranslationsButton();
+          button.removeAttribute("translationsactive");
+          button.hidden = true;
         }
 
         switch (error) {

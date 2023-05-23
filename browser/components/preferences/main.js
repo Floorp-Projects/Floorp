@@ -444,13 +444,11 @@ var gMainPane = {
       "click",
       gMainPane.openTranslationProviderAttribution
     );
-    // TODO (Bug 1817084) Remove this code when we disable the extension
     setEventListener(
       "translateButton",
       "command",
       gMainPane.showTranslationExceptions
     );
-    // TODO (Bug 1817084) Remove this code when we disable the extension
     setEventListener(
       "fxtranslateButton",
       "command",
@@ -528,7 +526,6 @@ var gMainPane = {
     }
 
     // Firefox Translations settings panel
-    // TODO (Bug 1817084) Remove this code when we disable the extension
     const fxtranslationsDisabledPrefName = "extensions.translations.disabled";
     if (!Services.prefs.getBoolPref(fxtranslationsDisabledPrefName, true)) {
       let fxtranslationRow = document.getElementById("fxtranslationsBox");
@@ -1126,9 +1123,6 @@ var gMainPane = {
       constructor(state) {
         this.state = state;
         this.elements = {
-          settingsButton: document.getElementById(
-            "translations-manage-settings-button"
-          ),
           installList: document.getElementById(
             "translations-manage-install-list"
           ),
@@ -1144,10 +1138,6 @@ var gMainPane = {
       setup() {
         this.buildLanguageList();
 
-        this.elements.settingsButton.addEventListener(
-          "command",
-          gMainPane.showTranslationsSettings
-        );
         this.elements.installAll.addEventListener(
           "command",
           this.handleInstallAll
@@ -1919,16 +1909,9 @@ var gMainPane = {
    * Displays the translation exceptions dialog where specific site and language
    * translation preferences can be set.
    */
-  // TODO (Bug 1817084) Remove this code when we disable the extension
   showTranslationExceptions() {
     gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/translationExceptions.xhtml"
-    );
-  },
-
-  showTranslationsSettings() {
-    gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/translations.xhtml"
+      "chrome://browser/content/preferences/dialogs/translation.xhtml"
     );
   },
 
