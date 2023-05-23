@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "ShippingInfo.html",
@@ -105,5 +105,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/NewEgg/"
+  "fixtures/third_party/NewEgg/"
 );

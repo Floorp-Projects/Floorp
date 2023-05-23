@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "Checkout_ShippingInfo.html",
@@ -67,5 +67,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/CDW/"
+  "fixtures/third_party/CDW/"
 );
