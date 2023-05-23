@@ -12,7 +12,6 @@
   --in-content-page-color: rgb(21, 20, 26);
   --in-content-page-background: #fff;
   --in-content-text-color: var(--in-content-page-color);
-  --in-content-deemphasized-text: var(--text-color-deemphasized);
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
@@ -185,7 +184,6 @@
   :root {
     --in-content-page-color: CanvasText;
     --in-content-page-background: Canvas;
-    --in-content-deemphasized-text: GrayText;
 
     --in-content-box-background: -moz-Dialog;
     --in-content-box-background-odd: -moz-Dialog;

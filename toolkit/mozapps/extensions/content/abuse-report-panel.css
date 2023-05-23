@@ -102,7 +102,7 @@ button.abuse-report-close-icon:hover:active {
 }
 
 .abuse-report-note {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   font-size: var(--note-font-size);
   font-weight: var(--note-font-weight);
   line-height: var(--line-height);

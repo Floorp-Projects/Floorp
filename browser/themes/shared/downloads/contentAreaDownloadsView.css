@@ -23,5 +23,5 @@
 #downloadsListEmptyDescription {
   margin: 1em;
   text-align: center;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }

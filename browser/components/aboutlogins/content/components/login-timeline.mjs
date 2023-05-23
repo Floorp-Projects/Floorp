@@ -27,7 +27,7 @@ export default class Timeline extends MozLitElement {
       display: grid;
       grid-template-rows: 24px auto auto;
       font-size: smaller;
-      color: var(--in-content-deemphasized-text);
+      color: var(--text-color-deemphasized);
       padding-inline-start: 0px;
       text-align: center;
     }

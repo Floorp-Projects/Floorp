@@ -16,7 +16,7 @@
   -webkit-line-clamp: 3;
   overflow: hidden;
 
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   text-align: end;
 }
 
