@@ -41,12 +41,12 @@ class TabCapturerWebrtc : public webrtc::DesktopCapturer {
   TabCapturerWebrtc& operator=(const TabCapturerWebrtc&) = delete;
 
   // DesktopCapturer interface.
-  void Start(Callback* callback) override;
+  void Start(Callback* aCallback) override;
   void CaptureFrame() override;
-  bool GetSourceList(SourceList* sources) override;
+  bool GetSourceList(SourceList* aSources) override;
   bool SelectSource(SourceId) override;
   bool FocusOnSelectedSource() override;
-  bool IsOccluded(const webrtc::DesktopVector& pos) override;
+  bool IsOccluded(const webrtc::DesktopVector& aPos) override;
 
  private:
   // Capture code

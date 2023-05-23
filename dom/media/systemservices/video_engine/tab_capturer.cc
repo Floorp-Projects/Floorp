@@ -97,9 +97,9 @@ TabCapturerWebrtc::~TabCapturerWebrtc() {
 }
 
 bool TabCapturerWebrtc::GetSourceList(
-    webrtc::DesktopCapturer::SourceList* sources) {
+    webrtc::DesktopCapturer::SourceList* aSources) {
   MOZ_LOG(gTabShareLog, LogLevel::Debug,
-          ("TabShare: GetSourceList, result %zu", sources->size()));
+          ("TabShare: GetSourceList, result %zu", aSources->size()));
   // XXX UI
   return true;
 }
@@ -111,15 +111,15 @@ bool TabCapturerWebrtc::SelectSource(webrtc::DesktopCapturer::SourceId) {
 
 bool TabCapturerWebrtc::FocusOnSelectedSource() { return true; }
 
-void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* callback) {
+void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* aCallback) {
   RTC_DCHECK_RUN_ON(&mCallbackChecker);
   RTC_DCHECK(!mCallback);
-  RTC_DCHECK(callback);
+  RTC_DCHECK(aCallback);
 
   MOZ_LOG(gTabShareLog, LogLevel::Debug,
           ("TabShare: Start, id=%" PRIu64, mBrowserId));
 
-  mCallback = callback;
+  mCallback = aCallback;
   mCallbackWorker = TaskQueue::Create(do_AddRef(GetCurrentSerialEventTarget()),
                                       "TabCapturerWebrtc::mCallbackThread");
   CaptureFrame();
@@ -194,7 +194,7 @@ void TabCapturerWebrtc::OnCaptureFrameFailure() {
       })));
 }
 
-bool TabCapturerWebrtc::IsOccluded(const webrtc::DesktopVector& pos) {
+bool TabCapturerWebrtc::IsOccluded(const webrtc::DesktopVector& aPos) {
   return false;
 }
 
