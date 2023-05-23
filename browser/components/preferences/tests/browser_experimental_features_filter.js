@@ -143,27 +143,17 @@ add_task(async function testFilterFeatures() {
       );
     }
 
-    // Check that switching to a non-find-in-page category changes item
-    // visibility appropriately.
     EventUtils.synthesizeMouseAtCenter(
       doc.getElementById(category),
       {},
       gBrowser.contentWindow
     );
 
-    // Ensure that async passes of localization and any code waiting for
-    // those passes have finished running.
-    await new Promise(r =>
-      requestAnimationFrame(() => requestAnimationFrame(r))
-    );
-    let shouldShow = category == "category-experimental";
     for (let definition of definitions) {
       checkVisibility(
         doc.getElementById(definition.id),
-        shouldShow,
-        `${definition.id} should be ${
-          shouldShow ? "visible" : "hidden"
-        } after category change to ${category}`
+        true,
+        `${definition.id} should be visible after category change to ${category}`
       );
     }
   }
