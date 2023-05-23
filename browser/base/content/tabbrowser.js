@@ -6445,6 +6445,27 @@
         }
       }
     },
+
+    /**
+     * Get the triggering principal for the last navigation in the session history.
+     */
+    _getTriggeringPrincipalFromHistory(aBrowser) {
+      let sessionHistory = aBrowser?.browsingContext?.sessionHistory;
+      if (
+        !sessionHistory ||
+        !sessionHistory.index ||
+        sessionHistory.count == 0
+      ) {
+        return undefined;
+      }
+      let currentEntry = sessionHistory.getEntryAtIndex(sessionHistory.index);
+      let triggeringPrincipal = currentEntry?.triggeringPrincipal;
+      return triggeringPrincipal;
+    },
+
+    clearRelatedTabs() {
+      this._lastRelatedTabMap = new WeakMap();
+    },
   };
 
   /**
@@ -6908,6 +6929,20 @@
             // Removing the tab's image here causes flickering, wait until the
             // load is complete.
             this.mBrowser.mIconURL = null;
+          }
+
+          if (!isReload && aWebProgress.isLoadingDocument) {
+            let triggerer = gBrowser._getTriggeringPrincipalFromHistory(
+              this.mBrowser
+            );
+            // Typing a url, searching or clicking a bookmark will load a new
+            // document that is no longer tied to a navigation from the previous
+            // content and will have a system principal as the triggerer.
+            if (triggerer && triggerer.isSystemPrincipal) {
+              // Reset the related tab map so that the next tab opened will be related
+              // to this new document and not to tabs opened by the previous one.
+              gBrowser.clearRelatedTabs();
+            }
           }
 
           if (
