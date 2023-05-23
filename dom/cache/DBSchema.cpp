@@ -1363,6 +1363,22 @@ DeleteAllCacheEntries(mozIStorageConnection& aConn, CacheId& aCacheId) {
   auto& deletedSecurityIdList = std::get<1>(result);
   auto& deletedPaddingSize = std::get<2>(result);
 
+  // XXX: We could create a query string with aggregation that would generate
+  // a single summary result such that we don't have to go through each row
+  // just to aggregate the result. This method could become much more
+  // performant.
+  //
+  // The columns could look like:
+  //
+  // GROUP_CONCAT(request_body_id || ',' || response_body_id),
+  // GROUP_CONCAT(response_security_info_id),
+  // SUM(response_padding_size)
+  //
+  // strtok the result row to generate the desired output to fill-in
+  // deletedBodyIdList, deletedSecurityIdList and deletedPaddingSize
+  //
+  // I am not sure about the memory requirements for such operation;
+  // it will all depend upon the result filtered by the `cache_id`.
   nsAutoCString query(
       "SELECT "
       "request_body_id, "
@@ -1429,7 +1445,10 @@ DeleteAllCacheEntries(mozIStorageConnection& aConn, CacheId& aCacheId) {
                            MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetInt64, 3));
 
             MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
-            MOZ_DIAGNOSTIC_ASSERT(paddingSize + deletedPaddingSize <= INT_MAX);
+
+            // Assert overflow
+            MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - deletedPaddingSize >=
+                                  paddingSize);
 
             deletedPaddingSize += paddingSize;
           }
