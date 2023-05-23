@@ -718,6 +718,7 @@ class TopSitesFeed {
           const spoc = discoveryStreamSpocs[i];
           const link = {
             favicon: reformatImageURL(spoc.raw_image_src, 96, 96),
+            faviconSize: 96,
             type: "SPOC",
             label: spoc.title || spoc.sponsor,
             title: spoc.title || spoc.sponsor,
