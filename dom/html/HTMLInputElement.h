@@ -1533,6 +1533,8 @@ class HTMLInputElement final : public TextControlElement,
   nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
   nsContentUtils::AutocompleteAttrState mAutocompleteInfoState;
   bool mDisabledChanged : 1;
+  // https://html.spec.whatwg.org/#concept-fe-dirty
+  // TODO: Maybe rename to match the spec?
   bool mValueChanged : 1;
   bool mLastValueChangeWasInteractive : 1;
   bool mCheckedChanged : 1;
