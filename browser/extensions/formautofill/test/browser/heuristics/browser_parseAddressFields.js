@@ -33,40 +33,40 @@ const markup2 = `
   </html>
 `;
 
-add_heuristic_tests(
-  [
-    {
-      fixtureData: markup1,
-      expectedResult: [
-        {
-          description: "Address Line1 in the last element and is not updated in _parsedAddressFields",
-          default: {
-            reason: "regex-heuristic",
-          },
-          fields: [
-            { fieldName: "country" },
-            { fieldName: "tel" },
-            { fieldName: "address-line1" },
-          ],
+add_heuristic_tests([
+  {
+    fixtureData: markup1,
+    expectedResult: [
+      {
+        description:
+          "Address Line1 in the last element and is not updated in _parsedAddressFields",
+        default: {
+          reason: "regex-heuristic",
         },
-      ],
-    },
-    {
-      fixtureData: markup2,
-      expectedResult: [
-        {
-          description: "Address Line2 in the last element and is not updated in _parsedAddressFields",
-          default: {
-            reason: "regex-heuristic",
-          },
-          fields: [
-            { fieldName: "country" },
-            { fieldName: "tel" },
-            { fieldName: "address-line1" },
-            { fieldName: "address-line2" },
-          ],
+        fields: [
+          { fieldName: "country" },
+          { fieldName: "tel" },
+          { fieldName: "address-line1" },
+        ],
+      },
+    ],
+  },
+  {
+    fixtureData: markup2,
+    expectedResult: [
+      {
+        description:
+          "Address Line2 in the last element and is not updated in _parsedAddressFields",
+        default: {
+          reason: "regex-heuristic",
         },
-      ],
-    },
-  ]
-);
+        fields: [
+          { fieldName: "country" },
+          { fieldName: "tel" },
+          { fieldName: "address-line1" },
+          { fieldName: "address-line2" },
+        ],
+      },
+    ],
+  },
+]);
