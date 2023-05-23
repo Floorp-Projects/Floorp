@@ -54,7 +54,8 @@ export var BookmarkJSONUtils = Object.freeze({
    *        imported bookmarks. Defaults to `RESTORE` if `replace = true`, or
    *        `IMPORT` otherwise.
    *
-   * @return {Promise}
+   * @returns {Promise<number>} The number of imported bookmarks, not including
+   *                            folders and separators.
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
@@ -68,9 +69,10 @@ export var BookmarkJSONUtils = Object.freeze({
     } = {}
   ) {
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
+    let bookmarkCount = 0;
     try {
       let importer = new BookmarkImporter(aReplace, aSource);
-      await importer.importFromURL(aSpec);
+      bookmarkCount = await importer.importFromURL(aSpec);
 
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
@@ -78,6 +80,7 @@ export var BookmarkJSONUtils = Object.freeze({
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       throw ex;
     }
+    return bookmarkCount;
   },
 
   /**
@@ -92,7 +95,8 @@ export var BookmarkJSONUtils = Object.freeze({
    *        imported bookmarks. Defaults to `RESTORE` if `replace = true`, or
    *        `IMPORT` otherwise.
    *
-   * @return {Promise}
+   * @returns {Promise<number>} The number of imported bookmarks, not including
+   *                            folders and separators.
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
@@ -106,6 +110,7 @@ export var BookmarkJSONUtils = Object.freeze({
     } = {}
   ) {
     notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aReplace);
+    let bookmarkCount = 0;
     try {
       if (!(await IOUtils.exists(aFilePath))) {
         throw new Error("Cannot restore from nonexisting json file");
@@ -113,9 +118,11 @@ export var BookmarkJSONUtils = Object.freeze({
 
       let importer = new BookmarkImporter(aReplace, aSource);
       if (aFilePath.endsWith("jsonlz4")) {
-        await importer.importFromCompressedFile(aFilePath);
+        bookmarkCount = await importer.importFromCompressedFile(aFilePath);
       } else {
-        await importer.importFromURL(PathUtils.toFileURI(aFilePath));
+        bookmarkCount = await importer.importFromURL(
+          PathUtils.toFileURI(aFilePath)
+        );
       }
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
@@ -125,6 +132,7 @@ export var BookmarkJSONUtils = Object.freeze({
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       throw ex;
     }
+    return bookmarkCount;
   },
 
   /**
@@ -188,7 +196,8 @@ BookmarkImporter.prototype = {
    * @param {string} aSpec
    *        url of the bookmark data.
    *
-   * @return {Promise}
+   * @returns {Promise<number>} The number of imported bookmarks, not including
+   *                            folders and separators.
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
@@ -201,10 +210,10 @@ BookmarkImporter.prototype = {
     let nodes = await (await fetch(spec)).json();
 
     if (!nodes.children || !nodes.children.length) {
-      return;
+      return 0;
     }
 
-    await this.import(nodes);
+    return this.import(nodes);
   },
 
   /**
@@ -213,7 +222,8 @@ BookmarkImporter.prototype = {
    * @param aFilePath
    *        OS.File path string of the bookmark data.
    *
-   * @return {Promise}
+   * @returns {Promise<number>} The number of imported bookmarks, not including
+   *                           folders and separators.
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
@@ -223,14 +233,15 @@ BookmarkImporter.prototype = {
     // We read as UTF8 rather than JSON, as PlacesUtils.unwrapNodes expects
     // a JSON string.
     let result = await IOUtils.readUTF8(aFilePath, { decompress: true });
-    await this.importFromJSON(result);
+    return this.importFromJSON(result);
   },
 
   /**
    * Import bookmarks from a JSON string.
    *
    * @param {String} aString JSON string of serialized bookmark data.
-   * @return {Promise}
+   * @returns {Promise<number>} The number of imported bookmarks, not including
+   *                            folders and separators.
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
@@ -241,10 +252,10 @@ BookmarkImporter.prototype = {
     );
 
     if (!nodes.length || !nodes[0].children || !nodes[0].children.length) {
-      return;
+      return 0;
     }
 
-    await this.import(nodes[0]);
+    return this.import(nodes[0]);
   },
 
   async import(rootNode) {
@@ -276,6 +287,7 @@ BookmarkImporter.prototype = {
       folderIdToGuidMap = Object.assign(folderIdToGuidMap, folders);
     }
 
+    let bookmarkCount = 0;
     // Now we can add the actual nodes to the database.
     for (let node of nodes) {
       // Drop any nodes without children, we can't insert them.
@@ -291,10 +303,13 @@ BookmarkImporter.prototype = {
 
       fixupSearchQueries(node, folderIdToGuidMap);
 
-      await PlacesUtils.bookmarks.insertTree(node, {
+      let bookmarks = await PlacesUtils.bookmarks.insertTree(node, {
         fixupOrSkipInvalidEntries: true,
       });
-
+      // We want to count only bookmarks, not folders or separators
+      bookmarkCount += bookmarks.filter(
+        bookmark => bookmark.type == PlacesUtils.bookmarks.TYPE_BOOKMARK
+      ).length;
       // Now add any favicons.
       try {
         insertFaviconsForTree(node);
@@ -302,6 +317,7 @@ BookmarkImporter.prototype = {
         console.error(`Failed to insert favicons: ${ex}`);
       }
     }
+    return bookmarkCount;
   },
 };
 
