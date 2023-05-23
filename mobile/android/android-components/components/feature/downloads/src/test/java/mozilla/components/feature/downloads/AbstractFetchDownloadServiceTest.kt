@@ -217,6 +217,26 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    fun `WHEN a try again intent is received THEN handleDownloadIntent must be called`() =
+        runTest(testsDispatcher) {
+            val download = DownloadState("https://example.com/file.txt", "file.txt")
+            val downloadIntent = Intent(ACTION_TRY_AGAIN)
+
+            doNothing().`when`(service).handleRemovePrivateDownloadIntent(any())
+            doNothing().`when`(service).handleDownloadIntent(any())
+
+            downloadIntent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
+            val newDownloadState = download.copy(status = DOWNLOADING)
+            browserStore.dispatch(DownloadAction.AddDownloadAction(newDownloadState)).joinBlocking()
+
+            service.onStartCommand(downloadIntent, 0, 0)
+
+            verify(service).handleDownloadIntent(newDownloadState)
+            assertEquals(newDownloadState.status, DOWNLOADING)
+            verify(service, never()).handleRemovePrivateDownloadIntent(newDownloadState)
+        }
+
+    @Test
     fun `WHEN a remove download intent is received THEN handleRemoveDownloadIntent must be called`() = runTest(testsDispatcher) {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val downloadIntent = Intent(ACTION_REMOVE_PRIVATE_DOWNLOAD)

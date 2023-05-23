@@ -256,10 +256,22 @@ abstract class AbstractFetchDownloadService : Service() {
             store.state.downloads[it]
         } ?: return START_REDELIVER_INTENT
 
-        if (intent.action == ACTION_REMOVE_PRIVATE_DOWNLOAD) {
-            handleRemovePrivateDownloadIntent(download)
-        } else {
-            handleDownloadIntent(download)
+        when (intent.action) {
+            ACTION_REMOVE_PRIVATE_DOWNLOAD -> {
+                handleRemovePrivateDownloadIntent(download)
+            }
+            ACTION_TRY_AGAIN -> {
+                val newDownloadState = download.copy(status = DOWNLOADING)
+                store.dispatch(
+                    DownloadAction.UpdateDownloadAction(
+                        newDownloadState,
+                    ),
+                )
+                handleDownloadIntent(newDownloadState)
+            }
+            else -> {
+                handleDownloadIntent(download)
+            }
         }
 
         return super.onStartCommand(intent, flags, startId)

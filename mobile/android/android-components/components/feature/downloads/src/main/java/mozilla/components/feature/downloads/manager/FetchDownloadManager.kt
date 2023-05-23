@@ -90,6 +90,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
 
         val intent = Intent(applicationContext, service.java)
         intent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
+        intent.action = AbstractFetchDownloadService.ACTION_TRY_AGAIN
         applicationContext.startService(intent)
 
         registerBroadcastReceiver()
