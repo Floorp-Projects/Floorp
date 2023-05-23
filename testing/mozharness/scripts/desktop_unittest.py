@@ -666,6 +666,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             if c["enable_xorigin_tests"]:
                 base_cmd.append("--enable-xorigin-tests")
 
+            base_cmd.append("--setpref=layout.css.stylo-threads=4")
+
             if c["extra_prefs"]:
                 base_cmd.extend(["--setpref={}".format(p) for p in c["extra_prefs"]])
 
@@ -1182,8 +1184,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
                 if self.config["allow_software_gl_layers"]:
                     env["MOZ_LAYERS_ALLOW_SOFTWARE_GL"] = "1"
-
-                env["STYLO_THREADS"] = "4"
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)

@@ -92,13 +92,6 @@ class TTest(object):
             mainthread_io = os.path.join(here, "mainthread_io.log")
             setup.env["MOZ_MAIN_THREAD_IO_LOG"] = mainthread_io
 
-        # Stylo is on by default
-        setup.env["STYLO_FORCE_ENABLED"] = "1"
-
-        # During the Stylo transition, measure different number of threads
-        if browser_config.get("stylothreads", 0) > 0:
-            setup.env["STYLO_THREADS"] = str(browser_config["stylothreads"])
-
         # set url if there is one (i.e. receiving a test page, not a manifest/pageloader test)
         if test_config.get("url", None) is not None:
             test_config["url"] = utils.interpolate(
