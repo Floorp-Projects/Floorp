@@ -835,13 +835,6 @@ eme-notifications-drm-content-playing-dismiss-accesskey = D
 panel-save-update-username = Username
 panel-save-update-password = Password
 
-## Add-on removal warning
-
-# Variables:
-#  $name (String): The name of the addon that will be removed.
-addon-removal-title = Remove { $name }?
-addon-removal-abuse-report-checkbox = Report this extension to { -vendor-short-name }
-
 ##
 
 # "More" item in macOS share menu
@@ -982,8 +975,10 @@ firefox-relay-offer-what-relay-provides = All emails sent to your email masks wi
 
 firefox-relay-offer-legal-notice = By clicking “Use email mask”, you agree to the <label data-l10n-name="tos-url">Terms of Service</label> and <label data-l10n-name="privacy-url">Privacy Notice</label>.
 
-## Pop-up Notification
+## Add-on Pop-up Notifications
 
+popup-notification-addon-install-unsigned =
+    .value = (Unverified)
 popup-notification-xpinstall-prompt-learn-more = Learn more about installing add-ons safely
 
 ## Pop-up warning
