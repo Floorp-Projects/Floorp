@@ -91,11 +91,10 @@ class FirefoxCom {
 exports.FirefoxCom = FirefoxCom;
 class DownloadManager {
   #openBlobUrls = new WeakMap();
-  downloadUrl(url, filename, options = {}) {
+  downloadUrl(url, filename) {
     FirefoxCom.request("download", {
       originalUrl: url,
-      filename,
-      options
+      filename
     });
   }
   downloadData(data, filename, contentType) {
@@ -133,13 +132,12 @@ class DownloadManager {
     this.downloadData(data, filename, contentType);
     return false;
   }
-  download(blob, url, filename, options = {}) {
+  download(blob, url, filename) {
     const blobUrl = URL.createObjectURL(blob);
     FirefoxCom.request("download", {
       blobUrl,
       originalUrl: url,
-      filename,
-      options
+      filename
     });
   }
 }
@@ -1150,7 +1148,7 @@ const PDFViewerApplication = {
     }
     throw new Error("PDF document not downloaded.");
   },
-  async download(options = {}) {
+  async download() {
     const url = this._downloadUrl,
       filename = this._docFilename;
     try {
@@ -1159,12 +1157,12 @@ const PDFViewerApplication = {
       const blob = new Blob([data], {
         type: "application/pdf"
       });
-      await this.downloadManager.download(blob, url, filename, options);
+      await this.downloadManager.download(blob, url, filename);
     } catch (reason) {
-      await this.downloadManager.downloadUrl(url, filename, options);
+      await this.downloadManager.downloadUrl(url, filename);
     }
   },
-  async save(options = {}) {
+  async save() {
     if (this._saveInProgress) {
       return;
     }
@@ -1178,10 +1176,10 @@ const PDFViewerApplication = {
       const blob = new Blob([data], {
         type: "application/pdf"
       });
-      await this.downloadManager.download(blob, url, filename, options);
+      await this.downloadManager.download(blob, url, filename);
     } catch (reason) {
       console.error(`Error when saving the document: ${reason.message}`);
-      await this.download(options);
+      await this.download();
     } finally {
       await this.pdfScriptingManager.dispatchDidSave();
       this._saveInProgress = false;
@@ -1195,17 +1193,12 @@ const PDFViewerApplication = {
       });
     }
   },
-  downloadOrSave(options = {}) {
+  downloadOrSave() {
     if (this.pdfDocument?.annotationStorage.size > 0) {
-      this.save(options);
+      this.save();
     } else {
-      this.download(options);
+      this.download();
     }
-  },
-  openInExternalApp() {
-    this.downloadOrSave({
-      openInExternalApp: true
-    });
   },
   _documentError(message, moreInfo = null) {
     this._unblockDocumentLoadEvent();
@@ -1695,7 +1688,6 @@ const PDFViewerApplication = {
     eventBus._on("switchannotationeditorparams", webViewerSwitchAnnotationEditorParams);
     eventBus._on("print", webViewerPrint);
     eventBus._on("download", webViewerDownload);
-    eventBus._on("openinexternalapp", webViewerOpenInExternalApp);
     eventBus._on("firstpage", webViewerFirstPage);
     eventBus._on("lastpage", webViewerLastPage);
     eventBus._on("nextpage", webViewerNextPage);
@@ -2050,9 +2042,6 @@ function webViewerPrint() {
 }
 function webViewerDownload() {
   PDFViewerApplication.downloadOrSave();
-}
-function webViewerOpenInExternalApp() {
-  PDFViewerApplication.openInExternalApp();
 }
 function webViewerFirstPage() {
   PDFViewerApplication.page = 1;
@@ -6086,7 +6075,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.6.126';
+    const viewerVersion = '3.6.125';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9324,9 +9313,6 @@ class Toolbar {
     this.#buttons = [{
       element: options.download,
       eventName: "download"
-    }, {
-      element: options.openInApp,
-      eventName: "openinexternalapp"
     }];
     this.#bindListeners(options);
   }
@@ -9606,8 +9592,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.126';
-const pdfjsBuild = '3f89a99a5';
+const pdfjsVersion = '3.6.125';
+const pdfjsBuild = '0ee0fcc6b';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
@@ -9622,8 +9608,7 @@ function getViewerConfiguration() {
     toolbar: {
       mainContainer,
       container: document.getElementById("floatingToolbar"),
-      download: document.getElementById("download"),
-      openInApp: document.getElementById("openInApp")
+      download: document.getElementById("download")
     },
     passwordOverlay: {
       dialog: document.getElementById("passwordDialog"),

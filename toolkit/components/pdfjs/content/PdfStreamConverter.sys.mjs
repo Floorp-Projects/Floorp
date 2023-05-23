@@ -307,9 +307,9 @@ class ChromeActions {
   }
 
   download(data, sendResponse) {
-    const { originalUrl, options } = data;
-    const blobUrl = data.blobUrl || originalUrl;
-    let { filename } = data;
+    var originalUrl = data.originalUrl;
+    var blobUrl = data.blobUrl || originalUrl;
+    var filename = data.filename;
     if (
       typeof filename !== "string" ||
       (!/\.pdf$/i.test(filename) && !data.isAttachment)
@@ -317,12 +317,11 @@ class ChromeActions {
       filename = "document.pdf";
     }
 
-    const actor = getActor(this.domWindow);
+    let actor = getActor(this.domWindow);
     actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
       blobUrl,
       originalUrl,
       filename,
-      options: options || {},
     });
   }
 

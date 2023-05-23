@@ -576,9 +576,7 @@ public class GeckoSession {
                 SessionPdfFileSaver.createResponse(
                     message.getByteArray("bytes"),
                     message.getString("filename"),
-                    message.getString("originalUrl"),
-                    message.getBoolean("skipConfirmation"),
-                    message.getBoolean("requestExternalApp"));
+                    message.getString("originalUrl"));
             if (response == null) {
               return;
             }
