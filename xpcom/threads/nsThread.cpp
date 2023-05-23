@@ -379,7 +379,7 @@ void nsThread::ThreadFunc(void* aArg) {
   {
     // Scope for MessageLoop.
     MessageLoop loop(
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#ifdef XP_WIN
         self->mIsUiThread ? MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD
                           : MessageLoop::TYPE_MOZILLA_NONMAINTHREAD,
 #else
@@ -574,9 +574,8 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mLastWakeupCheckTime(TimeStamp::Now()),
 #endif
       mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread) {
-#if !(defined(XP_WIN) || defined(XP_MACOSX))
-  MOZ_ASSERT(!mIsUiThread,
-             "Non-main UI threads are only supported on Windows and macOS");
+#ifndef XP_WIN
+  MOZ_ASSERT(!mIsUiThread, "Non-main UI threads are only supported on Windows");
 #endif
   if (mIsMainThread) {
     MOZ_ASSERT(!mIsUiThread,
