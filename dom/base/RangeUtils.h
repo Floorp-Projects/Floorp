@@ -114,12 +114,6 @@ class RangeUtils final {
                                      AbstractRange* aAbstractRange,
                                      bool* aNodeIsBeforeRange,
                                      bool* aNodeIsAfterRange);
-
-  template <typename SPT, typename SRT, typename EPT, typename ERT>
-  static nsresult CompareNodeToRangeBoundaries(
-      nsINode* aNode, const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
-      const RangeBoundaryBase<EPT, ERT>& aEndBoundary, bool* aNodeIsBeforeRange,
-      bool* aNodeIsAfterRange);
 };
 
 }  // namespace mozilla

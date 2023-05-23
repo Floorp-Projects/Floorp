@@ -51,12 +51,9 @@ class StaticRange final : public AbstractRange {
                                               nsINode* aEndContainer,
                                               uint32_t aEndOffset,
                                               ErrorResult& aRv) {
-    return StaticRange::Create(
-        RawRangeBoundary(aStartContainer, aStartOffset,
-                         RangeBoundaryIsMutationObserved::No),
-        RawRangeBoundary(aEndContainer, aEndOffset,
-                         RangeBoundaryIsMutationObserved::No),
-        aRv);
+    return StaticRange::Create(RawRangeBoundary(aStartContainer, aStartOffset),
+                               RawRangeBoundary(aEndContainer, aEndOffset),
+                               aRv);
   }
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   static already_AddRefed<StaticRange> Create(
@@ -75,7 +72,7 @@ class StaticRange final : public AbstractRange {
  protected:
   explicit StaticRange(nsINode* aNode)
       : AbstractRange(aNode, /* aIsDynamicRange = */ false) {}
-  virtual ~StaticRange();
+  virtual ~StaticRange() = default;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
