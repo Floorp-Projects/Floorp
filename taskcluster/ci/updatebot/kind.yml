@@ -13,6 +13,9 @@ transforms:
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
+job-defaults:
+    use-system-python: false
+
 jobs:
     cron:
         description: Cron Job for Updatebot
