@@ -10,7 +10,7 @@
 
 #include "video_engine/desktop_capture_impl.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 #include <string>
 
@@ -432,7 +432,7 @@ int32_t DesktopCaptureImpl::EnsureCapturer() {
       return -1;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
+    DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
     screenCapturer->SelectSource(sourceId);
 
     mCapturer = std::make_unique<DesktopAndCursorComposer>(
@@ -447,7 +447,7 @@ int32_t DesktopCaptureImpl::EnsureCapturer() {
       return -1;
     }
 
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
+    DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
     windowCapturer->SelectSource(sourceId);
 
     mCapturer = std::make_unique<DesktopAndCursorComposer>(
@@ -455,7 +455,7 @@ int32_t DesktopCaptureImpl::EnsureCapturer() {
   } else if (mDeviceType == CaptureDeviceType::Browser) {
     // XXX We don't capture cursors, so avoid the extra indirection layer. We
     // could also pass null for the pMouseCursorMonitor.
-    DesktopCapturer::SourceId sourceId = atoi(mDeviceUniqueId.c_str());
+    DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
     mCapturer = CreateTabCapturer(options, sourceId);
     if (!mCapturer) {
       return -1;
