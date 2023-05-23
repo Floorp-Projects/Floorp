@@ -2228,6 +2228,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
        id == NameToId(cx->names().groupToMap))) {
     return true;
   }
+#endif
 
   // It's gently surprising that this is JSProto_Function, but the trick
   // to realize is that this is a -constructor function-, not a function
@@ -2237,7 +2238,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
       id == NameToId(cx->names().fromAsync)) {
     return true;
   }
-#endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array &&
