@@ -215,23 +215,27 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // Control thread on which the public API is called.
   const nsCOMPtr<nsISerialEventTarget> mControlThread;
   // Set in StartCapture.
-  mozilla::Maybe<VideoCaptureCapability> mRequestedCapability;
+  mozilla::Maybe<VideoCaptureCapability> mRequestedCapability
+      RTC_GUARDED_BY(mControlThreadChecker);
   // The DesktopCapturer is created on mControlThread but assigned and accessed
   // only on mCaptureThread.
-  std::unique_ptr<DesktopCapturer> mCapturer;
-  // Dedicated thread that does the capturing. Only used on mControlThread.
-  nsCOMPtr<nsIThread> mCaptureThread;
+  std::unique_ptr<DesktopCapturer> mCapturer
+      RTC_GUARDED_BY(mCaptureThreadChecker);
+  // Dedicated thread that does the capturing.
+  nsCOMPtr<nsIThread> mCaptureThread RTC_GUARDED_BY(mControlThreadChecker);
+  // Checks that API methods are called on mControlThread.
+  webrtc::SequenceChecker mControlThreadChecker;
   // Checks that frame delivery only happens on mCaptureThread.
   webrtc::SequenceChecker mCaptureThreadChecker;
   // Timer that triggers frame captures. Only used on mCaptureThread.
   // TODO(Bug 1806646): Drive capture with vsync instead.
-  nsCOMPtr<nsITimer> mCaptureTimer;
+  nsCOMPtr<nsITimer> mCaptureTimer RTC_GUARDED_BY(mCaptureThreadChecker);
   // Interval between captured frames, based on the framerate in
   // mRequestedCapability. mCaptureThread only.
-  mozilla::Maybe<mozilla::TimeDuration> mRequestedCaptureInterval;
+  mozilla::Maybe<mozilla::TimeDuration> mRequestedCaptureInterval
+      RTC_GUARDED_BY(mCaptureThreadChecker);
   // Used to make sure incoming timestamp is increasing for every frame.
-  // mCaptureThread only.
-  webrtc::Timestamp mNextFrameMinimumTime;
+  webrtc::Timestamp mNextFrameMinimumTime RTC_GUARDED_BY(mCaptureThreadChecker);
   // Callbacks for captured frames. Mutated on mControlThread, callbacks happen
   // on mCaptureThread.
   mozilla::DataMutex<std::set<rtc::VideoSinkInterface<VideoFrame>*>> mCallbacks;
