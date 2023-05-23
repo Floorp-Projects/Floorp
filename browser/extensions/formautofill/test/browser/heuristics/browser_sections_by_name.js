@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
@@ -12,7 +12,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // - Fields without section name are merged to a section with section name
 // - Two sections without name
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       description: `One named billing section`,

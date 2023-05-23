@@ -831,6 +831,254 @@ async function setStorage(...items) {
   }
 }
 
+function verifySectionAutofillResult(sections, expectedSectionsInfo) {
+  sections.forEach((section, index) => {
+    const expectedSection = expectedSectionsInfo[index];
+
+    const fieldDetails = section.fieldDetails;
+    const expectedFieldDetails = expectedSection.fields;
+
+    info(`verify autofill section[${index}]`);
+
+    fieldDetails.forEach((field, fieldIndex) => {
+      const expeceted = expectedFieldDetails[fieldIndex];
+
+      Assert.equal(
+        expeceted.autofill,
+        field.element.value,
+        `Autofilled value for element(id=${field.element.id}, field name=${field.fieldName}) should be equal`
+      );
+    });
+  });
+}
+
+function verifySectionFieldDetails(sections, expectedSectionsInfo) {
+  sections.forEach((section, index) => {
+    const expectedSection = expectedSectionsInfo[index];
+
+    const fieldDetails = section.fieldDetails;
+    const expectedFieldDetails = expectedSection.fields;
+
+    info(`section[${index}] ${expectedSection.description ?? ""}:`);
+    info(`FieldName Prediction Results: ${fieldDetails.map(i => i.fieldName)}`);
+    info(
+      `FieldName Expected Results:   ${expectedFieldDetails.map(
+        detail => detail.fieldName
+      )}`
+    );
+    Assert.equal(
+      fieldDetails.length,
+      expectedFieldDetails.length,
+      `Expected field count.`
+    );
+
+    fieldDetails.forEach((field, fieldIndex) => {
+      const expectedFieldDetail = expectedFieldDetails[fieldIndex];
+
+      const expected = {
+        ...{
+          reason: "autocomplete",
+          section: "",
+          contactType: "",
+          addressType: "",
+        },
+        ...expectedSection.default,
+        ...expectedFieldDetail,
+      };
+
+      const keys = new Set([...Object.keys(field), ...Object.keys(expected)]);
+      ["autofill", "elementWeakRef", "confidence", "part"].forEach(k =>
+        keys.delete(k)
+      );
+
+      for (const key of keys) {
+        const expectedValue = expected[key];
+        const actualValue = field[key];
+        Assert.equal(
+          expectedValue,
+          actualValue,
+          `${key} should be equal, expect ${expectedValue}, got ${actualValue}`
+        );
+      }
+    });
+
+    Assert.equal(
+      section.isValidSection(),
+      !expectedSection.invalid,
+      `Should be an ${expectedSection.invalid ? "invalid" : "valid"} section`
+    );
+  });
+}
+/**
+ * Runs heuristics test for form autofill on given patterns.
+ *
+ * @param {Array<object>} patterns - An array of test patterns to run the heuristics test on.
+ * @param {string} pattern.description - Description of this heuristic test
+ * @param {string} pattern.fixurePath - The path of the test document
+ * @param {string} pattern.fixureData - Test document by string. Use either fixurePath or fixtureData.
+ * @param {object} pattern.profile - The profile to autofill. This is required only when running autofill test
+ * @param {Array}  pattern.expectedResult - The expected result of this heuristic test. See below for detailed explanation
+ *
+ * @param {string} [fixturePathPrefix=""] - The prefix to the path of fixture files.
+ * @param {object} [options={ testAutofill: false }] - An options object containing additional configuration for running the test.
+ * @param {boolean} [options.testAutofill=false] - A boolean indicating whether to run the test for autofill or not.
+ * @returns {Promise} A promise that resolves when all the tests are completed.
+ *
+ * The `patterns.expectedResult` array contains test data for different address or credit card sections.
+ * Each section in the array is represented by an object and can include the following properties:
+ * - description (optional): A string describing the section, primarily used for debugging purposes.
+ * - default (optional): An object that sets the default values for all the fields within this section.
+ *            The default object contains the same keys as the individual field objects.
+ * - fields: An array of field details (class FieldDetails) within the section.
+ *
+ * Each field object can have the following keys:
+ * - fieldName: The name of the field (e.g., "street-name", "cc-name" or "cc-number").
+ * - reason: The reason for the field value (e.g., "autocomplete", "regex-heuristic" or "fathom").
+ * - section: The section to which the field belongs (e.g., "billing", "shipping").
+ * - part: The part of the field.
+ * - contactType: The contact type of the field.
+ * - addressType: The address type of the field.
+ * - autofill: Set to true when running autofill test
+ *
+ * For more information on the field object properties, refer to the FieldDetails class.
+ *
+ * Example test data:
+ * add_heuristic_tests(
+ * [{
+ *   description: "first test pattern",
+ *   fixuturePath: "autocomplete_off.html",
+ *   profile: {organization: "Mozilla", country: "US", tel: "123"},
+ *   expectedResult: [
+ *   {
+ *     description: "First section"
+ *     fields: [
+ *       { fieldName: "organization", reason: "autocomplete", autofill: "Mozilla" },
+ *       { fieldName: "country", reason: "regex-heuristic", autofill: "US" },
+ *       { fieldName: "tel", reason: "regex-heuristic", autofill: "123" },
+ *     ]
+ *   },
+ *   {
+ *     default: {
+ *       reason: "regex-heuristic",
+ *       section: "billing",
+ *     },
+ *     fields: [
+ *       { fieldName: "cc-number", reason: "fathom" },
+ *       { fieldName: "cc-nane" },
+ *       { fieldName: "cc-exp" },
+ *     ],
+ *    }],
+ *  },
+ *  {
+ *    // second test pattern //
+ *  }
+ * ],
+ * "/fixturepath",
+ * {testAutofill: true}  // test options
+ * )
+ */
+
+async function add_heuristic_tests(
+  patterns,
+  fixturePathPrefix = "",
+  options = { testAutofill: false }
+) {
+  async function runTest(testPattern) {
+    const TEST_URL = testPattern.fixtureData
+      ? `data:text/html,${testPattern.fixtureData}`
+      : `${BASE_URL}../${fixturePathPrefix}${testPattern.fixturePath}`;
+
+    if (testPattern.fixtureData) {
+      info(`Starting test with fixture data`);
+    } else {
+      info(`Starting test fixture: ${testPattern.fixturePath ?? ""}`);
+    }
+
+    if (testPattern.description) {
+      info(`Test "${testPattern.description}"`);
+    }
+
+    if (testPattern.prefs) {
+      await SpecialPowers.pushPrefEnv({
+        set: testPattern.prefs,
+      });
+    }
+
+    await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [
+          {
+            testPattern,
+            verifySection: verifySectionFieldDetails.toString(),
+            verifyAutofill: options.testAutofill
+              ? verifySectionAutofillResult.toString()
+              : null,
+          },
+        ],
+        async obj => {
+          const { FormLikeFactory } = ChromeUtils.importESModule(
+            "resource://gre/modules/FormLikeFactory.sys.mjs"
+          );
+          const { FormAutofillHandler } = ChromeUtils.importESModule(
+            "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
+          );
+
+          const elements = Array.from(
+            content.document.querySelectorAll("input, select")
+          );
+          const forms = elements.reduce((acc, element) => {
+            const formLike = FormLikeFactory.createFromField(element);
+            if (!acc.some(form => form.rootElement === formLike.rootElement)) {
+              acc.push(formLike);
+            }
+            return acc;
+          }, []);
+
+          const sections = forms.flatMap(form => {
+            const handler = new FormAutofillHandler(form);
+            handler.collectFormFields(false /* ignoreInvalid */);
+            return handler.sections;
+          });
+
+          Assert.equal(
+            sections.length,
+            obj.testPattern.expectedResult.length,
+            "Expected section count."
+          );
+
+          // eslint-disable-next-line no-eval
+          let verify = eval(`(() => {return (${obj.verifySection});})();`);
+          verify(sections, obj.testPattern.expectedResult);
+
+          if (obj.verifyAutofill) {
+            for (const section of sections) {
+              section.focusedInput = section.fieldDetails[0].element;
+              await section.autofillFields(testPattern.profile);
+            }
+
+            // eslint-disable-next-line no-eval
+            verify = eval(`(() => {return (${obj.verifyAutofill});})();`);
+            verify(sections, obj.testPattern.expectedResult);
+          }
+        }
+      );
+    });
+
+    if (testPattern.prefs) {
+      await SpecialPowers.popPrefEnv();
+    }
+  }
+
+  patterns.forEach(testPattern => {
+    add_task(() => runTest(testPattern));
+  });
+}
+
+async function runAutofillHeuristicsTest(patterns, fixturePathPrefix = "") {
+  add_heuristic_tests(patterns, fixturePathPrefix, { testAutofill: true });
+}
+
 add_setup(function () {
   OSKeyStoreTestUtils.setup();
 });

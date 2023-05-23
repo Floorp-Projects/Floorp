@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "index.html",
@@ -27,5 +27,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/Lush/"
+  "fixtures/third_party/Lush/"
 );

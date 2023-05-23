@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "Basic.html",
@@ -74,5 +74,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/Staples/"
+  "fixtures/third_party/Staples/"
 );
