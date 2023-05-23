@@ -171,8 +171,7 @@ class AbstractRange : public nsISupports,
 
   void UpdateCommonAncestorIfNecessary();
 
-  static void MarkDescendants(
-      const nsINode& aNode);
+  static void MarkDescendants(const nsINode& aNode);
   static void UnmarkDescendants(const nsINode& aNode);
 
  private:
