@@ -460,7 +460,7 @@ while True:
   });
 
   let buffer = NativeApp.encodeMessage(mockContext, MSG);
-  app.send(new StructuredCloneHolder(buffer));
+  app.send(new StructuredCloneHolder("", null, buffer));
   await recvPromise;
 
   app._cleanup();

@@ -1507,7 +1507,7 @@ class SchemaAPIManager extends EventEmitter {
 
     this._modulesJSONLoaded = true;
 
-    return new StructuredCloneHolder({
+    return new StructuredCloneHolder("SchemaAPIManager/initModuleJSON", null, {
       modules: this.modules,
       modulePaths: this.modulePaths,
       manifestKeys: this.manifestKeys,

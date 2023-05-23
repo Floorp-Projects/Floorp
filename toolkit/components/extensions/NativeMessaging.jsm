@@ -138,7 +138,14 @@ var NativeApp = class extends EventEmitter {
   onConnect(portId, port) {
     // eslint-disable-next-line
     this.on("message", (_, message) => {
-      port.sendPortMessage(portId, new StructuredCloneHolder(message));
+      port.sendPortMessage(
+        portId,
+        new StructuredCloneHolder(
+          `NativeMessaging/onConnect/${this.name}`,
+          null,
+          message
+        )
+      );
     });
     this.once("disconnect", (_, error) => {
       port.sendPortDisconnect(portId, error && new ClonedErrorHolder(error));

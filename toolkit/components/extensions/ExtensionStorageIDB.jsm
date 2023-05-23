@@ -236,6 +236,10 @@ class ExtensionStorageLocalIDB extends IndexedDB {
     );
     const transactionCompleted = transaction.promiseComplete();
 
+    if (!serialize) {
+      serialize = (name, anonymizedName, value) => value;
+    }
+
     for (let key of Object.keys(items)) {
       try {
         let oldValue = await objectStore.get(key);
@@ -243,8 +247,9 @@ class ExtensionStorageLocalIDB extends IndexedDB {
         await objectStore.put(items[key], key);
 
         changes[key] = {
-          oldValue: oldValue && serialize ? serialize(oldValue) : oldValue,
-          newValue: serialize ? serialize(items[key]) : items[key],
+          oldValue:
+            oldValue && serialize(`old/${key}`, `old/<anonymized>`, oldValue),
+          newValue: serialize(`new/${key}`, `new/<anonymized>`, items[key]),
         };
         changed = true;
       } catch (err) {
@@ -701,6 +706,8 @@ ExtensionStorageIDB = {
         // Serialize the nsIPrincipal object into a StructuredCloneHolder related to the privileged
         // js global, ready to be sent to the child processes.
         const serializedPrincipal = new StructuredCloneHolder(
+          "ExtensionStorageIDB/selectBackend/serializedPrincipal",
+          null,
           storagePrincipal,
           this
         );

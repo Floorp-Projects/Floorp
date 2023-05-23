@@ -42,7 +42,7 @@ add_task(async function test_unhandled_dom_exception() {
   let messages = await getSandboxMessages(
     sandbox,
     `new Promise(() => {
-      new StructuredCloneHolder(() => {});
+      new StructuredCloneHolder("", "", () => {});
     });`
   );
 

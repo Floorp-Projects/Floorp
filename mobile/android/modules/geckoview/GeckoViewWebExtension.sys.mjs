@@ -171,7 +171,11 @@ class EmbedderPort {
 
     switch (aEvent) {
       case "GeckoView:WebExtension:PortMessageFromApp": {
-        const holder = new StructuredCloneHolder(aData.message);
+        const holder = new StructuredCloneHolder(
+          "GeckoView:WebExtension:PortMessageFromApp",
+          null,
+          aData.message
+        );
         this.messenger.sendPortMessage(this.id, holder);
         break;
       }

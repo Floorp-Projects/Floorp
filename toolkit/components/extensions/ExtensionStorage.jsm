@@ -80,13 +80,19 @@ class SerializeableMap extends Map {
  * sending a storage value across a message manager, before cloning it
  * into an extension scope.
  *
+ * @param {string} name
+ *        A debugging name for the value, which will appear in the
+ *        StructuredCloneHolder's about:memory path.
+ * @param {string?} anonymizedName
+ *        An anonymized version of `name`, to be used in anonymized memory
+ *        reports. If `null`, then `name` will be used instead.
  * @param {StructuredCloneHolder|*} value
  *        A value to serialize.
  * @returns {*}
  */
-function serialize(value) {
+function serialize(name, anonymizedName, value) {
   if (value && typeof value === "object" && !isStructuredCloneHolder(value)) {
-    return new StructuredCloneHolder(value);
+    return new StructuredCloneHolder(name, anonymizedName, value);
   }
   return value;
 }
@@ -219,8 +225,16 @@ var ExtensionStorage = {
     for (let prop in items) {
       let item = items[prop];
       changes[prop] = {
-        oldValue: serialize(jsonFile.data.get(prop)),
-        newValue: serialize(item),
+        oldValue: serialize(
+          `set/${extensionId}/old/${prop}`,
+          `set/${extensionId}/old/<anonymized>`,
+          jsonFile.data.get(prop)
+        ),
+        newValue: serialize(
+          `set/${extensionId}/new/${prop}`,
+          `set/${extensionId}/new/<anonymized>`,
+          item
+        ),
       };
       jsonFile.data.set(prop, item);
     }
@@ -249,7 +263,13 @@ var ExtensionStorage = {
 
     for (let prop of [].concat(items)) {
       if (jsonFile.data.has(prop)) {
-        changes[prop] = { oldValue: serialize(jsonFile.data.get(prop)) };
+        changes[prop] = {
+          oldValue: serialize(
+            `remove/${extensionId}/${prop}`,
+            `remove/${extensionId}/<anonymized>`,
+            jsonFile.data.get(prop)
+          ),
+        };
         jsonFile.data.delete(prop);
         changed = true;
       }
@@ -282,7 +302,13 @@ var ExtensionStorage = {
 
     for (let [prop, oldValue] of jsonFile.data.entries()) {
       if (shouldNotifyListeners) {
-        changes[prop] = { oldValue: serialize(oldValue) };
+        changes[prop] = {
+          oldValue: serialize(
+            `clear/${extensionId}/${prop}`,
+            `clear/${extensionId}/<anonymized>`,
+            oldValue
+          ),
+        };
       }
 
       jsonFile.data.delete(prop);
@@ -319,17 +345,21 @@ var ExtensionStorage = {
    */
   async get(extensionId, keys) {
     let jsonFile = await this.getFile(extensionId);
-    return this._filterProperties(jsonFile.data, keys);
+    return this._filterProperties(extensionId, jsonFile.data, keys);
   },
 
-  async _filterProperties(data, keys) {
+  async _filterProperties(extensionId, data, keys) {
     let result = {};
     if (keys === null) {
       Object.assign(result, data.toJSON());
     } else if (typeof keys == "object" && !Array.isArray(keys)) {
       for (let prop in keys) {
         if (data.has(prop)) {
-          result[prop] = serialize(data.get(prop));
+          result[prop] = serialize(
+            `filterProperties/${extensionId}/${prop}`,
+            `filterProperties/${extensionId}/<anonymized>`,
+            data.get(prop)
+          );
         } else {
           result[prop] = keys[prop];
         }
@@ -337,7 +367,11 @@ var ExtensionStorage = {
     } else {
       for (let prop of [].concat(keys)) {
         if (data.has(prop)) {
-          result[prop] = serialize(data.get(prop));
+          result[prop] = serialize(
+            `filterProperties/${extensionId}/${prop}`,
+            `filterProperties/${extensionId}/<anonymized>`,
+            data.get(prop)
+          );
         }
       }
     }
@@ -407,7 +441,12 @@ var ExtensionStorage = {
       let result = {};
       for (let [key, value] of Object.entries(items)) {
         try {
-          result[key] = new StructuredCloneHolder(value, context.cloneScope);
+          result[key] = new StructuredCloneHolder(
+            `serializeForContext/${context.extension.id}`,
+            null,
+            value,
+            context.cloneScope
+          );
         } catch (e) {
           throw new ExtensionError(String(e));
         }

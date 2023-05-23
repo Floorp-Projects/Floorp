@@ -1457,7 +1457,11 @@ export class RTCPeerConnection {
       // Exceptions thrown by c++ code do not propagate. In most cases, that's
       // fine because we're using Promises, which can be copied. But this is
       // not promise-based, so we have to do this sketchy stuff.
-      const holder = new StructuredCloneHolder(new ClonedErrorHolder(e));
+      const holder = new StructuredCloneHolder(
+        "",
+        "",
+        new ClonedErrorHolder(e)
+      );
       throw holder.deserialize(this._win);
     }
   }
