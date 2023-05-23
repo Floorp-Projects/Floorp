@@ -2,7 +2,7 @@ import pytest
 
 from .conftest import product, flatten
 
-from tests.new_session.support.create import invalid_data, invalid_extensions
+from tests.classic.new_session.support.create import invalid_data, invalid_extensions
 from tests.support.asserts import assert_error
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from tests.perform_actions.support.refine import get_events
+from tests.classic.perform_actions.support.refine import get_events
 from tests.support.helpers import filter_dict
 from tests.support.keys import Keys
 

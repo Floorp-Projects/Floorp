@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import pytest
 
-from tests.perform_actions.support.refine import get_events, get_keys
+from tests.classic.perform_actions.support.refine import get_events, get_keys
 from tests.support.helpers import filter_dict, filter_supported_key_events
 from tests.support.keys import ALL_EVENTS, ALTERNATIVE_KEY_NAMES, Keys
 

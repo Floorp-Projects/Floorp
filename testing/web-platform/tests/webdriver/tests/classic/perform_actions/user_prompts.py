@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.perform_actions.support.refine import get_keys
+from tests.classic.perform_actions.support.refine import get_keys
 from tests.support.asserts import assert_error, assert_success, assert_dialog_handled
 
 

@@ -14,7 +14,7 @@ def element_click(session, element):
 
 
 def test_numbers_link(session, server_config, inline):
-    link = "/webdriver/tests/element_click/support/input.html"
+    link = "/webdriver/tests/classic/element_click/support/input.html"
     session.url = inline("<a href={url}>123456</a>".format(url=link))
     element = session.find.css("a", all=False)
     response = element_click(session, element)
@@ -26,7 +26,7 @@ def test_numbers_link(session, server_config, inline):
 
 
 def test_multi_line_link(session, server_config, inline):
-    link = "/webdriver/tests/element_click/support/input.html"
+    link = "/webdriver/tests/classic/element_click/support/input.html"
     session.url = inline("""
         <p style="background-color: yellow; width: 50px;">
             <a href={url}>Helloooooooooooooooooooo Worlddddddddddddddd</a>
@@ -41,7 +41,7 @@ def test_multi_line_link(session, server_config, inline):
 
 
 def test_link_unload_event(session, server_config, inline):
-    link = "/webdriver/tests/element_click/support/input.html"
+    link = "/webdriver/tests/classic/element_click/support/input.html"
     session.url = inline("""
         <body onunload="checkUnload()">
             <a href={url}>click here</a>

@@ -1,6 +1,6 @@
 # META: timeout=long
 
-from tests.release_actions.support.refine import get_events, get_keys
+from tests.classic.release_actions.support.refine import get_events, get_keys
 from tests.support.helpers import filter_dict, filter_supported_key_events
 
 
