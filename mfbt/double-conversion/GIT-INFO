@@ -1,5 +1,5 @@
-commit af09fd65fcf24eee95dc62813ba9123414635428
-Author: Sean McBride <sean@rogue-research.com>
-Date:   Thu Jul 7 13:58:23 2022 -0400
+commit 4f7a25d8ced8c7cf6eee6fd09d6788eaa23c9afe
+Author: Florian Loitsch <florian@loitsch.com>
+Date:   Thu May 18 14:20:37 2023 +0200
 
-    Issue #184 : Fixed all -Wzero-as-null-pointer-constant warnings (#185)
+    Prepare v3.2.0 release. (#196)
