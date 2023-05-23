@@ -75,7 +75,7 @@ class StaticRange final : public AbstractRange {
  protected:
   explicit StaticRange(nsINode* aNode)
       : AbstractRange(aNode, /* aIsDynamicRange = */ false) {}
-  virtual ~StaticRange() = default;
+  virtual ~StaticRange();
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
