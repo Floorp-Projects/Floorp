@@ -10402,7 +10402,11 @@ static bool BindScriptArgs(JSContext* cx, OptionParser* op) {
 
   for (size_t i = 0; !msr.empty(); msr.popFront(), ++i) {
     const char* scriptArg = msr.front();
-    JS::RootedString str(cx, JS_NewStringCopyZ(cx, scriptArg));
+    UniqueChars scriptArgUtf8 = JS::EncodeNarrowToUtf8(cx, scriptArg);
+    if (!scriptArgUtf8) {
+      return false;
+    }
+    RootedString str(cx, NewStringCopyUTF8(cx, scriptArgUtf8.get()));
     if (!str || !JS_DefineElement(cx, scriptArgs, i, str, JSPROP_ENUMERATE)) {
       return false;
     }
@@ -10410,7 +10414,12 @@ static bool BindScriptArgs(JSContext* cx, OptionParser* op) {
 
   RootedValue scriptPathValue(cx);
   if (const char* scriptPath = op->getStringArg("script")) {
-    RootedString scriptPathString(cx, JS_NewStringCopyZ(cx, scriptPath));
+    UniqueChars scriptPathUtf8 = JS::EncodeNarrowToUtf8(cx, scriptPath);
+    if (!scriptPathUtf8) {
+      return false;
+    }
+    RootedString scriptPathString(cx,
+                                  NewStringCopyUTF8(cx, scriptPathUtf8.get()));
     if (!scriptPathString) {
       return false;
     }
@@ -10523,7 +10532,10 @@ auto minVal(T a, Ts... args) {
     }
 
     if (ccArgno == minArgno) {
-      const char* code = codeChunks.front();
+      UniqueChars code = JS::EncodeNarrowToUtf8(cx, codeChunks.front());
+      if (!code) {
+        return false;
+      }
 
       // Command line scripts are always parsed with full-parse to evaluate
       // conditions which might filter code coverage conditions.
@@ -10531,7 +10543,8 @@ auto minVal(T a, Ts... args) {
       opts.setFileAndLine("-e", 1).setForceFullParse();
 
       JS::SourceText<Utf8Unit> srcBuf;
-      if (!srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed)) {
+      if (!srcBuf.init(cx, code.get(), strlen(code.get()),
+                       JS::SourceOwnership::Borrowed)) {
         return false;
       }
 
