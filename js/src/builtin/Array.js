@@ -834,6 +834,8 @@ function ArrayKeys() {
 
 #ifdef NIGHTLY_BUILD
 // https://tc39.es/proposal-array-from-async/
+// TODO: Bug 1834560 The step numbers in this will need updating when this is merged
+// into the main spec.
 function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
   // Step 1. Let C be the this value.
   var C = this;
@@ -877,12 +879,6 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
       }
     }
 
-    // Step 3.e. If IsConstructor(C) is true, then
-    //     Step 3.e.i. Let A be ? Construct(C).
-    // Step 3.f. Else,
-    //     Step 3.f.i. Let A be ! ArrayCreate(0).
-    let A = IsConstructor(C) ? constructContentFunction(C, C) : [];
-
     // Step 3.g. Let iteratorRecord be undefined.
     // Step 3.j. If iteratorRecord is not undefined, then ...
     if (usingAsyncIterator !== undefined || usingSyncIterator !== undefined) {
@@ -897,6 +893,14 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
       //     Step 3.h.i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
       // Step 3.i. Else if usingSyncIterator is not undefined, then
       //     Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
+
+      // https://github.com/tc39/proposal-array-from-async/pull/41
+      // Step 3.e. If IsConstructor(C) is true, then
+      //     Step 3.e.i. Let A be ? Construct(C).
+      // Step 3.f. Else,
+      //     Step 3.f.i. Let A be ! ArrayCreate(0).
+      let A = IsConstructor(C) ? constructContentFunction(C, C) : [];
+
 
       // Step 3.j.i. Let k be 0.
       let k = 0;
@@ -964,9 +968,7 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
     //     Step 3.k.iv.1. Let A be ? Construct(C, « 𝔽(len) »).
     // Step 3.k.v. Else,
     //     Step 3.k.v.1. Let A be ? ArrayCreate(len).
-    // Note: This double construction isn't great, issue is open:
-    // https://github.com/tc39/proposal-array-from-async/issues/35
-    A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
+    let A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
 
     // Step 3.k.vi. Let k be 0.
     let k = 0;
