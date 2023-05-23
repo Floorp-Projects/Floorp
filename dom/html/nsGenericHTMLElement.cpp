@@ -3432,10 +3432,11 @@ void nsGenericHTMLElement::FocusPreviousElementAfterHidingPopover() {
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
-void nsGenericHTMLElement::TogglePopover(bool force, ErrorResult& aRv) {
-  if (!force && PopoverOpen()) {
+void nsGenericHTMLElement::TogglePopover(const Optional<bool>& aForce,
+                                         ErrorResult& aRv) {
+  if (PopoverOpen() && (!aForce.WasPassed() || !aForce.Value())) {
     HidePopover(aRv);
-  } else if (force && !PopoverOpen()) {
+  } else if (!aForce.WasPassed() || aForce.Value()) {
     ShowPopover(aRv);
   }
 }

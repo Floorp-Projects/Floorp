@@ -79,7 +79,7 @@ interface HTMLElement : Element {
   [Throws, Pref="dom.element.popover.enabled"]
   undefined hidePopover();
   [Throws, Pref="dom.element.popover.enabled"]
-  undefined togglePopover(boolean force);
+  undefined togglePopover(optional boolean force);
 };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-htmlelement-interface
