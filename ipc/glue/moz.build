@@ -219,6 +219,11 @@ else:
         "GeckoChildProcessHost.cpp",
     ]
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    UNIFIED_SOURCES += ["MessagePump_windows.cpp"]
+elif CONFIG["OS_TARGET"] == "Android":
+    UNIFIED_SOURCES += ["MessagePump_android.cpp"]
+
 LOCAL_INCLUDES += [
     "/caps",
     "/dom/broadcastchannel",
