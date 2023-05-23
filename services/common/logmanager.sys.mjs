@@ -9,12 +9,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 

@@ -3,11 +3,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+});
 
 export var PerfTestHelpers = {
   /**

@@ -9,7 +9,9 @@
  * UTF16 character and mid-surrogate pair
  */
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 
 const test = [
   // 0: Valid surrogate pair

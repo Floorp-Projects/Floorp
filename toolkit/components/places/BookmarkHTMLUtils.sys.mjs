@@ -56,7 +56,8 @@
  * both require the content (= title) before actually creating it.
  */
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
+
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 

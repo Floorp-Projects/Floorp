@@ -38,13 +38,9 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 
 const { Integration } = ChromeUtils.importESModule(
   "resource://gre/modules/Integration.sys.mjs"

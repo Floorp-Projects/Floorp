@@ -76,7 +76,9 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function () {
   let { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs"
   );
-  let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+  let { NetUtil } = ChromeUtils.importESModule(
+    "resource://gre/modules/NetUtil.sys.mjs"
+  );
   let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
     Ci.nsIFileInputStream
   );

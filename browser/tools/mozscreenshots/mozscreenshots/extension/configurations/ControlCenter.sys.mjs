@@ -9,7 +9,7 @@ import { UrlClassifierTestUtils } from "resource://testing-common/UrlClassifierT
 
 import { SitePermissions } from "resource:///modules/SitePermissions.sys.mjs";
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
 const CC_SELECTORS = ["#identity-popup", "#urlbar-input-container"];
 const PP_SELECTORS = ["#protections-popup", "#urlbar-input-container"];
