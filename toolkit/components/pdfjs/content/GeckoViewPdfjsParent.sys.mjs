@@ -196,12 +196,7 @@ class FileSaver {
     );
   }
 
-  async save({
-    blobUrl,
-    filename,
-    originalUrl,
-    options: { openInExternalApp },
-  }) {
+  async save({ blobUrl, filename, originalUrl }) {
     try {
       const isPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
         this.#browser
@@ -211,7 +206,6 @@ class FileSaver {
       const bytes = new Uint8Array(buffer);
 
       if (this.#callback) {
-        // "Save as PDF" from the share menu.
         this.#callback.onSuccess({
           bytes,
           filename,
@@ -219,15 +213,12 @@ class FileSaver {
           isPrivate,
         });
       } else {
-        // "Download" or "Open in app" from the pdf.js toolbar.
         this.#eventDispatcher.sendRequest({
           type: "GeckoView:SavePdf",
           bytes,
           filename,
           originalUrl,
           isPrivate,
-          skipConfirmation: true,
-          requestExternalApp: !!openInExternalApp,
         });
       }
       debug`Save a PDF: ${bytes.length} bytes sent.`;

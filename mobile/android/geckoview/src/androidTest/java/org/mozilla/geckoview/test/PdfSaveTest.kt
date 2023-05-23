@@ -36,9 +36,7 @@ class PdfSaveTest : BaseSessionTest() {
         val response = SessionPdfFileSaver.createResponse(
             bytes,
             filename,
-            url,
-            /* skipConfirmation = */ true,
-            /* requestExternalApp = */ false
+            url
         )!!
 
         assertThat("Uri", response.uri, equalTo("http://example.com/foobar.pdf"))
