@@ -340,7 +340,7 @@ using CStringCountMap = HashMap<const char*, CountBasePtr,
 // `Map` must be a `HashMap` from some key type to a `CountBasePtr`.
 //
 // `GetName` must be a callable type which takes `const Map::Key&` and returns
-// `const char*`.
+// `JSAtom*`.
 template <class Map, class GetName>
 static PlainObject* countMapToObject(JSContext* cx, Map& map, GetName getName) {
   // Build a vector of pointers to entries; sort by total; and then use
@@ -374,59 +374,7 @@ static PlainObject* countMapToObject(JSContext* cx, Map& map, GetName getName) {
       return nullptr;
     }
 
-    const char* name = getName(entry->key());
-    MOZ_ASSERT(name);
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom) {
-      return nullptr;
-    }
-
-    RootedId entryId(cx, AtomToId(atom));
-    if (!DefineDataProperty(cx, obj, entryId, thenReport)) {
-      return nullptr;
-    }
-  }
-
-  return obj;
-}
-
-template <class Map, class GetName>
-static PlainObject* countMap16ToObject(JSContext* cx, Map& map,
-                                       GetName getName) {
-  // Build a vector of pointers to entries; sort by total; and then use
-  // that to build the result object. This makes the ordering of entries
-  // more interesting, and a little less non-deterministic.
-
-  JS::ubi::Vector<typename Map::Entry*> entries;
-  if (!entries.reserve(map.count())) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  for (auto r = map.all(); !r.empty(); r.popFront()) {
-    entries.infallibleAppend(&r.front());
-  }
-
-  if (entries.length()) {
-    qsort(entries.begin(), entries.length(), sizeof(*entries.begin()),
-          compareEntries<typename Map::Entry>);
-  }
-
-  Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
-  if (!obj) {
-    return nullptr;
-  }
-
-  for (auto& entry : entries) {
-    CountBasePtr& thenCount = entry->value();
-    RootedValue thenReport(cx);
-    if (!thenCount->report(cx, &thenReport)) {
-      return nullptr;
-    }
-
-    const char16_t* name = getName(entry->key());
-    MOZ_ASSERT(name);
-    JSAtom* atom = AtomizeChars(cx, name, js_strlen(name));
+    JSAtom* atom = getName(entry->key());
     if (!atom) {
       return nullptr;
     }
@@ -528,8 +476,10 @@ bool ByObjectClass::report(JSContext* cx, CountBase& countBase,
   Count& count = static_cast<Count&>(countBase);
 
   Rooted<PlainObject*> obj(
-      cx,
-      countMapToObject(cx, count.table, [](const char* key) { return key; }));
+      cx, countMapToObject(cx, count.table, [cx](const char* key) {
+        MOZ_ASSERT(key);
+        return Atomize(cx, key, strlen(key));
+      }));
   if (!obj) {
     return false;
   }
@@ -636,8 +586,10 @@ bool ByDomObjectClass::report(JSContext* cx, CountBase& countBase,
   Count& count = static_cast<Count&>(countBase);
 
   Rooted<PlainObject*> obj(
-      cx, countMap16ToObject(cx, count.table, [](const UniqueC16String& key) {
-        return key.get();
+      cx, countMapToObject(cx, count.table, [cx](const UniqueC16String& key) {
+        const char16_t* chars = key.get();
+        MOZ_ASSERT(chars);
+        return AtomizeChars(cx, chars, js_strlen(chars));
       }));
   if (!obj) {
     return false;
@@ -1064,8 +1016,10 @@ bool ByFilename::report(JSContext* cx, CountBase& countBase,
   Count& count = static_cast<Count&>(countBase);
 
   Rooted<PlainObject*> obj(
-      cx, countMapToObject(cx, count.table,
-                           [](const UniqueCString& key) { return key.get(); }));
+      cx, countMapToObject(cx, count.table, [cx](const UniqueCString& key) {
+        const char* utf8chars = key.get();
+        return AtomizeUTF8Chars(cx, utf8chars, strlen(utf8chars));
+      }));
   if (!obj) {
     return false;
   }
