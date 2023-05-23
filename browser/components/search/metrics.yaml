@@ -140,6 +140,7 @@ serp:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816736
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816738
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
@@ -173,7 +174,8 @@ serp:
           Possible values are:
           `urlbar`, `urlbar_handoff`, `urlbar_searchmode`, `urlbar_persisted`,
           `searchbar`, `contextmenu`, `webextension`, `system`, `reload`,
-          `tabhistory`, `unknown`, `follow_on_from_refine_on_incontent_search`.
+          `tabhistory`, `follow_on_from_refine_on_incontent_search`,
+          `opened_in_new_tab`, `unknown`.
           This will be `unknown` if we cannot determine the source.
         type: string
       shopping_tab_displayed:
