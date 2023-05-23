@@ -2,11 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "l10n", () => {
+  return new Localization(["browser/recentlyClosed.ftl"], true);
 });
 
 export var RecentlyClosedTabsAndWindowsMenuUtils = {
@@ -73,7 +79,7 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
         const { selected, tabs, title } = closedWindowData[i];
         const selectedTab = tabs[selected - 1];
         if (selectedTab) {
-          const menuLabel = this.l10n.formatValueSync(
+          const menuLabel = lazy.l10n.formatValueSync(
             "recently-closed-undo-close-window-label",
             { tabCount: tabs.length - 1, winTitle: title }
           );
@@ -113,11 +119,6 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
     if (ancestorPanel) {
       ancestorPanel.hidePopup();
     }
-  },
-
-  get l10n() {
-    delete this.l10n;
-    return (this.l10n = new Localization(["browser/recentlyClosed.ftl"], true));
   },
 };
 
@@ -233,7 +234,7 @@ function createRestoreAllEntry(
   // updated in time and displays a blank string (see Bug 1691553).
   restoreAllElements.setAttribute(
     "label",
-    RecentlyClosedTabsAndWindowsMenuUtils.l10n.formatValueSync(aRestoreAllLabel)
+    lazy.l10n.formatValueSync(aRestoreAllLabel)
   );
 
   restoreAllElements.setAttribute(
