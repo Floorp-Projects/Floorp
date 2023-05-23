@@ -270,7 +270,9 @@ bool nsIFormControl::IsSubmittableControl() const {
 }
 
 bool nsIFormControl::IsConceptButton() const {
-  return IsSubmitControl() || IsButtonElement(ControlType());
+  auto type = ControlType();
+  return IsSubmitControl() || type == FormControlType::InputReset ||
+         type == FormControlType::InputButton || IsButtonElement(type);
 }
 
 bool nsIFormControl::IsButtonControl() const {
