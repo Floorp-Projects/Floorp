@@ -41,12 +41,15 @@ add_task(async function test_unsigned() {
   let description = panel.querySelector(
     ".popup-notification-description"
   ).textContent;
-  checkPermissionString(
-    description,
-    "webextPerms.headerUnsignedWithPerms",
-    undefined,
-    `Install notification includes unsigned warning`
-  );
+  const expected = formatExtValue("webext-perms-header-unsigned-with-perms", {
+    extension: "<>",
+  });
+  for (let part of expected.split("<>")) {
+    ok(
+      description.includes(part),
+      "Install notification includes unsigned warning"
+    );
+  }
 
   // cancel the install
   let promise = promiseInstallEvent({ id: ID }, "onInstallCancelled");
