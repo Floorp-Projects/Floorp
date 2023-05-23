@@ -14,6 +14,7 @@ const PAGE_WITH_IFRAMES_URL = `https://example.org/document-builder.sjs?html=
 
 const l10n = new Localization(
   [
+    "browser/addonNotifications.ftl",
     "toolkit/global/extensions.ftl",
     "toolkit/global/extensionPermissions.ftl",
     "branding/brand.ftl",
@@ -99,12 +100,12 @@ add_task(async function testRequestMIDIAccess() {
     );
   is(
     installPopupHeader.textContent,
-    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.header"),
+    l10n.formatValueSync("site-permission-install-first-prompt-midi-header"),
     "First popup has expected header text"
   );
   is(
     installPopupMessage.textContent,
-    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.message"),
+    l10n.formatValueSync("site-permission-install-first-prompt-midi-message"),
     "First popup has expected message"
   );
 

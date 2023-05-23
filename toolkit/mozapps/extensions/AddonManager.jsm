@@ -3998,9 +3998,9 @@ var AddonManager = {
   // add-on as a preparation for installation.
   // These will show up as AddonManager.ERROR_* (eg, ERROR_NETWORK_FAILURE)
   // The _errors codes are translated to text for a panel in browser-addons.js.
-  // The text is located in browser.properties. Errors with the "Updates only:"
-  // prefix are not translated because the error is dumped to the console
-  // instead of a panel.
+  // The localized messages are located in extensionsUI.ftl.
+  // Errors with the "Updates only:" prefix are not translated
+  // because the error is dumped to the console instead of a panel.
   _errors: new Map([
     // The download failed due to network problems.
     ["ERROR_NETWORK_FAILURE", -1],
