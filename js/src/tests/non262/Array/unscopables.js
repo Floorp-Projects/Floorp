@@ -20,6 +20,8 @@ assertDeepEq(desc2, {
 
 let keys = Reflect.ownKeys(Array_unscopables);
 
+// FIXME: Once bug 1826643 is fixed, change this test so that all
+// the keys are in alphabetical order
 let expectedKeys = ["at",
 		    "copyWithin",
 		    "entries",
@@ -32,7 +34,10 @@ let expectedKeys = ["at",
 		    "flatMap",
 		    "includes",
 		    "keys",
-		    "values"];
+		    "values",
+                    "toReversed",
+                    "toSorted",
+                    "toSpliced"];
 
 if (typeof getBuildConfiguration === "undefined") {
   var getBuildConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getBuildConfiguration;
@@ -44,10 +49,6 @@ if (typeof getRealmConfiguration === "undefined") {
 
 if (!getBuildConfiguration().release_or_beta && getRealmConfiguration().enableArrayGrouping) {
     expectedKeys.push("group", "groupToMap");
-}
-
-if (getBuildConfiguration()['change-array-by-copy'] && getRealmConfiguration().enableChangeArrayByCopy) {
-    expectedKeys.push("withAt", "withReversed", "withSorted", "withSpliced");
 }
 
 assertDeepEq(keys, expectedKeys);

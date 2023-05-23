@@ -377,26 +377,18 @@ async function doSimpleEagerEval(commands) {
     },
     {
       code: "testArray.toReversed().join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.toReversed !== "function",
       result: "3,2,1",
     },
     {
       code: "testArray.toSorted().join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.toSorted !== "function",
       result: "1,2,3",
     },
     {
       code: "testArray.toSpliced(0,1).join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.toSpliced !== "function",
       result: "2,3",
     },
     {
       code: "testArray.with(1, 'b').join()",
-      // Change array by copy is only available on Nightly
-      skip: typeof Array.prototype.with !== "function",
       result: "1,b,3",
     },
 

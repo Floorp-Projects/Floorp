@@ -3130,8 +3130,6 @@ static bool array_splice_noRetVal(JSContext* cx, unsigned argc, Value* vp) {
   return array_splice_impl(cx, argc, vp, false);
 }
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-
 static void CopyDenseElementsFillHoles(ArrayObject* arr, NativeObject* nobj,
                                        uint32_t length) {
   // Ensure |arr| is an empty array with sufficient capacity.
@@ -3546,7 +3544,6 @@ static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setObject(*arr);
   return true;
 }
-#endif
 
 struct SortComparatorIndexes {
   bool operator()(uint32_t a, uint32_t b, bool* lessOrEqualp) {
@@ -4899,11 +4896,9 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("findLast", "ArrayFindLast", 1, 0),
     JS_SELF_HOSTED_FN("findLastIndex", "ArrayFindLastIndex", 1, 0),
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
     JS_SELF_HOSTED_FN("toReversed", "ArrayToReversed", 0, 0),
     JS_SELF_HOSTED_FN("toSorted", "ArrayToSorted", 1, 0),
     JS_FN("toSpliced", array_toSpliced, 2, 0), JS_FN("with", array_with, 2, 0),
-#endif
 
     JS_FS_END};
 
@@ -5169,7 +5164,8 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
   }
 #endif
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  // FIXME: Once bug 1826643 is fixed, the names should be moved into the first
+  // "or" clause in this method so that they will be alphabetized.
   if (cx->realm()->creationOptions().getChangeArrayByCopyEnabled()) {
     /* The reason that "with" is not included in the unscopableList is
      * because it is already a reserved word.
@@ -5180,7 +5176,6 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
       return false;
     }
   }
-#endif
 
   RootedId id(cx, PropertyKey::Symbol(cx->wellKnownSymbols().unscopables));
   value.setObject(*unscopables);

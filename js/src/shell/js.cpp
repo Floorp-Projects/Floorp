@@ -629,9 +629,7 @@ bool shell::enableArrayFromAsync = false;
 // Pref for String.prototype.{is,to}WellFormed() methods.
 bool shell::enableWellFormedUnicodeStrings = false;
 #endif
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
 bool shell::enableNewSetMethods = true;
 #endif
@@ -3898,9 +3896,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setArrayFromAsyncEnabled(enableArrayFromAsync)
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
 #endif
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopyEnabled(enableChangeArrayByCopy)
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(enableNewSetMethods)
 #endif
@@ -11390,15 +11386,10 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-well-formed-unicode-strings",
                         "Enable String.prototype.{is,to}WellFormed() methods"
                         "(Well-Formed Unicode Strings)") ||
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       !op.addBoolOption('\0', "enable-change-array-by-copy",
                         "Enable change-array-by-copy methods") ||
       !op.addBoolOption('\0', "disable-change-array-by-copy",
                         "Disable change-array-by-copy methods") ||
-#else
-      !op.addBoolOption('\0', "enable-change-array-by-copy", "no-op") ||
-      !op.addBoolOption('\0', "disable-change-array-by-copy", "no-op") ||
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
       !op.addBoolOption('\0', "enable-new-set-methods",
                         "Enable New Set methods") ||
@@ -11914,9 +11905,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableWellFormedUnicodeStrings =
       op.getBoolOption("enable-well-formed-unicode-strings");
 #endif
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
-#endif
+  enableChangeArrayByCopy = !op.getBoolOption("disable-change-array-by-copy");
 #ifdef ENABLE_NEW_SET_METHODS
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
 #endif
