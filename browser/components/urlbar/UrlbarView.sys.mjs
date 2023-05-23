@@ -1463,11 +1463,11 @@ export class UrlbarView {
     item._elements.set("favicon", favicon);
 
     let body = this.#createElement("span");
-    body.className = "urlbarView-no-wrap";
+    body.classList.add("urlbarView-no-wrap", "urlbarView-overflowable");
     item._content.appendChild(body);
 
     let title = this.#createElement("span");
-    title.classList.add("urlbarView-title", "urlbarView-overflowable");
+    title.classList.add("urlbarView-title");
     body.appendChild(title);
     item._elements.set("title", title);
 
