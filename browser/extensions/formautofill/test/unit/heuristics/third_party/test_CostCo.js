@@ -1,8 +1,8 @@
-/* global add_heuristic_tests */
+/* global runHeuristicsTest */
 
 "use strict";
 
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
       fixturePath: "ShippingAddress.html",
@@ -166,5 +166,5 @@ add_heuristic_tests(
       ],
     },
   ],
-  "fixtures/third_party/CostCo/"
+  "../../../fixtures/third_party/CostCo/"
 );

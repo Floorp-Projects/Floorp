@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* global add_heuristic_tests */
+/* global runHeuristicsTest */
 
 "use strict";
 
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
       fixturePath: "heuristics_fr_fields.html",
@@ -23,5 +23,5 @@ add_heuristic_tests(
       ],
     },
   ],
-  "fixtures/"
+  "../../fixtures/"
 );

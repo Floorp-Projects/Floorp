@@ -1,8 +1,8 @@
-/* global add_heuristic_tests */
+/* global runHeuristicsTest */
 
 "use strict";
 
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
       fixturePath: "multiple_section.html",
@@ -13,8 +13,8 @@ add_heuristic_tests(
             addressType: "shipping",
           },
           fields: [
-            { fieldName: "name", addressType: "" },
-            { fieldName: "organization", addressType: "" },
+            { fieldName: "name", addressType: ""},
+            { fieldName: "organization", addressType: ""},
             { fieldName: "street-address" },
             { fieldName: "address-level2" },
             { fieldName: "address-level1" },
@@ -59,8 +59,8 @@ add_heuristic_tests(
             // Even the `contactType` of these two fields are different with the
             // above two, we still consider they are identical until supporting
             // multiple phone number and email in one profile.
-            { fieldName: "tel", contactType: "home" },
-            { fieldName: "email", contactType: "home" },
+            {"fieldName": "tel", "contactType": "home"},
+            {"fieldName": "email", "contactType": "home"},
           ],
         },
         {
@@ -109,10 +109,13 @@ add_heuristic_tests(
             reason: "autocomplete",
             contactType: "home",
           },
-          fields: [{ fieldName: "tel" }, { fieldName: "email" }],
+          fields: [
+            { fieldName: "tel" },
+            { fieldName: "email" },
+          ],
         },
       ],
     },
   ],
-  "fixtures/"
+  "../../fixtures/"
 );

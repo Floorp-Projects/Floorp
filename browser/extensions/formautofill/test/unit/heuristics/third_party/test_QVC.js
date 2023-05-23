@@ -1,8 +1,8 @@
-/* global add_heuristic_tests */
+/* global runHeuristicsTest */
 
 "use strict";
 
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
       fixturePath: "YourInformation.html",
@@ -92,5 +92,5 @@ add_heuristic_tests(
       ],
     },
   ],
-  "fixtures/third_party/QVC/"
+  "../../../fixtures/third_party/QVC/"
 );
