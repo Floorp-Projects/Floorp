@@ -41,9 +41,7 @@ var { getTestLogger, initTestLogging } = ChromeUtils.importESModule(
 var { MockRegistrar } = ChromeUtils.importESModule(
   "resource://testing-common/MockRegistrar.sys.mjs"
 );
-var { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function do_check_empty(obj) {
   do_check_attribute_count(obj, 0);

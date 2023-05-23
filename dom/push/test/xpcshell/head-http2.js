@@ -1,6 +1,4 @@
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Returns the test H/2 server port, throwing if it's missing or invalid.
 function getTestServerPort() {

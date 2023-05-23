@@ -20,9 +20,11 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIResProtocolHandler"
 );
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 // Define some shortcuts.
 function* getOwnIdentifiers(x) {

@@ -24,8 +24,12 @@ ChromeUtils.defineModuleGetter(
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 ChromeUtils.defineESModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
 });
 XPCOMUtils.defineLazyServiceGetter(

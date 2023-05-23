@@ -61,7 +61,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Livemark: "resource://tps/modules/bookmarks.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   Logger: "resource://tps/logger.sys.mjs",
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   Password: "resource://tps/modules/passwords.sys.mjs",
   PasswordValidator: "resource://services-sync/engines/passwords.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -87,6 +86,12 @@ XPCOMUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
 XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", () => {
   return new TextDecoder();
 });
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 // Options for wiping data during a sync
 const SYNC_RESET_CLIENT = "resetClient";

@@ -1,7 +1,5 @@
 "use strict";
-let { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200);

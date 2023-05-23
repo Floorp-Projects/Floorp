@@ -15,9 +15,7 @@ const CertDb = Cc[nsX509CertDB].getService(Ci.nsIX509CertDB);
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { CommonUtils } = ChromeUtils.importESModule(
   "resource://services-common/utils.sys.mjs"
 );

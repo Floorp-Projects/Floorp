@@ -13,9 +13,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.localDomains");
 });
 
-var { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(

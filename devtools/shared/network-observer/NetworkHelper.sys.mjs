@@ -67,8 +67,10 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   DevToolsInfaillibleUtils:
     "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs",
+});
 
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 // It would make sense to put this in the above

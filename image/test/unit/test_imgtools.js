@@ -2,9 +2,7 @@
  * Tests for imgITools
  */
 
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /*
  * dumpToFile()

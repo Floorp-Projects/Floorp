@@ -6,9 +6,7 @@
  * <https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy>.
  */
 
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 Services.prefs.setCharPref(
   "dom.securecontext.allowlist",
