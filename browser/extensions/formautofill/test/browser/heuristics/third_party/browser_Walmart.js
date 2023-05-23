@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "Checkout.html",
@@ -89,5 +89,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/Walmart/"
+  "fixtures/third_party/Walmart/"
 );

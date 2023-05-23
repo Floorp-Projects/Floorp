@@ -3,11 +3,11 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 // Ensures that fields are identified correctly even when the inputs
 // have their autocomplete attribute set to off.
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "autocomplete_off_on_inputs.html",
@@ -98,5 +98,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../fixtures/"
+  "fixtures/"
 );

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
@@ -33,7 +33,7 @@ const markup2 = `
   </html>
 `;
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixtureData: markup1,

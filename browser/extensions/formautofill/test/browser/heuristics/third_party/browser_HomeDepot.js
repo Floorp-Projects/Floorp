@@ -1,8 +1,8 @@
-/* global runHeuristicsTest */
+/* global add_heuristic_tests */
 
 "use strict";
 
-runHeuristicsTest(
+add_heuristic_tests(
   [
     {
       fixturePath: "Checkout_ShippingPayment.html",
@@ -73,5 +73,5 @@ runHeuristicsTest(
       ],
     },
   ],
-  "../../../fixtures/third_party/HomeDepot/"
+  "fixtures/third_party/HomeDepot/"
 );
