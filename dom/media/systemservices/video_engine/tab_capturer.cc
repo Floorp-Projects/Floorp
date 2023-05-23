@@ -56,11 +56,14 @@ class CaptureFrameRequest {
   MozPromiseRequestHolder<CapturePromise> mRequest;
 };
 
-TabCapturerWebrtc::TabCapturerWebrtc(SourceId aSourceId)
+TabCapturerWebrtc::TabCapturerWebrtc(
+    SourceId aSourceId, nsCOMPtr<nsISerialEventTarget> aCaptureThread)
     : mBrowserId(aSourceId),
       mMainThreadWorker(
           TaskQueue::Create(do_AddRef(GetMainThreadSerialEventTarget()),
-                            "TabCapturerWebrtc::mMainThreadWorker")) {
+                            "TabCapturerWebrtc::mMainThreadWorker")),
+      mCallbackWorker(TaskQueue::Create(aCaptureThread.forget(),
+                                        "TabCapturerWebrtc::mCallbackWorker")) {
   RTC_DCHECK_RUN_ON(&mControlChecker);
   MOZ_ASSERT(aSourceId != 0);
   mCallbackChecker.Detach();
@@ -71,9 +74,9 @@ TabCapturerWebrtc::TabCapturerWebrtc(SourceId aSourceId)
 
 // static
 std::unique_ptr<webrtc::DesktopCapturer> TabCapturerWebrtc::Create(
-    SourceId aSourceId) {
+    SourceId aSourceId, nsCOMPtr<nsISerialEventTarget> aCaptureThread) {
   return std::unique_ptr<webrtc::DesktopCapturer>(
-      new TabCapturerWebrtc(aSourceId));
+      new TabCapturerWebrtc(aSourceId, std::move(aCaptureThread)));
 }
 
 TabCapturerWebrtc::~TabCapturerWebrtc() {
@@ -120,8 +123,6 @@ void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* aCallback) {
           ("TabShare: Start, id=%" PRIu64, mBrowserId));
 
   mCallback = aCallback;
-  mCallbackWorker = TaskQueue::Create(do_AddRef(GetCurrentSerialEventTarget()),
-                                      "TabCapturerWebrtc::mCallbackThread");
 }
 
 void TabCapturerWebrtc::CaptureFrame() {
