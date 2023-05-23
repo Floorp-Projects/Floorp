@@ -286,21 +286,6 @@ xpcAccessible::GetValue(nsAString& aValue) {
 }
 
 NS_IMETHODIMP
-xpcAccessible::GetHelp(nsAString& aHelp) {
-  if (!IntlGeneric()) return NS_ERROR_FAILURE;
-
-  nsAutoString help;
-  if (IntlGeneric()->IsRemote()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  Intl()->Help(help);
-  aHelp.Assign(help);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessible::GetAccessKey(nsAString& aAccessKey) {
   aAccessKey.Truncate();
 
