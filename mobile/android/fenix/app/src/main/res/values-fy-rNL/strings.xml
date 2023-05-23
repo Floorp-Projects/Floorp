@@ -126,6 +126,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nij priveeljepblêd</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Wachtwurdfluchkeppeling</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Tebekspringe</string>
@@ -1354,7 +1357,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Te wiskjen tiidrek</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Smyt skiednis (ynklusyf fan oare apparaten syngronisearre skiednis ôf), cookies en oare navigaasjegegevens fuort.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Smyt skiednis (ynklusyf fan oare apparaten syngronisearre skiednis ôf), cookies en oare navigaasjegegevens fuort.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Smyt skiednis (ynklusyf skiednis syngronisearre fan oare apparaten ôf) fuort</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Lêste oere</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
