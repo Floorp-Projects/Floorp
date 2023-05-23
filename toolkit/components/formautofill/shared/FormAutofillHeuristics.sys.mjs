@@ -15,6 +15,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
 });
 
+XPCOMUtils.defineLazyGetter(lazy, "log", () =>
+  FormAutofill.defineLogGetter(lazy, "FormAutofillHeuristics")
+);
+
 /**
  * To help us classify sections, we want to know what fields can appear
  * multiple times in a row.
@@ -556,15 +560,27 @@ export const FormAutofillHeuristics = {
    *        all sections within its field details in the form.
    */
   getFormInfo(form) {
-    const eligibleFields = Array.from(form.elements).filter(elem =>
-      lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(elem)
+    let elements = Array.from(form.elements).filter(element =>
+      lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(element)
     );
 
-    if (eligibleFields.length <= 0) {
-      return [];
+    // Due to potential performance impact while running visibility check on
+    // a large amount of elements, a comprehensive visibility check
+    // (considering opacity and CSS visibility) is only applied when the number
+    // of eligible elements is below a certain threshold.
+    const runVisiblityCheck =
+      elements.length < lazy.FormAutofillUtils.visibilityCheckThreshold;
+    if (!runVisiblityCheck) {
+      lazy.log.debug(
+        `Skip running visibility check, because of too many elements (${elements.length})`
+      );
     }
 
-    let fieldScanner = new lazy.FieldScanner(eligibleFields);
+    elements = elements.filter(element =>
+      lazy.FormAutofillUtils.isFieldVisible(element, runVisiblityCheck)
+    );
+
+    let fieldScanner = new lazy.FieldScanner(elements);
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
