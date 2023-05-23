@@ -182,10 +182,6 @@ class RTC_EXPORT DesktopCapturer {
   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
       const DesktopCaptureOptions& options);
 
-  // Creates a DesktopCapturer instance which targets to capture tab.
-  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-      const DesktopCaptureOptions& options);
-
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
   static bool IsRunningUnderWayland();
 
@@ -215,10 +211,6 @@ class RTC_EXPORT DesktopCapturer {
   // Creates a platform specific DesktopCapturer instance which targets to
   // capture screens.
   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-      const DesktopCaptureOptions& options);
-
-  // Creates a DesktopCapturer instance which targets to capture tabs
-  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
       const DesktopCaptureOptions& options);
 };
 

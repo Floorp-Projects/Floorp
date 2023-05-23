@@ -27,17 +27,15 @@ class TabCapturedHandler;
 class TaskQueue;
 
 class TabCapturerWebrtc : public webrtc::DesktopCapturer {
- private:
+ protected:
+  TabCapturerWebrtc();
   ~TabCapturerWebrtc();
 
  public:
   friend class CaptureFrameRequest;
   friend class TabCapturedHandler;
 
-  explicit TabCapturerWebrtc(const webrtc::DesktopCaptureOptions& options);
-
-  static std::unique_ptr<webrtc::DesktopCapturer> CreateRawWindowCapturer(
-      const webrtc::DesktopCaptureOptions& options);
+  static std::unique_ptr<webrtc::DesktopCapturer> Create();
 
   TabCapturerWebrtc(const TabCapturerWebrtc&) = delete;
   TabCapturerWebrtc& operator=(const TabCapturerWebrtc&) = delete;
