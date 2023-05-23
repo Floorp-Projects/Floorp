@@ -339,12 +339,15 @@ LoginManager.prototype = {
     const crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].getService(
       Ci.nsILoginManagerCrypto
     );
-    const plaintexts = [login.username, login.password];
-    const [username, password] = await crypto.encryptMany(plaintexts);
+    const plaintexts = [login.username, login.password, login.unknownFields];
+    const [username, password, unknownFields] = await crypto.encryptMany(
+      plaintexts
+    );
 
     const { username: plaintextUsername, password: plaintextPassword } = login;
     login.username = username;
     login.password = password;
+    login.unknownFields = unknownFields;
 
     lazy.log.debug("Adding login");
     return this._storage.addLogin(

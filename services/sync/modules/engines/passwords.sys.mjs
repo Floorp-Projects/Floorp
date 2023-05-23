@@ -18,6 +18,28 @@ import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
 import { Async } from "resource://services-common/async.sys.mjs";
 
+// These are valid fields the server could have for a logins record
+// we mainly use this to detect if there are any unknownFields and
+// store (but don't process) those fields to roundtrip them back
+const VALID_LOGIN_FIELDS = [
+  "id",
+  "displayOrigin",
+  "formSubmitURL",
+  "formActionOrigin",
+  "httpRealm",
+  "hostname",
+  "origin",
+  "password",
+  "passwordField",
+  "timeCreated",
+  "timeLastUsed",
+  "timePasswordChanged",
+  "timesUsed",
+  "username",
+  "usernameField",
+  "unknownFields",
+];
+
 const SYNCABLE_LOGIN_FIELDS = [
   // `nsILoginInfo` fields.
   "hostname",
@@ -202,6 +224,26 @@ PasswordStore.prototype = {
     );
   },
 
+  // Returns an stringified object of any fields not "known" by this client
+  // mainly used to to prevent data loss for other clients by roundtripping
+  // these fields without processing them
+  _processUnknownFields(record) {
+    let unknownFields = {};
+    let keys = Object.keys(record);
+    keys
+      .filter(key => !VALID_LOGIN_FIELDS.includes(key))
+      .forEach(key => {
+        unknownFields[key] = record[key];
+      });
+    // If we found some unknown fields, we stringify it to be able
+    // to properly encrypt it for roundtripping since we can't know if
+    // it contained sensitive fields or not
+    if (Object.keys(unknownFields).length) {
+      return JSON.stringify(unknownFields);
+    }
+    return null;
+  },
+
   /**
    * Return an instance of nsILoginInfo (and, implicitly, nsILoginMetaInfo).
    */
@@ -248,6 +290,12 @@ PasswordStore.prototype = {
       info.timePasswordChanged = record.timePasswordChanged;
     }
 
+    // Check the record if there are any unknown fields from other clients
+    // that we want to roundtrip during sync to prevent data loss
+    let unknownFields = this._processUnknownFields(record.cleartext);
+    if (unknownFields) {
+      info.unknownFields = unknownFields;
+    }
     return info;
   },
 
@@ -328,6 +376,19 @@ PasswordStore.prototype = {
     login.QueryInterface(Ci.nsILoginMetaInfo);
     record.timeCreated = login.timeCreated;
     record.timePasswordChanged = login.timePasswordChanged;
+
+    // put the unknown fields back to the top-level record
+    // during upload
+    if (login.unknownFields) {
+      let unknownFields = JSON.parse(login.unknownFields);
+      if (unknownFields) {
+        Object.keys(unknownFields).forEach(key => {
+          // We have to manually add it to the cleartext since that's
+          // what gets processed during upload
+          record.cleartext[key] = unknownFields[key];
+        });
+      }
+    }
 
     return record;
   },
