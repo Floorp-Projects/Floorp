@@ -833,17 +833,6 @@ files = [
 ]
 
 [[package]]
-name = "pytoml"
-version = "0.1.10"
-description = "A parser for TOML-0.4.0"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pytoml-0.1.10.zip", hash = "sha256:98399eabd927cd3e12457525315b6abbc5abf9a6f392ab578cbcec327f73890c"},
-]
-
-[[package]]
 name = "pyyaml"
 version = "5.4.1"
 description = "YAML parser and emitter for Python"
@@ -1290,4 +1279,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "3d06b67c6d9786c57cd556f5bdac6a77384f815fdbf8677515aed2b2ae36a590"
+content-hash = "73400b896922dda273e939258f76bbb8d752ec811ce33fd56ec735516b932c2b"
