@@ -106,6 +106,42 @@ add_task(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
+add_task(async function test_import_count() {
+  // Ensure the bookmarks count is correct when importing in various cases
+  let count = await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, {
+    replace: true,
+  });
+  Assert.equal(
+    count,
+    8,
+    "There should be 8 imported bookmarks when importing from an empty database"
+  );
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
+  await PlacesTestUtils.promiseAsyncUpdates();
+
+  count = -1;
+  count = await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, {
+    replace: true,
+  });
+  Assert.equal(
+    count,
+    8,
+    "There should be 8 imported bookmarks when replacing existing bookmarks"
+  );
+  await PlacesTestUtils.promiseAsyncUpdates();
+
+  count = -1;
+  count = await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew);
+  Assert.equal(
+    count,
+    8,
+    "There should be 8 imported bookmarks even when we are not replacing existing bookmarks"
+  );
+  await PlacesTestUtils.promiseAsyncUpdates();
+  await PlacesUtils.bookmarks.eraseEverything();
+});
+
 add_task(async function test_import_new() {
   // Test importing a Places bookmarks.html file.
   // 1. import bookmarks.exported.html
