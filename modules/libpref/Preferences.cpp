@@ -5899,6 +5899,9 @@ static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder) {
 #undef ONCE_PREF
 }
 
+// Disable thread safety analysis on this function, because it explodes build
+// times and memory usage.
+MOZ_NO_THREAD_SAFETY_ANALYSIS
 static void InitStaticPrefsFromShared() {
   MOZ_ASSERT(!XRE_IsParentProcess());
   MOZ_DIAGNOSTIC_ASSERT(gSharedMap,
