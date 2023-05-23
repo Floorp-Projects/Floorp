@@ -364,7 +364,7 @@ async function promiseAdImpressionReceived(num) {
     return TestUtils.waitForCondition(() => {
       let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
       return adImpressions.length == num;
-    }, `Should have received an ${num} ad impressions.`);
+    }, `Should have received ${num} ad impressions.`);
   }
   return TestUtils.waitForCondition(() => {
     let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];

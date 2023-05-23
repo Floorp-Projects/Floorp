@@ -54,11 +54,12 @@ export var SearchSERPTelemetryUtils = {
     SHOPPING_TAB: "shopping_tab",
   },
   ABANDONMENTS: {
+    NAVIGATION: "navigation",
     TAB_CLOSE: "tab_close",
     WINDOW_CLOSE: "window_close",
-    NAVIGATION: "navigation",
   },
   INCONTENT_SOURCES: {
+    OPENED_IN_NEW_TAB: "opened_in_new_tab",
     SEARCHBOX: "follow_on_from_refine_on_incontent_search",
   },
 };
@@ -120,7 +121,9 @@ class TelemetryHandler {
    * @param {browser} browser
    *   The browser object associated with the page that should be a SERP.
    * @param {string} type
-   *   The component type that started the load.
+   *   The source that started the load. One of
+   *   SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX or
+   *   SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB.
    */
   setBrowserContentSource(browser, type) {
     switch (type) {
@@ -128,6 +131,12 @@ class TelemetryHandler {
         this.#browserContentSourceMap.set(
           browser,
           SearchSERPTelemetryUtils.INCONTENT_SOURCES.SEARCHBOX
+        );
+        break;
+      case SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB:
+        this.#browserContentSourceMap.set(
+          browser,
+          SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB
         );
         break;
     }
@@ -960,6 +969,7 @@ class ContentHandler {
         // tracked SERP.
         let browser = wrappedChannel.browserElement;
         let telemetryState;
+        let isFromNewtab = false;
         if (item.browserTelemetryStateMap.has(browser)) {
           // Current browser is tracked.
           telemetryState = item.browserTelemetryStateMap.get(browser);
@@ -969,6 +979,9 @@ class ContentHandler {
           let tabBrowser = browser.getTabBrowser();
           let tab = tabBrowser.getTabForBrowser(browser).openerTab;
           telemetryState = item.browserTelemetryStateMap.get(tab.linkedBrowser);
+          if (telemetryState) {
+            isFromNewtab = true;
+          }
         }
 
         // Step 2: If we have telemetryState, the browser object must be
@@ -979,11 +992,16 @@ class ContentHandler {
         //   engagement because the event was logged elsewhere.
         // - If the ad impression hasn't been recorded yet, we have no way of
         //   knowing precisely what kind of component was selected.
+        let isSerp = false;
         if (
           telemetryState &&
           telemetryState.adImpressionsReported &&
           !telemetryState.searchBoxSubmitted
         ) {
+          if (info.searchPageRegexp?.test(originURL)) {
+            isSerp = true;
+          }
+
           // Determine the "type" of the link.
           let type = telemetryState.hrefToComponentMap?.get(URL);
           // The SERP provider may have modified the url with different query
@@ -1010,10 +1028,8 @@ class ContentHandler {
           }
           // The SERP may have moved onto another page that matches a SERP page
           // e.g. Related Search
-          if (!type) {
-            type = info.searchPageRegexp?.test(URL)
-              ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
-              : "";
+          if (!type && isSerp) {
+            type = SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK;
           }
           // There might be other types of pages on a SERP that don't fall
           // neatly into expected non-ad expressions or SERPs, such as Image
@@ -1022,6 +1038,13 @@ class ContentHandler {
             type = info.extraPageRegexps?.some(r => r.test(URL))
               ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
               : "";
+          }
+
+          if (isSerp && isFromNewtab) {
+            SearchSERPTelemetry.setBrowserContentSource(
+              browser,
+              SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB
+            );
           }
 
           // Step 3: If we have a type, record an engagement.
