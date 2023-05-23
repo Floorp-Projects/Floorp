@@ -65,7 +65,6 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "disable_fission": kwargs["disable_fission"],
             # desktop only
             "leak_check": False,
-            "stylo_threads": kwargs["stylo_threads"],
             "chaos_mode_flags": kwargs["chaos_mode_flags"],
             "config": config,
             "install_fonts": kwargs["install_fonts"],
@@ -324,7 +323,7 @@ class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
                          stackwalk_binary=stackwalk_binary, certutil_binary=certutil_binary,
                          ca_certificate_path=ca_certificate_path, e10s=e10s,
                          disable_fission=disable_fission, stackfix_dir=stackfix_dir,
-                         leak_check=leak_check, asan=asan, stylo_threads=stylo_threads,
+                         leak_check=leak_check, asan=asan,
                          chaos_mode_flags=chaos_mode_flags, config=config,
                          browser_channel=browser_channel, headless=headless, **kwargs)
 
@@ -350,8 +349,8 @@ class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
             self.logger.warning("Failed to remove forwarded or reversed ports: %s" % e)
         super().stop(force=force)
 
-    def get_env(self, binary, debug_info, stylo_threads, headless, chaos_mode_flags):
-        env = get_environ(stylo_threads, chaos_mode_flags)
+    def get_env(self, binary, debug_info, headless, chaos_mode_flags):
+        env = get_environ(chaos_mode_flags)
         env["RUST_BACKTRACE"] = "1"
         del env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"]
         return env
