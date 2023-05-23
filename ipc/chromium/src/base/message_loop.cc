@@ -250,11 +250,12 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
     case TYPE_MOZILLA_NONMAINTHREAD:
       pump_ = new mozilla::ipc::MessagePumpForNonMainThreads(aEventTarget);
       return;
-#if defined(OS_WIN) || defined(OS_MACOSX)
+#if defined(OS_WIN)
     case TYPE_MOZILLA_NONMAINUITHREAD:
       pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads(aEventTarget);
       return;
-#elif defined(MOZ_WIDGET_ANDROID)
+#endif
+#if defined(MOZ_WIDGET_ANDROID)
     case TYPE_MOZILLA_ANDROID_UI:
       MOZ_RELEASE_ASSERT(aEventTarget);
       pump_ = new mozilla::ipc::MessagePumpForAndroidUI(aEventTarget);
