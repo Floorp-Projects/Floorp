@@ -150,7 +150,15 @@ class SendCrashReportServiceTest {
 
     @Test
     fun `notification tag and id is added to the report intent`() {
-        val crash: Crash = mock()
+        val crash: Crash = Crash.NativeCodeCrash(
+            123,
+            "",
+            true,
+            "",
+            Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
+            arrayListOf(),
+        )
+
         val intent = SendCrashReportService.createReportIntent(testContext, crash, "test_tag", 123)
 
         assertEquals(intent.getStringExtra(NOTIFICATION_TAG_KEY), "test_tag")
