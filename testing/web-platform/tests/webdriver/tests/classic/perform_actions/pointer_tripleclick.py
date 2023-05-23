@@ -1,6 +1,6 @@
 import math
 
-from tests.perform_actions.support.refine import get_events
+from tests.classic.perform_actions.support.refine import get_events
 from tests.support.asserts import assert_move_to_coordinates
 from tests.support.helpers import filter_dict
 

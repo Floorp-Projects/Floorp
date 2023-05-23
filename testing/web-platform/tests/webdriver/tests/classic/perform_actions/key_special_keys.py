@@ -2,7 +2,7 @@ import pytest
 
 from webdriver import error
 
-from tests.perform_actions.support.refine import get_keys
+from tests.classic.perform_actions.support.refine import get_keys
 
 
 @pytest.mark.parametrize("value", [
