@@ -6,9 +6,7 @@
 
 const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
 
-var { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var key;
 

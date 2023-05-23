@@ -12,13 +12,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   FeatureManifest: "resource://nimbus/FeatureManifest.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 function fetchSchemaSync(uri) {

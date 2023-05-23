@@ -4,25 +4,25 @@
 
 function run_test() {
   var scope1 = {};
-  var exports1 = ChromeUtils.import("resource://test/TestFile.jsm", scope1);
+  var exports1 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope1);
 
   var scope2 = {};
-  var exports2 = ChromeUtils.import("resource://test/TestFile.jsm", scope2);
+  var exports2 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope2);
 
   Assert.ok(exports1 === exports2);
-  Assert.ok(scope1.TestFile === scope2.TestFile);
+  Assert.ok(scope1.NetUtil === scope2.NetUtil);
 
-  Cu.unload("resource://test/TestFile.jsm");
+  Cu.unload("resource://gre/modules/NetUtil.jsm");
 
   var scope3 = {};
-  var exports3 = ChromeUtils.import("resource://test/TestFile.jsm", scope3);
+  var exports3 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope3);
 
   Assert.equal(false, exports1 === exports3);
-  Assert.equal(false, scope1.TestFile === scope3.TestFile);
+  Assert.equal(false, scope1.NetUtil === scope3.NetUtil);
 
   // When the jsm was unloaded, the value of all its global's properties were
   // set to undefined. While it must be safe (not crash) to call into the
   // module, we expect it to throw an error (e.g., when trying to use Ci).
-  try { scope1.TestFile.doTest(() => {}); } catch (e) {}
-  try { scope3.TestFile.doTest(() => {}); } catch (e) {}
+  try { scope1.NetUtil.newURI("http://www.example.com"); } catch (e) {}
+  try { scope3.NetUtil.newURI("http://www.example.com"); } catch (e) {}
 }

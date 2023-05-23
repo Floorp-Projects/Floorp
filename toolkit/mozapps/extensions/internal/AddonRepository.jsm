@@ -13,7 +13,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
 });
@@ -21,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 // The current platform as specified in the AMO API:

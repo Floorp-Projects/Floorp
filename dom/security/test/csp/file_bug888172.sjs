@@ -1,8 +1,6 @@
 // SJS file for CSP mochitests
 
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.
