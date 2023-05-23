@@ -1,8 +1,8 @@
-/* global add_heuristic_tests */
+/* global runHeuristicsTest */
 
 "use strict";
 
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
       fixturePath: "heuristics_cc_exp.html",
@@ -24,7 +24,10 @@ add_heuristic_tests(
           default: {
             reason: "autocomplete",
           },
-          fields: [{ fieldName: "cc-number" }, { fieldName: "cc-exp" }],
+          fields: [
+            { fieldName: "cc-number" },
+            { fieldName: "cc-exp" },
+          ],
         },
         {
           description: "form3",
@@ -52,5 +55,5 @@ add_heuristic_tests(
       ],
     },
   ],
-  "fixtures/"
+  "../../fixtures/"
 );

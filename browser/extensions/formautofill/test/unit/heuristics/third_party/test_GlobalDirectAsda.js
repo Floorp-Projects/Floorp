@@ -1,8 +1,8 @@
-/* global add_heuristic_tests */
+/* global runHeuristicsTest */
 
 "use strict";
 
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
       fixturePath: "Payment.html",
@@ -20,5 +20,5 @@ add_heuristic_tests(
       ],
     },
   ],
-  "fixtures/third_party/GlobalDirectAsda/"
+  "../../../fixtures/third_party/GlobalDirectAsda/"
 )

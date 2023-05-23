@@ -1,16 +1,11 @@
-/* Any copyright is dedicated to the Public Domain.
-http://creativecommons.org/publicdomain/zero/1.0/ */
+/* global runHeuristicsTest */
 
 "use strict";
 
-/* global add_heuristic_tests */
-
-// Ensures that fields are identified correctly even when the containing form
-// has its autocomplete attribute set to off.
-add_heuristic_tests(
+runHeuristicsTest(
   [
     {
-      fixturePath: "autocomplete_off_on_form.html",
+      fixturePath: "autocomplete_basic.html",
       expectedResult: [
         {
           default: {
@@ -70,5 +65,5 @@ add_heuristic_tests(
       ],
     },
   ],
-  "fixtures/"
+  "../../fixtures/"
 );
