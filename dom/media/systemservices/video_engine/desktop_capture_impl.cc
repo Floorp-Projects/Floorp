@@ -526,7 +526,7 @@ bool DesktopCaptureImpl::SetApplyRotation(bool aEnable) { return true; }
 
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& aCapability) {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
+  RTC_DCHECK_RUN_ON(&mControlThreadChecker);
 
   if (mRequestedCapability) {
     // Already initialized
@@ -558,7 +558,7 @@ int32_t DesktopCaptureImpl::StartCapture(
 }
 
 bool DesktopCaptureImpl::FocusOnSelectedSource() {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
+  RTC_DCHECK_RUN_ON(&mControlThreadChecker);
   if (!mCaptureThread) {
     MOZ_ASSERT_UNREACHABLE(
         "FocusOnSelectedSource must be called after StartCapture");
@@ -568,6 +568,7 @@ bool DesktopCaptureImpl::FocusOnSelectedSource() {
   bool success = false;
   MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
       mCaptureThread, NS_NewRunnableFunction(__func__, [&] {
+        RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
         MOZ_ASSERT(mCapturer);
         success = mCapturer && mCapturer->FocusOnSelectedSource();
       })));
@@ -575,7 +576,7 @@ bool DesktopCaptureImpl::FocusOnSelectedSource() {
 }
 
 int32_t DesktopCaptureImpl::StopCapture() {
-  MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
+  RTC_DCHECK_RUN_ON(&mControlThreadChecker);
   if (mRequestedCapability) {
     // Sync-cancel the capture timer so no CaptureFrame calls will come in after
     // we return.
@@ -608,7 +609,7 @@ int32_t DesktopCaptureImpl::CaptureSettings(VideoCaptureCapability& aSettings) {
 
 void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
                                          std::unique_ptr<DesktopFrame> aFrame) {
-  MOZ_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
   if (!aFrame) {
     return;
   }
@@ -693,7 +694,7 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
 }
 
 void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
-  MOZ_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
   MOZ_ASSERT(Timestamp::Millis(aFrame.render_time_ms()) >
              mNextFrameMinimumTime);
   // Set the next frame's minimum time to ensure two consecutive frames don't
@@ -708,7 +709,7 @@ void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
 
 void DesktopCaptureImpl::InitOnThread(
     std::unique_ptr<DesktopCapturer> aCapturer, int aFramerate) {
-  MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
 
   mCapturer = std::move(aCapturer);
 
@@ -723,7 +724,7 @@ void DesktopCaptureImpl::InitOnThread(
 }
 
 void DesktopCaptureImpl::ShutdownOnThread() {
-  MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
   if (mCaptureTimer) {
     mCaptureTimer->Cancel();
     mCaptureTimer = nullptr;
@@ -737,7 +738,7 @@ void DesktopCaptureImpl::ShutdownOnThread() {
 }
 
 void DesktopCaptureImpl::CaptureFrameOnThread() {
-  MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
+  RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
 
 #if defined(WEBRTC_MAC)
   // Give cycles to the RunLoop so frame callbacks can happen
