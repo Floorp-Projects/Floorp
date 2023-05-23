@@ -488,7 +488,10 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
       mRunning(false),
       mCallbacks("DesktopCaptureImpl::mCallbacks") {}
 
-DesktopCaptureImpl::~DesktopCaptureImpl() { MOZ_ASSERT(!mCaptureThread); }
+DesktopCaptureImpl::~DesktopCaptureImpl() {
+  MOZ_ASSERT(!mCaptureThread);
+  MOZ_ASSERT(!mRequestedCapability);
+}
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* aDataCallback) {
@@ -531,21 +534,22 @@ int32_t DesktopCaptureImpl::StartCapture(
   }
 
   DesktopCapturer::SourceId sourceId = std::stoi(mDeviceUniqueId);
-  mCapturer = CreateDesktopCapturerAndThread(mDeviceType, sourceId,
-                                             getter_AddRefs(mCaptureThread));
+  std::unique_ptr capturer = CreateDesktopCapturerAndThread(
+      mDeviceType, sourceId, getter_AddRefs(mCaptureThread));
 
-  MOZ_ASSERT(!mCapturer == !mCaptureThread);
-  if (!mCapturer) {
+  MOZ_ASSERT(!capturer == !mCaptureThread);
+  if (!capturer) {
     return -1;
   }
 
-  mRequestedCapability = aCapability;
+  mRequestedCapability = mozilla::Some(aCapability);
   mCaptureThreadChecker.Detach();
 
   MOZ_ALWAYS_SUCCEEDS(mCaptureThread->Dispatch(NS_NewRunnableFunction(
       "DesktopCaptureImpl::InitOnThread",
-      [this, self = RefPtr(this), maxFps = std::max(aCapability.maxFPS, 1)] {
-        InitOnThread(maxFps);
+      [this, self = RefPtr(this), capturer = std::move(capturer),
+       maxFps = std::max(aCapability.maxFPS, 1)]() mutable {
+        InitOnThread(std::move(capturer), maxFps);
       })));
 
   mRunning = true;
@@ -555,29 +559,33 @@ int32_t DesktopCaptureImpl::StartCapture(
 
 bool DesktopCaptureImpl::FocusOnSelectedSource() {
   MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-  if (!mCapturer) {
+  if (!mCaptureThread) {
     MOZ_ASSERT_UNREACHABLE(
         "FocusOnSelectedSource must be called after StartCapture");
     return false;
   }
 
-  return mCapturer->FocusOnSelectedSource();
+  bool success = false;
+  MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
+      mCaptureThread, NS_NewRunnableFunction(__func__, [&] {
+        MOZ_ASSERT(mCapturer);
+        success = mCapturer && mCapturer->FocusOnSelectedSource();
+      })));
+  return success;
 }
 
 int32_t DesktopCaptureImpl::StopCapture() {
   MOZ_DIAGNOSTIC_ASSERT(mControlThread->IsOnCurrentThread());
-  if (mCaptureThread) {
+  if (mRequestedCapability) {
     // Sync-cancel the capture timer so no CaptureFrame calls will come in after
     // we return.
     MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
         mCaptureThread,
         NewRunnableMethod(__func__, this,
                           &DesktopCaptureImpl::ShutdownOnThread)));
-  }
 
-  // Capturer dtor blocks until fully shut down. TabCapturerWebrtc needs the
-  // capture thread to be alive.
-  mCapturer = nullptr;
+    mRequestedCapability = mozilla::Nothing();
+  }
 
   if (mCaptureThread) {
     // CaptureThread shutdown.
@@ -699,8 +707,11 @@ void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
   }
 }
 
-void DesktopCaptureImpl::InitOnThread(int aFramerate) {
+void DesktopCaptureImpl::InitOnThread(
+    std::unique_ptr<DesktopCapturer> aCapturer, int aFramerate) {
   MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
+
+  mCapturer = std::move(aCapturer);
 
   // We need to call Start on the same thread we call CaptureFrame on.
   mCapturer->Start(this);
@@ -718,6 +729,11 @@ void DesktopCaptureImpl::ShutdownOnThread() {
     mCaptureTimer->Cancel();
     mCaptureTimer = nullptr;
   }
+
+  // DesktopCapturer dtor blocks until fully shut down. TabCapturerWebrtc needs
+  // the capture thread to be alive.
+  mCapturer = nullptr;
+
   mRequestedCaptureInterval = mozilla::Nothing();
 }
 

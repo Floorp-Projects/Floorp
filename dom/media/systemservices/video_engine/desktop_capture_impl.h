@@ -203,7 +203,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
  private:
   // Maximum CPU usage in %.
   static constexpr uint32_t kMaxDesktopCaptureCpuUsage = 50;
-  void InitOnThread(int aFramerate);
+  void InitOnThread(std::unique_ptr<DesktopCapturer> aCapturer, int aFramerate);
   void ShutdownOnThread();
   // DesktopCapturer::Callback interface.
   void OnCaptureResult(DesktopCapturer::Result aResult,
@@ -214,11 +214,10 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 
   // Control thread on which the public API is called.
   const nsCOMPtr<nsISerialEventTarget> mControlThread;
-  // Set in StartCapture. mControlThread only.
-  VideoCaptureCapability mRequestedCapability;
-  // This is created on mControlThread and accessed on both mControlThread and
-  // mCaptureThread. It is created prior to mCaptureThread starting and is
-  // destroyed after it is stopped.
+  // Set in StartCapture.
+  mozilla::Maybe<VideoCaptureCapability> mRequestedCapability;
+  // The DesktopCapturer is created on mControlThread but assigned and accessed
+  // only on mCaptureThread.
   std::unique_ptr<DesktopCapturer> mCapturer;
   // Dedicated thread that does the capturing. Only used on mControlThread.
   nsCOMPtr<nsIThread> mCaptureThread;
