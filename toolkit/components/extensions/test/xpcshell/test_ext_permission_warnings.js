@@ -4,7 +4,11 @@ let { ExtensionTestCommon } = ChromeUtils.import(
   "resource://testing-common/ExtensionTestCommon.jsm"
 );
 
-const { PERMISSION_L10N_ID_OVERRIDES } = ChromeUtils.importESModule(
+const {
+  PERMISSION_L10N_ID_OVERRIDES,
+  PERMISSIONS_WITH_MESSAGE,
+  permissionToL10nId,
+} = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
 );
 
@@ -119,6 +123,16 @@ add_task(async function customized_permission_keys_mapping() {
     for (let perm of manifest.permissions) {
       PERMISSION_L10N_ID_OVERRIDES.delete(perm);
     }
+  }
+});
+
+// Tests that permission description data is internally consistent
+add_task(async function permission_message_consistence() {
+  for (let perm of PERMISSIONS_WITH_MESSAGE) {
+    ok(permissionToL10nId(perm), `Message is provided for ${perm}`);
+  }
+  for (let [perm] of PERMISSION_L10N_ID_OVERRIDES) {
+    ok(permissionToL10nId(perm), `Message is provided for ${perm}`);
   }
 });
 
