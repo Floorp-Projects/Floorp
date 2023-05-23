@@ -924,6 +924,10 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
     handler->CanDropLink(dragEvent, false, &canDropLink);
     if (canDropLink) {
       aEvent->PreventDefault();
+      WidgetDragEvent* asWidgetDropEvent =
+          dragEvent->WidgetEventPtr()->AsDragEvent();
+      asWidgetDropEvent->UpdateDefaultPreventedOnContent(
+          asWidgetDropEvent->mCurrentTarget);
     }
   } else if (eventType.EqualsLiteral("drop")) {
     nsIWebNavigation* webnav = static_cast<nsIWebNavigation*>(mWebBrowser);
@@ -974,6 +978,10 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
     } else {
       aEvent->StopPropagation();
       aEvent->PreventDefault();
+      WidgetDragEvent* asWidgetDropEvent =
+          dragEvent->WidgetEventPtr()->AsDragEvent();
+      asWidgetDropEvent->UpdateDefaultPreventedOnContent(
+          asWidgetDropEvent->mCurrentTarget);
     }
   }
 
