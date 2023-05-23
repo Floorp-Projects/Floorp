@@ -27,6 +27,12 @@
 #include "rtc_base/logging.h"
 
 mozilla::LazyLogModule gTabShareLog("TabShare");
+#define LOG_FUNC_IMPL(level) \
+  MOZ_LOG(                   \
+      gTabShareLog, level,   \
+      ("TabCapturerWebrtc %p: %s id=%" PRIu64, this, __func__, mBrowserId))
+#define LOG_FUNC() LOG_FUNC_IMPL(LogLevel::Debug)
+#define LOG_FUNCV() LOG_FUNC_IMPL(LogLevel::Verbose)
 
 using namespace mozilla::dom;
 
@@ -68,8 +74,7 @@ TabCapturerWebrtc::TabCapturerWebrtc(
   MOZ_ASSERT(aSourceId != 0);
   mCallbackChecker.Detach();
 
-  MOZ_LOG(gTabShareLog, LogLevel::Debug,
-          ("TabCapturerWebrtc %p: source %" PRIdPTR, this, mBrowserId));
+  LOG_FUNC();
 }
 
 // static
@@ -81,6 +86,7 @@ std::unique_ptr<webrtc::DesktopCapturer> TabCapturerWebrtc::Create(
 
 TabCapturerWebrtc::~TabCapturerWebrtc() {
   RTC_DCHECK_RUN_ON(&mCallbackChecker);
+  LOG_FUNC();
 
   // mMainThreadWorker handles frame capture requests async. Since we're in the
   // dtor, no more frame capture requests can be made through CaptureFrame(). It
@@ -138,14 +144,14 @@ void TabCapturerWebrtc::Start(webrtc::DesktopCapturer::Callback* aCallback) {
   RTC_DCHECK(!mCallback);
   RTC_DCHECK(aCallback);
 
-  MOZ_LOG(gTabShareLog, LogLevel::Debug,
-          ("TabShare: Start, id=%" PRIu64, mBrowserId));
+  LOG_FUNC();
 
   mCallback = aCallback;
 }
 
 void TabCapturerWebrtc::CaptureFrame() {
   RTC_DCHECK_RUN_ON(&mCallbackChecker);
+  LOG_FUNCV();
   if (mRequests.GetSize() > 2) {
     // Allow two async capture requests in flight
     OnCaptureFrameFailure();
@@ -177,6 +183,7 @@ void TabCapturerWebrtc::OnCaptureFrameSuccess(
     UniquePtr<dom::ImageBitmapCloneData> aData) {
   RTC_DCHECK_RUN_ON(&mCallbackChecker);
   MOZ_DIAGNOSTIC_ASSERT(aData);
+  LOG_FUNCV();
   webrtc::DesktopSize size(aData->mPictureRect.Width(),
                            aData->mPictureRect.Height());
   webrtc::DesktopRect rect = webrtc::DesktopRect::MakeSize(size);
@@ -197,6 +204,7 @@ void TabCapturerWebrtc::OnCaptureFrameSuccess(
 
 void TabCapturerWebrtc::OnCaptureFrameFailure() {
   RTC_DCHECK_RUN_ON(&mCallbackChecker);
+  LOG_FUNC();
   mCallback->OnCaptureResult(webrtc::DesktopCapturer::Result::ERROR_TEMPORARY,
                              nullptr);
 }
@@ -286,13 +294,14 @@ bool TabCapturerWebrtc::CompleteRequest(CaptureFrameRequest* aRequest) {
 
 void TabCapturerWebrtc::DisconnectRequest(CaptureFrameRequest* aRequest) {
   RTC_DCHECK_RUN_ON(&mCallbackChecker);
+  LOG_FUNCV();
   aRequest->Disconnect();
   OnCaptureFrameFailure();
 }
 
 auto TabCapturerWebrtc::CaptureFrameNow() -> RefPtr<CapturePromise> {
   MOZ_ASSERT(mMainThreadWorker->IsOnCurrentThread());
-  MOZ_LOG(gTabShareLog, LogLevel::Debug, ("TabShare: CaptureFrameNow"));
+  LOG_FUNCV();
 
   WindowGlobalParent* wgp = nullptr;
   RefPtr<BrowsingContext> context =
