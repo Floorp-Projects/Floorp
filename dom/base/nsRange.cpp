@@ -8,6 +8,7 @@
  * Implementation of the DOM Range object.
  */
 
+#include "RangeBoundary.h"
 #include "nscore.h"
 #include "nsRange.h"
 
@@ -170,7 +171,7 @@ nsRange::nsRange(nsINode* aNode)
       mNextEndRef(nullptr) {
   // printf("Size of nsRange: %zu\n", sizeof(nsRange));
 
-  static_assert(sizeof(nsRange) <= 224,
+  static_assert(sizeof(nsRange) <= 240,
                 "nsRange size shouldn't be increased as far as possible");
 }
 
@@ -567,10 +568,10 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
 
   if (newStart.IsSet() || newEnd.IsSet()) {
     if (!newStart.IsSet()) {
-      newStart = mStart;
+      newStart.CopyFrom(mStart, RangeBoundaryIsMutationObserved::Yes);
     }
     if (!newEnd.IsSet()) {
-      newEnd = mEnd;
+      newEnd.CopyFrom(mEnd, RangeBoundaryIsMutationObserved::Yes);
     }
     DoSetRange(newStart, newEnd, newRoot ? newRoot : mRoot.get(),
                !newEnd.Container()->GetParentNode() ||
@@ -626,8 +627,8 @@ void nsRange::ContentInserted(nsIContent* aChild) {
   bool updateBoundaries = false;
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
-  RawRangeBoundary newStart(mStart);
-  RawRangeBoundary newEnd(mEnd);
+  RawRangeBoundary newStart(mStart, RangeBoundaryIsMutationObserved::Yes);
+  RawRangeBoundary newEnd(mEnd, RangeBoundaryIsMutationObserved::Yes);
   MOZ_ASSERT(aChild->GetParentNode() == container);
 
   // Invalidate boundary offsets if a child that may have moved them was
@@ -692,7 +693,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
     if (aChild == mStart.Ref()) {
       newStart = {container, aPreviousSibling};
     } else {
-      newStart = mStart;
+      newStart.CopyFrom(mStart, RangeBoundaryIsMutationObserved::Yes);
       newStart.InvalidateOffset();
     }
   } else {
@@ -707,7 +708,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
     if (aChild == mEnd.Ref()) {
       newEnd = {container, aPreviousSibling};
     } else {
-      newEnd = mEnd;
+      newEnd.CopyFrom(mEnd, RangeBoundaryIsMutationObserved::Yes);
       newEnd.InvalidateOffset();
     }
   } else {
@@ -980,8 +981,8 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
   // GetClosestCommonInclusiveAncestor is unreliable while we're unlinking
   // (could return null if our start/end have already been unlinked), so make
   // sure to not use it here to determine our "old" current ancestor.
-  mStart = aStartBoundary;
-  mEnd = aEndBoundary;
+  mStart.CopyFrom(aStartBoundary, RangeBoundaryIsMutationObserved::Yes);
+  mEnd.CopyFrom(aEndBoundary, RangeBoundaryIsMutationObserved::Yes);
 
   if (checkCommonAncestor) {
     nsINode* oldCommonAncestor = mRegisteredClosestCommonInclusiveAncestor;

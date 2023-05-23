@@ -123,11 +123,24 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
                                         AbstractRange* aAbstractRange,
                                         bool* aNodeIsBeforeRange,
                                         bool* aNodeIsAfterRange) {
+  if (NS_WARN_IF(!aAbstractRange) ||
+      NS_WARN_IF(!aAbstractRange->IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return CompareNodeToRangeBoundaries(aNode, aAbstractRange->StartRef(),
+                                      aAbstractRange->EndRef(),
+                                      aNodeIsBeforeRange, aNodeIsAfterRange);
+}
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+nsresult RangeUtils::CompareNodeToRangeBoundaries(
+    nsINode* aNode, const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+    const RangeBoundaryBase<EPT, ERT>& aEndBoundary, bool* aNodeIsBeforeRange,
+    bool* aNodeIsAfterRange) {
   MOZ_ASSERT(aNodeIsBeforeRange);
   MOZ_ASSERT(aNodeIsAfterRange);
 
-  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!aAbstractRange) ||
-      NS_WARN_IF(!aAbstractRange->IsPositioned())) {
+  if (NS_WARN_IF(!aNode) ||
+      NS_WARN_IF(!aStartBoundary.IsSet() || !aEndBoundary.IsSet())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -174,26 +187,24 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
 
   // is RANGE(start) <= NODE(start) ?
   Maybe<int32_t> order = nsContentUtils::ComparePoints_AllowNegativeOffsets(
-      aAbstractRange->StartRef().Container(),
-      *aAbstractRange->StartRef().Offset(
+      aStartBoundary.Container(),
+      *aStartBoundary.Offset(
           RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
       parent, nodeStart);
   if (NS_WARN_IF(!order)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
   *aNodeIsBeforeRange = *order > 0;
-
+  // if (aStartBoundary != aEndBoundary) {
   // is RANGE(end) >= NODE(end) ?
   order = nsContentUtils::ComparePoints(
-      aAbstractRange->EndRef().Container(),
-      *aAbstractRange->EndRef().Offset(
-          RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
+      aEndBoundary.Container(),
+      *aEndBoundary.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
       parent, nodeEnd);
 
   if (NS_WARN_IF(!order)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
-
   *aNodeIsAfterRange = *order < 0;
 
   return NS_OK;

@@ -94,8 +94,8 @@ template <typename SPT, typename SRT, typename EPT, typename ERT>
 void StaticRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
                              const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
                              nsINode* aRootNode) {
-  mStart = aStartBoundary;
-  mEnd = aEndBoundary;
+  mStart.CopyFrom(aStartBoundary, RangeBoundaryIsMutationObserved::No);
+  mEnd.CopyFrom(aEndBoundary, RangeBoundaryIsMutationObserved::No);
   MOZ_ASSERT(mStart.IsSet() == mEnd.IsSet());
   mIsPositioned = mStart.IsSet() && mEnd.IsSet();
 }
