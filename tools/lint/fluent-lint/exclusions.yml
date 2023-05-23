@@ -82,6 +82,9 @@ ID01:
         # policies-descriptions.ftl: These IDs are generated programmatically
         # from policy names.
         - browser/locales/en-US/browser/policies/policies-descriptions.ftl
+        # The webext-perms-description-* IDs are generated programmatically
+        # from permission names
+        - toolkit/locales/en-US/toolkit/global/extensionPermissions.ftl
 ID02:
     messages:
         # browser/components/ion/content/ion.ftl
@@ -185,6 +188,8 @@ CO01:
         - about-telemetry-firefox-data-doc
         - about-telemetry-telemetry-client-doc
         - about-telemetry-telemetry-dashboard
+        # toolkit/locales/en-US/toolkit/global/extensionPermissions.ftl
+        - webext-perms-description-management
         # toolkit/locales/en-US/toolkit/global/processTypes.ftl
         - process-type-privilegedmozilla
     files:

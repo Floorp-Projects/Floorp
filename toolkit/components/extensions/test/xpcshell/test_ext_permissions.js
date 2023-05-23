@@ -20,7 +20,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
-const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
+const l10n = new Localization([
+  "toolkit/global/extensions.ftl",
+  "toolkit/global/extensionPermissions.ftl",
+  "branding/brand.ftl",
+]);
+// Localization resources need to be first iterated outside a test
+l10n.formatValue("webext-perms-add");
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -677,7 +683,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "webRequestFilterResponse.serviceWorkerScript",
 ];
 
-add_task(function test_permissions_have_localization_strings() {
+add_task(async function test_permissions_have_localization_strings() {
   let noPromptNames = Schemas.getPermissionNames([
     "PermissionNoPrompt",
     "OptionalPermissionNoPrompt",
@@ -689,11 +695,10 @@ add_task(function test_permissions_have_localization_strings() {
     "List of no-prompt permissions is correct."
   );
 
-  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-
   for (const perm of Schemas.getPermissionNames()) {
     try {
-      const str = bundle.GetStringFromName(`webextPerms.description.${perm}`);
+      const permId = perm.replace(/\./g, "-");
+      const str = await l10n.formatValue(`webext-perms-description-${permId}`);
 
       ok(str.length, `Found localization string for '${perm}' permission`);
     } catch (e) {

@@ -23,6 +23,7 @@ EXTRA_JS_MODULES += [
     "ExtensionDNRStore.sys.mjs",
     "ExtensionPageChild.jsm",
     "ExtensionParent.jsm",
+    "ExtensionPermissionMessages.sys.mjs",
     "ExtensionPermissions.jsm",
     "ExtensionPreferencesManager.jsm",
     "ExtensionProcessScript.jsm",

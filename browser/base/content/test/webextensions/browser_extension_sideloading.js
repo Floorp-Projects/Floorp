@@ -179,8 +179,8 @@ add_task(async function test_sideloading() {
     panel,
     /\/foo-icon\.png$/,
     [
-      ["webextPerms.hostDescription.allUrls"],
-      ["webextPerms.description.history"],
+      ["webext-perms-host-description-all-urls"],
+      ["webext-perms-description-history"],
     ],
     kSideloaded
   );
@@ -229,7 +229,7 @@ add_task(async function test_sideloading() {
   checkNotification(
     panel,
     DEFAULT_ICON_URL,
-    [["webextPerms.hostDescription.allUrls"]],
+    [["webext-perms-host-description-all-urls"]],
     kSideloaded
   );
 
@@ -296,7 +296,7 @@ add_task(async function test_sideloading() {
   checkNotification(
     panel,
     DEFAULT_ICON_URL,
-    [["webextPerms.hostDescription.allUrls"]],
+    [["webext-perms-host-description-all-urls"]],
     kSideloaded
   );
 

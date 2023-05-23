@@ -25,16 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/browser.properties"
-  );
-});
-XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://branding/locale/brand.properties"
-  );
-});
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
   const { ExtensionParent } = ChromeUtils.import(
     "resource://gre/modules/ExtensionParent.jsm"
@@ -1945,8 +1935,6 @@ class AddonPermissionsList extends HTMLElement {
   }
 
   async render() {
-    let appName = brandBundle.GetStringFromName("brandShortName");
-
     let empty = { origins: [], permissions: [] };
     let requiredPerms = { ...(this.addon.userPermissions ?? empty) };
     let optionalPerms = { ...(this.addon.optionalPermissions ?? empty) };
@@ -1966,9 +1954,7 @@ class AddonPermissionsList extends HTMLElement {
       {
         permissions: requiredPerms,
         optionalPermissions: optionalPerms,
-        appName,
       },
-      browserBundle,
       { buildOptionalOrigins: manifestV3enabled }
     );
     let optionalEntries = [
@@ -2049,15 +2035,10 @@ class AddonSitePermissionsList extends HTMLElement {
   }
 
   async render() {
-    let appName = brandBundle.GetStringFromName("brandShortName");
-    let permissions = Extension.formatPermissionStrings(
-      {
-        sitePermissions: this.addon.sitePermissions,
-        siteOrigin: this.addon.siteOrigin,
-        appName,
-      },
-      browserBundle
-    );
+    let permissions = Extension.formatPermissionStrings({
+      sitePermissions: this.addon.sitePermissions,
+      siteOrigin: this.addon.siteOrigin,
+    });
 
     this.textContent = "";
     let frag = importTemplate("addon-sitepermissions-list");

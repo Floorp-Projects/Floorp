@@ -28,10 +28,13 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const BROWSER_PROPERTIES =
-  AppConstants.MOZ_APP_NAME == "thunderbird"
-    ? "chrome://messenger/locale/addons.properties"
-    : "chrome://browser/locale/browser.properties";
+const l10n = new Localization([
+  "toolkit/global/extensions.ftl",
+  "toolkit/global/extensionPermissions.ftl",
+  "branding/brand.ftl",
+]);
+// Localization resources need to be first iterated outside a test
+l10n.formatValue("webext-perms-add");
 
 // Lazily import ExtensionParent to allow AddonTestUtils.createAppInfo to
 // override Services.appinfo.
@@ -371,13 +374,10 @@ add_task(async function test_site_permissions_have_localization_strings() {
   ]);
   ok(SCHEMA_SITE_PERMISSIONS.length, "we have site permissions");
 
-  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-
   for (const perm of SCHEMA_SITE_PERMISSIONS) {
+    const l10nId = `webext-site-perms-${perm}`;
     try {
-      const str = bundle.GetStringFromName(
-        `webextSitePerms.description.${perm}`
-      );
+      const str = await l10n.formatValue(l10nId);
 
       ok(str.length, `Found localization string for '${perm}' site permission`);
     } catch (e) {

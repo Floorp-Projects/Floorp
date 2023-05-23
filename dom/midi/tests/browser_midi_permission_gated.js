@@ -12,6 +12,15 @@ const PAGE_WITH_IFRAMES_URL = `https://example.org/document-builder.sjs?html=
     'https://example.net/document-builder.sjs?html=CrossOrigin"'
   )}"></iframe>`;
 
+const l10n = new Localization(
+  [
+    "toolkit/global/extensions.ftl",
+    "toolkit/global/extensionPermissions.ftl",
+    "branding/brand.ftl",
+  ],
+  true
+);
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.defineModuleGetter(
   this,
@@ -141,19 +150,16 @@ add_task(async function testRequestMIDIAccess() {
   let installDialog = await dialogPromise;
   is(
     installDialog.querySelector(".popup-notification-description").textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.headerWithGatedPerms.midi-sysex",
-      [testPageHost]
+    l10n.formatValueSync(
+      "webext-site-perms-header-with-gated-perms-midi-sysex",
+      { hostname: testPageHost }
     ),
     "Install dialog has expected header text"
   );
   is(
     installDialog.querySelector("popupnotificationcontent description")
       .textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.descriptionGatedPerms.midi",
-      [testPageHost]
-    ),
+    l10n.formatValueSync("webext-site-perms-description-gated-perms-midi"),
     "Install dialog has expected description"
   );
 
@@ -288,19 +294,15 @@ add_task(async function testRequestMIDIAccess() {
 
   is(
     installDialog.querySelector(".popup-notification-description").textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.headerWithGatedPerms.midi",
-      [testPageHost]
-    ),
+    l10n.formatValueSync("webext-site-perms-header-with-gated-perms-midi", {
+      hostname: testPageHost,
+    }),
     "Install dialog has expected header text"
   );
   is(
     installDialog.querySelector("popupnotificationcontent description")
       .textContent,
-    gNavigatorBundle.getFormattedString(
-      "webextSitePerms.descriptionGatedPerms.midi",
-      [testPageHost]
-    ),
+    l10n.formatValueSync("webext-site-perms-description-gated-perms-midi"),
     "Install dialog has expected description"
   );
 

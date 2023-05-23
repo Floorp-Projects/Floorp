@@ -31,7 +31,6 @@ const DEFAULT_EXTENSION_ICON =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
-const BRAND_PROPERTIES = "chrome://branding/locale/brand.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -317,11 +316,8 @@ var ExtensionsUI = {
   // Create a set of formatted strings for a permission prompt
   _buildStrings(info) {
     let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-    let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
-    let appName = brandBundle.GetStringFromName("brandShortName");
-    let info2 = Object.assign({ appName }, info);
 
-    let strings = lazy.ExtensionData.formatPermissionStrings(info2, bundle, {
+    let strings = lazy.ExtensionData.formatPermissionStrings(info, {
       collapseOrigins: true,
     });
     strings.addonName = info.addon.name;
