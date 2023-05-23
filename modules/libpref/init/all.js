@@ -3184,11 +3184,7 @@ pref("signon.firefoxRelay.manage_url", "https://relay.firefox.com");
 pref("signon.firefoxRelay.terms_of_service_url", "https://www.mozilla.org/%LOCALE%/about/legal/terms/subscription-services/");
 pref("signon.firefoxRelay.privacy_policy_url", "https://www.mozilla.org/%LOCALE%/privacy/subscription-services/");
 pref("signon.signupDetection.confidenceThreshold",     "0.75");
-#ifdef NIGHTLY_BUILD
-  pref("signon.signupDetection.enabled", true);
-#else
-  pref("signon.signupDetection.enabled", false);
-#endif
+pref("signon.signupDetection.enabled", true);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
