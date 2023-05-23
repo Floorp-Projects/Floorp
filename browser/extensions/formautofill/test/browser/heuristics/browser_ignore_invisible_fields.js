@@ -77,7 +77,8 @@ add_heuristic_tests([
   },
   {
     // hidden and style="display:none" are always considered regardless what visibility check we use
-    description: "invisible fields are identified because number of elemenent in the form exceed the threshold",
+    description:
+      "invisible fields are identified because number of elemenent in the form exceed the threshold",
     prefs: [["extensions.formautofill.heuristics.visibilityCheckThreshold", 1]],
     fixtureData: `
         <html>

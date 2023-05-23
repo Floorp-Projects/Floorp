@@ -24,10 +24,7 @@ add_heuristic_tests(
           default: {
             reason: "autocomplete",
           },
-          fields: [
-            { fieldName: "cc-number" },
-            { fieldName: "cc-exp" },
-          ],
+          fields: [{ fieldName: "cc-number" }, { fieldName: "cc-exp" }],
         },
         {
           description: "form3",
