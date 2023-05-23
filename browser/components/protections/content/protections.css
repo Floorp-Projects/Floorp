@@ -75,7 +75,7 @@ h2 {
 }
 
 #report-summary {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   line-height: 26px;
   font-size: 16px;
   margin: 0;
@@ -256,7 +256,7 @@ a.hidden,
   margin-block: 5px 0;
   font-size: .93em;
   cursor: default;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .exit-icon {
@@ -294,7 +294,7 @@ a.hidden,
   background: url("chrome://global/skin/icons/settings.svg") no-repeat 0;
   cursor: pointer;
   width: max-content;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   margin-block: 6px 0;
   font-size: 0.8em;
   padding-block: 4px;
@@ -577,7 +577,7 @@ label:hover {
 }
 
 .tab-content p:nth-of-type(2) {
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 #tab-social:checked ~ #social,
@@ -752,7 +752,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-partial-breaches-percentage {
   font-size: .93em;
   cursor: default;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   float: inline-end;
 }
 
@@ -1103,7 +1103,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   margin-block: 5px 0;
   font-size: 0.88em;
   cursor: default;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
 }
 
 .new-banner .exit-icon {

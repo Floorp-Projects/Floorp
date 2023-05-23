@@ -15,7 +15,7 @@
 label {
   text-align: end;
   margin-inline-end: 0;
-  color: var(--in-content-deemphasized-text);
+  color: var(--text-color-deemphasized);
   font-weight: 600;
   font-size: 1em;
 }
