@@ -47,10 +47,13 @@ const {
 
 async function getOriginalURLs(generatedSource) {
   await fetchSourceMap(generatedSource);
-
   const data = await getSourceMapWithMetadata(generatedSource.id);
-
   return data ? data.sources : null;
+}
+
+async function getSourceMapIgnoreList(generatedSourceId) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  return data ? data.ignoreListUrls : [];
 }
 
 const COMPUTED_SPANS = new WeakSet();
@@ -514,6 +517,7 @@ module.exports = {
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
+  getSourceMapIgnoreList,
   setSourceMapForGeneratedSources,
   clearSourceMaps,
 };

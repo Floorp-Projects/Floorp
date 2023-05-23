@@ -57,6 +57,7 @@ export const initialUIState = () => ({
     },
   },
   hideIgnoredSources: prefs.hideIgnoredSources,
+  sourceMapIgnoreListEnabled: prefs.sourceMapIgnoreListEnabled,
 });
 
 function update(state = initialUIState(), action) {
@@ -174,6 +175,15 @@ function update(state = initialUIState(), action) {
       if (shouldHide !== state.hideIgnoredSources) {
         prefs.hideIgnoredSources = shouldHide;
         return { ...state, hideIgnoredSources: shouldHide };
+      }
+      return state;
+    }
+
+    case "ENABLE_SOURCEMAP_IGNORELIST": {
+      const { shouldEnable } = action;
+      if (shouldEnable !== state.sourceMapIgnoreListEnabled) {
+        prefs.sourceMapIgnoreListEnabled = shouldEnable;
+        return { ...state, sourceMapIgnoreListEnabled: shouldEnable };
       }
       return state;
     }

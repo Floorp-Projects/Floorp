@@ -120,9 +120,15 @@ export function findBlackBoxRange(source, blackboxedRanges, lineRange) {
  * Checks if a source line is blackboxed
  * @param {Array} ranges - Line ranges that are blackboxed
  * @param {Number} line
+ * @param {Boolean} isSourceOnIgnoreList - is the line in a source that is on
+ *                                         the sourcemap ignore lists then the line is blackboxed.
  * @returns boolean
  */
-export function isLineBlackboxed(ranges, line) {
+export function isLineBlackboxed(ranges, line, isSourceOnIgnoreList) {
+  if (isSourceOnIgnoreList) {
+    return true;
+  }
+
   if (!ranges) {
     return false;
   }
