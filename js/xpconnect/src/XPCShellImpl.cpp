@@ -164,18 +164,9 @@ static bool GetLocationProperty(JSContext* cx, unsigned argc, Value* vp) {
 #else
   JS::AutoFilename filename;
   if (JS::DescribeScriptedCaller(cx, &filename) && filename.get()) {
-#  if defined(XP_WIN)
-    // convert from the system codepage to UTF-16
-    int bufferSize =
-        MultiByteToWideChar(CP_ACP, 0, filename.get(), -1, nullptr, 0);
-    nsAutoString filenameString;
-    filenameString.SetLength(bufferSize);
-    MultiByteToWideChar(CP_ACP, 0, filename.get(), -1,
-                        (LPWSTR)filenameString.BeginWriting(),
-                        filenameString.Length());
-    // remove the null terminator
-    filenameString.SetLength(bufferSize - 1);
+    NS_ConvertUTF8toUTF16 filenameString(filename.get());
 
+#  if defined(XP_WIN)
     // replace forward slashes with backslashes,
     // since nsLocalFileWin chokes on them
     char16_t* start = filenameString.BeginWriting();
@@ -187,8 +178,6 @@ static bool GetLocationProperty(JSContext* cx, unsigned argc, Value* vp) {
       }
       start++;
     }
-#  elif defined(XP_UNIX)
-    NS_ConvertUTF8toUTF16 filenameString(filename.get());
 #  endif
 
     nsCOMPtr<nsIFile> location;
@@ -375,7 +364,7 @@ static bool Load(JSContext* cx, unsigned argc, Value* vp) {
     if (!str) {
       return false;
     }
-    JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+    JS::UniqueChars filename = JS_EncodeStringToUTF8(cx, str);
     if (!filename) {
       return false;
     }
@@ -791,10 +780,15 @@ static bool ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file,
     }
     ungetc(ch, file);
 
+    JS::UniqueChars filenameUtf8 = JS::EncodeNarrowToUtf8(jsapi.cx(), filename);
+    if (!filenameUtf8) {
+      return false;
+    }
+
     JS::RootedScript script(cx);
     JS::RootedValue unused(cx);
     JS::CompileOptions options(cx);
-    options.setFileAndLine(filename, 1)
+    options.setFileAndLine(filenameUtf8.get(), 1)
         .setIsRunOnce(true)
         .setNoScriptRval(true)
         .setSkipFilenameValidation(true);

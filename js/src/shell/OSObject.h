@@ -41,8 +41,7 @@ JSString* ResolvePath(JSContext* cx, JS::HandleString filenameStr,
 JSObject* FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr);
 
 /**
- * Return the current working directory as a string encoded in the native file
- * system encoding.
+ * Return the current working directory as a UTF-8 encoded string.
  *
  * @param cx current js-context
  * @return the working directory name or {@code nullptr} on error
@@ -53,7 +52,7 @@ JS::UniqueChars GetCWD(JSContext* cx);
  * Open the requested file.
  *
  * @param cx current js-context
- * @param filename file name encoded in the native file system encoding
+ * @param filename file name encoded in UTF-8
  * @param mode file mode specifier, see {@code fopen} for valid values
  * @return a FILE pointer or {@code nullptr} on failure
  */
@@ -63,8 +62,7 @@ FILE* OpenFile(JSContext* cx, const char* filename, const char* mode);
  * Read {@code length} bytes in the given buffer.
  *
  * @param cx current js-context
- * @param filename file name encoded in the native file system encoding, only
- *                 used for error reporting
+ * @param filename file name encoded in UTF-8, only used for error reporting
  * @param file file pointer to read from
  * @param buffer destination buffer to copy read bytes into
  * @param length number of bytes to read
@@ -78,8 +76,7 @@ bool ReadFile(JSContext* cx, const char* filename, FILE* file, char* buffer,
  * Compute the file size in bytes.
  *
  * @param cx current js-context
- * @param filename file name encoded in the native file system encoding, only
- *                 used for error reporting
+ * @param filename file name encoded in UTF-8, only used for error reporting
  * @param file file object to inspect
  * @param size output parameter to store the file size into
  * @return returns false and reports an error if an I/O error occurred
@@ -88,7 +85,7 @@ bool FileSize(JSContext* cx, const char* filename, FILE* file, size_t* size);
 
 /**
  * Return the system error message for the given error number. The error
- * message is encoded in the system encoding.
+ * message is UTF-8 encoded.
  *
  * @param cx current js-context
  * @param errnum error number
