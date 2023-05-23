@@ -910,11 +910,16 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
  */
 function fileURIFixup(uriString) {
   let attemptFixup = false;
+  let path = uriString;
   if (AppConstants.platform == "win") {
-    // Check for "\"" in the url-string or just a drive (e.g. C:).
+    // Check for "\"" in the url-string, just a drive (e.g. C:),
+    // or 'A:/...' where the "protocol" is also a single letter.
     attemptFixup =
       uriString.includes("\\") ||
-      (uriString.length == 2 && uriString.endsWith(":"));
+      (uriString[1] == ":" && (uriString.length == 2 || uriString[2] == "/"));
+    if (uriString[1] == ":" && uriString[2] == "/") {
+      path = uriString.replace(/\//g, "\\");
+    }
   } else {
     // UNIX: Check if it starts with "/".
     attemptFixup = uriString.startsWith("/");
@@ -924,7 +929,7 @@ function fileURIFixup(uriString) {
       // Test if this is a valid path by trying to create a local file
       // object. The URL of that is returned if successful.
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      file.initWithPath(uriString);
+      file.initWithPath(path);
       return Services.io.newURI(
         lazy.fileProtocolHandler.getURLSpecFromActualFile(file)
       );
