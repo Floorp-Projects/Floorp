@@ -2,14 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-let log = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-).Log.repository.getLogger("Sync.RemoteTabs");
-
-var EXPORTED_SYMBOLS = ["SyncedTabsDeckView"];
-
 /**
  * SyncedTabsDeckView
  *
@@ -18,7 +10,7 @@ var EXPORTED_SYMBOLS = ["SyncedTabsDeckView"];
  * rerender unless the state flags `isUpdatable`, which helps
  * make small changes without the overhead of a full rerender.
  */
-const SyncedTabsDeckView = function (window, tabListComponent, props) {
+export const SyncedTabsDeckView = function (window, tabListComponent, props) {
   this.props = props;
 
   this._window = window;

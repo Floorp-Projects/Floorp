@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-let { EventEmitter } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/EventEmitter.jsm"
-);
-
-var EXPORTED_SYMBOLS = ["SyncedTabsListStore"];
+import { EventEmitter } from "resource:///modules/syncedtabs/EventEmitter.sys.mjs";
 
 /**
  * SyncedTabsListStore
@@ -17,7 +11,7 @@ var EXPORTED_SYMBOLS = ["SyncedTabsListStore"];
  * The state includes the clients, their tabs, the row that is currently selected,
  * and the filtered query.
  */
-function SyncedTabsListStore(SyncedTabs) {
+export function SyncedTabsListStore(SyncedTabs) {
   EventEmitter.call(this);
   this._SyncedTabs = SyncedTabs;
   this.data = [];

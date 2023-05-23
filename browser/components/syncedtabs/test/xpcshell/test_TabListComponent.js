@@ -3,11 +3,11 @@
 let { SyncedTabs } = ChromeUtils.importESModule(
   "resource://services-sync/SyncedTabs.sys.mjs"
 );
-let { TabListComponent } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/TabListComponent.js"
+let { TabListComponent } = ChromeUtils.importESModule(
+  "resource:///modules/syncedtabs/TabListComponent.sys.mjs"
 );
-let { SyncedTabsListStore } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/SyncedTabsListStore.js"
+let { SyncedTabsListStore } = ChromeUtils.importESModule(
+  "resource:///modules/syncedtabs/SyncedTabsListStore.sys.mjs"
 );
 
 const ACTION_METHODS = [

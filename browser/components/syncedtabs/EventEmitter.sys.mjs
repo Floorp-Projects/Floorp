@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["EventEmitter"];
-
 // Simple event emitter abstraction for storage objects to use.
-function EventEmitter() {
+export function EventEmitter() {
   this._events = new Map();
 }
 

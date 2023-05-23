@@ -10,8 +10,8 @@ var EXPORTED_SYMBOLS = [
   "MacOSWebRTCStatusbarIndicator",
 ];
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource:///modules/syncedtabs/EventEmitter.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

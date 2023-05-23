@@ -2,23 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-let { getChromeWindow } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/util.js"
-);
-
-let log = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-).Log.repository.getLogger("Sync.RemoteTabs");
-
-var EXPORTED_SYMBOLS = ["TabListView"];
+import { getChromeWindow } from "resource:///modules/syncedtabs/util.sys.mjs";
 
 function getContextMenu(window) {
   return getChromeWindow(window).document.getElementById(
@@ -40,7 +30,7 @@ function getTabsFilterContextMenu(window) {
  * and triggers actions that may cause the state to change and
  * ultimately the view to rerender.
  */
-function TabListView(window, props) {
+export function TabListView(window, props) {
   this.props = props;
 
   this._window = window;

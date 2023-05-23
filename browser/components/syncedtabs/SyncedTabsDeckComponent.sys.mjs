@@ -2,39 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { SyncedTabsDeckStore } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/SyncedTabsDeckStore.js"
-);
-const { SyncedTabsDeckView } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/SyncedTabsDeckView.js"
-);
-const { SyncedTabsListStore } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/SyncedTabsListStore.js"
-);
-const { TabListComponent } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/TabListComponent.js"
-);
-const { TabListView } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/TabListView.js"
-);
-let { getChromeWindow } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/util.js"
-);
-const { UIState } = ChromeUtils.importESModule(
-  "resource://services-sync/UIState.sys.mjs"
-);
-
-let log = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-).Log.repository.getLogger("Sync.RemoteTabs");
-
-var EXPORTED_SYMBOLS = ["SyncedTabsDeckComponent"];
+import { SyncedTabsDeckStore } from "resource:///modules/syncedtabs/SyncedTabsDeckStore.sys.mjs";
+import { SyncedTabsDeckView } from "resource:///modules/syncedtabs/SyncedTabsDeckView.sys.mjs";
+import { SyncedTabsListStore } from "resource:///modules/syncedtabs/SyncedTabsListStore.sys.mjs";
+import { TabListComponent } from "resource:///modules/syncedtabs/TabListComponent.sys.mjs";
+import { TabListView } from "resource:///modules/syncedtabs/TabListView.sys.mjs";
+import { getChromeWindow } from "resource:///modules/syncedtabs/util.sys.mjs";
+import { UIState } from "resource://services-sync/UIState.sys.mjs";
 
 /* SyncedTabsDeckComponent
  * This component instantiates views and storage objects as well as defines
@@ -42,7 +16,7 @@ var EXPORTED_SYMBOLS = ["SyncedTabsDeckComponent"];
  * isolated and easier to test.
  */
 
-function SyncedTabsDeckComponent({
+export function SyncedTabsDeckComponent({
   window,
   SyncedTabs,
   deckStore,

@@ -2,19 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  NetworkEventRecord:
-    "chrome://remote/content/shared/listeners/NetworkEventRecord.sys.mjs",
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
   NetworkObserver:
     "resource://devtools/shared/network-observer/NetworkObserver.sys.mjs",
-});
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  NetworkEventRecord:
+    "chrome://remote/content/shared/listeners/NetworkEventRecord.sys.mjs",
 });
 
 /**
