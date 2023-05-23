@@ -6,8 +6,6 @@
 
 #include "MessagePump.h"
 
-#include "base/scoped_nsautorelease_pool.h"
-
 using namespace mozilla::ipc;
 
 NS_IMPL_ADDREF_INHERITED(MessagePumpForNonMainUIThreads, MessagePump)
@@ -36,10 +34,7 @@ void MessagePumpForNonMainUIThreads::DoRunLoop() {
   MOZ_ASSERT(ti);
   ti->SetObserver(this);
 
-  base::ScopedNSAutoreleasePool autoReleasePool;
   for (;;) {
-    autoReleasePool.Recycle();
-
     bool didWork = NS_ProcessNextEvent(thread, false);
 
     didWork |= ProcessNextWindowsMessage();
