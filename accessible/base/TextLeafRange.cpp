@@ -1474,7 +1474,7 @@ LayoutDeviceIntRect TextLeafPoint::ComputeBoundsFromFrame() const {
   nsIFrame* frame = local->GetFrame();
   MOZ_ASSERT(frame, "No frame found for acc!");
 
-  if (!frame->IsTextFrame()) {
+  if (!frame || !frame->IsTextFrame()) {
     return local->Bounds();
   }
 
