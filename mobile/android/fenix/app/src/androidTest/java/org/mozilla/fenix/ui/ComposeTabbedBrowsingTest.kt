@@ -239,28 +239,26 @@ class ComposeTabbedBrowsingTest {
 //        }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832610")
     @Test
     fun verifyPrivateTabUndoSnackBarTest() {
-//        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        homeScreen { }.togglePrivateBrowsingMode()
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            verifyCloseTabsButton("Test_Page_1")
-//            closeTab()
-//            verifySnackBarText("Private tab closed")
-//            snackBarButtonClick("UNDO")
-//        }
-//
-//        browserScreen {
-//            verifyTabCounter("1")
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            verifyPrivateModeSelected()
-//        }
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen { }.togglePrivateBrowsingMode()
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            closeTab()
+            TestHelper.verifySnackBarText("Private tab closed")
+            TestHelper.clickSnackbarButton("UNDO")
+        }
+
+        browserScreen {
+            verifyTabCounter("1")
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            verifyPrivateBrowsingButtonIsSelected()
+        }
     }
 
     @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832611")
