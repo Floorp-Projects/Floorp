@@ -7617,10 +7617,10 @@
   value: false
   mirror: always
 
-# Experimental support Array.fromAsync
+# Support Array.fromAsync
 - name: javascript.options.experimental.enable_array_from_async
   type: bool
-  value: false
+  value: true
   mirror: always
 
 #if defined(ENABLE_NEW_SET_METHODS)
