@@ -195,16 +195,6 @@ class RulersHighlighter {
     createRuler("x", RULERS_MAX_X_AXIS);
     createRuler("y", RULERS_MAX_Y_AXIS);
 
-    this.markup.createNode({
-      parent: container,
-      attributes: {
-        class: "viewport-infobar-container",
-        id: "viewport-infobar-container",
-        position: "top",
-      },
-      prefix,
-    });
-
     return container;
   }
 
@@ -254,8 +244,6 @@ class RulersHighlighter {
       this.updateViewport();
     }
 
-    this.updateViewportInfobar();
-
     setIgnoreLayoutChanges(false, window.document.documentElement);
 
     this._rafID = window.requestAnimationFrame(() => this._update());
@@ -285,14 +273,6 @@ class RulersHighlighter {
       .setAttribute("style", `stroke-width:${strokeWidth};`);
   }
 
-  updateViewportInfobar() {
-    const { window } = this.env;
-    const { innerHeight, innerWidth } = window;
-    const infobarId = this.ID_CLASS_PREFIX + "viewport-infobar-container";
-    const textContent = innerWidth + "px \u00D7 " + innerHeight + "px";
-    this.markup.getElement(infobarId).setTextContent(textContent);
-  }
-
   destroy() {
     this.hide();
 
@@ -313,10 +293,6 @@ class RulersHighlighter {
       this.ID_CLASS_PREFIX + "elements",
       "hidden"
     );
-    this.markup.removeAttributeForElement(
-      this.ID_CLASS_PREFIX + "viewport-infobar-container",
-      "hidden"
-    );
 
     this._update();
 
@@ -326,11 +302,6 @@ class RulersHighlighter {
   hide() {
     this.markup.setAttributeForElement(
       this.ID_CLASS_PREFIX + "elements",
-      "hidden",
-      "true"
-    );
-    this.markup.setAttributeForElement(
-      this.ID_CLASS_PREFIX + "viewport-infobar-container",
       "hidden",
       "true"
     );
