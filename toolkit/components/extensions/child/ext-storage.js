@@ -109,13 +109,21 @@ this.storage = class extends ExtensionAPI {
         );
       },
       set(items) {
+        function serialize(name, anonymizedName, value) {
+          return ExtensionStorage.serialize(
+            `set/${context.extension.id}/${name}`,
+            `set/${context.extension.id}/${anonymizedName}`,
+            value
+          );
+        }
+
         return measureOp(
           ExtensionTelemetry.storageLocalSetIDB,
           context.extension,
           async () => {
             const db = await getDB();
             const changes = await db.set(items, {
-              serialize: ExtensionStorage.serialize,
+              serialize,
             });
 
             if (changes) {

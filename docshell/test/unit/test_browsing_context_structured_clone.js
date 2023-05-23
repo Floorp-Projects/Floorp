@@ -12,7 +12,9 @@ add_task(async function test_BrowsingContext_structured_clone() {
 
   let { browsingContext } = frame;
 
-  let sch = new StructuredCloneHolder({ browsingContext });
+  let sch = new StructuredCloneHolder("debug name", "<anonymized> debug name", {
+    browsingContext,
+  });
 
   let deserialize = () => sch.deserialize({}, true);
 

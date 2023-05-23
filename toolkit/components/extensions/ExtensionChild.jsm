@@ -243,11 +243,11 @@ class MessageEvent extends SimpleEventAPI {
   }
 }
 
-function holdMessage(data, native = null) {
+function holdMessage(name, anonymizedName, data, native = null) {
   if (native && AppConstants.platform !== "android") {
     data = lazy.NativeApp.encodeMessage(native.context, data);
   }
-  return new StructuredCloneHolder(data);
+  return new StructuredCloneHolder(name, anonymizedName, data);
 }
 
 // Implements the runtime.Port extension API object.
@@ -263,7 +263,10 @@ class Port {
     this.context = context;
     this.name = name;
     this.sender = sender;
-    this.holdMessage = native ? data => holdMessage(data, this) : holdMessage;
+    this.holdMessage = native
+      ? (name, anonymizedName, data) =>
+          holdMessage(name, anonymizedName, data, this)
+      : holdMessage;
     this.conduit = context.openConduit(this, {
       portId,
       native,
@@ -307,7 +310,13 @@ class Port {
 
   sendPortMessage(json) {
     if (this.conduit.actor) {
-      return this.conduit.sendPortMessage({ holder: this.holdMessage(json) });
+      return this.conduit.sendPortMessage({
+        holder: this.holdMessage(
+          `Port/${this.context.extension.id}/sendPortMessage/${this.name}`,
+          `Port/${this.context.extension.id}/sendPortMessage/<anonymized>`,
+          json
+        ),
+      });
     }
     throw new this.context.Error("Attempt to postMessage on disconnected port");
   }
@@ -342,14 +351,23 @@ class Messenger {
   }
 
   sendNativeMessage(nativeApp, json) {
-    let holder = holdMessage(json, this);
+    let holder = holdMessage(
+      `Messenger/${this.context.extension.id}/sendNativeMessage/${nativeApp}`,
+      null,
+      json,
+      this
+    );
     return this.conduit.queryNativeMessage({ nativeApp, holder });
   }
 
   sendRuntimeMessage({ extensionId, message, callback, ...args }) {
     let response = this.conduit.queryRuntimeMessage({
       extensionId: extensionId || this.context.extension.id,
-      holder: holdMessage(message),
+      holder: holdMessage(
+        `Messenger/${this.context.extension.id}/sendRuntimeMessage`,
+        null,
+        message
+      ),
       ...args,
     });
     // If |response| is a rejected promise, the value will be sanitized by
@@ -836,7 +854,12 @@ class ChildAPIManager {
           : fire()
       ).then(result => {
         if (result !== undefined) {
-          return new StructuredCloneHolder(result, this.context.cloneScope);
+          return new StructuredCloneHolder(
+            `ChildAPIManager/${this.context.extension.id}/${data.path}`,
+            null,
+            result,
+            this.context.cloneScope
+          );
         }
         return result;
       });

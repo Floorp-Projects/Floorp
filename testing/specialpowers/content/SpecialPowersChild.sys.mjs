@@ -613,9 +613,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
         let name = aMessage.json.name;
         let message = aMessage.json.message;
         if (this.contentWindow) {
-          message = new StructuredCloneHolder(message).deserialize(
-            this.contentWindow
-          );
+          message = new StructuredCloneHolder(
+            `SpecialPowers/receiveMessage/${name}`,
+            null,
+            message
+          ).deserialize(this.contentWindow);
         }
         // Ignore message from other chrome script
         if (messageId != id) {

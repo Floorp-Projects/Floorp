@@ -1168,7 +1168,11 @@ ParentAPIManager = {
           result => {
             result = result instanceof SpreadArgs ? [...result] : [result];
 
-            let holder = new StructuredCloneHolder(result);
+            let holder = new StructuredCloneHolder(
+              `ExtensionParent/${context.extension.id}/recvAPICall/${data.path}`,
+              null,
+              result
+            );
 
             reply({ result: holder });
           },
@@ -1213,7 +1217,11 @@ ParentAPIManager = {
         path: data.path,
         urgentSend,
         get args() {
-          return new StructuredCloneHolder(listenerArgs);
+          return new StructuredCloneHolder(
+            `ExtensionParent/${context.extension.id}/recvAddListener/${data.path}`,
+            null,
+            listenerArgs
+          );
         },
       });
       context.trackRunListenerPromise(runListenerPromise);

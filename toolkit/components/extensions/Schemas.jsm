@@ -136,7 +136,7 @@ function blobbify(json) {
   // blobbifying.
   json = stripDescriptions(json);
 
-  return new StructuredCloneHolder(json);
+  return new StructuredCloneHolder("Schemas/blobbify", null, json);
 }
 
 async function readJSONAndBlobbify(url) {

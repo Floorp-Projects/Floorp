@@ -22,6 +22,7 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/StructuredCloneHolderBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "nsPrintfCString.h"
 #include "xpcpublic.h"
 
 namespace mozilla::dom {
@@ -37,11 +38,15 @@ StructuredCloneBlob::~StructuredCloneBlob() {
 
 /* static */
 already_AddRefed<StructuredCloneBlob> StructuredCloneBlob::Constructor(
-    GlobalObject& aGlobal, JS::Handle<JS::Value> aValue,
+    GlobalObject& aGlobal, const nsACString& aName,
+    const nsACString& aAnonymizedName, JS::Handle<JS::Value> aValue,
     JS::Handle<JSObject*> aTargetGlobal, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
   RefPtr<StructuredCloneBlob> holder = StructuredCloneBlob::Create();
+
+  holder->mName = aName;
+  holder->mAnonymizedName = aAnonymizedName.IsVoid() ? aName : aAnonymizedName;
 
   Maybe<JSAutoRealm> ar;
   JS::Rooted<JS::Value> value(cx, aValue);
@@ -129,6 +134,14 @@ JSObject* StructuredCloneBlob::ReadStructuredClone(
   {
     RefPtr<StructuredCloneBlob> holder = StructuredCloneBlob::Create();
 
+    if (!StructuredCloneHolder::ReadCString(aReader, holder->mName)) {
+      return nullptr;
+    }
+
+    if (!StructuredCloneHolder::ReadCString(aReader, holder->mAnonymizedName)) {
+      return nullptr;
+    }
+
     if (!holder->mHolder->ReadStructuredCloneInternal(aCx, aReader, aHolder) ||
         !holder->WrapObject(aCx, nullptr, &obj)) {
       return nullptr;
@@ -186,6 +199,13 @@ bool StructuredCloneBlob::WriteStructuredClone(JSContext* aCx,
   if (mHolder.isNothing()) {
     return false;
   }
+
+  if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_STRUCTURED_CLONE_HOLDER, 0) ||
+      !StructuredCloneHolder::WriteCString(aWriter, mName) ||
+      !StructuredCloneHolder::WriteCString(aWriter, mAnonymizedName)) {
+    return false;
+  }
+
   return mHolder->WriteStructuredClone(aCx, aWriter, aHolder);
 }
 
@@ -193,8 +213,7 @@ bool StructuredCloneBlob::Holder::WriteStructuredClone(
     JSContext* aCx, JSStructuredCloneWriter* aWriter,
     StructuredCloneHolder* aHolder) {
   auto& data = mBuffer->data();
-  if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_STRUCTURED_CLONE_HOLDER, 0) ||
-      !JS_WriteUint32Pair(aWriter, data.Size(), JS_STRUCTURED_CLONE_VERSION) ||
+  if (!JS_WriteUint32Pair(aWriter, data.Size(), JS_STRUCTURED_CLONE_VERSION) ||
       !JS_WriteUint32Pair(aWriter, aHolder->BlobImpls().Length(),
                           BlobImpls().Length())) {
     return false;
@@ -221,9 +240,12 @@ StructuredCloneBlob::CollectReports(nsIHandleReportCallback* aHandleReport,
     size += mHolder->SizeOfExcludingThis(MallocSizeOf);
   }
 
-  MOZ_COLLECT_REPORT("explicit/dom/structured-clone-holder", KIND_HEAP,
-                     UNITS_BYTES, size,
-                     "Memory used by StructuredCloneHolder DOM objects.");
+  aHandleReport->Callback(
+      ""_ns,
+      nsPrintfCString("explicit/dom/structured-clone-holder/%s",
+                      aAnonymize ? mAnonymizedName.get() : mName.get()),
+      KIND_HEAP, UNITS_BYTES, size,
+      "Memory used by StructuredCloneHolder DOM objects."_ns, aData);
 
   return NS_OK;
 }

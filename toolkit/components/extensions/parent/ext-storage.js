@@ -337,7 +337,7 @@ this.storage = class extends ExtensionAPIPersistent {
                 message: "Managed storage manifest not found",
               });
             }
-            return ExtensionStorage._filterProperties(data, keys);
+            return ExtensionStorage._filterProperties(extension.id, data, keys);
           },
           // managed storage is currently initialized once.
           onChanged: ignoreEvent(context, "storage.managed.onChanged"),

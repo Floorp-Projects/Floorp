@@ -259,7 +259,7 @@ this.test = class extends ExtensionAPI {
               // throw if needed.
               v = ChromeUtils.waiveXrays(v);
             }
-            new StructuredCloneHolder(v, globalThis);
+            new StructuredCloneHolder("test.assertEq", null, v, globalThis);
           }
           // When WebIDL bindings are used, the objects are already cloned
           // structurally, so we don't need to check again.

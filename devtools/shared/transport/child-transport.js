@@ -74,7 +74,11 @@ ChildDebuggerTransport.prototype = {
    */
   _canBeSerialized(object) {
     try {
-      const holder = new StructuredCloneHolder(object);
+      const holder = new StructuredCloneHolder(
+        "ChildDebuggerTransport._canBeSerialized",
+        null,
+        object
+      );
       holder.deserialize(this);
     } catch (e) {
       return false;

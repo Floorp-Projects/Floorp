@@ -40,7 +40,8 @@ class StructuredCloneBlob final : public nsIMemoryReporter {
                             StructuredCloneHolder* aHolder);
 
   static already_AddRefed<StructuredCloneBlob> Constructor(
-      GlobalObject& aGlobal, JS::Handle<JS::Value> aValue,
+      GlobalObject& aGlobal, const nsACString& aName,
+      const nsACString& aAnonymizedName, JS::Handle<JS::Value> aValue,
       JS::Handle<JSObject*> aTargetGlobal, ErrorResult& aRv);
 
   void Deserialize(JSContext* aCx, JS::Handle<JSObject*> aTargetScope,
@@ -71,6 +72,8 @@ class StructuredCloneBlob final : public nsIMemoryReporter {
                               StructuredCloneHolder* aHolder);
   };
 
+  nsCString mName;
+  nsCString mAnonymizedName;
   Maybe<Holder> mHolder;
 
   static already_AddRefed<StructuredCloneBlob> Create() {
