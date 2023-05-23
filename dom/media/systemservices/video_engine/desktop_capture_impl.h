@@ -232,9 +232,6 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // Used to make sure incoming timestamp is increasing for every frame.
   // mCaptureThread only.
   webrtc::Timestamp mNextFrameMinimumTime;
-  // True once fully started and not fully stopped. Only accessed on
-  // mControlThread.
-  bool mRunning;
   // Callbacks for captured frames. Mutated on mControlThread, callbacks happen
   // on mCaptureThread.
   mozilla::DataMutex<std::set<rtc::VideoSinkInterface<VideoFrame>*>> mCallbacks;
