@@ -4,7 +4,9 @@
 let { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+let { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 
 Cu.importGlobalProperties(["TextEncoder"]);
 

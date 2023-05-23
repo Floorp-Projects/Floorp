@@ -12,6 +12,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 // eslint-disable-next-line no-unused-vars
 ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
@@ -20,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
 

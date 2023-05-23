@@ -700,7 +700,9 @@ function regularListing(metadata, response) {
  * it into an object for creating a table of clickable links for each test.
  */
 function convertManifestToTestLinks(root, manifest) {
-  const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+  const { NetUtil } = ChromeUtils.importESModule(
+    "resource://gre/modules/NetUtil.sys.mjs"
+  );
 
   var manifestFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   manifestFile.initWithFile(serverBasePath);
