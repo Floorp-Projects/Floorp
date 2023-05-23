@@ -436,7 +436,9 @@ OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterJavaScriptValidation(
   }
 
   return aChannel->BlockOrFilterOpaqueResponse(
-      this, u"Javascript validation failed"_ns, "Javascript validation failed");
+      this, u"Javascript validation failed"_ns,
+      OpaqueResponseBlockedTelemetryReason::JS_VALIDATION_FAILED,
+      "Javascript validation failed");
 }
 
 static void RecordTelemetry(const TimeStamp& aStartOfValidation,

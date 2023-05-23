@@ -47,6 +47,20 @@ enum class OpaqueResponseBlockedReason : uint32_t {
   BLOCKED_SHOULD_SNIFF
 };
 
+enum class OpaqueResponseBlockedTelemetryReason : uint32_t {
+  MIME_NEVER_SNIFFED,
+  RESP_206_BLCLISTED,
+  NOSNIFF_BLC_OR_TEXTP,
+  RESP_206_NO_FIRST,
+  AFTER_SNIFF_MEDIA,
+  AFTER_SNIFF_NOSNIFF,
+  AFTER_SNIFF_STA_CODE,
+  AFTER_SNIFF_CT_FAIL,
+  MEDIA_NOT_INITIAL,
+  MEDIA_INCORRECT_RESP,
+  JS_VALIDATION_FAILED
+};
+
 enum class OpaqueResponse { Block, Allow, SniffCompressed, Sniff };
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(

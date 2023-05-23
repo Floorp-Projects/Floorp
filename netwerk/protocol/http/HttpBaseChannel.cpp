@@ -3130,8 +3130,9 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
 }
 
 OpaqueResponse HttpBaseChannel::BlockOrFilterOpaqueResponse(
-    OpaqueResponseBlocker* aORB, const nsAString& aReason, const char* aFormat,
-    ...) {
+    OpaqueResponseBlocker* aORB, const nsAString& aReason,
+    const OpaqueResponseBlockedTelemetryReason aTelemetryReason,
+    const char* aFormat, ...) {
   const bool shouldFilter =
       ShouldFilterOpaqueResponse(OpaqueResponseFilterFetch::BlockedByORB);
 
@@ -3145,6 +3146,8 @@ OpaqueResponse HttpBaseChannel::BlockOrFilterOpaqueResponse(
   }
 
   if (shouldFilter) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_ORB_BLOCK_INITIATOR::FILTERED_FETCH);
     // The existence of `mORB` depends on `BlockOrFilterOpaqueResponse` being
     // called before or after sniffing has completed.
     // Another requirement is that `OpaqueResponseFilter` must come after
@@ -3160,7 +3163,7 @@ OpaqueResponse HttpBaseChannel::BlockOrFilterOpaqueResponse(
     return OpaqueResponse::Allow;
   }
 
-  LogORBError(aReason);
+  LogORBError(aReason, aTelemetryReason);
   return OpaqueResponse::Block;
 }
 
@@ -3241,12 +3244,14 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
     case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
       return BlockOrFilterOpaqueResponse(
           mORB, u"mimeType is an opaque-blocklisted-never-sniffed MIME type"_ns,
+          OpaqueResponseBlockedTelemetryReason::MIME_NEVER_SNIFFED,
           "BLOCKED_BLOCKLISTED_NEVER_SNIFFED");
     case OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED:
       // Step 3.3
       return BlockOrFilterOpaqueResponse(
           mORB,
           u"response's status is 206 and mimeType is an opaque-blocklisted MIME type"_ns,
+          OpaqueResponseBlockedTelemetryReason::RESP_206_BLCLISTED,
           "BLOCKED_206_AND_BLOCKEDLISTED");
     case OpaqueResponseBlockedReason::
         BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN:
@@ -3254,6 +3259,7 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
       return BlockOrFilterOpaqueResponse(
           mORB,
           u"nosniff is true and mimeType is an opaque-blocklisted MIME type or its essence is 'text/plain'"_ns,
+          OpaqueResponseBlockedTelemetryReason::NOSNIFF_BLC_OR_TEXTP,
           "BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN");
     default:
       break;
@@ -3277,6 +3283,7 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
       !IsFirstPartialResponse(*mResponseHead)) {
     return BlockOrFilterOpaqueResponse(
         mORB, u"response status is 206 and not first partial response"_ns,
+        OpaqueResponseBlockedTelemetryReason::RESP_206_BLCLISTED,
         "Is not a valid partial response given 0");
   }
 
@@ -3332,14 +3339,17 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
   bool isMediaRequest;
   mLoadInfo->GetIsMediaRequest(&isMediaRequest);
   if (isMediaRequest) {
-    return BlockOrFilterOpaqueResponse(mORB, u"after sniff: media request"_ns,
-                                       "media request");
+    return BlockOrFilterOpaqueResponse(
+        mORB, u"after sniff: media request"_ns,
+        OpaqueResponseBlockedTelemetryReason::AFTER_SNIFF_MEDIA,
+        "media request");
   }
 
   // Step 11
   if (aNoSniff) {
-    return BlockOrFilterOpaqueResponse(mORB, u"after sniff: nosniff is true"_ns,
-                                       "nosniff");
+    return BlockOrFilterOpaqueResponse(
+        mORB, u"after sniff: nosniff is true"_ns,
+        OpaqueResponseBlockedTelemetryReason::AFTER_SNIFF_NOSNIFF, "nosniff");
   }
 
   // Step 12
@@ -3347,6 +3357,7 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
       (mResponseHead->Status() < 200 || mResponseHead->Status() > 299)) {
     return BlockOrFilterOpaqueResponse(
         mORB, u"after sniff: status code is not in allowed range"_ns,
+        OpaqueResponseBlockedTelemetryReason::AFTER_SNIFF_STA_CODE,
         "status code (%d) is not allowed", mResponseHead->Status());
   }
 
@@ -3363,6 +3374,7 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
     return BlockOrFilterOpaqueResponse(
         mORB,
         u"after sniff: content-type declares image/video/audio, but sniffing fails"_ns,
+        OpaqueResponseBlockedTelemetryReason::AFTER_SNIFF_CT_FAIL,
         "ContentType is image/video/audio");
   }
 
@@ -3373,9 +3385,11 @@ bool HttpBaseChannel::NeedOpaqueResponseAllowedCheckAfterSniff() const {
   return mORB ? mORB->IsSniffing() : false;
 }
 
-void HttpBaseChannel::BlockOpaqueResponseAfterSniff(const nsAString& aReason) {
+void HttpBaseChannel::BlockOpaqueResponseAfterSniff(
+    const nsAString& aReason,
+    const OpaqueResponseBlockedTelemetryReason aTelemetryReason) {
   MOZ_DIAGNOSTIC_ASSERT(mORB);
-  LogORBError(aReason);
+  LogORBError(aReason, aTelemetryReason);
   mORB->BlockResponse(this, NS_ERROR_FAILURE);
 }
 
@@ -6191,7 +6205,9 @@ HttpBaseChannel::GetIsProxyUsed(bool* aIsProxyUsed) {
   return NS_OK;
 }
 
-void HttpBaseChannel::LogORBError(const nsAString& aReason) {
+void HttpBaseChannel::LogORBError(
+    const nsAString& aReason,
+    const OpaqueResponseBlockedTelemetryReason aTelemetryReason) {
   RefPtr<dom::Document> doc;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
 
@@ -6215,6 +6231,33 @@ void HttpBaseChannel::LogORBError(const nsAString& aReason) {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "ORB"_ns, doc,
                                   nsContentUtils::eNECKO_PROPERTIES,
                                   "ResourceBlockedORB", params);
+
+  Telemetry::LABELS_ORB_BLOCK_REASON label{
+      static_cast<uint32_t>(aTelemetryReason)};
+  Telemetry::AccumulateCategorical(label);
+
+  switch (mLoadInfo->GetExternalContentPolicyType()) {
+    case ExtContentPolicy::TYPE_FETCH:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::BLOCKED_FETCH);
+      break;
+    case ExtContentPolicy::TYPE_IMAGE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::IMAGE);
+      break;
+    case ExtContentPolicy::TYPE_SCRIPT:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::SCRIPT);
+      break;
+    case ExtContentPolicy::TYPE_MEDIA:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::MEDIA);
+      break;
+    default:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::OTHER);
+      break;
+  }
 }
 
 NS_IMETHODIMP HttpBaseChannel::SetEarlyHintLinkType(

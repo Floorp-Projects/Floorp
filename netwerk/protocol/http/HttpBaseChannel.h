@@ -70,7 +70,6 @@ namespace net {
 extern mozilla::LazyLogModule gHttpLog;
 
 class OpaqueResponseBlocker;
-class OpaqueResponseBlockingInfo;
 class PreferredAlternativeDataTypeParams;
 
 enum CacheDisposition : uint8_t {
@@ -459,7 +458,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   [[nodiscard]] nsresult OverrideSecurityInfo(
       nsITransportSecurityInfo* aSecurityInfo);
 
-  void LogORBError(const nsAString& aReason);
+  void LogORBError(const nsAString& aReason,
+                   const OpaqueResponseBlockedTelemetryReason aTelemetryReason);
 
  public: /* Necko internal use only... */
   int64_t GetAltDataLength() { return mAltDataLength; }
@@ -655,9 +655,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   bool ShouldFilterOpaqueResponse(OpaqueResponseFilterFetch aFilterType) const;
   bool ShouldBlockOpaqueResponse() const;
-  OpaqueResponse BlockOrFilterOpaqueResponse(OpaqueResponseBlocker* aORB,
-                                             const nsAString& aReason,
-                                             const char* aFormat, ...);
+  OpaqueResponse BlockOrFilterOpaqueResponse(
+      OpaqueResponseBlocker* aORB, const nsAString& aReason,
+      const OpaqueResponseBlockedTelemetryReason aTelemetryReason,
+      const char* aFormat, ...);
 
   OpaqueResponse PerformOpaqueResponseSafelistCheckBeforeSniff();
 
@@ -665,7 +666,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
       const nsACString& aContentType, bool aNoSniff);
 
   bool NeedOpaqueResponseAllowedCheckAfterSniff() const;
-  void BlockOpaqueResponseAfterSniff(const nsAString& aReason);
+  void BlockOpaqueResponseAfterSniff(
+      const nsAString& aReason,
+      const OpaqueResponseBlockedTelemetryReason aTelemetryReason);
   void AllowOpaqueResponseAfterSniff();
   void SetChannelBlockedByOpaqueResponse();
   bool Http3Allowed() const;
