@@ -666,7 +666,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             if c["enable_xorigin_tests"]:
                 base_cmd.append("--enable-xorigin-tests")
 
-            base_cmd.append("--setpref=layout.css.stylo-threads=4")
+            if suite_category != "cppunittest":
+                # Enable stylo threads everywhere we can. cppunittest doesn't
+                # support --setpref, so ignore that.
+                base_cmd.append("--setpref=layout.css.stylo-threads=4")
 
             if c["extra_prefs"]:
                 base_cmd.extend(["--setpref={}".format(p) for p in c["extra_prefs"]])
