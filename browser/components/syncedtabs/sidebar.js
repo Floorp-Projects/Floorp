@@ -7,8 +7,8 @@
 const { SyncedTabs } = ChromeUtils.importESModule(
   "resource://services-sync/SyncedTabs.sys.mjs"
 );
-const { SyncedTabsDeckComponent } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/SyncedTabsDeckComponent.js"
+const { SyncedTabsDeckComponent } = ChromeUtils.importESModule(
+  "resource:///modules/syncedtabs/SyncedTabsDeckComponent.sys.mjs"
 );
 
 var syncedTabsDeckComponent = new SyncedTabsDeckComponent({

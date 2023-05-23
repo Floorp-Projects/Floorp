@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 let log = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
@@ -18,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["TabListComponent"];
-
 /**
  * TabListComponent
  *
@@ -29,7 +23,7 @@ var EXPORTED_SYMBOLS = ["TabListComponent"];
  * to state changes so it can rerender.
  */
 
-function TabListComponent({
+export function TabListComponent({
   window,
   store,
   View,

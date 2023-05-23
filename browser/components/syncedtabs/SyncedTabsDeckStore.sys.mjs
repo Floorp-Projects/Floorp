@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-let { EventEmitter } = ChromeUtils.import(
-  "resource:///modules/syncedtabs/EventEmitter.jsm"
-);
-
-var EXPORTED_SYMBOLS = ["SyncedTabsDeckStore"];
+import { EventEmitter } from "resource:///modules/syncedtabs/EventEmitter.sys.mjs";
 
 /**
  * SyncedTabsDeckStore
@@ -19,7 +13,7 @@ var EXPORTED_SYMBOLS = ["SyncedTabsDeckStore"];
  * will have `isUpdatable` set to true so the view can skip rerendering the whole
  * DOM.
  */
-function SyncedTabsDeckStore() {
+export function SyncedTabsDeckStore() {
   EventEmitter.call(this);
   this._panels = [];
 }
