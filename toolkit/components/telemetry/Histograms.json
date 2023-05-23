@@ -18144,6 +18144,45 @@
     "bug_numbers": [1812051],
     "description": "If any opaque response was blocked for a given top-level window context."
   },
+  "ORB_BLOCK_REASON": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com", "afarre@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "MIME_NEVER_SNIFFED",
+      "RESP_206_BLCLISTED",
+      "NOSNIFF_BLC_OR_TEXTP",
+      "RESP_206_NO_FIRST",
+      "AFTER_SNIFF_MEDIA",
+      "AFTER_SNIFF_NOSNIFF",
+      "AFTER_SNIFF_STA_CODE",
+      "AFTER_SNIFF_CT_FAIL",
+      "MEDIA_NOT_INITIAL",
+      "MEDIA_INCORRECT_RESP",
+      "JS_VALIDATION_FAILED"
+    ],
+    "bug_numbers": [1833216],
+    "description": "The reason of why this request was blocked by ORB"
+  },
+  "ORB_BLOCK_INITIATOR": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com", "afarre@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "FILTERED_FETCH",
+      "BLOCKED_FETCH",
+      "IMAGE",
+      "SCRIPT",
+      "MEDIA",
+      "OTHER"
+    ],
+    "bug_numbers": [1833216],
+    "description": "The initiator of this ORB blocked request."
+  },
   "EVENT_LONGTASK": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
