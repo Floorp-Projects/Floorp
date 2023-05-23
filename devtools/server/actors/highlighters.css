@@ -446,7 +446,7 @@
   text-anchor: end;
 }
 
-:-moz-native-anonymous .rulers-highlighter-viewport-infobar-container {
+:-moz-native-anonymous .viewport-size-highlighter-viewport-infobar-container {
   shape-rendering: crispEdges;
   background-color: rgba(255, 255, 255, 0.7);
   font: var(--highlighter-font-family);
