@@ -1684,8 +1684,8 @@ bool nsRefreshDriver::CanDoExtraTick() {
 }
 
 void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
-  // FIXME: Bug 1346065: We should also assert the case where we have
-  // STYLO_THREADS=1.
+  // FIXME: Bug 1346065: We should also assert the case where we have no
+  // stylo-threads.
   MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal() || NS_IsMainThread(),
              "EnsureTimerStarted should be called only when we are not "
              "in servo traversal or on the main-thread");

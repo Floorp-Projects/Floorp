@@ -8945,6 +8945,16 @@
   mirror: always
   rust: true
 
+# Stylo thread-pool size.
+# Negative means auto, 0 disables the thread-pool (main-thread styling), other
+# numbers override as specified.
+# Note that 1 still creates a thread-pool of one thread!
+- name: layout.css.stylo-threads
+  type: int32_t
+  value: -1
+  mirror: once
+  rust: true
+
 # Are counters for implemented CSS properties enabled?
 - name: layout.css.use-counters.enabled
   type: bool
