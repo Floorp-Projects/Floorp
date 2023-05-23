@@ -434,7 +434,7 @@ class ContentActionTest {
     fun `UpdateHitResultAction updates hit result`() {
         assertNull(tab.content.hitResult)
 
-        val hitResult1: HitResult = mock()
+        val hitResult1: HitResult = HitResult.UNKNOWN("file://foo")
 
         store.dispatch(
             ContentAction.UpdateHitResultAction(tab.id, hitResult1),
@@ -442,7 +442,7 @@ class ContentActionTest {
 
         assertEquals(hitResult1, tab.content.hitResult)
 
-        val hitResult2: HitResult = mock()
+        val hitResult2: HitResult = HitResult.UNKNOWN("file://bar")
 
         store.dispatch(
             ContentAction.UpdateHitResultAction(tab.id, hitResult2),
@@ -453,7 +453,7 @@ class ContentActionTest {
 
     @Test
     fun `ConsumeHitResultAction removes hit result`() {
-        val hitResult: HitResult = mock()
+        val hitResult: HitResult = HitResult.UNKNOWN("file://foo")
 
         store.dispatch(
             ContentAction.UpdateHitResultAction(tab.id, hitResult),
