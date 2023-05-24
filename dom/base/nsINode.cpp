@@ -3217,7 +3217,7 @@ nsGenericHTMLElement* nsINode::GetEffectivePopoverTargetElement() const {
   }
   if (auto* popover = nsGenericHTMLElement::FromNodeOrNull(
           formControl->GetPopoverTargetElement())) {
-    if (popover->GetPopoverState() != PopoverState::None) {
+    if (popover->GetPopoverAttributeState() != PopoverAttributeState::None) {
       return popover;
     }
   }
