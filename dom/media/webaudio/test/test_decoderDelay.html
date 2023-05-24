@@ -27,7 +27,7 @@ async function doit(t) {
     var response = await fetch(testfile);
     var buffer = await response.arrayBuffer();
     var decoded = await context.decodeAudioData(buffer);
-    is(decoded.duration, 0.5, "The file is half a second.");
+    is(decoded.duration, 0.5, "The file " + testfile + " is half a second.");
     if (++count == tests.length) {
       SimpleTest.finish();
     }
