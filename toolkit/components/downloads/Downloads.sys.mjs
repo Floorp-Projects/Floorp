@@ -31,7 +31,7 @@ Integration.downloads.defineESModuleGetter(
  * This object is exposed directly to the consumers of this JavaScript module,
  * and provides the only entry point to get references to back-end objects.
  */
-export const Downloads = {
+export var Downloads = {
   /**
    * Work on downloads that were not started from a private browsing window.
    */
@@ -54,7 +54,7 @@ export const Downloads = {
   /**
    * Creates a new Download object.
    *
-   * @param properties
+   * @param aProperties
    *        Provides the initial properties for the newly created download.
    *        This matches the serializable representation of a Download object.
    *        Some of the most common properties in this object include:
@@ -90,8 +90,12 @@ export const Downloads = {
    * @resolves The newly created Download object.
    * @rejects JavaScript exception.
    */
-  async createDownload(properties) {
-    return Download.fromSerializable(properties);
+  createDownload: function D_createDownload(aProperties) {
+    try {
+      return Promise.resolve(Download.fromSerializable(aProperties));
+    } catch (ex) {
+      return Promise.reject(ex);
+    }
   },
 
   /**
@@ -104,13 +108,13 @@ export const Downloads = {
    * Since the download cannot be restarted, any partially downloaded data will
    * not be kept in case the download fails.
    *
-   * @param source
+   * @param aSource
    *        String containing the URI for the download source.  Alternatively,
    *        may be an nsIURI or a DownloadSource object.
-   * @param target
+   * @param aTarget
    *        String containing the path of the target file.  Alternatively, may
    *        be an nsIFile or a DownloadTarget object.
-   * @param options
+   * @param aOptions
    *        An optional object used to control the behavior of this function.
    *        You may pass an object with a subset of the following fields:
    *        {
@@ -122,13 +126,16 @@ export const Downloads = {
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  async fetch(source, target, options) {
-    const download = await this.createDownload({ source, target });
-
-    if (options?.isPrivate) {
-      download.source.isPrivate = options.isPrivate;
-    }
-    return download.start();
+  fetch(aSource, aTarget, aOptions) {
+    return this.createDownload({
+      source: aSource,
+      target: aTarget,
+    }).then(function D_SD_onSuccess(aDownload) {
+      if (aOptions && "isPrivate" in aOptions) {
+        aDownload.source.isPrivate = aOptions.isPrivate;
+      }
+      return aDownload.start();
+    });
   },
 
   /**
@@ -139,7 +146,7 @@ export const Downloads = {
    * Calling this function may cause the list of public downloads to be reloaded
    * from the previous session, if it wasn't loaded already.
    *
-   * @param type
+   * @param aType
    *        This can be Downloads.PUBLIC, Downloads.PRIVATE, or Downloads.ALL.
    *        Downloads added to the Downloads.PUBLIC and Downloads.PRIVATE lists
    *        are reflected in the Downloads.ALL list, and downloads added to the
@@ -150,7 +157,7 @@ export const Downloads = {
    * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  async getList(type) {
+  getList(aType) {
     if (!this._promiseListsInitialized) {
       this._promiseListsInitialized = (async () => {
         let publicList = new lazy.DownloadList();
@@ -166,8 +173,8 @@ export const Downloads = {
           await lazy.DownloadIntegration.initializePublicDownloadList(
             publicList
           );
-        } catch (err) {
-          console.error(err);
+        } catch (ex) {
+          console.error(ex);
         }
 
         let publicSummary = await this.getSummary(Downloads.PUBLIC);
@@ -184,9 +191,7 @@ export const Downloads = {
       })();
     }
 
-    await this._promiseListsInitialized;
-
-    return this._lists[type];
+    return this._promiseListsInitialized.then(() => this._lists[aType]);
   },
 
   /**
@@ -211,27 +216,27 @@ export const Downloads = {
    * reloaded from the previous session.  The summary will behave as if no
    * downloads are present until the getList method is called.
    *
-   * @param type
+   * @param aType
    *        This can be Downloads.PUBLIC, Downloads.PRIVATE, or Downloads.ALL.
    *
    * @return {Promise}
    * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  async getSummary(type) {
+  getSummary(aType) {
     if (
-      type != Downloads.PUBLIC &&
-      type != Downloads.PRIVATE &&
-      type != Downloads.ALL
+      aType != Downloads.PUBLIC &&
+      aType != Downloads.PRIVATE &&
+      aType != Downloads.ALL
     ) {
-      throw new Error("Invalid type argument.");
+      throw new Error("Invalid aType argument.");
     }
 
-    if (this._summaries.type === undefined) {
-      this._summaries[type] = new lazy.DownloadSummary();
+    if (!(aType in this._summaries)) {
+      this._summaries[aType] = new lazy.DownloadSummary();
     }
 
-    return this._summaries[type];
+    return Promise.resolve(this._summaries[aType]);
   },
 
   /**
@@ -257,7 +262,7 @@ export const Downloads = {
    * @return {Promise}
    * @resolves The downloads directory string path.
    */
-  getSystemDownloadsDirectory() {
+  getSystemDownloadsDirectory: function D_getSystemDownloadsDirectory() {
     return lazy.DownloadIntegration.getSystemDownloadsDirectory();
   },
 
@@ -268,7 +273,7 @@ export const Downloads = {
    * @return {Promise}
    * @resolves The downloads directory string path.
    */
-  getPreferredDownloadsDirectory() {
+  getPreferredDownloadsDirectory: function D_getPreferredDownloadsDirectory() {
     return lazy.DownloadIntegration.getPreferredDownloadsDirectory();
   },
 
@@ -281,7 +286,7 @@ export const Downloads = {
    * @return {Promise}
    * @resolves The downloads directory string path.
    */
-  getTemporaryDownloadsDirectory() {
+  getTemporaryDownloadsDirectory: function D_getTemporaryDownloadsDirectory() {
     return lazy.DownloadIntegration.getTemporaryDownloadsDirectory();
   },
 
