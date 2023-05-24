@@ -43,8 +43,8 @@ class MediaSourceDecoder : public MediaDecoder,
   // Return the duration of the video in seconds.
   double GetDuration() override;
 
-  void SetInitialDuration(int64_t aDuration);
-  void SetMediaSourceDuration(double aDuration);
+  void SetInitialDuration(const media::TimeUnit& aDuration);
+  void SetMediaSourceDuration(const media::TimeUnit& aDuration);
 
   MediaSourceDemuxer* GetDemuxer() { return mDemuxer; }
 
