@@ -119,7 +119,7 @@ class MediaDecoderStateMachine
   using TrackSet = MediaFormatReader::TrackSet;
 
  public:
-  typedef mozilla::layers::ImageContainer::FrameID FrameID;
+  using FrameID = mozilla::layers::ImageContainer::FrameID;
   MediaDecoderStateMachine(MediaDecoder* aDecoder, MediaFormatReader* aReader);
 
   nsresult Init(MediaDecoder* aDecoder) override;
