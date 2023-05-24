@@ -6874,19 +6874,7 @@ EventTarget* HTMLEditor::GetDOMEventTarget() const {
   // whether Init() was ever called.  So we need to get the document
   // ourselves, if it exists.
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor has not been initialized yet");
-  Document* doc = GetDocument();
-  if (!doc) {
-    return nullptr;
-  }
-
-  // Register the EditorEventListener to the parent of window.
-  //
-  // The advantage of this approach is HTMLEditor can still
-  // receive events when shadow dom is involved.
-  if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
-    return win->GetParentTarget();
-  }
-  return nullptr;
+  return GetDocument();
 }
 
 bool HTMLEditor::ShouldReplaceRootElement() const {
