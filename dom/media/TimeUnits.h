@@ -101,6 +101,9 @@ class TimeUnit final {
   static constexpr TimeUnit Zero(int64_t aBase = USECS_PER_S) {
     return TimeUnit(0, aBase);
   }
+  static constexpr TimeUnit Zero(const TimeUnit& aOther) {
+    return TimeUnit(0, aOther.mBase);
+  }
   static TimeUnit Invalid();
   int64_t ToMilliseconds() const;
   int64_t ToMicroseconds() const;
