@@ -93,7 +93,7 @@ where
 #[test]
 fn read_box_header_short() {
     let mut stream = make_box(BoxSize::Short(8), b"test", |s| s);
-    let header = super::read_box_header(&mut stream).unwrap();
+    let header = super::read_box_header(&mut stream).unwrap().unwrap();
     assert_eq!(header.name, BoxType::UnknownBox(0x7465_7374)); // "test"
     assert_eq!(header.size, 8);
     assert!(header.uuid.is_none());
@@ -102,7 +102,7 @@ fn read_box_header_short() {
 #[test]
 fn read_box_header_long() {
     let mut stream = make_box(BoxSize::Long(16), b"test", |s| s);
-    let header = super::read_box_header(&mut stream).unwrap();
+    let header = super::read_box_header(&mut stream).unwrap().unwrap();
     assert_eq!(header.name, BoxType::UnknownBox(0x7465_7374)); // "test"
     assert_eq!(header.size, 16);
     assert!(header.uuid.is_none());
@@ -164,6 +164,23 @@ fn read_box_header_truncated_uuid() {
     assert_eq!(stream.head.name, BoxType::UuidBox);
     assert_eq!(stream.head.size, 23);
     assert!(stream.head.uuid.is_none());
+}
+
+#[test]
+fn read_box_header_uuid_past_eof() {
+    const HEADER_UUID: [u8; 20] = [
+        0x00, 0x00, 0x00, 0x18, // size = 24
+        0x75, 0x75, 0x69, 0x64, // type = uuid
+        0x85, 0xc0, 0xb6, 0x87, 0x82, 0x0f, 0x11, 0xe0, 0x81, 0x11, 0xf4, 0xce,
+    ];
+
+    let mut cursor = Cursor::new(HEADER_UUID);
+    let mut iter = super::BoxIter::new(&mut cursor);
+    match iter.next_box() {
+        Err(Error::UnexpectedEOF) => (),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
+    };
 }
 
 #[test]

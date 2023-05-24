@@ -42,9 +42,7 @@ use std::io::Read;
 
 // Symbols we need from our rust api.
 use mp4parse::serialize_opus_header;
-use mp4parse::unstable::{
-    create_sample_table, media_time_to_us, track_time_to_us, CheckedInteger, Indice, Microseconds,
-};
+use mp4parse::unstable::{create_sample_table, CheckedInteger, Indice};
 use mp4parse::AV1ConfigBox;
 use mp4parse::AudioCodecSpecific;
 use mp4parse::AvifContext;
@@ -127,10 +125,8 @@ pub struct Mp4parseTrackInfo {
     pub track_type: Mp4parseTrackType,
     pub track_id: u32,
     pub duration: u64,
-    pub media_time: CheckedInteger<i64>, // wants to be u64? understand how elst adjustment works
-                                         // TODO(kinetik): include crypto guff
-                                         // If this changes to u64, we can get rid of the strange
-                                         // impl Sub for CheckedInteger<u64>
+    pub media_time: CheckedInteger<i64>,
+    pub time_scale: u32,
 }
 
 #[repr(C)]
@@ -278,9 +274,9 @@ impl Default for Mp4parseTrackVideoInfo {
 #[repr(C)]
 #[derive(Default, Debug)]
 pub struct Mp4parseFragmentInfo {
-    pub fragment_duration: u64,
-    // TODO:
-    // info in trex box.
+    pub fragment_duration: u64, // in ticks
+                                // TODO:
+                                // info in trex box.
 }
 
 #[derive(Default)]
@@ -631,46 +627,34 @@ pub unsafe extern "C" fn mp4parse_get_track_info(
 
     let track = &context.tracks[track_index];
 
-    if let (Some(track_timescale), Some(context_timescale)) = (track.timescale, context.timescale) {
-        let media_time: CheckedInteger<_> = match track
+    if let (Some(timescale), Some(_)) = (track.timescale, context.timescale) {
+        info.time_scale = timescale.0 as u32;
+        let media_time: CheckedInteger<u64> = track
             .media_time
-            .map_or(Some(Microseconds(0)), |media_time| {
-                track_time_to_us(media_time, track_timescale)
-            }) {
-            Some(time) => time.0.into(),
-            None => return Mp4parseStatus::Invalid,
-        };
-        let empty_duration: CheckedInteger<_> = match track
+            .map_or(0.into(), |media_time| media_time.0.into());
+
+        let empty_duration: CheckedInteger<u64> = track
             .empty_duration
-            .map_or(Some(Microseconds(0)), |empty_duration| {
-                media_time_to_us(empty_duration, context_timescale)
-            }) {
-            Some(time) => time.0.into(),
-            None => return Mp4parseStatus::Invalid,
-        };
+            .map_or(0.into(), |empty_duration| empty_duration.0.into());
+
         info.media_time = match media_time - empty_duration {
             Some(difference) => difference,
             None => return Mp4parseStatus::Invalid,
         };
 
-        if let Some(track_duration) = track.duration {
-            match track_time_to_us(track_duration, track_timescale) {
-                Some(duration) => info.duration = duration.0,
-                None => return Mp4parseStatus::Invalid,
+        match track.duration {
+            Some(duration) => info.duration = duration.0,
+            None => {
+                // Duration unknown; stagefright returns 0 for this.
+                info.duration = 0
             }
-        } else {
-            // Duration unknown; stagefright returns 0 for this.
-            info.duration = 0
         }
-    } else {
-        return Mp4parseStatus::Invalid;
-    }
+    };
 
     info.track_id = match track.track_id {
         Some(track_id) => track_id,
         None => return Mp4parseStatus::Invalid,
     };
-
     Mp4parseStatus::Ok
 }
 
@@ -1313,6 +1297,7 @@ pub unsafe extern "C" fn mp4parse_avif_get_indice_table(
     parser: *mut Mp4parseAvifParser,
     track_id: u32,
     indices: *mut Mp4parseByteData,
+    timescale: *mut u64,
 ) -> Mp4parseStatus {
     if parser.is_null() {
         return Mp4parseStatus::BadArg;
@@ -1326,6 +1311,27 @@ pub unsafe extern "C" fn mp4parse_avif_get_indice_table(
     *indices = Default::default();
 
     if let Some(sequence) = &(*parser).context.sequence {
+        // Use the top level timescale, and the track timescale if present.
+        let mut found_timescale = false;
+        if let Some(context_timescale) = sequence.timescale {
+            *timescale = context_timescale.0;
+            found_timescale = true;
+        }
+        let maybe_track_timescale = match sequence
+            .tracks
+            .iter()
+            .find(|track| track.track_id == Some(track_id))
+        {
+            Some(track) => track.timescale,
+            _ => None,
+        };
+        if let Some(track_timescale) = maybe_track_timescale {
+            found_timescale = true;
+            *timescale = track_timescale.0;
+        }
+        if !found_timescale {
+            return Mp4parseStatus::Invalid;
+        }
         return get_indice_table(
             sequence,
             &mut (*parser).sample_table,
@@ -1355,20 +1361,15 @@ fn get_indice_table(
         return Ok(());
     }
 
-    let media_time = match (&track.media_time, &track.timescale) {
-        (&Some(t), &Some(s)) => track_time_to_us(t, s)
-            .and_then(|v| i64::try_from(v.0).ok())
-            .map(Into::into),
+    let media_time = match &track.media_time {
+        &Some(t) => i64::try_from(t.0).ok().map(Into::into),
         _ => None,
     };
 
-    let empty_duration: Option<CheckedInteger<_>> =
-        match (&track.empty_duration, &context.timescale) {
-            (&Some(e), &Some(s)) => media_time_to_us(e, s)
-                .and_then(|v| i64::try_from(v.0).ok())
-                .map(Into::into),
-            _ => None,
-        };
+    let empty_duration: Option<CheckedInteger<_>> = match &track.empty_duration {
+        &Some(e) => i64::try_from(e.0).ok().map(Into::into),
+        _ => None,
+    };
 
     // Find the track start offset time from 'elst'.
     // 'media_time' maps start time onward, 'empty_duration' adds time offset
@@ -1420,12 +1421,12 @@ pub unsafe extern "C" fn mp4parse_get_fragment_info(
         None => return Mp4parseStatus::Invalid,
     };
 
-    if let (Some(time), Some(scale)) = (duration, context.timescale) {
-        info.fragment_duration = match media_time_to_us(time, scale) {
-            Some(time_us) => time_us.0,
-            None => return Mp4parseStatus::Invalid,
+    match duration {
+        Some(duration_ticks) => {
+            info.fragment_duration = duration_ticks.0;
         }
-    }
+        None => return Mp4parseStatus::Invalid,
+    };
 
     Mp4parseStatus::Ok
 }
@@ -1741,7 +1742,7 @@ fn minimal_mp4_get_track_info() {
     });
     assert_eq!(info.track_type, Mp4parseTrackType::Video);
     assert_eq!(info.track_id, 1);
-    assert_eq!(info.duration, 40000);
+    assert_eq!(info.duration, 512);
     assert_eq!(info.media_time, 0);
 
     assert_eq!(Mp4parseStatus::Ok, unsafe {
@@ -1749,8 +1750,8 @@ fn minimal_mp4_get_track_info() {
     });
     assert_eq!(info.track_type, Mp4parseTrackType::Audio);
     assert_eq!(info.track_id, 2);
-    assert_eq!(info.duration, 61333);
-    assert_eq!(info.media_time, 21333);
+    assert_eq!(info.duration, 2944);
+    assert_eq!(info.media_time, 1024);
 
     unsafe {
         mp4parse_free(parser);
