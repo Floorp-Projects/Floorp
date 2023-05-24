@@ -708,38 +708,20 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
     return nullptr;
   }
 
-  AtkObject* childAtkObj = nullptr;
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    if (nsAccUtils::MustPrune(accWrap)) {
-      return nullptr;
-    }
-
-    LocalAccessible* accChild = accWrap->EmbeddedChildAt(aChildIndex);
-    if (accChild) {
-      childAtkObj = AccessibleWrap::GetAtkObject(accChild);
-    } else {
-      OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
-      if (docOwner) {
-        RemoteAccessible* proxyDoc = docOwner->RemoteChildDoc();
-        if (proxyDoc) childAtkObj = GetWrapperFor(proxyDoc);
-      }
-    }
-  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    if (nsAccUtils::MustPrune(proxy)) {
-      return nullptr;
-    }
-
-    Accessible* child = proxy->EmbeddedChildAt(aChildIndex);
-    if (child) {
-      childAtkObj = GetWrapperFor(child->AsRemote());
-    }
-  } else {
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc || nsAccUtils::MustPrune(acc)) {
+    return nullptr;
+  }
+  Accessible* accChild = acc->EmbeddedChildAt(aChildIndex);
+  if (!accChild) {
     return nullptr;
   }
 
+  AtkObject* childAtkObj = GetWrapperFor(accChild);
   NS_ASSERTION(childAtkObj, "Fail to get AtkObj");
-  if (!childAtkObj) return nullptr;
+  if (!childAtkObj) {
+    return nullptr;
+  }
 
   g_object_ref(childAtkObj);
 
@@ -797,11 +779,8 @@ AtkStateSet* refStateSetCB(AtkObject* aAtkObj) {
   AtkStateSet* state_set = nullptr;
   state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    TranslateStates(accWrap->State(), accWrap->Role(), state_set);
-  } else if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    TranslateStates(proxy->State(), proxy->Role(), state_set);
+  if (Accessible* acc = GetInternalObj(aAtkObj)) {
+    TranslateStates(acc->State(), acc->Role(), state_set);
   } else {
     TranslateStates(states::DEFUNCT, roles::NOTHING, state_set);
   }

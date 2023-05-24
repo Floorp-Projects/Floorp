@@ -76,8 +76,6 @@ enum CheckedState {
 // allows for gecko accessible access outside of the class
 - (mozilla::a11y::Accessible*)geckoAccessible;
 
-- (mozilla::a11y::Accessible*)geckoDocument;
-
 // override
 - (void)dealloc;
 
