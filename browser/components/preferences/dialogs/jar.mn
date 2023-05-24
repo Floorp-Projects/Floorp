@@ -43,5 +43,7 @@ browser.jar:
    content/browser/preferences/dialogs/siteDataRemoveSelected.js
    content/browser/preferences/dialogs/syncChooseWhatToSync.xhtml
    content/browser/preferences/dialogs/syncChooseWhatToSync.js
-   content/browser/preferences/dialogs/translation.xhtml
-   content/browser/preferences/dialogs/translation.js
+   content/browser/preferences/dialogs/translationExceptions.xhtml
+   content/browser/preferences/dialogs/translationExceptions.js
+   content/browser/preferences/dialogs/translations.xhtml
+   content/browser/preferences/dialogs/translations.js
