@@ -14,9 +14,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Assert
 import org.junit.Assume.assumeThat
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo
 import org.mozilla.geckoview.GeckoResult
@@ -39,10 +37,6 @@ private const val BIG_SCREEN_WIDTH = 999999
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ScreenshotTest : BaseSessionTest() {
-
-    @get:Rule
-    val expectedEx: ExpectedException = ExpectedException.none()
-
     private fun getComparisonScreenshot(width: Int, height: Int): Bitmap {
         val screenshotFile = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(screenshotFile)
