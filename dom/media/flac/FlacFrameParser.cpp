@@ -146,7 +146,7 @@ Result<Ok, nsresult> FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket,
           blockDataStart, blockDataSize);
       mInfo.mCodecSpecificConfig =
           AudioCodecSpecificVariant{std::move(flacCodecSpecificData)};
-      auto duration = FramesToTimeUnit(mNumFrames, sampleRate);
+      auto duration = media::TimeUnit(mNumFrames, sampleRate);
       mInfo.mDuration = duration.IsValid() ? duration : media::TimeUnit::Zero();
       mParser = MakeUnique<OpusParser>();
       break;
