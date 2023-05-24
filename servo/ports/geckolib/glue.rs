@@ -5037,6 +5037,11 @@ pub unsafe extern "C" fn Servo_MediaList_SetText(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_MediaList_IsViewportDependent(list: &LockedMediaList) -> bool {
+    read_locked_arc(list, |list: &MediaList| list.is_viewport_dependent())
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_MediaList_GetLength(list: &LockedMediaList) -> u32 {
     read_locked_arc(list, |list: &MediaList| list.media_queries.len() as u32)
 }

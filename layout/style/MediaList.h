@@ -42,9 +42,10 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
   nsISupports* GetParentObject() const;
 
-  void GetText(nsACString& aMediaText);
-  void SetText(const nsACString& aMediaText);
+  void GetText(nsACString&) const;
+  void SetText(const nsACString&);
   bool Matches(const Document&) const;
+  bool IsViewportDependent() const;
 
   void SetStyleSheet(StyleSheet* aSheet);
   void SetRawAfterClone(RefPtr<StyleLockedMediaList> aRaw) {
@@ -52,13 +53,15 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   }
 
   // WebIDL
-  void GetMediaText(nsACString& aMediaText);
-  void SetMediaText(const nsACString& aMediaText);
-  uint32_t Length();
-  void IndexedGetter(uint32_t aIndex, bool& aFound, nsACString& aReturn);
-  void Item(uint32_t aIndex, nsACString& aResult);
-  void DeleteMedium(const nsACString& aMedium, ErrorResult& aRv);
-  void AppendMedium(const nsACString& aMedium, ErrorResult& aRv);
+  void GetMediaText(nsACString& aMediaText) const {
+    return GetText(aMediaText);
+  }
+  void SetMediaText(const nsACString&);
+  uint32_t Length() const;
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsACString&) const;
+  void Item(uint32_t aIndex, nsACString&);
+  void DeleteMedium(const nsACString&, ErrorResult&);
+  void AppendMedium(const nsACString&, ErrorResult&);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 

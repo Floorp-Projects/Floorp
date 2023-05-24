@@ -76,15 +76,14 @@ MediaList::MediaList(const nsACString& aMedia, CallerType aCallerType)
   SetTextInternal(aMedia, aCallerType);
 }
 
-void MediaList::GetText(nsACString& aMediaText) {
+void MediaList::GetText(nsACString& aMediaText) const {
   Servo_MediaList_GetText(mRawList, &aMediaText);
 }
 
 /* static */
 already_AddRefed<MediaList> MediaList::Create(const nsACString& aMedia,
                                               CallerType aCallerType) {
-  RefPtr<MediaList> mediaList = new MediaList(aMedia, aCallerType);
-  return mediaList.forget();
+  return do_AddRef(new MediaList(aMedia, aCallerType));
 }
 
 void MediaList::SetText(const nsACString& aMediaText) {
@@ -95,17 +94,21 @@ void MediaList::SetText(const nsACString& aMediaText) {
   SetTextInternal(aMediaText, CallerType::NonSystem);
 }
 
-void MediaList::GetMediaText(nsACString& aMediaText) { GetText(aMediaText); }
-
 void MediaList::SetTextInternal(const nsACString& aMediaText,
                                 CallerType aCallerType) {
   Servo_MediaList_SetText(mRawList, &aMediaText, aCallerType);
 }
 
-uint32_t MediaList::Length() { return Servo_MediaList_GetLength(mRawList); }
+uint32_t MediaList::Length() const {
+  return Servo_MediaList_GetLength(mRawList);
+}
+
+bool MediaList::IsViewportDependent() const {
+  return Servo_MediaList_IsViewportDependent(mRawList);
+}
 
 void MediaList::IndexedGetter(uint32_t aIndex, bool& aFound,
-                              nsACString& aReturn) {
+                              nsACString& aReturn) const {
   aFound = Servo_MediaList_GetMediumAt(mRawList, aIndex, &aReturn);
   if (!aFound) {
     aReturn.SetIsVoid(true);
