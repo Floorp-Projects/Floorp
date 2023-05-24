@@ -249,14 +249,14 @@ class ProviderContextualSearch extends UrlbarProvider {
     };
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(isPrivate, state, queryContext, details, window) {
     let { result } = details;
     if (result?.providerName == this.name) {
-      this.#pickResult(result);
+      this.#pickResult(result, window);
     }
   }
 
-  async #pickResult(result) {
+  async #pickResult(result, window) {
     // If we have an engine to add, first create a new OpenSearchEngine, then
     // get and open a url to execute a search for the term in the url bar.
     // In cases where we don't have to create a new engine, navigation is
@@ -274,7 +274,6 @@ class ProviderContextualSearch extends UrlbarProvider {
         newEngine,
         result.payload.input
       );
-      let window = lazy.BrowserWindowTracker.getTopWindow();
       window.gBrowser.fixupAndLoadURIString(url, {
         triggeringPrincipal:
           Services.scriptSecurityManager.getSystemPrincipal(),

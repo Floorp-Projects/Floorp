@@ -783,7 +783,9 @@ class TelemetryEvent {
     this._controller.manager.notifyEngagementChange(
       this._isPrivate,
       "start",
-      queryContext
+      queryContext,
+      {},
+      this._controller.browserWindow
     );
   }
 
@@ -891,7 +893,9 @@ class TelemetryEvent {
         this._controller.manager.notifyEngagementChange(
           this._isPrivate,
           "discard",
-          queryContext
+          queryContext,
+          {},
+          this._controller.browserWindow
         );
       }
       return;
@@ -982,7 +986,8 @@ class TelemetryEvent {
         this._isPrivate,
         method,
         queryContext,
-        details
+        details,
+        this._controller.browserWindow
       );
       return;
     }
@@ -1051,7 +1056,8 @@ class TelemetryEvent {
       this._isPrivate,
       method,
       queryContext,
-      details
+      details,
+      this._controller.browserWindow
     );
   }
 
