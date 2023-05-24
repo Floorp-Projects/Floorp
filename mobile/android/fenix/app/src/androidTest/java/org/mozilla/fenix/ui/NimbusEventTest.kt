@@ -9,6 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import io.mockk.mockk
 import mozilla.components.concept.sync.AuthType
+import mozilla.components.service.fxa.FirefoxAccount
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -65,7 +66,8 @@ class NimbusEventTest {
     @Test
     fun telemetryAccountObserverTest() {
         val observer = TelemetryAccountObserver(appContext)
-        observer.onAuthenticated(mockk(), AuthType.Signin)
+        // replacing interface mock with implementation mock.
+        observer.onAuthenticated(mockk<FirefoxAccount>(), AuthType.Signin)
 
         Experimentation.withHelper {
             assertTrue(evalJexl("'sync_auth.sign_in'|eventSum('Days', 28, 0) > 0"))
