@@ -6,6 +6,7 @@
 #ifndef nsBaseClipboard_h__
 #define nsBaseClipboard_h__
 
+#include "mozilla/dom/PContent.h"
 #include "mozilla/Logging.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
@@ -98,7 +99,8 @@ class ClipboardSetDataHelper : public nsIClipboard {
  */
 class nsBaseClipboard : public ClipboardSetDataHelper {
  public:
-  nsBaseClipboard();
+  explicit nsBaseClipboard(
+      const mozilla::dom::ClipboardCapabilities& aClipboardCaps);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -113,7 +115,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
                                     int32_t aWhichClipboard,
                                     bool* _retval) override;
   NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
-                                      bool* _retval) override;
+                                      bool* aRetval) override final;
   RefPtr<mozilla::GenericPromise> AsyncGetData(
       nsITransferable* aTransferable, int32_t aWhichClipboard) override;
   RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
@@ -128,11 +130,12 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
 
   void ClearClipboardCache();
 
-  bool mEmptyingForSetData;
+  bool mEmptyingForSetData = false;
   nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
   nsCOMPtr<nsITransferable> mTransferable;
 
  private:
+  const mozilla::dom::ClipboardCapabilities mClipboardCaps;
   bool mIgnoreEmptyNotification = false;
 };
 

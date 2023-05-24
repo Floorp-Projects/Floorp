@@ -30,7 +30,10 @@ using mozilla::gfx::SourceSurface;
 
 mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 
-nsClipboard::nsClipboard() : nsBaseClipboard(), mCachedClipboard(-1), mChangeCount(0) {}
+nsClipboard::nsClipboard()
+    : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(false /* supportsSelectionClipboard */,
+                                                          true /* supportsFindClipboard */,
+                                                          true /* supportsSelectionCache */)) {}
 
 nsClipboard::~nsClipboard() { ClearSelectionCache(); }
 
@@ -471,14 +474,6 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
-}
-
-NS_IMETHODIMP
-nsClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard, bool* _retval) {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = kGlobalClipboard == aWhichClipboard || kFindClipboard == aWhichClipboard ||
-             kSelectionCache == aWhichClipboard;
-  return NS_OK;
 }
 
 // static

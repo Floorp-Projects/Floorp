@@ -11,6 +11,7 @@
 
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
+using mozilla::dom::ClipboardCapabilities;
 
 NS_IMPL_ISUPPORTS(ClipboardSetDataHelper::AsyncSetClipboardData,
                   nsIAsyncSetClipboardData)
@@ -129,7 +130,8 @@ NS_IMETHODIMP ClipboardSetDataHelper::AsyncSetData(
   return NS_OK;
 }
 
-nsBaseClipboard::nsBaseClipboard() : mEmptyingForSetData(false) {}
+nsBaseClipboard::nsBaseClipboard(const ClipboardCapabilities& aClipboardCaps)
+    : mClipboardCaps(aClipboardCaps) {}
 
 nsBaseClipboard::~nsBaseClipboard() {
   EmptyClipboard(kSelectionClipboard);
@@ -259,11 +261,26 @@ RefPtr<DataFlavorsPromise> nsBaseClipboard::AsyncHasDataMatchingFlavors(
 
 NS_IMETHODIMP
 nsBaseClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard,
-                                          bool* _retval) {
-  NS_ENSURE_ARG_POINTER(_retval);
-  // We support global clipboard by default.
-  *_retval = kGlobalClipboard == aWhichClipboard;
-  return NS_OK;
+                                          bool* aRetval) {
+  NS_ENSURE_ARG_POINTER(aRetval);
+  switch (aWhichClipboard) {
+    case kGlobalClipboard:
+      // We always support the global clipboard.
+      *aRetval = true;
+      return NS_OK;
+    case kSelectionClipboard:
+      *aRetval = mClipboardCaps.supportsSelectionClipboard();
+      return NS_OK;
+    case kFindClipboard:
+      *aRetval = mClipboardCaps.supportsFindClipboard();
+      return NS_OK;
+    case kSelectionCache:
+      *aRetval = mClipboardCaps.supportsSelectionCache();
+      return NS_OK;
+    default:
+      *aRetval = false;
+      return NS_OK;
+  }
 }
 
 void nsBaseClipboard::ClearClipboardCache() {

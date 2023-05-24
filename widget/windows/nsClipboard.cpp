@@ -84,7 +84,11 @@ UINT nsClipboard::GetCustomClipboardFormat() {
 // nsClipboard constructor
 //
 //-------------------------------------------------------------------------
-nsClipboard::nsClipboard() : nsBaseClipboard() {
+nsClipboard::nsClipboard()
+    : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(
+          false /* supportsSelectionClipboard */,
+          false /* supportsFindClipboard */,
+          false /* supportsSelectionCache */)) {
   mWindow = nullptr;
 
   // Register for a shutdown notification so that we can flush data
