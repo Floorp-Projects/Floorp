@@ -709,6 +709,13 @@ def plain_llvm_or_prefixed(name):
 
 
 check_prog(
+    "OTOOL",
+    plain_llvm_or_prefixed("otool"),
+    when=compile_environment & target_is_darwin,
+    paths=clang_search_path,
+)
+
+check_prog(
     "INSTALL_NAME_TOOL",
     plain_llvm_or_prefixed("llvm-install-name-tool"),
     when=compile_environment & target_is_darwin & js_standalone,

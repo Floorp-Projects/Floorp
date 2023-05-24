@@ -66,7 +66,6 @@ else
       sleep 2
     esac
     AC_PROG_CXX
-    AC_CHECK_PROGS(OTOOL, otool, :)
 fi
 
 MOZ_TOOL_VARIABLES
