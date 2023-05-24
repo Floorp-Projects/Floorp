@@ -101,8 +101,10 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
 
-static nsTArray<mozilla::RFPTarget> sFPPTargets = {
-    RFPTarget::IsAlwaysEnabledForPrecompute, RFPTarget::Unknown};
+// Fingerprinting protections that are enabled by default. This can be
+// overridden using the privacy.fingerprintingProtection.overrides pref.
+const uint32_t kDefaultFingerintingProtections =
+    uint32_t(RFPTarget::CanvasRandomization);
 
 // ============================================================================
 // ============================================================================
@@ -113,8 +115,9 @@ NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
-static nsTArray<mozilla::RFPTarget> sTargetOverrideAdditions;
-static nsTArray<mozilla::RFPTarget> sTargetOverrideSubtractions;
+
+// Actually enabled fingerprinting protections.
+static Atomic<uint32_t> sEnabledFingerintingProtections;
 
 /* static */
 nsRFPService* nsRFPService::GetOrCreate() {
@@ -191,16 +194,15 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
 
   if (StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly() ||
       StaticPrefs::privacy_fingerprintingProtection_pbmode_DoNotUseDirectly()) {
-    if (sTargetOverrideAdditions.Contains(aTarget)) {
+    if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
-    if (sTargetOverrideSubtractions.Contains(aTarget)) {
+    // All not yet explicitly defined targets are disabled by default (no
+    // fingerprinting protection).
+    if (aTarget == RFPTarget::Unknown) {
       return false;
     }
-    if (sFPPTargets.Contains(aTarget)) {
-      return true;
-    }
-    return false;
+    return sEnabledFingerintingProtections & uint32_t(aTarget);
   }
 
   return false;
@@ -281,32 +283,33 @@ void nsRFPService::UpdateFPPOverrideList() {
     return;
   }
 
-  sTargetOverrideAdditions.Clear();
-  sTargetOverrideSubtractions.Clear();
+  uint32_t enabled = kDefaultFingerintingProtections;
   for (const nsAString& each : targetOverrides.Split(',')) {
     Maybe<RFPTarget> mappedValue =
         nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
     if (mappedValue.isSome()) {
-      if (each[0] == '+') {
-        sTargetOverrideAdditions.AppendElement(mappedValue.value());
-        MOZ_LOG(
-            gResistFingerprintingLog, LogLevel::Warning,
-            ("Mapped value %s (%X), to an addition, now we have %zu",
-             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value()),
-             sTargetOverrideAdditions.Length()));
+      RFPTarget target = mappedValue.value();
+      if (target == RFPTarget::IsAlwaysEnabledForPrecompute ||
+          target == RFPTarget::Unknown) {
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("RFPTarget::%s is not a valid value",
+                 NS_ConvertUTF16toUTF8(each).get()));
+      } else if (each[0] == '+') {
+        enabled |= uint32_t(target);
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%08x), to an addition, now we have 0x%08x",
+                 NS_ConvertUTF16toUTF8(each).get(), unsigned(target), enabled));
       } else if (each[0] == '-') {
-        sTargetOverrideSubtractions.AppendElement(mappedValue.value());
+        enabled &= ~uint32_t(target);
         MOZ_LOG(
             gResistFingerprintingLog, LogLevel::Warning,
-            ("Mapped value %s (%X) to a subtraction, now we have %zu",
-             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value()),
-             sTargetOverrideSubtractions.Length()));
+            ("Mapped value %s (0x%08x) to a subtraction, now we have 0x%08x",
+             NS_ConvertUTF16toUTF8(each).get(), unsigned(target), enabled));
       } else {
-        MOZ_LOG(
-            gResistFingerprintingLog, LogLevel::Warning,
-            ("Mapped value %s (%X) to an RFPTarget Enum, but the first "
-             "character wasn't + or -",
-             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value())));
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (0x%08x) to an RFPTarget Enum, but the first "
+                 "character wasn't + or -",
+                 NS_ConvertUTF16toUTF8(each).get(), unsigned(target)));
       }
     } else {
       MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
@@ -314,6 +317,8 @@ void nsRFPService::UpdateFPPOverrideList() {
                NS_ConvertUTF16toUTF8(each).get()));
     }
   }
+
+  sEnabledFingerintingProtections = enabled;
 }
 
 /* static */
@@ -1286,7 +1291,8 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
   // resistance is exempted from the normal windows. Note that we still need to
   // generate the key for exempted domains because there could be unexempted
   // sub-documents that need the key.
-  if (!nsContentUtils::ShouldResistFingerprinting("Coarse Efficiency Check") ||
+  if (!nsContentUtils::ShouldResistFingerprinting(
+          "Coarse Efficiency Check", RFPTarget::CanvasRandomization) ||
       (!aIsPrivate &&
        StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
            0x02 /* NonPBMExemptMask */)) {
