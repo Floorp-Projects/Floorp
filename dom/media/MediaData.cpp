@@ -88,7 +88,6 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     // MoveableData got called. Can no longer work on it.
     return false;
   }
-  const size_t originalFrames = mAudioData.Length() / mChannels;
   if (aTrim.mStart < mOriginalTime || aTrim.mEnd > GetEndTime()) {
     return false;
   }
@@ -110,7 +109,7 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
   MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
                         "Data offset outside original buffer");
   mFrames = (trimAfter - trimBefore).ToTicksAtRate(mRate);
-  MOZ_DIAGNOSTIC_ASSERT(mFrames <= originalFrames,
+  MOZ_DIAGNOSTIC_ASSERT(mFrames <= mAudioData.Length() / mChannels,
                         "More frames than found in container");
   mTime = mOriginalTime + trimBefore;
   mDuration = TimeUnit(mFrames, mRate);
