@@ -324,8 +324,8 @@ dependencies {
     androidTestImplementation FocusDependencies.espresso_intents
 
 
-    androidTestImplementation FocusDependencies.testing_mockwebserver
-    testImplementation FocusDependencies.testing_mockwebserver
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation ComponentsDependencies.testing_mockwebserver
     testImplementation project(':lib-fetch-okhttp')
 
     androidTestImplementation FocusDependencies.fastlane

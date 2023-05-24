@@ -34,7 +34,6 @@ object FocusVersions {
         const val falcon = "2.2.0"
         const val fastlane = "2.1.1"
         const val junit = "5.9.3"
-        const val mockwebserver = "4.11.0"
     }
 
     object ThirdParty {
@@ -62,7 +61,6 @@ object FocusDependencies {
     const val espresso_web = "androidx.test.espresso:espresso-web:${FocusVersions.Testing.androidx_espresso}"
     const val falcon = "com.jraska:falcon:${FocusVersions.Testing.falcon}"
     const val fastlane = "tools.fastlane:screengrab:${FocusVersions.Testing.fastlane}"
-    const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${FocusVersions.Testing.mockwebserver}"
 
     const val testing_junit_api = "org.junit.jupiter:junit-jupiter-api:${FocusVersions.Testing.junit}"
     const val testing_junit_engine = "org.junit.jupiter:junit-jupiter-engine:${FocusVersions.Testing.junit}"

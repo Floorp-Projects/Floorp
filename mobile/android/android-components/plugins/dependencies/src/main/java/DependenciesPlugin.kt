@@ -24,10 +24,7 @@ object Versions {
     const val mockito = "5.6.0"
     const val maven_ant_tasks = "2.1.3"
     const val jacoco = "0.8.10"
-
-    // TO-DO: These could be kept in sync in the future
-    const val mockwebserver = "3.10.0"
-    const val okhttp = "3.13.1"
+    const val okhttp = "4.11.0"
 
     const val android_gradle_plugin = "7.4.2"
 
@@ -107,7 +104,7 @@ object ComponentsDependencies {
     const val testing_junit = "junit:junit:${Versions.junit}"
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.mockito}"
-    const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
+    const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.okhttp}"
     const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
     const val testing_maven_ant_tasks = "org.apache.maven:maven-ant-tasks:${Versions.maven_ant_tasks}"
     const val testing_leakcanary = "com.squareup.leakcanary:leakcanary-android-instrumentation:${Versions.leakcanary}"

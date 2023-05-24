@@ -657,7 +657,7 @@ dependencies {
     androidTestImplementation ComponentsDependencies.androidx_test_junit
     androidTestImplementation ComponentsDependencies.androidx_work_testing
     androidTestImplementation FenixDependencies.androidx_benchmark_junit4
-    androidTestImplementation FenixDependencies.mockwebserver
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')
     testImplementation ComponentsDependencies.androidx_test_junit
