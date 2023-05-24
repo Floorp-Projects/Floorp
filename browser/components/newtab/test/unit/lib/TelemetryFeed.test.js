@@ -2132,7 +2132,26 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(instance.sendStructuredIngestionEvent);
     });
-    it("should console.error on unknown pingTypes", async () => {
+    it("should call submitGleanPingForPing on known pingTypes when telemetry is enabled", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        event: "IMPRESSION",
+        message_id: "12345",
+      };
+      instance = new TelemetryFeed();
+      instance._prefs.set(TELEMETRY_PREF, true);
+      sandbox.spy(
+        global.AboutWelcomeTelemetry.prototype,
+        "submitGleanPingForPing"
+      );
+
+      await instance.handleASRouterUserEvent({ data });
+
+      assert.calledOnce(
+        global.AboutWelcomeTelemetry.prototype.submitGleanPingForPing
+      );
+    });
+    it("should console.error and not submit pings on unknown pingTypes", async () => {
       const data = {
         action: "unknown_event",
         event: "IMPRESSION",

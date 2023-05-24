@@ -569,3 +569,653 @@ pocket:
         type: string
     send_in_pings:
       - newtab
+
+
+messaging_system:
+  event_context_parse_error:
+    type: counter
+    lifetime: ping
+    description: |
+      How often we failed to parse event_context as JSON.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_reason:
+    type: string
+    lifetime: ping
+    description: |
+      The event_context's `reason`. Likely something like
+      "welcome-window-closed" or "app-shut-down",.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_page:
+    type: string
+    lifetime: ping
+    description: |
+      The event_context's `page`. Almost always "about:welcome".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_source:
+    type: string
+    lifetime: ping
+    description: |
+      The event_context's `source`. Likely something like "primary_button".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event_context:
+    type: text
+    lifetime: ping
+    description: |
+      The stringified JSON of `event_context`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  message_id:
+    type: text
+    lifetime: ping
+    description: |
+      A string identifier of the message in Activity Stream Router.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  event:
+    type: string
+    description: >
+      The type of event. Any user defined string
+      (e.g. “click”, “share”, “delete”, “more_items”)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  ping_type:
+    type: string
+    description: >
+      Type of event the ping is capturing.
+      e.g. "cfr", "whats-new-panel", "onboarding"
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  page:
+    type: string
+    description: >
+      One of [”about:newtab”, “about:home”, “about:welcome”,
+      “unknown” (which either means not-applicable or is a bug)].
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  source:
+    type: string
+    description: >
+      The source of the interaction described by the other metrics.
+      e.g. "frecent_links", "newtab", "CFR"
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  client_id:
+    type: uuid
+    lifetime: ping
+    description: |
+      The client_id according to Telemetry.
+      Might not always have a value due to policy around specific types of
+      ping being sent. Value may be the canary client id
+      `c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0`
+      in pings near when the data upload pref is disabled (if Telemetry gets
+      to go first), or between when a client_id has been removed and when it
+      has been regenerated.
+      Present only in some circumstances (see
+      [bug 1484035]https://bugzilla.mozilla.org/show_bug.cgi?id=1484035)).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755549
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1484035
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1755549
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  locale:
+    type: string
+    lifetime: ping
+    description: >
+      The locale as supplied to the messaging system by
+      `Services.locale.appLocaleAsBCP47`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  browser_session_id:
+    type: uuid
+    lifetime: ping
+    # Disable yamllint for long lines.
+    # yamllint disable
+    description: >
+      The Legacy Telemetry browser "session id".
+      Identifies a specific period from application start to shutdown.
+      See [the "main" ping docs](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/main-ping.html)
+      for details.
+    # yamllint enable
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  impression_id:
+    type: uuid
+    lifetime: ping
+    description: >
+      The unique impression identifier for a specific client.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  bucket_id:
+    type: string
+    lifetime: ping
+    description: >
+      A name shared between multiple messages that may individually be too
+      targetted.
+      e.g. a message that gets shown on specific websites or a message asking
+      about personal information.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  action:
+    type: string
+    lifetime: ping
+    description: >
+      What type of action resulted in the event.
+      One of "IMPRESSION" or "DISMISS".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+
+  cfr_action:
+    type: text
+    lifetime: ping
+    description: >
+      The Contextual Feature Recommender's action.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  addon_version:
+    type: string
+    lifetime: ping
+    description: >
+      Used to hold the system addon's version,
+      now is almost certainly an echo of the app's build id.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - dmosedale@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  unknown_key_count:
+    type: counter
+    description: |
+      The sum of all unknown keys counted.
+      Useful for testing.
+      Can be removed after bug 1600008 is resolved.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  unknown_keys:
+    type: labeled_counter
+    description: |
+      Ping keys supplied to the messaging system for which
+      we did not have a corresponding metric mapped to how often they attempted
+      to be recorded.
+      You may have forgotten to define an appropriate metric in
+      `browser/components/newtab/metrics.yaml`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  glean_ping_for_ping_failures:
+    type: counter
+    description: |
+      How often something went awry within
+      `AboutWelcome.submitGleanPingForPing`, preventing ping submission.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+      - chutten@mozilla.com
+    expires: never
+    send_in_pings:
+      - metrics
+
+  invalid_nested_data:
+    type: labeled_counter
+    description: |
+      We received a ping with non-scalar data on a field of this name.
+      If this is existing pre-PingCentre-replacement data, you may need to
+      augment the logic in
+      `AboutWelcome.submitGleanPingForPing` like the other `handledKeys`.
+      If this is for new, post-PingCentre-replacement data, you should
+      probably prefer a flat structure.
+      If you're unsure, please ask in
+      [the #glean channel](https://chat.mozilla.org/#/room/#glean:mozilla.org).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+      - chutten@mozilla.com
+    expires: never
+    send_in_pings:
+      - metrics
+
+
+messaging_system.attribution:
+  source:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's source, possibly derived from the utm parameter of the same
+      name.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  medium:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's medium, possibly derived from the utm parameter of the same
+      name.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  campaign:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's campaign, possibly derived from the utm parameter of the
+      same name.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  content:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's content, possibly derived from the utm parameter of the
+      same name.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  experiment:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's experiment key.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  variation:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's variation key.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  ua:
+    type: string
+    lifetime: ping
+    description: |
+      Attribution's ua key.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  dltoken:
+    type: string
+    lifetime: ping
+    description: |
+      String representation of the dltoken identifying the particular
+      installer used to install this Firefox.
+      Likely a UUID, if present.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  msstoresignedin:
+    type: string
+    lifetime: ping
+    description: |
+      Either the string "true" or the string "false" to indicate whether the
+      attributed install came from the Microsoft store and, if so, whether the
+      user was signed in at the time.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1756209
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1756209
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  dlsource:
+    type: string
+    lifetime: ping
+    description: |
+      Mozilla-specific download "source" name. Could be something like
+      "mozillaci" to identify that the installer came from
+      `{archive|ftp}.mozilla.org`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1819997
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1819997
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
+
+  unknown_keys:
+    type: labeled_counter
+    description: |
+      Attribution keys supplied to the messaging system for which
+      we did not have a corresponding metric, and the count of how
+      often that happened.
+      Either add this key to a list of known attribution keys in
+      `AboutWelcomeTelemetry` to suppress or define an appropriate metric in
+      `browser/components/newtab/metrics.yaml` to collect.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - dmosedale@mozilla.com
+      - pmcmanis@mozilla.com
+    expires: never
+    send_in_pings:
+      - messaging-system
