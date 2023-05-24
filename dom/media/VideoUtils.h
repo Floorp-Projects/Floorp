@@ -9,7 +9,6 @@
 
 #include "AudioSampleFormat.h"
 #include "MediaInfo.h"
-#include "TimeUnits.h"
 #include "VideoLimits.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"

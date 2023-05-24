@@ -129,6 +129,7 @@
 #include "nsURIHashKey.h"
 #include "nsVideoFrame.h"
 #include "ReferrerInfo.h"
+#include "TimeUnits.h"
 #include "xpcpublic.h"
 #include <algorithm>
 #include <cmath>
@@ -3223,13 +3224,13 @@ void HTMLMediaElement::Seek(double aTime, SeekTarget::Type aSeekType,
   }
 
   // Clamp the seek target to inside the seekable ranges.
-  media::TimeIntervals seekableIntervals = mDecoder->GetSeekable();
-  if (seekableIntervals.IsInvalid()) {
+  media::TimeRanges seekableRanges = mDecoder->GetSeekableTimeRanges();
+  if (seekableRanges.IsInvalid()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
   RefPtr<TimeRanges> seekable =
-      new TimeRanges(ToSupports(OwnerDoc()), seekableIntervals);
+      new TimeRanges(ToSupports(OwnerDoc()), seekableRanges);
   uint32_t length = seekable->Length();
   if (length == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -3300,8 +3301,8 @@ double HTMLMediaElement::Duration() const {
 }
 
 already_AddRefed<TimeRanges> HTMLMediaElement::Seekable() const {
-  media::TimeIntervals seekable =
-      mDecoder ? mDecoder->GetSeekable() : media::TimeIntervals();
+  media::TimeRanges seekable =
+      mDecoder ? mDecoder->GetSeekableTimeRanges() : media::TimeRanges();
   RefPtr<TimeRanges> ranges = new TimeRanges(
       ToSupports(OwnerDoc()), seekable.ToMicrosecondResolution());
   return ranges.forget();

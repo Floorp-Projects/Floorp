@@ -118,7 +118,7 @@ class MediaSource final : public DOMEventTargetHelper,
   already_AddRefed<Promise> MozDebugReaderData(ErrorResult& aRv);
 
   bool HasLiveSeekableRange() const { return mLiveSeekableRange.isSome(); }
-  media::TimeInterval LiveSeekableRange() const {
+  media::TimeRanges LiveSeekableRange() const {
     return mLiveSeekableRange.value();
   }
 
@@ -168,7 +168,7 @@ class MediaSource final : public DOMEventTargetHelper,
 
   MediaSourceReadyState mReadyState;
 
-  Maybe<media::TimeInterval> mLiveSeekableRange;
+  Maybe<media::TimeRanges> mLiveSeekableRange;
   nsTArray<MozPromiseHolder<ActiveCompletionPromise>> mCompletionPromises;
 };
 
