@@ -287,7 +287,7 @@ already_AddRefed<SourceBuffer> MediaSource::AddSourceBuffer(
     return nullptr;
   }
   if (mSourceBuffers->Length() >= MAX_SOURCE_BUFFERS) {
-    aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+    aRv.Throw(NS_ERROR_DOM_MEDIA_SOURCE_MAX_BUFFER_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }
   if (mReadyState != MediaSourceReadyState::Open) {
