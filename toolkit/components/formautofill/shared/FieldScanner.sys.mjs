@@ -13,6 +13,45 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
 });
 
+export class FormSection {
+  static ADDRESS = "address";
+  static CREDIT_CARD = "creditCard";
+
+  #fieldDetails = [];
+
+  #name = "";
+
+  constructor(fieldDetails) {
+    if (!fieldDetails.length) {
+      throw new TypeError("A section should contain at least one field");
+    }
+
+    fieldDetails.forEach(field => this.addField(field));
+
+    const fieldName = fieldDetails[0].fieldName;
+    if (lazy.FormAutofillUtils.isAddressField(fieldName)) {
+      this.type = FormSection.ADDRESS;
+    } else if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
+      this.type = FormSection.CREDIT_CARD;
+    } else {
+      throw new Error("Unknown field type to create a section.");
+    }
+  }
+
+  get fieldDetails() {
+    return this.#fieldDetails;
+  }
+
+  get name() {
+    return this.#name;
+  }
+
+  addField(fieldDetail) {
+    this.#name ||= fieldDetail.sectionName;
+    this.#fieldDetails.push(fieldDetail);
+  }
+}
+
 /**
  * Represents the detailed information about a form field, including
  * the inferred field name, the approach used for inferring, and additional metadata.
