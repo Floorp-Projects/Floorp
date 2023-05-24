@@ -200,7 +200,7 @@ This should simplify the search for underlying logic by:
 
 To demonstrate the bullets above, here is the method definition in the `DefaultPocketStoriesController` that currently handles the business logic initiated from the `interactor::onCategoryClicked` call above. 
 
-```
+```kotlin
     override fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
         val initialCategoriesSelections = appStore.state.pocketStoriesCategoriesSelections
 
@@ -331,7 +331,7 @@ fun reduce(state: AppState, action: AppAction): AppState = when (action) {
 
 ### Interacting with the storage layer through middlewares
 
-What if a feature requires some async data for its initial state, or needs to write changes to disk? There are no restrictions on running impure methods in middleware, so we can respond to an actions that would changes to the storage layer from middlewares. A good example is [ContainerMiddleware](../../android-components/components/feature/containers/src/main/java/mozilla/components/feature/containers/ContainerMiddleware.kt)
+What if a feature requires some async data for its initial state, or needs to write changes to disk? There are no restrictions on running impure methods in middleware, so we can respond to an action that would make changes to the storage layer from the middleware. A good example is [ContainerMiddleware](https://github.com/mozilla-mobile/firefox-android/blob/5d773ae7710265ab98e15efc43b1afb17ab2e404/android-components/components/feature/containers/src/main/java/mozilla/components/feature/containers/ContainerMiddleware.kt)
 
 Note that the `InitAction` here subscribes to a `Flow` from the database, which will continue to collect updates from the storage layer and dispatch actions to change the state accordingly.
 
@@ -343,33 +343,32 @@ Overall, this should convey the following improvements
 
 ---
 
-### Single- vs multi-store patterns and mobile constraints
-
-One big difference between Redux for web and for mobile is that mobile is generally under tighter resource constraints. These constraints are the primary driver for our current usage of `lib-state`, which more closely mirrors the "Flux" pattern instead of the "Redux" pattern. One of the primary differences between the two patterns is simply the number of stores they suggest using. Redux will usually have a single store, while Flux would have multiple. 
-
-Multiple stores allows us to manage memory better. For example, state for Settings will be be automatically collected when a `SettingsStore` falls out of scope, instead of being kept permanently in a global store. 
-
-This proposal is _not_ suggesting that we move to a pure Redux model yet. There are huge wins we can achieve in terms of architectural consistency by only removing interactors/controllers and switching them to a store model. 
-
-This will mean that we will continue to have "global" stores like the `AppStore` and the `BrowserStore` co-existing with "local" stores like the `HistoryFragmentStore`. This can introduce complexity in terms of determining the best place to add state, middlewares, and actions. Generally speaking, prefer using local stores over global stores whenever possible.
-
-Moving into the future, we will investigate options for consolidating our stores. It should be relatively straightforward to at least combine our global stores. Investigation is also ongoing into whether we can create "scoped" stores that combine a local store with the global store such that the local portion of the store can still automatically fall out of scope and respect the constraints of developing on mobile.
-
----
-
 ## Drawbacks
 
 Redux-like patterns have a bit of a learning curve, and some problems can be more difficult to solve than others. For example, handling side-effects like navigation or loading state from disk. The benefits of streamlining our architecture should outweigh this, especially once demonstrative examples of solving these problems are common in the codebase.
+
+Additionally, the current implementation of our `Store` requires that dispatches are handled on a separate thread specific to the Store. This may change in the future, but also introduces some particular drawbacks:
+- it can be harder to conceptualize the concurrency model, since there are no synchronous actions.
+- thread switching has a performance impact.
+- testing is more cumbersome by requiring additional async methods.
 
 ---
 
 ## Proposal acceptance and future plans
 
-To demonstrate some of the concepts discussed in this proposal in more detail, an example patch will be produced that shows a refactor of a prominent feature of the app - history. Following this, a series of meetings will be hosted to discuss in detail any questions or concerns. 
+To demonstrate some of the concepts discussed in this proposal in more detail, an example patch will be produced that shows a refactor of a prominent feature of the app - history.
 
 Following that, should this proposal be accepted the following suggestions are made for adoption with a focus on increasing the team's familiarity and knowledge of the pattern:
 
 1. Architecture documentation should be updated with guidelines matching this proposal. 
 1. A number (1-3) of refactors should be planned to help demonstrate the pattern, especially in regards to things like using middleware to handle side-effects, how to structure local vs global state, and how to propagate state and actions to Composables and XML views.
 1. Where possible, new feature work should require refactoring to the established architecture before feature implementation. 
-1. Investigate further improvements to the architecture. For example, a "single Store" model that more closely matches the current state of Redux.
+1. Investigate further improvements to the architecture. For example, a "single Store" model that more closely follows Redux patterns.
+
+### Consolidating Stores
+
+Multiple stores allows us to  manage memory with less investment. For example, state for a Settings UI screen can be held in a `SettingsStore` which can be cleared from memory (garbage collected) when no longer in that UI context.
+
+This will mean that we will continue to have "global" stores like the `AppStore` and the `BrowserStore` co-existing with "local" stores like the `HistoryFragmentStore`. This can introduce complexity in terms of determining the best place to add state, middlewares, and actions.
+
+Moving into the future, we will investigate options for consolidating our stores. It should be relatively straightforward to at least combine our global stores. Investigation is also ongoing into whether we can create "scoped" stores that combine a local store with the global store such that the local portion of the store can still automatically fall out of scope and respect the constraints of developing on mobile.
