@@ -193,13 +193,6 @@ static inline bool IsLeapYear(double year) {
   return fmod(year, 4) == 0 && (fmod(year, 100) != 0 || fmod(year, 400) == 0);
 }
 
-static inline double DaysInYear(double year) {
-  if (!std::isfinite(year)) {
-    return GenericNaN();
-  }
-  return IsLeapYear(year) ? 366 : 365;
-}
-
 static inline double DayFromYear(double y) {
   return 365 * (y - 1970) + floor((y - 1969) / 4.0) -
          floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
@@ -209,33 +202,145 @@ static inline double TimeFromYear(double y) {
   return DayFromYear(y) * msPerDay;
 }
 
+namespace {
+struct YearMonthDay {
+  int32_t year;
+  uint32_t month;
+  uint32_t day;
+};
+}  // namespace
+
+/*
+ * The implementation closely follows (w.r.t. types and variable names)
+ * Figure 12 of [1]. It returns the year, month and day corresponding to the
+ * time value t.
+ *
+ * A key point of the algorithm is that it works on the so called
+ * Computational calendar where years run from March to February -- this
+ * hugely avoids complications with leap years. The algorithm finds the date
+ * in the Computation calendar and then maps it to the Gregorian calendar.
+ *
+ * The natural epoch for the Computational calendar is 0000-Mar-01 and there
+ * are rataDie1970Jan1 = 719468 days from 0000-Mar-01 to 1970-Jan-01, the
+ * Unix epoch.
+ *
+ * [1] Neri C, Schneider L., "Euclidean affine functions and their
+ * application to calendar algorithms."
+ * Softw Pract Exper. 2023;53(4):937-970. doi: 10.1002/spe.3172
+ * https://onlinelibrary.wiley.com/doi/full/10.1002/spe.3172
+ */
+static inline YearMonthDay ToYearMonthDay(double t) {
+  MOZ_ASSERT(ToInteger(t) == t);
+
+  // ES2023, 21.4.1.1 Time Values and Time Range
+  constexpr int32_t daysRange = 100'000'000;
+
+  // Per ES5 15.9.1.1, t >= StartOfTime is the integral number of ms since
+  // 1970-Jan-01 UTC. For local time a negative timezone offset might be
+  // added to t and we might get local t < StartOfTime. By conservatively
+  // assuming the offset is at most 48h in magnitude, we obtain t belongs to
+  // [StartOfTime - 2 * msPerDay, EndOfTime + 2 * msPerDay].
+  MOZ_ASSERT(StartOfTime - 2 * msPerDay <= t && t <= EndOfTime + 2 * msPerDay);
+
+  // Per [1], N_U is the integral number of days since the Unix epoch. Hence,
+  // one might expect that N_U = int64_t(t) / int64_t(msPerDay) but there's
+  // a catch. Consider, for instance, half day before the epoch, that is,
+  // t = -0.5 * msPerDay. This time obviously falls on 1969-Dec-31, and
+  // should correspond to N_U = -1 but the above expression gives N_U = 0.
+  // Indeed, t / msPerDay = -0.5 but integer division truncates towards zero
+  // (C++ Standard [expr.mul]/4) and not towards -infinity as needed. To
+  // workaround this issue we perform the division on positive operands so
+  // that the quotient is positive for which truncations towards zero and
+  // -infinity are equivalent. For this, we set u = t - localStartOfTime,
+  // where localStartOfTime = StartOfTime - 2 * msPerDay, so that u >= 0.
+  // Then we perform the division u / msPerDay and to the result we add
+  // localStartOfTime / msPerDay to cancel the subtraction of
+  // localStartOfTime.
+  constexpr int64_t localStartOfTime = StartOfTime - 2 * msPerDay;
+  const uint64_t u = int64_t(t) - localStartOfTime;
+  const int32_t N_U = int32_t(u / uint64_t(msPerDay)) +
+                      int32_t(localStartOfTime / int64_t(msPerDay));
+
+  MOZ_ASSERT(-daysRange - 2 <= N_U && N_U <= daysRange + 2);
+
+  // Hacker's Delight, 2nd edition, theorem D2.
+  auto ceilingDiv = [](uint32_t x, uint32_t y) { return (x + y - 1) / y; };
+
+  // Shift and correction constants (as per in [1]).
+  // Calendar cycles repeat every 400 years in the Gregorian calendar which
+  // amounts to cycleInDays = 146097 days. (As per the Gregorian leap year
+  // rule: a leap day is added every 4 years, removed every 100 years and
+  // added every 400 years.)
+  constexpr uint32_t cycleInYears = 400;
+  constexpr uint32_t cycleInDays = cycleInYears * 365 + (cycleInYears / 4) -
+                                   (cycleInYears / 100) + (cycleInYears / 400);
+
+  // The integer s = ceil(daysRange / cycleInDays) = 685 is the rounded-up
+  // number of cycles in daysRange and thus, cycleInDays * s >= daysRange.
+  // In particular, K = rataDie1970Jan1 + cycleInDays * s > 2 + daysRange.
+  constexpr uint32_t rataDie1970Jan1 = 719468;
+  constexpr uint32_t s = ceilingDiv(uint32_t(daysRange), cycleInDays);
+  constexpr uint32_t K = rataDie1970Jan1 + cycleInDays * s;
+  static_assert(K >= 2 + daysRange, "K is large enough so that N_U + K >= 0");
+
+  // For performance and correctness, we need to work with positive number
+  // of days and this is achieved by using N = N_U + K rather than N_U.
+  // However, this yields a date that is s * cycleInDays days later than
+  // expected. To compensate, we shall decrease the year that we originally
+  // find by L = s * cycleInYears.
+  constexpr uint32_t L = cycleInYears * s;
+
+  // Rata die shift.
+  const uint32_t N = N_U + K;
+
+  // Some magic numbers have been explained above but, unfortunately, others
+  // with no precise interpretation do appear. They mostly come from
+  // numerical approximations of Euclidean affine functions (see [1]) which
+  // are faster for the CPU to calculate. Unfortunately, no compiler can do
+  // these optimizations.
+
+  // Century C and year of the century N_C:
+  const uint32_t N_1 = 4 * N + 3;
+  const uint32_t C = N_1 / 146097;
+  const uint32_t N_C = N_1 % 146097 / 4;
+
+  // Year of the century Z and day of the year N_Y:
+  const uint32_t N_2 = 4 * N_C + 3;
+  const uint64_t P_2 = uint64_t(2939745) * N_2;
+  const uint32_t Z = uint32_t(P_2 / 4294967296);
+  const uint32_t N_Y = uint32_t(P_2 % 4294967296) / 2939745 / 4;
+
+  // Year Y:
+  const uint32_t Y = 100 * C + Z;
+
+  // Month M and day D.
+  // The expression for N_3 has been adapted to account for the difference
+  // between month numbers in ES5 15.9.1.4 (from 0 to 11) and [1] (from 1 to
+  /// 12). This is done by subtracting 65536 from the original expression so
+  // that M decreases by 1 and so does M_G further down.
+  const uint32_t N_3 = 2141 * N_Y + 132377;  // 132377 = 197913 - 65536
+  const uint32_t M = N_3 / 65536;
+  const uint32_t D = N_3 % 65536 / 2141;
+
+  // Map from Computational to Gregorian calendar. Notice also the year
+  // correction and the type change.
+  // January 1 is day 306 of the Computational calendar, cf. Table 1. [1]
+  constexpr uint32_t daysFromMar01ToJan01 = 306;
+  const uint32_t J = N_Y >= daysFromMar01ToJan01;
+  const int32_t Y_G = int32_t((Y - L) + J);
+  const uint32_t M_G = J ? M - 12 : M;
+  const uint32_t D_G = D + 1;
+
+  return {Y_G, M_G, D_G};
+}
+
 static double YearFromTime(double t) {
   if (!std::isfinite(t)) {
     return GenericNaN();
   }
 
-  MOZ_ASSERT(ToInteger(t) == t);
-
-  double y = floor(t / (msPerDay * 365.2425)) + 1970;
-  double t2 = TimeFromYear(y);
-
-  /*
-   * Adjust the year if the approximation was wrong.  Since the year was
-   * computed using the average number of ms per year, it will usually
-   * be wrong for dates within several hours of a year transition.
-   */
-  if (t2 > t) {
-    y--;
-  } else {
-    if (t2 + msPerDay * DaysInYear(y) <= t) {
-      y++;
-    }
-  }
-  return y;
-}
-
-static inline int DaysInFebruary(double year) {
-  return IsLeapYear(year) ? 29 : 28;
+  auto const year = ToYearMonthDay(t).year;
+  return double(year);
 }
 
 /* ES5 15.9.1.4. */
@@ -249,44 +354,8 @@ static double MonthFromTime(double t) {
     return GenericNaN();
   }
 
-  double year = YearFromTime(t);
-  double d = DayWithinYear(t, year);
-
-  int step;
-  if (d < (step = 31)) {
-    return 0;
-  }
-  if (d < (step += DaysInFebruary(year))) {
-    return 1;
-  }
-  if (d < (step += 31)) {
-    return 2;
-  }
-  if (d < (step += 30)) {
-    return 3;
-  }
-  if (d < (step += 31)) {
-    return 4;
-  }
-  if (d < (step += 30)) {
-    return 5;
-  }
-  if (d < (step += 31)) {
-    return 6;
-  }
-  if (d < (step += 31)) {
-    return 7;
-  }
-  if (d < (step += 30)) {
-    return 8;
-  }
-  if (d < (step += 31)) {
-    return 9;
-  }
-  if (d < (step += 30)) {
-    return 10;
-  }
-  return 11;
+  const auto month = ToYearMonthDay(t).month;
+  return double(month);
 }
 
 /* ES5 15.9.1.5. */
@@ -295,55 +364,8 @@ static double DateFromTime(double t) {
     return GenericNaN();
   }
 
-  double year = YearFromTime(t);
-  double d = DayWithinYear(t, year);
-
-  int next;
-  if (d <= (next = 30)) {
-    return d + 1;
-  }
-  int step = next;
-  if (d <= (next += DaysInFebruary(year))) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 31)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 30)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 31)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 30)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 31)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 31)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 30)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 31)) {
-    return d - step;
-  }
-  step = next;
-  if (d <= (next += 30)) {
-    return d - step;
-  }
-  step = next;
-  return d - step;
+  const auto day = ToYearMonthDay(t).day;
+  return double(day);
 }
 
 /* ES5 15.9.1.6. */
@@ -1762,101 +1784,18 @@ void DateObject::fillLocalTimeSlots() {
 
   setReservedSlot(LOCAL_TIME_SLOT, DoubleValue(localTime));
 
-  int year = (int)floor(localTime / (msPerDay * 365.2425)) + 1970;
-  double yearStartTime = TimeFromYear(year);
-
-  /* Adjust the year in case the approximation was wrong, as in YearFromTime. */
-  int yearDays;
-  if (yearStartTime > localTime) {
-    year--;
-    yearStartTime -= (msPerDay * DaysInYear(year));
-    yearDays = DaysInYear(year);
-  } else {
-    yearDays = DaysInYear(year);
-    double nextStart = yearStartTime + (msPerDay * yearDays);
-    if (nextStart <= localTime) {
-      year++;
-      yearStartTime = nextStart;
-      yearDays = DaysInYear(year);
-    }
-  }
+  const auto [year, month, day] = ToYearMonthDay(localTime);
 
   setReservedSlot(LOCAL_YEAR_SLOT, Int32Value(year));
-
-  uint64_t yearTime = uint64_t(localTime - yearStartTime);
-  int yearSeconds = uint32_t(yearTime / 1000);
-
-  int day = yearSeconds / int(SecondsPerDay);
-
-  int step = -1, next = 30;
-  int month;
-
-  do {
-    if (day <= next) {
-      month = 0;
-      break;
-    }
-    step = next;
-    next += ((yearDays == 366) ? 29 : 28);
-    if (day <= next) {
-      month = 1;
-      break;
-    }
-    step = next;
-    if (day <= (next += 31)) {
-      month = 2;
-      break;
-    }
-    step = next;
-    if (day <= (next += 30)) {
-      month = 3;
-      break;
-    }
-    step = next;
-    if (day <= (next += 31)) {
-      month = 4;
-      break;
-    }
-    step = next;
-    if (day <= (next += 30)) {
-      month = 5;
-      break;
-    }
-    step = next;
-    if (day <= (next += 31)) {
-      month = 6;
-      break;
-    }
-    step = next;
-    if (day <= (next += 31)) {
-      month = 7;
-      break;
-    }
-    step = next;
-    if (day <= (next += 30)) {
-      month = 8;
-      break;
-    }
-    step = next;
-    if (day <= (next += 31)) {
-      month = 9;
-      break;
-    }
-    step = next;
-    if (day <= (next += 30)) {
-      month = 10;
-      break;
-    }
-    step = next;
-    month = 11;
-  } while (0);
-
-  setReservedSlot(LOCAL_MONTH_SLOT, Int32Value(month));
-  setReservedSlot(LOCAL_DATE_SLOT, Int32Value(day - step));
+  setReservedSlot(LOCAL_MONTH_SLOT, Int32Value(int32_t(month)));
+  setReservedSlot(LOCAL_DATE_SLOT, Int32Value(int32_t(day)));
 
   int weekday = WeekDay(localTime);
   setReservedSlot(LOCAL_DAY_SLOT, Int32Value(weekday));
 
+  double yearStartTime = TimeFromYear(year);
+  uint64_t yearTime = uint64_t(localTime - yearStartTime);
+  int32_t yearSeconds = int32_t(yearTime / 1000);
   setReservedSlot(LOCAL_SECONDS_INTO_YEAR_SLOT, Int32Value(yearSeconds));
 }
 
