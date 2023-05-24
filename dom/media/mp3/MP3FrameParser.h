@@ -24,6 +24,7 @@ class ID3Parser {
    public:
     // The header size is static, see class comment.
     static const int SIZE = 10;
+    static const int ID3v1_SIZE = 128;
 
     // Constructor.
     ID3Header();
@@ -82,6 +83,8 @@ class ID3Parser {
 
   // Check if the buffer is starting with ID3v2 tag.
   static bool IsBufferStartingWithID3Tag(BufferReader* aReader);
+  // Similarly, if the buffer is starting with ID3v1 tag.
+  static bool IsBufferStartingWithID3v1Tag(BufferReader* aReader);
 
   // Returns the parsed ID3 header. Note: check for validity.
   const ID3Header& Header() const;
@@ -310,6 +313,9 @@ class FrameParser {
   // Returns the parsed ID3 header. Note: check for validity.
   const ID3Parser::ID3Header& ID3Header() const;
 
+  // Returns whether ID3 metadata have been found, at the end of the file.
+  bool ID3v1MetadataFound() const;
+
   // Returns the size of all parsed ID3 headers.
   uint32_t TotalID3HeaderSize() const;
 
@@ -353,6 +359,12 @@ class FrameParser {
   Frame mFirstFrame;
   Frame mFrame;
   Frame mPrevFrame;
+  // If this is true, ID3v1 metadata have been found at the end of the file, and
+  // must be sustracted from the stream size in order to compute the stream
+  // duration, when computing the duration of a CBR file based on its length in
+  // bytes. This means that the duration can change at the moment we reach the
+  // end of the file.
+  bool mID3v1MetadataFound = false;
 };
 
 }  // namespace mozilla

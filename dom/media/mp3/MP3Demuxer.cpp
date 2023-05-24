@@ -369,8 +369,13 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
   // since some live radio will give an opening remark before playing music
   // and the duration of the opening talk can be calculated by numAudioFrames.
 
-  const int64_t size = streamLen - mFirstFrameOffset;
+  int64_t size = streamLen - mFirstFrameOffset;
   MOZ_ASSERT(size);
+
+  if (mParser.ID3v1MetadataFound() && size > 128) {
+    MP3LOG("ID3v1 tag found, subtracting from size");
+    size -= 128;
+  }
 
   // If it's CBR, calculate the duration by bitrate.
   if (!mParser.VBRInfo().IsValid()) {
