@@ -755,11 +755,7 @@ static void RecomputeResistFingerprintingAllDocs(const char*, void*) {
     bcGroup->GetDocGroups(docGroups);
     for (auto* docGroup : docGroups) {
       for (Document* doc : *docGroup) {
-        const bool old = doc->ShouldResistFingerprinting(
-            RFPTarget::IgnoreTargetAndReturnCachedValue);
-        doc->RecomputeResistFingerprinting();
-        if (old != doc->ShouldResistFingerprinting(
-                       RFPTarget::IsAlwaysEnabledForPrecompute)) {
+        if (doc->RecomputeResistFingerprinting()) {
           if (auto* pc = doc->GetPresContext()) {
             pc->MediaFeatureValuesChanged(
                 {MediaFeatureChangeReason::PreferenceChange},
