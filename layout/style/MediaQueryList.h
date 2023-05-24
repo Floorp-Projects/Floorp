@@ -29,7 +29,7 @@ class MediaQueryList final : public DOMEventTargetHelper,
   // The caller who constructs is responsible for calling Evaluate
   // before calling any other methods.
   MediaQueryList(Document* aDocument, const nsACString& aMediaQueryList,
-                 CallerType aCallerType);
+                 CallerType);
 
  private:
   ~MediaQueryList();
@@ -49,7 +49,7 @@ class MediaQueryList final : public DOMEventTargetHelper,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL methods
-  void GetMedia(nsACString& aMedia);
+  void GetMedia(nsACString& aMedia) const;
   bool Matches();
   void AddListener(EventListener* aListener, ErrorResult& aRv);
   void RemoveListener(EventListener* aListener, ErrorResult& aRv);
@@ -59,7 +59,7 @@ class MediaQueryList final : public DOMEventTargetHelper,
 
   IMPL_EVENT_HANDLER(change)
 
-  bool HasListeners();
+  bool HasListeners() const;
 
   void Disconnect();
 
@@ -67,7 +67,7 @@ class MediaQueryList final : public DOMEventTargetHelper,
 
  private:
   void LastRelease() final {
-    auto listElement = static_cast<LinkedListElement<MediaQueryList>*>(this);
+    auto* listElement = static_cast<LinkedListElement<MediaQueryList>*>(this);
     if (listElement->isInList()) {
       listElement->remove();
     }
@@ -90,10 +90,12 @@ class MediaQueryList final : public DOMEventTargetHelper,
   // is equivalent to being in that document's mDOMMediaQueryLists
   // linked list.
   RefPtr<Document> mDocument;
-
-  RefPtr<MediaList> mMediaList;
-  bool mMatches;
-  bool mMatchesValid;
+  const RefPtr<const MediaList> mMediaList;
+  bool mMatches = false;
+  bool mMatchesValid = false;
+  // Whether our MediaList depends on our viewport size. Our medialist is
+  // immutable, so we can just compute this once and carry on with our lives.
+  const bool mViewportDependent;
 };
 
 }  // namespace mozilla::dom
