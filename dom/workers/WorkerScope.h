@@ -101,7 +101,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   WorkerGlobalScopeBase(WorkerPrivate* aWorkerPrivate,
                         UniquePtr<ClientSource> aClientSource,
-                        bool mShouldResistFingerprinting);
+                        bool aShouldResistFingerprinting);
 
   virtual bool WrapGlobalObject(JSContext* aCx,
                                 JS::MutableHandle<JSObject*> aReflector) = 0;
