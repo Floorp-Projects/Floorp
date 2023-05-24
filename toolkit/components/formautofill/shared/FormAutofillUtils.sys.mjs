@@ -921,7 +921,7 @@ FormAutofillUtils = {
         break;
       }
       case "country": {
-        if (this.getCountryAddressData(value).alternative_names) {
+        if (this.getCountryAddressData(value)) {
           for (let option of selectEl.options) {
             if (
               this.identifyCountryCode(option.text, value) ||
