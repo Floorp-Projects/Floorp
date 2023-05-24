@@ -55,7 +55,7 @@ add_heuristic_tests([
             <input type="text" id="country" autocomplete="country" hidden />
             <input type="text" id="postal-code" autocomplete="postal-code" style="display:none" />
             <input type="text" id="address-line1" autocomplete="address-line1" style="opacity:0" />
-            <div style="content-visibility:hidden">
+            <div style="visibility: hidden">
               <input type="text" id="address-line2" autocomplete="address-line2" />
             </div>
           </form>
@@ -90,7 +90,7 @@ add_heuristic_tests([
             <input type="text" id="country" autocomplete="country" hidden />
             <input type="text" id="postal-code" autocomplete="postal-code" style="display:none" />
             <input type="text" id="address-line1" autocomplete="address-line1" style="opacity:0" />
-            <div style="content-visibility:hidden">
+            <div style="visibility: hidden">
               <input type="text" id="address-line2" autocomplete="address-line2" />
             </div>
           </form>
