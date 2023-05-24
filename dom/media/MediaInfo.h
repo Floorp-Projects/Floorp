@@ -476,9 +476,11 @@ class AudioInfo : public TrackInfo {
   bool operator==(const AudioInfo& rhs) const;
 
   static const uint32_t MAX_RATE = 640000;
+  static const uint32_t MAX_CHANNEL_COUNT = 256;
 
   bool IsValid() const override {
-    return mChannels > 0 && mRate > 0 && mRate <= MAX_RATE;
+    return mChannels > 0 && mChannels <= MAX_CHANNEL_COUNT && mRate > 0 &&
+           mRate <= MAX_RATE;
   }
 
   AudioInfo* GetAsAudioInfo() override { return this; }
