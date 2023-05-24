@@ -47,5 +47,10 @@ add_task(async function test() {
     await onToolboxHidden;
 
     Assert.ok(true, "Nav toolbox hidden");
+
+    info("Waiting for exiting from the fullscreen mode...");
+    onFullscreen = BrowserTestUtils.waitForEvent(window, "fullscreen");
+    document.getElementById("View:FullScreen").doCommand();
+    await onFullscreen;
   });
 });

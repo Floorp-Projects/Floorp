@@ -365,6 +365,7 @@ var FullScreen = {
       this._isPopupOpen = false;
       this.cleanup();
     }
+    this._toggleShortcutKeys();
   },
 
   exitDomFullScreen() {
@@ -553,6 +554,25 @@ var FullScreen = {
       document.removeEventListener("popupshown", this._setPopupOpen);
       document.removeEventListener("popuphidden", this._setPopupOpen);
       gURLBar.controller.removeQueryListener(this);
+    }
+  },
+
+  _toggleShortcutKeys() {
+    const kEnterKeyIds = [
+      "key_enterFullScreen",
+      "key_enterFullScreen_old",
+      "key_enterFullScreen_compat",
+    ];
+    const kExitKeyIds = [
+      "key_exitFullScreen",
+      "key_exitFullScreen_old",
+      "key_exitFullScreen_compat",
+    ];
+    for (let id of window.fullScreen ? kEnterKeyIds : kExitKeyIds) {
+      document.getElementById(id)?.setAttribute("disabled", "true");
+    }
+    for (let id of window.fullScreen ? kExitKeyIds : kEnterKeyIds) {
+      document.getElementById(id)?.removeAttribute("disabled");
     }
   },
 
