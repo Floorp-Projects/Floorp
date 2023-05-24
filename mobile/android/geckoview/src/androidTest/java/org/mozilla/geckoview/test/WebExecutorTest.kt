@@ -15,10 +15,9 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.json.JSONObject
 import org.junit.After
+import org.junit.Assert.assertThrows
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExpectedException
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.gecko.util.ThreadUtils
@@ -55,8 +54,6 @@ class WebExecutorTest {
 
     lateinit var executor: GeckoWebExecutor
     lateinit var server: TestServer
-
-    @get:Rule val thrown = ExpectedException.none()
 
     @Before
     fun setup() {
@@ -188,8 +185,10 @@ class WebExecutorTest {
 
     @Test
     fun testRedirectLoop() {
-        thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_REDIRECT_LOOP, WebRequestError.ERROR_CATEGORY_NETWORK)))
-        fetch(webRequest("$TEST_ENDPOINT/redirect/100"))
+        val thrown = assertThrows(WebRequestError::class.java) {
+            fetch(webRequest("$TEST_ENDPOINT/redirect/100"))
+        }
+        assertThat(thrown, equalTo(WebRequestError(WebRequestError.ERROR_REDIRECT_LOOP, WebRequestError.ERROR_CATEGORY_NETWORK)))
     }
 
     @Test
@@ -400,8 +399,10 @@ class WebExecutorTest {
 
     @Test
     fun testFetchUnknownHost() {
-        thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_UNKNOWN_HOST, WebRequestError.ERROR_CATEGORY_URI)))
-        fetch(webRequest("https://this.should.not.resolve"))
+        val thrown = assertThrows(WebRequestError::class.java) {
+            fetch(webRequest("https://this.should.not.resolve"))
+        }
+        assertThat(thrown, equalTo(WebRequestError(WebRequestError.ERROR_UNKNOWN_HOST, WebRequestError.ERROR_CATEGORY_URI)))
     }
 
     @Test(expected = UnknownHostException::class)
