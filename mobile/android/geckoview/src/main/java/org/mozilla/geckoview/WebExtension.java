@@ -41,8 +41,10 @@ public class WebExtension {
    * Will point to folder <code>/assets/web_extensions/my_webextension/</code> in the APK.
    */
   public final @NonNull String location;
+
   /** Unique identifier for this WebExtension */
   public final @NonNull String id;
+
   /** {@link Flags} for this WebExtension. */
   public final @WebExtensionFlags long flags;
 
@@ -107,6 +109,7 @@ public class WebExtension {
      * Default flags for this WebExtension.
      */
     public static final long NONE = 0;
+
     /**
      * Set this flag if you want to enable content scripts messaging. To listen to such messages you
      * can use {@link SessionController#setMessageDelegate}.
@@ -219,6 +222,7 @@ public class WebExtension {
        * remove data given in milliseconds since the UNIX epoch.
        */
       public final int sinceUnixTimestamp;
+
       /**
        * Data types that can be toggled in the browser's "Clear Data" UI. One or more flags from
        * {@link Type}.
@@ -619,14 +623,19 @@ public class WebExtension {
      * should stop being highlighted. If <code>false</code>, does nothing.
      */
     @Nullable public final Boolean active;
+
     /** Whether the tab should be discarded automatically by the app when resources are low. */
     @Nullable public final Boolean autoDiscardable;
+
     /** If <code>true</code> and the tab is not highlighted, it should become active by default. */
     @Nullable public final Boolean highlighted;
+
     /** Whether the tab should be muted. */
     @Nullable public final Boolean muted;
+
     /** Whether the tab should be pinned. */
     @Nullable public final Boolean pinned;
+
     /**
      * The url that the tab will be navigated to. This url is provided just for informational
      * purposes, there is no need to load the URL manually. The corresponding {@link GeckoSession}
@@ -668,23 +677,29 @@ public class WebExtension {
      * should stop being highlighted. If <code>false</code>, does nothing.
      */
     @Nullable public final Boolean active;
+
     /**
      * The CookieStoreId used for the tab. This option is only available if the extension has the
      * "cookies" permission.
      */
     @Nullable public final String cookieStoreId;
+
     /**
      * Whether the tab is created and made visible in the tab bar without any content loaded into
      * memory, a state known as discarded. The tab’s content should be loaded when the tab is
      * activated.
      */
     @Nullable public final Boolean discarded;
+
     /** The position the tab should take in the window. */
     @Nullable public final Integer index;
+
     /** If true, open this tab in Reader Mode. */
     @Nullable public final Boolean openInReaderMode;
+
     /** Whether the tab should be pinned. */
     @Nullable public final Boolean pinned;
+
     /**
      * The url that the tab will be navigated to. This url is provided just for informational
      * purposes, there is no need to load the URL manually. The corresponding {@link GeckoSession}
@@ -1095,7 +1110,9 @@ public class WebExtension {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ENV_TYPE_UNKNOWN, ENV_TYPE_EXTENSION, ENV_TYPE_CONTENT_SCRIPT})
     public @interface EnvType {}
+
     /* package */ static final int ENV_TYPE_UNKNOWN = 0;
+
     /** This sender originated inside a privileged extension context like a background script. */
     public static final int ENV_TYPE_EXTENSION = 1;
 
@@ -1197,6 +1214,7 @@ public class WebExtension {
      * browserAction/getTitle</a>
      */
     public final @Nullable String title;
+
     /**
      * Icon for this Action.
      *
@@ -1207,6 +1225,7 @@ public class WebExtension {
      * browserAction/setIcon</a>
      */
     public final @Nullable Image icon;
+
     /**
      * Whether this action is enabled and should be visible.
      *
@@ -1221,6 +1240,7 @@ public class WebExtension {
      * browserAction/enabled</a>
      */
     public final @Nullable Boolean enabled;
+
     /**
      * Badge text for this action.
      *
@@ -1229,6 +1249,7 @@ public class WebExtension {
      * browserAction/getBadgeText</a>
      */
     public final @Nullable String badgeText;
+
     /**
      * Background color for the badge for this Action.
      *
@@ -1240,6 +1261,7 @@ public class WebExtension {
      * browserAction/getBadgeBackgroundColor</a>
      */
     public final @Nullable Integer badgeBackgroundColor;
+
     /**
      * Text color for the badge for this Action.
      *
@@ -1457,6 +1479,7 @@ public class WebExtension {
         final @NonNull WebExtension extension,
         final @Nullable GeckoSession session,
         final @NonNull Action action) {}
+
     /**
      * Called whenever a page action is defined or updated.
      *
@@ -1517,24 +1540,34 @@ public class WebExtension {
     public static class ErrorCodes {
       /** The download failed due to network problems. */
       public static final int ERROR_NETWORK_FAILURE = -1;
+
       /** The downloaded file did not match the provided hash. */
       public static final int ERROR_INCORRECT_HASH = -2;
+
       /** The downloaded file seems to be corrupted in some way. */
       public static final int ERROR_CORRUPT_FILE = -3;
+
       /** An error occurred trying to write to the filesystem. */
       public static final int ERROR_FILE_ACCESS = -4;
+
       /** The extension must be signed and isn't. */
       public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;
+
       /** The downloaded extension had a different type than expected. */
       public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
+
       /** The downloaded extension had a different version than expected */
       public static final int ERROR_UNEXPECTED_ADDON_VERSION = -9;
+
       /** The extension did not have the expected ID. */
       public static final int ERROR_INCORRECT_ID = -7;
+
       /** The extension did not have the expected ID. */
       public static final int ERROR_INVALID_DOMAIN = -8;
+
       /** The extension install was canceled. */
       public static final int ERROR_USER_CANCELED = -100;
+
       /** The extension install was postponed until restart. */
       public static final int ERROR_POSTPONED = -101;
 
@@ -1637,14 +1670,19 @@ public class WebExtension {
      * certificate.
      */
     public static final int UNKNOWN = -1;
+
     /** This extension is unsigned. */
     public static final int MISSING = 0;
+
     /** This extension has been preliminarily reviewed. */
     public static final int PRELIMINARY = 1;
+
     /** This extension has been fully reviewed. */
     public static final int SIGNED = 2;
+
     /** This extension is a system add-on. */
     public static final int SYSTEM = 3;
+
     /** This extension is signed with a "Mozilla Extensions" certificate. */
     public static final int PRIVILEGED = 4;
 
@@ -1671,17 +1709,22 @@ public class WebExtension {
     // Keep in sync with nsIBlocklistService.idl
     /** This extension does not appear in the blocklist. */
     public static final int NOT_BLOCKED = 0;
+
     /**
      * This extension is in the blocklist but the problem is not severe enough to warant forcibly
      * blocking.
      */
     public static final int SOFTBLOCKED = 1;
+
     /** This extension should be blocked and never used. */
     public static final int BLOCKED = 2;
+
     /** This extension is considered outdated, and there is a known update available. */
     public static final int OUTDATED = 3;
+
     /** This extension is vulnerable and there is an update. */
     public static final int VULNERABLE_UPDATE_AVAILABLE = 4;
+
     /** This extension is vulnerable and there is no update. */
     public static final int VULNERABLE_NO_UPDATE = 5;
   }
@@ -1728,6 +1771,7 @@ public class WebExtension {
      * prompts.
      */
     public final @NonNull Image icon;
+
     /**
      * API permissions requested or granted to this extension.
      *
@@ -1736,6 +1780,7 @@ public class WebExtension {
      * API permissions </a>.
      */
     public final @NonNull String[] permissions;
+
     /**
      * Host permissions requested or granted to this extension.
      *
@@ -1744,6 +1789,7 @@ public class WebExtension {
      * Host permissions </a>.
      */
     public final @NonNull String[] origins;
+
     /**
      * Branding name for this extension.
      *
@@ -1752,6 +1798,7 @@ public class WebExtension {
      * manifest.json/name </a>
      */
     public final @Nullable String name;
+
     /**
      * Branding description for this extension. This string will be localized using the current
      * GeckoView language setting.
@@ -1761,6 +1808,7 @@ public class WebExtension {
      * manifest.json/description </a>
      */
     public final @Nullable String description;
+
     /**
      * Version string for this extension.
      *
@@ -1769,6 +1817,7 @@ public class WebExtension {
      * manifest.json/version </a>
      */
     public final @NonNull String version;
+
     /**
      * Creator name as provided in the manifest.
      *
@@ -1777,6 +1826,7 @@ public class WebExtension {
      * manifest.json/developer </a>
      */
     public final @Nullable String creatorName;
+
     /**
      * Creator url as provided in the manifest.
      *
@@ -1785,6 +1835,7 @@ public class WebExtension {
      * manifest.json/developer </a>
      */
     public final @Nullable String creatorUrl;
+
     /**
      * Homepage url as provided in the manifest.
      *
@@ -1793,6 +1844,7 @@ public class WebExtension {
      * manifest.json/homepage_url </a>
      */
     public final @Nullable String homepageUrl;
+
     /**
      * Options page as provided in the manifest.
      *
@@ -1801,6 +1853,7 @@ public class WebExtension {
      * manifest.json/options_ui </a>
      */
     public final @Nullable String optionsPageUrl;
+
     /**
      * Whether the options page should be open in a Tab or not.
      *
@@ -1809,6 +1862,7 @@ public class WebExtension {
      * manifest.json/options_ui#Syntax </a>
      */
     public final boolean openOptionsPageInTab;
+
     /**
      * Whether or not this is a recommended extension.
      *
@@ -1816,6 +1870,7 @@ public class WebExtension {
      * Extensions program </a>
      */
     public final boolean isRecommended;
+
     /**
      * Blocklist status for this extension.
      *
@@ -1823,6 +1878,7 @@ public class WebExtension {
      * Add-ons that cause stability or security issues are put on a blocklist </a>.
      */
     public final @BlocklistState int blocklistState;
+
     /**
      * Signed status for this extension.
      *

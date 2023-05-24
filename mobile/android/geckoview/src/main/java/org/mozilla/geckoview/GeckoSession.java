@@ -243,6 +243,7 @@ public class GeckoSession {
   private SessionMagnifier mMagnifier;
 
   private String mId;
+
   /* package */ String getId() {
     return mId;
   }
@@ -1842,6 +1843,7 @@ public class GeckoSession {
    * CORS-safelisted request header </a>.
    */
   public static final int HEADER_FILTER_CORS_SAFELISTED = 1;
+
   /**
    * Allows most headers.
    *
@@ -2330,10 +2332,13 @@ public class GeckoSession {
 
   /** Go backwards when finding the next match. */
   public static final int FINDER_FIND_BACKWARDS = 1;
+
   /** Perform case-sensitive match; default is to perform a case-insensitive match. */
   public static final int FINDER_FIND_MATCH_CASE = 1 << 1;
+
   /** Must match entire words; default is to allow matching partial words. */
   public static final int FINDER_FIND_WHOLE_WORD = 1 << 2;
+
   /** Limit matches to links on the page. */
   public static final int FINDER_FIND_LINKS_ONLY = 1 << 3;
 
@@ -2349,8 +2354,10 @@ public class GeckoSession {
 
   /** Highlight all find-in-page matches. */
   public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;
+
   /** Dim the rest of the page when showing a find-in-page match. */
   public static final int FINDER_DISPLAY_DIM_PAGE = 1 << 1;
+
   /** Draw outlines around matching links. */
   public static final int FINDER_DISPLAY_DRAW_LINK_OUTLINE = 1 << 2;
 
@@ -2359,21 +2366,28 @@ public class GeckoSession {
   public static class FinderResult {
     /** Whether a match was found. */
     public final boolean found;
+
     /** Whether the search wrapped around the top or bottom of the page. */
     public final boolean wrapped;
+
     /** Ordinal number of the current match starting from 1, or 0 if no match. */
     public final int current;
+
     /** Total number of matches found so far, or -1 if unknown. */
     public final int total;
+
     /** Search string. */
     @NonNull public final String searchString;
+
     /**
      * Flags used for the search; either 0 or a combination of {@link #FINDER_FIND_BACKWARDS
      * FINDER_FIND_*} flags.
      */
     @FinderFindFlags public final int flags;
+
     /** URI of the link, if the current match is a link, or null otherwise. */
     @Nullable public final String linkUri;
+
     /** Bounds of the current match in client coordinates, or null if unknown. */
     @Nullable public final RectF clientRect;
 
@@ -3199,12 +3213,16 @@ public class GeckoSession {
       public static final int CONTENT_UNKNOWN = 0;
       public static final int CONTENT_BLOCKED = 1;
       public static final int CONTENT_LOADED = 2;
+
       /** Indicates whether or not the site is secure. */
       public final boolean isSecure;
+
       /** Indicates whether or not the site is a security exception. */
       public final boolean isException;
+
       /** Contains the origin of the certificate. */
       public final @Nullable String origin;
+
       /** Contains the host associated with the certificate. */
       public final @NonNull String host;
 
@@ -3217,11 +3235,13 @@ public class GeckoSession {
        * domain validation only, while SECURITY_MODE_VERIFIED indicates extended validation.
        */
       public final @SecurityMode int securityMode;
+
       /**
        * Indicates the presence of passive mixed content; possible values are CONTENT_UNKNOWN,
        * CONTENT_BLOCKED, and CONTENT_LOADED.
        */
       public final @ContentType int mixedModePassive;
+
       /**
        * Indicates the presence of active mixed content; possible values are CONTENT_UNKNOWN,
        * CONTENT_BLOCKED, and CONTENT_LOADED.
@@ -3681,34 +3701,45 @@ public class GeckoSession {
   public interface SelectionActionDelegate {
     /** The selection is collapsed at a single position. */
     final int FLAG_IS_COLLAPSED = 1 << 0;
+
     /**
      * The selection is inside editable content such as an input element or contentEditable node.
      */
     final int FLAG_IS_EDITABLE = 1 << 1;
+
     /** The selection is inside a password field. */
     final int FLAG_IS_PASSWORD = 1 << 2;
 
     /** Hide selection actions and cause {@link #onHideAction} to be called. */
     final String ACTION_HIDE = "org.mozilla.geckoview.HIDE";
+
     /** Copy onto the clipboard then delete the selected content. Selection must be editable. */
     final String ACTION_CUT = "org.mozilla.geckoview.CUT";
+
     /** Copy the selected content onto the clipboard. */
     final String ACTION_COPY = "org.mozilla.geckoview.COPY";
+
     /** Delete the selected content. Selection must be editable. */
     final String ACTION_DELETE = "org.mozilla.geckoview.DELETE";
+
     /** Replace the selected content with the clipboard content. Selection must be editable. */
     final String ACTION_PASTE = "org.mozilla.geckoview.PASTE";
+
     /**
      * Replace the selected content with the clipboard content as plain text. Selection must be
      * editable.
      */
     final String ACTION_PASTE_AS_PLAIN_TEXT = "org.mozilla.geckoview.PASTE_AS_PLAIN_TEXT";
+
     /** Select the entire content of the document or editor. */
     final String ACTION_SELECT_ALL = "org.mozilla.geckoview.SELECT_ALL";
+
     /** Clear the current selection. Selection must not be editable. */
     final String ACTION_UNSELECT = "org.mozilla.geckoview.UNSELECT";
+
     /** Collapse the current selection to its start position. Selection must be editable. */
     final String ACTION_COLLAPSE_TO_START = "org.mozilla.geckoview.COLLAPSE_TO_START";
+
     /** Collapse the current selection to its end position. Selection must be editable. */
     final String ACTION_COLLAPSE_TO_END = "org.mozilla.geckoview.COLLAPSE_TO_END";
 
@@ -3921,17 +3952,20 @@ public class GeckoSession {
 
     /** Actions are no longer available due to the user clearing the selection. */
     final int HIDE_REASON_NO_SELECTION = 0;
+
     /**
      * Actions are no longer available due to the user moving the selection out of view. Previous
      * actions are still available after a callback with this reason.
      */
     final int HIDE_REASON_INVISIBLE_SELECTION = 1;
+
     /**
      * Actions are no longer available due to the user actively changing the selection. {@link
      * #onShowActionRequest} may be called again once the user has set a selection, if the new
      * selection has available actions.
      */
     final int HIDE_REASON_ACTIVE_SELECTION = 2;
+
     /**
      * Actions are no longer available due to the user actively scrolling the page. {@link
      * #onShowActionRequest} may be called again once the user has stopped scrolling the page, if
@@ -3968,6 +4002,7 @@ public class GeckoSession {
        * PERMISSION_CLIPBOARD_*}.
        */
       public final @ClipboardPermissionType int type;
+
       /**
        * The last mouse or touch location in screen coordinates when the permission is requested.
        */
@@ -4335,6 +4370,7 @@ public class GeckoSession {
 
       /** The title of this prompt; may be null. */
       public final @Nullable String title;
+
       /* package */ String id;
 
       private BasePrompt(
@@ -4593,12 +4629,16 @@ public class GeckoSession {
         public static class Flags {
           /** The auth prompt is for a network host. */
           public static final int HOST = 1 << 0;
+
           /** The auth prompt is for a proxy. */
           public static final int PROXY = 1 << 1;
+
           /** The auth prompt should only request a password. */
           public static final int ONLY_PASSWORD = 1 << 3;
+
           /** The auth prompt is the result of a previous failed login. */
           public static final int PREVIOUS_FAILED = 1 << 4;
+
           /** The auth prompt is for a cross-origin sub-resource. */
           public static final int CROSS_ORIGIN_SUB_RESOURCE = 1 << 5;
 
@@ -4613,8 +4653,10 @@ public class GeckoSession {
         public static class Level {
           /** The auth request is unencrypted or the encryption status is unknown. */
           public static final int NONE = 0;
+
           /** The auth request only encrypts password but not data. */
           public static final int PW_ENCRYPTED = 1;
+
           /** The auth request encrypts both password and data. */
           public static final int SECURE = 2;
 
@@ -6247,8 +6289,10 @@ public class GeckoSession {
   public interface TextInputDelegate {
     /** Restarting input due to an input field gaining focus. */
     int RESTART_REASON_FOCUS = 0;
+
     /** Restarting input due to an input field losing focus. */
     int RESTART_REASON_BLUR = 1;
+
     /**
      * Restarting input due to the content of the input field changing. For example, the input field
      * type may have changed, or the current composition may have been committed outside of the
@@ -6793,14 +6837,19 @@ public class GeckoSession {
 
     /** The URL was visited a top-level window. */
     final int VISIT_TOP_LEVEL = 1 << 0;
+
     /** The URL is the target of a temporary redirect. */
     final int VISIT_REDIRECT_TEMPORARY = 1 << 1;
+
     /** The URL is the target of a permanent redirect. */
     final int VISIT_REDIRECT_PERMANENT = 1 << 2;
+
     /** The URL is temporarily redirected to another URL. */
     final int VISIT_REDIRECT_SOURCE = 1 << 3;
+
     /** The URL is permanently redirected to another URL. */
     final int VISIT_REDIRECT_SOURCE_PERMANENT = 1 << 4;
+
     /** The URL failed to load due to a client or server error. */
     final int VISIT_UNRECOVERABLE_ERROR = 1 << 5;
 
@@ -7006,6 +7055,7 @@ public class GeckoSession {
      * @param session to print
      */
     default void onPrint(@NonNull final GeckoSession session) {}
+
     /**
      * Print any provided PDF InputStream.
      *
@@ -7050,12 +7100,16 @@ public class GeckoSession {
   public static class GeckoPrintException extends Exception {
     /** The print service was not available. */
     public static final int ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE = -1;
+
     /** The print service was not created due to an initialization error. */
     public static final int ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS = -2;
+
     /** An error happened while trying to find the canonical browing context */
     public static final int ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT = -3;
+
     /** An error happened while trying to find the activity context delegate */
     public static final int ERROR_NO_ACTIVITY_CONTEXT_DELEGATE = -4;
+
     /** An error happened while trying to find the activity context */
     public static final int ERROR_NO_ACTIVITY_CONTEXT = -5;
 

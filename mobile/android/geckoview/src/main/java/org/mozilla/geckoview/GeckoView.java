@@ -328,6 +328,7 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
    * <p>This option offers the best performance at the price of not being able to animate GeckoView.
    */
   public static final int BACKEND_SURFACE_VIEW = 1;
+
   /**
    * This GeckoView instance will be backed by a {@link TextureView}.
    *

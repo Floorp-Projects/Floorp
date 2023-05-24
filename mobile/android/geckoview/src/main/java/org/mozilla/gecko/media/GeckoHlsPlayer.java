@@ -72,6 +72,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     PLAY_STATE_PAUSED,
     PLAY_STATE_PLAYING
   }
+
   // Default value is PLAY_STATE_PREPARING and it will be set to PLAY_STATE_PLAYING
   // once HTMLMediaElement calls PlayInternal().
   // Accessed only in GeckoHlsPlayerThread.
@@ -737,6 +738,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     mPlayer.prepare(mMediaSource);
     mIsPlayerInitDone = true;
   }
+
   // =======================================================================
   // API for GeckoHLSResourceWrapper
   // =======================================================================
@@ -765,6 +767,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
   public boolean isLiveStream() {
     return !mIsTimelineStatic;
   }
+
   // =======================================================================
   // API for GeckoHLSDemuxerWrapper
   // =======================================================================

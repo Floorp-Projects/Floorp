@@ -894,6 +894,7 @@ public class Autofill {
      */
     @UiThread
     default void onSessionStart(@NonNull final GeckoSession session) {}
+
     /**
      * An autofill session has been committed. Triggered by form submission or navigation.
      *
@@ -906,6 +907,7 @@ public class Autofill {
         @NonNull final GeckoSession session,
         @NonNull final Node node,
         @NonNull final NodeData data) {}
+
     /**
      * An autofill session has been canceled. Triggered by page unload.
      *
@@ -913,6 +915,7 @@ public class Autofill {
      */
     @UiThread
     default void onSessionCancel(@NonNull final GeckoSession session) {}
+
     /**
      * A node within the autofill session has been added.
      *
@@ -925,6 +928,7 @@ public class Autofill {
         @NonNull final GeckoSession session,
         @NonNull final Node node,
         @NonNull final NodeData data) {}
+
     /**
      * A node within the autofill session has been removed.
      *
@@ -937,6 +941,7 @@ public class Autofill {
         @NonNull final GeckoSession session,
         @NonNull final Node node,
         @NonNull final NodeData data) {}
+
     /**
      * A node within the autofill session has been updated.
      *
@@ -949,6 +954,7 @@ public class Autofill {
         @NonNull final GeckoSession session,
         @NonNull final Node node,
         @NonNull final NodeData data) {}
+
     /**
      * A node within the autofill session has gained focus.
      *
@@ -961,6 +967,7 @@ public class Autofill {
         @NonNull final GeckoSession session,
         @NonNull final Node focused,
         @NonNull final NodeData data) {}
+
     /**
      * A node within the autofill session has lost focus.
      *

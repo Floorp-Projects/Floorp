@@ -130,6 +130,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       getSettings().mDebugPause = enabled;
       return this;
     }
+
     /**
      * Set whether the to report the full bit depth of the device.
      *
@@ -1025,8 +1026,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   /** A light theme for web content is preferred. */
   public static final int COLOR_SCHEME_LIGHT = 0;
+
   /** A dark theme for web content is preferred. */
   public static final int COLOR_SCHEME_DARK = 1;
+
   /** The preferred color scheme will be based on system settings. */
   public static final int COLOR_SCHEME_SYSTEM = -1;
 
@@ -1189,8 +1192,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   /** Allow all insecure connections */
   public static final int ALLOW_ALL = 0;
+
   /** Allow insecure connections in normal browsing, but only HTTPS in private browsing. */
   public static final int HTTPS_ONLY_PRIVATE = 1;
+
   /** Only allow HTTPS connections. */
   public static final int HTTPS_ONLY = 2;
 
