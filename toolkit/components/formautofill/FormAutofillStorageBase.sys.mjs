@@ -1568,11 +1568,11 @@ export class AddressesBase extends AutofillRecords {
           .map(s => s.trim());
       }
       for (let i = 0; i < 3; i++) {
-        address[`address-line${i + 1}`] = streetAddress[i] || "";
+        address["address-line" + (i + 1)] = streetAddress[i] || "";
       }
       if (streetAddress.length > 3) {
         address["address-line3"] = lazy.FormAutofillUtils.toOneLineAddress(
-          streetAddress.slice(2)
+          streetAddress.splice(2)
         );
       }
       hasNewComputedFields = true;
