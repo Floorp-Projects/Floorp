@@ -585,7 +585,6 @@ check_prog("XARGS", ("xargs",))
 def extra_programs(target):
     if target.kernel == "Darwin":
         return namespace(
-            DSYMUTIL=("dsymutil", "llvm-dsymutil"),
             MKFSHFS=("newfs_hfs", "mkfs.hfsplus"),
             HFS_TOOL=("hfsplus",),
         )
@@ -593,7 +592,6 @@ def extra_programs(target):
         return namespace(RPMBUILD=("rpmbuild",))
 
 
-check_prog("DSYMUTIL", extra_programs.DSYMUTIL, allow_missing=True)
 check_prog("MKFSHFS", extra_programs.MKFSHFS, allow_missing=True)
 check_prog("HFS_TOOL", extra_programs.HFS_TOOL, allow_missing=True)
 check_prog("RPMBUILD", extra_programs.RPMBUILD, allow_missing=True)
@@ -688,6 +686,14 @@ def llvm_tool(name):
         return (tool,)
 
     return llvm_tool
+
+
+check_prog(
+    "DSYMUTIL",
+    llvm_tool("dsymutil"),
+    when=compile_environment & target_is_darwin,
+    paths=clang_search_path,
+)
 
 
 llvm_objdump = check_prog(
