@@ -73,20 +73,3 @@ skip == chrome://reftest/content/xul/treecell-image-svg-1b.xhtml chrome://reftes
 test-pref(svg.context-properties.content.enabled,true) fuzzy(0-26,0-2) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 
 == chrome://reftest/content/xul/tree-scrollbar-height-change.xhtml chrome://reftest/content/xul/tree-scrollbar-height-change-ref.xhtml
-
-# resizer (non-native-themed)
-
-!= chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/blank-window.xhtml
-== chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/resizer-bottomright.xhtml
-!= chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/resizer-bottomend-rtl.xhtml
-!= chrome://reftest/content/xul/resizer-bottomend-rtl.xhtml chrome://reftest/content/xul/blank-window.xhtml
-== chrome://reftest/content/xul/resizer-bottomend-rtl.xhtml chrome://reftest/content/xul/resizer-bottomend-flipped.xhtml
-== chrome://reftest/content/xul/resizer-bottomleft-rtl.xhtml chrome://reftest/content/xul/resizer-bottomleft.xhtml
-== chrome://reftest/content/xul/resizer-bottomright-rtl.xhtml chrome://reftest/content/xul/resizer-bottomright.xhtml
-
-!= chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/blank-window.xhtml
-== chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/resizer-bottomleft.xhtml
-== chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/resizer-left.xhtml
-!= chrome://reftest/content/xul/resizer-bottomstart.xhtml chrome://reftest/content/xul/resizer-bottomstart-rtl.xhtml
-!= chrome://reftest/content/xul/resizer-bottomstart-rtl.xhtml chrome://reftest/content/xul/blank-window.xhtml
-== chrome://reftest/content/xul/resizer-bottomstart-rtl.xhtml chrome://reftest/content/xul/resizer-bottomend.xhtml
