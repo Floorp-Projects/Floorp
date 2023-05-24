@@ -146,8 +146,7 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
       continue;
     }
     LOGV("Trimming sample[%" PRId64 ",%" PRId64 "] to [%" PRId64 ",%" PRId64
-         "] (raw "
-         "was:[%" PRId64 ",%" PRId64 "])",
+         "] (raw was:[%" PRId64 ",%" PRId64 "])",
          sampleInterval.mStart.ToMicroseconds(),
          sampleInterval.mEnd.ToMicroseconds(), trimmer->mStart.ToMicroseconds(),
          trimmer->mEnd.ToMicroseconds(), rawStart, rawEnd);
