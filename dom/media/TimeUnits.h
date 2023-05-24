@@ -97,6 +97,9 @@ class TimeUnit final {
   static constexpr TimeUnit FromMicroseconds(int64_t aValue) {
     return TimeUnit(aValue, USECS_PER_S);
   }
+  static TimeUnit FromHns(int64_t aValue, int64_t aBase) {
+    return TimeUnit::FromNanoseconds(aValue * 100).ToBase(aBase);
+  }
   static constexpr TimeUnit FromNanoseconds(int64_t aValue) {
     return TimeUnit(aValue, NSECS_PER_S);
   }
