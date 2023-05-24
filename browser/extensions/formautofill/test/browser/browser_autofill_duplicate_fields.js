@@ -17,7 +17,7 @@ const TEST_PROFILE = {
   email: "address@mozilla.org",
 };
 
-runAutofillHeuristicsTest([
+add_autofill_heuristic_tests([
   {
     fixtureData: `
         <html><body>
