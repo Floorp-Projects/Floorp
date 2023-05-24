@@ -109,7 +109,7 @@ RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
         "Invalid Opus header: container CodecDelay and Opus pre-skip do not "
         "match!");
   }
-  OPUS_DEBUG("Opus preskip in extradata: %ldus",
+  OPUS_DEBUG("Opus preskip in extradata: %" PRId64 "us",
              opusCodecSpecificData.mContainerCodecDelayMicroSeconds);
 
   if (mInfo.mRate != (uint32_t)mOpusParser->mRate) {
@@ -335,7 +335,7 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
   mFrames += frames;
   mTotalFrames += frames;
 
-  OPUS_DEBUG("Total frames so far: %ld", mTotalFrames);
+  OPUS_DEBUG("Total frames so far: %" PRId64, mTotalFrames);
 
   if (!frames) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);

@@ -415,13 +415,14 @@ nsresult WebMDemuxer::ReadMetadata() {
         uint64_t codecDelayUs = params.codec_delay / 1000;
         mInfo.mAudio.mMimeType = "audio/opus";
         OpusCodecSpecificData opusCodecSpecificData;
-        opusCodecSpecificData.mContainerCodecDelayMicroSeconds = codecDelayUs;
+        opusCodecSpecificData.mContainerCodecDelayMicroSeconds =
+            AssertedCast<int64_t>(codecDelayUs);
         mInfo.mAudio.mCodecSpecificConfig =
             AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
-        WEBM_DEBUG("Preroll for Opus: %lu\n", codecDelayUs);
+        WEBM_DEBUG("Preroll for Opus: %" PRIu64, codecDelayUs);
       }
       mSeekPreroll = params.seek_preroll;
-      mInfo.mAudio.mRate = params.rate;
+      mInfo.mAudio.mRate = AssertedCast<uint32_t>(params.rate);
       mInfo.mAudio.mChannels = params.channels;
 
       unsigned int nheaders = 0;
