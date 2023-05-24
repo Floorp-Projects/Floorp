@@ -103,13 +103,11 @@ class SPSCRingBufferBase {
    */
   explicit SPSCRingBufferBase(int aCapacity)
       : mReadIndex(0),
-        mWriteIndex(0)
+        mWriteIndex(0),
         /* One more element to distinguish from empty and full buffer. */
-        ,
         mCapacity(aCapacity + 1) {
-    MOZ_ASSERT(StorageCapacity() < std::numeric_limits<int>::max() / 2,
-               "buffer too large for the type of index used.");
-    MOZ_ASSERT(mCapacity > 0 && aCapacity != std::numeric_limits<int>::max());
+    MOZ_RELEASE_ASSERT(aCapacity != std::numeric_limits<int>::max());
+    MOZ_RELEASE_ASSERT(mCapacity > 0);
 
     mData = std::make_unique<T[]>(StorageCapacity());
 
