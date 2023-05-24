@@ -112,61 +112,18 @@ using namespace mozilla::a11y;
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-static const uint64_t kCachedStates =
-    states::CHECKED | states::PRESSED | states::MIXED | states::EXPANDED |
-    states::EXPANDABLE | states::CURRENT | states::SELECTED |
-    states::TRAVERSED | states::LINKED | states::HASPOPUP | states::BUSY |
-    states::MULTI_LINE | states::CHECKABLE;
-static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
-
 - (uint64_t)state {
-  uint64_t state = 0;
-
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    state = acc->State();
-  }
-
-  if (RemoteAccessible* proxy = mGeckoAccessible->AsRemote()) {
-    state = proxy->State();
-  }
-
-  if (!(mCachedState & kCacheInitialized)) {
-    mCachedState = state & kCachedStates;
-    mCachedState |= kCacheInitialized;
-  }
-
-  return state;
+  return mGeckoAccessible->State();
 }
 
 - (uint64_t)stateWithMask:(uint64_t)mask {
-  if ((mask & kCachedStates) == mask &&
-      (mCachedState & kCacheInitialized) != 0) {
-    return mCachedState & mask;
-  }
-
   return [self state] & mask;
 }
 
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
-  if ((state & kCachedStates) != 0) {
-    if (!(mCachedState & kCacheInitialized)) {
-      [self state];
-    } else {
-      if (enabled) {
-        mCachedState |= state;
-      } else {
-        mCachedState &= ~state;
-      }
-    }
-  }
-
   if (state == states::BUSY) {
     [self moxPostNotification:@"AXElementBusyChanged"];
   }
-}
-
-- (void)invalidateState {
-  mCachedState = 0;
 }
 
 - (BOOL)providesLabelNotTitle {
@@ -894,9 +851,6 @@ struct RoleDescrComparator {
   } else {
     mGeckoAccessible->AsRemote()->DoAction(0);
   }
-
-  // Activating accessible may alter its state.
-  [self invalidateState];
 }
 
 #pragma mark -
@@ -1049,8 +1003,6 @@ struct RoleDescrComparator {
 
 - (void)expire {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  [self invalidateState];
 
   mGeckoAccessible = nullptr;
 
