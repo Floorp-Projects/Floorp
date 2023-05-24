@@ -681,6 +681,7 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
 
   // It's possible for the duration of a frame to be zero if the frame is to be
   // trimmed entirely because it's fully comprised of decoder delay samples.
+  // This is common at the beginning of an stream.
   MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
 
   frame->mDuration = Duration(1);
@@ -688,8 +689,37 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   frame->mKeyframe = true;
   frame->mEOS = mEOS;
 
-  if (frame->mEOS) {
+  // It's possible to create an mp3 file that has a padding value that somehow
+  // spans multiple packets. In that case the duration is probably known,
+  // because it's probably a VBR file with a XING header (that has a duration
+  // field). Use the duration to be able to set the correct duration on
+  // packets that aren't the last one.
+  // For most files, the padding is less than a packet, it's simply substracted.
+  if (mParser.VBRInfo().Type() == FrameParser::VBRHeader::XING &&
+      Padding().IsPositive() &&
+      frame->GetEndTime() > Duration().valueOr(TimeUnit::FromInfinity())) {
+    TimeUnit duration = Duration().value();
+    TimeUnit inPaddingZone = frame->GetEndTime() - duration;
+    TimeUnit originalEnd = frame->GetEndTime();
+    TimeUnit originalPts = frame->mTime;
+    frame->mDuration -= inPaddingZone;
+    // Packet is entirely padding and will be completely discarded by the decoder.
+    if (frame->mDuration.IsNegative()) {
+      frame->mDuration = TimeUnit::Zero();
+    }
+    MP3LOG(
+        "Found padding spanning multiple packets -- trimming [%lf,%lf] to "
+        "[%lf,%lf] (stream duration: %lf)",
+        originalPts.ToSeconds(), originalEnd.ToSeconds(),
+        frame->mTime.ToSeconds(), frame->GetEndTime().ToSeconds(),
+        duration.ToSeconds());
+  } else if (frame->mEOS && Padding() <= frame->mDuration) {
     frame->mDuration -= Padding();
+    MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
+    MP3LOG(
+        "Trimming last packet %lf to [%lf,%lf]",
+        Padding().ToSeconds(), frame->mTime.ToSeconds(),
+        frame->GetEndTime().ToSeconds());
   }
 
 
