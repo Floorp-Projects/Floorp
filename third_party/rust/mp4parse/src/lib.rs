@@ -2273,11 +2273,11 @@ impl<'a, T: Read> BoxIter<'a, T> {
     fn next_box(&mut self) -> Result<Option<BMFFBox<T>>> {
         let r = read_box_header(self.src);
         match r {
-            Ok(Some(h)) => Ok(Some(BMFFBox {
+            Ok(h) => Ok(Some(BMFFBox {
                 head: h,
                 content: self.src.take(h.size.saturating_sub(h.offset)),
             })),
-            Ok(None) => Ok(None),
+            Err(Error::UnexpectedEOF) => Ok(None),
             Err(e) => Err(e),
         }
     }
@@ -2332,10 +2332,9 @@ impl<'a, T> Drop for BMFFBox<'a, T> {
 /// skip unknown or uninteresting boxes.
 ///
 /// See ISOBMFF (ISO 14496-12:2020) § 4.2
-fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<Option<BoxHeader>> {
+fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
     let size32 = match be_u32(src) {
         Ok(v) => v,
-        Err(Error::UnexpectedEOF) => return Ok(None),
         Err(error) => return Err(error),
     };
     let name = BoxType::from(be_u32(src)?);
@@ -2379,12 +2378,12 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<Option<BoxHeader>> {
         _ if offset > size => return Err(Error::from(Status::BoxBadSize)),
         _ => (),
     }
-    Ok(Some(BoxHeader {
+    Ok(BoxHeader {
         name,
         size,
         offset,
         uuid,
-    }))
+    })
 }
 
 /// Parse the extra header fields for a full box.

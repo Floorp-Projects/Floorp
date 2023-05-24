@@ -1294,7 +1294,7 @@ fn public_avif_valid_with_garbage_overread_at_end() {
 
 #[test]
 fn public_avif_valid_with_garbage_byte_at_end() {
-    assert_avif_should(IMAGE_AVIF_VALID_WITH_GARBAGE_BYTE_AT_END, Status::Eof);
+    assert_avif_should(IMAGE_AVIF_VALID_WITH_GARBAGE_BYTE_AT_END, Status::Ok);
 }
 
 #[test]
