@@ -1911,7 +1911,7 @@ var gMainPane = {
    */
   showTranslationExceptions() {
     gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/translation.xhtml"
+      "chrome://browser/content/preferences/dialogs/translationExceptions.xhtml"
     );
   },
 
