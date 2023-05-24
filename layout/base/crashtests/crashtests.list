@@ -569,4 +569,5 @@ load 1789934.html
 load 1791883.html
 load 1797995.html
 pref(layout.accessiblecaret.enabled,true) load 1818036.html
+pref(layout.accessiblecaret.enabled,true) load 1819239.html
 load 1821469.html
