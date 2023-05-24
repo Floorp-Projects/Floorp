@@ -5853,17 +5853,7 @@ HTMLInputElement::SubmitNamesValues(FormData* aFormData) {
     value = defaultValue;
   }
 
-  const nsresult rv = aFormData->AddNameValuePair(name, value);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Submit dirname=dir
-  if (DoesDirnameApply()) {
-    return SubmitDirnameDir(aFormData);
-  }
-
-  return NS_OK;
+  return aFormData->AddNameValuePair(name, value);
 }
 
 static nsTArray<FileContentData> SaveFileContentData(

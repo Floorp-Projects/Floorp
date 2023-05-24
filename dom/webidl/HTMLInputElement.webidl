@@ -38,8 +38,7 @@ interface HTMLInputElement : HTMLElement {
            attribute boolean defaultChecked;
   [Pure]
            attribute boolean checked;
-  [CEReactions, Pure, SetterThrows]
-           attribute DOMString dirName;
+           // Bug 850337 - attribute DOMString dirName;
   [CEReactions, Pure, SetterThrows]
            attribute boolean disabled;
   readonly attribute HTMLFormElement? form;

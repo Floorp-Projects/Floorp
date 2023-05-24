@@ -706,15 +706,9 @@ HTMLTextAreaElement::SubmitNamesValues(FormData* aFormData) {
   GetValueInternal(value, false);
 
   //
-  // Submit name=value
+  // Submit
   //
-  const nsresult rv = aFormData->AddNameValuePair(name, value);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Submit dirname=dir
-  return SubmitDirnameDir(aFormData);
+  return aFormData->AddNameValuePair(name, value);
 }
 
 void HTMLTextAreaElement::SaveState() {
