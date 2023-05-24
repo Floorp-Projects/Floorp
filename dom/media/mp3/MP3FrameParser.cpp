@@ -363,8 +363,6 @@ int64_t FrameParser::VBRHeader::Offset(media::TimeUnit aTime, media::TimeUnit aD
       offset += AssertedCast<int64_t>(fractional) *
                 (mTOC.at(integerPer + 1) - offset);
     }
-    double duration = aDuration.ToMicroseconds() / 1000.;
-    double frameDuration = duration / mTOC.size()+1;
   }
   // TODO: VBRI TOC seeking
   MP3LOG("VBRHeader::Offset (%s): %f is at byte %" PRId64 "",
@@ -427,7 +425,7 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(BufferReader* aReader,
       uint8_t data;
       for (size_t i = 0; i < vbr_header::TOC_SIZE; ++i) {
         MOZ_TRY_VAR(data, aReader->ReadU8());
-        mTOC.push_back(1.0f / 256.0f * data * mNumBytes.value());
+        mTOC.push_back(AssertedCast<uint32_t>(1.0f / 256.0f * data * mNumBytes.value()));
       }
     }
   }
@@ -596,13 +594,13 @@ bool FrameParser::VBRHeader::Parse(BufferReader* aReader, size_t aFrameSize) {
 
 void FrameParser::Frame::Reset() { mHeader.Reset(); }
 
-int32_t FrameParser::Frame::Length() const {
+uint32_t FrameParser::Frame::Length() const {
   if (!mHeader.IsValid() || !mHeader.SampleRate()) {
     return 0;
   }
 
-  const float bitsPerSample = mHeader.SamplesPerFrame() / 8.0f;
-  const int32_t frameLen =
+  const uint32_t bitsPerSample = mHeader.SamplesPerFrame() / 8;
+  const uint32_t frameLen =
       bitsPerSample * mHeader.Bitrate() / mHeader.SampleRate() +
       mHeader.Padding() * mHeader.SlotSize();
   return frameLen;
