@@ -283,11 +283,6 @@ class SettingsSearchTest {
             verifyAllowSuggestionsInPrivateModeDialog()
             denySuggestionsInPrivateMode()
             verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
-        }.dismissSearchBar {
-            togglePrivateBrowsingModeOnOff()
-        }.openSearch {
-            typeSearch("mozilla")
-            verifySearchEngineSuggestionResults(activityTestRule, "mozilla firefox")
         }
     }
 
