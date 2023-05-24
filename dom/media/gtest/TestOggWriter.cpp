@@ -29,6 +29,7 @@ TEST(TestOggWriter, MultiPageInput)
   }
 
   size_t inputBytes = 0;
+  const size_t USECS_PER_MS = 1000;
   auto frameData = MakeRefPtr<EncodedFrame::FrameData>();
   frameData->SetLength(320);  // 320B per 20ms == 128kbps
   PodZero(frameData->Elements(), frameData->Length());
