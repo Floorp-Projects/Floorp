@@ -4263,7 +4263,8 @@ void Element::SetHasPopoverInvoker(bool aHasInvoker) {
 
 bool Element::IsAutoPopover() const {
   const auto* htmlElement = nsGenericHTMLElement::FromNode(this);
-  return htmlElement && htmlElement->GetPopoverState() == PopoverState::Auto;
+  return htmlElement &&
+         htmlElement->GetPopoverAttributeState() == PopoverAttributeState::Auto;
 }
 
 bool Element::IsPopoverOpen() const {

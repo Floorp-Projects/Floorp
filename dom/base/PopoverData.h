@@ -14,11 +14,11 @@
 
 namespace mozilla::dom {
 
-// https://html.spec.whatwg.org/multipage/popover.html#attr-popover
-enum class PopoverState : uint8_t {
+// https://html.spec.whatwg.org/#attr-popover
+enum class PopoverAttributeState : uint8_t {
   None,
-  Auto,
-  Manual,
+  Auto,    ///< https://html.spec.whatwg.org/#attr-popover-auto-state
+  Manual,  ///< https://html.spec.whatwg.org/#attr-popover-manual-state
 };
 
 enum class PopoverVisibilityState : uint8_t {
@@ -47,8 +47,10 @@ class PopoverData {
   PopoverData() = default;
   ~PopoverData() = default;
 
-  PopoverState GetPopoverState() const { return mState; }
-  void SetPopoverState(PopoverState aState) { mState = aState; }
+  PopoverAttributeState GetPopoverAttributeState() const { return mState; }
+  void SetPopoverAttributeState(PopoverAttributeState aState) {
+    mState = aState;
+  }
 
   PopoverVisibilityState GetPopoverVisibilityState() const {
     return mVisibilityState;
@@ -77,7 +79,7 @@ class PopoverData {
 
  private:
   PopoverVisibilityState mVisibilityState = PopoverVisibilityState::Hidden;
-  PopoverState mState = PopoverState::None;
+  PopoverAttributeState mState = PopoverAttributeState::None;
   // Popover and dialog don't share mPreviouslyFocusedElement for there are
   // chances to lose the previously focused element.
   // See, https://github.com/whatwg/html/issues/9063
