@@ -209,7 +209,7 @@ class WebPushTest : BaseSessionTest() {
             PUSH_ENDPOINT,
             WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey),
             WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey)!!,
-            AUTH_SECRET
+            AUTH_SECRET,
         )
     }
 
@@ -221,7 +221,7 @@ class WebPushTest : BaseSessionTest() {
             PUSH_ENDPOINT,
             WebPushUtils.keyToBytes(APP_SERVER_KEY_PAIR.public as ECPublicKey),
             WebPushUtils.keyToBytes(BROWSER_KEY_PAIR.public as ECPublicKey)!!,
-            AUTH_SECRET
+            AUTH_SECRET,
         )
 
         val parcel = Parcel.obtain()

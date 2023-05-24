@@ -44,7 +44,7 @@ class WebExecutorTest {
         @JvmStatic
         val parameters: List<Array<out Any>> = listOf(
             arrayOf("#conservative"),
-            arrayOf("#normal")
+            arrayOf("#normal"),
         )
     }
 
@@ -239,12 +239,12 @@ class WebExecutorTest {
         assertThat(
             "Subject should match",
             response.certificate?.subjectX500Principal?.name,
-            equalTo(expectedSubject)
+            equalTo(expectedSubject),
         )
         assertThat(
             "Issuer should match",
             response.certificate?.issuerX500Principal?.name,
-            equalTo(expectedIssuer)
+            equalTo(expectedIssuer),
         )
     }
 
@@ -261,14 +261,14 @@ class WebExecutorTest {
         assertThat(
             "Body should match",
             body.getJSONObject("cookies").getString("uptimeMillis"),
-            equalTo(uptimeMillis.toString())
+            equalTo(uptimeMillis.toString()),
         )
 
         val anotherBody = fetch(webRequest("$TEST_ENDPOINT/cookies")).getJSONBody()
         assertThat(
             "Body should match",
             anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
-            equalTo(uptimeMillis.toString())
+            equalTo(uptimeMillis.toString()),
         )
     }
 
@@ -285,7 +285,7 @@ class WebExecutorTest {
         assertThat(
             "Cookies should not be set for the test server",
             body.getJSONObject("cookies").length(),
-            equalTo(0)
+            equalTo(0),
         )
     }
 
@@ -296,7 +296,7 @@ class WebExecutorTest {
 
         val response = fetch(
             webRequest("$TEST_ENDPOINT/cookies"),
-            GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
+            GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS,
         )
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
@@ -311,7 +311,7 @@ class WebExecutorTest {
             clearData.completeFrom(
                 RuntimeCreator.getRuntime()
                     .storageController
-                    .clearData(StorageController.ClearFlags.ALL)
+                    .clearData(StorageController.ClearFlags.ALL),
             )
         }
 
@@ -328,21 +328,21 @@ class WebExecutorTest {
         assertThat(
             "Cookies should be set for the test server",
             body.getJSONObject("cookies").getString("uptimeMillis"),
-            equalTo(uptimeMillis.toString())
+            equalTo(uptimeMillis.toString()),
         )
 
         val anotherBody = fetch(webRequest("$TEST_ENDPOINT/cookies"), GeckoWebExecutor.FETCH_FLAGS_PRIVATE).getJSONBody()
         assertThat(
             "Body should match",
             anotherBody.getJSONObject("cookies").getString("uptimeMillis"),
-            equalTo(uptimeMillis.toString())
+            equalTo(uptimeMillis.toString()),
         )
 
         val yetAnotherBody = fetch(webRequest("$TEST_ENDPOINT/cookies")).getJSONBody()
         assertThat(
             "Cookies set in private session are not supposed to be seen in normal download",
             yetAnotherBody.getJSONObject("cookies").length(),
-            equalTo(0)
+            equalTo(0),
         )
     }
 
@@ -362,17 +362,17 @@ class WebExecutorTest {
         assertThat(
             "Addresses should not be null",
             addresses,
-            notNullValue()
+            notNullValue(),
         )
         assertThat(
             "First address should be loopback",
             addresses.first().isLoopbackAddress,
-            equalTo(true)
+            equalTo(true),
         )
         assertThat(
             "First address size should be 4",
             addresses.first().address.size,
-            equalTo(4)
+            equalTo(4),
         )
     }
 
@@ -383,17 +383,17 @@ class WebExecutorTest {
         assertThat(
             "Addresses should not be null",
             addresses,
-            notNullValue()
+            notNullValue(),
         )
         assertThat(
             "First address should be loopback",
             addresses.first().isLoopbackAddress,
-            equalTo(true)
+            equalTo(true),
         )
         assertThat(
             "First address size should be 16",
             addresses.first().address.size,
-            equalTo(16)
+            equalTo(16),
         )
     }
 
@@ -428,7 +428,7 @@ class WebExecutorTest {
         assertThat(
             "Hashes should match",
             response.headers["X-SHA-256"],
-            equalTo(String.format("%064x", BigInteger(1, digest)))
+            equalTo(String.format("%064x", BigInteger(1, digest))),
         )
     }
 
@@ -437,7 +437,7 @@ class WebExecutorTest {
         val expectedCount = 1 * 1024 * 1024 // 1MB
         val response = executor.fetch(
             webRequest("$TEST_ENDPOINT/bytes/$expectedCount"),
-            GeckoWebExecutor.FETCH_FLAGS_STREAM_FAILURE_TEST
+            GeckoWebExecutor.FETCH_FLAGS_STREAM_FAILURE_TEST,
         ).pollDefault()!!
 
         assertThat("Status code should match", response.statusCode, equalTo(200))
@@ -507,7 +507,7 @@ class WebExecutorTest {
             "1234567890" to "1234567890",
             "12345678901" to "1234567890",
             "file://test" to "file://tes",
-            "moz-extension://what" to "moz-extens"
+            "moz-extension://what" to "moz-extens",
         )
 
         for ((uri, truncated) in illegal) {
@@ -518,7 +518,7 @@ class WebExecutorTest {
                 assertThat(
                     "Message should match",
                     e.message,
-                    equalTo("Unsupported URI scheme: $truncated")
+                    equalTo("Unsupported URI scheme: $truncated"),
                 )
             }
         }
@@ -526,7 +526,7 @@ class WebExecutorTest {
         val legal = listOf(
             "http://$TEST_ENDPOINT\n",
             "http://$TEST_ENDPOINT/🥲",
-            "http://$TEST_ENDPOINT/abc"
+            "http://$TEST_ENDPOINT/abc",
         )
 
         for (uri in legal) {
@@ -537,7 +537,7 @@ class WebExecutorTest {
                 assertThat(
                     "Request should pass initial validation.",
                     true,
-                    equalTo(true)
+                    equalTo(true),
                 )
             }
         }

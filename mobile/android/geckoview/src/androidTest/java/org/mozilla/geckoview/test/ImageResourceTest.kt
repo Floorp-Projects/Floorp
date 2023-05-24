@@ -17,7 +17,7 @@ class TestImage(
     val type: String?,
     val sizes: String?,
     val widths: Array<Int>?,
-    val heights: Array<Int>?
+    val heights: Array<Int>?,
 )
 
 @RunWith(AndroidJUnit4::class)
@@ -29,7 +29,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/icon",
             "16x16 32x32 64x64",
             arrayOf(16, 32, 64),
-            arrayOf(16, 32, 64)
+            arrayOf(16, 32, 64),
         )
 
         val kValidTestImage2 = TestImage(
@@ -37,7 +37,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/png",
             "128x128",
             arrayOf(128),
-            arrayOf(128)
+            arrayOf(128),
         )
 
         val kValidTestImage3 = TestImage(
@@ -45,7 +45,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/jpg",
             "256x256",
             arrayOf(256),
-            arrayOf(256)
+            arrayOf(256),
         )
 
         val kValidTestImage4 = TestImage(
@@ -53,7 +53,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/png",
             "300x128",
             arrayOf(300),
-            arrayOf(128)
+            arrayOf(128),
         )
 
         val kValidTestImage5 = TestImage(
@@ -61,7 +61,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/svg",
             "any",
             arrayOf(0),
-            arrayOf(0)
+            arrayOf(0),
         )
 
         val kValidTestImage6 = TestImage(
@@ -69,7 +69,7 @@ class ImageResourceTest : BaseSessionTest() {
             null,
             null,
             null,
-            null
+            null,
         )
     }
 
@@ -77,24 +77,24 @@ class ImageResourceTest : BaseSessionTest() {
         assertThat(
             "Path should match",
             image.src,
-            equalTo(base.path)
+            equalTo(base.path),
         )
         assertThat(
             "Type should match",
             image.type,
-            equalTo(base.type)
+            equalTo(base.type),
         )
 
         assertThat(
             "Sizes should match",
             image.sizes?.size,
-            equalTo(base.widths?.size)
+            equalTo(base.widths?.size),
         )
 
         assertThat(
             "Sizes should match",
             image.sizes?.size,
-            equalTo(base.heights?.size)
+            equalTo(base.heights?.size),
         )
 
         if (image.sizes == null) {
@@ -104,12 +104,12 @@ class ImageResourceTest : BaseSessionTest() {
             assertThat(
                 "Sizes widths should match",
                 image.sizes!![i].width,
-                equalTo(base.widths!![i])
+                equalTo(base.widths!![i]),
             )
             assertThat(
                 "Sizes heights should match",
                 image.sizes!![i].height,
-                equalTo(base.heights!![i])
+                equalTo(base.heights!![i]),
             )
         }
     }
@@ -146,7 +146,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/icon",
             "16x16 32",
             arrayOf(16),
-            arrayOf(16)
+            arrayOf(16),
         )
         testValidImage(invalidImage1)
 
@@ -155,7 +155,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/icon",
             "16x16 32xa32",
             arrayOf(16),
-            arrayOf(16)
+            arrayOf(16),
         )
         testValidImage(invalidImage2)
 
@@ -164,7 +164,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/icon",
             "",
             null,
-            null
+            null,
         )
         testValidImage(invalidImage3)
 
@@ -173,7 +173,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/icon",
             "abxab",
             null,
-            null
+            null,
         )
         testValidImage(invalidImage4)
     }
@@ -185,8 +185,8 @@ class ImageResourceTest : BaseSessionTest() {
                 kValidTestImage1,
                 kValidTestImage2,
                 kValidTestImage3,
-                kValidTestImage4
-            )
+                kValidTestImage4,
+            ),
         )
         // 16, 32, 64
         verifyEqual(collection.getBest(10)!!, kValidTestImage1)
@@ -217,8 +217,8 @@ class ImageResourceTest : BaseSessionTest() {
                 kValidTestImage2,
                 kValidTestImage3,
                 kValidTestImage4,
-                kValidTestImage5
-            )
+                kValidTestImage5,
+            ),
         )
         // any
         verifyEqual(collection.getBest(10)!!, kValidTestImage5)
@@ -245,8 +245,8 @@ class ImageResourceTest : BaseSessionTest() {
                 kValidTestImage2,
                 kValidTestImage3,
                 kValidTestImage4,
-                kValidTestImage6
-            )
+                kValidTestImage6,
+            ),
         )
         // null, handled as any
         verifyEqual(collection.getBest(10)!!, kValidTestImage6)
@@ -273,7 +273,7 @@ class ImageResourceTest : BaseSessionTest() {
             "image/gif",
             "any",
             arrayOf(0),
-            arrayOf(0)
+            arrayOf(0),
         )
         val collection = buildCollection(arrayOf(testImage))
         val image = collection.getBest(actualWidth)
@@ -286,21 +286,21 @@ class ImageResourceTest : BaseSessionTest() {
                     assertThat(
                         "Bitmap should be non-null",
                         bitmap,
-                        notNullValue()
+                        notNullValue(),
                     )
                     assertThat(
                         "Bitmap width should match",
                         bitmap!!.getWidth(),
-                        equalTo(actualWidth)
+                        equalTo(actualWidth),
                     )
                     assertThat(
                         "Bitmap height should match",
                         bitmap.getHeight(),
-                        equalTo(actualHeight)
+                        equalTo(actualHeight),
                     )
 
                     GeckoResult.fromValue(null)
-                }
+                },
         )
     }
 }

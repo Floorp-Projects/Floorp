@@ -38,7 +38,7 @@ class InputResultDetailTest : BaseSessionTest() {
             MotionEvent.ACTION_DOWN,
             x,
             y,
-            0
+            0,
         )
 
         val result = mainSession.panZoomController.onTouchEventForDetailResult(down)
@@ -49,7 +49,7 @@ class InputResultDetailTest : BaseSessionTest() {
             MotionEvent.ACTION_UP,
             x,
             y,
-            0
+            0,
         )
 
         mainSession.panZoomController.onTouchEvent(up)
@@ -62,22 +62,22 @@ class InputResultDetailTest : BaseSessionTest() {
         actual: InputResultDetail,
         expectedHandledResult: Int,
         expectedScrollableDirections: Int,
-        expectedOverscrollDirections: Int
+        expectedOverscrollDirections: Int,
     ) {
         assertThat(
             testName + ": The handled result",
             actual.handledResult(),
-            equalTo(expectedHandledResult)
+            equalTo(expectedHandledResult),
         )
         assertThat(
             testName + ": The scrollable directions",
             actual.scrollableDirections(),
-            equalTo(expectedScrollableDirections)
+            equalTo(expectedScrollableDirections),
         )
         assertThat(
             testName + ": The overscroll directions",
             actual.overscrollDirections(),
-            equalTo(expectedOverscrollDirections)
+            equalTo(expectedOverscrollDirections),
         )
     }
 
@@ -139,7 +139,7 @@ class InputResultDetailTest : BaseSessionTest() {
                             value,
                             expectedPlace,
                             expectedScrollableDirections,
-                            expectedOverscrollDirections
+                            expectedOverscrollDirections,
                         )
                     }
                 }
@@ -164,7 +164,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
         )
 
         // Prepare a resize event listener.
@@ -175,7 +175,7 @@ class InputResultDetailTest : BaseSessionTest() {
                     resolve(true);
                 }, { once: true });
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         // Hide the dynamic toolbar.
@@ -190,7 +190,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_TOP,
-            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
         )
     }
 
@@ -207,7 +207,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
         )
     }
 
@@ -224,7 +224,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            PanZoomController.OVERSCROLL_FLAG_HORIZONTAL
+            PanZoomController.OVERSCROLL_FLAG_HORIZONTAL,
         )
     }
 
@@ -241,7 +241,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            PanZoomController.OVERSCROLL_FLAG_VERTICAL
+            PanZoomController.OVERSCROLL_FLAG_VERTICAL,
         )
     }
 
@@ -256,7 +256,7 @@ class InputResultDetailTest : BaseSessionTest() {
                     resolve(true);
                 }, { once: true });
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         // Scroll to the bottom edge of the scroll container.
@@ -264,7 +264,7 @@ class InputResultDetailTest : BaseSessionTest() {
             """
             const scroll = document.getElementById('scroll');
             scroll.scrollTo(0, scroll.scrollHeight);
-            """.trimIndent()
+            """.trimIndent(),
         )
         assertThat("scroll", scrollPromise.value as Boolean, equalTo(true))
         mainSession.flushApzRepaints()
@@ -284,7 +284,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            PanZoomController.OVERSCROLL_FLAG_VERTICAL
+            PanZoomController.OVERSCROLL_FLAG_VERTICAL,
         )
 
         // Scroll to the bottom edge
@@ -298,7 +298,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_HANDLED,
             PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
         )
     }
 
@@ -306,7 +306,7 @@ class InputResultDetailTest : BaseSessionTest() {
     @Test
     fun testOverscrollBehaviorNoneOnNonRoot() {
         var files = arrayOf(
-            OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH
+            OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH,
         )
 
         for (file in files) {
@@ -319,7 +319,7 @@ class InputResultDetailTest : BaseSessionTest() {
                 value,
                 PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
                 PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-                PanZoomController.OVERSCROLL_FLAG_NONE
+                PanZoomController.OVERSCROLL_FLAG_NONE,
             )
 
             // Scroll to the bottom edge so that the container is no longer scrollable downwards.
@@ -333,7 +333,7 @@ class InputResultDetailTest : BaseSessionTest() {
                 value,
                 PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
                 PanZoomController.SCROLLABLE_FLAG_TOP,
-                PanZoomController.OVERSCROLL_FLAG_NONE
+                PanZoomController.OVERSCROLL_FLAG_NONE,
             )
         }
     }
@@ -344,7 +344,7 @@ class InputResultDetailTest : BaseSessionTest() {
         sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
 
         var files = arrayOf(
-            OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH
+            OVERSCROLL_BEHAVIOR_NONE_NON_ROOT_HTML_PATH,
         )
 
         for (file in files) {
@@ -357,7 +357,7 @@ class InputResultDetailTest : BaseSessionTest() {
                 value,
                 PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
                 PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-                PanZoomController.OVERSCROLL_FLAG_NONE
+                PanZoomController.OVERSCROLL_FLAG_NONE,
             )
 
             // Scroll to the bottom edge so that the container is no longer scrollable downwards.
@@ -373,7 +373,7 @@ class InputResultDetailTest : BaseSessionTest() {
                 value,
                 PanZoomController.INPUT_RESULT_HANDLED,
                 PanZoomController.SCROLLABLE_FLAG_BOTTOM,
-                (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+                (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
             )
         }
     }
@@ -396,8 +396,8 @@ class InputResultDetailTest : BaseSessionTest() {
     fun testFractionalScrollPortSize() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "browser.viewport.desktopWidth" to 980
-            )
+                "browser.viewport.desktopWidth" to 980,
+            ),
         )
         sessionRule.display?.run { setDynamicToolbarMaxHeight(59) }
 
@@ -411,7 +411,7 @@ class InputResultDetailTest : BaseSessionTest() {
             value,
             PanZoomController.INPUT_RESULT_UNHANDLED,
             PanZoomController.SCROLLABLE_FLAG_NONE,
-            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
         )
     }
 }

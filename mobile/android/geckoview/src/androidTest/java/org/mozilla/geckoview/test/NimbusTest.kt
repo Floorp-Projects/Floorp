@@ -26,7 +26,7 @@ class NimbusTest : BaseSessionTest() {
                 assertThat(
                     "Feature id should match",
                     featureId,
-                    equalTo("pdfjs")
+                    equalTo("pdfjs"),
                 )
                 return null
             }

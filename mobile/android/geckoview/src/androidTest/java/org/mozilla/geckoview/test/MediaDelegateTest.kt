@@ -29,7 +29,7 @@ class MediaDelegateTest : BaseSessionTest() {
                 uri: String,
                 video: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
                 audio: Array<out GeckoSession.PermissionDelegate.MediaSource>?,
-                callback: GeckoSession.PermissionDelegate.MediaCallback
+                callback: GeckoSession.PermissionDelegate.MediaCallback,
             ) {
                 if (!(allowAudio || allowCamera)) {
                     callback.reject()
@@ -52,7 +52,7 @@ class MediaDelegateTest : BaseSessionTest() {
             override fun onAndroidPermissionsRequest(
                 session: GeckoSession,
                 permissions: Array<out String>?,
-                callback: GeckoSession.PermissionDelegate.Callback
+                callback: GeckoSession.PermissionDelegate.Callback,
             ) {
                 callback.grant()
             }
@@ -62,7 +62,7 @@ class MediaDelegateTest : BaseSessionTest() {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onRecordingStatusChanged(
                 session: GeckoSession,
-                devices: Array<org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice>
+                devices: Array<org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice>,
             ) {
                 var audioActive = false
                 var cameraActive = false
@@ -78,13 +78,13 @@ class MediaDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Camera is ${if (allowCamera) { "active" } else { "inactive" }}",
                     cameraActive,
-                    Matchers.equalTo(allowCamera)
+                    Matchers.equalTo(allowCamera),
                 )
 
                 assertThat(
                     "Audio is ${if (allowAudio) { "active" } else { "inactive" }}",
                     audioActive,
-                    Matchers.equalTo(allowAudio)
+                    Matchers.equalTo(allowAudio),
                 )
             }
         })
@@ -117,13 +117,13 @@ class MediaDelegateTest : BaseSessionTest() {
 
                      return true;
                    })
-            """.trimMargin()
+            """.trimMargin(),
         ) as Boolean
 
         assertThat(
             "Stream should be active and id should not be empty.",
             isActive,
-            Matchers.equalTo(true)
+            Matchers.equalTo(true),
         )
     }
 
@@ -134,7 +134,7 @@ class MediaDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-            "window.navigator.mediaDevices.enumerateDevices()"
+            "window.navigator.mediaDevices.enumerateDevices()",
         ).asJSList<JSONObject>()
         val audioDevice = devices.find { map -> map.getString("kind") == "audioinput" }
         if (audioDevice != null) {
@@ -150,7 +150,7 @@ class MediaDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-            "window.navigator.mediaDevices.enumerateDevices()"
+            "window.navigator.mediaDevices.enumerateDevices()",
         ).asJSList<JSONObject>()
 
         val videoDevice = devices.find { map -> map.getString("kind") == "videoinput" }
@@ -166,7 +166,7 @@ class MediaDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         val devices = mainSession.waitForJS(
-            "window.navigator.mediaDevices.enumerateDevices()"
+            "window.navigator.mediaDevices.enumerateDevices()",
         ).asJSList<JSONObject>()
         val audioDevice = devices.find { map -> map.getString("kind") == "audioinput" }
         val videoDevice = devices.find { map -> map.getString("kind") == "videoinput" }

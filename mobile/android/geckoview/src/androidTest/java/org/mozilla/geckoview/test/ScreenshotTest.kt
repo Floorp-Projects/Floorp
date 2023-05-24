@@ -75,7 +75,7 @@ class ScreenshotTest : BaseSessionTest() {
             assertThat(
                 "Screenshot is not null",
                 it,
-                notNullValue()
+                notNullValue(),
             )
             assertThat("Widths are the same", comparisonImage.width, equalTo(it.width))
             assertThat("Heights are the same", comparisonImage.height, equalTo(it.height))
@@ -84,7 +84,7 @@ class ScreenshotTest : BaseSessionTest() {
             assertThat(
                 "Images are almost identical",
                 imageElementDifference(comparisonImage, it),
-                lessThanOrEqualTo(1)
+                lessThanOrEqualTo(1),
             )
         }
     }
@@ -221,7 +221,7 @@ class ScreenshotTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onSessionStateChange(
                 session: GeckoSession,
-                sessionState: GeckoSession.SessionState
+                sessionState: GeckoSession.SessionState,
             ) {}
         })
 
@@ -355,7 +355,7 @@ class ScreenshotTest : BaseSessionTest() {
                     .source(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
                     .size(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
                     .capture(),
-                screenshotFile
+                screenshotFile,
             )
         }
     }
@@ -376,13 +376,13 @@ class ScreenshotTest : BaseSessionTest() {
                 it.screenshot()
                     .source(0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
                     .capture(),
-                BitmapFactory.decodeResource(res, R.drawable.colors_tl)
+                BitmapFactory.decodeResource(res, R.drawable.colors_tl),
             )
             assertScreenshotResult(
                 it.screenshot()
                     .source(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
                     .capture(),
-                BitmapFactory.decodeResource(res, R.drawable.colors_br)
+                BitmapFactory.decodeResource(res, R.drawable.colors_br),
             )
         }
     }
@@ -404,14 +404,14 @@ class ScreenshotTest : BaseSessionTest() {
                     .source(0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
                     .size(SCREEN_WIDTH / 4, SCREEN_WIDTH / 4)
                     .capture(),
-                BitmapFactory.decodeResource(res, R.drawable.colors_tl_scaled)
+                BitmapFactory.decodeResource(res, R.drawable.colors_tl_scaled),
             )
             assertScreenshotResult(
                 it.screenshot()
                     .source(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
                     .size(SCREEN_WIDTH / 4, SCREEN_WIDTH / 4)
                     .capture(),
-                BitmapFactory.decodeResource(res, R.drawable.colors_br_scaled)
+                BitmapFactory.decodeResource(res, R.drawable.colors_br_scaled),
             )
         }
     }
@@ -427,7 +427,7 @@ class ScreenshotTest : BaseSessionTest() {
                 OnExceptionListener<Throwable> { error: Throwable ->
                     Assert.assertTrue(error is OutOfMemoryError)
                     fromException(error)
-                }
+                },
             )
     }
 }

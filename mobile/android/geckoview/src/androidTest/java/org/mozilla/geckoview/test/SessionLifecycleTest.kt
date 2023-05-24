@@ -81,17 +81,17 @@ class SessionLifecycleTest : BaseSessionTest() {
             assertThat(
                 "Parceled settings must match",
                 newSettings.javaScriptEnabled,
-                equalTo(settings.javaScriptEnabled)
+                equalTo(settings.javaScriptEnabled),
             )
             assertThat(
                 "Parceled settings must match",
                 newSettings.extras.getInt("test1"),
-                equalTo(settings.extras.getInt("test1"))
+                equalTo(settings.extras.getInt("test1")),
             )
             assertThat(
                 "Parceled settings must match",
                 newSettings.extras.getBoolean("test2"),
-                equalTo(settings.extras.getBoolean("test2"))
+                equalTo(settings.extras.getBoolean("test2")),
             )
         }
     }
@@ -147,7 +147,7 @@ class SessionLifecycleTest : BaseSessionTest() {
                 }
                 window.requestAnimationFrame(raf);
             });
-        """
+        """,
         ) as Double
     }
 
@@ -160,8 +160,8 @@ class SessionLifecycleTest : BaseSessionTest() {
                 // This makes the throttled frame rate 4 times faster than normal,
                 // so this test doesn't time out. Should still be significantly slower tha
                 // the active frame rate so we can measure the effects
-                "layout.throttled_frame_rate" to 4
-            )
+                "layout.throttled_frame_rate" to 4,
+            ),
         )
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
@@ -174,7 +174,7 @@ class SessionLifecycleTest : BaseSessionTest() {
         assertThat(
             "docShell shouldn't be active after calling setActive(false)",
             mainSession.active,
-            equalTo(false)
+            equalTo(false),
         )
 
         mainSession.evaluateJS(
@@ -184,23 +184,23 @@ class SessionLifecycleTest : BaseSessionTest() {
             }
             setTimeout(fail, 1);
             fetch("missing.html").catch(fail);
-        """
+        """,
         )
 
         var rafRate = computeRequestAnimationFrameRate(mainSession)
         assertThat(
             "requestAnimationFrame should be called about once a second",
             rafRate,
-            greaterThan(450.0)
+            greaterThan(450.0),
         )
         assertThat(
             "requestAnimationFrame should be called about once a second",
             rafRate,
-            lessThan(10000.0)
+            lessThan(10000.0),
         )
 
         val isNotGreen = mainSession.evaluateJS(
-            "document.documentElement.style.backgroundColor !== 'green'"
+            "document.documentElement.style.backgroundColor !== 'green'",
         ) as Boolean
         assertThat("timeouts have not run yet", isNotGreen, equalTo(true))
 
@@ -209,7 +209,7 @@ class SessionLifecycleTest : BaseSessionTest() {
         assertThat(
             "docShell should be active after calling setActive(true)",
             mainSession.active,
-            equalTo(true)
+            equalTo(true),
         )
 
         // At 60fps, once a frame is about 16.6 ms
@@ -217,12 +217,12 @@ class SessionLifecycleTest : BaseSessionTest() {
         assertThat(
             "requestAnimationFrame should be called about once a frame",
             rafRate,
-            lessThan(60.0)
+            lessThan(60.0),
         )
         assertThat(
             "requestAnimationFrame should be called about once a frame",
             rafRate,
-            greaterThan(5.0)
+            greaterThan(5.0),
         )
     }
 
@@ -235,6 +235,6 @@ class SessionLifecycleTest : BaseSessionTest() {
 
     class QueuedWeakReference<T> @JvmOverloads constructor(
         obj: T,
-        var queue: ReferenceQueue<T> = ReferenceQueue()
+        var queue: ReferenceQueue<T> = ReferenceQueue(),
     ) : WeakReference<T>(obj, queue)
 }
