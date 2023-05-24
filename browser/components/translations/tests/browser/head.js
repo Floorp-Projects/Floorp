@@ -230,6 +230,7 @@ function isVisible(element) {
  * The `l10nId` represents the text that a user would actually see.
  *
  * @param {string} l10nId
+ * @param {Document} doc
  * @returns {Element}
  */
 function getByL10nId(l10nId, doc = document) {
@@ -243,6 +244,21 @@ function getByL10nId(l10nId, doc = document) {
     }
   }
   throw new Error("The element is not visible in the DOM: " + l10nId);
+}
+
+/**
+ * Get all elements that match the l10n id.
+ *
+ * @param {string} l10nId
+ * @param {Document} doc
+ * @returns {Element}
+ */
+function getAllByL10nId(l10nId, doc = document) {
+  const elements = doc.querySelectorAll(`[data-l10n-id="${l10nId}"]`);
+  if (elements.length === 0) {
+    throw new Error("Could not find the element by l10n id: " + l10nId);
+  }
+  return elements;
 }
 
 /**
