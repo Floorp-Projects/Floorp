@@ -8955,6 +8955,32 @@
   mirror: once
   rust: true
 
+# Stylo work unit size. This is the amount of nodes we'll process in a single
+# unit of work of the thread-pool.
+#
+# Larger values will increase style sharing cache hits and general DOM locality
+# at the expense of decreased opportunities for parallelism.  There are some
+# measurements in bug 1385982 comments 11, 12, 13 that investigate some
+# slightly different values for the work unit size.
+#
+# If the size is significantly increased, make sure to adjust the condition for
+# kicking off a new work unit (stylo-parallelism-threshold), because otherwise
+# we're likely to end up doing too much work serially.
+- name: layout.css.stylo-work-unit-size
+  type: RelaxedAtomicUint32
+  value: 16
+  mirror: always
+  rust: true
+
+# The amount of nodes that kick off the initial parallel traversal. See above
+# for tweaking. A value of 0 causes the traversal to effectively always be
+# serial.
+- name: layout.css.stylo-parallelism-threshold
+  type: RelaxedAtomicUint32
+  value: 16
+  mirror: always
+  rust: true
+
 # Are counters for implemented CSS properties enabled?
 - name: layout.css.use-counters.enabled
   type: bool
