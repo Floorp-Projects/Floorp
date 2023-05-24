@@ -1590,6 +1590,16 @@ class HTMLInputElement final : public TextControlElement,
     }
   }
 
+  bool DoesDirnameApply() const {
+    switch (mType) {
+      case FormControlType::InputText:
+      case FormControlType::InputSearch:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   static bool CreatesDateTimeWidget(FormControlType aType) {
     return aType == FormControlType::InputDate ||
            aType == FormControlType::InputTime ||
