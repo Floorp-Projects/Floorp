@@ -176,16 +176,16 @@ static const TestFileData testFiles[] = {
     // validMoof? audio_profile
     {"test_case_1156505.mp4", false, 0, false, -1, 0, 0, 0, -1., false, 152,
      false, 0},  // invalid ''trak box
-    {"test_case_1181213.mp4", true, 1, true, 0.41666666, 320, 240, 1, 0.47746032,
-     true, 0, false, 2},
+    {"test_case_1181213.mp4", true, 1, true, 0.41666666, 320, 240, 1,
+     0.47746032, true, 0, false, 2},
     {"test_case_1181215.mp4", true, 0, false, -1, 0, 0, 0, -1, false, 0, false,
      0},
-    {"test_case_1181223.mp4", false, 0, false, 0.41666666, 320, 240, 0, -1, false,
-     0, false, 0},
+    {"test_case_1181223.mp4", false, 0, false, 0.41666666, 320, 240, 0, -1,
+     false, 0, false, 0},
     {"test_case_1181719.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
      0},
-    {"test_case_1185230.mp4", true, 2, true, 0.41666666, 320, 240, 2, 0.0000059754907, false, 0,
-     false, 2},
+    {"test_case_1185230.mp4", true, 2, true, 0.41666666, 320, 240, 2,
+     0.0000059754907, false, 0, false, 2},
     {"test_case_1187067.mp4", true, 1, true, 0.080000, 160, 90, 0, -1, false, 0,
      false, 0},
     {"test_case_1200326.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
@@ -230,8 +230,8 @@ static const TestFileData testFiles[] = {
 
     {"test_case_1389527.mp4", true, 1, false, 5.005000, 80, 128, 1, 4.992000,
      false, 0, false, 2},
-    {"test_case_1395244.mp4", true, 1, true, 0.41666666, 320, 240, 1, 0.47746032,
-     false, 0, false, 2},
+    {"test_case_1395244.mp4", true, 1, true, 0.41666666, 320, 240, 1,
+     0.47746032, false, 0, false, 2},
     {"test_case_1388991.mp4", true, 0, false, -1, 0, 0, 1, 30.000181, false, 0,
      false, 2},
     {"test_case_1410565.mp4", false, 0, false, 0, 0, 0, 0, 0, false, 955100,
@@ -306,7 +306,7 @@ TEST(MP4Metadata, test_case_mp4)
         ASSERT_TRUE(std::isinf(videoInfo->mDuration.ToSeconds()));
       } else {
         EXPECT_FLOAT_EQ(tests[test].mVideoDuration,
-                  videoInfo->mDuration.ToSeconds())
+                        videoInfo->mDuration.ToSeconds())
             << tests[test].mFilename;
       }
       EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width)

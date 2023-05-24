@@ -440,10 +440,9 @@ TimeRanges TimeRanges::ToMicrosecondResolution() const {
   TimeRanges output;
 
   for (const auto& interval : mIntervals) {
-    TimeRange reducedPrecision{
-        RoundToMicrosecondResolution(interval.mStart),
-        RoundToMicrosecondResolution(interval.mEnd),
-        RoundToMicrosecondResolution(interval.mFuzz)};
+    TimeRange reducedPrecision{RoundToMicrosecondResolution(interval.mStart),
+                               RoundToMicrosecondResolution(interval.mEnd),
+                               RoundToMicrosecondResolution(interval.mFuzz)};
     output += reducedPrecision;
   }
   return output;

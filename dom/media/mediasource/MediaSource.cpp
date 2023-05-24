@@ -462,8 +462,7 @@ void MediaSource::SetLiveSeekableRange(double aStart, double aEnd,
   // 3. Set live seekable range to be a new normalized TimeRanges object
   // containing a single range whose start position is start and end position is
   // end.
-  mLiveSeekableRange =
-      Some(media::TimeRanges(media::TimeRange(aStart, aEnd)));
+  mLiveSeekableRange = Some(media::TimeRanges(media::TimeRange(aStart, aEnd)));
 }
 
 void MediaSource::ClearLiveSeekableRange(ErrorResult& aRv) {
