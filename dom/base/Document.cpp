@@ -15025,7 +15025,6 @@ Document::HideAllPopoversWithoutRunningScript() {
   return HideAllPopoversUntil(*this, false, false);
 }
 
-// https://html.spec.whatwg.org/#dom-hidepopover
 void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
                            bool aFireEvents, ErrorResult& aRv) {
   RefPtr<nsGenericHTMLElement> popoverHTMLEl =
