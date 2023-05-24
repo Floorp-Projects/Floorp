@@ -844,8 +844,8 @@ function verifySectionAutofillResult(sections, expectedSectionsInfo) {
       const expeceted = expectedFieldDetails[fieldIndex];
 
       Assert.equal(
-        expeceted.autofill,
         field.element.value,
+        expeceted.autofill,
         `Autofilled value for element(id=${field.element.id}, field name=${field.fieldName}) should be equal`
       );
     });
@@ -895,8 +895,8 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
         const expectedValue = expected[key];
         const actualValue = field[key];
         Assert.equal(
-          expectedValue,
           actualValue,
+          expectedValue,
           `${key} should be equal, expect ${expectedValue}, got ${actualValue}`
         );
       }
@@ -1027,6 +1027,9 @@ async function add_heuristic_tests(
           const elements = Array.from(
             content.document.querySelectorAll("input, select")
           );
+
+          // Bug 1834768. We should simulate user behavior instead of
+          // using internal APIs.
           const forms = elements.reduce((acc, element) => {
             const formLike = FormLikeFactory.createFromField(element);
             if (!acc.some(form => form.rootElement === formLike.rootElement)) {
@@ -1054,7 +1057,9 @@ async function add_heuristic_tests(
           if (obj.verifyAutofill) {
             for (const section of sections) {
               section.focusedInput = section.fieldDetails[0].element;
-              await section.autofillFields(obj.testPattern.profile);
+              await section.autofillFields(
+                section.getAdaptedProfiles([obj.testPattern.profile])[0]
+              );
             }
 
             // eslint-disable-next-line no-eval
