@@ -36,8 +36,8 @@ add_task(async function test_parseStreetAddress() {
   for (const TEST of TESTCASES) {
     let [address, expected] = TEST;
     const result = AddressParser.parseStreetAddress(address);
-    if (!result) {
-      Assert.equal(null, expected, "Expect fail to parse this street address");
+    if (!expected) {
+      Assert.equal(result, null, "Expect failure to parse this street address");
       continue;
     }
 
