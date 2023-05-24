@@ -104,6 +104,9 @@ const TEST_GLOBAL = {
     addMessageListener: (messageName, listener) => {},
     removeMessageListener: (messageName, listener) => {},
   },
+  AboutWelcomeTelemetry: class {
+    submitGleanPingForPing() {}
+  },
   AddonManager: {
     getActiveAddons() {
       return Promise.resolve({ addons: [], fullData: false });

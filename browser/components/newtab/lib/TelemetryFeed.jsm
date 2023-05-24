@@ -58,6 +58,15 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AboutWelcomeTelemetry:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
+});
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "Telemetry",
+  () => new lazy.AboutWelcomeTelemetry()
+);
 
 const ACTIVITY_STREAM_ID = "activity-stream";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
@@ -1003,6 +1012,12 @@ class TelemetryFeed {
       console.error("Unknown ping type for ASRouter telemetry");
       return;
     }
+
+    // Now that the action has become a ping, we can echo it to Glean.
+    if (this.telemetryEnabled) {
+      lazy.Telemetry.submitGleanPingForPing({ ...ping, pingType });
+    }
+
     this.sendStructuredIngestionEvent(
       ping,
       STRUCTURED_INGESTION_NAMESPACE_MS,

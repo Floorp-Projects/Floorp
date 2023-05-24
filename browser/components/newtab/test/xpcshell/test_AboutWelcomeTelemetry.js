@@ -15,6 +15,11 @@ const { sinon } = ChromeUtils.importESModule(
 );
 const TELEMETRY_PREF = "browser.newtabpage.activity-stream.telemetry";
 
+add_setup(function setup() {
+  do_get_profile();
+  Services.fog.initializeFOG();
+});
+
 add_task(function test_enabled() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(TELEMETRY_PREF);
@@ -42,6 +47,11 @@ add_task(async function test_pingPayload() {
   );
   sinon.stub(AWTelemetry, "_createPing").resolves({ event: "MOCHITEST" });
 
+  let pingSubmitted = false;
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {
+    pingSubmitted = true;
+    Assert.equal(Glean.messagingSystem.event.testGetValue(), "MOCHITEST");
+  });
   await AWTelemetry.sendTelemetry();
 
   equal(stub.callCount, 1, "Call was made");
@@ -50,6 +60,8 @@ add_task(async function test_pingPayload() {
     stub.firstCall.args[1].includes("/messaging-system/onboarding"),
     "Endpoint is correct"
   );
+
+  ok(pingSubmitted, "Glean ping was submitted");
 });
 
 add_task(function test_mayAttachAttribution() {
