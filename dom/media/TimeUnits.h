@@ -125,6 +125,8 @@ class TimeUnit final {
 
   bool IsPositiveOrZero() const { return mValue.value() >= 0; }
 
+  bool IsZero() const { return mValue.value() == 0; }
+
   bool IsNegative() const { return mValue.value() < 0; }
 
   bool operator==(const TimeUnit& aOther) const {
