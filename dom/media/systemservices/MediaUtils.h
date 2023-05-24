@@ -162,7 +162,7 @@ nsCOMPtr<nsIAsyncShutdownClient> MustGetShutdownBarrier();
 
 class ShutdownBlocker : public nsIAsyncShutdownBlocker {
  public:
-  ShutdownBlocker(nsString aName) : mName(std::move(aName)) {}
+  ShutdownBlocker(const nsAString& aName) : mName(aName) {}
 
   NS_IMETHOD
   BlockShutdown(nsIAsyncShutdownClient* aProfileBeforeChange) override = 0;
