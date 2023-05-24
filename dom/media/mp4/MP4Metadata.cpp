@@ -24,10 +24,10 @@ using mozilla::media::TimeUnit;
 namespace mozilla {
 LazyLogModule gMP4MetadataLog("MP4Metadata");
 
-IndiceWrapper::IndiceWrapper(Mp4parseByteData& aIndice) {
+IndiceWrapper::IndiceWrapper(Mp4parseByteData& aRustIndice) {
   mIndice.data = nullptr;
-  mIndice.length = aIndice.length;
-  mIndice.indices = aIndice.indices;
+  mIndice.length = aRustIndice.length;
+  mIndice.indices = aRustIndice.indices;
 }
 
 size_t IndiceWrapper::Length() const { return mIndice.length; }
