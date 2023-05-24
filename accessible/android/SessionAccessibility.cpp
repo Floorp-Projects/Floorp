@@ -115,8 +115,6 @@ void SessionAccessibility::Init() {
   Settings::Init();
 }
 
-bool SessionAccessibility::IsCacheEnabled() { return a11y::IsCacheActive(); }
-
 void SessionAccessibility::GetNodeInfo(int32_t aID,
                                        mozilla::jni::Object::Param aNodeInfo) {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
@@ -144,7 +142,6 @@ void SessionAccessibility::GetNodeInfo(int32_t aID,
 
 int SessionAccessibility::GetNodeClassName(int32_t aID) {
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
   ReleasableMonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
   int32_t classNameEnum = java::SessionAccessibility::CLASSNAME_VIEW;
   RefPtr<SessionAccessibility> self(this);
@@ -180,7 +177,6 @@ void SessionAccessibility::Click(int32_t aID) {
 
 bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
                                  bool aForward, bool aInclusive) {
-  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
   RefPtr<SessionAccessibility> self(this);
