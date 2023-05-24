@@ -48,6 +48,7 @@ job-template:
                 by-project:
                     autoland: build-mac-signing
                     try: build-mac-signing
+                    toolchains: build-mac-signing
                     default: build-mac-notarization
     worker-type: b-linux-gcp
     worker:
