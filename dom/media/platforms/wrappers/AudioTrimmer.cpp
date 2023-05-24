@@ -101,15 +101,15 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     return DecodePromise::CreateAndReject(std::move(aValue.RejectValue()),
                                           __func__);
   }
-  int64_t rawStart = aRaw ? aRaw->mTime.ToMicroseconds() : 0;
-  int64_t rawEnd = aRaw ? aRaw->GetEndTime().ToMicroseconds() : 0;
+  TimeUnit rawStart = aRaw ? aRaw->mTime : TimeUnit::Zero();
+  TimeUnit rawEnd = aRaw ? aRaw->GetEndTime() : TimeUnit::Zero();
   MediaDataDecoder::DecodedData results = std::move(aValue.ResolveValue());
   if (results.IsEmpty()) {
     // No samples returned, we assume this is due to the latency of the
     // decoder and that the related decoded sample will be returned during
     // the next call to Decode().
-    LOGV("No sample returned for sample[%" PRId64 ",%" PRId64 "]", rawStart,
-         rawEnd);
+    LOGV("No sample returned for sample[%s, %s]", rawStart.ToString().get(),
+         rawEnd.ToString().get());
   }
   for (uint32_t i = 0; i < results.Length();) {
     const RefPtr<MediaData>& data = results[i];
@@ -118,10 +118,10 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     if (mTrimmers.IsEmpty()) {
       // mTrimmers being empty can only occurs if the decoder returned more
       // frames than we pushed in. We can't handle this case, abort trimming.
-      LOG("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
-          "] no trimming information",
-          rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
-          sampleInterval.mEnd.ToMicroseconds());
+      LOG("sample[%s, %s] (decoded[%s, %s] no trimming information)",
+          rawStart.ToString().get(), rawEnd.ToString().get(),
+          sampleInterval.mStart.ToString().get(),
+          sampleInterval.mEnd.ToString().get());
       i++;
       continue;
     }
@@ -130,26 +130,28 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     mTrimmers.RemoveElementAt(0);
     if (!trimmer) {
       // Those frames didn't need trimming.
-      LOGV("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
-           "] no trimming needed",
-           rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
-           sampleInterval.mEnd.ToMicroseconds());
+      LOGV("sample[%s, %s] (decoded[%s, %s] no trimming needed",
+           rawStart.ToString().get(), rawEnd.ToString().get(),
+           sampleInterval.mStart.ToString().get(),
+           sampleInterval.mEnd.ToString().get());
       i++;
       continue;
     }
     if (!trimmer->Intersects(sampleInterval)) {
-      LOGV("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
-           "] would be empty after trimming, dropping it",
-           rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
-           sampleInterval.mEnd.ToMicroseconds());
+      LOGV(
+          "sample[%s, %s] (decoded[%s, %s] would be empty after trimming, "
+          "dropping it",
+          rawStart.ToString().get(), rawEnd.ToString().get(),
+          sampleInterval.mStart.ToString().get(),
+          sampleInterval.mEnd.ToString().get());
       results.RemoveElementAt(i);
       continue;
     }
-    LOGV("Trimming sample[%" PRId64 ",%" PRId64 "] to [%" PRId64 ",%" PRId64
-         "] (raw was:[%" PRId64 ",%" PRId64 "])",
-         sampleInterval.mStart.ToMicroseconds(),
-         sampleInterval.mEnd.ToMicroseconds(), trimmer->mStart.ToMicroseconds(),
-         trimmer->mEnd.ToMicroseconds(), rawStart, rawEnd);
+    LOGV("Trimming sample[%s,%s] to [%s,%s] (raw was:[%s, %s])",
+         sampleInterval.mStart.ToString().get(),
+         sampleInterval.mEnd.ToString().get(), trimmer->mStart.ToString().get(),
+         trimmer->mEnd.ToString().get(), rawStart.ToString().get(),
+         rawEnd.ToString().get());
 
     TimeInterval trim({std::max(trimmer->mStart, sampleInterval.mStart),
                        std::min(trimmer->mEnd, sampleInterval.mEnd)});
@@ -158,9 +160,8 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     NS_ASSERTION(ok, "Trimming of audio sample failed");
     Unused << ok;
     if (sample->Frames() == 0) {
-      LOGV("sample[%" PRId64 ",%" PRId64
-           "] is empty after trimming, dropping it",
-           rawStart, rawEnd);
+      LOGV("sample[%s, %s] is empty after trimming, dropping it",
+           rawStart.ToString().get(), rawEnd.ToString().get());
       results.RemoveElementAt(i);
       continue;
     }
@@ -200,18 +201,17 @@ void AudioTrimmer::PrepareTrimmers(MediaRawData* aRaw) {
   // the frame set by the demuxer and mTime and mDuration set to what it
   // should be after trimming.
   if (aRaw->mOriginalPresentationWindow) {
-    LOGV("sample[%" PRId64 ",%" PRId64 "] has trimming info ([%" PRId64
-         ",%" PRId64 "]",
-         aRaw->mOriginalPresentationWindow->mStart.ToMicroseconds(),
-         aRaw->mOriginalPresentationWindow->mEnd.ToMicroseconds(),
-         aRaw->mTime.ToMicroseconds(), aRaw->GetEndTime().ToMicroseconds());
+    LOGV("sample[%s, %s] has trimming info ([%s, %s]",
+         aRaw->mOriginalPresentationWindow->mStart.ToString().get(),
+         aRaw->mOriginalPresentationWindow->mEnd.ToString().get(),
+         aRaw->mTime.ToString().get(), aRaw->GetEndTime().ToString().get());
     mTrimmers.AppendElement(
         Some(TimeInterval(aRaw->mTime, aRaw->GetEndTime())));
     aRaw->mTime = aRaw->mOriginalPresentationWindow->mStart;
     aRaw->mDuration = aRaw->mOriginalPresentationWindow->Length();
   } else {
-    LOGV("sample[%" PRId64 ",%" PRId64 "] no trimming information",
-         aRaw->mTime.ToMicroseconds(), aRaw->GetEndTime().ToMicroseconds());
+    LOGV("sample[%s,%s] no trimming information", aRaw->mTime.ToString().get(),
+         aRaw->GetEndTime().ToString().get());
     mTrimmers.AppendElement(Nothing());
   }
 }
