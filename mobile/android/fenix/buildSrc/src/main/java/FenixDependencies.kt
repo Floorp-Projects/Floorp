@@ -8,7 +8,7 @@
 object FenixVersions {
     const val kotlin = "1.8.21"
     const val coroutines = "1.6.4"
-    const val python_envs_plugin = "0.0.26"
+    const val python_envs_plugin = "0.0.31"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3

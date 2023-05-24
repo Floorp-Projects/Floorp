@@ -47,7 +47,7 @@ object FocusVersions {
     object Kotlin {
         const val compiler = "1.8.21"
         const val coroutines = "1.6.4"
-        const val python_envs_plugin = "0.0.26"
+        const val python_envs_plugin = "0.0.31"
     }
 
     object Testing {
