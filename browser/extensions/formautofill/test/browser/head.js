@@ -938,7 +938,7 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
  * - part: The part of the field.
  * - contactType: The contact type of the field.
  * - addressType: The address type of the field.
- * - autofill: Set to true when running autofill test
+ * - autofill: Set the expected autofill value when running autofill test
  *
  * For more information on the field object properties, refer to the FieldDetails class.
  *
