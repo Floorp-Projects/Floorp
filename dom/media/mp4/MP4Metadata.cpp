@@ -340,6 +340,19 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
           ("track codec %s (%u)\n", codecString, codecType));
 #endif
 
+  Mp4parseTrackInfo track_info;
+  rv = mp4parse_get_track_info(mParser.get(), trackIndex.value(), &track_info);
+  if (rv != MP4PARSE_STATUS_OK) {
+        MOZ_LOG(gMP4MetadataLog, LogLevel::Warning,
+                ("mp4parse_get_track_info returned error %d", rv));
+        return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                            RESULT_DETAIL("Cannot parse %s track #%zu",
+                                          TrackTypeToStr(aType), aTrackNumber)),
+                nullptr};
+  }
+
+  uint32_t timeScale = info.time_scale;
+
   // This specialization interface is wild.
   UniquePtr<mozilla::TrackInfo> e;
   switch (aType) {
@@ -415,12 +428,16 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
               nullptr};
   }
 
+  e->mTimeScale = AssertedCast<int32_t>(timeScale);
+
   // No duration in track, use fragment_duration.
   if (e && !e->mDuration.IsPositive()) {
-    Mp4parseFragmentInfo info;
-    auto rv = mp4parse_get_fragment_info(mParser.get(), &info);
+    Mp4parseFragmentInfo fragmentInfo;
+    auto rv = mp4parse_get_fragment_info(mParser.get(), &fragmentInfo);
     if (rv == MP4PARSE_STATUS_OK) {
-      e->mDuration = TimeUnit::FromMicroseconds(info.fragment_duration);
+      // This doesn't use the time scale of the track, but the time scale
+      // indicated in the mvhd box
+      e->mDuration = TimeUnit(fragmentInfo.fragment_duration, fragmentInfo.time_scale);
     }
   }
 
