@@ -92,7 +92,7 @@ ifndef rustflags_sancov
 # Never enable when coverage is enabled to work around https://github.com/rust-lang/rust/issues/90045.
 ifndef MOZ_CODE_COVERAGE
 ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
-cargo_rustc_flags += -Clto
+cargo_rustc_flags += -Clto$(if $(filter full,$(MOZ_LTO_RUST_CROSS)),=fat)
 endif
 # We need -Cembed-bitcode=yes for all crates when using -Clto.
 RUSTFLAGS += -Cembed-bitcode=yes
@@ -283,7 +283,7 @@ endif
 $(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS) $(rust_pgo_flags) \
 								$(if $(MOZ_LTO_RUST_CROSS),\
 								    -Clinker-plugin-lto \
-									$(if $(filter full,$(MOZ_LTO_RUST_CROSS)), -Clto=fat,),)
+									,)
 $(target_rust_nonltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS)
 
 TARGET_RECIPES := $(target_rust_ltoable) $(target_rust_nonltoable)
