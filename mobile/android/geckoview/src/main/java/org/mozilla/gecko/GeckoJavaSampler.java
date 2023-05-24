@@ -51,6 +51,7 @@ public class GeckoJavaSampler {
    * https://searchfox.org/mozilla-central/rev/d4ebb53e719b913afdbcf7c00e162f0e96574701/mozglue/baseprofiler/public/BaseProfilerUtils.h#194
    */
   private static final long REPLACEMENT_MAIN_THREAD_ID = 1;
+
   /**
    * The thread name to use for the main thread instead of its true thread name. The name is "main",
    * which is ambiguous with the JS main thread, so we rename it to match the C++ replacement. We
@@ -177,20 +178,25 @@ public class GeckoJavaSampler {
 
     /** Name of the marker */
     private final String mMarkerName;
+
     /** Either start time for the duration markers or time for a point-in-time markers. */
     private final double mTime;
+
     /**
      * A fallback field of {@link #mTime} but it only exists when {@link #getProfilerTime()} is
      * failed. It is non-zero if Android time is used.
      */
     private final long mJavaTime;
+
     /** End time for the duration markers. It's zero for point-in-time markers. */
     private final double mEndTime;
+
     /**
      * A fallback field of {@link #mEndTime} but it only exists when {@link #getProfilerTime()} is
      * failed. It is non-zero if Android time is used.
      */
     private final long mEndJavaTime;
+
     /** A nullable additional information field for the marker. */
     private @Nullable final String mText;
 

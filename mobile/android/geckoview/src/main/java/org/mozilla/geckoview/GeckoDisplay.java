@@ -245,6 +245,7 @@ public class GeckoDisplay {
       mSession.onSafeAreaInsetsChanged(top, right, bottom, left);
     }
   }
+
   /**
    * Set the maximum height of the dynamic toolbar(s).
    *
