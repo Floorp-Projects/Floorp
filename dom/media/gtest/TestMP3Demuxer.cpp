@@ -54,30 +54,30 @@ struct MP3Resource {
 
     Duration(int64_t aMicroseconds, float aTolerableRate)
         : mMicroseconds(aMicroseconds), mTolerableRate(aTolerableRate) {}
-    int64_t Tolerance() const { return mTolerableRate * mMicroseconds; }
+    int64_t Tolerance() const { return AssertedCast<int64_t>(mTolerableRate * static_cast<float>(mMicroseconds)); }
   };
 
-  const char* mFilePath;
-  bool mIsVBR;
-  HeaderType mHeaderType;
-  int64_t mFileSize;
-  uint32_t mMPEGLayer;
-  uint32_t mMPEGVersion;
-  uint8_t mID3MajorVersion;
-  uint8_t mID3MinorVersion;
-  uint8_t mID3Flags;
-  uint32_t mID3Size;
+  const char* mFilePath{};
+  bool mIsVBR{};
+  HeaderType mHeaderType{ HeaderType::NONE };
+  int64_t mFileSize{};
+  uint32_t mMPEGLayer{};
+  uint32_t mMPEGVersion{};
+  uint8_t mID3MajorVersion{};
+  uint8_t mID3MinorVersion{};
+  uint8_t mID3Flags{};
+  uint32_t mID3Size{};
 
   Maybe<Duration> mDuration;
-  float mSeekError;
-  uint32_t mSampleRate;
-  uint32_t mSamplesPerFrame;
-  uint32_t mNumSamples;
-  uint32_t mPadding;
-  uint32_t mEncoderDelay;
-  uint32_t mBitrate;
-  uint32_t mSlotSize;
-  int32_t mPrivate;
+  float mSeekError{};
+  uint32_t mSampleRate{};
+  uint32_t mSamplesPerFrame{};
+  uint32_t mNumSamples{};
+  uint32_t mPadding{};
+  uint32_t mEncoderDelay{};
+  uint32_t mBitrate{};
+  uint32_t mSlotSize{};
+  int32_t mPrivate{};
 
   // The first n frame offsets.
   std::vector<int32_t> mSyncOffsets;
@@ -439,7 +439,7 @@ TEST_F(MP3DemuxerTest, FrameParsing) {
       }
 
       ++numFrames;
-      parsedLength += frameData->Size();
+      parsedLength += AssertedCast<int64_t>(frameData->Size());
 
       const auto& frame = target.mDemuxer->LastFrame();
       const auto& header = frame.Header();
@@ -507,6 +507,7 @@ TEST_F(MP3DemuxerTest, Duration) {
 
   // Seek out of range tests.
   for (const auto& target : mTargets) {
+    printf("Testing %s\n", target.mFilePath);
     // Skip tests for stream media resources because of lacking duration.
     if (target.mFileSize <= 0) {
       continue;
