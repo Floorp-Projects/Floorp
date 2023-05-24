@@ -159,7 +159,6 @@ fun TabsTray(
                 onTabPageIndicatorClicked = onTabPageClick,
                 onSaveToCollectionClick = onSaveToCollectionClick,
                 onShareSelectedTabsClick = onShareSelectedTabsClick,
-                onEnterMultiselectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode) },
                 onShareAllTabsClick = onShareAllTabsClick,
                 onTabSettingsClick = onTabSettingsClick,
                 onRecentlyClosedClick = onRecentlyClosedClick,

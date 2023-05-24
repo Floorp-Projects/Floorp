@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -66,7 +67,6 @@ private val ICON_SIZE = 24.dp
  * @param onSaveToCollectionClick Invoked when the user clicks on the save to collection button from
  * the multi select banner.
  * @param onShareSelectedTabsClick Invoked when the user clicks on the share button from the multi select banner.
- * @param onEnterMultiselectModeClick Invoked when the user clicks on the enter multiselect mode menu item.
  * @param onShareAllTabsClick Invoked when the user clicks on the share menu item.
  * @param onTabSettingsClick Invoked when the user clicks on the tab settings menu item.
  * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed tabs menu item.
@@ -84,7 +84,6 @@ fun TabsTrayBanner(
     onTabPageIndicatorClicked: (Page) -> Unit,
     onSaveToCollectionClick: () -> Unit,
     onShareSelectedTabsClick: () -> Unit,
-    onEnterMultiselectModeClick: () -> Unit,
     onShareAllTabsClick: () -> Unit,
     onTabSettingsClick: () -> Unit,
     onRecentlyClosedClick: () -> Unit,
@@ -121,7 +120,7 @@ fun TabsTrayBanner(
             selectedPage = selectedPage,
             normalTabCount = normalTabCount,
             privateTabCount = privateTabCount,
-            onEnterMultiselectModeClick = onEnterMultiselectModeClick,
+            onEnterMultiselectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode) },
             onShareAllTabsClick = onShareAllTabsClick,
             onTabSettingsClick = onTabSettingsClick,
             onRecentlyClosedClick = onRecentlyClosedClick,
@@ -149,7 +148,7 @@ private fun SingleSelectBanner(
     val inactiveColor = FirefoxTheme.colors.iconPrimaryInactive
     var showMenu by remember { mutableStateOf(false) }
 
-    Column {
+    Column(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.bottom_sheet_handle_top_margin)))
 
         Divider(
@@ -534,7 +533,7 @@ private fun TabsTrayBannerPreviewRoot(
     )
 
     FirefoxTheme {
-        Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+        Box(modifier = Modifier.size(400.dp)) {
             TabsTrayBanner(
                 tabsTrayStore = tabsTrayStore,
                 isInDebugMode = true,
@@ -543,7 +542,6 @@ private fun TabsTrayBannerPreviewRoot(
                 },
                 onSaveToCollectionClick = {},
                 onShareSelectedTabsClick = {},
-                onEnterMultiselectModeClick = {},
                 onShareAllTabsClick = {},
                 onTabSettingsClick = {},
                 onRecentlyClosedClick = {},
