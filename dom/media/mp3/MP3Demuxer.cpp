@@ -569,6 +569,8 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
   if (frameHeaderOffset + mParser.CurrentFrame().Length() + BUFFER_SIZE >
       StreamLength()) {
     mEOS = true;
+  } else {
+    mEOS = false;
   }
 
   MP3LOGV("FindNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
@@ -628,13 +630,16 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
 
   UpdateState(aRange);
 
-  frame->mTime = Duration(mFrameIndex - 1);
+  frame->mTime = Duration(mFrameIndex - 1) - FramesToTimeUnit(mEncoderDelay, mSamplesPerSecond);
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
   frame->mEOS = mEOS;
 
-  MOZ_ASSERT(!frame->mTime.IsNegative());
+  if (frame->mEOS) {
+    frame->mDuration -= FramesToTimeUnit(mEncoderPadding, mSamplesPerSecond);
+  }
+
   MOZ_ASSERT(frame->mDuration.IsPositive());
 
   if (mNumParsedFrames == 1) {
@@ -649,6 +654,7 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
                 mParser.VBRInfo().EncoderDelay());
         mEncoderDelay = mParser.VBRInfo().EncoderDelay();
         mEncoderPadding = mParser.VBRInfo().EncoderPadding();
+        frame->mTime -= FramesToTimeUnit(mEncoderDelay, mSamplesPerSecond);
       }
     }
   }
