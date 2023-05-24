@@ -12392,7 +12392,7 @@
 
 - name: network.http.http2.send-buffer-size
   type: RelaxedAtomicInt32
-  value: 131072
+  value: 0
   mirror: always
 
 - name: network.http.http2.allow-push
