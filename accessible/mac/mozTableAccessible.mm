@@ -22,8 +22,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
-
 @implementation mozColumnContainer
 
 - (id)initWithIndex:(uint32_t)aIndex andParent:(mozAccessible*)aParent {
@@ -116,30 +114,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   return [self isLayoutTablePart] ? NSAccessibilityGroupRole : [super moxRole];
 }
 
-- (void)handleAccessibleEvent:(uint32_t)eventType {
-  if (![self isKindOfClass:[mozTableAccessible class]] &&
-      !a11y::IsCacheActive()) {
-    // If we are not a table, we are a cell or a row.
-    // Check to see if the event we're handling should
-    // invalidate the mIsLayoutTable cache on our parent
-    // table. Only do this when the core cache is off, because
-    // we don't use the platform cache when its on.
-    if (eventType == nsIAccessibleEvent::EVENT_REORDER ||
-        eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED) {
-      // Invalidate the cache on our parent table
-      [self invalidateLayoutTableCache];
-    }
-  }
-
-  [super handleAccessibleEvent:eventType];
-}
-
 - (BOOL)isLayoutTablePart {
-  // mIsLayoutTable is a cache on each mozTableAccessible that stores
-  // the previous result of calling IsProbablyLayoutTable in core. To see
-  // how/when the cache is invalidated, view handleAccessibleEvent.
-  // The cache contains one of three values from the CachedBool enum
-  // defined in mozTableAccessible.h
   mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
   if ([parent isKindOfClass:[mozTablePartAccessible class]]) {
     return [(mozTablePartAccessible*)parent isLayoutTablePart];
@@ -149,67 +124,33 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   return NO;
 }
-
-- (void)invalidateLayoutTableCache {
-  mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
-  if ([parent isKindOfClass:[mozTablePartAccessible class]]) {
-    // We do this to prevent dispatching invalidateLayoutTableCache
-    // on outlines or outline parts. This is possible here because
-    // outline rows subclass table rows, which are a table part.
-    // This means `parent` could be an outline, and there is no
-    // cache on outlines to invalidate.
-    [(mozTablePartAccessible*)parent invalidateLayoutTableCache];
-  }
-}
 @end
 
 @implementation mozTableAccessible
 
-- (void)invalidateLayoutTableCache {
-  MOZ_ASSERT(!a11y::IsCacheActive(),
-             "If the core cache is enabled we shouldn't be maintaining the "
-             "platform table cache!");
-  mIsLayoutTable = eCachedBoolMiss;
-}
-
 - (BOOL)isLayoutTablePart {
-  if (mIsLayoutTable != eCachedBoolMiss && !a11y::IsCacheActive()) {
-    // Only use the platform cache if the core cache is not on
-    return mIsLayoutTable == eCachedTrue;
-  }
-
   if (mGeckoAccessible->Role() == roles::TREE_TABLE) {
     // tree tables are never layout tables, and we shouldn't
     // query IsProbablyLayoutTable() on them, so we short
     // circuit here
-    mIsLayoutTable = eCachedFalse;
     return false;
   }
 
-  bool tableGuess;
   // For LocalAccessible and cached RemoteAccessible, we could use
   // AsTableBase()->IsProbablyLayoutTable(). However, if the cache is enabled,
   // that would build the table cache, which is pointless for layout tables on
   // Mac because layout tables are AXGroups and do not expose table properties
   // like AXRows, AXColumns, etc.
   if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    tableGuess = acc->AsTable()->IsProbablyLayoutTable();
-  } else {
-    RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-    tableGuess = proxy->TableIsProbablyForLayout();
+    return acc->AsTable()->IsProbablyLayoutTable();
   }
-
-  mIsLayoutTable = tableGuess ? eCachedTrue : eCachedFalse;
-  return tableGuess;
+  RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
+  return proxy->TableIsProbablyForLayout();
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   if (eventType == nsIAccessibleEvent::EVENT_REORDER ||
-      eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED ||
-      eventType == nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED) {
-    if (!a11y::IsCacheActive()) {
-      [self invalidateLayoutTableCache];
-    }
+      eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED) {
     [self invalidateColumns];
   }
 

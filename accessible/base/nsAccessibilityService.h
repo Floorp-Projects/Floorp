@@ -546,7 +546,6 @@ static const char kEventTypeNames[][40] = {
     "announcement",                     // EVENT_ANNOUNCEMENT
     "live region added",                // EVENT_LIVE_REGION_ADDED
     "live region removed",              // EVENT_LIVE_REGION_REMOVED
-    "table styling changed",            // EVENT_TABLE_STYLING_CHANGED
     "inner reorder",                    // EVENT_INNER_REORDER
 };
 
