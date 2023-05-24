@@ -239,9 +239,8 @@ add_task(async function test_password_dupe() {
   let collection = server.user("foo").collection("passwords");
 
   let guid1 = Utils.makeGUID();
-  let rec1 = new LoginRec("passwords", guid1);
   let guid2 = Utils.makeGUID();
-  let cleartext = {
+  let details = {
     formSubmitURL: "https://www.example.com",
     hostname: "https://www.example.com",
     httpRealm: null,
@@ -249,19 +248,18 @@ add_task(async function test_password_dupe() {
     password: "bar",
     usernameField: "username-field",
     passwordField: "password-field",
-    timeCreated: Math.round(Date.now()),
-    timePasswordChanged: Math.round(Date.now()),
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
   };
-  rec1.cleartext = cleartext;
 
   _("Create remote record with same details and guid1");
-  collection.insert(guid1, encryptPayload(rec1.cleartext));
+  collection.insertRecord(Object.assign({}, details, { id: guid1 }));
 
   _("Create remote record with guid2");
-  collection.insert(guid2, encryptPayload(cleartext));
+  collection.insertRecord(Object.assign({}, details, { id: guid2 }));
 
   _("Create local record with same details and guid1");
-  await engine._store.create(rec1);
+  await engine._store.create(Object.assign({}, details, { id: guid1 }));
 
   try {
     _("Perform sync");
@@ -400,8 +398,7 @@ add_task(async function test_new_null_password_sync() {
   await SyncTestingInfrastructure(server);
 
   let guid1 = Utils.makeGUID();
-  let rec1 = new LoginRec("passwords", guid1);
-  rec1.cleartext = {
+  let details = {
     formSubmitURL: "https://www.example.com",
     hostname: "https://www.example.com",
     httpRealm: null,
@@ -415,7 +412,7 @@ add_task(async function test_new_null_password_sync() {
 
   try {
     _("Create local login with null password");
-    await engine._store.create(rec1);
+    await engine._store.create(Object.assign({}, details, { id: guid1 }));
 
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
@@ -440,8 +437,7 @@ add_task(async function test_new_undefined_password_sync() {
   await SyncTestingInfrastructure(server);
 
   let guid1 = Utils.makeGUID();
-  let rec1 = new LoginRec("passwords", guid1);
-  rec1.cleartext = {
+  let details = {
     formSubmitURL: "https://www.example.com",
     hostname: "https://www.example.com",
     httpRealm: null,
@@ -455,7 +451,7 @@ add_task(async function test_new_undefined_password_sync() {
 
   try {
     _("Create local login with undefined password");
-    await engine._store.create(rec1);
+    await engine._store.create(Object.assign({}, details, { id: guid1 }));
 
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
@@ -493,94 +489,6 @@ add_task(async function test_sync_password_validation() {
 
     let validation = engineInfo.validation;
     ok(validation, "Engine should have validation info");
-  } finally {
-    await cleanup(engine, server);
-  }
-});
-
-add_task(async function test_roundtrip_unknown_fields() {
-  _(
-    "Testing that unknown fields from other clients get roundtripped back to server"
-  );
-
-  let engine = Service.engineManager.get("passwords");
-
-  let server = await serverForFoo(engine);
-  await SyncTestingInfrastructure(server);
-  let collection = server.user("foo").collection("passwords");
-
-  enableValidationPrefs();
-
-  _("Add login with older password change time to replace during first sync");
-  let oldLogin;
-  {
-    let login = new LoginInfo(
-      "https://mozilla.com",
-      "",
-      null,
-      "us3r",
-      "0ldpa55",
-      "",
-      ""
-    );
-    Services.logins.addLogin(login);
-
-    let props = new PropertyBag();
-    let localPasswordChangeTime = Math.round(
-      Date.now() - 1 * 60 * 60 * 24 * 1000
-    );
-    props.setProperty("timePasswordChanged", localPasswordChangeTime);
-    Services.logins.modifyLogin(login, props);
-
-    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
-    equal(logins.length, 1, "Should find old login in login manager");
-    oldLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
-    equal(oldLogin.timePasswordChanged, localPasswordChangeTime);
-
-    let rec = new LoginRec("passwords", oldLogin.guid);
-    rec.hostname = oldLogin.origin;
-    rec.formSubmitURL = oldLogin.formActionOrigin;
-    rec.httpRealm = oldLogin.httpRealm;
-    rec.username = oldLogin.username;
-    // Change the password and bump the password change time to ensure we prefer
-    // the remote one during reconciliation.
-    rec.password = "n3wpa55";
-    rec.usernameField = oldLogin.usernameField;
-    rec.passwordField = oldLogin.usernameField;
-    rec.timeCreated = oldLogin.timeCreated;
-    rec.timePasswordChanged = Math.round(Date.now());
-
-    // pretend other clients have some snazzy new fields
-    // we don't quite understand yet
-    rec.cleartext.someStrField = "I am a str";
-    rec.cleartext.someObjField = { newField: "I am a new field" };
-    collection.insert(oldLogin.guid, encryptPayload(rec.cleartext));
-  }
-
-  await engine._tracker.stop();
-
-  try {
-    await sync_engine_and_validate_telem(engine, false);
-
-    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
-    equal(
-      logins[0].password,
-      "n3wpa55",
-      "Should update local password for older login"
-    );
-    let expectedUnknowns = JSON.stringify({
-      someStrField: "I am a str",
-      someObjField: { newField: "I am a new field" },
-    });
-    // Check that the local record has all unknown fields properly
-    // stringified
-    equal(logins[0].unknownFields, expectedUnknowns);
-
-    // Check that the server has the unknown fields unfurled and on the
-    // top-level record
-    let serverRec = collection.cleartext(oldLogin.guid);
-    equal(serverRec.someStrField, "I am a str");
-    equal(serverRec.someObjField.newField, "I am a new field");
   } finally {
     await cleanup(engine, server);
   }
