@@ -25,7 +25,6 @@ nsLoginInfo.prototype = {
   password: null,
   usernameField: null,
   passwordField: null,
-  unknownFields: null,
 
   get displayOrigin() {
     let displayOrigin = this.origin;
@@ -120,9 +119,6 @@ nsLoginInfo.prototype = {
     clone.timeLastUsed = this.timeLastUsed;
     clone.timePasswordChanged = this.timePasswordChanged;
     clone.timesUsed = this.timesUsed;
-
-    // Unknown fields from other clients
-    clone.unknownFields = this.unknownFields;
 
     return clone;
   },

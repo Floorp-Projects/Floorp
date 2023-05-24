@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { PasswordEngine, LoginRec } = ChromeUtils.importESModule(
+const { PasswordEngine } = ChromeUtils.importESModule(
   "resource://services-sync/engines/passwords.sys.mjs"
 );
 const { Service } = ChromeUtils.importESModule(
@@ -28,8 +28,7 @@ add_task(async function test_tracking() {
 
   async function createPassword() {
     _("RECORD NUM: " + recordNum);
-    let record = new LoginRec("passwords", "GUID" + recordNum);
-    record.cleartext = {
+    let record = {
       id: "GUID" + recordNum,
       hostname: "http://foo.bar.com",
       formSubmitURL: "http://foo.bar.com",
@@ -116,8 +115,7 @@ add_task(async function test_removeAllLogins() {
 
   async function createPassword() {
     _("RECORD NUM: " + recordNum);
-    let record = new LoginRec("passwords", "GUID" + recordNum);
-    record.cleartext = {
+    let record = {
       id: "GUID" + recordNum,
       hostname: "http://foo.bar.com",
       formSubmitURL: "http://foo.bar.com",
