@@ -303,7 +303,7 @@ elif CONFIG["OS_ARCH"] == "Linux":
     ]
 
 EXTRA_JS_MODULES += [
-    "NetUtil.jsm",
+    "NetUtil.sys.mjs",
 ]
 
 DIRS += ["mozurl", "rust-helper", "http-sfv"]
