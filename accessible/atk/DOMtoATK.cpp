@@ -145,12 +145,6 @@ gchar* Convert(const nsAString& aStr) {
   return g_strdup(cautoStrBOMs.get());
 }
 
-void ConvertTexttoAsterisks(nsAString& aString) {
-  for (uint32_t i = 0; i < aString.Length(); i++) {
-    aString.ReplaceLiteral(i, 1, u"*");
-  }
-}
-
 }  // namespace DOMtoATK
 
 }  // namespace a11y

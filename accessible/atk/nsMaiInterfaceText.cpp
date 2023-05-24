@@ -95,34 +95,18 @@ static AtkAttributeSet* ConvertToAtkTextAttributeSet(
   return objAttributeSet;
 }
 
-static void ConvertTexttoAsterisks(Accessible* aAcc, nsAString& aString) {
-  // convert each char to "*" when it's "password text"
-  if (aAcc->IsPassword()) {
-    DOMtoATK::ConvertTexttoAsterisks(aString);
-  }
-}
-
 extern "C" {
 
 static gchar* getTextCB(AtkText* aText, gint aStartOffset, gint aEndOffset) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  nsAutoString autoStr;
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole() || text->IsDefunct()) return nullptr;
-
-    return DOMtoATK::NewATKString(
-        text, aStartOffset, aEndOffset,
-        accWrap->IsPassword()
-            ? DOMtoATK::AtkStringConvertFlags::ConvertTextToAsterisks
-            : DOMtoATK::AtkStringConvertFlags::None);
-
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return DOMtoATK::NewATKString(proxy, aStartOffset, aEndOffset,
-                                  DOMtoATK::AtkStringConvertFlags::None);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc || !acc->IsTextRole()) {
+    return nullptr;
   }
-
-  return nullptr;
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text) {
+    return nullptr;
+  }
+  return DOMtoATK::NewATKString(text, aStartOffset, aEndOffset);
 }
 
 static gint getCharacterCountCB(AtkText* aText);
@@ -173,11 +157,6 @@ static gchar* getTextAfterOffsetCB(AtkText* aText, gint aOffset,
   int32_t startOffset = 0, endOffset = 0;
   text->TextAfterOffset(aOffset, aBoundaryType, &startOffset, &endOffset,
                         autoStr);
-  if (acc->IsLocal()) {
-    // XXX Is this needed any more? Masking of passwords is handled in
-    // cross-platform code.
-    ConvertTexttoAsterisks(acc, autoStr);
-  }
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -206,11 +185,6 @@ static gchar* getTextAtOffsetCB(AtkText* aText, gint aOffset,
   nsAutoString autoStr;
   int32_t startOffset = 0, endOffset = 0;
   text->TextAtOffset(aOffset, aBoundaryType, &startOffset, &endOffset, autoStr);
-  if (acc->IsLocal()) {
-    // XXX Is this needed any more? Masking of passwords is handled in
-    // cross-platform code.
-    ConvertTexttoAsterisks(acc, autoStr);
-  }
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -254,11 +228,6 @@ static gchar* getTextBeforeOffsetCB(AtkText* aText, gint aOffset,
   int32_t startOffset = 0, endOffset = 0;
   text->TextBeforeOffset(aOffset, aBoundaryType, &startOffset, &endOffset,
                          autoStr);
-  if (acc->IsLocal()) {
-    // XXX Is this needed any more? Masking of passwords is handled in
-    // cross-platform code.
-    ConvertTexttoAsterisks(acc, autoStr);
-  }
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
