@@ -24,7 +24,7 @@ object FenixVersions {
     const val maven_ant_tasks = "2.1.3"
     const val jacoco = "0.8.10"
     const val falcon = "2.2.0"
-    const val fastlane = "2.0.0"
+    const val fastlane = "2.1.1"
 
     const val androidx_activity = "1.7.1"
     const val androidx_compose = "1.4.3"
