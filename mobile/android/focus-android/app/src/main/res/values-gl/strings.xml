@@ -65,7 +65,7 @@
          Next to this label is a switch that allows the user to temporarily enable / disable the
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
-    <string name="menu_trackers_blocked_title">Elementos bloqueados</string>
+    <string name="menu_trackers_blocked_title">Rastrexadores bloqueados</string>
 
     <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
     trackers have been blocked for the currently loaded website.  -->
@@ -457,7 +457,7 @@
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
          the number of trackers blocked for the current session -->
-    <string name="content_description_trackers_blocked">Número de elementos bloqueados</string>
+    <string name="content_description_trackers_blocked">Número de rastrexadores bloqueados</string>
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
          content blocking for the current session -->
