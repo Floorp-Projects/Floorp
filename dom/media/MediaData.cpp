@@ -86,36 +86,32 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     return false;
   }
   const size_t originalFrames = mAudioData.Length() / mChannels;
-  const TimeUnit originalDuration = FramesToTimeUnit(AssertedCast<int64_t>(originalFrames), mRate);
   if (aTrim.mStart < mOriginalTime ||
-      aTrim.mEnd > mOriginalTime + originalDuration) {
+      aTrim.mEnd > GetEndTime()) {
     return false;
   }
 
-  auto trimBefore = TimeUnitToFrames(aTrim.mStart - mOriginalTime, mRate);
-  auto trimAfter = aTrim.mEnd == GetEndTime()
-                       ? originalFrames
-                       : TimeUnitToFrames(aTrim.mEnd - mOriginalTime, mRate);
-  if (!trimBefore.isValid() || !trimAfter.isValid()) {
+  auto trimBefore = aTrim.mStart - mOriginalTime;
+  auto trimAfter = aTrim.mEnd - mOriginalTime;
+  if (!trimBefore.IsValid() || !trimAfter.IsValid()) {
     // Overflow.
     return false;
   }
-  MOZ_DIAGNOSTIC_ASSERT(trimAfter.value() >= trimBefore.value(),
-                        "Something went wrong with trimming value");
-  if (!mTrimWindow && trimBefore == 0 && trimAfter == originalFrames) {
+  if (!mTrimWindow && trimBefore.IsZero() && trimAfter == mDuration) {
     // Nothing to change, abort early to prevent rounding errors.
     return true;
   }
 
+  size_t frameOffset = trimBefore.ToTicksAtRate(mRate);
   mTrimWindow = Some(aTrim);
-  mDataOffset = trimBefore.value() * mChannels;
+  mDataOffset = frameOffset * mChannels;
   MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
                         "Data offset outside original buffer");
-  mFrames = (trimAfter - trimBefore).value();
+  mFrames = (trimAfter - trimBefore).ToTicksAtRate(mRate);
   MOZ_DIAGNOSTIC_ASSERT(mFrames <= originalFrames,
                         "More frames than found in container");
-  mTime = mOriginalTime + FramesToTimeUnit(trimBefore.value(), mRate);
-  mDuration = FramesToTimeUnit(mFrames, mRate);
+  mTime = mOriginalTime + trimBefore;
+  mDuration = TimeUnit(mFrames, mRate);
 
   return true;
 }
