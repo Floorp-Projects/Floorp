@@ -202,15 +202,21 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
     uint64_t mediaFrameCount = 0;
     // Pass the padding number, in frames, to the AAC decoder as well.
     if (aIndices) {
-      MP4SampleIndex::Indice indice = {0};
-      bool rv = aIndices->GetIndice(aIndices->Length() - 1, indice);
+      MP4SampleIndex::Indice firstIndice = {0};
+      MP4SampleIndex::Indice lastIndice = {0};
+      bool rv = aIndices->GetIndice(0, firstIndice);
+      rv |= aIndices->GetIndice(aIndices->Length() - 1, lastIndice);
       if (rv) {
+        if (firstIndice.start_composition > lastIndice.end_composition) {
+          return MediaResult(
+              NS_ERROR_DOM_MEDIA_METADATA_ERR,
+              RESULT_DETAIL("Inconsistent start and end time in index"));
+        }
         // The `end_composition` member of the very last index member is the
         // duration of the media in microseconds, excluding decoder delay and
         // padding. Convert to frames and give to the decoder so that trimming
         // can be done properly.
-        mediaFrameCount = AssertedCast<uint64_t>(static_cast<double>(indice.end_composition) *
-                          aAudio->sample_info->sample_rate / USECS_PER_S);
+        mediaFrameCount = lastIndice.end_composition - firstIndice.start_composition;
         LOG("AAC stream in MP4 container, total media duration is %" PRIu64
             " frames",
             mediaFrameCount);
@@ -254,8 +260,8 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
   mChannels = aAudio->sample_info[0].channels;
   mBitDepth = aAudio->sample_info[0].bit_depth;
   mExtendedProfile = AssertedCast<int8_t>(aAudio->sample_info[0].extended_profile);
-  mDuration = TimeUnit::FromMicroseconds(AssertedCast<int64_t>(aTrack->duration));
-  mMediaTime = TimeUnit::FromMicroseconds(aTrack->media_time);
+  mDuration = TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+  mMediaTime = TimeUnit(aTrack->media_time, aTrack->time_scale);
   mTrackId = aTrack->track_id;
 
   // In stagefright, mProfile is kKeyAACProfile, mExtendedProfile is kKeyAACAOT.
@@ -315,8 +321,8 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
     mMimeType = "video/mp4v-es"_ns;
   }
   mTrackId = track->track_id;
-  mDuration = TimeUnit::FromMicroseconds(AssertedCast<int64_t>(track->duration));
-  mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
+  mDuration = TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+  mMediaTime = TimeUnit(track->media_time, track->time_scale);
   mDisplay.width = AssertedCast<int32_t>(video->display_width);
   mDisplay.height = AssertedCast<int32_t>(video->display_height);
   mImage.width = video->sample_info[0].image_width;
