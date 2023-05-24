@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Test for nested contenteditable elements </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+  <template id="focus-iframe-contenteditable-in-div">
+    <div contenteditable>
+      <iframe srcdoc="<div id='focusme' contenteditable></div>"></iframe>
+    </div>
+  </template>
+
+  <template id="focus-contenteditable-parent-along-with-iframe">
+    <div id='focusme' contenteditable></div>
+    <iframe srcdoc="<div contenteditable></div>"></iframe>
+  </template>
+
+  <template id="focus-iframe-textarea-in-div">
+    <div contenteditable>
+      <iframe srcdoc="<textarea id='focusme'></textarea>"></iframe>
+    </div>
+  </template>
+
+  <template id="focus-textarea-parent-along-with-iframe">
+    <textarea id='focusme' contenteditable></textarea>
+    <iframe srcdoc="<div contenteditable></div>"></iframe>
+  </template>
+<script>
+"use strict";
+
+async function runTest() {
+  function findFocusme() {
+    return new Promise(r => {
+      let focusInParent = document.getElementById("focusme");
+      if (focusInParent) {
+        r(focusInParent);
+        return;
+      }
+      document.querySelector("iframe").addEventListener("load", function() {
+        return r(document.querySelector("iframe").contentDocument.getElementById("focusme"));
+      });
+    });
+  }
+
+  const focusme = await findFocusme();
+
+  focusme.focus();
+  synthesizeKey("abc");
+
+  if (focusme.nodeName === "TEXTAREA") {
+    is(focusme.value, "abc");
+  } else {
+    is(focusme.innerHTML, "abc");
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(async () => {
+  for (const template of document.querySelectorAll("template")) {
+    const content = template.content.cloneNode(true);
+    document.body.appendChild(content);
+
+    await runTest();
+
+    document.body.innerHTML = "";
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>
