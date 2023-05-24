@@ -9,6 +9,7 @@
 #include "nsEventShell.h"
 #include "DocAccessible.h"
 #include "DocAccessibleChild.h"
+#include "nsAccessibilityService.h"
 #include "nsTextEquivUtils.h"
 #ifdef A11Y_LOG
 #  include "Logging.h"
@@ -351,7 +352,7 @@ void EventQueue::ProcessEventQueue() {
     if (!target || target->IsDefunct()) continue;
 
     // Collect select changes
-    if (IPCAccessibilityActive()) {
+    if (IPCAccessibilityActive() && a11y::IsCacheActive()) {
       if ((event->mEventRule == AccEvent::eDoNotEmit &&
            (eventType == nsIAccessibleEvent::EVENT_SELECTION_ADD ||
             eventType == nsIAccessibleEvent::EVENT_SELECTION_REMOVE ||
@@ -416,7 +417,7 @@ void EventQueue::ProcessEventQueue() {
     if (!mDocument) return;
   }
 
-  if (mDocument && IPCAccessibilityActive() &&
+  if (mDocument && IPCAccessibilityActive() && a11y::IsCacheActive() &&
       (!selectedIDs.IsEmpty() || !unselectedIDs.IsEmpty())) {
     DocAccessibleChild* ipcDoc = mDocument->IPCDoc();
     ipcDoc->SendSelectedAccessiblesChanged(selectedIDs, unselectedIDs);

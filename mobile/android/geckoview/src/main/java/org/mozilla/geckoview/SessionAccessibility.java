@@ -172,7 +172,10 @@ public class SessionAccessibility {
     @Override
     public AccessibilityNodeInfo createAccessibilityNodeInfo(final int virtualDescendantId) {
       AccessibilityNodeInfo node = null;
-      node = getNodeFromGecko(virtualDescendantId);
+      if (isCacheEnabled()) {
+        // For accessibility to work we need to have caching enabled.
+        node = getNodeFromGecko(virtualDescendantId);
+      }
 
       if (node == null) {
         Log.w(
@@ -570,7 +573,7 @@ public class SessionAccessibility {
   /* package */ void sendEvent(
       final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {
     ThreadUtils.assertOnUiThread();
-    if (mView == null) {
+    if (mView == null || !isCacheEnabled()) {
       return;
     }
 
@@ -684,6 +687,10 @@ public class SessionAccessibility {
     return success;
   }
 
+  private boolean isCacheEnabled() {
+    return mAttached && nativeProvider.isCacheEnabled();
+  }
+
   /* package */ final class NativeProvider extends JNIObject {
     @WrapForJNI(calledFrom = "ui")
     private void setAttached(final boolean attached) {
@@ -695,6 +702,9 @@ public class SessionAccessibility {
       // Disposal happens in native code.
       throw new UnsupportedOperationException();
     }
+
+    @WrapForJNI(dispatchTo = "current")
+    public native boolean isCacheEnabled();
 
     @WrapForJNI(dispatchTo = "current")
     public native void getNodeInfo(int id, AccessibilityNodeInfo nodeInfo);

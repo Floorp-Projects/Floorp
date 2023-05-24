@@ -58,11 +58,13 @@ void RemoteAccessibleBase<Derived>::Shutdown() {
     CachedTableAccessible::Invalidate(this);
   }
 
-  // Remove this acc's relation map from the doc's map of
-  // reverse relations. Prune forward relations associated with this
-  // acc's reverse relations. This also removes the acc's map of reverse
-  // rels from the mDoc's mReverseRelations.
-  PruneRelationsOnShutdown();
+  if (a11y::IsCacheActive()) {
+    // Remove this acc's relation map from the doc's map of
+    // reverse relations. Prune forward relations associated with this
+    // acc's reverse relations. This also removes the acc's map of reverse
+    // rels from the mDoc's mReverseRelations.
+    PruneRelationsOnShutdown();
+  }
 
   // XXX Ideally  this wouldn't be necessary, but it seems OuterDoc
   // accessibles can be destroyed before the doc they own.
@@ -333,19 +335,24 @@ bool RemoteAccessibleBase<Derived>::SetCurValue(double aValue) {
     return false;
   }
 
-  const uint32_t kValueCannotChange = states::READONLY | states::UNAVAILABLE;
-  if (State() & kValueCannotChange) {
-    return false;
-  }
+  if (a11y::IsCacheActive()) {
+    // XXX: If cache is disabled there is a slight regression
+    // where we don't check the readonly/unavailable state or the min/max
+    // values. This will go away once cache is enabled by default.
+    const uint32_t kValueCannotChange = states::READONLY | states::UNAVAILABLE;
+    if (State() & kValueCannotChange) {
+      return false;
+    }
 
-  double checkValue = MinValue();
-  if (!std::isnan(checkValue) && aValue < checkValue) {
-    return false;
-  }
+    double checkValue = MinValue();
+    if (!std::isnan(checkValue) && aValue < checkValue) {
+      return false;
+    }
 
-  checkValue = MaxValue();
-  if (!std::isnan(checkValue) && aValue > checkValue) {
-    return false;
+    checkValue = MaxValue();
+    if (!std::isnan(checkValue) && aValue > checkValue) {
+      return false;
+    }
   }
 
   Unused << mDoc->SendSetCurValue(mID, aValue);
@@ -1880,6 +1887,7 @@ void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
 
 template <class Derived>
 TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
+  MOZ_ASSERT(a11y::IsCacheActive());
   if (IsTable()) {
     return CachedTableAccessible::GetFrom(this);
   }
@@ -1888,6 +1896,7 @@ TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
 
 template <class Derived>
 TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
+  MOZ_ASSERT(a11y::IsCacheActive());
   if (IsTableCell()) {
     return CachedTableCellAccessible::GetFrom(this);
   }
@@ -1896,6 +1905,7 @@ TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
 
 template <class Derived>
 bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
+  MOZ_ASSERT(a11y::IsCacheActive());
   if (mCachedFields) {
     if (auto layoutGuess =
             mCachedFields->GetAttribute<bool>(nsGkAtoms::layout_guess)) {
