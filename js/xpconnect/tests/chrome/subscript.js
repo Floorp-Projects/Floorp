@@ -1,4 +1,3 @@
-/* global base */
 var ns = {};
-Services.scriptloader.loadSubScript(base + "file_expandosharing.jsm", ns);
-var checkFromJSM = ns.checkFromJSM;
+Services.scriptloader.loadSubScript("resource://gre/modules/NetUtil.jsm", ns);
+var NetUtil = ns.NetUtil;
