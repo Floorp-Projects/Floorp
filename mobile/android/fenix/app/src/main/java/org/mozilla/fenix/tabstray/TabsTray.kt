@@ -187,7 +187,6 @@ fun TabsTray(
                             browserStore = browserStore,
                             tabsTrayStore = tabsTrayStore,
                             displayTabsInGrid = displayTabsInGrid,
-                            selectionMode = multiselectMode,
                             onTabClose = onTabClose,
                             onTabMediaClick = onTabMediaClick,
                             onTabClick = handleTabClick,
@@ -208,7 +207,6 @@ fun TabsTray(
                             browserStore = browserStore,
                             tabsTrayStore = tabsTrayStore,
                             displayTabsInGrid = displayTabsInGrid,
-                            selectionMode = multiselectMode,
                             onTabClose = onTabClose,
                             onTabMediaClick = onTabMediaClick,
                             onTabClick = handleTabClick,
@@ -235,7 +233,6 @@ private fun NormalTabsPage(
     browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
     displayTabsInGrid: Boolean,
-    selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -257,6 +254,8 @@ private fun NormalTabsPage(
         .observeAsComposableState { state -> state.normalTabs }.value ?: emptyList()
     val inactiveTabs = tabsTrayStore
         .observeAsComposableState { state -> state.inactiveTabs }.value ?: emptyList()
+    val selectionMode = tabsTrayStore
+        .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
 
     if (normalTabs.isNotEmpty() || inactiveTabs.isNotEmpty()) {
         val showInactiveTabsAutoCloseDialog =
@@ -314,7 +313,6 @@ private fun PrivateTabsPage(
     browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
     displayTabsInGrid: Boolean,
-    selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -324,6 +322,8 @@ private fun PrivateTabsPage(
         .observeAsComposableState { state -> state.selectedTabId }.value
     val privateTabs = tabsTrayStore
         .observeAsComposableState { state -> state.privateTabs }.value ?: emptyList()
+    val selectionMode = tabsTrayStore
+        .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
 
     if (privateTabs.isNotEmpty()) {
         TabLayout(
