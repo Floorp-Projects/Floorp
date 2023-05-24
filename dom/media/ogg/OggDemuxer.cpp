@@ -62,7 +62,7 @@ static const uint32_t OGG_SEEK_FUZZ_USECS = 500000;
 
 // The number of microseconds of "pre-roll" we use for Opus streams.
 // The specification recommends 80 ms.
-static const int64_t OGG_SEEK_OPUS_PREROLL = 80 * USECS_PER_MS;
+static const TimeUnit OGG_SEEK_OPUS_PREROLL = TimeUnit::FromMicroseconds(80000);
 
 static Atomic<uint32_t> sStreamSourceID(0u);
 
@@ -1095,7 +1095,7 @@ nsresult OggDemuxer::SeekInternal(TrackInfo::TrackType aType,
   int64_t startTime = StartTime(aType);
   int64_t endTime = mInfo.mMetadataDuration->ToMicroseconds() + startTime;
   if (aType == TrackInfo::kAudioTrack && mOpusState) {
-    adjustedTarget = std::max(startTime, target - OGG_SEEK_OPUS_PREROLL);
+    adjustedTarget = std::max(startTime, target - OGG_SEEK_OPUS_PREROLL.ToMicroseconds());
   }
 
   if (!HaveStartTime(aType) || adjustedTarget == startTime) {
@@ -1869,7 +1869,7 @@ nsresult OggDemuxer::SeekInUnbuffered(TrackInfo::TrackType aType,
   }
   // Add in the Opus pre-roll if necessary, as well.
   if (aType == TrackInfo::kAudioTrack && mOpusState) {
-    keyframeOffsetMs = std::max(keyframeOffsetMs, OGG_SEEK_OPUS_PREROLL);
+    keyframeOffsetMs = std::max(keyframeOffsetMs, OGG_SEEK_OPUS_PREROLL.ToMilliseconds());
   }
   int64_t seekTarget = std::max(aStartTime, aTarget - keyframeOffsetMs);
   // Minimize the bisection search space using the known timestamps from the
