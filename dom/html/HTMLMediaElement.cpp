@@ -3293,12 +3293,7 @@ double HTMLMediaElement::Duration() const {
   }
 
   if (mDecoder) {
-    // Limit resolution to microsecond.
-    double duration = mDecoder->GetDuration();
-    if (IsFinite<double>(duration)) {
-      return ToMicrosecondResolution(mDecoder->GetDuration());
-    }
-    return duration;
+    return mDecoder->GetDuration();
   }
 
   return std::numeric_limits<double>::quiet_NaN();
@@ -3307,7 +3302,7 @@ double HTMLMediaElement::Duration() const {
 already_AddRefed<TimeRanges> HTMLMediaElement::Seekable() const {
   media::TimeIntervals seekable =
       mDecoder ? mDecoder->GetSeekable() : media::TimeIntervals();
-  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable.ToMicrosecondResolution());
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable);
   return ranges.forget();
 }
 

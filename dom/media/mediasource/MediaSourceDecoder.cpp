@@ -8,6 +8,7 @@
 #include "base/process_util.h"
 #include "mozilla/Logging.h"
 #include "ExternalEngineStateMachine.h"
+#include "MediaDecoder.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
 #include "MediaSource.h"
@@ -111,8 +112,8 @@ media::TimeIntervals MediaSourceDecoder::GetSeekable() {
       seekable += media::TimeInterval(TimeUnit::Zero(), buffered.GetEnd());
     }
   } else {
-    seekable +=
-        media::TimeInterval(TimeUnit::Zero(), TimeUnit::FromSeconds(duration));
+      seekable +=
+          media::TimeInterval(TimeUnit::Zero(), mDuration.match(DurationToTimeUnit()));
   }
   MSE_DEBUG("ranges=%s", DumpTimeRanges(seekable).get());
   return seekable;
@@ -217,7 +218,17 @@ void MediaSourceDecoder::SetMediaSourceDuration(const TimeUnit& aDuration) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
   if (aDuration.IsPositiveOrZero()) {
-    SetExplicitDuration(aDuration.ToSeconds());
+    SetExplicitDuration(ToMicrosecondResolution(aDuration.ToSeconds()));
+  } else {
+    SetExplicitDuration(PositiveInfinity<double>());
+  }
+}
+
+void MediaSourceDecoder::SetMediaSourceDuration(double aDuration) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsShutdown());
+  if (aDuration >= 0) {
+    SetExplicitDuration(aDuration);
   } else {
     SetExplicitDuration(PositiveInfinity<double>());
   }
@@ -288,12 +299,12 @@ bool MediaSourceDecoder::CanPlayThroughImpl() {
   }
   // If we have data up to the mediasource's duration or 3s ahead, we can
   // assume that we can play without interruption.
-  TimeIntervals buffered = GetBuffered();
-  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
+  dom::SourceBufferList* sourceBuffers = mMediaSource->ActiveSourceBuffers();
+  TimeUnit bufferedEnd = sourceBuffers->GetHighestBufferedEndTime();
   TimeUnit timeAhead =
       std::min(duration, currentPosition + TimeUnit::FromSeconds(3));
   TimeInterval interval(currentPosition, timeAhead);
-  return buffered.ToMicrosecondResolution().ContainsWithStrictEnd(ClampIntervalToEnd(interval));
+  return bufferedEnd >= timeAhead;
 }
 
 TimeInterval MediaSourceDecoder::ClampIntervalToEnd(
@@ -303,7 +314,7 @@ TimeInterval MediaSourceDecoder::ClampIntervalToEnd(
   if (!mEnded) {
     return aInterval;
   }
-  TimeUnit duration = mDuration;
+  TimeUnit duration = mDuration.match(DurationToTimeUnit());
   if (duration < aInterval.mStart) {
     return aInterval;
   }
@@ -313,7 +324,6 @@ TimeInterval MediaSourceDecoder::ClampIntervalToEnd(
 
 void MediaSourceDecoder::NotifyInitDataArrived() {
   MOZ_ASSERT(NS_IsMainThread());
-
   if (mDemuxer) {
     mDemuxer->NotifyInitDataArrived();
   }
