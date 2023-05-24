@@ -696,13 +696,13 @@ already_AddRefed<MediaByteBuffer> SourceBuffer::PrepareAppend(
 
   // See if we have enough free space to append our new data.
   if (evicted == Result::BUFFER_FULL) {
-    aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+    aRv.Throw(NS_ERROR_DOM_MEDIA_SOURCE_FULL_BUFFER_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }
 
   RefPtr<MediaByteBuffer> data = new MediaByteBuffer();
   if (!data->AppendElements(aData, aLength, fallible)) {
-    aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+    aRv.Throw(NS_ERROR_DOM_MEDIA_SOURCE_FULL_BUFFER_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }
   return data.forget();

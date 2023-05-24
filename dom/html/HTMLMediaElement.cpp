@@ -6917,7 +6917,7 @@ bool HTMLMediaElement::DetachExistingMediaKeys() {
   // is QuotaExceededError.
   if (mIncomingMediaKeys && mIncomingMediaKeys->IsBoundToMediaElement()) {
     SetCDMProxyFailure(MediaResult(
-        NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
+        NS_ERROR_DOM_MEDIA_KEY_QUOTA_EXCEEDED_ERR,
         "MediaKeys object is already bound to another HTMLMediaElement"));
     return false;
   }
