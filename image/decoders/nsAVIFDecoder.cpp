@@ -298,14 +298,16 @@ static Mp4parseStatus CreateSampleIterator(
     Mp4parseAvifParser* aParser, ByteStream* aBuffer, uint32_t trackID,
     UniquePtr<SampleIterator>& aIteratorOut) {
   Mp4parseByteData data;
-  Mp4parseStatus rv = mp4parse_avif_get_indice_table(aParser, trackID, &data);
+  uint64_t timescale;
+  Mp4parseStatus rv =
+      mp4parse_avif_get_indice_table(aParser, trackID, &data, &timescale);
   if (rv != MP4PARSE_STATUS_OK) {
     return rv;
   }
 
   UniquePtr<IndiceWrapper> wrapper = MakeUnique<IndiceWrapper>(data);
-  RefPtr<MP4SampleIndex> index =
-      new MP4SampleIndex(*wrapper, aBuffer, trackID, false);
+  RefPtr<MP4SampleIndex> index = new MP4SampleIndex(
+      *wrapper, aBuffer, trackID, false, AssertedCast<int32_t>(timescale));
   aIteratorOut = MakeUnique<SampleIterator>(index);
   return MP4PARSE_STATUS_OK;
 }
