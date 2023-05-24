@@ -1879,7 +1879,7 @@ void MacroAssemblerRiscv64Compat::handleFailureWithHandlerTail(
   mv(a0, StackPointer);  // Use a0 since it is a first function argument
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
+  using Fn = void (*)(ResumeFromException* rfe);
   asMasm().setupUnalignedABICall(a1);
   asMasm().passABIArg(a0);
   asMasm().callWithABI<Fn, HandleException>(
@@ -4450,6 +4450,7 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
     MOZ_ASSERT(rt.is_reg());
     scratch = rt.rm();
   }
+  BlockTrampolinePoolScope block_trampoline_pool(this, 2);
   {
     switch (cond) {
       case Always:
@@ -5903,7 +5904,6 @@ void MacroAssemblerRiscv64::Ctz32(Register rd, Register rs) {
 void MacroAssemblerRiscv64::Ctz64(Register rd, Register rs) {
   // Convert trailing zeroes to trailing ones, and bits to their left
   // to zeroes.
-  BlockTrampolinePoolScope block_trampoline_pool(this, 40);
   {
     UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
