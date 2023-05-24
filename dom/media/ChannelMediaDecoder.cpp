@@ -314,7 +314,8 @@ void ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus) {
         "ChannelMediaDecoder::UpdatePlaybackRate",
         [stats = mPlaybackStatistics,
          res = RefPtr<BaseMediaResource>(mResource), duration = mDuration]() {
-          auto rate = ComputePlaybackRate(stats, res, duration);
+          auto rate = ComputePlaybackRate(stats, res,
+                                          duration.match(DurationToTimeUnit()));
           UpdatePlaybackRate(rate, res);
         });
     nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
@@ -372,7 +373,8 @@ void ChannelMediaDecoder::DurationChanged() {
       "ChannelMediaDecoder::UpdatePlaybackRate",
       [stats = mPlaybackStatistics, res = RefPtr<BaseMediaResource>(mResource),
        duration = mDuration]() {
-        auto rate = ComputePlaybackRate(stats, res, duration);
+        auto rate = ComputePlaybackRate(stats, res,
+                                        duration.match(DurationToTimeUnit()));
         UpdatePlaybackRate(rate, res);
       });
   nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
@@ -391,7 +393,8 @@ void ChannelMediaDecoder::DownloadProgressed() {
               [playbackStats = mPlaybackStatistics,
                res = RefPtr<BaseMediaResource>(mResource), duration = mDuration,
                pos = mPlaybackPosition]() {
-                auto rate = ComputePlaybackRate(playbackStats, res, duration);
+                auto rate = ComputePlaybackRate(
+                    playbackStats, res, duration.match(DurationToTimeUnit()));
                 UpdatePlaybackRate(rate, res);
                 MediaStatistics stats = GetStatistics(rate, res, pos);
                 return StatsPromise::CreateAndResolve(stats, __func__);

@@ -45,6 +45,7 @@ class MediaSourceDecoder : public MediaDecoder,
 
   void SetInitialDuration(const media::TimeUnit& aDuration);
   void SetMediaSourceDuration(const media::TimeUnit& aDuration);
+  void SetMediaSourceDuration(double aDuration);
 
   MediaSourceDemuxer* GetDemuxer() { return mDemuxer; }
 
