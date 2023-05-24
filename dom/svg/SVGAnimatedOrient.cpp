@@ -27,11 +27,6 @@ using namespace mozilla::dom::SVGMarkerElement_Binding;
 
 namespace mozilla {
 
-static const nsStaticAtom* const angleUnitMap[] = {
-    nullptr, /* SVG_ANGLETYPE_UNKNOWN */
-    nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
-    nsGkAtoms::deg, nsGkAtoms::rad, nsGkAtoms::grad};
-
 static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAnimatedEnumeration>
     sSVGAnimatedEnumTearoffTable;
 static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAnimatedAngle>
@@ -78,34 +73,42 @@ class MOZ_RAII AutoChangeOrientNotifier {
   bool mDoSetAttr;
 };
 
-static bool IsValidAngleUnitType(uint16_t unit) {
-  return unit > SVG_ANGLETYPE_UNKNOWN && unit <= SVG_ANGLETYPE_GRAD;
+static bool IsValidAngleUnitType(uint16_t aUnitType) {
+  return aUnitType > SVG_ANGLETYPE_UNKNOWN && aUnitType <= SVG_ANGLETYPE_GRAD;
 }
 
-static void GetAngleUnitString(nsAString& unit, uint16_t unitType) {
-  if (IsValidAngleUnitType(unitType)) {
-    if (angleUnitMap[unitType]) {
-      angleUnitMap[unitType]->ToString(unit);
-    }
-    return;
+static void GetAngleUnitString(nsAString& aUnit, uint16_t aUnitType) {
+  switch (aUnitType) {
+    case SVG_ANGLETYPE_UNSPECIFIED:
+      aUnit.Truncate();
+      return;
+    case SVG_ANGLETYPE_DEG:
+      aUnit.AssignLiteral("deg");
+      return;
+    case SVG_ANGLETYPE_RAD:
+      aUnit.AssignLiteral("rad");
+      return;
+    case SVG_ANGLETYPE_GRAD:
+      aUnit.AssignLiteral("grad");
+      return;
   }
 
   MOZ_ASSERT_UNREACHABLE("Unknown unit type");
 }
 
-static uint16_t GetAngleUnitTypeForString(const nsAString& unitStr) {
-  if (unitStr.IsEmpty()) return SVG_ANGLETYPE_UNSPECIFIED;
-
-  nsStaticAtom* unitAtom = NS_GetStaticAtom(unitStr);
-
-  if (unitAtom) {
-    for (uint32_t i = 0; i < ArrayLength(angleUnitMap); i++) {
-      if (angleUnitMap[i] == unitAtom) {
-        return i;
-      }
-    }
+static uint16_t GetAngleUnitTypeForString(const nsAString& aUnit) {
+  if (aUnit.IsEmpty()) {
+    return SVG_ANGLETYPE_UNSPECIFIED;
   }
-
+  if (aUnit.LowerCaseEqualsLiteral("deg")) {
+    return SVG_ANGLETYPE_DEG;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("rad")) {
+    return SVG_ANGLETYPE_RAD;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("grad")) {
+    return SVG_ANGLETYPE_GRAD;
+  }
   return SVG_ANGLETYPE_UNKNOWN;
 }
 

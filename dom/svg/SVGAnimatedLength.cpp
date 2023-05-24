@@ -62,61 +62,17 @@ class MOZ_RAII AutoChangeLengthNotifier {
   bool mDoSetAttr;
 };
 
-static const nsStaticAtom* const unitMap[] = {
-    nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
-    nullptr, /* SVG_LENGTHTYPE_NUMBER */
-    nsGkAtoms::percentage,
-    nsGkAtoms::em,
-    nsGkAtoms::ex,
-    nsGkAtoms::px,
-    nsGkAtoms::cm,
-    nsGkAtoms::mm,
-    nsGkAtoms::in,
-    nsGkAtoms::pt,
-    nsGkAtoms::pc};
-
 static SVGAttrTearoffTable<SVGAnimatedLength, DOMSVGAnimatedLength>
     sSVGAnimatedLengthTearoffTable;
 
 /* Helper functions */
-
-static bool IsValidUnitType(uint16_t unit) {
-  return unit > SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
-         unit <= SVGLength_Binding::SVG_LENGTHTYPE_PC;
-}
-
-static void GetUnitString(nsAString& unit, uint16_t unitType) {
-  if (IsValidUnitType(unitType)) {
-    if (unitMap[unitType]) {
-      unitMap[unitType]->ToString(unit);
-    }
-    return;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unknown unit type");
-}
-
-static uint16_t GetUnitTypeForString(const nsAString& unitStr) {
-  if (unitStr.IsEmpty()) return SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
-
-  nsAtom* unitAtom = NS_GetStaticAtom(unitStr);
-  if (unitAtom) {
-    for (uint32_t i = 0; i < ArrayLength(unitMap); i++) {
-      if (unitMap[i] == unitAtom) {
-        return i;
-      }
-    }
-  }
-
-  return SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
-}
 
 static void GetValueString(nsAString& aValueAsString, float aValue,
                            uint16_t aUnitType) {
   nsTextFormatter::ssprintf(aValueAsString, u"%g", (double)aValue);
 
   nsAutoString unitString;
-  GetUnitString(unitString, aUnitType);
+  SVGLength::GetUnitString(unitString, aUnitType);
   aValueAsString.Append(unitString);
 }
 
@@ -136,8 +92,8 @@ static bool GetValueFromString(const nsAString& aString, float& aValue,
     return false;
   }
   const nsAString& units = Substring(iter.get(), end.get());
-  *aUnitType = GetUnitTypeForString(units);
-  return IsValidUnitType(*aUnitType);
+  *aUnitType = SVGLength::GetUnitTypeForString(units);
+  return SVGLength::IsValidUnitType(*aUnitType);
 }
 
 static float FixAxisLength(float aLength) {
@@ -307,7 +263,9 @@ void SVGAnimatedLength::SetBaseValueInSpecifiedUnits(float aValue,
 
 nsresult SVGAnimatedLength::ConvertToSpecifiedUnits(uint16_t unitType,
                                                     SVGElement* aSVGElement) {
-  if (!IsValidUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!SVGLength::IsValidUnitType(unitType)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   if (mIsBaseSet && mSpecifiedUnitType == uint8_t(unitType)) return NS_OK;
 
@@ -343,7 +301,9 @@ nsresult SVGAnimatedLength::NewValueSpecifiedUnits(uint16_t aUnitType,
                                                    SVGElement* aSVGElement) {
   NS_ENSURE_FINITE(aValueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
-  if (!IsValidUnitType(aUnitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!SVGLength::IsValidUnitType(aUnitType)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   if (mIsBaseSet && mBaseVal == aValueInSpecifiedUnits &&
       mSpecifiedUnitType == uint8_t(aUnitType)) {
