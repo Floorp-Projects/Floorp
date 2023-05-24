@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(this, {
   Color: "resource://gre/modules/Color.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   Deprecated: "resource://gre/modules/Deprecated.sys.mjs",
   DevToolsSocketStatus:
     "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
@@ -87,7 +88,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",

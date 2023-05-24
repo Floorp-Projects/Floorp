@@ -190,8 +190,8 @@ async function updateZoomUI(aBrowser, aAnimate = false) {
   win.FullZoom.updateCommands();
 }
 
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs"
 );
 let customizationListener = {};
 customizationListener.onWidgetAdded =

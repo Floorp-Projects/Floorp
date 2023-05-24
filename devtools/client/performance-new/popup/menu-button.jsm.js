@@ -19,7 +19,7 @@ const { createLazyLoaders } = ChromeUtils.import(
 
 const lazy = createLazyLoaders({
   CustomizableUI: () =>
-    ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
+    ChromeUtils.importESModule("resource:///modules/CustomizableUI.sys.mjs"),
   CustomizableWidgets: () =>
     ChromeUtils.importESModule(
       "resource:///modules/CustomizableWidgets.sys.mjs"

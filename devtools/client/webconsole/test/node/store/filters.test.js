@@ -209,7 +209,7 @@ describe("Filtering", () => {
     it("matches prefixed log message", () => {
       const stub = {
         level: "debug",
-        filename: "resource:///modules/CustomizableUI.jsm",
+        filename: "resource:///modules/CustomizableUI.sys.mjs",
         lineNumber: 181,
         functionName: "initialize",
         timeStamp: 1519311532912,

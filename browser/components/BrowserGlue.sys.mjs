@@ -3998,8 +3998,8 @@ BrowserGlue.prototype = {
       // In Firefox 83, we moved to a dynamic button, so it needs to be removed
       // from default placement. This is done early enough that it doesn't
       // impact adding new managed bookmarks.
-      const { CustomizableUI } = ChromeUtils.import(
-        "resource:///modules/CustomizableUI.jsm"
+      const { CustomizableUI } = ChromeUtils.importESModule(
+        "resource:///modules/CustomizableUI.sys.mjs"
       );
       CustomizableUI.removeWidgetFromArea("managed-bookmarks");
     }
