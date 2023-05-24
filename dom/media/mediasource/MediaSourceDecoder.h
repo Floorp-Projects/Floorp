@@ -78,7 +78,7 @@ class MediaSourceDecoder : public MediaDecoder,
   MediaDecoderStateMachineBase* CreateStateMachine(
       bool aDisableExternalEngine) override;
 
-  template<typename IntervalType>
+  template <typename IntervalType>
   IntervalType GetSeekableImpl();
 
   void DoSetMediaSourceDuration(double aDuration);

@@ -289,8 +289,7 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
   }
 
   LOG("Decoded audio packet [%s, %s] (duration: %s)\n",
-      aSample->mTime.ToString().get(),
-      aSample->GetEndTime().ToString().get(),
+      aSample->mTime.ToString().get(), aSample->GetEndTime().ToString().get(),
       duration.ToString().get());
 
   AudioSampleBuffer data(outputData.Elements(), outputData.Length());

@@ -284,14 +284,16 @@ class WebMContainerParser
             ? mapping[completeIdx + 1].mTimecode -
                   mapping[completeIdx].mTimecode
             : mapping[completeIdx].mTimecode - previousMapping.ref().mTimecode;
-    aStart = media::TimeUnit::FromNanoseconds(AssertedCast<int64_t>(mapping[0].mTimecode));
-    aEnd = media::TimeUnit::FromNanoseconds(AssertedCast<int64_t>(mapping[completeIdx].mTimecode + frameDuration));
+    aStart = media::TimeUnit::FromNanoseconds(
+        AssertedCast<int64_t>(mapping[0].mTimecode));
+    aEnd = media::TimeUnit::FromNanoseconds(
+        AssertedCast<int64_t>(mapping[completeIdx].mTimecode + frameDuration));
 
     MSE_DEBUG("[%" PRId64 ", %" PRId64 "] [fso=%" PRId64 ", leo=%" PRId64
               ", l=%zu processedIdx=%u fs=%" PRId64 "]",
-              aStart.ToMicroseconds(), aEnd.ToMicroseconds(), mapping[0].mSyncOffset,
-              mapping[completeIdx].mEndOffset, mapping.Length(), completeIdx,
-              mCompleteMediaSegmentRange.mEnd);
+              aStart.ToMicroseconds(), aEnd.ToMicroseconds(),
+              mapping[0].mSyncOffset, mapping[completeIdx].mEndOffset,
+              mapping.Length(), completeIdx, mCompleteMediaSegmentRange.mEnd);
 
     return NS_OK;
   }
@@ -580,7 +582,8 @@ class MP4ContainerParser : public ContainerParser,
     }
     aStart = compositionRange.start;
     aEnd = compositionRange.end;
-    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart.ToMicroseconds(), aEnd.ToMicroseconds());
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart.ToMicroseconds(),
+              aEnd.ToMicroseconds());
     return NS_OK;
   }
 
@@ -724,7 +727,8 @@ class ADTSContainerParser
     // media segment.
     mCompleteMediaHeaderRange = mCompleteMediaSegmentRange;
 
-    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart.ToMicroseconds(), aEnd.ToMicroseconds());
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart.ToMicroseconds(),
+              aEnd.ToMicroseconds());
     // We don't update timestamps, regardless.
     return NS_ERROR_NOT_AVAILABLE;
   }

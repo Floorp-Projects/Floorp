@@ -343,7 +343,8 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       }
 
       FFMPEG_LOG("Packet decoded: [%s, %s] (%" PRId64 "us, %d frames)",
-                 aSample->mTime.ToString().get(), aSample->GetEndTime().ToString().get(),
+                 aSample->mTime.ToString().get(),
+                 aSample->GetEndTime().ToString().get(),
                  aSample->mDuration.ToMicroseconds(), mFrame->nb_samples);
 
       media::TimeUnit duration = TimeUnit(mFrame->nb_samples, samplingRate);

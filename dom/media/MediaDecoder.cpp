@@ -1307,7 +1307,8 @@ IntervalType MediaDecoder::GetSeekableImpl() {
     return IntervalType(GetBuffered());
   }
   // Return [0, duration] -- When dealing with doubles, use ::GetDuration to
-  // avoid rounding the value differently. When dealing with TimeUnit, it's returned directly.
+  // avoid rounding the value differently. When dealing with TimeUnit, it's
+  // returned directly.
   typename IntervalType::InnerType duration;
   if constexpr (std::is_same<typename IntervalType::InnerType, double>::value) {
     duration = GetDuration();
@@ -1317,8 +1318,7 @@ IntervalType MediaDecoder::GetSeekableImpl() {
 
   return IntervalType(typename IntervalType::ElemType(
       Zero<typename IntervalType::InnerType>(),
-      IsInfinite() ? Infinity<typename IntervalType::InnerType>()
-                   : duration));
+      IsInfinite() ? Infinity<typename IntervalType::InnerType>() : duration));
 }
 
 media::TimeIntervals MediaDecoder::GetSeekable() {

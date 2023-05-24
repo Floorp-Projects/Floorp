@@ -17,7 +17,8 @@
 #include "OpusDecoder.h"
 #include "mp4parse.h"
 
-#define LOG(...) MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOG(...) \
+  MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 using mozilla::media::TimeUnit;
 
@@ -216,7 +217,8 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
         // duration of the media in microseconds, excluding decoder delay and
         // padding. Convert to frames and give to the decoder so that trimming
         // can be done properly.
-        mediaFrameCount = lastIndice.end_composition - firstIndice.start_composition;
+        mediaFrameCount =
+            lastIndice.end_composition - firstIndice.start_composition;
         LOG("AAC stream in MP4 container, total media duration is %" PRIu64
             " frames",
             mediaFrameCount);
@@ -259,11 +261,13 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
   mRate = aAudio->sample_info[0].sample_rate;
   mChannels = aAudio->sample_info[0].channels;
   mBitDepth = aAudio->sample_info[0].bit_depth;
-  mExtendedProfile = AssertedCast<int8_t>(aAudio->sample_info[0].extended_profile);
+  mExtendedProfile =
+      AssertedCast<int8_t>(aAudio->sample_info[0].extended_profile);
   if (aTrack->duration > TimeUnit::MaxTicks()) {
     mDuration = TimeUnit::FromInfinity();
   } else {
-    mDuration = TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+    mDuration =
+        TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
   }
   mMediaTime = TimeUnit(aTrack->media_time, aTrack->time_scale);
   mTrackId = aTrack->track_id;
@@ -328,7 +332,8 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
   if (track->duration > TimeUnit::MaxTicks()) {
     mDuration = TimeUnit::FromInfinity();
   } else {
-    mDuration = TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+    mDuration =
+        TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
   }
   mMediaTime = TimeUnit(track->media_time, track->time_scale);
   mDisplay.width = AssertedCast<int32_t>(video->display_width);

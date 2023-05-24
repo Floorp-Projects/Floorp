@@ -1156,7 +1156,8 @@ void DecodedStream::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   aInfo.mDecodedStream.mLastAudio =
       lastAudio ? lastAudio->GetEndTime().ToMicroseconds() : -1;
   aInfo.mDecodedStream.mAudioQueueFinished = mAudioQueue.IsFinished();
-  aInfo.mDecodedStream.mAudioQueueSize = AssertedCast<int>(mAudioQueue.GetSize());
+  aInfo.mDecodedStream.mAudioQueueSize =
+      AssertedCast<int>(mAudioQueue.GetSize());
   if (mData) {
     mData->GetDebugInfo(aInfo.mDecodedStream.mData);
   }

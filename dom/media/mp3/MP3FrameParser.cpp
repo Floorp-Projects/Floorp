@@ -275,9 +275,7 @@ bool FrameParser::FrameHeader::ParseNext(uint8_t c) {
   return IsValid();
 }
 
-bool FrameParser::ID3v1MetadataFound() const {
-  return mID3v1MetadataFound;
-}
+bool FrameParser::ID3v1MetadataFound() const { return mID3v1MetadataFound; }
 
 bool FrameParser::FrameHeader::IsValid(int aPos) const {
   if (aPos >= SIZE) {
@@ -343,7 +341,8 @@ bool FrameParser::VBRHeader::IsComplete() const {
       ;
 }
 
-int64_t FrameParser::VBRHeader::Offset(media::TimeUnit aTime, media::TimeUnit aDuration) const {
+int64_t FrameParser::VBRHeader::Offset(media::TimeUnit aTime,
+                                       media::TimeUnit aDuration) const {
   if (!IsTOCPresent()) {
     return -1;
   }
@@ -425,7 +424,8 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(BufferReader* aReader,
       uint8_t data;
       for (size_t i = 0; i < vbr_header::TOC_SIZE; ++i) {
         MOZ_TRY_VAR(data, aReader->ReadU8());
-        mTOC.push_back(AssertedCast<uint32_t>(1.0f / 256.0f * data * mNumBytes.value()));
+        mTOC.push_back(
+            AssertedCast<uint32_t>(1.0f / 256.0f * data * mNumBytes.value()));
       }
     }
   }
@@ -473,8 +473,7 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(BufferReader* aReader,
   return mType == XING;
 }
 
-
-template<typename T>
+template <typename T>
 int readAndConvertToInt(BufferReader* aReader) {
   int value = AssertedCast<int>(aReader->ReadType<T>());
   return value;
@@ -519,42 +518,44 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
       MOZ_TRY_VAR(vbriSeekOffsetsBytesPerEntry, aReader->ReadU16());
       MOZ_TRY_VAR(vbriSeekOffsetsFramesPerEntry, aReader->ReadU16());
 
-      mTOC.reserve(vbriSeekOffsetsTableSize+1);
+      mTOC.reserve(vbriSeekOffsetsTableSize + 1);
 
       int (*readFunc)(BufferReader*);
-      switch(vbriSeekOffsetsBytesPerEntry) {
-          case 1:
-            readFunc = &readAndConvertToInt<uint8_t>;
+      switch (vbriSeekOffsetsBytesPerEntry) {
+        case 1:
+          readFunc = &readAndConvertToInt<uint8_t>;
           break;
-          case 2:
-            readFunc = &readAndConvertToInt<int16_t>;
+        case 2:
+          readFunc = &readAndConvertToInt<int16_t>;
           break;
-          case 4:
-            readFunc = &readAndConvertToInt<int32_t>;
-            break;
-          case 8:
-            readFunc = &readAndConvertToInt<int64_t>;
-            break;
-          default:
-            MP3LOG("Unhandled vbriSeekOffsetsBytesPerEntry size of %hd", vbriSeekOffsetsBytesPerEntry);
-            break;
+        case 4:
+          readFunc = &readAndConvertToInt<int32_t>;
+          break;
+        case 8:
+          readFunc = &readAndConvertToInt<int64_t>;
+          break;
+        default:
+          MP3LOG("Unhandled vbriSeekOffsetsBytesPerEntry size of %hd",
+                 vbriSeekOffsetsBytesPerEntry);
+          break;
       }
       for (uint32_t i = 0; i < vbriSeekOffsetsTableSize; i++) {
         int entry = readFunc(aReader);
         mTOC.push_back(entry * vbriSeekOffsetsScaleFactor);
       }
-      MP3LOG("Header::Parse found valid  header: EncoderVersion=%hu "
-              "EncoderDelay=%hu "
-              "Quality=%hu "
-              "Bytes=%u "
-              "Frames=%u "
-              "SeekOffsetsTableSize=%u "
-              "SeekOffsetsScaleFactor=%hu "
-              "SeekOffsetsBytesPerEntry=%hu "
-              "SeekOffsetsFramesPerEntry=%hu",
-              vbriEncoderVersion , vbriEncoderDelay , vbriQuality , vbriBytes ,
-              vbriFrames , vbriSeekOffsetsTableSize, vbriSeekOffsetsScaleFactor,
-              vbriSeekOffsetsBytesPerEntry, vbriSeekOffsetsFramesPerEntry);
+      MP3LOG(
+          "Header::Parse found valid  header: EncoderVersion=%hu "
+          "EncoderDelay=%hu "
+          "Quality=%hu "
+          "Bytes=%u "
+          "Frames=%u "
+          "SeekOffsetsTableSize=%u "
+          "SeekOffsetsScaleFactor=%hu "
+          "SeekOffsetsBytesPerEntry=%hu "
+          "SeekOffsetsFramesPerEntry=%hu",
+          vbriEncoderVersion, vbriEncoderDelay, vbriQuality, vbriBytes,
+          vbriFrames, vbriSeekOffsetsTableSize, vbriSeekOffsetsScaleFactor,
+          vbriSeekOffsetsBytesPerEntry, vbriSeekOffsetsFramesPerEntry);
       // Adjust the number of frames so it's counted the same way as in the XING
       // header
       if (vbriFrames < 1) {
