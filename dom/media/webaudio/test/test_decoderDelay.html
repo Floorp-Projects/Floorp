@@ -71,6 +71,16 @@
         "frameCount": 16,
         "samplerate": 44100,
         "fuzz": {}
+      },
+      {
+        // This is incorrect (the duration should be 0.5s exactly)
+        // This is tracked in https://github.com/mozilla/mp4parse-rust/issues/404
+        "path":"half-a-second-1ch-44100-aac-afconvert.mp4",
+        "frameCount": 22464,
+        "samplerate": 44100,
+        "fuzz": {
+          "android": 2
+        }
       }
     ];
 
@@ -122,7 +132,8 @@
         var response = await fetch(test.path);
         var buffer = await response.arrayBuffer();
         var decoded = await contextAtRate.decodeAudioData(buffer);
-        is(decoded.length, test.frameCount, `${test.path} is ${decoded.duration} frames long`);
+        const fuzz = test.fuzz[AppConstants.platform] ?? 0;
+        ok(Math.abs(decoded.length - test.frameCount) <= fuzz, `${test.path} is ${decoded.length} frames long`);
         checkDone();
       });
     }
