@@ -19,7 +19,7 @@ class LocaleTest : BaseSessionTest() {
         assertThat(
             "Requested locale is found",
             sessionRule.requestedLocales.indexOf("en-GB"),
-            greaterThanOrEqualTo(0)
+            greaterThanOrEqualTo(0),
         )
     }
 
@@ -28,7 +28,7 @@ class LocaleTest : BaseSessionTest() {
         assertThat(
             "Locales have no duplicates",
             sessionRule.requestedLocales,
-            equalTo(listOf("en-GB", "en-US", "en-FR"))
+            equalTo(listOf("en-GB", "en-US", "en-FR")),
         )
     }
 
@@ -37,7 +37,7 @@ class LocaleTest : BaseSessionTest() {
         assertThat(
             "Locales are formatted properly",
             sessionRule.requestedLocales,
-            equalTo(listOf("en-GB", "en-US", "en-FR"))
+            equalTo(listOf("en-GB", "en-US", "en-FR")),
         )
     }
 }

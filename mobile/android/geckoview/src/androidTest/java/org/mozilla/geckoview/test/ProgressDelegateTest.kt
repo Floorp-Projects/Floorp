@@ -30,44 +30,44 @@ class ProgressDelegateTest : BaseSessionTest() {
         var lastProgress = -1
 
         sessionRule.forCallbacksDuringWait(object :
-                ProgressDelegate,
-                NavigationDelegate {
-                @AssertCalled
-                override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
-                    assertThat("LocationChange is called", url, endsWith(path))
-                }
+            ProgressDelegate,
+            NavigationDelegate {
+            @AssertCalled
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+                assertThat("LocationChange is called", url, endsWith(path))
+            }
 
-                @AssertCalled
-                override fun onProgressChange(session: GeckoSession, progress: Int) {
-                    assertThat(
-                        "Progress must be strictly increasing",
-                        progress,
-                        greaterThan(lastProgress)
-                    )
-                    lastProgress = progress
-                    counter++
-                }
+            @AssertCalled
+            override fun onProgressChange(session: GeckoSession, progress: Int) {
+                assertThat(
+                    "Progress must be strictly increasing",
+                    progress,
+                    greaterThan(lastProgress),
+                )
+                lastProgress = progress
+                counter++
+            }
 
-                @AssertCalled
-                override fun onPageStart(session: GeckoSession, url: String) {
-                    assertThat("PageStart is called", url, endsWith(path))
-                }
+            @AssertCalled
+            override fun onPageStart(session: GeckoSession, url: String) {
+                assertThat("PageStart is called", url, endsWith(path))
+            }
 
-                @AssertCalled
-                override fun onPageStop(session: GeckoSession, success: Boolean) {
-                    assertThat("PageStop is called", success, equalTo(true))
-                }
-            })
+            @AssertCalled
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("PageStop is called", success, equalTo(true))
+            }
+        })
 
         assertThat(
             "Callback should be called at least twice",
             counter,
-            greaterThanOrEqualTo(2)
+            greaterThanOrEqualTo(2),
         )
         assertThat(
             "Last progress value should be 100",
             lastProgress,
-            equalTo(100)
+            equalTo(100),
         )
     }
 
@@ -95,7 +95,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Security info should not be null", securityInfo, notNullValue())
@@ -124,7 +124,7 @@ class ProgressDelegateTest : BaseSessionTest() {
                 assertThat(
                     "URL should match",
                     url,
-                    endsWith(forEachCall(UNKNOWN_HOST_URI, HELLO_HTML_PATH))
+                    endsWith(forEachCall(UNKNOWN_HOST_URI, HELLO_HTML_PATH)),
                 )
             }
 
@@ -135,7 +135,7 @@ class ProgressDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Success flag should match",
                     success,
-                    equalTo(forEachCall(false, true))
+                    equalTo(forEachCall(false, true)),
                 )
             }
         })
@@ -157,7 +157,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
             }
 
@@ -186,7 +186,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
             }
 
@@ -208,7 +208,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
             }
 
@@ -229,52 +229,52 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
                 assertThat(
                     "Should be secure",
                     securityInfo.isSecure,
-                    equalTo(true)
+                    equalTo(true),
                 )
                 assertThat(
                     "Should not be exception",
                     securityInfo.isException,
-                    equalTo(false)
+                    equalTo(false),
                 )
                 assertThat(
                     "Origin should match",
                     securityInfo.origin,
-                    equalTo("https://example.com")
+                    equalTo("https://example.com"),
                 )
                 assertThat(
                     "Host should match",
                     securityInfo.host,
-                    equalTo("example.com")
+                    equalTo("example.com"),
                 )
                 assertThat(
                     "Subject should match",
                     securityInfo.certificate?.subjectX500Principal?.name,
-                    equalTo("CN=example.com")
+                    equalTo("CN=example.com"),
                 )
                 assertThat(
                     "Issuer should match",
                     securityInfo.certificate?.issuerX500Principal?.name,
-                    equalTo("OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority")
+                    equalTo("OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority"),
                 )
                 assertThat(
                     "Security mode should match",
                     securityInfo.securityMode,
-                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED)
+                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED),
                 )
                 assertThat(
                     "Active mixed mode should match",
                     securityInfo.mixedModeActive,
-                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN)
+                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN),
                 )
                 assertThat(
                     "Passive mixed mode should match",
                     securityInfo.mixedModePassive,
-                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN)
+                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN),
                 )
             }
         })
@@ -292,52 +292,52 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
                 assertThat(
                     "Should be secure",
                     securityInfo.isSecure,
-                    equalTo(true)
+                    equalTo(true),
                 )
                 assertThat(
                     "Should not be exception",
                     securityInfo.isException,
-                    equalTo(false)
+                    equalTo(false),
                 )
                 assertThat(
                     "Origin should match",
                     securityInfo.origin,
-                    equalTo("https://mozilla-modern.badssl.com")
+                    equalTo("https://mozilla-modern.badssl.com"),
                 )
                 assertThat(
                     "Host should match",
                     securityInfo.host,
-                    equalTo("mozilla-modern.badssl.com")
+                    equalTo("mozilla-modern.badssl.com"),
                 )
                 assertThat(
                     "Subject should match",
                     securityInfo.certificate?.subjectX500Principal?.name,
-                    equalTo("CN=*.badssl.com,O=Lucas Garron,L=Walnut Creek,ST=California,C=US")
+                    equalTo("CN=*.badssl.com,O=Lucas Garron,L=Walnut Creek,ST=California,C=US"),
                 )
                 assertThat(
                     "Issuer should match",
                     securityInfo.certificate?.issuerX500Principal?.name,
-                    equalTo("CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US")
+                    equalTo("CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US"),
                 )
                 assertThat(
                     "Security mode should match",
                     securityInfo.securityMode,
-                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED)
+                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.SECURITY_MODE_IDENTIFIED),
                 )
                 assertThat(
                     "Active mixed mode should match",
                     securityInfo.mixedModeActive,
-                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN)
+                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN),
                 )
                 assertThat(
                     "Passive mixed mode should match",
                     securityInfo.mixedModePassive,
-                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN)
+                    equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN),
                 )
             }
         })
@@ -351,7 +351,7 @@ class ProgressDelegateTest : BaseSessionTest() {
                 "https://expired.example.com"
             } else {
                 "https://expired.badssl.com"
-            }
+            },
         )
         sessionRule.waitForPageStop()
 
@@ -364,7 +364,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(false)
             override fun onSecurityChange(
                 session: GeckoSession,
-                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation
+                securityInfo: GeckoSession.ProgressDelegate.SecurityInformation,
             ) {
             }
         })
@@ -388,7 +388,7 @@ class ProgressDelegateTest : BaseSessionTest() {
              }
              window.requestAnimationFrame(step);
            });
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -466,7 +466,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
-                perms: MutableList<ContentPermission>
+                perms: MutableList<ContentPermission>,
             ) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
@@ -481,7 +481,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         assertThat(
             "Scroll position should match",
             session.evaluateJS("window.visualViewport.pageTop") as Double,
-            closeTo(100.0, .5)
+            closeTo(100.0, .5),
         )
 
         session.goBack()
@@ -525,7 +525,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         assertThat(
             "Scroll position should match",
             mainSession.evaluateJS("window.visualViewport.pageTop") as Double,
-            closeTo(100.0, .5)
+            closeTo(100.0, .5),
         )
     }
 

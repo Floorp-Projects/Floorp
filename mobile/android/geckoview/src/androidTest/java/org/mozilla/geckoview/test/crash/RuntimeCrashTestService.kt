@@ -13,7 +13,7 @@ class RuntimeCrashTestService : TestRuntimeService() {
             this.applicationContext,
             GeckoRuntimeSettings.Builder()
                 .extras(intent.extras!!)
-                .crashHandler(TestCrashHandler::class.java).build()
+                .crashHandler(TestCrashHandler::class.java).build(),
         )
     }
 }

@@ -38,7 +38,7 @@ class PdfSaveTest : BaseSessionTest() {
             filename,
             url,
             /* skipConfirmation = */ true,
-            /* requestExternalApp = */ false
+            /* requestExternalApp = */ false,
         )!!
 
         assertThat("Uri", response.uri, equalTo("http://example.com/foobar.pdf"))

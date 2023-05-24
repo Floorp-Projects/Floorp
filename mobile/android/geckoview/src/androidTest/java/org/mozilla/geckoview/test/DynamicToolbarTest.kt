@@ -50,7 +50,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             assertThat(
                 "Screenshot is not null",
                 it,
-                notNullValue()
+                notNullValue(),
             )
             assertThat("Widths are the same", comparisonImage.width, equalTo(it.width))
             assertThat("Heights are the same", comparisonImage.height, equalTo(it.height))
@@ -170,13 +170,13 @@ class DynamicToolbarTest : BaseSessionTest() {
              new Promise(resolve => {
                window.visualViewport.addEventListener('resize', resolve(window.visualViewport.height));
              });
-                """.trimIndent()
+                """.trimIndent(),
             )
 
             assertThat(
                 "The visual viewport height should be changed in response to the dynamc toolbar transition",
                 promise.value as Double,
-                closeTo(expectedViewportHeight, .01)
+                closeTo(expectedViewportHeight, .01),
             )
         }
     }
@@ -196,7 +196,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         val originalHeight = mainSession.evaluateJS(
             """
             getComputedStyle(document.querySelector('#fixed-element')).height
-            """.trimIndent()
+            """.trimIndent(),
         ) as String
 
         // Set the vertical clipping value to the middle of toolbar transition.
@@ -205,13 +205,13 @@ class DynamicToolbarTest : BaseSessionTest() {
         var height = mainSession.evaluateJS(
             """
             getComputedStyle(document.querySelector('#fixed-element')).height
-            """.trimIndent()
+            """.trimIndent(),
         ) as String
 
         assertThat(
             "The %-based height should be the static in the middle of toolbar tansition",
             height,
-            equalTo(originalHeight)
+            equalTo(originalHeight),
         )
 
         // Set the vertical clipping value to hide the toolbar completely.
@@ -219,7 +219,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         height = mainSession.evaluateJS(
             """
             getComputedStyle(document.querySelector('#fixed-element')).height
-            """.trimIndent()
+            """.trimIndent(),
         ) as String
 
         val scale = mainSession.evaluateJS("window.visualViewport.scale") as Double
@@ -227,7 +227,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         assertThat(
             "The %-based height should be now recomputed based on the screen height",
             height,
-            equalTo(expectedHeight.toString() + "px")
+            equalTo(expectedHeight.toString() + "px"),
         )
     }
 
@@ -254,7 +254,7 @@ class DynamicToolbarTest : BaseSessionTest() {
                     // unexpected resize event(s) will be caught in the next loop.
                     requestAnimationFrame(() => { resolve(fired); });
                 });
-                """.trimIndent()
+                """.trimIndent(),
             )
 
             // Simulate the dynamic toolbar is going to be hidden.
@@ -262,7 +262,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             assertThat(
                 "'resize' event on window should not be fired in response to the dynamc toolbar transition",
                 promise.value as Boolean,
-                equalTo(false)
+                equalTo(false),
             )
         }
 
@@ -271,14 +271,14 @@ class DynamicToolbarTest : BaseSessionTest() {
             new Promise(resolve => {
                 window.addEventListener('resize', () => { resolve(true); }, { once: true });
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
         assertThat(
             "'resize' event on window should be fired when the dynamc toolbar is completely hidden",
             promise.value as Boolean,
-            equalTo(true)
+            equalTo(true),
         )
     }
 
@@ -305,7 +305,7 @@ class DynamicToolbarTest : BaseSessionTest() {
                new Promise(resolve => {
                  window.visualViewport.addEventListener('resize', resolve(window.innerHeight));
                });
-                """.trimIndent()
+                """.trimIndent(),
             )
 
             // Simulate the dynamic toolbar is going to be hidden.
@@ -313,7 +313,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             assertThat(
                 "window.innerHeight should not be changed in response to the dynamc toolbar transition",
                 promise.value as Double,
-                closeTo(SCREEN_HEIGHT / 2 / pixelRatio, .01)
+                closeTo(SCREEN_HEIGHT / 2 / pixelRatio, .01),
             )
         }
 
@@ -322,14 +322,14 @@ class DynamicToolbarTest : BaseSessionTest() {
             new Promise(resolve => {
                 window.addEventListener('resize', () => { resolve(window.innerHeight); }, { once: true });
             });
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
         assertThat(
             "window.innerHeight should be changed when the dynamc toolbar is completely hidden",
             promise.value as Double,
-            closeTo(SCREEN_HEIGHT / pixelRatio, .01)
+            closeTo(SCREEN_HEIGHT / pixelRatio, .01),
         )
     }
 
@@ -348,7 +348,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         val promise = mainSession.evaluatePromiseJS(
             """
             new Promise(resolve => window.addEventListener('resize', () => resolve(true)));
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         // Do some setVerticalClipping calls that we might try to queue two window resize events.
@@ -426,7 +426,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             target.style.height = '$style';
             document.body.appendChild(target);
             parseFloat(getComputedStyle(target).height);
-            """.trimIndent()
+            """.trimIndent(),
         ) as Double
 
         return viewportHeight
@@ -451,21 +451,21 @@ class DynamicToolbarTest : BaseSessionTest() {
         assertThat(
             "svh value at the initial state",
             smallViewportHeight,
-            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1)
+            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1),
         )
 
         var largeViewportHeight = getComputedViewportHeight("100lvh")
         assertThat(
             "lvh value at the initial state",
             largeViewportHeight,
-            closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1)
+            closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1),
         )
 
         var dynamicViewportHeight = getComputedViewportHeight("100dvh")
         assertThat(
             "dvh value at the initial state",
             dynamicViewportHeight,
-            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1)
+            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1),
         )
 
         // Move down the toolbar at a fourth of its position.
@@ -475,21 +475,21 @@ class DynamicToolbarTest : BaseSessionTest() {
         assertThat(
             "svh value during toolbar transition",
             smallViewportHeight,
-            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1)
+            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1),
         )
 
         largeViewportHeight = getComputedViewportHeight("100lvh")
         assertThat(
             "lvh value during toolbar transition",
             largeViewportHeight,
-            closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1)
+            closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1),
         )
 
         dynamicViewportHeight = getComputedViewportHeight("100dvh")
         assertThat(
             "dvh value during toolbar transition",
             dynamicViewportHeight,
-            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight + dynamicToolbarMaxHeight / 4) / scale / pixelRatio, 0.1)
+            closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight + dynamicToolbarMaxHeight / 4) / scale / pixelRatio, 0.1),
         )
     }
 
@@ -523,7 +523,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             MotionEvent.ACTION_DOWN,
             50f,
             70f,
-            0
+            0,
         )
         mainSession.panZoomController.onTouchEvent(down)
         var move = MotionEvent.obtain(
@@ -532,7 +532,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             MotionEvent.ACTION_MOVE,
             50f,
             30f,
-            0
+            0,
         )
         mainSession.panZoomController.onTouchEvent(move)
         var up = MotionEvent.obtain(
@@ -541,7 +541,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             MotionEvent.ACTION_UP,
             50f,
             10f,
-            0
+            0,
         )
         mainSession.panZoomController.onTouchEvent(up)
         mainSession.flushApzRepaints()
@@ -554,7 +554,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             MotionEvent.ACTION_DOWN,
             50f,
             10f,
-            0
+            0,
         )
         mainSession.panZoomController.onTouchEvent(down)
         move = MotionEvent.obtain(
@@ -563,7 +563,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             MotionEvent.ACTION_MOVE,
             50f,
             30f,
-            0
+            0,
         )
         mainSession.panZoomController.onTouchEvent(move)
         up = MotionEvent.obtain(
@@ -572,7 +572,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             MotionEvent.ACTION_UP,
             50f,
             70f,
-            0
+            0,
         )
         mainSession.panZoomController.onTouchEvent(up)
         mainSession.flushApzRepaints()

@@ -182,7 +182,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
             assertThat(
                 "Read parcel matches written parcel",
                 parcel.dataPosition(),
-                Matchers.equalTo(pos)
+                Matchers.equalTo(pos),
             )
         } finally {
             parcel.recycle()
@@ -240,14 +240,14 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         // Create a Promise to listen to the key event, and wait on it below.
         val promise = this.evaluatePromiseJS(
             """new Promise(r => window.addEventListener(
-                    'keyup', r, { once: true }))"""
+                    'keyup', r, { once: true }))""",
         )
         val time = SystemClock.uptimeMillis()
         val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0)
         this.textInput.onKeyDown(keyCode, keyEvent)
         this.textInput.onKeyUp(
             keyCode,
-            KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP)
+            KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP),
         )
         promise.value
     }

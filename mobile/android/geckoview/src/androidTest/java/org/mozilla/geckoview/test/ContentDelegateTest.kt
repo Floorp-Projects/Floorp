@@ -41,7 +41,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Title should match",
                     title,
-                    equalTo(forEachCall("Title1", "Title2"))
+                    equalTo(forEachCall("Title1", "Title2")),
                 )
             }
         })
@@ -65,17 +65,17 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat(
             "Filename matches as expected",
             response.headers["Content-Disposition"],
-            equalTo(fileHeader)
+            equalTo(fileHeader),
         )
         assertThat(
             "Request external response matches as expected.",
             requestExternal,
-            equalTo(response.requestExternalApp)
+            equalTo(response.requestExternalApp),
         )
         assertThat(
             "Skipping the confirmation matches as expected.",
             skipConfirmation,
-            equalTo(response.skipConfirmation)
+            equalTo(response.skipConfirmation),
         )
     }
 
@@ -125,7 +125,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Session should be closed after a crash",
                     session.isOpen,
-                    equalTo(false)
+                    equalTo(false),
                 )
             }
         })
@@ -182,7 +182,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "Session should be closed after being killed",
                     session.isOpen,
-                    equalTo(false)
+                    equalTo(false),
                 )
             }
         })
@@ -406,14 +406,14 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun cookieBannerDetectedEvent() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT
-            )
+                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT,
+            ),
         )
 
         val detectHandled = GeckoResult<Void>()
         mainSession.delegateUntilTestEnd(object : GeckoSession.ContentDelegate {
             override fun onCookieBannerDetected(
-                session: GeckoSession
+                session: GeckoSession,
             ) {
                 detectHandled.complete(null)
             }
@@ -429,14 +429,14 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun cookieBannerHandledEvent() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT
-            )
+                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT,
+            ),
         )
 
         val handleHandled = GeckoResult<Void>()
         mainSession.delegateUntilTestEnd(object : GeckoSession.ContentDelegate {
             override fun onCookieBannerHandled(
-                session: GeckoSession
+                session: GeckoSession,
             ) {
                 handleHandled.complete(null)
             }
@@ -486,8 +486,8 @@ class ContentDelegateTest : BaseSessionTest() {
                 "dom.max_chrome_script_run_time" to 1,
                 "dom.max_ext_content_script_run_time" to 1,
                 "dom.ipc.cpow.timeout" to 100,
-                "browser.hangNotification.waitPeriod" to timeout
-            )
+                "browser.hangNotification.waitPeriod" to timeout,
+            ),
         )
     }
 
@@ -505,7 +505,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The script did not complete.",
                     mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
-                    equalTo("Started")
+                    equalTo("Started"),
                 )
             }
         })
@@ -525,7 +525,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The script did not complete.",
                     mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
-                    equalTo("Started")
+                    equalTo("Started"),
                 )
             }
         })
@@ -552,7 +552,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The script did complete.",
                     mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
-                    equalTo("Finished")
+                    equalTo("Finished"),
                 )
             }
         })
@@ -576,7 +576,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The script did not complete.",
                     mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
-                    equalTo("Started")
+                    equalTo("Started"),
                 )
             }
         })
@@ -600,7 +600,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The script did complete.",
                     mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
-                    equalTo("Finished")
+                    equalTo("Finished"),
                 )
             }
         })
@@ -630,7 +630,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat(
                     "The script did not complete.",
                     mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
-                    equalTo("Started")
+                    equalTo("Started"),
                 )
             }
         })
@@ -645,7 +645,7 @@ class ContentDelegateTest : BaseSessionTest() {
         val pwaSession = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .displayMode(GeckoSessionSettings.DISPLAY_MODE_FULLSCREEN)
-                .build()
+                .build(),
         )
         pwaSession.loadTestPath(HELLO_HTML_PATH)
         pwaSession.waitForPageStop()
@@ -654,7 +654,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat(
             "display-mode should be fullscreen",
             matches,
-            equalTo(true)
+            equalTo(true),
         )
     }
 }

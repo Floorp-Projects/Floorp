@@ -22,46 +22,46 @@ class PrivateModeTest : BaseSessionTest() {
         mainSession.evaluateJS(
             """
             localStorage.setItem('ctx', 'regular');
-        """
+        """,
         )
 
         val privateSession = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .usePrivateMode(true)
-                .build()
+                .build(),
         )
         privateSession.loadUri("https://example.com")
         privateSession.waitForPageStop()
         var localStorage = privateSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         // Ensure that the regular session's data hasn't leaked into the private session.
         assertThat(
             "Private mode local storage value should be empty",
             localStorage,
-            Matchers.equalTo("null")
+            Matchers.equalTo("null"),
         )
 
         privateSession.evaluateJS(
             """
             localStorage.setItem('ctx', 'private');
-        """
+        """,
         )
 
         localStorage = mainSession.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         // Conversely, ensure private data hasn't leaked into the regular session.
         assertThat(
             "Regular mode storage value should be unchanged",
             localStorage,
-            Matchers.equalTo("regular")
+            Matchers.equalTo("regular"),
         )
     }
 
@@ -71,7 +71,7 @@ class PrivateModeTest : BaseSessionTest() {
         val privateSession1 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .usePrivateMode(true)
-                .build()
+                .build(),
         )
         privateSession1.loadUri("https://example.com")
         privateSession1.waitForPageStop()
@@ -79,13 +79,13 @@ class PrivateModeTest : BaseSessionTest() {
         privateSession1.evaluateJS(
             """
             localStorage.setItem('ctx', 'private');
-        """
+        """,
         )
 
         val privateSession2 = sessionRule.createOpenSession(
             GeckoSessionSettings.Builder(mainSession.settings)
                 .usePrivateMode(true)
-                .build()
+                .build(),
         )
         privateSession2.loadUri("https://example.com")
         privateSession2.waitForPageStop()
@@ -93,13 +93,13 @@ class PrivateModeTest : BaseSessionTest() {
         val localStorage = privateSession2.evaluateJS(
             """
             localStorage.getItem('ctx') || 'null'
-        """
+        """,
         ) as String
 
         assertThat(
             "Private mode storage value still set",
             localStorage,
-            Matchers.equalTo("private")
+            Matchers.equalTo("private"),
         )
     }
 }

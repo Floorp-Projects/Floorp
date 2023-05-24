@@ -69,7 +69,7 @@ class GeckoViewTest : BaseSessionTest() {
             assertThat(
                 "The new session should be correctly set.",
                 it.view.session,
-                equalTo(newSession)
+                equalTo(newSession),
             )
         }
     }
@@ -80,7 +80,7 @@ class GeckoViewTest : BaseSessionTest() {
             assertThat(
                 "View should be attached",
                 ViewCompat.isAttachedToWindow(it.view),
-                equalTo(true)
+                equalTo(true),
             )
             it.view.session!!.acquireDisplay()
         }
@@ -119,8 +119,8 @@ class GeckoViewTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "dom.ipc.processPriorityManager.backgroundGracePeriodMS" to 0,
-                "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS" to 0
-            )
+                "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS" to 0,
+            ),
         )
 
         val otherSession = sessionRule.createOpenSession()
@@ -139,7 +139,7 @@ class GeckoViewTest : BaseSessionTest() {
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession),
-            low = listOf(otherSession)
+            low = listOf(otherSession),
         )
 
         return otherSession
@@ -187,7 +187,7 @@ class GeckoViewTest : BaseSessionTest() {
 
             waitUntilContentProcessPriority(
                 high = listOf(otherSession),
-                low = listOf(mainSession)
+                low = listOf(mainSession),
             )
 
             // After releasing otherSession, both sessions should be low priority
@@ -195,21 +195,21 @@ class GeckoViewTest : BaseSessionTest() {
 
             waitUntilContentProcessPriority(
                 high = listOf(),
-                low = listOf(mainSession, otherSession)
+                low = listOf(mainSession, otherSession),
             )
 
             // Test that re-setting mainSession in the view raises the priority again
             it.view.setSession(mainSession)
             waitUntilContentProcessPriority(
                 high = listOf(mainSession),
-                low = listOf(otherSession)
+                low = listOf(otherSession),
             )
 
             // Setting the session to active should also raise priority
             otherSession.setActive(true)
             waitUntilContentProcessPriority(
                 high = listOf(mainSession, otherSession),
-                low = listOf()
+                low = listOf(),
             )
         }
     }
@@ -227,7 +227,7 @@ class GeckoViewTest : BaseSessionTest() {
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession, otherSession),
-            low = listOf()
+            low = listOf(),
         )
 
         // Setting priorityHint to PRIORITY_DEFAULT should lower priority
@@ -235,7 +235,7 @@ class GeckoViewTest : BaseSessionTest() {
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession),
-            low = listOf(otherSession)
+            low = listOf(otherSession),
         )
     }
 
@@ -260,7 +260,7 @@ class GeckoViewTest : BaseSessionTest() {
             "#user1" to "username@example.com",
             "#user2" to "username@example.com",
             "#pass1" to "test-password",
-            "#pass2" to "test-password"
+            "#pass2" to "test-password",
         )
 
         // Set up promises to monitor the values changing.
@@ -269,7 +269,7 @@ class GeckoViewTest : BaseSessionTest() {
             mainSession.evaluatePromiseJS(
                 """
                 window.getDataForAllFrames('${entry.key}', '${entry.value}')
-                """
+                """,
             )
         }
 
@@ -303,7 +303,7 @@ class GeckoViewTest : BaseSessionTest() {
                     assertThat(
                         "input event should be dispatched with InputEvent interface",
                         eventInterface,
-                        equalTo("InputEvent")
+                        equalTo("InputEvent"),
                     )
                 }
             }
