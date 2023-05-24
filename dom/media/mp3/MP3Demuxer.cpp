@@ -355,13 +355,15 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
   int64_t numFrames = 0;
   const auto numAudioFrames = ValidNumAudioFrames();
   if (numAudioFrames) {
+    MP3LOG("Using VBR header to compute duration.");
     // VBR headers don't include the VBR header frame.
     numFrames = numAudioFrames.value() + 1;
-    return Some(Duration(numFrames));
+    return Some(Duration(numFrames) - (EncoderDelay() + Padding()));
   }
 
   const int64_t streamLen = StreamLength();
   if (streamLen < 0) {  // Live streams.
+    MP3LOG("Unknown stream length can't compute duration.");
     // Unknown length, we can't estimate duration.
     return Nothing();
   }
@@ -380,15 +382,18 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
   // If it's CBR, calculate the duration by bitrate.
   if (!mParser.VBRInfo().IsValid()) {
     const int32_t bitrate = mParser.CurrentFrame().Header().Bitrate();
+    MP3LOG("Using frame stream size to compute duration size: %ld bitrate: %d, %zu %zu.", size, bitrate, mFirstFrameOffset, streamLen);
     return Some(
         media::TimeUnit::FromSeconds(static_cast<double>(size) * 8 / bitrate));
   }
 
   if (AverageFrameLength() > 0) {
+    MP3LOG("Using average frame length to compute duration.");
     numFrames = size / AverageFrameLength();
   }
 
-  return Some(Duration(numFrames));
+  MP3LOG("Using frame count and their size to compute duration.");
+  return Some(Duration(numFrames) - (EncoderDelay() + Padding()));
 }
 
 TimeUnit MP3TrackDemuxer::Duration(int64_t aNumFrames) const {
@@ -396,8 +401,8 @@ TimeUnit MP3TrackDemuxer::Duration(int64_t aNumFrames) const {
     return TimeUnit::FromMicroseconds(-1);
   }
 
-  const double usPerFrame = USECS_PER_S * mSamplesPerFrame / mSamplesPerSecond;
-  return TimeUnit::FromMicroseconds(aNumFrames * usPerFrame);
+  const int64_t frameCount = aNumFrames * mSamplesPerFrame;
+  return FramesToTimeUnit(frameCount, mSamplesPerSecond);
 }
 
 MediaByteRange MP3TrackDemuxer::FindFirstFrame() {
