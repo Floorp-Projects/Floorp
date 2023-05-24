@@ -175,13 +175,6 @@ struct ParamTraits<mozilla::a11y::EWhichRange>
           mozilla::a11y::EWhichRange, mozilla::a11y::EWhichRange::eLeftWord,
           mozilla::a11y::EWhichRange::eStyle> {};
 
-template <>
-struct ParamTraits<mozilla::a11y::EWhichPostFilter>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::a11y::EWhichPostFilter,
-          mozilla::a11y::EWhichPostFilter::eContainsText,
-          mozilla::a11y::EWhichPostFilter::eContainsText> {};
-
 }  // namespace IPC
 
 #  else

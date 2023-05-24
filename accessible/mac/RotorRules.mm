@@ -61,16 +61,10 @@ uint16_t RotorRule::Match(Accessible* aAcc) {
         result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
         break;
       default:
-        if (a11y::IsCacheActive()) {
-          // If caching is enabled and we have a non-empty search text,
-          // we can query the cached name to do furhter filtering. If
-          // the cache is disabled this will happen in the post-filter stage
-          // where we send a sync message to content.
-          nsAutoString name;
-          aAcc->Name(name);
-          if (!CaseInsensitiveFindInReadable(mSearchText, name)) {
-            result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
-          }
+        nsAutoString name;
+        aAcc->Name(name);
+        if (!CaseInsensitiveFindInReadable(mSearchText, name)) {
+          result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
         }
         break;
     }
