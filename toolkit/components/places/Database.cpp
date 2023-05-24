@@ -8,6 +8,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/StaticPrefs_places.h"
 
 #include "Database.h"
 
@@ -1639,6 +1640,11 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetShouldStartFrecencyRecalculationFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (StaticPrefs::places_frecency_pages_alternative_featureGate_AtStartup()) {
+    rv = CalculateAltFrecencyFunction::create(mMainConn);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }

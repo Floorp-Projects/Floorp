@@ -70,6 +70,7 @@ pref_groups = [
     "page_load",
     "pdfjs",
     "permissions",
+    "places",
     "plain_text",
     "plugin",
     "plugins",

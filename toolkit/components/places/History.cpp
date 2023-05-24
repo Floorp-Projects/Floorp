@@ -43,6 +43,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
 #include "js/PropertyAndElement.h"  // JS_DefineElement, JS_GetElement, JS_GetProperty
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_places.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PlacesObservers.h"
@@ -1202,6 +1203,24 @@ class InsertVisitedURIs final : public Runnable {
       rv = stmt->BindInt64ByName("page_id"_ns, aPlace.placeId);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (StaticPrefs::
+            places_frecency_pages_alternative_featureGate_AtStartup()) {
+      nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(
+          "UPDATE moz_places "
+          "SET alt_frecency = CALCULATE_ALT_FRECENCY(id, :redirect), "
+          "recalc_alt_frecency = 0 "
+          "WHERE id = :page_id");
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
+      rv = stmt->BindInt64ByName("page_id"_ns, aPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv =
+          stmt->BindInt32ByName("redirect"_ns, aPlace.useFrecencyRedirectBonus);
+      NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->Execute();
       NS_ENSURE_SUCCESS(rv, rv);
     }

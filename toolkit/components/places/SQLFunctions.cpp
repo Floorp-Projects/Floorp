@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/storage.h"
+#include "mozilla/StaticPrefs_places.h"
 #include "nsString.h"
 #include "nsFaviconService.h"
 #include "nsNavBookmarks.h"
@@ -762,6 +763,171 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
       MakeAndAddRef<IntegerVariant>((int32_t)ceilf(pointsForSampledVisits))
           .take();
 
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// Frecency Calculation Function
+
+/* static */
+nsresult CalculateAltFrecencyFunction::create(mozIStorageConnection* aDBConn) {
+  RefPtr<CalculateAltFrecencyFunction> function =
+      new CalculateAltFrecencyFunction();
+
+  nsresult rv =
+      aDBConn->CreateFunction("calculate_alt_frecency"_ns, -1, function);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(CalculateAltFrecencyFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+CalculateAltFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                             nsIVariant** _result) {
+  // Fetch arguments.  Use default values if they were omitted.
+  uint32_t numEntries;
+  nsresult rv = aArguments->GetNumEntries(&numEntries);
+  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(numEntries <= 2, "unexpected number of arguments");
+
+  int64_t pageId = aArguments->AsInt64(0);
+  MOZ_ASSERT(pageId > 0, "Should always pass a valid page id");
+  if (pageId <= 0) {
+    *_result = MakeAndAddRef<IntegerVariant>(0).take();
+    return NS_OK;
+  }
+
+  int32_t isRedirect = 0;
+  if (numEntries > 1) {
+    isRedirect = aArguments->AsInt32(1);
+  }
+  // This is a const version of the history object for thread-safety.
+  const nsNavHistory* history = nsNavHistory::GetConstHistoryService();
+  NS_ENSURE_STATE(history);
+  RefPtr<Database> DB = Database::GetDatabase();
+  NS_ENSURE_STATE(DB);
+
+  /*
+    Exponentially decay each visit with an half-life of halfLifeDays.
+    Score per each visit is a weight exponentially decayed depending on how
+    far away is from a reference date, that is the most recent visit date.
+    The weight for each visit is assigned depending on the visit type and other
+    information (bookmarked, a redirect, a typed entry).
+    If a page has no visits, consider a single visit with an high weight and
+    decay its score using the bookmark date as reference time.
+    Frecency is the sum of all the scores / number of samples.
+    The final score is further decayed using the same half-life.
+    To avoid having to decay the score manually, the stored value is the number
+    of days after which the score would become 1.
+
+    TODO: Add reference link to source docs here.
+  */
+  nsCOMPtr<mozIStorageStatement> stmt = DB->GetStatement(
+      "WITH "
+      "lambda (lambda) AS ( "
+      "  SELECT ln(2) / :halfLifeDays "
+      "), "
+      "visits (days, weight) AS ( "
+      "  SELECT "
+      "    v.visit_date / 86400000000, "
+      "    (SELECT CASE "
+      "      WHEN IFNULL(s.visit_type, v.visit_type) = 3 "     // is a bookmark
+      "        OR  ( v.source <> 3 "                           // is a search
+      "          AND IFNULL(s.visit_type, v.visit_type) = 2 "  // is typed
+      "          AND t.id IS NULL AND NOT :isRedirect "        // not a redirect
+      "        ) "
+      "      THEN :highWeight "
+      "      WHEN t.id IS NULL AND NOT :isRedirect "  // not a redirect
+      "       AND IFNULL(s.visit_type, v.visit_type) NOT IN (4, 8, 9) "
+      "      THEN :mediumWeight "
+      "      ELSE :lowWeight "
+      "     END) "
+      "  FROM moz_historyvisits v "
+      // If it's a redirect target, use the visit_type of the source.
+      "  LEFT JOIN moz_historyvisits s ON s.id = v.from_visit "
+      "                               AND v.visit_type IN (5,6) "
+      // If it's a redirect, use a low weight.
+      "  LEFT JOIN moz_historyvisits t ON t.from_visit = v.id "
+      "                               AND t.visit_type IN (5,6) "
+      "  WHERE v.place_id = :pageId "
+      "  ORDER BY v.visit_date DESC "
+      "  LIMIT :numSampledVisits "
+      "), "
+      "bookmark (days, weight) AS ( "
+      "  SELECT dateAdded / 86400000000, 100 "
+      "  FROM moz_bookmarks "
+      "  WHERE fk = :pageId "
+      "  ORDER BY dateAdded DESC "
+      "  LIMIT 1 "
+      "), "
+      "samples (days, weight) AS ( "
+      "  SELECT * FROM bookmark WHERE (SELECT count(*) FROM visits) = 0 "
+      "  UNION ALL "
+      "  SELECT * FROM visits "
+      "), "
+      "reference (days, samples_count) AS ( "
+      "  SELECT max(samples.days), count(*) FROM samples "
+      "), "
+      "scores (score) AS ( "
+      "  SELECT (weight * exp(-lambda * (samples.days - reference.days))) "
+      "  FROM samples, reference, lambda "
+      ") "
+      "SELECT CASE "
+      "WHEN (substr(url, 0, 7) = 'place:') THEN 0 "
+      "ELSE "
+      "  reference.days + CAST (( "
+      "    ln( "
+      "      (sum(score) / samples_count * MAX(visit_count, samples_count)) * "
+      "        exp(-lambda) "
+      "    ) / lambda "
+      "  ) AS INTEGER) "
+      "END "
+      "FROM moz_places h, reference, lambda, scores "
+      "WHERE h.id = :pageId");
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper infoScoper(stmt);
+
+  rv = stmt->BindInt64ByName("pageId"_ns, pageId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName("isRedirect"_ns, isRedirect);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(
+      "halfLifeDays"_ns,
+      StaticPrefs::places_frecency_pages_alternative_halfLifeDays_AtStartup());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(
+      "numSampledVisits"_ns,
+      StaticPrefs::
+          places_frecency_pages_alternative_numSampledVisits_AtStartup());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(
+      "lowWeight"_ns,
+      StaticPrefs::places_frecency_pages_alternative_lowWeight_AtStartup());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(
+      "mediumWeight"_ns,
+      StaticPrefs::places_frecency_pages_alternative_mediumWeight_AtStartup());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(
+      "highWeight"_ns,
+      StaticPrefs::places_frecency_pages_alternative_highWeight_AtStartup());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasResult = false;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_UNEXPECTED);
+
+  bool isNull;
+  if (NS_SUCCEEDED(stmt->GetIsNull(0, &isNull)) && isNull) {
+    *_result = MakeAndAddRef<NullVariant>().take();
+  } else {
+    int32_t score;
+    rv = stmt->GetInt32(0, &score);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *_result = MakeAndAddRef<IntegerVariant>(score).take();
+  }
   return NS_OK;
 }
 

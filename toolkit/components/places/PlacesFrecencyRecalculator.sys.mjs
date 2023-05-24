@@ -64,16 +64,6 @@ const DEFERRED_TASK_MAX_IDLE_WAIT_MS = 5 * 60000;
 // Number of entries to update at once.
 const DEFAULT_CHUNK_SIZE = 50;
 
-// Pref controlling altenrative origins frecency.
-const ORIGINS_ALT_FRECENCY_PREF =
-  "places.frecency.origins.alternative.featureGate";
-// Current version of alternative origins frecency.
-//  ! IMPORTANT: Always bump this up when making changes to the algorithm.
-const ORIGINS_ALT_FRECENCY_VERSION = 2;
-// Key used to store a descriptor object for the alternative frecency in the
-// moz_meta table.
-const ORIGINS_ALT_FRECENCY_META_KEY = "origin_alternative_frecency";
-
 export class PlacesFrecencyRecalculator {
   classID = Components.ID("1141fd31-4c1a-48eb-8f1a-2f05fad94085");
 
@@ -88,11 +78,12 @@ export class PlacesFrecencyRecalculator {
    */
   #alternativeFrecencyHelper = null;
 
-  originsAlternativeFrecencyInfo = {
-    pref: ORIGINS_ALT_FRECENCY_PREF,
-    key: ORIGINS_ALT_FRECENCY_META_KEY,
-    version: ORIGINS_ALT_FRECENCY_VERSION,
-  };
+  /**
+   * This is useful for testing.
+   */
+  get alternativeFrecencyInfo() {
+    return this.#alternativeFrecencyHelper?.sets;
+  }
 
   constructor() {
     lazy.logger.trace("Initializing Frecency Recalculator");
@@ -205,7 +196,7 @@ export class PlacesFrecencyRecalculator {
 
     // If alternative frecency is enabled, also recalculate a chunk of it.
     affectedCount +=
-      await this.#alternativeFrecencyHelper.recalculateSomeOriginsAlternativeFrecencies(
+      await this.#alternativeFrecencyHelper.recalculateSomeAlternativeFrecencies(
         { chunkSize }
       );
 
@@ -331,112 +322,180 @@ export class PlacesFrecencyRecalculator {
 class AlternativeFrecencyHelper {
   initializedDeferred = lazy.PromiseUtils.defer();
   #recalculator = null;
-  #useOriginsAlternativeFrecency = false;
-  /**
-   * Store an object containing variables influencing the calculation.
-   * Any change to this object will cause a full recalculation on restart.
-   */
-  #variables = null;
+
+  sets = {
+    pages: {
+      // This pref is only read once and used to kick-off recalculations.
+      enabled: Services.prefs.getBoolPref(
+        "places.frecency.pages.alternative.featureGate",
+        false
+      ),
+      // Key used to store variables in the moz_meta table.
+      metadataKey: "page_alternative_frecency",
+      // The table containing frecency.
+      table: "moz_places",
+      // Object containing variables influencing the calculation.
+      // Any change to this object will cause a full recalculation on restart.
+      variables: {
+        // Current version of origins alternative frecency.
+        //  ! IMPORTANT: Always bump up when making changes to the algorithm.
+        version: 1,
+        highWeight: Services.prefs.getIntPref(
+          "places.frecency.pages.alternative.highWeight",
+          100
+        ),
+        mediumWeight: Services.prefs.getIntPref(
+          "places.frecency.pages.alternative.mediumWeight",
+          50
+        ),
+        lowWeight: Services.prefs.getIntPref(
+          "places.frecency.pages.alternative.lowWeight",
+          20
+        ),
+        halfLifeDays: Services.prefs.getIntPref(
+          "places.frecency.pages.alternative.halfLifeDays",
+          30
+        ),
+        numSampledVisits: Services.prefs.getIntPref(
+          "places.frecency.pages.alternative.numSampledVisits",
+          10
+        ),
+      },
+      method: this.#recalculateSomePagesAlternativeFrecencies,
+    },
+
+    origins: {
+      // This pref is only read once and used to kick-off recalculations.
+      enabled: Services.prefs.getBoolPref(
+        "places.frecency.origins.alternative.featureGate",
+        false
+      ),
+      // Key used to store variables in the moz_meta table.
+      metadataKey: "origin_alternative_frecency",
+      // The table containing frecency.
+      table: "moz_origins",
+      // Object containing variables influencing the calculation.
+      // Any change to this object will cause a full recalculation on restart.
+      variables: {
+        // Current version of origins alternative frecency.
+        //  ! IMPORTANT: Always bump up when making changes to the algorithm.
+        version: 2,
+        // Frecencies of pages are ignored after these many days.
+        daysCutOff: Services.prefs.getIntPref(
+          "places.frecency.origins.alternative.daysCutOff",
+          90
+        ),
+      },
+      method: this.#recalculateSomeOriginsAlternativeFrecencies,
+    },
+  };
 
   constructor(recalculator) {
     this.#recalculator = recalculator;
-    this.#variables = {
-      version: ORIGINS_ALT_FRECENCY_VERSION,
-      // Frecencies of pages are ignored after these many days.
-      daysCutOff: Services.prefs.getIntPref(
-        "places.frecency.origins.alternative.daysCutOff",
-        90
-      ),
-    };
-
-    this.#kickOffOriginsAlternativeFrecency()
+    this.#kickOffAlternativeFrecencies()
       .catch(console.error)
       .finally(() => this.initializedDeferred.resolve());
   }
 
-  async #kickOffOriginsAlternativeFrecency() {
-    // First check the status of the pref, we only read it once on startup
-    // and don't mind if it changes later, since it's pretty much used on
-    // startup to kick-off recalculations and create some triggers.
-    this.#useOriginsAlternativeFrecency = Services.prefs.getBoolPref(
-      ORIGINS_ALT_FRECENCY_PREF,
-      false
-    );
-
-    // Now check the state cached in the moz_meta table. If there's no state we
-    // assume alternative frecency is disabled.
-    let storedVariables = await lazy.PlacesUtils.metadata.get(
-      ORIGINS_ALT_FRECENCY_META_KEY,
-      Object.create(null)
-    );
-
-    // Check whether this is the first-run, that happens when the alternative
-    // ranking is enabled and it was not at the previous session, or its version
-    // was bumped up. We should recalc all origins alternative frecency.
-    if (
-      this.#useOriginsAlternativeFrecency &&
-      !lazy.ObjectUtils.deepEqual(this.#variables, storedVariables)
-    ) {
-      lazy.logger.trace("Origins alternative frecency must be recalculated");
-      await lazy.PlacesUtils.withConnectionWrapper(
-        "PlacesFrecencyRecalculator :: Alternative Origins Frecency Set Recalc",
-        async db => {
-          await db.execute(`UPDATE moz_origins SET recalc_alt_frecency = 1`);
-        }
-      );
-      await lazy.PlacesUtils.metadata.set(
-        ORIGINS_ALT_FRECENCY_META_KEY,
-        this.#variables
+  async #kickOffAlternativeFrecencies() {
+    let recalculateFirstChunk = false;
+    for (let [type, set] of Object.entries(this.sets)) {
+      // Now check the variables cached in the moz_meta table. If not found we
+      // assume alternative frecency was disabled in the previous session.
+      let storedVariables = await lazy.PlacesUtils.metadata.get(
+        set.metadataKey,
+        Object.create(null)
       );
 
-      // Unblock recalculateSomeOriginsAlternativeFrecencies().
-      this.initializedDeferred.resolve();
+      // Check whether this is the first-run, that happens when the alternative
+      // ranking is enabled and it was not at the previous session, or variables
+      // were changed. We should recalculate all the alternative frecency values.
+      if (
+        set.enabled &&
+        !lazy.ObjectUtils.deepEqual(set.variables, storedVariables)
+      ) {
+        lazy.logger.trace(
+          `Alternative frecency of ${type} must be recalculated`
+        );
+        await lazy.PlacesUtils.withConnectionWrapper(
+          `PlacesFrecencyRecalculator :: ${type} alternative frecency set recalc`,
+          async db => {
+            await db.execute(`UPDATE ${set.table} SET recalc_alt_frecency = 1`);
+          }
+        );
+        await lazy.PlacesUtils.metadata.set(set.metadataKey, set.variables);
+        recalculateFirstChunk = true;
+        continue;
+      }
 
+      if (!set.enabled && storedVariables) {
+        lazy.logger.trace(`Clean up alternative frecency of ${type}`);
+        // Clear alternative frecency to save on space.
+        await lazy.PlacesUtils.withConnectionWrapper(
+          `PlacesFrecencyRecalculator :: ${type} alternative frecency set NULL`,
+          async db => {
+            await db.execute(`UPDATE ${set.table} SET alt_frecency = NULL`);
+          }
+        );
+        await lazy.PlacesUtils.metadata.delete(set.metadataKey);
+      }
+    }
+
+    if (recalculateFirstChunk) {
       // Do a first recalculation immediately, so we don't leave the user
       // with unranked entries for too long.
-      await this.recalculateSomeOriginsAlternativeFrecencies();
-      if (lazy.PlacesUtils.isInAutomation) {
-        Services.obs.notifyObservers(
-          null,
-          "test-origins-alternative-frecency-first-recalc"
-        );
-      }
+      await this.recalculateSomeAlternativeFrecencies();
+
       // Ensure the recalculation task is armed for a second run.
       lazy.PlacesUtils.history.shouldStartFrecencyRecalculation = true;
       this.#recalculator.maybeStartFrecencyRecalculation();
-      return;
-    }
-
-    if (!this.#useOriginsAlternativeFrecency && storedVariables) {
-      lazy.logger.trace("Origins alternative frecency clean up");
-      // Clear alternative frecency to save on space.
-      await lazy.PlacesUtils.withConnectionWrapper(
-        "PlacesFrecencyRecalculator :: Alternative Origins Frecency Set Null",
-        async db => {
-          await db.execute(`UPDATE moz_origins SET alt_frecency = NULL`);
-        }
-      );
-      await lazy.PlacesUtils.metadata.delete(ORIGINS_ALT_FRECENCY_META_KEY);
     }
   }
 
   /**
-   * Updates a chunk of outdated origins frecency values.
+   * Updates a chunk of outdated frecency values.
    * @param {Number} chunkSize maximum number of entries to update at a time,
    *   set to -1 to update any entry.
    * @resolves {Number} Number of affected pages.
    */
-  async recalculateSomeOriginsAlternativeFrecencies({
+  async recalculateSomeAlternativeFrecencies({
     chunkSize = DEFAULT_CHUNK_SIZE,
   } = {}) {
-    // Check initialization.
-    await this.initializedDeferred.promise;
-
-    // Check whether we should do anything at all.
-    if (!this.#useOriginsAlternativeFrecency) {
-      return 0;
+    let affected = 0;
+    for (let set of Object.values(this.sets)) {
+      if (!set.enabled) {
+        continue;
+      }
+      try {
+        affected += await set.method({ chunkSize, variables: set.variables });
+      } catch (ex) {
+        console.error(ex);
+      }
     }
+    return affected;
+  }
 
+  async #recalculateSomePagesAlternativeFrecencies({ chunkSize, variables }) {
+    lazy.logger.trace(
+      `Recalculate ${chunkSize} alternative pages frecency values`
+    );
+    let db = await lazy.PlacesUtils.promiseUnsafeWritableDBConnection();
+    let affected = await db.executeCached(
+      `UPDATE moz_places
+       SET alt_frecency = CALCULATE_ALT_FRECENCY(moz_places.id),
+           recalc_alt_frecency = 0
+       WHERE id IN (
+        SELECT id FROM moz_places
+          WHERE recalc_alt_frecency = 1
+          ORDER BY frecency DESC
+          LIMIT ${chunkSize}
+      )
+      RETURNING id`
+    );
+    return affected;
+  }
+
+  async #recalculateSomeOriginsAlternativeFrecencies({ chunkSize, variables }) {
     lazy.logger.trace(
       `Recalculate ${chunkSize} alternative origins frecency values`
     );
@@ -451,9 +510,8 @@ class AlternativeFrecencyHelper {
           FROM moz_places h
           WHERE origin_id = moz_origins.id
           AND last_visit_date >
-            strftime('%s','now','localtime','start of day','-${
-              this.#variables.daysCutOff
-            } day','utc') * 1000000
+            strftime('%s','now','localtime','start of day',
+                     '-${variables.daysCutOff} day','utc') * 1000000
         ), recalc_alt_frecency = 0
         WHERE id IN (
           SELECT id FROM moz_origins
