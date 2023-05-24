@@ -173,6 +173,9 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
           mp4ParseSampleCodecSpecific.data + 10);
       opusCodecSpecificData.mContainerCodecDelayMicroSeconds =
           mozilla::FramesToUsecs(preskip, 48000).value();
+      LOG("Opus stream in MP4 container, %" PRId64
+          " microseconds of encoder delay (%" PRIu16 ").",
+          opusCodecSpecificData.mContainerCodecDelayMicroSeconds, preskip);
     } else {
       // This file will error later as it will be rejected by the opus decoder.
       opusCodecSpecificData.mContainerCodecDelayMicroSeconds = 0;
