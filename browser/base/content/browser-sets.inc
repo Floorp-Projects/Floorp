@@ -215,12 +215,16 @@
 #ifndef XP_MACOSX
     <key id="showAllHistoryKb" data-l10n-id="history-show-all-shortcut" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
-    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
+    <key id="key_enterFullScreen" keycode="VK_F11" command="View:FullScreen"/>
+    <key id="key_exitFullScreen" keycode="VK_F11" command="View:FullScreen" reserved="true" disabled="true"/>
 #else
     <key id="showAllHistoryKb" data-l10n-id="history-show-all-shortcut-mac" command="Browser:ShowAllHistory" modifiers="accel"/>
-    <key id="key_fullScreen" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,control"/>
-    <key id="key_fullScreen_old" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,shift"/>
-    <key keycode="VK_F11" command="View:FullScreen"/>
+    <key id="key_enterFullScreen" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,control"/>
+    <key id="key_enterFullScreen_old" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,shift"/>
+    <key id="key_enterFullScreen_compat" keycode="VK_F11" command="View:FullScreen"/>
+    <key id="key_exitFullScreen" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,control" reserved="true" disabled="true"/>
+    <key id="key_exitFullScreen_old" data-l10n-id="full-screen-shortcut" command="View:FullScreen" modifiers="accel,shift" reserved="true" disabled="true"/>
+    <key id="key_exitFullScreen_compat" keycode="VK_F11" command="View:FullScreen" reserved="true" disabled="true"/>
 #endif
     <key id="key_toggleReaderMode"
          command="View:ReaderView"
