@@ -102,7 +102,7 @@ Mozilla recommends a number of changes to Mercurial to enhance your
 experience with it.
 
 Would you like to run a configuration wizard to ensure Mercurial is
-optimally configured?"""
+optimally configured? (This will also ensure 'version-control-tools' is up-to-date)"""
 
 CONFIGURE_GIT = """
 Mozilla recommends using git-cinnabar to work with mozilla-central (or
