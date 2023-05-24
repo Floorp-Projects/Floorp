@@ -562,21 +562,22 @@ export var PlacesTestUtils = Object.freeze({
   },
 
   /**
-   * Updates a specified field in a database table, based on the given
+   * Updates specified fields in a database table, based on the given
    * conditions.
    * @param {string} table - The name of the database table to add to.
-   * @param {string} field - The name of the field to update the value for.
-   * @param {string} value - The value to set.
-   * @param {Object} conditions - An object containing the conditions to filter
+   * @param {string} fields - an object with field, value pairs
+   * @param {Object} [conditions] - An object containing the conditions to filter
    * the query results. The keys represent the names of the columns to filter
    * by, and the values represent the filter values.
    * @return {Promise} A Promise that resolves to the number of affected rows.
    * @throws If no rows were affected.
    */
-  async updateDatabaseValue(table, field, value, conditions) {
+  async updateDatabaseValues(table, fields, conditions = {}) {
     let { fragment: where, params } = this._buildWhereClause(table, conditions);
-    let query = `UPDATE ${table} SET ${field} = :val ${where} RETURNING rowid`;
-    params.val = value;
+    let query = `UPDATE ${table} SET ${Object.keys(fields)
+      .map(f => f + " = :" + f)
+      .join()} ${where} RETURNING rowid`;
+    params = Object.assign(fields, params);
     return lazy.PlacesUtils.withConnectionWrapper(
       "setDatabaseValue",
       async conn => {

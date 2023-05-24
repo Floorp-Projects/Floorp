@@ -12819,6 +12819,42 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "places."
+#---------------------------------------------------------------------------
+
+# Whether pages alternative frecency is enabled. This and the following related
+# prefs only apply at restart.
+- name: places.frecency.pages.alternative.featureGate
+  type: bool
+  value: false
+  mirror: once
+
+- name: places.frecency.pages.alternative.highWeight
+  type: uint32_t
+  value: 100
+  mirror: once
+
+- name: places.frecency.pages.alternative.mediumWeight
+  type: uint32_t
+  value: 50
+  mirror: once
+
+- name: places.frecency.pages.alternative.lowWeight
+  type: uint32_t
+  value: 20
+  mirror: once
+
+- name: places.frecency.pages.alternative.halfLifeDays
+  type: uint32_t
+  value: 30
+  mirror: once
+
+- name: places.frecency.pages.alternative.numSampledVisits
+  type: uint32_t
+  value: 10
+  mirror: once
+
+#---------------------------------------------------------------------------
 # Prefs starting with "plain_text."
 #---------------------------------------------------------------------------
 
