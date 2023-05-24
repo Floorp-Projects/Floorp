@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// TODO (Bug 1817084) Remove this file when we disable the extension
 // tests the translation infobar, using a fake 'Translation' implementation.
 
 const { PermissionTestUtils } = ChromeUtils.importESModule(
