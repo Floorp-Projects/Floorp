@@ -122,6 +122,7 @@ class AwesomeBarView(
                 loadUrlUseCase,
                 components.core.icons,
                 engineForSpeculativeConnects,
+                showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
@@ -133,6 +134,7 @@ class AwesomeBarView(
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
@@ -347,6 +349,7 @@ class AwesomeBarView(
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
                 resultsHostFilter = searchEngineHostFilter,
             )
@@ -357,6 +360,7 @@ class AwesomeBarView(
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
                 resultsHostFilter = searchEngineHostFilter,
             )
@@ -531,6 +535,7 @@ class AwesomeBarView(
             icons = components.core.icons,
             indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
             engine = engineForSpeculativeConnects,
+            showEditSuggestion = false,
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             resultsHostFilter = searchEngineHostFilter,
         )

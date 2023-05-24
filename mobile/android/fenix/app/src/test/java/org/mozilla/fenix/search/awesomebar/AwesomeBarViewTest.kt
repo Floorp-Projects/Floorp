@@ -27,6 +27,7 @@ import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -185,6 +186,358 @@ class AwesomeBarViewTest {
         assertNotNull(historyProvider)
         assertEquals("test", (historyProvider as CombinedHistorySuggestionProvider).resultsHostFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, historyProvider.getMaxNumberOfSuggestions())
+    }
+
+    @Test
+    fun `GIVEN the default engine is selected WHEN history metadata is enabled THEN suggestions are disabled in history and bookmark providers`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns true
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val combinedHistoryProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider } as CombinedHistorySuggestionProvider
+        assertNotNull(combinedHistoryProvider)
+        assertFalse(combinedHistoryProvider.showEditSuggestion)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider } as BookmarksStorageSuggestionProvider
+        assertNotNull(bookmarkProvider)
+        assertFalse(bookmarkProvider.showEditSuggestion)
+    }
+
+    @Test
+    fun `GIVEN the default engine is selected WHEN history metadata is disabled THEN suggestions are disabled in history and bookmark providers`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns false
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val defaultHistoryProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider } as HistoryStorageSuggestionProvider
+        assertNotNull(defaultHistoryProvider)
+        assertFalse(defaultHistoryProvider.showEditSuggestion)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider } as BookmarksStorageSuggestionProvider
+        assertNotNull(bookmarkProvider)
+        assertFalse(bookmarkProvider.showEditSuggestion)
+    }
+
+    @Test
+    fun `GIVEN the non default general engine is selected WHEN history metadata is enabled THEN history and bookmark providers are not set`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns true
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showAllHistorySuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { isGeneral } returns true
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val combinedHistoryProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider }
+        assertNull(combinedHistoryProvider)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider }
+        assertNull(bookmarkProvider)
+    }
+
+    @Test
+    fun `GIVEN the non default general engine is selected WHEN history metadata is disabled THEN history and bookmark providers are not set`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns false
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showAllHistorySuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { isGeneral } returns true
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val defaultHistoryProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider }
+        assertNull(defaultHistoryProvider)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider }
+        assertNull(bookmarkProvider)
+    }
+
+    @Test
+    fun `GIVEN the non default non general engine is selected WHEN history metadata is enabled THEN suggestions are disabled in history and bookmark providers`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns true
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showAllHistorySuggestions = false,
+            showAllBookmarkSuggestions = false,
+            showAllSyncedTabsSuggestions = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { isGeneral } returns false
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val combinedHistoryProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider } as CombinedHistorySuggestionProvider
+        assertNotNull(combinedHistoryProvider)
+        assertFalse(combinedHistoryProvider.showEditSuggestion)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider } as BookmarksStorageSuggestionProvider
+        assertNotNull(bookmarkProvider)
+        assertFalse(bookmarkProvider.showEditSuggestion)
+    }
+
+    @Test
+    fun `GIVEN the non default non general engine is selected WHEN history metadata is disabled THEN suggestions are disabled in history and bookmark providers`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns false
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showAllHistorySuggestions = false,
+            showAllBookmarkSuggestions = false,
+            showAllSyncedTabsSuggestions = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Shortcut(
+                mockk(relaxed = true) {
+                    every { isGeneral } returns false
+                },
+            ),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val defaultHistoryProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider } as HistoryStorageSuggestionProvider
+        assertNotNull(defaultHistoryProvider)
+        assertFalse(defaultHistoryProvider.showEditSuggestion)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider } as BookmarksStorageSuggestionProvider
+        assertNotNull(bookmarkProvider)
+        assertFalse(bookmarkProvider.showEditSuggestion)
+    }
+
+    @Test
+    fun `GIVEN history is selected WHEN history metadata is enabled THEN suggestions are disabled in history provider, bookmark provider is not set`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns true
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showSearchTermHistory = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
+            showSearchSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.History(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val combinedHistoryProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider } as CombinedHistorySuggestionProvider
+        assertNotNull(combinedHistoryProvider)
+        assertFalse(combinedHistoryProvider.showEditSuggestion)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider }
+        assertNull(bookmarkProvider)
+    }
+
+    @Test
+    fun `GIVEN history is selected WHEN history metadata is disabled THEN suggestions are disabled in history provider, bookmark provider is not set`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns false
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showSearchTermHistory = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
+            showSearchSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.History(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val defaultHistoryProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider } as HistoryStorageSuggestionProvider
+        assertNotNull(defaultHistoryProvider)
+        assertFalse(defaultHistoryProvider.showEditSuggestion)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider }
+        assertNull(bookmarkProvider)
+    }
+
+    @Test
+    fun `GIVEN tab engine is selected WHEN history metadata is enabled THEN history and bookmark providers are not set`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns true
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showSearchTermHistory = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showAllHistorySuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
+            showSearchSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Tabs(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val combinedHistoryProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider }
+        assertNull(combinedHistoryProvider)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider }
+        assertNull(bookmarkProvider)
+    }
+
+    @Test
+    fun `GIVEN tab engine is selected WHEN history metadata is disabled THEN history and bookmark providers are not set`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns false
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showSearchTermHistory = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showAllHistorySuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showAllBookmarkSuggestions = false,
+            showSearchSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            searchEngineSource = SearchEngineSource.Tabs(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val defaultHistoryProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider }
+        assertNull(defaultHistoryProvider)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider }
+        assertNull(bookmarkProvider)
+    }
+
+    @Test
+    fun `GIVEN bookmarks engine is selected WHEN history metadata is enabled THEN history provider is not set, suggestions are disabled in bookmark provider`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns true
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showSearchTermHistory = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showAllHistorySuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showSearchSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Bookmarks(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val combinedHistoryProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider }
+        assertNull(combinedHistoryProvider)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider } as BookmarksStorageSuggestionProvider
+        assertNotNull(bookmarkProvider)
+        assertFalse(bookmarkProvider.showEditSuggestion)
+    }
+
+    @Test
+    fun `GIVEN bookmarks engine is selected WHEN history metadata is disabled THEN history provider is not set, suggestions are disabled in bookmark provider`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { historyMetadataUIFeature } returns false
+        }
+        every { activity.settings() } returns settings
+        val state = getSearchProviderState(
+            showSearchShortcuts = false,
+            showSearchTermHistory = false,
+            showHistorySuggestionsForCurrentEngine = false,
+            showAllHistorySuggestions = false,
+            showBookmarksSuggestionsForCurrentEngine = false,
+            showSearchSuggestions = false,
+            showSyncedTabsSuggestionsForCurrentEngine = false,
+            showAllSyncedTabsSuggestions = false,
+            showSessionSuggestionsForCurrentEngine = false,
+            showAllSessionSuggestions = false,
+            searchEngineSource = SearchEngineSource.Bookmarks(mockk(relaxed = true)),
+        )
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val defaultHistoryProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider }
+        assertNull(defaultHistoryProvider)
+
+        val bookmarkProvider = result.firstOrNull { it is BookmarksStorageSuggestionProvider } as BookmarksStorageSuggestionProvider
+        assertNotNull(bookmarkProvider)
+        assertFalse(bookmarkProvider.showEditSuggestion)
     }
 
     @Test

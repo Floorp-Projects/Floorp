@@ -59,7 +59,7 @@ class CombinedHistorySuggestionProvider(
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
     internal var maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT,
-    private val showEditSuggestion: Boolean = true,
+    @get:VisibleForTesting val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
     @get:VisibleForTesting val resultsHostFilter: String? = null,
 ) : AwesomeBar.SuggestionProvider {
