@@ -453,6 +453,19 @@ inline T Clamp(const T aValue, const T aMin, const T aMax) {
   return aValue;
 }
 
+template <typename T>
+inline uint_fast8_t CountTrailingZeroes(T aValue) {
+  static_assert(sizeof(T) <= 8);
+  static_assert(std::is_integral_v<T>);
+  // This casts to 32-bits
+  if constexpr (sizeof(T) <= 4) {
+    return CountTrailingZeroes32(aValue);
+  }
+  // This doesn't
+  if constexpr (sizeof(T) == 8) {
+    return CountTrailingZeroes64(aValue);
+  }
+}
 } /* namespace mozilla */
 
 #endif /* mozilla_MathAlgorithms_h */
