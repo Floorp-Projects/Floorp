@@ -3136,7 +3136,7 @@ already_AddRefed<Promise> HTMLMediaElement::SeekToNextFrame(ErrorResult& aRv) {
 
 void HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv) {
   LOG(LogLevel::Debug,
-      ("%p SetCurrentTime(%f) called by JS", this, aCurrentTime));
+      ("%p SetCurrentTime(%lf) called by JS", this, aCurrentTime));
   Seek(aCurrentTime, SeekTarget::Accurate, IgnoreErrors());
 }
 
@@ -3291,7 +3291,8 @@ double HTMLMediaElement::Duration() const {
   }
 
   if (mDecoder) {
-    return mDecoder->GetDuration();
+    // Limit resolution to microsecond.
+    return std::round(mDecoder->GetDuration() * 1000000.) / 1000000;
   }
 
   return std::numeric_limits<double>::quiet_NaN();
@@ -3300,7 +3301,7 @@ double HTMLMediaElement::Duration() const {
 already_AddRefed<TimeRanges> HTMLMediaElement::Seekable() const {
   media::TimeIntervals seekable =
       mDecoder ? mDecoder->GetSeekable() : media::TimeIntervals();
-  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable);
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable.ToMicrosecondResolution());
   return ranges.forget();
 }
 
@@ -6627,7 +6628,8 @@ nsresult HTMLMediaElement::CopyInnerTo(Element* aDest) {
 already_AddRefed<TimeRanges> HTMLMediaElement::Buffered() const {
   media::TimeIntervals buffered =
       mDecoder ? mDecoder->GetBuffered() : media::TimeIntervals();
-  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), buffered);
+  RefPtr<TimeRanges> ranges = new TimeRanges(
+      ToSupports(OwnerDoc()), buffered.ToMicrosecondResolution());
   return ranges.forget();
 }
 
