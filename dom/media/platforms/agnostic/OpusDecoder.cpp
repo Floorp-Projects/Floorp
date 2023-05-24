@@ -109,6 +109,8 @@ RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
         "Invalid Opus header: container CodecDelay and Opus pre-skip do not "
         "match!");
   }
+  OPUS_DEBUG("Opus preskip in extradata: %ldus",
+             opusCodecSpecificData.mContainerCodecDelayMicroSeconds);
 
   if (mInfo.mRate != (uint32_t)mOpusParser->mRate) {
     NS_WARNING("Invalid Opus header: container and codec rate do not match!");
@@ -255,16 +257,23 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
   NS_ASSERTION(ret == frames, "Opus decoded too few audio samples");
   auto startTime = aSample->mTime;
 
+  OPUS_DEBUG("Decoding frames: [%lf, %lf]", aSample->mTime.ToSeconds(),
+             aSample->GetEndTime().ToSeconds());
+
   // Trim the initial frames while the decoder is settling.
   if (mSkip > 0) {
     int32_t skipFrames = std::min<int32_t>(mSkip, frames);
     int32_t keepFrames = frames - skipFrames;
-    OPUS_DEBUG("Opus decoder skipping %d of %d frames", skipFrames, frames);
+    OPUS_DEBUG("Opus decoder trimming %d of %d frames", skipFrames, frames);
     PodMove(buffer.get(), buffer.get() + skipFrames * channels,
             keepFrames * channels);
     startTime = startTime + FramesToTimeUnit(skipFrames, mOpusParser->mRate);
     frames = keepFrames;
     mSkip -= skipFrames;
+    aSample->mTime += FramesToTimeUnit(skipFrames, 48000);
+    aSample->mDuration -= FramesToTimeUnit(skipFrames, 48000);
+    OPUS_DEBUG("Adjusted frame after trimming pre-roll: [%lf, %lf]",
+               aSample->mTime.ToSeconds(), aSample->GetEndTime().ToSeconds());
   }
 
   if (aSample->mDiscardPadding > 0) {
@@ -324,6 +333,9 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
   };
 
   mFrames += frames;
+  mTotalFrames += frames;
+
+  OPUS_DEBUG("Total frames so far: %ld", mTotalFrames);
 
   if (!frames) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
