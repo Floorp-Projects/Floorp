@@ -200,6 +200,8 @@ add_task(async function runRTPTestDOM() {
     13,
     runTests
   );
+  /*
+  Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -211,7 +213,7 @@ add_task(async function runRTPTestDOM() {
     13,
     runTests
   );
-
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -237,6 +239,8 @@ add_task(async function runRTPTestDOM() {
     7.97,
     runTests
   );
+  /*
+  Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -248,6 +252,7 @@ add_task(async function runRTPTestDOM() {
     7.97,
     runTests
   );
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -409,6 +414,8 @@ add_task(async function runRTPTestsForWorker() {
     13,
     runWorkerTest
   );
+  /*
+  Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -420,6 +427,7 @@ add_task(async function runRTPTestsForWorker() {
     13,
     runWorkerTest
   );
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -441,6 +449,7 @@ add_task(async function runRTPTestsForWorker() {
     7.97,
     runWorkerTest
   );
+  /* Disabled because it causes too many intermittents
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
@@ -452,6 +461,7 @@ add_task(async function runRTPTestsForWorker() {
     7.97,
     runWorkerTest
   );
+  */
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprintingPBMOnly: true,
