@@ -19,10 +19,6 @@ using namespace mozilla::dom::SVGLength_Binding;
 
 namespace mozilla {
 
-// Declare some helpers defined below:
-static void GetUnitString(nsAString& unit, uint16_t unitType);
-static uint16_t GetUnitTypeForString(const nsAString& unitStr);
-
 void SVGLength::GetValueAsString(nsAString& aValue) const {
   nsTextFormatter::ssprintf(aValue, u"%g", (double)mValue);
 
@@ -182,45 +178,78 @@ float SVGLength::GetUserUnitsPerPercent(const SVGElement* aElement,
 
 // Helpers:
 
-// These items must be at the same index as the SVGLength constants!
-static const nsStaticAtom* const unitMap[] = {
-    nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
-    nullptr, /* SVG_LENGTHTYPE_NUMBER */
-    nsGkAtoms::percentage,
-    nsGkAtoms::em,
-    nsGkAtoms::ex,
-    nsGkAtoms::px,
-    nsGkAtoms::cm,
-    nsGkAtoms::mm,
-    nsGkAtoms::in,
-    nsGkAtoms::pt,
-    nsGkAtoms::pc};
-
-static void GetUnitString(nsAString& unit, uint16_t unitType) {
-  if (SVGLength::IsValidUnitType(unitType)) {
-    if (unitMap[unitType]) {
-      unitMap[unitType]->ToString(unit);
-    }
-    return;
+/* static */
+void SVGLength::GetUnitString(nsAString& aUnit, uint16_t aUnitType) {
+  switch (aUnitType) {
+    case SVG_LENGTHTYPE_NUMBER:
+      aUnit.Truncate();
+      return;
+    case SVG_LENGTHTYPE_PERCENTAGE:
+      aUnit.AssignLiteral("%");
+      return;
+    case SVG_LENGTHTYPE_EMS:
+      aUnit.AssignLiteral("em");
+      return;
+    case SVG_LENGTHTYPE_EXS:
+      aUnit.AssignLiteral("ex");
+      return;
+    case SVG_LENGTHTYPE_PX:
+      aUnit.AssignLiteral("px");
+      return;
+    case SVG_LENGTHTYPE_CM:
+      aUnit.AssignLiteral("cm");
+      return;
+    case SVG_LENGTHTYPE_MM:
+      aUnit.AssignLiteral("mm");
+      return;
+    case SVG_LENGTHTYPE_IN:
+      aUnit.AssignLiteral("in");
+      return;
+    case SVG_LENGTHTYPE_PT:
+      aUnit.AssignLiteral("pt");
+      return;
+    case SVG_LENGTHTYPE_PC:
+      aUnit.AssignLiteral("pc");
+      return;
   }
   MOZ_ASSERT_UNREACHABLE(
       "Unknown unit type! Someone's using an SVGLength "
       "with an invalid unit?");
 }
 
-static uint16_t GetUnitTypeForString(const nsAString& unitStr) {
-  if (unitStr.IsEmpty()) return SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
-
-  nsAtom* unitAtom = NS_GetStaticAtom(unitStr);
-
-  if (unitAtom) {
-    for (uint32_t i = 1; i < ArrayLength(unitMap); i++) {
-      if (unitMap[i] == unitAtom) {
-        return i;
-      }
-    }
+/* static */
+uint16_t SVGLength::GetUnitTypeForString(const nsAString& aUnit) {
+  if (aUnit.IsEmpty()) {
+    return SVG_LENGTHTYPE_NUMBER;
   }
-  return SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
+  if (aUnit.EqualsLiteral("%")) {
+    return SVG_LENGTHTYPE_PERCENTAGE;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("em")) {
+    return SVG_LENGTHTYPE_EMS;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("ex")) {
+    return SVG_LENGTHTYPE_EXS;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("px")) {
+    return SVG_LENGTHTYPE_PX;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("cm")) {
+    return SVG_LENGTHTYPE_CM;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("mm")) {
+    return SVG_LENGTHTYPE_MM;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("in")) {
+    return SVG_LENGTHTYPE_IN;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("pt")) {
+    return SVG_LENGTHTYPE_PT;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("pc")) {
+    return SVG_LENGTHTYPE_PC;
+  }
+  return SVG_LENGTHTYPE_UNKNOWN;
 }
 
 }  // namespace mozilla
