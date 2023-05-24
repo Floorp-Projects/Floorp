@@ -39,6 +39,8 @@ An investigation was previously done to provide [further context](https://docs.g
 	- initiating navigation events
 	- delegating to `UseCase`s or directly to closures instead of `Controller`s.
 
+---
+
 ## Guide-level explanation
 
 The proposal is to remove interactors and controllers completely from the codebase. Their usages will be replaced with direct Store observations and direct action dispatches to those Stores. All state changes would be handled by reducers, and side-effects like telemetry or disk writes would be handled in middlewares.
@@ -50,6 +52,8 @@ This would address all the goals listed above:
 4. Refactoring interactors/controllers to instead dispatch actions and react to state changes should be doable on a per-component basis.
 
 Additionally, there are tons of prior art discussing the benefits of a unidirectional data flow, including the [Redux documentation](https://redux.js.org/tutorials/fundamentals/part-2-concepts-data-flow).
+
+---
 
 ## Reference-level explanation
 
@@ -129,6 +133,8 @@ private fun historyStateReducer(
 
 This reduces the number of layers in the code path. Note also that business logic around whether to update based on Sync status is incorporated locally in the Reducer. In this example, the details of observing state from the store are complicated by the additional view hierarchies required by recycler views, so they have been omitted for brevity.
 
+---
+
 ### Moving into the future: using lib-state with Compose
 
 Ideally, fragments or top-level views/Composables would register observers of their Store's state and send updates from those observers to their child Composables along with closures containing dispatches to those Stores. We are already close to being familiar with this pattern in some places. The following is a current example that has been edited for brevity and clarity:
@@ -188,6 +194,7 @@ This should simplify the search for underlying logic by:
 - moving business logic into an expected and consistent component (the reducer)
 - moving side-effects into a consistent and centralized component (a middleware, which could even handle telemetry for the entire store)
 
+---
 
 ### Extending the example: separating state and side-effects
 
@@ -320,18 +327,49 @@ fun reduce(state: AppState, action: AppAction): AppState = when (action) {
 }
 ```
 
+---
+
 ### Interacting with the storage layer through middlewares
 
-What if a feature requires some async data for its initial state, or needs to write changes to disk? There are no restrictions on running impure methods in middleware, so we can respond to an actions that would imply changes to the storage layer from middlewares. A good example is [ContainerMiddleware](../../android-components/components/feature/containers/src/main/java/mozilla/components/feature/containers/ContainerMiddleware.kt)
+What if a feature requires some async data for its initial state, or needs to write changes to disk? There are no restrictions on running impure methods in middleware, so we can respond to an actions that would changes to the storage layer from middlewares. A good example is [ContainerMiddleware](../../android-components/components/feature/containers/src/main/java/mozilla/components/feature/containers/ContainerMiddleware.kt)
 
 Note that the `InitAction` here subscribes to a `Flow` from the database, which will continue to collect updates from the storage layer and dispatch actions to change the state accordingly.
 
 
 Overall, this should convey the following improvements
-- All state updates are guaranteed to be pure and in a single component, allowing for easy testing and reproduction
-- All side-effects are logically grouped into middlewares, allowing for testing strategies specific to the type of side-effect
-- Several indirect abstraction layers are removed, minimizing mental model of code
+- All state updates are guaranteed to be pure and in a single component, allowing for easy testing and reproduction.
+- All side-effects are logically grouped into middlewares, allowing for testing strategies specific to the type of side-effect.
+- Several indirect abstraction layers are removed, minimizing mental model of code.
+
+---
+
+### Single- vs multi-store patterns and mobile constraints
+
+One big difference between Redux for web and for mobile is that mobile is generally under tighter resource constraints. These constraints are the primary driver for our current usage of `lib-state`, which more closely mirrors the "Flux" pattern instead of the "Redux" pattern. One of the primary differences between the two patterns is simply the number of stores they suggest using. Redux will usually have a single store, while Flux would have multiple. 
+
+Multiple stores allows us to manage memory better. For example, state for Settings will be be automatically collected when a `SettingsStore` falls out of scope, instead of being kept permanently in a global store. 
+
+This proposal is _not_ suggesting that we move to a pure Redux model yet. There are huge wins we can achieve in terms of architectural consistency by only removing interactors/controllers and switching them to a store model. 
+
+This will mean that we will continue to have "global" stores like the `AppStore` and the `BrowserStore` co-existing with "local" stores like the `HistoryFragmentStore`. This can introduce complexity in terms of determining the best place to add state, middlewares, and actions. Generally speaking, prefer using local stores over global stores whenever possible.
+
+Moving into the future, we will investigate options for consolidating our stores. It should be relatively straightforward to at least combine our global stores. Investigation is also ongoing into whether we can create "scoped" stores that combine a local store with the global store such that the local portion of the store can still automatically fall out of scope and respect the constraints of developing on mobile.
+
+---
 
 ## Drawbacks
 
 Redux-like patterns have a bit of a learning curve, and some problems can be more difficult to solve than others. For example, handling side-effects like navigation or loading state from disk. The benefits of streamlining our architecture should outweigh this, especially once demonstrative examples of solving these problems are common in the codebase.
+
+---
+
+## Proposal acceptance and future plans
+
+To demonstrate some of the concepts discussed in this proposal in more detail, an example patch will be produced that shows a refactor of a prominent feature of the app - history. Following this, a series of meetings will be hosted to discuss in detail any questions or concerns. 
+
+Following that, should this proposal be accepted the following suggestions are made for adoption with a focus on increasing the team's familiarity and knowledge of the pattern:
+
+1. Architecture documentation should be updated with guidelines matching this proposal. 
+1. A number (1-3) of refactors should be planned to help demonstrate the pattern, especially in regards to things like using middleware to handle side-effects, how to structure local vs global state, and how to propagate state and actions to Composables and XML views.
+1. Where possible, new feature work should require refactoring to the established architecture before feature implementation. 
+1. Investigate further improvements to the architecture. For example, a "single Store" model that more closely matches the current state of Redux.
