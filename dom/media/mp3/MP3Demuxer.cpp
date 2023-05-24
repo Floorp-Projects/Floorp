@@ -603,6 +603,24 @@ bool MP3TrackDemuxer::SkipNextFrame(const MediaByteRange& aRange) {
   return true;
 }
 
+media::TimeUnit MP3TrackDemuxer::EncoderDelay() const {
+  return media::TimeUnit::FromSeconds(AssertedCast<double>(mEncoderDelay) /
+                                      mSamplesPerSecond);
+}
+
+uint32_t MP3TrackDemuxer::EncoderDelayFrames() const {
+  return mEncoderDelay;
+}
+
+media::TimeUnit MP3TrackDemuxer::Padding() const {
+  return media::TimeUnit::FromSeconds(AssertedCast<double>(mEncoderPadding) /
+                                      mSamplesPerSecond);
+}
+
+uint32_t MP3TrackDemuxer::PaddingFrames() const {
+  return mEncoderPadding;
+}
+
 already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     const MediaByteRange& aRange) {
   MP3LOG("GetNext() Begin({mStart=%" PRId64 " Length()=%" PRId64 "})",
