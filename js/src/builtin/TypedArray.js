@@ -2060,6 +2060,8 @@ function SharedArrayBufferSlice(start, end) {
   return newObj;
 }
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+
 // https://github.com/tc39/proposal-change-array-by-copy
 function TypedArrayCreateSameType(exemplar, length) {
   // Step 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
@@ -2266,3 +2268,5 @@ function TypedArrayToSorted(comparefn) {
   // MergeSortTypedArray returns a sorted copy - exactly what we need to return.
   return MergeSortTypedArray(O, len, wrappedCompareFn);
 }
+
+#endif

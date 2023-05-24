@@ -407,6 +407,8 @@ function ArrayGroupToMap(callbackfn /*, thisArg*/) {
   return map;
 }
 
+#endif
+
 /* ES5 15.4.4.21. */
 function ArrayReduce(callbackfn /*, initialValue*/) {
   /* Step 1. */
@@ -1407,6 +1409,8 @@ function ArrayAt(index) {
 }
 // This function is only barely too long for normal inlining.
 SetIsInlinableLargeFunction(ArrayAt);
+
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
 // https://github.com/tc39/proposal-change-array-by-copy
 // Array.prototype.toReversed()
