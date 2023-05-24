@@ -26,9 +26,7 @@ const { worker } = ChromeUtils.import(
   "resource://devtools/shared/loader/worker-loader.js"
 );
 
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.

@@ -7,7 +7,6 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
@@ -16,6 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 var profileDir = do_get_profile();

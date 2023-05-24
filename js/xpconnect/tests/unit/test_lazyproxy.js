@@ -75,39 +75,39 @@ add_task(function test_lazy_proxy() {
 add_task(function test_module_version() {
   // Test that passing a string instead of an initialization function
   // makes this behave like a lazy module getter.
-  const TEST_FILE_URI = "resource://test/TestFile.jsm";
+  const NET_UTIL_URI = "resource://gre/modules/NetUtil.jsm";
   let underlyingObject;
 
-  Cu.unload(TEST_FILE_URI);
+  Cu.unload(NET_UTIL_URI);
 
   let lazyProxy = XPCOMUtils.defineLazyProxy(
     null,
-    "TestFile",
-    TEST_FILE_URI,
+    "NetUtil",
+    NET_UTIL_URI,
     null, /* no stubs */
     function untrapCallback(object) {
       underlyingObject = object;
     }
   );
 
-  Assert.ok(!Cu.isModuleLoaded(TEST_FILE_URI), "The NetUtil module was not loaded by the lazy proxy definition");
+  Assert.ok(!Cu.isModuleLoaded(NET_UTIL_URI), "The NetUtil module was not loaded by the lazy proxy definition");
 
   // Access the object, which will evaluate the proxy.
   lazyProxy.foo = "bar";
 
   // Module was loaded.
-  Assert.ok(Cu.isModuleLoaded(TEST_FILE_URI), "The NetUtil module was loaded");
+  Assert.ok(Cu.isModuleLoaded(NET_UTIL_URI), "The NetUtil module was loaded");
 
-  let { TestFile } = ChromeUtils.import(TEST_FILE_URI, {});
+  let { NetUtil } = ChromeUtils.import(NET_UTIL_URI, {});
 
   // Avoids a gigantic stringification in the logs.
-  Assert.ok(TestFile === underlyingObject, "The module loaded is the same as the one directly obtained by ChromeUtils.import");
+  Assert.ok(NetUtil === underlyingObject, "The module loaded is the same as the one directly obtained by ChromeUtils.import");
 
   // Proxy correctly passed the setter to the underlying object.
-  Assert.equal(TestFile.foo, "bar", "Proxy correctly passed the setter to the underlying object");
+  Assert.equal(NetUtil.foo, "bar", "Proxy correctly passed the setter to the underlying object");
 
   delete lazyProxy.foo;
 
   // Proxy correctly passed the delete operation to the underlying object.
-  Assert.ok(!TestFile.hasOwnProperty("foo"), "Proxy correctly passed the delete operation to the underlying object");
+  Assert.ok(!NetUtil.hasOwnProperty("foo"), "Proxy correctly passed the delete operation to the underlying object");
 });

@@ -15,13 +15,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MockColorPicker: "resource://specialpowers/MockColorPicker.sys.mjs",
   MockFilePicker: "resource://specialpowers/MockFilePicker.sys.mjs",
   MockPermissionPrompt: "resource://specialpowers/MockPermissionPrompt.sys.mjs",
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PerTestCoverageUtils:
     "resource://testing-common/PerTestCoverageUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
   WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 Cu.crashIfNotInAutomation();

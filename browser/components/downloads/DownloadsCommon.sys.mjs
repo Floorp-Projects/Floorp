@@ -34,12 +34,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DownloadHistory: "resource://gre/modules/DownloadHistory.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 

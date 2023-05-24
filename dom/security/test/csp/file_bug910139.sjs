@@ -1,8 +1,6 @@
 // Server side js file for bug 910139, see file test_bug910139.html for details.
 
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function loadResponseFromFile(path) {
   var testHTMLFile = Components.classes["@mozilla.org/file/directory_service;1"]
