@@ -67,6 +67,14 @@ runWithMSE(async (ms, v) => {
              "must thow if start > end",
              "TypeError");
 
+  must_throw(() => ms.setLiveSeekableRange(2, 0),
+             "must thow if start > end",
+             "TypeError");
+
+  ms.setLiveSeekableRange(0, 1e300);
+  is(v.seekable.start(0), 0, "seekable range start at live range start");
+  is(v.seekable.end(0), 1e300, "seekable range end at specified time");
+
   SimpleTest.finish();
 });
 

@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "nsPrintfCString.h"
+#include "nsStringFwd.h"
 
 namespace mozilla::media {
 class TimeIntervals;
@@ -434,9 +435,23 @@ TimeUnit TimeUnit::Reduced() const {
   return TimeUnit(mTicks.value() / gcd, mBase / gcd);
 }
 
-CheckedInt64 mTicks{0};
-// Default base is microseconds.
-int64_t mBase{USECS_PER_S};
+double RoundToMicrosecondResolution(double aSeconds) {
+  return std::round(aSeconds * USECS_PER_S) / USECS_PER_S;
+}
+
+TimeRanges TimeRanges::ToMicrosecondResolution() const {
+  TimeRanges output;
+
+  for (const auto& interval : mIntervals) {
+    TimeRange reducedPrecision{
+        RoundToMicrosecondResolution(interval.mStart),
+        RoundToMicrosecondResolution(interval.mEnd),
+        RoundToMicrosecondResolution(interval.mFuzz)};
+    output += reducedPrecision;
+  }
+  return output;
+}
+
 };  // namespace media
 
 }  // namespace mozilla
