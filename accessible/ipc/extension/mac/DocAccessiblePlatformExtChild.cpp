@@ -244,31 +244,6 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSelectRange(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-DocAccessiblePlatformExtChild::RecvApplyPostSearchFilter(
-    const nsTArray<uint64_t>& aAccessibles, const int32_t& aLimit,
-    const EWhichPostFilter& aSearchKey, const nsString& aSearchText,
-    nsTArray<uint64_t>* aMatches) {
-  if (aSearchKey != EWhichPostFilter::eContainsText) {
-    return IPC_OK();
-  }
-
-  DocAccessibleChild* ipcDoc = static_cast<DocAccessibleChild*>(Manager());
-  for (size_t i = 0; i < aAccessibles.Length(); i++) {
-    AccessibleWrap* acc = static_cast<AccessibleWrap*>(
-        ipcDoc->IdToAccessible(aAccessibles.ElementAt(i)));
-    if (!acc) {
-      continue;
-    }
-
-    if (acc->ApplyPostFilter(aSearchKey, aSearchText)) {
-      aMatches->AppendElement(UNIQUE_ID(acc));
-    }
-  }
-
-  return IPC_OK();
-}
-
 HyperTextAccessibleWrap*
 DocAccessiblePlatformExtChild::IdToHyperTextAccessibleWrap(
     const uint64_t& aID) const {

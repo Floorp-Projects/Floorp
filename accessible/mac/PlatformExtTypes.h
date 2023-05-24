@@ -19,8 +19,6 @@ enum class EWhichRange {
   eStyle
 };
 
-enum class EWhichPostFilter { eContainsText };
-
 }  // namespace a11y
 }  // namespace mozilla
 

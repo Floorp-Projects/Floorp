@@ -54,9 +54,6 @@ class AccessibleWrap : public LocalAccessible {
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 
-  bool ApplyPostFilter(const EWhichPostFilter& aSearchKey,
-                       const nsString& aSearchText);
-
  protected:
   friend class xpcAccessibleMacInterface;
 
