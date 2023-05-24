@@ -267,11 +267,11 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
     OPUS_DEBUG("Opus decoder trimming %d of %d frames", skipFrames, frames);
     PodMove(buffer.get(), buffer.get() + skipFrames * channels,
             keepFrames * channels);
-    startTime = startTime + FramesToTimeUnit(skipFrames, mOpusParser->mRate);
+    startTime = startTime + media::TimeUnit(skipFrames, mOpusParser->mRate);
     frames = keepFrames;
     mSkip -= skipFrames;
-    aSample->mTime += FramesToTimeUnit(skipFrames, 48000);
-    aSample->mDuration -= FramesToTimeUnit(skipFrames, 48000);
+    aSample->mTime += media::TimeUnit(skipFrames, 48000);
+    aSample->mDuration -= media::TimeUnit(skipFrames, 48000);
     OPUS_DEBUG("Adjusted frame after trimming pre-roll: [%lf, %lf]",
                aSample->mTime.ToSeconds(), aSample->GetEndTime().ToSeconds());
   }
@@ -315,7 +315,7 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
   }
 #endif
 
-  auto duration = FramesToTimeUnit(frames, mOpusParser->mRate);
+  auto duration = media::TimeUnit(frames, mOpusParser->mRate);
   if (!duration.IsValid()) {
     return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
@@ -323,8 +323,8 @@ RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
         __func__);
   }
   auto time = startTime -
-              FramesToTimeUnit(mOpusParser->mPreSkip, mOpusParser->mRate) +
-              FramesToTimeUnit(mFrames, mOpusParser->mRate);
+              media::TimeUnit(mOpusParser->mPreSkip, mOpusParser->mRate) +
+              media::TimeUnit(mFrames, mOpusParser->mRate);
   if (!time.IsValid()) {
     return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
