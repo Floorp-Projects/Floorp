@@ -95,6 +95,12 @@ interface nsILoginInfo : nsISupports {
   attribute AString passwordField;
 
   /**
+   * Unknown fields this client doesn't know about but will be roundtripped
+   * for other clients to prevent data loss
+   */
+  attribute AString unknownFields;
+
+  /**
    * Initialize a newly created nsLoginInfo object.
    *
    * The arguments are the fields for the new object.
