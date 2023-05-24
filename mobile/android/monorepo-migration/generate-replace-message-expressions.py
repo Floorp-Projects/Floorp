@@ -44,7 +44,7 @@ def main():
 
         for number_type in ("issues", "pulls"):
             for chunk in divide_chunks(numbers[number_type], 100):
-                regex = "regex:(({repo_owner}/)?{repo_name}){repo_suffix}#({current_numbers})(\D|$)==>{url}/\\3\\4".format(
+                regex = "regex:(({repo_owner}/)?{repo_name}){repo_suffix}#({current_numbers})(\D|$)==>{url}/\\3\\4\n".format(
                     repo_owner=REPO_OWNER,
                     repo_name=f"[{repo_name[0].upper()}{repo_name[0].lower()}]{repo_name[1:]}",
                     repo_suffix="?" if repo_name == REPO_NAME_TO_IMPORT else "\\s*",
@@ -58,7 +58,7 @@ def main():
                 regexes.append(regex)
 
     with open(DATA_DIR / "message-expressions.txt", "w") as f:
-        f.write("\n".join(regexes))
+        f.write("".join(regexes))
 
 
 __name__ == "__main__" and main()
