@@ -20,6 +20,7 @@ import {
 import { searchContents } from "./file-search";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
+import { primaryPaneTabs } from "../constants";
 
 export function setPrimaryPaneTab(tabName) {
   return { type: "SET_PRIMARY_PANE_TAB", tabName };
@@ -41,6 +42,18 @@ export function setActiveSearch(activeSearch) {
 
     if (getQuickOpenEnabled(getState())) {
       dispatch({ type: "CLOSE_QUICK_OPEN" });
+    }
+
+    // Open start panel if it was collapsed so the project search UI is visible
+    if (
+      activeSearch === primaryPaneTabs.PROJECT_SEARCH &&
+      getPaneCollapse(getState(), "start")
+    ) {
+      dispatch({
+        type: "TOGGLE_PANE",
+        position: "start",
+        paneCollapsed: false,
+      });
     }
 
     dispatch({

@@ -28,6 +28,10 @@ add_task(async function testProjectSearchCloseOnNavigation() {
 });
 
 add_task(async function testSimpleProjectSearch() {
+  // Start with side panel collapsed so we can assert that the project search keyboard
+  // shortcut will open it.
+  await pushPref("devtools.debugger.start-panel-collapsed", true);
+
   const dbg = await initDebugger(
     "doc-script-switching.html",
     "script-switching-01.js"
