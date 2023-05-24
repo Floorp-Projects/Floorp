@@ -16,19 +16,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"

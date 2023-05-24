@@ -18,9 +18,7 @@ const kDownloadAutohideCheckboxId = "downloads-button-autohide-checkbox";
 const kDownloadAutohidePanelId = "downloads-button-autohide-panel";
 const kDownloadAutoHidePref = "browser.download.autohideButton";
 
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
-);
+import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 

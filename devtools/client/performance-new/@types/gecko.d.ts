@@ -23,7 +23,7 @@ declare namespace MockedExports {
   interface KnownModules {
     Services: typeof import("Services");
     "resource://gre/modules/AppConstants.sys.mjs": typeof import("resource://gre/modules/AppConstants.sys.mjs");
-    "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
+    "resource:///modules/CustomizableUI.sys.mjs": typeof import("resource:///modules/CustomizableUI.sys.mjs");
     "resource:///modules/CustomizableWidgets.sys.mjs": typeof import("resource:///modules/CustomizableWidgets.sys.mjs");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
     "resource://devtools/client/performance-new/shared/background.jsm.js": typeof import("resource://devtools/client/performance-new/shared/background.jsm.js");
@@ -233,7 +233,7 @@ declare namespace MockedExports {
   }
 
   // TS-TODO
-  const CustomizableUIJSM: any;
+  const CustomizableUISYSMJS: any;
   const CustomizableWidgetsSYSMJS: any;
   const PanelMultiViewSYSMJS: any;
 
@@ -348,8 +348,8 @@ declare module "resource://devtools/client/performance-new/shared/symbolication.
   export = PerfSymbolication;
 }
 
-declare module "resource:///modules/CustomizableUI.jsm" {
-  export = MockedExports.CustomizableUIJSM;
+declare module "resource:///modules/CustomizableUI.sys.mjs" {
+  export = MockedExports.CustomizableUISYSMJS;
 }
 
 declare module "resource:///modules/CustomizableWidgets.sys.mjs" {

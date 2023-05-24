@@ -9,14 +9,11 @@ const { Assert } = ChromeUtils.importESModule(
 const { BrowserTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/BrowserTestUtils.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
 });
 
 var EXPORTED_SYMBOLS = ["AppUiTestDelegate", "AppUiTestInternals"];

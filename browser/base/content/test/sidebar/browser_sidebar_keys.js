@@ -27,8 +27,8 @@ add_task(async function test_sidebar_in_customize_mode() {
   // Test bug 1756385 - widgets to appear unchecked in customize mode. Test that
   // the sidebar button widget doesn't appear checked, and that the sidebar
   // button toggle is inert while in customize mode.
-  let { CustomizableUI } = ChromeUtils.import(
-    "resource:///modules/CustomizableUI.jsm"
+  let { CustomizableUI } = ChromeUtils.importESModule(
+    "resource:///modules/CustomizableUI.sys.mjs"
   );
   registerCleanupFunction(() => SidebarUI.hide());
 

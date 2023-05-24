@@ -6,12 +6,8 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });

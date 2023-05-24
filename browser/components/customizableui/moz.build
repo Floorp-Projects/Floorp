@@ -16,7 +16,7 @@ TESTING_JS_MODULES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "CustomizableUI.jsm",
+    "CustomizableUI.sys.mjs",
     "CustomizableWidgets.sys.mjs",
     "CustomizeMode.sys.mjs",
     "DragPositionManager.sys.mjs",

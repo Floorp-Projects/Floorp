@@ -38,19 +38,15 @@ ChromeUtils.defineModuleGetter(
   "BrowserUIUtils",
   "resource:///modules/BrowserUIUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
 
 let { makeWidgetId } = ExtensionCommon;
 

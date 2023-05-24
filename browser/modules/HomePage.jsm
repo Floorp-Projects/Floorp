@@ -13,13 +13,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
+
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
 });

@@ -13,11 +13,9 @@ import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+});
 
 export class CustomizableUITestUtils {
   /**

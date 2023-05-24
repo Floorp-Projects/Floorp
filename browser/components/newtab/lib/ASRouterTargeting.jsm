@@ -24,6 +24,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -39,12 +40,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(

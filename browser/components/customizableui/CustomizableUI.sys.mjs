@@ -1,16 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["CustomizableUI"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { SearchWidgetTracker } from "resource:///modules/SearchWidgetTracker.sys.mjs";
 
 const lazy = {};
 
@@ -18,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
 });
 
@@ -79,7 +72,7 @@ var ObsoleteBuiltinButtons = {
 };
 
 /**
- * gPalette is a map of every widget that CustomizableUI.jsm knows about, keyed
+ * gPalette is a map of every widget that CustomizableUI.sys.mjs knows about, keyed
  * on their IDs.
  */
 var gPalette = new Map();
@@ -308,7 +301,7 @@ var CustomizableUIInternal = {
       true
     );
 
-    lazy.SearchWidgetTracker.init();
+    SearchWidgetTracker.init();
 
     Services.obs.addObserver(this, "browser-set-toolbar-visibility");
   },
@@ -3710,7 +3703,7 @@ var CustomizableUIInternal = {
 };
 Object.freeze(CustomizableUIInternal);
 
-var CustomizableUI = {
+export var CustomizableUI = {
   /**
    * Constant reference to the ID of the navigation toolbar.
    */
@@ -4914,6 +4907,7 @@ var CustomizableUI = {
     }
   },
 };
+
 Object.freeze(CustomizableUI);
 Object.freeze(CustomizableUI.windows);
 

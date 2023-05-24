@@ -16,8 +16,8 @@ const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
 const { ProfilerMenuButton } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
-const { CustomizableUI } = ChromeUtils.import(
-  "resource:///modules/CustomizableUI.jsm"
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs"
 );
 
 XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function () {
