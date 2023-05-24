@@ -109,44 +109,9 @@ function nsAsyncShutdownClient(moduleClient) {
     throw new TypeError("nsAsyncShutdownClient expects one argument");
   }
   this._moduleClient = moduleClient;
-  this._byName = new Map();
+  this._byXpcomBlocker = new Map();
 }
 nsAsyncShutdownClient.prototype = {
-  _getPromisified(xpcomBlocker) {
-    let candidate = this._byName.get(xpcomBlocker.name);
-    if (!candidate) {
-      return null;
-    }
-    if (candidate.xpcom === xpcomBlocker) {
-      return candidate.jsm;
-    }
-    return null;
-  },
-  _setPromisified(xpcomBlocker, moduleBlocker) {
-    let candidate = this._byName.get(xpcomBlocker.name);
-    if (!candidate) {
-      this._byName.set(xpcomBlocker.name, {
-        xpcom: xpcomBlocker,
-        jsm: moduleBlocker,
-      });
-      return;
-    }
-    if (candidate.xpcom === xpcomBlocker) {
-      return;
-    }
-    throw new Error(
-      "We have already registered a distinct blocker with the same name: " +
-        xpcomBlocker.name
-    );
-  },
-  _deletePromisified(xpcomBlocker) {
-    let candidate = this._byName.get(xpcomBlocker.name);
-    if (!candidate || candidate.xpcom !== xpcomBlocker) {
-      return false;
-    }
-    this._byName.delete(xpcomBlocker.name);
-    return true;
-  },
   get jsclient() {
     return this._moduleClient;
   },
@@ -167,24 +132,25 @@ nsAsyncShutdownClient.prototype = {
     // need to ensure that we always get the same Promise-based
     // function if we call several `addBlocker`/`removeBlocker` several
     // times with the same `xpcomBlocker`.
-    //
-    // Ideally, this should be done with a WeakMap() with xpcomBlocker
-    // as a key, but XPConnect NativeWrapped objects cannot serve as
-    // WeakMap keys.
-    //
-    let moduleBlocker = this._getPromisified(xpcomBlocker);
-    if (!moduleBlocker) {
-      moduleBlocker = () =>
-        new Promise(
-          // This promise is never resolved. By opposition to AsyncShutdown
-          // blockers, `nsIAsyncShutdownBlocker`s are always lifted by calling
-          // `removeBlocker`.
-          () => xpcomBlocker.blockShutdown(this)
-        );
 
-      this._setPromisified(xpcomBlocker, moduleBlocker);
+    if (this._byXpcomBlocker.has(xpcomBlocker)) {
+      throw new Error(
+        `We have already registered the blocker (${xpcomBlocker.name})`
+      );
     }
 
+    // Ideally, this should be done with a WeakMap() with xpcomBlocker
+    // as a key, but XPCWrappedNative objects cannot serve as WeakMap keys, see
+    // bug 1834365.
+    const moduleBlocker = () =>
+      new Promise(
+        // This promise is never resolved. By opposition to AsyncShutdown
+        // blockers, `nsIAsyncShutdownBlocker`s are always lifted by calling
+        // `removeBlocker`.
+        () => xpcomBlocker.blockShutdown(this)
+      );
+
+    this._byXpcomBlocker.set(xpcomBlocker, moduleBlocker);
     this._moduleClient.addBlocker(xpcomBlocker.name, moduleBlocker, {
       fetchState: () =>
         new PropertyBagConverter().propertyBagToJsValue(xpcomBlocker.state),
@@ -195,11 +161,11 @@ nsAsyncShutdownClient.prototype = {
   },
 
   removeBlocker(xpcomBlocker) {
-    let moduleBlocker = this._getPromisified(xpcomBlocker);
+    let moduleBlocker = this._byXpcomBlocker.get(xpcomBlocker);
     if (!moduleBlocker) {
       return false;
     }
-    this._deletePromisified(xpcomBlocker);
+    this._byXpcomBlocker.delete(xpcomBlocker);
     return this._moduleClient.removeBlocker(moduleBlocker);
   },
 
