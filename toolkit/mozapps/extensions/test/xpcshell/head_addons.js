@@ -39,9 +39,7 @@ var { AppConstants } = ChromeUtils.importESModule(
 var { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-var { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
+var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );

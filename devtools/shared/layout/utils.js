@@ -10,9 +10,11 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/DevToolsUtils.js"
 );
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 const SHEET_TYPE = {
   agent: "AGENT_SHEET",

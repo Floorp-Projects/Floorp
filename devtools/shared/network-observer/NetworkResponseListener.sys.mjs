@@ -2,16 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+  getResponseCacheObject:
+    "resource://devtools/shared/platform/CacheEntry.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
-  getResponseCacheObject:
-    "resource://devtools/shared/platform/CacheEntry.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 // Network logging

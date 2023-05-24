@@ -11,9 +11,7 @@ var docbody =
   '<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body></body></html>';
 
 function handler(metadata, response) {
-  var { NetUtil } = ChromeUtils.importESModule(
-    "resource://gre/modules/NetUtil.sys.mjs"
-  );
+  var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
   let body = NetUtil.readInputStreamToString(
     metadata.bodyInputStream,
