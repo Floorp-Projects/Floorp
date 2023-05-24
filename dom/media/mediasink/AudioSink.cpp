@@ -60,8 +60,9 @@ AudioSink::AudioSink(AbstractThread* aThread,
   // Twice the limit that trigger a refill.
   double capacitySeconds = mProcessedQueueThresholdMS / 1000.f * 2;
   // Clamp to correct boundaries, and align on the channel count
-  int elementCount = static_cast<int>(std::clamp(capacitySeconds * mOutputChannels * mOutputRate,
-                                      0., std::numeric_limits<int>::max() - 1.));
+  int elementCount = static_cast<int>(
+      std::clamp(capacitySeconds * mOutputChannels * mOutputRate, 0.,
+                 std::numeric_limits<int>::max() - 1.));
   elementCount -= elementCount % mOutputChannels;
   mProcessedSPSCQueue = MakeUnique<SPSCQueue<AudioDataValue>>(elementCount);
   SINK_LOG("Ringbuffer has space for %u elements (%lf seconds)",
