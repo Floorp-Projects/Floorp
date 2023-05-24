@@ -30,16 +30,6 @@ ITEM_VALUE(CanvasExtractionFromThirdPartiesIsBlocked, 0x000C)
 ITEM_VALUE(CanvasExtractionBeforeUserInputIsBlocked, 0x000D)
 
 /*
- * Certain classes (Document, at time of writing) have a cached value for
- * ShouldResistFingerprinting. By adding a Target check into their ShouldRFP
- * function, we are potentially changing the return value of what was
- * previously the cached value. This is intentional in most places, but not
- * in any place that is asking if e.g. restyling needs to occur. Use this enum
- * value for that in conjunction with a check in the affected class.
- */
-ITEM_VALUE(IgnoreTargetAndReturnCachedValue, 0xFFFD)
-
-/*
  * In certain cases, we precompute the vaqlue of ShouldRFP for e.g. a Document.
  * (This saves us more computation and casting later.)  This document will still
  * need to check whether an individual target is allowed, but the initial

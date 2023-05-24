@@ -4185,7 +4185,9 @@ class Document : public nsINode,
 
   bool ShouldResistFingerprinting(RFPTarget aTarget = RFPTarget::Unknown) const;
 
-  void RecomputeResistFingerprinting();
+  // Recompute the current resist fingerprinting state. Returns true when
+  // the state was changed.
+  bool RecomputeResistFingerprinting();
 
  protected:
   // Returns the WindowContext for the document that we will contribute
