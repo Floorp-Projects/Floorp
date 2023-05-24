@@ -172,7 +172,8 @@ Pref Sanitization is used for two purposes:
 
 A pref is sanitized from entering the web content process if it matches a
 denylist _or_ it is a dynamically-named string preference (that is not
-exempted via an allowlist).
+exempted via an allowlist), See `ShouldSanitizePreference` in
+`Preferences.cpp`.
 
 ### Loading and Saving
 Default pref values are initialized from various pref data files. Notable ones
