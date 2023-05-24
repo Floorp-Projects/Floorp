@@ -19,6 +19,8 @@
 
 namespace mozilla {
 
+using TimeUnit = media::TimeUnit;
+
 extern LazyLogModule gMediaDecoderLog;
 #define LOG(x, ...) \
   DDMOZ_LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
@@ -413,13 +415,13 @@ void ChannelMediaDecoder::DownloadProgressed() {
 /* static */ ChannelMediaDecoder::PlaybackRateInfo
 ChannelMediaDecoder::ComputePlaybackRate(const MediaChannelStatistics& aStats,
                                          BaseMediaResource* aResource,
-                                         double aDuration) {
+                                         const TimeUnit& aDuration) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   int64_t length = aResource->GetLength();
-  if (std::isfinite(aDuration) && aDuration > 0 && length >= 0 &&
-      length / aDuration < UINT32_MAX) {
-    return {uint32_t(length / aDuration), true};
+  if (aDuration.IsInfinite() && aDuration.IsPositive() > 0 && length >= 0 &&
+      length / aDuration.ToSeconds() < UINT32_MAX) {
+    return {uint32_t(length / aDuration.ToSeconds()), true};
   }
 
   bool reliable = false;
