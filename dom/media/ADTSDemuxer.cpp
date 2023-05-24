@@ -343,11 +343,13 @@ bool ADTSTrackDemuxer::Init() {
           mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
           mInfo->mDuration.ToMicroseconds());
 
-  // AAC encoder delay is by default 2112 audio frames.
+  // AAC encoder delay can be 2112 (typical value when using Apple AAC encoder),
+  // or 1024 (typical value when encoding using fdk_aac, often via ffmpeg).
   // See
   // https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
-  // So we always seek 2112 frames prior the seeking point.
-  mPreRoll = TimeUnit::FromMicroseconds(2112 * 1000000ULL / mSamplesPerSecond);
+  // In an attempt to not trim valid audio data, and because ADTS doesn't
+  // provide a way to know this pre-roll value, this offets by 1024 frames.
+  mPreRoll = TimeUnit::FromMicroseconds(1024u * 1000000ULL / mSamplesPerSecond);
   return mChannels;
 }
 
@@ -646,12 +648,11 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
 
   UpdateState(aFrame);
 
-  frame->mTime = Duration(mFrameIndex - 1);
+  frame->mTime = Duration(mFrameIndex - 1) - mPreRoll;
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
 
-  MOZ_ASSERT(!frame->mTime.IsNegative());
   MOZ_ASSERT(frame->mDuration.IsPositive());
 
   ADTSLOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
