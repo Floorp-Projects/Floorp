@@ -315,9 +315,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::Toolbargripper:
       aGtkWidgetType = MOZ_GTK_GRIPPER;
       break;
-    case StyleAppearance::Resizer:
-      aGtkWidgetType = MOZ_GTK_RESIZER;
-      break;
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
       aGtkWidgetType = MOZ_GTK_ENTRY;
@@ -414,10 +411,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       break;
     case StyleAppearance::Tooltip:
       aGtkWidgetType = MOZ_GTK_TOOLTIP;
-      break;
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-      aGtkWidgetType = MOZ_GTK_FRAME;
       break;
     case StyleAppearance::ProgressBar:
       aGtkWidgetType = MOZ_GTK_PROGRESSBAR;
@@ -1238,10 +1231,6 @@ LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
       result.width = 14;
       result.height = 13;
       break;
-    case StyleAppearance::Resizer:
-      // same as Windows to make our lives easier
-      result.width = result.height = 15;
-      break;
     case StyleAppearance::Treetwisty:
     case StyleAppearance::Treetwistyopen: {
       gint expander_size;
@@ -1271,9 +1260,6 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   // Some widget types just never change state.
   if (aAppearance == StyleAppearance::Toolbox ||
       aAppearance == StyleAppearance::Toolbar ||
-      aAppearance == StyleAppearance::Statusbar ||
-      aAppearance == StyleAppearance::Statusbarpanel ||
-      aAppearance == StyleAppearance::Resizerpanel ||
       aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::Menubar ||
@@ -1360,10 +1346,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ButtonArrowPrevious:
     case StyleAppearance::Separator:
     case StyleAppearance::Toolbargripper:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Statusbarpanel:
-    case StyleAppearance::Resizerpanel:
-    case StyleAppearance::Resizer:
     case StyleAppearance::Listbox:
     case StyleAppearance::Treeview:
       // case StyleAppearance::Treeitem:
