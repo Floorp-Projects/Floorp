@@ -336,6 +336,8 @@ export const FormAutofillHeuristics = {
         "iu"
       ),
     };
+
+    const startIndex = fieldScanner.parsingIndex;
     while (!fieldScanner.parsingFinished) {
       let detail = fieldScanner.getFieldDetailByIndex(
         fieldScanner.parsingIndex
@@ -362,6 +364,23 @@ export const FormAutofillHeuristics = {
         break;
       }
       fieldScanner.parsingIndex++;
+    }
+
+    // If "address-line2" is found but the previous field is "street-address",
+    // then we assume what the website actually wants is "address-line1" instead
+    // of "street-address".
+    if (
+      startIndex > 0 &&
+      fieldScanner.getFieldDetailByIndex(startIndex)?.fieldName ==
+        "address-line2" &&
+      fieldScanner.getFieldDetailByIndex(startIndex - 1)?.fieldName ==
+        "street-address"
+    ) {
+      fieldScanner.updateFieldName(
+        startIndex - 1,
+        "address-line1",
+        "regexp-heuristic"
+      );
     }
 
     return parsedFields;

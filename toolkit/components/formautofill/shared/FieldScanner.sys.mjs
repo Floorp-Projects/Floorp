@@ -197,12 +197,17 @@ export class FieldScanner {
    *        The index indicates a field detail to be updated.
    * @param {string} fieldName
    *        The new fieldName
+   * @param {string} reason
+   *        What approach we use to identify this field
    */
-  updateFieldName(index, fieldName) {
+  updateFieldName(index, fieldName, reason = null) {
     if (index >= this.fieldDetails.length) {
       throw new Error("Try to update the non-existing field detail.");
     }
     this.fieldDetails[index].fieldName = fieldName;
+    if (reason) {
+      this.fieldDetails[index].reason = reason;
+    }
   }
 
   elementExisting(index) {
