@@ -126,7 +126,6 @@ export function setPreview(
     }
 
     const root = {
-      name: expression,
       path: expression,
       contents: {
         value: resultGrip,

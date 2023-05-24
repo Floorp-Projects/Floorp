@@ -120,12 +120,15 @@ export class Popup extends Component {
 
   renderObjectPreview() {
     const {
-      preview: { properties },
+      preview: { root, properties },
       openLink,
       openElementInInspector,
       highlightDomElement,
       unHighlightDomElement,
     } = this.props;
+
+    const usesCustomFormatter =
+      root?.contents?.value?.useCustomFormatter ?? false;
 
     if (!properties.length) {
       return (
@@ -135,14 +138,17 @@ export class Popup extends Component {
       );
     }
 
+    const roots = usesCustomFormatter ? [root] : properties;
+
     return (
       <div
         className="preview-popup"
         style={{ maxHeight: this.calculateMaxHeight() }}
       >
         <ObjectInspector
-          roots={properties}
+          roots={roots}
           autoExpandDepth={0}
+          mode={usesCustomFormatter ? MODE.LONG : null}
           disableWrap={true}
           focusable={false}
           openLink={openLink}
