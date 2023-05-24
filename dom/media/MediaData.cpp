@@ -483,7 +483,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   // The naming convention in the gfx stack is byte-order.
   ConvertI420AlphaToARGB(aBuffer.mPlanes[0].mData, aBuffer.mPlanes[1].mData,
                          aBuffer.mPlanes[2].mData, aAlphaPlane.mData,
-                         aBuffer.mPlanes[0].mStride, aBuffer.mPlanes[1].mStride,
+                         AssertedCast<int>(aBuffer.mPlanes[0].mStride), AssertedCast<int>(aBuffer.mPlanes[1].mStride),
                          buffer.data, buffer.stride, buffer.size.width,
                          buffer.size.height);
 
