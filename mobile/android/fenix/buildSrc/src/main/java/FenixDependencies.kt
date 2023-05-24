@@ -22,7 +22,7 @@ object FenixVersions {
     const val ktlint = "0.48.2"
 
     const val maven_ant_tasks = "2.1.3"
-    const val jacoco = "0.8.7"
+    const val jacoco = "0.8.10"
     const val falcon = "2.2.0"
     const val fastlane = "2.0.0"
 

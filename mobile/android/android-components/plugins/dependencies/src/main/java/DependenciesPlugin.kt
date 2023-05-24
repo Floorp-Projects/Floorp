@@ -23,7 +23,7 @@ object Versions {
     const val robolectric = "4.10.1"
     const val mockito = "5.3.1"
     const val maven_ant_tasks = "2.1.3"
-    const val jacoco = "0.8.8"
+    const val jacoco = "0.8.10"
 
     // TO-DO: These could be kept in sync in the future
     const val mockwebserver = "3.10.0"
