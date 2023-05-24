@@ -92,7 +92,6 @@ TEST(TimeUnit, Base)
   }
 }
 
-
 TEST(TimeUnit, Rounding)
 {
   int64_t usecs = 662617;

@@ -201,14 +201,8 @@ bool TimeUnit::operator>=(const TimeUnit& aOther) const {
   lhs = a.mTicks * b.mBase;
   rhs = b.mTicks * a.mBase;
 
-  nsCString TimeUnit::ToString() const {
-    nsCString dump;
-    if (mTicks.isValid()) {
-      dump += nsPrintfCString("{%" PRId64 ",%" PRId64 "}", mTicks.value(), mBase);
-    } else {
-      dump += nsLiteralCString("{invalid}"_ns);
-    }
-    return dump;
+  if (lhs.isValid() && rhs.isValid()) {
+    return lhs.value() >= rhs.value();
   }
   // last ditch, convert the reduced fractions to doubles
   double lhsFloating =
@@ -385,7 +379,6 @@ TimeUnit TimeUnit::ToBase(int64_t aTargetBase, double& aOutError) const {
     if (!rv.rem) {
       return TimeUnit(rv.quot, aTargetBase);
     }
-    return rv.value();
   }
   double approx = static_cast<double>(mTicks.value()) *
                   static_cast<double>(aTargetBase) / static_cast<double>(mBase);
