@@ -690,6 +690,12 @@ impl AuthrsTransport {
                 let _ = controller.finish_sign(tid, result);
             }));
 
+        // Bug 1834771 - Pre-filtering allowlists broke AppID support. As a temporary
+        // workaround, we will fallback to CTAP1 when the request includes the AppID
+        // extension and the allowlist is non-empty.
+        let use_ctap1_fallback = static_prefs::pref!("security.webauthn.ctap2") == false
+            || (alternate_rp_id.is_some() && !allow_list.is_empty());
+
         let info = SignArgs {
             client_data_hash: client_data_hash_arr,
             relying_party_id: relying_party_id.to_string(),
@@ -700,7 +706,7 @@ impl AuthrsTransport {
             extensions: Default::default(),
             pin: None,
             alternate_rp_id,
-            use_ctap1_fallback: static_prefs::pref!("security.webauthn.ctap2") == false,
+            use_ctap1_fallback,
         };
 
         self.auth_service
