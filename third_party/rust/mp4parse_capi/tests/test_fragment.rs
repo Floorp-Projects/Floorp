@@ -59,6 +59,7 @@ fn parse_fragment() {
         rv = mp4parse_get_fragment_info(parser, &mut fragment_info);
         assert_eq!(rv, Mp4parseStatus::Ok);
         assert_eq!(fragment_info.fragment_duration, 10_032);
+        assert_eq!(fragment_info.time_scale, 1000);
 
         mp4parse_free(parser);
     }
