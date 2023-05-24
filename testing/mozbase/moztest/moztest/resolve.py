@@ -836,7 +836,15 @@ class TestResolver(MozbuildObject):
         """
         # This takes into account that for mozilla-specific WPT tests, the path
         # contains an extra '/_mozilla' prefix that must be accounted for.
-        depth = depth + 1 if test["name"].startswith("/_mozilla") else depth
+        if test["name"].startswith("/_mozilla"):
+            depth = depth + 1
+
+        # Webdriver BiDi tests are nested in a "bidi" subfolder. Increase the
+        # depth to avoid grouping all bidi tests in one chunk.
+        if test["name"].startswith(
+            ("/webdriver/tests/bidi", "/_mozilla/webdriver/bidi")
+        ):
+            depth = depth + 1
 
         group = os.path.dirname(test["name"])
         while group.count("/") > depth:
