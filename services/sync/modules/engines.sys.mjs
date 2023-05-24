@@ -1402,7 +1402,14 @@ SyncEngine.prototype = {
 
     count.newFailed = 0;
     for (let item of this.previousFailed) {
-      if (!failedInPreviousSync.has(item)) {
+      // Anything that failed in the current sync that also failed in
+      // the previous sync means there is likely something wrong with
+      // the record, we remove it from trying again to prevent
+      // infinitely syncing corrupted records
+      if (failedInPreviousSync.has(item)) {
+        this.previousFailed.delete(item);
+      } else {
+        // otherwise it's a new failed and we count it as so
         ++count.newFailed;
       }
     }

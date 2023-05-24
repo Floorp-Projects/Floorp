@@ -798,7 +798,9 @@ add_task(async function test_processIncoming_notify_count() {
 
     // Confirming removed failures.
     do_check_attribute_count(engine._store.items, 14);
-    Assert.deepEqual(Array.from(engine.previousFailed), ["record-no-00"]);
+    // After failing twice the record that failed again [record-no-00]
+    // should NOT be stored to try again
+    Assert.deepEqual(Array.from(engine.previousFailed), []);
 
     Assert.equal(called, 2);
     Assert.equal(counts.failed, 1);
@@ -893,13 +895,10 @@ add_task(async function test_processIncoming_previousFailed() {
     // Sync again with the same failed items (records 0, 1, 8, 9).
     await engine._processIncoming();
 
-    // A second sync with the same failed items should not add the same items again.
-    // Items that did not fail a second time should no longer be in previousFailed.
     do_check_attribute_count(engine._store.items, 10);
-    Assert.deepEqual(
-      Array.from(engine.previousFailed).sort(),
-      ["record-no-00", "record-no-01", "record-no-08", "record-no-09"].sort()
-    );
+    // A second sync with the same failed items should NOT add the same items again.
+    // Items that did not fail a second time should no longer be in previousFailed.
+    Assert.deepEqual(Array.from(engine.previousFailed).sort(), []);
 
     // Refetched items that didn't fail the second time are in engine._store.items.
     Assert.equal(engine._store.items["record-no-04"], "Record No. 4");
@@ -1034,9 +1033,10 @@ add_task(async function test_processIncoming_failed_records() {
     _("Test batching with ID batch size 3, normal mobile batch size.");
     Assert.equal(await batchDownload(3), 3);
 
-    // Now see with a more realistic limit.
-    _("Test batching with sufficient ID batch size.");
-    Assert.equal(await batchDownload(BOGUS_RECORDS.length), 1);
+    // Since there the previous batch failed again, there should be
+    // no more records to fetch
+    _("Test that the second time a record failed to sync, gets ignored");
+    Assert.equal(await batchDownload(BOGUS_RECORDS.length), 0);
   } finally {
     await cleanAndGo(engine, server);
   }
