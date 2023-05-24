@@ -177,6 +177,8 @@ taskgraph:
             name: firefox-android
     cached-task-prefix: mobile.v2.firefox-android
     decision-parameters: 'android_taskgraph:get_decision_parameters'
+    index-path-regexes:
+        - 'mobile\.v3.[^.]*\.).*'
 
 workers:
     aliases:
