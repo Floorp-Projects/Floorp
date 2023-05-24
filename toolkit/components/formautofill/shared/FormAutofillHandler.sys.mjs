@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillHeuristics:
     "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
-  FormSection: "resource://gre/modules/shared/FieldScanner.sys.mjs",
+  FormSection: "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
 });
 
 const { FIELD_STATES } = FormAutofillUtils;
