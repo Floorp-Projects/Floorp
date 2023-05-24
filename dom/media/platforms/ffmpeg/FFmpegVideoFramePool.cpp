@@ -43,8 +43,7 @@ VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
     : mSurface(aSurface),
       mLib(nullptr),
       mAVHWFrameContext(nullptr),
-      mHWAVBuffer(nullptr),
-      mFFMPEGSurfaceID(-1) {
+      mHWAVBuffer(nullptr) {
   // Create global refcount object to track mSurface usage over
   // gects rendering engine. We can't release it until it's used
   // by GL compositor / WebRender.
@@ -59,7 +58,9 @@ VideoFrameSurface<LIBAV_VER>::~VideoFrameSurface() {
              mSurface->GetUID());
   mSurface->GlobalRefCountDelete();
   // We're about to quit, no need to recycle the frames.
-  ReleaseVAAPIData(/* aForFrameRecycle */ false);
+  if (mFFMPEGSurfaceID) {
+    ReleaseVAAPIData(/* aForFrameRecycle */ false);
+  }
 }
 
 void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
@@ -76,14 +77,15 @@ void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
     DMABUF_LOG(
         "VideoFrameSurface: VAAPI locking dmabuf surface UID %d FFMPEG ID 0x%x "
         "mAVHWFrameContext %p mHWAVBuffer %p",
-        mSurface->GetUID(), mFFMPEGSurfaceID, mAVHWFrameContext, mHWAVBuffer);
+        mSurface->GetUID(), mFFMPEGSurfaceID.value(), mAVHWFrameContext,
+        mHWAVBuffer);
   } else {
     mAVHWFrameContext = nullptr;
     mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
     DMABUF_LOG(
         "VideoFrameSurface: V4L2 locking dmabuf surface UID %d FFMPEG ID 0x%x "
         "mHWAVBuffer %p",
-        mSurface->GetUID(), mFFMPEGSurfaceID, mHWAVBuffer);
+        mSurface->GetUID(), mFFMPEGSurfaceID.value(), mHWAVBuffer);
   }
 }
 
@@ -91,7 +93,7 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
   DMABUF_LOG(
       "VideoFrameSurface: VAAPI releasing dmabuf surface UID %d FFMPEG ID 0x%x "
       "aForFrameRecycle %d mLib %p mAVHWFrameContext %p mHWAVBuffer %p",
-      mSurface->GetUID(), mFFMPEGSurfaceID, aForFrameRecycle, mLib,
+      mSurface->GetUID(), mFFMPEGSurfaceID.value(), aForFrameRecycle, mLib,
       mAVHWFrameContext, mHWAVBuffer);
   // It's possible to unref GPU data while IsUsed() is still set.
   // It can happen when VideoFramePool is deleted while decoder shutdown
@@ -107,8 +109,7 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
     mLib = nullptr;
   }
 
-  mUsed = false;
-  mFFMPEGSurfaceID = -1;
+  mFFMPEGSurfaceID = Nothing();
   mSurface->ReleaseSurface();
 
   if (aForFrameRecycle && IsUsed()) {
@@ -131,11 +132,11 @@ void VideoFramePool<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
   MutexAutoLock lock(mSurfaceLock);
   for (const auto& surface : mDMABufSurfaces) {
 #ifdef DEBUG
-    if (!surface->mUsed && surface->IsUsed()) {
+    if (!surface->mFFMPEGSurfaceID && surface->IsUsed()) {
       NS_WARNING("VA-API: Untracked but still used dmabug surface!");
     }
 #endif
-    if (surface->mUsed && !surface->IsUsed()) {
+    if (surface->mFFMPEGSurfaceID && !surface->IsUsed()) {
       surface->ReleaseVAAPIData();
     }
   }
@@ -144,7 +145,7 @@ void VideoFramePool<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
 RefPtr<VideoFrameSurface<LIBAV_VER>>
 VideoFramePool<LIBAV_VER>::GetFreeVideoFrameSurface() {
   for (auto& surface : mDMABufSurfaces) {
-    if (!surface->mUsed) {
+    if (!surface->mFFMPEGSurfaceID) {
       return surface;
     }
     if (surface->IsUsed()) {
@@ -160,7 +161,7 @@ void VideoFramePool<LIBAV_VER>::CheckNewFFMPEGSurface(
     VASurfaceID aNewSurfaceID) {
   for (const auto& surface : mDMABufSurfaces) {
     if (surface->IsUsed() && surface->IsFFMPEGSurface()) {
-      MOZ_DIAGNOSTIC_ASSERT(surface->mFFMPEGSurfaceID != aNewSurfaceID);
+      MOZ_DIAGNOSTIC_ASSERT(surface->mFFMPEGSurfaceID.value() != aNewSurfaceID);
     }
   }
 }
@@ -173,8 +174,10 @@ bool VideoFramePool<LIBAV_VER>::ShouldCopySurface() {
     if (surface->IsUsed()) {
       surfacesUsed++;
       if (surface->IsFFMPEGSurface()) {
-        DMABUF_LOG("Used HW surface UID %d FFMPEG ID 0x%x\n",
-                   surface->mSurface->GetUID(), surface->mFFMPEGSurfaceID);
+        DMABUF_LOG(
+            "Used HW surface UID %d FFMPEG ID 0x%x\n",
+            surface->mSurface->GetUID(),
+            surface->mFFMPEGSurfaceID ? surface->mFFMPEGSurfaceID.value() : -1);
         surfacesUsedFFmpeg++;
       }
     }
