@@ -673,11 +673,19 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     if (mParser.ParseVBRHeader(&reader)) {
       // Parsing was successful
       if (mParser.VBRInfo().Type() == FrameParser::VBRHeader::XING) {
-        MP3LOGV("XING header present, skipping encoder delay (%u frames)",
-                mParser.VBRInfo().EncoderDelay());
+        MP3LOG("XING header present, skipping encoder delay (%u frames)",
+               mParser.VBRInfo().EncoderDelay());
         mEncoderDelay = mParser.VBRInfo().EncoderDelay();
         mEncoderPadding = mParser.VBRInfo().EncoderPadding();
-        frame->mTime -= FramesToTimeUnit(mEncoderDelay, mSamplesPerSecond);
+        if (mEncoderDelay == 0) {
+          mEncoderDelay = mSamplesPerFrame;
+          MP3LOG("No explicit delay present in vbr header, delay is assumed to be %u frames\n",
+                 mEncoderDelay);
+        }
+      } else if (mParser.VBRInfo().Type() == FrameParser::VBRHeader::VBRI) {
+        MP3LOG("VBRI header present, skipping encoder delay (%u frames)",
+               mParser.VBRInfo().EncoderDelay());
+        mEncoderDelay = mParser.VBRInfo().EncoderDelay();
       }
     }
   }
