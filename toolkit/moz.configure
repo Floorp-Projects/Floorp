@@ -2931,7 +2931,7 @@ set_define("MOZ_DATA_REPORTING", True, when=data_reporting)
 with only_when(toolkit_gtk):
     pkg_check_modules(
         "MOZ_GTK3",
-        "gtk+-3.0 >= 3.14.0 gtk+-unix-print-3.0 glib-2.0 gobject-2.0 gio-unix-2.0",
+        "gtk+-3.0 >= 3.14.0 gtk+-unix-print-3.0 glib-2.0 gobject-2.0 gio-unix-2.0 libdrm >= 2.4",
     )
 
     set_define("GDK_VERSION_MIN_REQUIRED", "GDK_VERSION_3_14")
