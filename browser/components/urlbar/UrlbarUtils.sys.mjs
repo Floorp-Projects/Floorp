@@ -30,10 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-});
-
 export var UrlbarUtils = {
   // Results are categorized into groups to help the muxer compose them.  See
   // UrlbarUtils.getResultGroup.  Since result groups are stored in result
@@ -989,10 +985,7 @@ export var UrlbarUtils = {
    * @param {nsIDOMWindow} window The window requesting it.
    * @returns {UrlbarResult} an heuristic result.
    */
-  async getHeuristicResultFor(
-    searchString,
-    window = lazy.BrowserWindowTracker.getTopWindow()
-  ) {
+  async getHeuristicResultFor(searchString, window) {
     if (!searchString) {
       throw new Error("Must pass a non-null search string");
     }

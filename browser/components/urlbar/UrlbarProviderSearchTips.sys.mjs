@@ -27,10 +27,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-});
-
 XPCOMUtils.defineLazyGetter(lazy, "updateManager", () => {
   return (
     Cc["@mozilla.org/updates/update-manager;1"] &&
@@ -253,10 +249,11 @@ class ProviderSearchTips extends UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result that was picked.
+   * @param {window} window
+   *   The browser window in which the tip is being displayed.
    */
-  #pickResult(result) {
+  #pickResult(result, window) {
     let tip = result.payload.type;
-    let window = lazy.BrowserWindowTracker.getTopWindow();
     switch (tip) {
       case TIPS.PERSIST:
         window.gURLBar.removeAttribute("suppress-focus-border");
@@ -293,8 +290,10 @@ class ProviderSearchTips extends UrlbarProvider {
    * @param {object} details
    *   This is defined only when `state` is "engagement" or "abandonment", and
    *   it describes the search string and picked result.
+   * @param {window} window
+   *   The browser window where the engagement event took place.
    */
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(isPrivate, state, queryContext, details, window) {
     // Ignore engagements on other results that didn't end the session.
     let { result } = details;
     if (result?.providerName != this.name && details.isSessionOngoing) {
@@ -302,7 +301,7 @@ class ProviderSearchTips extends UrlbarProvider {
     }
 
     if (result?.providerName == this.name) {
-      this.#pickResult(result);
+      this.#pickResult(result, window);
     }
 
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
@@ -374,7 +373,7 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    this._maybeShowTipForUrl(uri.spec, originalUri).catch(ex =>
+    this._maybeShowTipForUrl(uri.spec, originalUri, window).catch(ex =>
       this.logger.error(ex)
     );
   }
@@ -387,8 +386,10 @@ class ProviderSearchTips extends UrlbarProvider {
    *   The URL of the page being loaded, in string form.
    * @param {nsIURI | null} originalUri
    *   The original URI of the page being loaded.
+   * @param {window} window
+   *   The browser window in which the tip is being displayed.
    */
-  async _maybeShowTipForUrl(urlStr, originalUri) {
+  async _maybeShowTipForUrl(urlStr, originalUri, window) {
     let instance = {};
     this._maybeShowTipForUrlInstance = instance;
 
@@ -456,7 +457,6 @@ class ProviderSearchTips extends UrlbarProvider {
         return;
       }
 
-      let window = lazy.BrowserWindowTracker.getTopWindow();
       // We don't want to interrupt a user's typed query with a Search Tip.
       // See bugs 1613662 and 1619547. The persist search tip is an
       // exception because the query is not erased.
@@ -477,7 +477,7 @@ class ProviderSearchTips extends UrlbarProvider {
       // Don't show a tip if the browser is already showing some other
       // notification.
       if (
-        (!ignoreShowLimits && (await isBrowserShowingNotification())) ||
+        (!ignoreShowLimits && (await isBrowserShowingNotification(window))) ||
         this._maybeShowTipForUrlInstance != instance
       ) {
         return;
@@ -514,9 +514,7 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 }
 
-async function isBrowserShowingNotification() {
-  let window = lazy.BrowserWindowTracker.getTopWindow();
-
+async function isBrowserShowingNotification(window) {
   // urlbar view and notification box (info bar)
   if (
     window.gURLBar.view.isOpen ||
