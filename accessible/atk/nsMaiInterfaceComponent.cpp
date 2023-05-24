@@ -77,7 +77,7 @@ static gboolean scrollToPointCB(AtkComponent* aComponent, AtkCoordType coords,
 AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
                                       AtkCoordType aCoordType) {
   Accessible* acc = GetInternalObj(aAtkObj);
-  if (!acc || (acc->IsLocal() && acc->AsLocal()->IsDefunct())) {
+  if (!acc) {
     return nullptr;
   }
 
@@ -112,7 +112,7 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
   *aX = *aY = *aWidth = *aHeight = -1;
 
   Accessible* acc = GetInternalObj(aAtkObj);
-  if (!acc || (acc->IsLocal() && acc->AsLocal()->IsDefunct())) {
+  if (!acc) {
     return;
   }
 

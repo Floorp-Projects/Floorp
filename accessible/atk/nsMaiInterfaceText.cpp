@@ -487,20 +487,15 @@ static gboolean removeTextSelectionCB(AtkText* aText, gint aSelectionNum) {
 
 static gboolean setTextSelectionCB(AtkText* aText, gint aSelectionNum,
                                    gint aStartOffset, gint aEndOffset) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return FALSE;
-    }
-
-    return text->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc || !acc->IsTextRole()) {
+    return FALSE;
   }
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return proxy->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text) {
+    return FALSE;
   }
-
-  return FALSE;
+  return text->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
 }
 
 static gboolean setCaretOffsetCB(AtkText* aText, gint aOffset) {

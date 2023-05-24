@@ -140,30 +140,11 @@ using namespace mozilla::a11y;
   return mGeckoAccessible;
 }
 
-- (mozilla::a11y::Accessible*)geckoDocument {
-  MOZ_ASSERT(mGeckoAccessible);
-
-  if (mGeckoAccessible->IsLocal()) {
-    if (mGeckoAccessible->AsLocal()->IsDoc()) {
-      return mGeckoAccessible;
-    }
-    return mGeckoAccessible->AsLocal()->Document();
-  }
-
-  if (mGeckoAccessible->AsRemote()->IsDoc()) {
-    return mGeckoAccessible;
-  }
-
-  return mGeckoAccessible->AsRemote()->Document();
-}
-
 #pragma mark - MOXAccessible protocol
 
 - (BOOL)moxBlockSelector:(SEL)selector {
   if (selector == @selector(moxPerformPress)) {
-    uint8_t actionCount = mGeckoAccessible->IsLocal()
-                              ? mGeckoAccessible->AsLocal()->ActionCount()
-                              : mGeckoAccessible->AsRemote()->ActionCount();
+    uint8_t actionCount = mGeckoAccessible->ActionCount();
 
     // If we have no action, we don't support press, so return YES.
     return actionCount == 0;
@@ -206,13 +187,8 @@ using namespace mozilla::a11y;
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate {
   MOZ_ASSERT(mGeckoAccessible);
 
-  if (mGeckoAccessible->IsLocal()) {
-    return [MOXTextMarkerDelegate
-        getOrCreateForDoc:mGeckoAccessible->AsLocal()->Document()];
-  }
-
   return [MOXTextMarkerDelegate
-      getOrCreateForDoc:mGeckoAccessible->AsRemote()->Document()];
+      getOrCreateForDoc:nsAccUtils::DocumentFor(mGeckoAccessible)];
 }
 
 - (BOOL)moxIsLiveRegion {
@@ -342,14 +318,11 @@ using namespace mozilla::a11y;
 - (NSString*)moxSubrole {
   MOZ_ASSERT(mGeckoAccessible);
 
-  LocalAccessible* acc = mGeckoAccessible->AsLocal();
-  RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-
   // Deal with landmarks first
   // macOS groups the specific landmark types of DPub ARIA into two broad
   // categories with corresponding subroles: Navigation and region/container.
   if (mRole == roles::LANDMARK) {
-    nsAtom* landmark = acc ? acc->LandmarkRole() : proxy->LandmarkRole();
+    nsAtom* landmark = mGeckoAccessible->LandmarkRole();
     // HTML Elements treated as landmarks, and ARIA landmarks.
     if (landmark) {
       if (landmark == nsGkAtoms::banner) return @"AXLandmarkBanner";
@@ -618,9 +591,7 @@ struct RoleDescrComparator {
 - (NSValue*)moxFrame {
   MOZ_ASSERT(mGeckoAccessible);
 
-  LayoutDeviceIntRect rect = mGeckoAccessible->IsLocal()
-                                 ? mGeckoAccessible->AsLocal()->Bounds()
-                                 : mGeckoAccessible->AsRemote()->Bounds();
+  LayoutDeviceIntRect rect = mGeckoAccessible->Bounds();
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
 
@@ -697,7 +668,7 @@ struct RoleDescrComparator {
 }
 
 - (mozAccessible*)topWebArea {
-  Accessible* doc = [self geckoDocument];
+  Accessible* doc = nsAccUtils::DocumentFor(mGeckoAccessible);
   while (doc) {
     if (doc->IsLocal()) {
       DocAccessible* docAcc = doc->AsLocal()->AsDoc();
@@ -823,9 +794,7 @@ struct RoleDescrComparator {
 
   // We don't need to convert this rect into mac coordinates because the
   // mouse event synthesizer expects layout (gecko) coordinates.
-  LayoutDeviceIntRect bounds = mGeckoAccessible->IsLocal()
-                                   ? mGeckoAccessible->AsLocal()->Bounds()
-                                   : mGeckoAccessible->AsRemote()->Bounds();
+  LayoutDeviceIntRect bounds = mGeckoAccessible->Bounds();
 
   LocalAccessible* rootAcc = mGeckoAccessible->IsLocal()
                                  ? mGeckoAccessible->AsLocal()->RootAccessible()
@@ -846,11 +815,7 @@ struct RoleDescrComparator {
 - (void)moxPerformPress {
   MOZ_ASSERT(mGeckoAccessible);
 
-  if (mGeckoAccessible->IsLocal()) {
-    mGeckoAccessible->AsLocal()->DoAction(0);
-  } else {
-    mGeckoAccessible->AsRemote()->DoAction(0);
-  }
+  mGeckoAccessible->DoAction(0);
 }
 
 #pragma mark -
