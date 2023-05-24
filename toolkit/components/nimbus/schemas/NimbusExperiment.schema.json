@@ -93,7 +93,10 @@
                 "description": "e.g. \"primary\" or \"secondary\""
               }
             },
-            "required": ["slug", "priority"]
+            "required": [
+              "slug",
+              "priority"
+            ]
           },
           "description": "A list of outcomes relevant to the experiment analysis."
         },
@@ -133,11 +136,18 @@
                         "description": "Optional extra params for the feature (this should be validated against a schema)"
                       }
                     },
-                    "required": ["featureId", "value"],
+                    "required": [
+                      "featureId",
+                      "value"
+                    ],
                     "description": "A single feature configuration"
                   }
                 },
-                "required": ["slug", "ratio", "feature"]
+                "required": [
+                  "slug",
+                  "ratio",
+                  "feature"
+                ]
               }
             },
             {
@@ -170,7 +180,11 @@
                         "additionalProperties": {}
                       }
                     },
-                    "required": ["featureId", "enabled", "value"],
+                    "required": [
+                      "featureId",
+                      "enabled",
+                      "value"
+                    ],
                     "description": "The feature key must be provided with valid values to prevent crashes if the DTO is encountered by Desktop clients earlier than version 95."
                   },
                   "features": {
@@ -188,12 +202,20 @@
                           "description": "Optional extra params for the feature (this should be validated against a schema)"
                         }
                       },
-                      "required": ["featureId", "value"]
+                      "required": [
+                        "featureId",
+                        "value"
+                      ]
                     },
                     "description": "An array of feature configurations"
                   }
                 },
-                "required": ["slug", "ratio", "feature", "features"]
+                "required": [
+                  "slug",
+                  "ratio",
+                  "feature",
+                  "features"
+                ]
               }
             },
             {
@@ -225,33 +247,52 @@
                           "description": "Optional extra params for the feature (this should be validated against a schema)"
                         }
                       },
-                      "required": ["featureId", "value"]
+                      "required": [
+                        "featureId",
+                        "value"
+                      ]
                     },
                     "description": "An array of feature configurations"
                   }
                 },
-                "required": ["slug", "ratio", "features"]
+                "required": [
+                  "slug",
+                  "ratio",
+                  "features"
+                ]
               }
             }
           ],
           "description": "Branch configuration for the experiment"
         },
         "targeting": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "JEXL expression used to filter experiments based on locale, geo, etc."
         },
         "startDate": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Actual publish date of the experiment Note that this value is expected to be null in Remote Settings.",
           "format": "date"
         },
         "enrollmentEndDate": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Actual enrollment end date of the experiment. Note that this value is expected to be null in Remote Settings.",
           "format": "date"
         },
         "endDate": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Actual end date of the experiment. Note that this value is expected to be null in Remote Settings.",
           "format": "date"
         },
@@ -264,7 +305,10 @@
           "description": "This represents the number of days that we expect to enroll new users. Note that this property is only used during the analysis phase (not by the SDK)"
         },
         "referenceBranch": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "The slug of the reference branch (that is, which branch we consider \"control\")"
         },
         "featureValidationOptOut": {
@@ -287,6 +331,13 @@
             }
           ],
           "description": "Per-locale localization substitutions.\n\nThe top level key is the locale (e.g., \"en-US\" or \"fr\"). Each entry is a mapping of string IDs to their localized equivalents.\n\nOnly supported on desktop."
+        },
+        "locales": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The list of locale codes (e.g., \"en-US\" or \"fr\") that this experiment is targeting.\n\nIf null, all locales are targeted."
         }
       },
       "required": [
