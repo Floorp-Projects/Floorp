@@ -51,7 +51,6 @@ class SessionAccessibility final
   // Native implementations
   using Base::AttachNative;
   using Base::DisposeNative;
-  bool IsCacheEnabled();
   void GetNodeInfo(int32_t aID, mozilla::jni::Object::Param aNodeInfo);
   int GetNodeClassName(int32_t aID);
   void SetText(int32_t aID, jni::String::Param aText);

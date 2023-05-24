@@ -8,7 +8,6 @@
 #include "DocAccessible-inl.h"
 #include "HyperTextAccessible.h"
 #include "HyperTextAccessible-inl.h"
-#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsEventShell.h"
@@ -238,7 +237,7 @@ void SelectionManager::ProcessSelectionChanged(SelData* aSelData) {
 void SelectionManager::SpellCheckRangeChanged(const nsRange& aRange) {
   // Events are fired in SelectionManager::NotifySelectionChanged. This is only
   // used to push cache updates.
-  if (a11y::IsCacheActive() && IPCAccessibilityActive()) {
+  if (IPCAccessibilityActive()) {
     dom::Document* doc = aRange.GetStartContainer()->OwnerDoc();
     MOZ_ASSERT(doc);
     TextLeafPoint::UpdateCachedSpellingError(doc, aRange);

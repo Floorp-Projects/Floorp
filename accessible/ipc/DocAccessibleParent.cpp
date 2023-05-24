@@ -142,11 +142,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
   RemoteAccessible* target = parent->RemoteChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
 
-  if (a11y::IsCacheActive()) {
-    if (nsCOMPtr<nsIObserverService> obsService =
-            services::GetObserverService()) {
-      obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
-    }
+  if (nsCOMPtr<nsIObserverService> obsService =
+          services::GetObserverService()) {
+    obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
   }
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -194,7 +192,6 @@ uint32_t DocAccessibleParent::AddSubtree(
     ProxyCreated(newProxy);
 
     if (RefPtr<AccAttributes> fields = newChild.CacheFields()) {
-      MOZ_ASSERT(a11y::IsCacheActive());
       newProxy->ApplyCache(CacheUpdateType::Initial, fields);
     }
 
@@ -348,24 +345,22 @@ void DocAccessibleParent::FireEvent(RemoteAccessible* aAcc,
     mFocus = aAcc->ID();
   }
 
-  if (a11y::IsCacheActive()) {
-    if (aEventType == nsIAccessibleEvent::EVENT_REORDER ||
-        aEventType == nsIAccessibleEvent::EVENT_INNER_REORDER) {
-      for (RemoteAccessible* child = aAcc->RemoteFirstChild(); child;
-           child = child->RemoteNextSibling()) {
-        child->InvalidateGroupInfo();
-      }
-    } else if (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
-               aAcc == this) {
-      // A DocAccessible gets the STALE state while it is still loading, but we
-      // don't fire a state change for that. That state might have been
-      // included in the initial cache push, so clear it here.
-      // We also clear the BUSY state here. Although we do fire a state change
-      // for that, we fire it after doc load complete. It doesn't make sense
-      // for the document to report BUSY after doc load complete and doing so
-      // confuses JAWS.
-      UpdateStateCache(states::STALE | states::BUSY, false);
+  if (aEventType == nsIAccessibleEvent::EVENT_REORDER ||
+      aEventType == nsIAccessibleEvent::EVENT_INNER_REORDER) {
+    for (RemoteAccessible* child = aAcc->RemoteFirstChild(); child;
+         child = child->RemoteNextSibling()) {
+      child->InvalidateGroupInfo();
     }
+  } else if (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
+             aAcc == this) {
+    // A DocAccessible gets the STALE state while it is still loading, but we
+    // don't fire a state change for that. That state might have been
+    // included in the initial cache push, so clear it here.
+    // We also clear the BUSY state here. Although we do fire a state change
+    // for that, we fire it after doc load complete. It doesn't make sense
+    // for the document to report BUSY after doc load complete and doing so
+    // confuses JAWS.
+    UpdateStateCache(states::STALE | states::BUSY, false);
   }
 
   ProxyEvent(aAcc, aEventType);
@@ -396,12 +391,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
     return IPC_OK();
   }
 
-  if (a11y::IsCacheActive()) {
-    target->UpdateStateCache(aState, aEnabled);
-    if (nsCOMPtr<nsIObserverService> obsService =
-            services::GetObserverService()) {
-      obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
-    }
+  target->UpdateStateCache(aState, aEnabled);
+  if (nsCOMPtr<nsIObserverService> obsService =
+          services::GetObserverService()) {
+    obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
   }
   ProxyStateChangeEvent(target, aState, aEnabled);
 
@@ -741,10 +734,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
     return IPC_OK();
   }
 
-  if (a11y::IsCacheActive()) {
-    mTextSelections.ClearAndRetainStorage();
-    mTextSelections.AppendElements(aSelection);
-  }
+  mTextSelections.ClearAndRetainStorage();
+  mTextSelections.AppendElements(aSelection);
 
 #ifdef MOZ_WIDGET_COCOA
   ProxyTextSelectionChangeEvent(target, aSelection);
