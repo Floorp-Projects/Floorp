@@ -30,30 +30,6 @@ registerCleanupFunction(() => {
   globalSandbox.restore();
 });
 
-async function assertEmptyStore(store) {
-  Assert.deepEqual(
-    store
-      .getAll()
-      .filter(e => e.active)
-      .map(e => e.slug),
-    [],
-    "Store should have no active enrollments"
-  );
-
-  Assert.deepEqual(
-    store
-      .getAll()
-      .filter(e => e.inactive)
-      .map(e => e.slug),
-    [],
-    "Store should have no inactive enrollments"
-  );
-
-  store._store.saveSoon();
-  await store._store.finalize();
-  await IOUtils.remove(store._store.path);
-}
-
 /**
  * FOG requires a little setup in order to test it
  */
@@ -979,4 +955,69 @@ add_task(async function experiment_and_rollout_enroll_and_cleanup() {
   );
 
   await assertEmptyStore(manager.store);
+});
+
+add_task(async function test_reEnroll() {
+  const store = ExperimentFakes.store();
+  const manager = ExperimentFakes.manager(store);
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  const experiment = ExperimentFakes.recipe("experiment");
+  experiment.bucketConfig = {
+    ...experiment.bucketConfig,
+    start: 0,
+    count: 1000,
+    total: 1000,
+  };
+  const rollout = ExperimentFakes.recipe("rollout", { isRollout: true });
+  rollout.bucketConfig = {
+    ...rollout.bucketConfig,
+    start: 0,
+    count: 1000,
+    total: 1000,
+  };
+
+  await manager.enroll(experiment, "test");
+  Assert.equal(
+    manager.store.getExperimentForFeature("testFeature")?.slug,
+    experiment.slug,
+    "Should enroll in experiment"
+  );
+
+  await manager.enroll(rollout, "test");
+  Assert.equal(
+    manager.store.getRolloutForFeature("testFeature")?.slug,
+    rollout.slug,
+    "Should enroll in rollout"
+  );
+
+  manager.unenroll(experiment.slug);
+  Assert.ok(
+    !manager.store.getExperimentForFeature("testFeature"),
+    "Should unenroll from experiment"
+  );
+
+  manager.unenroll(rollout.slug);
+  Assert.ok(
+    !manager.store.getRolloutForFeature("testFeature"),
+    "Should unenroll from rollout"
+  );
+
+  await Assert.rejects(
+    manager.enroll(experiment, "test", { reenroll: true }),
+    /An experiment with the slug "experiment" already exists/,
+    "Should not re-enroll in experiment"
+  );
+
+  await manager.enroll(rollout, "test", { reenroll: true });
+  Assert.equal(
+    manager.store.getRolloutForFeature("testFeature")?.slug,
+    rollout.slug,
+    "Should re-enroll in rollout"
+  );
+
+  manager.unenroll(rollout.slug);
+  await assertEmptyStore(store);
 });

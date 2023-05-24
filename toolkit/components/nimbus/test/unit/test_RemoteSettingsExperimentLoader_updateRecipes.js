@@ -44,6 +44,8 @@ add_task(async function test_updateRecipes_activeExperiments() {
   await loader.init();
 
   ok(onRecipe.calledOnce, "Should match active experiments");
+
+  await assertEmptyStore(manager.store);
 });
 
 add_task(async function test_updateRecipes_isFirstRun() {
@@ -63,6 +65,8 @@ add_task(async function test_updateRecipes_isFirstRun() {
   await loader.init();
 
   Assert.ok(onRecipe.calledOnce, "Should match first run");
+
+  await assertEmptyStore(manager.store);
 });
 
 add_task(async function test_updateRecipes_invalidFeatureId() {
@@ -103,6 +107,8 @@ add_task(async function test_updateRecipes_invalidFeatureId() {
 
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
+
+  await assertEmptyStore(manager.store);
 });
 
 add_task(async function test_updateRecipes_invalidFeatureValue() {
@@ -147,6 +153,8 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
 
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_invalidRecipe() {
@@ -165,6 +173,8 @@ add_task(async function test_updateRecipes_invalidRecipe() {
 
   await loader.init();
   ok(onRecipe.notCalled, "No recipes");
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_invalidRecipeAfterUpdate() {
@@ -239,6 +249,8 @@ add_task(async function test_updateRecipes_invalidRecipeAfterUpdate() {
     }),
     "should call .onFinalize with an invalid recipe"
   );
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_invalidBranchAfterUpdate() {
@@ -352,6 +364,8 @@ add_task(async function test_updateRecipes_invalidBranchAfterUpdate() {
     }),
     "should call .onFinalize with an invalid branch"
   );
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
@@ -474,6 +488,8 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
   );
 
   EnrollmentsContext.prototype._generateVariablesOnlySchema.restore();
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_validationTelemetry() {
@@ -602,6 +618,8 @@ add_task(async function test_updateRecipes_validationTelemetry() {
     });
 
     Services.fog.testResetFOG();
+
+    await assertEmptyStore(manager.store, { cleanup: true });
   }
 });
 
@@ -669,7 +687,10 @@ add_task(async function test_updateRecipes_validationDisabled() {
       }),
       "should call .onFinalize with no validation issues"
     );
+
+    await assertEmptyStore(manager.store, { cleanup: true });
   }
+
   Services.prefs.clearUserPref("nimbus.validation.enabled");
 });
 
@@ -745,6 +766,8 @@ add_task(async function test_updateRecipes_appId() {
   );
 
   Services.prefs.clearUserPref("nimbus.appId");
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_withPropNotInManifest() {
@@ -787,6 +810,8 @@ add_task(async function test_updateRecipes_withPropNotInManifest() {
     "should call .onRecipe with this recipe"
   );
   equal(loader.manager.onRecipe.callCount, 1, "should only call onRecipe once");
+
+  await assertEmptyStore(loader.manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_recipeAppId() {
@@ -834,6 +859,8 @@ add_task(async function test_updateRecipes_recipeAppId() {
     }),
     "Should call .onFinalize with no validation issues"
   );
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_featureValidationOptOut() {
@@ -916,6 +943,8 @@ add_task(async function test_updateRecipes_featureValidationOptOut() {
         }),
       "should call .onFinalize with only one invalid recipe"
     );
+
+    await assertEmptyStore(manager.store, { cleanup: true });
   }
 });
 
@@ -972,6 +1001,8 @@ add_task(async function test_updateRecipes_invalidFeature_mismatch() {
   );
 
   targetingSpy.restore();
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
 
 add_task(async function test_updateRecipes_rollout_bucketing() {
@@ -1097,4 +1128,95 @@ add_task(async function test_updateRecipes_rollout_bucketing() {
       object: "nimbus_experiment",
     }
   );
+
+  manager.unenroll(experiment.slug);
+  await assertEmptyStore(manager.store, { cleanup: true });
+});
+
+add_task(async function test_reenroll_rollout_resized() {
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  await loader.init();
+  await manager.onStartup();
+  await manager.store.ready();
+
+  const rollout = ExperimentFakes.recipe("rollout", {
+    isRollout: true,
+  });
+  rollout.bucketConfig = {
+    ...rollout.bucketConfig,
+    start: 0,
+    count: 1000,
+    total: 1000,
+  };
+
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([rollout]);
+
+  await loader.updateRecipes();
+  Assert.equal(
+    manager.store.getRolloutForFeature("testFeature")?.slug,
+    rollout.slug,
+    "Should enroll in rollout"
+  );
+
+  rollout.bucketConfig.count = 0;
+  await loader.updateRecipes();
+
+  Assert.ok(
+    !manager.store.getRolloutForFeature("testFeature"),
+    "Should unenroll from rollout"
+  );
+
+  rollout.bucketConfig.count = 1000;
+  await loader.updateRecipes();
+
+  Assert.equal(
+    manager.store.getRolloutForFeature("testFeature")?.slug,
+    rollout.slug,
+    "Should re-enroll in rollout"
+  );
+
+  manager.unenroll(rollout.slug);
+  await assertEmptyStore(manager.store, { cleanup: true });
+});
+
+add_task(async function test_experiment_reenroll() {
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  await loader.init();
+  await manager.onStartup();
+  await manager.store.ready();
+
+  const experiment = ExperimentFakes.recipe("experiment");
+  experiment.bucketConfig = {
+    ...experiment.bucketConfig,
+    start: 0,
+    count: 1000,
+    total: 1000,
+  };
+
+  await manager.enroll(experiment, "test");
+  Assert.equal(
+    manager.store.getExperimentForFeature("testFeature")?.slug,
+    experiment.slug,
+    "Should enroll in experiment"
+  );
+
+  manager.unenroll(experiment.slug);
+  Assert.ok(
+    !manager.store.getExperimentForFeature("testFeature"),
+    "Should unenroll from experiment"
+  );
+
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([experiment]);
+
+  await loader.updateRecipes();
+  Assert.ok(
+    !manager.store.getExperimentForFeature("testFeature"),
+    "Should not re-enroll in experiment"
+  );
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });

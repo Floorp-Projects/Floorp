@@ -160,7 +160,7 @@ export class _ExperimentManager {
     this.sessions.get(source).add(slug);
 
     if (this.store.has(slug)) {
-      await this.updateEnrollment(recipe);
+      await this.updateEnrollment(recipe, source);
     } else if (isEnrollmentPaused) {
       lazy.log.debug(`Enrollment is paused for "${slug}"`);
     } else if (!(await this.isInBucketAllocation(recipe.bucketConfig))) {
@@ -350,13 +350,21 @@ export class _ExperimentManager {
    *
    * @param {RecipeArgs} recipe
    * @param {string} source
+   * @param {object} options
+   * @param {boolean} options.reenroll - Allow re-enrollment. Only allowed for rollouts.
    * @returns {Promise<Enrollment>} The experiment object stored in the data store
    * @rejects {Error}
    * @memberof _ExperimentManager
    */
-  async enroll(recipe, source) {
+  async enroll(recipe, source, { reenroll = false } = {}) {
     let { slug, branches } = recipe;
-    if (this.store.has(slug)) {
+
+    const enrollment = this.store.get(slug);
+
+    if (
+      enrollment &&
+      (enrollment.isActive || !enrollment.isRollout || !reenroll)
+    ) {
       this.sendFailureTelemetry("enrollFailed", slug, "name-conflict");
       throw new Error(`An experiment with the slug "${slug}" already exists.`);
     }
@@ -497,22 +505,27 @@ export class _ExperimentManager {
    * @param {RecipeArgs} recipe
    * @returns {boolean} whether the enrollment is still active
    */
-  async updateEnrollment(recipe) {
+  async updateEnrollment(recipe, source) {
     /** @type Enrollment */
     const enrollment = this.store.get(recipe.slug);
 
     // Don't update experiments that were already unenrolled.
-    if (enrollment.active === false) {
+    if (enrollment.active === false && !recipe.isRollout) {
       lazy.log.debug(`Enrollment ${recipe.slug} has expired, aborting.`);
       return false;
     }
 
-    if (
-      recipe.isRollout &&
-      !(await this.isInBucketAllocation(recipe.bucketConfig))
-    ) {
-      this.unenroll(recipe.slug, "bucketing");
-      return false;
+    if (recipe.isRollout) {
+      if (!(await this.isInBucketAllocation(recipe.bucketConfig))) {
+        lazy.log.debug(
+          `No longer meet bucketing for "${recipe.slug}"; unenrolling...`
+        );
+        this.unenroll(recipe.slug, "bucketing");
+        return false;
+      } else if (!enrollment.active) {
+        lazy.log.debug(`Re-enrolling in rollout "${recipe.slug}`);
+        return !!(await this.enroll(recipe, source, { reenroll: true }));
+      }
     }
 
     // Stay in the same branch, don't re-sample every time.
