@@ -25,6 +25,8 @@
  *       "timeLastUsed": 1262304000000,
  *       "timePasswordChanged": 1262476800000,
  *       "timesUsed": 1
+ *        // only present if other clients had fields we didn't know about
+ *       "encryptedUnknownFields: "...",
  *     },
  *     {
  *       "id": 4,

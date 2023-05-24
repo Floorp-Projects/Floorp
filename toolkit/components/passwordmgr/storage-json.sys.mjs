@@ -176,8 +176,13 @@ export class LoginManagerStorage_json {
     // Throws if there are bogus values.
     lazy.LoginHelper.checkLoginValues(login);
 
-    let [encUsername, encPassword, encType] = preEncrypted
-      ? [login.username, login.password, this._crypto.defaultEncType]
+    let [encUsername, encPassword, encType, encUnknownFields] = preEncrypted
+      ? [
+          login.username,
+          login.password,
+          this._crypto.defaultEncType,
+          login.unknownFields,
+        ]
       : this._encryptLogin(login);
 
     // Reset the username and password to keep the same guarantees for preEncrypted
@@ -243,6 +248,7 @@ export class LoginManagerStorage_json {
       timeLastUsed: loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
       timesUsed: loginClone.timesUsed,
+      encryptedUnknownFields: encUnknownFields,
     });
     this._store.saveSoon();
 
@@ -306,7 +312,8 @@ export class LoginManagerStorage_json {
     }
 
     // Get the encrypted value of the username and password.
-    let [encUsername, encPassword, encType] = this._encryptLogin(newLogin);
+    let [encUsername, encPassword, encType, encUnknownFields] =
+      this._encryptLogin(newLogin);
 
     for (let loginItem of this._store.data.logins) {
       if (loginItem.id == idToModify) {
@@ -323,6 +330,7 @@ export class LoginManagerStorage_json {
         loginItem.timeLastUsed = newLogin.timeLastUsed;
         loginItem.timePasswordChanged = newLogin.timePasswordChanged;
         loginItem.timesUsed = newLogin.timesUsed;
+        loginItem.encryptedUnknownFields = encUnknownFields;
         this._store.saveSoon();
         break;
       }
@@ -617,6 +625,9 @@ export class LoginManagerStorage_json {
         login.timeLastUsed = loginItem.timeLastUsed;
         login.timePasswordChanged = loginItem.timePasswordChanged;
         login.timesUsed = loginItem.timesUsed;
+
+        // Any unknown fields along for the ride
+        login.unknownFields = loginItem.encryptedUnknownFields;
         foundLogins.push(login);
         foundIds.push(loginItem.id);
       }
@@ -813,9 +824,16 @@ export class LoginManagerStorage_json {
   _encryptLogin(login) {
     let encUsername = this._crypto.encrypt(login.username);
     let encPassword = this._crypto.encrypt(login.password);
+
+    // Unknown fields should be encrypted since we can't know whether new fields
+    // from other clients will contain sensitive data or not
+    let encUnknownFields = null;
+    if (login.unknownFields) {
+      encUnknownFields = this._crypto.encrypt(login.unknownFields);
+    }
     let encType = this._crypto.defaultEncType;
 
-    return [encUsername, encPassword, encType];
+    return [encUsername, encPassword, encType, encUnknownFields];
   }
 
   /**
@@ -836,6 +854,10 @@ export class LoginManagerStorage_json {
       try {
         login.username = this._crypto.decrypt(login.username);
         login.password = this._crypto.decrypt(login.password);
+        // Verify unknownFields actually has a value
+        if (login.unknownFields) {
+          login.unknownFields = this._crypto.decrypt(login.unknownFields);
+        }
       } catch (e) {
         // If decryption failed (corrupt entry?), just skip it.
         // Rethrow other errors (like canceling entry of a primary pw)
