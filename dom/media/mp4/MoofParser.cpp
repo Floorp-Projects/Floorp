@@ -36,12 +36,9 @@ extern mozilla::LogModule* GetDemuxerLog();
 
 namespace mozilla {
 
-const uint32_t kKeyIdSize = 16;
+using TimeUnit = media::TimeUnit;
 
-// We ensure there are no gaps in samples' CTS between the last sample in a
-// Moof, and the first sample in the next Moof, if they're within these many
-// Microseconds of each other.
-const Microseconds CROSS_MOOF_CTS_MERGE_THRESHOLD = 1;
+const uint32_t kKeyIdSize = 16;
 
 bool MoofParser::RebuildFragmentedIndex(const MediaByteRangeSet& aByteRanges) {
   BoxContext context(mSource, aByteRanges);
@@ -233,10 +230,10 @@ already_AddRefed<mozilla::MediaByteBuffer> MoofParser::Metadata() {
   return metadata.forget();
 }
 
-MP4Interval<Microseconds> MoofParser::GetCompositionRange(
+MP4Interval<TimeUnit> MoofParser::GetCompositionRange(
     const MediaByteRangeSet& aByteRanges) {
   LOG_DEBUG(Moof, "Starting.");
-  MP4Interval<Microseconds> compositionRange;
+  MP4Interval<TimeUnit> compositionRange;
   BoxContext context(mSource, aByteRanges);
   for (size_t i = 0; i < mMoofs.Length(); i++) {
     Moof& moof = mMoofs[i];
@@ -248,7 +245,8 @@ MP4Interval<Microseconds> MoofParser::GetCompositionRange(
   LOG_DEBUG(Moof,
             "Done, compositionRange.start=%" PRIi64
             ", compositionRange.end=%" PRIi64 ".",
-            compositionRange.start, compositionRange.end);
+            compositionRange.start.ToMicroseconds(),
+            compositionRange.end.ToMicroseconds());
   return compositionRange;
 }
 
@@ -431,7 +429,10 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
            Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf,
            uint64_t* aDecodeTime, bool aIsAudio,
            nsTArray<TrackEndCts>& aTracksEndCts)
-    : mRange(aBox.Range()), mTfhd(aTrex), mMaxRoundingError(35000) {
+    : mRange(aBox.Range()),
+      mTfhd(aTrex),
+      // Do not reporting discontuities less than 35ms
+      mMaxRoundingError(TimeUnit::FromSeconds(0.035)) {
   LOG_DEBUG(
       Moof,
       "Starting, aTrackParseMode=%s, track#=%" PRIu32
@@ -490,6 +491,10 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
         // parsed, for the track we're parsing.
         for (auto& prevCts : aTracksEndCts) {
           if (prevCts.mTrackId == trackId) {
+            // We ensure there are no gaps in samples' CTS between the last sample in a
+            // Moof, and the first sample in the next Moof, if they're within these many
+            // Microseconds of each other.
+            const TimeUnit CROSS_MOOF_CTS_MERGE_THRESHOLD = TimeUnit::FromSeconds(aMvhd.mTimescale / 1000000., aMvhd.mTimescale);
             // We have previously parsed a Moof for this track. Smooth the gap
             // between samples for this track across the Moof bounary.
             if (ctsOrder[0]->mCompositionRange.start > prevCts.mCtsEndTime &&
@@ -515,29 +520,29 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
       // sample as a Sample's duration is mCompositionRange.end -
       // mCompositionRange.start MSE's TrackBuffersManager expects dts that
       // increased by the sample's duration, so we rewrite the dts accordingly.
-      int64_t presentationDuration =
+      TimeUnit presentationDuration =
           ctsOrder.LastElement()->mCompositionRange.end -
           ctsOrder[0]->mCompositionRange.start;
       auto decodeOffset =
-          aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart);
-      auto offsetOffset = aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
-      int64_t endDecodeTime =
+          aMdhd.ToTimeUnit((int64_t)*aDecodeTime - aEdts.mMediaStart);
+      auto offsetOffset = aMvhd.ToTimeUnit(aEdts.mEmptyOffset);
+      TimeUnit endDecodeTime =
           (decodeOffset.isOk() && offsetOffset.isOk())
               ? decodeOffset.unwrap() + offsetOffset.unwrap()
-              : 0;
-      int64_t decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
-      double adjust = !!presentationDuration
-                          ? (double)decodeDuration / presentationDuration
-                          : 0;
-      int64_t dtsOffset = mIndex[0].mDecodeTime;
-      int64_t compositionDuration = 0;
+              : TimeUnit::Zero(aMvhd.mTimescale);
+      TimeUnit decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
+      double adjust = !presentationDuration.IsZero()
+                          ? (double)decodeDuration.ToMicroseconds() / (double)presentationDuration.ToMicroseconds()
+                          : 0.;
+      TimeUnit dtsOffset = mIndex[0].mDecodeTime;
+      TimeUnit compositionDuration(0, aMvhd.mTimescale);
       // Adjust the dts, ensuring that the new adjusted dts will never be
       // greater than decodeTime (the next moof's decode start time).
       for (auto& sample : mIndex) {
-        sample.mDecodeTime = dtsOffset + int64_t(compositionDuration * adjust);
+        sample.mDecodeTime = dtsOffset + compositionDuration.MultDouble(adjust);
         compositionDuration += sample.mCompositionRange.Length();
       }
-      mTimeRange = MP4Interval<Microseconds>(
+      mTimeRange = MP4Interval<TimeUnit>(
           ctsOrder[0]->mCompositionRange.start,
           ctsOrder.LastElement()->mCompositionRange.end);
     }
@@ -724,8 +729,8 @@ void Moof::ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
 }
 
 void Moof::FixRounding(const Moof& aMoof) {
-  Microseconds gap = aMoof.mTimeRange.start - mTimeRange.end;
-  if (gap > 0 && gap <= mMaxRoundingError) {
+  TimeUnit gap = aMoof.mTimeRange.start - mTimeRange.end;
+  if (gap.IsPositive() && gap <= mMaxRoundingError) {
     mTimeRange.end = aMoof.mTimeRange.start;
   }
 }
@@ -771,8 +776,8 @@ Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
   if (flags & 0x04) {
     MOZ_TRY_VAR(firstSampleFlags, reader->ReadU32());
   }
+  nsTArray<MP4Interval<TimeUnit>> timeRanges;
   uint64_t decodeTime = *aDecodeTime;
-  nsTArray<MP4Interval<Microseconds>> timeRanges;
 
   if (!mIndex.SetCapacity(sampleCount, fallible)) {
     LOG_ERROR(Moof, "Out of Memory");
@@ -802,18 +807,17 @@ Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
       sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
       offset += sampleSize;
 
-      Microseconds decodeOffset, emptyOffset, startCts, endCts;
-      MOZ_TRY_VAR(decodeOffset, aMdhd.ToMicroseconds((int64_t)decodeTime -
-                                                     aEdts.mMediaStart));
-      MOZ_TRY_VAR(emptyOffset, aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
+      TimeUnit decodeOffset, emptyOffset, startCts, endCts;
+      MOZ_TRY_VAR(decodeOffset, aMdhd.ToTimeUnit((int64_t)decodeTime - aEdts.mMediaStart));
+      MOZ_TRY_VAR(emptyOffset, aMvhd.ToTimeUnit(aEdts.mEmptyOffset));
       sample.mDecodeTime = decodeOffset + emptyOffset;
       MOZ_TRY_VAR(startCts,
-                  aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset -
+                  aMdhd.ToTimeUnit((int64_t)decodeTime + ctsOffset -
                                        aEdts.mMediaStart));
       MOZ_TRY_VAR(endCts,
-                  aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset +
+                  aMdhd.ToTimeUnit((int64_t)decodeTime + ctsOffset +
                                        sampleDuration - aEdts.mMediaStart));
-      sample.mCompositionRange = MP4Interval<Microseconds>(
+      sample.mCompositionRange = MP4Interval<TimeUnit>(
           startCts + emptyOffset, endCts + emptyOffset);
       // Sometimes audio streams don't properly mark their samples as keyframes,
       // because every audio sample is a keyframe.
@@ -826,9 +830,9 @@ Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
     }
     decodeTime += sampleDuration;
   }
-  Microseconds roundTime;
-  MOZ_TRY_VAR(roundTime, aMdhd.ToMicroseconds(sampleCount));
-  mMaxRoundingError += roundTime;
+  TimeUnit roundTime;
+  MOZ_TRY_VAR(roundTime, aMdhd.ToTimeUnit(sampleCount));
+  mMaxRoundingError = roundTime + mMaxRoundingError;
 
   *aDecodeTime = decodeTime;
 
