@@ -8,6 +8,7 @@
   --success-icon-url: url("chrome://global/skin/icons/check.svg");
   --error-icon-url: url("chrome://global/skin/icons/error.svg");
   --close-icon-url: url("chrome://global/skin/icons/close-12.svg");
+  --close-fill-color: var(--in-content-icon-color);
   --icon-size: 16px;
   --close-icon-size: 24px;
 }
@@ -33,6 +34,8 @@
   --in-content-button-background: var(--yellow-60);
   --in-content-button-background-hover: var(--yellow-70);
   --in-content-button-background-active: var(--yellow-80);
+
+  --close-fill-color: var(--message-bar-text-color);
 }
 :host([type=warning]) {
   --message-bar-icon-url: var(--warn-icon-url);
@@ -155,7 +158,7 @@
   }
 
   .close {
-    fill: var(--in-content-icon-color);
+    fill: var(--close-fill-color);
   }
 
   @media (prefers-color-scheme: dark) {
