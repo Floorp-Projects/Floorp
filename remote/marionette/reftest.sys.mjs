@@ -7,7 +7,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
@@ -293,10 +295,10 @@ reftest.Runner = class {
     width = DEFAULT_REFTEST_WIDTH,
     height = DEFAULT_REFTEST_HEIGHT
   ) {
-    let timeoutHandle;
+    let timerId;
 
     let timeoutPromise = new Promise(resolve => {
-      timeoutHandle = this.parentWindow.setTimeout(() => {
+      timerId = lazy.setTimeout(() => {
         resolve({ status: STATUS.TIMEOUT, message: null, extra: {} });
       }, timeout);
     });
@@ -325,7 +327,7 @@ reftest.Runner = class {
     })();
 
     let result = await Promise.race([testRunner, timeoutPromise]);
-    this.parentWindow.clearTimeout(timeoutHandle);
+    lazy.clearTimeout(timerId);
     if (result.status === STATUS.TIMEOUT) {
       await this.abort();
     }

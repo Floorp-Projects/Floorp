@@ -9,6 +9,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   element: "chrome://remote/content/marionette/element.sys.mjs",
@@ -408,7 +410,7 @@ interaction.flushEventLoop = async function (el) {
       if (win.closed) {
         resolve();
       } else {
-        win.setTimeout(resolve, 0);
+        lazy.setTimeout(resolve, 0);
       }
     };
 
