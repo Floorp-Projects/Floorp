@@ -42,6 +42,12 @@ using gfx::CICP::TransferCharacteristics;
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
 
+double ToMicrosecondResolution(double aSeconds) {
+  double integer;
+  modf(aSeconds * USECS_PER_S, &integer);
+  return integer / USECS_PER_S;
+}
+
 CheckedInt64 SaferMultDiv(int64_t aValue, uint64_t aMul, uint64_t aDiv) {
   if (aMul > INT64_MAX || aDiv > INT64_MAX) {
     return CheckedInt64(INT64_MAX) + 1;  // Return an invalid checked int.
