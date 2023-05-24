@@ -44,7 +44,7 @@ const MULTI_N_FIELD_NAMES = {
   "cc-number": 4,
 };
 
-class Section {
+export class FormSection {
   static ADDRESS = "address";
   static CREDIT_CARD = "creditCard";
 
@@ -61,9 +61,9 @@ class Section {
 
     const fieldName = fieldDetails[0].fieldName;
     if (lazy.FormAutofillUtils.isAddressField(fieldName)) {
-      this.type = Section.ADDRESS;
+      this.type = FormSection.ADDRESS;
     } else if (lazy.FormAutofillUtils.isCreditCardField(fieldName)) {
-      this.type = Section.CREDIT_CARD;
+      this.type = FormSection.CREDIT_CARD;
     } else {
       throw new Error("Unknown field type to create a section.");
     }
@@ -575,7 +575,7 @@ export const FormAutofillHeuristics = {
    *
    * @param {HTMLFormElement} form
    *        the elements in this form to be predicted the field info.
-   * @returns {Array<Array<object>>}
+   * @returns {Array<FormSection>}
    *        all sections within its field details in the form.
    */
   getFormInfo(form) {
@@ -641,7 +641,7 @@ export const FormAutofillHeuristics = {
    * The result is an array contains the sections with its belonging field details.
    *
    * @param   {Array<FieldDetails>} fieldDetails field detail array to be classified
-   * @returns {Array<Section>} The array with the sections.
+   * @returns {Array<FormSection>} The array with the sections.
    */
   _classifySections(fieldDetails) {
     let sections = [];
@@ -718,7 +718,7 @@ export const FormAutofillHeuristics = {
       }
 
       // Create a new section
-      sections.push(new Section([fieldDetails[i]]));
+      sections.push(new FormSection([fieldDetails[i]]));
     }
 
     return sections;
