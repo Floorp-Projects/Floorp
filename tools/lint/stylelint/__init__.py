@@ -78,6 +78,9 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
             ["--ignore-pattern", os.path.relpath(path, lintargs["root"])]
         )
 
+    # Default to $topsrcdir/.stylelintrc.js, but allow override in stylelint.yml
+    stylelint_rc = config.get("stylelint-rc", ".stylelintrc.js")
+
     # First run Stylelint
     cmd_args = (
         [
@@ -89,7 +92,7 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
             "json",
             "--allow-empty-input",
             "--config",
-            os.path.join(lintargs["root"], ".stylelintrc.js"),
+            os.path.join(lintargs["root"], stylelint_rc),
         ]
         + extra_args
         + exclude_args
