@@ -7,6 +7,7 @@
 include("/dom/media/webrtc/third_party_build/webrtc.mozbuild")
 
 DEFINES["ENABLE_SET_CUBEB_BACKEND"] = True
+DEFINES["VISIBLE_TIMEUNIT_INTERNALS"] = True
 
 LOCAL_INCLUDES += [
     "/dom/media/mediasink",
