@@ -1054,7 +1054,7 @@ async function add_heuristic_tests(
           if (obj.verifyAutofill) {
             for (const section of sections) {
               section.focusedInput = section.fieldDetails[0].element;
-              await section.autofillFields(testPattern.profile);
+              await section.autofillFields(obj.testPattern.profile);
             }
 
             // eslint-disable-next-line no-eval
@@ -1075,7 +1075,7 @@ async function add_heuristic_tests(
   });
 }
 
-async function runAutofillHeuristicsTest(patterns, fixturePathPrefix = "") {
+async function add_autofill_heuristic_tests(patterns, fixturePathPrefix = "") {
   add_heuristic_tests(patterns, fixturePathPrefix, { testAutofill: true });
 }
 
