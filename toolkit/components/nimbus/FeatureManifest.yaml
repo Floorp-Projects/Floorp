@@ -65,8 +65,9 @@ search:
     extraParams:
       type: json
       description: >-
-        This allows extra parameters to be set for search engines, where the
-        search engine configuration defines those parameters.
+        This allows extra parameters to be set for search engines requests including,
+        where calls to the suggestions API, the search engine configuration defines
+        those parameters.
 
         The use of this field should be coordinated with the Search team.
 

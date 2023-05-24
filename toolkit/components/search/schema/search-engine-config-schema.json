@@ -38,6 +38,9 @@
     },
     "extraParams": {
       "$ref": "#/definitions/extraParams"
+    },
+    "suggestExtraParams": {
+      "$ref": "#/definitions/extraParams"
     }
   },
   "definitions": {
