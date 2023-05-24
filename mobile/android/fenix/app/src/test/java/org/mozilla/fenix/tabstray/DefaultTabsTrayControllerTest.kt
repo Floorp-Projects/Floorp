@@ -829,8 +829,7 @@ class DefaultTabsTrayControllerTest {
         }
 
         try {
-            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-            every { browserStore.state } returns mockk()
+            mockkStatic("org.mozilla.fenix.ext.BrowserStateKt")
             every { browserStore.state.potentialInactiveTabs } returns listOf(inactiveTab)
             assertNull(TabsTray.closeAllInactiveTabs.testGetValue())
 
@@ -840,7 +839,7 @@ class DefaultTabsTrayControllerTest {
             assertNotNull(TabsTray.closeAllInactiveTabs.testGetValue())
             assertTrue(showSnackbarInvoked)
         } finally {
-            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            unmockkStatic("org.mozilla.fenix.ext.BrowserStateKt")
         }
     }
 
