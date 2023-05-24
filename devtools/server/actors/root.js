@@ -135,9 +135,6 @@ class RootActor extends Actor {
             "dom.worker.console.dispatch_events_to_main_thread"
           )
         : true,
-      // @backward-compat { version 113 } Fx 113 added support for uninstalling
-      // add-ons via the Addons actor.
-      supportsAddonsUninstall: true,
     };
   }
 
