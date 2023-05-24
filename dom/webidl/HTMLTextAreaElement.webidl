@@ -22,8 +22,7 @@ interface HTMLTextAreaElement : HTMLElement {
            attribute DOMString autocomplete;
   [CEReactions, SetterThrows, Pure]
            attribute unsigned long cols;
-  [CEReactions, Pure, SetterThrows]
-           attribute DOMString dirName;
+           // attribute DOMString dirName;
   [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
   [Pure]

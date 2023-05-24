@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 
-#include "mozilla/dom/FormData.h"
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -2811,23 +2810,6 @@ bool nsGenericHTMLFormControlElement::IsAutocapitalizeInheriting() const {
   return IsInputElement(type) || IsButtonElement(type) ||
          type == FormControlType::Fieldset || type == FormControlType::Output ||
          type == FormControlType::Select || type == FormControlType::Textarea;
-}
-
-nsresult nsGenericHTMLFormControlElement::SubmitDirnameDir(
-    FormData* aFormData) {
-  // Submit dirname=dir if element has non-empty dirname attribute
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::dirname)) {
-    nsAutoString dirname;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::dirname, dirname);
-    if (!dirname.IsEmpty()) {
-      const Directionality eDir = GetDirectionality();
-      MOZ_ASSERT(eDir == eDir_RTL || eDir == eDir_LTR,
-                 "The directionality of an element is either ltr or rtl");
-      const nsString dir = eDir == eDir_LTR ? u"ltr"_ns : u"rtl"_ns;
-      return aFormData->AddNameValuePair(dirname, dir);
-    }
-  }
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

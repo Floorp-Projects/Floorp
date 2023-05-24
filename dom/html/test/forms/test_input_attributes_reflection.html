@@ -87,10 +87,8 @@ reflectBoolean({
 // .checked doesn't reflect a content attribute.
 
 // .dirName
-reflectString({
-  element: document.createElement("input"),
-  attribute: "dirName"
-});
+todo("dirName" in document.createElement("input"),
+     "dirName isn't implemented yet");
 
 // .disabled
 reflectBoolean({

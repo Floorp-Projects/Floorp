@@ -730,13 +730,6 @@ class HTMLInputElement final : public TextControlElement,
     SetHTMLAttr(nsGkAtoms::usemap, aValue, aRv);
   }
 
-  void GetDirName(nsAString& aValue) {
-    GetHTMLAttr(nsGkAtoms::dirname, aValue);
-  }
-  void SetDirName(const nsAString& aValue, ErrorResult& aRv) {
-    SetHTMLAttr(nsGkAtoms::dirname, aValue, aRv);
-  }
-
   nsIControllers* GetControllers(ErrorResult& aRv);
   // XPCOM adapter function widely used throughout code, leaving it as is.
   nsresult GetControllers(nsIControllers** aResult);
@@ -1584,16 +1577,6 @@ class HTMLInputElement final : public TextControlElement,
       case FormControlType::InputUrl:
       case FormControlType::InputTel:
       case FormControlType::InputPassword:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  bool DoesDirnameApply() const {
-    switch (mType) {
-      case FormControlType::InputText:
-      case FormControlType::InputSearch:
         return true;
       default:
         return false;
