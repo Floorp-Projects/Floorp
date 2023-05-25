@@ -113,8 +113,7 @@ nsBaseURLParser::ParseURL(const char* spec, int32_t specLen,
     // spec = <scheme>:<authority>
     // spec = <scheme>:<path-no-slashes>
     //
-    if (!net_IsValidScheme(nsDependentCSubstring(spec, colon - spec)) ||
-        (*(colon + 1) == ':')) {
+    if (!net_IsValidScheme(nsDependentCSubstring(spec, colon - spec))) {
       return NS_ERROR_MALFORMED_URI;
     }
     SET_RESULT(scheme, offset, colon - spec);
