@@ -323,6 +323,7 @@ dependencies {
     }
     androidTestImplementation FocusDependencies.espresso_intents
 
+
     androidTestImplementation FocusDependencies.testing_mockwebserver
     testImplementation FocusDependencies.testing_mockwebserver
     testImplementation project(':lib-fetch-okhttp')
@@ -551,6 +552,12 @@ task generateLocaleList {
         localeList.createNewFile()
         localeList << "package org.mozilla.focus.generated" << "\n" << "\n"
         localeList << "import java.util.Collections" << "\n"
+        localeList << "\n"
+        localeList << "/**"
+        localeList << "\n"
+        localeList << " * Provides a list of bundled locales based on the language files in the res folder."
+        localeList << "\n"
+        localeList << " */"
         localeList << "\n"
         localeList << "object LocalesList {" << "\n"
         localeList << "    " << "val BUNDLED_LOCALES: List<String> = Collections.unmodifiableList("
