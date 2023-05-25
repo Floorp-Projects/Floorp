@@ -623,7 +623,7 @@ bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
 bool shell::enableShadowRealms = false;
-bool shell::enableArrayFromAsync = false;
+bool shell::enableArrayFromAsync = true;
 #ifdef NIGHTLY_BUILD
 bool shell::enableArrayGrouping = false;
 // Pref for String.prototype.{is,to}WellFormed() methods.
