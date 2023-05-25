@@ -1952,8 +1952,8 @@ package org.mozilla.geckoview {
   }
 
   @AnyThread public final class SessionPdfFileSaver {
-    method @Nullable public static WebResponse createResponse(@NonNull byte[], @NonNull String, @NonNull String, boolean, boolean);
-    method @NonNull public GeckoResult<GeckoSession.PdfSaveResult> save();
+    method @Nullable public static GeckoResult<WebResponse> createResponse(@NonNull GeckoSession, @NonNull String, @NonNull String, @NonNull String, boolean, boolean);
+    method @NonNull public GeckoResult<WebResponse> save();
   }
 
   public final class SessionTextInput {
