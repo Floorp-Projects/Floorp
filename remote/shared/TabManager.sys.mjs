@@ -7,6 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.sys.mjs",
 });
 
@@ -223,8 +224,7 @@ export var TabManager = {
 
     const key = browserElement.permanentKey;
     if (!browserUniqueIds.has(key)) {
-      const uuid = Services.uuid.generateUUID().toString();
-      browserUniqueIds.set(key, uuid.substring(1, uuid.length - 1));
+      browserUniqueIds.set(key, lazy.generateUUID());
     }
     return browserUniqueIds.get(key);
   },

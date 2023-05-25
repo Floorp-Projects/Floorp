@@ -16,8 +16,8 @@ const {
 
 const ISSUE_OUTLINE_RADIUS = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-outline-radius",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
+  property: "-moz-user-input",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-user-input",
   deprecated: true,
   experimental: false,
 };
@@ -34,7 +34,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     div {
-      -moz-outline-radius: 25px;
+      -moz-user-input: none;
     }
   </style>
   <body>

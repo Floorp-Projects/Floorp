@@ -192,3 +192,52 @@ add_task(
     await PlacesUtils.history.clear();
   }
 );
+
+add_task(
+  {
+    pref_set: [["browser.urlbar.suggest.quickactions", false]],
+  },
+  async function test_autofill_cutoff() {
+    async function getOriginAltFrecency(origin) {
+      let db = await PlacesUtils.promiseDBConnection();
+      let rows = await db.execute(
+        "SELECT alt_frecency FROM moz_origins WHERE host = :origin",
+        { origin }
+      );
+      return rows?.[0].getResultByName("alt_frecency");
+    }
+
+    // Add many visits older than the default 90 days cutoff.
+    const visitDate = new Date(Date.now() - 120 * 86400000);
+    await PlacesTestUtils.addVisits(
+      new Array(10)
+        .fill("https://example.com/")
+        .map(url => ({ url, visitDate }))
+    );
+    await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
+    Assert.strictEqual(
+      await getOriginAltFrecency("example.com"),
+      null,
+      "Check example.com has a NULL frecency"
+    );
+
+    let engine = Services.search.defaultEngine;
+    let context = createContext("ex", { isPrivate: false });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          heuristic: true,
+          query: "ex",
+          engineName: engine.name,
+        }),
+        makeVisitResult(context, {
+          uri: "https://example.com/",
+          title: "test visit for https://example.com/",
+        }),
+      ],
+    });
+    await PlacesUtils.history.clear();
+  }
+);

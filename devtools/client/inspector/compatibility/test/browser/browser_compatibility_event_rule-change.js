@@ -12,7 +12,7 @@ const TEST_URI = `
     ruby-align: center;
   }
   div {
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
   }
   </style>
   <div class="test-class">test class</div>
@@ -23,7 +23,7 @@ const TEST_DATA_SELECTED = {
   fullRule: {
     expectedProperties: [
       { property: "ruby-align" },
-      { property: "font-variant-alternates" },
+      { property: "scrollbar-width" },
     ],
     expectedNodes: [
       {
@@ -31,7 +31,7 @@ const TEST_DATA_SELECTED = {
         nodes: [],
       },
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: [],
       },
     ],
@@ -46,10 +46,10 @@ const TEST_DATA_SELECTED = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "font-variant-alternates" }],
+    expectedProperties: [{ property: "scrollbar-width" }],
     expectedNodes: [
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: [],
       },
     ],
@@ -60,7 +60,7 @@ const TEST_DATA_ALL = {
   fullRule: {
     expectedProperties: [
       { property: "ruby-align" },
-      { property: "font-variant-alternates" },
+      { property: "scrollbar-width" },
     ],
     expectedNodes: [
       {
@@ -68,7 +68,7 @@ const TEST_DATA_ALL = {
         nodes: ["div.test-class"],
       },
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: ["div.test-class", "div"],
       },
     ],
@@ -83,10 +83,10 @@ const TEST_DATA_ALL = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "font-variant-alternates" }],
+    expectedProperties: [{ property: "scrollbar-width" }],
     expectedNodes: [
       {
-        property: "font-variant-alternates",
+        property: "scrollbar-width",
         nodes: ["div.test-class", "div"],
       },
     ],

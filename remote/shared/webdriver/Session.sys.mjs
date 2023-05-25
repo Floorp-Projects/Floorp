@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   allowAllCerts: "chrome://remote/content/marionette/cert.sys.mjs",
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   registerProcessDataActor:
     "chrome://remote/content/shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs",
@@ -159,7 +160,7 @@ export class WebDriverSession {
     // to reconnect.
     this._connections = new Set();
 
-    this.id = Services.uuid.generateUUID().toString().slice(1, -1);
+    this.id = lazy.generateUUID();
 
     // Define the HTTP path to query this session via WebDriver BiDi
     this.path = `/session/${this.id}`;

@@ -21,7 +21,9 @@
  * SOFTWARE.
  */
 
-#include "Hacl_Curve25519_51.h"
+#include "internal/Hacl_Curve25519_51.h"
+
+#include "internal/Hacl_Krmllib.h"
 
 static const uint8_t g25519[32U] = { (uint8_t)9U };
 
@@ -150,8 +152,12 @@ montgomery_ladder(uint64_t *out, uint8_t *key, uint64_t *init)
     memcpy(out, p0, (uint32_t)10U * sizeof(uint64_t));
 }
 
-static void
-fsquare_times(uint64_t *o, uint64_t *inp, FStar_UInt128_uint128 *tmp, uint32_t n)
+void
+Hacl_Curve25519_51_fsquare_times(
+    uint64_t *o,
+    uint64_t *inp,
+    FStar_UInt128_uint128 *tmp,
+    uint32_t n)
 {
     Hacl_Impl_Curve25519_Field51_fsqr(o, inp, tmp);
     for (uint32_t i = (uint32_t)0U; i < n - (uint32_t)1U; i++) {
@@ -159,43 +165,43 @@ fsquare_times(uint64_t *o, uint64_t *inp, FStar_UInt128_uint128 *tmp, uint32_t n
     }
 }
 
-static void
-finv(uint64_t *o, uint64_t *i, FStar_UInt128_uint128 *tmp)
+void
+Hacl_Curve25519_51_finv(uint64_t *o, uint64_t *i, FStar_UInt128_uint128 *tmp)
 {
     uint64_t t1[20U] = { 0U };
     uint64_t *a1 = t1;
     uint64_t *b1 = t1 + (uint32_t)5U;
     uint64_t *t010 = t1 + (uint32_t)15U;
     FStar_UInt128_uint128 *tmp10 = tmp;
-    fsquare_times(a1, i, tmp10, (uint32_t)1U);
-    fsquare_times(t010, a1, tmp10, (uint32_t)2U);
+    Hacl_Curve25519_51_fsquare_times(a1, i, tmp10, (uint32_t)1U);
+    Hacl_Curve25519_51_fsquare_times(t010, a1, tmp10, (uint32_t)2U);
     Hacl_Impl_Curve25519_Field51_fmul(b1, t010, i, tmp);
     Hacl_Impl_Curve25519_Field51_fmul(a1, b1, a1, tmp);
-    fsquare_times(t010, a1, tmp10, (uint32_t)1U);
+    Hacl_Curve25519_51_fsquare_times(t010, a1, tmp10, (uint32_t)1U);
     Hacl_Impl_Curve25519_Field51_fmul(b1, t010, b1, tmp);
-    fsquare_times(t010, b1, tmp10, (uint32_t)5U);
+    Hacl_Curve25519_51_fsquare_times(t010, b1, tmp10, (uint32_t)5U);
     Hacl_Impl_Curve25519_Field51_fmul(b1, t010, b1, tmp);
     uint64_t *b10 = t1 + (uint32_t)5U;
     uint64_t *c10 = t1 + (uint32_t)10U;
     uint64_t *t011 = t1 + (uint32_t)15U;
     FStar_UInt128_uint128 *tmp11 = tmp;
-    fsquare_times(t011, b10, tmp11, (uint32_t)10U);
+    Hacl_Curve25519_51_fsquare_times(t011, b10, tmp11, (uint32_t)10U);
     Hacl_Impl_Curve25519_Field51_fmul(c10, t011, b10, tmp);
-    fsquare_times(t011, c10, tmp11, (uint32_t)20U);
+    Hacl_Curve25519_51_fsquare_times(t011, c10, tmp11, (uint32_t)20U);
     Hacl_Impl_Curve25519_Field51_fmul(t011, t011, c10, tmp);
-    fsquare_times(t011, t011, tmp11, (uint32_t)10U);
+    Hacl_Curve25519_51_fsquare_times(t011, t011, tmp11, (uint32_t)10U);
     Hacl_Impl_Curve25519_Field51_fmul(b10, t011, b10, tmp);
-    fsquare_times(t011, b10, tmp11, (uint32_t)50U);
+    Hacl_Curve25519_51_fsquare_times(t011, b10, tmp11, (uint32_t)50U);
     Hacl_Impl_Curve25519_Field51_fmul(c10, t011, b10, tmp);
     uint64_t *b11 = t1 + (uint32_t)5U;
     uint64_t *c1 = t1 + (uint32_t)10U;
     uint64_t *t01 = t1 + (uint32_t)15U;
     FStar_UInt128_uint128 *tmp1 = tmp;
-    fsquare_times(t01, c1, tmp1, (uint32_t)100U);
+    Hacl_Curve25519_51_fsquare_times(t01, c1, tmp1, (uint32_t)100U);
     Hacl_Impl_Curve25519_Field51_fmul(t01, t01, c1, tmp);
-    fsquare_times(t01, t01, tmp1, (uint32_t)50U);
+    Hacl_Curve25519_51_fsquare_times(t01, t01, tmp1, (uint32_t)50U);
     Hacl_Impl_Curve25519_Field51_fmul(t01, t01, b11, tmp);
-    fsquare_times(t01, t01, tmp1, (uint32_t)5U);
+    Hacl_Curve25519_51_fsquare_times(t01, t01, tmp1, (uint32_t)5U);
     uint64_t *a = t1;
     uint64_t *t0 = t1 + (uint32_t)15U;
     Hacl_Impl_Curve25519_Field51_fmul(o, t0, a, tmp);
@@ -211,12 +217,14 @@ encode_point(uint8_t *o, uint64_t *i)
     FStar_UInt128_uint128 tmp_w[10U];
     for (uint32_t _i = 0U; _i < (uint32_t)10U; ++_i)
         tmp_w[_i] = FStar_UInt128_uint64_to_uint128((uint64_t)0U);
-    finv(tmp, z, tmp_w);
+    Hacl_Curve25519_51_finv(tmp, z, tmp_w);
     Hacl_Impl_Curve25519_Field51_fmul(tmp, tmp, x, tmp_w);
     Hacl_Impl_Curve25519_Field51_store_felem(u64s, tmp);
-    for (uint32_t i0 = (uint32_t)0U; i0 < (uint32_t)4U; i0++) {
-        store64_le(o + i0 * (uint32_t)8U, u64s[i0]);
-    }
+    KRML_MAYBE_FOR4(i0,
+                    (uint32_t)0U,
+                    (uint32_t)4U,
+                    (uint32_t)1U,
+                    store64_le(o + i0 * (uint32_t)8U, u64s[i0]););
 }
 
 void
@@ -224,14 +232,16 @@ Hacl_Curve25519_51_scalarmult(uint8_t *out, uint8_t *priv, uint8_t *pub)
 {
     uint64_t init[10U] = { 0U };
     uint64_t tmp[4U] = { 0U };
-    for (uint32_t i = (uint32_t)0U; i < (uint32_t)4U; i++) {
-        uint64_t *os = tmp;
-        uint8_t *bj = pub + i * (uint32_t)8U;
-        uint64_t u = load64_le(bj);
-        uint64_t r = u;
-        uint64_t x = r;
-        os[i] = x;
-    }
+    KRML_MAYBE_FOR4(i,
+                    (uint32_t)0U,
+                    (uint32_t)4U,
+                    (uint32_t)1U,
+                    uint64_t *os = tmp;
+                    uint8_t *bj = pub + i * (uint32_t)8U;
+                    uint64_t u = load64_le(bj);
+                    uint64_t r = u;
+                    uint64_t x = r;
+                    os[i] = x;);
     uint64_t tmp3 = tmp[3U];
     tmp[3U] = tmp3 & (uint64_t)0x7fffffffffffffffU;
     uint64_t *x = init;

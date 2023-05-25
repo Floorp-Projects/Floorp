@@ -17,7 +17,7 @@ FC_Initialize
 
 .. container::
 
-   .. code:: brush:
+   .. code::
 
       CK_RV FC_Initialize(CK_VOID_PTR pInitArgs);
 
@@ -129,12 +129,3 @@ FC_Initialize
 
       /* invoke FC_Initialize as pFunctionList->C_Initialize */
       crv = pFunctionList->C_Initialize(&initArgs);
-
-.. _see_also:
-
-`See also <#see_also>`__
-------------------------
-
-.. container::
-
-   -  `FC_Finalize <https://developer.mozilla.org/en-US/docs/FC_Finalize>`__

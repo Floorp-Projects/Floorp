@@ -50,6 +50,35 @@
 
 char *progName;
 
+static SECStatus
+ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
+                CERTCertTrust *trust, PK11SlotInfo *slot, void *pwdata)
+{
+    SECStatus rv;
+
+    rv = CERT_ChangeCertTrust(handle, cert, trust);
+    if (rv != SECSuccess) {
+        if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
+            rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
+            if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
+                PK11SlotInfo *internalslot;
+                internalslot = PK11_GetInternalKeySlot();
+                rv = PK11_Authenticate(internalslot, PR_TRUE, pwdata);
+                if (rv != SECSuccess) {
+                    SECU_PrintError(progName,
+                                    "could not authenticate to token %s.",
+                                    PK11_GetTokenName(internalslot));
+                    PK11_FreeSlot(internalslot);
+                    return SECFailure;
+                }
+                PK11_FreeSlot(internalslot);
+            }
+            rv = CERT_ChangeCertTrust(handle, cert, trust);
+        }
+    }
+    return rv;
+}
+
 static CERTCertificateRequest *
 GetCertRequest(const SECItem *reqDER, void *pwarg)
 {
@@ -149,24 +178,11 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
                 GEN_BREAK(SECFailure);
             }
         }
-
-        rv = CERT_ChangeCertTrust(handle, cert, trust);
+        rv = ChangeCertTrust(handle, cert, trust, slot, pwdata);
         if (rv != SECSuccess) {
-            if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
-                rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
-                if (rv != SECSuccess) {
-                    SECU_PrintError(progName,
-                                    "could not authenticate to token %s.",
-                                    PK11_GetTokenName(slot));
-                    GEN_BREAK(SECFailure);
-                }
-                rv = CERT_ChangeCertTrust(handle, cert, trust);
-            }
-            if (rv != SECSuccess) {
-                SECU_PrintError(progName,
-                                "could not change trust on certificate");
-                GEN_BREAK(SECFailure);
-            }
+            SECU_PrintError(progName,
+                            "could not change trust on certificate");
+            GEN_BREAK(SECFailure);
         }
 
         if (emailcert) {
@@ -426,21 +442,10 @@ ChangeTrustAttributes(CERTCertDBHandle *handle, PK11SlotInfo *slot,
      * a context, so NSS can't prompt for the password if it needs to.
      * check to see if the failure was token not logged in and
      * log in if need be. */
-    rv = CERT_ChangeCertTrust(handle, cert, trust);
+    rv = ChangeCertTrust(handle, cert, trust, slot, pwdata);
     if (rv != SECSuccess) {
-        if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
-            rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
-            if (rv != SECSuccess) {
-                SECU_PrintError(progName, "could not authenticate to token %s.",
-                                PK11_GetTokenName(slot));
-                return SECFailure;
-            }
-            rv = CERT_ChangeCertTrust(handle, cert, trust);
-        }
-        if (rv != SECSuccess) {
-            SECU_PrintError(progName, "unable to modify trust attributes");
-            return SECFailure;
-        }
+        SECU_PrintError(progName, "unable to modify trust attributes");
+        return SECFailure;
     }
     CERT_DestroyCertificate(cert);
     PORT_Free(trust);
@@ -852,7 +857,7 @@ SECItemToHex(const SECItem *item, char *dst)
         unsigned char *src = item->data;
         unsigned int len = item->len;
         for (; len > 0; --len, dst += 2) {
-            sprintf(dst, "%02x", *src++);
+            snprintf(dst, 3, "%02x", *src++);
         }
         *dst = '\0';
     }
@@ -2344,7 +2349,7 @@ getObjectClass(CK_ULONG classType)
     if (classType >= CKO_NSS && classType <= CKO_NSS_BUILTIN_ROOT_LIST) {
         return objNSSClassArray[classType - CKO_NSS];
     }
-    sprintf(buf, "0x%lx", classType);
+    snprintf(buf, sizeof(buf), "0x%lx", classType);
     return buf;
 }
 

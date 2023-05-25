@@ -827,7 +827,7 @@ helloExtensionNameString(int ex_num)
             ex_name = "renegotiation_info";
             break;
         default:
-            sprintf(buf, "%d", ex_num);
+            snprintf(buf, sizeof(buf), "%d", ex_num);
             ex_name = (const char *)buf;
             break;
     }

@@ -12,7 +12,7 @@ const TEST_URI = `
   }
   div {
     user-modify: read-only;
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
   }
   </style>
   <body>
@@ -26,7 +26,7 @@ const TEST_DATA_ALL = [
     nodes: ["body", "div"],
   },
   {
-    property: "font-variant-alternates",
+    property: "scrollbar-width",
     nodes: ["div"],
   },
 ];

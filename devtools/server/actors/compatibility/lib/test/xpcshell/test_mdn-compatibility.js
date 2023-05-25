@@ -151,13 +151,13 @@ const TEST_DATA = [
   },
   {
     description: "Test for a property defined with prefix",
-    declarations: [{ name: "-moz-outline-radius" }],
+    declarations: [{ name: "-moz-user-input" }],
     browsers: [FIREFOX_1, FIREFOX_60, FIREFOX_69],
     expectedIssues: [
       {
         type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-        property: "-moz-outline-radius",
-        url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
+        property: "-moz-user-input",
+        url: "https://developer.mozilla.org/docs/Web/CSS/-moz-user-input",
         deprecated: true,
         experimental: false,
         unsupportedBrowsers: [],

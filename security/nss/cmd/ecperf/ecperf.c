@@ -53,6 +53,7 @@ PKCS11Thread(void *data)
     SECItem sig;
     CK_SESSION_HANDLE session;
     CK_RV crv;
+    void *tmp = NULL;
 
     threadData->status = SECSuccess;
     threadData->count = 0;
@@ -68,6 +69,7 @@ PKCS11Thread(void *data)
     if (threadData->isSign) {
         sig.data = sigData;
         sig.len = sizeof(sigData);
+        tmp = threadData->p2;
         threadData->p2 = (void *)&sig;
     }
 
@@ -79,6 +81,10 @@ PKCS11Thread(void *data)
         }
         threadData->count++;
     }
+
+    if (threadData->isSign) {
+        threadData->p2 = tmp;
+    }
     return;
 }
 
@@ -89,6 +95,7 @@ genericThread(void *data)
     int iters = threadData->iters;
     unsigned char sigData[256];
     SECItem sig;
+    void *tmp = NULL;
 
     threadData->status = SECSuccess;
     threadData->count = 0;
@@ -96,6 +103,7 @@ genericThread(void *data)
     if (threadData->isSign) {
         sig.data = sigData;
         sig.len = sizeof(sigData);
+        tmp = threadData->p2;
         threadData->p2 = (void *)&sig;
     }
 
@@ -106,6 +114,10 @@ genericThread(void *data)
             break;
         }
         threadData->count++;
+    }
+
+    if (threadData->isSign) {
+        threadData->p2 = tmp;
     }
     return;
 }

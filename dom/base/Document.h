@@ -2333,12 +2333,6 @@ class Document : public nsINode,
                                  ErrorResult& aRv);
 
   /**
-   * Controls whether or not we allow TLS 1.0/1.1. Only exposed to error pages.
-   */
-  bool AllowDeprecatedTls();
-  void SetAllowDeprecatedTls(bool aResult);
-
-  /**
    * Set the channel that failed to load and resulted in an error page.
    * This is only relevant to error pages.
    */

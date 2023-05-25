@@ -805,7 +805,7 @@ P12U_ListPKCS12File(char *in_file, PK11SlotInfo *slot,
                     if (dumpRawFile) {
                         PRFileDesc *fd;
                         char fileName[20];
-                        sprintf(fileName, "file%04d.der", ++fileCounter);
+                        snprintf(fileName, sizeof(fileName), "file%04d.der", ++fileCounter);
                         fd = PR_Open(fileName,
                                      PR_CREATE_FILE | PR_RDWR | PR_TRUNCATE,
                                      0600);

@@ -29,8 +29,6 @@ NSS 3.35 release notes
 `New in NSS 3.35 <#new_in_nss_3.35>`__
 --------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__

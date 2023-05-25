@@ -36,6 +36,7 @@ add_setup(async () => {
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.trending.featureGate", true],
       ["browser.urlbar.trending.requireSearchMode", false],
+      ["browser.urlbar.eventTelemetry.enabled", true],
     ],
   });
 
@@ -57,6 +58,8 @@ add_task(async function test_trending_results() {
 });
 
 async function check_results({ featureEnabled = false }) {
+  Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.richSuggestions.featureGate", featureEnabled]],
   });
@@ -81,8 +84,30 @@ async function check_results({ featureEnabled = false }) {
     }
   }
 
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    EventUtils.synthesizeKey("KEY_Escape");
+  info("Select first remote search suggestion & hit Enter.");
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+  EventUtils.synthesizeKey("VK_RETURN", {}, window);
+
+  let event = {
+    category: "urlbar",
+    method: "engagement",
+    object: "enter",
+    value: "typed",
+    extra: {
+      elapsed: val => parseInt(val) > 0,
+      numChars: "0",
+      numWords: "0",
+      selIndex: "0",
+      selType: featureEnabled ? "trending_rich" : "trending",
+      provider: "SearchSuggestions",
+    },
+  };
+
+  TelemetryTestUtils.assertEvents([event], {
+    category: "urlbar",
   });
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+  TelemetryTestUtils.assertScalar(scalars, "urlbar.engagement", 1);
+
   await SpecialPowers.popPrefEnv();
 }

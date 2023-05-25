@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
+});
+
 const TYPED_ARRAY_CLASSES = [
   "Uint8Array",
   "Uint8ClampedArray",
@@ -17,10 +23,6 @@ const TYPED_ARRAY_CLASSES = [
 // Bug 1786299: Puppeteer expects specific error messages.
 const ERROR_CYCLIC_REFERENCE = "Object reference chain is too long";
 const ERROR_CANNOT_RETURN_BY_VALUE = "Object couldn't be returned by value";
-
-function uuid() {
-  return Services.uuid.generateUUID().toString().slice(1, -1);
-}
 
 function randomInt() {
   return crypto.getRandomValues(new Uint32Array(1))[0];
@@ -92,7 +94,7 @@ export class ExecutionContext {
    * can be represented via multiple references.
    */
   setRemoteObject(debuggerObj) {
-    const objectId = uuid();
+    const objectId = lazy.generateUUID();
 
     // TODO: Wrap Symbol into an object,
     // which would allow us to set the objectId.

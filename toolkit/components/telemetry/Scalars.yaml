@@ -7531,6 +7531,22 @@ urlbar.picked:
       record_in_processes:
         - main
 
+    searchsuggestion_rich:
+      bug_numbers:
+        - 1834359
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
     switchtab:
       bug_numbers:
         - 1671508
@@ -7598,6 +7614,22 @@ urlbar.picked:
     trending:
       bug_numbers:
         - 1823543
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    trending_rich:
+      bug_numbers:
+        - 1834359
       description: >
         Counts how many times this result type was picked at a given index.
       expires: never

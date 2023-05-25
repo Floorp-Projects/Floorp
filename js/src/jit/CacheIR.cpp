@@ -11106,7 +11106,8 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
         writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId, flags);
     ObjOperandId thisObjId = writer.guardToObject(thisValId);
 
-    // Guard on the |this| shape to make sure it's the right instance.
+    // Guard on the |this| shape to make sure it's the right instance. This also
+    // ensures DOM_OBJECT_SLOT is stored in a fixed slot. See CanAttachDOMCall.
     writer.guardShape(thisObjId, thisval_.toObject().shape());
 
     // Ensure callee matches this stub's callee
