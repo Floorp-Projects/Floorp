@@ -815,7 +815,7 @@ add_task(async function setupAndTeardown() {
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings._test_rs,
+    !QuickSuggestRemoteSettings.rs,
     "Settings client is null after disabling suggest prefs"
   );
 
@@ -824,49 +824,49 @@ add_task(async function setupAndTeardown() {
   // task).
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings._test_rs,
+    QuickSuggestRemoteSettings.rs,
     "Settings client is non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings._test_rs,
+    !QuickSuggestRemoteSettings.rs,
     "Settings client is null after disabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings._test_rs,
+    QuickSuggestRemoteSettings.rs,
     "Settings client is non-null after enabling suggest.quicksuggest.sponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings._test_rs,
+    QuickSuggestRemoteSettings.rs,
     "Settings client remains non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
   Assert.ok(
-    QuickSuggestRemoteSettings._test_rs,
+    QuickSuggestRemoteSettings.rs,
     "Settings client remains non-null after disabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings._test_rs,
+    !QuickSuggestRemoteSettings.rs,
     "Settings client is null after disabling suggest.quicksuggest.sponsored"
   );
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   Assert.ok(
-    QuickSuggestRemoteSettings._test_rs,
+    QuickSuggestRemoteSettings.rs,
     "Settings client is non-null after enabling suggest.quicksuggest.nonsponsored"
   );
 
   UrlbarPrefs.set("quicksuggest.enabled", false);
   Assert.ok(
-    !QuickSuggestRemoteSettings._test_rs,
+    !QuickSuggestRemoteSettings.rs,
     "Settings client is null after disabling quicksuggest.enabled"
   );
 
@@ -875,7 +875,7 @@ add_task(async function setupAndTeardown() {
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
   UrlbarPrefs.set("quicksuggest.enabled", true);
   Assert.ok(
-    !QuickSuggestRemoteSettings._test_rs,
+    !QuickSuggestRemoteSettings.rs,
     "Settings client remains null at end of task"
   );
 });
