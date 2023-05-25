@@ -196,10 +196,10 @@ Building NSS
 .. container::
 
    NSS tests are configured using environment variables.
-   | The scripts will attempt to infer values for ``HOST`` and ``DOMSUF``, but
-     can fail. Replace ``localhost`` and ``localdomain`` with the hostname and
-     domain suffix for your host. You need to be able to connect to
-     ``$HOST.$DOMSUF``.
+   The scripts will attempt to infer values for ``HOST`` and ``DOMSUF``, but
+   can fail. Replace ``localhost`` and ``localdomain`` with the hostname and
+   domain suffix for your host. You need to be able to connect to
+   ``$HOST.$DOMSUF``.
 
    If you don't have a domain suffix you can add an entry to ``/etc/hosts`` (on
    Windows,\ ``c:\Windows\System32\drivers\etc\hosts``) as follows:

@@ -23,6 +23,9 @@
 
 #include "Hacl_Chacha20Poly1305_128.h"
 
+#include "internal/Hacl_Poly1305_128.h"
+#include "internal/Hacl_Krmllib.h"
+#include "libintvector.h"
 static inline void
 poly1305_padded_128(Lib_IntVector_Intrinsics_vec128 *ctx, uint32_t len, uint8_t *text)
 {
@@ -44,9 +47,8 @@ poly1305_padded_128(Lib_IntVector_Intrinsics_vec128 *ctx, uint32_t len, uint8_t 
         uint32_t nb = len1 / bs;
         for (uint32_t i = (uint32_t)0U; i < nb; i++) {
             uint8_t *block = text1 + i * bs;
-            Lib_IntVector_Intrinsics_vec128 e[5U];
-            for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
-                e[_i] = Lib_IntVector_Intrinsics_vec128_zero;
+            KRML_PRE_ALIGN(16)
+            Lib_IntVector_Intrinsics_vec128 e[5U] KRML_POST_ALIGN(16) = { 0U };
             Lib_IntVector_Intrinsics_vec128 b1 = Lib_IntVector_Intrinsics_vec128_load64_le(block);
             Lib_IntVector_Intrinsics_vec128
                 b2 = Lib_IntVector_Intrinsics_vec128_load64_le(block + (uint32_t)16U);
@@ -268,9 +270,8 @@ poly1305_padded_128(Lib_IntVector_Intrinsics_vec128 *ctx, uint32_t len, uint8_t 
     uint32_t rem1 = len1 % (uint32_t)16U;
     for (uint32_t i = (uint32_t)0U; i < nb; i++) {
         uint8_t *block = t10 + i * (uint32_t)16U;
-        Lib_IntVector_Intrinsics_vec128 e[5U];
-        for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
-            e[_i] = Lib_IntVector_Intrinsics_vec128_zero;
+        KRML_PRE_ALIGN(16)
+        Lib_IntVector_Intrinsics_vec128 e[5U] KRML_POST_ALIGN(16) = { 0U };
         uint64_t u0 = load64_le(block);
         uint64_t lo = u0;
         uint64_t u = load64_le(block + (uint32_t)8U);
@@ -476,9 +477,8 @@ poly1305_padded_128(Lib_IntVector_Intrinsics_vec128 *ctx, uint32_t len, uint8_t 
     }
     if (rem1 > (uint32_t)0U) {
         uint8_t *last = t10 + nb * (uint32_t)16U;
-        Lib_IntVector_Intrinsics_vec128 e[5U];
-        for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
-            e[_i] = Lib_IntVector_Intrinsics_vec128_zero;
+        KRML_PRE_ALIGN(16)
+        Lib_IntVector_Intrinsics_vec128 e[5U] KRML_POST_ALIGN(16) = { 0U };
         uint8_t tmp[16U] = { 0U };
         memcpy(tmp, last, rem1 * sizeof(uint8_t));
         uint64_t u0 = load64_le(tmp);
@@ -689,9 +689,8 @@ poly1305_padded_128(Lib_IntVector_Intrinsics_vec128 *ctx, uint32_t len, uint8_t 
     if (r > (uint32_t)0U) {
         Lib_IntVector_Intrinsics_vec128 *pre = ctx + (uint32_t)5U;
         Lib_IntVector_Intrinsics_vec128 *acc = ctx;
-        Lib_IntVector_Intrinsics_vec128 e[5U];
-        for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
-            e[_i] = Lib_IntVector_Intrinsics_vec128_zero;
+        KRML_PRE_ALIGN(16)
+        Lib_IntVector_Intrinsics_vec128 e[5U] KRML_POST_ALIGN(16) = { 0U };
         uint64_t u0 = load64_le(tmp);
         uint64_t lo = u0;
         uint64_t u = load64_le(tmp + (uint32_t)8U);
@@ -907,22 +906,22 @@ poly1305_do_128(
     uint8_t *m,
     uint8_t *out)
 {
-    Lib_IntVector_Intrinsics_vec128 ctx[25U];
-    for (uint32_t _i = 0U; _i < (uint32_t)25U; ++_i)
-        ctx[_i] = Lib_IntVector_Intrinsics_vec128_zero;
+    KRML_PRE_ALIGN(16)
+    Lib_IntVector_Intrinsics_vec128 ctx[25U] KRML_POST_ALIGN(16) = { 0U };
     uint8_t block[16U] = { 0U };
     Hacl_Poly1305_128_poly1305_init(ctx, k);
     if (aadlen != (uint32_t)0U) {
         poly1305_padded_128(ctx, aadlen, aad);
     }
-    poly1305_padded_128(ctx, mlen, m);
+    if (mlen != (uint32_t)0U) {
+        poly1305_padded_128(ctx, mlen, m);
+    }
     store64_le(block, (uint64_t)aadlen);
     store64_le(block + (uint32_t)8U, (uint64_t)mlen);
     Lib_IntVector_Intrinsics_vec128 *pre = ctx + (uint32_t)5U;
     Lib_IntVector_Intrinsics_vec128 *acc = ctx;
-    Lib_IntVector_Intrinsics_vec128 e[5U];
-    for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
-        e[_i] = Lib_IntVector_Intrinsics_vec128_zero;
+    KRML_PRE_ALIGN(16)
+    Lib_IntVector_Intrinsics_vec128 e[5U] KRML_POST_ALIGN(16) = { 0U };
     uint64_t u0 = load64_le(block);
     uint64_t lo = u0;
     uint64_t u = load64_le(block + (uint32_t)8U);
@@ -1163,10 +1162,12 @@ Hacl_Chacha20Poly1305_128_aead_decrypt(
     uint8_t *key = tmp;
     poly1305_do_128(key, aadlen, aad, mlen, cipher, computed_mac);
     uint8_t res = (uint8_t)255U;
-    for (uint32_t i = (uint32_t)0U; i < (uint32_t)16U; i++) {
-        uint8_t uu____0 = FStar_UInt8_eq_mask(computed_mac[i], mac[i]);
-        res = uu____0 & res;
-    }
+    KRML_MAYBE_FOR16(i,
+                     (uint32_t)0U,
+                     (uint32_t)16U,
+                     (uint32_t)1U,
+                     uint8_t uu____0 = FStar_UInt8_eq_mask(computed_mac[i], mac[i]);
+                     res = uu____0 & res;);
     uint8_t z = res;
     if (z == (uint8_t)255U) {
         Hacl_Chacha20_Vec128_chacha20_encrypt_128(mlen, m, cipher, k, n, (uint32_t)1U);

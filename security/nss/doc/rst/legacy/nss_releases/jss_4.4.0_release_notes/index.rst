@@ -30,8 +30,6 @@ JSS 4.4.0 Release Notes
 `New in JSS 4.40 <#new_in_jss_4.40>`__
 --------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__

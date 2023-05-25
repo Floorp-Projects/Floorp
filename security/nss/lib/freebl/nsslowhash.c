@@ -67,7 +67,7 @@ NSSLOW_Init(void)
     /* make sure the FIPS product is installed if we are trying to
      * go into FIPS mode */
     if (nsslow_GetFIPSEnabled()) {
-        if (BL_FIPSEntryOK(PR_TRUE) != SECSuccess) {
+        if (BL_FIPSEntryOK(PR_TRUE, PR_FALSE) != SECSuccess) {
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             post_failed = PR_TRUE;
             return NULL;

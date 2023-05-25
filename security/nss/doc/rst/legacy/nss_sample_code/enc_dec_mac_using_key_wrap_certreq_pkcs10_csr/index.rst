@@ -12,7 +12,7 @@ Enc Dec MAC Using Key Wrap CertReq PKCS10 CSR
 
    Generates encryption/mac keys and outputs public key as pkcs11 certificate signing request
 
-   .. code:: brush:
+   .. code:: c
 
        /* This Source Code Form is subject to the terms of the Mozilla Public
         * License, v. 2.0. If a copy of the MPL was not distributed with this

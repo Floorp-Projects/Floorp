@@ -30,8 +30,6 @@ NSS 3.16.2 release notes
 `New in NSS 3.16.2 <#new_in_nss_3.16.2>`__
 ------------------------------------------
 
-.. container::
-
 .. _new_functionality:
 
 `New Functionality <#new_functionality>`__
@@ -114,4 +112,3 @@ NSS 3.16.2 release notes
    This Bugzilla query returns all the bugs fixed in NSS 3.16.2:
 
    | https://bugzilla.mozilla.org/buglist.cgi?resolution=FIXED&classification=Components&query_format=advanced&product=NSS&target_milestone=3.16.2
-   |  

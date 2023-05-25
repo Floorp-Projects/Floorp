@@ -207,17 +207,18 @@ ChaCha20Xor(uint8_t *output, uint8_t *block, uint32_t len, uint8_t *k,
             uint8_t *nonce, uint32_t ctr)
 {
 #ifdef NSS_X64
-    if (ssse3_support() && sse4_1_support() && avx_support()) {
-#ifdef NSS_DISABLE_AVX2
-        Hacl_Chacha20_Vec128_chacha20_encrypt_128(len, output, block, k, nonce, ctr);
-#else
-        if (avx2_support()) {
-            Hacl_Chacha20_Vec256_chacha20_encrypt_256(len, output, block, k, nonce, ctr);
-        } else {
-            Hacl_Chacha20_Vec128_chacha20_encrypt_128(len, output, block, k, nonce, ctr);
-        }
+#ifndef NSS_DISABLE_AVX2
+    if (avx2_support()) {
+        Hacl_Chacha20_Vec256_chacha20_encrypt_256(len, output, block, k, nonce, ctr);
+    }
 #endif
-    } else
+
+#ifndef NSS_DISABLE_SSE3
+    if (ssse3_support() && sse4_1_support() && avx_support()) {
+        Hacl_Chacha20_Vec128_chacha20_encrypt_128(len, output, block, k, nonce, ctr);
+    }
+#endif
+
 #elif defined(__powerpc64__) && defined(__LITTLE_ENDIAN__) && \
     !defined(NSS_DISABLE_ALTIVEC) && !defined(NSS_DISABLE_CRYPTO_VSX)
     if (ppc_crypto_support()) {
@@ -280,37 +281,41 @@ ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx, unsigned char *output,
     }
 
 #ifdef NSS_X64
+#ifndef NSS_DISABLE_AVX2
+    if (avx2_support()) {
+        Hacl_Chacha20Poly1305_256_aead_encrypt(
+            (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
+            (uint8_t *)input, output, output + inputLen);
+        goto finish;
+    }
+#endif
+
+#ifndef NSS_DISABLE_SSE3
     if (ssse3_support() && sse4_1_support() && avx_support()) {
-#ifdef NSS_DISABLE_AVX2
         Hacl_Chacha20Poly1305_128_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, output + inputLen);
-#else
-        if (avx2_support()) {
-            Hacl_Chacha20Poly1305_256_aead_encrypt(
-                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
-                (uint8_t *)input, output, output + inputLen);
-        } else {
-            Hacl_Chacha20Poly1305_128_aead_encrypt(
-                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
-                (uint8_t *)input, output, output + inputLen);
-        }
+        goto finish;
+    }
 #endif
-    } else
+
 #elif defined(__powerpc64__) && defined(__LITTLE_ENDIAN__) && \
     !defined(NSS_DISABLE_ALTIVEC) && !defined(NSS_DISABLE_CRYPTO_VSX)
     if (ppc_crypto_support()) {
         Chacha20Poly1305_vsx_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, output + inputLen);
-    } else
+        goto finish;
+    }
 #endif
     {
         Hacl_Chacha20Poly1305_32_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, output + inputLen);
+        goto finish;
     }
 
+finish:
     *outputLen = inputLen + ctx->tagLen;
     return SECSuccess;
 #endif
@@ -349,37 +354,41 @@ ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx, unsigned char *output,
 
     uint32_t res = 1;
 #ifdef NSS_X64
+#ifndef NSS_DISABLE_AVX2
+    if (avx2_support()) {
+        res = Hacl_Chacha20Poly1305_256_aead_decrypt(
+            (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
+            (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
+        goto finish;
+    }
+#endif
+
+#ifndef NSS_DISABLE_SSE3
     if (ssse3_support() && sse4_1_support() && avx_support()) {
-#ifdef NSS_DISABLE_AVX2
         res = Hacl_Chacha20Poly1305_128_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
-#else
-        if (avx2_support()) {
-            res = Hacl_Chacha20Poly1305_256_aead_decrypt(
-                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
-                (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
-        } else {
-            res = Hacl_Chacha20Poly1305_128_aead_decrypt(
-                (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
-                (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
-        }
+        goto finish;
+    }
 #endif
-    } else
+
 #elif defined(__powerpc64__) && defined(__LITTLE_ENDIAN__) && \
     !defined(NSS_DISABLE_ALTIVEC) && !defined(NSS_DISABLE_CRYPTO_VSX)
     if (ppc_crypto_support()) {
         res = Chacha20Poly1305_vsx_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
-    } else
+        goto finish;
+    }
 #endif
     {
         res = Hacl_Chacha20Poly1305_32_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)input + ciphertextLen);
+        goto finish;
     }
 
+finish:
     if (res) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
@@ -420,25 +429,42 @@ ChaCha20Poly1305_Encrypt(const ChaCha20Poly1305Context *ctx,
     }
 
 #ifdef NSS_X64
+#ifndef NSS_DISABLE_AVX2
+    if (avx2_support()) {
+        Hacl_Chacha20Poly1305_256_aead_encrypt(
+            (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
+            (uint8_t *)input, output, outTag);
+        goto finish;
+    }
+#endif
+
+#ifndef NSS_DISABLE_SSE3
     if (ssse3_support() && sse4_1_support() && avx_support()) {
         Hacl_Chacha20Poly1305_128_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, outTag);
-    } else
+        goto finish;
+    }
+#endif
+
+    else
 #elif defined(__powerpc64__) && defined(__LITTLE_ENDIAN__) && \
     !defined(NSS_DISABLE_ALTIVEC) && !defined(NSS_DISABLE_CRYPTO_VSX)
     if (ppc_crypto_support()) {
         Chacha20Poly1305_vsx_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, outTag);
+        goto finish;
     } else
 #endif
     {
         Hacl_Chacha20Poly1305_32_aead_encrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, inputLen,
             (uint8_t *)input, output, outTag);
+        goto finish;
     }
 
+finish:
     *outputLen = inputLen;
     return SECSuccess;
 #endif
@@ -477,25 +503,41 @@ ChaCha20Poly1305_Decrypt(const ChaCha20Poly1305Context *ctx,
 
     uint32_t res = 1;
 #ifdef NSS_X64
+#ifndef NSS_DISABLE_AVX2
+    if (avx2_support()) {
+        res = Hacl_Chacha20Poly1305_256_aead_decrypt(
+            (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
+            (uint8_t *)output, (uint8_t *)input, (uint8_t *)tagIn);
+        goto finish;
+    }
+#endif
+
+#ifndef NSS_DISABLE_SSE3
     if (ssse3_support() && sse4_1_support() && avx_support()) {
         res = Hacl_Chacha20Poly1305_128_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)tagIn);
-    } else
+        goto finish;
+    }
+#endif
+
 #elif defined(__powerpc64__) && defined(__LITTLE_ENDIAN__) && \
     !defined(NSS_DISABLE_ALTIVEC) && !defined(NSS_DISABLE_CRYPTO_VSX)
     if (ppc_crypto_support()) {
         res = Chacha20Poly1305_vsx_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)tagIn);
-    } else
+        goto finish;
+    }
 #endif
     {
         res = Hacl_Chacha20Poly1305_32_aead_decrypt(
             (uint8_t *)ctx->key, (uint8_t *)nonce, adLen, (uint8_t *)ad, ciphertextLen,
             (uint8_t *)output, (uint8_t *)input, (uint8_t *)tagIn);
+        goto finish;
     }
 
+finish:
     if (res) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;

@@ -12,7 +12,7 @@ Encrypt Decrypt_MAC_Using Token
 
    Generates encryption/mac keys and uses token for storing.
 
-   .. code:: brush:
+   .. code:: c
 
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this

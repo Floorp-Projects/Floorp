@@ -566,7 +566,7 @@ typedef struct KDFCacheItemStr KDFCacheItem;
 /* Bug 1606992 - Cache the hash result for the common case that we're
  * asked to repeatedly compute the key for the same password item,
  * hash, iterations and salt. */
-#define KDF2_CACHE_COUNT 3
+#define KDF2_CACHE_COUNT 150
 static struct {
     PZLock *lock;
     struct {
