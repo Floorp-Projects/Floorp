@@ -96,7 +96,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
 #endif
   uint32_t selectorFlags =
       container->GetFlags() &
-      (NODE_ALL_SELECTOR_FLAGS & ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
+      (NODE_RESTYLE_SELECTOR_FLAGS & ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   if (selectorFlags == 0) {
     return;
   }
@@ -264,7 +264,7 @@ void RestyleManager::CharacterDataChanged(
   nsINode* parent = aContent->GetParentNode();
   MOZ_ASSERT(parent, "How were we notified of a stray node?");
 
-  uint32_t slowSelectorFlags = parent->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
+  uint32_t slowSelectorFlags = parent->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
   if (!(slowSelectorFlags &
         (NODE_HAS_EMPTY_SELECTOR | NODE_HAS_EDGE_CHILD_SELECTOR))) {
     // Nothing to do, no other slow selector can change as a result of this.
@@ -344,7 +344,7 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   nsINode* container = aChild->GetParentNode();
   MOZ_ASSERT(container);
 
-  uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
+  uint32_t selectorFlags = container->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
   if (selectorFlags == 0) {
     return;
   }
@@ -408,7 +408,7 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
     IncrementUndisplayedRestyleGeneration();
   }
 
-  uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
+  uint32_t selectorFlags = container->GetFlags() & NODE_RESTYLE_SELECTOR_FLAGS;
   if (selectorFlags == 0) {
     return;
   }
