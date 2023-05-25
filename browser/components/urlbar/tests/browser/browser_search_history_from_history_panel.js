@@ -15,7 +15,9 @@ add_task(async function searchHistoryFromHistoryPanel() {
     CustomizableUI.AREA_NAVBAR,
     0
   );
-  registerCleanupFunction(() => CustomizableUI.reset());
+  registerCleanupFunction(() => {
+    resetCUIAndReinitUrlbarInput();
+  });
 
   let historyButton = document.getElementById("history-panelmenu");
   ok(historyButton, "History button appears in Panel Menu");

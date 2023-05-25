@@ -51,5 +51,5 @@ add_task(async function searchBookmarksFromBooksmarksMenu() {
     "Addressbar in correct mode."
   );
 
-  CustomizableUI.reset();
+  resetCUIAndReinitUrlbarInput();
 });
