@@ -14,6 +14,9 @@ browser.jar:
     content/browser/firefoxview/overview.mjs
     content/browser/firefoxview/firefoxview.css
     content/browser/firefoxview/firefoxview-next.css
+    content/browser/firefoxview/fxview-category-button.css
+    content/browser/firefoxview/fxview-category-navigation.css
+    content/browser/firefoxview/fxview-category-navigation.mjs
     content/browser/firefoxview/helpers.mjs
     content/browser/firefoxview/fxview-tab-list.css
     content/browser/firefoxview/fxview-tab-list.mjs

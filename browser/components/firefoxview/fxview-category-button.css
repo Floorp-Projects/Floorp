@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  border-radius: 4px;
+}
+
+button {
+  background-color: initial;
+  border: 1px solid var(--in-content-primary-button-border-color);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  gap: 12px;
+  align-items: center;
+  font-size: inherit;
+  width: 100%;
+  font-weight: normal;
+  border-radius: 4px;
+  color: inherit;
+  text-align: start;
+  transition: background-color 150ms;
+  padding: var(--fxviewcategorynav-button-padding);
+}
+
+button[selected] {
+  text-decoration: underline;
+  color: var(--in-content-accent-color);
+}
+
+button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.category-icon {
+  background-color: initial;
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 20px;
+  width: 20px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+@media (prefers-contrast) {
+  button {
+    transition: none;
+    border-color: ButtonText;
+    background-color: var(--in-content-button-background);
+  }
+
+  button:hover {
+    color: SelectedItem;
+  }
+
+  button[selected] {
+    color: SelectedItemText;
+    background-color: SelectedItem;
+    border-color: SelectedItem;
+  }
+}
+
+@media not (prefers-contrast) {
+  button:hover {
+    background-color: var(--in-content-button-background-hover);
+    border-color: var(--in-content-button-border-color-hover);
+  }
+}
+
+slot {
+  font-size: 1.13em;
+  line-height: 1.4;
+  margin: 0;
+  padding-inline-start: 0;
+  user-select: none;
+}
+
+@media (max-width: 52rem) {
+  button {
+    grid-template-columns: min-content;
+    justify-content: center;
+    margin-inline: 0;
+  }
+
+  slot {
+    display: none;
+  }
+}
