@@ -44,10 +44,6 @@ dependencies {
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-fakes')
-
-    androidTestImplementation project(':support-android-test')
-    androidTestImplementation ComponentsDependencies.androidx_test_core
-    androidTestImplementation ComponentsDependencies.androidx_test_runner
     
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit
