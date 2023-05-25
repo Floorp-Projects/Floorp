@@ -2239,7 +2239,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 #endif
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array &&
       !cx->realm()->creationOptions().getChangeArrayByCopyEnabled() &&
       (id == NameToId(cx->names().with) ||
@@ -2256,7 +2255,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
        id == NameToId(cx->names().toSorted))) {
     return true;
   }
-#endif
 
 #ifdef ENABLE_NEW_SET_METHODS
   if (key == JSProto_Set &&
