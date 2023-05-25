@@ -12,9 +12,9 @@
 
 namespace mozilla::dom {
 
-CSSMediaRule::CSSMediaRule(RefPtr<StyleMediaRule> aRawRule,
-                           StyleSheet* aSheet, css::Rule* aParentRule,
-                           uint32_t aLine, uint32_t aColumn)
+CSSMediaRule::CSSMediaRule(RefPtr<StyleMediaRule> aRawRule, StyleSheet* aSheet,
+                           css::Rule* aParentRule, uint32_t aLine,
+                           uint32_t aColumn)
     : ConditionRule(Servo_MediaRule_GetRules(aRawRule).Consume(), aSheet,
                     aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}

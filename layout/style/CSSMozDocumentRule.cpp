@@ -107,8 +107,7 @@ void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-void CSSMozDocumentRule::SetRawAfterClone(
-    RefPtr<StyleDocumentRule> aRaw) {
+void CSSMozDocumentRule::SetRawAfterClone(RefPtr<StyleDocumentRule> aRaw) {
   mRawRule = std::move(aRaw);
   css::ConditionRule::SetRawAfterClone(
       Servo_DocumentRule_GetRules(mRawRule).Consume());
