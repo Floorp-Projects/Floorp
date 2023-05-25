@@ -2114,62 +2114,55 @@ pub extern "C" fn Servo_CssRules_DeleteRule(rules: &LockedCssRules, index: u32) 
     })
 }
 
-macro_rules! impl_basic_rule_funcs_without_getter {
-    { $rule_type:ty,
-        debug: $debug:ident,
-        to_css: $to_css:ident,
-    } => {
-        #[cfg(debug_assertions)]
-        #[no_mangle]
-        pub extern "C" fn $debug(rule: &Locked<$rule_type>, result: &mut nsACString) {
-            read_locked_arc(rule, |rule: &$rule_type| {
-                write!(result, "{:?}", *rule).unwrap();
-            })
-        }
+trait MaybeLocked<Target> {
+    fn maybe_locked_read<'a>(&'a self, guard: &'a SharedRwLockReadGuard) -> &'a Target;
+}
 
-        #[cfg(not(debug_assertions))]
-        #[no_mangle]
-        pub extern "C" fn $debug(_: &Locked<$rule_type>, _: &mut nsACString) {
-            unreachable!()
-        }
-
-        #[no_mangle]
-        pub extern "C" fn $to_css(rule: &Locked<$rule_type>, result: &mut nsACString) {
-            let global_style_data = &*GLOBAL_STYLE_DATA;
-            let guard = global_style_data.shared_lock.read();
-            rule.read_with(&guard).to_css(&guard, result).unwrap();
-        }
+impl<T> MaybeLocked<T> for T {
+    fn maybe_locked_read<'a>(&'a self, _: &'a SharedRwLockReadGuard) -> &'a T {
+        self
     }
 }
 
-macro_rules! impl_basic_rule_funcs_without_getter_or_lock {
-    { $rule_type:ty,
+impl<T> MaybeLocked<T> for Locked<T> {
+    fn maybe_locked_read<'a>(&'a self, guard: &'a SharedRwLockReadGuard) -> &'a T {
+        self.read_with(guard)
+    }
+}
+
+macro_rules! impl_basic_rule_funcs_without_getter {
+    {
+        ($rule_type:ty, $maybe_locked_rule_type:ty),
         debug: $debug:ident,
         to_css: $to_css:ident,
     } => {
         #[cfg(debug_assertions)]
         #[no_mangle]
-        pub extern "C" fn $debug(rule: &$rule_type, result: &mut nsACString) {
+        pub extern "C" fn $debug(rule: &$maybe_locked_rule_type, result: &mut nsACString) {
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+            let guard = global_style_data.shared_lock.read();
+            let rule: &$rule_type = rule.maybe_locked_read(&guard);
             write!(result, "{:?}", *rule).unwrap();
         }
 
         #[cfg(not(debug_assertions))]
         #[no_mangle]
-        pub extern "C" fn $debug(_: &$rule_type, _: &mut nsACString) {
+        pub extern "C" fn $debug(_: &$maybe_locked_rule_type, _: &mut nsACString) {
             unreachable!()
         }
 
         #[no_mangle]
-        pub extern "C" fn $to_css(rule: &$rule_type, result: &mut nsACString) {
+        pub extern "C" fn $to_css(rule: &$maybe_locked_rule_type, result: &mut nsACString) {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let guard = global_style_data.shared_lock.read();
+            let rule: &$rule_type = rule.maybe_locked_read(&guard);
             rule.to_css(&guard, result).unwrap();
         }
     }
 }
 
-macro_rules! impl_basic_rule_funcs_without_lock {
-    { ($name:ident, $rule_type:ty),
+macro_rules! impl_basic_rule_funcs {
+    { ($name:ident, $rule_type:ty, $maybe_locked_rule_type:ty),
         getter: $getter:ident,
         debug: $debug:ident,
         to_css: $to_css:ident,
@@ -2181,7 +2174,7 @@ macro_rules! impl_basic_rule_funcs_without_lock {
             index: u32,
             line: &mut u32,
             column: &mut u32,
-        ) -> Strong<$rule_type> {
+        ) -> Strong<$maybe_locked_rule_type> {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let guard = global_style_data.shared_lock.read();
             let rules = rules.read_with(&guard);
@@ -2192,11 +2185,12 @@ macro_rules! impl_basic_rule_funcs_without_lock {
             }
 
             match rules.0[index] {
-                CssRule::$name(ref rule) => {
+                CssRule::$name(ref arc) => {
+                    let rule: &$rule_type = (&**arc).maybe_locked_read(&guard);
                     let location = rule.source_location;
                     *line = location.line as u32;
                     *column = location.column as u32;
-                    rule.clone().into()
+                    arc.clone().into()
                 },
                 _ => {
                     Strong::null()
@@ -2207,7 +2201,7 @@ macro_rules! impl_basic_rule_funcs_without_lock {
         #[no_mangle]
         pub extern "C" fn $changed(
             styleset: &PerDocumentStyleData,
-            rule: &$rule_type,
+            rule: &$maybe_locked_rule_type,
             sheet: &DomStyleSheet,
             change_kind: RuleChangeKind,
         ) {
@@ -2222,68 +2216,8 @@ macro_rules! impl_basic_rule_funcs_without_lock {
             data.stylist.rule_changed(&sheet, &rule, &guard, change_kind);
         }
 
-        impl_basic_rule_funcs_without_getter_or_lock! { $rule_type,
-            debug: $debug,
-            to_css: $to_css,
-        }
-    }
-}
-
-macro_rules! impl_basic_rule_funcs {
-    { ($name:ident, $rule_type:ty),
-        getter: $getter:ident,
-        debug: $debug:ident,
-        to_css: $to_css:ident,
-        changed: $changed:ident,
-    } => {
-        #[no_mangle]
-        pub extern "C" fn $getter(
-            rules: &LockedCssRules,
-            index: u32,
-            line: &mut u32,
-            column: &mut u32,
-        ) -> Strong<Locked<$rule_type>> {
-            let global_style_data = &*GLOBAL_STYLE_DATA;
-            let guard = global_style_data.shared_lock.read();
-            let rules = rules.read_with(&guard);
-            let index = index as usize;
-
-            if index >= rules.0.len() {
-                return Strong::null();
-            }
-
-            match rules.0[index] {
-                CssRule::$name(ref rule) => {
-                    let location = rule.read_with(&guard).source_location;
-                    *line = location.line as u32;
-                    *column = location.column as u32;
-                    rule.clone().into()
-                },
-                _ => {
-                    Strong::null()
-                }
-            }
-        }
-
-        #[no_mangle]
-        pub extern "C" fn $changed(
-            styleset: &PerDocumentStyleData,
-            rule: &Locked<$rule_type>,
-            sheet: &DomStyleSheet,
-            change_kind: RuleChangeKind,
-        ) {
-            let mut data = styleset.borrow_mut();
-            let data = &mut *data;
-            let global_style_data = &*GLOBAL_STYLE_DATA;
-            let guard = global_style_data.shared_lock.read();
-            // TODO(emilio): Would be nice not to deal with refcount bumps here,
-            // but it's probably not a huge deal.
-            let rule = unsafe { CssRule::$name(Arc::from_raw_addrefed(rule)) };
-            let sheet = unsafe { GeckoStyleSheet::new(sheet) };
-            data.stylist.rule_changed(&sheet, &rule, &guard, change_kind);
-        }
-
-        impl_basic_rule_funcs_without_getter! { $rule_type,
+        impl_basic_rule_funcs_without_getter! {
+            ($rule_type, $maybe_locked_rule_type),
             debug: $debug,
             to_css: $to_css,
         }
@@ -2291,48 +2225,50 @@ macro_rules! impl_basic_rule_funcs {
 }
 
 macro_rules! impl_group_rule_funcs {
-    { ($name:ident, $rule_type:ty),
+    { ($name:ident, $rule_type:ty, $maybe_locked_rule_type:ty),
       get_rules: $get_rules:ident,
       $($basic:tt)+
     } => {
-        impl_basic_rule_funcs! { ($name, $rule_type), $($basic)+ }
+        impl_basic_rule_funcs! { ($name, $rule_type, $maybe_locked_rule_type), $($basic)+ }
 
         #[no_mangle]
-        pub extern "C" fn $get_rules(rule: &Locked<$rule_type>) -> Strong<LockedCssRules> {
-            read_locked_arc(rule, |rule: &$rule_type| {
-                rule.rules.clone().into()
-            })
+        pub extern "C" fn $get_rules(rule: &$maybe_locked_rule_type) -> Strong<LockedCssRules> {
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+            let guard = global_style_data.shared_lock.read();
+            let rule: &$rule_type = rule.maybe_locked_read(&guard);
+            rule.rules.clone().into()
         }
     }
 }
 
-impl_basic_rule_funcs! { (Style, StyleRule),
+impl_basic_rule_funcs! { (Style, StyleRule, Locked<StyleRule>),
     getter: Servo_CssRules_GetStyleRuleAt,
     debug: Servo_StyleRule_Debug,
     to_css: Servo_StyleRule_GetCssText,
     changed: Servo_StyleSet_StyleRuleChanged,
 }
 
-impl_basic_rule_funcs! { (Import, ImportRule),
+impl_basic_rule_funcs! { (Import, ImportRule, Locked<ImportRule>),
     getter: Servo_CssRules_GetImportRuleAt,
     debug: Servo_ImportRule_Debug,
     to_css: Servo_ImportRule_GetCssText,
     changed: Servo_StyleSet_ImportRuleChanged,
 }
 
-impl_basic_rule_funcs_without_getter! { Keyframe,
+impl_basic_rule_funcs_without_getter! { (Keyframe, Locked<Keyframe>),
     debug: Servo_Keyframe_Debug,
     to_css: Servo_Keyframe_GetCssText,
 }
 
-impl_basic_rule_funcs! { (Keyframes, KeyframesRule),
+impl_basic_rule_funcs! { (Keyframes, KeyframesRule, Locked<KeyframesRule>),
     getter: Servo_CssRules_GetKeyframesRuleAt,
     debug: Servo_KeyframesRule_Debug,
     to_css: Servo_KeyframesRule_GetCssText,
     changed: Servo_StyleSet_KeyframesRuleChanged,
 }
 
-impl_group_rule_funcs! { (Media, MediaRule),
+// TODO: Could be unlocked.
+impl_group_rule_funcs! { (Media, MediaRule, Locked<MediaRule>),
     get_rules: Servo_MediaRule_GetRules,
     getter: Servo_CssRules_GetMediaRuleAt,
     debug: Servo_MediaRule_Debug,
@@ -2340,28 +2276,30 @@ impl_group_rule_funcs! { (Media, MediaRule),
     changed: Servo_StyleSet_MediaRuleChanged,
 }
 
-impl_basic_rule_funcs! { (Namespace, NamespaceRule),
+// TODO: Could be unlocked.
+impl_basic_rule_funcs! { (Namespace, NamespaceRule, Locked<NamespaceRule>),
     getter: Servo_CssRules_GetNamespaceRuleAt,
     debug: Servo_NamespaceRule_Debug,
     to_css: Servo_NamespaceRule_GetCssText,
     changed: Servo_StyleSet_NamespaceRuleChanged,
 }
 
-impl_basic_rule_funcs! { (Page, PageRule),
+impl_basic_rule_funcs! { (Page, PageRule, Locked<PageRule>),
     getter: Servo_CssRules_GetPageRuleAt,
     debug: Servo_PageRule_Debug,
     to_css: Servo_PageRule_GetCssText,
     changed: Servo_StyleSet_PageRuleChanged,
 }
 
-impl_basic_rule_funcs_without_lock! { (Property, PropertyRule),
+impl_basic_rule_funcs! { (Property, PropertyRule, PropertyRule),
     getter: Servo_CssRules_GetPropertyRuleAt,
     debug: Servo_PropertyRule_Debug,
     to_css: Servo_PropertyRule_GetCssText,
     changed: Servo_StyleSet_PropertyRuleChanged,
 }
 
-impl_group_rule_funcs! { (Supports, SupportsRule),
+// TODO: Could be unlocked.
+impl_group_rule_funcs! { (Supports, SupportsRule, Locked<SupportsRule>),
     get_rules: Servo_SupportsRule_GetRules,
     getter: Servo_CssRules_GetSupportsRuleAt,
     debug: Servo_SupportsRule_Debug,
@@ -2369,7 +2307,8 @@ impl_group_rule_funcs! { (Supports, SupportsRule),
     changed: Servo_StyleSet_SupportsRuleChanged,
 }
 
-impl_group_rule_funcs! { (Container, ContainerRule),
+// TODO: Could be unlocked.
+impl_group_rule_funcs! { (Container, ContainerRule, Locked<ContainerRule>),
     get_rules: Servo_ContainerRule_GetRules,
     getter: Servo_CssRules_GetContainerRuleAt,
     debug: Servo_ContainerRule_Debug,
@@ -2377,7 +2316,8 @@ impl_group_rule_funcs! { (Container, ContainerRule),
     changed: Servo_StyleSet_ContainerRuleChanged,
 }
 
-impl_group_rule_funcs! { (LayerBlock, LayerBlockRule),
+// TODO: Could be unlocked.
+impl_group_rule_funcs! { (LayerBlock, LayerBlockRule, Locked<LayerBlockRule>),
     get_rules: Servo_LayerBlockRule_GetRules,
     getter: Servo_CssRules_GetLayerBlockRuleAt,
     debug: Servo_LayerBlockRule_Debug,
@@ -2385,14 +2325,16 @@ impl_group_rule_funcs! { (LayerBlock, LayerBlockRule),
     changed: Servo_StyleSet_LayerBlockRuleChanged,
 }
 
-impl_basic_rule_funcs! { (LayerStatement, LayerStatementRule),
+// TODO: Could be unlocked.
+impl_basic_rule_funcs! { (LayerStatement, LayerStatementRule, Locked<LayerStatementRule>),
     getter: Servo_CssRules_GetLayerStatementRuleAt,
     debug: Servo_LayerStatementRule_Debug,
     to_css: Servo_LayerStatementRule_GetCssText,
     changed: Servo_StyleSet_LayerStatementRuleChanged,
 }
 
-impl_group_rule_funcs! { (Document, DocumentRule),
+// TODO: Could be unlocked.
+impl_group_rule_funcs! { (Document, DocumentRule, Locked<DocumentRule>),
     get_rules: Servo_DocumentRule_GetRules,
     getter: Servo_CssRules_GetDocumentRuleAt,
     debug: Servo_DocumentRule_Debug,
@@ -2400,28 +2342,30 @@ impl_group_rule_funcs! { (Document, DocumentRule),
     changed: Servo_StyleSet_DocumentRuleChanged,
 }
 
-impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule),
+// TODO: Could be unlocked.
+impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, Locked<FontFeatureValuesRule>),
     getter: Servo_CssRules_GetFontFeatureValuesRuleAt,
     debug: Servo_FontFeatureValuesRule_Debug,
     to_css: Servo_FontFeatureValuesRule_GetCssText,
     changed: Servo_StyleSet_FontFeatureValuesRuleChanged,
 }
 
-impl_basic_rule_funcs! { (FontPaletteValues, FontPaletteValuesRule),
+// TODO: Could be unlocked.
+impl_basic_rule_funcs! { (FontPaletteValues, FontPaletteValuesRule, Locked<FontPaletteValuesRule>),
     getter: Servo_CssRules_GetFontPaletteValuesRuleAt,
     debug: Servo_FontPaletteValuesRule_Debug,
     to_css: Servo_FontPaletteValuesRule_GetCssText,
     changed: Servo_StyleSet_FontPaletteValuesRuleChanged,
 }
 
-impl_basic_rule_funcs! { (FontFace, FontFaceRule),
+impl_basic_rule_funcs! { (FontFace, FontFaceRule, Locked<FontFaceRule>),
     getter: Servo_CssRules_GetFontFaceRuleAt,
     debug: Servo_FontFaceRule_Debug,
     to_css: Servo_FontFaceRule_GetCssText,
     changed: Servo_StyleSet_FontFaceRuleChanged,
 }
 
-impl_basic_rule_funcs! { (CounterStyle, CounterStyleRule),
+impl_basic_rule_funcs! { (CounterStyle, CounterStyleRule, Locked<CounterStyleRule>),
     getter: Servo_CssRules_GetCounterStyleRuleAt,
     debug: Servo_CounterStyleRule_Debug,
     to_css: Servo_CounterStyleRule_GetCssText,

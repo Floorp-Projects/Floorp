@@ -79,24 +79,27 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
     MOZ_ASSERT(ruleObj->Type() == StyleCssRuleType(rule));                    \
     break;                                                                    \
   }
-#define CASE_RULE(const_, name_) CASE_RULE_WITH_PREFIX(const_, Locked, name_)
-      CASE_RULE(Style, Style)
-      CASE_RULE(Keyframes, Keyframes)
-      CASE_RULE(Media, Media)
-      CASE_RULE(Namespace, Namespace)
-      CASE_RULE(Page, Page)
-      CASE_RULE_WITH_PREFIX(Property, , Property)
-      CASE_RULE(Supports, Supports)
-      CASE_RULE(Document, MozDocument)
-      CASE_RULE(Import, Import)
-      CASE_RULE(FontFeatureValues, FontFeatureValues)
-      CASE_RULE(FontPaletteValues, FontPaletteValues)
-      CASE_RULE(FontFace, FontFace)
-      CASE_RULE(CounterStyle, CounterStyle)
-      CASE_RULE(LayerBlock, LayerBlock)
-      CASE_RULE(LayerStatement, LayerStatement)
-      CASE_RULE(Container, Container)
-#undef CASE_RULE
+#define CASE_RULE_LOCKED(const_, name_) CASE_RULE_WITH_PREFIX(const_, Locked, name_)
+#define CASE_RULE_UNLOCKED(const_, name_) CASE_RULE_WITH_PREFIX(const_, , name_)
+      CASE_RULE_LOCKED(Style, Style)
+      CASE_RULE_LOCKED(Keyframes, Keyframes)
+      CASE_RULE_LOCKED(Media, Media)
+      CASE_RULE_LOCKED(Namespace, Namespace)
+      CASE_RULE_LOCKED(Page, Page)
+      CASE_RULE_UNLOCKED(Property, Property)
+      CASE_RULE_LOCKED(Supports, Supports)
+      CASE_RULE_LOCKED(Document, MozDocument)
+      CASE_RULE_LOCKED(Import, Import)
+      CASE_RULE_LOCKED(FontFeatureValues, FontFeatureValues)
+      CASE_RULE_LOCKED(FontPaletteValues, FontPaletteValues)
+      CASE_RULE_LOCKED(FontFace, FontFace)
+      CASE_RULE_LOCKED(CounterStyle, CounterStyle)
+      CASE_RULE_LOCKED(LayerBlock, LayerBlock)
+      CASE_RULE_LOCKED(LayerStatement, LayerStatement)
+      CASE_RULE_LOCKED(Container, Container)
+#undef CASE_RULE_LOCKED
+#undef CASE_RULE_UNLOCKED
+#undef CASE_RULE_WITH_PREFIX
       case StyleCssRuleType::Viewport:
         MOZ_ASSERT_UNREACHABLE("viewport is not implemented in Gecko");
         return nullptr;
