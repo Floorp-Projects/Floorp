@@ -28,7 +28,7 @@ class SVGAttrTearoffTable {
  public:
 #ifdef DEBUG
   ~SVGAttrTearoffTable() {
-    MOZ_ASSERT(!mTable, "Tear-off objects remain in hashtable at shutdown.");
+    NS_ASSERTION(!mTable, "Tear-off objects remain in hashtable at shutdown.");
   }
 #endif
 
