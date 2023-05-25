@@ -24,7 +24,7 @@ cat > ${TARGET_TRIPLE}-pkg-config <<END_PKGCONFIG_WRAPPER
 export PKG_CONFIG_DIR=
 export PKG_CONFIG_LIBDIR=${MACOS_SYSROOT}/usr/lib/pkgconfig:${MACOS_SYSROOT}/usr/share/pkgconfig
 export PKG_CONFIG_SYSROOT_DIR=${MACOS_SYSROOT}
-exec pkg-config "$@"
+exec pkg-config "\$@"
 END_PKGCONFIG_WRAPPER
 chmod +x "${TARGET_TRIPLE}-pkg-config"
 popd
