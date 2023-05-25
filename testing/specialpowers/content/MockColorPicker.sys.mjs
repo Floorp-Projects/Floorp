@@ -5,7 +5,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
+  WrapPrivileged: "resource://testing-common/WrapPrivileged.sys.mjs",
 });
 
 const Cm = Components.manager;

@@ -31,14 +31,14 @@ this.specialpowers = class extends ExtensionAPI {
       allFrames: true,
       includeChrome: true,
       child: {
-        esModuleURI: "resource://specialpowers/SpecialPowersChild.sys.mjs",
+        esModuleURI: "resource://testing-common/SpecialPowersChild.sys.mjs",
         observers: [
           "chrome-document-global-created",
           "content-document-global-created",
         ],
       },
       parent: {
-        esModuleURI: "resource://specialpowers/SpecialPowersParent.sys.mjs",
+        esModuleURI: "resource://testing-common/SpecialPowersParent.sys.mjs",
       },
     });
 

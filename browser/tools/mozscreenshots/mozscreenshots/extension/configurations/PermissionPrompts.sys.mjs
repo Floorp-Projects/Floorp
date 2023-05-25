@@ -155,10 +155,7 @@ async function clickOn(selector, beforeContentFn) {
   }
 
   await SpecialPowers.spawn(lastTab.linkedBrowser, [selector], arg => {
-    const { EventUtils } = ChromeUtils.importESModule(
-      "resource://specialpowers/SpecialPowersEventUtils.sys.mjs"
-    );
-
+    /* eslint-env mozilla/chrome-script */
     let element = content.document.querySelector(arg);
     return EventUtils.synthesizeClick(element);
   });
