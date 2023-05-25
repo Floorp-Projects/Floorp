@@ -105,7 +105,7 @@ add_task(async function test_importMaps_not_supported() {
   );
   await extension.awaitMessage("done");
 
-  await contentPage.spawn([], async () => {
+  await contentPage.spawn(null, async () => {
     // Import maps should work for documents.
     let promise = content.eval(`import("simple2")`);
     let mod = (await promise.wrappedJSObject).wrappedJSObject;

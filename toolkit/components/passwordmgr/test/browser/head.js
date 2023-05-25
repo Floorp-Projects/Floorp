@@ -128,7 +128,7 @@ async function submitFormAndGetResults(
 ) {
   async function contentSubmitForm([contentFormAction, contentSelectorValues]) {
     const { WrapPrivileged } = ChromeUtils.importESModule(
-      "resource://testing-common/WrapPrivileged.sys.mjs"
+      "resource://specialpowers/WrapPrivileged.sys.mjs"
     );
     let doc = content.document;
     let form = doc.querySelector("form");

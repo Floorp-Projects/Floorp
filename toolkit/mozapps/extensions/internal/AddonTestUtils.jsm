@@ -52,6 +52,10 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   ],
 });
 
+const PREF_DISABLE_SECURITY =
+  "security.turn_off_all_security_so_that_" +
+  "viruses_can_take_over_this_computer";
+
 const ArrayBufferInputStream = Components.Constructor(
   "@mozilla.org/io/arraybuffer-input-stream;1",
   "nsIArrayBufferInputStream",
@@ -1743,9 +1747,11 @@ var AddonTestUtils = {
 
   /**
    * Initializes the URLPreloader, which is required in order to load
-   * built_in_addons.json.
+   * built_in_addons.json. This has the side-effect of setting
+   * preferences which flip Cu.isInAutomation to true.
    */
   initializeURLPreloader() {
+    Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
     lazy.aomStartup.initializeURLPreloader();
   },
 
@@ -1756,6 +1762,9 @@ var AddonTestUtils = {
    *                        to load, for instance: { "system": ["id1", "..."] }
    */
   async overrideBuiltIns(data) {
+    // We need to set this in order load the URL preloader service, which
+    // is only possible when running in automation.
+    let prevPrefVal = Services.prefs.getBoolPref(PREF_DISABLE_SECURITY, false);
     this.initializeURLPreloader();
 
     let file = this.tempDir.clone();
@@ -1771,6 +1780,7 @@ var AddonTestUtils = {
         Services.io.newFileURI(file).spec,
       ],
     ]);
+    Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, prevPrefVal);
   },
 
   // AMTelemetry events helpers.

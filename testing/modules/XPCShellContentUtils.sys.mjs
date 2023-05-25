@@ -22,12 +22,12 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ContentTask: "resource://testing-common/ContentTask.sys.mjs",
-  SpecialPowersParent: "resource://testing-common/SpecialPowersParent.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   HttpServer: "resource://testing-common/httpd.js",
+  MessageChannel: "resource://testing-common/MessageChannel.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -43,11 +43,22 @@ var gRemoteContentScripts = Services.appinfo.browserTabsRemoteAutostart;
 const REMOTE_CONTENT_SUBFRAMES = Services.appinfo.fissionAutostart;
 
 function frameScript() {
+  const { MessageChannel } = ChromeUtils.import(
+    "resource://testing-common/MessageChannel.jsm"
+  );
+
   // We need to make sure that the ExtensionPolicy service has been initialized
   // as it sets up the observers that inject extension content scripts.
   Cc["@mozilla.org/addons/policy-service;1"].getService();
 
-  Services.obs.notifyObservers(this, "tab-content-frameloader-created");
+  const messageListener = {
+    async receiveMessage({ target, messageName, recipient, data, name }) {
+      /* globals content */
+      let resp = await content.fetch(data.url, data.options);
+      return resp.text();
+    },
+  };
+  MessageChannel.addListener(this, "Test:Fetch", messageListener);
 
   // eslint-disable-next-line mozilla/balanced-listeners, no-undef
   addEventListener(
@@ -165,10 +176,6 @@ class ContentPage {
 
     let chromeDoc = await promiseDocumentLoaded(chromeShell.document);
 
-    let { SpecialPowers } = chromeDoc.ownerGlobal;
-    SpecialPowers.xpcshellScope = XPCShellContentUtils.currentScope;
-    SpecialPowers.setAsDefaultAssertHandler();
-
     let browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
@@ -223,8 +230,12 @@ class ContentPage {
     return this.browser.browsingContext;
   }
 
-  get SpecialPowers() {
-    return this.browser.ownerGlobal.SpecialPowers;
+  sendMessage(msg, data) {
+    return lazy.MessageChannel.sendMessage(
+      this.browser.messageManager,
+      msg,
+      data
+    );
   }
 
   loadFrameScript(func) {
@@ -252,26 +263,11 @@ class ContentPage {
     return promiseBrowserLoaded(this.browser, url, redirectUrl);
   }
 
-  async fetch(...args) {
-    return this.spawn(args, async (url, options) => {
-      let resp = await this.content.fetch(url, options);
-      return resp.text();
-    });
+  async fetch(url, options) {
+    return this.sendMessage("Test:Fetch", { url, options });
   }
 
   spawn(params, task) {
-    return this.SpecialPowers.spawn(this.browser, params, task);
-  }
-
-  // Like spawn(), but uses the legacy ContentTask infrastructure rather than
-  // SpecialPowers. Exists only because the author of the SpecialPowers
-  // migration did not have the time to fix all of the legacy users who relied
-  // on the old semantics.
-  //
-  // DO NOT USE IN NEW CODE
-  legacySpawn(params, task) {
-    lazy.ContentTask.setTestScope(XPCShellContentUtils.currentScope);
-
     return lazy.ContentTask.spawn(this.browser, params, task);
   }
 
@@ -327,8 +323,6 @@ export var XPCShellContentUtils = {
     scope.do_get_profile();
 
     this.initCommon(scope);
-
-    lazy.SpecialPowersParent.registerActor();
   },
 
   initMochitest(scope) {
@@ -441,7 +435,7 @@ export var XPCShellContentUtils = {
     }
 
     let fetchScope = await fetchScopePromise;
-    return fetchScope.fetch(url, options);
+    return fetchScope.sendMessage("Test:Fetch", { url, options });
   },
 
   /**
@@ -476,6 +470,8 @@ export var XPCShellContentUtils = {
       userContextId = undefined,
     } = {}
   ) {
+    lazy.ContentTask.setTestScope(this.currentScope);
+
     let contentPage = new ContentPage(
       remote,
       remoteSubframes,

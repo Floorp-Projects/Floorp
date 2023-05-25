@@ -4,10 +4,6 @@
 
 /* globals ExtensionAPI, Services, XPCOMUtils */
 
-ChromeUtils.defineESModuleGetters(this, {
-  SpecialPowersParent: "resource://testing-common/SpecialPowersParent.sys.mjs",
-});
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "resProto",
@@ -31,7 +27,20 @@ this.specialpowers = class extends ExtensionAPI {
       .QueryInterface(Ci.nsIComponentRegistrar)
       .autoRegister(manifest);
 
-    SpecialPowersParent.registerActor();
+    ChromeUtils.registerWindowActor("SpecialPowers", {
+      allFrames: true,
+      includeChrome: true,
+      child: {
+        esModuleURI: "resource://specialpowers/SpecialPowersChild.sys.mjs",
+        observers: [
+          "chrome-document-global-created",
+          "content-document-global-created",
+        ],
+      },
+      parent: {
+        esModuleURI: "resource://specialpowers/SpecialPowersParent.sys.mjs",
+      },
+    });
 
     ChromeUtils.registerWindowActor("AppTestDelegate", {
       parent: {
@@ -50,7 +59,7 @@ this.specialpowers = class extends ExtensionAPI {
   }
 
   onShutdown() {
-    SpecialPowersParent.unregisterActor();
+    ChromeUtils.unregisterWindowActor("SpecialPowers");
     ChromeUtils.unregisterWindowActor("AppTestDelegate");
     resProto.setSubstitution("specialpowers", null);
   }
