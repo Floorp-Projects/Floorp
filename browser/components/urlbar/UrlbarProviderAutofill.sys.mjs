@@ -43,13 +43,18 @@ const ORIGIN_FRECENCY_FIELD = ORIGIN_USE_ALT_FRECENCY
 // the mean of all moz_origins.frecency values + stddevMultiplier * one standard
 // deviation.  This is inlined directly in the SQL (as opposed to being a custom
 // Sqlite function for example) in order to be as efficient as possible.
+// For alternative frecency, a NULL frecency will be normalized to 0.0, and when
+// it will graduate, it will likely become 1 (official frecency is NOT NULL).
+// Thus we set a minimum threshold of 2.0, otherwise if all the visits are older
+// than the cutoff, we end up checking 0.0 (frecency) >= 0.0 (threshold) and
+// autofill everything instead of nothing.
 const SQL_AUTOFILL_WITH = ORIGIN_USE_ALT_FRECENCY
   ? `
     WITH
     autofill_frecency_threshold(value) AS (
       SELECT IFNULL(
         (SELECT value FROM moz_meta WHERE key = 'origin_alt_frecency_threshold'),
-        0.0
+        2.0
       )
     )
     `

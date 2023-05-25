@@ -1148,26 +1148,38 @@ export var UrlbarTestUtils = {
   },
 
   /**
-   * Enrolls in a mock Nimbus rollout.
+   * Enrolls in a mock Nimbus feature.
    *
    * If you call UrlbarPrefs.updateFirefoxSuggestScenario() from an xpcshell
    * test, you must call this first to intialize the Nimbus urlbar feature.
    *
    * @param {object} value
    *   Define any desired Nimbus variables in this object.
+   * @param {string} [feature]
+   *   The feature to init.
+   * @param {string} [enrollmentType]
+   *   The enrollment type, either "rollout" (default) or "config".
    * @returns {Function}
-   *   A cleanup function that will remove the mock rollout.
+   *   A cleanup function that will unenroll the feature, returns a promise.
    */
-  async initNimbusFeature(value = {}) {
+  async initNimbusFeature(
+    value = {},
+    feature = "urlbar",
+    enrollmentType = "rollout"
+  ) {
     this.info?.("initNimbusFeature awaiting ExperimentManager.onStartup");
     await lazy.ExperimentManager.onStartup();
 
     this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
     await lazy.ExperimentAPI.ready();
 
-    this.info?.("initNimbusFeature awaiting ExperimentFakes.enrollWithRollout");
-    let doCleanup = await lazy.ExperimentFakes.enrollWithRollout({
-      featureId: lazy.NimbusFeatures.urlbar.featureId,
+    let method =
+      enrollmentType == "rollout"
+        ? "enrollWithRollout"
+        : "enrollWithFeatureConfig";
+    this.info?.(`initNimbusFeature awaiting ExperimentFakes.${method}`);
+    let doCleanup = await lazy.ExperimentFakes[method]({
+      featureId: lazy.NimbusFeatures[feature].featureId,
       value: { enabled: true, ...value },
     });
 
