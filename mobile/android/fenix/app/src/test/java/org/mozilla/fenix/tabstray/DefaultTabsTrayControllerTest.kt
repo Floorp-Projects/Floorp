@@ -585,10 +585,10 @@ class DefaultTabsTrayControllerTest {
         trayStore.dispatch(TabsTrayAction.ExitSelectMode)
         trayStore.waitUntilIdle()
 
-        controller.handleMultiSelectClicked(tab1, "Tabs tray")
+        controller.handleTabSelected(tab1, "Tabs tray")
         verify(exactly = 1) { controller.handleTabSelected(tab1, "Tabs tray") }
 
-        controller.handleMultiSelectClicked(tab2, "Tabs tray")
+        controller.handleTabSelected(tab2, "Tabs tray")
         verify(exactly = 1) { controller.handleTabSelected(tab2, "Tabs tray") }
     }
 
@@ -613,10 +613,10 @@ class DefaultTabsTrayControllerTest {
         trayStore.dispatch(TabsTrayAction.AddSelectTab(tab2))
         trayStore.waitUntilIdle()
 
-        controller.handleMultiSelectClicked(tab1, "Tabs tray")
+        controller.handleTabSelected(tab1, "Tabs tray")
         verify(exactly = 1) { controller.handleTabUnselected(tab1) }
 
-        controller.handleMultiSelectClicked(tab2, "Tabs tray")
+        controller.handleTabSelected(tab2, "Tabs tray")
         verify(exactly = 1) { controller.handleTabUnselected(tab2) }
     }
 
@@ -644,7 +644,7 @@ class DefaultTabsTrayControllerTest {
         trayStore.dispatch(TabsTrayAction.AddSelectTab(tab1))
         trayStore.waitUntilIdle()
 
-        controller.handleMultiSelectClicked(tab2, "Tabs tray")
+        controller.handleTabSelected(tab2, "Tabs tray")
 
         middleware.assertLastAction(TabsTrayAction.AddSelectTab::class) {
             assertEquals(tab2, it.tab)
@@ -903,6 +903,7 @@ class DefaultTabsTrayControllerTest {
             content = ContentState(url = "https://mozilla.com", private = true),
             id = "privateTab",
         )
+        trayStore = TabsTrayStore()
         browserStore = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(normalTab, privateTab),
@@ -942,6 +943,7 @@ class DefaultTabsTrayControllerTest {
         val privateTab = TabSessionState(content = ContentState(url = "https://mozilla.com", private = true), id = "privateTab")
         var showUndoSnackbarForTabInvoked = false
         var navigateToHomeAndDeleteSessionInvoked = false
+        trayStore = TabsTrayStore()
         browserStore = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(currentTab, privateTab),

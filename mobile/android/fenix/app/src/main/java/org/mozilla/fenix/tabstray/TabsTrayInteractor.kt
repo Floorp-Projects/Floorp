@@ -85,17 +85,6 @@ interface TabsTrayInteractor :
     fun onMediaClicked(tab: TabSessionState)
 
     /**
-     * Invoked when tabs are clicked when multi-selection is enabled.
-     *
-     * @param tab [TabSessionState] that was clicked.
-     * @param source App feature from which the tab was clicked.
-     */
-    fun onMultiSelectClicked(
-        tab: TabSessionState,
-        source: String?,
-    )
-
-    /**
      * Invoked when a tab is long clicked.
      *
      * @param tab [TabSessionState] that was clicked.
@@ -195,10 +184,6 @@ class DefaultTabsTrayInteractor(
 
     override fun onMediaClicked(tab: TabSessionState) {
         controller.handleMediaClicked(tab)
-    }
-
-    override fun onMultiSelectClicked(tab: TabSessionState, source: String?) {
-        controller.handleMultiSelectClicked(tab, source)
     }
 
     override fun onTabLongClicked(tab: TabSessionState): Boolean {

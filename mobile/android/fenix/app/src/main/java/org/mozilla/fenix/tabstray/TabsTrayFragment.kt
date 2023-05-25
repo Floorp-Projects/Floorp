@@ -246,9 +246,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         onTabClick = { tab ->
                             tabsTrayInteractor.onTabSelected(tab, TABS_TRAY_FEATURE_NAME)
                         },
-                        onTabMultiSelectClick = { tab ->
-                            tabsTrayInteractor.onMultiSelectClicked(tab, TABS_TRAY_FEATURE_NAME)
-                        },
                         onTabLongClick = tabsTrayInteractor::onTabLongClicked,
                         onInactiveTabsHeaderClick = tabsTrayInteractor::onInactiveTabsHeaderClicked,
                         onDeleteAllInactiveTabsClick = tabsTrayInteractor::onDeleteAllInactiveTabsClicked,

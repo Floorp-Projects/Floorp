@@ -138,17 +138,6 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
     fun handleMediaClicked(tab: SessionState)
 
     /**
-     * Handles a user's tab click while in multi select mode.
-     *
-     * @param tab [TabSessionState] that was clicked.
-     * @param source App feature from which the tab was clicked.
-     */
-    fun handleMultiSelectClicked(
-        tab: TabSessionState,
-        source: String?,
-    )
-
-    /**
      * Adds the provided tab to the current selection of tabs.
      *
      * @param tab [TabSessionState] that was long clicked.
@@ -527,17 +516,6 @@ class DefaultTabsTrayController(
         )
     }
 
-    override fun handleMultiSelectClicked(tab: TabSessionState, source: String?) {
-        val selected = tabsTrayStore.state.mode.selectedTabs
-        when {
-            selected.isEmpty() && tabsTrayStore.state.mode.isSelect().not() -> {
-                handleTabSelected(tab, source)
-            }
-            tab.id in selected.map { it.id } -> handleTabUnselected(tab)
-            else -> tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
-        }
-    }
-
     override fun handleTabLongClick(tab: TabSessionState): Boolean {
         return if (tab.isNormalTab() && tabsTrayStore.state.mode.selectedTabs.isEmpty()) {
             Collections.longPress.record(NoExtras())
@@ -549,10 +527,17 @@ class DefaultTabsTrayController(
     }
 
     override fun handleTabSelected(tab: TabSessionState, source: String?) {
-        TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))
-        tabsUseCases.selectTab(tab.id)
-        browsingModeManager.mode = BrowsingMode.fromBoolean(tab.content.private)
-        handleNavigateToBrowser()
+        val selected = tabsTrayStore.state.mode.selectedTabs
+        when {
+            selected.isEmpty() && tabsTrayStore.state.mode.isSelect().not() -> {
+                TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))
+                tabsUseCases.selectTab(tab.id)
+                browsingModeManager.mode = BrowsingMode.fromBoolean(tab.content.private)
+                handleNavigateToBrowser()
+            }
+            tab.id in selected.map { it.id } -> handleTabUnselected(tab)
+            else -> tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+        }
     }
 
     override fun handleTabUnselected(tab: TabSessionState) {

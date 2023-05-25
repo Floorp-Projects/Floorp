@@ -65,11 +65,7 @@ class ComposeGridViewHolder(
     }
 
     private fun onClick(tab: TabSessionState) {
-        if (store.state.mode is TabsTrayState.Mode.Select) {
-            interactor.onMultiSelectClicked(tab, featureName)
-        } else {
-            interactor.onTabSelected(tab, featureName)
-        }
+        interactor.onTabSelected(tab, featureName)
     }
 
     private fun onLongClick(tab: TabSessionState) {
