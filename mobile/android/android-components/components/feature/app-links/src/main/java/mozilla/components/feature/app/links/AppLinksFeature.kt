@@ -55,7 +55,7 @@ class AppLinksFeature(
     private val dialog: RedirectDialogFragment? = null,
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
-    private val failedToLaunchAction: () -> Unit = {},
+    private val failedToLaunchAction: (fallbackUrl: String?) -> Unit = {},
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null,
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
     private val shouldPrompt: () -> Boolean = { true },

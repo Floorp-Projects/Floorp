@@ -622,6 +622,15 @@ abstract class BaseBrowserFragment :
                 launchInApp = { context.settings().shouldOpenLinksInApp(customTabSessionId != null) },
                 loadUrlUseCase = context.components.useCases.sessionUseCases.loadUrl,
                 shouldPrompt = { context.settings().shouldPromptOpenLinksInApp() },
+                failedToLaunchAction = { fallbackUrl ->
+                    fallbackUrl?.let {
+                        val appLinksUseCases = activity.components.useCases.appLinksUseCases
+                        val getRedirect = appLinksUseCases.appLinkRedirect
+                        val redirect = getRedirect.invoke(fallbackUrl)
+                        redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        appLinksUseCases.openAppLink.invoke(redirect.appIntent)
+                    }
+                },
             ),
             owner = this,
             view = view,

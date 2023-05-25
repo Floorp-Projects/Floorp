@@ -394,6 +394,15 @@ class BrowserFragment :
                 fragmentManager = parentFragmentManager,
                 launchInApp = { requireContext().settings.openLinksInExternalApp },
                 loadUrlUseCase = requireContext().components.sessionUseCases.loadUrl,
+                failedToLaunchAction = { fallbackUrl ->
+                    fallbackUrl?.let {
+                        val appLinksUseCases = components.appLinksUseCases
+                        val getRedirect = appLinksUseCases.appLinkRedirect
+                        val redirect = getRedirect.invoke(fallbackUrl)
+                        redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        appLinksUseCases.openAppLink.invoke(redirect.appIntent)
+                    }
+                },
             ),
             owner = this,
             view = view,

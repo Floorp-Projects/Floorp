@@ -355,48 +355,51 @@ class AppLinksUseCasesTest {
     fun `Start activity fails will perform failure action`() {
         val context = createContext()
         val appIntent = Intent()
+        appIntent.putExtra(EXTRA_BROWSER_FALLBACK_URL, appUrl)
         val redirect = AppLinkRedirect(appIntent, appUrl, null)
         val subject = AppLinksUseCases(context, { true })
 
-        var failedToLaunch = false
-        val failedAction = { failedToLaunch = true }
+        var failedToLaunch: String? = null
+        val failedAction = { fallbackUrl: String? -> failedToLaunch = fallbackUrl }
         `when`(context.startActivity(any())).thenThrow(ActivityNotFoundException("failed"))
         subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
 
         verify(context).startActivity(any())
-        assert(failedToLaunch)
+        assertEquals(failedToLaunch, appUrl)
     }
 
     @Test
     fun `Security exception perform failure action`() {
         val context = createContext()
         val appIntent = Intent()
+        appIntent.putExtra(EXTRA_BROWSER_FALLBACK_URL, appUrl)
         val redirect = AppLinkRedirect(appIntent, appUrl, null)
         val subject = AppLinksUseCases(context, { true })
 
-        var failedToLaunch = false
-        val failedAction = { failedToLaunch = true }
+        var failedToLaunch: String? = null
+        val failedAction = { fallbackUrl: String? -> failedToLaunch = fallbackUrl }
         `when`(context.startActivity(any())).thenThrow(SecurityException("failed"))
         subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
 
         verify(context).startActivity(any())
-        assert(failedToLaunch)
+        assertEquals(failedToLaunch, appUrl)
     }
 
     @Test
     fun `Null pointer exception perform failure action`() {
         val context = createContext()
         val appIntent = Intent()
+        appIntent.putExtra(EXTRA_BROWSER_FALLBACK_URL, appUrl)
         val redirect = AppLinkRedirect(appIntent, appUrl, null)
         val subject = AppLinksUseCases(context, { true })
 
-        var failedToLaunch = false
-        val failedAction = { failedToLaunch = true }
+        var failedToLaunch: String? = null
+        val failedAction = { fallbackUrl: String? -> failedToLaunch = fallbackUrl }
         `when`(context.startActivity(any())).thenThrow(NullPointerException("failed"))
         subject.openAppLink(redirect.appIntent, failedToLaunchAction = failedAction)
 
         verify(context).startActivity(any())
-        assert(failedToLaunch)
+        assertEquals(failedToLaunch, appUrl)
     }
 
     @Test

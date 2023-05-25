@@ -26,7 +26,8 @@ import java.lang.NullPointerException
 import java.lang.NumberFormatException
 import java.net.URISyntaxException
 
-private const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
 private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -210,7 +211,7 @@ class AppLinksUseCases(
         operator fun invoke(
             appIntent: Intent?,
             launchInNewTask: Boolean = true,
-            failedToLaunchAction: () -> Unit = {},
+            failedToLaunchAction: (fallbackUrl: String?) -> Unit = {},
         ) {
             appIntent?.let {
                 try {
@@ -226,7 +227,7 @@ class AppLinksUseCases(
                 } catch (e: Exception) {
                     when (e) {
                         is ActivityNotFoundException, is SecurityException, is NullPointerException -> {
-                            failedToLaunchAction()
+                            failedToLaunchAction(it.getStringExtra(EXTRA_BROWSER_FALLBACK_URL))
                             Logger.error("failed to start third party app activity", e)
                         }
                         else -> throw e
