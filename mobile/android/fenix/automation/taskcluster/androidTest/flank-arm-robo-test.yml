@@ -2,7 +2,7 @@
 # Flank Documentation: https://flank.github.io/flank/
 gcloud:
   results-bucket: fenix_test_artifacts
-  record-video: true
+  record-video: false
   timeout: 10m
   async: false
 
