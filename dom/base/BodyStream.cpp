@@ -343,7 +343,7 @@ void BodyStream::ErrorPropagation(JSContext* aCx, ReadableStream* aStream,
     mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
 
-  ReleaseObjects();
+  MOZ_ASSERT(IsClosed());
 }
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
