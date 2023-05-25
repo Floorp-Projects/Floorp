@@ -602,7 +602,10 @@ export const FormAutofillHeuristics = {
       lazy.FormAutofillUtils.isFieldVisible(element, runVisiblityCheck)
     );
 
-    let fieldScanner = new lazy.FieldScanner(elements);
+    const fieldScanner = new lazy.FieldScanner(elements, element =>
+      this.inferFieldInfo(element, elements)
+    );
+
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
@@ -766,13 +769,13 @@ export const FormAutofillHeuristics = {
    * Get inferred information about an input element using autocomplete info, fathom and regex-based heuristics.
    *
    * @param {HTMLElement} element - The input element to infer information about.
-   * @param {object} scanner - Scanner object used to analyze elements with fathom.
+   * @param {Array<HTMLElement>} elements - See `getFathomField` for details
    * @returns {Array} - An array containing:
    *                    [0]the inferred field name
    *                    [1]autocomplete information if the element has autocompelte attribute, null otherwise.
    *                    [2]fathom confidence if fathom considers it a cc field, null otherwise.
    */
-  getInferredInfo(element, scanner) {
+  inferFieldInfo(element, elements = []) {
     const autocompleteInfo = element.getAutocompleteInfo();
 
     // An input[autocomplete="on"] will not be early return here since it stll
@@ -799,9 +802,10 @@ export const FormAutofillHeuristics = {
       const fathomFields = fields.filter(r =>
         lazy.CreditCardRulesets.types.includes(r)
       );
-      const [matchedFieldName, confidence] = scanner.getFathomField(
+      const [matchedFieldName, confidence] = this.getFathomField(
         element,
-        fathomFields
+        fathomFields,
+        elements
       );
       // At this point, use fathom's recommendation if it has one
       if (matchedFieldName) {
@@ -826,6 +830,120 @@ export const FormAutofillHeuristics = {
     }
 
     return [null, null, null];
+  },
+
+  /**
+   * Using Fathom, say what kind of CC field an element is most likely to be.
+   * This function deoesn't only run fathom on the passed elements. It also
+   * runs fathom for all elements in the FieldScanner for optimization purpose.
+   *
+   * @param {HTMLElement} element
+   * @param {Array} fields
+   * @param {Array<HTMLElement>} elements - All other eligible elements in the same form. This is mainly used as an
+   *                                        optimization approach to run fathom model on all eligible elements
+   *                                        once instead of one by one
+   * @returns {Array} A tuple of [field name, probability] describing the
+   *   highest-confidence classification
+   */
+  getFathomField(element, fields, elements = []) {
+    if (!fields.length) {
+      return [null, null];
+    }
+
+    if (!this._fathomConfidences?.get(element)) {
+      this._fathomConfidences = new Map();
+
+      // This should not throw unless we run into an OOM situation, at which
+      // point we have worse problems and this failing is not a big deal.
+      elements = elements.includes(element) ? elements : [element];
+      const confidences = this.getFormAutofillConfidences(elements);
+
+      for (let i = 0; i < elements.length; i++) {
+        this._fathomConfidences.set(elements[i], confidences[i]);
+      }
+    }
+
+    const elementConfidences = this._fathomConfidences.get(element);
+    if (!elementConfidences) {
+      return [null, null];
+    }
+
+    let highestField = null;
+    let highestConfidence = lazy.FormAutofillUtils.ccFathomConfidenceThreshold; // Start with a threshold of 0.5
+    for (let [key, value] of Object.entries(elementConfidences)) {
+      if (!fields.includes(key)) {
+        // ignore field that we don't care
+        continue;
+      }
+
+      if (value > highestConfidence) {
+        highestConfidence = value;
+        highestField = key;
+      }
+    }
+
+    if (!highestField) {
+      return [null, null];
+    }
+
+    // Used by test ONLY! This ensure testcases always get the same confidence
+    if (lazy.FormAutofillUtils.ccFathomTestConfidence > 0) {
+      highestConfidence = lazy.FormAutofillUtils.ccFathomTestConfidence;
+    }
+
+    return [highestField, highestConfidence];
+  },
+
+  /**
+   * @param {Array} elements Array of elements that we want to get result from fathom cc rules
+   * @returns {object} Fathom confidence keyed by field-type.
+   */
+  getFormAutofillConfidences(elements) {
+    if (
+      lazy.FormAutofillUtils.ccHeuristicsMode ==
+      lazy.FormAutofillUtils.CC_FATHOM_NATIVE
+    ) {
+      const confidences = ChromeUtils.getFormAutofillConfidences(elements);
+      return confidences.map(c => {
+        let result = {};
+        for (let [fieldName, confidence] of Object.entries(c)) {
+          let type =
+            lazy.FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
+              fieldName
+            );
+          result[type] = confidence;
+        }
+        return result;
+      });
+    }
+
+    return elements.map(element => {
+      /**
+       * Return how confident our ML model is that `element` is a field of the
+       * given type.
+       *
+       * @param {string} fieldName The Fathom type to check against. This is
+       *   conveniently the same as the autocomplete attribute value that means
+       *   the same thing.
+       * @returns {number} Confidence in range [0, 1]
+       */
+      function confidence(fieldName) {
+        const ruleset = lazy.CreditCardRulesets[fieldName];
+        const fnodes = ruleset.against(element).get(fieldName);
+
+        // fnodes is either 0 or 1 item long, since we ran the ruleset
+        // against a single element:
+        return fnodes.length ? fnodes[0].scoreFor(fieldName) : 0;
+      }
+
+      // Bang the element against the ruleset for every type of field:
+      const confidences = {};
+      lazy.CreditCardRulesets.types.map(fieldName => {
+        confidences[fieldName] = confidence(fieldName);
+      });
+
+      return confidences;
+    });
   },
 
   /**
