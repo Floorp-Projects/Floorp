@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { getSelectedLocation } from "./selected-location";
+import { getSource } from "../selectors";
 
 /**
  * Note that arguments can be created via `createLocation`.
@@ -100,5 +101,34 @@ export function sortSelectedLocations(locations, selectedSource) {
     }
 
     return aSelected.column < bSelected.column ? -1 : 1;
+  });
+}
+
+/**
+ * Source map Loader/Worker and debugger frontend don't use the same objects for locations.
+ * Worker uses 'sourceId' attributes whereas the frontend has 'source' attribute.
+ */
+export function sourceMapToDebuggerLocation(state, location) {
+  // From MapScopes modules, we might re-process the exact same location objects
+  // for which we would already have computed the source object,
+  // and which would lack sourceId attribute.
+  if (location.source) {
+    return location;
+  }
+
+  // SourceMapLoader doesn't known about debugger's source objects
+  // so that we have to fetch it from here
+  const source = getSource(state, location.sourceId);
+  if (!source) {
+    throw new Error(`Could not find source-map source ${location.sourceId}`);
+  }
+
+  return createLocation({
+    ...location,
+    source,
+
+    // Ensure having location with sourceUrl attribute set.
+    // To be removed in bug 1822783.
+    sourceUrl: source.url,
   });
 }

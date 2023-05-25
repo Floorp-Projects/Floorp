@@ -20,6 +20,7 @@ import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 import {
   debuggerToSourceMapLocation,
+  sourceMapToDebuggerLocation,
   createLocation,
 } from "../../utils/location";
 
@@ -34,12 +35,7 @@ async function mapLocations(generatedLocations, { getState, sourceMapLoader }) {
   return originalLocations.map((location, index) => ({
     // If location is null, this particular location doesn't map to any original source.
     location: location
-      ? createLocation({
-          ...location,
-          // SourceMapLoader doesn't know about debugger's source objects
-          // so that we have to fetch it from here.
-          source: getSource(getState(), location.sourceId),
-        })
+      ? sourceMapToDebuggerLocation(getState(), location)
       : generatedLocations[index],
     generatedLocation: generatedLocations[index],
   }));
