@@ -39,6 +39,24 @@ export function createLocation({
 }
 
 /**
+ * Convert location objects created via `createLocation` into
+ * the format used by the Source Map Loader/Worker.
+ * It only needs sourceId, line and column attributes.
+ */
+export function debuggerToSourceMapLocation(location) {
+  return {
+    sourceId: location.source.id,
+    line: location.line,
+    column: location.column,
+
+    // Also add sourceUrl attribute as this may be preserved in jest tests
+    // where we return the exact same object.
+    // This will be removed by bug 1822783.
+    sourceUrl: location.sourceUrl,
+  };
+}
+
+/**
  * Pending location only need these three attributes,
  * and especially doesn't need the large source and sourceActor objects of the regular location objects.
  *
