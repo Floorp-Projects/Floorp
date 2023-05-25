@@ -512,6 +512,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.zeitstempel]]
+version = "0.1.1"
+when = "2021-03-18"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
 [[audits.bytecode-alliance.audits.arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
@@ -819,6 +826,12 @@ that the RNG here is not cryptographically secure.
 """
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
 
+[[audits.google.audits.glob]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = "safe-to-deploy"
+version = "0.3.1"
+aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
+
 [[audits.google.audits.h2]]
 who = "ChromeOS"
 criteria = "safe-to-run"
@@ -932,6 +945,15 @@ aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
+
+[[audits.mozilla.wildcard-audits.zeitstempel]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 48 # Jan-Erik Rediger (badboy)
+start = "2021-03-03"
+end = "2024-05-10"
+notes = "Maintained by me"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.either]]
 who = "Nika Layzell <nika@thelayzells.com>"
