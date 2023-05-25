@@ -15,10 +15,12 @@ FINAL_TARGET_FILES += [
 ]
 
 FINAL_TARGET_FILES.content += [
-    "../modules/Assert.sys.mjs",
     "content/AppTestDelegate.sys.mjs",
     "content/AppTestDelegateChild.sys.mjs",
     "content/AppTestDelegateParent.sys.mjs",
+]
+
+TESTING_JS_MODULES += [
     "content/MockColorPicker.sys.mjs",
     "content/MockFilePicker.sys.mjs",
     "content/MockPermissionPrompt.sys.mjs",
@@ -27,10 +29,6 @@ FINAL_TARGET_FILES.content += [
     "content/SpecialPowersParent.sys.mjs",
     "content/SpecialPowersSandbox.sys.mjs",
     "content/WrapPrivileged.sys.mjs",
-]
-
-TESTING_JS_MODULES += [
-    "content/MockFilePicker.sys.mjs",
 ]
 
 with Files("**"):

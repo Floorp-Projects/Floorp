@@ -72,9 +72,9 @@ const intermittently_loaded_scripts = {
     "chrome://remote/content/shared/Log.sys.mjs",
     "resource://testing-common/BrowserTestUtilsChild.sys.mjs",
     "resource://testing-common/ContentEventListenerChild.sys.mjs",
-    "resource://specialpowers/SpecialPowersChild.sys.mjs",
+    "resource://testing-common/SpecialPowersChild.sys.mjs",
     "resource://specialpowers/AppTestDelegateChild.sys.mjs",
-    "resource://specialpowers/WrapPrivileged.sys.mjs",
+    "resource://testing-common/WrapPrivileged.sys.mjs",
   ]),
   processScripts: new Set([]),
 };
