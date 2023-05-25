@@ -226,13 +226,11 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool getChangeArrayByCopyEnabled() const { return changeArrayByCopy_; }
   RealmCreationOptions& setChangeArrayByCopyEnabled(bool flag) {
     changeArrayByCopy_ = flag;
     return *this;
   }
-#endif
 
 #ifdef ENABLE_NEW_SET_METHODS
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
@@ -291,9 +289,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool wellFormedUnicodeStrings_ = false;
 #endif
   bool arrayFromAsync_ = false;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ = false;
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods_ = false;
 #endif
