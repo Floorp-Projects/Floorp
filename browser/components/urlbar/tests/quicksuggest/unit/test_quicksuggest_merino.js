@@ -641,7 +641,7 @@ add_task(async function block() {
 // Tests a Merino suggestion that is a best match.
 add_task(async function bestMatch() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
-  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   // Simply enabling the best match feature should make the mock suggestion a
