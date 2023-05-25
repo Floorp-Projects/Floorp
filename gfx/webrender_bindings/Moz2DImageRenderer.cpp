@@ -19,7 +19,7 @@
 
 #include <unordered_map>
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 #  include "mozilla/gfx/UnscaledFontMac.h"
 #elif defined(XP_WIN)
 #  include "mozilla/gfx/UnscaledFontDWrite.h"
@@ -173,7 +173,7 @@ void AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
     FontTemplate& font = sFontDataTable[aKey];
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
     font.mUnscaledFont =
         new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), false);
 #elif defined(XP_WIN)
@@ -249,7 +249,7 @@ static RefPtr<UnscaledFont> GetUnscaledFont(Translator* aTranslator,
   }
   MOZ_ASSERT(data.mData);
   FontType type =
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
       FontType::MAC;
 #elif defined(XP_WIN)
       FontType::DWRITE;
