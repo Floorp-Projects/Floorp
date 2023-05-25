@@ -2785,6 +2785,11 @@ pref("first-startup.timeout", 30000);
   pref("browser.menu.showViewImageInfo", false);
 #endif
 
+// Handing URLs to external apps via the "Share URL" menu item could allow a proxy bypass
+#ifdef MOZ_PROXY_BYPASS_PROTECTION
+  pref("browser.menu.share_url.allow", false);
+#endif
+
 // Mozilla-controlled domains that are allowed to use non-standard
 // context properties for SVG images for use in the browser UI. Please
 // keep this list short. This preference (and SVG `context-` keyword support)
