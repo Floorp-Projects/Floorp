@@ -159,7 +159,7 @@ def setup_vscode(command_context, interactive):
         },
         # Note, the top-level editor settings are left as default to allow the
         # user's defaults (if any) to take effect.
-        "[javascript][javascriptreact][typescript][typescriptreact][json]": {
+        "[javascript][javascriptreact][typescript][typescriptreact][json][html]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode",
             "editor.formatOnSave": True,
         },
@@ -205,6 +205,13 @@ def setup_vscode(command_context, interactive):
         if "[javascript][javascriptreact][typescript][typescriptreact]" in old_settings:
             old_settings.pop(
                 "[javascript][javascriptreact][typescript][typescriptreact]"
+            )
+        if (
+            "[javascript][javascriptreact][typescript][typescriptreact][json]"
+            in old_settings
+        ):
+            old_settings.pop(
+                "[javascript][javascriptreact][typescript][typescriptreact][json]"
             )
 
         settings = {**old_settings, **new_settings}
