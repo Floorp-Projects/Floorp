@@ -24,7 +24,13 @@ const FAKE_MIGRATOR_LIST = [
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
     key: "chrome",
     displayName: "Chrome",
-    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    resourceTypes: [
+      "HISTORY",
+      "FORMDATA",
+      "PASSWORDS",
+      "BOOKMARKS",
+      "PAYMENT_METHODS",
+    ],
     profile: { id: "Default", name: "Default" },
     brandImage: "chrome://browser/content/migration/brands/chrome.png",
   },
@@ -32,7 +38,13 @@ const FAKE_MIGRATOR_LIST = [
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
     key: "chrome",
     displayName: "Chrome",
-    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    resourceTypes: [
+      "HISTORY",
+      "FORMDATA",
+      "PASSWORDS",
+      "BOOKMARKS",
+      "PAYMENT_METHODS",
+    ],
     profile: { id: "person-2", name: "Person 2" },
     brandImage: "chrome://browser/content/migration/brands/chrome.png",
   },
@@ -55,7 +67,13 @@ const FAKE_MIGRATOR_LIST = [
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
     key: "chromium-edge",
     displayName: "Microsoft Edge",
-    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    resourceTypes: [
+      "HISTORY",
+      "FORMDATA",
+      "PASSWORDS",
+      "BOOKMARKS",
+      "PAYMENT_METHODS",
+    ],
     profile: { id: "Default", name: "Default" },
     brandImage: "chrome://browser/content/migration/brands/edge.png",
   },
@@ -63,7 +81,13 @@ const FAKE_MIGRATOR_LIST = [
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
     key: "brave",
     displayName: "Brave",
-    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    resourceTypes: [
+      "HISTORY",
+      "FORMDATA",
+      "PASSWORDS",
+      "BOOKMARKS",
+      "PAYMENT_METHODS",
+    ],
     profile: { id: "Default", name: "Default" },
     brandImage: "chrome://browser/content/migration/brands/brave.png",
   },
@@ -192,6 +216,9 @@ Progress.args = {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
         inProgress: true,
       },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]: {
+        inProgress: true,
+      },
     },
   },
 };
@@ -216,6 +243,10 @@ PartialProgress.args = {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
         inProgress: false,
         message: "Addresses, credit cards, form history",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]: {
+        inProgress: false,
+        message: "6 payment methods",
       },
     },
   },
@@ -243,6 +274,10 @@ Success.args = {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
         inProgress: false,
         message: "Addresses, credit cards, form history",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]: {
+        inProgress: false,
+        message: "6 payment methods",
       },
     },
   },

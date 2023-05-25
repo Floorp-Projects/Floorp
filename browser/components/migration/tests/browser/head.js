@@ -142,6 +142,7 @@ async function waitForTestMigration(
     bookmarks: EXPECTED_QUANTITY,
     history: EXPECTED_QUANTITY,
     logins: EXPECTED_QUANTITY,
+    cards: EXPECTED_QUANTITY,
   });
 
   // Fake out the migrate method of the migrator and assert that the

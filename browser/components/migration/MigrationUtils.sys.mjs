@@ -904,7 +904,11 @@ class MigrationUtils {
 
     await formAutofillStorage.initialize();
     for (let card of cards) {
-      await formAutofillStorage.creditCards.add(card);
+      try {
+        await formAutofillStorage.creditCards.add(card);
+      } catch (e) {
+        console.error("Failed to insert credit card due to error: ", e, card);
+      }
     }
   }
 
