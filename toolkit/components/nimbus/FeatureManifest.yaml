@@ -281,6 +281,27 @@ urlbar:
         used, and the user will be able to increment the minimum length without
         any limit.
 
+frecency:
+  description: "The address bar ranking algorithm"
+  owner: search-and-suggest-program@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    originsAlternativeEnable:
+      description: >-
+        Use an alternative ranking algorithm for autofilling origins, that is
+        mainly domains of Web pages. When the user types the beginning of an
+        origin, we autofill the whole origin. Whether autofill happens depends
+        on the ranking algorithm. Bookmarks are always autofilled anyway.
+      type: boolean
+      setPref: "places.frecency.origins.alternative.featureGate"
+    originsDaysCutOff:
+      description: >-
+        The alternative ranking algorithm only considers pages visited in the
+        last N days, where N is controlled by this variable.
+      type: int
+      setPref: "places.frecency.origins.alternative.daysCutOff"
+
 aboutwelcome:
   description: "The about:welcome page"
   owner: omc@mozilla.com
