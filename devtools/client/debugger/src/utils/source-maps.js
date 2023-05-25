@@ -35,6 +35,8 @@ export async function getGeneratedLocation(location, thunkArgs) {
     return location;
   }
 
+  // SourceMapLoader doesn't known about debugger's source objects
+  // so that we have to fetch it from here
   const generatedSource = getSource(getState(), generatedLocation.sourceId);
   if (!generatedSource) {
     throw new Error(

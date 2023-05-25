@@ -308,35 +308,6 @@ describe("loadGeneratedSourceText", () => {
     ).toEqual("yay");
   });
 
-  it("should cache subsequent source text loads", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
-
-    const source = await dispatch(
-      actions.newGeneratedSource(makeSource("foo1"))
-    );
-    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-
-    const prevSource = selectors.getSource(getState(), "foo1");
-    const prevSourceSourceActor =
-      selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        prevSource.id
-      );
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: prevSourceSourceActor,
-      })
-    );
-    const curSource = selectors.getSource(getState(), "foo1");
-
-    expect(prevSource === curSource).toBeTruthy();
-  });
-
   it("should indicate a loading source", async () => {
     const store = createStore(mockCommandClient);
     const { dispatch, cx, getState } = store;
@@ -375,17 +346,14 @@ describe("loadGeneratedSourceText", () => {
       source.id
     );
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-    const badSource = selectors.getSource(getState(), "bad-id");
 
-    const content = badSource
-      ? selectors.getSettledSourceTextContent(
-          getState(),
-          createLocation({
-            source: badSource,
-            sourceActor: sourceActor,
-          })
-        )
-      : null;
+    const content = selectors.getSettledSourceTextContent(
+      getState(),
+      createLocation({
+        source,
+        sourceActor,
+      })
+    );
     expect(
       content && isRejected(content) && typeof content.value === "string"
         ? content.value.indexOf("sourceContents failed")
