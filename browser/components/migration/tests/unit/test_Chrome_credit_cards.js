@@ -175,6 +175,32 @@ add_task(async function test_credit_cards() {
     "Sanity check the source exists"
   );
 
+  Services.prefs.setBoolPref(
+    "browser.migrate.chrome.payment_methods.enabled",
+    false
+  );
+  Assert.ok(
+    !(
+      (await migrator.getMigrateData(PROFILE)) &
+      MigrationUtils.resourceTypes.PAYMENT_METHODS
+    ),
+    "Should be able to disable migrating payment methods"
+  );
+  // Clear the cached resources now so that a re-check for payment methods
+  // will look again.
+  delete migrator._resourcesByProfile[PROFILE.id];
+
+  Services.prefs.setBoolPref(
+    "browser.migrate.chrome.payment_methods.enabled",
+    true
+  );
+
+  Assert.ok(
+    (await migrator.getMigrateData(PROFILE)) &
+      MigrationUtils.resourceTypes.PAYMENT_METHODS,
+    "Should be able to enable migrating payment methods"
+  );
+
   let { formAutofillStorage } = ChromeUtils.importESModule(
     "resource://autofill/FormAutofillStorage.sys.mjs"
   );

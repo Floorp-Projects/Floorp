@@ -382,6 +382,15 @@ export class ChromeProfileMigrator extends MigratorBase {
     };
   }
   async _GetPaymentMethodsResource(aProfileFolder) {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.migrate.chrome.payment_methods.enabled",
+        false
+      )
+    ) {
+      return null;
+    }
+
     let paymentMethodsPath = PathUtils.join(aProfileFolder, "Web Data");
 
     if (!(await IOUtils.exists(paymentMethodsPath))) {
