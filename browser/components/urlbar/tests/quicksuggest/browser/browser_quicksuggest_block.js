@@ -68,7 +68,12 @@ add_setup(async function () {
   Services.telemetry.clearEvents();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: REMOTE_SETTINGS_RESULTS,
+      },
+    ],
     config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
   });
 });
