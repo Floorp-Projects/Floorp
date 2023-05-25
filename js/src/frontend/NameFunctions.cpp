@@ -87,7 +87,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
   /*
    * Walk over the given ParseNode, attempting to convert it to a stringified
-   * name that respresents where the function is being assigned to.
+   * name that represents where the function is being assigned to.
    *
    * |*foundName| is set to true if a name is found for the expression.
    */
