@@ -71,7 +71,11 @@ void HTMLDialogElement::Close(
 
 void HTMLDialogElement::Show(ErrorResult& aError) {
   if (Open()) {
-    return;
+    if (!IsInTopLayer()) {
+      return;
+    }
+    return aError.ThrowInvalidStateError(
+        "Cannot call show() on an open modal dialog.");
   }
 
   if (IsPopoverOpen()) {
@@ -121,13 +125,16 @@ void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLDialogElement::ShowModal(ErrorResult& aError) {
-  if (!IsInComposedDoc()) {
-    return aError.ThrowInvalidStateError("Dialog element is not connected");
+  if (Open()) {
+    if (IsInTopLayer()) {
+      return;
+    }
+    return aError.ThrowInvalidStateError(
+        "Cannot call showModal() on an open non-modal dialog.");
   }
 
-  if (Open()) {
-    return aError.ThrowInvalidStateError(
-        "Dialog element already has an 'open' attribute");
+  if (!IsInComposedDoc()) {
+    return aError.ThrowInvalidStateError("Dialog element is not connected");
   }
 
   if (IsPopoverOpen()) {
