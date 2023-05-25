@@ -117,6 +117,10 @@ async function ensureQuickSuggestInit({
           },
         ],
       },
+      {
+        type: "weather",
+        weather: MerinoTestUtils.WEATHER_RS_DATA,
+      },
     ],
   });
 }

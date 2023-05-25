@@ -276,9 +276,5 @@ export class AdmWikipedia extends BaseFeature {
     return rs.attachments.downloadToDisk(record);
   }
 
-  get _test_suggestionsMap() {
-    return this.#suggestionsMap;
-  }
-
   #suggestionsMap;
 }

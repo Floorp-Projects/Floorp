@@ -17,7 +17,7 @@ const index = 1;
 const position = index + 1;
 
 const { TELEMETRY_SCALARS: WEATHER_SCALARS } = UrlbarProviderWeather;
-const { WEATHER_SUGGESTION: suggestion } = MerinoTestUtils;
+const { WEATHER_SUGGESTION: suggestion, WEATHER_RS_DATA } = MerinoTestUtils;
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
@@ -30,6 +30,12 @@ add_setup(async function () {
 
   await setUpTelemetryTest({
     suggestions: [],
+    remoteSettingsResults: [
+      {
+        type: "weather",
+        weather: WEATHER_RS_DATA,
+      },
+    ],
   });
   await MerinoTestUtils.initWeather();
   await updateTopSitesAndAwaitChanged();
