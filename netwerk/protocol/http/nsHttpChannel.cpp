@@ -400,9 +400,11 @@ nsresult nsHttpChannel::AddSecurityMessage(const nsAString& aMessageTag,
 
 NS_IMETHODIMP
 nsHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                     const nsACString& aCategory) {
+                                     const nsACString& aCategory,
+                                     bool aIsWarning) {
   if (mWarningReporter) {
-    return mWarningReporter->LogBlockedCORSRequest(aMessage, aCategory);
+    return mWarningReporter->LogBlockedCORSRequest(aMessage, aCategory,
+                                                   aIsWarning);
   }
   return NS_ERROR_UNEXPECTED;
 }

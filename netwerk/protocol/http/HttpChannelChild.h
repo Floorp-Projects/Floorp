@@ -173,9 +173,11 @@ class HttpChannelChild final : public PHttpChannelChild,
   already_AddRefed<nsISerialEventTarget> GetNeckoTarget() override;
 
   virtual mozilla::ipc::IPCResult RecvLogBlockedCORSRequest(
-      const nsAString& aMessage, const nsACString& aCategory) override;
+      const nsAString& aMessage, const nsACString& aCategory,
+      const bool& aIsWarning) override;
   NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage,
-                                   const nsACString& aCategory) override;
+                                   const nsACString& aCategory,
+                                   bool aIsWarning = false) override;
 
   virtual mozilla::ipc::IPCResult RecvLogMimeTypeMismatch(
       const nsACString& aMessageName, const bool& aWarning,

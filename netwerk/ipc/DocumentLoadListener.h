@@ -246,10 +246,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   }
 
   nsresult LogBlockedCORSRequest(const nsAString& aMessage,
-                                 const nsACString& aCategory) override {
+                                 const nsACString& aCategory,
+                                 bool aIsWarning) override {
     LogBlockedCORSRequestParams params;
     params.mMessage = aMessage;
     params.mCategory = aCategory;
+    params.mIsWarning = aIsWarning;
     mSecurityWarningFunctions.AppendElement(
         SecurityWarningFunction{VariantIndex<1>{}, std::move(params)});
     return NS_OK;
@@ -473,6 +475,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   struct LogBlockedCORSRequestParams {
     nsString mMessage;
     nsCString mCategory;
+    bool mIsWarning;
   };
 
   struct LogMimeTypeMismatchParams {

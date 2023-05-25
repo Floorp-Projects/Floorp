@@ -1406,8 +1406,8 @@ void DocumentLoadListener::ApplyPendingFunctions(
                                                       aParams.mMessageCategory);
           },
           [reporter](const LogBlockedCORSRequestParams& aParams) {
-            Unused << reporter->LogBlockedCORSRequest(aParams.mMessage,
-                                                      aParams.mCategory);
+            Unused << reporter->LogBlockedCORSRequest(
+                aParams.mMessage, aParams.mCategory, aParams.mIsWarning);
           },
           [reporter](const LogMimeTypeMismatchParams& aParams) {
             Unused << reporter->LogMimeTypeMismatch(

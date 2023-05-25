@@ -768,7 +768,8 @@ NullHttpChannel::SetIsMainDocumentChannel(bool aValue) {
 
 NS_IMETHODIMP
 NullHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                       const nsACString& aCategory) {
+                                       const nsACString& aCategor,
+                                       bool aIsWarning) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

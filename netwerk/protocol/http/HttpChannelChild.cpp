@@ -3053,20 +3053,23 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvLogBlockedCORSRequest(
-    const nsAString& aMessage, const nsACString& aCategory) {
-  Unused << LogBlockedCORSRequest(aMessage, aCategory);
+    const nsAString& aMessage, const nsACString& aCategory,
+    const bool& aIsWarning) {
+  Unused << LogBlockedCORSRequest(aMessage, aCategory, aIsWarning);
   return IPC_OK();
 }
 
 NS_IMETHODIMP
 HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
-                                        const nsACString& aCategory) {
+                                        const nsACString& aCategory,
+                                        bool aIsWarning) {
   uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
   bool privateBrowsing = !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
   bool fromChromeContext =
       mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal();
-  nsCORSListenerProxy::LogBlockedCORSRequest(
-      innerWindowID, privateBrowsing, fromChromeContext, aMessage, aCategory);
+  nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, privateBrowsing,
+                                             fromChromeContext, aMessage,
+                                             aCategory, aIsWarning);
   return NS_OK;
 }
 

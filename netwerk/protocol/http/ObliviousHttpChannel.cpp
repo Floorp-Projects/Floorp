@@ -374,8 +374,9 @@ ObliviousHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
 
 NS_IMETHODIMP
 ObliviousHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                            const nsACString& aCategory) {
-  return mInnerChannel->LogBlockedCORSRequest(aMessage, aCategory);
+                                            const nsACString& aCategory,
+                                            bool aIsWarning) {
+  return mInnerChannel->LogBlockedCORSRequest(aMessage, aCategory, aIsWarning);
 }
 
 NS_IMETHODIMP
