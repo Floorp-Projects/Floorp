@@ -1066,6 +1066,33 @@ class DefaultTabsTrayControllerTest {
         assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
 
+    @Test
+    fun `WHEN the normal tabs page button is clicked THEN report the metric`() {
+        assertNull(TabsTray.normalModeTapped.testGetValue())
+
+        createController().handleTrayScrollingToPosition(Page.NormalTabs.ordinal, false)
+
+        assertNotNull(TabsTray.normalModeTapped.testGetValue())
+    }
+
+    @Test
+    fun `WHEN the private tabs page button is clicked THEN report the metric`() {
+        assertNull(TabsTray.privateModeTapped.testGetValue())
+
+        createController().handleTrayScrollingToPosition(Page.PrivateTabs.ordinal, false)
+
+        assertNotNull(TabsTray.privateModeTapped.testGetValue())
+    }
+
+    @Test
+    fun `WHEN the synced tabs page button is clicked THEN report the metric`() {
+        assertNull(TabsTray.syncedModeTapped.testGetValue())
+
+        createController().handleTrayScrollingToPosition(Page.SyncedTabs.ordinal, false)
+
+        assertNotNull(TabsTray.syncedModeTapped.testGetValue())
+    }
+
     private fun createController(
         navigateToHomeAndDeleteSession: (String) -> Unit = { },
         selectTabPosition: (Int, Boolean) -> Unit = { _, _ -> },

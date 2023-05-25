@@ -9,13 +9,10 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_SYNCED_TABS
-import org.mozilla.fenix.utils.Do
 
 /**
  * Selected the selected pager depending on the [BrowserStore] state and synchronizes user actions
@@ -82,12 +79,6 @@ internal class TabLayoutObserver(
         }
 
         interactor.onTrayPositionSelected(tab.position, animate)
-
-        Do exhaustive when (Page.positionToPage(tab.position)) {
-            Page.NormalTabs -> TabsTray.normalModeTapped.record(NoExtras())
-            Page.PrivateTabs -> TabsTray.privateModeTapped.record(NoExtras())
-            Page.SyncedTabs -> TabsTray.syncedModeTapped.record(NoExtras())
-        }
     }
 
     override fun onTabUnselected(tab: TabLayout.Tab) = Unit

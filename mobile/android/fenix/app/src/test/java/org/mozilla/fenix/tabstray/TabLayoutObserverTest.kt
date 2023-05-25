@@ -12,13 +12,10 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
@@ -40,34 +37,28 @@ class TabLayoutObserverTest {
         val observer = TabLayoutObserver(interactor)
         val tab = mockk<TabLayout.Tab>()
         every { tab.position } returns 1
-        assertNull(TabsTray.privateModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         store.waitUntilIdle()
 
         verify { interactor.onTrayPositionSelected(1, false) }
-        assertNotNull(TabsTray.privateModeTapped.testGetValue())
 
         every { tab.position } returns 0
-        assertNull(TabsTray.normalModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         store.waitUntilIdle()
 
         verify { interactor.onTrayPositionSelected(0, true) }
-        assertNotNull(TabsTray.normalModeTapped.testGetValue())
 
         every { tab.position } returns 2
-        assertNull(TabsTray.syncedModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         store.waitUntilIdle()
 
         verify { interactor.onTrayPositionSelected(2, true) }
-        assertNotNull(TabsTray.syncedModeTapped.testGetValue())
     }
 
     @Test
@@ -75,16 +66,13 @@ class TabLayoutObserverTest {
         val observer = TabLayoutObserver(interactor)
         val tab = mockk<TabLayout.Tab>()
         every { tab.position } returns 1
-        assertNull(TabsTray.privateModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         verify { interactor.onTrayPositionSelected(1, false) }
-        assertNotNull(TabsTray.privateModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         verify { interactor.onTrayPositionSelected(1, true) }
-        assertNotNull(TabsTray.privateModeTapped.testGetValue())
     }
 }
