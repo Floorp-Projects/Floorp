@@ -377,10 +377,10 @@ export function createBreakpoint({
     // }
     options,
 
-    // The location (object) information for the original source, for details on its format and structure See `makeBreakpointLocation`
+    // The location (object) information for the original source, for details on its format and structure See `createLocation`
     location,
 
-    // The location (object) information for the generated source, for details on its format and structure See `makeBreakpointLocation`
+    // The location (object) information for the generated source, for details on its format and structure See `createLocation`
     generatedLocation,
 
     // The text (string) on the line which the brekpoint is set in the generated source

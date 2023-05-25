@@ -4,7 +4,7 @@
 
 import { createBreakpoint } from "../../client/firefox/create";
 import {
-  makeBreakpointLocation,
+  makeBreakpointServerLocation,
   makeBreakpointId,
 } from "../../utils/breakpoint";
 import {
@@ -60,7 +60,7 @@ async function clientSetBreakpoint(
   { getState, dispatch },
   breakpoint
 ) {
-  const breakpointLocation = makeBreakpointLocation(
+  const breakpointServerLocation = makeBreakpointServerLocation(
     getState(),
     breakpoint.generatedLocation
   );
@@ -72,12 +72,15 @@ async function clientSetBreakpoint(
   if (shouldMapBreakpointExpressions) {
     breakpoint = await dispatch(updateBreakpointSourceMapping(cx, breakpoint));
   }
-  return client.setBreakpoint(breakpointLocation, breakpoint.options);
+  return client.setBreakpoint(breakpointServerLocation, breakpoint.options);
 }
 
 function clientRemoveBreakpoint(client, state, generatedLocation) {
-  const breakpointLocation = makeBreakpointLocation(state, generatedLocation);
-  return client.removeBreakpoint(breakpointLocation);
+  const breakpointServerLocation = makeBreakpointServerLocation(
+    state,
+    generatedLocation
+  );
+  return client.removeBreakpoint(breakpointServerLocation);
 }
 
 export function enableBreakpoint(cx, initialBreakpoint) {
