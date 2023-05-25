@@ -659,6 +659,11 @@ skip script test262/built-ins/Date/parse/year-zero.js
 # test for now.
 skip script non262/Tuple/prototype/concat/concat-with-array.js
 
+# https://github.com/tc39/test262/pull/3804
+skip script test262/intl402/Locale/constructor-non-iana-canon.js
+skip script test262/intl402/Locale/prototype/minimize/removing-likely-subtags-first-adds-likely-subtags.js
+
+
 ##############################################
 # Enable Iterator Helpers tests in the shell #
 ##############################################
