@@ -13,7 +13,7 @@ import * as ui from "./ui";
 import * as fileSearch from "./file-search";
 import * as projectTextSearch from "./project-text-search";
 import * as quickOpen from "./quick-open";
-import * as sourcesTree from "./sources-tree";
+import * as sourceTree from "./source-tree";
 import * as sources from "./sources";
 import * as sourcesActors from "./source-actors";
 import * as tabs from "./tabs";
@@ -40,7 +40,7 @@ export default {
   ...objectInspector.actions,
   ...projectTextSearch,
   ...quickOpen,
-  ...sourcesTree,
+  ...sourceTree,
   ...threads,
   ...toolbox,
   ...preview,
