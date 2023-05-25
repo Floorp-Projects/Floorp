@@ -36,23 +36,23 @@ template struct StyleStrong<StyleAnimationValue>;
 template struct StyleStrong<StyleLockedDeclarationBlock>;
 template struct StyleStrong<StyleStylesheetContents>;
 template struct StyleStrong<StyleLockedKeyframe>;
-template struct StyleStrong<StyleLockedLayerBlockRule>;
-template struct StyleStrong<StyleLockedLayerStatementRule>;
+template struct StyleStrong<StyleLayerBlockRule>;
+template struct StyleStrong<StyleLayerStatementRule>;
 template struct StyleStrong<StyleLockedMediaList>;
 template struct StyleStrong<StyleLockedStyleRule>;
 template struct StyleStrong<StyleLockedImportRule>;
 template struct StyleStrong<StyleLockedKeyframesRule>;
-template struct StyleStrong<StyleLockedMediaRule>;
-template struct StyleStrong<StyleLockedDocumentRule>;
-template struct StyleStrong<StyleLockedNamespaceRule>;
+template struct StyleStrong<StyleMediaRule>;
+template struct StyleStrong<StyleDocumentRule>;
+template struct StyleStrong<StyleNamespaceRule>;
 template struct StyleStrong<StyleLockedPageRule>;
 template struct StyleStrong<StylePropertyRule>;
-template struct StyleStrong<StyleLockedSupportsRule>;
-template struct StyleStrong<StyleLockedFontFeatureValuesRule>;
-template struct StyleStrong<StyleLockedFontPaletteValuesRule>;
+template struct StyleStrong<StyleSupportsRule>;
+template struct StyleStrong<StyleFontFeatureValuesRule>;
+template struct StyleStrong<StyleFontPaletteValuesRule>;
 template struct StyleStrong<StyleLockedFontFaceRule>;
 template struct StyleStrong<StyleLockedCounterStyleRule>;
-template struct StyleStrong<StyleLockedContainerRule>;
+template struct StyleStrong<StyleContainerRule>;
 
 template <typename T>
 inline void StyleOwnedSlice<T>::Clear() {

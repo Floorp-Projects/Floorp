@@ -81,7 +81,6 @@ struct PropertyValuePair;
 struct StyleAnimation;
 struct StyleCssUrlData;
 struct StyleAnimationValue;
-struct StylePropertyRule;
 struct StyleStylesheetContents;
 struct URLExtraData;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
@@ -113,11 +112,30 @@ class Element;
   }                                  \
   SERVO_ARC_TYPE(name_, mozilla::StyleLocked##name_)
 #include "mozilla/ServoLockedArcTypeList.h"
-SERVO_ARC_TYPE(PropertyRule, mozilla::StylePropertyRule)
+
+#define UNLOCKED_RULE_TYPE(name_) \
+  namespace mozilla {             \
+  struct Style##name_##Rule;      \
+  }                               \
+  SERVO_ARC_TYPE(name_##Rule, mozilla::Style##name_##Rule)
+
+UNLOCKED_RULE_TYPE(Property)
+UNLOCKED_RULE_TYPE(LayerBlock)
+UNLOCKED_RULE_TYPE(LayerStatement)
+UNLOCKED_RULE_TYPE(Namespace)
+UNLOCKED_RULE_TYPE(Container)
+UNLOCKED_RULE_TYPE(Media)
+UNLOCKED_RULE_TYPE(Supports)
+UNLOCKED_RULE_TYPE(Document)
+UNLOCKED_RULE_TYPE(FontFeatureValues)
+UNLOCKED_RULE_TYPE(FontPaletteValues)
+
 SERVO_ARC_TYPE(AnimationValue, mozilla::StyleAnimationValue)
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 SERVO_ARC_TYPE(CssUrlData, mozilla::StyleCssUrlData)
 SERVO_ARC_TYPE(StyleSheetContents, mozilla::StyleStylesheetContents)
+
+#undef UNLOCKED_RULE_TYPE
 #undef SERVO_LOCKED_ARC_TYPE
 #undef SERVO_ARC_TYPE
 

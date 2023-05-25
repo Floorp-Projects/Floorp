@@ -11,7 +11,7 @@
 namespace mozilla::dom {
 
 CSSLayerStatementRule::CSSLayerStatementRule(
-    RefPtr<StyleLockedLayerStatementRule> aRawRule, StyleSheet* aSheet,
+    RefPtr<StyleLayerStatementRule> aRawRule, StyleSheet* aSheet,
     css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn)
     : Rule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}
@@ -39,7 +39,7 @@ StyleCssRuleType CSSLayerStatementRule::Type() const {
 }
 
 void CSSLayerStatementRule::SetRawAfterClone(
-    RefPtr<StyleLockedLayerStatementRule> aRaw) {
+    RefPtr<StyleLayerStatementRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 

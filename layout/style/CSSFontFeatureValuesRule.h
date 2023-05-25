@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 class CSSFontFeatureValuesRule final : public css::Rule {
  public:
-  CSSFontFeatureValuesRule(RefPtr<StyleLockedFontFeatureValuesRule> aRawRule,
+  CSSFontFeatureValuesRule(RefPtr<StyleFontFeatureValuesRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
                            uint32_t aLine, uint32_t aColumn)
       : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -24,8 +24,8 @@ class CSSFontFeatureValuesRule final : public css::Rule {
 
   virtual bool IsCCLeaf() const override;
 
-  StyleLockedFontFeatureValuesRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedFontFeatureValuesRule> aRaw);
+  StyleFontFeatureValuesRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<StyleFontFeatureValuesRule> aRaw);
 
   // WebIDL interfaces
   StyleCssRuleType Type() const final;
@@ -49,7 +49,7 @@ class CSSFontFeatureValuesRule final : public css::Rule {
  private:
   ~CSSFontFeatureValuesRule() = default;
 
-  RefPtr<StyleLockedFontFeatureValuesRule> mRawRule;
+  RefPtr<StyleFontFeatureValuesRule> mRawRule;
 };
 
 }  // namespace mozilla::dom

@@ -208,8 +208,7 @@ macro_rules! rule_filter {
                 use crate::stylesheets::CssRule;
 
                 for rule in self.effective_rules(device, guard) {
-                    if let CssRule::$variant(ref lock) = *rule {
-                        let rule = lock.read_with(guard);
+                    if let CssRule::$variant(ref rule) = *rule {
                         f(&rule)
                     }
                 }
@@ -273,7 +272,6 @@ pub trait StylesheetInDocument: ::std::fmt::Debug {
     }
 
     rule_filter! {
-        effective_style_rules(Style => StyleRule),
         effective_viewport_rules(Viewport => ViewportRule),
     }
 }
