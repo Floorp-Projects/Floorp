@@ -21,15 +21,14 @@ gtstd
 
 .. _chapter_2_getting_started_with_ssl:
 
-`Chapter 2
- <#chapter_2_getting_started_with_ssl>`__ Getting Started With SSL
-------------------------------------------------------------------
+`Chapter 2 <#chapter_2_getting_started_with_ssl>`__ Getting Started With SSL
+----------------------------------------------------------------------------
 
 .. container::
 
    This chapter describes how to set up your environment, including certificate and key databases.
 
-   |  `SSL, PKCS #11, and the Default Security Databases <#1011970>`__
+   | `SSL, PKCS #11, and the Default Security Databases <#1011970>`__
    | `Setting Up the Certificate and Key Databases <#1011987>`__
    | `Building NSS Programs <#1013274>`__
 
@@ -117,7 +116,7 @@ gtstd
    and populate them with valid CA, client SSL, and server SSL certificates. The following sections
    decribe how to the Certificate Database Tool to perform these tasks:
 
-   |  `Setting Up the CA DB and Certificate <#1012301>`__
+   | `Setting Up the CA DB and Certificate <#1012301>`__
    | `Setting Up the Server DB and Certificate <#1012351>`__
    | `Setting Up the Client DB and Certificate <#1012067>`__
    | `Verifying the Server and Client Certificates <#1012108>`__

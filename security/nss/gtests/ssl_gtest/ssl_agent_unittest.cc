@@ -154,7 +154,6 @@ TEST_F(TlsAgentDgramTestClient, AckWithBogusLengthField) {
              sizeof(ackBuf), &record, 0);
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
                           SSL_LIBRARY_VERSION_TLS_1_3);
-  ExpectAlert(kTlsAlertDecodeError);
   ProcessMessage(record, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_MALFORMED_DTLS_ACK);
 }
@@ -171,7 +170,8 @@ TEST_F(TlsAgentDgramTestClient, AckWithNonEvenLength) {
   // Because we haven't negotiated the version,
   // ssl3_DecodeError() sends an older (pre-TLS error).
   ExpectAlert(kTlsAlertIllegalParameter);
-  ProcessMessage(record, TlsAgent::STATE_ERROR, SSL_ERROR_BAD_SERVER);
+  ProcessMessage(record, TlsAgent::STATE_ERROR,
+                 SSL_ERROR_RX_MALFORMED_DTLS_ACK);
 }
 
 TEST_F(TlsAgentStreamTestClient, Set0RttOptionThenWrite) {

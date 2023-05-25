@@ -224,13 +224,6 @@ parent:
     async PVsync();
 
     /**
-     * When content moves focus from a native plugin window that's a child
-     * of the native browser window we need to move native focus to the
-     * browser. Otherwise the plugin window will never relinquish focus.
-     */
-    sync DispatchFocusToTopLevelWindow();
-
-    /**
      * When the child process unsuppresses painting, we send the message for the
      * parent process to start painting the new document, if it's still painting
      * the old one.
@@ -663,8 +656,6 @@ parent:
     async ScrollRectIntoView(nsRect aRect, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
                              int32_t aAppUnitsPerDevPixel);
-
-    async SetAllowDeprecatedTls(bool value);
 
     async ShowDynamicToolbar();
 

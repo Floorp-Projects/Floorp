@@ -3,10 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  --fxviewtabrow-text-secondary-color: color-mix(in srgb, currentColor 70%, transparent);
-  --fxviewtabrow-background-color: var(--newtab-background-color, var(--in-content-page-background));
-  --fxviewtabrow-element-background-hover: color-mix(in srgb, var(--fxviewtabrow-background-color) 90%, currentColor);
-  --fxviewtabrow-element-background-active: color-mix(in srgb, var(--fxviewtabrow-background-color) 80%, currentColor);
+  --fxviewtabrow-element-background-hover: color-mix(in srgb, currentColor 14%, transparent);
+  --fxviewtabrow-element-background-active: color-mix(in srgb, currentColor 21%, transparent);
   display: grid;
   grid-template-columns: subgrid;
   grid-column: span 6;
@@ -19,7 +17,6 @@
     --fxviewtabrow-element-background-hover: ButtonText;
     --fxviewtabrow-element-background-active: ButtonText;
     --fxviewtabrow-text-color-hover: ButtonFace;
-    --fxviewtabrow-text-secondary-color: currentColor;
   }
 }
 
@@ -89,7 +86,7 @@
 }
 
 .fxview-tab-row-url {
-  color: var(--fxviewtabrow-text-secondary-color);
+  color: var(--text-color-deemphasized);
   word-break: break-word;
   text-decoration-line: underline;
 }
@@ -101,7 +98,7 @@
 
 .fxview-tab-row-date,
 .fxview-tab-row-time {
-  color: var(--fxviewtabrow-text-secondary-color);
+  color: var(--text-color-deemphasized);
   white-space: nowrap;
 }
 
@@ -112,4 +109,27 @@
 
 .fxview-tab-row-button {
   margin: 0;
+  cursor: pointer;
+}
+
+@media (prefers-contrast) {
+  .fxview-tab-row-button {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+  }
+
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:hover {
+    border: 1px solid SelectedItem;
+    color: SelectedItem;
+  }
+
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:active {
+    color: SelectedItem;
+  }
+
+  .fxview-tab-row-button.ghost-button.icon-button:enabled,
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:hover,
+  .fxview-tab-row-button.ghost-button.icon-button:enabled:active {
+    background-color: ButtonFace;
+  }
 }

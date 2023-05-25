@@ -8,8 +8,6 @@ NSS Code Coverage
 `NSS - Code Coverage <#nss_-_code_coverage>`__
 ----------------------------------------------
 
-.. container::
-
 .. _results_link:
 
 `Results link <#results_link>`__

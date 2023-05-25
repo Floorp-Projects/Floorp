@@ -19,7 +19,7 @@ NSS Sample Code Sample_3_Basic Encryption and MACing
 
 .. container::
 
-   .. code:: brush:
+   .. code:: c
 
       /* NSPR Headers */
       #include <prthread.h>

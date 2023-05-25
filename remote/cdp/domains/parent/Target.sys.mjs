@@ -9,6 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
+
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
@@ -185,7 +187,7 @@ export class Target extends Domain {
     const tabSession = new lazy.TabSession(
       this.session.connection,
       target,
-      Services.uuid.generateUUID().toString().slice(1, -1)
+      lazy.generateUUID()
     );
     this.session.connection.registerSession(tabSession);
 

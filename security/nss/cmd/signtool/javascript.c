@@ -105,7 +105,7 @@ javascript_fn(char *relpath, char *basedir, char *reldir, char *filename, void *
     if (PL_strcaserstr(reldir, ".arc") == reldir + strlen(reldir) - 4)
         return 0;
 
-    sprintf(fullname, "%s/%s", basedir, relpath);
+    snprintf(fullname, sizeof(fullname), "%s/%s", basedir, relpath);
     return extract_js(fullname);
 }
 

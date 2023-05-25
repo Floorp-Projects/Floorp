@@ -497,7 +497,7 @@ ssl3_DecodeHandshakeType(int msgType)
             rv = "key_update   (24)";
             break;
         default:
-            sprintf(line, "*UNKNOWN* handshake type! (%d)", msgType);
+            snprintf(line, sizeof(line), "*UNKNOWN* handshake type! (%d)", msgType);
             rv = line;
     }
     return rv;
@@ -526,7 +526,7 @@ ssl3_DecodeContentType(int msgType)
             rv = "ack (26)";
             break;
         default:
-            sprintf(line, "*UNKNOWN* record type! (%d)", msgType);
+            snprintf(line, sizeof(line), "*UNKNOWN* record type! (%d)", msgType);
             rv = line;
     }
     return rv;
@@ -11067,7 +11067,7 @@ get_fake_cert(SECItem *pCertItem, int *pIndex)
         *pIndex = -1;
         return SECSuccess;
     }
-    sprintf(cfn, "%s/%08d%s", testdir, fileNum, extension);
+    snprintf(cfn, sizeof(cfn), "%s/%08d%s", testdir, fileNum, extension);
     cf = PR_Open(cfn, PR_RDONLY, 0);
     if (!cf) {
         goto loser;
@@ -13429,7 +13429,7 @@ ssl3_GetCipherSpec(sslSocket *ss, SSL3Ciphertext *cText)
 SECStatus
 ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
 {
-    SECStatus rv;
+    SECStatus rv = SECFailure;
     PRBool isTLS, isTLS13;
     DTLSEpoch epoch;
     ssl3CipherSpec *spec = NULL;
@@ -13555,8 +13555,13 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
          * Additionaly, this is used to silently drop DTLS encryption/record
          * errors/alerts using the error handling below as suggested in the
          * DTLS specification [RFC6347, Section 4.1.2.7]. */
-        if (spec->version < SSL_LIBRARY_VERSION_TLS_1_3 ||
-            spec->epoch == 0) {
+        if (spec->cipherDef->cipher == cipher_null && cText->buf->len == 0) {
+            /* Handle a zero-length unprotected record
+             * In this case, we treat it as a no-op and let later functions decide
+             * whether to ignore or alert accordingly. */
+            PR_ASSERT(plaintext->len == 0);
+            rv = SECSuccess;
+        } else if (spec->version < SSL_LIBRARY_VERSION_TLS_1_3 || spec->epoch == 0) {
             rv = ssl3_UnprotectRecord(ss, spec, cText, plaintext, &alert);
         } else {
             rv = tls13_UnprotectRecord(ss, spec, cText, plaintext, &rType,

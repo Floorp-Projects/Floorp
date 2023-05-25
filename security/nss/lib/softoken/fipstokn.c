@@ -529,15 +529,22 @@ FC_Initialize(CK_VOID_PTR pReserved)
 {
     const char *envp;
     CK_RV crv;
+    PRBool rerun;
 
     if ((envp = PR_GetEnv("NSS_ENABLE_AUDIT")) != NULL) {
         sftk_audit_enabled = (atoi(envp) == 1);
     }
 
+    /* if we have the forcePOST flag on, rerun the integrity checks */
+    /* we need to know this before we fully parse the arguments in
+     * nsc_CommonInitialize, so read it now */
+    rerun = sftk_RawArgHasFlag("flags", "forcePost", pReserved);
+
     /* At this point we should have already done post and integrity checks.
      * if we haven't, it probably means the FIPS product has not been installed
-     * or the tests failed. Don't let an application try to enter FIPS mode */
-    crv = sftk_FIPSEntryOK();
+     * or the tests failed. Don't let an application try to enter FIPS mode. This
+     * also forces the tests to be rerun if forcePOST is set. */
+    crv = sftk_FIPSEntryOK(rerun);
     if (crv != CKR_OK) {
         sftk_fatalError = PR_TRUE;
         fc_log_init_error(crv);

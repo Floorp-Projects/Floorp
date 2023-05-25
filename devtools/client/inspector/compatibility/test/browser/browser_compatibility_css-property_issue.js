@@ -13,7 +13,7 @@ const TEST_URI = `
   <style>
   body {
     color: blue;
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
     user-modify: read-only;
   }
   div {
@@ -28,8 +28,8 @@ const TEST_URI = `
 const TEST_DATA_SELECTED = [
   {
     type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-    property: "font-variant-alternates",
-    url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
+    property: "scrollbar-width",
+    url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
     deprecated: false,
     experimental: false,
   },

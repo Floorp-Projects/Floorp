@@ -305,8 +305,6 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<mozilla::ContentBlockingNotifier::
                       StorageAccessPermissionGrantedReason>& aReason);
 
-  mozilla::ipc::IPCResult RecvSetAllowDeprecatedTls(bool value);
-
   mozilla::ipc::IPCResult RecvNavigationFinished();
 
   already_AddRefed<nsIBrowser> GetBrowser();
@@ -396,8 +394,6 @@ class BrowserParent final : public PBrowserParent,
                                           const nsString& aDirection);
 
   mozilla::ipc::IPCResult RecvHideTooltip();
-
-  mozilla::ipc::IPCResult RecvDispatchFocusToTopLevelWindow();
 
   mozilla::ipc::IPCResult RecvRespondStartSwipeEvent(
       const uint64_t& aInputBlockId, const bool& aStartSwipe);

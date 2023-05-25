@@ -2882,7 +2882,7 @@ var gPrivacyPane = {
   toggleRelayIntegration() {
     const checkbox = document.getElementById("relayIntegration");
     if (checkbox.checked) {
-      FirefoxRelay.markAsEnabled();
+      FirefoxRelay.markAsAvailable();
       FirefoxRelayTelemetry.recordRelayPrefEvent("enabled");
     } else {
       FirefoxRelay.markAsDisabled();
@@ -2894,7 +2894,7 @@ var gPrivacyPane = {
     document.getElementById("relayIntegrationBox").hidden =
       !FirefoxRelay.isAvailable;
     document.getElementById("relayIntegration").checked =
-      FirefoxRelay.isEnabled;
+      FirefoxRelay.isAvailable && !FirefoxRelay.isDisabled;
   },
 
   _initRelayIntegrationUI() {

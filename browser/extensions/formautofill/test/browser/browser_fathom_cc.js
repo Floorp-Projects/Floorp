@@ -62,8 +62,8 @@ async function run_test(path, dirs) {
         browser,
         [{ eligibleElementSelector, file }],
         obj => {
-          const { FieldScanner } = ChromeUtils.importESModule(
-            "resource://gre/modules/shared/FieldScanner.sys.mjs"
+          const { FormAutofillHeuristics } = ChromeUtils.importESModule(
+            "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
           );
           const { FormAutofillUtils } = ChromeUtils.importESModule(
             "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
@@ -84,7 +84,7 @@ async function run_test(path, dirs) {
           let nativeConfidencesKeyedByType =
             ChromeUtils.getFormAutofillConfidences(eligibleFields);
           let jsConfidencesKeyedByType =
-            FieldScanner.getFormAutofillConfidences(eligibleFields);
+            FormAutofillHeuristics.getFormAutofillConfidences(eligibleFields);
 
           if (eligibleFields.length != nativeConfidencesKeyedByType.length) {
             ok(

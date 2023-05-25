@@ -2,17 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  CreditCardRulesets: "resource://gre/modules/shared/CreditCardRuleset.sys.mjs",
-  FormAutofillHeuristics:
-    "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
-  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
-});
-
 /**
  * Represents the detailed information about a form field, including
  * the inferred field name, the approach used for inferring, and additional metadata.
@@ -81,12 +70,15 @@ export class FieldDetail {
 }
 
 /**
- * A scanner for traversing all elements in a form and retrieving the field
- * detail with FormAutofillHeuristics.getInferredInfo function. It also provides a
+ * A scanner for traversing all elements in a form. It also provides a
  * cursor (parsingIndex) to indicate which element is waiting for parsing.
+ *
+ * The scanner retrives the field detail by calling heuristics handlers
+ * `inferFieldInfo` function.
  */
 export class FieldScanner {
   #elementsWeakRef = null;
+  #inferFieldInfoFn = null;
 
   #parsingIndex = 0;
 
@@ -98,13 +90,12 @@ export class FieldScanner {
    *
    * @param {Array.DOMElement} elements
    *        The elements from a form for each parser.
+   * @param {Funcion} inferFieldInfoFn
+   *        The callback function that is used to infer the field info of a given element
    */
-  constructor(elements) {
+  constructor(elements, inferFieldInfoFn) {
     this.#elementsWeakRef = Cu.getWeakReference(elements);
-
-    XPCOMUtils.defineLazyGetter(this, "log", () =>
-      FormAutofill.defineLogGetter(this, "FieldScanner")
-    );
+    this.#inferFieldInfoFn = inferFieldInfoFn;
   }
 
   get #elements() {
@@ -167,8 +158,10 @@ export class FieldScanner {
   }
 
   /**
-   * This function will prepare an autocomplete info object with getInferredInfo
-   * function and push the detail to fieldDetails property.
+   * This function retrieves the first unparsed element and obtains its
+   * information by invoking the `inferFieldInfoFn` callback function.
+   * The field information is then stored in a FieldDetail object and
+   * appended to the `fieldDetails` array.
    *
    * Any element without the related detail will be used for adding the detail
    * to the end of field details.
@@ -180,7 +173,7 @@ export class FieldScanner {
     }
     const element = this.#elements[elementIndex];
     const [fieldName, autocompleteInfo, confidence] =
-      lazy.FormAutofillHeuristics.getInferredInfo(element, this);
+      this.#inferFieldInfoFn(element);
     const fieldDetail = new FieldDetail(element, fieldName, {
       autocompleteInfo,
       confidence,
@@ -212,122 +205,6 @@ export class FieldScanner {
 
   elementExisting(index) {
     return index < this.#elements.length;
-  }
-
-  /**
-   * Using Fathom, say what kind of CC field an element is most likely to be.
-   * This function deoesn't only run fathom on the passed elements. It also
-   * runs fathom for all elements in the FieldScanner for optimization purpose.
-   *
-   * @param {HTMLElement} element
-   * @param {Array} fields
-   * @returns {Array} A tuple of [field name, probability] describing the
-   *   highest-confidence classification
-   */
-  getFathomField(element, fields) {
-    if (!fields.length) {
-      return [null, null];
-    }
-
-    if (!this._fathomConfidences?.get(element)) {
-      this._fathomConfidences = new Map();
-
-      let elements = [];
-      if (this.#elements?.includes(element)) {
-        elements = this.#elements;
-      } else {
-        elements = [element];
-      }
-
-      // This should not throw unless we run into an OOM situation, at which
-      // point we have worse problems and this failing is not a big deal.
-      const confidences = FieldScanner.getFormAutofillConfidences(elements);
-      for (let i = 0; i < elements.length; i++) {
-        this._fathomConfidences.set(elements[i], confidences[i]);
-      }
-    }
-
-    const elementConfidences = this._fathomConfidences.get(element);
-    if (!elementConfidences) {
-      return [null, null];
-    }
-
-    let highestField = null;
-    let highestConfidence = lazy.FormAutofillUtils.ccFathomConfidenceThreshold; // Start with a threshold of 0.5
-    for (let [key, value] of Object.entries(elementConfidences)) {
-      if (!fields.includes(key)) {
-        // ignore field that we don't care
-        continue;
-      }
-
-      if (value > highestConfidence) {
-        highestConfidence = value;
-        highestField = key;
-      }
-    }
-
-    if (!highestField) {
-      return [null, null];
-    }
-
-    // Used by test ONLY! This ensure testcases always get the same confidence
-    if (lazy.FormAutofillUtils.ccFathomTestConfidence > 0) {
-      highestConfidence = lazy.FormAutofillUtils.ccFathomTestConfidence;
-    }
-
-    return [highestField, highestConfidence];
-  }
-
-  /**
-   * @param {Array} elements Array of elements that we want to get result from fathom cc rules
-   * @returns {object} Fathom confidence keyed by field-type.
-   */
-  static getFormAutofillConfidences(elements) {
-    if (
-      lazy.FormAutofillUtils.ccHeuristicsMode ==
-      lazy.FormAutofillUtils.CC_FATHOM_NATIVE
-    ) {
-      const confidences = ChromeUtils.getFormAutofillConfidences(elements);
-      return confidences.map(c => {
-        let result = {};
-        for (let [fieldName, confidence] of Object.entries(c)) {
-          let type =
-            lazy.FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
-              fieldName
-            );
-          result[type] = confidence;
-        }
-        return result;
-      });
-    }
-
-    return elements.map(element => {
-      /**
-       * Return how confident our ML model is that `element` is a field of the
-       * given type.
-       *
-       * @param {string} fieldName The Fathom type to check against. This is
-       *   conveniently the same as the autocomplete attribute value that means
-       *   the same thing.
-       * @returns {number} Confidence in range [0, 1]
-       */
-      function confidence(fieldName) {
-        const ruleset = lazy.CreditCardRulesets[fieldName];
-        const fnodes = ruleset.against(element).get(fieldName);
-
-        // fnodes is either 0 or 1 item long, since we ran the ruleset
-        // against a single element:
-        return fnodes.length ? fnodes[0].scoreFor(fieldName) : 0;
-      }
-
-      // Bang the element against the ruleset for every type of field:
-      const confidences = {};
-      lazy.CreditCardRulesets.types.map(fieldName => {
-        confidences[fieldName] = confidence(fieldName);
-      });
-
-      return confidences;
-    });
   }
 }
 

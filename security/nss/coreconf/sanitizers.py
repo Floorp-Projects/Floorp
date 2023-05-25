@@ -11,7 +11,8 @@ def main():
     if sanitizer == "ubsan":
         if len(sys.argv) < 3:
             raise Exception('ubsan requires another argument.')
-        print('-fsanitize='+sys.argv[2]+' -fno-sanitize-recover=undefined ', end='')
+        print('-fsanitize='+sys.argv[2]+' -fno-sanitize-recover='+sys.argv[2] + ' ', end='')
+        print('-fno-sanitize=nonnull-attribute -fno-sanitize=enum ', end='')
         return
     if sanitizer == "asan":
         print('-fsanitize=address -fsanitize-address-use-after-scope ', end='')

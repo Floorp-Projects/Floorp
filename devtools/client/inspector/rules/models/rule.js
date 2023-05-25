@@ -12,12 +12,6 @@ const TextProperty = require("resource://devtools/client/inspector/rules/models/
 
 loader.lazyRequireGetter(
   this,
-  "getTargetBrowsers",
-  "resource://devtools/client/inspector/shared/compatibility-user-settings.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "promiseWarn",
   "resource://devtools/client/inspector/shared/utils.js",
   true
@@ -216,28 +210,10 @@ class Rule {
    */
   async getCompatibilityIssues() {
     if (!this.compatibilityIssues) {
-      this.compatibilityIssues = Promise.all([
-        getTargetBrowsers(),
-        this.inspector.inspectorFront.getCompatibilityFront(),
-      ])
-        .then(([targetBrowsers, compatibility]) =>
-          compatibility.getCSSDeclarationBlockIssues(
-            this.domRule.declarations,
-            targetBrowsers
-          )
-        )
-        .catch(e => {
-          if (
-            this.destroyed ||
-            !this.inspector.inspectorFront ||
-            this.inspector.inspectorFront.isDestroyed()
-          ) {
-            // This method is often called from synchronous codepath and the
-            // request will throw if it occurs while DevTools are destroyed/the page navigates.
-            return [];
-          }
-          throw e;
-        });
+      this.compatibilityIssues =
+        this.inspector.commands.inspectorCommand.getCSSDeclarationBlockIssues(
+          this.domRule.declarations
+        );
     }
 
     return this.compatibilityIssues;

@@ -149,7 +149,7 @@ static const char *const flag_names[] = {
 };
 
 static int /* bool */
-formatKind(unsigned long kind, char *buf)
+formatKind(unsigned long kind, char *buf, int space_in_buffer)
 {
     int i;
     unsigned long k = kind & SEC_ASN1_TAGNUM_MASK;
@@ -158,30 +158,30 @@ formatKind(unsigned long kind, char *buf)
 
     buf[0] = 0;
     if ((kind & SEC_ASN1_CLASS_MASK) != SEC_ASN1_UNIVERSAL) {
-        sprintf(buf, " %s", class_names[(kind & SEC_ASN1_CLASS_MASK) >> 6]);
+        space_in_buffer -= snprintf(buf, space_in_buffer, " %s", class_names[(kind & SEC_ASN1_CLASS_MASK) >> 6]);
         buf += strlen(buf);
     }
     if (kind & SEC_ASN1_METHOD_MASK) {
-        sprintf(buf, " %s", method_names[1]);
+        space_in_buffer -= snprintf(buf, space_in_buffer, " %s", method_names[1]);
         buf += strlen(buf);
     }
     if ((kind & SEC_ASN1_CLASS_MASK) == SEC_ASN1_UNIVERSAL) {
         if (k || !notag) {
-            sprintf(buf, " %s", type_names[k]);
+            space_in_buffer -= snprintf(buf, space_in_buffer, " %s", type_names[k]);
             if ((k == SEC_ASN1_SET || k == SEC_ASN1_SEQUENCE) &&
                 (kind & SEC_ASN1_GROUP)) {
                 buf += strlen(buf);
-                sprintf(buf, "_OF");
+                space_in_buffer -= snprintf(buf, space_in_buffer, "_OF");
             }
         }
     } else {
-        sprintf(buf, " [%lu]", k);
+        space_in_buffer -= snprintf(buf, space_in_buffer, " [%lu]", k);
     }
     buf += strlen(buf);
 
     for (k = kind >> 8, i = 0; k; k >>= 1, ++i) {
         if (k & 1) {
-            sprintf(buf, " %s", flag_names[i]);
+            space_in_buffer -= snprintf(buf, space_in_buffer, " %s", flag_names[i]);
             buf += strlen(buf);
         }
     }
@@ -751,8 +751,9 @@ sec_asn1d_parse_identifier(sec_asn1d_state *state,
     byte = (unsigned char)*buf;
 #ifdef DEBUG_ASN1D_STATES
     {
-        char kindBuf[256];
-        formatKind(byte, kindBuf);
+        int bufsize = 256;
+        char kindBuf[bufsize];
+        formatKind(byte, kindBuf, bufsize);
         printf("Found tag %02x %s\n", byte, kindBuf);
     }
 #endif
@@ -2731,7 +2732,8 @@ static void
 dump_states(SEC_ASN1DecoderContext *cx)
 {
     sec_asn1d_state *state;
-    char kindBuf[256];
+    int bufsize = 256;
+    char kindBuf[bufsize];
 
     for (state = cx->current; state->parent; state = state->parent) {
         ;
@@ -2743,7 +2745,7 @@ dump_states(SEC_ASN1DecoderContext *cx)
             printf("  ");
         }
 
-        i = formatKind(state->theTemplate->kind, kindBuf);
+        i = formatKind(state->theTemplate->kind, kindBuf, bufsize);
         printf("%s: tmpl kind %s",
                (state == cx->current) ? "STATE" : "State",
                kindBuf);

@@ -1185,7 +1185,11 @@ export var UrlbarUtils = {
           return "tabtosearch";
         }
         if (result.payload.suggestion) {
-          return result.payload.trending ? "trending" : "searchsuggestion";
+          let type = result.payload.trending ? "trending" : "searchsuggestion";
+          if (result.payload.isRichSuggestion) {
+            type += "_rich";
+          }
+          return type;
         }
         return "searchengine";
       case UrlbarUtils.RESULT_TYPE.URL:
@@ -1283,7 +1287,13 @@ export var UrlbarUtils = {
       }
       case UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION:
       case UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION: {
-        return result.payload.trending ? "trending_search" : "search_suggest";
+        let group = result.payload.trending
+          ? "trending_search"
+          : "search_suggest";
+        if (result.payload.isRichSuggestion) {
+          group += "_rich";
+        }
+        return group;
       }
       case UrlbarUtils.RESULT_GROUP.REMOTE_TAB: {
         return "remote_tab";
@@ -1363,7 +1373,13 @@ export var UrlbarUtils = {
           return "search_history";
         }
         if (result.payload.suggestion) {
-          return result.payload.trending ? "trending_search" : "search_suggest";
+          let type = result.payload.trending
+            ? "trending_search"
+            : "search_suggest";
+          if (result.payload.isRichSuggestion) {
+            type += "_rich";
+          }
+          return type;
         }
         return "search_engine";
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:

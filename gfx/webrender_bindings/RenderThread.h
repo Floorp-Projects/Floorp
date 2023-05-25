@@ -437,7 +437,6 @@ class RenderThread final {
   struct PendingFrameInfo {
     TimeStamp mStartTime;
     VsyncId mStartId;
-    bool mFrameNeedsRender = false;
   };
 
   struct WindowInfo {

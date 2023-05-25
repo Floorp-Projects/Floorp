@@ -18,12 +18,12 @@ Getting Started
    | Would you like to get involved and help us to improve the core security of Mozilla Firefox and
      other applications that make use of NSS? We are looking forward to your contributions!
 
-     ..
-      | We have a large list of tasks waiting for attention, and we are happy to assist you in
-        identifying areas that match your interest or skills. You can find us on `Mozilla
-        IRC <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Getting_Started_with_IRC>`__ in
-        channel `#nss <irc://irc.mozilla.org/#nss>`__ or you could ask your questions on the
-        `mozilla.dev.tech.crypto <https://lists.mozilla.org/listinfo/dev-tech-crypto/>`__ newsgroup.
+   .. note::
+
+      We have a large list of tasks waiting for attention, and we are happy to assist you in
+      identifying areas that match your interest or skills. You can find us on `chat.mozilla.org`
+      in channel `#nss <https://chat.mozilla.org/#/room/#nss:mozilla.org>`__ or you could ask your 
+      questions on the `mozilla.dev.tech.crypto <https://groups.google.com/a/mozilla.org/g/dev-tech-crypto>`__ newsgroup.
 
 
    The NSS library and its supporting command line tools are written in the C programming language.
@@ -32,9 +32,8 @@ Getting Started
    Over time, many documents have been produced that describe various aspects of NSS. You can start
    with:
 
-   ..
-      -  the current `primary NSS documentation page <https://developer.mozilla.org/en-US/docs/NSS>`__
-         from which we link to other documentation.
+   -  the current `primary NSS documentation page <https://developer.mozilla.org/en-US/docs/NSS>`__
+      from which we link to other documentation.
    -  a `General Overview <https://developer.mozilla.org/en-US/docs/Overview_of_NSS>`__ of the
       applications that use NSS and the features it provides.
    -  a high level :ref:`mozilla_projects_nss_an_overview_of_nss_internals`.
@@ -42,7 +41,6 @@ Getting Started
    -  `Old documentation <https://www-archive.mozilla.org/projects/security/pki/nss/>`__ that is on
       the archived mozilla.org website.
 
-..
    .. _nss_sample_code:
 
    `NSS Sample Code <#nss_sample_code>`__

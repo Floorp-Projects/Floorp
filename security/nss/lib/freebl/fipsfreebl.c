@@ -2216,7 +2216,7 @@ bl_startup_tests(void)
  * power on selftest failed.
  */
 SECStatus
-BL_FIPSEntryOK(PRBool freebl_only)
+BL_FIPSEntryOK(PRBool freebl_only, PRBool rerun)
 {
 #ifdef NSS_NO_INIT_SUPPORT
     /* this should only be set on platforms that can't handle one of the INIT
@@ -2229,6 +2229,14 @@ BL_FIPSEntryOK(PRBool freebl_only)
         bl_startup_tests();
     }
 #endif
+    if (rerun) {
+        /* reset the flags */
+        self_tests_freebl_ran = PR_FALSE;
+        self_tests_success = PR_FALSE;
+        self_tests_success = PR_FALSE;
+        self_tests_freebl_success = PR_FALSE;
+        bl_startup_tests();
+    }
     /* if the general self tests succeeded, we're done */
     if (self_tests_success) {
         return SECSuccess;
