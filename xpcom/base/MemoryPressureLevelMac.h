@@ -13,7 +13,7 @@ namespace mozilla {
 // An internal representation of the Mac memory-pressure level constants.
 class MacMemoryPressureLevel {
  public:
-  // Order enum values so that higher integer values respresent higher
+  // Order enum values so that higher integer values represent higher
   // memory pressure levels allowing comparison operators to be used.
   enum class Value {
     eUnset,
