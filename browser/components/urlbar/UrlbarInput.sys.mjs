@@ -3525,8 +3525,10 @@ export class UrlbarInput {
       event.preventDefault();
       event.stopImmediatePropagation();
 
-      this.inputField.value = oldStart + pasteData + oldEnd;
-      this._untrimmedValue = this.inputField.value;
+      const value = oldStart + pasteData + oldEnd;
+      this.inputField.value = value;
+      this._untrimmedValue = value;
+      this.window.gBrowser.userTypedValue = value;
 
       if (this._untrimmedValue) {
         this.setAttribute("usertyping", "true");
