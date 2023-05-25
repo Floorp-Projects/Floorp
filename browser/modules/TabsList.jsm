@@ -258,8 +258,12 @@ class TabsPanel extends TabsListBase {
         }
         break;
       case "command":
-        if (event.target.hasAttribute("toggle-mute")) {
+        if (event.target.classList.contains("all-tabs-mute-button")) {
           event.target.tab.toggleMuteAudio();
+          break;
+        }
+        if (event.target.classList.contains("all-tabs-close-button")) {
+          this.gBrowser.removeTab(event.target.tab);
           break;
         }
       // fall through
@@ -317,15 +321,26 @@ class TabsPanel extends TabsListBase {
 
     row.appendChild(button);
 
-    let secondaryButton = doc.createXULElement("toolbarbutton");
-    secondaryButton.setAttribute(
-      "class",
-      "all-tabs-secondary-button subviewbutton subviewbutton-iconic"
+    let muteButton = doc.createXULElement("toolbarbutton");
+    muteButton.classList.add(
+      "all-tabs-mute-button",
+      "all-tabs-secondary-button",
+      "subviewbutton",
+      "subviewbutton-iconic"
     );
-    secondaryButton.setAttribute("closemenu", "none");
-    secondaryButton.setAttribute("toggle-mute", "true");
-    secondaryButton.tab = tab;
-    row.appendChild(secondaryButton);
+    muteButton.setAttribute("closemenu", "none");
+    muteButton.tab = tab;
+    row.appendChild(muteButton);
+
+    let closeButton = doc.createXULElement("toolbarbutton");
+    closeButton.classList.add(
+      "all-tabs-close-button",
+      "all-tabs-secondary-button",
+      "subviewbutton"
+    );
+    closeButton.setAttribute("closemenu", "none");
+    closeButton.tab = tab;
+    row.appendChild(closeButton);
 
     this._setRowAttributes(row, tab);
 
@@ -346,11 +361,10 @@ class TabsPanel extends TabsListBase {
 
     this._setImageAttributes(row, tab);
 
-    let secondaryButton = row.querySelector(".all-tabs-secondary-button");
-    setAttributes(secondaryButton, {
+    let muteButton = row.querySelector(".all-tabs-mute-button");
+    setAttributes(muteButton, {
       muted: tab.muted,
       soundplaying: tab.soundPlaying,
-      pictureinpicture: tab.pictureinpicture,
       hidden: !(tab.muted || tab.soundPlaying),
     });
   }
