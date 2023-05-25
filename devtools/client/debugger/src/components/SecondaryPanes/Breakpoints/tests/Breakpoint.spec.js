@@ -52,8 +52,8 @@ describe("Breakpoint", () => {
   });
 });
 
-const generatedLocation = { sourceId: "foo", line: 53, column: 73 };
-const location = { sourceId: "foo/original", line: 5, column: 7 };
+const generatedLocation = { source: { id: "foo" }, line: 53, column: 73 };
+const location = { source: { id: "foo/original" }, line: 5, column: 7 };
 
 function render(overrides = {}, breakpointOverrides = {}) {
   const props = generateDefaults(overrides, breakpointOverrides);

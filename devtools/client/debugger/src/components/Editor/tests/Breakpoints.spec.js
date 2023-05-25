@@ -10,7 +10,7 @@ const BreakpointsComponent = Breakpoints.WrappedComponent;
 
 function generateDefaults(overrides) {
   const sourceId = "server1.conn1.child1/source1";
-  const matchingBreakpoints = [{ location: { sourceId } }];
+  const matchingBreakpoints = [{ location: { source: { id: sourceId } } }];
 
   return {
     selectedSource: { sourceId, get: () => false },
@@ -37,7 +37,7 @@ function render(overrides = {}) {
 describe("Breakpoints Component", () => {
   it("should render breakpoints without columns", async () => {
     const sourceId = "server1.conn1.child1/source1";
-    const breakpoints = [{ location: { sourceId } }];
+    const breakpoints = [{ location: { source: { id: sourceId } } }];
 
     const { component, props } = render({ breakpoints });
     expect(component.find("Breakpoint")).toHaveLength(props.breakpoints.length);
@@ -45,7 +45,7 @@ describe("Breakpoints Component", () => {
 
   it("should render breakpoints with columns", async () => {
     const sourceId = "server1.conn1.child1/source1";
-    const breakpoints = [{ location: { column: 2, sourceId } }];
+    const breakpoints = [{ location: { column: 2, source: { id: sourceId } } }];
 
     const { component, props } = render({ breakpoints });
     expect(component.find("Breakpoint")).toHaveLength(props.breakpoints.length);
