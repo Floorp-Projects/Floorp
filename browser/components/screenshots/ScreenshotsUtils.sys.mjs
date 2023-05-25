@@ -266,6 +266,37 @@ export var ScreenshotsUtils = {
     return browser.ownerDocument.querySelector("#screenshotsPagePanel");
   },
   /**
+   * Gets the screenshots button if it is visible, otherwise it will get the
+   * element that the screenshots button is nested under. If the screenshots
+   * button doesn't exist then we will default to the navigator toolbox.
+   * @param browser The selected browser
+   * @returns The anchor element for the ConfirmationHint
+   */
+  getWidgetAnchor(browser) {
+    let window = browser.ownerGlobal;
+    let widgetGroup = window.CustomizableUI.getWidget("screenshot-button");
+    let widget = widgetGroup?.forWindow(window);
+    let anchor = widget?.anchor;
+
+    // Check if the anchor exists and is visible
+    if (!anchor || !window.isElementVisible(anchor.parentNode)) {
+      anchor = browser.ownerDocument.getElementById("navigator-toolbox");
+    }
+    return anchor;
+  },
+  /**
+   * Indicate that the screenshot has been copied via ConfirmationHint.
+   * @param browser The selected browser
+   */
+  showCopiedConfirmationHint(browser) {
+    let anchor = this.getWidgetAnchor(browser);
+
+    browser.ownerGlobal.ConfirmationHint.show(
+      anchor,
+      "confirmation-hint-screenshot-copied"
+    );
+  },
+  /**
    * If the buttons panel does not exist then we will replace the buttons
    * panel template with the buttons panel then open the buttons panel and
    * show the screenshots overaly.
@@ -451,8 +482,9 @@ export var ScreenshotsUtils = {
   /**
    * Copy the image to the clipboard
    * @param dataUrl The image data
+   * @param browser The current browser
    */
-  copyScreenshot(dataUrl) {
+  copyScreenshot(dataUrl, browser) {
     // Guard against missing image data.
     if (!dataUrl) {
       return;
@@ -483,6 +515,8 @@ export var ScreenshotsUtils = {
       null,
       Services.clipboard.kGlobalClipboard
     );
+
+    this.showCopiedConfirmationHint(browser);
   },
   /**
    * Download the screenshot

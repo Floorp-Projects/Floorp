@@ -88,7 +88,10 @@ class ScreenshotsUI extends HTMLElement {
   }
 
   saveToClipboard(dataUrl) {
-    ScreenshotsUtils.copyScreenshot(dataUrl);
+    ScreenshotsUtils.copyScreenshot(
+      dataUrl,
+      window.parent.ownerGlobal.gBrowser.selectedBrowser
+    );
 
     this.close();
 
