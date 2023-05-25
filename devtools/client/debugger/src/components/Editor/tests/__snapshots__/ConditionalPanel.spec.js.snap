@@ -8,12 +8,18 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
       "generatedLocation": Object {
         "column": 2,
         "line": 2,
+        "source": Object {
+          "id": "source",
+        },
         "sourceId": "source",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 2,
         "line": 2,
+        "source": Object {
+          "id": "source",
+        },
         "sourceId": "source",
       },
       "options": Object {
@@ -171,6 +177,9 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
     Object {
       "column": 2,
       "line": 2,
+      "source": Object {
+        "id": "source",
+      },
       "sourceId": "source",
     }
   }
@@ -206,12 +215,18 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
       "generatedLocation": Object {
         "column": 3,
         "line": 3,
+        "source": Object {
+          "id": "source",
+        },
         "sourceId": "source",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 3,
         "line": 3,
+        "source": Object {
+          "id": "source",
+        },
         "sourceId": "source",
       },
       "options": Object {
@@ -373,6 +388,9 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
     Object {
       "column": 3,
       "line": 3,
+      "source": Object {
+        "id": "source",
+      },
       "sourceId": "source",
     }
   }
@@ -408,12 +426,18 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
       "generatedLocation": Object {
         "column": 4,
         "line": 4,
+        "source": Object {
+          "id": "source",
+        },
         "sourceId": "source",
       },
       "id": "breakpoint",
       "location": Object {
         "column": 4,
         "line": 4,
+        "source": Object {
+          "id": "source",
+        },
         "sourceId": "source",
       },
       "options": Object {
@@ -575,6 +599,9 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
     Object {
       "column": 4,
       "line": 4,
+      "source": Object {
+        "id": "source",
+      },
       "sourceId": "source",
     }
   }

@@ -45,14 +45,14 @@ describe("Breakpoints Selectors", () => {
     const matchingBreakpoints = {
       id1: {
         ...makeMockBreakpoint(makeMockSource(undefined, generatedSourceId), 1),
-        location: { line: 1, sourceId: "original-source-id-1" },
+        location: { line: 1, source: { id: "original-source-id-1" } },
       },
     };
 
     const otherBreakpoints = {
       id2: {
         ...makeMockBreakpoint(makeMockSource(undefined, "not-this-source"), 1),
-        location: { line: 1, sourceId: "original-source-id-2" },
+        location: { line: 1, source: { id: "original-source-id-2" } },
       },
     };
 
