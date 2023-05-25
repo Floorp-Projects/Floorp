@@ -172,7 +172,9 @@ function checkPendingBreakpoints(cx, source, sourceActor) {
 
     // load the source text if there is a pending breakpoint for it
     await dispatch(loadSourceText(cx, source, sourceActor));
-    await dispatch(setBreakableLines(cx, source, sourceActor));
+    await dispatch(
+      setBreakableLines(cx, createLocation({ source, sourceActor }))
+    );
 
     await Promise.all(
       pendingBreakpoints.map(bp => {
@@ -330,7 +332,10 @@ export function newGeneratedSources(sourceResources) {
         // will request breakable lines for that particular source actor.
         if (sourceActor.sourceObject.isHTML) {
           await dispatch(
-            setBreakableLines(cx, sourceActor.sourceObject, sourceActor)
+            setBreakableLines(
+              cx,
+              createLocation({ source: sourceActor.sourceObject, sourceActor })
+            )
           );
         }
         dispatch(

@@ -19,10 +19,7 @@ import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
 async function findBreakpointPosition(cx, { getState, dispatch }, location) {
-  const { sourceId, line } = location;
-  const positions = await dispatch(
-    setBreakpointPositions({ cx, sourceId, line })
-  );
+  const positions = await dispatch(setBreakpointPositions({ cx, location }));
 
   const position = findPosition(positions, location);
   return position;
