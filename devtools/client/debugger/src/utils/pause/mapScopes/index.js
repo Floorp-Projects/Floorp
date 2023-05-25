@@ -24,7 +24,6 @@ import {
   getApplicableBindingsForOriginalPosition,
 } from "./getApplicableBindingsForOriginalPosition";
 import { getOptimizedOutGrip } from "./optimizedOut";
-import { getGeneratedLocation } from "../../source-maps";
 
 import { log } from "../../log";
 
@@ -242,11 +241,15 @@ function batchScopeMappings(originalAstScopes, source, thunkArgs) {
           );
           precalculatedLocations.set(
             buildLocationKey(loc.start),
-            getGeneratedLocation(loc.start, thunkArgs)
+            sourceMapLoader.getGeneratedLocation(
+              debuggerToSourceMapLocation(loc.start)
+            )
           );
           precalculatedLocations.set(
             buildLocationKey(loc.end),
-            getGeneratedLocation(loc.end, thunkArgs)
+            sourceMapLoader.getGeneratedLocation(
+              debuggerToSourceMapLocation(loc.end)
+            )
           );
         }
       }
@@ -271,7 +274,9 @@ function batchScopeMappings(originalAstScopes, source, thunkArgs) {
 
       if (!precalculatedLocations.has(key)) {
         log("Bad precalculated mapping");
-        return getGeneratedLocation(pos, thunkArgs);
+        return sourceMapLoader.getGeneratedLocation(
+          debuggerToSourceMapLocation(pos)
+        );
       }
       return precalculatedLocations.get(key);
     },
