@@ -181,7 +181,6 @@ const TEST_CASES = [
     input: SPONSORED_SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -199,7 +198,6 @@ const TEST_CASES = [
     input: SPONSORED_NORMAL_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -217,7 +215,6 @@ const TEST_CASES = [
     input: NONSPONSORED_SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.nonsponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -235,7 +232,6 @@ const TEST_CASES = [
     input: NONSPONSORED_NORMAL_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.nonsponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -254,7 +250,6 @@ const TEST_CASES = [
     input: SPONSORED_SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": false,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -272,7 +267,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderQuickSuggest.name,
@@ -290,7 +284,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderTabToSearch.name,
@@ -306,7 +299,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderQuickSuggest.name,
@@ -322,7 +314,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -340,7 +331,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -360,7 +350,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -379,7 +368,6 @@ const TEST_CASES = [
     input: SECOND_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderHeuristicFallback.name,
@@ -399,7 +387,6 @@ const TEST_CASES = [
     input: FIRST_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderTabToSearch.name,
@@ -415,7 +402,6 @@ const TEST_CASES = [
     input: THIRD_POSITION_RESULT.keywords[0],
     prefs: {
       "quicksuggest.allowPositionInSuggestions": true,
-      "suggest.quicksuggest.sponsored": true,
     },
     providers: [
       UrlbarProviderQuickSuggest.name,
@@ -430,17 +416,24 @@ const TEST_CASES = [
 
 add_task(async function setup() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
 
   // Setup for quick suggest result.
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsResults: [
-      SPONSORED_SECOND_POSITION_RESULT,
-      SPONSORED_NORMAL_POSITION_RESULT,
-      NONSPONSORED_SECOND_POSITION_RESULT,
-      NONSPONSORED_NORMAL_POSITION_RESULT,
-      FIRST_POSITION_RESULT,
-      SECOND_POSITION_RESULT,
-      THIRD_POSITION_RESULT,
+      {
+        type: "data",
+        attachment: [
+          SPONSORED_SECOND_POSITION_RESULT,
+          SPONSORED_NORMAL_POSITION_RESULT,
+          NONSPONSORED_SECOND_POSITION_RESULT,
+          NONSPONSORED_NORMAL_POSITION_RESULT,
+          FIRST_POSITION_RESULT,
+          SECOND_POSITION_RESULT,
+          THIRD_POSITION_RESULT,
+        ],
+      },
     ],
   });
 

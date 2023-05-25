@@ -87,6 +87,14 @@ class _QuickSuggestRemoteSettings {
     return this.#config;
   }
 
+  /**
+   * @returns {Array}
+   *   Array of `BasicFeature` instances.
+   */
+  get features() {
+    return [...this.#features];
+  }
+
   get logger() {
     if (!this.#logger) {
       this.#logger = lazy.UrlbarUtils.getLogger({

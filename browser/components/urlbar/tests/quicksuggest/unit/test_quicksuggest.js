@@ -211,9 +211,7 @@ const EXPECTED_HTTPS_RESULT = {
   },
 };
 
-let cleanUpQuickSuggest;
-
-add_task(async function init() {
+add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
   UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
@@ -226,8 +224,21 @@ add_task(async function init() {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
-  cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+  const testDataTypeResults = [
+    Object.assign({}, REMOTE_SETTINGS_RESULTS[0], { title: "test-data-type" }),
+  ];
+
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: REMOTE_SETTINGS_RESULTS,
+      },
+      {
+        type: "test-data-type",
+        attachment: testDataTypeResults,
+      },
+    ],
   });
 });
 
@@ -1295,18 +1306,7 @@ add_task(async function block() {
 // Makes sure remote settings data is fetched using the correct `type` based on
 // the value of the `quickSuggestRemoteSettingsDataType` Nimbus variable.
 add_task(async function remoteSettingsDataType() {
-  // `QuickSuggestTestUtils.ensureQuickSuggestInit()` stubs
-  // `QuickSuggestRemoteSettings._queueSettingsSync()`, which we want to test
-  // below, so remove the stub by calling the cleanup function it returned.
-  await cleanUpQuickSuggest();
-
-  // We need to spy on `QuickSuggestRemoteSettings.#rs.get()`, but `#rs` is
-  // created lazily. Set `suggest.quicksuggest.sponsored` to trigger its
-  // creation.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-
-  let sandbox = sinon.createSandbox();
-  let spy = sandbox.spy(QuickSuggestRemoteSettings._test_rs, "get");
 
   for (let dataType of [undefined, "test-data-type"]) {
     // Set up a mock Nimbus rollout with the data type.
@@ -1316,24 +1316,26 @@ add_task(async function remoteSettingsDataType() {
     }
     let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature(value);
 
+    // Make the result for test data type.
+    let expected = EXPECTED_SPONSORED_RESULT;
+    if (dataType) {
+      expected = JSON.parse(JSON.stringify(expected));
+      expected.payload.title = dataType;
+    }
+
     // Re-enable to trigger sync from remote settings.
     UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
     UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
 
-    let expectedDataType = dataType || "data";
-    Assert.ok(
-      spy.calledWith({ filters: { type: expectedDataType } }),
-      "#rs.get() called with expected data type: " + expectedDataType
-    );
+    let context = createContext(SPONSORED_SEARCH_STRING, {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      matches: [expected],
+    });
 
-    spy.resetHistory();
     await cleanUpNimbus();
   }
-
-  sandbox.restore();
-
-  // Restore the stub for the remainder of the test.
-  cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit(
-    REMOTE_SETTINGS_RESULTS
-  );
 });

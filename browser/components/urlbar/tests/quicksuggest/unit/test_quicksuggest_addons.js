@@ -16,9 +16,6 @@ ChromeUtils.defineModuleGetter(
   "ExtensionTestCommon",
   "resource://testing-common/ExtensionTestCommon.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  sinon: "resource://testing-common/Sinon.sys.mjs",
-});
 
 const MERINO_SUGGESTIONS = [
   {
@@ -101,6 +98,7 @@ add_setup(async function init() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
     merinoSuggestions: MERINO_SUGGESTIONS,
   });
 });
@@ -265,34 +263,6 @@ add_task(async function hideIfAlreadyInstalled() {
 });
 
 add_task(async function remoteSettings() {
-  // Disable addon suggestions to avoid fetching RemoteSettings.
-  UrlbarPrefs.set("suggest.addons", false);
-
-  // Set dummy data.
-  const rs = QuickSuggestRemoteSettings.rs;
-  sinon.stub(rs, "get").callsFake(async query => {
-    return query.filters.type === "amo_suggestion"
-      ? REMOTE_SETTINGS_RESULTS
-      : [];
-  });
-  QuickSuggestRemoteSettings._test_ignoreSettingsSync = false;
-
-  // Make a stub that waits until RemoteSettings data is updated in the feature.
-  const addonSuggestions = QuickSuggest.getFeature("AddonSuggestions");
-  const onRemoteSettings = new Promise(resolve => {
-    const stub = sinon.stub(addonSuggestions, "onRemoteSettingsSync");
-    stub.callsFake(async (...args) => {
-      await stub.wrappedMethod.apply(addonSuggestions, args);
-      resolve();
-    });
-  });
-
-  // Enable to fetch RemoteSettings
-  UrlbarPrefs.set("suggest.addons", true);
-
-  // Wait until onRemoteSettingsSync is called.
-  await onRemoteSettings;
-
   const testCases = [
     {
       input: "first",
@@ -355,9 +325,6 @@ add_task(async function remoteSettings() {
       matches: [expected],
     });
   }
-
-  sinon.restore();
-  QuickSuggestRemoteSettings._test_ignoreSettingsSync = true;
 });
 
 function makeExpectedResult({ suggestion, source }) {
