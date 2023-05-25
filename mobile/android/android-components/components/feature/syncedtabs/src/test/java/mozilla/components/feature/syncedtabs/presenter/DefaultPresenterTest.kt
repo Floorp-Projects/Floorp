@@ -9,6 +9,7 @@ import android.os.Looper.getMainLooper
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
@@ -152,7 +153,7 @@ class DefaultPresenterTest {
             lifecycleOwner,
         )
 
-        presenter.accountObserver.onAuthenticated(mock(), mock())
+        presenter.accountObserver.onAuthenticated(mock(), mock<AuthType.Existing>())
         shadowOf(getMainLooper()).idle()
 
         verify(controller).syncAccount()

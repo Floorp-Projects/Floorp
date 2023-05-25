@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fxa.manager
 
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -78,7 +79,7 @@ class StateKtTest {
             "LoggedOut" -> Event.Progress.LoggedOut
             "FailedToRecoverFromAuthenticationProblem" -> Event.Progress.FailedToRecoverFromAuthenticationProblem
             "RecoveredFromAuthenticationProblem" -> Event.Progress.RecoveredFromAuthenticationProblem
-            "CompletedAuthentication" -> Event.Progress.CompletedAuthentication(mock())
+            "CompletedAuthentication" -> Event.Progress.CompletedAuthentication(mock<AuthType.Existing>())
             "FailedToBeginAuth" -> Event.Progress.FailedToBeginAuth
             "FailedToCompleteAuth" -> Event.Progress.FailedToCompleteAuth
             "FailedToCompleteAuthRestore" -> Event.Progress.FailedToCompleteAuthRestore

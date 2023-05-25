@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellation
@@ -103,7 +104,7 @@ class SyncStoreSupportTest {
             whenever(deviceConstellation()).thenReturn(constellation)
         }
 
-        accountObserver.onAuthenticated(account, mock())
+        accountObserver.onAuthenticated(account, mock<AuthType.Existing>())
         runCurrent()
 
         verify(constellation).registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
@@ -120,7 +121,7 @@ class SyncStoreSupportTest {
             whenever(getProfile()).thenReturn(profile)
         }
 
-        accountObserver.onAuthenticated(account, mock())
+        accountObserver.onAuthenticated(account, mock<AuthType.Existing>())
         runCurrent()
 
         val expected = Account(
@@ -143,7 +144,7 @@ class SyncStoreSupportTest {
             whenever(getProfile()).thenReturn(null)
         }
 
-        accountObserver.onAuthenticated(account, mock())
+        accountObserver.onAuthenticated(account, mock<AuthType.Existing>())
         runCurrent()
 
         store.waitUntilIdle()
@@ -156,7 +157,7 @@ class SyncStoreSupportTest {
             whenever(deviceConstellation()).thenReturn(mock())
             whenever(getProfile()).thenReturn(null)
         }
-        accountObserver.onAuthenticated(account, mock())
+        accountObserver.onAuthenticated(account, mock<AuthType.Existing>())
         runCurrent()
 
         accountObserver.onLoggedOut()
