@@ -541,7 +541,7 @@ void SourceBuffer::CheckEndTime() {
   // Check if we need to update mMediaSource duration
   TimeUnit endTime = mCurrentAttributes.GetGroupEndTimestamp();
   double duration = mMediaSource->Duration();
-  if (!std::isnan(duration) && endTime > TimeUnit::FromSeconds(duration)) {
+  if (!std::isnan(duration) && endTime.ToSeconds() > duration) {
     mMediaSource->SetDuration(endTime);
   }
 }
