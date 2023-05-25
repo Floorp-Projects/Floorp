@@ -1410,8 +1410,6 @@ function ArrayAt(index) {
 // This function is only barely too long for normal inlining.
 SetIsInlinableLargeFunction(ArrayAt);
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-
 // https://github.com/tc39/proposal-change-array-by-copy
 // Array.prototype.toReversed()
 function ArrayToReversed() {
@@ -1492,8 +1490,6 @@ function ArrayToSorted(comparefn) {
 
   return sorted;
 }
-
-#endif
 
 // https://github.com/tc39/proposal-array-find-from-last
 // Array.prototype.findLast ( predicate, thisArg )
