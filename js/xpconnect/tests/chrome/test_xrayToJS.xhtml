@@ -255,7 +255,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       "findIndex", "copyWithin", "fill", Symbol.iterator, Symbol.unscopables, "entries", "keys",
       "values", "constructor", "flat", "flatMap", "at", "findLast", "findLastIndex"];
   gConstructorProperties.Array =
-    constructorProps(["isArray", "from", "fromAsync", "of", Symbol.species]);
+    constructorProps(["isArray", "from", "of", Symbol.species]);
   for (let c of typedArrayClasses) {
     gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
     gConstructorProperties[c] = constructorProps(["BYTES_PER_ELEMENT"]);
