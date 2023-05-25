@@ -39,6 +39,40 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                              aCoordinateType, aX, aY);
 }
 
+void RemoteAccessible::ReplaceText(const nsString& aText) {
+  Unused << mDoc->SendReplaceText(mID, aText);
+}
+
+bool RemoteAccessible::InsertText(const nsString& aText, int32_t aPosition) {
+  bool valid;
+  Unused << mDoc->SendInsertText(mID, aText, aPosition, &valid);
+  return valid;
+}
+
+bool RemoteAccessible::CopyText(int32_t aStartPos, int32_t aEndPos) {
+  bool valid;
+  Unused << mDoc->SendCopyText(mID, aStartPos, aEndPos, &valid);
+  return valid;
+}
+
+bool RemoteAccessible::CutText(int32_t aStartPos, int32_t aEndPos) {
+  bool valid;
+  Unused << mDoc->SendCutText(mID, aStartPos, aEndPos, &valid);
+  return valid;
+}
+
+bool RemoteAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos) {
+  bool valid;
+  Unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos, &valid);
+  return valid;
+}
+
+bool RemoteAccessible::PasteText(int32_t aPosition) {
+  bool valid;
+  Unused << mDoc->SendPasteText(mID, aPosition, &valid);
+  return valid;
+}
+
 void RemoteAccessible::DocType(nsString& aType) {
   Unused << mDoc->SendDocType(mID, &aType);
 }
