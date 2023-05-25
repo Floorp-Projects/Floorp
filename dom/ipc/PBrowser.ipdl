@@ -664,8 +664,6 @@ parent:
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags,
                              int32_t aAppUnitsPerDevPixel);
 
-    async SetAllowDeprecatedTls(bool value);
-
     async ShowDynamicToolbar();
 
 child:

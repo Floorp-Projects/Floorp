@@ -4271,9 +4271,7 @@ public class GeckoSession {
      *     following special methods are made available to the URI: -
      *     document.addCertException(isTemporary), returns Promise -
      *     document.getFailedCertSecurityInfo(), returns FailedCertSecurityInfo -
-     *     document.getNetErrorInfo(), returns NetErrorInfo - document.allowDeprecatedTls, a
-     *     property indicating whether or not TLS 1.0/1.1 is allowed -
-     *     document.reloadWithHttpsOnlyException()
+     *     document.getNetErrorInfo(), returns NetErrorInfo document.reloadWithHttpsOnlyException()
      * @see <a
      *     href="https://searchfox.org/mozilla-central/source/dom/webidl/FailedCertSecurityInfo.webidl">FailedCertSecurityInfo
      *     IDL</a>

@@ -305,8 +305,6 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<mozilla::ContentBlockingNotifier::
                       StorageAccessPermissionGrantedReason>& aReason);
 
-  mozilla::ipc::IPCResult RecvSetAllowDeprecatedTls(bool value);
-
   mozilla::ipc::IPCResult RecvNavigationFinished();
 
   already_AddRefed<nsIBrowser> GetBrowser();
