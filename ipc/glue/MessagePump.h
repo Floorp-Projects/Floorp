@@ -10,7 +10,7 @@
 #include "base/message_pump_default.h"
 #if defined(XP_WIN)
 #  include "base/message_pump_win.h"
-#elif defined(XP_MACOSX)
+#elif defined(XP_DARWIN)
 #  include "base/message_pump_mac.h"
 #endif
 
@@ -132,7 +132,7 @@ class MessagePumpForNonMainUIThreads final : public base::MessagePumpForUI,
   bool mInWait MOZ_GUARDED_BY(mWaitLock);
   mozilla::Mutex mWaitLock;
 };
-#elif defined(XP_MACOSX)
+#elif defined(XP_DARWIN)
 // Extends the CFRunLoopBase message pump to process xpcom events. Based on
 // MessagePumpNSRunLoop.
 class MessagePumpForNonMainUIThreads final
@@ -165,7 +165,7 @@ class MessagePumpForNonMainUIThreads final
 
   DISALLOW_COPY_AND_ASSIGN(MessagePumpForNonMainUIThreads);
 };
-#endif  // defined(XP_MACOSX)
+#endif  // defined(XP_DARWIN)
 
 #if defined(MOZ_WIDGET_ANDROID)
 /*`
