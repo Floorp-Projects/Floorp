@@ -52,6 +52,7 @@
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1440,11 +1441,17 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
     }
   }
 
+  bool authorizationInPreflightHeaders = false;
+  bool authorizationCoveredByWildcard = false;
   for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
+    // Cache the result of the authorization header.
+    bool isAuthorization =
+        mPreflightHeaders[i].LowerCaseEqualsASCII("authorization");
     if (wildcard) {
-      if (!mPreflightHeaders[i].LowerCaseEqualsASCII("authorization")) {
+      if (!isAuthorization) {
         continue;
       } else {
+        authorizationInPreflightHeaders = true;
         if (StaticPrefs::
                 network_cors_preflight_authorization_covered_by_wildcard() &&
             !hasAuthorizationHeader) {
@@ -1453,6 +1460,10 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
           // console.
           LogBlockedRequest(aRequest, "CORSAllowHeaderFromPreflightDeprecation",
                             nullptr, 0, parentHttpChannel, true);
+          glean::network::cors_authorization_header
+              .Get("covered_by_wildcard"_ns)
+              .Add(1);
+          authorizationCoveredByWildcard = true;
           continue;
         }
       }
@@ -1465,8 +1476,15 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
           NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
           nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
           parentHttpChannel);
+      if (isAuthorization) {
+        glean::network::cors_authorization_header.Get("disallowed"_ns).Add(1);
+      }
       return NS_ERROR_DOM_BAD_URI;
     }
+  }
+
+  if (authorizationInPreflightHeaders && !authorizationCoveredByWildcard) {
+    glean::network::cors_authorization_header.Get("allowed"_ns).Add(1);
   }
 
   return NS_OK;
