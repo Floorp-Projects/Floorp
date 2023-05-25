@@ -9,6 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
@@ -60,10 +61,6 @@ export const OwnershipModel = {
  * @property {IncludeShadowTreeMode} [includeShadowTree=IncludeShadowTreeMode.None]
  *     Mode of a serialization of shadow dom. Defaults to "none".
  */
-
-function getUUID() {
-  return Services.uuid.generateUUID().toString().slice(1, -1);
-}
 
 const TYPED_ARRAY_CLASSES = [
   "Uint8Array",
@@ -1036,7 +1033,7 @@ function setInternalIdsIfNeeded(serializationInternalMap, remoteValue, object) {
     if (!previousRemoteValue.internalId) {
       // If the original remote value has no internal id yet, generate a uuid
       // and update the internalId of the original remote value with it.
-      previousRemoteValue.internalId = getUUID();
+      previousRemoteValue.internalId = lazy.generateUUID();
     }
 
     // Copy the internalId of the original remote value to the new remote value.

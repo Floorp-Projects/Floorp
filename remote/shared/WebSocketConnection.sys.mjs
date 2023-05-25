@@ -8,6 +8,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   truncate: "chrome://remote/content/shared/Format.sys.mjs",
   WebSocketTransport:
@@ -24,7 +25,7 @@ export class WebSocketConnection {
    *     Reference to the httpd.js's connection needed for clean-up.
    */
   constructor(webSocket, httpdConnection) {
-    this.id = Services.uuid.generateUUID().toString().slice(1, -1);
+    this.id = lazy.generateUUID();
 
     this.httpdConnection = httpdConnection;
 

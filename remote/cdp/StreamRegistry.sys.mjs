@@ -5,6 +5,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   UnsupportedError: "chrome://remote/content/cdp/Error.sys.mjs",
 });
 
@@ -95,7 +96,7 @@ export class StreamRegistry {
       throw new lazy.UnsupportedError(`Unknown stream type for ${stream}`);
     }
 
-    const handle = Services.uuid.generateUUID().toString().slice(1, -1);
+    const handle = lazy.generateUUID();
 
     this.streams.set(handle, stream);
     return handle;

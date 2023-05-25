@@ -698,10 +698,6 @@ add_task(function test_WebReference_isReference() {
   ok(WebReference.isReference({ [WebFrame.Identifier]: "foo" }));
 });
 
-add_task(function test_generateUUID() {
-  equal(typeof element.generateUUID(), "string");
-});
-
 add_task(function test_WebElement_toJSON() {
   const { Identifier } = WebElement;
 

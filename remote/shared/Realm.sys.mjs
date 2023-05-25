@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.sys.mjs",
+
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
@@ -36,10 +38,6 @@ export const RealmType = {
   Worklet: "worklet",
 };
 
-function getUUID() {
-  return Services.uuid.generateUUID().toString().slice(1, -1);
-}
-
 /**
  * Base class that wraps any kind of WebDriver BiDi realm.
  */
@@ -48,7 +46,7 @@ export class Realm {
   #id;
 
   constructor() {
-    this.#id = getUUID();
+    this.#id = lazy.generateUUID();
 
     // Map of unique handles (UUIDs) to objects belonging to this realm.
     this.#handleObjectMap = new Map();
@@ -115,7 +113,7 @@ export class Realm {
    * @returns {string} The unique handle created for this strong reference.
    */
   getHandleForObject(object) {
-    const handle = getUUID();
+    const handle = lazy.generateUUID();
     this.#handleObjectMap.set(handle, object);
     return handle;
   }

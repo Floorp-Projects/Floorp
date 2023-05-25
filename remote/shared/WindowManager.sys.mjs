@@ -8,6 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TimedPromise: "chrome://remote/content/marionette/sync.sys.mjs",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.sys.mjs",
@@ -124,8 +125,7 @@ class WindowManager {
    */
   getIdForWindow(win) {
     if (!this._chromeWindowHandles.has(win)) {
-      const uuid = Services.uuid.generateUUID().toString();
-      this._chromeWindowHandles.set(win, uuid.substring(1, uuid.length - 1));
+      this._chromeWindowHandles.set(win, lazy.generateUUID());
     }
     return this._chromeWindowHandles.get(win);
   }

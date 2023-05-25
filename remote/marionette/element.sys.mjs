@@ -8,6 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   PollPromise: "chrome://remote/content/marionette/sync.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
 });
@@ -1007,18 +1008,6 @@ element.isInView = function (el) {
 };
 
 /**
- * Generates a unique identifier.
- *
- * The generated uuid will not contain the curly braces.
- *
- * @returns {string}
- *     UUID.
- */
-element.generateUUID = function () {
-  return Services.uuid.generateUUID().toString().slice(1, -1);
-};
-
-/**
  * This function throws the visibility of the element error if the element is
  * not displayed or the given coordinates are not within the viewport.
  *
@@ -1401,7 +1390,7 @@ export class WebReference {
    */
   static from(node, uuid) {
     if (uuid === undefined) {
-      uuid = element.generateUUID();
+      uuid = lazy.generateUUID();
     }
 
     if (element.isShadowRoot(node) && !element.isInPrivilegedDocument(node)) {

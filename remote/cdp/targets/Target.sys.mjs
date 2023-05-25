@@ -6,6 +6,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CDPConnection: "chrome://remote/content/cdp/CDPConnection.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   WebSocketHandshake:
     "chrome://remote/content/server/WebSocketHandshake.sys.mjs",
 });
@@ -31,7 +32,7 @@ export class Target {
 
     // There can be more than one connection if multiple clients connect to the remote agent.
     this.connections = new Set();
-    this.id = Services.uuid.generateUUID().toString().slice(1, -1);
+    this.id = lazy.generateUUID();
   }
 
   /**
