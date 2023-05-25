@@ -1063,13 +1063,14 @@ void nsViewSourceChannel::DisableAltDataCache() {
 
 NS_IMETHODIMP
 nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                           const nsACString& aCategory) {
+                                           const nsACString& aCategory,
+                                           bool aIsWarning) {
   if (!mHttpChannel) {
     NS_WARNING(
         "nsViewSourceChannel::LogBlockedCORSRequest mHttpChannel is null");
     return NS_ERROR_UNEXPECTED;
   }
-  return mHttpChannel->LogBlockedCORSRequest(aMessage, aCategory);
+  return mHttpChannel->LogBlockedCORSRequest(aMessage, aCategory, aIsWarning);
 }
 
 NS_IMETHODIMP

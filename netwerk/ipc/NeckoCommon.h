@@ -108,7 +108,8 @@ class HttpChannelSecurityWarningReporter : public nsISupports {
   [[nodiscard]] virtual nsresult ReportSecurityMessage(
       const nsAString& aMessageTag, const nsAString& aMessageCategory) = 0;
   [[nodiscard]] virtual nsresult LogBlockedCORSRequest(
-      const nsAString& aMessage, const nsACString& aCategory) = 0;
+      const nsAString& aMessage, const nsACString& aCategory,
+      bool aIsWarning = false) = 0;
   [[nodiscard]] virtual nsresult LogMimeTypeMismatch(
       const nsACString& aMessageName, bool aWarning, const nsAString& aURL,
       const nsAString& aContentType) = 0;

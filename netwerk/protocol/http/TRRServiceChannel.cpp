@@ -1288,7 +1288,8 @@ TRRServiceChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 
 NS_IMETHODIMP
 TRRServiceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
-                                         const nsACString& aCategory) {
+                                         const nsACString& aCategory,
+                                         bool aIsWarning) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -205,7 +205,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   [[nodiscard]] nsresult ReportSecurityMessage(
       const nsAString& aMessageTag, const nsAString& aMessageCategory) override;
   nsresult LogBlockedCORSRequest(const nsAString& aMessage,
-                                 const nsACString& aCategory) override;
+                                 const nsACString& aCategory,
+                                 bool aIsWarning = false) override;
   nsresult LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                const nsAString& aURL,
                                const nsAString& aContentType) override;
