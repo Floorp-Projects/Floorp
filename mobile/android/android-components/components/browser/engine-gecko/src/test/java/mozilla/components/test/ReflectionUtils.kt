@@ -4,18 +4,23 @@
 
 package mozilla.components.test
 
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
+import java.security.AccessController
+import java.security.PrivilegedExceptionAction
 
 object ReflectionUtils {
     fun <T : Any> setField(instance: T, fieldName: String, value: Any?) {
-        val originField = instance.javaClass.getField(fieldName)
+        val mapField = AccessController.doPrivileged(
+            PrivilegedExceptionAction {
+                try {
+                    val field = instance::class.java.getField(fieldName)
+                    field.isAccessible = true
+                    return@PrivilegedExceptionAction field
+                } catch (e: ReflectiveOperationException) {
+                    throw Error(e)
+                }
+            },
+        )
 
-        val modifiersField = Field::class.java.getDeclaredField("modifiers")
-        modifiersField.isAccessible = true
-        modifiersField.setInt(originField, originField.modifiers and Modifier.FINAL.inv())
-
-        originField.isAccessible = true
-        originField.set(instance, value)
+        mapField.set(instance, value)
     }
 }
