@@ -455,8 +455,7 @@ void InputToReadableStreamAlgorithms::ErrorPropagation(JSContext* aCx,
     NS_WARNING_ASSERTION(!rv.Failed(), "Failed to error InputToReadableStream");
   }
 
-  MOZ_ASSERT(mInput);
-  CloseAndReleaseObjects(aCx, aStream);
+  MOZ_ASSERT(IsClosed());
 }
 
 }  // namespace mozilla::dom
