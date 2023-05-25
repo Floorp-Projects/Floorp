@@ -29,9 +29,7 @@ export async function getGeneratedLocation(location, thunkArgs) {
   const generatedLocation = await sourceMapLoader.getGeneratedLocation(
     location
   );
-  // Avoid re-creating a new location if the SourceMapLoader returned the same location.
-  // We can't compare location objects as the worker always return new objects, even if their content is the same.
-  if (generatedLocation.sourceId == location.sourceId) {
+  if (!generatedLocation) {
     return location;
   }
 
@@ -81,10 +79,12 @@ export async function getOriginalLocation(
     return location;
   }
   const { getState, sourceMapLoader } = thunkArgs;
-  const originalLocation = await sourceMapLoader.getOriginalLocation(location);
-  // Avoid re-creating a new location if this isn't mapped and it returned the generated location.
-  // We can't compare location objects as the worker always return new objects, even if their content is the same.
-  if (originalLocation.sourceId == location.sourceId) {
+  const originalLocation = await sourceMapLoader.getOriginalLocation({
+    sourceId: location.source.id,
+    line: location.line,
+    column: location.column,
+  });
+  if (!originalLocation) {
     return location;
   }
 

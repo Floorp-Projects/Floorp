@@ -30,11 +30,7 @@ add_task(async function testGetOriginalLocation() {
   const originalLocation2 = await gSourceMapLoader.getOriginalLocation(
     originalLocation
   );
-  Assert.deepEqual(
-    originalLocation2,
-    originalLocation,
-    "original location maps to itself"
-  );
+  Assert.deepEqual(originalLocation2, null, "No mapped location");
 
   gSourceMapLoader.clearSourceMaps();
   const originalLocation3 = await gSourceMapLoader.getOriginalLocation(
@@ -42,8 +38,8 @@ add_task(async function testGetOriginalLocation() {
   );
   Assert.deepEqual(
     originalLocation3,
-    generatedLocation,
-    "after clearing the source maps, the same generated location maps to itself"
+    null,
+    "after clearing the source maps, the same generated location no longer maps"
   );
 });
 
@@ -84,7 +80,7 @@ add_task(async function testGetGeneratedLocation() {
     );
     Assert.deepEqual(
       secondGeneratedLocation,
-      originalLocation,
+      null,
       "after clearing source maps, the same location no longer maps to an original location"
     );
   }
