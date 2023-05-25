@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { actions, createStore, makeSource } from "../../utils/test-head";
+import { createLocation } from "../../utils/location";
 
 import {
   getColumnBreakpoints,
@@ -128,10 +129,13 @@ describe("getFirstBreakpointPosition", () => {
       source: fooSource,
     });
 
-    const position = getFirstBreakpointPosition(getState(), {
-      line: 1,
-      sourceId: fooSource.id,
-    });
+    const position = getFirstBreakpointPosition(
+      getState(),
+      createLocation({
+        line: 1,
+        source: fooSource,
+      })
+    );
 
     if (!position) {
       throw new Error("There should be a position");

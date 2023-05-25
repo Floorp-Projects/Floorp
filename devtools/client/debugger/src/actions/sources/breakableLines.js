@@ -24,22 +24,21 @@ function calculateBreakableLines(positions) {
  * Ensure that breakable lines for a given source are fetched.
  *
  * @param Object cx
- * @param Object source
- * @param Object sourceActor (optional)
- *        If one particular source actor is to be fetched.
- *        Otherwise the first available one will be picked,
- *        or all the source actors in case of HTML sources.
+ * @param Object location
  */
-export function setBreakableLines(cx, source, sourceActor) {
+export function setBreakableLines(cx, location) {
   return async ({ getState, dispatch, client }) => {
     let breakableLines;
-    if (isOriginalId(source.id)) {
+    if (isOriginalId(location.source.id)) {
       const positions = await dispatch(
-        setBreakpointPositions({ cx, sourceId: source.id })
+        setBreakpointPositions({ cx, location })
       );
       breakableLines = calculateBreakableLines(positions);
 
-      const existingBreakableLines = getBreakableLines(getState(), source.id);
+      const existingBreakableLines = getBreakableLines(
+        getState(),
+        location.source.id
+      );
       if (existingBreakableLines) {
         breakableLines = [
           ...new Set([...existingBreakableLines, ...breakableLines]),
@@ -49,19 +48,24 @@ export function setBreakableLines(cx, source, sourceActor) {
       dispatch({
         type: "SET_ORIGINAL_BREAKABLE_LINES",
         cx,
-        sourceId: source.id,
+        sourceId: location.source.id,
         breakableLines,
       });
     } else {
       // Ignore re-fetching the breakable lines for source actor we already fetched
-      breakableLines = getSourceActorBreakableLines(getState(), sourceActor.id);
+      breakableLines = getSourceActorBreakableLines(
+        getState(),
+        location.sourceActor.id
+      );
       if (breakableLines) {
         return;
       }
-      breakableLines = await client.getSourceActorBreakableLines(sourceActor);
+      breakableLines = await client.getSourceActorBreakableLines(
+        location.sourceActor
+      );
       dispatch({
         type: "SET_SOURCE_ACTOR_BREAKABLE_LINES",
-        sourceActorId: sourceActor.id,
+        sourceActorId: location.sourceActor.id,
         breakableLines,
       });
     }

@@ -125,8 +125,7 @@ export function addBreakpoint(
     await dispatch(
       setBreakpointPositions({
         cx,
-        sourceId: initialLocation.source.id,
-        line: initialLocation.line,
+        location: initialLocation,
       })
     );
 

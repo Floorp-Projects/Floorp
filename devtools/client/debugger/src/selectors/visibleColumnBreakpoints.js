@@ -6,7 +6,6 @@ import { createSelector } from "reselect";
 
 import {
   getViewport,
-  getSource,
   getSelectedSource,
   getSelectedSourceTextContent,
   getBreakpointPositionsForSource,
@@ -173,15 +172,14 @@ export const visibleColumnBreakpoints = createSelector(
   getColumnBreakpoints
 );
 
-export function getFirstBreakpointPosition(state, { line, sourceId }) {
-  const positions = getBreakpointPositionsForSource(state, sourceId);
-  const source = getSource(state, sourceId);
-
-  if (!source || !positions) {
+export function getFirstBreakpointPosition(state, location) {
+  const positions = getBreakpointPositionsForSource(state, location.sourceId);
+  if (!positions) {
     return null;
   }
 
-  return sortSelectedLocations(convertToList(positions), source).find(
-    position => getSelectedLocation(position, source).line == line
+  return sortSelectedLocations(convertToList(positions), location.source).find(
+    position =>
+      getSelectedLocation(position, location.source).line == location.line
   );
 }

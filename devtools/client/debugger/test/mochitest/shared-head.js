@@ -991,13 +991,13 @@ async function navigateToAbsoluteURL(dbg, url, ...sources) {
   return waitForSources(dbg, ...sources);
 }
 
-function getFirstBreakpointColumn(dbg, { line, sourceId }) {
-  const { getSource, getFirstBreakpointPosition } = dbg.selectors;
-  const source = getSource(sourceId);
-  const position = getFirstBreakpointPosition({
-    line,
-    sourceId,
-  });
+function getFirstBreakpointColumn(dbg, source, line) {
+  const position = dbg.selectors.getFirstBreakpointPosition(
+    createLocation({
+      line,
+      source,
+    })
+  );
 
   return getSelectedLocation(position, source).column;
 }
@@ -1062,8 +1062,7 @@ async function addBreakpointViaGutter(dbg, line) {
 }
 
 function disableBreakpoint(dbg, source, line, column) {
-  column =
-    column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
+  column = column || getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
     sourceUrl: source.url,
@@ -1260,8 +1259,13 @@ async function expandAllSourceNodes(dbg, treeNode) {
  */
 function removeBreakpoint(dbg, sourceId, line, column) {
   const source = dbg.selectors.getSource(sourceId);
-  column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
-  const location = { sourceId, sourceUrl: source.url, line, column };
+  column = column || getFirstBreakpointColumn(dbg, source, line);
+  const location = createLocation({
+    source,
+    sourceUrl: source.url,
+    line,
+    column,
+  });
   const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
