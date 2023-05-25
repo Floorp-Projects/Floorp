@@ -39,6 +39,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -342,7 +344,12 @@ private fun NormalTabsTabIcon(normalTabCount: Int) {
         stringResource(id = R.string.mozac_tab_counter_open_tab_tray_plural, normalTabCount.toString())
     }
 
-    Box {
+    Box(
+        modifier = Modifier
+            .semantics(mergeDescendants = true) {
+                testTag = TabsTrayTestTag.normalTabsCounter
+            },
+    ) {
         Icon(
             painter = painterResource(
                 id = mozilla.components.ui.tabcounter.R.drawable.mozac_ui_tabcounter_box,

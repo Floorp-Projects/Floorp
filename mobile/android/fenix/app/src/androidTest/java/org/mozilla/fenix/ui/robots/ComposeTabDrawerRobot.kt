@@ -6,12 +6,16 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyChild
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
@@ -47,7 +51,7 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
     fun verifyExistingOpenTabs(vararg titles: String) {
         titles.forEach { title ->
-            tabItem(title).assertExists()
+            composeTestRule.tabItem(title).assertExists()
         }
     }
 
@@ -103,17 +107,34 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         composeTestRule.tabsTrayFab().assertExists()
     }
 
+    fun verifyNormalTabCounter() {
+        composeTestRule.normalTabsCounter().assertExists()
+    }
+
+    /**
+     * Verifies a tab's thumbnail when there is only one tab open.
+     */
+    fun verifyTabThumbnail() {
+        composeTestRule.tabThumbnail().assertExists()
+    }
+
+    /**
+     * Verifies a tab with [title] has a close button.
+     */
+    fun verifyTabCloseButton(title: String) {
+        composeTestRule.tabItem(title).assert(
+            hasAnyChild(
+                hasTestTag(TabsTrayTestTag.tabItemClose),
+            ),
+        )
+    }
+
     /**
      * Closes a tab when there is only one tab open.
      */
     fun closeTab() {
         composeTestRule.closeTabButton().performClick()
     }
-
-    /**
-     * Obtains the tab with the provided [title]
-     */
-    private fun tabItem(title: String) = composeTestRule.onNodeWithText(title)
 
     class Transition(private val composeTestRule: HomeActivityComposeTestRule) {
 
@@ -145,6 +166,15 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
         fun closeAllTabs(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             composeTestRule.dropdownMenuItemCloseAllTabs().performClick()
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            composeTestRule.tabItem(title)
+                .performScrollTo()
+                .performClick()
+
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
@@ -202,9 +232,19 @@ private fun ComposeTestRule.emptyNormalTabsList() = onNodeWithTag(TabsTrayTestTa
 private fun ComposeTestRule.emptyPrivateTabsList() = onNodeWithTag(TabsTrayTestTag.emptyPrivateTabsList)
 
 /**
+ * Obtains the tab with the provided [title]
+ */
+private fun ComposeTestRule.tabItem(title: String) = onNodeWithText(title)
+
+/**
  * Obtains an open tab's close button when there's only one tab open.
  */
 private fun ComposeTestRule.closeTabButton() = onNodeWithTag(TabsTrayTestTag.tabItemClose)
+
+/**
+ * Obtains an open tab's thumbnail when there's only one tab open.
+ */
+private fun ComposeTestRule.tabThumbnail() = onNodeWithTag(TabsTrayTestTag.tabItemThumbnail)
 
 /**
  * Obtains the three dot button in the Tabs Tray banner.
@@ -240,3 +280,8 @@ private fun ComposeTestRule.dropdownMenuItemShareAllTabs() = onNodeWithTag(TabsT
  * Obtains the dropdown menu item to access tab settings.
  */
 private fun ComposeTestRule.dropdownMenuItemTabSettings() = onNodeWithTag(TabsTrayTestTag.tabSettings)
+
+/**
+ * Obtains the normal tabs counter.
+ */
+private fun ComposeTestRule.normalTabsCounter() = onNodeWithTag(TabsTrayTestTag.normalTabsCounter)

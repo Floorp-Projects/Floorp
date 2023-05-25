@@ -36,6 +36,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
@@ -198,7 +200,10 @@ private fun Thumbnail(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(FirefoxTheme.colors.layer2),
+            .background(FirefoxTheme.colors.layer2)
+            .semantics(mergeDescendants = true) {
+                testTag = TabsTrayTestTag.tabItemThumbnail
+            },
     ) {
         ThumbnailCard(
             url = tab.content.url,
