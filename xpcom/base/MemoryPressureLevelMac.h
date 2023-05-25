@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-#if defined(XP_MACOSX)
+#if defined(XP_DARWIN)
 // An internal representation of the Mac memory-pressure level constants.
 class MacMemoryPressureLevel {
  public:
