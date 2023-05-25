@@ -22,6 +22,8 @@ exclude: true
 - Added new [`GeckoPrintException`][115.4] errors of `ERROR_NO_ACTIVITY_CONTEXT` and `ERROR_NO_ACTIVITY_CONTEXT_DELEGATE`
 - Added [`GeckoSession.ContentDelegate.onGetNimbusFeature`][115.5]
 - Added [`textContent`][115.6] to [`ContentDelegate.ContextElement`][65.21] and a new [`constructor`][115.7] to [`ContentDelegate.ContextElement`][65.21]
+- Changed [`SessionPdfFileSaver.createResponse`][115.8] to response of saving PDF to accept an url and return a [`GeckoResult<WebResponse>`].
+- ⚠️ Deprecated [`GeckoSession.PdfSaveResult`][111.7]
 
 [115.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String, boolean, boolean)
 [115.2]: {{javadoc_uri}}/GeckoDisplay.NewSurfaceProvider.html
@@ -30,6 +32,7 @@ exclude: true
 [115.5]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onGetNimbusFeature(org.mozilla.geckoview.GeckoSession)
 [115.6]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html#textContent
 [115.7]: {{javadoc_uri}}/GeckoSession.ContentDelegate.ContextElement.html#<init>(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String)
+[115.8]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(GeckoSession, String, String, String, boolean, boolean)
 
 ## v114
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
@@ -1373,4 +1376,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2985f82e6989c2e441dc58418184e4892228caa7
+[api-version]: aa4d7a44b1bdd7687884196affc6af0555ac7253

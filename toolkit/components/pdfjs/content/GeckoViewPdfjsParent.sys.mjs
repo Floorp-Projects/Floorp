@@ -209,14 +209,11 @@ class FileSaver {
       const isPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
         this.#browser
       );
-      const response = await fetch(blobUrl);
-      const buffer = await response.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
 
       if (this.#callback) {
         // "Save as PDF" from the share menu.
         this.#callback.onSuccess({
-          bytes,
+          url: blobUrl,
           filename,
           originalUrl,
           isPrivate,
@@ -225,7 +222,7 @@ class FileSaver {
         // "Download" or "Open in app" from the pdf.js toolbar.
         this.#eventDispatcher.sendRequest({
           type: "GeckoView:SavePdf",
-          bytes,
+          url: blobUrl,
           filename,
           originalUrl,
           isPrivate,
@@ -234,7 +231,6 @@ class FileSaver {
         });
       }
       lazy.PdfJsTelemetry.onGeckoview("download_succeeded");
-      debug`Save a PDF: ${bytes.length} bytes sent.`;
     } catch (e) {
       lazy.PdfJsTelemetry.onGeckoview("download_failed");
       if (this.#callback) {
