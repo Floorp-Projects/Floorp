@@ -44,7 +44,7 @@ list of acceptable features is given below:
      -
    * - Current minimal requirement
      - 7.1
-     - 5.0
+     - 7.0
      -
    * - Feature
      - GCC
