@@ -201,6 +201,24 @@ class MockRemoteSettings {
     await Promise.all([onConfigSync, ...onFeatureSyncs]);
   }
 
+  /*
+   * Update the config and data in RemoteSettings. If the config or the data are
+   * undefined, use the current one.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {object} options.config
+   *   Dummy config in the RemoteSettings.
+   * @param {Array} options.data
+   *   Dummy data in the RemoteSettings.
+   */
+  async update({ config = this.#config, data = this.#data }) {
+    this.#config = config;
+    this.#data = data;
+
+    await this.sync();
+  }
+
   cleanup() {
     this.#sandbox.restore();
   }
@@ -322,17 +340,15 @@ class _QuickSuggestTestUtils {
   }
 
   /**
-   * Clears the current remote settings results and adds a new set of results.
-   * This can be used to add remote settings results after
+   * Clears the current remote settings data and adds a new set of data.
+   * This can be used to add remote settings data after
    * `ensureQuickSuggestInit()` has been called.
    *
-   * @param {Array} results
-   *   Array of remote settings result objects.
+   * @param {Array} data
+   *   Array of remote settings data objects.
    */
-  async setRemoteSettingsResults(results) {
-    let admWikipedia = lazy.QuickSuggest.getFeature("AdmWikipedia");
-    admWikipedia._test_suggestionsMap.clear();
-    await admWikipedia._test_suggestionsMap.add(results);
+  async setRemoteSettingsResults(data) {
+    await this.#mockRemoteSettings.update({ data });
   }
 
   /**
