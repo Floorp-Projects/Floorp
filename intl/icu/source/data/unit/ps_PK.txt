@@ -94,6 +94,13 @@ ps_PK{
             }
         }
     }
+    unitsNarrow{
+        angle{
+            degree{
+                dnam{"درجے"}
+            }
+        }
+    }
     unitsShort{
         acceleration{
             g-force{

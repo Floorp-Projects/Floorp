@@ -191,6 +191,7 @@ my{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -218,6 +219,12 @@ my{
                 "G d MMM y",
                 "GGGGG d/M/y",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -412,6 +419,12 @@ my{
                 "y၊ MMM d",
                 "d/M/yy",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -1031,6 +1044,11 @@ my{
         }
         day-narrow{
             dn{"ရက်"}
+            relative{
+                "-1"{"မနေ့က"}
+                "0"{"ယနေ့"}
+                "1"{"မနက်ဖြန်"}
+            }
             relativeTime{
                 future{
                     other{"{0} ရက်အတွင်း"}
@@ -1042,6 +1060,11 @@ my{
         }
         day-short{
             dn{"ရက်"}
+            relative{
+                "-1"{"မနေ့က"}
+                "0"{"ယနေ့"}
+                "1"{"မနက်ဖြန်"}
+            }
             relativeTime{
                 future{
                     other{"{0} ရက်အတွင်း"}
@@ -1258,6 +1281,11 @@ my{
         }
         month-narrow{
             dn{"လ"}
+            relative{
+                "-1"{"ပြီးခဲ့သည့်လ"}
+                "0"{"ယခုလ"}
+                "1"{"လာမည့်လ"}
+            }
             relativeTime{
                 future{
                     other{"{0} လအတွင်း"}
@@ -1269,6 +1297,11 @@ my{
         }
         month-short{
             dn{"လ"}
+            relative{
+                "-1"{"ပြီးခဲ့သည့်လ"}
+                "0"{"ယခုလ"}
+                "1"{"လာမည့်လ"}
+            }
             relativeTime{
                 future{
                     other{"{0} လအတွင်း"}
@@ -1606,6 +1639,11 @@ my{
         }
         week-narrow{
             dn{"ပတ်"}
+            relative{
+                "-1"{"ပြီးခဲ့သည့် သီတင်းပတ်"}
+                "0"{"ယခု သီတင်းပတ်"}
+                "1"{"လာမည့် သီတင်းပတ်"}
+            }
             relativePeriod{"{0} ပတ်မြောက် သီတင်းပတ်"}
             relativeTime{
                 future{
@@ -1618,6 +1656,11 @@ my{
         }
         week-short{
             dn{"ပတ်"}
+            relative{
+                "-1"{"ပြီးခဲ့သည့် သီတင်းပတ်"}
+                "0"{"ယခု သီတင်းပတ်"}
+                "1"{"လာမည့် သီတင်းပတ်"}
+            }
             relativePeriod{"{0} ပတ်မြောက် သီတင်းပတ်"}
             relativeTime{
                 future{
@@ -1673,6 +1716,11 @@ my{
         }
         year-narrow{
             dn{"နှစ်"}
+            relative{
+                "-1"{"ယမန်နှစ်"}
+                "0"{"ယခုနှစ်"}
+                "1"{"လာမည့်နှစ်"}
+            }
             relativeTime{
                 future{
                     other{"{0} နှစ်အတွင်း"}
@@ -1684,6 +1732,11 @@ my{
         }
         year-short{
             dn{"နှစ်"}
+            relative{
+                "-1"{"ယမန်နှစ်"}
+                "0"{"ယခုနှစ်"}
+                "1"{"လာမည့်နှစ်"}
+            }
             relativeTime{
                 future{
                     other{"{0} နှစ်အတွင်း"}
@@ -1711,10 +1764,14 @@ my{
             start{"{0} - {1}"}
         }
         or-narrow{
+            2{"{0} သို့မဟုတ် {1}"}
+            end{"{0} သို့မဟုတ် {1}"}
             middle{"{0} - {1}"}
             start{"{0} - {1}"}
         }
         or-short{
+            2{"{0} သို့မဟုတ် {1}"}
+            end{"{0} သို့မဟုတ် {1}"}
             middle{"{0} - {1}"}
             start{"{0} - {1}"}
         }
@@ -1725,6 +1782,8 @@ my{
             start{"{0} - {1}"}
         }
         standard-narrow{
+            2{"{0}နှင့် {1}"}
+            end{"{0}နှင့် {1}"}
             middle{"{0} - {1}"}
             start{"{0} - {1}"}
         }
@@ -1808,8 +1867,75 @@ my{
             }
         }
         namePattern{
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
             sorting-long-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            sorting-long-referring-informal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
+            sorting-medium-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
+            sorting-short-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
+            surnameFirst-long-addressing-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-long-referring-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-referring-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {given} {given2} {credentials}"}
         }
     }
 }

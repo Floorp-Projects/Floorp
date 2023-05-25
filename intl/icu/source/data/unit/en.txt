@@ -817,6 +817,11 @@ en{
             }
         }
         speed{
+            beaufort{
+                dnam{"Beaufort"}
+                one{"Beaufort {0}"}
+                other{"Beaufort {0}"}
+            }
             kilometer-per-hour{
                 dnam{"kilometers per hour"}
                 one{"{0} kilometer per hour"}
@@ -1790,6 +1795,11 @@ en{
             }
         }
         speed{
+            beaufort{
+                dnam{"Bft"}
+                one{"B{0}"}
+                other{"B{0}"}
+            }
             kilometer-per-hour{
                 dnam{"km/hr"}
                 one{"{0}km/h"}
@@ -2755,6 +2765,11 @@ en{
             }
         }
         speed{
+            beaufort{
+                dnam{"Bft"}
+                one{"B {0}"}
+                other{"B {0}"}
+            }
             kilometer-per-hour{
                 dnam{"km/hour"}
                 one{"{0} km/h"}

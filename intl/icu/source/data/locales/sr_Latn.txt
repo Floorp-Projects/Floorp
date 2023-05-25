@@ -329,6 +329,12 @@ sr_Latn{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -415,7 +421,7 @@ sr_Latn{
                 }
                 MMMEd{
                     M{"E, dd. MMM – E, dd. MMM"}
-                    d{"E, dd. – E, dd. MMM"}
+                    d{"E, dd. – E, dd. MMM"}
                 }
                 MMMd{
                     M{"d. MMM – d. MMM"}
@@ -470,15 +476,15 @@ sr_Latn{
                 }
                 yMMMM{
                     M{"MMMM – MMMM y. G"}
-                    y{"MMMM y. – MMMM y. G"}
+                    y{"MMMM y. – MMMM y. G"}
                 }
                 yMMMd{
                     M{"d. MMM – d. MMM y. G"}
                     d{"d–d. MMM y. G"}
-                    y{"d. MMM y. – d. MMM y. G"}
+                    y{"d. MMM y. – d. MMM y. G"}
                 }
                 yMd{
-                    M{"d.M.y. – d.M.y."}
+                    M{"d.M.y. – d.M.y."}
                     d{"d.M.y – d.M.y. GGGGG"}
                     y{"d.M.y – d.M.y. GGGGG"}
                 }
@@ -503,6 +509,12 @@ sr_Latn{
                 "d. M. y.",
                 "d.M.yy.",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -766,7 +778,7 @@ sr_Latn{
                 }
                 MMMEd{
                     M{"E, dd. MMM – E, dd. MMM"}
-                    d{"E, dd. – E, dd. MMM"}
+                    d{"E, dd. – E, dd. MMM"}
                 }
                 MMMd{
                     M{"dd. MMM – dd. MMM"}
@@ -803,35 +815,35 @@ sr_Latn{
                 }
                 yM{
                     M{"M – M. y."}
-                    y{"M.y. – M.y."}
+                    y{"M.y. – M.y."}
                 }
                 yMEd{
-                    M{"E, d. M. y. – E, d. M. y."}
-                    d{"E, d. M. y. – E, d. M. y."}
-                    y{"E, d. M. y. – E, d. M. y."}
+                    M{"E, d. M. y. – E, d. M. y."}
+                    d{"E, d. M. y. – E, d. M. y."}
+                    y{"E, d. M. y. – E, d. M. y."}
                 }
                 yMMM{
                     M{"MMM–MMM y."}
-                    y{"MMM y. – MMM y."}
+                    y{"MMM y. – MMM y."}
                 }
                 yMMMEd{
                     M{"E, dd. MMM – E, dd. MMM y."}
-                    d{"E, dd. – E, dd. MMM y."}
-                    y{"E, dd. MMM y. – E, dd. MMM y."}
+                    d{"E, dd. – E, dd. MMM y."}
+                    y{"E, dd. MMM y. – E, dd. MMM y."}
                 }
                 yMMMM{
                     M{"MMMM – MMMM y."}
-                    y{"MMMM y. – MMMM y."}
+                    y{"MMMM y. – MMMM y."}
                 }
                 yMMMd{
                     M{"dd. MMM – dd. MMM y."}
                     d{"dd.–dd. MMM y."}
-                    y{"dd. MMM y. – dd. MMM y."}
+                    y{"dd. MMM y. – dd. MMM y."}
                 }
                 yMd{
-                    M{"d. M. y. – d. M. y."}
-                    d{"d. M. y. – d. M. y."}
-                    y{"d. M. y. – d. M. y."}
+                    M{"d. M. y. – d. M. y."}
+                    d{"d. M. y. – d. M. y."}
+                    y{"d. M. y. – d. M. y."}
                 }
             }
             monthNames{
@@ -1015,6 +1027,50 @@ sr_Latn{
             }
         }
         islamic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d. MMMM y. G",
+                "d. MMMM y. G",
+                "d.MM.y. G",
+                "d.M.y. GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E d."}
+                Gy{"y. G"}
+                GyMMM{"MMM y. G"}
+                GyMMMEd{"E, d. MMM y. G"}
+                GyMMMd{"d. MMM y. G"}
+                GyMd{"d.M.y. GGGGG"}
+                M{"L"}
+                MEd{"E, d.M."}
+                MMM{"LLL"}
+                MMMEd{"E, d. MMM"}
+                MMMMEd{"E, d. MMMM"}
+                MMMMd{"d. MMMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                d{"d"}
+                y{"y. G"}
+                yyyy{"y. G"}
+                yyyyM{"M.y. GGGGG"}
+                yyyyMEd{"E, d.M.y. GGGGG"}
+                yyyyMMM{"MMM y. G"}
+                yyyyMMMEd{"E, d. MMM y. G"}
+                yyyyMMMM{"MMMM y. G"}
+                yyyyMMMd{"d. MMM y. G"}
+                yyyyMd{"d.M.y. GGGGG"}
+                yyyyQQQ{"QQQ, y. G"}
+                yyyyQQQQ{"QQQQ y. G"}
+            }
             eras{
                 abbreviated{
                     "AH",
@@ -1036,6 +1092,20 @@ sr_Latn{
                         "Zul-k.",
                         "Zul-h.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "Muharem",
                         "Safar",
@@ -1052,6 +1122,20 @@ sr_Latn{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Reb. 1",
+                        "Reb. 2",
+                        "Džum. 1",
+                        "Džum. 2",
+                        "Redž.",
+                        "Ša.",
+                        "Ram.",
+                        "Še.",
+                        "Zul-k.",
+                        "Zul-h.",
+                    }
                     wide{
                         "Muharem",
                         "Safer",
@@ -1785,6 +1869,12 @@ sr_Latn{
             }
         }
         month-narrow{
+            dn{"mes."}
+            relative{
+                "-1"{"prošlog mes."}
+                "0"{"ovog mes."}
+                "1"{"sledećeg mes."}
+            }
             relativeTime{
                 future{
                     few{"za {0} m."}
@@ -2233,6 +2323,7 @@ sr_Latn{
             }
         }
         week-narrow{
+            dn{"ned."}
             relative{
                 "-1"{"prošle n."}
                 "0"{"ove n."}
@@ -2377,7 +2468,25 @@ sr_Latn{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} ili {1}"}
+            end{"{0} ili {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ili {1}"}
+            end{"{0} ili {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} i {1}"}
+            end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
             middle{"{0}, {1}"}
@@ -2455,18 +2564,17 @@ sr_Latn{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname}, {suffix}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname}, {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -2478,18 +2586,18 @@ sr_Latn{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2}, {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial}, {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

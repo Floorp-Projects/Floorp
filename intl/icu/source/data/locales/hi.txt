@@ -27,6 +27,108 @@ hi{
     }
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        bali{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        beng{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        brah{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        cakm{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        cham{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         default{"latn"}
         deva{
             patterns{
@@ -36,11 +138,257 @@ hi{
                 scientificFormat{"[#E0]"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
+                exponential{"E"}
                 group{","}
+                infinity{"∞"}
+                list{";"}
                 minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        fullwide{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        gong{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        gonm{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        gujr{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        guru{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        hanidec{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        hmnp{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        java{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        kali{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        khmr{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        knda{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        lana{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        lanatham{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        laoo{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         latn{
@@ -279,6 +627,40 @@ hi{
                 timeSeparator{":"}
             }
         }
+        lepc{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        limb{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         minimalPairs{
             case{
                 nominative{"{0} लगेगा/लगेंगे"}
@@ -301,23 +683,420 @@ hi{
             }
         }
         minimumGroupingDigits{"1"}
+        mlym{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mong{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mtei{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mymr{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        mymrshan{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         native{"deva"}
+        nkoo{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        olck{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        orya{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        osma{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        rohg{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        saur{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        shrd{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        sora{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        sund{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        takr{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        talu{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        tamldec{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        telu{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        thai{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        tibt{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        vaii{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
     }
     calendar{
         buddhist{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "G EEEE, d MMMM y",
+                "G d MMMM y",
+                "G d MMM y",
+                "G d/M/y",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GyMd",
+            }
             availableFormats{
+                E{"ccc"}
+                Ed{"d E"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                M{"M"}
+                MEd{"E, d/M"}
+                MMM{"MMM"}
+                MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMdd{"dd-MM"}
+                Md{"d/M"}
+                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
                 yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"G MMM y"}
                 yyyyMMMEd{"E, d MMM y G"}
                 yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"G d MMM y"}
+                yyyyMMdd{"dd-MM-y G"}
                 yyyyMd{"d/M`/y GGGGG"}
+                yyyyQQQ{"QQQ G y"}
+                yyyyQQQQ{"QQQQ G y"}
             }
             eras{
                 abbreviated{
@@ -368,6 +1147,99 @@ hi{
                     M{"d/M/y – d/M/y GGGGG"}
                     d{"d/M/y – d/M/y GGGGG"}
                     y{"d/M/y – d/M/y GGGGG"}
+                }
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d MMM – E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"d/M – d/M"}
+                    d{"d/M – d/M"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y G"}
+                }
+                yM{
+                    M{"M/y – M/y G"}
+                    y{"M/y – M/y G"}
+                }
+                yMEd{
+                    M{"E, d/M/y – E, d/M/y G"}
+                    d{"E, d/M/y – E, d/M/y G"}
+                    y{"E, d/M/y – E, d/M/y G"}
+                }
+                yMMM{
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                yMd{
+                    M{"d/M/y – d/M/y G"}
+                    d{"d/M/y – d/M/y G"}
+                    y{"d/M/y – d/M/y G"}
                 }
             }
         }
@@ -1094,25 +1966,50 @@ hi{
                 "GGGGGyMd",
             }
             availableFormats{
+                E{"ccc"}
+                Ed{"d E"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                M{"M"}
+                MEd{"E, d/M"}
+                MMM{"MMM"}
+                MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMdd{"dd-MM"}
+                Md{"d/M"}
+                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
                 yyyyMEd{"E, d/M/y GGGGG"}
                 yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"G E, d MMM y"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM y G"}
+                yyyyMMdd{"dd-MM-y G"}
                 yyyyMd{"d/M/y GGGGG"}
+                yyyyQQQ{"QQQ G y"}
+                yyyyQQQQ{"QQQQ G y"}
             }
             eras{
                 abbreviated{
                     "शक",
                 }
+                narrow{
+                    "शक",
+                }
+                wide{
+                    "शक",
+                }
             }
             intervalFormats{
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
                 GyM{
                     G{"GGGGG M/y – GGGGG M/y"}
                     M{"GGGGG M/y – M/"}
@@ -1120,6 +2017,9 @@ hi{
                 }
                 GyMd{
                     d{"GGGGG d/M/y – d/M/y"}
+                }
+                d{
+                    d{"d–d"}
                 }
             }
             monthNames{
@@ -1881,6 +2781,11 @@ hi{
         }
         month-narrow{
             dn{"माह"}
+            relative{
+                "-1"{"पिछला माह"}
+                "0"{"इस माह"}
+                "1"{"अगला माह"}
+            }
             relativeTime{
                 future{
                     one{"{0} माह में"}
@@ -1894,6 +2799,11 @@ hi{
         }
         month-short{
             dn{"माह"}
+            relative{
+                "-1"{"पिछला माह"}
+                "0"{"इस माह"}
+                "1"{"अगला माह"}
+            }
             relativeTime{
                 future{
                     one{"{0} माह में"}
@@ -2277,6 +3187,11 @@ hi{
         }
         week-narrow{
             dn{"सप्ताह"}
+            relative{
+                "-1"{"पिछला सप्ताह"}
+                "0"{"इस सप्ताह"}
+                "1"{"अगला सप्ताह"}
+            }
             relativePeriod{"{0} के सप्ताह"}
             relativeTime{
                 future{
@@ -2291,6 +3206,11 @@ hi{
         }
         week-short{
             dn{"सप्ताह"}
+            relative{
+                "-1"{"पिछला सप्ताह"}
+                "0"{"इस सप्ताह"}
+                "1"{"अगला सप्ताह"}
+            }
             relativePeriod{"{0} के सप्ताह"}
             relativeTime{
                 future{
@@ -2368,6 +3288,11 @@ hi{
         }
         year-short{
             dn{"वर्ष"}
+            relative{
+                "-1"{"पिछला वर्ष"}
+                "0"{"इस वर्ष"}
+                "1"{"अगला वर्ष"}
+            }
             relativeTime{
                 future{
                     one{"{0} वर्ष में"}
@@ -2396,9 +3321,27 @@ hi{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} या {1}"}
+            end{"{0} या {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} या {1}"}
+            end{"{0} या {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} और {1}"}
             end{"{0}, और {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0} और {1}"}
+            end{"{0} और {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -2484,49 +3427,45 @@ hi{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
-            givenFirst-long-addressing-informal{"{prefix} {given-informal}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
+            givenFirst-long-addressing-formal{"{title} {surname}"}
+            givenFirst-long-addressing-informal{"{title} {given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname} {surname2}, {suffix}"}
-            givenFirst-long-referring-informal{"{prefix} {given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {surname2}, {credentials}"}
+            givenFirst-long-referring-informal{"{title} {given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{given-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{prefix} {given-initial} {given2-initial} {surname}, {suffix}"}
+            givenFirst-medium-referring-formal{"{title} {given-initial} {given2-initial} {surname}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{given-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname}"}
-            sorting-long-referring-formal{"{surname}, {given} {given2} {suffix}"}
+            sorting-long-referring-formal{"{surname}, {given} {given2} {credentials}"}
             sorting-long-referring-informal{"{surname}, {given-informal}"}
-            sorting-medium-referring-formal{"{surname}, {given} {given2-initial} {suffix}"}
+            sorting-medium-referring-formal{"{surname}, {given} {given2-initial} {credentials}"}
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname}, {given-initial} {given2-initial}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
                 "llCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{prefix} {surname} {given} {given2}, {suffix}"}
-            surnameFirst-long-referring-informal{"{prefix} {surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-referring-formal{"{title} {surname} {given} {given2}, {credentials}"}
+            surnameFirst-long-referring-informal{"{title} {surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{prefix} {surname} {given-initial} {given2-initial}, {suffix}"}
+            surnameFirst-medium-referring-formal{"{title} {surname} {given-initial} {given2-initial}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

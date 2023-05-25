@@ -258,6 +258,9 @@ lo{
         "America:Chihuahua"{
             ec{"ຊິວາວາ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ຊີອູດັດ ຄົວເຣຊ"}
+        }
         "America:Coral_Harbour"{
             ec{"ອາທິໂຄຄານ"}
         }

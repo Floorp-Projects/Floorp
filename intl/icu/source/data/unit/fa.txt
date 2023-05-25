@@ -55,6 +55,8 @@ fa{
             }
             dunam{
                 dnam{"دونوم"}
+                one{"{0} دونوم"}
+                other{"{0} دونوم"}
             }
             hectare{
                 dnam{"هکتار"}
@@ -492,6 +494,8 @@ fa{
             }
             em{
                 dnam{"em تایپوگرافی"}
+                one{"{0} em"}
+                other{"{0} em"}
             }
             megapixel{
                 dnam{"مگاپیکسل"}
@@ -852,6 +856,7 @@ fa{
                 other{"{0} درجهٔ فارنهایت"}
             }
             generic{
+                dnam{"°"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
@@ -1016,6 +1021,8 @@ fa{
             }
             pinch{
                 dnam{"سرانگشت"}
+                one{"{0} سرانگشت"}
+                other{"{0} سرانگشت"}
             }
             pint{
                 dnam{"پاینت"}
@@ -1058,14 +1065,18 @@ fa{
             }
             meter-per-square-second{
                 dnam{"متر/مجذور ثانیه"}
+                one{"{0}‎ m/s²"}
+                other{"{0}‎ m/s²"}
             }
         }
         angle{
             arc-minute{
+                dnam{"دقیقهٔ قوسی"}
                 one{"{0}′"}
                 other{"{0}′"}
             }
             arc-second{
+                dnam{"ثانیهٔ قوسی"}
                 one{"{0}″"}
                 other{"{0}″"}
             }
@@ -1076,41 +1087,65 @@ fa{
             }
             radian{
                 dnam{"رادیان"}
+                one{"{0} رادیان"}
+                other{"{0} رادیان"}
+            }
+            revolution{
+                dnam{"دور"}
+                one{"{0} دور"}
+                other{"{0} دور"}
             }
         }
         area{
             acre{
+                dnam{"جریب"}
                 one{"{0}جریب"}
                 other{"{0} جریب"}
             }
             dunam{
+                dnam{"دونوم"}
                 one{"{0}دونوم"}
                 other{"{0}دونوم"}
             }
             hectare{
+                dnam{"هکتار"}
                 one{"{0}ha"}
                 other{"{0}ha"}
             }
+            square-centimeter{
+                dnam{"cm²"}
+                one{"{0}‎ cm²"}
+                other{"{0}‎ cm²"}
+                per{"{0}‎/cm²"}
+            }
             square-foot{
+                dnam{"فوت مربع"}
                 one{"{0}ft²"}
                 other{"{0}ft²"}
             }
             square-inch{
+                dnam{"اینچ مربع"}
                 one{"{0}اینچ مربع"}
                 other{"{0}اینچ مربع"}
                 per{"{0}/اینچ مربع"}
             }
             square-kilometer{
+                dnam{"کیلومتر مربع"}
                 one{"{0}km²"}
                 other{"{0}km²"}
+                per{"{0}/km²"}
             }
             square-meter{
+                dnam{"متر مربع"}
                 one{"{0}m²"}
                 other{"{0}m²"}
+                per{"{0}‎/m²"}
             }
             square-mile{
+                dnam{"مایل مربع"}
                 one{"{0} mi²"}
                 other{"{0} mi²"}
+                per{"{0}‎/mi²"}
             }
             square-yard{
                 dnam{"یارد مربع"}
@@ -1119,6 +1154,14 @@ fa{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
             10p-1{"d{0}"}
             10p-12{"p{0}"}
             10p-15{"f{0}"}
@@ -1140,6 +1183,31 @@ fa{
             10p6{"M{0}"}
             10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -1147,14 +1215,45 @@ fa{
                 one{"{0}مورد"}
                 other{"{0}مورد"}
             }
+            karat{
+                dnam{"عیار"}
+                one{"{0} عیار"}
+                other{"{0} عیار"}
+            }
+            milligram-ofglucose-per-deciliter{
+                dnam{"میلی‌گرم در دسی‌لیتر"}
+                one{"{0} mg/dL"}
+                other{"{0} mg/dL"}
+            }
+            millimole-per-liter{
+                dnam{"میلی‌مول/لیتر"}
+                one{"{0} mmol/L"}
+                other{"{0} mmol/L"}
+            }
+            mole{
+                dnam{"مول"}
+                one{"{0} مول"}
+                other{"{0} مول"}
+            }
             percent{
                 dnam{"٪"}
                 one{"{0}٪"}
                 other{"{0}٪"}
             }
+            permille{
+                dnam{"هزارم"}
+                one{"{0}‰"}
+                other{"{0}‰"}
+            }
             permillion{
+                dnam{"بخش/میلیون"}
                 one{"{0}ppm"}
                 other{"{0}ppm"}
+            }
+            permyriad{
+                dnam{"ده‌هزارم"}
+                one{"{0}‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -1163,7 +1262,18 @@ fa{
                 one{"{0} ل./۱۰۰ ک.م."}
                 other{"{0} ل./۱۰۰ ک.م."}
             }
+            liter-per-kilometer{
+                dnam{"لیتر/کیلومتر"}
+                one{"{0} ل./ک.م."}
+                other{"{0} ل./ک.م."}
+            }
+            mile-per-gallon{
+                dnam{"مایل/گالن"}
+                one{"{0} مایل در گالن"}
+                other{"{0} مایل در گالن"}
+            }
             mile-per-gallon-imperial{
+                dnam{"مایل/امپریال گالن"}
                 one{"{0}m/gUK"}
                 other{"{0}m/gUK"}
             }
@@ -1178,43 +1288,56 @@ fa{
         digital{
             bit{
                 dnam{"بیت"}
+                one{"{0} بیت"}
+                other{"{0} بیت"}
             }
             byte{
                 dnam{"بایت"}
+                one{"{0} بایت"}
+                other{"{0} بایت"}
             }
             gigabit{
+                dnam{"گیگابیت"}
                 one{"{0}Gb"}
                 other{"{0}Gb"}
             }
             gigabyte{
+                dnam{"GB"}
                 one{"{0}GB"}
                 other{"{0}GB"}
             }
             kilobit{
+                dnam{"کیلوبیت"}
                 one{"{0}kb"}
                 other{"{0}kb"}
             }
             kilobyte{
+                dnam{"کیلوبایت"}
                 one{"{0}kB"}
                 other{"{0}kB"}
             }
             megabit{
+                dnam{"مگابیت"}
                 one{"{0}Mb"}
                 other{"{0}Mb"}
             }
             megabyte{
+                dnam{"MB"}
                 one{"{0}MB"}
                 other{"{0}MB"}
             }
             petabyte{
+                dnam{"پتابایت"}
                 one{"{0}PB"}
                 other{"{0}PB"}
             }
             terabit{
+                dnam{"ترابیت"}
                 one{"{0}Tb"}
                 other{"{0}Tb"}
             }
             terabyte{
+                dnam{"ترابایت"}
                 one{"{0}TB"}
                 other{"{0}TB"}
             }
@@ -1231,6 +1354,11 @@ fa{
                 other{"{0} روز"}
                 per{"{0}/روز"}
             }
+            decade{
+                dnam{"دهه"}
+                one{"{0} دهه"}
+                other{"{0} دهه"}
+            }
             hour{
                 dnam{"ساعت"}
                 one{"{0}h"}
@@ -1238,6 +1366,7 @@ fa{
                 per{"{0}/ساعت"}
             }
             microsecond{
+                dnam{"میکروثانیه"}
                 one{"{0}μs"}
                 other{"{0}μs"}
             }
@@ -1263,6 +1392,12 @@ fa{
                 one{"{0}ns"}
                 other{"{0}ns"}
             }
+            quarter{
+                dnam{"سه‌ماه"}
+                one{"{0} سه‌ماهه"}
+                other{"{0} سه‌ماهه"}
+                per{"{0}/سه‌ماه"}
+            }
             second{
                 dnam{"ثانیه"}
                 one{"{0}s"}
@@ -1279,12 +1414,76 @@ fa{
                 dnam{"سال"}
                 one{"{0} سال"}
                 other{"{0} سال"}
+                per{"{0}/سال"}
+            }
+        }
+        electric{
+            ampere{
+                dnam{"آمپر"}
+                one{"{0} آمپر"}
+                other{"{0} آمپر"}
+            }
+            milliampere{
+                dnam{"میلی‌آمپر"}
+                one{"{0} میلی‌آمپر"}
+                other{"{0} میلی‌آمپر"}
+            }
+            ohm{
+                dnam{"اهم"}
+                one{"{0} اهم"}
+                other{"{0} اهم"}
+            }
+            volt{
+                dnam{"ولت"}
+                one{"{0} ولت"}
+                other{"{0} ولت"}
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"بی‌تی‌یو"}
+                one{"{0} بی‌تی‌یو"}
+                other{"{0} بی‌تی‌یو"}
+            }
+            calorie{
+                dnam{"کالری"}
+                one{"{0} کالری"}
+                other{"{0} کالری"}
+            }
             electronvolt{
+                dnam{"الکترون‌ولت"}
                 one{"{0}الکترون‌ولت"}
                 other{"{0}الکترون‌ولت"}
+            }
+            foodcalorie{
+                dnam{"کالری"}
+                one{"{0} کالری"}
+                other{"{0} کالری"}
+            }
+            joule{
+                dnam{"ژول"}
+                one{"{0} ژول"}
+                other{"{0} ژول"}
+            }
+            kilocalorie{
+                dnam{"ک.کالری"}
+                one{"{0} ک.کالری"}
+                other{"{0} ک.کالری"}
+            }
+            kilojoule{
+                dnam{"ک.ژول"}
+                one{"{0} ک.ژول"}
+                other{"{0} ک.ژول"}
+            }
+            kilowatt-hour{
+                dnam{"ک.وات‌ساعت"}
+                one{"{0} ک.و.ساعت"}
+                other{"{0} ک.و.ساعت"}
+            }
+            therm-us{
+                dnam{"ترم آمریکایی"}
+                one{"{0} ترم آمریکایی"}
+                other{"{0} ترم آمریکایی"}
             }
         }
         force{
@@ -1293,12 +1492,27 @@ fa{
                 one{"{0}ک.وا.س/۱۰۰ ک.م"}
                 other{"{0} ک.وا.س/۱۰۰ ک.م"}
             }
+            newton{
+                dnam{"نیوتن"}
+                one{"{0} نیوتن"}
+                other{"{0} نیوتن"}
+            }
+            pound-force{
+                dnam{"پوند-نیرو"}
+                one{"{0} پوند-نیرو"}
+                other{"{0} پوند-نیرو"}
+            }
         }
         frequency{
             gigahertz{
                 dnam{"گ‌.هرتز"}
                 one{"{0} گ.هرتز"}
                 other{"{0} گ.هرتز"}
+            }
+            hertz{
+                dnam{"هرتز"}
+                one{"{0} هرتز"}
+                other{"{0} هرتز"}
             }
             kilohertz{
                 dnam{"ک.هرتز"}
@@ -1312,22 +1526,45 @@ fa{
             }
         }
         graphics{
+            dot{
+                dnam{"نقطه"}
+                one{"{0} نقطه"}
+                other{"{0} نقطه"}
+            }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
             dot-per-inch{
                 dnam{"dpi"}
                 one{"{0}dpi"}
                 other{"{0}dpi"}
             }
+            em{
+                dnam{"em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
             megapixel{
+                dnam{"مگاپیکسل"}
                 one{"{0}MP"}
                 other{"{0}MP"}
             }
             pixel{
+                dnam{"پیکسل"}
                 one{"{0}px"}
                 other{"{0}px"}
             }
             pixel-per-centimeter{
+                dnam{"ppcm"}
                 one{"{0}ppcm"}
                 other{"{0}ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1340,13 +1577,20 @@ fa{
                 dnam{"cm"}
                 one{"{0}cm"}
                 other{"{0}cm"}
+                per{"{0}/س.م"}
             }
             decimeter{
                 dnam{"دس.م"}
                 one{"{0}dm"}
                 other{"{0}dm"}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             fathom{
+                dnam{"فاتوم"}
                 one{"{0}فاتوم"}
                 other{"{0}فاتوم"}
             }
@@ -1357,6 +1601,7 @@ fa{
                 per{"{0}/فوت"}
             }
             furlong{
+                dnam{"فرلانگ"}
                 one{"{0}فرلانگ"}
                 other{"{0}فرلانگ"}
             }
@@ -1364,11 +1609,13 @@ fa{
                 dnam{"اینچ"}
                 one{"{0}in"}
                 other{"{0}in"}
+                per{"{0}/اینچ"}
             }
             kilometer{
                 dnam{"km"}
                 one{"{0}km"}
                 other{"{0}km"}
+                per{"{0}‎/km"}
             }
             light-year{
                 dnam{"سال نوری"}
@@ -1377,9 +1624,12 @@ fa{
             }
             meter{
                 dnam{"متر"}
+                one{"{0} m"}
+                other{"{0} m"}
                 per{"{0}/متر"}
             }
             micrometer{
+                dnam{"μm"}
                 one{"{0}μm"}
                 other{"{0}μm"}
             }
@@ -1387,6 +1637,11 @@ fa{
                 dnam{"مایل"}
                 one{"{0}mi"}
                 other{"{0}mi"}
+            }
+            mile-scandinavian{
+                dnam{"مایل اسکاندیناوی"}
+                one{"{0}‎ smi"}
+                other{"{0}‎ smi"}
             }
             millimeter{
                 dnam{"mm"}
@@ -1414,10 +1669,12 @@ fa{
                 other{"{0}pm"}
             }
             point{
+                dnam{"پوینت"}
                 one{"{0}پوینت"}
                 other{"{0}پوینت"}
             }
             solar-radius{
+                dnam{"شعاع خورشید"}
                 one{"{0}شعاع خورشید"}
                 other{"{0}شعاع خورشید"}
             }
@@ -1427,20 +1684,46 @@ fa{
                 other{"{0} یارد"}
             }
         }
+        light{
+            candela{
+                dnam{"cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
+            lux{
+                dnam{"لوکس"}
+                one{"{0} لوکس"}
+                other{"{0} لوکس"}
+            }
+            solar-luminosity{
+                dnam{"تابندگی خورشید"}
+                one{"{0} ☉L"}
+                other{"{0} ☉L"}
+            }
+        }
         mass{
             carat{
+                dnam{"قیراط"}
                 one{"{0}CD"}
                 other{"{0}CD"}
             }
             dalton{
+                dnam{"دالتون"}
                 one{"{0}Da"}
                 other{"{0}Da"}
             }
             earth-mass{
+                dnam{"جرم زمین"}
                 one{"{0}M⊕"}
                 other{"{0}M⊕"}
             }
             grain{
+                dnam{"دانه"}
                 one{"{0}gr"}
                 other{"{0}gr"}
             }
@@ -1454,6 +1737,7 @@ fa{
                 dnam{"kg"}
                 one{"{0}kg"}
                 other{"{0}kg"}
+                per{"{0}‎/kg"}
             }
             microgram{
                 dnam{"میکروگرم"}
@@ -1472,6 +1756,7 @@ fa{
                 per{"{0} در اونس"}
             }
             ounce-troy{
+                dnam{"اونس تروا"}
                 one{"{0}اونس تروا"}
                 other{"{0}اونس تروا"}
             }
@@ -1482,6 +1767,7 @@ fa{
                 per{"{0} در پوند"}
             }
             solar-mass{
+                dnam{"جرم خورشید"}
                 one{"{0}M☉"}
                 other{"{0}M☉"}
             }
@@ -1502,23 +1788,47 @@ fa{
             }
         }
         power{
+            gigawatt{
+                dnam{"گیگاوات"}
+                one{"{0} گیگاوات"}
+                other{"{0} گیگاوات"}
+            }
             horsepower{
+                dnam{"اسب بخار"}
                 one{"{0}hp"}
                 other{"{0}hp"}
             }
             kilowatt{
+                dnam{"ک.وات"}
                 one{"{0}kW"}
                 other{"{0}kW"}
             }
+            megawatt{
+                dnam{"مگاوات"}
+                one{"{0} مگاوات"}
+                other{"{0} مگاوات"}
+            }
+            milliwatt{
+                dnam{"میلی‌وات"}
+                one{"{0} میلی‌وات"}
+                other{"{0} میلی‌وات"}
+            }
             watt{
+                dnam{"وات"}
                 one{"{0}W"}
                 other{"{0}W"}
             }
         }
         pressure{
             atmosphere{
+                dnam{"اتمسفر"}
                 one{"{0}اتمسفر"}
                 other{"{0}اتمسفر"}
+            }
+            bar{
+                dnam{"بار"}
+                one{"{0} بار"}
+                other{"{0} بار"}
             }
             hectopascal{
                 dnam{"هکتوپاسکال"}
@@ -1529,6 +1839,16 @@ fa{
                 dnam{"اینچ جیوه"}
                 one{"{0}inHg"}
                 other{"{0}inHg"}
+            }
+            kilopascal{
+                dnam{"ک.پاسکال"}
+                one{"{0} ک.پاسکال"}
+                other{"{0} ک.پاسکال"}
+            }
+            megapascal{
+                dnam{"مگاپاسکال"}
+                one{"{0} مگاپاسکال"}
+                other{"{0} مگاپاسکال"}
             }
             millibar{
                 dnam{"میلی‌بار"}
@@ -1590,22 +1910,49 @@ fa{
                 other{"{0}°"}
             }
             kelvin{
+                dnam{"درجهٔ کلوین"}
                 one{"{0}K"}
                 other{"{0}K"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"نیوتن‌متر"}
+                one{"{0} نیوتن‌متر"}
+                other{"{0} نیوتن‌متر"}
+            }
+            pound-force-foot{
+                dnam{"پوند-فوت"}
+                one{"{0} پوند-فوت"}
+                other{"{0} پوند-فوت"}
+            }
+        }
         volume{
             acre-foot{
+                dnam{"جریب فوت"}
                 one{"{0}ac ft"}
                 other{"{0}ac ft"}
             }
+            barrel{
+                dnam{"بشکه"}
+                one{"{0} بشکه"}
+                other{"{0} بشکه"}
+            }
             bushel{
+                dnam{"بوشل"}
                 one{"{0}bu"}
                 other{"{0}bu"}
             }
             centiliter{
+                dnam{"cL"}
                 one{"{0}cL"}
                 other{"{0}cL"}
+            }
+            cubic-centimeter{
+                dnam{"cm³"}
+                one{"{0}‎ cm³"}
+                other{"{0}‎ cm³"}
+                per{"{0}‎ /cm³"}
             }
             cubic-foot{
                 dnam{"ft³"}
@@ -1618,6 +1965,7 @@ fa{
                 other{"{0}in³"}
             }
             cubic-kilometer{
+                dnam{"کیلومتر مکعب"}
                 one{"{0}km³"}
                 other{"{0}km³"}
             }
@@ -1625,8 +1973,10 @@ fa{
                 dnam{"m³"}
                 one{"{0}m³"}
                 other{"{0}m³"}
+                per{"{0}‎/m³"}
             }
             cubic-mile{
+                dnam{"mi³"}
                 one{"{0}mi³"}
                 other{"{0}mi³"}
             }
@@ -1636,38 +1986,77 @@ fa{
                 other{"{0}yd³"}
             }
             cup{
+                dnam{"پیمانه"}
                 one{"{0}c"}
                 other{"{0}c"}
             }
             cup-metric{
+                dnam{"پیمانهٔ متریک"}
                 one{"{0}mc"}
                 other{"{0}mc"}
             }
             deciliter{
+                dnam{"dL"}
                 one{"{0}dL"}
                 other{"{0}dL"}
             }
+            dessert-spoon{
+                dnam{"قاشق دسرخوری"}
+                one{"{0} ق.دس.خ."}
+                other{"{0} ق.دس.خ."}
+            }
             dessert-spoon-imperial{
+                dnam{"قاشق دسرخوری انگلیسی"}
                 one{"{0} ق.دس. انگلیسی"}
                 other{"{0} ق.دس. انگلیسی"}
             }
+            dram{
+                dnam{"درم سیال"}
+                one{"{0} درم سیال"}
+                other{"{0} درم سیال"}
+            }
+            drop{
+                dnam{"قطره"}
+                one{"{0} قطره"}
+                other{"{0} قطره"}
+            }
             fluid-ounce{
+                dnam{"اونس سیال"}
                 one{"{0}fl oz"}
                 other{"{0}fl oz"}
             }
             fluid-ounce-imperial{
+                dnam{"اونس سیال انگلیسی"}
                 one{"{0}اونس سیال انگلیسی"}
                 other{"{0}اونس سیال انگلیسی"}
+            }
+            gallon{
+                dnam{"گالن"}
+                one{"{0} گالن"}
+                other{"{0} گالن"}
+                per{"{0} در گالن"}
+            }
+            gallon-imperial{
+                dnam{"گالن امپریال"}
+                one{"{0} گالن امپریال"}
+                other{"{0} گالن امپریال"}
+                per{"{0}/گالن امپریال"}
             }
             hectoliter{
                 dnam{"hL"}
                 one{"{0}hL"}
                 other{"{0}hL"}
             }
+            jigger{
+                dnam{"گیلاس"}
+                one{"{0} گیلاس"}
+                other{"{0} گیلاس"}
+            }
             liter{
                 dnam{"لیتر"}
                 one{"{0}L"}
                 other{"{0}L"}
+                per{"{0}‎/L"}
             }
             megaliter{
                 dnam{"ML"}
@@ -1681,6 +2070,8 @@ fa{
             }
             pinch{
                 dnam{"سرانگشت"}
+                one{"{0} سرانگشت"}
+                other{"{0} سرانگشت"}
             }
             pint{
                 dnam{"pt"}
@@ -1688,6 +2079,7 @@ fa{
                 other{"{0}pt"}
             }
             pint-metric{
+                dnam{"پاینت متریک"}
                 one{"{0}mpt"}
                 other{"{0}mpt"}
             }
@@ -1701,7 +2093,13 @@ fa{
                 one{"{0}کوارت انگلیسی"}
                 other{"{0} کورت انگلیسی"}
             }
+            tablespoon{
+                dnam{"قاشق غ."}
+                one{"{0} ق.غ.خ"}
+                other{"{0} قاشق غ."}
+            }
             teaspoon{
+                dnam{"قاشق چ."}
                 one{"{0}ق.چ."}
                 other{"{0}ق.چ."}
             }
@@ -1824,6 +2222,30 @@ fa{
             10p6{"مگا{0}"}
             10p9{"گیگا{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
             times{"{0}⋅{1}"}
         }
         concentr{
@@ -1864,6 +2286,8 @@ fa{
             }
             permillion{
                 dnam{"بخش/میلیون"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
             }
             permyriad{
                 dnam{"ده‌هزارم"}
@@ -2295,6 +2719,14 @@ fa{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"لوکس"}
                 one{"{0} لوکس"}

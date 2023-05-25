@@ -258,6 +258,9 @@ ps{
         "America:Chihuahua"{
             ec{"چھواھوا"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"سیوداد جیوریز"}
+        }
         "America:Coral_Harbour"{
             ec{"اتیکوکن"}
         }

@@ -259,6 +259,9 @@ sr_Latn{
         "America:Chihuahua"{
             ec{"Čihuahua"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Siudad Huarez"}
+        }
         "America:Coral_Harbour"{
             ec{"Koral Harbur"}
         }

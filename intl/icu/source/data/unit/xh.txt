@@ -7,6 +7,32 @@ xh{
         hms{"h:mm:ss"}
         ms{"m:ss"}
     }
+    units{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
+        coordinate{
+            dnam{"direction"}
+            east{"{0}E"}
+            north{"{0}N"}
+            south{"{0}S"}
+            west{"{0}W"}
+        }
+    }
+    unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
+        coordinate{
+            dnam{"direction"}
+            east{"{0}E"}
+            north{"{0}N"}
+            south{"{0}S"}
+            west{"{0}W"}
+        }
+    }
     unitsShort{
         coordinate{
             dnam{"direction"}

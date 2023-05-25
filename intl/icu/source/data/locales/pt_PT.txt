@@ -459,24 +459,6 @@ pt_PT{
                         "sexta",
                         "sábado",
                     }
-                    narrow{
-                        "D",
-                        "S",
-                        "T",
-                        "Q",
-                        "Q",
-                        "S",
-                        "S",
-                    }
-                    short{
-                        "dom.",
-                        "seg.",
-                        "ter.",
-                        "qua.",
-                        "qui.",
-                        "sex.",
-                        "sáb.",
-                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -791,11 +773,6 @@ pt_PT{
             }
         }
         day-narrow{
-            relative{
-                "-1"{"ontem"}
-                "0"{"hoje"}
-                "1"{"amanhã"}
-            }
             relativeTime{
                 future{
                     one{"+{0} dia"}
@@ -808,11 +785,6 @@ pt_PT{
             }
         }
         day-short{
-            relative{
-                "-1"{"ontem"}
-                "0"{"hoje"}
-                "1"{"amanhã"}
-            }
             relativeTime{
                 future{
                     one{"dentro de {0} dia"}
@@ -1296,17 +1268,9 @@ pt_PT{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
-        unit{
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         unit-narrow{
             2{"{0} e {1}"}
             end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

@@ -35,6 +35,7 @@ fa{
             patterns{
                 currencyFormat{"‎¤#,##0.00"}
                 currencyFormat%noCurrency{"#,##0.00"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -49,6 +50,11 @@ fa{
                 percentSign{"٪"}
                 plusSign{"‎+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        cakm{
+            symbols{
                 timeSeparator{":"}
             }
         }
@@ -246,10 +252,31 @@ fa{
             }
         }
         minimumGroupingDigits{"1"}
+        mtei{
+            miscPatterns{
+                approximately{"~{0}"}
+                atLeast{"‎{0}+‎"}
+            }
+        }
         native{"arabext"}
     }
     calendar{
         buddhist{
+            DateTimePatterns{
+                "H:mm:ss (zzzz)",
+                "H:mm:ss (z)",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "y/M/d GGGGG",
+                "{1}،‏ {0}",
+                "{1}، ساعت {0}",
+                "{1}، ساعت {0}",
+                "{1}،‏ {0}",
+                "{1}،‏ {0}",
+            }
             eras{
                 abbreviated{
                     "تقویم بودایی",
@@ -267,6 +294,34 @@ fa{
                 zodiacs{
                     format{
                         abbreviated{
+                            "موش",
+                            "گاو",
+                            "ببر",
+                            "خرگوش",
+                            "اژدها",
+                            "مار",
+                            "اسب",
+                            "بز",
+                            "میمون",
+                            "خروس",
+                            "سگ",
+                            "خوک",
+                        }
+                        narrow{
+                            "موش",
+                            "گاو",
+                            "ببر",
+                            "خرگوش",
+                            "اژدها",
+                            "مار",
+                            "اسب",
+                            "بز",
+                            "میمون",
+                            "خروس",
+                            "سگ",
+                            "خوک",
+                        }
+                        wide{
                             "موش",
                             "گاو",
                             "ببر",
@@ -460,6 +515,12 @@ fa{
                 "d MMM y G",
                 "y/M/d GGGGG",
                 "{1}،‏ {0}",
+                "{1}، ساعت {0}",
+                "{1}، ساعت {0}",
+                "{1}،‏ {0}",
+                "{1}،‏ {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1}، ساعت {0}",
                 "{1}، ساعت {0}",
                 "{1}،‏ {0}",
@@ -1486,6 +1547,15 @@ fa{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B تا h B"}
+                    h{"h تا h B"}
+                }
+                Bhm{
+                    B{"h:mm B تا h:mm B"}
+                    h{"h:mm تا h:mm B"}
+                    m{"h:mm تا h:mm B"}
+                }
                 Gy{
                     G{"y G تا y G"}
                     y{"y تا y G"}
@@ -1524,8 +1594,50 @@ fa{
                     d{"y/M/d تا y/M/d GGGGG"}
                     y{"y/M/d تا y/M/d GGGGG"}
                 }
+                H{
+                    H{"H تا H"}
+                }
+                Hm{
+                    H{"H:mm تا H:mm"}
+                    m{"H:mm تا H:mm"}
+                }
+                M{
+                    M{"M تا M"}
+                }
+                MEd{
+                    M{"E M/d تا E M/d"}
+                    d{"E M/d تا E M/d"}
+                }
                 MMM{
                     M{"LLL تا LLL"}
+                }
+                MMMEd{
+                    M{"E d LLL تا E d LLL"}
+                    d{"E d LLL تا E d LLL"}
+                }
+                MMMd{
+                    M{"d LLL تا d LLL"}
+                    d{"d تا d LLL"}
+                }
+                Md{
+                    M{"M/d تا M/d"}
+                    d{"M/d تا M/d"}
+                }
+                d{
+                    d{"d تا d"}
+                }
+                fallback{"{0} تا {1}"}
+                h{
+                    a{"h a تا h a"}
+                    h{"h تا h a"}
+                }
+                hm{
+                    a{"h:mm a تا h:mm a"}
+                    h{"h:mm تا h:mm a"}
+                    m{"h:mm تا h:mm a"}
+                }
+                y{
+                    y{"y تا y G"}
                 }
                 yM{
                     M{"y/M تا y/M GGGGG"}
@@ -1535,6 +1647,24 @@ fa{
                     M{"E y/M/d تا E y/M/d GGGGG"}
                     d{"E y/M/d تا E y/M/d GGGGG"}
                     y{"E y/M/d تا E y/M/d GGGGG"}
+                }
+                yMMM{
+                    M{"LLL تا MMM y G"}
+                    y{"MMM y تا MMM y G"}
+                }
+                yMMMEd{
+                    M{"E d LLL تا E d MMM y G"}
+                    d{"E d LLL تا E d MMM y G"}
+                    y{"E d MMM y تا E d MMM y G"}
+                }
+                yMMMM{
+                    M{"LLLL تا MMMM y G"}
+                    y{"MMMM y تا MMMM y G"}
+                }
+                yMMMd{
+                    M{"d LLL تا d MMM y G"}
+                    d{"d تا d MMM y G"}
+                    y{"d MMM y تا d MMM y G"}
                 }
                 yMd{
                     M{"y/M/d تا y/M/d GGGGG"}
@@ -2381,7 +2511,22 @@ fa{
                 "yMd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E dم"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                GyMd{"M/d/y GGGGG"}
+                M{"L"}
+                MEd{"E M/d"}
+                MMM{"LLL"}
+                MMMEd{"E d LLL"}
+                MMMMEd{"E d LLLL"}
+                MMMMd{"d LLLL"}
+                MMMd{"d LLL"}
+                Md{"M/d"}
+                d{"d"}
                 y{"y"}
                 yyyy{"y"}
                 yyyyM{"y/M"}
@@ -2406,6 +2551,15 @@ fa{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B تا h B"}
+                    h{"h تا h B"}
+                }
+                Bhm{
+                    B{"h:mm B تا h:mm B"}
+                    h{"h:mm تا h:mm B"}
+                    m{"h:mm تا h:mm B"}
+                }
                 Gy{
                     G{"y G تا y G"}
                     y{"y تا y G"}
@@ -2444,8 +2598,47 @@ fa{
                     d{"y/M/d تا y/M/d GGGGG"}
                     y{"y/M/d تا y/M/d GGGGG"}
                 }
+                H{
+                    H{"H تا H"}
+                }
+                Hm{
+                    H{"H:mm تا H:mm"}
+                    m{"H:mm تا H:mm"}
+                }
+                M{
+                    M{"M تا M"}
+                }
+                MEd{
+                    M{"E M/d تا E M/d"}
+                    d{"E M/d تا E M/d"}
+                }
                 MMM{
                     M{"LLL تا LLL"}
+                }
+                MMMEd{
+                    M{"E d LLL تا E d LLL"}
+                    d{"E d LLL تا E d LLL"}
+                }
+                MMMd{
+                    M{"d LLL تا d LLL"}
+                    d{"d تا d LLL"}
+                }
+                Md{
+                    M{"M/d تا M/d"}
+                    d{"M/d تا M/d"}
+                }
+                d{
+                    d{"d تا d"}
+                }
+                fallback{"{0} تا {1}"}
+                h{
+                    a{"h a تا h a"}
+                    h{"h تا h a"}
+                }
+                hm{
+                    a{"h:mm a تا h:mm a"}
+                    h{"h:mm تا h:mm a"}
+                    m{"h:mm تا h:mm a"}
                 }
                 y{
                     y{"y تا y"}
@@ -2575,6 +2768,28 @@ fa{
             }
         }
         roc{
+            DateTimePatterns{
+                "H:mm:ss (zzzz)",
+                "H:mm:ss (z)",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "y/M/d GGGGG",
+                "{1}،‏ {0}",
+                "{1}، ساعت {0}",
+                "{1}، ساعت {0}",
+                "{1}،‏ {0}",
+                "{1}،‏ {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMd{"M/d/y GGGGG"}
+                d{"d"}
+            }
             eras{
                 abbreviated{
                     "قبل از R.O.C.",
@@ -3541,10 +3756,14 @@ fa{
             start{"{0}،‏ {1}"}
         }
         or-narrow{
+            2{"{0} یا {1}"}
+            end{"{0}، یا {1}"}
             middle{"{0}،‏ {1}"}
             start{"{0}،‏ {1}"}
         }
         or-short{
+            2{"{0} یا {1}"}
+            end{"{0}، یا {1}"}
             middle{"{0}،‏ {1}"}
             start{"{0}،‏ {1}"}
         }
@@ -3617,36 +3836,84 @@ fa{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
+                "-allCaps}"
+            }
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
+                "-allCaps}"
+            }
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}، {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
+                "-allCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
+                "-allCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {generation}، {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
+                "-allCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram"
+                "-allCaps}"
+            }
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
-            sorting-long-referring-formal{"{surname}، {given} {given2} {suffix}"}
+            sorting-long-referring-formal{"{surname-core}، {given} {given2} {surname-prefix}"}
             sorting-long-referring-informal{"{surname}، {given-informal}"}
-            sorting-medium-referring-formal{"{surname}، {given} {given2-initial} {suffix}"}
+            sorting-medium-referring-formal{"{surname-core}، {given} {given2-initial} {surname-prefix}"}
             sorting-medium-referring-informal{"{surname}، {given-informal}"}
             sorting-short-referring-formal{"{surname}، {given-initial} {given2-initial}"}
             sorting-short-referring-informal{"{surname}، {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
-            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
+                "-allCaps}"
+            }
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
+                "-allCaps}"
+            }
+            surnameFirst-long-referring-formal{"{surname}، {title} {given} {given2} {generation}، {credentials}"}
+            surnameFirst-long-referring-informal{"{surname}، {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
-            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
+                "-allCaps}"
+            }
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
+                "-allCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname}، {given} {given2-initial} {generation}، {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname}، {given-informal}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
-            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
-            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
+            surnameFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
+                "-allCaps}"
+            }
+            surnameFirst-short-monogram-informal{
+                "{surname-monogram-allCaps}.{given-monogram-allCaps}.{given2-monogram"
+                "-allCaps}"
+            }
+            surnameFirst-short-referring-formal{"{surname}، {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname}، {given-initial}"}
         }
     }
 }

@@ -304,6 +304,7 @@ pt{
         li{"limburguês"}
         lil{"lillooet"}
         lkt{"lacota"}
+        lmo{"lombardo"}
         ln{"lingala"}
         lo{"laosiano"}
         lol{"mongo"}
@@ -587,6 +588,9 @@ pt{
     Languages%menu{
         yue{"cantonês (tradicional)"}
         zh{"chinês, mandarim"}
+    }
+    Languages%short{
+        en_US{"inglês (EUA)"}
     }
     Languages%variant{
         ckb{"curdo sorâni"}

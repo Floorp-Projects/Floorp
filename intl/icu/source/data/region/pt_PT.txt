@@ -83,5 +83,6 @@ pt_PT{
         CZ{"República Checa"}
         FK{"Ilhas Falkland (Malvinas)"}
         NZ{"Aotearoa"}
+        TR{"Türkiye"}
     }
 }

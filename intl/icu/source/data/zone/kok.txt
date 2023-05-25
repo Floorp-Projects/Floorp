@@ -258,6 +258,9 @@ kok{
         "America:Chihuahua"{
             ec{"चिहुआहुआ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"सिउदाद जुआरेज"}
+        }
         "America:Coral_Harbour"{
             ec{"अतिकोकॉन"}
         }

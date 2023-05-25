@@ -69,7 +69,8 @@ string_segment_test.o \
 numbertest_parse.o numbertest_doubleconversion.o numbertest_skeletons.o \
 static_unisets_test.o numfmtdatadriventest.o numbertest_range.o erarulestest.o \
 formattedvaluetest.o formatted_string_builder_test.o numbertest_permutation.o \
-units_data_test.o units_router_test.o units_test.o displayoptions_test.o
+units_data_test.o units_router_test.o units_test.o displayoptions_test.o \
+numbertest_simple.o
 
 DEPS = $(OBJECTS:.o=.d)
 

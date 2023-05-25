@@ -159,6 +159,7 @@ uz{
         hax{"janubiy hayda"}
         he{"ivrit"}
         hi{"hind"}
+        hi_Latn{"hind (lotin)"}
         hil{"hiligaynon"}
         hmn{"xmong"}
         hr{"xorvat"}
@@ -450,6 +451,7 @@ uz{
         yue{"kanton"}
         zgh{"tamazigxt"}
         zh{"xitoy"}
+        zh_Hans{"xitoy (soddalashgan)"}
         zh_Hant{"xitoy (an’anaviy)"}
         zu{"zulu"}
         zun{"zuni"}

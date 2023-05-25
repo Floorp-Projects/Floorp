@@ -107,6 +107,7 @@ zh_Hant{
                 range{"{0}-{1}"}
             }
             patterns{
+                accountingFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 scientificFormat{"#E0"}
             }
@@ -437,6 +438,7 @@ zh_Hant{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -1504,6 +1506,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -2726,6 +2729,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -2904,6 +2908,7 @@ zh_Hant{
                 "UMd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日E"}
                 Gy{"rU年"}
                 GyMMM{"rU年MMM"}
@@ -2911,6 +2916,7 @@ zh_Hant{
                 GyMMMd{"r年MMMd"}
                 M{"MMM"}
                 MEd{"M/dE"}
+                MMM{"LLL"}
                 MMMEd{"MMMd日E"}
                 MMMMd{"MMMMd日"}
                 MMMd{"MMMd日"}
@@ -3680,6 +3686,13 @@ zh_Hant{
                 }
             }
             intervalFormats{
+                H{
+                    H{"HH至HH"}
+                }
+                Hm{
+                    H{"HH:mm至HH:mm"}
+                    m{"HH:mm至HH:mm"}
+                }
                 Hmv{
                     H{"HH:mm–HH:mm [v]"}
                     m{"HH:mm–HH:mm [v]"}
@@ -4000,6 +4013,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -4180,6 +4194,12 @@ zh_Hant{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "Bhmmsszzzz",
                 "Bhmmssz",
@@ -4355,6 +4375,12 @@ zh_Hant{
                 "y年M月d日",
                 "y/M/d",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -4839,6 +4865,12 @@ zh_Hant{
             }
             quarters{
                 format{
+                    abbreviated{
+                        "第1季",
+                        "第2季",
+                        "第3季",
+                        "第4季",
+                    }
                     narrow{
                         "1",
                         "2",
@@ -4981,6 +5013,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -5245,6 +5278,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -5497,6 +5531,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -6462,6 +6497,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -6624,6 +6660,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -6886,6 +6923,7 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     B{"Bh時至Bh時"}
                     h{"Bh時至h時"}
@@ -7798,7 +7836,25 @@ zh_Hant{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        or-narrow{
+            2{"{0}或{1}"}
+            end{"{0}或{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
+        or-short{
+            2{"{0}或{1}"}
+            end{"{0}或{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         standard{
+            2{"{0}和{1}"}
+            end{"{0}和{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
+        standard-narrow{
             2{"{0}和{1}"}
             end{"{0}和{1}"}
             middle{"{0}、{1}"}
@@ -7847,28 +7903,64 @@ zh_Hant{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{surname} {prefix}"}
+            givenFirst-long-addressing-formal{"{surname} {title}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-medium-addressing-formal{"{surname} {prefix}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{surname} {title}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-short-addressing-formal{"{surname} {prefix}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{surname} {title}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
             sorting-long-referring-formal{"{surname}{given}{given2}"}
             sorting-long-referring-informal{"{surname}{given-informal}"}
             sorting-medium-referring-formal{"{surname}{given}"}
             sorting-medium-referring-informal{"{surname}{given-informal}"}
             sorting-short-referring-formal{"{surname}{given}"}
             sorting-short-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-long-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-long-addressing-formal{"{surname}{title}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-referring-formal{"{surname}{given}{given2}{suffix}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-formal{"{surname}{given}{given2}{generation}{credentials}"}
             surnameFirst-long-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-medium-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-medium-addressing-formal{"{surname}{title}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-referring-formal{"{surname}{given}{given2}{suffix}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname}{given}{given2-initial}{generation}{credentials}"}
             surnameFirst-medium-referring-informal{"{surname}{given-informal}"}
-            surnameFirst-short-addressing-formal{"{surname}{suffix}"}
+            surnameFirst-short-addressing-formal{"{surname}{title}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-short-referring-formal{"{surname}{given}{given2}"}
             surnameFirst-short-referring-informal{"{surname}{given}"}
         }

@@ -87,5 +87,9 @@ R ↔ Ր ;
 W ↔ Ւ ;
 Ō ↔ Օ ;
 F ↔ Ֆ ;
+'’' ↔ ՚ 	 ; # U+055A	ARMENIAN APOSTROPHE
+',' ↔ ՝ 	; # U+055D	ARMENIAN COMMA
+'?' ↔ ՞; # U+055E	ARMENIAN QUESTION MARK
+։ → \. ; # ARMENIAN FULL STOP
 ::NFC(NFD);
 

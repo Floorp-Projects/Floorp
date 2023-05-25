@@ -258,6 +258,9 @@ lv{
         "America:Chihuahua"{
             ec{"Čivava"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Huaresa"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokana"}
         }

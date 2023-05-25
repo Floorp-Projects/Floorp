@@ -158,7 +158,10 @@ ga{
         compound{
             1024p1{"cibi-{0}"}
             1024p2{"mebi{0}"}
+            1024p3{"Gi{0}"}
             1024p4{"tebi{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
             1024p7{"zebi{0}"}
             1024p8{"yobe{0}"}
             10p-1{"deici{0}"}
@@ -236,8 +239,17 @@ ga{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"item"}
+                few{"{0} item"}
+                many{"{0} item"}
+                one{"{0} item"}
+                other{"{0} item"}
+                two{"{0} item"}
+            }
             karat{
                 dnam{"carait"}
                 few{"{0} charat"}
@@ -1693,6 +1705,14 @@ ga{
                 other{"{0} ac"}
                 two{"{0} ac"}
             }
+            dunam{
+                dnam{"dunaim"}
+                few{"{0} dhunam"}
+                many{"{0} ndunam"}
+                one{"{0} dunam"}
+                other{"{0} dunam"}
+                two{"{0} dhunam"}
+            }
             hectare{
                 dnam{"heicteáir"}
                 few{"{0} ha"}
@@ -1766,7 +1786,10 @@ ga{
         compound{
             1024p1{"Ki{0}"}
             1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
             1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
             1024p7{"Zi{0}"}
             1024p8{"Yi{0}"}
             10p-1{"d{0}"}
@@ -1790,8 +1813,71 @@ ga{
             10p6{"M{0}"}
             10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"item"}
+                few{"{0} item"}
+                many{"{0} item"}
+                one{"{0} item"}
+                other{"{0} item"}
+                two{"{0} item"}
+            }
             karat{
                 dnam{"kt"}
                 few{"{0}kt"}
@@ -1816,6 +1902,14 @@ ga{
                 other{"{0} mmol/L"}
                 two{"{0} mmol/L"}
             }
+            mole{
+                dnam{"mól"}
+                few{"{0} mhól"}
+                many{"{0} mól"}
+                one{"{0} mhól"}
+                other{"{0} mól"}
+                two{"{0} mhól"}
+            }
             percent{
                 dnam{"%"}
                 few{"{0}%"}
@@ -1824,6 +1918,14 @@ ga{
                 other{"{0}%"}
                 two{"{0}%"}
             }
+            permille{
+                dnam{"faoin míle"}
+                few{"{0}‰"}
+                many{"{0}‰"}
+                one{"{0}‰"}
+                other{"{0}‰"}
+                two{"{0}‰"}
+            }
             permillion{
                 dnam{"codanna/milliún"}
                 few{"{0}/milliún"}
@@ -1831,6 +1933,14 @@ ga{
                 one{"{0}/milliún"}
                 other{"{0}/milliún"}
                 two{"{0}/milliún"}
+            }
+            permyriad{
+                dnam{"permeiriad"}
+                few{"{0}‱"}
+                many{"{0}‱"}
+                one{"{0}‱"}
+                other{"{0}‱"}
+                two{"{0}‱"}
             }
         }
         consumption{
@@ -1939,6 +2049,14 @@ ga{
                 other{"{0}MB"}
                 two{"{0}MB"}
             }
+            petabyte{
+                dnam{"PBheart"}
+                few{"{0} PB"}
+                many{"{0} PB"}
+                one{"{0} PB"}
+                other{"{0} PB"}
+                two{"{0} PB"}
+            }
             terabit{
                 dnam{"Tb"}
                 few{"{0}Tb"}
@@ -1973,6 +2091,14 @@ ga{
                 other{"{0}l"}
                 per{"{0}/lá"}
                 two{"{0}l"}
+            }
+            decade{
+                dnam{"dec"}
+                few{"{0} dec"}
+                many{"{0} dec"}
+                one{"{0} dec"}
+                other{"{0} dec"}
+                two{"{0} dec"}
             }
             hour{
                 dnam{"uair"}
@@ -2097,6 +2223,14 @@ ga{
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"BTU"}
+                few{"{0} Btu"}
+                many{"{0} Btu"}
+                one{"{0} Btu"}
+                other{"{0} Btu"}
+                two{"{0} Btu"}
+            }
             calorie{
                 dnam{"cal"}
                 few{"{0}cal"}
@@ -2104,6 +2238,14 @@ ga{
                 one{"{0}cal"}
                 other{"{0}cal"}
                 two{"{0}cal"}
+            }
+            electronvolt{
+                dnam{"leictravolta"}
+                few{"{0} eV"}
+                many{"{0} eV"}
+                one{"{0} eV"}
+                other{"{0} eV"}
+                two{"{0} eV"}
             }
             foodcalorie{
                 dnam{"Cal"}
@@ -2145,6 +2287,40 @@ ga{
                 other{"{0}kWh"}
                 two{"{0}kWh"}
             }
+            therm-us{
+                dnam{"teirmeacha SAM"}
+                few{"{0} theirm SAM"}
+                many{"{0} dteirm SAM"}
+                one{"{0} teirm SAM"}
+                other{"{0} teirm SAM"}
+                two{"{0} theirm SAM"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                few{"{0} kWh/100km"}
+                many{"{0} kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+                two{"{0} kWh/100km"}
+            }
+            newton{
+                dnam{"niútan"}
+                few{"{0} N"}
+                many{"{0} N"}
+                one{"{0} N"}
+                other{"{0} N"}
+                two{"{0} N"}
+            }
+            pound-force{
+                dnam{"punt-fhórsa"}
+                few{"{0} lbf"}
+                many{"{0} lbf"}
+                one{"{0} lbf"}
+                other{"{0} lbf"}
+                two{"{0} lbf"}
+            }
         }
         frequency{
             gigahertz{
@@ -2180,6 +2356,72 @@ ga{
                 two{"{0}MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"ponc"}
+                few{"{0} phonc"}
+                many{"{0} bponc"}
+                one{"{0} phonc"}
+                other{"{0} ponc"}
+                two{"{0} phonc"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+                two{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+                two{"{0} ppi"}
+            }
+            em{
+                dnam{"eim"}
+                few{"{0} eim"}
+                many{"{0} n-eim"}
+                one{"{0} eim"}
+                other{"{0} eim"}
+                two{"{0} eim"}
+            }
+            megapixel{
+                dnam{"meigiphicteilíní"}
+                few{"{0} MP"}
+                many{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+                two{"{0} MP"}
+            }
+            pixel{
+                dnam{"picteilíní"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+                two{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+                two{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+                two{"{0} ppi"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"AR"}
@@ -2205,6 +2447,14 @@ ga{
                 one{"{0}dm"}
                 other{"{0}dm"}
                 two{"{0}dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+                two{"{0} R⊕"}
             }
             fathom{
                 dnam{"feá"}
@@ -2338,6 +2588,14 @@ ga{
                 other{"{0} pt"}
                 two{"{0} pt"}
             }
+            solar-radius{
+                dnam{"raonta gréine"}
+                few{"{0} R☉"}
+                many{"{0} R☉"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
+                two{"{0} R☉"}
+            }
             yard{
                 dnam{"sl"}
                 few{"{0}sl"}
@@ -2348,6 +2606,22 @@ ga{
             }
         }
         light{
+            candela{
+                dnam{"cd"}
+                few{"{0} cd"}
+                many{"{0} cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+                two{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                few{"{0} lm"}
+                many{"{0} lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+                two{"{0} lm"}
+            }
             lux{
                 dnam{"lucsa"}
                 few{"{0}lx"}
@@ -2355,6 +2629,14 @@ ga{
                 one{"{0}lx"}
                 other{"{0}lx"}
                 two{"{0}lx"}
+            }
+            solar-luminosity{
+                dnam{"lonrachtaí gréine"}
+                few{"{0} L☉"}
+                many{"{0} L☉"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
+                two{"{0} L☉"}
             }
         }
         mass{
@@ -2365,6 +2647,30 @@ ga{
                 one{"{0}CD"}
                 other{"{0}CD"}
                 two{"{0}CD"}
+            }
+            dalton{
+                dnam{"daltúin"}
+                few{"{0} Da"}
+                many{"{0} Da"}
+                one{"{0} Da"}
+                other{"{0} Da"}
+                two{"{0} Da"}
+            }
+            earth-mass{
+                dnam{"maiseanna an Domhain"}
+                few{"{0} M⊕"}
+                many{"{0} M⊕"}
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
+                two{"{0} M⊕"}
+            }
+            grain{
+                dnam{"gráinne"}
+                few{"{0} ghráinne"}
+                many{"{0} ngráinne"}
+                one{"{0} ghráinne"}
+                other{"{0} gráinne"}
+                two{"{0} ghráinne"}
             }
             gram{
                 dnam{"gram"}
@@ -2425,6 +2731,14 @@ ga{
                 other{"{0} punt"}
                 per{"{0}/punt"}
                 two{"{0} phunt"}
+            }
+            solar-mass{
+                dnam{"maiseanna gréine"}
+                few{"{0} M☉"}
+                many{"{0} M☉"}
+                one{"{0} M☉"}
+                other{"{0} M☉"}
+                two{"{0} M☉"}
             }
             stone{
                 dnam{"cloch"}
@@ -2502,6 +2816,22 @@ ga{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"atm"}
+                few{"{0} atm"}
+                many{"{0} atm"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+                two{"{0} atm"}
+            }
+            bar{
+                dnam{"barra"}
+                few{"{0} bharra"}
+                many{"{0} mbarra"}
+                one{"{0} bharra"}
+                other{"{0} barra"}
+                two{"{0} bharra"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 few{"{0}hPa"}
@@ -2518,6 +2848,22 @@ ga{
                 other{"{0}″ Hg"}
                 two{"{0}″ Hg"}
             }
+            kilopascal{
+                dnam{"kPa"}
+                few{"{0} kPa"}
+                many{"{0} kPa"}
+                one{"{0} kPa"}
+                other{"{0} kPa"}
+                two{"{0} kPa"}
+            }
+            megapascal{
+                dnam{"MPa"}
+                few{"{0} MPa"}
+                many{"{0} MPa"}
+                one{"{0} MPa"}
+                other{"{0} MPa"}
+                two{"{0} MPa"}
+            }
             millibar{
                 dnam{"mbar"}
                 few{"{0}mb"}
@@ -2533,6 +2879,14 @@ ga{
                 one{"{0}mmHg"}
                 other{"{0}mmHg"}
                 two{"{0}mmHg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                few{"{0} Pa"}
+                many{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+                two{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psoc"}
@@ -2611,6 +2965,24 @@ ga{
                 two{"{0}K"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"N⋅m"}
+                few{"{0} N⋅m"}
+                many{"{0} N⋅m"}
+                one{"{0} N⋅m"}
+                other{"{0} N⋅m"}
+                two{"{0} N⋅m"}
+            }
+            pound-force-foot{
+                dnam{"lbf⋅ft"}
+                few{"{0} lbf⋅ft"}
+                many{"{0} lbf⋅ft"}
+                one{"{0} lbf⋅ft"}
+                other{"{0} lbf⋅ft"}
+                two{"{0} lbf⋅ft"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"acra-tr"}
@@ -2619,6 +2991,14 @@ ga{
                 one{"{0} ac tr"}
                 other{"{0} ac tr"}
                 two{"{0} ac tr"}
+            }
+            barrel{
+                dnam{"bairille"}
+                few{"{0} bbl"}
+                many{"{0} bbl"}
+                one{"{0} bbl"}
+                other{"{0} bbl"}
+                two{"{0} bbl"}
             }
             bushel{
                 dnam{"buiséil"}
@@ -2718,6 +3098,38 @@ ga{
                 other{"{0}dl"}
                 two{"{0}dl"}
             }
+            dessert-spoon{
+                dnam{"spmhil"}
+                few{"{0} spmhil"}
+                many{"{0} spmhil"}
+                one{"{0} spmhil"}
+                other{"{0} spmhil"}
+                two{"{0} spmhil"}
+            }
+            dessert-spoon-imperial{
+                dnam{"spmhil imp"}
+                few{"{0} spmhil imp"}
+                many{"{0} spmhil imp"}
+                one{"{0} spmhil imp"}
+                other{"{0} spmhil imp"}
+                two{"{0} spmhil imp"}
+            }
+            dram{
+                dnam{"dr l."}
+                few{"{0} dr l."}
+                many{"{0} dr l."}
+                one{"{0} dr l."}
+                other{"{0} dr l."}
+                two{"{0} dr l."}
+            }
+            drop{
+                dnam{"braon"}
+                few{"{0} bhraon"}
+                many{"{0} mbraon"}
+                one{"{0} bhraon"}
+                other{"{0} braon"}
+                two{"{0} bhraon"}
+            }
             fluid-ounce{
                 dnam{"unsaí leacht."}
                 few{"{0} unsa l."}
@@ -2725,6 +3137,14 @@ ga{
                 one{"{0} unsa l."}
                 other{"{0} unsa l."}
                 two{"{0} unsa l."}
+            }
+            fluid-ounce-imperial{
+                dnam{"Unsa leachtach impiriúil"}
+                few{"{0} fl oz Imp."}
+                many{"{0} fl oz Imp."}
+                one{"{0} fl oz Imp."}
+                other{"{0} fl oz Imp."}
+                two{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"galúin"}
@@ -2752,6 +3172,14 @@ ga{
                 other{"{0} hl"}
                 two{"{0} hl"}
             }
+            jigger{
+                dnam{"miosúr"}
+                few{"{0} mhiosúr"}
+                many{"{0} miosúr"}
+                one{"{0} mhiosúr"}
+                other{"{0} miosúr"}
+                two{"{0} mhiosúr"}
+            }
             liter{
                 dnam{"lítir"}
                 few{"{0}l"}
@@ -2777,6 +3205,14 @@ ga{
                 other{"{0} ml"}
                 two{"{0} ml"}
             }
+            pinch{
+                dnam{"pinse"}
+                few{"{0} phinse"}
+                many{"{0} bpinse"}
+                one{"{0} phinse"}
+                other{"{0} pinse"}
+                two{"{0} phinse"}
+            }
             pint{
                 dnam{"piontaí"}
                 few{"{0} pt"}
@@ -2800,6 +3236,14 @@ ga{
                 one{"{0} chárt"}
                 other{"{0} cárt"}
                 two{"{0} chárt"}
+            }
+            quart-imperial{
+                dnam{"cárt impiriúil"}
+                few{"{0} chárt impiriúla"}
+                many{"{0} gcárt impiriúla"}
+                one{"{0} chárt impiriúil"}
+                other{"{0} cárt impiriúil"}
+                two{"{0} chárt impiriúla"}
             }
             tablespoon{
                 dnam{"spbh"}
@@ -2993,8 +3437,69 @@ ga{
             10p6{"M{0}"}
             10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
         }
         concentr{
+            item{
+                few{"{0} item"}
+                many{"{0} item"}
+                one{"{0} item"}
+                other{"{0} item"}
+                two{"{0} item"}
+            }
             karat{
                 dnam{"kt"}
                 few{"{0} kt"}
@@ -3209,6 +3714,13 @@ ga{
                 per{"{0}/lá"}
                 two{"{0} lá"}
             }
+            decade{
+                few{"{0} dec"}
+                many{"{0} dec"}
+                one{"{0} dec"}
+                other{"{0} dec"}
+                two{"{0} dec"}
+            }
             hour{
                 dnam{"uair"}
                 few{"{0} u"}
@@ -3406,6 +3918,13 @@ ga{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                few{"{0} kWh/100km"}
+                many{"{0} kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+                two{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"niútan"}
                 few{"{0} N"}
@@ -3466,6 +3985,22 @@ ga{
                 other{"{0} ponc"}
                 two{"{0} phonc"}
             }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+                two{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+                two{"{0} ppi"}
+            }
             em{
                 dnam{"eim"}
                 few{"{0} eim"}
@@ -3476,9 +4011,33 @@ ga{
             }
             megapixel{
                 dnam{"meigiphicteilíní"}
+                few{"{0} MP"}
+                many{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+                two{"{0} MP"}
             }
             pixel{
                 dnam{"picteilíní"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+                two{"{0} px"}
+            }
+            pixel-per-centimeter{
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+                two{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+                two{"{0} ppi"}
             }
         }
         length{
@@ -3506,6 +4065,13 @@ ga{
                 one{"{0} dm"}
                 other{"{0} dm"}
                 two{"{0} dm"}
+            }
+            earth-radius{
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+                two{"{0} R⊕"}
             }
             fathom{
                 dnam{"feánna"}
@@ -3657,6 +4223,20 @@ ga{
             }
         }
         light{
+            candela{
+                few{"{0} cd"}
+                many{"{0} cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+                two{"{0} cd"}
+            }
+            lumen{
+                few{"{0} lm"}
+                many{"{0} lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+                two{"{0} lm"}
+            }
             lux{
                 dnam{"lucsa"}
                 few{"{0} lx"}
@@ -3914,6 +4494,13 @@ ga{
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
+            }
+            pascal{
+                few{"{0} Pa"}
+                many{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+                two{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psoc"}

@@ -30,6 +30,10 @@ ku{
                 other{"{0} dewr"}
             }
         }
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         concentr{
             karat{
                 dnam{"qerat"}
@@ -93,8 +97,13 @@ ku{
         }
     }
     unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         concentr{
             percent{
+                dnam{"%"}
                 one{"%{0}"}
                 other{"%{0}"}
             }
@@ -153,12 +162,18 @@ ku{
         angle{
             arc-minute{
                 dnam{"xlk. kevanî"}
+                one{"{0}′"}
+                other{"{0}′"}
             }
             arc-second{
                 dnam{"çrk. kevanî"}
+                one{"{0}″"}
+                other{"{0}″"}
             }
             degree{
                 dnam{"derece"}
+                one{"{0}°"}
+                other{"{0}°"}
             }
             radian{
                 dnam{"radyan"}
@@ -240,6 +255,18 @@ ku{
                 one{"{0} sal"}
                 other{"{0} sal"}
                 per{"{0}/sal"}
+            }
+        }
+        force{
+            newton{
+                one{"{0} N"}
+                other{"{0} N"}
+            }
+        }
+        torque{
+            newton-meter{
+                one{"{0} N⋅m"}
+                other{"{0} N⋅m"}
             }
         }
     }

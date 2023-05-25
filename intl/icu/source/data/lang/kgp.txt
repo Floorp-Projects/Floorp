@@ -556,6 +556,9 @@ kgp{
         yue{"kỹtonẽj (pẽ)"}
         zh{"sĩnẽj mỹnarĩj"}
     }
+    Languages%short{
+        en_US{"ĩnhgrej (EUA)"}
+    }
     Languages%variant{
         ps{"pusito"}
     }

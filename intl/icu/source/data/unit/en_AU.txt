@@ -108,11 +108,13 @@ en_AU{
                 dnam{"min."}
                 one{"{0}min."}
                 other{"{0}min."}
+                per{"{0}/min."}
             }
             second{
                 dnam{"sec."}
                 one{"{0}s."}
                 other{"{0}s."}
+                per{"{0} ps."}
             }
         }
         speed{

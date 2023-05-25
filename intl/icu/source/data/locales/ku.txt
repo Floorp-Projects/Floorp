@@ -82,6 +82,10 @@ ku{
                 "BN",
                 "PN",
             }
+            AmPmMarkersNarrow{
+                "BN",
+                "PN",
+            }
             dayNames{
                 format{
                     abbreviated{
@@ -157,6 +161,22 @@ ku{
                         "pêncşem",
                         "în",
                         "şemî",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"BN"}
+                        pm{"PN"}
+                    }
+                    narrow{
+                        am{"BN"}
+                        pm{"PN"}
+                    }
+                    wide{
+                        am{"BN"}
+                        pm{"PN"}
                     }
                 }
             }
@@ -346,9 +366,19 @@ ku{
         }
         day-narrow{
             dn{"r."}
+            relative{
+                "-1"{"duh"}
+                "0"{"îro"}
+                "1"{"sibe"}
+            }
         }
         day-short{
             dn{"r."}
+            relative{
+                "-1"{"duh"}
+                "0"{"îro"}
+                "1"{"sibe"}
+            }
         }
         dayOfYear{
             dn{"roja salê"}
@@ -369,6 +399,12 @@ ku{
             dn{"BN/PN"}
         }
         era{
+            dn{"serdem"}
+        }
+        era-narrow{
+            dn{"serdem"}
+        }
+        era-short{
             dn{"serdem"}
         }
         hour{
@@ -404,6 +440,16 @@ ku{
                 "0"{"vê mehê"}
                 "1"{"meha bê"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} m"}
+                    other{"+{0} m"}
+                }
+                past{
+                    one{"-{0} m"}
+                    other{"-{0} m"}
+                }
+            }
         }
         month-short{
             dn{"m."}
@@ -411,6 +457,16 @@ ku{
                 "-1"{"meha br."}
                 "0"{"vê mehê"}
                 "1"{"meha bê"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} m"}
+                    other{"+{0} m"}
+                }
+                past{
+                    one{"-{0} m"}
+                    other{"-{0} m"}
+                }
             }
         }
         quarter{
@@ -459,6 +515,12 @@ ku{
             relativePeriod{"hft. {0}"}
         }
         weekOfMonth{
+            dn{"hefteya mehê"}
+        }
+        weekOfMonth-narrow{
+            dn{"hefteya mehê"}
+        }
+        weekOfMonth-short{
             dn{"hefteya mehê"}
         }
         weekday{
@@ -550,7 +612,25 @@ ku{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} an {1}"}
+            end{"{0} an {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} an {1}"}
+            end{"{0} an {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} û {1}"}
+            end{"{0} û {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} û {1}"}
             end{"{0} û {1}"}
             middle{"{0}, {1}"}

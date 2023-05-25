@@ -33,6 +33,7 @@ de{
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
+                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
@@ -588,15 +589,15 @@ de{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, dd.MM. – E, dd.MM."}
-                    d{"E, dd.MM. – E, dd.MM."}
+                    M{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd.MM. – E, dd.MM."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
@@ -606,8 +607,8 @@ de{
                     d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"dd.MM. – dd.MM."}
-                    d{"dd.MM. – dd.MM."}
+                    M{"dd.MM. – dd.MM."}
+                    d{"dd.MM. – dd.MM."}
                 }
                 d{
                     d{"d.–d."}
@@ -649,7 +650,7 @@ de{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
@@ -674,6 +675,10 @@ de{
                 "PM",
             }
             AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
+            AmPmMarkersNarrow{
                 "AM",
                 "PM",
             }
@@ -894,11 +899,13 @@ de{
                     narrow{
                         afternoon1{"Mittag"}
                         afternoon2{"Nachm."}
+                        am{"AM"}
                         evening1{"Abend"}
                         midnight{"Mitternacht"}
                         morning1{"Morgen"}
                         morning2{"Vorm."}
                         night1{"Nacht"}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"Mittag"}
@@ -960,7 +967,7 @@ de{
                 }
                 GyMEd{
                     G{"E, dd.MM.y G – E, dd.MM.y G"}
-                    M{"E, dd.MM. – E, dd.MM.y G"}
+                    M{"E, dd.MM. – E, dd.MM.y G"}
                     d{"E, dd.MM.y – E, dd.MM.y G"}
                     y{"E, dd.MM.y – E, dd.MM.y G"}
                 }
@@ -972,7 +979,7 @@ de{
                 GyMMMEd{
                     G{"E, d. MMM y G – E E, d. MMM y G"}
                     M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
+                    d{"E, d. – E, d. MMM y G"}
                     y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 GyMMMd{
@@ -983,7 +990,7 @@ de{
                 }
                 GyMd{
                     G{"dd.MM.y G – dd.MM.y G"}
-                    M{"dd.MM. – dd.MM.y G"}
+                    M{"dd.MM. – dd.MM.y G"}
                     d{"dd.–dd.MM.y G"}
                     y{"dd.MM.y – dd.MM.y G"}
                 }
@@ -1002,15 +1009,15 @@ de{
                     H{"HH–HH 'Uhr' v"}
                 }
                 MEd{
-                    M{"E, dd.MM. – E, dd.MM."}
-                    d{"E, dd. – E, dd.MM."}
+                    M{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd. – E, dd.MM."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
                     M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
@@ -1020,7 +1027,7 @@ de{
                     d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"dd.MM. – dd.MM."}
+                    M{"dd.MM. – dd.MM."}
                     d{"dd.–dd.MM."}
                 }
                 d{
@@ -1053,8 +1060,8 @@ de{
                     y{"MM/y – MM/y"}
                 }
                 yMEd{
-                    M{"E, dd.MM. – E, dd.MM.y"}
-                    d{"E, dd. – E, dd.MM.y"}
+                    M{"E, dd.MM. – E, dd.MM.y"}
+                    d{"E, dd. – E, dd.MM.y"}
                     y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
@@ -1063,7 +1070,7 @@ de{
                 }
                 yMMMEd{
                     M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
                     y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
@@ -1076,7 +1083,7 @@ de{
                     y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
-                    M{"dd.MM. – dd.MM.y"}
+                    M{"dd.MM. – dd.MM.y"}
                     d{"dd.–dd.MM.y"}
                     y{"dd.MM.y – dd.MM.y"}
                 }
@@ -2731,7 +2738,25 @@ de{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} oder {1}"}
+            end{"{0} oder {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} oder {1}"}
+            end{"{0} oder {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} und {1}"}
+            end{"{0} und {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} und {1}"}
             end{"{0} und {1}"}
             middle{"{0}, {1}"}
@@ -2814,18 +2839,18 @@ de{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname}, {suffix}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation} {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname}, {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -2837,22 +2862,22 @@ de{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
                 "llCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname}, {given} {given2}, {suffix}"}
+            surnameFirst-long-referring-formal{"{surname}, {title} {given} {given2} {generation} {credentials}"}
             surnameFirst-long-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial}, {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial} {generation} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

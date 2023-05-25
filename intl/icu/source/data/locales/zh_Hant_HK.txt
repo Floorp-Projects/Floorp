@@ -291,6 +291,21 @@ zh_Hant_HK{
             }
         }
         dangi{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "U年MMMd日EEEE",
+                "U年MMMd日",
+                "U年MMMd日",
+                "U/M/d",
+                "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             intervalFormats{
                 h{
                     a{"ah時至ah時"}
@@ -345,6 +360,12 @@ zh_Hant_HK{
                 "Gy年M月d日",
                 "Gy/M/d",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -682,6 +703,21 @@ zh_Hant_HK{
             }
         }
         japanese{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gy/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             availableFormats{
                 h{"ah時"}
                 hm{"ah:mm"}
@@ -1285,6 +1321,10 @@ zh_Hant_HK{
     }
     listPattern{
         standard{
+            2{"{0}及{1}"}
+            end{"{0}及{1}"}
+        }
+        standard-narrow{
             2{"{0}及{1}"}
             end{"{0}及{1}"}
         }

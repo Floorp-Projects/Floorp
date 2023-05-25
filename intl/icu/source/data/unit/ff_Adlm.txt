@@ -2271,6 +2271,8 @@ ff_Adlm{
             }
             karat{
                 dnam{"𞤳𞤢𞤪𞤼𞤭"}
+                one{"{0} kt"}
+                other{"{0} kt"}
             }
             milligram-ofglucose-per-deciliter{
                 dnam{"𞤥𞤺/𞤣𞤤"}
@@ -2754,6 +2756,8 @@ ff_Adlm{
             }
             solar-luminosity{
                 dnam{"𞤲𞤣𞤢𞤴𞤲𞤺𞤵𞥅𞤶𞤭 𞤲𞤢𞥄𞤺𞤫𞤴𞤢𞤲𞤳𞤮"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
             }
         }
         mass{
@@ -2953,6 +2957,10 @@ ff_Adlm{
                 dnam{"𞤶𞤫𞤩. 𞤊"}
                 one{"{0}°𞤊"}
                 other{"{0}°𞤊"}
+            }
+            generic{
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
                 dnam{"𞤑"}

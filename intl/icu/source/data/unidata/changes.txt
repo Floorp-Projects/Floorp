@@ -38,6 +38,158 @@ and see the change logs below.
 
 ---------------------------------------------------------------------------- ***
 
+CLDR 43 root collation update for ICU 73
+
+Partial update only for the root collation.
+See
+- https://unicode-org.atlassian.net/browse/CLDR-15946
+  Treat quote marks as equivalent when strength=UCOL_PRIMARY
+- https://github.com/unicode-org/cldr/pull/2691
+  CLDR-15946 make fancy quotes primary-equal to ASCII fallbacks
+- https://github.com/unicode-org/cldr/pull/2833
+  CLDR-15946 make fancy quotes secondary-different from each other
+
+The related changes to tailorings were already integrated in an earlier PR for
+https://unicode-org.atlassian.net/browse/ICU-22220 ICU 73rc BRS.
+
+This update is for the root collation,
+which is handled by different tools than the locale data updates.
+
+* Command-line environment setup
+
+export UNICODE_DATA=~/unidata/uni15/20220830
+export CLDR_SRC=~/cldr/uni/src
+export ICU_ROOT=~/icu/uni
+export ICU_SRC=$ICU_ROOT/src
+export ICUDT=icudt73b
+export ICU4C_DATA_IN=$ICU_SRC/icu4c/source/data/in
+export ICU4C_UNIDATA=$ICU_SRC/icu4c/source/data/unidata
+export LD_LIBRARY_PATH=$ICU_ROOT/dbg/icu4c/lib
+
+*** Configure: Build Unicode data for ICU4J
+  cd $ICU_ROOT/dbg/icu4c
+  ICU_DATA_BUILDTOOL_OPTS=--include_uni_core_data ../../../doconfig-clang-dbg.sh
+
+* Bazel build process
+
+See https://unicode-org.github.io/icu/processes/unicode-update#bazel-build-process
+for an overview and for setup instructions.
+
+Consider running `bazelisk --version` outside of the $ICU_SRC folder
+to find out the latest `bazel` version, and
+copying that version number into the $ICU_SRC/.bazeliskrc config file.
+(Revert if you find incompatibilities, or, better, update our build & config files.)
+
+* generate data files
+
+- remember to define the environment variables
+  (see the start of the section for this Unicode version)
+- cd $ICU_SRC
+- optional but not necessary:
+    bazelisk clean
+      or even
+    bazelisk clean --expunge
+- build/bootstrap/generate new files:
+    icu4c/source/data/unidata/generate.sh
+
+* collation: CLDR collation root, UCA DUCET
+
+- UCA DUCET goes into Mark's Unicode tools,
+  and a tool-tailored version goes into CLDR, see
+    https://github.com/unicode-org/unicodetools/blob/main/docs/uca/index.md
+
+- update source/data/unidata/FractionalUCA.txt with FractionalUCA_SHORT.txt
+    cp -v $CLDR_SRC/common/uca/FractionalUCA_SHORT.txt $ICU4C_UNIDATA/FractionalUCA.txt
+- update source/data/unidata/UCARules.txt with UCA_Rules_SHORT.txt
+    cp -v $ICU4C_UNIDATA/UCARules.txt /tmp/UCARules-old.txt
+    (note removing the underscore before "Rules")
+    cp -v $CLDR_SRC/common/uca/UCA_Rules_SHORT.txt $ICU4C_UNIDATA/UCARules.txt
+- restore TODO diffs in UCARules.txt
+    meld /tmp/UCARules-old.txt $ICU4C_UNIDATA/UCARules.txt
+- update (ICU4C)/source/test/testdata/CollationTest_*.txt
+  and (ICU4J)/main/tests/collate/src/com/ibm/icu/dev/data/CollationTest_*.txt
+  from the CLDR root files (..._CLDR_..._SHORT.txt)
+    cp -v $CLDR_SRC/common/uca/CollationTest_CLDR_NON_IGNORABLE_SHORT.txt $ICU_SRC/icu4c/source/test/testdata/CollationTest_NON_IGNORABLE_SHORT.txt
+    cp -v $CLDR_SRC/common/uca/CollationTest_CLDR_SHIFTED_SHORT.txt $ICU_SRC/icu4c/source/test/testdata/CollationTest_SHIFTED_SHORT.txt
+    cp -v $ICU_SRC/icu4c/source/test/testdata/CollationTest_*.txt $ICU_SRC/icu4j/main/tests/collate/src/com/ibm/icu/dev/data
+- if CLDR common/uca/unihan-index.txt changes, then update
+  CLDR common/collation/root.xml <collation type="private-unihan">
+  and regenerate (or update in parallel) $ICU_SRC/icu4c/source/data/coll/root.txt
+
+- generate data files, as above (generate.sh), now to pick up new collation data
+- rebuild ICU4C (make clean, make check, as usual)
+
+* run & fix ICU4C tests, now with new CLDR collation root data
+- run all tests with the collation test data *_SHORT.txt or the full files
+  (the full ones have comments, useful for debugging)
+- note on intltest: if collate/UCAConformanceTest fails, then
+  utility/MultithreadTest/TestCollators will fail as well;
+  fix the conformance test before looking into the multi-thread test
+
+* update Java data files
+- refresh just the UCD/UCA-related/derived files, just to be safe
+- see (ICU4C)/source/data/icu4j-readme.txt
+- mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+    NOTE: If you get the error "No rule to make target 'out/build/icudt70l/uprops.icu'",
+    you need to reconfigure with unicore data; see the "configure" line above.
+  output:
+    ...
+    make[1]: Entering directory '/usr/local/google/home/mscherer/icu/uni/dbg/icu4c/data'
+    mkdir -p ./out/icu4j/com/ibm/icu/impl/data/icudt73b
+    mkdir -p ./out/icu4j/tzdata/com/ibm/icu/impl/data/icudt73b
+    LD_LIBRARY_PATH=../lib:../stubdata:../tools/ctestfw:$LD_LIBRARY_PATH  ../bin/icupkg ./out/tmp/icudt73l.dat ./out/icu4j/icudt73b.dat -s ./out/build/icudt73l -x '*' -tb -d ./out/icu4j/com/ibm/icu/impl/data/icudt73b
+    mv ./out/icu4j/"com/ibm/icu/impl/data/icudt73b/zoneinfo64.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt73b/metaZones.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt73b/timezoneTypes.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt73b/windowsZones.res" "./out/icu4j/tzdata/com/ibm/icu/impl/data/icudt73b"
+    jar cf ./out/icu4j/icudata.jar -C ./out/icu4j com/ibm/icu/impl/data/icudt73b/
+    mkdir -p /tmp/icu4j/main/shared/data
+    cp ./out/icu4j/icudata.jar /tmp/icu4j/main/shared/data
+    jar cf ./out/icu4j/icutzdata.jar -C ./out/icu4j/tzdata com/ibm/icu/impl/data/icudt73b/
+    mkdir -p /tmp/icu4j/main/shared/data
+    cp ./out/icu4j/icutzdata.jar /tmp/icu4j/main/shared/data
+    make[1]: Leaving directory '/usr/local/google/home/mscherer/icu/uni/dbg/icu4c/data'
+- copy the big-endian Unicode data files to another location,
+  separate from the other data files,
+  and then refresh ICU4J
+    cd $ICU_ROOT/dbg/icu4c/data/out/icu4j
+    mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/coll
+    cp -v com/ibm/icu/impl/data/$ICUDT/coll/* /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/coll
+    jar uvf $ICU_SRC/icu4j/main/shared/data/icudata.jar -C /tmp/icu4j com/ibm/icu/impl/data/$ICUDT
+- new for ICU 73: also copy the binary data files directly into the ICU4J tree
+    cp -v com/ibm/icu/impl/data/$ICUDT/coll/* $ICU_SRC/icu4j/maven-build/maven-icu4j-datafiles/src/main/resources/com/ibm/icu/impl/data/$ICUDT/coll
+
+* When refreshing all of ICU4J data from ICU4C
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+- cp /tmp/icu4j/main/shared/data/icudata.jar $ICU_SRC/icu4j/main/shared/data
+or
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=$ICU_SRC/icu4j icu4j-data-install
+
+* refresh Java test .txt files
+- copy new .txt files into ICU4J's main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cd $ICU_SRC/icu4c/source/data/unidata
+    cp -v confusables.txt confusablesWholeScript.txt NormalizationCorrections.txt NormalizationTest.txt SpecialCasing.txt UnicodeData.txt $ICU_SRC/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cd ../../test/testdata
+    cp -v BidiCharacterTest.txt BidiTest.txt IdnaTestV2.txt $ICU_SRC/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cp -v $UNICODE_DATA/ucd/CompositionExclusions.txt $ICU_SRC/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+
+* run & fix ICU4J tests
+
+*** merge the Unicode update branch back onto the main branch
+- do not merge the icudata.jar and testdata.jar,
+  instead rebuild them from merged & tested ICU4C
+- if there is a merge conflict in icudata.jar, here is one way to deal with it:
+  +   remove icudata.jar from the commit so that rebasing is trivial
+  + ~/icu/uni/src$ git restore --source=main icu4j/main/shared/data/icudata.jar
+  + ~/icu/uni/src$ git commit -a --amend
+  +   switch to main, pull updates, switch back to the dev branch
+  + ~/icu/uni/src$ git rebase main
+  +   rebuild icudata.jar
+  + ~/icu/uni/src$ git commit -a --amend
+  + ~/icu/uni/src$ git push -f
+- make sure that changes to Unicode tools are checked in:
+  https://github.com/unicode-org/unicodetools
+
+---------------------------------------------------------------------------- ***
+
 Unicode 15.0 update for ICU 72
 
 https://www.unicode.org/versions/Unicode15.0.0/

@@ -2520,6 +2520,10 @@ eu{
             one{"rand hegoafrikar"}
             other{"rand hegoafrikar"}
         }
+        ZMK{
+            one{"Zambiako kwacha (1968–2012)"}
+            other{"Zambiako kwacha (1968–2012)"}
+        }
         ZMW{
             one{"kwacha zambiar"}
             other{"kwacha zambiar"}

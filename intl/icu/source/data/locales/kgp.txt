@@ -2019,6 +2019,18 @@ kgp{
             2{"{0} ketũmỹr {1}"}
             end{"{0} ketũmỹr {1}"}
         }
+        or-narrow{
+            2{"{0} ketũmỹr {1}"}
+            end{"{0} ketũmỹr {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} ketũmỹr {1}"}
+            end{"{0} ketũmỹr {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} kar {1}"}
             end{"{0} kar {1}"}
@@ -2026,6 +2038,8 @@ kgp{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} kar {1}"}
@@ -2036,6 +2050,8 @@ kgp{
         unit{
             2{"{0} kar {1}"}
             end{"{0} kar {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -2046,6 +2062,8 @@ kgp{
         unit-short{
             2{"{0} kar {1}"}
             end{"{0} kar {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

@@ -82,6 +82,7 @@ fo{
         dar{"dargwa"}
         dav{"taita"}
         de{"týskt"}
+        de_AT{"týskt (Eysturríki)"}
         de_CH{"høgt týskt (Sveis)"}
         dgr{"dogrib"}
         dje{"sarma"}
@@ -97,8 +98,15 @@ fo{
         eka{"ekajuk"}
         el{"grikskt"}
         en{"enskt"}
+        en_AU{"enskt (Avstralia)"}
+        en_CA{"enskt (Kanada)"}
+        en_GB{"enskt (Stórabretland)"}
+        en_US{"enskt (Sambandsríki Amerika)"}
         eo{"esperanto"}
         es{"spanskt"}
+        es_419{"spanskt (Latínamerika)"}
+        es_ES{"spanskt (Spania)"}
+        es_MX{"spanskt (Meksiko)"}
         et{"estiskt"}
         eu{"baskiskt"}
         ewo{"ewondo"}
@@ -111,6 +119,8 @@ fo{
         fo{"føroyskt"}
         fon{"fon"}
         fr{"franskt"}
+        fr_CA{"franskt (Kanada)"}
+        fr_CH{"franskt (Sveis)"}
         fur{"friuliskt"}
         fy{"vestur frísiskt"}
         ga{"írskt"}

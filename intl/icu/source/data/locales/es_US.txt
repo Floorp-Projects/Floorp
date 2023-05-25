@@ -137,19 +137,6 @@ es_US{
                 yMMMEd{"EEE, d 'de' MMM 'de' y"}
                 yQQQ{"QQQ y"}
             }
-            dayNames{
-                format{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
-            }
             intervalFormats{
                 H{
                     H{"HH–HH"}
@@ -353,7 +340,7 @@ es_US{
     personNames{
         namePattern{
             sorting-long-referring-formal{
-                "{surname}, {prefix} {given} {given2}",
+                "{surname}, {title} {given} {given2}",
                 "{surname} {surname2}, {given} {given2}",
             }
             sorting-long-referring-informal{
@@ -361,7 +348,7 @@ es_US{
                 "{surname} {surname2}, {given} {given2}",
             }
             sorting-medium-referring-formal{
-                "{surname}, {prefix} {given} {given2-initial}",
+                "{surname}, {title} {given} {given2-initial}",
                 "{surname} {surname2}, {given} {given2}",
             }
             sorting-medium-referring-informal{
@@ -369,7 +356,7 @@ es_US{
                 "{surname} {surname2}, {given} {given2}",
             }
             sorting-short-referring-formal{
-                "{surname}, {prefix} {given-initial} {given2-initial} {suffix}",
+                "{surname}, {title} {given} {given2}",
                 "{surname} {surname2}, {given} {given2}",
             }
             sorting-short-referring-informal{

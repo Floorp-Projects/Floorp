@@ -184,6 +184,7 @@ fr{
                     }
                 }
             }
+            times{"{0}-{1}"}
         }
         concentr{
             item{
@@ -717,6 +718,7 @@ fr{
                 other{"{0} picomètres"}
             }
             point{
+                dnam{"pt typog."}
                 one{"{0} point typographique"}
                 other{"{0} points typographiques"}
             }
@@ -1223,6 +1225,8 @@ fr{
         acceleration{
             g-force{
                 dnam{"G"}
+                one{"{0} force g"}
+                other{"{0} force g"}
             }
             meter-per-square-second{
                 dnam{"m/s²"}
@@ -1315,11 +1319,64 @@ fr{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
             times{"{0}-{1}"}
         }
         concentr{
             item{
+                dnam{"item"}
                 one{"{0}item"}
                 other{"{0}items"}
             }
@@ -1371,6 +1428,7 @@ fr{
                 other{"{0}l/100km"}
             }
             liter-per-kilometer{
+                dnam{"l/km"}
                 one{"{0}l/km"}
                 other{"{0}l/km"}
             }
@@ -1380,6 +1438,7 @@ fr{
                 other{"{0}mi/gal"}
             }
             mile-per-gallon-imperial{
+                dnam{"mi/gal imp."}
                 one{"{0}mi/gal imp."}
                 other{"{0}mi/gal imp."}
             }
@@ -1594,6 +1653,7 @@ fr{
         }
         force{
             kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
                 one{"{0}kWh/100km"}
                 other{"{0}kWh/100km"}
             }
@@ -1632,34 +1692,42 @@ fr{
         }
         graphics{
             dot{
+                dnam{"pt"}
                 one{"{0}pt"}
                 other{"{0}pt"}
             }
             dot-per-centimeter{
+                dnam{"pt/cm"}
                 one{"{0}pt/cm"}
                 other{"{0}pt/cm"}
             }
             dot-per-inch{
+                dnam{"pt/po"}
                 one{"{0}pt/po"}
                 other{"{0}pt/po"}
             }
             em{
+                dnam{"em"}
                 one{"{0}em"}
                 other{"{0}em"}
             }
             megapixel{
+                dnam{"Mpx"}
                 one{"{0}Mpx"}
                 other{"{0}Mpx"}
             }
             pixel{
+                dnam{"px"}
                 one{"{0}px"}
                 other{"{0}px"}
             }
             pixel-per-centimeter{
+                dnam{"px/cm"}
                 one{"{0}px/cm"}
                 other{"{0}px/cm"}
             }
             pixel-per-inch{
+                dnam{"px/po"}
                 one{"{0}px/po"}
                 other{"{0}px/po"}
             }
@@ -1678,9 +1746,18 @@ fr{
             }
             decimeter{
                 dnam{"dm"}
+                one{"{0} dm"}
+                other{"{0} dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 dnam{"fm"}
+                one{"{0} fm"}
+                other{"{0} fm"}
             }
             foot{
                 dnam{"pi"}
@@ -1707,6 +1784,8 @@ fr{
             }
             light-year{
                 dnam{"al"}
+                one{"{0} al"}
+                other{"{0} al"}
             }
             meter{
                 dnam{"m"}
@@ -1716,6 +1795,8 @@ fr{
             }
             micrometer{
                 dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mi"}
@@ -1724,6 +1805,8 @@ fr{
             }
             mile-scandinavian{
                 dnam{"smi"}
+                one{"{0} smi"}
+                other{"{0} smi"}
             }
             millimeter{
                 dnam{"mm"}
@@ -1732,12 +1815,18 @@ fr{
             }
             nanometer{
                 dnam{"nm"}
+                one{"{0} nm"}
+                other{"{0} nm"}
             }
             nautical-mile{
                 dnam{"nmi"}
+                one{"{0} nmi"}
+                other{"{0} nmi"}
             }
             parsec{
                 dnam{"pc"}
+                one{"{0} pc"}
+                other{"{0} pc"}
             }
             picometer{
                 dnam{"pm"}
@@ -1746,6 +1835,8 @@ fr{
             }
             point{
                 dnam{"pt typog."}
+                one{"{0} pt typog."}
+                other{"{0} pts typog."}
             }
             solar-radius{
                 dnam{"R☉"}
@@ -1760,10 +1851,12 @@ fr{
         }
         light{
             candela{
+                dnam{"cd"}
                 one{"{0}cd"}
                 other{"{0}cd"}
             }
             lumen{
+                dnam{"lm"}
                 one{"{0}lm"}
                 other{"{0}lm"}
             }
@@ -1795,6 +1888,7 @@ fr{
                 other{"{0}M⊕"}
             }
             grain{
+                dnam{"grain"}
                 one{"{0} grain"}
                 other{"{0} grains"}
             }
@@ -1897,6 +1991,7 @@ fr{
                 other{"{0}atm"}
             }
             bar{
+                dnam{"bar"}
                 one{"{0}bar"}
                 other{"{0}bar"}
             }
@@ -1904,6 +1999,11 @@ fr{
                 dnam{"hPa"}
                 one{"{0}hPa"}
                 other{"{0}hPa"}
+            }
+            inch-ofhg{
+                dnam{"inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
             }
             kilopascal{
                 dnam{"kPa"}
@@ -1926,6 +2026,7 @@ fr{
                 other{"{0} mmHg"}
             }
             pascal{
+                dnam{"Pa"}
                 one{"{0}Pa"}
                 other{"{0}Pa"}
             }
@@ -2080,6 +2181,7 @@ fr{
                 other{"{0}fl dr"}
             }
             drop{
+                dnam{"gte"}
                 one{"{0}gte"}
                 other{"{0}gte"}
             }
@@ -2100,6 +2202,7 @@ fr{
                 per{"{0}/gal"}
             }
             gallon-imperial{
+                dnam{"gal imp."}
                 one{"{0}gal imp."}
                 other{"{0}gal imp."}
                 per{"{0}/gal imp."}
@@ -2108,6 +2211,11 @@ fr{
                 dnam{"hl"}
                 one{"{0}hl"}
                 other{"{0}hl"}
+            }
+            jigger{
+                dnam{"jigger"}
+                one{"{0} jigger"}
+                other{"{0} jiggers"}
             }
             liter{
                 dnam{"l"}
@@ -2125,6 +2233,11 @@ fr{
                 one{"{0}ml"}
                 other{"{0}ml"}
             }
+            pinch{
+                dnam{"pincée"}
+                one{"{0} pincée"}
+                other{"{0} pincées"}
+            }
             pint{
                 dnam{"pte"}
                 one{"{0}pte"}
@@ -2141,6 +2254,7 @@ fr{
                 other{"{0}qt"}
             }
             quart-imperial{
+                dnam{"qt imp."}
                 one{"{0}qt imp."}
                 other{"{0}qt imp."}
             }
@@ -2255,6 +2369,30 @@ fr{
         }
         compound{
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
             times{"{0}-{1}"}
         }
         concentr{
@@ -2626,6 +2764,10 @@ fr{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             fathom{
                 dnam{"fm"}
                 one{"{0} fm"}
@@ -2722,6 +2864,14 @@ fr{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}

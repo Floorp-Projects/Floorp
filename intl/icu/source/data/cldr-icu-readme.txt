@@ -131,6 +131,7 @@ export ANT_OPTS="-Xmx4096m"
 # CLDR_DIR=`cygpath -wp /build/cldr`
 
 export CLDR_DIR=$HOME/cldr-myfork
+export CLDR_TMP_DIR=$HOME/cldr-staging
 
 # 1c. ICU variables
 
@@ -160,6 +161,13 @@ make check 2>&1 | tee $NOTES/icu4c-oldData-makeCheck.txt
 cd $ICU4J_ROOT
 ant clean
 ant check 2>&1 | tee $NOTES/icu4j-oldData-antCheck.txt
+
+# 2c. Additionally for ICU4J, repeat the same as 2b, but for building with
+# Maven instead of with Ant.
+
+cd $ICU4J_ROOT/maven-build
+mvn clean
+mvn verify
 
 # 3. Make pre-adjustments as necessary
 # 3a. Copy latest relevant CLDR dtds to ICU
@@ -196,6 +204,12 @@ cd $ICU4C_DIR/source/data
 ant cleanprod
 ant setup
 ant proddata 2>&1 | tee $NOTES/cldr-newData-proddataLog.txt
+
+#---
+# Note, for CLDR development, at this point tests are sometimes run on the production
+# data, see:
+# https://cldr.unicode.org/development/cldr-big-red-switch/brs-run-tests-on-production-data
+#---
 
 # 5b. Build the new ICU4C data files; these include .txt files and .py files.
 # These new files will replace whatever was already present in the ICU4C sources.
@@ -307,11 +321,23 @@ make icu4j-data-install
 cd $ICU4C_DIR/source/test/testdata
 make icu4j-data-install
 
+# 12c. Replace the extracted {main, test} data files in the Maven build
+
+cd $ICU4J_ROOT/maven-build
+sh ./extract-data-files.sh
+
 # 13. Now rebuild ICU4J with the new data and run tests:
 # Keep a log so you can investigate the errors.
 
+# 13a. Run the tests using the ant build
+
 cd $ICU4J_ROOT
 ant check 2>&1 | tee $NOTES/icu4j-newData-antCheck.txt
+
+# 13b. Run the tests using the Maven build
+
+cd $ICU4J_ROOT/maven-build
+mvn verify 2>&1 | tee $NOTES/icu4j-newData-mavenVerify.txt
 
 # 14. Investigate test case failures; fix test cases and repeat from step 12,
 # or fix CLDR data and repeat from step 4, as appropriate, until there are no
@@ -344,8 +370,8 @@ git status
 # commit
 
 # 16. For an official CLDR data integration into ICU, now tag the CLDR and
-# ICU sources with an appropriate CLDR milestone (you can check previous
-# tags for format), e.g.:
+# possibly the ICU sources with an appropriate CLDR milestone (you can check
+# previous tags for format), e.g.:
 
 cd $CLDR_DIR
 git tag ...
@@ -363,6 +389,14 @@ cd $CLDR_TMP_DIR
 # commit
 git tag ...
 git push --tags
+
+# 18. You should publish the cldr and cldr-staging tags in github. For cldr, go to
+# https://github.com/unicode-org/cldr/tags and click on the tag you just created.
+# Click on the "Create release from tag" button at the upper right. Set release
+# title to be the same as the tag. Click the checkbox for "Set as a pre-release" for
+# all but the final release. For the description, see what was done for earlier tags.
+# When you are all ready, click the "Publish release" button.
+
 
 
 

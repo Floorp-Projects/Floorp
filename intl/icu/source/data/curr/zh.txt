@@ -1332,6 +1332,9 @@ zh{
         AED{
             other{"阿联酋迪拉姆"}
         }
+        AFA{
+            other{"阿富汗尼 (1927–2002)"}
+        }
         AFN{
             other{"阿富汗尼"}
         }
@@ -1475,6 +1478,9 @@ zh{
         }
         BTN{
             other{"不丹努尔特鲁姆"}
+        }
+        BUK{
+            other{"缅元"}
         }
         BWP{
             other{"博茨瓦纳普拉"}
@@ -1733,6 +1739,12 @@ zh{
         }
         KPW{
             other{"朝鲜元"}
+        }
+        KRH{
+            other{"韩元 (1953–1962)"}
+        }
+        KRO{
+            other{"韩元 (1945–1953)"}
         }
         KRW{
             other{"韩元"}
@@ -2043,6 +2055,9 @@ zh{
         TOP{
             other{"汤加潘加"}
         }
+        TPE{
+            other{"帝汶埃斯库多"}
+        }
         TRL{
             other{"土耳其里拉 (1922–2005)"}
         }
@@ -2109,6 +2124,9 @@ zh{
         VND{
             other{"越南盾"}
         }
+        VNN{
+            other{"越南盾 (1978–1985)"}
+        }
         VUV{
             other{"瓦努阿图瓦图"}
         }
@@ -2118,20 +2136,59 @@ zh{
         XAF{
             other{"中非法郎"}
         }
+        XAG{
+            other{"银"}
+        }
+        XAU{
+            other{"黄金"}
+        }
+        XBA{
+            other{"欧洲复合单位"}
+        }
+        XBB{
+            other{"欧洲货币联盟"}
+        }
+        XBC{
+            other{"欧洲计算单位 (XBC)"}
+        }
+        XBD{
+            other{"欧洲计算单位 (XBD)"}
+        }
         XCD{
             other{"东加勒比元"}
+        }
+        XDR{
+            other{"特别提款权"}
         }
         XEU{
             other{"欧洲货币单位"}
         }
+        XFO{
+            other{"法国金法郎"}
+        }
+        XFU{
+            other{"法国法郎 (UIC)"}
+        }
         XOF{
             other{"西非法郎"}
+        }
+        XPD{
+            other{"钯"}
         }
         XPF{
             other{"太平洋法郎"}
         }
+        XPT{
+            other{"铂"}
+        }
+        XRE{
+            other{"RINET 基金"}
+        }
         XSU{
             other{"苏克雷"}
+        }
+        XTS{
+            other{"测试货币代码"}
         }
         XUA{
             other{"非洲开发银行记账单位"}

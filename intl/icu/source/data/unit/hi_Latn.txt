@@ -115,6 +115,13 @@ hi_Latn{
         }
     }
     unitsNarrow{
+        compound{
+            10p-6{"μ {0}"}
+            10p-9{"n {0}"}
+            10p12{"T {0}"}
+            10p15{"P {0}"}
+            10p6{"M {0}"}
+        }
         concentr{
             karat{
                 dnam{"karat"}

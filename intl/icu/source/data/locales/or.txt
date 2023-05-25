@@ -275,11 +275,14 @@ or{
         orya{
             patterns{
                 currencyFormat{"¤#,##0.00"}
+                currencyFormat%alphaNextToNumber{"¤ #,##0.00"}
+                currencyFormat%noCurrency{"#,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -629,6 +632,10 @@ or{
                     }
                     narrow{
                         am{"AM"}
+                        pm{"ଅପରାହ୍ନ"}
+                    }
+                    wide{
+                        am{"ପୂର୍ବାହ୍ନ"}
                         pm{"ଅପରାହ୍ନ"}
                     }
                 }
@@ -1091,6 +1098,11 @@ or{
         }
         day-narrow{
             dn{"ଦିନ"}
+            relative{
+                "-1"{"ଗତକାଲି"}
+                "0"{"ଆଜି"}
+                "1"{"ଆସନ୍ତାକାଲି"}
+            }
             relativeTime{
                 future{
                     one{"{0} ଦିନରେ"}
@@ -1104,6 +1116,11 @@ or{
         }
         day-short{
             dn{"ଦିନ"}
+            relative{
+                "-1"{"ଗତକାଲି"}
+                "0"{"ଆଜି"}
+                "1"{"ଆସନ୍ତାକାଲି"}
+            }
             relativeTime{
                 future{
                     one{"{0} ଦିନରେ"}
@@ -1348,6 +1365,11 @@ or{
         }
         month-narrow{
             dn{"ମା."}
+            relative{
+                "-1"{"ଗତ ମାସ"}
+                "0"{"ଏହି ମାସ"}
+                "1"{"ଆଗାମୀ ମାସ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ମା. ରେ"}
@@ -1361,6 +1383,11 @@ or{
         }
         month-short{
             dn{"ମା."}
+            relative{
+                "-1"{"ଗତ ମାସ"}
+                "0"{"ଏହି ମାସ"}
+                "1"{"ଆଗାମୀ ମାସ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ମା. ରେ"}
@@ -1744,6 +1771,11 @@ or{
         }
         week-narrow{
             dn{"ସ."}
+            relative{
+                "-1"{"ଗତ ସପ୍ତାହ"}
+                "0"{"ଏହି ସପ୍ତାହ"}
+                "1"{"ଆଗାମୀ ସପ୍ତାହ"}
+            }
             relativePeriod{"{0} ର ସପ୍ତାହ"}
             relativeTime{
                 future{
@@ -1758,6 +1790,11 @@ or{
         }
         week-short{
             dn{"ସ."}
+            relative{
+                "-1"{"ଗତ ସପ୍ତାହ"}
+                "0"{"ଏହି ସପ୍ତାହ"}
+                "1"{"ଆଗାମୀ ସପ୍ତାହ"}
+            }
             relativePeriod{"{0} ର ସପ୍ତାହ"}
             relativeTime{
                 future{
@@ -1817,6 +1854,11 @@ or{
         }
         year-narrow{
             dn{"ବ."}
+            relative{
+                "-1"{"ଗତ ବର୍ଷ"}
+                "0"{"ଏହି ବର୍ଷ"}
+                "1"{"ଆଗାମୀ ବର୍ଷ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ବ. ରେ"}
@@ -1830,6 +1872,11 @@ or{
         }
         year-short{
             dn{"ବ."}
+            relative{
+                "-1"{"ଗତ ବର୍ଷ"}
+                "0"{"ଏହି ବର୍ଷ"}
+                "1"{"ଆଗାମୀ ବର୍ଷ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ବ. ରେ"}
@@ -1858,14 +1905,35 @@ or{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} କିମ୍ବା {1}"}
+            end{"{0} କିମ୍ବା {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} କିମ୍ବା {1}"}
+            end{"{0} କିମ୍ବା {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} ଓ {1}"}
             end{"{0}, ଓ {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
-        standard-short{
+        standard-narrow{
+            2{"{0} ଓ {1}"}
             end{"{0}, ଓ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} ଓ {1}"}
+            end{"{0}, ଓ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0}, {1}"}
@@ -1930,22 +1998,18 @@ or{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -1957,22 +2021,18 @@ or{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

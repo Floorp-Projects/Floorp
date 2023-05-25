@@ -4167,7 +4167,4 @@ $SCDigit { 出 } 戏 → 齣;
 龚↔龔;
 龛↔龕;
 龟↔龜;
-# map some punctuation too
-“↔「;
-”↔」;
 

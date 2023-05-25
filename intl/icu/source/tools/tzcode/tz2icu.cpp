@@ -650,7 +650,7 @@ void scandir(string dir, string prefix="") {
     vector<string> subdirs;
     vector<string> subfiles;
 
-    if ((dp = opendir(dir.c_str())) == NULL) {
+    if ((dp = opendir(dir.c_str())) == nullptr) {
         cerr << "Error: Invalid directory: " << dir << endl;
         exit(1);
     }
@@ -659,7 +659,7 @@ void scandir(string dir, string prefix="") {
         exit(1);
     }
     chdir(dir.c_str());
-    while ((dir_entry = readdir(dp)) != NULL) {
+    while ((dir_entry = readdir(dp)) != nullptr) {
         string name = dir_entry->d_name;
         string path = dir + "/" + name;
         lstat(dir_entry->d_name,&stat_info);

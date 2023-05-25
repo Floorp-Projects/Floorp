@@ -87,10 +87,6 @@ fr_CA{
             "KRW",
             "won sud-coréen",
         }
-        LAK{
-            "LAK",
-            "kip laotien",
-        }
         LBP{
             "LBP",
             "livre libanaise",
@@ -214,10 +210,6 @@ fr_CA{
         IRR{
             one{"rial iranien"}
             other{"rials iraniens"}
-        }
-        LAK{
-            one{"kip laotien"}
-            other{"kips laotiens"}
         }
         OMR{
             one{"rial omanais"}

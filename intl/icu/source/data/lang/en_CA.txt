@@ -28,6 +28,7 @@ en_CA{
         lw{"line breaks in words setting"}
         m0{"transform rules"}
         ms{"measurement system"}
+        mu{"measurement unit"}
         numbers{"numbers"}
         rg{"region for supplemental data"}
         s0{"transform source"}

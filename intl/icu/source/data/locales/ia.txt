@@ -902,9 +902,39 @@ ia{
         }
         day-narrow{
             dn{"d."}
+            relative{
+                "-1"{"heri"}
+                "0"{"hodie"}
+                "1"{"deman"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} die"}
+                    other{"in {0} dies"}
+                }
+                past{
+                    one{"{0} die retro"}
+                    other{"{0} dies retro"}
+                }
+            }
         }
         day-short{
             dn{"die"}
+            relative{
+                "-1"{"heri"}
+                "0"{"hodie"}
+                "1"{"deman"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} die"}
+                    other{"in {0} dies"}
+                }
+                past{
+                    one{"{0} die retro"}
+                    other{"{0} dies retro"}
+                }
+            }
         }
         dayOfYear{
             dn{"die del anno"}
@@ -950,6 +980,23 @@ ia{
                 }
             }
         }
+        fri-narrow{
+            relative{
+                "-1"{"ven. pass."}
+                "0"{"iste ven."}
+                "1"{"ven. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} ven."}
+                    other{"in {0} ven."}
+                }
+                past{
+                    one{"{0} ven. retro"}
+                    other{"{0} ven. retro"}
+                }
+            }
+        }
         fri-short{
             relative{
                 "-1"{"ven. pass."}
@@ -985,6 +1032,16 @@ ia{
         }
         hour-narrow{
             dn{"h."}
+            relativeTime{
+                future{
+                    one{"in {0} hr."}
+                    other{"in {0} hr."}
+                }
+                past{
+                    one{"{0} hr. retro"}
+                    other{"{0} hr. retro"}
+                }
+            }
         }
         hour-short{
             dn{"hr."}
@@ -1017,6 +1074,16 @@ ia{
         }
         minute-narrow{
             dn{"m."}
+            relativeTime{
+                future{
+                    one{"in {0} min."}
+                    other{"in {0} min."}
+                }
+                past{
+                    one{"{0} min. retro"}
+                    other{"{0} min. retro"}
+                }
+            }
         }
         minute-short{
             dn{"min."}
@@ -1045,6 +1112,23 @@ ia{
                 past{
                     one{"{0} lunedi retro"}
                     other{"{0} lunedis retro"}
+                }
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"lun. pass."}
+                "0"{"iste lun."}
+                "1"{"lun. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} lun."}
+                    other{"in {0} lun."}
+                }
+                past{
+                    one{"{0} lun. retro"}
+                    other{"{0} lun. retro"}
                 }
             }
         }
@@ -1085,6 +1169,21 @@ ia{
         }
         month-narrow{
             dn{"m."}
+            relative{
+                "-1"{"mns. pass."}
+                "0"{"iste mns."}
+                "1"{"mns. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} mns."}
+                    other{"in {0} mns."}
+                }
+                past{
+                    one{"{0} mns. retro"}
+                    other{"{0} mns. retro"}
+                }
+            }
         }
         month-short{
             dn{"mns."}
@@ -1124,6 +1223,16 @@ ia{
         }
         quarter-narrow{
             dn{"t."}
+            relativeTime{
+                future{
+                    one{"in {0} trim."}
+                    other{"in {0} trim."}
+                }
+                past{
+                    one{"{0} trim. retro"}
+                    other{"{0} trim. retro"}
+                }
+            }
         }
         quarter-short{
             dn{"trim."}
@@ -1152,6 +1261,23 @@ ia{
                 past{
                     one{"{0} sabbato retro"}
                     other{"{0} sabbatos retro"}
+                }
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"sab. pass."}
+                "0"{"iste sab."}
+                "1"{"sab. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} sab."}
+                    other{"in {0} sab."}
+                }
+                past{
+                    one{"{0} sab. retro"}
+                    other{"{0} sab. retro"}
                 }
             }
         }
@@ -1190,6 +1316,16 @@ ia{
         }
         second-narrow{
             dn{"s."}
+            relativeTime{
+                future{
+                    one{"in {0} sec."}
+                    other{"in {0} sec."}
+                }
+                past{
+                    one{"{0} sec. retro"}
+                    other{"{0} sec. retro"}
+                }
+            }
         }
         second-short{
             dn{"sec."}
@@ -1218,6 +1354,23 @@ ia{
                 past{
                     one{"{0} dominica retro"}
                     other{"{0} dominicas retro"}
+                }
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"dom. pass."}
+                "0"{"iste dom."}
+                "1"{"dom. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} dom."}
+                    other{"in {0} dom."}
+                }
+                past{
+                    one{"{0} dom. retro"}
+                    other{"{0} dom. retro"}
                 }
             }
         }
@@ -1255,6 +1408,23 @@ ia{
                 }
             }
         }
+        thu-narrow{
+            relative{
+                "-1"{"jov. pass."}
+                "0"{"iste jov."}
+                "1"{"jov. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} jov."}
+                    other{"in {0} jov."}
+                }
+                past{
+                    one{"{0} jov. retro"}
+                    other{"{0} jov. retro"}
+                }
+            }
+        }
         thu-short{
             relative{
                 "-1"{"jov. pass."}
@@ -1289,6 +1459,23 @@ ia{
                 }
             }
         }
+        tue-narrow{
+            relative{
+                "-1"{"mar. pass."}
+                "0"{"iste mar."}
+                "1"{"mar. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} mar."}
+                    other{"in {0} mar."}
+                }
+                past{
+                    one{"{0} mar. retro"}
+                    other{"{0} mar. retro"}
+                }
+            }
+        }
         tue-short{
             relative{
                 "-1"{"mar. pass."}
@@ -1320,6 +1507,23 @@ ia{
                 past{
                     one{"{0} mercuridi retro"}
                     other{"{0} mercuridis retro"}
+                }
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"mer. pass."}
+                "0"{"iste mer."}
+                "1"{"mer. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} mer."}
+                    other{"in {0} mer."}
+                }
+                past{
+                    one{"{0} mer. retro"}
+                    other{"{0} mer. retro"}
                 }
             }
         }
@@ -1361,6 +1565,22 @@ ia{
         }
         week-narrow{
             dn{"s."}
+            relative{
+                "-1"{"sept. pass."}
+                "0"{"iste sept."}
+                "1"{"sept. prox."}
+            }
+            relativePeriod{"le sept. de {0}"}
+            relativeTime{
+                future{
+                    one{"in {0} sept."}
+                    other{"in {0} sept."}
+                }
+                past{
+                    one{"{0} sept. retro"}
+                    other{"{0} sept. retro"}
+                }
+            }
         }
         week-short{
             dn{"sept."}
@@ -1428,6 +1648,21 @@ ia{
         }
         year-narrow{
             dn{"a."}
+            relative{
+                "-1"{"an. pass."}
+                "0"{"iste an."}
+                "1"{"an. prox."}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} an."}
+                    other{"in {0} an."}
+                }
+                past{
+                    one{"{0} an. retro"}
+                    other{"{0} an. retro"}
+                }
+            }
         }
         year-short{
             dn{"an."}

@@ -27,12 +27,213 @@ si{
     }
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
         arab{
             symbols{
                 timeSeparator{":"}
             }
         }
+        bali{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
+        beng{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
+        brah{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
+        cakm{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
+        cham{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
         default{"latn"}
+        deva{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
+        fullwide{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        gong{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        gonm{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        gujr{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        guru{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        hanidec{
+            symbols{
+                approximatelySign{"~"}
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{"."}
+            }
+        }
+        hmnp{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        java{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        kali{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        khmr{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        knda{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        lana{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        lanatham{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        laoo{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -269,6 +470,16 @@ si{
                 timeSeparator{"."}
             }
         }
+        lepc{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        limb{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
         minimalPairs{
             ordinal{
                 other{"{0} වන හැරවුම දකුණට"}
@@ -279,7 +490,112 @@ si{
             }
         }
         minimumGroupingDigits{"1"}
+        mlym{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        mong{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        mtei{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        mymr{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        mymrshan{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
         native{"latn"}
+        nkoo{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        olck{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        orya{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        osma{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        rohg{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        saur{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        shrd{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        sora{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        sund{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        takr{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        talu{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        tamldec{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        telu{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        thai{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        tibt{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        vaii{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
     }
     calendar{
         generic{
@@ -1164,6 +1480,11 @@ si{
         }
         day-narrow{
             dn{"දිනය"}
+            relative{
+                "-1"{"ඊයේ"}
+                "0"{"අද"}
+                "1"{"හෙට"}
+            }
             relativeTime{
                 future{
                     one{"දින {0}න්"}
@@ -1177,6 +1498,11 @@ si{
         }
         day-short{
             dn{"දිනය"}
+            relative{
+                "-1"{"ඊයේ"}
+                "0"{"අද"}
+                "1"{"හෙට"}
+            }
             relativeTime{
                 future{
                     one{"දින {0}න්"}
@@ -1961,7 +2287,25 @@ si{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} හෝ {1}"}
+            end{"{0}, හෝ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} හෝ {1}"}
+            end{"{0}, හෝ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
+            2{"{0} සහ {1}"}
+            end{"{0}, සහ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} සහ {1}"}
             end{"{0}, සහ {1}"}
             middle{"{0}, {1}"}
@@ -2036,7 +2380,6 @@ si{
             initialSequence{"{0} {1}"}
         }
         nameOrderLocales{
-            givenFirst{"und"}
             surnameFirst{
                 "ko",
                 "si",
@@ -2048,57 +2391,53 @@ si{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {given} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {given} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
                 "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
                 "llCaps}"
             }
-            givenFirst-long-monogram-informal{
-                "{given-informal-monogram-allCaps}{given2-monogram-allCaps}{surname-m"
-                "onogram-allCaps}"
-            }
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {surname2} {suffix}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {given-initial} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-medium-monogram-formal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
-            givenFirst-short-referring-informal{"{given-informal}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{given} {given2}, {surname}"}
-            sorting-long-referring-informal{"{given-informal} {given2}, {surname}"}
-            sorting-medium-referring-formal{"{given} {given2}, {surname-initial}"}
-            sorting-medium-referring-informal{"{given-informal} {given2}, {surname-initial}"}
-            sorting-short-referring-formal{"{given} {given2-initial}, {surname-initial}"}
-            sorting-short-referring-informal{"{given-informal} {given2-initial}, {surname-initial}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname-initial} {given}"}
+            sorting-long-referring-informal{"{given-informal} {surname}"}
+            sorting-medium-referring-formal{"{given} {given2-initial} {surname}"}
+            sorting-medium-referring-informal{"{given-informal}, {surname}"}
+            sorting-short-referring-formal{"{given-initial} {given2-initial}, {surname}"}
+            sorting-short-referring-informal{"{given-informal}, {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
                 "llCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{prefix} {surname} {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname-initial} {given}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}{given-monogram-allCaps}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname-initial} {given} {given2} {suffix}"}
-            surnameFirst-medium-referring-informal{"{surname-initial} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {given}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
-            surnameFirst-short-monogram-formal{"{given-monogram-allCaps}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-short-referring-formal{"{surname-initial} {given}"}
-            surnameFirst-short-referring-informal{"{given-informal}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

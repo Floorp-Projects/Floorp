@@ -158,7 +158,7 @@ rm{
                 }
                 MMMMEd{
                     M{"E, d MMMM – E, d MMMM"}
-                    d{"E, d. – E, d MMMM"}
+                    d{"E, d. – E, d MMMM"}
                 }
                 MMMMd{
                     M{"d MMMM – d MMMM"}
@@ -221,7 +221,7 @@ rm{
                 }
                 yMMMMEd{
                     M{"E, d MMMM – E, d MMMM y G"}
-                    d{"E, d. – E, d MMMM y G"}
+                    d{"E, d. – E, d MMMM y G"}
                     y{"E, d MMMM y – E, d MMMM y G"}
                 }
                 yMMMMd{
@@ -480,7 +480,7 @@ rm{
                 }
                 MMMMEd{
                     M{"E, d MMMM – E, d MMMM"}
-                    d{"E, d. – E, d MMMM"}
+                    d{"E, d. – E, d MMMM"}
                 }
                 MMMMd{
                     M{"d MMMM – d MMMM"}
@@ -543,7 +543,7 @@ rm{
                 }
                 yMMMMEd{
                     M{"E, d MMMM – E, d MMMM y"}
-                    d{"E, d. – E, d MMMM y"}
+                    d{"E, d. – E, d MMMM y"}
                     y{"E, d MMMM y – E, d MMMM y"}
                 }
                 yMMMMd{
@@ -715,9 +715,19 @@ rm{
         }
         day-narrow{
             dn{"d"}
+            relative{
+                "-1"{"ier"}
+                "0"{"oz"}
+                "1"{"damaun"}
+            }
         }
         day-short{
             dn{"di"}
+            relative{
+                "-1"{"ier"}
+                "0"{"oz"}
+                "1"{"damaun"}
+            }
         }
         dayperiod{
             dn{"mesadad dal di"}
@@ -726,6 +736,12 @@ rm{
             dn{"epoca"}
         }
         hour{
+            dn{"ura"}
+        }
+        hour-narrow{
+            dn{"ura"}
+        }
+        hour-short{
             dn{"ura"}
         }
         minute{
@@ -738,6 +754,12 @@ rm{
             dn{"min"}
         }
         month{
+            dn{"mais"}
+        }
+        month-narrow{
+            dn{"mais"}
+        }
+        month-short{
             dn{"mais"}
         }
         quarter{
@@ -769,6 +791,12 @@ rm{
         week{
             dn{"emna"}
         }
+        week-narrow{
+            dn{"emna"}
+        }
+        week-short{
+            dn{"emna"}
+        }
         weekday{
             dn{"di da l’emna"}
         }
@@ -779,6 +807,12 @@ rm{
                 "0"{"quest onn"}
                 "1"{"l’onn proxim"}
             }
+        }
+        year-narrow{
+            dn{"onn"}
+        }
+        year-short{
+            dn{"onn"}
         }
         zone{
             dn{"zona d’urari"}
@@ -792,12 +826,34 @@ rm{
         or-narrow{
             2{"{0} u {1}"}
             end{"{0} u {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
             2{"{0} u {1}"}
             end{"{0} u {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
+            2{"{0} e {1}"}
+            end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0} e {1}"}
+            end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} e {1}"}
+            end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
             2{"{0} e {1}"}
             end{"{0} e {1}"}
             middle{"{0}, {1}"}
@@ -808,6 +864,12 @@ rm{
             end{"{0} {1}"}
             middle{"{0} {1}"}
             start{"{0} {1}"}
+        }
+        unit-short{
+            2{"{0} e {1}"}
+            end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

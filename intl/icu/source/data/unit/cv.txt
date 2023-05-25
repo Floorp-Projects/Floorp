@@ -3,6 +3,10 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 cv{
     units{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         coordinate{
             dnam{"енӗ"}
             east{"{0} хӗвелтухӑҫ тӑрӑхӗ"}
@@ -12,6 +16,10 @@ cv{
         }
     }
     unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         coordinate{
             dnam{"енӗ"}
             east{"{0} х. т."}

@@ -17,9 +17,14 @@ he{
     ExemplarCharacters{"[א ב ג ד ה ו ז ח ט י כ ך ל מ ם נ ן ס ע פ ף צ ץ ק ר ש ת]"}
     ExemplarCharactersIndex{"[א ב ג ד ה ו ז ח ט י כ ל מ נ ס ע פ צ ק ר ש ת]"}
     ExemplarCharactersNumbers{"[\u200E \\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — , ; \\: ! ? . ׳ ' \u0022 ( ) \\[ \\] / ״ ־]"}
+    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — , ; \\: ! ? . ' ׳ \u0022 ״ ( ) \\[ \\] / ־]"}
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
         cakm{
             symbols{
                 infinity{"∞"}
@@ -41,6 +46,7 @@ he{
             }
             patterns{
                 accountingFormat{"‏#,##0.00 ‏¤;‏-#,##0.00 ‏¤"}
+                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"‏#,##0.00 ‏¤;‏-#,##0.00 ‏¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -382,6 +388,49 @@ he{
     }
     calendar{
         buddhist{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d בMMMM y G",
+                "d בMMMM y G",
+                "d בMMM y G",
+                "d.M.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E ה-d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d בMMM y G"}
+                GyMMMd{"d בMMM y G"}
+                GyMd{"d/M/y GGGGG"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E, d בMMM"}
+                MMMMd{"MMMM d"}
+                MMMd{"d בMMM"}
+                Md{"d.M"}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E, d/M/y G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d בMMM y G"}
+                yyyyMMMM{"G y MMMM"}
+                yyyyMMMd{"d בMMM y G"}
+                yyyyMd{"d.M.y G"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
+            }
             eras{
                 abbreviated{
                     "BE",
@@ -394,18 +443,193 @@ he{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"E, d.M.y GGGGG – E, d.M.y GGGGG"}
+                    M{"E, d.M.y – E, d.M.y GGGGG"}
+                    d{"E, d.M.y – E, d.M.y GGGGG"}
+                    y{"E, d.M.y – E, d.M.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d בMMM y G – E, d בMMM y G"}
+                    M{"E, d בMMM – E, d בMMM y G"}
+                    d{"E, d בMMM – E, d בMMM y G"}
+                    y{"E, d בMMM y – E, d בMMM y G"}
+                }
+                GyMMMd{
+                    G{"d בMMM y G – d בMMM y G"}
+                    M{"d בMMM – d בMMM y G"}
+                    d{"d – d בMMM y G"}
+                    y{"d בMMM y – d בMMM y G"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"d.M.y – d.M.y GGGGG"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"d.M.y – d.M.y GGGGG"}
+                }
+                H{
+                    H{"H–H"}
+                }
+                Hm{
+                    H{"H:mm–H:mm"}
+                    m{"H:mm–H:mm"}
+                }
+                Hmv{
+                    H{"H:mm–H:mm v"}
+                    m{"H:mm–H:mm v"}
+                }
+                Hv{
+                    H{"H–H v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"EEEE dd/MM – EEEE dd/MM"}
+                    d{"EEEE dd/MM – EEEE dd/MM"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"EEEE d MMM – EEEE d MMM"}
+                    d{"EEEE d MMM – EEEE d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
+                }
+                yMEd{
+                    M{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                    d{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                    y{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
                 yMMMEd{
+                    M{"EEEE d MMM – EEEE d MMM y"}
                     d{"E, d בMMM – E, d בMMM y G"}
                     y{"E, d, בMMM, y – E, d בMMM, y G"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y G"}
+                    y{"MMMM y–MMMM y"}
                 }
                 yMMMd{
                     M{"d בMMM – d בMMM y G"}
                     d{"d–d בMMM y G"}
                     y{"d בMMM y – d בMMM y G"}
                 }
+                yMd{
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
+                    y{"dd/MM/y – dd/MM/y"}
+                }
             }
         }
         coptic{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d בMMMM y G",
+                "d בMMMM y G",
+                "d בMMM y G",
+                "d.M.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E ה-d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d בMMM y G"}
+                GyMMMd{"d בMMM y G"}
+                GyMd{"d/M/y GGGGG"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E, d בMMM"}
+                MMMMd{"MMMM d"}
+                MMMd{"d בMMM"}
+                Md{"d.M"}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E, d/M/y G"}
+                yyyyMM{"MM/y G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d בMMM y G"}
+                yyyyMMMM{"G y MMMM"}
+                yyyyMMMd{"d בMMM y G"}
+                yyyyMd{"d.M.y G"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
+            }
             eras{
                 abbreviated{
                     "ERA0",
@@ -418,6 +642,151 @@ he{
                 wide{
                     "עידן 0",
                     "עידן 1",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"E, d.M.y GGGGG – E, d.M.y GGGGG"}
+                    M{"E, d.M.y – E, d.M.y GGGGG"}
+                    d{"E, d.M.y – E, d.M.y GGGGG"}
+                    y{"E, d.M.y – E, d.M.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d בMMM y G – E, d בMMM y G"}
+                    M{"E, d בMMM – E, d בMMM y G"}
+                    d{"E, d בMMM – E, d בMMM y G"}
+                    y{"E, d בMMM y – E, d בMMM y G"}
+                }
+                GyMMMd{
+                    G{"d בMMM y G – d בMMM y G"}
+                    M{"d בMMM – d בMMM y G"}
+                    d{"d – d בMMM y G"}
+                    y{"d בMMM y – d בMMM y G"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"d.M.y – d.M.y GGGGG"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"d.M.y – d.M.y GGGGG"}
+                }
+                H{
+                    H{"H–H"}
+                }
+                Hm{
+                    H{"H:mm–H:mm"}
+                    m{"H:mm–H:mm"}
+                }
+                Hmv{
+                    H{"H:mm–H:mm v"}
+                    m{"H:mm–H:mm v"}
+                }
+                Hv{
+                    H{"H–H v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"EEEE dd/MM – EEEE dd/MM"}
+                    d{"EEEE dd/MM – EEEE dd/MM"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"EEEE d MMM – EEEE d MMM"}
+                    d{"EEEE d MMM – EEEE d MMM"}
+                }
+                MMMM{
+                    M{"LLLL–LLLL"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
+                }
+                yMEd{
+                    M{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                    d{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                    y{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"EEEE d MMM – EEEE d MMM y"}
+                    d{"EEEE d MMM – EEEE d MMM y"}
+                    y{"EEEE d MMM y – EEEE d MMM y"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y G"}
+                    y{"MMMM y–MMMM y"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM y"}
+                    d{"d–d MMM y"}
+                    y{"d MMM y – d MMM y"}
+                }
+                yMd{
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
+                    y{"dd/MM/y – dd/MM/y"}
                 }
             }
             monthNames{
@@ -626,6 +995,16 @@ he{
                         "נהסה",
                         "פגומן",
                     }
+                }
+            }
+        }
+        ethiopic-amete-alem{
+            eras{
+                narrow{
+                    "ERA0",
+                }
+                wide{
+                    "ERA0",
                 }
             }
         }
@@ -1099,6 +1478,10 @@ he{
                     "לפני",
                     "אחריי",
                 }
+                narrow%variant{
+                    "BCE",
+                    "CE",
+                }
                 wide{
                     "לפני הספירה",
                     "לספירה",
@@ -1437,11 +1820,13 @@ he{
                 }
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMMM y G"}
                 GyMMMEd{"E, d בMMMM y G"}
                 GyMMMd{"d בMMMM y G"}
+                GyMd{"d/M/y GGGGG"}
                 M{"MMMM"}
                 MEd{"E, d בMMMM"}
                 MMM{"MMMM"}
@@ -1450,7 +1835,9 @@ he{
                 MMMMd{"d בMMMM"}
                 MMMd{"d בMMMM"}
                 Md{"d בMMMM"}
+                d{"d"}
                 y{"y"}
+                yyyy{"y G"}
                 yyyyM{"MMMM y"}
                 yyyyMEd{"E, d בMMMM y"}
                 yyyyMMM{"MMMM y"}
@@ -1477,12 +1864,62 @@ he{
                     B{"h בB – h בB"}
                     h{"h–h בB"}
                 }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
                 Gy{
+                    G{"y G – y G"}
                     y{"y – y G"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"E, d.M.y GGGGG – E, d.M.y GGGGG"}
+                    M{"E, d.M.y – E, d.M.y GGGGG"}
+                    d{"E, d.M.y – E, d.M.y GGGGG"}
+                    y{"E, d.M.y – E, d.M.y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d בMMM y G – E, d בMMM y G"}
+                    M{"E, d בMMM – E, d בMMM y G"}
+                    d{"E, d בMMM – E, d בMMM y G"}
+                    y{"E, d בMMM y – E, d בMMM y G"}
+                }
+                GyMMMd{
+                    G{"d בMMM y G – d בMMM y G"}
+                    M{"d בMMM – d בMMM y G"}
+                    d{"d – d בMMM y G"}
+                    y{"d בMMM y – d בMMM y G"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"d.M.y – d.M.y GGGGG"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"d.M.y – d.M.y GGGGG"}
+                }
+                H{
+                    H{"H–H"}
                 }
                 Hm{
                     H{"HH:mm – HH:mm"}
                     m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"H:mm–H:mm v"}
+                    m{"H:mm–H:mm v"}
+                }
+                Hv{
+                    H{"H–H v"}
                 }
                 M{
                     M{"MMM – MMM"}
@@ -1506,6 +1943,9 @@ he{
                     M{"d בMMM – d בMMM"}
                     d{"d – d בMMM"}
                 }
+                d{
+                    d{"d–d"}
+                }
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
@@ -1513,6 +1953,7 @@ he{
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
                     m{"h:mm – h:mm a"}
                 }
                 hmv{
@@ -1524,6 +1965,9 @@ he{
                     a{"h a – h a v"}
                     h{"h – h a v"}
                 }
+                y{
+                    y{"y–y"}
+                }
                 yM{
                     M{"MMM y – MMM y"}
                     y{"MMM y – MMM y"}
@@ -1532,6 +1976,10 @@ he{
                     M{"E d בMMM – E d בMMM y"}
                     d{"E d בMMM – E d בMMM y"}
                     y{"E d בMMM y – E d בMMM y"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
                     M{"E d בMMM – E d בMMM y"}
@@ -1792,6 +2240,7 @@ he{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d בMMM y G"}
                 GyMMMd{"d בMMM y G"}
+                GyMd{"d/M/y GGGGG"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
                 M{"L"}
@@ -2405,6 +2854,7 @@ he{
                 "-2"{"שלשום"}
                 "0"{"היום"}
                 "1"{"מחר"}
+                "2"{"מחרתיים"}
             }
             relativeTime{
                 future{
@@ -2557,6 +3007,9 @@ he{
         }
         hour-narrow{
             dn{"שע׳"}
+            relative{
+                "0"{"בשעה זו"}
+            }
             relativeTime{
                 future{
                     many{"בעוד {0} שע׳"}
@@ -2574,6 +3027,9 @@ he{
         }
         hour-short{
             dn{"שעה"}
+            relative{
+                "0"{"בשעה זו"}
+            }
             relativeTime{
                 future{
                     many{"בעוד {0} שע׳"}
@@ -2929,6 +3385,9 @@ he{
         }
         second-narrow{
             dn{"שנ׳"}
+            relative{
+                "0"{"עכשיו"}
+            }
             relativeTime{
                 future{
                     many{"בעוד {0} שנ׳"}
@@ -2946,6 +3405,9 @@ he{
         }
         second-short{
             dn{"שנ׳"}
+            relative{
+                "0"{"עכשיו"}
+            }
             relativeTime{
                 future{
                     many{"בעוד {0} שנ׳"}
@@ -3396,12 +3858,24 @@ he{
             start{"{0}, {1}"}
         }
         or-narrow{
+            2{"{0} או {1}"}
             end{"{0} או {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
+            2{"{0} או {1}"}
             end{"{0} או {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
+            2{"{0} ו{1}"}
+            end{"{0} ו{1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} ו{1}"}
             end{"{0} ו{1}"}
             middle{"{0}, {1}"}
@@ -3483,41 +3957,60 @@ he{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-"
-                "allCaps}"
+                "{given-monogram-allCaps}״{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-allCaps}",
+            }
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}״{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-allCaps}",
             }
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}״{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-allCaps}",
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}״{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-allCaps}",
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-"
-                "allCaps}"
+                "{given-monogram-allCaps}״{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-allCaps}",
             }
             givenFirst-short-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-"
-                "allCaps}"
+                "{given-monogram-allCaps}״{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}{given2-monogram-allCaps}״{surname-monogram-allCaps}",
             }
-            givenFirst-short-referring-formal{"{prefix} {given-initial} {surname}"}
+            givenFirst-short-referring-formal{"{title} {given-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
             sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{surname}, {prefix}"}
+            surnameFirst-short-addressing-formal{"{surname}, {title}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

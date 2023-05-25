@@ -257,17 +257,23 @@ id{
                 "GGGGGyMd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d/M/y GGGGG"}
+                M{"L"}
                 MEd{"E, d/M"}
+                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
+                d{"d"}
+                y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y G"}
                 yyyyMEd{"E, d/M/y G"}
@@ -291,6 +297,53 @@ id{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h.mm B – h.mm B"}
+                    h{"h.mm – h.mm B"}
+                    m{"h.mm – h.mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
+                    d{"E, d/M/y – E, d/M/y GGGGG"}
+                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM y G – E, d MMM y G"}
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"d/M/y GGGGG – d/M/y GGGGG"}
+                    M{"d/M/y – d/M/y GGGGG"}
+                    d{"d/M/y – d/M/y GGGGG"}
+                    y{"d/M/y – d/M/y GGGGG"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -330,7 +383,9 @@ id{
                 d{
                     d{"d – d"}
                 }
+                fallback{"{0} – {1}"}
                 h{
+                    a{"h a – h a"}
                     h{"h – h a"}
                 }
                 hm{
@@ -344,6 +399,7 @@ id{
                     m{"h.mm – h.mm a v"}
                 }
                 hv{
+                    a{"h a – h a v"}
                     h{"h – h a v"}
                 }
                 y{
@@ -410,6 +466,228 @@ id{
                 "yMd",
             }
             cyclicNameSets{
+                dayParts{
+                    format{
+                        narrow{
+                            "zi",
+                            "chou",
+                            "yin",
+                            "mao",
+                            "chen",
+                            "si",
+                            "wu",
+                            "wei",
+                            "shen",
+                            "you",
+                            "xu",
+                            "hai",
+                        }
+                        wide{
+                            "zi",
+                            "chou",
+                            "yin",
+                            "mao",
+                            "chen",
+                            "si",
+                            "wu",
+                            "wei",
+                            "shen",
+                            "you",
+                            "xu",
+                            "hai",
+                        }
+                    }
+                }
+                days{
+                    format{
+                        abbreviated{
+                            "jia-zi",
+                            "yi-chou",
+                            "bing-yin",
+                            "ding-mao",
+                            "wu-chen",
+                            "ji-si",
+                            "geng-wu",
+                            "xin-wei",
+                            "ren-shen",
+                            "gui-you",
+                            "jia-xu",
+                            "yi-hai",
+                            "bing-zi",
+                            "ding-chou",
+                            "wu-yin",
+                            "ji-mao",
+                            "geng-chen",
+                            "xin-si",
+                            "ren-wu",
+                            "gui-wei",
+                            "jia-shen",
+                            "yi-you",
+                            "bing-xu",
+                            "ding-hai",
+                            "wu-zi",
+                            "ji-chou",
+                            "geng-yin",
+                            "xin-mao",
+                            "ren-chen",
+                            "gui-si",
+                            "jia-wu",
+                            "yi-wei",
+                            "bing-shen",
+                            "ding-you",
+                            "wu-xu",
+                            "ji-hai",
+                            "geng-zi",
+                            "xin-chou",
+                            "ren-yin",
+                            "gui-mao",
+                            "jia-chen",
+                            "yi-si",
+                            "bing-wu",
+                            "ding-wei",
+                            "wu-shen",
+                            "ji-you",
+                            "geng-xu",
+                            "xin-hai",
+                            "ren-zi",
+                            "gui-chou",
+                            "jia-yin",
+                            "yi-mao",
+                            "bing-chen",
+                            "ding-si",
+                            "wu-wu",
+                            "ji-wei",
+                            "geng-shen",
+                            "xin-you",
+                            "ren-xu",
+                            "gui-hai",
+                        }
+                        narrow{
+                            "jia-zi",
+                            "yi-chou",
+                            "bing-yin",
+                            "ding-mao",
+                            "wu-chen",
+                            "ji-si",
+                            "geng-wu",
+                            "xin-wei",
+                            "ren-shen",
+                            "gui-you",
+                            "jia-xu",
+                            "yi-hai",
+                            "bing-zi",
+                            "ding-chou",
+                            "wu-yin",
+                            "ji-mao",
+                            "geng-chen",
+                            "xin-si",
+                            "ren-wu",
+                            "gui-wei",
+                            "jia-shen",
+                            "yi-you",
+                            "bing-xu",
+                            "ding-hai",
+                            "wu-zi",
+                            "ji-chou",
+                            "geng-yin",
+                            "xin-mao",
+                            "ren-chen",
+                            "gui-si",
+                            "jia-wu",
+                            "yi-wei",
+                            "bing-shen",
+                            "ding-you",
+                            "wu-xu",
+                            "ji-hai",
+                            "geng-zi",
+                            "xin-chou",
+                            "ren-yin",
+                            "gui-mao",
+                            "jia-chen",
+                            "yi-si",
+                            "bing-wu",
+                            "ding-wei",
+                            "wu-shen",
+                            "ji-you",
+                            "geng-xu",
+                            "xin-hai",
+                            "ren-zi",
+                            "gui-chou",
+                            "jia-yin",
+                            "yi-mao",
+                            "bing-chen",
+                            "ding-si",
+                            "wu-wu",
+                            "ji-wei",
+                            "geng-shen",
+                            "xin-you",
+                            "ren-xu",
+                            "gui-hai",
+                        }
+                        wide{
+                            "jia-zi",
+                            "yi-chou",
+                            "bing-yin",
+                            "ding-mao",
+                            "wu-chen",
+                            "ji-si",
+                            "geng-wu",
+                            "xin-wei",
+                            "ren-shen",
+                            "gui-you",
+                            "jia-xu",
+                            "yi-hai",
+                            "bing-zi",
+                            "ding-chou",
+                            "wu-yin",
+                            "ji-mao",
+                            "geng-chen",
+                            "xin-si",
+                            "ren-wu",
+                            "gui-wei",
+                            "jia-shen",
+                            "yi-you",
+                            "bing-xu",
+                            "ding-hai",
+                            "wu-zi",
+                            "ji-chou",
+                            "geng-yin",
+                            "xin-mao",
+                            "ren-chen",
+                            "gui-si",
+                            "jia-wu",
+                            "yi-wei",
+                            "bing-shen",
+                            "ding-you",
+                            "wu-xu",
+                            "ji-hai",
+                            "geng-zi",
+                            "xin-chou",
+                            "ren-yin",
+                            "gui-mao",
+                            "jia-chen",
+                            "yi-si",
+                            "bing-wu",
+                            "ding-wei",
+                            "wu-shen",
+                            "ji-you",
+                            "geng-xu",
+                            "xin-hai",
+                            "ren-zi",
+                            "gui-chou",
+                            "jia-yin",
+                            "yi-mao",
+                            "bing-chen",
+                            "ding-si",
+                            "wu-wu",
+                            "ji-wei",
+                            "geng-shen",
+                            "xin-you",
+                            "ren-xu",
+                            "gui-hai",
+                        }
+                    }
+                }
                 solarTerms{
                     format{
                         abbreviated{
@@ -1033,6 +1311,10 @@ id{
                     "SM",
                     "M",
                 }
+                narrow%variant{
+                    "SEU",
+                    "EU",
+                }
                 wide{
                     "Sebelum Masehi",
                     "Masehi",
@@ -1316,6 +1598,28 @@ id{
                 }
             }
         }
+        hebrew{
+            monthNames{
+                format{
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
+                    }
+                }
+            }
+        }
         indian{
             eras{
                 abbreviated{
@@ -1362,17 +1666,22 @@ id{
                 "GGGGGyMd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d/M/y GGGGG"}
+                M{"L"}
                 MEd{"E, d/M"}
+                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
+                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y G"}
@@ -1516,6 +1825,20 @@ id{
                         "Syaw.",
                         "Zulka.",
                         "Zulhi.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "Muharam",
@@ -2016,6 +2339,10 @@ id{
         day-narrow{
             dn{"h"}
             relative{
+                "-1"{"kemarin"}
+                "-2"{"selumbari"}
+                "0"{"hari ini"}
+                "1"{"besok"}
                 "2"{"lusa"}
             }
             relativeTime{
@@ -2030,7 +2357,10 @@ id{
         day-short{
             dn{"hr"}
             relative{
+                "-1"{"kemarin"}
                 "-2"{"selumbari"}
+                "0"{"hari ini"}
+                "1"{"besok"}
                 "2"{"lusa"}
             }
             relativeTime{
@@ -2130,6 +2460,9 @@ id{
         }
         hour-narrow{
             dn{"j"}
+            relative{
+                "0"{"jam ini"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} jam"}
@@ -2141,6 +2474,9 @@ id{
         }
         hour-short{
             dn{"jam"}
+            relative{
+                "0"{"jam ini"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} jam"}
@@ -2303,6 +2639,11 @@ id{
         }
         quarter-narrow{
             dn{"krtl."}
+            relative{
+                "-1"{"krtl lalu"}
+                "0"{"krtl ini"}
+                "1"{"krtl berikutnya"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} krtl."}
@@ -2389,6 +2730,9 @@ id{
         }
         second-narrow{
             dn{"d"}
+            relative{
+                "0"{"sekarang"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} dtk"}
@@ -2400,6 +2744,9 @@ id{
         }
         second-short{
             dn{"dtk."}
+            relative{
+                "0"{"sekarang"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} dtk"}
@@ -2732,6 +3079,18 @@ id{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} atau {1}"}
+            end{"{0}, atau {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} atau {1}"}
+            end{"{0}, atau {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} dan {1}"}
             end{"{0}, dan {1}"}
@@ -2741,6 +3100,8 @@ id{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} dan {1}"}
@@ -2815,33 +3176,24 @@ id{
                 "und",
                 "id",
             }
-            surnameFirst{
-                "ko",
-                "vi",
-                "yue",
-                "zh",
-            }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
                 "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
                 "llCaps}"
             }
-            givenFirst-long-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}, {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
@@ -2853,22 +3205,22 @@ id{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-formal{
                 "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
                 "llCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname}, {given} {given2} {suffix}"}
+            surnameFirst-long-referring-formal{"{title} {surname}, {given} {given2} {generation}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial} {suffix}"}
+            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial} {generation}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

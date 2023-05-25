@@ -200,7 +200,7 @@ root{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"42"}
+    Version{"43"}
     currencySpacing{
         afterCurrency{
             currencyMatch{"[[:^S:]&[:^Z:]]"}

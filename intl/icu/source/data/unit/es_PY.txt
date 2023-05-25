@@ -38,6 +38,16 @@ es_PY{
                 dnam{"año"}
             }
         }
+        electric{
+            volt{
+                dnam{"voltios"}
+            }
+        }
+        power{
+            watt{
+                dnam{"vatios"}
+            }
+        }
     }
     unitsShort{
         duration{

@@ -75,6 +75,22 @@ en_CA{
                         "twelfth month",
                     }
                 }
+                stand-alone{
+                    wide{
+                        "first month",
+                        "second month",
+                        "third month",
+                        "fourth month",
+                        "fifth month",
+                        "sixth month",
+                        "seventh month",
+                        "eighth month",
+                        "ninth month",
+                        "tenth month",
+                        "eleventh month",
+                        "twelfth month",
+                    }
+                }
             }
         }
         generic{

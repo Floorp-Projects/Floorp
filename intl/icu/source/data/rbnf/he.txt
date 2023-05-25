@@ -3,6 +3,11 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 he{
     RBNFRules{
+        OrdinalRules{
+            "%digits-ordinal:",
+            "-x: \u2212>>;",
+            "0: =#,##0=;",
+        }
         SpelloutRules{
             "%spellout-numbering-year:",
             "x.x: =0.0=;",

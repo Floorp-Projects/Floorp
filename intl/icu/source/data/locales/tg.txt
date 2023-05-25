@@ -344,6 +344,10 @@ tg{
                 "AM",
                 "PM",
             }
+            AmPmMarkersNarrow{
+                "AM",
+                "PM",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -499,6 +503,22 @@ tg{
                         "Панҷшанбе",
                         "Ҷумъа",
                         "Шанбе",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        am{"AM"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -868,6 +888,20 @@ tg{
                         "Дхул-Қ.",
                         "Дхул-Ҳ.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "муҳаррам",
                         "сафар",
@@ -996,6 +1030,11 @@ tg{
         }
         day-narrow{
             dn{"рӯз"}
+            relative{
+                "-1"{"дирӯз"}
+                "0"{"имрӯз"}
+                "1"{"фардо"}
+            }
             relativeTime{
                 future{
                     other{"пас аз {0} рӯз"}
@@ -1006,6 +1045,12 @@ tg{
             }
         }
         day-short{
+            dn{"рӯз"}
+            relative{
+                "-1"{"дирӯз"}
+                "0"{"имрӯз"}
+                "1"{"фардо"}
+            }
             relativeTime{
                 future{
                     other{"пас аз {0} рӯз"}
@@ -1027,10 +1072,19 @@ tg{
         dayperiod{
             dn{"AM/PM"}
         }
+        dayperiod-narrow{
+            dn{"AM/PM"}
+        }
+        dayperiod-short{
+            dn{"AM/PM"}
+        }
         era{
             dn{"мабдаи таърих"}
         }
         era-narrow{
+            dn{"мабдаи таърих"}
+        }
+        era-short{
             dn{"мабдаи таърих"}
         }
         fri{
@@ -1261,6 +1315,14 @@ tg{
         }
         quarter-narrow{
             dn{"чр."}
+            relativeTime{
+                future{
+                    other{"пас аз {0} чр."}
+                }
+                past{
+                    other{"{0} чр. пеш"}
+                }
+            }
         }
         quarter-short{
             dn{"чр."}
@@ -1552,6 +1614,7 @@ tg{
             }
         }
         week-narrow{
+            dn{"ҳ."}
             relative{
                 "-1"{"ҳафтаи г."}
                 "0"{"ҳафтаи ҷ."}
@@ -1660,6 +1723,12 @@ tg{
             }
         }
         zone{
+            dn{"минтақаи вақт"}
+        }
+        zone-narrow{
+            dn{"минтақаи вақт"}
+        }
+        zone-short{
             dn{"минтақаи вақт"}
         }
     }

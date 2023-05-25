@@ -676,6 +676,11 @@ tt{
         }
         day-narrow{
             dn{"көн"}
+            relative{
+                "-1"{"кичә"}
+                "0"{"бүген"}
+                "1"{"иртәгә"}
+            }
             relativeTime{
                 future{
                     other{"{0} көннән"}
@@ -687,6 +692,11 @@ tt{
         }
         day-short{
             dn{"көн"}
+            relative{
+                "-1"{"кичә"}
+                "0"{"бүген"}
+                "1"{"иртәгә"}
+            }
             relativeTime{
                 future{
                     other{"{0} көннән"}
@@ -708,7 +718,19 @@ tt{
         dayperiod{
             dn{"AM/PM"}
         }
+        dayperiod-narrow{
+            dn{"AM/PM"}
+        }
+        dayperiod-short{
+            dn{"AM/PM"}
+        }
         era{
+            dn{"эра"}
+        }
+        era-narrow{
+            dn{"эра"}
+        }
+        era-short{
             dn{"эра"}
         }
         fri{
@@ -981,6 +1003,9 @@ tt{
                 "1"{"киләсе шим."}
             }
             relativeTime{
+                future{
+                    other{"{0} шим. узгач"}
+                }
                 past{
                     other{"{0} шим. элек"}
                 }
@@ -1280,6 +1305,12 @@ tt{
         weekday{
             dn{"атна көне"}
         }
+        weekday-narrow{
+            dn{"атна көне"}
+        }
+        weekday-short{
+            dn{"атна көне"}
+        }
         weekdayOfMonth{
             dn{"айның эш көне"}
         }
@@ -1340,6 +1371,12 @@ tt{
         zone{
             dn{"вакыт өлкәсе"}
         }
+        zone-narrow{
+            dn{"вакыт өлкәсе"}
+        }
+        zone-short{
+            dn{"вакыт өлкәсе"}
+        }
     }
     listPattern{
         standard{
@@ -1367,6 +1404,17 @@ tt{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
+            surnameFirst-long-addressing-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
         }
     }
 }

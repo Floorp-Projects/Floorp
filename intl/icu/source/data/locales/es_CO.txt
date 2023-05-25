@@ -148,17 +148,6 @@ es_CO{
                 yMMMd{"d 'de' MMM 'de' y"}
             }
             dayNames{
-                format{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
                 stand-alone{
                     narrow{
                         "d",

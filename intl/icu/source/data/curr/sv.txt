@@ -1290,6 +1290,7 @@ sv{
         PYG{"₲"}
         RON{"L"}
         RUB{"₽"}
+        RUR{"RUR"}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}

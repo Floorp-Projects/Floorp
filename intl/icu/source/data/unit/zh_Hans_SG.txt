@@ -18,6 +18,20 @@ zh_Hans_SG{
             }
         }
     }
+    unitsNarrow{
+        concentr{
+            karat{
+                dnam{"开"}
+                other{"{0}开"}
+            }
+        }
+        temperature{
+            kelvin{
+                dnam{"开氏度"}
+                other{"{0}°K"}
+            }
+        }
+    }
     unitsShort{
         temperature{
             kelvin{

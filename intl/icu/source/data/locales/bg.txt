@@ -1628,6 +1628,7 @@ bg{
             }
         }
         second-narrow{
+            dn{"сек"}
             relativeTime{
                 future{
                     one{"сл. {0} сек"}
@@ -2011,6 +2012,18 @@ bg{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} или {1}"}
+            end{"{0} или {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} или {1}"}
+            end{"{0} или {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
@@ -2019,8 +2032,12 @@ bg{
         }
         standard-narrow{
             2{"{0}, {1}"}
+            end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
+            2{"{0} и {1}"}
             end{"{0} и {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
@@ -2059,54 +2076,60 @@ bg{
                 "und",
                 "bg",
             }
-            surnameFirst{
-                "ko",
-                "vi",
-                "yue",
-                "zh",
-            }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname-core}"}
+            givenFirst-long-addressing-formal{"{title} {surname-core}"}
             givenFirst-long-addressing-informal{"{given}"}
             givenFirst-long-monogram-formal{
                 "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-core-monog"
                 "ram-allCaps}"
             }
-            givenFirst-long-referring-formal{"{prefix} {given} {given2} {surname-core}, {suffix}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-core-monog"
+                "ram-allCaps}"
+            }
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname-core}, {credentials}"}
             givenFirst-long-referring-informal{"{given} {surname-core}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname-core}"}
+            givenFirst-medium-addressing-formal{"{title} {surname-core}"}
             givenFirst-medium-addressing-informal{"{given}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-core-monog"
+                "ram-allCaps}"
+            }
             givenFirst-medium-monogram-informal{"{given-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{prefix} {given} {given2} {surname-core}, {suffix}"}
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname-core}, {credentials}"}
             givenFirst-medium-referring-informal{"{given} {surname-core}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname-core}"}
+            givenFirst-short-addressing-formal{"{title} {surname-core}"}
             givenFirst-short-addressing-informal{"{given}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-core-monog"
+                "ram-allCaps}"
+            }
             givenFirst-short-monogram-informal{"{given-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname-core}"}
             givenFirst-short-referring-informal{"{given} {surname-core-initial}"}
-            sorting-long-referring-formal{"{prefix} {surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-formal{"{title} {surname-core}, {given} {given2} {surname-prefix}"}
             sorting-long-referring-informal{"{surname-core}, {given}"}
-            sorting-medium-referring-formal{"{prefix} {surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-formal{"{title} {surname-core}, {given} {given2-initial} {surname-prefix}"}
             sorting-medium-referring-informal{"{surname-core}, {given}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname-core}, {given-initial}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname-core}"}
+            surnameFirst-long-addressing-formal{"{title} {surname-core}"}
             surnameFirst-long-addressing-informal{"{given}"}
             surnameFirst-long-monogram-formal{
                 "{surname-core-monogram-allCaps}{given-monogram-allCaps}{given2-monog"
                 "ram-allCaps}"
             }
             surnameFirst-long-monogram-informal{"{surname-core-monogram-allCaps}{given-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{prefix} {surname-core}, {given} {given2}, {suffix}"}
+            surnameFirst-long-referring-formal{"{title} {surname-core}, {given} {given2}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname-core}, {given}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname-core}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname-core}"}
             surnameFirst-medium-addressing-informal{"{given}"}
             surnameFirst-medium-monogram-formal{"{surname-core-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{prefix} {surname-core}, {given} {given2-initial}, {suffix}"}
+            surnameFirst-medium-referring-formal{"{title} {surname-core}, {given} {given2-initial}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname-core}, {given}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname-core}"}
+            surnameFirst-short-addressing-formal{"{title} {surname-core}"}
             surnameFirst-short-addressing-informal{"{given}"}
             surnameFirst-short-monogram-formal{"{surname-core-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-monogram-allCaps}"}

@@ -249,7 +249,7 @@ ksh{
                     M{"LLL–LLL"}
                 }
                 Md{
-                    d{"dd. – dd. MM."}
+                    d{"dd. – dd. MM."}
                 }
                 d{
                     d{"d–d"}
@@ -434,7 +434,7 @@ ksh{
                     M{"LLL–LLL"}
                 }
                 Md{
-                    d{"dd. – dd. MM."}
+                    d{"dd. – dd. MM."}
                 }
                 d{
                     d{"d–d"}

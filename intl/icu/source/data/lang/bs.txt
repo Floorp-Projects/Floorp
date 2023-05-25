@@ -302,6 +302,7 @@ bs{
         lij{"ligurski"}
         lil{"liluet"}
         lkt{"lakota"}
+        lmo{"lombardski"}
         ln{"lingala"}
         lo{"laoski"}
         lol{"mongo"}
@@ -587,6 +588,8 @@ bs{
     }
     Languages%short{
         az{"azerski"}
+        en_GB{"engleski (UK)"}
+        en_US{"engleski (SAD)"}
     }
     Languages%variant{
         ps{"pušto"}

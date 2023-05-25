@@ -167,6 +167,12 @@ mi{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             DateTimeSkeletons{
                 "ahmmsszzzz",
                 "ahmmssz",
@@ -264,6 +270,12 @@ mi{
                 "d MMM y",
                 "dd-MM-y",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -799,6 +811,14 @@ mi{
         }
         hour-narrow{
             dn{"hr"}
+            relativeTime{
+                future{
+                    other{"+{0} h."}
+                }
+                past{
+                    other{"-{0} h."}
+                }
+            }
         }
         hour-short{
             dn{"hr."}
@@ -902,6 +922,19 @@ mi{
         }
         month-narrow{
             dn{"m"}
+            relative{
+                "-1"{"i tērā m."}
+                "0"{"i tēnei m."}
+                "1"{"ā tērā m."}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} m."}
+                }
+                past{
+                    other{"-{0} m."}
+                }
+            }
         }
         month-short{
             dn{"m."}
@@ -941,10 +974,21 @@ mi{
                 future{
                     other{"+{0} Hwh"}
                 }
+                past{
+                    other{"-{0} hwh"}
+                }
             }
         }
         quarter-short{
             dn{"hw."}
+            relativeTime{
+                future{
+                    other{"+{0} hwh"}
+                }
+                past{
+                    other{"-{0} hwh"}
+                }
+            }
         }
         sat{
             relative{
@@ -1006,6 +1050,7 @@ mi{
             }
         }
         second-narrow{
+            dn{"hēk"}
             relativeTime{
                 future{
                     other{"+{0} h"}
@@ -1217,6 +1262,20 @@ mi{
         }
         week-narrow{
             dn{"w"}
+            relative{
+                "-1"{"i tērā w."}
+                "0"{"i tēnei w."}
+                "1"{"ā tērā w."}
+            }
+            relativePeriod{"t w o {0}"}
+            relativeTime{
+                future{
+                    other{"+{0} w"}
+                }
+                past{
+                    other{"-{0} w"}
+                }
+            }
         }
         week-short{
             dn{"w."}
@@ -1226,6 +1285,14 @@ mi{
                 "1"{"ā tērā w."}
             }
             relativePeriod{"t w o {0}"}
+            relativeTime{
+                future{
+                    other{"+{0} w"}
+                }
+                past{
+                    other{"-{0} w"}
+                }
+            }
         }
         weekOfMonth{
             dn{"wiki o te marama"}
@@ -1272,9 +1339,35 @@ mi{
         }
         year-narrow{
             dn{"t"}
+            relative{
+                "-1"{"i tērā tau"}
+                "0"{"i tēnei tau"}
+                "1"{"ā tērā tau"}
+            }
+            relativeTime{
+                future{
+                    other{"ā te {0} tau"}
+                }
+                past{
+                    other{"i te {0} tau"}
+                }
+            }
         }
         year-short{
             dn{"t."}
+            relative{
+                "-1"{"i tērā tau"}
+                "0"{"i tēnei tau"}
+                "1"{"ā tērā tau"}
+            }
+            relativeTime{
+                future{
+                    other{"ā te {0} tau"}
+                }
+                past{
+                    other{"i te {0} tau"}
+                }
+            }
         }
         zone{
             dn{"rohe wā"}

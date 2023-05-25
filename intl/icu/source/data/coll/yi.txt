@@ -3,22 +3,10 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yi{
     collations{
-        search{
-            Sequence{
-                "[import und-u-co-search]"
-                "‎&׳"
-                "<<''"
-                "‎&״"
-                "<<'\u0022'"
-            }
-            Version{"42"}
-        }
         standard{
             Sequence{
                 "[normalization on]"
                 "[reorder Hebr]"
-                "&[before 2]''<<׳"
-                "&[before 2]'\u0022'<<״"
                 "&ב<בֿ"
                 "&ו<<וּ<<וו<<וי"
                 "&י<<יִ<<יי<<ײַ"
@@ -28,7 +16,7 @@ yi{
                 "&ש<שׂ"
                 "&[before 1]ת<תּ"
             }
-            Version{"42"}
+            Version{"43"}
         }
     }
 }

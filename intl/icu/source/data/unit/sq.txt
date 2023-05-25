@@ -158,6 +158,7 @@ sq{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -541,12 +542,19 @@ sq{
             }
             fathom{
                 dnam{"fth"}
+                one{"{0} fth"}
+                other{"{0} fth"}
             }
             foot{
                 dnam{"këmbë"}
                 one{"{0} këmbë"}
                 other{"{0} këmbë"}
                 per{"{0}/këmbë"}
+            }
+            furlong{
+                dnam{"fur"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"inç"}
@@ -714,6 +722,11 @@ sq{
                 one{"{0} masë diellore"}
                 other{"{0} masa diellore"}
             }
+            stone{
+                dnam{"st"}
+                one{"{0} st"}
+                other{"{0} st"}
+            }
             ton{
                 dnam{"tonë"}
                 one{"{0} ton"}
@@ -797,6 +810,11 @@ sq{
                 dnam{"milimetra mërkuri"}
                 one{"{0} milimetër mërkuri"}
                 other{"{0} milimetra mërkuri"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"paund për inç në katror"}
@@ -933,10 +951,25 @@ sq{
                 one{"{0} decilitër"}
                 other{"{0} decilitra"}
             }
+            dessert-spoon{
+                dnam{"dstspn"}
+                one{"{0} dstspn"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dstspn Imp"}
+                one{"{0} dstspn Imp"}
+                other{"{0} dstspn Imp"}
+            }
             dram{
                 dnam{"drahma të lëngshme"}
                 one{"{0} drahmë i lëngshëm"}
                 other{"{0} drahma të lëngshme"}
+            }
+            drop{
+                dnam{"drop"}
+                one{"{0} drop"}
+                other{"{0} drop"}
             }
             fluid-ounce{
                 dnam{"onsë të lëngshëm"}
@@ -965,6 +998,11 @@ sq{
                 one{"{0} hektolitër"}
                 other{"{0} hektolitra"}
             }
+            jigger{
+                dnam{"jigger"}
+                one{"{0} jigger"}
+                other{"{0} jigger"}
+            }
             liter{
                 dnam{"litra"}
                 one{"{0} litër"}
@@ -981,6 +1019,11 @@ sq{
                 one{"{0} mililitër"}
                 other{"{0} mililitra"}
             }
+            pinch{
+                dnam{"pinch"}
+                one{"{0} pinch"}
+                other{"{0} pinch"}
+            }
             pint{
                 dnam{"pinta"}
                 one{"{0} pintë"}
@@ -995,6 +1038,11 @@ sq{
                 dnam{"çerekë"}
                 one{"{0} çerek"}
                 other{"{0} çerekë"}
+            }
+            quart-imperial{
+                dnam{"qt Imp"}
+                one{"{0} qt Imp."}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"lugë gjelle"}
@@ -1106,7 +1154,60 @@ sq{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -2103,6 +2204,30 @@ sq{
         }
         compound{
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
         }
         concentr{
             item{
@@ -2125,6 +2250,10 @@ sq{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
+            mole{
+                one{"{0} mol"}
+                other{"{0} mol"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -2139,6 +2268,10 @@ sq{
                 dnam{"ppm"}
                 one{"{0} ppm"}
                 other{"{0} ppm"}
+            }
+            permyriad{
+                one{"{0}‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -2325,10 +2458,18 @@ sq{
             }
         }
         energy{
+            british-thermal-unit{
+                one{"{0} Btu"}
+                other{"{0} Btu"}
+            }
             calorie{
                 dnam{"cal"}
                 one{"{0} cal"}
                 other{"{0} cal"}
+            }
+            electronvolt{
+                one{"{0} eV"}
+                other{"{0} eV"}
             }
             foodcalorie{
                 dnam{"Cal"}
@@ -2367,6 +2508,14 @@ sq{
                 one{"{0} kWh/100 km"}
                 other{"{0} kWh/100 km"}
             }
+            newton{
+                one{"{0} N"}
+                other{"{0} N"}
+            }
+            pound-force{
+                one{"{0} lbf"}
+                other{"{0} lbf"}
+            }
         }
         frequency{
             gigahertz{
@@ -2390,6 +2539,43 @@ sq{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot{
+                dnam{"px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"au"}
@@ -2407,14 +2593,24 @@ sq{
                 one{"{0} dm"}
                 other{"{0} dm"}
             }
+            earth-radius{
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             fathom{
                 dnam{"fth"}
+                one{"{0} fth"}
+                other{"{0} fth"}
             }
             foot{
                 dnam{"këmbë"}
                 one{"{0} ft"}
                 other{"{0} ft"}
                 per{"{0}/ft"}
+            }
+            furlong{
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"inç"}
@@ -2484,6 +2680,10 @@ sq{
                 one{"{0} pt"}
                 other{"{0} pt"}
             }
+            solar-radius{
+                one{"{0} R☉"}
+                other{"{0} R☉"}
+            }
             yard{
                 dnam{"yd"}
                 one{"{0} yd"}
@@ -2491,10 +2691,22 @@ sq{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"lx"}
                 one{"{0} lx"}
                 other{"{0} lx"}
+            }
+            solar-luminosity{
+                one{"{0} L☉"}
+                other{"{0} L☉"}
             }
         }
         mass{
@@ -2502,6 +2714,14 @@ sq{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            dalton{
+                one{"{0} Da"}
+                other{"{0} Da"}
+            }
+            earth-mass{
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
             }
             grain{
                 dnam{"gran"}
@@ -2546,6 +2766,14 @@ sq{
                 one{"{0} lb"}
                 other{"{0} lb"}
                 per{"{0}/lb"}
+            }
+            solar-mass{
+                one{"{0} M☉"}
+                other{"{0} M☉"}
+            }
+            stone{
+                one{"{0} st"}
+                other{"{0} st"}
             }
             ton{
                 dnam{"tn"}
@@ -2596,6 +2824,10 @@ sq{
                 one{"{0} atm"}
                 other{"{0} atm"}
             }
+            bar{
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -2604,6 +2836,14 @@ sq{
             inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
+            }
+            kilopascal{
+                one{"{0} kPa"}
+                other{"{0} kPa"}
+            }
+            megapascal{
+                one{"{0} MPa"}
+                other{"{0} MPa"}
             }
             millibar{
                 dnam{"mbar"}
@@ -2614,6 +2854,10 @@ sq{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -2665,14 +2909,30 @@ sq{
                 other{"{0} K"}
             }
         }
+        torque{
+            newton-meter{
+                one{"{0} N⋅m"}
+                other{"{0} N⋅m"}
+            }
+            pound-force-foot{
+                one{"{0} lbf⋅ft"}
+                other{"{0} lbf⋅ft"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"ac ft"}
                 one{"{0} ac ft"}
                 other{"{0} ac ft"}
             }
+            barrel{
+                one{"{0} bbl"}
+                other{"{0} bbl"}
+            }
             bushel{
                 dnam{"bushelë"}
+                one{"{0} bu"}
+                other{"{0} bu"}
             }
             centiliter{
                 dnam{"cL"}
@@ -2731,10 +2991,30 @@ sq{
                 one{"{0} dL"}
                 other{"{0} dL"}
             }
+            dessert-spoon{
+                one{"{0} dstspn"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                one{"{0} dstspn Imp"}
+                other{"{0} dstspn Imp"}
+            }
+            dram{
+                one{"{0} dram fl"}
+                other{"{0} dram fl"}
+            }
+            drop{
+                one{"{0} drop"}
+                other{"{0} drop"}
+            }
             fluid-ounce{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
+            }
+            fluid-ounce-imperial{
+                one{"{0} fl oz Imp."}
+                other{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"gallon"}
@@ -2753,6 +3033,10 @@ sq{
                 one{"{0} hL"}
                 other{"{0} hL"}
             }
+            jigger{
+                one{"{0} jigger"}
+                other{"{0} jigger"}
+            }
             liter{
                 dnam{"L"}
                 one{"{0} L"}
@@ -2769,6 +3053,10 @@ sq{
                 one{"{0} mL"}
                 other{"{0} mL"}
             }
+            pinch{
+                one{"{0} pinch"}
+                other{"{0} pinch"}
+            }
             pint{
                 dnam{"pt"}
                 one{"{0} pt"}
@@ -2783,6 +3071,10 @@ sq{
                 dnam{"qt"}
                 one{"{0} qt"}
                 other{"{0} qt"}
+            }
+            quart-imperial{
+                one{"{0} qt Imp."}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"tbsp"}
