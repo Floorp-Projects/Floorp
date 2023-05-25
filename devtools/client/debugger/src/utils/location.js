@@ -4,6 +4,11 @@
 
 import { getSelectedLocation } from "./selected-location";
 
+/**
+ * Note that arguments can be created via `createLocation`.
+ * But they can also be created via `createPendingLocation` in reducer/pending-breakpoints.js.
+ * Both will have similar line and column attributes.
+ */
 export function comparePosition(a, b) {
   return a && b && a.line == b.line && a.column == b.column;
 }

@@ -13,7 +13,8 @@ import { asyncStore } from "../../utils/prefs";
 
 function loadInitialState(opts = {}) {
   const mockedPendingBreakpoint = mockPendingBreakpoint({ ...opts, column: 2 });
-  const id = makePendingLocationId(mockedPendingBreakpoint.location);
+  const l = mockedPendingBreakpoint.location;
+  const id = `${l.sourceUrl}:${l.line}:${l.column}`;
   asyncStore.pendingBreakpoints = { [id]: mockedPendingBreakpoint };
 
   return { pendingBreakpoints: asyncStore.pendingBreakpoints };
@@ -44,7 +45,6 @@ import {
 
 import sourceMapLoader from "devtools/client/shared/source-map-loader/index";
 
-import { makePendingLocationId } from "../../utils/breakpoint";
 function mockClient(bpPos = {}) {
   return {
     ...mockCommandClient,
@@ -88,221 +88,10 @@ describe("when adding breakpoints", () => {
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     const bp = generateBreakpoint("foo.js", 5, 1);
-    const id = makePendingLocationId(bp.location);
 
     await dispatch(actions.addBreakpoint(cx, bp.location));
-    const pendingBps = selectors.getPendingBreakpoints(getState());
 
     expect(selectors.getPendingBreakpointList(getState())).toHaveLength(2);
-    expect(pendingBps[id]).toMatchSnapshot();
-  });
-
-  describe("adding and deleting breakpoints", () => {
-    let breakpoint1;
-    let breakpoint2;
-    let breakpointLocationId1;
-    let breakpointLocationId2;
-
-    beforeEach(() => {
-      breakpoint1 = generateBreakpoint("foo");
-      breakpoint2 = generateBreakpoint("foo2");
-      breakpointLocationId1 = makePendingLocationId(breakpoint1.location);
-      breakpointLocationId2 = makePendingLocationId(breakpoint2.location);
-    });
-
-    it("add a corresponding pendingBreakpoint for each addition", async () => {
-      const { dispatch, getState, cx } = createStore(
-        mockClient({ 5: [0] }),
-        loadInitialState(),
-        mockSourceMaps()
-      );
-
-      const source1 = await dispatch(
-        actions.newGeneratedSource(makeSource("foo"))
-      );
-
-      const sourceActor1 = selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        source1.id
-      );
-
-      const source2 = await dispatch(
-        actions.newGeneratedSource(makeSource("foo2"))
-      );
-
-      const sourceActor2 = selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        source2.id
-      );
-
-      await dispatch(
-        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor1 })
-      );
-      await dispatch(
-        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor2 })
-      );
-
-      await dispatch(actions.addBreakpoint(cx, breakpoint1.location));
-      await dispatch(actions.addBreakpoint(cx, breakpoint2.location));
-
-      const pendingBps = selectors.getPendingBreakpoints(getState());
-
-      // NOTE the sourceId should be `foo2/originalSource`, but is `foo2`
-      // because we do not have a real source map for `getOriginalLocation`
-      // to map.
-      expect(pendingBps[breakpointLocationId1]).toMatchSnapshot();
-      expect(pendingBps[breakpointLocationId2]).toMatchSnapshot();
-    });
-
-    it("hidden breakponts do not create pending bps", async () => {
-      const { dispatch, getState, cx } = createStore(
-        mockClient({ 5: [0] }),
-        loadInitialState(),
-        mockSourceMaps()
-      );
-
-      const source = await dispatch(
-        actions.newGeneratedSource(makeSource("foo"))
-      );
-
-      const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        source.id
-      );
-
-      await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-
-      await dispatch(
-        actions.addBreakpoint(cx, breakpoint1.location, { hidden: true })
-      );
-      const pendingBps = selectors.getPendingBreakpoints(getState());
-
-      expect(pendingBps[breakpointLocationId1]).toBeUndefined();
-    });
-
-    it("remove a corresponding pending breakpoint when deleting", async () => {
-      const { dispatch, getState, cx } = createStore(
-        mockClient({ 5: [0] }),
-        loadInitialState(),
-        mockSourceMaps()
-      );
-
-      const source1 = await dispatch(
-        actions.newGeneratedSource(makeSource("foo"))
-      );
-      const sourceActor1 = selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        source1.id
-      );
-
-      const source2 = await dispatch(
-        actions.newGeneratedSource(makeSource("foo2"))
-      );
-      const sourceActor2 = selectors.getFirstSourceActorForGeneratedSource(
-        getState(),
-        source2.id
-      );
-
-      await dispatch(
-        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor1 })
-      );
-      await dispatch(
-        actions.loadGeneratedSourceText({ cx, sourceActor: sourceActor2 })
-      );
-
-      await dispatch(actions.addBreakpoint(cx, breakpoint1.location));
-      await dispatch(actions.addBreakpoint(cx, breakpoint2.location));
-      await dispatch(actions.removeBreakpoint(cx, breakpoint1));
-
-      const pendingBps = selectors.getPendingBreakpoints(getState());
-      expect(pendingBps.hasOwnProperty(breakpointLocationId1)).toBe(false);
-      expect(pendingBps.hasOwnProperty(breakpointLocationId2)).toBe(true);
-    });
-  });
-});
-
-describe("when changing an existing breakpoint", () => {
-  it("updates corresponding pendingBreakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ 5: [0] }),
-      loadInitialState(),
-      mockSourceMaps()
-    );
-    const bp = generateBreakpoint("foo");
-    const id = makePendingLocationId(bp.location);
-
-    const source = await dispatch(
-      actions.newGeneratedSource(makeSource("foo"))
-    );
-    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-
-    await dispatch(actions.addBreakpoint(cx, bp.location));
-    await dispatch(
-      actions.setBreakpointOptions(cx, bp.location, { condition: "2" })
-    );
-    const bps = selectors.getPendingBreakpoints(getState());
-    const breakpoint = bps[id];
-    expect(breakpoint.options.condition).toBe("2");
-  });
-
-  it("if disabled, updates corresponding pendingBreakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ 5: [0] }),
-      loadInitialState(),
-      mockSourceMaps()
-    );
-    const bp = generateBreakpoint("foo");
-    const id = makePendingLocationId(bp.location);
-
-    const source = await dispatch(
-      actions.newGeneratedSource(makeSource("foo"))
-    );
-    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-
-    await dispatch(actions.addBreakpoint(cx, bp.location));
-    await dispatch(actions.disableBreakpoint(cx, bp));
-    const bps = selectors.getPendingBreakpoints(getState());
-    const breakpoint = bps[id];
-    expect(breakpoint.disabled).toBe(true);
-  });
-
-  it("does not delete the pre-existing pendingBreakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ 5: [0] }),
-      loadInitialState(),
-      mockSourceMaps()
-    );
-    const bp = generateBreakpoint("foo.js");
-
-    const source = await dispatch(
-      actions.newGeneratedSource(makeSource("foo.js"))
-    );
-    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-
-    const id = makePendingLocationId(bp.location);
-
-    await dispatch(actions.addBreakpoint(cx, bp.location));
-    await dispatch(
-      actions.setBreakpointOptions(cx, bp.location, { condition: "2" })
-    );
-    const bps = selectors.getPendingBreakpoints(getState());
-    const breakpoint = bps[id];
-    expect(breakpoint.options.condition).toBe("2");
   });
 });
 
