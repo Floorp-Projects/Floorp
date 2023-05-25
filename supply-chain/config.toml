@@ -116,12 +116,6 @@ notes = "This is a first-party crate which is also published to crates.io. We ce
 audit-as-crates-io = false
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
-[policy.mp4parse]
-audit-as-crates-io = false
-
-[policy.mp4parse_capi]
-audit-as-crates-io = false
-
 [policy.naga]
 audit-as-crates-io = true
 notes = "wgpu-core pins this crate."
@@ -129,12 +123,6 @@ notes = "wgpu-core pins this crate."
 [policy.packed_simd_2]
 audit-as-crates-io = true
 notes = "Based on upstream, see bug 1719674."
-
-[policy.peek-poke]
-audit-as-crates-io = false
-
-[policy.peek-poke-derive]
-audit-as-crates-io = false
 
 [policy.pulse]
 audit-as-crates-io = false
@@ -181,15 +169,6 @@ audit-as-crates-io = false
 criteria = "safe-to-run"
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here. It's also used only for automation, so its subtree can be safe-to-run."
 
-[policy.webrender]
-audit-as-crates-io = false
-
-[policy.webrender_api]
-audit-as-crates-io = false
-
-[policy.webrender_build]
-audit-as-crates-io = false
-
 [policy.wgpu-core]
 audit-as-crates-io = true
 notes = "Upstream project which we pin."
@@ -201,9 +180,6 @@ notes = "Upstream project which we pin."
 [policy.wgpu-types]
 audit-as-crates-io = true
 notes = "Upstream project which we pin."
-
-[policy.wr_malloc_size_of]
-audit-as-crates-io = false
 
 [[exemptions.adler]]
 version = "1.0.2"
@@ -463,6 +439,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.gl_generator]]
 version = "0.14.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.glob]]
+version = "0.3.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.glsl]]
@@ -912,6 +892,10 @@ criteria = "safe-to-deploy"
 [[exemptions.yaml-rust]]
 version = "0.4.5"
 criteria = "safe-to-run"
+
+[[exemptions.zeitstempel]]
+version = "0.1.1"
+criteria = "safe-to-deploy"
 
 [[exemptions.zip]]
 version = "0.6.2"
