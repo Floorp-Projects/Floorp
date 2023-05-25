@@ -40,7 +40,7 @@ void CSSNamespaceRule::GetCssText(nsACString& aCssText) const {
   Servo_NamespaceRule_GetCssText(mRawRule, &aCssText);
 }
 
-void CSSNamespaceRule::SetRawAfterClone(RefPtr<StyleLockedNamespaceRule> aRaw) {
+void CSSNamespaceRule::SetRawAfterClone(RefPtr<StyleNamespaceRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 

@@ -80,7 +80,7 @@ bool CSSMozDocumentRule::Match(const Document* aDoc, nsIURI* aDocURI,
   return false;
 }
 
-CSSMozDocumentRule::CSSMozDocumentRule(RefPtr<StyleLockedDocumentRule> aRawRule,
+CSSMozDocumentRule::CSSMozDocumentRule(RefPtr<StyleDocumentRule> aRawRule,
                                        StyleSheet* aSheet,
                                        css::Rule* aParentRule, uint32_t aLine,
                                        uint32_t aColumn)
@@ -108,7 +108,7 @@ void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
 #endif
 
 void CSSMozDocumentRule::SetRawAfterClone(
-    RefPtr<StyleLockedDocumentRule> aRaw) {
+    RefPtr<StyleDocumentRule> aRaw) {
   mRawRule = std::move(aRaw);
   css::ConditionRule::SetRawAfterClone(
       Servo_DocumentRule_GetRules(mRawRule).Consume());

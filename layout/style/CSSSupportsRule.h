@@ -15,7 +15,7 @@ namespace dom {
 
 class CSSSupportsRule : public css::ConditionRule {
  public:
-  CSSSupportsRule(RefPtr<StyleLockedSupportsRule> aRawRule, StyleSheet* aSheet,
+  CSSSupportsRule(RefPtr<StyleSupportsRule> aRawRule, StyleSheet* aSheet,
                   css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -24,8 +24,8 @@ class CSSSupportsRule : public css::ConditionRule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  StyleLockedSupportsRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedSupportsRule>);
+  StyleSupportsRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<StyleSupportsRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -39,7 +39,7 @@ class CSSSupportsRule : public css::ConditionRule {
  private:
   ~CSSSupportsRule() = default;
 
-  RefPtr<StyleLockedSupportsRule> mRawRule;
+  RefPtr<StyleSupportsRule> mRawRule;
 };
 
 }  // namespace dom

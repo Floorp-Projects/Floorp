@@ -16,9 +16,8 @@ namespace dom {
 
 class CSSMozDocumentRule final : public css::ConditionRule {
  public:
-  CSSMozDocumentRule(RefPtr<StyleLockedDocumentRule> aRawRule,
-                     StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
-                     uint32_t aColumn);
+  CSSMozDocumentRule(RefPtr<StyleDocumentRule> aRawRule, StyleSheet* aSheet,
+                     css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -30,8 +29,8 @@ class CSSMozDocumentRule final : public css::ConditionRule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  StyleLockedDocumentRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedDocumentRule>);
+  StyleDocumentRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<StyleDocumentRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -46,7 +45,7 @@ class CSSMozDocumentRule final : public css::ConditionRule {
  private:
   ~CSSMozDocumentRule() = default;
 
-  RefPtr<StyleLockedDocumentRule> mRawRule;
+  RefPtr<StyleDocumentRule> mRawRule;
 };
 
 }  // namespace dom

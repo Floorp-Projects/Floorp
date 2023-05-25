@@ -30,11 +30,9 @@ use style::driver;
 use style::error_reporting::ParseErrorReporter;
 use style::font_face::{self, FontFaceSourceFormat, FontFaceSourceListComponent, Source};
 use style::gecko::arc_types::{
-    LockedContainerRule, LockedCounterStyleRule, LockedCssRules, LockedDeclarationBlock,
-    LockedDocumentRule, LockedFontFaceRule, LockedFontFeatureValuesRule,
-    LockedFontPaletteValuesRule, LockedImportRule, LockedKeyframe, LockedKeyframesRule,
-    LockedLayerBlockRule, LockedLayerStatementRule, LockedMediaList, LockedMediaRule,
-    LockedNamespaceRule, LockedPageRule, LockedStyleRule, LockedSupportsRule,
+    LockedCounterStyleRule, LockedCssRules, LockedDeclarationBlock,
+    LockedFontFaceRule, LockedImportRule, LockedKeyframe, LockedKeyframesRule,
+    LockedMediaList, LockedPageRule, LockedStyleRule,
 };
 use style::gecko::data::{
     AuthorStyles, GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl,
@@ -2267,8 +2265,7 @@ impl_basic_rule_funcs! { (Keyframes, KeyframesRule, Locked<KeyframesRule>),
     changed: Servo_StyleSet_KeyframesRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_group_rule_funcs! { (Media, MediaRule, Locked<MediaRule>),
+impl_group_rule_funcs! { (Media, MediaRule, MediaRule),
     get_rules: Servo_MediaRule_GetRules,
     getter: Servo_CssRules_GetMediaRuleAt,
     debug: Servo_MediaRule_Debug,
@@ -2276,8 +2273,7 @@ impl_group_rule_funcs! { (Media, MediaRule, Locked<MediaRule>),
     changed: Servo_StyleSet_MediaRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_basic_rule_funcs! { (Namespace, NamespaceRule, Locked<NamespaceRule>),
+impl_basic_rule_funcs! { (Namespace, NamespaceRule, NamespaceRule),
     getter: Servo_CssRules_GetNamespaceRuleAt,
     debug: Servo_NamespaceRule_Debug,
     to_css: Servo_NamespaceRule_GetCssText,
@@ -2298,8 +2294,7 @@ impl_basic_rule_funcs! { (Property, PropertyRule, PropertyRule),
     changed: Servo_StyleSet_PropertyRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_group_rule_funcs! { (Supports, SupportsRule, Locked<SupportsRule>),
+impl_group_rule_funcs! { (Supports, SupportsRule, SupportsRule),
     get_rules: Servo_SupportsRule_GetRules,
     getter: Servo_CssRules_GetSupportsRuleAt,
     debug: Servo_SupportsRule_Debug,
@@ -2307,8 +2302,7 @@ impl_group_rule_funcs! { (Supports, SupportsRule, Locked<SupportsRule>),
     changed: Servo_StyleSet_SupportsRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_group_rule_funcs! { (Container, ContainerRule, Locked<ContainerRule>),
+impl_group_rule_funcs! { (Container, ContainerRule, ContainerRule),
     get_rules: Servo_ContainerRule_GetRules,
     getter: Servo_CssRules_GetContainerRuleAt,
     debug: Servo_ContainerRule_Debug,
@@ -2316,8 +2310,7 @@ impl_group_rule_funcs! { (Container, ContainerRule, Locked<ContainerRule>),
     changed: Servo_StyleSet_ContainerRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_group_rule_funcs! { (LayerBlock, LayerBlockRule, Locked<LayerBlockRule>),
+impl_group_rule_funcs! { (LayerBlock, LayerBlockRule, LayerBlockRule),
     get_rules: Servo_LayerBlockRule_GetRules,
     getter: Servo_CssRules_GetLayerBlockRuleAt,
     debug: Servo_LayerBlockRule_Debug,
@@ -2325,16 +2318,14 @@ impl_group_rule_funcs! { (LayerBlock, LayerBlockRule, Locked<LayerBlockRule>),
     changed: Servo_StyleSet_LayerBlockRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_basic_rule_funcs! { (LayerStatement, LayerStatementRule, Locked<LayerStatementRule>),
+impl_basic_rule_funcs! { (LayerStatement, LayerStatementRule, LayerStatementRule),
     getter: Servo_CssRules_GetLayerStatementRuleAt,
     debug: Servo_LayerStatementRule_Debug,
     to_css: Servo_LayerStatementRule_GetCssText,
     changed: Servo_StyleSet_LayerStatementRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_group_rule_funcs! { (Document, DocumentRule, Locked<DocumentRule>),
+impl_group_rule_funcs! { (Document, DocumentRule, DocumentRule),
     get_rules: Servo_DocumentRule_GetRules,
     getter: Servo_CssRules_GetDocumentRuleAt,
     debug: Servo_DocumentRule_Debug,
@@ -2342,16 +2333,14 @@ impl_group_rule_funcs! { (Document, DocumentRule, Locked<DocumentRule>),
     changed: Servo_StyleSet_DocumentRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, Locked<FontFeatureValuesRule>),
+impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, FontFeatureValuesRule),
     getter: Servo_CssRules_GetFontFeatureValuesRuleAt,
     debug: Servo_FontFeatureValuesRule_Debug,
     to_css: Servo_FontFeatureValuesRule_GetCssText,
     changed: Servo_StyleSet_FontFeatureValuesRuleChanged,
 }
 
-// TODO: Could be unlocked.
-impl_basic_rule_funcs! { (FontPaletteValues, FontPaletteValuesRule, Locked<FontPaletteValuesRule>),
+impl_basic_rule_funcs! { (FontPaletteValues, FontPaletteValuesRule, FontPaletteValuesRule),
     getter: Servo_CssRules_GetFontPaletteValuesRuleAt,
     debug: Servo_FontPaletteValuesRule_Debug,
     to_css: Servo_FontPaletteValuesRule_GetCssText,
@@ -2786,22 +2775,18 @@ pub extern "C" fn Servo_KeyframesRule_DeleteRule(rule: &LockedKeyframesRule, ind
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_MediaRule_GetMedia(rule: &LockedMediaRule) -> Strong<LockedMediaList> {
-    read_locked_arc(rule, |rule: &MediaRule| rule.media_queries.clone().into())
+pub extern "C" fn Servo_MediaRule_GetMedia(rule: &MediaRule) -> Strong<LockedMediaList> {
+    rule.media_queries.clone().into()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &LockedNamespaceRule) -> *mut nsAtom {
-    read_locked_arc(rule, |rule: &NamespaceRule| {
-        rule.prefix
-            .as_ref()
-            .map_or(atom!("").as_ptr(), |a| a.as_ptr())
-    })
+pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &NamespaceRule) -> *mut nsAtom {
+    rule.prefix.as_ref().map_or(atom!("").as_ptr(), |a| a.as_ptr())
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_NamespaceRule_GetURI(rule: &LockedNamespaceRule) -> *mut nsAtom {
-    read_locked_arc(rule, |rule: &NamespaceRule| rule.url.0.as_ptr())
+pub extern "C" fn Servo_NamespaceRule_GetURI(rule: &NamespaceRule) -> *mut nsAtom {
+    rule.url.0.as_ptr()
 }
 
 #[no_mangle]
@@ -2898,141 +2883,111 @@ pub extern "C" fn Servo_PropertyRule_GetInitialValue(
 
 #[no_mangle]
 pub extern "C" fn Servo_SupportsRule_GetConditionText(
-    rule: &LockedSupportsRule,
+    rule: &SupportsRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &SupportsRule| {
-        rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
-    })
+    rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_ContainerRule_GetConditionText(
-    rule: &LockedContainerRule,
+    rule: &ContainerRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &ContainerRule| {
-        rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
-    })
+    rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_ContainerRule_GetContainerQuery(
-    rule: &LockedContainerRule,
+    rule: &ContainerRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &ContainerRule| {
-        rule.query_condition()
-            .to_css(&mut CssWriter::new(result))
-            .unwrap();
-    })
+    rule.query_condition().to_css(&mut CssWriter::new(result)).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_ContainerRule_QueryContainerFor(
-    rule: &LockedContainerRule,
+    rule: &ContainerRule,
     element: &RawGeckoElement,
 ) -> *const RawGeckoElement {
-    read_locked_arc(rule, |rule: &ContainerRule| {
-        rule.condition
-            .find_container(GeckoElement(element), None)
-            .map_or(ptr::null(), |result| result.element.0)
-    })
+    rule.condition
+        .find_container(GeckoElement(element), None)
+        .map_or(ptr::null(), |result| result.element.0)
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_ContainerRule_GetContainerName(
-    rule: &LockedContainerRule,
+    rule: &ContainerRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &ContainerRule| {
-        let name = rule.container_name();
-        if !name.is_none() {
-            name.to_css(&mut CssWriter::new(result)).unwrap();
-        }
-    })
+    let name = rule.container_name();
+    if !name.is_none() {
+        name.to_css(&mut CssWriter::new(result)).unwrap();
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_DocumentRule_GetConditionText(
-    rule: &LockedDocumentRule,
+    rule: &DocumentRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &DocumentRule| {
-        rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
-    })
+    rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(
-    rule: &LockedFontFeatureValuesRule,
+    rule: &FontFeatureValuesRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.family_names
-            .to_css(&mut CssWriter::new(result))
-            .unwrap()
-    })
+    rule.family_names.to_css(&mut CssWriter::new(result)).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_FontFeatureValuesRule_GetValueText(
-    rule: &LockedFontFeatureValuesRule,
+    rule: &FontFeatureValuesRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.value_to_css(&mut CssWriter::new(result)).unwrap();
-    })
+    rule.value_to_css(&mut CssWriter::new(result)).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_FontPaletteValuesRule_GetName(
-    rule: &LockedFontPaletteValuesRule,
+    rule: &FontPaletteValuesRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        rule.name.to_css(&mut CssWriter::new(result)).unwrap()
-    })
+    rule.name.to_css(&mut CssWriter::new(result)).unwrap()
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_FontPaletteValuesRule_GetFontFamily(
-    rule: &LockedFontPaletteValuesRule,
+    rule: &FontPaletteValuesRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        if !rule.family_names.is_empty() {
-            rule.family_names
-                .to_css(&mut CssWriter::new(result))
-                .unwrap()
-        }
-    })
+    if !rule.family_names.is_empty() {
+        rule.family_names
+            .to_css(&mut CssWriter::new(result))
+            .unwrap()
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_FontPaletteValuesRule_GetBasePalette(
-    rule: &LockedFontPaletteValuesRule,
+    rule: &FontPaletteValuesRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        rule.base_palette
-            .to_css(&mut CssWriter::new(result))
-            .unwrap()
-    })
+    rule.base_palette.to_css(&mut CssWriter::new(result)).unwrap()
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_FontPaletteValuesRule_GetOverrideColors(
-    rule: &LockedFontPaletteValuesRule,
+    rule: &FontPaletteValuesRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        if !rule.override_colors.is_empty() {
-            rule.override_colors
-                .to_css(&mut CssWriter::new(result))
-                .unwrap()
-        }
-    })
+    if !rule.override_colors.is_empty() {
+        rule.override_colors
+            .to_css(&mut CssWriter::new(result))
+            .unwrap()
+    }
 }
 
 #[no_mangle]
@@ -6613,9 +6568,6 @@ pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
 ) -> *mut gfxFontFeatureValueSet {
     let data = raw_data.borrow();
 
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
-
     let has_rule = data
         .stylist
         .iter_extra_data_origins()
@@ -6631,8 +6583,7 @@ pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
         .flat_map(|(d, _)| d.font_feature_values.iter());
 
     let set = unsafe { Gecko_ConstructFontFeatureValueSet() };
-    for &(ref src, _) in font_feature_values_iter {
-        let rule = src.read_with(&guard);
+    for &(ref rule, _) in font_feature_values_iter {
         rule.set_at_rules(set);
     }
     set
@@ -6643,9 +6594,6 @@ pub extern "C" fn Servo_StyleSet_BuildFontPaletteValueSet(
     raw_data: &PerDocumentStyleData,
 ) -> *mut FontPaletteValueSet {
     let data = raw_data.borrow();
-
-    let global_style_data = &*GLOBAL_STYLE_DATA;
-    let guard = global_style_data.shared_lock.read();
 
     let has_rule = data
         .stylist
@@ -6662,8 +6610,7 @@ pub extern "C" fn Servo_StyleSet_BuildFontPaletteValueSet(
         .flat_map(|(d, _)| d.font_palette_values.iter());
 
     let set = unsafe { Gecko_ConstructFontPaletteValueSet() };
-    for &(ref src, _) in font_palette_values_iter {
-        let rule = src.read_with(&guard);
+    for &(ref rule, _) in font_palette_values_iter {
         rule.to_gecko_palette_value_set(set);
     }
     set
@@ -7680,32 +7627,28 @@ pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> b
 
 #[no_mangle]
 pub extern "C" fn Servo_LayerBlockRule_GetName(
-    rule: &LockedLayerBlockRule,
+    rule: &LayerBlockRule,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &LayerBlockRule| {
-        if let Some(ref name) = rule.name {
-            name.to_css(&mut CssWriter::new(result)).unwrap()
-        }
-    })
+    if let Some(ref name) = rule.name {
+        name.to_css(&mut CssWriter::new(result)).unwrap()
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_LayerStatementRule_GetNameCount(rule: &LockedLayerStatementRule) -> usize {
-    read_locked_arc(rule, |rule: &LayerStatementRule| rule.names.len())
+pub extern "C" fn Servo_LayerStatementRule_GetNameCount(rule: &LayerStatementRule) -> usize {
+    rule.names.len()
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_LayerStatementRule_GetNameAt(
-    rule: &LockedLayerStatementRule,
+    rule: &LayerStatementRule,
     index: usize,
     result: &mut nsACString,
 ) {
-    read_locked_arc(rule, |rule: &LayerStatementRule| {
-        if let Some(ref name) = rule.names.get(index) {
-            name.to_css(&mut CssWriter::new(result)).unwrap()
-        }
-    })
+    if let Some(ref name) = rule.names.get(index) {
+        name.to_css(&mut CssWriter::new(result)).unwrap()
+    }
 }
 
 #[no_mangle]
