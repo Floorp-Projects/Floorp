@@ -177,6 +177,10 @@ class ContentPage {
 
     let chromeDoc = await promiseDocumentLoaded(chromeShell.document);
 
+    let { SpecialPowers } = chromeDoc.ownerGlobal;
+    SpecialPowers.xpcshellScope = XPCShellContentUtils.currentScope;
+    SpecialPowers.setAsDefaultAssertHandler();
+
     let browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");

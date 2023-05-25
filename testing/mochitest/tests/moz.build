@@ -11,4 +11,5 @@ TESTING_JS_MODULES += [
 ]
 
 MOCHITEST_MANIFESTS += ["Harness_sanity/mochitest.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["Harness_sanity/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
