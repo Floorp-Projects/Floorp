@@ -3,8 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
-import { getSource } from "../selectors";
-import { createLocation, debuggerToSourceMapLocation } from "./location";
+import {
+  debuggerToSourceMapLocation,
+  sourceMapToDebuggerLocation,
+} from "./location";
 import { waitForSourceToBeRegisteredInStore } from "../client/firefox/create";
 
 /**
@@ -33,22 +35,7 @@ export async function getGeneratedLocation(location, thunkArgs) {
     return location;
   }
 
-  // SourceMapLoader doesn't known about debugger's source objects
-  // so that we have to fetch it from here
-  const generatedSource = getSource(getState(), generatedLocation.sourceId);
-  if (!generatedSource) {
-    throw new Error(
-      `Could not find generated source ${generatedLocation.sourceId}`
-    );
-  }
-
-  return createLocation({
-    source: generatedSource,
-    sourceUrl: generatedSource.url,
-    line: generatedLocation.line,
-    column:
-      generatedLocation.column === 0 ? undefined : generatedLocation.column,
-  });
+  return sourceMapToDebuggerLocation(getState(), generatedLocation);
 }
 
 /**
@@ -92,18 +79,7 @@ export async function getOriginalLocation(
     await waitForSourceToBeRegisteredInStore(originalLocation.sourceId);
   }
 
-  // SourceMapLoader doesn't known about debugger's source objects
-  // so that we have to fetch it from here
-  const originalSource = getSource(getState(), originalLocation.sourceId);
-  if (!originalSource) {
-    throw new Error(
-      `Could not find original source ${originalLocation.sourceId}`
-    );
-  }
-  return createLocation({
-    ...originalLocation,
-    source: originalSource,
-  });
+  return sourceMapToDebuggerLocation(getState(), originalLocation);
 }
 
 export async function getMappedLocation(location, thunkArgs) {
