@@ -35,13 +35,17 @@ TimeUnit TimeUnit::FromSeconds(double aValue, int64_t aBase) {
   // base -- we can keep this for some time until we're confident this is
   // stable.
   double inBase = aValue * static_cast<double>(aBase);
-  if (inBase > static_cast<double>(std::numeric_limits<int64_t>::max())) {
+  if (std::abs(inBase) >
+      static_cast<double>(std::numeric_limits<int64_t>::max())) {
     NS_WARNING(nsPrintfCString("Warning: base %" PRId64
                                " is too high to represent %lfs accurately: "
                                "overflows int64_t",
                                aBase, aValue)
                    .get());
-    MOZ_DIAGNOSTIC_ASSERT(false);
+    if (inBase > 0) {
+      return TimeUnit::FromInfinity();
+    }
+    return TimeUnit::FromNegativeInfinity();
   }
   if (inBase > std::pow(2, std::numeric_limits<double>::digits) - 1) {
     NS_WARNING(
