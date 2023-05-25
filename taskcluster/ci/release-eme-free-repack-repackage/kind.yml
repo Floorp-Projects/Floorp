@@ -29,9 +29,8 @@ job-template:
             debug: release-eme-free-repack-mac-signing
             default:
                 by-project:
-                    autoland: release-eme-free-repack-mac-signing
-                    try: release-eme-free-repack-mac-signing
-                    default: release-eme-free-repack-mac-notarization
+                    mozilla-(central|beta|release|esr.*): release-eme-free-repack-mac-notarization
+                    default: release-eme-free-repack-mac-signing
     mozharness:
         config:
             by-build-platform:
