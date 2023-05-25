@@ -395,8 +395,6 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvHideTooltip();
 
-  mozilla::ipc::IPCResult RecvDispatchFocusToTopLevelWindow();
-
   mozilla::ipc::IPCResult RecvRespondStartSwipeEvent(
       const uint64_t& aInputBlockId, const bool& aStartSwipe);
 

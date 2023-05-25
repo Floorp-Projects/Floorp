@@ -3230,13 +3230,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetInputContext(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvDispatchFocusToTopLevelWindow() {
-  if (nsCOMPtr<nsIWidget> widget = GetTopLevelWidget()) {
-    widget->SetFocus(nsIWidget::Raise::No, CallerType::System);
-  }
-  return IPC_OK();
-}
-
 bool BrowserParent::ReceiveMessage(const nsString& aMessage, bool aSync,
                                    StructuredCloneData* aData,
                                    nsTArray<StructuredCloneData>* aRetVal) {
