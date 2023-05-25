@@ -462,6 +462,15 @@ browser.jar:
   skin/classic/browser/floorplegacy/test_legacy.css           (designs/floorp-legacy/test_legacy.css)
   skin/classic/browser/floorplegacy/test_legacy_multitab.css  (designs/floorp-legacy/test_legacy_multitab.css)
 
+# WebkitUI
+  skin/classic/browser/webkitUI/webkitUI.css                        (designs/webkitUI/webkitUI.css)
+  skin/classic/browser/webkitUI/go-previous-symbolic.svg            (designs/webkitUI/go-previous-symbolic.svg)
+  skin/classic/browser/webkitUI/go-next-symbolic.svg                (designs/webkitUI/go-next-symbolic.svg)
+  skin/classic/browser/webkitUI/pan-start-symbolic.svg              (designs/webkitUI/pan-start-symbolic.svg)
+  skin/classic/browser/webkitUI/window-close-symbolic.svg           (designs/webkitUI/window-close-symbolic.svg)
+  skin/classic/browser/webkitUI/window-close-symbolic-light.svg     (designs/webkitUI/window-close-symbolic-light.svg)
+  skin/classic/browser/webkitUI/pan-down-symbolic.svg               (designs/webkitUI/pan-down-symbolic.svg)
+
 # New tab background images
   skin/classic/browser/newtabbg-0.webp                            　 (newtabbg/newtabbg-0.webp)
   skin/classic/browser/newtabbg-1.webp                             　(newtabbg/newtabbg-1.webp)
