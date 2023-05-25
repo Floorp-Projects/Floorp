@@ -165,7 +165,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
 
   iter = aIter;
 
-  int32_t hours = 0, timecount = 0;
+  int32_t hours = 0, timecount;
   double fraction = 0.0;
   uint32_t minutes, seconds, multiplier;
 
@@ -192,8 +192,7 @@ bool ParseClockValue(RangedPtr<const char16_t>& aIter,
       aIter = iter;
       return true;
     case TIMECOUNT_VALUE:
-      if (*iter != '.' &&
-          !SVGContentUtils::ParseInteger(iter, aEnd, timecount)) {
+      if (!SVGContentUtils::ParseInteger(iter, aEnd, timecount)) {
         return false;
       }
       if (iter != aEnd && *iter == '.' &&
