@@ -226,6 +226,21 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual void Language(nsAString& aLocale) override;
 
   //////////////////////////////////////////////////////////////////////////////
+  // EditableTextAccessible
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void ReplaceText(
+      const nsAString& aText) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InsertText(
+      const nsAString& aText, int32_t aPosition) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CopyText(int32_t aStartPos,
+                                                    int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CutText(int32_t aStartPos,
+                                                   int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void DeleteText(int32_t aStartPos,
+                                                      int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT virtual void PasteText(int32_t aPosition) override;
+
+  //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
 
   virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;

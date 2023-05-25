@@ -265,6 +265,66 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetCurValue(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvReplaceText(
+    const uint64_t& aID, const nsAString& aText) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->ReplaceText(aText);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvInsertText(
+    const uint64_t& aID, const nsAString& aText, const int32_t& aPosition) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->InsertText(aText, aPosition);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvCopyText(
+    const uint64_t& aID, const int32_t& aStartPos, const int32_t& aEndPos) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CopyText(aStartPos, aEndPos);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvCutText(
+    const uint64_t& aID, const int32_t& aStartPos, const int32_t& aEndPos) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CutText(aStartPos, aEndPos);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvDeleteText(
+    const uint64_t& aID, const int32_t& aStartPos, const int32_t& aEndPos) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->DeleteText(aStartPos, aEndPos);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvPasteText(
+    const uint64_t& aID, const int32_t& aPosition) {
+  RefPtr<HyperTextAccessible> acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->PasteText(aPosition);
+  }
+
+  return IPC_OK();
+}
+
 LocalAccessible* DocAccessibleChildBase::IdToAccessible(
     const uint64_t& aID) const {
   if (!aID) return mDoc;

@@ -130,6 +130,13 @@ child:
                                     uint64_t aEndID, int32_t aEndOffset,
                                     uint32_t aScrollType);
 
+  async ReplaceText(uint64_t aID, nsString aText);
+  async InsertText(uint64_t aID, nsString aText, int32_t aPosition);
+  async CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  async CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  async DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  async PasteText(uint64_t aID, int32_t aPosition);
+
   /*
    * Verify the cache. Used for testing purposes.
    */
