@@ -181,7 +181,7 @@ features = ["dynamic"]
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.libloading]
-version = "0.7"
+version = ">=0.7,<0.9"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.renderdoc-sys]
@@ -207,7 +207,7 @@ features = [
 ]
 
 [target."cfg(target_os = \"emscripten\")".dependencies.libloading]
-version = "0.7"
+version = ">=0.7,<0.9"
 optional = true
 
 [target."cfg(unix)".dependencies]

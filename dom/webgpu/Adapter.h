@@ -54,8 +54,8 @@ class AdapterInfo final : public dom::NonRefcountedDOMObject {
 
   // Non-standard field getters; see also TODO BUGZILLA LINK
   void GetWgpuName(nsString&) const;
-  size_t WgpuVendor() const;
-  size_t WgpuDevice() const;
+  uint32_t WgpuVendor() const;
+  uint32_t WgpuDevice() const;
   void GetWgpuDeviceType(nsString&) const;
   void GetWgpuDriver(nsString&) const;
   void GetWgpuDriverInfo(nsString&) const;

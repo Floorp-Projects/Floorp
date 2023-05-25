@@ -27,9 +27,9 @@ void AdapterInfo::GetWgpuName(nsString& s) const {
   s = mAboutSupportInfo->name;
 }
 
-size_t AdapterInfo::WgpuVendor() const { return mAboutSupportInfo->vendor; }
+uint32_t AdapterInfo::WgpuVendor() const { return mAboutSupportInfo->vendor; }
 
-size_t AdapterInfo::WgpuDevice() const { return mAboutSupportInfo->device; }
+uint32_t AdapterInfo::WgpuDevice() const { return mAboutSupportInfo->device; }
 
 void AdapterInfo::GetWgpuDeviceType(nsString& s) const {
   switch (mAboutSupportInfo->device_type) {
