@@ -34,21 +34,27 @@ namespace mozilla {
 
 extern "C" {
 
-#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_)                        \
-  void Servo_##type_##_Debug(const mozilla::StyleLocked##type_*,      \
-                             nsACString* result);                     \
-  void Servo_##type_##_GetCssText(const mozilla::StyleLocked##type_*, \
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_, style_prefix_)      \
+  void Servo_##type_##_Debug(const mozilla::Style##style_prefix_##type_*,      \
+                             nsACString* result);                              \
+  void Servo_##type_##_GetCssText(const mozilla::Style##style_prefix_##type_*, \
                                   nsACString* result);
 
-#define BASIC_RULE_FUNCS(type_)                                           \
-  StyleStrong<mozilla::StyleLocked##type_##Rule>                          \
-      Servo_CssRules_Get##type_##RuleAt(const StyleLockedCssRules* rules, \
-                                        uint32_t index, uint32_t* line,   \
-                                        uint32_t* column);                \
-  void Servo_StyleSet_##type_##RuleChanged(                               \
-      const StylePerDocumentStyleData*, const StyleLocked##type_##Rule*,  \
-      const StyleDomStyleSheet*, StyleRuleChangeKind);                    \
-  BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_) \
+  BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_, Locked)
+
+#define BASIC_RULE_FUNCS_WITH_PREFIX(type_, style_prefix_)                 \
+  StyleStrong<mozilla::Style##style_prefix_##type_##Rule>                  \
+      Servo_CssRules_Get##type_##RuleAt(const StyleLockedCssRules* rules,  \
+                                        uint32_t index, uint32_t* line,    \
+                                        uint32_t* column);                 \
+  void Servo_StyleSet_##type_##RuleChanged(                                \
+      const StylePerDocumentStyleData*,                                    \
+      const Style##style_prefix_##type_##Rule*, const StyleDomStyleSheet*, \
+      StyleRuleChangeKind);                                                \
+  BASIC_RULE_FUNCS_WITHOUT_GETTER_WITH_PREFIX(type_##Rule, style_prefix_)
+
+#define BASIC_RULE_FUNCS(type_) BASIC_RULE_FUNCS_WITH_PREFIX(type_, Locked)
 
 #define GROUP_RULE_FUNCS(type_)                                           \
   BASIC_RULE_FUNCS(type_)                                                 \

@@ -106,11 +106,12 @@ class Element;
     static void Release(type_* aPtr) { Servo_##name_##_Release(aPtr); } \
   };                                                                    \
   }
-#define SERVO_LOCKED_ARC_TYPE(name_) \
-  namespace mozilla {                \
-  struct StyleLocked##name_;         \
-  }                                  \
-  SERVO_ARC_TYPE(name_, mozilla::StyleLocked##name_)
+#define SERVO_ARC_TYPE_WITH_PREFIX(name_, style_prefix_) \
+  namespace mozilla {                                    \
+  struct Style##style_prefix_##name_;                    \
+  }                                                      \
+  SERVO_ARC_TYPE(name_, mozilla::Style##style_prefix_##name_)
+#define SERVO_LOCKED_ARC_TYPE(name_) SERVO_ARC_TYPE_WITH_PREFIX(name_, Locked)
 #include "mozilla/ServoLockedArcTypeList.h"
 SERVO_ARC_TYPE(AnimationValue, mozilla::StyleAnimationValue)
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)

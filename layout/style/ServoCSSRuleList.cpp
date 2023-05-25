@@ -67,10 +67,10 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
   if (rule <= kMaxRuleType) {
     RefPtr<css::Rule> ruleObj = nullptr;
     switch (StyleCssRuleType(rule)) {
-#define CASE_RULE(const_, name_)                                              \
+#define CASE_RULE_WITH_PREFIX(const_, style_prefix_, name_)                   \
   case StyleCssRuleType::const_: {                                            \
     uint32_t line = 0, column = 0;                                            \
-    RefPtr<StyleLocked##const_##Rule> raw =                                   \
+    RefPtr<Style##style_prefix_##const_##Rule> raw =                          \
         Servo_CssRules_Get##const_##RuleAt(mRawRules, aIndex, &line, &column) \
             .Consume();                                                       \
     MOZ_ASSERT(raw);                                                          \
@@ -79,6 +79,7 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
     MOZ_ASSERT(ruleObj->Type() == StyleCssRuleType(rule));                    \
     break;                                                                    \
   }
+#define CASE_RULE(const_, name_) CASE_RULE_WITH_PREFIX(const_, Locked, name_)
       CASE_RULE(Style, Style)
       CASE_RULE(Keyframes, Keyframes)
       CASE_RULE(Media, Media)
@@ -238,10 +239,10 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
   }
 
   EnumerateInstantiatedRules([&](css::Rule* aRule, uint32_t aIndex) {
-#define CASE_FOR(constant_, type_)                                      \
+#define CASE_FOR_WITH_PREFIX(constant_, style_prefix_, type_)           \
   case StyleCssRuleType::constant_: {                                   \
     uint32_t line = 0, column = 0;                                      \
-    RefPtr<StyleLocked##constant_##Rule> raw =                          \
+    RefPtr<Style##style_prefix_##constant_##Rule> raw =                 \
         Servo_CssRules_Get##constant_##RuleAt(mRawRules, aIndex, &line, \
                                               &column)                  \
             .Consume();                                                 \
@@ -249,6 +250,8 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
         std::move(raw));                                                \
     break;                                                              \
   }
+#define CASE_FOR(constant_, type_) \
+  CASE_FOR_WITH_PREFIX(constant_, Locked, type_)
     switch (aRule->Type()) {
       CASE_FOR(Style, Style)
       CASE_FOR(Keyframes, Keyframes)
