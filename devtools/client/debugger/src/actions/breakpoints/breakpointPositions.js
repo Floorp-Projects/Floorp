@@ -18,7 +18,10 @@ import {
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
-import { createLocation } from "../../utils/location";
+import {
+  debuggerToSourceMapLocation,
+  createLocation,
+} from "../../utils/location";
 
 async function mapLocations(generatedLocations, { getState, sourceMapLoader }) {
   if (!generatedLocations.length) {
@@ -26,9 +29,8 @@ async function mapLocations(generatedLocations, { getState, sourceMapLoader }) {
   }
 
   const originalLocations = await sourceMapLoader.getOriginalLocations(
-    generatedLocations
+    generatedLocations.map(debuggerToSourceMapLocation)
   );
-
   return originalLocations.map((location, index) => ({
     // If location is null, this particular location doesn't map to any original source.
     location: location

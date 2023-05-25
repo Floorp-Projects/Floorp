@@ -13,7 +13,10 @@ import { isFrameBlackBoxed } from "../../utils/source";
 
 import assert from "../../utils/assert";
 import { getOriginalLocation } from "../../utils/source-maps";
-import { createLocation } from "../../utils/location";
+import {
+  createLocation,
+  debuggerToSourceMapLocation,
+} from "../../utils/location";
 
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
@@ -70,7 +73,7 @@ async function expandFrames(frames, { getState, sourceMapLoader }) {
       continue;
     }
     const originalFrames = await sourceMapLoader.getOriginalStackFrames(
-      frame.generatedLocation
+      debuggerToSourceMapLocation(frame.generatedLocation)
     );
     if (!originalFrames) {
       result.push(frame);
