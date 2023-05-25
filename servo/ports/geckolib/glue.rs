@@ -2142,6 +2142,93 @@ macro_rules! impl_basic_rule_funcs_without_getter {
     }
 }
 
+macro_rules! impl_basic_rule_funcs_without_getter_or_lock {
+    { $rule_type:ty,
+        debug: $debug:ident,
+        to_css: $to_css:ident,
+    } => {
+        #[cfg(debug_assertions)]
+        #[no_mangle]
+        pub extern "C" fn $debug(rule: &$rule_type, result: &mut nsACString) {
+            write!(result, "{:?}", *rule).unwrap();
+        }
+
+        #[cfg(not(debug_assertions))]
+        #[no_mangle]
+        pub extern "C" fn $debug(_: &$rule_type, _: &mut nsACString) {
+            unreachable!()
+        }
+
+        #[no_mangle]
+        pub extern "C" fn $to_css(rule: &$rule_type, result: &mut nsACString) {
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+            let guard = global_style_data.shared_lock.read();
+            rule.to_css(&guard, result).unwrap();
+        }
+    }
+}
+
+macro_rules! impl_basic_rule_funcs_without_lock {
+    { ($name:ident, $rule_type:ty),
+        getter: $getter:ident,
+        debug: $debug:ident,
+        to_css: $to_css:ident,
+        changed: $changed:ident,
+    } => {
+        #[no_mangle]
+        pub extern "C" fn $getter(
+            rules: &LockedCssRules,
+            index: u32,
+            line: &mut u32,
+            column: &mut u32,
+        ) -> Strong<$rule_type> {
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+            let guard = global_style_data.shared_lock.read();
+            let rules = rules.read_with(&guard);
+            let index = index as usize;
+
+            if index >= rules.0.len() {
+                return Strong::null();
+            }
+
+            match rules.0[index] {
+                CssRule::$name(ref rule) => {
+                    let location = rule.source_location;
+                    *line = location.line as u32;
+                    *column = location.column as u32;
+                    rule.clone().into()
+                },
+                _ => {
+                    Strong::null()
+                }
+            }
+        }
+
+        #[no_mangle]
+        pub extern "C" fn $changed(
+            styleset: &PerDocumentStyleData,
+            rule: &$rule_type,
+            sheet: &DomStyleSheet,
+            change_kind: RuleChangeKind,
+        ) {
+            let mut data = styleset.borrow_mut();
+            let data = &mut *data;
+            let global_style_data = &*GLOBAL_STYLE_DATA;
+            let guard = global_style_data.shared_lock.read();
+            // TODO(emilio): Would be nice not to deal with refcount bumps here,
+            // but it's probably not a huge deal.
+            let rule = unsafe { CssRule::$name(Arc::from_raw_addrefed(rule)) };
+            let sheet = unsafe { GeckoStyleSheet::new(sheet) };
+            data.stylist.rule_changed(&sheet, &rule, &guard, change_kind);
+        }
+
+        impl_basic_rule_funcs_without_getter_or_lock! { $rule_type,
+            debug: $debug,
+            to_css: $to_css,
+        }
+    }
+}
+
 macro_rules! impl_basic_rule_funcs {
     { ($name:ident, $rule_type:ty),
         getter: $getter:ident,
