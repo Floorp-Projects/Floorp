@@ -1,4 +1,4 @@
-// |jit-test| --enable-change-array-by-copy; skip-if: !getBuildConfiguration()['change-array-by-copy']
+// |jit-test| --enable-change-array-by-copy
 
 load(libdir + "asserts.js");
 
