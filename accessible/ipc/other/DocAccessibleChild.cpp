@@ -60,6 +60,74 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollSubstringToPoint(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChild::RecvReplaceText(
+    const uint64_t& aID, const nsAString& aText) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->ReplaceText(aText);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvInsertText(
+    const uint64_t& aID, const nsAString& aText, const int32_t& aPosition,
+    bool* aValid) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aValid = acc->IsValidOffset(aPosition);
+    acc->InsertText(aText, aPosition);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvCopyText(
+    const uint64_t& aID, const int32_t& aStartPos, const int32_t& aEndPos,
+    bool* aValid) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    acc->CopyText(aStartPos, aEndPos);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvCutText(
+    const uint64_t& aID, const int32_t& aStartPos, const int32_t& aEndPos,
+    bool* aValid) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aValid = acc->IsValidRange(aStartPos, aEndPos);
+    acc->CutText(aStartPos, aEndPos);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvDeleteText(
+    const uint64_t& aID, const int32_t& aStartPos, const int32_t& aEndPos,
+    bool* aValid) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aValid = acc->IsValidRange(aStartPos, aEndPos);
+    acc->DeleteText(aStartPos, aEndPos);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChild::RecvPasteText(
+    const uint64_t& aID, const int32_t& aPosition, bool* aValid) {
+  RefPtr<HyperTextAccessible> acc = IdToHyperTextAccessible(aID);
+  if (acc && acc->IsTextRole()) {
+    *aValid = acc->IsValidOffset(aPosition);
+    acc->PasteText(aPosition);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleChild::RecvDocType(const uint64_t& aID,
                                                         nsString* aType) {
   LocalAccessible* acc = IdToAccessible(aID);

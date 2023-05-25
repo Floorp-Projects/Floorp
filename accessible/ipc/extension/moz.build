@@ -8,5 +8,7 @@ toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 if toolkit == "android":
     DIRS += ["android"]
+elif toolkit == "cocoa":
+    DIRS += ["mac"]
 else:
     DIRS += ["other"]

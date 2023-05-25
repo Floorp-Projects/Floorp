@@ -444,8 +444,16 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::SetTextContents(const nsAString& aText) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->ReplaceText(aText);
-
+  if (mIntl->IsLocal()) {
+    IntlLocal()->ReplaceText(aText);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    nsString text(aText);
+    mIntl->AsRemote()->ReplaceText(text);
+#endif
+  }
   return NS_OK;
 }
 
@@ -453,8 +461,16 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::InsertText(const nsAString& aText, int32_t aOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->InsertText(aText, aOffset);
-
+  if (mIntl->IsLocal()) {
+    IntlLocal()->InsertText(aText, aOffset);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    nsString text(aText);
+    mIntl->AsRemote()->InsertText(text, aOffset);
+#endif
+  }
   return NS_OK;
 }
 
@@ -462,8 +478,15 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::CopyText(int32_t aStartOffset, int32_t aEndOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->CopyText(aStartOffset, aEndOffset);
-
+  if (mIntl->IsLocal()) {
+    IntlLocal()->CopyText(aStartOffset, aEndOffset);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    mIntl->AsRemote()->CopyText(aStartOffset, aEndOffset);
+#endif
+  }
   return NS_OK;
 }
 
@@ -471,8 +494,15 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::CutText(int32_t aStartOffset, int32_t aEndOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->CutText(aStartOffset, aEndOffset);
-
+  if (mIntl->IsLocal()) {
+    IntlLocal()->CutText(aStartOffset, aEndOffset);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    mIntl->AsRemote()->CutText(aStartOffset, aEndOffset);
+#endif
+  }
   return NS_OK;
 }
 
@@ -480,8 +510,15 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::DeleteText(int32_t aStartOffset, int32_t aEndOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->DeleteText(aStartOffset, aEndOffset);
-
+  if (mIntl->IsLocal()) {
+    IntlLocal()->DeleteText(aStartOffset, aEndOffset);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    mIntl->AsRemote()->DeleteText(aStartOffset, aEndOffset);
+#endif
+  }
   return NS_OK;
 }
 
@@ -489,8 +526,16 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::PasteText(int32_t aOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  Intl()->PasteText(aOffset);
-
+  if (mIntl->IsLocal()) {
+    RefPtr<HyperTextAccessible> acc = IntlLocal();
+    acc->PasteText(aOffset);
+  } else {
+#if defined(XP_WIN)
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    mIntl->AsRemote()->PasteText(aOffset);
+#endif
+  }
   return NS_OK;
 }
 
