@@ -4,11 +4,6 @@
 en_IN{
     %%Parent{"en_001"}
     RBNFRules{
-        OrdinalRules{
-            "%digits-ordinal:",
-            "-x: \u2212>>;",
-            "0: =#,##0=$(ordinal,one{st}two{nd}few{rd}other{th})$;",
-        }
         SpelloutRules{
             "%%2d-year:",
             "0: hundred;",
@@ -154,7 +149,7 @@ en_IN{
             "1000000000: <%spellout-numbering< billion>%%th>;",
             "1000000000000: <%spellout-numbering< trillion>%%th>;",
             "1000000000000000: <%spellout-numbering< quadrillion>%%th>;",
-            "1000000000000000000: =#,##0=.;",
+            "1000000000000000000: =#,##0=$(ordinal,one{st}two{nd}few{rd}other{th})$;",
             "%%and-o:",
             "0: th;",
             "1: ' and =%spellout-ordinal-verbose=;",
@@ -177,7 +172,7 @@ en_IN{
             "1000000000: <%spellout-numbering-verbose< billion>%%commas-o>;",
             "1000000000000: <%spellout-numbering-verbose< trillion>%%commas-o>;",
             "1000000000000000: <%spellout-numbering-verbose< quadrillion>%%commas-o>;",
-            "1000000000000000000: =#,##0=.;",
+            "1000000000000000000: =#,##0=$(ordinal,one{st}two{nd}few{rd}other{th})$;",
         }
     }
 }

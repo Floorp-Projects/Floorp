@@ -271,7 +271,7 @@ brx{
                 d{"d"}
                 h{"a h"}
                 hm{"a h:mm"}
-                hms{"a h:mm:ss"}
+                hms{"a h:mm:ss"}
                 ms{"mm:ss"}
                 y{"G y"}
                 yM{"M/y"}
@@ -485,7 +485,7 @@ brx{
                 Md{"M/d"}
                 d{"d"}
                 h{"a नि h"}
-                hms{"h:mm:ss a"}
+                hms{"h:mm:ss a"}
                 hmsv{"a नि h:mm:ss v"}
                 hmv{"a h:mm v"}
                 ms{"mm:ss"}
@@ -1832,6 +1832,19 @@ brx{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            surnameFirst-short-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
         }
     }
 }

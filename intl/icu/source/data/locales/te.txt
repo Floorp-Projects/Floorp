@@ -24,6 +24,16 @@ te{
     ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
+        adlm{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        bali{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
         default{"latn"}
         latn{
             miscPatterns{
@@ -288,6 +298,7 @@ te{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"~"}
                 decimal{"."}
                 exponential{"E"}
                 group{","}
@@ -551,6 +562,12 @@ te{
                 "d MMM y G",
                 "dd-MM-y GGGGG",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -1973,6 +1990,7 @@ te{
             }
         }
         minute-narrow{
+            dn{"నిమి."}
             relativeTime{
                 future{
                     one{"{0} నిమి.లో"}
@@ -2488,6 +2506,7 @@ te{
                 "0"{"ఈ వారం"}
                 "1"{"తదుపరి వారం"}
             }
+            relativePeriod{"{0} వారం"}
             relativeTime{
                 future{
                     one{"{0} వారంలో"}
@@ -2597,8 +2616,17 @@ te{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
-        or-short{
+        or-narrow{
+            2{"{0} లేదా {1}"}
+            end{"{0} లేదా {1}"}
             middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} లేదా {1}"}
+            end{"{0} లేదా {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
             2{"{0} మరియు {1}"}
@@ -2609,6 +2637,8 @@ te{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} మరియు {1}"}
@@ -2685,24 +2715,40 @@ te{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{prefix} {surname}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
             givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}. {given2-monogram-allCaps}. {surname-monogr"
-                "am-allCaps}"
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
             }
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {suffix}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}.{given2-monogram-allCaps}.{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-long-referring-formal{"{given} {given2} {surname} {credentials}"}
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{prefix} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
-            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
-            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {suffix}"}
+            givenFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-informal-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {surname}"}
-            givenFirst-short-addressing-formal{"{prefix} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
-            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
-            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
+            givenFirst-short-monogram-informal{
+                "{given-informal-monogram-allCaps}",
+                "{given-monogram-allCaps}.{surname-monogram-allCaps}",
+            }
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
@@ -2711,16 +2757,21 @@ te{
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
-            surnameFirst-long-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {suffix}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-medium-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
-            surnameFirst-short-addressing-formal{"{prefix} {surname}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}

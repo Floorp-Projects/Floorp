@@ -40,6 +40,7 @@ sources = [
    '/intl/icu/source/common/lsr.cpp',
    '/intl/icu/source/common/lstmbe.cpp',
    '/intl/icu/source/common/messagepattern.cpp',
+   '/intl/icu/source/common/mlbe.cpp',
    '/intl/icu/source/common/normalizer2.cpp',
    '/intl/icu/source/common/normalizer2impl.cpp',
    '/intl/icu/source/common/normlzr.cpp',

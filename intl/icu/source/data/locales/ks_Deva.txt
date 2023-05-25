@@ -16,6 +16,14 @@ ks_Deva{
     }
     MoreInformation{"?"}
     NumberElements{
+        arabext{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+        }
         latn{
             patterns{
                 currencyFormat{"¤#,##0.00"}
@@ -93,6 +101,15 @@ ks_Deva{
             }
             dayNames{
                 format{
+                    abbreviated{
+                        "आथवार",
+                        "चंदिरवार",
+                        "बुवार",
+                        "बोदवार",
+                        "ब्रेसवार",
+                        "जुम्मा",
+                        "बटवार",
+                    }
                     narrow{
                         "अ",
                         "च",
@@ -113,6 +130,15 @@ ks_Deva{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "आथवार",
+                        "चंदिरवार",
+                        "बुवार",
+                        "बोदवार",
+                        "ब्रेसवार",
+                        "जुम्मा",
+                        "बटवार",
+                    }
                     narrow{
                         "अ",
                         "च",
@@ -149,6 +175,10 @@ ks_Deva{
                 wide{
                     "ईसा ब्रोंठ",
                     "ईस्वी",
+                }
+                wide%variant{
+                    "BC",
+                    "AD",
                 }
             }
             intervalFormats{
@@ -200,6 +230,20 @@ ks_Deva{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "जनवरी",
+                        "फ़रवरी",
+                        "मार्च",
+                        "अप्रैल",
+                        "मे",
+                        "जून",
+                        "जुलाई",
+                        "अगस्त",
+                        "सतुंबर",
+                        "अकतुम्बर",
+                        "नवूमबर",
+                        "दसूमबर",
+                    }
                     narrow{
                         "ज",
                         "फ़",
@@ -237,6 +281,12 @@ ks_Deva{
                         "Q2",
                         "Q3",
                         "Q4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
                     }
                     wide{
                         "1st सह माह",

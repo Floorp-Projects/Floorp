@@ -27,8 +27,8 @@
   *  the TestDataModule info section. The default headers will be overridden
   *  by per-test headers. 
   *  Example:                                             
-  *  DataMap *settings = NULL;                            
-  *  DataMap *cases = NULL;                               
+  *  DataMap *settings = nullptr;
+  *  DataMap *cases = nullptr;
   *  while(nextSettings(settings, status)) {              
   *    // set settings for the subtest                    
   *    while(nextCase(cases, status) {                    
@@ -59,13 +59,13 @@ public:
   /** Get a pointer to an object owned DataMap that contains more information on this
    *  TestData object.
    *  Usual fields is "Description".                                   
-   *  @param info pass in a const DataMap pointer. If no info, it will be set to NULL
+   *  @param info pass in a const DataMap pointer. If no info, it will be set to nullptr
    */
   virtual UBool getInfo(const DataMap *& info, UErrorCode &status) const = 0;
 
   /** Gets the next set of settings for the test. Resets the cases iterator. 
    *  DataMap is owned by the object and should not be deleted. 
-   *  @param settings a DataMap pointer provided by the user. Will be NULL if 
+   *  @param settings a DataMap pointer provided by the user. Will be nullptr if
    *                  no more settings are available.
    *  @param status for reporting unexpected errors.
    *  @return A boolean, true if there are settings, false if there is no more 
@@ -75,7 +75,7 @@ public:
 
   /** Gets the next test case. 
    *  DataMap is owned by the object and should not be deleted. 
-   *  @param data a DataMap pointer provided by the user. Will be NULL if 
+   *  @param data a DataMap pointer provided by the user. Will be nullptr if 
    *                  no more cases are available.
    *  @param status for reporting unexpected errors.
    *  @return A boolean, true if there are cases, false if there is no more 

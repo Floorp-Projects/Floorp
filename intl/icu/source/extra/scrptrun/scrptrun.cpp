@@ -125,14 +125,14 @@ UBool ScriptRun::next()
     scriptCode = USCRIPT_COMMON;
 
     for (scriptStart = scriptEnd; scriptEnd < charLimit; scriptEnd += 1) {
-        UChar   high = charArray[scriptEnd];
+        char16_t   high = charArray[scriptEnd];
         UChar32 ch   = high;
 
         // if the character is a high surrogate and it's not the last one
         // in the text, see if it's followed by a low surrogate
         if (high >= 0xD800 && high <= 0xDBFF && scriptEnd < charLimit - 1)
         {
-            UChar low = charArray[scriptEnd + 1];
+            char16_t low = charArray[scriptEnd + 1];
 
             // if it is followed by a low surrogate,
             // consume it and form the full character

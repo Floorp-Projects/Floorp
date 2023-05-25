@@ -35,11 +35,11 @@
 static UNumberFormat *gPosixNumberFormat[ULOCALEBUNDLE_NUMBERFORMAT_COUNT];
 
 U_CDECL_BEGIN
-static UBool U_CALLCONV locbund_cleanup(void) {
+static UBool U_CALLCONV locbund_cleanup() {
     int32_t style;
     for (style = 0; style < ULOCALEBUNDLE_NUMBERFORMAT_COUNT; style++) {
         unum_close(gPosixNumberFormat[style]);
-        gPosixNumberFormat[style] = NULL;
+        gPosixNumberFormat[style] = nullptr;
     }
     return true;
 }
@@ -49,17 +49,17 @@ static inline UNumberFormat * copyInvariantFormatter(ULocaleBundle *result, UNum
     U_NAMESPACE_USE
     static UMutex gLock;
     Mutex lock(&gLock);
-    if (result->fNumberFormat[style-1] == NULL) {
-        if (gPosixNumberFormat[style-1] == NULL) {
+    if (result->fNumberFormat[style-1] == nullptr) {
+        if (gPosixNumberFormat[style-1] == nullptr) {
             UErrorCode status = U_ZERO_ERROR;
-            UNumberFormat *formatAlias = unum_open(style, NULL, 0, "en_US_POSIX", NULL, &status);
+            UNumberFormat *formatAlias = unum_open(style, nullptr, 0, "en_US_POSIX", nullptr, &status);
             if (U_SUCCESS(status)) {
                 gPosixNumberFormat[style-1] = formatAlias;
                 ucln_io_registerCleanup(UCLN_IO_LOCBUND, locbund_cleanup);
             }
         }
         /* Copy the needed formatter. */
-        if (gPosixNumberFormat[style-1] != NULL) {
+        if (gPosixNumberFormat[style-1] != nullptr) {
             UErrorCode status = U_ZERO_ERROR;
             result->fNumberFormat[style-1] = unum_clone(gPosixNumberFormat[style-1], &status);
         }
@@ -75,7 +75,7 @@ u_locbund_init(ULocaleBundle *result, const char *loc)
     if(result == 0)
         return 0;
 
-    if (loc == NULL) {
+    if (loc == nullptr) {
         loc = uloc_getDefault();
     }
 
@@ -124,11 +124,11 @@ u_locbund_clone(const ULocaleBundle *bundle)
         if (result->fNumberFormat[styleIdx]) {
             result->fNumberFormat[styleIdx] = unum_clone(bundle->fNumberFormat[styleIdx], &status);
             if (U_FAILURE(status)) {
-                result->fNumberFormat[styleIdx] = NULL;
+                result->fNumberFormat[styleIdx] = nullptr;
             }
         }
         else {
-            result->fNumberFormat[styleIdx] = NULL;
+            result->fNumberFormat[styleIdx] = nullptr;
         }
     }
     result->fDateFormat         = (bundle->fDateFormat == 0 ? 0 :
@@ -159,19 +159,19 @@ u_locbund_close(ULocaleBundle *bundle)
 U_CAPI UNumberFormat *
 u_locbund_getNumberFormat(ULocaleBundle *bundle, UNumberFormatStyle style)
 {
-    UNumberFormat *formatAlias = NULL;
+    UNumberFormat *formatAlias = nullptr;
     if (style > UNUM_IGNORE) {
         formatAlias = bundle->fNumberFormat[style-1];
-        if (formatAlias == NULL) {
+        if (formatAlias == nullptr) {
             if (bundle->isInvariantLocale) {
                 formatAlias = copyInvariantFormatter(bundle, style);
             }
             else {
                 UErrorCode status = U_ZERO_ERROR;
-                formatAlias = unum_open(style, NULL, 0, bundle->fLocale, NULL, &status);
+                formatAlias = unum_open(style, nullptr, 0, bundle->fLocale, nullptr, &status);
                 if (U_FAILURE(status)) {
                     unum_close(formatAlias);
-                    formatAlias = NULL;
+                    formatAlias = nullptr;
                 }
                 else {
                     bundle->fNumberFormat[style-1] = formatAlias;

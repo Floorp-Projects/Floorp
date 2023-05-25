@@ -665,11 +665,21 @@ yo{
         }
     }
     Currencies%narrow{
+        BYN{"BYN"}
         KRW{"₩"}
     }
     CurrencyPlurals{
+        AED{
+            other{"Diami ti Awon Orílẹ́ède Arabu"}
+        }
+        AFN{
+            other{"Afugánì Afuganísítàànì"}
+        }
         ALL{
             other{"lẹ́kè Àlìbéníà"}
+        }
+        AMD{
+            other{"Dírààmù Àmẹ́níà"}
         }
         ANG{
             other{"àwọn gílídà Netherlands Antillean"}
@@ -680,8 +690,14 @@ yo{
         ARS{
             other{"àwọn pẹ́sò Agẹntínà"}
         }
+        AUD{
+            other{"Dọla ti Orílẹ́ède Ástràlìá"}
+        }
         AWG{
             other{"àwọn fuloríìnì Àrúbà"}
+        }
+        AZN{
+            other{"Mánààtì Àsàbáíjáì"}
         }
         BAM{
             other{"àwọn àmi Yíyípadà Bosnia-Herzegovina"}
@@ -689,14 +705,23 @@ yo{
         BBD{
             other{"àwọn dọ́là Bábádọ̀ọ̀sì"}
         }
+        BDT{
+            other{"Tákà Báńgíládẹ̀ẹ̀ṣì"}
+        }
         BGN{
             other{"Lẹ́fà Bọ̀lìgéríà"}
+        }
+        BHD{
+            other{"Dina ti Orílẹ́ède Báránì"}
         }
         BIF{
             other{"àwọn faransi Bùùrúndì"}
         }
         BMD{
             other{"àwọ́n dọ́là Bẹ̀múdà"}
+        }
+        BND{
+            other{"Dọ́là Bùrùnéì"}
         }
         BOB{
             other{"àwọn bọlifiánò Bọ̀lífíà"}
@@ -706,6 +731,9 @@ yo{
         }
         BSD{
             other{"àwọn dọ́là Bàhámà"}
+        }
+        BTN{
+            other{"Ìngọ́tírọ̀mù Bútàànì"}
         }
         BWP{
             other{"àwọn pula Bọ̀tìsúwánà"}
@@ -728,6 +756,12 @@ yo{
         CLP{
             other{"àwọn pẹ́sò Ṣílè"}
         }
+        CNH{
+            other{"Yúànì Sháínà"}
+        }
+        CNY{
+            other{"Reminibi ti Orílẹ́ède ṣáínà"}
+        }
         COP{
             other{"àwọn pẹ́sò Kòlóḿbíà"}
         }
@@ -736,6 +770,9 @@ yo{
         }
         CUC{
             other{"àwọn pẹ́sò yíyípadà Kúbà"}
+        }
+        CUP{
+            other{"Pẹ́sò Kúbà"}
         }
         CVE{
             other{"àwọn èsìkúdò Kapú Faadì"}
@@ -767,11 +804,20 @@ yo{
         EUR{
             other{"Awon owó Yúrò"}
         }
+        FJD{
+            other{"Dọ́là Fíjì"}
+        }
         FKP{
             other{
                 "àwọn Pọ́n-ùn Erékùsù Falkland [ Pɔ́n-ùn Erékùsù Falkland ] 1.23 Pọ́n"
                 "-ùn Erékùsù Falkland 0.00 pọ́n-ùn Erékùsù Falkland"
             }
+        }
+        GBP{
+            other{"Pọ́n-ùn ti Orilẹ̀-èdè Gẹ̀ẹ́sì"}
+        }
+        GEL{
+            other{"Lárì Jọ́jíà"}
         }
         GHS{
             other{"àwọn sídì Gana"}
@@ -791,6 +837,9 @@ yo{
         GYD{
             other{"àwọn dọ́là Gùyánà"}
         }
+        HKD{
+            other{"Dọ́là Hong Kong"}
+        }
         HNL{
             other{"àwọn Lẹmipírà Ọ́ńdúrà"}
         }
@@ -803,20 +852,68 @@ yo{
         HUF{
             other{"àwọn fọ́ríǹtì Họ̀ngérí"}
         }
+        IDR{
+            other{"Rúpìyá Indonésíà"}
+        }
+        ILS{
+            other{"Ṣékélì Tuntun Ísírẹ̀ẹ̀lì"}
+        }
+        INR{
+            other{"Rupi ti Orílẹ́ède Indina"}
+        }
+        IQD{
+            other{"Dínárì Ìráákì"}
+        }
+        IRR{
+            other{"Rial Iranian"}
+        }
         ISK{
             other{"kórónọ̀ Áílándíìkì"}
         }
         JMD{
             other{"àwọn dọ́là Jàmáíkà"}
         }
+        JOD{
+            other{"Dínárì Jọ́dàànì"}
+        }
+        JPY{
+            other{"Yeni ti Orílẹ́ède Japani"}
+        }
         KES{
             other{"àwọ́n ṣiili Kenya"}
+        }
+        KGS{
+            other{"Sómú Kirijísítàànì"}
+        }
+        KHR{
+            other{"Ráyò Kàm̀bọ́díà"}
         }
         KMF{
             other{"àwọn faransi Komori"}
         }
+        KPW{
+            other{"Wọ́ọ̀nù Àríwá Kòríà"}
+        }
+        KRW{
+            other{"Wọ́ọ̀nù Gúúsù Kòríà"}
+        }
+        KWD{
+            other{"Dínárì Kuwaiti"}
+        }
         KYD{
             other{"àwọn dọ́là Erékùsù Cayman"}
+        }
+        KZT{
+            other{"Tẹngé Kasakísítàànì"}
+        }
+        LAK{
+            other{"Kíììpù Làótì"}
+        }
+        LBP{
+            other{"Pọ́n-ùn Lebanese"}
+        }
+        LKR{
+            other{"Rúpìì Siri Láńkà"}
         }
         LRD{
             other{"àwọn dọla Liberia"}
@@ -839,14 +936,32 @@ yo{
         MKD{
             other{"dẹ́nàrì Masidóníà"}
         }
+        MMK{
+            other{"Kíyàtì Myanmar"}
+        }
+        MNT{
+            other{"Túgúrììkì Mòǹgólíà"}
+        }
+        MOP{
+            other{"Pàtákà Màkáò"}
+        }
+        MRU{
+            other{"Ouguiya ti Orílẹ́ède Maritania"}
+        }
         MUR{
             other{"àwọn rupi Maritusi"}
+        }
+        MVR{
+            other{"Rúfìyá Mọ̀lìdífà"}
         }
         MWK{
             other{"àwọn kásà Màláwì"}
         }
         MXN{
             other{"àwọn pẹ́sò Mẹ́síkò"}
+        }
+        MYR{
+            other{"Ríngìtì Màléṣíà"}
         }
         MZN{
             other{"àwọn mẹ́tíkààlì Mòsáḿbíìkì"}
@@ -863,17 +978,38 @@ yo{
         NOK{
             other{"kórónà Nọ́wè"}
         }
+        NPR{
+            other{"Rúpìì Nẹ̵́pààlì"}
+        }
+        NZD{
+            other{"Dọ́là New Zealand"}
+        }
+        OMR{
+            other{"Ráyò Omani"}
+        }
         PAB{
             other{"àwọn bálíbóà Pànámà"}
         }
         PEN{
             other{"àwọn sólì Pèrúù"}
         }
+        PGK{
+            other{"Kínà Papua Guinea Tuntun"}
+        }
+        PHP{
+            other{"Písò Fílípìnì"}
+        }
+        PKR{
+            other{"Rúpìì Pakisitánì"}
+        }
         PLN{
             other{"àwọn sílọ̀tì Pọ́líṣì"}
         }
         PYG{
             other{"àwọn gúáránì Párágúwè"}
+        }
+        QAR{
+            other{"Ráyò Kàtárì"}
         }
         RON{
             other{"Léhì Ròméníà"}
@@ -887,6 +1023,12 @@ yo{
         RWF{
             other{"àwọn faransi Ruwanda"}
         }
+        SAR{
+            other{"Riya ti Orílẹ́ède Saudi"}
+        }
+        SBD{
+            other{"Dọ́là Erékùsù Sọ́lómọ́nì"}
+        }
         SCR{
             other{"àwọ́n rúpì Sayiselesi"}
         }
@@ -895,6 +1037,9 @@ yo{
         }
         SEK{
             other{"Kòrónọ̀ Súwídìn"}
+        }
+        SGD{
+            other{"Dọ́là Síngápọ̀"}
         }
         SHP{
             other{"àwọn pọ́n-un Elena"}
@@ -911,17 +1056,44 @@ yo{
         SSP{
             other{"àwọn pọ́n-un Gúúsù Sùdáànì"}
         }
+        STN{
+            other{"Dọbíra Sao tome àti Pirisipi"}
+        }
+        SYP{
+            other{"Pọ́n-ùn Sírìà"}
+        }
         SZL{
             other{"emalangeni Suwasi"}
+        }
+        THB{
+            other{"Báàtì Tháì"}
+        }
+        TJS{
+            other{"Sómónì Tajikístàànì"}
+        }
+        TMT{
+            other{"Mánààtì Tọkimẹnístàànì"}
         }
         TND{
             other{"àwọn dínà Tuniṣíà"}
         }
+        TOP{
+            other{"Pàángà Tóńgà"}
+        }
+        TRY{
+            other{"Lírà Tọ́kì"}
+        }
         TTD{
             other{"àwọn dọ́là Trinidad àti Tobago"}
         }
+        TWD{
+            other{"Dọ́là Tàìwánì Tuntun"}
+        }
         TZS{
             other{"àwọn ṣile Tansania"}
+        }
+        UAH{
+            other{"Ọrifiníyà Yukiréníà"}
         }
         UGX{
             other{"àwọn ṣile Uganda"}
@@ -932,8 +1104,20 @@ yo{
         UYU{
             other{"àwọn pẹ́sò Úrúgúwè"}
         }
+        UZS{
+            other{"Sómú Usibẹkísítàànì"}
+        }
         VES{
             other{"àwọn bọ̀lífà Fẹnẹsuẹ́là"}
+        }
+        VND{
+            other{"Dáhùn Vietnamese"}
+        }
+        VUV{
+            other{"Fátù Vanuatu"}
+        }
+        WST{
+            other{"Tálà Sàmóà"}
         }
         XAF{
             other{"àwọn firanki àárín Afíríkà"}
@@ -944,8 +1128,14 @@ yo{
         XOF{
             other{"àwọn faransì ìwọ̀-oorùn Afíríkà"}
         }
+        XPF{
+            other{"Fírànkì CFP"}
+        }
         XXX{
             other{"owóníná àìmọ̀"}
+        }
+        YER{
+            other{"Ráyò Yẹ́mẹ̀nì"}
         }
         ZAR{
             other{"rándì Gúúsù Afíríkà"}

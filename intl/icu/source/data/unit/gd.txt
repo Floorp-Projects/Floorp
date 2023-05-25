@@ -212,6 +212,7 @@ gd{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -667,6 +668,10 @@ gd{
             }
             em{
                 dnam{"em chlò-ghrafach"}
+                few{"{0} em"}
+                one{"{0} em"}
+                other{"{0} em"}
+                two{"{0} em"}
             }
             megapixel{
                 dnam{"meaga-piogsail"}
@@ -1578,7 +1583,71 @@ gd{
             1024p7{"Zi{0}"}
             1024p8{"Yi{0}"}
             10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -2033,6 +2102,7 @@ gd{
                 two{"{0}dpi"}
             }
             em{
+                dnam{"em"}
                 few{"{0}em"}
                 one{"{0}em"}
                 other{"{0}em"}
@@ -2046,18 +2116,21 @@ gd{
                 two{"{0}MP"}
             }
             pixel{
+                dnam{"piogsail"}
                 few{"{0}px"}
                 one{"{0}px"}
                 other{"{0}px"}
                 two{"{0}px"}
             }
             pixel-per-centimeter{
+                dnam{"ppcm"}
                 few{"{0}ppcm"}
                 one{"{0}ppcm"}
                 other{"{0}ppcm"}
                 two{"{0}ppcm"}
             }
             pixel-per-inch{
+                dnam{"ppi"}
                 few{"{0}ppi"}
                 one{"{0}ppi"}
                 other{"{0}ppi"}
@@ -2088,6 +2161,7 @@ gd{
                 two{"{0}dm"}
             }
             earth-radius{
+                dnam{"R⊕"}
                 few{"{0}R⊕"}
                 one{"{0}R⊕"}
                 other{"{0}R⊕"}
@@ -2543,6 +2617,7 @@ gd{
         }
         torque{
             newton-meter{
+                dnam{"N⋅m"}
                 few{"{0}N⋅m"}
                 one{"{0}N⋅m"}
                 other{"{0}N⋅m"}
@@ -2944,6 +3019,50 @@ gd{
             1024p8{"Yi{0}"}
             10p-1{"d{0}"}
             per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
         }
         concentr{
             item{
@@ -3004,6 +3123,10 @@ gd{
             }
             permyriad{
                 dnam{"sna deich mìltean"}
+                few{"{0}‱"}
+                one{"{0}‱"}
+                other{"{0}‱"}
+                two{"{0}‱"}
             }
         }
         consumption{
@@ -3256,6 +3379,10 @@ gd{
         energy{
             british-thermal-unit{
                 dnam{"aonad-teasa Breatannach"}
+                few{"{0} Btu"}
+                one{"{0} Btu"}
+                other{"{0} Btu"}
+                two{"{0} Btu"}
             }
             calorie{
                 dnam{"cal"}
@@ -3266,6 +3393,10 @@ gd{
             }
             electronvolt{
                 dnam{"volt-eleactroin"}
+                few{"{0} eV"}
+                one{"{0} eV"}
+                other{"{0} eV"}
+                two{"{0} eV"}
             }
             foodcalorie{
                 dnam{"Cal"}
@@ -3304,14 +3435,32 @@ gd{
             }
             therm-us{
                 dnam{"aonad-teasa nan SA"}
+                few{"{0} US therm"}
+                one{"{0} US therm"}
+                other{"{0} US therm"}
+                two{"{0} US therm"}
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                few{"{0} kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+                two{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"newton"}
+                few{"{0} N"}
+                one{"{0} N"}
+                other{"{0} N"}
+                two{"{0} N"}
             }
             pound-force{
                 dnam{"punnd-fhorsa"}
+                few{"{0} lbf"}
+                one{"{0} lbf"}
+                other{"{0} lbf"}
+                two{"{0} lbf"}
             }
         }
         frequency{
@@ -3366,11 +3515,37 @@ gd{
                 other{"{0} dpi"}
                 two{"{0} dpi"}
             }
+            em{
+                few{"{0} em"}
+                one{"{0} em"}
+                other{"{0} em"}
+                two{"{0} em"}
+            }
             megapixel{
                 dnam{"meaga-piogsail"}
+                few{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+                two{"{0} MP"}
             }
             pixel{
                 dnam{"piogsail"}
+                few{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+                two{"{0} px"}
+            }
+            pixel-per-centimeter{
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+                two{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                few{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+                two{"{0} ppi"}
             }
         }
         length{
@@ -3395,6 +3570,12 @@ gd{
                 one{"{0} dm"}
                 other{"{0} dm"}
                 two{"{0} dm"}
+            }
+            earth-radius{
+                few{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+                two{"{0} R⊕"}
             }
             fathom{
                 dnam{"aitheamh"}
@@ -3514,6 +3695,10 @@ gd{
             }
             solar-radius{
                 dnam{"rèideas-grèine"}
+                few{"{0} R☉"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
+                two{"{0} R☉"}
             }
             yard{
                 dnam{"slat"}
@@ -3526,9 +3711,17 @@ gd{
         light{
             candela{
                 dnam{"candela"}
+                few{"{0} cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+                two{"{0} cd"}
             }
             lumen{
                 dnam{"lumen"}
+                few{"{0} lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+                two{"{0} lm"}
             }
             lux{
                 dnam{"lux"}
@@ -3539,6 +3732,10 @@ gd{
             }
             solar-luminosity{
                 dnam{"boillsgeachd-ghrèine"}
+                few{"{0} L☉"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
+                two{"{0} L☉"}
             }
         }
         mass{
@@ -3558,6 +3755,10 @@ gd{
             }
             earth-mass{
                 dnam{"tomad-talmhainn"}
+                few{"{0} M⊕"}
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
+                two{"{0} M⊕"}
             }
             grain{
                 dnam{"gràinne"}
@@ -3621,6 +3822,10 @@ gd{
             }
             solar-mass{
                 dnam{"tomad-grèine"}
+                few{"{0} M☉"}
+                one{"{0} M☉"}
+                other{"{0} M☉"}
+                two{"{0} M☉"}
             }
             stone{
                 dnam{"clach"}
@@ -3723,6 +3928,12 @@ gd{
                 other{"{0} kPa"}
                 two{"{0} kPa"}
             }
+            megapascal{
+                few{"{0} MPa"}
+                one{"{0} MPa"}
+                other{"{0} MPa"}
+                two{"{0} MPa"}
+            }
             millibar{
                 dnam{"mbàr"}
                 few{"{0} mbàr"}
@@ -3736,6 +3947,12 @@ gd{
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
+            }
+            pascal{
+                few{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+                two{"{0} Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -3806,6 +4023,12 @@ gd{
             }
         }
         torque{
+            newton-meter{
+                few{"{0} N⋅m"}
+                one{"{0} N⋅m"}
+                other{"{0} N⋅m"}
+                two{"{0} N⋅m"}
+            }
             pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0} lbf⋅ft"}
@@ -3824,6 +4047,10 @@ gd{
             }
             barrel{
                 dnam{"baraill"}
+                few{"{0} bbl"}
+                one{"{0} bbl"}
+                other{"{0} bbl"}
+                two{"{0} bbl"}
             }
             bushel{
                 dnam{"buiseal"}

@@ -258,6 +258,9 @@ ko{
         "America:Chihuahua"{
             ec{"치와와"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"시우다드후아레스"}
+        }
         "America:Coral_Harbour"{
             ec{"코랄하버"}
         }

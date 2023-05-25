@@ -258,6 +258,9 @@ my{
         "America:Chihuahua"{
             ec{"ချီဟူအာဟူအာ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"စီယူဒတ်စ် ဟွာရက်စ်"}
+        }
         "America:Coral_Harbour"{
             ec{"အာတီကိုကန်"}
         }

@@ -237,6 +237,9 @@ so{
         "America:Chihuahua"{
             ec{"Jiwaahuu"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Magaalada Juarez"}
+        }
         "America:Coral_Harbour"{
             ec{"Atikokaan"}
         }
@@ -1160,6 +1163,9 @@ so{
         }
         "Pacific:Johnston"{
             ec{"Joonston"}
+        }
+        "Pacific:Kanton"{
+            ec{"Kantoon"}
         }
         "Pacific:Kiritimati"{
             ec{"Kiritimaati"}

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 units:table(nofallback){
-    cldrVersion{"42"}
+    cldrVersion{"43"}
     convertUnits{
         100-kilometer{
             factor{"100000"}
@@ -519,6 +519,33 @@ units:table(nofallback){
                     }
                     {
                         unit{"square-inch"}
+                    }
+                }
+            }
+            "floor"{
+                001{
+                    {
+                        unit{"square-meter"}
+                    }
+                }
+                CA{
+                    {
+                        unit{"square-foot"}
+                    }
+                }
+                GB{
+                    {
+                        unit{"square-foot"}
+                    }
+                }
+                MM{
+                    {
+                        unit{"square-foot"}
+                    }
+                }
+                US{
+                    {
+                        unit{"square-foot"}
                     }
                 }
             }
@@ -1618,6 +1645,35 @@ units:table(nofallback){
                 US{
                     {
                         unit{"mile-per-hour"}
+                    }
+                }
+            }
+            "rainfall"{
+                001{
+                    {
+                        unit{"millimeter-per-hour"}
+                    }
+                }
+                BR{
+                    {
+                        unit{"centimeter-per-hour"}
+                    }
+                }
+                US{
+                    {
+                        unit{"inch-per-hour"}
+                    }
+                }
+            }
+            "snowfall"{
+                001{
+                    {
+                        unit{"centimeter-per-hour"}
+                    }
+                }
+                US{
+                    {
+                        unit{"inch-per-hour"}
                     }
                 }
             }

@@ -16,186 +16,6 @@ hi_Latn{
                 accountingFormat%noCurrency{"#,##,##0.00"}
                 scientificFormat{"[#E0]"}
             }
-            patternsLong{
-                decimalFormat{
-                    1000{
-                        one{"0 hazaar"}
-                        other{"0 hazaar"}
-                    }
-                    10000{
-                        one{"00 hazaar"}
-                        other{"00 hazaar"}
-                    }
-                    100000{
-                        one{"0 laakh"}
-                        other{"0 laakh"}
-                    }
-                    1000000{
-                        one{"00 laakh"}
-                        other{"00 laakh"}
-                    }
-                    10000000{
-                        one{"0 karod"}
-                        other{"0 karod"}
-                    }
-                    100000000{
-                        one{"00 karod"}
-                        other{"00 karod"}
-                    }
-                    1000000000{
-                        one{"0 arab"}
-                        other{"0 arab"}
-                    }
-                    10000000000{
-                        one{"00 arab"}
-                        other{"00 arab"}
-                    }
-                    100000000000{
-                        one{"0 kharab"}
-                        other{"0 kharab"}
-                    }
-                    1000000000000{
-                        one{"00 kharab"}
-                        other{"00 kharab"}
-                    }
-                    10000000000000{
-                        one{"000 kharab"}
-                        other{"000 kharab"}
-                    }
-                    100000000000000{
-                        one{"0000 kharab"}
-                        other{"0000 kharab"}
-                    }
-                }
-            }
-            patternsShort{
-                currencyFormat{
-                    1000{
-                        one{"¤0 hazaar"}
-                        other{"¤0 hazaar"}
-                    }
-                    10000{
-                        one{"¤00 hazaar"}
-                        other{"¤00 hazaar"}
-                    }
-                    100000{
-                        one{"¤0 laakh"}
-                        other{"¤0 laakh"}
-                    }
-                    1000000{
-                        one{"¤00 laakh"}
-                        other{"¤00 laakh"}
-                    }
-                    10000000{
-                        one{"¤0Cr"}
-                        other{"¤0 ka'.'"}
-                    }
-                    100000000{
-                        one{"¤00 ka'.'"}
-                        other{"¤00 ka'.'"}
-                    }
-                    1000000000{
-                        one{"¤0 a'.'"}
-                        other{"¤0 a'.'"}
-                    }
-                    10000000000{
-                        one{"¤00 a'.'"}
-                        other{"¤00 a'.'"}
-                    }
-                    100000000000{
-                        one{"¤0 kha'.'"}
-                        other{"¤0 kha'.'"}
-                    }
-                    1000000000000{
-                        one{"¤00 kha'.'"}
-                        other{"¤00 kha'.'"}
-                    }
-                    10000000000000{
-                        one{"¤000 kha'.'"}
-                        other{"¤000 kha'.'"}
-                    }
-                    100000000000000{
-                        one{"¤0000 kha'.'"}
-                        other{"¤0000 kha'.'"}
-                    }
-                }
-                currencyFormat%alphaNextToNumber{
-                    1000{
-                        one{"¤ 0 hazaar"}
-                        other{"¤ 0 hazaar"}
-                    }
-                    10000{
-                        one{"¤ 00 hazaar"}
-                        other{"¤ 00 hazaar"}
-                    }
-                    100000{
-                        one{"¤ 0 laakh"}
-                        other{"¤ 0 laakh"}
-                    }
-                    1000000{
-                        one{"¤ 00 laakh"}
-                        other{"¤ 00 laakh"}
-                    }
-                    1000000000{
-                        one{"¤ 0B"}
-                        other{"¤ 0B"}
-                    }
-                    10000000000{
-                        one{"¤ 00B"}
-                        other{"¤ 00B"}
-                    }
-                }
-                decimalFormat{
-                    1000{
-                        one{"0 hazaar"}
-                        other{"0 hazaar"}
-                    }
-                    10000{
-                        one{"00Th"}
-                        other{"00Th"}
-                    }
-                    100000{
-                        one{"0 laakh"}
-                        other{"0 laakh"}
-                    }
-                    1000000{
-                        one{"00 laakh"}
-                        other{"00 laakh"}
-                    }
-                    10000000{
-                        one{"0 ka'.'"}
-                        other{"0 ka'.'"}
-                    }
-                    100000000{
-                        one{"00 ka'.'"}
-                        other{"00 ka'.'"}
-                    }
-                    1000000000{
-                        one{"0 a'.'"}
-                        other{"0 a'.'"}
-                    }
-                    10000000000{
-                        one{"00 a'.'"}
-                        other{"00 a'.'"}
-                    }
-                    100000000000{
-                        one{"0 kha'.'"}
-                        other{"0 kha'.'"}
-                    }
-                    1000000000000{
-                        one{"00 kha'.'"}
-                        other{"00 kha'.'"}
-                    }
-                    10000000000000{
-                        one{"000 kha'.'"}
-                        other{"000 kha'.'"}
-                    }
-                    100000000000000{
-                        one{"000kha'.'"}
-                        other{"000kha'.'"}
-                    }
-                }
-            }
         }
         minimalPairs{
             ordinal{
@@ -367,6 +187,15 @@ hi_Latn{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Ravi",
+                        "Som",
+                        "Mangal",
+                        "Budh",
+                        "Guru",
+                        "Shukra",
+                        "Shani",
+                    }
                     narrow{
                         "Ra",
                         "So",
@@ -518,6 +347,9 @@ hi_Latn{
                 abbreviated{
                     "Hijri",
                 }
+                narrow{
+                    "Hijri",
+                }
                 wide{
                     "Hijri",
                 }
@@ -587,6 +419,11 @@ hi_Latn{
         }
         day-narrow{
             dn{"din"}
+            relative{
+                "-1"{"kal"}
+                "0"{"aaj"}
+                "1"{"aane wala kal"}
+            }
             relativeTime{
                 future{
                     one{"{0} din mein"}
@@ -600,6 +437,11 @@ hi_Latn{
         }
         day-short{
             dn{"din"}
+            relative{
+                "-1"{"kal"}
+                "0"{"aaj"}
+                "1"{"aane wala kal"}
+            }
             relativeTime{
                 future{
                     one{"{0} din mein"}

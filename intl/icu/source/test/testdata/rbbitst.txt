@@ -1913,6 +1913,26 @@ Bangkok)•</data>
 <data>•\U0001F469\u200D\U0001F680•\U0001F469\U0001F3FD\u200D\U0001F680\u0020•</data>
 
 <locale ja@lw=phrase>
+#phrase breaking test cases for the ML solution
+<lineML>
+#９月に東京から友達が遊びに来た -> ９月に•東京から•友達が•遊びに•来た•
+<data>•\uff19\u6708\u306b•\u6771\u4eac\u304b\u3089•\u53cb\u9054\u304c•\u904a\u3073\u306b•\u6765\u305f•</data>
+#る文字「そうだ、京都」-> る•文字•「そうだ、•京都」•
+<data>•\u308b•\u6587\u5b57•\u300c\u305d\u3046\u3060\u3001•\u4eac\u90fd\u300d•</data>
+#Kana supplement: 𛁛 (U+1B05B), 𛂦(U+1B0A6)
+#生 𛁛𛂦゙をいただく。-> 生 𛁛𛂦゙を•いただく。
+<data>•\u751F\U0001B05B\U0001B0A6\u3099\u3092•\u3044\u305F\u3060\u304F\u3002•</data>
+#中国の携帯は約５００元から５０００元です -> 中国の▁携帯は▁約▁５００元から▁５０００元です
+<data>•\u4E2D\u56FD\u306E•\u643A\u5E2F\u306F•\u7D04•\uFF15\uFF10\uFF10\u5143\u304B\u3089•\uFF15\uFF10\uFF10\uFF10\u5143\u3067\u3059•</data>
+#しかもロゴがＵｎｉｃｏｄｅ！！ -> しかも▁ロゴが▁Ｕｎｉｃｏｄｅ！！
+<data>•\u3057\u304B\u3082•\u30ED\u30B4\u304C•\uFF35\uFF4E\uFF49\uFF43\uFF4F\uFF44\uFF45\uFF01\uFF01•</data>
+#バッテリーを長持ちさせ、充電を最適化します -> バッテリーを▁長持ちさせ、▁充電を▁最適化します
+<data>•\u30D0\u30C3\u30C6\u30EA\u30FC\u3092•\u9577\u6301\u3061\u3055\u305B\u3001•\u5145\u96FB\u3092•\u6700\u9069\u5316\u3057\u307E\u3059•</data>
+#データのコピー、スマートフォンでのお支払いなど -> データの▁コピー、▁スマートフォンでの▁お支払いなど
+<data>•\u30C7\u30FC\u30BF\u306E•\u30B3\u30D4\u30FC\u3001•\u30B9\u30DE\u30FC\u30C8\u30D5\u30A9\u30F3\u3067\u306E•\u304A\u652F\u6255\u3044\u306A\u3069•</data>
+
+<locale ja@lw=phrase>
+#phrase breaking test cases for the dictionary based solution
 <line>
 #[京都観光］時雨殿に行った。-> [京都•観光］•時雨•殿に•行った。•
 <data>•\uff3b\u4eac\u90fd•\u89b3\u5149\uff3d•\u6642\u96e8•\u6bbf\u306b•\u884c\u3063\u305f\u3002•</data>
@@ -1980,6 +2000,58 @@ Bangkok)•</data>
 <data>•\u30E1\u30CB\u30E5\u30FC\u306E•\u30DC\u30BF\u30F3\u3092•\u5927\u304D\u304F•\u3059\u308B•</data>
 #これらの連絡先はデバイスをロック解除しなくても表示され -> これらの▁連絡先は▁デバイスを▁ロック▁解除しなくても▁表示され
 <data>•\u3053\u308C\u3089\u306E•\u9023\u7D61\u5148\u306F•\u30C7\u30D0\u30A4\u30B9\u3092•\u30ED\u30C3\u30AF•\u89E3\u9664\u3057\u306A\u304F\u3066\u3082•\u8868\u793A\u3055\u308C•</data>
+
+# Test the differences in ko with or without lw=phrase.
+<locale ko@lw=phrase>
+<line>
+#1948년 7월 12일에 제정되고 8차에 국민투표에 의하여 개정한다.
+<data>•1948년 •7월 •12일에 •제정되고 •8차에 •국민투표에 •의하여 •개정한다.•</data>
+#대한민국은 민주공화국이다.
+<data>•대한민국은 •민주공화국이다.•</data>
+#서울에서 부산까지 London까지
+<data>•서울에서 •부산까지 •London까지•</data>
+#LTE가 안 되면 WiFi를
+<data>•LTE가 •안 •되면 •WiFi를•</data>
+#<님의 침묵>을 읽고 느낀 점은?
+<data>•\u003c님의 •침묵\u003e을 •읽고 •느낀 •점은?•</data>
+# The following entry passes in ICU4C but fails in ICU4J for an unknown reason.
+#"님의 침묵"을 읽고
+#<data>•"님의 •침묵"을 •읽고•</data>
+# The following 3 lines are not handled properly, yet.
+#“님의 침묵”을 읽고
+#<data>•“님의 •침묵”을 •읽고•</data>
+#『님의 침묵』을 읽고
+#<data>•『님의 •침묵』을 •읽고•</data>
+#大韓民國은 民主共和國이다
+#<data>•大韓民國은 •民主•共和國이다•</data>
+# All the tests for ja@lw=phrase should also work in Korean.
+#る文字「そうだ、京都」-> る•文字•「そうだ、•京都」•
+<data>•\u308b•\u6587\u5b57•\u300c\u305d\u3046\u3060\u3001•\u4eac\u90fd\u300d•</data>
+#９月に東京から友達が遊びに来た -> ９月に•東京から•友達が•遊びに•来た•
+<data>•\uff19\u6708\u306b•\u6771\u4eac\u304b\u3089•\u53cb\u9054\u304c•\u904a\u3073\u306b•\u6765\u305f•</data>
+
+<locale ko>
+<line>
+#1948년 7월 12일에 제정되고 8차에 국민투표에 의하여 개정한다.
+<data>•1948•년 •7•월 •12•일•에 •제•정•되•고 •8•차•에 •국•민•투•표•에 •의•하•여•개•정•한•다.•</data>
+#대한민국은 민주공화국이다.
+<data>•대•한•민•국•은 •민•주•공•화•국•이•다.•</data>
+#서울에서 부산까지 London까지
+<data>•서•울•에•서 •부•산•까•지 •London•까•지•</data>
+#LTE가 안 되면 WiFi를
+<data>•LTE•가 •안 •되•면 •WiFi•를•</data>
+#<님의 침묵>을 읽고 느낀 점은?
+<data>•\u003c•님•의 •침•묵•\u003e•을 •읽•고 •느•낀 •점•은?•</data>
+#"님의 침묵"을 읽고
+<data>•"님•의 •침•묵"을 •읽•고•</data>
+#“님의 침묵”을 읽고
+<data>•“님•의 •침•묵”을 •읽•고•</data>
+#『님의 침묵』을 읽고
+<data>•『님•의 •침•묵』•을 •읽•고•</data>
+#『foo bar』load
+<data>•『foo •bar』•load•</data>
+#《님의 침묵》을 읽고
+<data>•《님•의 •침•묵》•을 •읽•고•</data>
 
 ####################################################################################
 #

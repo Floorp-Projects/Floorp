@@ -55,6 +55,7 @@ yrl{
             }
             dunam{
                 dnam{"dunan-ita"}
+                one{"{0} dunan"}
                 other{"{0} dunan-ita"}
             }
             hectare{
@@ -105,6 +106,7 @@ yrl{
         }
         compound{
             per{"{0} {1} rupi"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -124,6 +126,7 @@ yrl{
             }
             mole{
                 dnam{"mol-ita"}
+                one{"{0} mol"}
                 other{"{0} mol-ita"}
             }
             percent{
@@ -142,6 +145,7 @@ yrl{
                 other{"{0} pisawera-ita miliãu rupi"}
             }
             permyriad{
+                dnam{"pitusá-pitasukasá"}
                 one{"{0} pitusá-pitasukasá"}
                 other{"{0} pitusá-pitasukasá-ita"}
             }
@@ -417,6 +421,8 @@ yrl{
             }
             em{
                 dnam{"tipografia em"}
+                one{"{0} em"}
+                other{"{0} em"}
             }
             megapixel{
                 dnam{"megapikisel-ita"}
@@ -679,6 +685,7 @@ yrl{
             }
             bar{
                 dnam{"bar-ita"}
+                one{"{0} bar"}
                 other{"{0} bar-ita"}
             }
             hectopascal{
@@ -754,6 +761,11 @@ yrl{
                 dnam{"garau Fahrenheit-ita"}
                 one{"{0} garau Fahrenheit"}
                 other{"{0} garau Fahrenheit-ita"}
+            }
+            generic{
+                dnam{"°"}
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
                 dnam{"kelvin-ita"}
@@ -933,6 +945,10 @@ yrl{
                 other{"{0} acre"}
             }
         }
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         concentr{
             percent{
                 dnam{"%"}
@@ -950,6 +966,8 @@ yrl{
         coordinate{
             dnam{"mupikasawa"}
             east{"{0}L"}
+            north{"{0} N"}
+            south{"{0} S"}
             west{"{0}O"}
         }
         digital{
@@ -1023,9 +1041,18 @@ yrl{
             }
             hour{
                 dnam{"hura"}
+                one{"{0} h"}
+                other{"{0} h"}
             }
             millisecond{
                 dnam{"ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+            }
+            minute{
+                dnam{"min"}
+                one{"{0} min"}
+                other{"{0} min"}
             }
             month{
                 dnam{"yasí"}
@@ -1058,6 +1085,12 @@ yrl{
                 one{"{0} ua"}
                 other{"{0} ua"}
             }
+            centimeter{
+                dnam{"cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+                per{"{0}/cm"}
+            }
             fathom{
                 dnam{"barasa"}
                 one{"{0} bsa."}
@@ -1078,6 +1111,11 @@ yrl{
                 other{"{0}″"}
                 per{"{0}/pur."}
             }
+            kilometer{
+                dnam{"km"}
+                one{"{0} km"}
+                other{"{0} km"}
+            }
             light-year{
                 dnam{"akayú-werawa"}
                 one{"{0} akayú-werawa"}
@@ -1085,11 +1123,18 @@ yrl{
             }
             meter{
                 dnam{"m"}
+                one{"{0} m"}
+                other{"{0} m"}
             }
             mile{
                 dnam{"mil"}
                 one{"{0} milha"}
                 other{"{0} milha"}
+            }
+            millimeter{
+                dnam{"mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
             }
             nautical-mile{
                 dnam{"mn"}
@@ -1112,6 +1157,7 @@ yrl{
                 other{"{0}g"}
             }
             kilogram{
+                dnam{"kg"}
                 one{"{0}kg"}
                 other{"{0}kg"}
             }
@@ -1145,6 +1191,7 @@ yrl{
         }
         speed{
             kilometer-per-hour{
+                dnam{"km/h"}
                 one{"{0}km/h"}
                 other{"{0}km/h"}
             }
@@ -1185,9 +1232,11 @@ yrl{
         acceleration{
             g-force{
                 dnam{"kirĩba g"}
+                one{"{0} G"}
             }
             meter-per-square-second{
                 dnam{"meturu-itá/seg²"}
+                one{"{0} m/s²"}
             }
         }
         angle{
@@ -1203,14 +1252,20 @@ yrl{
             }
             degree{
                 dnam{"garau"}
+                one{"{0}°"}
             }
             radian{
                 dnam{"radiano"}
+                one{"{0} rad"}
+            }
+            revolution{
+                one{"{0} rev"}
             }
         }
         area{
             acre{
                 dnam{"acre"}
+                one{"{0} ac"}
             }
             dunam{
                 dnam{"dunan"}
@@ -1219,9 +1274,14 @@ yrl{
             }
             hectare{
                 dnam{"hectare"}
+                one{"{0} ha"}
+            }
+            square-centimeter{
+                one{"{0} cm²"}
             }
             square-foot{
                 dnam{"pí-itá²"}
+                one{"{0} ft²"}
             }
             square-inch{
                 dnam{"puregada-itá²"}
@@ -1229,14 +1289,20 @@ yrl{
                 other{"{0} pur²"}
                 per{"{0} pur² rupi"}
             }
+            square-kilometer{
+                one{"{0} km²"}
+            }
             square-meter{
                 dnam{"meturu-itá²"}
+                one{"{0} m²"}
             }
             square-mile{
                 dnam{"milha-itá²"}
+                one{"{0} mi²"}
             }
             square-yard{
                 dnam{"jarda-itá²"}
+                one{"{0} yd²"}
             }
         }
         concentr{
@@ -1255,6 +1321,9 @@ yrl{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
+            mole{
+                one{"{0} mol"}
+            }
             percent{
                 dnam{"sẽtu rupi"}
                 one{"{0}%"}
@@ -1267,9 +1336,11 @@ yrl{
             }
             permillion{
                 dnam{"pisawera miliãu rupi"}
+                one{"{0} ppm"}
             }
             permyriad{
                 dnam{"pitusá-pitasukasá"}
+                one{"{0}‱"}
             }
         }
         consumption{
@@ -1377,18 +1448,27 @@ yrl{
             }
             hour{
                 dnam{"hura"}
+                one{"{0} h"}
+            }
+            microsecond{
+                one{"{0} μs"}
             }
             millisecond{
                 dnam{"mirisegũdu"}
+                one{"{0} ms"}
             }
             minute{
                 dnam{"min"}
+                one{"{0} min"}
             }
             month{
                 dnam{"yasí"}
                 one{"{0} yasí"}
                 other{"{0} yasí"}
                 per{"{0}/yasí"}
+            }
+            nanosecond{
+                one{"{0} ns"}
             }
             second{
                 dnam{"seg"}
@@ -1412,15 +1492,19 @@ yrl{
         electric{
             ampere{
                 dnam{"amp"}
+                one{"{0} A"}
             }
             milliampere{
                 dnam{"miriamp"}
+                one{"{0} mA"}
             }
             ohm{
                 dnam{"ohm"}
+                one{"{0} Ω"}
             }
             volt{
                 dnam{"volt"}
+                one{"{0} V"}
             }
         }
         energy{
@@ -1429,8 +1513,12 @@ yrl{
                 one{"{0} BTU"}
                 other{"{0} BTU"}
             }
+            calorie{
+                one{"{0} cal"}
+            }
             electronvolt{
                 dnam{"elétron-volt"}
+                one{"{0} eV"}
             }
             foodcalorie{
                 dnam{"cal"}
@@ -1439,12 +1527,18 @@ yrl{
             }
             joule{
                 dnam{"joule"}
+                one{"{0} J"}
+            }
+            kilocalorie{
+                one{"{0} kcal"}
             }
             kilojoule{
                 dnam{"kirujoule"}
+                one{"{0} kJ"}
             }
             kilowatt-hour{
                 dnam{"kW-hura"}
+                one{"{0} kWh"}
             }
             therm-us{
                 dnam{"thm EUA"}
@@ -1455,17 +1549,54 @@ yrl{
         force{
             newton{
                 dnam{"newton"}
+                one{"{0} N"}
             }
             pound-force{
                 dnam{"libra-kirĩba"}
+                one{"{0} lbf"}
+            }
+        }
+        frequency{
+            gigahertz{
+                one{"{0} GHz"}
+            }
+            hertz{
+                one{"{0} Hz"}
+            }
+            kilohertz{
+                one{"{0} kHz"}
+            }
+            megahertz{
+                one{"{0} MHz"}
             }
         }
         graphics{
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                one{"{0} em"}
+            }
             megapixel{
                 dnam{"megapixel"}
+                one{"{0} MP"}
             }
             pixel{
                 dnam{"pixel"}
+                one{"{0} px"}
+            }
+            pixel-per-centimeter{
+                one{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0} ppi"}
             }
         }
         length{
@@ -1473,6 +1604,12 @@ yrl{
                 dnam{"ua"}
                 one{"{0} ua"}
                 other{"{0} ua"}
+            }
+            centimeter{
+                one{"{0} cm"}
+            }
+            decimeter{
+                one{"{0} dm"}
             }
             fathom{
                 dnam{"barasa"}
@@ -1494,6 +1631,9 @@ yrl{
                 other{"{0} pur."}
                 per{"{0}/pur."}
             }
+            kilometer{
+                one{"{0} km"}
+            }
             light-year{
                 dnam{"akayú-werawa"}
                 one{"{0} akayú-werawa"}
@@ -1501,9 +1641,23 @@ yrl{
             }
             meter{
                 dnam{"m"}
+                one{"{0} m"}
+            }
+            micrometer{
+                one{"{0} μm"}
             }
             mile{
                 dnam{"milha"}
+                one{"{0} mi"}
+            }
+            mile-scandinavian{
+                one{"{0} smi"}
+            }
+            millimeter{
+                one{"{0} mm"}
+            }
+            nanometer{
+                one{"{0} nm"}
             }
             nautical-mile{
                 dnam{"mn"}
@@ -1512,23 +1666,32 @@ yrl{
             }
             parsec{
                 dnam{"parsec"}
+                one{"{0} pc"}
+            }
+            picometer{
+                one{"{0} pm"}
             }
             point{
                 dnam{"pitusá"}
+                one{"{0} pt"}
             }
             solar-radius{
                 dnam{"kuarasiawa"}
+                one{"{0} R☉"}
             }
             yard{
                 dnam{"jarda"}
+                one{"{0} yd"}
             }
         }
         light{
             lux{
                 dnam{"lux"}
+                one{"{0} lx"}
             }
             solar-luminosity{
                 dnam{"kuarasí muturisawa"}
+                one{"{0} L☉"}
             }
         }
         mass{
@@ -1539,21 +1702,39 @@ yrl{
             }
             dalton{
                 dnam{"dalton"}
+                one{"{0} Da"}
             }
             earth-mass{
                 dnam{"iwí susuẽga"}
+                one{"{0} M⊕"}
             }
             gram{
                 dnam{"grama"}
+                one{"{0} g"}
+            }
+            kilogram{
+                one{"{0} kg"}
+            }
+            microgram{
+                one{"{0} μg"}
+            }
+            milligram{
+                one{"{0} mg"}
+            }
+            ounce{
+                one{"{0} oz"}
             }
             ounce-troy{
                 dnam{"oz troy"}
+                one{"{0} oz t"}
             }
             pound{
                 dnam{"libra"}
+                one{"{0} lb"}
             }
             solar-mass{
                 dnam{"kuarasí susuẽga"}
+                one{"{0} M☉"}
             }
             stone{
                 dnam{"stones"}
@@ -1570,13 +1751,26 @@ yrl{
             }
         }
         power{
+            gigawatt{
+                one{"{0} GW"}
+            }
             horsepower{
                 dnam{"cv"}
                 one{"{0} cv"}
                 other{"{0} cv"}
             }
+            kilowatt{
+                one{"{0} kW"}
+            }
+            megawatt{
+                one{"{0} MW"}
+            }
+            milliwatt{
+                one{"{0} mW"}
+            }
             watt{
                 dnam{"watt"}
+                one{"{0} W"}
             }
         }
         pressure{
@@ -1589,13 +1783,37 @@ yrl{
                 one{"{0} bar"}
                 other{"{0} bar"}
             }
+            hectopascal{
+                one{"{0} hPa"}
+            }
+            inch-ofhg{
+                one{"{0} inHg"}
+            }
+            kilopascal{
+                one{"{0} kPa"}
+            }
+            megapascal{
+                one{"{0} MPa"}
+            }
+            millibar{
+                one{"{0} mbar"}
+            }
             millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
             }
+            pascal{
+                one{"{0} Pa"}
+            }
+            pound-force-per-square-inch{
+                one{"{0} psi"}
+            }
         }
         speed{
+            kilometer-per-hour{
+                one{"{0} km/h"}
+            }
             knot{
                 dnam{"kitanga"}
                 one{"{0} kitanga"}
@@ -1603,6 +1821,7 @@ yrl{
             }
             meter-per-second{
                 dnam{"meturu/seg"}
+                one{"{0} m/s"}
             }
             mile-per-hour{
                 dnam{"milha-itá/hura"}
@@ -1621,6 +1840,20 @@ yrl{
                 one{"{0} °F"}
                 other{"{0} °F"}
             }
+            generic{
+                one{"{0}°"}
+            }
+            kelvin{
+                one{"{0} K"}
+            }
+        }
+        torque{
+            newton-meter{
+                one{"{0} N⋅m"}
+            }
+            pound-force-foot{
+                one{"{0} lbf⋅ft"}
+            }
         }
         volume{
             acre-foot{
@@ -1630,22 +1863,37 @@ yrl{
             }
             barrel{
                 dnam{"koroti"}
+                one{"{0} bbl"}
             }
             centiliter{
                 dnam{"cl"}
                 one{"{0} cl"}
                 other{"{0} cl"}
             }
+            cubic-centimeter{
+                one{"{0} cm³"}
+            }
             cubic-foot{
                 dnam{"pí-itá³"}
+                one{"{0} ft³"}
             }
             cubic-inch{
                 dnam{"puregada-irá³"}
                 one{"{0} pur³"}
                 other{"{0} pur³"}
             }
+            cubic-kilometer{
+                one{"{0} km³"}
+            }
+            cubic-meter{
+                one{"{0} m³"}
+            }
+            cubic-mile{
+                one{"{0} mi³"}
+            }
             cubic-yard{
                 dnam{"jarda-itá³"}
+                one{"{0} yd³"}
             }
             cup{
                 dnam{"xíkara"}
@@ -1667,6 +1915,9 @@ yrl{
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
             }
+            fluid-ounce-imperial{
+                one{"{0} fl oz Imp."}
+            }
             gallon{
                 dnam{"gal"}
                 one{"{0} gal"}
@@ -1686,6 +1937,7 @@ yrl{
             }
             liter{
                 dnam{"litros"}
+                one{"{0} l"}
             }
             megaliter{
                 dnam{"Ml"}
@@ -1699,6 +1951,7 @@ yrl{
             }
             pint{
                 dnam{"pint"}
+                one{"{0} pt"}
             }
             pint-metric{
                 dnam{"ptm"}
@@ -1707,6 +1960,7 @@ yrl{
             }
             quart{
                 dnam{"qts"}
+                one{"{0} qt"}
             }
             tablespoon{
                 dnam{"k. kaĩbewara"}

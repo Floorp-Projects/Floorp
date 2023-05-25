@@ -8,12 +8,40 @@ sr_Latn_BA{
         }
         duration{
             century{
+                case{
+                    accusative{
+                        few{"{0} vijeka"}
+                        other{"{0} vijekova"}
+                    }
+                    genitive{
+                        few{"{0} vijeka"}
+                        other{"{0} vijekova"}
+                    }
+                    instrumental{
+                        few{"{0} vijeka"}
+                        other{"{0} vijekova"}
+                    }
+                }
                 dnam{"vijekovi"}
                 few{"{0} vijeka"}
                 one{"{0} vijek"}
                 other{"{0} vijekova"}
             }
             month{
+                case{
+                    accusative{
+                        few{"{0} mjeseca"}
+                        other{"{0} mjeseci"}
+                    }
+                    genitive{
+                        few{"{0} mjeseca"}
+                        other{"{0} mjeseci"}
+                    }
+                    instrumental{
+                        few{"{0} mjeseca"}
+                        other{"{0} mjeseci"}
+                    }
+                }
                 dnam{"mjeseci"}
                 few{"{0} mjeseca"}
                 one{"{0} mjesec"}
@@ -21,6 +49,20 @@ sr_Latn_BA{
                 per{"{0} mjesečno"}
             }
             week{
+                case{
+                    accusative{
+                        few{"{0} nedjelje"}
+                        other{"{0} nedjelja"}
+                    }
+                    genitive{
+                        few{"{0} nedjelje"}
+                        other{"{0} nedjelja"}
+                    }
+                    instrumental{
+                        few{"{0} nedjelje"}
+                        other{"{0} nedjelja"}
+                    }
+                }
                 dnam{"nedjelje"}
                 few{"{0} nedjelje"}
                 one{"{0} nedjelja"}
@@ -46,9 +88,21 @@ sr_Latn_BA{
         }
     }
     unitsNarrow{
+        length{
+            light-year{
+                dnam{"svjetlosne god."}
+            }
+        }
+        mass{
+            grain{
+                dnam{"gran"}
+                few{"{0} grana"}
+                one{"{0} gran"}
+                other{"{0} granova"}
+            }
+        }
         volume{
             barrel{
-                dnam{"bbl"}
                 few{"{0} bbl"}
                 one{"{0}bbl"}
                 other{"{0}bbl"}

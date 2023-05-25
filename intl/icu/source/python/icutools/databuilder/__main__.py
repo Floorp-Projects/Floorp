@@ -159,6 +159,23 @@ class Config(object):
         if "usePoolBundle" in self.filters_json_data:
             self.use_pool_bundle = self.filters_json_data["usePoolBundle"]
 
+        # By default, exclude collation data that mimics the order of some large legacy charsets.
+        # We do this in "subtractive" strategy by inserting a resourceFilter.
+        # Later rules from an explicit filter file may override this default behavior.
+        # (In "additive" strategy this is unnecessary.)
+        if self.strategy == "subtractive":
+            filters = self.filters_json_data.setdefault("resourceFilters", [])
+            omit_charset_collations = {
+                "categories": [
+                    "coll_tree"
+                ],
+                "rules": [
+                    "-/collations/big5han",
+                    "-/collations/gb2312han"
+                ]
+            }
+            filters.insert(0, omit_charset_collations)
+
     def _parse_filter_file(self, f):
         # Use the Hjson parser if it is available; otherwise, use vanilla JSON.
         try:

@@ -1366,6 +1366,11 @@ lv{
             other{"Libērijas dolāri"}
             zero{"Libērijas dolāri"}
         }
+        LSL{
+            one{"Lesoto loti"}
+            other{"Lesoto loti"}
+            zero{"Lesoto loti"}
+        }
         LTL{
             one{"Lietuvas lits"}
             other{"Lietuvas liti"}

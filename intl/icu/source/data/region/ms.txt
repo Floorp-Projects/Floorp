@@ -267,7 +267,7 @@ ms{
         TM{"Turkmenistan"}
         TN{"Tunisia"}
         TO{"Tonga"}
-        TR{"Turki"}
+        TR{"Turkiye"}
         TT{"Trinidad dan Tobago"}
         TV{"Tuvalu"}
         TW{"Taiwan"}
@@ -315,6 +315,6 @@ ms{
         NZ{"Aotearoa New Zealand"}
         SZ{"Swaziland"}
         TL{"Timor Timur"}
-        TR{"Türkiye"}
+        TR{"Turki"}
     }
 }

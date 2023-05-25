@@ -231,6 +231,33 @@ ti{
                 }
             }
         }
+        coptic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE፣ d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
+        dangi{
+            intervalFormats{
+                fallback{"{0} – {1}"}
+            }
+        }
+        ethiopic{
+            intervalFormats{
+                fallback{"{0} – {1}"}
+            }
+        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -829,6 +856,125 @@ ti{
                 }
             }
         }
+        islamic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE፣ d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMdd",
+                "GyMMMdd",
+                "GGGGGyyMMdd",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E፣ d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                M{"L"}
+                MEd{"E፣ d/M"}
+                MMM{"LLL"}
+                MMMEd{"E፣ d MMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                d{"d"}
+                y{"y G"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E፣ d/M/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E፣ d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"d/M/y GGGGG"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            monthNames{
+                format{
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+            }
+        }
+        japanese{
+            intervalFormats{
+                fallback{"{0} – {1}"}
+            }
+        }
+        persian{
+            intervalFormats{
+                fallback{"{0} – {1}"}
+            }
+        }
+        roc{
+            intervalFormats{
+                fallback{"{0} – {1}"}
+            }
+        }
     }
     characterLabel{
         activities{"ንጥፈታት"}
@@ -888,6 +1034,11 @@ ti{
         }
         day-narrow{
             dn{"መዓልቲ"}
+            relative{
+                "-1"{"ትማሊ"}
+                "0"{"ሎሚ"}
+                "1"{"ጽባሕ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} መዓልቲ"}
@@ -901,6 +1052,11 @@ ti{
         }
         day-short{
             dn{"መዓልቲ"}
+            relative{
+                "-1"{"ትማሊ"}
+                "0"{"ሎሚ"}
+                "1"{"ጽባሕ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} መዓልቲ"}
@@ -1008,6 +1164,9 @@ ti{
         }
         hour-narrow{
             dn{"ሰዓት"}
+            relative{
+                "0"{"ኣብዚ ሰዓት"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ሰዓት"}
@@ -1021,6 +1180,9 @@ ti{
         }
         hour-short{
             dn{"ሰዓት"}
+            relative{
+                "0"{"ኣብዚ ሰዓት"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ሰዓት"}
@@ -1050,6 +1212,9 @@ ti{
         }
         minute-narrow{
             dn{"ደቒ."}
+            relative{
+                "0"{"ኣብዚ ደቒቕ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ደቒቕ"}
@@ -1063,6 +1228,9 @@ ti{
         }
         minute-short{
             dn{"ደቒቕ"}
+            relative{
+                "0"{"ኣብዚ ደቒቕ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ደቒቕ"}
@@ -1199,6 +1367,11 @@ ti{
         }
         quarter-narrow{
             dn{"ርብዒ"}
+            relative{
+                "-1"{"ዝሓለፈ ርብዒ"}
+                "0"{"ህሉው ርብዒ"}
+                "1"{"ዝመጽእ ርብዒ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ርብዒ"}
@@ -1212,6 +1385,11 @@ ti{
         }
         quarter-short{
             dn{"ርብዒ"}
+            relative{
+                "-1"{"ዝሓለፈ ርብዒ"}
+                "0"{"ህሉው ርብዒ"}
+                "1"{"ዝመጽእ ርብዒ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ርብዒ"}
@@ -1292,6 +1470,9 @@ ti{
         }
         second-narrow{
             dn{"ካልኢት"}
+            relative{
+                "0"{"ሕጂ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ካልኢት"}
@@ -1305,6 +1486,9 @@ ti{
         }
         second-short{
             dn{"ካልኢት"}
+            relative{
+                "0"{"ሕጂ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ካልኢት"}
@@ -1541,6 +1725,11 @@ ti{
         }
         week-narrow{
             dn{"ሰሙን"}
+            relative{
+                "-1"{"ዝሓለፈ ሰሙን"}
+                "0"{"ህሉው ሰሙን"}
+                "1"{"ዝመጽእ ሰሙን"}
+            }
             relativePeriod{"ሰሙን ናይ {0}"}
             relativeTime{
                 future{
@@ -1555,6 +1744,11 @@ ti{
         }
         week-short{
             dn{"ሰሙን"}
+            relative{
+                "-1"{"ዝሓለፈ ሰሙን"}
+                "0"{"ህሉው ሰሙን"}
+                "1"{"ዝመጽእ ሰሙን"}
+            }
             relativePeriod{"ሰሙን ናይ {0}"}
             relativeTime{
                 future{
@@ -1569,6 +1763,9 @@ ti{
         }
         weekOfMonth{
             dn{"ሰሙን ናይ ወርሒ"}
+        }
+        weekOfMonth-narrow{
+            dn{"ሰሙ. ናይ ወር."}
         }
         weekOfMonth-short{
             dn{"ሰሙ. ናይ ወር."}
@@ -1611,6 +1808,11 @@ ti{
         }
         year-narrow{
             dn{"ዓመት"}
+            relative{
+                "-1"{"ዓሚ"}
+                "0"{"ሎሚ ዓመት"}
+                "1"{"ንዓመታ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ዓ"}
@@ -1624,6 +1826,11 @@ ti{
         }
         year-short{
             dn{"ዓመት"}
+            relative{
+                "-1"{"ዓሚ"}
+                "0"{"ሎሚ ዓመት"}
+                "1"{"ንዓመታ"}
+            }
             relativeTime{
                 future{
                     one{"ኣብ {0} ዓ"}
@@ -1652,7 +1859,25 @@ ti{
             middle{"{0}፣ {1}"}
             start{"{0}፣ {1}"}
         }
+        or-narrow{
+            2{"{0} ወይ {1}"}
+            end{"{0} ወይ {1}"}
+            middle{"{0}፣ {1}"}
+            start{"{0}፣ {1}"}
+        }
+        or-short{
+            2{"{0} ወይ {1}"}
+            end{"{0} ወይ {1}"}
+            middle{"{0}፣ {1}"}
+            start{"{0}፣ {1}"}
+        }
         standard{
+            2{"{0}ን {1}ን"}
+            end{"{0}ን {1}ን"}
+            middle{"{0}፣ {1}"}
+            start{"{0}፣ {1}"}
+        }
+        standard-narrow{
             2{"{0}ን {1}ን"}
             end{"{0}ን {1}ን"}
             middle{"{0}፣ {1}"}
@@ -1703,6 +1928,75 @@ ti{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-monogram-informal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-medium-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-long-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-short-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
         }
     }
 }

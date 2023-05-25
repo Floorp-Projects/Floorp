@@ -157,7 +157,20 @@ fr_CA{
         }
     }
     calendar{
+        buddhist{
+            availableFormats{
+                GyMd{"y-MM-dd GGGGG"}
+            }
+        }
         coptic{
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                }
+            }
             monthNames{
                 format{
                     narrow{
@@ -226,6 +239,14 @@ fr_CA{
             }
         }
         ethiopic{
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                }
+            }
             monthNames{
                 format{
                     narrow{
@@ -448,17 +469,6 @@ fr_CA{
                 yMd{"y-MM-dd"}
             }
             dayNames{
-                format{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
                 stand-alone{
                     narrow{
                         "D",
@@ -668,6 +678,17 @@ fr_CA{
                 abbreviated{
                     "AM",
                 }
+                narrow{
+                    "AM",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                }
             }
             monthNames{
                 format{
@@ -746,6 +767,14 @@ fr_CA{
                     "Saka",
                 }
             }
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                }
+            }
             monthNames{
                 format{
                     narrow{
@@ -813,14 +842,43 @@ fr_CA{
                     "Anno Hegirae",
                 }
             }
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                }
+            }
+        }
+        japanese{
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                }
+            }
         }
         persian{
             eras{
                 abbreviated{
                     "AP",
                 }
+                narrow{
+                    "AP",
+                }
                 wide{
                     "AP",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
                 }
             }
             monthNames{
@@ -883,6 +941,16 @@ fr_CA{
                         "Bahman",
                         "Esfand",
                     }
+                }
+            }
+        }
+        roc{
+            intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
                 }
             }
         }
@@ -1051,6 +1119,13 @@ fr_CA{
         }
         year-short{
             dn{"a"}
+        }
+    }
+    personNames{
+        namePattern{
+            sorting-long-referring-informal{"{surname-core}, {given-informal} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname-core}, {given-informal} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname-core}, {given-informal} {surname-prefix}"}
         }
     }
 }

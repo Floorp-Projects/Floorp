@@ -258,6 +258,9 @@ pa{
         "America:Chihuahua"{
             ec{"ਚਿਹੁਆਹੁਆ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ਸਿਉਡਾਡ ਹੁਆਰੇਜ਼"}
+        }
         "America:Coral_Harbour"{
             ec{"ਐਟੀਕੋਕਨ"}
         }

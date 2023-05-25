@@ -3,6 +3,26 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ms_ID{
     NumberElements{
+        adlm{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        bali{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        beng{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        brah{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
         latn{
             patterns{
                 accountingFormat{"¤#,##0.00"}
@@ -13,8 +33,45 @@ ms_ID{
                 timeSeparator{"."}
             }
         }
+        olck{
+            symbols{
+                decimal{","}
+            }
+        }
+        sora{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
     }
     calendar{
+        buddhist{
+            DateTimePatterns{
+                "HH.mm.ss zzzz",
+                "HH.mm.ss z",
+                "HH.mm.ss",
+                "HH.mm",
+                "EEEE, dd MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyyMMdd",
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH.mm.ss zzzz",

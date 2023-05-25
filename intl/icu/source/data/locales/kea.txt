@@ -364,6 +364,10 @@ kea{
                 "am",
                 "pm",
             }
+            AmPmMarkersNarrow{
+                "am",
+                "pm",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -520,6 +524,22 @@ kea{
                         "kinta-fera",
                         "sesta-fera",
                         "sábadu",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"am"}
+                        pm{"pm"}
+                    }
+                    narrow{
+                        am{"am"}
+                        pm{"pm"}
+                    }
+                    wide{
+                        am{"am"}
+                        pm{"pm"}
                     }
                 }
             }
@@ -882,7 +902,19 @@ kea{
         dayperiod{
             dn{"am/pm"}
         }
+        dayperiod-narrow{
+            dn{"am/pm"}
+        }
+        dayperiod-short{
+            dn{"am/pm"}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1065,6 +1097,11 @@ kea{
         }
         month-narrow{
             dn{"mes"}
+            relative{
+                "-1"{"mes pasadu"}
+                "0"{"es mes li"}
+                "1"{"prósimu mes"}
+            }
             relativeTime{
                 future{
                     other{"di li {0} mes"}
@@ -1076,6 +1113,11 @@ kea{
         }
         month-short{
             dn{"mes"}
+            relative{
+                "-1"{"mes pasadu"}
+                "0"{"es mes li"}
+                "1"{"prósimu mes"}
+            }
             relativeTime{
                 future{
                     other{"di li {0} mes"}
@@ -1403,6 +1445,11 @@ kea{
         }
         week-narrow{
             dn{"sim."}
+            relative{
+                "-1"{"simana pasadu"}
+                "0"{"es simana li"}
+                "1"{"prósimu simana"}
+            }
             relativePeriod{"sim. di {0}"}
             relativeTime{
                 future{
@@ -1415,6 +1462,11 @@ kea{
         }
         week-short{
             dn{"sim."}
+            relative{
+                "-1"{"simana pasadu"}
+                "0"{"es simana li"}
+                "1"{"prósimu simana"}
+            }
             relativePeriod{"sim. di {0}"}
             relativeTime{
                 future{
@@ -1436,6 +1488,9 @@ kea{
         }
         weekday{
             dn{"dia di simana"}
+        }
+        weekday-narrow{
+            dn{"dia di sim."}
         }
         weekday-short{
             dn{"dia di sim."}
@@ -1467,6 +1522,11 @@ kea{
         }
         year-narrow{
             dn{"anu"}
+            relative{
+                "-1"{"anu pasadu"}
+                "0"{"es anu li"}
+                "1"{"prósimu anu"}
+            }
             relativeTime{
                 future{
                     other{"di li {0} anu"}
@@ -1478,6 +1538,11 @@ kea{
         }
         year-short{
             dn{"anu"}
+            relative{
+                "-1"{"anu pasadu"}
+                "0"{"es anu li"}
+                "1"{"prósimu anu"}
+            }
             relativeTime{
                 future{
                     other{"di li {0} anu"}
@@ -1490,6 +1555,12 @@ kea{
         zone{
             dn{"ora lokal"}
         }
+        zone-narrow{
+            dn{"ora lokal"}
+        }
+        zone-short{
+            dn{"ora lokal"}
+        }
     }
     listPattern{
         or{
@@ -1499,12 +1570,28 @@ kea{
         or-narrow{
             2{"{0} o {1}"}
             end{"{0} o {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         or-short{
             2{"{0} o {1}"}
             end{"{0} o {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard{
+            2{"{0} i {1}"}
+            end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0} i {1}"}
+            end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
             middle{"{0}, {1}"}

@@ -273,6 +273,7 @@ en{
         hdn{"Northern Haida"}
         he{"Hebrew"}
         hi{"Hindi"}
+        hi_Latn{"Hindi (Latin)"}
         hif{"Fiji Hindi"}
         hil{"Hiligaynon"}
         hit{"Hittite"}

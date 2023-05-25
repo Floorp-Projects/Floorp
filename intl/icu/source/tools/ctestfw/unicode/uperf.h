@@ -37,7 +37,7 @@ U_NAMESPACE_USE
 //|             name = "";
 //|             break;
 //|     }
-//|     return NULL;
+//|     return nullptr;
 //| }
 #define TESTCASE(id,test)                       \
     case id:                                    \
@@ -57,7 +57,7 @@ U_NAMESPACE_USE
 //|     TESTCASE_AUTO(TestSomethingElse);
 //|     TESTCASE_AUTO(TestAnotherThing);
 //|     TESTCASE_AUTO_END;
-//|     return NULL;
+//|     return nullptr;
 //| }
 #define TESTCASE_AUTO_BEGIN \
     for(;;) { \
@@ -133,9 +133,9 @@ public:
 class T_CTEST_EXPORT_API UPerfTest {
 public:
     UBool run();
-    UBool runTest( char* name = NULL, char* par = NULL ); // not to be overridden
+    UBool runTest( char* name = nullptr, char* par = nullptr ); // not to be overridden
         
-    virtual void usage( void ) ;
+    virtual void usage() ;
     
     virtual ~UPerfTest();
 
@@ -145,7 +145,7 @@ public:
     
     ULine* getLines(UErrorCode& status);
 
-    const UChar* getBuffer(int32_t& len,UErrorCode& status);
+    const char16_t* getBuffer(int32_t& len,UErrorCode& status);
 
 protected:
     UPerfTest(int32_t argc, const char* argv[], UErrorCode& status);
@@ -158,7 +158,7 @@ protected:
     void init(UOption addOptions[], int32_t addOptionsCount,
               UErrorCode& status);
 
-    virtual UPerfFunction* runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL ); // override !
+    virtual UPerfFunction* runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = nullptr ); // override !
 
     virtual UBool runTestLoop( char* testname, char* par );
 
@@ -177,7 +177,7 @@ protected:
     ULine*       lines;
     int32_t      numLines;
     UBool        line_mode;
-    UChar* buffer;
+    char16_t* buffer;
     int32_t      bufferLen;
     UBool        verbose;
     UBool        bulk_mode;

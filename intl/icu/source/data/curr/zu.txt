@@ -1091,6 +1091,10 @@ zu{
             one{"i-Liberian Dollar"}
             other{"i-Liberian Dollar"}
         }
+        LSL{
+            one{"i-Lesotho Loti"}
+            other{"i-Lesotho Loti"}
+        }
         LYD{
             one{"i-Libyan Dinar"}
             other{"i-Libyan Dinar"}

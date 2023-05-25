@@ -260,6 +260,23 @@ sv{
         }
         minimumGroupingDigits{"1"}
         native{"latn"}
+        nkoo{
+            symbols{
+                decimal{","}
+                plusSign{"+"}
+            }
+        }
+        olck{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
+        thai{
+            symbols{
+                perMille{"‰"}
+                percentSign{"%"}
+            }
+        }
     }
     calendar{
         buddhist{
@@ -289,9 +306,35 @@ sv{
                 "GyMMdd",
             }
             availableFormats{
+                E{"ccc"}
+                Ed{"E d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                M{"L"}
+                MEd{"E d/M"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMMEd{"E d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMd{"d/M"}
                 MMdd{"d/M"}
+                Md{"d/M"}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"y-MM G"}
+                yyyyMEd{"E y-MM-dd G"}
                 yyyyMM{"y-MM G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E d MMM y G"}
                 yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"y-MM-dd G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
             }
             eras{
                 abbreviated{
@@ -305,6 +348,19 @@ sv{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y G–y G"}
+                    y{"y – y G"}
+                }
                 GyM{
                     G{"y-MM GGGGG – y-MM GGGGG"}
                     M{"y-MM – y-MM GGGGG"}
@@ -316,14 +372,89 @@ sv{
                     d{"E y-MM-dd – E y-MM-dd GGGGG"}
                     y{"E y-MM-dd – E y-MM-dd GGGGG"}
                 }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E d MMM y G – E d MMM y G"}
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d–d MMM y G"}
+                    y{"d MMM y G – d MMM d y"}
+                }
                 GyMd{
                     G{"y-MM-dd GGGGG – y-MM-dd GGGGG"}
                     M{"y-MM-dd – y-MM-dd GGGGG"}
                     d{"y-MM-dd – y-MM-dd GGGGG"}
                     y{"y-MM-dd – y-MM-dd GGGGG"}
                 }
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E d/M – E d/M"}
+                    d{"E d/M – E d/M"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E d MMM – E d MMM"}
+                    d{"E d – E d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"d/M–d/M"}
+                    d{"d–d/M"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
                 hmv{
+                    a{"h:mm a – h:mm a v"}
                     h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y G"}
                 }
                 yM{
                     M{"y-MM – MM GGGGG"}
@@ -334,10 +465,23 @@ sv{
                     d{"E y-MM-dd – E y-MM-dd GGGGG"}
                     y{"E y-MM-dd – E y-MM-dd GGGGG"}
                 }
+                yMMM{
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
                 yMMMEd{
                     M{"E d MMM–E d MMM y G"}
                     d{"E d MMM–E d MMM y G"}
                     y{"E d MMM y–E d MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"d MMM–d MMM y G"}
+                    d{"d–d MMM y G"}
+                    y{"d MMM y–d MMM y G"}
                 }
                 yMd{
                     M{"y-MM-dd – MM-dd GGGGG"}
@@ -447,6 +591,20 @@ sv{
                         "11:e mån",
                         "12:e mån",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "första månaden",
                         "andra månaden",
@@ -477,10 +635,29 @@ sv{
                         "11:e mån",
                         "12:e mån",
                     }
+                    wide{
+                        "första månaden",
+                        "andra månaden",
+                        "tredje månaden",
+                        "fjärde månaden",
+                        "femte månaden",
+                        "sjätte månaden",
+                        "sjunde månaden",
+                        "åttonde månaden",
+                        "nionde månaden",
+                        "tionde månaden",
+                        "elfte månaden",
+                        "tolfte månaden",
+                    }
                 }
             }
         }
         coptic{
+            intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1121,11 +1298,13 @@ sv{
                 stand-alone{
                     abbreviated{
                         afternoon1{"efterm."}
+                        am{"fm"}
                         evening1{"kväll"}
                         midnight{"midnatt"}
                         morning1{"morgon"}
                         morning2{"förm."}
                         night1{"natt"}
+                        pm{"em"}
                     }
                     narrow{
                         afternoon1{"efterm."}
@@ -1458,9 +1637,11 @@ sv{
             }
             intervalFormats{
                 Bh{
+                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
+                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
@@ -1621,6 +1802,16 @@ sv{
                 }
                 wide{
                     "efter Hirja",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
                 }
             }
             monthNames{
@@ -1915,6 +2106,17 @@ sv{
                     "Reiwa",
                 }
             }
+            intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+            }
         }
         persian{
             eras{
@@ -1926,6 +2128,17 @@ sv{
                 }
                 wide{
                     "Anno Persarum",
+                }
+            }
+            intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
                 }
             }
             monthNames{
@@ -2369,6 +2582,11 @@ sv{
             }
         }
         mon-narrow{
+            relative{
+                "-1"{"mån. förra veckan"}
+                "0"{"mån. denna vecka"}
+                "1"{"mån. nästa vecka"}
+            }
             relativeTime{
                 future{
                     one{"+{0} må."}
@@ -2963,6 +3181,18 @@ sv{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-narrow{
+            2{"{0} eller {1}"}
+            end{"{0} eller {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        or-short{
+            2{"{0} eller {1}"}
+            end{"{0} eller {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} och {1}"}
             end{"{0} och {1}"}
@@ -2972,6 +3202,8 @@ sv{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} och {1}"}
@@ -3039,6 +3271,57 @@ sv{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{credentials} {given} {given2} {surname} {surname2}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{
+                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
+                "llCaps}"
+            }
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{credentials} {given} {given2-initial} {surname}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname} {surname2}, {given} {given2}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname} {surname2}, {given} {given2-initial}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname} {surname2}, {given-initial} {given2-initial}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-informal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-long-referring-formal{"{surname}, {title} {given} {given2}, {credentials}"}
+            surnameFirst-long-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{
+                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
+                "llCaps}"
+            }
+            surnameFirst-medium-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial}, {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}, {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname}, {given-initial}"}
         }
     }
 }

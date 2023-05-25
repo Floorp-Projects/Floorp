@@ -578,12 +578,29 @@ nn{
                 dnam{"bogesek"}
             }
         }
+        area{
+            square-mile{
+                per{"{0}/mi²"}
+            }
+        }
         compound{
             times{"{0}{1}"}
         }
         consumption{
             liter-per-100-kilometer{
                 dnam{"l/100 km"}
+            }
+            mile-per-gallon{
+                dnam{"eng. mil/gal"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"eng. mil/brit. gal"}
+            }
+        }
+        digital{
+            byte{
+                one{"{0}B"}
+                other{"{0} byte"}
             }
         }
         duration{
@@ -617,30 +634,36 @@ nn{
                 per{"{0}/v"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                one{"{0} dpcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                one{"{0} ppt"}
+                other{"{0} ppt"}
+            }
+        }
         length{
-            centimeter{
-                per{"{0}/cm"}
+            astronomical-unit{
+                dnam{"au"}
             }
-            decimeter{
-                dnam{"dm"}
+            fathom{
+                dnam{"famner"}
             }
-            kilometer{
-                per{"{0}/km"}
-            }
-            meter{
-                per{"{0}/m"}
-            }
-            micrometer{
-                dnam{"μm"}
-            }
-            nanometer{
-                dnam{"nm"}
+            picometer{
+                dnam{"pikometer"}
             }
         }
         mass{
             ounce{
                 one{"{0} unse"}
                 other{"{0} unser"}
+            }
+            stone{
+                dnam{"stones"}
+                one{"{0} eng. st."}
+                other{"{0} eng. st."}
             }
         }
         pressure{
@@ -656,26 +679,33 @@ nn{
             }
         }
         volume{
-            dessert-spoon{
-                dnam{"bs"}
-                one{"{0} bs"}
-                other{"{0} bs"}
+            cup-metric{
+                dnam{"m. koppar"}
             }
             dessert-spoon-imperial{
                 dnam{"brit. barneskei"}
-                one{"{0} imp. bs"}
-                other{"{0} imp. bs"}
             }
             drop{
                 one{"{0} dr"}
                 other{"{0} drope"}
             }
+            fluid-ounce{
+                dnam{"væskeunse"}
+            }
             fluid-ounce-imperial{
+                dnam{"britisk væskeunse"}
                 one{"{0} imp. fl oz"}
                 other{"{0} imp. fl oz"}
             }
             liter{
                 dnam{"liter"}
+            }
+            pint{
+                one{"{0} pt"}
+                other{"{0} pt"}
+            }
+            quart-imperial{
+                dnam{"brit. quart"}
             }
             tablespoon{
                 dnam{"ms"}

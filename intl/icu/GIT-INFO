@@ -1,5 +1,5 @@
-commit ff3514f257ea10afe7e710e9f946f68d256704b1
+commit 5861e1fd52f1d7673eee38bc3c965aa18b336062
 Author: Peter Edberg <pedberg@unicode.org>
-Date:   Thu Oct 13 13:44:35 2022 -0700
+Date:   Tue Apr 11 10:32:35 2023 -0700
 
-    ICU-21958 integrate CLDR release-42-beta5 to ICU main for 72
+    ICU-22221 update cldr-icu instructions, and ICU tag for integration

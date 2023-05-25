@@ -120,6 +120,7 @@ sd{
             10p-2{"سينٽي{0}"}
             10p-21{"zepto{0}"}
             10p-24{"yocto{0}"}
+            10p-3{"m{0}"}
             10p-6{"micro{0}"}
             10p-9{"nano{0}"}
             10p1{"deka{0}"}
@@ -374,6 +375,7 @@ sd{
                 other{"{0} ایمپئیر"}
             }
             milliampere{
+                dnam{"ملي ايمپئير"}
                 one{"{0} ملي ايمپئير"}
                 other{"{0} ملي ايمپئير"}
             }
@@ -476,6 +478,7 @@ sd{
         }
         graphics{
             dot{
+                dnam{"پڪسلز"}
                 one{"{0} dot"}
                 other{"{0} dots"}
             }
@@ -532,11 +535,26 @@ sd{
                 one{"{0} ڊيسي ميٽر"}
                 other{"{0} ڊيسي ميٽر"}
             }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"fm"}
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
             foot{
                 dnam{"فوٽ"}
                 one{"{0} فوٽ"}
                 other{"{0} فوٽ"}
                 per{"{0} في فوٽ"}
+            }
+            furlong{
+                dnam{"fur"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"انچ"}
@@ -704,6 +722,11 @@ sd{
                 one{"{0} سولر ماس"}
                 other{"{0} سولر ماسز"}
             }
+            stone{
+                dnam{"st"}
+                one{"{0} st"}
+                other{"{0} st"}
+            }
             ton{
                 dnam{"ٽن"}
                 one{"{0} ٽن"}
@@ -866,6 +889,863 @@ sd{
                 one{"{0} بيريلز"}
                 other{"{0} بيريلز"}
             }
+            bushel{
+                dnam{"bu"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
+            centiliter{
+                dnam{"سينٽي ليٽر"}
+                one{"{0} سينٽي ليٽر"}
+                other{"{0} سينٽي ليٽر"}
+            }
+            cubic-centimeter{
+                dnam{"ڪيوبڪ سينٽي ميٽر"}
+                one{"{0} ڪيوبڪ سينٽي ميٽر"}
+                other{"{0} ڪيوبڪ سينٽي ميٽر"}
+                per{"{0} في ڪيوبڪ سينٽي ميٽر"}
+            }
+            cubic-foot{
+                dnam{"ڪيوبڪ فٽ"}
+                one{"{0} ڪيوبڪ فٽ"}
+                other{"{0} ڪيوبڪ فٽ"}
+            }
+            cubic-inch{
+                dnam{"ڪيوبڪ انچ"}
+                one{"{0} ڪيوبڪ انچ"}
+                other{"{0} ڪيوبڪ انچ"}
+            }
+            cubic-kilometer{
+                dnam{"ڪيوبڪ ڪلوميٽر"}
+                one{"{0} ڪيوبڪ ڪلوميٽر"}
+                other{"{0} ڪيوبڪ ڪلوميٽر"}
+            }
+            cubic-meter{
+                dnam{"ڪيوبڪ ميٽر"}
+                one{"{0} ڪيوبڪ ميٽر"}
+                other{"{0} ڪيوبڪ ميٽر"}
+                per{"{0} في ڪيوبڪ ميٽر"}
+            }
+            cubic-mile{
+                dnam{"ڪيوبڪ ميل"}
+                one{"{0} ڪيوبڪ ميل"}
+                other{"{0} ڪيوبڪ ميل"}
+            }
+            cubic-yard{
+                dnam{"ڪيوبڪ يارڊ"}
+                one{"{0} ڪيوبڪ يارڊ"}
+                other{"{0} ڪيوبڪ يارڊ"}
+            }
+            cup{
+                dnam{"ڪپ ماپو"}
+                one{"{0} ڪپ ماپو"}
+                other{"{0} ڪپ ماپو"}
+            }
+            cup-metric{
+                dnam{"ميٽرڪ ڪپ"}
+                one{"{0} ميٽرڪ ڪپ"}
+                other{"{0} ميٽرڪ ڪپ"}
+            }
+            deciliter{
+                dnam{"ڊيسي ليٽر"}
+                one{"{0} ڊيسي ليٽر"}
+                other{"{0} ڊيسي ليٽر"}
+            }
+            dessert-spoon{
+                dnam{"dstspn"}
+                one{"{0} dstspn"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dstspn Imp"}
+                one{"{0} dstspn Imp"}
+                other{"{0} dstspn Imp"}
+            }
+            dram{
+                dnam{"dram fluid"}
+                one{"{0} dram fl"}
+                other{"{0} dram fl"}
+            }
+            drop{
+                dnam{"drop"}
+                one{"{0} drop"}
+                other{"{0} drop"}
+            }
+            fluid-ounce{
+                dnam{"پاڻياٺ اونس"}
+                one{"{0} پاڻياٺ اونس"}
+                other{"{0} پاڻياٺ اونس"}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp. پاڻياٺ آئونسز"}
+                one{"{0} Imp. پاڻياٺ آئونس"}
+                other{"{0} Imp. پاڻياٺ آئونسز"}
+            }
+            gallon{
+                dnam{"گيلن"}
+                one{"{0} گيلن"}
+                other{"{0} گيلن"}
+                per{"{0} في گيلن"}
+            }
+            gallon-imperial{
+                dnam{"امپيريل گيلن"}
+                one{"{0} امپيريل گيلن"}
+                other{"{0} امپيريل گيلن"}
+                per{"{0} في امپيريل گيلن"}
+            }
+            hectoliter{
+                dnam{"هيڪٽو ليٽر"}
+                one{"{0} هيڪٽو ليٽر"}
+                other{"{0} هيڪٽو ليٽر"}
+            }
+            jigger{
+                dnam{"jigger"}
+                one{"{0} jigger"}
+                other{"{0} jigger"}
+            }
+            liter{
+                dnam{"ليٽر"}
+                one{"{0} ليٽر"}
+                other{"{0} ليٽر"}
+                per{"{0} في ليٽر"}
+            }
+            megaliter{
+                dnam{"ميگا ليٽر"}
+                one{"{0} ميگا ليٽر"}
+                other{"{0} ميگا ليٽر"}
+            }
+            milliliter{
+                dnam{"ملي ليٽر"}
+                one{"{0} ملي ليٽر"}
+                other{"{0} ملي ليٽر"}
+            }
+            pinch{
+                dnam{"pinch"}
+                one{"{0} pinch"}
+                other{"{0} pinch"}
+            }
+            pint{
+                dnam{"پنٽ"}
+                one{"{0} پنٽ"}
+                other{"{0} پنٽ"}
+            }
+            pint-metric{
+                dnam{"ميٽرڪ پنٽ"}
+                one{"{0} ميٽرڪ پنٽ"}
+                other{"{0} ميٽرڪ پنٽ"}
+            }
+            quart{
+                dnam{"چوٿائي گيلن"}
+                one{"{0} چوٿائي گيلن"}
+                other{"{0} چوٿائي گيلن"}
+            }
+            quart-imperial{
+                dnam{"qt Imp"}
+                one{"{0} qt Imp."}
+                other{"{0} qt Imp."}
+            }
+            tablespoon{
+                dnam{"کاڌي جا چمچا"}
+                one{"{0} کاڌي جا چمچا"}
+                other{"{0} کاڌي جا چمچا"}
+            }
+            teaspoon{
+                dnam{"چانهن جا چمچا"}
+                one{"{0} چانهن جا چمچا"}
+                other{"{0} چانهن جا چمچا"}
+            }
+        }
+    }
+    unitsNarrow{
+        angle{
+            arc-minute{
+                dnam{"آرڪ منٽز"}
+                one{"{0} آرڪ منٽز"}
+                other{"{0} آرڪ منٽز"}
+            }
+            arc-second{
+                dnam{"آرڪ سيڪنڊز"}
+                one{"{0} آرڪ سيڪنڊز"}
+                other{"{0} آرڪ سيڪنڊز"}
+            }
+            degree{
+                dnam{"ڊگري"}
+                one{"{0} ڊگريز"}
+                other{"{0} ڊگريز"}
+            }
+            radian{
+                one{"{0}رئڊ"}
+                other{"{0}رئڊ"}
+            }
+            revolution{
+                dnam{"گردش"}
+                one{"{0} گردشون"}
+                other{"{0} گردشون"}
+            }
+        }
+        area{
+            acre{
+                dnam{"ايڪڙ"}
+                one{"{0} ايڪڙ"}
+                other{"{0} ايڪڙ"}
+            }
+            dunam{
+                dnam{"دنام"}
+                one{"{0} دنام"}
+                other{"{0} دنام"}
+            }
+            hectare{
+                dnam{"هيڪٽر"}
+                one{"{0}ھيڪٽر"}
+                other{"{0}ھيڪٽر"}
+            }
+            square-centimeter{
+                dnam{"اسڪوائر سينٽي ميٽر"}
+                one{"{0} اسڪوائر سينٽي ميٽر"}
+                other{"{0} اسڪوائر سينٽي ميٽر"}
+                per{"{0} في اسڪوائر سينٽي ميٽر"}
+            }
+            square-foot{
+                dnam{"اسڪوائر فٽ"}
+                one{"{0} اسڪوائر فٽ"}
+                other{"{0} اسڪوائر فٽ"}
+            }
+            square-inch{
+                dnam{"اسڪوائر انچ"}
+                one{"{0} اسڪوائر انچ"}
+                other{"{0} اسڪوائر انچ"}
+                per{"{0} في اسڪوائر انچ"}
+            }
+            square-kilometer{
+                dnam{"اسڪوائر ڪلوميٽر"}
+                one{"{0} اسڪوائر ڪلوميٽر"}
+                other{"{0} اسڪوائر ڪلوميٽر"}
+                per{"{0} اسڪوائر ڪلوميٽر"}
+            }
+            square-meter{
+                dnam{"اسڪوائر ميٽر"}
+                one{"{0}m²"}
+                other{"{0}m²"}
+                per{"{0} في اسڪوائر ميٽر"}
+            }
+            square-mile{
+                dnam{"اسڪوائر ميل"}
+                one{"{0} اسڪوائر ميل"}
+                other{"{0} اسڪوائر ميل"}
+                per{"{0} في اسڪوائر ميل"}
+            }
+            square-yard{
+                dnam{"اسڪوائر يارڊ"}
+                one{"{0} ااسڪوائر يارڊ"}
+                other{"{0} ااسڪوائر يارڊ"}
+            }
+        }
+        compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
+            per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
+        }
+        concentr{
+            item{
+                dnam{"آئٽم"}
+                one{"{0} آئٽم"}
+                other{"{0} آئٽم"}
+            }
+            karat{
+                dnam{"قيراط"}
+                one{"{0} قيراط"}
+                other{"{0} قيراط"}
+            }
+            milligram-ofglucose-per-deciliter{
+                dnam{"ملي گرامز في ڊيسي ليٽر"}
+            }
+            millimole-per-liter{
+                dnam{"ملي مولز في ليٽر"}
+                one{"{0} ملي مولز في ليٽر"}
+                other{"{0} ملي مولز في ليٽر"}
+            }
+            mole{
+                dnam{"مول"}
+            }
+            percent{
+                dnam{"%"}
+                one{"{0}%"}
+                other{"{0}%"}
+            }
+            permyriad{
+                dnam{"پيرمائيرڊ"}
+            }
+        }
+        consumption{
+            liter-per-100-kilometer{
+                dnam{"L/100km"}
+                one{"{0} L/100km"}
+                other{"{0} L/100km"}
+            }
+            liter-per-kilometer{
+                dnam{"ليٽرز في ڪلو ميٽر"}
+            }
+            mile-per-gallon{
+                dnam{"ميل في گيلن"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"ميل في امپيريل گيلن"}
+            }
+        }
+        coordinate{
+            dnam{"ڊائريڪشن"}
+            east{"{0} اوڀر"}
+            north{"{0} اتر"}
+            south{"{0} ڏکڻ"}
+            west{"{0} اولهه"}
+        }
+        digital{
+            bit{
+                dnam{"بٽ"}
+                one{"{0} بٽ"}
+                other{"{0} بٽ"}
+            }
+            byte{
+                dnam{"بائيٽ"}
+                one{"{0} بائيٽ"}
+                other{"{0} بائيٽ"}
+            }
+            gigabit{
+                dnam{"Gb"}
+            }
+            kilobit{
+                dnam{"ڪلو بٽ"}
+                one{"{0} ڪلو بٽز"}
+                other{"{0} ڪلو بٽز"}
+            }
+            kilobyte{
+                dnam{"ڪلو بائيٽ"}
+                one{"{0} ڪلو بائيٽ"}
+                other{"{0} ڪلو بائيٽز"}
+            }
+            megabit{
+                dnam{"ميگا بٽ"}
+                one{"{0} ميگا بٽز"}
+                other{"{0} ميگا بٽز"}
+            }
+        }
+        duration{
+            century{
+                dnam{"c"}
+                one{"{0} c"}
+                other{"{0} c"}
+            }
+            day{
+                dnam{"ڏينهن"}
+                one{"{0} ڏينهن"}
+                other{"{0} ڏينهن"}
+                per{"{0} في ڏينهن"}
+            }
+            decade{
+                dnam{"ڏهاڪا"}
+                one{"{0} ڏهاڪو"}
+                other{"{0} ڏهاڪا"}
+            }
+            hour{
+                dnam{"ڪلاڪ"}
+                one{"{0} ڪلاڪ"}
+                other{"{0} ڪلاڪ"}
+                per{"{0} في ڪلاڪ"}
+            }
+            microsecond{
+                dnam{"مائڪرو سيڪنڊ"}
+                one{"{0} مائڪرو سيڪنڊ"}
+                other{"{0} مائڪرو سيڪنڊ"}
+            }
+            millisecond{
+                dnam{"ملي سيڪنڊ"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+            }
+            minute{
+                dnam{"منٽ"}
+                one{"{0} منٽ"}
+                other{"{0} منٽ"}
+                per{"{0} في منٽ"}
+            }
+            month{
+                dnam{"مهينو"}
+                one{"{0} مهينا"}
+                other{"{0} مهينا"}
+                per{"{0} في مهيني"}
+            }
+            nanosecond{
+                dnam{"نينو سيڪنڊ"}
+                one{"{0} نينو سيڪنڊ"}
+                other{"{0} نينو سيڪنڊ"}
+            }
+            quarter{
+                dnam{"ٽه ماهي"}
+                one{"{0} ٽه ماهي"}
+                other{"{0} ٽه ماهي"}
+                per{"{0} في ٽه ماهي"}
+            }
+            second{
+                dnam{"سيڪنڊ"}
+                one{"{0} s"}
+                other{"{0} سيڪنڊ"}
+                per{"{0} في سيڪنڊ"}
+            }
+            week{
+                dnam{"هفتو"}
+                one{"{0} هفتا"}
+                other{"{0} هفتي"}
+                per{"{0} في هفتي"}
+            }
+            year{
+                dnam{"سال"}
+                one{"{0} سال"}
+                other{"{0} سال"}
+                per{"{0} في سال"}
+            }
+        }
+        electric{
+            ampere{
+                dnam{"ایمپئیر"}
+                one{"{0} ایمپئیر"}
+                other{"{0} ایمپئیر"}
+            }
+            milliampere{
+                dnam{"ملي ايمپئير"}
+                one{"{0} ملي ايمپيئر"}
+                other{"{0} ملي ايمپيئر"}
+            }
+            ohm{
+                dnam{"اوهمس"}
+            }
+            volt{
+                dnam{"وولٽ"}
+                one{"{0} وولٽ"}
+                other{"{0} وولٽ"}
+            }
+        }
+        energy{
+            calorie{
+                dnam{"ڪيلوري"}
+                one{"{0} ڪيلوري"}
+                other{"{0} ڪيلوري"}
+            }
+            electronvolt{
+                dnam{"اليڪٽرون وولٽ"}
+            }
+            foodcalorie{
+                dnam{"ڪيلوري"}
+                one{"{0} ڪيلوري"}
+                other{"{0} ڪيلوري"}
+            }
+            joule{
+                dnam{"جول"}
+                one{"{0} جول"}
+                other{"{0} جول"}
+            }
+            kilocalorie{
+                dnam{"ڪلو ڪيلوريز"}
+                one{"{0} ڪلو ڪيلوريز"}
+                other{"{0} ڪلو ڪيلوريز"}
+            }
+            kilojoule{
+                dnam{"ڪلو جول"}
+            }
+            kilowatt-hour{
+                dnam{"ڪلو واٽ في ڪلاڪ"}
+                one{"{0} ڪلو واٽ في ڪلڪ"}
+                other{"{0} ڪلو واٽ في ڪلڪ"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"ڪ و آ / 100 ڪ م"}
+                one{"{0}ڪ و آ/100 ڪ م"}
+                other{"{0}ڪ و آ/100 ڪ م"}
+            }
+            newton{
+                dnam{"نيوٽن"}
+            }
+            pound-force{
+                dnam{"پائونڊ-فورس"}
+            }
+        }
+        frequency{
+            gigahertz{
+                dnam{"گيگا هرٽز"}
+                one{"{0} گيگا هرٽز"}
+                other{"{0} گيگا هرٽز"}
+            }
+            hertz{
+                dnam{"هرٽز"}
+                one{"{0} هرٽز"}
+                other{"{0} هرٽز"}
+            }
+            kilohertz{
+                dnam{"ڪلو هرٽز"}
+                one{"{0} ڪلو هرٽز"}
+                other{"{0} ڪلو هرٽز"}
+            }
+            megahertz{
+                dnam{"ميگا هرٽز"}
+                one{"{0} ميگا هرٽز"}
+                other{"{0} ميگا هرٽز"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"پڪسلز"}
+                one{"{0}dot"}
+                other{"{0}dot"}
+            }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0}dpcm"}
+                other{"{0}dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0}dpi"}
+                other{"{0}dpi"}
+            }
+            em{
+                dnam{"em"}
+                one{"{0}em"}
+                other{"{0}em"}
+            }
+            megapixel{
+                dnam{"MP"}
+                one{"{0}MP"}
+                other{"{0}MP"}
+            }
+            pixel{
+                dnam{"px"}
+                one{"{0}px"}
+                other{"{0}px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0}ppcm"}
+                other{"{0}ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0}ppi"}
+                other{"{0}ppi"}
+            }
+        }
+        length{
+            astronomical-unit{
+                dnam{"فلڪيات جا يونٽ"}
+                one{"{0} فلڪيات جا يونٽ"}
+                other{"{0} فلڪيات جا يونٽ"}
+            }
+            centimeter{
+                dnam{"سينٽي ميٽر"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+                per{"{0} في سينٽي ميٽر"}
+            }
+            decimeter{
+                dnam{"ڊيسي ميٽر"}
+                one{"{0} ڊيسي ميٽر"}
+                other{"{0} ڊيسي ميٽر"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"fm"}
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
+            foot{
+                dnam{"فوٽ"}
+                one{"{0} فوٽ"}
+                other{"{0} فوٽ"}
+                per{"{0} في فوٽ"}
+            }
+            furlong{
+                dnam{"fur"}
+                one{"{0} fur"}
+                other{"{0} fur"}
+            }
+            inch{
+                dnam{"انچ"}
+                one{"{0} انچ"}
+                other{"{0} انچ"}
+                per{"{0} في انچ"}
+            }
+            kilometer{
+                dnam{"ڪلوميٽر"}
+                one{"{0} ڪلوميٽر"}
+                other{"{0} ڪلوميٽر"}
+                per{"{0} في ڪلوميٽر"}
+            }
+            light-year{
+                dnam{"لائيٽ ايئرس"}
+                one{"{0} لائيٽ ايئرس"}
+                other{"{0} لائيٽ ايئرس"}
+            }
+            meter{
+                dnam{"ميٽر"}
+                one{"{0} ميٽر"}
+                other{"{0} ميٽر"}
+                per{"{0} في ميٽر"}
+            }
+            micrometer{
+                dnam{"مائڪرو ميٽر"}
+                one{"{0} مائڪرو ميٽر"}
+                other{"{0} مائڪرو ميٽر"}
+            }
+            mile{
+                dnam{"ميل"}
+                one{"{0} ميل"}
+                other{"{0} ميل"}
+            }
+            mile-scandinavian{
+                dnam{"ايس ايم آئي"}
+                one{"{0}ايس ايم آئي"}
+                other{"{0}ايس ايم آئي"}
+            }
+            millimeter{
+                dnam{"ملي ميٽر"}
+                one{"{0} ملي ميٽر"}
+                other{"{0} ملي ميٽر"}
+            }
+            nanometer{
+                dnam{"نينو ميٽر"}
+                one{"{0} نينو ميٽر"}
+                other{"{0} نينو ميٽر"}
+            }
+            nautical-mile{
+                dnam{"سمندري ميل"}
+                one{"{0} سمندري ميل"}
+                other{"{0} سمندري ميل"}
+            }
+            parsec{
+                dnam{"پارسيڪ"}
+                one{"{0} pc"}
+                other{"{0} pc"}
+            }
+            picometer{
+                dnam{"پيڪو ميٽر"}
+                one{"{0} پيڪو ميٽر"}
+                other{"{0} پيڪو ميٽر"}
+            }
+            point{
+                dnam{"پوائينٽون"}
+                one{"{0}پوائينٽ"}
+                other{"{0}پوائينٽ"}
+            }
+            solar-radius{
+                dnam{"R☉"}
+                one{"{0}R☉"}
+                other{"{0}R☉"}
+            }
+            yard{
+                dnam{"گز"}
+                one{"{0} گز"}
+                other{"{0} گز"}
+            }
+        }
+        light{
+            lux{
+                dnam{"لڪس"}
+            }
+            solar-luminosity{
+                dnam{"سولر ليومينوسائيٽيز"}
+            }
+        }
+        mass{
+            carat{
+                dnam{"ڪيرٽ"}
+                one{"{0} ڪيرٽ"}
+                other{"{0} ڪيرٽ"}
+            }
+            dalton{
+                dnam{"ڊالٽنز"}
+            }
+            earth-mass{
+                dnam{"ارٿ ماسز"}
+            }
+            grain{
+                dnam{"گرين"}
+                one{"{0} گرين"}
+                other{"{0} گرين"}
+            }
+            gram{
+                dnam{"گرام"}
+                one{"{0}g"}
+                other{"{0}g"}
+                per{"{0}/گـ."}
+            }
+            kilogram{
+                dnam{"kg"}
+                one{"{0}kg"}
+                other{"{0} kg"}
+                per{"{0}/ڪ.گـ."}
+            }
+            milligram{
+                dnam{"مـ.گـ."}
+                one{"{0}مـ.گـ."}
+                other{"{0}مـ.گـ."}
+            }
+            ounce{
+                dnam{"اونس"}
+                one{"{0} اونس"}
+                other{"{0} اونس"}
+                per{"{0} في اونس"}
+            }
+            ounce-troy{
+                dnam{"ٽرائي اونس"}
+                one{"{0} ٽرائي اونس"}
+                other{"{0} ٽرائي اونس"}
+            }
+            pound{
+                dnam{"پائونڊ"}
+                one{"{0} پائونڊ"}
+                other{"{0} پائونڊ"}
+                per{"{0} في پائونڊ"}
+            }
+            ton{
+                dnam{"ٽن"}
+                one{"{0} ٽن"}
+                other{"{0} ٽن"}
+            }
+            tonne{
+                dnam{"ٽَـ"}
+                one{"{0}ٽَـ"}
+                other{"{0}ٽَـ"}
+            }
+        }
+        power{
+            gigawatt{
+                dnam{"گيگا واٽ"}
+                one{"{0} گيگا واٽ"}
+                other{"{0} گيگا واٽ"}
+            }
+            horsepower{
+                dnam{"هارس پاور"}
+                one{"{0} هارس پاور"}
+                other{"{0} هارس پاور"}
+            }
+            kilowatt{
+                dnam{"ڪلو واٽ"}
+                one{"{0} ڪلو واٽ"}
+                other{"{0} ڪلو واٽ"}
+            }
+            megawatt{
+                dnam{"ميگا واٽ"}
+                one{"{0} ميگا واٽ"}
+                other{"{0} ميگا واٽ"}
+            }
+            milliwatt{
+                dnam{"ملي واٽ"}
+                one{"{0} ملي واٽ"}
+                other{"{0} ملي واٽ"}
+            }
+            watt{
+                dnam{"واٽز"}
+                one{"{0} واٽ"}
+                other{"{0} واٽ"}
+            }
+        }
+        pressure{
+            bar{
+                dnam{"بار"}
+                one{"{0} بار"}
+                other{"{0} بارس"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                dnam{"ڪلوميٽر في ڪلاڪ"}
+                one{"{0} km/h"}
+                other{"{0} km/h"}
+            }
+            knot{
+                dnam{"ناٽ"}
+                one{"{0} ناٽ"}
+                other{"{0} ناٽ"}
+            }
+            meter-per-second{
+                dnam{"ميٽر في سيڪنڊ"}
+                one{"{0} ميٽر في سيڪنڊ"}
+                other{"{0} ميٽر في سيڪنڊ"}
+            }
+            mile-per-hour{
+                dnam{"ميل في ڪلاڪ"}
+                one{"{0} ميل في ڪلاڪ"}
+                other{"{0} ميل في ڪلاڪ"}
+            }
+        }
+        temperature{
+            celsius{
+                dnam{"°C"}
+                one{"{0}°C"}
+                other{"{0}°C"}
+            }
+        }
+        volume{
+            acre-foot{
+                dnam{"ايڪڙ فٽ"}
+                one{"{0} ايڪڙ فٽ"}
+                other{"{0} ايڪڙ فٽ"}
+            }
             centiliter{
                 dnam{"سينٽي ليٽر"}
                 one{"{0} سينٽي ليٽر"}
@@ -928,11 +1808,6 @@ sd{
                 one{"{0} پاڻياٺ اونس"}
                 other{"{0} پاڻياٺ اونس"}
             }
-            fluid-ounce-imperial{
-                dnam{"Imp. پاڻياٺ آئونسز"}
-                one{"{0} Imp. پاڻياٺ آئونس"}
-                other{"{0} Imp. پاڻياٺ آئونسز"}
-            }
             gallon{
                 dnam{"گيلن"}
                 one{"{0} گيلن"}
@@ -966,16 +1841,6 @@ sd{
                 one{"{0} ملي ليٽر"}
                 other{"{0} ملي ليٽر"}
             }
-            pint{
-                dnam{"پنٽ"}
-                one{"{0} پنٽ"}
-                other{"{0} پنٽ"}
-            }
-            pint-metric{
-                dnam{"ميٽرڪ پنٽ"}
-                one{"{0} ميٽرڪ پنٽ"}
-                other{"{0} ميٽرڪ پنٽ"}
-            }
             quart{
                 dnam{"چوٿائي گيلن"}
                 one{"{0} چوٿائي گيلن"}
@@ -990,229 +1855,6 @@ sd{
                 dnam{"چانهن جا چمچا"}
                 one{"{0} چانهن جا چمچا"}
                 other{"{0} چانهن جا چمچا"}
-            }
-        }
-    }
-    unitsNarrow{
-        compound{
-            10p-1{"d{0}"}
-            10p-15{"f{0}"}
-            10p-18{"a{0}"}
-            10p-2{"c{0}"}
-            10p-21{"z{0}"}
-            10p-24{"y{0}"}
-            10p-3{"m{0}"}
-            10p-6{"μ{0}"}
-            10p-9{"n{0}"}
-            10p1{"da{0}"}
-            10p12{"T{0}"}
-            10p15{"P{0}"}
-            10p18{"E{0}"}
-            10p2{"h{0}"}
-            10p21{"Z{0}"}
-            10p24{"Y{0}"}
-            10p3{"k{0}"}
-            10p6{"M{0}"}
-            10p9{"G{0}"}
-            per{"{0}/{1}"}
-            power2{
-                one{
-                    _{
-                        _{"{0}²"}
-                    }
-                }
-                other{
-                    _{
-                        _{"{0}²"}
-                    }
-                }
-            }
-            times{"{0}⋅{1}"}
-        }
-        concentr{
-            item{
-                dnam{"آئٽم"}
-            }
-            percent{
-                dnam{"%"}
-                one{"{0}%"}
-                other{"{0}%"}
-            }
-        }
-        consumption{
-            liter-per-100-kilometer{
-                dnam{"L/100km"}
-                one{"{0} L/100km"}
-                other{"{0} L/100km"}
-            }
-        }
-        coordinate{
-            dnam{"ڊائريڪشن"}
-            east{"{0} اوڀر"}
-            north{"{0} اتر"}
-            south{"{0} ڏکڻ"}
-            west{"{0} اولهه"}
-        }
-        duration{
-            day{
-                dnam{"ڏينهن"}
-                one{"{0} ڏينهن"}
-                other{"{0} ڏينهن"}
-            }
-            hour{
-                dnam{"ڪلاڪ"}
-                one{"{0} ڪلاڪ"}
-                other{"{0} ڪلاڪ"}
-            }
-            millisecond{
-                dnam{"ملي سيڪنڊ"}
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                dnam{"منٽ"}
-                one{"{0} منٽ"}
-                other{"{0} منٽ"}
-            }
-            month{
-                dnam{"مهينو"}
-                one{"{0} مهينا"}
-                other{"{0} مهينا"}
-            }
-            quarter{
-                dnam{"ٽه ماهي"}
-                one{"{0} ٽه ماهي"}
-                other{"{0} ٽه ماهي"}
-                per{"{0} في ٽه ماهي"}
-            }
-            second{
-                dnam{"سيڪنڊ"}
-                one{"{0} s"}
-                other{"{0} سيڪنڊ"}
-            }
-            week{
-                dnam{"هفتو"}
-                one{"{0} هفتا"}
-                other{"{0} هفتي"}
-            }
-            year{
-                dnam{"سال"}
-                one{"{0} سال"}
-                other{"{0} سال"}
-            }
-        }
-        force{
-            kilowatt-hour-per-100-kilometer{
-                one{"{0}ڪ و آ/100 ڪ م"}
-                other{"{0}ڪ و آ/100 ڪ م"}
-            }
-        }
-        graphics{
-            dot{
-                one{"{0}dot"}
-                other{"{0}dot"}
-            }
-            dot-per-centimeter{
-                dnam{"dpcm"}
-                one{"{0}dpcm"}
-                other{"{0}dpcm"}
-            }
-            dot-per-inch{
-                dnam{"dpi"}
-                one{"{0}dpi"}
-                other{"{0}dpi"}
-            }
-            em{
-                one{"{0}em"}
-                other{"{0}em"}
-            }
-            megapixel{
-                dnam{"MP"}
-                one{"{0}MP"}
-                other{"{0}MP"}
-            }
-            pixel{
-                dnam{"px"}
-                one{"{0}px"}
-                other{"{0}px"}
-            }
-            pixel-per-centimeter{
-                one{"{0}ppcm"}
-                other{"{0}ppcm"}
-            }
-            pixel-per-inch{
-                one{"{0}ppi"}
-                other{"{0}ppi"}
-            }
-        }
-        length{
-            centimeter{
-                dnam{"سينٽي ميٽر"}
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            earth-radius{
-                dnam{"R⊕"}
-            }
-            kilometer{
-                dnam{"ڪلوميٽر"}
-                one{"{0} ڪلوميٽر"}
-                other{"{0} ڪلوميٽر"}
-            }
-            meter{
-                dnam{"ميٽر"}
-                one{"{0} ميٽر"}
-                other{"{0} ميٽر"}
-            }
-            millimeter{
-                dnam{"ملي ميٽر"}
-                one{"{0} ملي ميٽر"}
-                other{"{0} ملي ميٽر"}
-            }
-        }
-        mass{
-            gram{
-                dnam{"گرام"}
-                one{"{0}g"}
-                other{"{0}g"}
-                per{"{0}/گـ."}
-            }
-            kilogram{
-                dnam{"kg"}
-                one{"{0}kg"}
-                other{"{0} kg"}
-                per{"{0}/ڪ.گـ."}
-            }
-            milligram{
-                dnam{"مـ.گـ."}
-                one{"{0}مـ.گـ."}
-                other{"{0}مـ.گـ."}
-            }
-            tonne{
-                dnam{"ٽَـ"}
-                one{"{0}ٽَـ"}
-                other{"{0}ٽَـ"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                dnam{"ڪلوميٽر في ڪلاڪ"}
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-        }
-        temperature{
-            celsius{
-                dnam{"°C"}
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-        }
-        volume{
-            liter{
-                dnam{"ليٽر"}
-                one{"{0} ليٽر"}
-                other{"{0} ليٽر"}
             }
         }
     }
@@ -1670,6 +2312,11 @@ sd{
             }
         }
         graphics{
+            dot{
+                dnam{"پڪسلز"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
             dot-per-centimeter{
                 dnam{"dpcm"}
                 one{"{0} dpcm"}
@@ -1680,11 +2327,27 @@ sd{
                 one{"{0} dpi"}
                 other{"{0} dpi"}
             }
+            em{
+                one{"{0} em"}
+                other{"{0} em"}
+            }
             megapixel{
                 dnam{"ميگا پڪسلز"}
+                one{"{0} MP"}
+                other{"{0} MP"}
             }
             pixel{
                 dnam{"پڪسلز"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1704,11 +2367,23 @@ sd{
                 one{"{0} ڊيسي ميٽر"}
                 other{"{0} ڊيسي ميٽر"}
             }
+            earth-radius{
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                one{"{0} fth"}
+                other{"{0} fth"}
+            }
             foot{
                 dnam{"فوٽ"}
                 one{"{0} فوٽ"}
                 other{"{0} فوٽ"}
                 per{"{0} في فوٽ"}
+            }
+            furlong{
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"انچ"}
@@ -1790,6 +2465,14 @@ sd{
             }
         }
         light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
             lux{
                 dnam{"لڪس"}
                 one{"{0} lx"}
@@ -1861,6 +2544,10 @@ sd{
                 dnam{"سولر ماسز"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            stone{
+                one{"{0} st"}
+                other{"{0} st"}
             }
             ton{
                 dnam{"ٽن"}
@@ -1940,6 +2627,10 @@ sd{
                 one{"{0} mmHg"}
                 other{"{0} mm Hg"}
             }
+            pascal{
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+            }
             pound-force-per-square-inch{
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -2008,6 +2699,10 @@ sd{
                 one{"{0} bbl"}
                 other{"{0} bbl"}
             }
+            bushel{
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"سينٽي ليٽر"}
                 one{"{0} سينٽي ليٽر"}
@@ -2065,6 +2760,22 @@ sd{
                 one{"{0} ڊيسي ليٽر"}
                 other{"{0} ڊيسي ليٽر"}
             }
+            dessert-spoon{
+                one{"{0} dstspn"}
+                other{"{0} dstspn"}
+            }
+            dessert-spoon-imperial{
+                one{"{0} dstspn Imp"}
+                other{"{0} dstspn Imp"}
+            }
+            dram{
+                one{"{0} dram fl"}
+                other{"{0} dram fl"}
+            }
+            drop{
+                one{"{0} drop"}
+                other{"{0} drop"}
+            }
             fluid-ounce{
                 dnam{"پاڻياٺ اونس"}
                 one{"{0} پاڻياٺ اونس"}
@@ -2092,6 +2803,10 @@ sd{
                 one{"{0} هيڪٽو ليٽر"}
                 other{"{0} هيڪٽو ليٽر"}
             }
+            jigger{
+                one{"{0} jigger"}
+                other{"{0} jigger"}
+            }
             liter{
                 dnam{"ليٽر"}
                 one{"{0} ليٽر"}
@@ -2108,6 +2823,10 @@ sd{
                 one{"{0} ملي ليٽر"}
                 other{"{0} ملي ليٽر"}
             }
+            pinch{
+                one{"{0} pinch"}
+                other{"{0} pinch"}
+            }
             pint{
                 dnam{"پنٽ"}
                 one{"{0} پنٽ"}
@@ -2122,6 +2841,10 @@ sd{
                 dnam{"چوٿائي گيلن"}
                 one{"{0} چوٿائي گيلن"}
                 other{"{0} چوٿائي گيلن"}
+            }
+            quart-imperial{
+                one{"{0} qt Imp."}
+                other{"{0} qt Imp."}
             }
             tablespoon{
                 dnam{"کاڌي جا چمچا"}

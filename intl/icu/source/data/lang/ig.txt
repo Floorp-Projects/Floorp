@@ -121,6 +121,7 @@ ig{
         eu{"Baskwe"}
         ewo{"Ewọndọ"}
         fa{"Peshianụ"}
+        fa_AF{"Peshianụ (Afghanistan)"}
         ff{"Fula"}
         fi{"Fịnịsh"}
         fil{"Fịlịpịnọ"}
@@ -287,6 +288,7 @@ ig{
         nia{"Nias"}
         niu{"Niwan"}
         nl{"Dọchị"}
+        nl_BE{"Dọchị (Belgium)"}
         nmg{"Kwasịọ"}
         nn{"Nọrweyịan Nynersk"}
         nnh{"Nglembọn"}

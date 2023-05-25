@@ -10,6 +10,7 @@ rm{
     units{
         compound{
             per{"{0} per {1}"}
+            times{"{0}⋅{1}"}
         }
         coordinate{
             dnam{"direcziun"}
@@ -184,9 +185,14 @@ rm{
         }
     }
     unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         coordinate{
             dnam{"direcziun"}
             east{"{0}O"}
+            north{"{0} N"}
             south{"{0}S"}
             west{"{0}V"}
         }

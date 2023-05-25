@@ -108,11 +108,13 @@ yo_BJ{
         ZZ{"Àgbègbè àìmɔ̀"}
     }
     Countries%short{
+        GB{"Gɛ̀ɛ́sì"}
         PS{"Palɛsítínì"}
+        US{"Amɛrikà"}
     }
     Countries%variant{
         CZ{"Shɛ́ɛ́kì"}
         TL{"Ìlà Òòrùn Tímɔ̀"}
-        TR{"Èdè Tɔɔki"}
+        TR{"Tɔɔki"}
     }
 }

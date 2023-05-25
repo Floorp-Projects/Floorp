@@ -158,6 +158,7 @@ chr{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -346,6 +347,7 @@ chr{
                 dnam{"ᎯᎸᏍᎩ ᎩᏄᏘᏗ"}
                 one{"{0} ᎩᏄᏘᏗ"}
                 other{"{0} ᎯᎸᏍᎩ ᎩᏄᏘᏗ"}
+                per{"{0}/q"}
             }
             second{
                 dnam{"ᏗᏎᏢ"}
@@ -487,6 +489,8 @@ chr{
             }
             em{
                 dnam{"ᎪᏪᎸ em"}
+                one{"{0} em"}
+                other{"{0} em"}
             }
             megapixel{
                 dnam{"ᏧᏔᎾ ᏗᏇᎦᏎᎵ"}
@@ -1050,6 +1054,7 @@ chr{
     unitsNarrow{
         acceleration{
             g-force{
+                dnam{"ᎠᏓᎾᏌᏁᏍᎩ-ᎦᏌᏙᏯᏍᏗ"}
                 one{"{0}G"}
                 other{"{0}Gs"}
             }
@@ -1088,6 +1093,7 @@ chr{
         }
         area{
             acre{
+                dnam{"ᎢᏧᏟᎶᏓ"}
                 one{"{0}ac"}
                 other{"{0}ac"}
             }
@@ -1097,8 +1103,15 @@ chr{
                 other{"{0}ᏚᎾᎹ"}
             }
             hectare{
+                dnam{"ᎮᏔ ᎢᏳᏟᎶᏛ"}
                 one{"{0}ha"}
                 other{"{0}ha"}
+            }
+            square-centimeter{
+                dnam{"cm²"}
+                one{"{0} cm²"}
+                other{"{0} cm²"}
+                per{"{0}/cm²"}
             }
             square-foot{
                 dnam{"ft²"}
@@ -1111,7 +1124,14 @@ chr{
                 other{"{0}in²"}
                 per{"{0}/in²"}
             }
+            square-kilometer{
+                dnam{"km²"}
+                one{"{0} km²"}
+                other{"{0} km²"}
+                per{"{0}/km²"}
+            }
             square-meter{
+                dnam{"ᏗᏟᎶᏍᏗ²"}
                 one{"{0}m²"}
                 other{"{0}m²"}
                 per{"{0}/m²"}
@@ -1137,7 +1157,52 @@ chr{
             1024p6{"Ei{0}"}
             1024p7{"Zi{0}"}
             1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -1217,6 +1282,7 @@ chr{
         }
         digital{
             bit{
+                dnam{"ᎤᏍᎦᎳ"}
                 one{"{0}ᎤᏍᎦᎳ"}
                 other{"{0}ᎤᏍᎦᎳ"}
             }
@@ -1272,18 +1338,32 @@ chr{
             }
         }
         duration{
+            century{
+                dnam{"ᏍᏧ"}
+                one{"{0} ᏍᏧ"}
+                other{"{0} ᏍᏧ"}
+            }
             day{
                 dnam{"ᎢᎦ"}
                 one{"{0}Ꭲ"}
                 other{"{0}Ꭲ"}
+                per{"{0}/Ꭲ"}
+            }
+            decade{
+                dnam{"ᏍᎪᎯ"}
+                one{"{0} ᏍᎪᎯ"}
+                other{"{0} ᏍᎪᎯ"}
             }
             hour{
                 dnam{"ᏑᏟᎶᏓ"}
                 one{"{0}Ꮡ"}
                 other{"{0}Ꮡ"}
+                per{"{0}/Ꮡ"}
             }
             microsecond{
                 dnam{"μᏗᏎᏢ"}
+                one{"{0} μs"}
+                other{"{0} μs"}
             }
             millisecond{
                 dnam{"ᏌᎠ"}
@@ -1294,26 +1374,42 @@ chr{
                 dnam{"ᎢᏯᏔ"}
                 one{"{0}Ꭲ"}
                 other{"{0}Ꭲ"}
+                per{"{0}/ᎢᏯᏔ"}
             }
             month{
                 dnam{"ᎧᎸᎢ"}
                 one{"{0}Ꭷ"}
                 other{"{0}Ꭷ"}
+                per{"{0}/Ꭷ"}
+            }
+            nanosecond{
+                dnam{"ᎾᏃᏗᏎᏢ"}
+                one{"{0} ᎾᏃ"}
+                other{"{0} ᎾᏃ"}
+            }
+            quarter{
+                dnam{"qtr"}
+                one{"{0} q"}
+                other{"{0} q"}
+                per{"{0}/q"}
             }
             second{
                 dnam{"ᎠᏎᏢ"}
                 one{"{0}ᎠᏎ"}
                 other{"{0}ᎠᏎ"}
+                per{"{0}/ᎠᏎ"}
             }
             week{
                 dnam{"ᏒᎾ"}
                 one{"{0}Ꮢ"}
                 other{"{0}Ꮢ"}
+                per{"{0}/Ꮢ"}
             }
             year{
                 dnam{"ᎤᏕ"}
                 one{"{0}Ꭴ"}
                 other{"{0}Ꭴ"}
+                per{"{0}/Ꭴ"}
             }
         }
         electric{
@@ -1365,6 +1461,7 @@ chr{
                 other{"{0}J"}
             }
             kilocalorie{
+                dnam{"kcal"}
                 one{"{0}kcal"}
                 other{"{0}kcal"}
             }
@@ -1379,6 +1476,7 @@ chr{
                 other{"{0}kWh"}
             }
             therm-us{
+                dnam{"US ᎤᏗᏞᎬᎢ"}
                 one{"{0}US ᎤᏗᏞᎬ"}
                 other{"{0}US ᎤᏗᏞᎬ"}
             }
@@ -1433,11 +1531,30 @@ chr{
                 one{"{0}dpi"}
                 other{"{0}dpi"}
             }
+            em{
+                dnam{"em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
             megapixel{
                 dnam{"MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
             }
             pixel{
                 dnam{"px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1452,8 +1569,20 @@ chr{
                 other{"{0}cm"}
                 per{"{0}/cm"}
             }
+            decimeter{
+                dnam{"ᏌᏟ"}
+                one{"{0} ᏌᏟ"}
+                other{"{0} ᏌᏟ"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             fathom{
                 dnam{"ᏑᏓᎵ ᎢᏗᎳᏏᏗ ᎠᏯᏱ"}
+                one{"{0} fth"}
+                other{"{0} fth"}
             }
             foot{
                 dnam{"ft"}
@@ -1463,6 +1592,8 @@ chr{
             }
             furlong{
                 dnam{"ᎠᏰᏟ ᎩᏄᏘᏗ ᏑᏟᎶᏓ"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"in"}
@@ -1474,6 +1605,7 @@ chr{
                 dnam{"ᎠᏗ"}
                 one{"{0}ᎠᏗ"}
                 other{"{0}ᎠᏗ"}
+                per{"{0}/ᎠᏗ"}
             }
             light-year{
                 dnam{"ly"}
@@ -1484,6 +1616,7 @@ chr{
                 dnam{"ᎠᏟ"}
                 one{"{0}ᎠᏟ"}
                 other{"{0}ᎠᏟ"}
+                per{"{0}/ᎠᏟ"}
             }
             micrometer{
                 dnam{"μm"}
@@ -1516,6 +1649,7 @@ chr{
                 other{"{0}nmi"}
             }
             parsec{
+                dnam{"ᎢᏯᏆᏎᎦ"}
                 one{"{0}pc"}
                 other{"{0}pc"}
             }
@@ -1552,6 +1686,7 @@ chr{
                 other{"{0}lm"}
             }
             lux{
+                dnam{"ᎸᏏ"}
                 one{"{0}lx"}
                 other{"{0}lx"}
             }
@@ -1632,6 +1767,7 @@ chr{
                 other{"{0}st"}
             }
             ton{
+                dnam{"ᏗᏈᏂ"}
                 one{"{0}tn"}
                 other{"{0}tn"}
             }
@@ -1783,6 +1919,7 @@ chr{
         }
         volume{
             acre-foot{
+                dnam{"ᏑᏟᎶᏛ-ᎢᏗᎳᏏᏗ"}
                 one{"{0}ac ft"}
                 other{"{0}ac ft"}
             }
@@ -1796,18 +1933,62 @@ chr{
                 one{"{0}bu"}
                 other{"{0}bu"}
             }
+            centiliter{
+                dnam{"cL"}
+                one{"{0} cL"}
+                other{"{0} cL"}
+            }
+            cubic-centimeter{
+                dnam{"cm³"}
+                one{"{0} cm³"}
+                other{"{0} cm³"}
+                per{"{0}/cm³"}
+            }
             cubic-foot{
                 dnam{"ft³"}
+                one{"{0} ft³"}
+                other{"{0} ft³"}
             }
             cubic-inch{
                 dnam{"in³"}
+                one{"{0} in³"}
+                other{"{0} in³"}
+            }
+            cubic-kilometer{
+                dnam{"km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
+            }
+            cubic-meter{
+                dnam{"m³"}
+                one{"{0} m³"}
+                other{"{0} m³"}
+                per{"{0}/m³"}
+            }
+            cubic-mile{
+                dnam{"mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
             }
             cubic-yard{
                 dnam{"yd³"}
+                one{"{0} yd³"}
+                other{"{0} yd³"}
             }
             cup{
+                dnam{"ᏧᎵᏍᏈᏗ"}
                 one{"{0}c"}
                 other{"{0}c"}
+            }
+            cup-metric{
+                dnam{"mcup"}
+                one{"{0} mc"}
+                other{"{0} mc"}
+            }
+            deciliter{
+                dnam{"dL"}
+                one{"{0} dL"}
+                other{"{0} dL"}
             }
             dessert-spoon{
                 dnam{"dsp"}
@@ -1851,6 +2032,11 @@ chr{
                 other{"{0}galIm"}
                 per{"{0}/galIm"}
             }
+            hectoliter{
+                dnam{"hL"}
+                one{"{0} hL"}
+                other{"{0} hL"}
+            }
             jigger{
                 dnam{"ᏥᎩᎳ"}
                 one{"{0}ᏥᎩᎳ"}
@@ -1862,6 +2048,16 @@ chr{
                 other{"{0}L"}
                 per{"{0}/L"}
             }
+            megaliter{
+                dnam{"ML"}
+                one{"{0} ML"}
+                other{"{0} ML"}
+            }
+            milliliter{
+                dnam{"mL"}
+                one{"{0} mL"}
+                other{"{0} mL"}
+            }
             pinch{
                 dnam{"pn"}
                 one{"{0}pn"}
@@ -1871,6 +2067,11 @@ chr{
                 dnam{"pt"}
                 one{"{0}pt"}
                 other{"{0}pt"}
+            }
+            pint-metric{
+                dnam{"mpt"}
+                one{"{0} mpt"}
+                other{"{0} mpt"}
             }
             quart{
                 dnam{"qt"}
@@ -2001,6 +2202,30 @@ chr{
             1024p7{"Zi{0}"}
             1024p8{"Yi{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
         }
         concentr{
             item{
@@ -2185,6 +2410,10 @@ chr{
                 one{"{0} ᎾᏃ"}
                 other{"{0} ᎾᏃ"}
             }
+            quarter{
+                one{"{0} q"}
+                other{"{0} q"}
+            }
             second{
                 dnam{"ᏓᏓᎾ"}
                 one{"{0} ᎠᏎᏢ"}
@@ -2323,11 +2552,27 @@ chr{
                 one{"{0} dpi"}
                 other{"{0} dpi"}
             }
+            em{
+                one{"{0} em"}
+                other{"{0} em"}
+            }
             megapixel{
                 dnam{"ᏧᏔᎾ ᏗᏇᎦᏎᎵ"}
+                one{"{0} MP"}
+                other{"{0} MP"}
             }
             pixel{
                 dnam{"ᏗᏇᎦᏎᎵ"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -2347,8 +2592,14 @@ chr{
                 one{"{0} ᏌᏟ"}
                 other{"{0} ᏌᏟ"}
             }
+            earth-radius{
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
             fathom{
                 dnam{"ᏑᏓᎵ ᎢᏗᎳᏏᏗ ᎠᏯᏱ"}
+                one{"{0} fth"}
+                other{"{0} fth"}
             }
             foot{
                 dnam{"ᎢᏗᎳᏏᏗ"}
@@ -2358,6 +2609,8 @@ chr{
             }
             furlong{
                 dnam{"ᎠᏰᏟ ᎩᏄᏘᏗ ᎢᏳᏟᎶᏓ"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             inch{
                 dnam{"ᎢᏗᏏᏔᏗᏍᏗ"}
@@ -2694,6 +2947,8 @@ chr{
             }
             bushel{
                 dnam{"ᎤᎧᏲᏗ ᏑᏟᎶᏓ"}
+                one{"{0} bu"}
+                other{"{0} bu"}
             }
             centiliter{
                 dnam{"cL"}

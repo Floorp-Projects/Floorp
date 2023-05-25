@@ -131,6 +131,7 @@ ko{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -164,6 +165,10 @@ ko{
             permillion{
                 dnam{"ppm"}
                 other{"{0}ppm"}
+            }
+            permyriad{
+                dnam{"‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -246,6 +251,10 @@ ko{
                 dnam{"일"}
                 other{"{0}일"}
                 per{"일당 {0}"}
+            }
+            decade{
+                dnam{"dec"}
+                other{"{0}dec"}
             }
             hour{
                 dnam{"시간"}
@@ -385,24 +394,35 @@ ko{
         }
         graphics{
             dot{
+                dnam{"px"}
                 other{"{0}dot"}
             }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                other{"{0}dpcm"}
+            }
             dot-per-inch{
+                dnam{"dpi"}
                 other{"{0}dpi"}
             }
             em{
+                dnam{"em"}
                 other{"{0}em"}
             }
             megapixel{
+                dnam{"MP"}
                 other{"{0}MP"}
             }
             pixel{
+                dnam{"px"}
                 other{"{0}px"}
             }
             pixel-per-centimeter{
+                dnam{"ppcm"}
                 other{"{0}ppcm"}
             }
             pixel-per-inch{
+                dnam{"ppi"}
                 other{"{0}ppi"}
             }
         }
@@ -695,6 +715,7 @@ ko{
                 other{"{0}뉴턴미터"}
             }
             pound-force-foot{
+                dnam{"lbf⋅ft"}
                 other{"{0}lbf⋅ft"}
             }
         }
@@ -855,39 +876,140 @@ ko{
         }
         angle{
             arc-minute{
+                dnam{"′"}
                 other{"{0}′"}
             }
             arc-second{
+                dnam{"″"}
                 other{"{0}″"}
             }
             degree{
+                dnam{"°"}
                 other{"{0}°"}
+            }
+            radian{
+                dnam{"rad"}
+                other{"{0}rad"}
+            }
+            revolution{
+                dnam{"rev"}
+                other{"{0}rev"}
             }
         }
         area{
             acre{
+                dnam{"ac"}
                 other{"{0}ac"}
             }
+            dunam{
+                dnam{"두남"}
+                other{"{0}두남"}
+            }
             hectare{
+                dnam{"ha"}
                 other{"{0}ha"}
             }
+            square-centimeter{
+                dnam{"cm²"}
+                other{"{0}cm²"}
+                per{"{0}/cm²"}
+            }
             square-foot{
+                dnam{"ft²"}
                 other{"{0}ft²"}
             }
+            square-inch{
+                dnam{"in²"}
+                other{"{0}in²"}
+                per{"{0}/in²"}
+            }
             square-kilometer{
+                dnam{"km²"}
                 other{"{0}km²"}
+                per{"{0}/km²"}
             }
             square-meter{
+                dnam{"m²"}
                 other{"{0}m²"}
+                per{"{0}/m²"}
             }
             square-mile{
+                dnam{"mi²"}
                 other{"{0}mi²"}
+                per{"{0}/mi²"}
+            }
+            square-yard{
+                dnam{"yd²"}
+                other{"{0}yd²"}
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
+            power2{
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"항목"}
+                other{"{0}개 항목"}
+            }
+            karat{
+                dnam{"kt"}
+                other{"{0}kt"}
+            }
+            milligram-ofglucose-per-deciliter{
+                dnam{"mg/dL"}
+                other{"{0}mg/dL"}
+            }
+            millimole-per-liter{
+                dnam{"mmol/L"}
+                other{"{0}mmol/L"}
+            }
+            mole{
+                dnam{"mol"}
+                other{"{0}mol"}
+            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -900,11 +1022,27 @@ ko{
                 dnam{"ppm"}
                 other{"{0}ppm"}
             }
+            permyriad{
+                dnam{"‱"}
+                other{"{0}‱"}
+            }
         }
         consumption{
             liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0}L/100km"}
+            }
+            liter-per-kilometer{
+                dnam{"L/km"}
+                other{"{0}L/km"}
+            }
+            mile-per-gallon{
+                dnam{"mpg"}
+                other{"{0}mpg"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mpg Imp."}
+                other{"{0}mpg Imp."}
             }
         }
         coordinate{
@@ -913,6 +1051,52 @@ ko{
             north{"{0}N"}
             south{"{0}S"}
             west{"{0}W"}
+        }
+        digital{
+            bit{
+                dnam{"bit"}
+                other{"{0}bit"}
+            }
+            byte{
+                dnam{"byte"}
+                other{"{0}byte"}
+            }
+            gigabit{
+                dnam{"Gb"}
+                other{"{0}Gb"}
+            }
+            gigabyte{
+                dnam{"GB"}
+                other{"{0}GB"}
+            }
+            kilobit{
+                dnam{"kb"}
+                other{"{0}kb"}
+            }
+            kilobyte{
+                dnam{"kB"}
+                other{"{0}kB"}
+            }
+            megabit{
+                dnam{"Mb"}
+                other{"{0}Mb"}
+            }
+            megabyte{
+                dnam{"MB"}
+                other{"{0}MB"}
+            }
+            petabyte{
+                dnam{"PB"}
+                other{"{0}PB"}
+            }
+            terabit{
+                dnam{"Tb"}
+                other{"{0}Tb"}
+            }
+            terabyte{
+                dnam{"TB"}
+                other{"{0}TB"}
+            }
         }
         duration{
             century{
@@ -923,6 +1107,10 @@ ko{
                 dnam{"일"}
                 other{"{0}일"}
                 per{"{0}/일"}
+            }
+            decade{
+                dnam{"dec"}
+                other{"{0}dec"}
             }
             hour{
                 dnam{"시간"}
@@ -972,9 +1160,126 @@ ko{
                 per{"{0}/년"}
             }
         }
+        electric{
+            ampere{
+                dnam{"amp"}
+                other{"{0}A"}
+            }
+            milliampere{
+                dnam{"mA"}
+                other{"{0}mA"}
+            }
+            ohm{
+                dnam{"ohm"}
+                other{"{0}Ω"}
+            }
+            volt{
+                dnam{"V"}
+                other{"{0}V"}
+            }
+        }
+        energy{
+            british-thermal-unit{
+                dnam{"Btu"}
+                other{"{0}Btu"}
+            }
+            calorie{
+                dnam{"cal"}
+                other{"{0}cal"}
+            }
+            electronvolt{
+                dnam{"eV"}
+                other{"{0}eV"}
+            }
+            foodcalorie{
+                dnam{"Cal"}
+                other{"{0}Cal"}
+            }
+            joule{
+                dnam{"줄"}
+                other{"{0}줄"}
+            }
+            kilocalorie{
+                dnam{"kcal"}
+                other{"{0}kcal"}
+            }
+            kilojoule{
+                dnam{"kJ"}
+                other{"{0}kJ"}
+            }
+            kilowatt-hour{
+                dnam{"kWh"}
+                other{"{0}kWh"}
+            }
+            therm-us{
+                dnam{"미국 섬"}
+                other{"{0}섬"}
+            }
+        }
         force{
             kilowatt-hour-per-100-kilometer{
                 dnam{"kWh/100km"}
+                other{"{0}kWh/100km"}
+            }
+            newton{
+                dnam{"N"}
+                other{"{0}N"}
+            }
+            pound-force{
+                dnam{"lbf"}
+                other{"{0}lbf"}
+            }
+        }
+        frequency{
+            gigahertz{
+                dnam{"GHz"}
+                other{"{0}GHz"}
+            }
+            hertz{
+                dnam{"Hz"}
+                other{"{0}Hz"}
+            }
+            kilohertz{
+                dnam{"kHz"}
+                other{"{0}kHz"}
+            }
+            megahertz{
+                dnam{"MHz"}
+                other{"{0}MHz"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"px"}
+                other{"{0}dot"}
+            }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                other{"{0}dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                other{"{0}dpi"}
+            }
+            em{
+                dnam{"em"}
+                other{"{0}em"}
+            }
+            megapixel{
+                dnam{"MP"}
+                other{"{0}MP"}
+            }
+            pixel{
+                dnam{"px"}
+                other{"{0}px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                other{"{0}ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                other{"{0}ppi"}
             }
         }
         length{
@@ -990,6 +1295,10 @@ ko{
             decimeter{
                 dnam{"dm"}
                 other{"{0}dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                other{"{0}R⊕"}
             }
             fathom{
                 dnam{"fm"}
@@ -1059,15 +1368,49 @@ ko{
                 dnam{"pt"}
                 other{"{0}pt"}
             }
+            solar-radius{
+                dnam{"R☉"}
+                other{"{0}R☉"}
+            }
             yard{
                 dnam{"yd"}
                 other{"{0}yd"}
+            }
+        }
+        light{
+            candela{
+                dnam{"cd"}
+                other{"{0}cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                other{"{0}lm"}
+            }
+            lux{
+                dnam{"lx"}
+                other{"{0}lx"}
+            }
+            solar-luminosity{
+                dnam{"L☉"}
+                other{"{0}L☉"}
             }
         }
         mass{
             carat{
                 dnam{"CD"}
                 other{"{0}CD"}
+            }
+            dalton{
+                dnam{"Da"}
+                other{"{0}Da"}
+            }
+            earth-mass{
+                dnam{"M⊕"}
+                other{"{0}M⊕"}
+            }
+            grain{
+                dnam{"grain"}
+                other{"{0}grain"}
             }
             gram{
                 dnam{"g"}
@@ -1101,6 +1444,10 @@ ko{
                 other{"{0}lb"}
                 per{"{0}/lb"}
             }
+            solar-mass{
+                dnam{"M☉"}
+                other{"{0}M☉"}
+            }
             stone{
                 dnam{"st"}
                 other{"{0}st"}
@@ -1115,23 +1462,55 @@ ko{
             }
         }
         power{
+            gigawatt{
+                dnam{"GW"}
+                other{"{0}GW"}
+            }
             horsepower{
+                dnam{"hp"}
                 other{"{0}HP"}
             }
             kilowatt{
+                dnam{"kW"}
                 other{"{0}kW"}
             }
+            megawatt{
+                dnam{"MW"}
+                other{"{0}MW"}
+            }
+            milliwatt{
+                dnam{"mW"}
+                other{"{0}mW"}
+            }
             watt{
+                dnam{"w"}
                 other{"{0}W"}
             }
         }
         pressure{
+            atmosphere{
+                dnam{"atm"}
+                other{"{0}atm"}
+            }
+            bar{
+                dnam{"bar"}
+                other{"{0}bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 other{"{0}hPa"}
             }
             inch-ofhg{
                 dnam{"inHg"}
+                other{"{0}inHg"}
+            }
+            kilopascal{
+                dnam{"kPa"}
+                other{"{0}kPa"}
+            }
+            megapascal{
+                dnam{"MPa"}
+                other{"{0}MPa"}
             }
             millibar{
                 dnam{"mbar"}
@@ -1140,6 +1519,10 @@ ko{
             millimeter-ofhg{
                 dnam{"mmHg"}
                 other{"{0}mmHg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                other{"{0}Pa"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}
@@ -1182,20 +1565,157 @@ ko{
                 other{"{0}K"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"N⋅m"}
+                other{"{0}N⋅m"}
+            }
+            pound-force-foot{
+                dnam{"lbf⋅ft"}
+                other{"{0}lbf⋅ft"}
+            }
+        }
         volume{
+            acre-foot{
+                dnam{"ac ft"}
+                other{"{0}ac ft"}
+            }
+            barrel{
+                dnam{"bbl"}
+                other{"{0}bbl"}
+            }
+            bushel{
+                dnam{"bu"}
+                other{"{0}bu"}
+            }
+            centiliter{
+                dnam{"cL"}
+                other{"{0}cL"}
+            }
+            cubic-centimeter{
+                dnam{"cm³"}
+                other{"{0}cm³"}
+                per{"{0}/cm³"}
+            }
+            cubic-foot{
+                dnam{"ft³"}
+                other{"{0}ft³"}
+            }
+            cubic-inch{
+                dnam{"in³"}
+                other{"{0}in³"}
+            }
             cubic-kilometer{
+                dnam{"km³"}
                 other{"{0}km³"}
             }
+            cubic-meter{
+                dnam{"m³"}
+                other{"{0}m³"}
+                per{"{0}/m³"}
+            }
             cubic-mile{
+                dnam{"mi³"}
                 other{"{0}mi³"}
+            }
+            cubic-yard{
+                dnam{"yd³"}
+                other{"{0}yd³"}
+            }
+            cup{
+                dnam{"컵"}
+                other{"{0}컵"}
+            }
+            cup-metric{
+                dnam{"mcup"}
+                other{"{0}mc"}
+            }
+            deciliter{
+                dnam{"dL"}
+                other{"{0}dL"}
+            }
+            dessert-spoon{
+                dnam{"dstspn"}
+                other{"{0}dstspn"}
             }
             dessert-spoon-imperial{
                 dnam{"dsp Imp"}
                 other{"{0}dsp-Imp"}
             }
+            dram{
+                dnam{"dram fluid"}
+                other{"{0}dram fl"}
+            }
+            drop{
+                dnam{"drop"}
+                other{"{0}drop"}
+            }
+            fluid-ounce{
+                dnam{"fl oz"}
+                other{"{0}fl oz"}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp. fl oz"}
+                other{"{0}fl oz Imp."}
+            }
+            gallon{
+                dnam{"gal"}
+                other{"{0}gal"}
+                per{"{0}/gal"}
+            }
+            gallon-imperial{
+                dnam{"Imp. gal"}
+                other{"{0}gal Imp."}
+                per{"{0}/gal Imp."}
+            }
+            hectoliter{
+                dnam{"hL"}
+                other{"{0}hL"}
+            }
+            jigger{
+                dnam{"jigger"}
+                other{"{0}jigger"}
+            }
             liter{
                 dnam{"ℓ"}
                 other{"{0}ℓ"}
+                per{"{0}/L"}
+            }
+            megaliter{
+                dnam{"ML"}
+                other{"{0}ML"}
+            }
+            milliliter{
+                dnam{"mL"}
+                other{"{0}mL"}
+            }
+            pinch{
+                dnam{"pinch"}
+                other{"{0}pinch"}
+            }
+            pint{
+                dnam{"pt"}
+                other{"{0}pt"}
+            }
+            pint-metric{
+                dnam{"mpt"}
+                other{"{0}mpt"}
+            }
+            quart{
+                dnam{"qt"}
+                other{"{0}qt"}
+            }
+            quart-imperial{
+                dnam{"qt Imp"}
+                other{"{0}qt Imp."}
+            }
+            tablespoon{
+                dnam{"tbsp"}
+                other{"{0}tbsp"}
+            }
+            teaspoon{
+                dnam{"tsp"}
+                other{"{0}tsp"}
             }
         }
     }
@@ -1537,6 +2057,7 @@ ko{
         }
         graphics{
             dot{
+                dnam{"px"}
                 other{"{0}dot"}
             }
             dot-per-centimeter{

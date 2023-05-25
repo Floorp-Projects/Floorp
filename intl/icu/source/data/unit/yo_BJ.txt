@@ -15,7 +15,11 @@ yo_BJ{
                 dnam{"àwɔ́n ohun"}
             }
             permille{
+                dnam{"ìdákan nínú ɛgbɛ̀rún"}
                 other{"{0} ìdákan nínú ɛgbɛ̀rún"}
+            }
+            permillion{
+                dnam{"ara/milíɔ̀nù"}
             }
         }
         digital{
@@ -164,30 +168,54 @@ yo_BJ{
         }
     }
     unitsNarrow{
+        concentr{
+            permille{
+                dnam{"ìdákan nínú ɛgbɛ̀rún"}
+            }
+            permillion{
+                dnam{"ara/milíɔ̀nù"}
+            }
+        }
         duration{
             day{
                 dnam{"ɔjɔ́"}
                 other{"ɔj {0}"}
+                per{"{0}/ɔj"}
+            }
+            decade{
+                dnam{"ɛ̀wádùn"}
+                other{"ɛ̀wádún {0}"}
             }
             minute{
                 dnam{"ìsh"}
                 other{"{0}/ìsh"}
+                per{"{0}/ìsh"}
             }
             month{
                 dnam{"oshù"}
                 other{"{0} oshù"}
+                per{"{0}/oshù"}
             }
             second{
                 dnam{"ìsh àáy"}
                 other{"{0} ìsh àáy"}
+                per{"{0} ìsh àáy"}
             }
             week{
                 dnam{"ɔshɛ́"}
                 other{"{0} ɔsh"}
+                per{"{0}/ɔ̀shɛ̀"}
             }
             year{
                 dnam{"ɔd"}
                 other{"{0} ɔd"}
+                per{"{0}/ɔd"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"dɔ́ɔ̀tì"}
+                other{"{0} dɔ́ɔ̀tì"}
             }
         }
         length{
@@ -210,6 +238,16 @@ yo_BJ{
             bushel{
                 dnam{"búsɛ́li"}
                 other{"{0}búsɛ́ɛ̀li"}
+            }
+            dessert-spoon{
+                dnam{"shíbí oúnjɛ́ kékeré"}
+            }
+            dessert-spoon-imperial{
+                dnam{"àmì oúnjɛ kékeré"}
+                other{"{0} àmì oúnjɛ kékeré"}
+            }
+            drop{
+                dnam{"dírɔ́pù"}
             }
         }
     }

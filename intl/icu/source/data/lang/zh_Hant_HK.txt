@@ -70,6 +70,9 @@ zh_Hant_HK{
         yue{"廣東話"}
         zgh{"摩洛哥標準塔馬齊格特文"}
     }
+    Languages%menu{
+        yue{"粵語"}
+    }
     Languages%short{
         az{"阿塞拜疆文"}
         en_GB{"英式英文"}

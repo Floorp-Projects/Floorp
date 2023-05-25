@@ -10,8 +10,50 @@ pl{
     units{
         acceleration{
             g-force{
+                case{
+                    accusative{
+                        few{"{0} G"}
+                        many{"{0} G"}
+                        one{"{0} G"}
+                        other{"{0} G"}
+                    }
+                    dative{
+                        few{"{0} G"}
+                        many{"{0} G"}
+                        one{"{0} G"}
+                        other{"{0} G"}
+                    }
+                    genitive{
+                        few{"{0} G"}
+                        many{"{0} G"}
+                        one{"{0} G"}
+                        other{"{0} G"}
+                    }
+                    instrumental{
+                        few{"{0} G"}
+                        many{"{0} G"}
+                        one{"{0} G"}
+                        other{"{0} G"}
+                    }
+                    locative{
+                        few{"{0} G"}
+                        many{"{0} G"}
+                        one{"{0} G"}
+                        other{"{0} G"}
+                    }
+                    vocative{
+                        few{"{0} G"}
+                        many{"{0} G"}
+                        one{"{0} G"}
+                        other{"{0} G"}
+                    }
+                }
                 dnam{"stała grawitacji"}
+                few{"{0} G"}
                 gender{"neuter"}
+                many{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
             }
             meter-per-square-second{
                 case{
@@ -25,6 +67,7 @@ pl{
                         few{"{0} metrom na sekundę do kwadratu"}
                         many{"{0} metrom na sekundę do kwadratu"}
                         one{"{0} metrowi na sekundę do kwadratu"}
+                        other{"{0} metra na sekundę do kwadratu"}
                     }
                     genitive{
                         few{"{0} metrów na sekundę do kwadratu"}
@@ -36,15 +79,19 @@ pl{
                         few{"{0} metrami na sekundę do kwadratu"}
                         many{"{0} metrami na sekundę do kwadratu"}
                         one{"{0} metrem na sekundę do kwadratu"}
+                        other{"{0} metra na sekundę do kwadratu"}
                     }
                     locative{
                         few{"{0} metrach na sekundę do kwadratu"}
                         many{"{0} metrach na sekundę do kwadratu"}
                         one{"{0} metrze na sekundę do kwadratu"}
+                        other{"{0} metra na sekundę do kwadratu"}
                     }
                     vocative{
                         few{"{0} metry na sekundę do kwadratu"}
+                        many{"{0} metrów na sekundę do kwadratu"}
                         one{"{0} metrze na sekundę do kwadratu"}
+                        other{"{0} metra na sekundę do kwadratu"}
                     }
                 }
                 dnam{"metry na sekundę do kwadratu"}
@@ -180,6 +227,7 @@ pl{
                         few{"{0} akrom"}
                         many{"{0} akrom"}
                         one{"{0} akrowi"}
+                        other{"{0} akra"}
                     }
                     genitive{
                         few{"{0} akrów"}
@@ -191,15 +239,19 @@ pl{
                         few{"{0} akrami"}
                         many{"{0} akrami"}
                         one{"{0} akrem"}
+                        other{"{0} akra"}
                     }
                     locative{
                         few{"{0} akrach"}
                         many{"{0} akrach"}
                         one{"{0} akrze"}
+                        other{"{0} akra"}
                     }
                     vocative{
                         few{"{0} akry"}
+                        many{"{0} akrów"}
                         one{"{0} akrze"}
+                        other{"{0} akra"}
                     }
                 }
                 dnam{"akry"}
@@ -228,6 +280,7 @@ pl{
                         few{"{0} hektarom"}
                         many{"{0} hektarom"}
                         one{"{0} hektarowi"}
+                        other{"{0} hektara"}
                     }
                     genitive{
                         few{"{0} hektarów"}
@@ -239,15 +292,19 @@ pl{
                         few{"{0} hektarami"}
                         many{"{0} hektarami"}
                         one{"{0} hektarem"}
+                        other{"{0} hektara"}
                     }
                     locative{
                         few{"{0} hektarach"}
                         many{"{0} hektarach"}
                         one{"{0} hektarze"}
+                        other{"{0} hektara"}
                     }
                     vocative{
                         few{"{0} hektary"}
+                        many{"{0} hektarów"}
                         one{"{0} hektarze"}
+                        other{"{0} hektara"}
                     }
                 }
                 dnam{"hektary"}
@@ -269,6 +326,7 @@ pl{
                         few{"{0} centymetrom kwadratowym"}
                         many{"{0} centymetrom kwadratowym"}
                         one{"{0} centymetrowi kwadratowemu"}
+                        other{"{0} centymetra kwadratowego"}
                     }
                     genitive{
                         few{"{0} centymetrów kwadratowych"}
@@ -280,15 +338,19 @@ pl{
                         few{"{0} centymetrami kwadratowymi"}
                         many{"{0} centymetrami kwadratowymi"}
                         one{"{0} centymetrem kwadratowym"}
+                        other{"{0} centymetra kwadratowego"}
                     }
                     locative{
                         few{"{0} centymetrach kwadratowych"}
                         many{"{0} centymetrach kwadratowych"}
                         one{"{0} centymetrze kwadratowym"}
+                        other{"{0} centymetra kwadratowego"}
                     }
                     vocative{
                         few{"{0} centymetry kwadratowe"}
+                        many{"{0} centymetrów kwadratowych"}
                         one{"{0} centymetrze kwadratowy"}
+                        other{"{0} centymetra kwadratowego"}
                     }
                 }
                 dnam{"centymetry kwadratowe"}
@@ -311,6 +373,7 @@ pl{
                         few{"{0} stopom kwadratowym"}
                         many{"{0} stopom kwadratowym"}
                         one{"{0} stopie kwadratowej"}
+                        other{"{0} stopy kwadratowej"}
                     }
                     genitive{
                         few{"{0} stóp kwadratowych"}
@@ -322,15 +385,19 @@ pl{
                         few{"{0} stopami kwadratowymi"}
                         many{"{0} stopami kwadratowymi"}
                         one{"{0} stopą kwadratową"}
+                        other{"{0} stopy kwadratowej"}
                     }
                     locative{
                         few{"{0} stopach kwadratowych"}
                         many{"{0} stopach kwadratowych"}
                         one{"{0} stopie kwadratowej"}
+                        other{"{0} stopy kwadratowej"}
                     }
                     vocative{
                         few{"{0} stopy kwadratowe"}
+                        many{"{0} stóp kwadratowych"}
                         one{"{0} stopo kwadratowa"}
+                        other{"{0} stopy kwadratowej"}
                     }
                 }
                 dnam{"stopy kwadratowe"}
@@ -360,6 +427,7 @@ pl{
                         few{"{0} kilometrom kwadratowym"}
                         many{"{0} kilometrom kwadratowym"}
                         one{"{0} kilometrowi kwadratowemu"}
+                        other{"{0} kilometra kwadratowego"}
                     }
                     genitive{
                         few{"{0} kilometrów kwadratowych"}
@@ -371,15 +439,19 @@ pl{
                         few{"{0} kilometrami kwadratowymi"}
                         many{"{0} kilometrami kwadratowymi"}
                         one{"{0} kilometrem kwadratowym"}
+                        other{"{0} kilometra kwadratowego"}
                     }
                     locative{
                         few{"{0} kilometrach kwadratowych"}
                         many{"{0} kilometrach kwadratowych"}
                         one{"{0} kilometrze kwadratowym"}
+                        other{"{0} kilometra kwadratowego"}
                     }
                     vocative{
                         few{"{0} kilometry kwadratowe"}
+                        many{"{0} kilometrów kwadratowych"}
                         one{"{0} kilometrze kwadratowy"}
+                        other{"{0} kilometra kwadratowego"}
                     }
                 }
                 dnam{"kilometry kwadratowe"}
@@ -425,6 +497,7 @@ pl{
                         few{"{0} milom kwadratowym"}
                         many{"{0} milom kwadratowym"}
                         one{"{0} mili kwadratowej"}
+                        other{"{0} mili kwadratowej"}
                     }
                     genitive{
                         few{"{0} mil kwadratowych"}
@@ -436,15 +509,19 @@ pl{
                         few{"{0} milami kwadratowymi"}
                         many{"{0} milami kwadratowymi"}
                         one{"{0} milą kwadratową"}
+                        other{"{0} mili kwadratowej"}
                     }
                     locative{
                         few{"{0} milach kwadratowych"}
                         many{"{0} milach kwadratowych"}
                         one{"{0} mili kwadratowej"}
+                        other{"{0} mili kwadratowej"}
                     }
                     vocative{
                         few{"{0} mile kwadratowe"}
+                        many{"{0} mil kwadratowych"}
                         one{"{0} milo kwadratowa"}
+                        other{"{0} mili kwadratowej"}
                     }
                 }
                 dnam{"mile kwadratowe"}
@@ -729,6 +806,7 @@ pl{
                     }
                 }
             }
+            times{"{0}⋅{1}"}
         }
         concentr{
             item{
@@ -838,6 +916,7 @@ pl{
                         few{"{0} procentom"}
                         many{"{0} procentom"}
                         one{"{0} procentowi"}
+                        other{"{0} procent"}
                     }
                     genitive{
                         few{"{0} procent"}
@@ -849,14 +928,19 @@ pl{
                         few{"{0} procentami"}
                         many{"{0} procentami"}
                         one{"{0} procentem"}
+                        other{"{0} procent"}
                     }
                     locative{
                         few{"{0} procentach"}
                         many{"{0} procentach"}
                         one{"{0} procencie"}
+                        other{"{0} procent"}
                     }
                     vocative{
+                        few{"{0} procent"}
+                        many{"{0} procent"}
                         one{"{0} procencie"}
+                        other{"{0} procent"}
                     }
                 }
                 dnam{"procent"}
@@ -946,6 +1030,7 @@ pl{
                         few{"{0} litrom na 100 kilometrów"}
                         many{"{0} litrom na 100 kilometrów"}
                         one{"{0} litrowi na 100 kilometrów"}
+                        other{"{0} litra na 100 kilometrów"}
                     }
                     genitive{
                         few{"{0} litrów na 100 kilometrów"}
@@ -957,15 +1042,19 @@ pl{
                         few{"{0} litrami na 100 kilometrów"}
                         many{"{0} litrami na 100 kilometrów"}
                         one{"{0} litrem na 100 kilometrów"}
+                        other{"{0} litra na 100 kilometrów"}
                     }
                     locative{
                         few{"{0} litrach na 100 kilometrów"}
                         many{"{0} litrach na 100 kilometrów"}
                         one{"{0} litrze na 100 kilometrów"}
+                        other{"{0} litra na 100 kilometrów"}
                     }
                     vocative{
                         few{"{0} litry na 100 kilometrów"}
+                        many{"{0} litrów na 100 kilometrów"}
                         one{"{0} litrze na 100 kilometrów"}
+                        other{"{0} litra na 100 kilometrów"}
                     }
                 }
                 dnam{"litry na 100 kilometrów"}
@@ -1009,6 +1098,7 @@ pl{
                         few{"{0} milom na galon"}
                         many{"{0} milom na galon"}
                         one{"{0} mili na galon"}
+                        other{"{0} mili na galon"}
                     }
                     genitive{
                         few{"{0} mil na galon"}
@@ -1020,16 +1110,19 @@ pl{
                         few{"{0} milami na galon"}
                         many{"{0} milami na galon"}
                         one{"{0} milą na galon"}
+                        other{"{0} mili na galon"}
                     }
                     locative{
                         few{"{0} milach na galon"}
                         many{"{0} milach na galon"}
                         one{"{0} mili na galon"}
+                        other{"{0} mili na galon"}
                     }
                     vocative{
                         few{"{0} mile na galon"}
                         many{"{0} mil na galon"}
                         one{"{0} milo na galon"}
+                        other{"{0} mili na galon"}
                     }
                 }
                 dnam{"mile na galon"}
@@ -1051,6 +1144,7 @@ pl{
                         few{"{0} milom na galon angielski"}
                         many{"{0} milom na galon angielski"}
                         one{"{0} mili na galon angielski"}
+                        other{"{0} mili na galon angielski"}
                     }
                     genitive{
                         few{"{0} mil na galon angielski"}
@@ -1062,15 +1156,19 @@ pl{
                         few{"{0} milami na galon angielski"}
                         many{"{0} milami na galon angielski"}
                         one{"{0} milą na galon angielski"}
+                        other{"{0} mili na galon angielski"}
                     }
                     locative{
                         few{"{0} milach na galon angielski"}
                         many{"{0} milach na galon angielski"}
                         one{"{0} mili na galon angielski"}
+                        other{"{0} mili na galon angielski"}
                     }
                     vocative{
                         few{"{0} mile na galon angielski"}
+                        many{"{0} mil na galon angielski"}
                         one{"{0} milo na galon angielski"}
+                        other{"{0} mili na galon angielski"}
                     }
                 }
                 dnam{"mile na galon angielski"}
@@ -1389,6 +1487,7 @@ pl{
                     }
                     vocative{
                         few{"{0} doby"}
+                        many{"{0} dób"}
                         one{"{0} dobo"}
                         other{"{0} doby"}
                     }
@@ -1456,6 +1555,7 @@ pl{
                         few{"{0} godzinom"}
                         many{"{0} godzinom"}
                         one{"{0} godzinie"}
+                        other{"{0} godziny"}
                     }
                     genitive{
                         few{"{0} godzin"}
@@ -1467,15 +1567,19 @@ pl{
                         few{"{0} godzinami"}
                         many{"{0} godzinami"}
                         one{"{0} godziną"}
+                        other{"{0} godziny"}
                     }
                     locative{
                         few{"{0} godzinach"}
                         many{"{0} godzinach"}
                         one{"{0} godzinie"}
+                        other{"{0} godziny"}
                     }
                     vocative{
                         few{"{0} godziny"}
+                        many{"{0} godzin"}
                         one{"{0} godzino"}
+                        other{"{0} godziny"}
                     }
                 }
                 dnam{"godziny"}
@@ -1542,6 +1646,7 @@ pl{
                         few{"{0} minutom"}
                         many{"{0} minutom"}
                         one{"{0} minucie"}
+                        other{"{0} minuty"}
                     }
                     genitive{
                         few{"{0} minut"}
@@ -1553,15 +1658,19 @@ pl{
                         few{"{0} minutami"}
                         many{"{0} minutami"}
                         one{"{0} minutą"}
+                        other{"{0} minuty"}
                     }
                     locative{
                         few{"{0} minutach"}
                         many{"{0} minutach"}
                         one{"{0} minucie"}
+                        other{"{0} minuty"}
                     }
                     vocative{
                         few{"{0} minuty"}
+                        many{"{0} minut"}
                         one{"{0} minuto"}
+                        other{"{0} minuty"}
                     }
                 }
                 dnam{"minuty"}
@@ -1584,6 +1693,7 @@ pl{
                         few{"{0} miesiącom"}
                         many{"{0} miesiącom"}
                         one{"{0} miesiącowi"}
+                        other{"{0} miesiąca"}
                     }
                     genitive{
                         few{"{0} miesięcy"}
@@ -1595,15 +1705,19 @@ pl{
                         few{"{0} miesiącami"}
                         many{"{0} miesiącami"}
                         one{"{0} miesiącem"}
+                        other{"{0} miesiąca"}
                     }
                     locative{
                         few{"{0} miesiącach"}
                         many{"{0} miesiącach"}
                         one{"{0} miesiącu"}
+                        other{"{0} miesiąca"}
                     }
                     vocative{
                         few{"{0} miesiące"}
+                        many{"{0} miesięcy"}
                         one{"{0} miesiącu"}
+                        other{"{0} miesiąca"}
                     }
                 }
                 dnam{"miesiące"}
@@ -1671,6 +1785,7 @@ pl{
                         few{"{0} sekundom"}
                         many{"{0} sekundom"}
                         one{"{0} sekundzie"}
+                        other{"{0} sekundy"}
                     }
                     genitive{
                         few{"{0} sekund"}
@@ -1682,15 +1797,19 @@ pl{
                         few{"{0} sekundami"}
                         many{"{0} sekundami"}
                         one{"{0} sekundą"}
+                        other{"{0} sekundy"}
                     }
                     locative{
                         few{"{0} sekundach"}
                         many{"{0} sekundach"}
                         one{"{0} sekundzie"}
+                        other{"{0} sekundy"}
                     }
                     vocative{
                         few{"{0} sekundy"}
+                        many{"{0} sekund"}
                         one{"{0} sekundo"}
+                        other{"{0} sekundy"}
                     }
                 }
                 dnam{"sekundy"}
@@ -1713,6 +1832,7 @@ pl{
                         few{"{0} tygodniom"}
                         many{"{0} tygodniom"}
                         one{"{0} tygodniowi"}
+                        other{"{0} tygodnia"}
                     }
                     genitive{
                         few{"{0} tygodni"}
@@ -1724,15 +1844,19 @@ pl{
                         few{"{0} tygodniami"}
                         many{"{0} tygodniami"}
                         one{"{0} tygodniem"}
+                        other{"{0} tygodnia"}
                     }
                     locative{
                         few{"{0} tygodniach"}
                         many{"{0} tygodniach"}
                         one{"{0} tygodniu"}
+                        other{"{0} tygodnia"}
                     }
                     vocative{
                         few{"{0} tygodnie"}
+                        many{"{0} tygodni"}
                         one{"{0} tygodniu"}
+                        other{"{0} tygodnia"}
                     }
                 }
                 dnam{"tygodnie"}
@@ -1755,6 +1879,7 @@ pl{
                         few{"{0} latom"}
                         many{"{0} latom"}
                         one{"{0} rokowi"}
+                        other{"{0} roku"}
                     }
                     genitive{
                         few{"{0} lat"}
@@ -1766,14 +1891,19 @@ pl{
                         few{"{0} latami"}
                         many{"{0} latami"}
                         one{"{0} rokiem"}
+                        other{"{0} roku"}
                     }
                     locative{
                         few{"{0} latach"}
                         many{"{0} latach"}
                         one{"{0} roku"}
+                        other{"{0} roku"}
                     }
                     vocative{
+                        few{"{0} lata"}
+                        many{"{0} lat"}
                         one{"{0} roku"}
+                        other{"{0} roku"}
                     }
                 }
                 dnam{"lata"}
@@ -1924,6 +2054,7 @@ pl{
                         few{"{0} kaloriom"}
                         many{"{0} kaloriom"}
                         one{"{0} kalorii"}
+                        other{"{0} kalorii"}
                     }
                     genitive{
                         few{"{0} kalorii"}
@@ -1935,15 +2066,19 @@ pl{
                         few{"{0} kaloriami"}
                         many{"{0} kaloriami"}
                         one{"{0} kalorią"}
+                        other{"{0} kalorii"}
                     }
                     locative{
                         few{"{0} kaloriach"}
                         many{"{0} kaloriach"}
                         one{"{0} kalorii"}
+                        other{"{0} kalorii"}
                     }
                     vocative{
                         few{"{0} kalorie"}
+                        many{"{0} kalorii"}
                         one{"{0} kalorio"}
+                        other{"{0} kalorii"}
                     }
                 }
                 dnam{"kalorie"}
@@ -1987,6 +2122,7 @@ pl{
                         few{"{0} kilokaloriom"}
                         many{"{0} kilokaloriom"}
                         one{"{0} kilokalorii"}
+                        other{"{0} kilokalorii"}
                     }
                     genitive{
                         few{"{0} kilokalorii"}
@@ -1998,15 +2134,19 @@ pl{
                         few{"{0} kilokaloriami"}
                         many{"{0} kilokaloriami"}
                         one{"{0} kilokalorią"}
+                        other{"{0} kilokalorii"}
                     }
                     locative{
                         few{"{0} kilokaloriach"}
                         many{"{0} kilokaloriach"}
                         one{"{0} kilokalorii"}
+                        other{"{0} kilokalorii"}
                     }
                     vocative{
                         few{"{0} kilokalorie"}
+                        many{"{0} kilokalorii"}
                         one{"{0} kilokalorio"}
+                        other{"{0} kilokalorii"}
                     }
                 }
                 dnam{"kilokalorie"}
@@ -2212,6 +2352,27 @@ pl{
             }
         }
         graphics{
+            dot{
+                dnam{"px"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
             em{
                 case{
                     accusative{
@@ -2279,7 +2440,33 @@ pl{
                 other{"{0} piksela"}
             }
             pixel-per-centimeter{
+                case{
+                    accusative{
+                        few{"{0} ppcm"}
+                        many{"{0} ppcm"}
+                        one{"{0} ppcm"}
+                        other{"{0} ppcm"}
+                    }
+                    genitive{
+                        few{"{0} ppcm"}
+                        many{"{0} ppcm"}
+                        one{"{0} ppcm"}
+                        other{"{0} ppcm"}
+                    }
+                }
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
                 gender{"inanimate"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -2302,6 +2489,7 @@ pl{
                         few{"{0} centymetrom"}
                         many{"{0} centymetrom"}
                         one{"{0} centymetrowi"}
+                        other{"{0} centymetra"}
                     }
                     genitive{
                         few{"{0} centymetrów"}
@@ -2313,15 +2501,19 @@ pl{
                         few{"{0} centymetrami"}
                         many{"{0} centymetrami"}
                         one{"{0} centymetrem"}
+                        other{"{0} centymetra"}
                     }
                     locative{
                         few{"{0} centymetrach"}
                         many{"{0} centymetrach"}
                         one{"{0} centymetrze"}
+                        other{"{0} centymetra"}
                     }
                     vocative{
                         few{"{0} centymetry"}
+                        many{"{0} centymetrów"}
                         one{"{0} centymetrze"}
+                        other{"{0} centymetra"}
                     }
                 }
                 dnam{"centymetry"}
@@ -2380,6 +2572,7 @@ pl{
                         few{"{0} stopom"}
                         many{"{0} stopom"}
                         one{"{0} stopie"}
+                        other{"{0} stopy"}
                     }
                     genitive{
                         few{"{0} stóp"}
@@ -2391,15 +2584,19 @@ pl{
                         few{"{0} stopami"}
                         many{"{0} stopami"}
                         one{"{0} stopą"}
+                        other{"{0} stopy"}
                     }
                     locative{
                         few{"{0} stopach"}
                         many{"{0} stopach"}
                         one{"{0} stopie"}
+                        other{"{0} stopy"}
                     }
                     vocative{
                         few{"{0} stopy"}
+                        many{"{0} stóp"}
                         one{"{0} stopo"}
+                        other{"{0} stopy"}
                     }
                 }
                 dnam{"stopy"}
@@ -2429,6 +2626,7 @@ pl{
                         few{"{0} calom"}
                         many{"{0} calom"}
                         one{"{0} calowi"}
+                        other{"{0} cala"}
                     }
                     genitive{
                         few{"{0} cali"}
@@ -2440,15 +2638,19 @@ pl{
                         few{"{0} calami"}
                         many{"{0} calami"}
                         one{"{0} calem"}
+                        other{"{0} cala"}
                     }
                     locative{
                         few{"{0} calach"}
                         many{"{0} calach"}
                         one{"{0} calu"}
+                        other{"{0} cala"}
                     }
                     vocative{
                         few{"{0} cale"}
+                        many{"{0} cali"}
                         one{"{0} calu"}
+                        other{"{0} cala"}
                     }
                 }
                 dnam{"cale"}
@@ -2471,6 +2673,7 @@ pl{
                         few{"{0} kilometrom"}
                         many{"{0} kilometrom"}
                         one{"{0} kilometrowi"}
+                        other{"{0} kilometra"}
                     }
                     genitive{
                         few{"{0} kilometrów"}
@@ -2482,15 +2685,19 @@ pl{
                         few{"{0} kilometrami"}
                         many{"{0} kilometrami"}
                         one{"{0} kilomentrem"}
+                        other{"{0} kilometra"}
                     }
                     locative{
                         few{"{0} kilometrach"}
                         many{"{0} kilometrach"}
                         one{"{0} kilometrze"}
+                        other{"{0} kilometra"}
                     }
                     vocative{
                         few{"{0} kilometry"}
+                        many{"{0} kilometrów"}
                         one{"{0} kilometrze"}
+                        other{"{0} kilometra"}
                     }
                 }
                 dnam{"kilometry"}
@@ -2520,6 +2727,7 @@ pl{
                         few{"{0} metrom"}
                         many{"{0} metrom"}
                         one{"{0} metrowi"}
+                        other{"{0} metra"}
                     }
                     genitive{
                         few{"{0} metrów"}
@@ -2531,15 +2739,19 @@ pl{
                         few{"{0} metrami"}
                         many{"{0} metrami"}
                         one{"{0} metrem"}
+                        other{"{0} metra"}
                     }
                     locative{
                         few{"{0} metrach"}
                         many{"{0} metrach"}
                         one{"{0} metrze"}
+                        other{"{0} metra"}
                     }
                     vocative{
                         few{"{0} metry"}
+                        many{"{0} metrów"}
                         one{"{0} metrze"}
+                        other{"{0} metra"}
                     }
                 }
                 dnam{"metry"}
@@ -2584,6 +2796,7 @@ pl{
                         few{"{0} milom"}
                         many{"{0} milom"}
                         one{"{0} mili"}
+                        other{"{0} mili"}
                     }
                     genitive{
                         few{"{0} mil"}
@@ -2595,14 +2808,19 @@ pl{
                         few{"{0} milami"}
                         many{"{0} milami"}
                         one{"{0} milą"}
+                        other{"{0} mili"}
                     }
                     locative{
                         few{"{0} milach"}
                         many{"{0} milach"}
                         one{"{0} mili"}
+                        other{"{0} mili"}
                     }
                     vocative{
+                        few{"{0} mile"}
+                        many{"{0} mil"}
                         one{"{0} milo"}
+                        other{"{0} mili"}
                     }
                 }
                 dnam{"mile"}
@@ -2646,6 +2864,7 @@ pl{
                         few{"{0} milimetrom"}
                         many{"{0} milimetrom"}
                         one{"{0} milimetrowi"}
+                        other{"{0} milimetra"}
                     }
                     genitive{
                         few{"{0} milimetrów"}
@@ -2657,15 +2876,19 @@ pl{
                         few{"{0} milimetrami"}
                         many{"{0} milimetrami"}
                         one{"{0} milimentrem"}
+                        other{"{0} milimetra"}
                     }
                     locative{
                         few{"{0} milimetrach"}
                         many{"{0} milimetrach"}
                         one{"{0} milimetrze"}
+                        other{"{0} milimetra"}
                     }
                     vocative{
                         few{"{0} milimetry"}
+                        many{"{0} milimetrów"}
                         one{"{0} milimetrrze"}
+                        other{"{0} milimetra"}
                     }
                 }
                 dnam{"milimetry"}
@@ -2716,6 +2939,7 @@ pl{
                         few{"{0} parsekom"}
                         many{"{0} parsekom"}
                         one{"{0} parsekowi"}
+                        other{"{0} parseka"}
                     }
                     genitive{
                         few{"{0} parseków"}
@@ -2727,15 +2951,19 @@ pl{
                         few{"{0} parsekami"}
                         many{"{0} parsekami"}
                         one{"{0} parsekiem"}
+                        other{"{0} parseka"}
                     }
                     locative{
                         few{"{0} parsekach"}
                         many{"{0} parsekach"}
                         one{"{0} parseku"}
+                        other{"{0} parseka"}
                     }
                     vocative{
                         few{"{0} parseki"}
+                        many{"{0} parseków"}
                         one{"{0} parseku"}
+                        other{"{0} parseka"}
                     }
                 }
                 dnam{"parseki"}
@@ -2757,6 +2985,7 @@ pl{
                         few{"{0} pikometrom"}
                         many{"{0} pikometrom"}
                         one{"{0} pikometrowi"}
+                        other{"{0} pikometra"}
                     }
                     genitive{
                         few{"{0} pikometrów"}
@@ -2768,15 +2997,19 @@ pl{
                         few{"{0} pikometrami"}
                         many{"{0} pikometrami"}
                         one{"{0} pikometrem"}
+                        other{"{0} pikometra"}
                     }
                     locative{
                         few{"{0} pikometrach"}
                         many{"{0} pikometrach"}
                         one{"{0} pikometrze"}
+                        other{"{0} pikometra"}
                     }
                     vocative{
                         few{"{0} pikometry"}
+                        many{"{0} pikometrów"}
                         one{"{0} pikometrze"}
+                        other{"{0} pikometra"}
                     }
                 }
                 dnam{"pikometry"}
@@ -2805,6 +3038,7 @@ pl{
                         few{"{0} promieniom Słońca"}
                         many{"{0} promieniom Słońca"}
                         one{"{0} promieniowi Słońca"}
+                        other{"{0} promienia Słońca"}
                     }
                     genitive{
                         few{"{0} promieni Słońca"}
@@ -2816,15 +3050,19 @@ pl{
                         few{"{0} promieniami Słońca"}
                         many{"{0} promieniami Słońca"}
                         one{"{0} promieniem Słońca"}
+                        other{"{0} promienia Słońca"}
                     }
                     locative{
                         few{"{0} promieniach Słońca"}
                         many{"{0} promieniach Słońca"}
                         one{"{0} promieniu Słońca"}
+                        other{"{0} promienia Słońca"}
                     }
                     vocative{
                         few{"{0} promienie Słońca"}
+                        many{"{0} promieni Słońca"}
                         one{"{0} promieniu Słońca"}
+                        other{"{0} promienia Słońca"}
                     }
                 }
                 dnam{"promienie Słońca"}
@@ -2846,6 +3084,7 @@ pl{
                         few{"{0} jardom"}
                         many{"{0} jardom"}
                         one{"{0} jardowi"}
+                        other{"{0} jarda"}
                     }
                     genitive{
                         few{"{0} jardów"}
@@ -2857,14 +3096,19 @@ pl{
                         few{"{0} jardami"}
                         many{"{0} jardami"}
                         one{"{0} jardem"}
+                        other{"{0} jarda"}
                     }
                     locative{
                         few{"{0} jardach"}
                         many{"{0} jardach"}
                         one{"{0} jardzie"}
+                        other{"{0} jarda"}
                     }
                     vocative{
+                        few{"{0} jardy"}
+                        many{"{0} jardów"}
                         one{"{0} jardzie"}
+                        other{"{0} jarda"}
                     }
                 }
                 dnam{"jardy"}
@@ -2954,6 +3198,7 @@ pl{
                         few{"{0} jasnościom Słońca"}
                         many{"{0} jasnościom Słońca"}
                         one{"{0} jasności Słońca"}
+                        other{"{0} jasności Słońca"}
                     }
                     genitive{
                         few{"{0} jasności Słońca"}
@@ -2965,16 +3210,19 @@ pl{
                         few{"{0} jasnościami Słońca"}
                         many{"{0} jasnościami Słońca"}
                         one{"{0} jasnością Słońca"}
+                        other{"{0} jasności Słońca"}
                     }
                     locative{
                         few{"{0} jasnościach Słońca"}
                         many{"{0} jasnościach Słońca"}
                         one{"{0} jasności Słońca"}
+                        other{"{0} jasności Słońca"}
                     }
                     vocative{
                         few{"{0} jasności Słońca"}
                         many{"{0} jasności Słońca"}
                         one{"{0} jasności Słońca"}
+                        other{"{0} jasności Słońca"}
                     }
                 }
                 dnam{"jasności Słońca"}
@@ -3088,6 +3336,7 @@ pl{
                     }
                     vocative{
                         few{"{0} masy Ziemi"}
+                        many{"{0} mas Ziemi"}
                         one{"{0} maso Ziemi"}
                         other{"{0} masy Ziemi"}
                     }
@@ -3157,6 +3406,7 @@ pl{
                         few{"{0} gramom"}
                         many{"{0} gramom"}
                         one{"{0} gramowi"}
+                        other{"{0} grama"}
                     }
                     genitive{
                         few{"{0} gramów"}
@@ -3168,15 +3418,19 @@ pl{
                         few{"{0} gramami"}
                         many{"{0} gramami"}
                         one{"{0} gramem"}
+                        other{"{0} grama"}
                     }
                     locative{
                         few{"{0} gramach"}
                         many{"{0} gramach"}
                         one{"{0} gramie"}
+                        other{"{0} grama"}
                     }
                     vocative{
                         few{"{0} gramy"}
+                        many{"{0} gramów"}
                         one{"{0} gramie"}
+                        other{"{0} grama"}
                     }
                 }
                 dnam{"gramy"}
@@ -3199,6 +3453,7 @@ pl{
                         few{"{0} kilogramom"}
                         many{"{0} kilogramom"}
                         one{"{0} kilogramowi"}
+                        other{"{0} kilograma"}
                     }
                     genitive{
                         few{"{0} kilogramów"}
@@ -3210,15 +3465,19 @@ pl{
                         few{"{0} kilogramami"}
                         many{"{0} kilogramami"}
                         one{"{0} kilogramem"}
+                        other{"{0} kilograma"}
                     }
                     locative{
                         few{"{0} kilogramach"}
                         many{"{0} kilogramach"}
                         one{"{0} kilogramie"}
+                        other{"{0} kilograma"}
                     }
                     vocative{
                         few{"{0} kilogramy"}
+                        many{"{0} kilogramów"}
                         one{"{0} kilogramie"}
+                        other{"{0} kilograma"}
                     }
                 }
                 dnam{"kilogramy"}
@@ -3263,6 +3522,7 @@ pl{
                         few{"{0} miligramom"}
                         many{"{0} miligramom"}
                         one{"{0} miligramowi"}
+                        other{"{0} miligrama"}
                     }
                     genitive{
                         few{"{0} miligramów"}
@@ -3274,15 +3534,19 @@ pl{
                         few{"{0} miligramami"}
                         many{"{0} miligramami"}
                         one{"{0} miligramem"}
+                        other{"{0} miligrama"}
                     }
                     locative{
                         few{"{0} miligramach"}
                         many{"{0} miligramach"}
                         one{"{0} miligramie"}
+                        other{"{0} miligrama"}
                     }
                     vocative{
                         few{"{0} miligramy"}
+                        many{"{0} miligramów"}
                         one{"{0} miligramie"}
+                        other{"{0} miligrama"}
                     }
                 }
                 dnam{"miligramy"}
@@ -3304,6 +3568,7 @@ pl{
                         few{"{0} uncjom"}
                         many{"{0} uncjom"}
                         one{"{0} uncji"}
+                        other{"{0} uncji"}
                     }
                     genitive{
                         few{"{0} uncji"}
@@ -3315,15 +3580,19 @@ pl{
                         few{"{0} uncjami"}
                         many{"{0} uncjami"}
                         one{"{0} uncją"}
+                        other{"{0} uncji"}
                     }
                     locative{
                         few{"{0} uncjach"}
                         many{"{0} uncjach"}
                         one{"{0} uncji"}
+                        other{"{0} uncji"}
                     }
                     vocative{
                         few{"{0} uncje"}
+                        many{"{0} uncji"}
                         one{"{0} uncjo"}
+                        other{"{0} uncji"}
                     }
                 }
                 dnam{"uncje"}
@@ -3353,6 +3622,7 @@ pl{
                         few{"{0} funtom"}
                         many{"{0} funtom"}
                         one{"{0} funtowi"}
+                        other{"{0} funta"}
                     }
                     genitive{
                         few{"{0} funtów"}
@@ -3364,15 +3634,19 @@ pl{
                         few{"{0} funtami"}
                         many{"{0} funtami"}
                         one{"{0} funtem"}
+                        other{"{0} funta"}
                     }
                     locative{
                         few{"{0} funtach"}
                         many{"{0} funtach"}
                         one{"{0} funcie"}
+                        other{"{0} funta"}
                     }
                     vocative{
                         few{"{0} funty"}
+                        many{"{0} funtów"}
                         one{"{0} funcie"}
+                        other{"{0} funta"}
                     }
                 }
                 dnam{"funty"}
@@ -3395,6 +3669,7 @@ pl{
                         few{"{0} masom Słońca"}
                         many{"{0} masom Słońca"}
                         one{"{0} masie Słońca"}
+                        other{"{0} masy Słońca"}
                     }
                     genitive{
                         few{"{0} mas Słońca"}
@@ -3406,15 +3681,19 @@ pl{
                         few{"{0} masami Słońca"}
                         many{"{0} masami Słońca"}
                         one{"{0} masą Słońca"}
+                        other{"{0} masy Słońca"}
                     }
                     locative{
                         few{"{0} masach Słońca"}
                         many{"{0} masach Słońca"}
                         one{"{0} masie Słońca"}
+                        other{"{0} masy Słońca"}
                     }
                     vocative{
                         few{"{0} masy Słońca"}
+                        many{"{0} mas Słońca"}
                         one{"{0} maso Słońca"}
+                        other{"{0} masy Słońca"}
                     }
                 }
                 dnam{"masy Słońca"}
@@ -3666,6 +3945,7 @@ pl{
                         few{"{0} kilopaskalom"}
                         many{"{0} kilopaskalom"}
                         one{"{0} kilopaskalowi"}
+                        other{"{0} kilopaskala"}
                     }
                     genitive{
                         few{"{0} kilopaskali"}
@@ -3677,15 +3957,19 @@ pl{
                         few{"{0} kilopaskalami"}
                         many{"{0} kilopaskalami"}
                         one{"{0} kilopaskalem"}
+                        other{"{0} kilopaskala"}
                     }
                     locative{
                         few{"{0} kilopaskalach"}
                         many{"{0} kilopaskalach"}
                         one{"{0} kilopaskalu"}
+                        other{"{0} kilopaskala"}
                     }
                     vocative{
                         few{"{0} kilopaskale"}
+                        many{"{0} kilopaskali"}
                         one{"{0} kilopaskalu"}
+                        other{"{0} kilopaskala"}
                     }
                 }
                 dnam{"kilopaskale"}
@@ -3789,6 +4073,7 @@ pl{
                         few{"{0} kilometrom na godzinę"}
                         many{"{0} kilometrom na godzinę"}
                         one{"{0} kilometrowi na godzinę"}
+                        other{"{0} kilometra na godzinę"}
                     }
                     genitive{
                         few{"{0} kilometrów na godzinę"}
@@ -3800,15 +4085,19 @@ pl{
                         few{"{0} kilometrami na godzinę"}
                         many{"{0} kilometrami na godzinę"}
                         one{"{0} kilometrem na godzinę"}
+                        other{"{0} kilometra na godzinę"}
                     }
                     locative{
                         few{"{0} kilometrach na godzinę"}
                         many{"{0} kilometrach na godzinę"}
                         one{"{0} kilometrze na godzinę"}
+                        other{"{0} kilometra na godzinę"}
                     }
                     vocative{
                         few{"{0} kilometry na godzinę"}
+                        many{"{0} kilometrów na godzinę"}
                         one{"{0} kilometrze na godzinę"}
+                        other{"{0} kilometra na godzinę"}
                     }
                 }
                 dnam{"kilometry na godzinę"}
@@ -3837,6 +4126,7 @@ pl{
                         few{"{0} metrom na sekundę"}
                         many{"{0} metrom na sekundę"}
                         one{"{0} metrowi na sekundę"}
+                        other{"{0} metra na sekundę"}
                     }
                     genitive{
                         few{"{0} metrów na sekundę"}
@@ -3848,15 +4138,19 @@ pl{
                         few{"{0} metrami na sekundę"}
                         many{"{0} metrami na sekundę"}
                         one{"{0} metrem na sekundę"}
+                        other{"{0} metra na sekundę"}
                     }
                     locative{
                         few{"{0} metrach na sekundę"}
                         many{"{0} metrach na sekundę"}
                         one{"{0} metrze na sekundę"}
+                        other{"{0} metra na sekundę"}
                     }
                     vocative{
                         few{"{0} metry na sekundę"}
+                        many{"{0} metrów na sekundę"}
                         one{"{0} metrze na sekundę"}
+                        other{"{0} metra na sekundę"}
                     }
                 }
                 dnam{"metry na sekundę"}
@@ -3878,6 +4172,7 @@ pl{
                         few{"{0} milom na godzinę"}
                         many{"{0} milom na godzinę"}
                         one{"{0} mili na godzinę"}
+                        other{"{0} mili na godzinę"}
                     }
                     genitive{
                         few{"{0} mil na godzinę"}
@@ -3889,15 +4184,19 @@ pl{
                         few{"{0} milami na godzinę"}
                         many{"{0} milami na godzinę"}
                         one{"{0} milą na godzinę"}
+                        other{"{0} mili na godzinę"}
                     }
                     locative{
                         few{"{0} milach na godzinę"}
                         many{"{0} milach na godzinę"}
                         one{"{0} mili na godzinę"}
+                        other{"{0} mili na godzinę"}
                     }
                     vocative{
                         few{"{0} mile na godzinę"}
+                        many{"{0} mil na godzinę"}
                         one{"{0} milo na godzinę"}
+                        other{"{0} mili na godzinę"}
                     }
                 }
                 dnam{"mile na godzinę"}
@@ -3921,6 +4220,7 @@ pl{
                         few{"{0} stopniom Celsjusza"}
                         many{"{0} stopniom Celsjusza"}
                         one{"{0} stopniowi Celsjusza"}
+                        other{"{0} stopnia Celsjusza"}
                     }
                     genitive{
                         few{"{0} stopni Celsjusza"}
@@ -3932,15 +4232,19 @@ pl{
                         few{"{0} stopniami Celsjusza"}
                         many{"{0} stopniami Celsjusza"}
                         one{"{0} stopniem Celsjusza"}
+                        other{"{0} stopnia Celsjusza"}
                     }
                     locative{
                         few{"{0} stopniach Celsjusza"}
                         many{"{0} stopniach Celsjusza"}
                         one{"{0} stopniu Celsjusza"}
+                        other{"{0} stopnia Celsjusza"}
                     }
                     vocative{
                         few{"{0} stopnie Celsjusza"}
+                        many{"{0} stopni Celsjusza"}
                         one{"{0} stopniu Celsjusza"}
+                        other{"{0} stopnia Celsjusza"}
                     }
                 }
                 dnam{"stopnie Celsjusza"}
@@ -3962,6 +4266,7 @@ pl{
                         few{"{0} stopniom Fahrenheita"}
                         many{"{0} stopniom Fahrenheita"}
                         one{"{0} stopniowi Fahrenheita"}
+                        other{"{0} stopnia Fahrenheita"}
                     }
                     genitive{
                         few{"{0} stopni Fahrenheita"}
@@ -3973,15 +4278,19 @@ pl{
                         few{"{0} stopniami Fahrenheita"}
                         many{"{0} stopniami Fahrenheita"}
                         one{"{0} stopniem Fahrenheita"}
+                        other{"{0} stopnia Fahrenheita"}
                     }
                     locative{
                         few{"{0} stopniach Fahrenheita"}
                         many{"{0} stopniach Fahrenheita"}
                         one{"{0} stopniu Fahrenheita"}
+                        other{"{0} stopnia Fahrenheita"}
                     }
                     vocative{
                         few{"{0} stopnie Fahrenheita"}
+                        many{"{0} stopni Fahrenheita"}
                         one{"{0} stopniu Fahrenheita"}
+                        other{"{0} stopnia Fahrenheita"}
                     }
                 }
                 dnam{"stopnie Fahrenheita"}
@@ -4003,6 +4312,7 @@ pl{
                         few{"{0} stopniom"}
                         many{"{0} stopniom"}
                         one{"{0} stopniowi"}
+                        other{"{0} stopnia"}
                     }
                     genitive{
                         few{"{0} stopni"}
@@ -4014,15 +4324,19 @@ pl{
                         few{"{0} stopniami"}
                         many{"{0} stopniami"}
                         one{"{0} stopniem"}
+                        other{"{0} stopnia"}
                     }
                     locative{
                         few{"{0} stopniach"}
                         many{"{0} stopniach"}
                         one{"{0} stopniu"}
+                        other{"{0} stopnia"}
                     }
                     vocative{
                         few{"{0} stopnie"}
+                        many{"{0} stopni"}
                         one{"{0} stopniu"}
+                        other{"{0} stopnia"}
                     }
                 }
                 dnam{"stopnie"}
@@ -4044,6 +4358,7 @@ pl{
                         few{"{0} kelwinom"}
                         many{"{0} kelwinom"}
                         one{"{0} kelwinowi"}
+                        other{"{0} kelwina"}
                     }
                     genitive{
                         few{"{0} kelwinów"}
@@ -4055,15 +4370,19 @@ pl{
                         few{"{0} kelwinami"}
                         many{"{0} kelwinami"}
                         one{"{0} kelwinem"}
+                        other{"{0} kelwina"}
                     }
                     locative{
                         few{"{0} kelwinach"}
                         many{"{0} kelwinach"}
                         one{"{0} kelwinie"}
+                        other{"{0} kelwina"}
                     }
                     vocative{
                         few{"{0} kelwiny"}
+                        many{"{0} kelwinów"}
                         one{"{0} kelwinie"}
+                        other{"{0} kelwina"}
                     }
                 }
                 dnam{"kelwiny"}
@@ -4139,6 +4458,7 @@ pl{
                         few{"{0} centylitrom"}
                         many{"{0} centylitrom"}
                         one{"{0} centylitrowi"}
+                        other{"{0} centylitra"}
                     }
                     genitive{
                         few{"{0} centylitrów"}
@@ -4150,15 +4470,19 @@ pl{
                         few{"{0} centylitrami"}
                         many{"{0} centylitrami"}
                         one{"{0} centylitrem"}
+                        other{"{0} centylitra"}
                     }
                     locative{
                         few{"{0} centylitrach"}
                         many{"{0} centylitrach"}
                         one{"{0} centylitrze"}
+                        other{"{0} centylitra"}
                     }
                     vocative{
                         few{"{0} centylitry"}
+                        many{"{0} centylitrów"}
                         one{"{0} centylitrze"}
+                        other{"{0} centylitra"}
                     }
                 }
                 dnam{"centylitry"}
@@ -4180,6 +4504,7 @@ pl{
                         few{"{0} centymetrom sześciennym"}
                         many{"{0} centymetrom sześciennym"}
                         one{"{0} centymetrowi sześciennemu"}
+                        other{"{0} centymetra sześciennego"}
                     }
                     genitive{
                         few{"{0} centymetrów sześciennych"}
@@ -4191,15 +4516,19 @@ pl{
                         few{"{0} centymetrami sześciennymi"}
                         many{"{0} centymetrami sześciennymi"}
                         one{"{0} centymetrem sześciennym"}
+                        other{"{0} centymetra sześciennego"}
                     }
                     locative{
                         few{"{0} centymetrach sześciennych"}
                         many{"{0} centymetrach sześciennych"}
                         one{"{0} centymetrze sześciennym"}
+                        other{"{0} centymetra sześciennego"}
                     }
                     vocative{
                         few{"{0} centymetry sześcienne"}
+                        many{"{0} centymetrów sześciennych"}
                         one{"{0} centymetrze sześcienny"}
+                        other{"{0} centymetra sześciennego"}
                     }
                 }
                 dnam{"centymetry sześcienne"}
@@ -4222,6 +4551,7 @@ pl{
                         few{"{0} stopom sześciennym"}
                         many{"{0} stopom sześciennym"}
                         one{"{0} stopie sześciennej"}
+                        other{"{0} stopy sześciennej"}
                     }
                     genitive{
                         few{"{0} stóp sześciennych"}
@@ -4233,15 +4563,19 @@ pl{
                         few{"{0} stopami sześciennymi"}
                         many{"{0} stopami sześciennymi"}
                         one{"{0} stopą sześcienną"}
+                        other{"{0} stopy sześciennej"}
                     }
                     locative{
                         few{"{0} stopach sześciennych"}
                         many{"{0} stopach sześciennych"}
                         one{"{0} stopie sześciennej"}
+                        other{"{0} stopy sześciennej"}
                     }
                     vocative{
                         few{"{0} stopy sześcienne"}
+                        many{"{0} stóp sześciennych"}
                         one{"{0} stopo sześcienna"}
+                        other{"{0} stopy sześciennej"}
                     }
                 }
                 dnam{"stopy sześcienne"}
@@ -4315,6 +4649,7 @@ pl{
                         few{"{0} milom sześciennym"}
                         many{"{0} milom sześciennym"}
                         one{"{0} mili sześciennej"}
+                        other{"{0} mili sześciennej"}
                     }
                     genitive{
                         few{"{0} mil sześciennych"}
@@ -4326,15 +4661,19 @@ pl{
                         few{"{0} milami sześciennymi"}
                         many{"{0} milami sześciennymi"}
                         one{"{0} milą sześcienną"}
+                        other{"{0} mili sześciennej"}
                     }
                     locative{
                         few{"{0} milach sześciennych"}
                         many{"{0} milach sześciennych"}
                         one{"{0} mili sześciennej"}
+                        other{"{0} mili sześciennej"}
                     }
                     vocative{
                         few{"{0} mile sześcienne"}
+                        many{"{0} mil sześciennych"}
                         one{"{0} milo sześcienna"}
+                        other{"{0} mili sześciennej"}
                     }
                 }
                 dnam{"mile sześcienne"}
@@ -4431,6 +4770,7 @@ pl{
                         few{"{0} decylitrom"}
                         many{"{0} decylitrom"}
                         one{"{0} decylitrowi"}
+                        other{"{0} decylitra"}
                     }
                     genitive{
                         few{"{0} decylitrów"}
@@ -4442,15 +4782,19 @@ pl{
                         few{"{0} decylitrami"}
                         many{"{0} decylitrami"}
                         one{"{0} decylitrem"}
+                        other{"{0} decylitra"}
                     }
                     locative{
                         few{"{0} decylitrach"}
                         many{"{0} decylitrach"}
                         one{"{0} decylitrze"}
+                        other{"{0} decylitra"}
                     }
                     vocative{
                         few{"{0} decylitry"}
+                        many{"{0} decylitrów"}
                         one{"{0} decylitrze"}
+                        other{"{0} decylitra"}
                     }
                 }
                 dnam{"decylitry"}
@@ -4585,6 +4929,7 @@ pl{
                         other{"{0} drachmy płynu"}
                     }
                     vocative{
+                        few{"{0} drachmy płynu"}
                         many{"{0} drachm płynu"}
                         one{"{0} drachmo płynu"}
                         other{"{0} drachmy płynu"}
@@ -4794,6 +5139,7 @@ pl{
                         few{"{0} galonom angielskim"}
                         many{"{0} galonom angielskim"}
                         one{"{0} galonowi angielskiemu"}
+                        other{"{0} galona angielskiego"}
                     }
                     genitive{
                         few{"{0} galonów angielskich"}
@@ -4805,14 +5151,19 @@ pl{
                         few{"{0} galonami angielskimi"}
                         many{"{0} galonami angielskimi"}
                         one{"{0} galonem angielskim"}
+                        other{"{0} galona angielskiego"}
                     }
                     locative{
                         few{"{0} galonach angielskich"}
                         many{"{0} galonach angielskich"}
                         one{"{0} galonie angielskim"}
+                        other{"{0} galona angielskiego"}
                     }
                     vocative{
+                        few{"{0} galony angielskie"}
+                        many{"{0} galonów angielskich"}
                         one{"{0} galonie angielski"}
+                        other{"{0} galona angielskiego"}
                     }
                 }
                 dnam{"galony angielskie"}
@@ -4903,6 +5254,7 @@ pl{
                         few{"{0} litrom"}
                         many{"{0} litrom"}
                         one{"{0} litrowi"}
+                        other{"{0} litra"}
                     }
                     genitive{
                         few{"{0} litrów"}
@@ -4914,15 +5266,19 @@ pl{
                         few{"{0} litrami"}
                         many{"{0} litrami"}
                         one{"{0} litrem"}
+                        other{"{0} litra"}
                     }
                     locative{
                         few{"{0} litrach"}
                         many{"{0} litrach"}
                         one{"{0} litrze"}
+                        other{"{0} litra"}
                     }
                     vocative{
                         few{"{0} litry"}
+                        many{"{0} litrów"}
                         one{"{0} litrze"}
+                        other{"{0} litra"}
                     }
                 }
                 dnam{"litry"}
@@ -4967,6 +5323,7 @@ pl{
                         few{"{0} mililitrom"}
                         many{"{0} mililitrom"}
                         one{"{0} mililitrowi"}
+                        other{"{0} mililitra"}
                     }
                     genitive{
                         few{"{0} mililitrów"}
@@ -4978,15 +5335,19 @@ pl{
                         few{"{0} mililitrami"}
                         many{"{0} mililitrami"}
                         one{"{0} mililitrem"}
+                        other{"{0} mililitra"}
                     }
                     locative{
                         few{"{0} mililitrach"}
                         many{"{0} mililitrach"}
                         one{"{0} mililitrze"}
+                        other{"{0} mililitra"}
                     }
                     vocative{
                         few{"{0} mililitry"}
+                        many{"{0} mililitrów"}
                         one{"{0} mililitrze"}
+                        other{"{0} mililitra"}
                     }
                 }
                 dnam{"mililitry"}
@@ -5008,6 +5369,7 @@ pl{
                         few{"{0} szczyptom"}
                         many{"{0} szczyptom"}
                         one{"{0} szczypcie"}
+                        other{"{0} szczypty"}
                     }
                     genitive{
                         few{"{0} szczypt"}
@@ -5019,16 +5381,19 @@ pl{
                         few{"{0} szczyptami"}
                         many{"{0} szczyptami"}
                         one{"{0} szczyptą"}
+                        other{"{0} szczypty"}
                     }
                     locative{
                         few{"{0} szczyptach"}
                         many{"{0} szczyptach"}
                         one{"{0} szczypcie"}
+                        other{"{0} szczypty"}
                     }
                     vocative{
                         few{"{0} szczypty"}
                         many{"{0} szczypt"}
                         one{"{0} szczypto"}
+                        other{"{0} szczypty"}
                     }
                 }
                 dnam{"szczypty"}
@@ -5210,6 +5575,7 @@ pl{
                         few{"{0} łyżkom stołowym"}
                         many{"{0} łyżkom stołowym"}
                         one{"{0} łyżce stołowej"}
+                        other{"{0} łyżki stołowej"}
                     }
                     genitive{
                         few{"{0} łyżek stołowych"}
@@ -5221,14 +5587,19 @@ pl{
                         few{"{0} łyżkami stołowymi"}
                         many{"{0} łyżkami stołowymi"}
                         one{"{0} łyżką stołową"}
+                        other{"{0} łyżki stołowej"}
                     }
                     locative{
                         few{"{0} łyżkach stołowych"}
                         many{"{0} łyżkach stołowych"}
                         one{"{0} łyżce stołowej"}
+                        other{"{0} łyżki stołowej"}
                     }
                     vocative{
+                        few{"{0} łyżki stołowe"}
+                        many{"{0} łyżek stołowych"}
                         one{"{0} łyżko stołowa"}
+                        other{"{0} łyżki stołowej"}
                     }
                 }
                 dnam{"łyżki stołowe"}
@@ -5250,6 +5621,7 @@ pl{
                         few{"{0} łyżeczkom"}
                         many{"{0} łyżeczkom"}
                         one{"{0} łyżeczkce"}
+                        other{"{0} łyżeczki"}
                     }
                     genitive{
                         few{"{0} lyżeczek"}
@@ -5261,14 +5633,19 @@ pl{
                         few{"{0} łyżeczkami"}
                         many{"{0} łyżeczkami"}
                         one{"{0} łyżeczką"}
+                        other{"{0} łyżeczki"}
                     }
                     locative{
                         few{"{0} łyżeczkach"}
                         many{"{0} łyżeczkach"}
                         one{"{0} łyżeczce"}
+                        other{"{0} łyżeczki"}
                     }
                     vocative{
+                        few{"{0} łyżeczki"}
+                        many{"{0} łyżeczek"}
                         one{"{0} łyżeczko"}
+                        other{"{0} łyżeczki"}
                     }
                 }
                 dnam{"łyżeczki"}
@@ -5283,277 +5660,48 @@ pl{
     unitsNarrow{
         acceleration{
             g-force{
+                dnam{"G"}
                 few{"{0} G"}
                 many{"{0} G"}
                 one{"{0} G"}
                 other{"{0} G"}
             }
+            meter-per-square-second{
+                dnam{"m/s²"}
+                few{"{0} m/s²"}
+                many{"{0} m/s²"}
+                one{"{0} m/s²"}
+                other{"{0} m/s²"}
+            }
         }
         angle{
             arc-minute{
+                dnam{"minuty"}
                 few{"{0}′"}
                 many{"{0}′"}
                 one{"{0}′"}
                 other{"{0}′"}
             }
             arc-second{
-                few{"{0}″"}
-                many{"{0}″"}
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-        }
-        area{
-            square-foot{
-                dnam{"ft²"}
-                few{"{0} ft²"}
-                many{"{0} ft²"}
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-inch{
-                dnam{"in²"}
-                few{"{0} in²"}
-                many{"{0} in²"}
-                one{"{0} in²"}
-                other{"{0} in²"}
-                per{"{0}/in²"}
-            }
-            square-mile{
-                dnam{"mi²"}
-                few{"{0} mi²"}
-                many{"{0} mi²"}
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-                per{"{0}/mi²"}
-            }
-            square-yard{
-                dnam{"yd²"}
-                few{"{0} yd²"}
-                many{"{0} yd²"}
-                one{"{0} yd²"}
-                other{"{0} yd²"}
-            }
-        }
-        compound{
-            1024p2{"Mi{0}"}
-            1024p3{"Gi{0}"}
-            1024p4{"Ti{0}"}
-            1024p5{"Pi{0}"}
-            1024p6{"Ei{0}"}
-            1024p7{"Zi{0}"}
-            1024p8{"Yi{0}"}
-        }
-        concentr{
-            item{
-                dnam{"szt."}
-                few{"{0} szt."}
-                many{"{0} szt."}
-                one{"{0} szt."}
-                other{"{0} szt."}
-            }
-            percent{
-                dnam{"%"}
-            }
-        }
-        consumption{
-            liter-per-100-kilometer{
-                dnam{"l/100 km"}
-                few{"{0} l/100 km"}
-                many{"{0} l/100 km"}
-                one{"{0} l/100 km"}
-                other{"{0} l/100 km"}
-            }
-        }
-        coordinate{
-            dnam{"kierunek"}
-        }
-        duration{
-            day{
-                dnam{"doba"}
-                few{"{0} d."}
-                many{"{0} d."}
-                one{"{0} d."}
-                other{"{0} d."}
-                per{"{0}/d."}
-            }
-            hour{
-                dnam{"h"}
-                few{"{0} h"}
-                many{"{0} h"}
-                one{"{0} h"}
-                other{"{0} h"}
-                per{"{0}/h"}
-            }
-            millisecond{
-                dnam{"ms"}
-            }
-            minute{
-                dnam{"min"}
-            }
-            month{
-                dnam{"m-c"}
-                few{"{0} m-ce"}
-                many{"{0} m-cy"}
-                one{"{0} m-c"}
-                other{"{0} m-ca"}
-                per{"{0}/m-c"}
-            }
-            quarter{
-                dnam{"kw."}
-                few{"{0} kw."}
-                many{"{0} kw."}
-                one{"{0} kw."}
-                other{"{0} kw."}
-                per{"{0}/kw."}
-            }
-            second{
-                dnam{"s"}
-                few{"{0} s"}
-                many{"{0} s"}
-                one{"{0} s"}
-                other{"{0} s"}
-            }
-            week{
-                dnam{"tydz."}
-                few{"{0} t."}
-                many{"{0} tyg."}
-                one{"{0} tydz."}
-                other{"{0} tyg."}
-                per{"{0}/t."}
-            }
-            year{
-                dnam{"r."}
-                few{"{0} l."}
-                many{"{0} l."}
-                one{"{0} r."}
-                other{"{0} r."}
-            }
-        }
-        energy{
-            electronvolt{
-                dnam{"eV"}
-            }
-        }
-        force{
-            pound-force{
-                dnam{"lbf"}
-            }
-        }
-        length{
-            centimeter{
-                dnam{"cm"}
-            }
-            foot{
-                dnam{"ft"}
-            }
-            inch{
-                dnam{"cale"}
-                few{"{0}″"}
-                many{"{0}″"}
-                one{"{0}″"}
-                other{"{0}″"}
-                per{"{0}/cal"}
-            }
-            meter{
-                dnam{"m"}
-            }
-            mile{
-                dnam{"mile"}
-            }
-        }
-        mass{
-            carat{
-                dnam{"kt"}
-            }
-            dalton{
-                few{"{0} u"}
-                many{"{0} u"}
-                one{"{0} u"}
-                other{"{0} u"}
-            }
-            pound{
-                dnam{"lb"}
-            }
-        }
-        power{
-            horsepower{
-                few{"{0} KM"}
-                many{"{0} KM"}
-                one{"{0} KM"}
-                other{"{0} KM"}
-            }
-        }
-        speed{
-            mile-per-hour{
-                dnam{"mph"}
-                few{"{0} mph"}
-                many{"{0} mph"}
-                one{"{0} mph"}
-                other{"{0} mph"}
-            }
-        }
-        temperature{
-            celsius{
-                dnam{"°C"}
-                few{"{0}°C"}
-                many{"{0}°C"}
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-        }
-        volume{
-            barrel{
-                dnam{"bbl"}
-            }
-            cubic-foot{
-                dnam{"ft³"}
-                few{"{0} ft³"}
-                many{"{0} ft³"}
-                one{"{0} ft³"}
-                other{"{0} ft³"}
-            }
-            cubic-inch{
-                dnam{"in³"}
-                few{"{0} in³"}
-                many{"{0} in³"}
-                one{"{0} in³"}
-                other{"{0} in³"}
-            }
-            cubic-mile{
-                dnam{"mi³"}
-                few{"{0} mi³"}
-                many{"{0} mi³"}
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            cubic-yard{
-                dnam{"yd³"}
-                few{"{0} yd³"}
-                many{"{0} yd³"}
-                one{"{0} yd³"}
-                other{"{0} yd³"}
-            }
-            liter{
-                dnam{"l"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                dnam{"G"}
-            }
-        }
-        angle{
-            arc-minute{
-                dnam{"minuty"}
-            }
-            arc-second{
                 dnam{"sekundy"}
+                few{"{0}″"}
+                many{"{0}″"}
+                one{"{0}″"}
+                other{"{0}″"}
             }
             degree{
                 dnam{"stopnie"}
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            radian{
+                dnam{"rad"}
+                few{"{0} rad"}
+                many{"{0} rad"}
+                one{"{0} rad"}
+                other{"{0} rad"}
             }
             revolution{
                 dnam{"obr."}
@@ -5580,6 +5728,1449 @@ pl{
             }
             hectare{
                 dnam{"ha"}
+                few{"{0} ha"}
+                many{"{0} ha"}
+                one{"{0} ha"}
+                other{"{0} ha"}
+            }
+            square-centimeter{
+                dnam{"cm²"}
+                few{"{0} cm²"}
+                many{"{0} cm²"}
+                one{"{0} cm²"}
+                other{"{0} cm²"}
+                per{"{0}/cm²"}
+            }
+            square-foot{
+                dnam{"ft²"}
+                few{"{0} ft²"}
+                many{"{0} ft²"}
+                one{"{0} ft²"}
+                other{"{0} ft²"}
+            }
+            square-inch{
+                dnam{"in²"}
+                few{"{0} in²"}
+                many{"{0} in²"}
+                one{"{0} in²"}
+                other{"{0} in²"}
+                per{"{0}/in²"}
+            }
+            square-kilometer{
+                dnam{"km²"}
+                few{"{0} km²"}
+                many{"{0} km²"}
+                one{"{0} km²"}
+                other{"{0} km²"}
+                per{"{0}/km²"}
+            }
+            square-meter{
+                dnam{"m²"}
+                few{"{0} m²"}
+                many{"{0} m²"}
+                one{"{0} m²"}
+                other{"{0} m²"}
+                per{"{0}/m²"}
+            }
+            square-mile{
+                dnam{"mi²"}
+                few{"{0} mi²"}
+                many{"{0} mi²"}
+                one{"{0} mi²"}
+                other{"{0} mi²"}
+                per{"{0}/mi²"}
+            }
+            square-yard{
+                dnam{"yd²"}
+                few{"{0} yd²"}
+                many{"{0} yd²"}
+                one{"{0} yd²"}
+                other{"{0} yd²"}
+            }
+        }
+        compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
+            per{"{0}/{1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
+            times{"{0}⋅{1}"}
+        }
+        concentr{
+            item{
+                dnam{"szt."}
+                few{"{0} szt."}
+                many{"{0} szt."}
+                one{"{0} szt."}
+                other{"{0} szt."}
+            }
+            karat{
+                dnam{"karaty"}
+                few{"{0} kt"}
+                many{"{0} kt"}
+                one{"{0} kt"}
+                other{"{0} kt"}
+            }
+            milligram-ofglucose-per-deciliter{
+                dnam{"mg/dl"}
+                few{"{0} mg/dl"}
+                many{"{0} mg/dl"}
+                one{"{0} mg/dl"}
+                other{"{0} mg/dl"}
+            }
+            millimole-per-liter{
+                dnam{"mmol/l"}
+                few{"{0} mmol/l"}
+                many{"{0} mmol/l"}
+                one{"{0} mmol/l"}
+                other{"{0} mmol/l"}
+            }
+            mole{
+                dnam{"mol"}
+                few{"{0} mole"}
+                many{"{0} moli"}
+                one{"{0} mol"}
+                other{"{0} mola"}
+            }
+            percent{
+                dnam{"%"}
+                few{"{0}%"}
+                many{"{0}%"}
+                one{"{0}%"}
+                other{"{0}%"}
+            }
+            permille{
+                dnam{"‰"}
+                few{"{0}‰"}
+                many{"{0}‰"}
+                one{"{0}‰"}
+                other{"{0}‰"}
+            }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
+            permyriad{
+                dnam{"‱"}
+                few{"{0}‱"}
+                many{"{0}‱"}
+                one{"{0}‱"}
+                other{"{0}‱"}
+            }
+        }
+        consumption{
+            liter-per-100-kilometer{
+                dnam{"l/100 km"}
+                few{"{0} l/100 km"}
+                many{"{0} l/100 km"}
+                one{"{0} l/100 km"}
+                other{"{0} l/100 km"}
+            }
+            liter-per-kilometer{
+                dnam{"l/km"}
+                few{"{0} l/km"}
+                many{"{0} l/km"}
+                one{"{0} l/km"}
+                other{"{0} l/km"}
+            }
+            mile-per-gallon{
+                dnam{"mpg"}
+                few{"{0} mpg"}
+                many{"{0} mpg"}
+                one{"{0} mpg"}
+                other{"{0} mpg"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mile/gal ang."}
+                few{"{0} mi/gal ang."}
+                many{"{0} mi/gal ang."}
+                one{"{0} mi/gal ang."}
+                other{"{0} mi/gal ang."}
+            }
+        }
+        coordinate{
+            dnam{"kierunek"}
+            east{"{0}°E"}
+            north{"{0}°N"}
+            south{"{0}°S"}
+            west{"{0}°W"}
+        }
+        digital{
+            bit{
+                dnam{"b"}
+                few{"{0} b"}
+                many{"{0} b"}
+                one{"{0} b"}
+                other{"{0} b"}
+            }
+            byte{
+                dnam{"B"}
+                few{"{0} B"}
+                many{"{0} B"}
+                one{"{0} B"}
+                other{"{0} B"}
+            }
+            gigabit{
+                dnam{"Gb"}
+                few{"{0} Gb"}
+                many{"{0} Gb"}
+                one{"{0} Gb"}
+                other{"{0} Gb"}
+            }
+            gigabyte{
+                dnam{"GB"}
+                few{"{0} GB"}
+                many{"{0} GB"}
+                one{"{0} GB"}
+                other{"{0} GB"}
+            }
+            kilobit{
+                dnam{"kb"}
+                few{"{0} kb"}
+                many{"{0} kb"}
+                one{"{0} kb"}
+                other{"{0} kb"}
+            }
+            kilobyte{
+                dnam{"kB"}
+                few{"{0} kB"}
+                many{"{0} kB"}
+                one{"{0} kB"}
+                other{"{0} kB"}
+            }
+            megabit{
+                dnam{"Mb"}
+                few{"{0} Mb"}
+                many{"{0} Mb"}
+                one{"{0} Mb"}
+                other{"{0} Mb"}
+            }
+            megabyte{
+                dnam{"MB"}
+                few{"{0} MB"}
+                many{"{0} MB"}
+                one{"{0} MB"}
+                other{"{0} MB"}
+            }
+            petabyte{
+                dnam{"PB"}
+                few{"{0} PB"}
+                many{"{0} PB"}
+                one{"{0} PB"}
+                other{"{0} PB"}
+            }
+            terabit{
+                dnam{"Tb"}
+                few{"{0} Tb"}
+                many{"{0} Tb"}
+                one{"{0} Tb"}
+                other{"{0} Tb"}
+            }
+            terabyte{
+                dnam{"TB"}
+                few{"{0} TB"}
+                many{"{0} TB"}
+                one{"{0} TB"}
+                other{"{0} TB"}
+            }
+        }
+        duration{
+            century{
+                dnam{"w."}
+                few{"{0} w."}
+                many{"{0} w."}
+                one{"{0} w."}
+                other{"{0} w."}
+            }
+            day{
+                dnam{"doba"}
+                few{"{0} d."}
+                many{"{0} d."}
+                one{"{0} d."}
+                other{"{0} d."}
+                per{"{0}/d."}
+            }
+            decade{
+                dnam{"dek"}
+                few{"{0} dek"}
+                many{"{0} dek"}
+                one{"{0} dek"}
+                other{"{0} dek"}
+            }
+            hour{
+                dnam{"h"}
+                few{"{0} h"}
+                many{"{0} h"}
+                one{"{0} h"}
+                other{"{0} h"}
+                per{"{0}/h"}
+            }
+            microsecond{
+                dnam{"μs"}
+                few{"{0} μs"}
+                many{"{0} μs"}
+                one{"{0} μs"}
+                other{"{0} μs"}
+            }
+            millisecond{
+                dnam{"ms"}
+                few{"{0} ms"}
+                many{"{0} ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+            }
+            minute{
+                dnam{"min"}
+                few{"{0} min"}
+                many{"{0} min"}
+                one{"{0} min"}
+                other{"{0} min"}
+                per{"{0}/min"}
+            }
+            month{
+                dnam{"m-c"}
+                few{"{0} m-ce"}
+                many{"{0} m-cy"}
+                one{"{0} m-c"}
+                other{"{0} m-ca"}
+                per{"{0}/m-c"}
+            }
+            nanosecond{
+                dnam{"ns"}
+                few{"{0} ns"}
+                many{"{0} ns"}
+                one{"{0} ns"}
+                other{"{0} ns"}
+            }
+            quarter{
+                dnam{"kw."}
+                few{"{0} kw."}
+                many{"{0} kw."}
+                one{"{0} kw."}
+                other{"{0} kw."}
+                per{"{0}/kw."}
+            }
+            second{
+                dnam{"s"}
+                few{"{0} s"}
+                many{"{0} s"}
+                one{"{0} s"}
+                other{"{0} s"}
+                per{"{0}/s"}
+            }
+            week{
+                dnam{"tydz."}
+                few{"{0} t."}
+                many{"{0} tyg."}
+                one{"{0} tydz."}
+                other{"{0} tyg."}
+                per{"{0}/t."}
+            }
+            year{
+                dnam{"r."}
+                few{"{0} l."}
+                many{"{0} l."}
+                one{"{0} r."}
+                other{"{0} r."}
+                per{"{0}/rok"}
+            }
+        }
+        electric{
+            ampere{
+                dnam{"A"}
+                few{"{0} A"}
+                many{"{0} A"}
+                one{"{0} A"}
+                other{"{0} A"}
+            }
+            milliampere{
+                dnam{"mA"}
+                few{"{0} mA"}
+                many{"{0} mA"}
+                one{"{0} mA"}
+                other{"{0} mA"}
+            }
+            ohm{
+                dnam{"Ω"}
+                few{"{0} Ω"}
+                many{"{0} Ω"}
+                one{"{0} Ω"}
+                other{"{0} Ω"}
+            }
+            volt{
+                dnam{"V"}
+                few{"{0} V"}
+                many{"{0} V"}
+                one{"{0} V"}
+                other{"{0} V"}
+            }
+        }
+        energy{
+            british-thermal-unit{
+                dnam{"BTU"}
+                few{"{0} Btu"}
+                many{"{0} Btu"}
+                one{"{0} Btu"}
+                other{"{0} Btu"}
+            }
+            calorie{
+                dnam{"cal"}
+                few{"{0} cal"}
+                many{"{0} cal"}
+                one{"{0} cal"}
+                other{"{0} cal"}
+            }
+            electronvolt{
+                dnam{"eV"}
+                few{"{0} eV"}
+                many{"{0} eV"}
+                one{"{0} eV"}
+                other{"{0} eV"}
+            }
+            foodcalorie{
+                dnam{"kcal"}
+                few{"{0} kcal"}
+                many{"{0} kcal"}
+                one{"{0} kcal"}
+                other{"{0} kcal"}
+            }
+            joule{
+                dnam{"J"}
+                few{"{0} J"}
+                many{"{0} J"}
+                one{"{0} J"}
+                other{"{0} J"}
+            }
+            kilocalorie{
+                dnam{"kcal"}
+                few{"{0} kcal"}
+                many{"{0} kcal"}
+                one{"{0} kcal"}
+                other{"{0} kcal"}
+            }
+            kilojoule{
+                dnam{"kJ"}
+                few{"{0} kJ"}
+                many{"{0} kJ"}
+                one{"{0} kJ"}
+                other{"{0} kJ"}
+            }
+            kilowatt-hour{
+                dnam{"kWh"}
+                few{"{0} kWh"}
+                many{"{0} kWh"}
+                one{"{0} kWh"}
+                other{"{0} kWh"}
+            }
+            therm-us{
+                dnam{"thermy amer."}
+                few{"{0} thermy amer."}
+                many{"{0} thermów amer."}
+                one{"{0} therm amer."}
+                other{"{0} therma amer."}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                few{"{0} kWh/100km"}
+                many{"{0} kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
+            newton{
+                dnam{"N"}
+                few{"{0} N"}
+                many{"{0} N"}
+                one{"{0} N"}
+                other{"{0} N"}
+            }
+            pound-force{
+                dnam{"lbf"}
+                few{"{0} lbf"}
+                many{"{0} lbf"}
+                one{"{0} lbf"}
+                other{"{0} lbf"}
+            }
+        }
+        frequency{
+            gigahertz{
+                dnam{"GHz"}
+                few{"{0} GHz"}
+                many{"{0} GHz"}
+                one{"{0} GHz"}
+                other{"{0} GHz"}
+            }
+            hertz{
+                dnam{"Hz"}
+                few{"{0} Hz"}
+                many{"{0} Hz"}
+                one{"{0} Hz"}
+                other{"{0} Hz"}
+            }
+            kilohertz{
+                dnam{"kHz"}
+                few{"{0} kHz"}
+                many{"{0} kHz"}
+                one{"{0} kHz"}
+                other{"{0} kHz"}
+            }
+            megahertz{
+                dnam{"MHz"}
+                few{"{0} MHz"}
+                many{"{0} MHz"}
+                one{"{0} MHz"}
+                other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"px"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+            em{
+                dnam{"firet"}
+                few{"{0} firety"}
+                many{"{0} firetów"}
+                one{"{0} firet"}
+                other{"{0} firetu"}
+            }
+            megapixel{
+                dnam{"MP"}
+                few{"{0} MP"}
+                many{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"px"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
+        }
+        length{
+            astronomical-unit{
+                dnam{"j.a."}
+                few{"{0} j.a."}
+                many{"{0} j.a."}
+                one{"{0} j.a."}
+                other{"{0} j.a."}
+            }
+            centimeter{
+                dnam{"cm"}
+                few{"{0} cm"}
+                many{"{0} cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+                per{"{0}/cm"}
+            }
+            decimeter{
+                dnam{"dm"}
+                few{"{0} dm"}
+                many{"{0} dm"}
+                one{"{0} dm"}
+                other{"{0} dm"}
+            }
+            earth-radius{
+                dnam{"R⊕"}
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
+            }
+            fathom{
+                dnam{"fm"}
+                few{"{0} fm"}
+                many{"{0} fm"}
+                one{"{0} fm"}
+                other{"{0} fm"}
+            }
+            foot{
+                dnam{"ft"}
+                few{"{0} ft"}
+                many{"{0} ft"}
+                one{"{0} ft"}
+                other{"{0} ft"}
+                per{"{0}/ft"}
+            }
+            furlong{
+                dnam{"fur"}
+                few{"{0} fur"}
+                many{"{0} fur"}
+                one{"{0} fur"}
+                other{"{0} fur"}
+            }
+            inch{
+                dnam{"cale"}
+                few{"{0}″"}
+                many{"{0}″"}
+                one{"{0}″"}
+                other{"{0}″"}
+                per{"{0}/cal"}
+            }
+            kilometer{
+                dnam{"km"}
+                few{"{0} km"}
+                many{"{0} km"}
+                one{"{0} km"}
+                other{"{0} km"}
+                per{"{0}/km"}
+            }
+            light-year{
+                dnam{"ly"}
+                few{"{0} ly"}
+                many{"{0} ly"}
+                one{"{0} ly"}
+                other{"{0} ly"}
+            }
+            meter{
+                dnam{"m"}
+                few{"{0} m"}
+                many{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+                per{"{0}/m"}
+            }
+            micrometer{
+                dnam{"μm"}
+                few{"{0} μm"}
+                many{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
+            }
+            mile{
+                dnam{"mile"}
+                few{"{0} mile"}
+                many{"{0} mil"}
+                one{"{0} mila"}
+                other{"{0} mili"}
+            }
+            mile-scandinavian{
+                dnam{"smi"}
+                few{"{0} smi"}
+                many{"{0} smi"}
+                one{"{0} smi"}
+                other{"{0} smi"}
+            }
+            millimeter{
+                dnam{"mm"}
+                few{"{0} mm"}
+                many{"{0} mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
+            }
+            nanometer{
+                dnam{"nm"}
+                few{"{0} nm"}
+                many{"{0} nm"}
+                one{"{0} nm"}
+                other{"{0} nm"}
+            }
+            nautical-mile{
+                dnam{"Mm"}
+                few{"{0} Mm"}
+                many{"{0} Mm"}
+                one{"{0} Mm"}
+                other{"{0} Mm"}
+            }
+            parsec{
+                dnam{"pc"}
+                few{"{0} pc"}
+                many{"{0} pc"}
+                one{"{0} pc"}
+                other{"{0} pc"}
+            }
+            picometer{
+                dnam{"pm"}
+                few{"{0} pm"}
+                many{"{0} pm"}
+                one{"{0} pm"}
+                other{"{0} pm"}
+            }
+            point{
+                dnam{"pkt."}
+                few{"{0} pkt."}
+                many{"{0} pkt."}
+                one{"{0} pkt."}
+                other{"{0} pkt."}
+            }
+            solar-radius{
+                dnam{"R☉"}
+                few{"{0} R☉"}
+                many{"{0} R☉"}
+                one{"{0} R☉"}
+                other{"{0} R☉"}
+            }
+            yard{
+                dnam{"yd"}
+                few{"{0} yd"}
+                many{"{0} yd"}
+                one{"{0} yd"}
+                other{"{0} yd"}
+            }
+        }
+        light{
+            candela{
+                dnam{"cd"}
+                few{"{0} cd"}
+                many{"{0} cd"}
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                few{"{0} lm"}
+                many{"{0} lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
+            lux{
+                dnam{"lx"}
+                few{"{0} lx"}
+                many{"{0} lx"}
+                one{"{0} lx"}
+                other{"{0} lx"}
+            }
+            solar-luminosity{
+                dnam{"L☉"}
+                few{"{0} L☉"}
+                many{"{0} L☉"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
+            }
+        }
+        mass{
+            carat{
+                dnam{"kt"}
+                few{"{0} kt"}
+                many{"{0} kt"}
+                one{"{0} kt"}
+                other{"{0} kt"}
+            }
+            dalton{
+                dnam{"Da"}
+                few{"{0} u"}
+                many{"{0} u"}
+                one{"{0} u"}
+                other{"{0} u"}
+            }
+            earth-mass{
+                dnam{"M⊕"}
+                few{"{0} M⊕"}
+                many{"{0} M⊕"}
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
+            }
+            grain{
+                dnam{"gr"}
+                few{"{0} gr"}
+                many{"{0} gr"}
+                one{"{0} gr"}
+                other{"{0} gr"}
+            }
+            gram{
+                dnam{"g"}
+                few{"{0} g"}
+                many{"{0} g"}
+                one{"{0} g"}
+                other{"{0} g"}
+                per{"{0}/g"}
+            }
+            kilogram{
+                dnam{"kg"}
+                few{"{0} kg"}
+                many{"{0} kg"}
+                one{"{0} kg"}
+                other{"{0} kg"}
+                per{"{0}/kg"}
+            }
+            microgram{
+                dnam{"μg"}
+                few{"{0} μg"}
+                many{"{0} μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
+            }
+            milligram{
+                dnam{"mg"}
+                few{"{0} mg"}
+                many{"{0} mg"}
+                one{"{0} mg"}
+                other{"{0} mg"}
+            }
+            ounce{
+                dnam{"oz"}
+                few{"{0} oz"}
+                many{"{0} oz"}
+                one{"{0} oz"}
+                other{"{0} oz"}
+                per{"{0}/oz"}
+            }
+            ounce-troy{
+                dnam{"oz t"}
+                few{"{0} oz t"}
+                many{"{0} oz t"}
+                one{"{0} oz t"}
+                other{"{0} oz t"}
+            }
+            pound{
+                dnam{"lb"}
+                few{"{0} funty"}
+                many{"{0} funtów"}
+                one{"{0} funt"}
+                other{"{0} funta"}
+                per{"{0}/funt"}
+            }
+            solar-mass{
+                dnam{"M☉"}
+                few{"{0} M☉"}
+                many{"{0} M☉"}
+                one{"{0} M☉"}
+                other{"{0} M☉"}
+            }
+            stone{
+                dnam{"st"}
+                few{"{0} st"}
+                many{"{0} st"}
+                one{"{0} st"}
+                other{"{0} st"}
+            }
+            ton{
+                dnam{"krótkie tony"}
+                few{"{0} krótkie tony"}
+                many{"{0} krótkich ton"}
+                one{"{0} krótka tona"}
+                other{"{0} krótkiej tony"}
+            }
+            tonne{
+                dnam{"t"}
+                few{"{0} t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
+        }
+        power{
+            gigawatt{
+                dnam{"GW"}
+                few{"{0} GW"}
+                many{"{0} GW"}
+                one{"{0} GW"}
+                other{"{0} GW"}
+            }
+            horsepower{
+                dnam{"KM"}
+                few{"{0} KM"}
+                many{"{0} KM"}
+                one{"{0} KM"}
+                other{"{0} KM"}
+            }
+            kilowatt{
+                dnam{"kW"}
+                few{"{0} kW"}
+                many{"{0} kW"}
+                one{"{0} kW"}
+                other{"{0} kW"}
+            }
+            megawatt{
+                dnam{"MW"}
+                few{"{0} MW"}
+                many{"{0} MW"}
+                one{"{0} MW"}
+                other{"{0} MW"}
+            }
+            milliwatt{
+                dnam{"mW"}
+                few{"{0} mW"}
+                many{"{0} mW"}
+                one{"{0} mW"}
+                other{"{0} mW"}
+            }
+            watt{
+                dnam{"waty"}
+                few{"{0} W"}
+                many{"{0} W"}
+                one{"{0} W"}
+                other{"{0} W"}
+            }
+        }
+        pressure{
+            atmosphere{
+                dnam{"atm"}
+                few{"{0} atm"}
+                many{"{0} atm"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
+            bar{
+                dnam{"bar"}
+                few{"{0} bar"}
+                many{"{0} bar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
+            hectopascal{
+                dnam{"hPa"}
+                few{"{0} hPa"}
+                many{"{0} hPa"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+            }
+            inch-ofhg{
+                dnam{"inHg"}
+                few{"{0} inHg"}
+                many{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
+            kilopascal{
+                dnam{"kPa"}
+                few{"{0} kPa"}
+                many{"{0} kPa"}
+                one{"{0} kPa"}
+                other{"{0} kPa"}
+            }
+            megapascal{
+                dnam{"MPa"}
+                few{"{0} MPa"}
+                many{"{0} MPa"}
+                one{"{0} MPa"}
+                other{"{0} MPa"}
+            }
+            millibar{
+                dnam{"mbar"}
+                few{"{0} mbar"}
+                many{"{0} mbar"}
+                one{"{0} mbar"}
+                other{"{0} mbar"}
+            }
+            millimeter-ofhg{
+                dnam{"mmHg"}
+                few{"{0} mmHg"}
+                many{"{0} mmHg"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                few{"{0} Pa"}
+                many{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+            }
+            pound-force-per-square-inch{
+                dnam{"psi"}
+                few{"{0} psi"}
+                many{"{0} psi"}
+                one{"{0} psi"}
+                other{"{0} psi"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                dnam{"km/godz."}
+                few{"{0} km/godz."}
+                many{"{0} km/godz."}
+                one{"{0} km/godz."}
+                other{"{0} km/godz."}
+            }
+            knot{
+                dnam{"w."}
+                few{"{0} w."}
+                many{"{0} w."}
+                one{"{0} w."}
+                other{"{0} w."}
+            }
+            meter-per-second{
+                dnam{"m/s"}
+                few{"{0} m/s"}
+                many{"{0} m/s"}
+                one{"{0} m/s"}
+                other{"{0} m/s"}
+            }
+            mile-per-hour{
+                dnam{"mph"}
+                few{"{0} mph"}
+                many{"{0} mph"}
+                one{"{0} mph"}
+                other{"{0} mph"}
+            }
+        }
+        temperature{
+            celsius{
+                dnam{"°C"}
+                few{"{0}°C"}
+                many{"{0}°C"}
+                one{"{0}°C"}
+                other{"{0}°C"}
+            }
+            fahrenheit{
+                dnam{"°F"}
+                few{"{0}°F"}
+                many{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+            generic{
+                dnam{"°"}
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            kelvin{
+                dnam{"K"}
+                few{"{0} K"}
+                many{"{0} K"}
+                one{"{0} K"}
+                other{"{0} K"}
+            }
+        }
+        torque{
+            newton-meter{
+                dnam{"N⋅m"}
+                few{"{0} N⋅m"}
+                many{"{0} N⋅m"}
+                one{"{0} N⋅m"}
+                other{"{0} N⋅m"}
+            }
+            pound-force-foot{
+                dnam{"lbf⋅ft"}
+                few{"{0} lbf⋅ft"}
+                many{"{0} lbf⋅ft"}
+                one{"{0} lbf⋅ft"}
+                other{"{0} lbf⋅ft"}
+            }
+        }
+        volume{
+            acre-foot{
+                dnam{"akrostopy"}
+                few{"{0} akrostopy"}
+                many{"{0} akrostóp"}
+                one{"{0} akrostopa"}
+                other{"{0} akrostopy"}
+            }
+            barrel{
+                dnam{"bbl"}
+                few{"{0} bbl"}
+                many{"{0} bbl"}
+                one{"{0} bbl"}
+                other{"{0} bbl"}
+            }
+            bushel{
+                dnam{"bu"}
+                few{"{0} bu"}
+                many{"{0} bu"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
+            centiliter{
+                dnam{"cl"}
+                few{"{0} cl"}
+                many{"{0} cl"}
+                one{"{0} cl"}
+                other{"{0} cl"}
+            }
+            cubic-centimeter{
+                dnam{"cm³"}
+                few{"{0} cm³"}
+                many{"{0} cm³"}
+                one{"{0} cm³"}
+                other{"{0} cm³"}
+                per{"{0}/cm³"}
+            }
+            cubic-foot{
+                dnam{"ft³"}
+                few{"{0} ft³"}
+                many{"{0} ft³"}
+                one{"{0} ft³"}
+                other{"{0} ft³"}
+            }
+            cubic-inch{
+                dnam{"in³"}
+                few{"{0} in³"}
+                many{"{0} in³"}
+                one{"{0} in³"}
+                other{"{0} in³"}
+            }
+            cubic-kilometer{
+                dnam{"km³"}
+                few{"{0} km³"}
+                many{"{0} km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
+            }
+            cubic-meter{
+                dnam{"m³"}
+                few{"{0} m³"}
+                many{"{0} m³"}
+                one{"{0} m³"}
+                other{"{0} m³"}
+                per{"{0}/m³"}
+            }
+            cubic-mile{
+                dnam{"mi³"}
+                few{"{0} mi³"}
+                many{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+            }
+            cubic-yard{
+                dnam{"yd³"}
+                few{"{0} yd³"}
+                many{"{0} yd³"}
+                one{"{0} yd³"}
+                other{"{0} yd³"}
+            }
+            cup{
+                dnam{"ćwierćkwarty am."}
+                few{"{0} ćwierćkwarty am."}
+                many{"{0} ćwierćkwart am."}
+                one{"{0} ćwierćkwarta am."}
+                other{"{0} ćwierćkwarty am."}
+            }
+            cup-metric{
+                dnam{"ćwierćkwarty metr."}
+                few{"{0} ćwierćkwarty metr."}
+                many{"{0} ćwierćkwart metr."}
+                one{"{0} ćwierćkwarta metr."}
+                other{"{0} ćwierćkwarty metr."}
+            }
+            deciliter{
+                dnam{"dl"}
+                few{"{0} dl"}
+                many{"{0} dl"}
+                one{"{0} dl"}
+                other{"{0} dl"}
+            }
+            dessert-spoon{
+                dnam{"ł. deser."}
+                few{"{0} ł. deser."}
+                many{"{0} ł. deser."}
+                one{"{0} ł. deser."}
+                other{"{0} ł. deser."}
+            }
+            dessert-spoon-imperial{
+                dnam{"ł. deser. ang."}
+                few{"{0} ł. deser. ang."}
+                many{"{0} ł. deser. ang."}
+                one{"{0} ł. deser. ang."}
+                other{"{0} ł. deser. ang."}
+            }
+            dram{
+                dnam{"drachmy"}
+                few{"{0} drachmy"}
+                many{"{0} drachm"}
+                one{"{0} drachma"}
+                other{"{0} drachmy"}
+            }
+            drop{
+                dnam{"krople"}
+                few{"{0} krople"}
+                many{"{0} kropli"}
+                one{"{0} kropla"}
+                other{"{0} kropli"}
+            }
+            fluid-ounce{
+                dnam{"fl oz am."}
+                few{"{0} fl oz am."}
+                many{"{0} fl oz am."}
+                one{"{0} fl oz am."}
+                other{"{0} fl oz am."}
+            }
+            fluid-ounce-imperial{
+                dnam{"fl oz ang."}
+                few{"{0} fl oz ang."}
+                many{"{0} fl oz ang."}
+                one{"{0} fl oz ang."}
+                other{"{0} fl oz ang."}
+            }
+            gallon{
+                dnam{"gal am."}
+                few{"{0} gal am."}
+                many{"{0} gal am."}
+                one{"{0} gal am."}
+                other{"{0} gal am."}
+                per{"{0}/gal am."}
+            }
+            gallon-imperial{
+                dnam{"gal ang."}
+                few{"{0} gal ang."}
+                many{"{0} gal ang."}
+                one{"{0} gal ang."}
+                other{"{0} gal ang."}
+                per{"{0}/gal ang."}
+            }
+            hectoliter{
+                dnam{"hl"}
+                few{"{0} hl"}
+                many{"{0} hl"}
+                one{"{0} hl"}
+                other{"{0} hl"}
+            }
+            jigger{
+                dnam{"jiggery"}
+                few{"{0} jiggery"}
+                many{"{0} jiggerów"}
+                one{"{0} jigger"}
+                other{"{0} jiggera"}
+            }
+            liter{
+                dnam{"l"}
+                few{"{0} l"}
+                many{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
+                per{"{0}/l"}
+            }
+            megaliter{
+                dnam{"Ml"}
+                few{"{0} Ml"}
+                many{"{0} Ml"}
+                one{"{0} Ml"}
+                other{"{0} Ml"}
+            }
+            milliliter{
+                dnam{"ml"}
+                few{"{0} ml"}
+                many{"{0} ml"}
+                one{"{0} ml"}
+                other{"{0} ml"}
+            }
+            pinch{
+                dnam{"szcz."}
+                few{"{0} szcz."}
+                many{"{0} szcz."}
+                one{"{0} szcz."}
+                other{"{0} szcz."}
+            }
+            pint{
+                dnam{"półkwarty am."}
+                few{"{0} półkwarty am."}
+                many{"{0} półkwart am."}
+                one{"{0} półkwarta am."}
+                other{"{0} półkwarty am."}
+            }
+            pint-metric{
+                dnam{"półkwarty metr."}
+                few{"{0} półkwarty metr."}
+                many{"{0} półkwart metr."}
+                one{"{0} półkwarta metr."}
+                other{"{0} półkwarty metr."}
+            }
+            quart{
+                dnam{"kwarty am."}
+                few{"{0} kwarty am."}
+                many{"{0} kwart am."}
+                one{"{0} kwarta am."}
+                other{"{0} kwarty am."}
+            }
+            quart-imperial{
+                dnam{"kwarty ang."}
+                few{"{0} kwarty ang."}
+                many{"{0} kwart ang."}
+                one{"{0} kwarta ang."}
+                other{"{0} kwarty ang."}
+            }
+            tablespoon{
+                dnam{"ł. stoł."}
+                few{"{0} ł. stoł."}
+                many{"{0} ł. stoł."}
+                one{"{0} ł. stoł."}
+                other{"{0} ł. stoł."}
+            }
+            teaspoon{
+                dnam{"łyżeczki"}
+                few{"{0} łyżeczki"}
+                many{"{0} łyżeczek"}
+                one{"{0} łyżeczka"}
+                other{"{0} łyżeczki"}
+            }
+        }
+    }
+    unitsShort{
+        acceleration{
+            g-force{
+                dnam{"G"}
+                few{"{0} G"}
+                many{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+            }
+            meter-per-square-second{
+                few{"{0} m/s²"}
+                many{"{0} m/s²"}
+                one{"{0} m/s²"}
+                other{"{0} m/s²"}
+            }
+        }
+        angle{
+            arc-minute{
+                dnam{"minuty"}
+                few{"{0}′"}
+                many{"{0}′"}
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            arc-second{
+                dnam{"sekundy"}
+                few{"{0}″"}
+                many{"{0}″"}
+                one{"{0}″"}
+                other{"{0}″"}
+            }
+            degree{
+                dnam{"stopnie"}
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            radian{
+                few{"{0} rad"}
+                many{"{0} rad"}
+                one{"{0} rad"}
+                other{"{0} rad"}
+            }
+            revolution{
+                dnam{"obr."}
+                few{"{0} obr."}
+                many{"{0} obr."}
+                one{"{0} obr."}
+                other{"{0} obr."}
+            }
+        }
+        area{
+            acre{
+                dnam{"akry"}
+                few{"{0} akry"}
+                many{"{0} akrów"}
+                one{"{0} akr"}
+                other{"{0} akra"}
+            }
+            dunam{
+                dnam{"dunamy"}
+                few{"{0} dunamy"}
+                many{"{0} dunamów"}
+                one{"{0} dunam"}
+                other{"{0} dunama"}
+            }
+            hectare{
+                dnam{"ha"}
+                few{"{0} ha"}
+                many{"{0} ha"}
+                one{"{0} ha"}
+                other{"{0} ha"}
+            }
+            square-centimeter{
+                few{"{0} cm²"}
+                many{"{0} cm²"}
+                one{"{0} cm²"}
+                other{"{0} cm²"}
             }
             square-foot{
                 dnam{"stopy kw."}
@@ -5595,6 +7186,18 @@ pl{
                 one{"{0} cal kw."}
                 other{"{0} cala kw."}
                 per{"{0}/cal kw."}
+            }
+            square-kilometer{
+                few{"{0} km²"}
+                many{"{0} km²"}
+                one{"{0} km²"}
+                other{"{0} km²"}
+            }
+            square-meter{
+                few{"{0} m²"}
+                many{"{0} m²"}
+                one{"{0} m²"}
+                other{"{0} m²"}
             }
             square-mile{
                 dnam{"mile kw."}
@@ -5620,6 +7223,50 @@ pl{
             1024p6{"Ei{0}"}
             1024p7{"Zi{0}"}
             1024p8{"Yi{0}"}
+            power2{
+                few{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}²"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                many{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0}³"}
+                    }
+                }
+            }
         }
         concentr{
             item{
@@ -5631,6 +7278,10 @@ pl{
             }
             karat{
                 dnam{"karaty"}
+                few{"{0} kt"}
+                many{"{0} kt"}
+                one{"{0} kt"}
+                other{"{0} kt"}
             }
             milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
@@ -5652,6 +7303,24 @@ pl{
                 many{"{0} moli"}
                 one{"{0} mol"}
                 other{"{0} mola"}
+            }
+            percent{
+                few{"{0}%"}
+                many{"{0}%"}
+                one{"{0}%"}
+                other{"{0}%"}
+            }
+            permille{
+                few{"{0}‰"}
+                many{"{0}‰"}
+                one{"{0}‰"}
+                other{"{0}‰"}
+            }
+            permillion{
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
             }
             permyriad{
                 few{"{0}‱"}
@@ -5712,6 +7381,60 @@ pl{
                 one{"{0} B"}
                 other{"{0} B"}
             }
+            gigabit{
+                few{"{0} Gb"}
+                many{"{0} Gb"}
+                one{"{0} Gb"}
+                other{"{0} Gb"}
+            }
+            gigabyte{
+                few{"{0} GB"}
+                many{"{0} GB"}
+                one{"{0} GB"}
+                other{"{0} GB"}
+            }
+            kilobit{
+                few{"{0} kb"}
+                many{"{0} kb"}
+                one{"{0} kb"}
+                other{"{0} kb"}
+            }
+            kilobyte{
+                few{"{0} kB"}
+                many{"{0} kB"}
+                one{"{0} kB"}
+                other{"{0} kB"}
+            }
+            megabit{
+                few{"{0} Mb"}
+                many{"{0} Mb"}
+                one{"{0} Mb"}
+                other{"{0} Mb"}
+            }
+            megabyte{
+                few{"{0} MB"}
+                many{"{0} MB"}
+                one{"{0} MB"}
+                other{"{0} MB"}
+            }
+            petabyte{
+                few{"{0} PB"}
+                many{"{0} PB"}
+                one{"{0} PB"}
+                other{"{0} PB"}
+            }
+            terabit{
+                few{"{0} Tb"}
+                many{"{0} Tb"}
+                one{"{0} Tb"}
+                other{"{0} Tb"}
+            }
+            terabyte{
+                few{"{0} TB"}
+                many{"{0} TB"}
+                one{"{0} TB"}
+                other{"{0} TB"}
+            }
         }
         duration{
             century{
@@ -5744,6 +7467,24 @@ pl{
                 other{"{0} godz."}
                 per{"{0}/godz."}
             }
+            microsecond{
+                few{"{0} μs"}
+                many{"{0} μs"}
+                one{"{0} μs"}
+                other{"{0} μs"}
+            }
+            millisecond{
+                few{"{0} ms"}
+                many{"{0} ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+            }
+            minute{
+                few{"{0} min"}
+                many{"{0} min"}
+                one{"{0} min"}
+                other{"{0} min"}
+            }
             month{
                 dnam{"miesiące"}
                 few{"{0} mies."}
@@ -5751,6 +7492,12 @@ pl{
                 one{"{0} mies."}
                 other{"{0} mies."}
                 per{"{0}/mies."}
+            }
+            nanosecond{
+                few{"{0} ns"}
+                many{"{0} ns"}
+                one{"{0} ns"}
+                other{"{0} ns"}
             }
             quarter{
                 dnam{"kw."}
@@ -5787,12 +7534,30 @@ pl{
         electric{
             ampere{
                 dnam{"A"}
+                few{"{0} A"}
+                many{"{0} A"}
+                one{"{0} A"}
+                other{"{0} A"}
+            }
+            milliampere{
+                few{"{0} mA"}
+                many{"{0} mA"}
+                one{"{0} mA"}
+                other{"{0} mA"}
             }
             ohm{
                 dnam{"Ω"}
+                few{"{0} Ω"}
+                many{"{0} Ω"}
+                one{"{0} Ω"}
+                other{"{0} Ω"}
             }
             volt{
                 dnam{"V"}
+                few{"{0} V"}
+                many{"{0} V"}
+                one{"{0} V"}
+                other{"{0} V"}
             }
         }
         energy{
@@ -5802,6 +7567,12 @@ pl{
                 many{"{0} Btu"}
                 one{"{0} Btu"}
                 other{"{0} Btu"}
+            }
+            calorie{
+                few{"{0} cal"}
+                many{"{0} cal"}
+                one{"{0} cal"}
+                other{"{0} cal"}
             }
             electronvolt{
                 dnam{"elektronowolt"}
@@ -5819,6 +7590,28 @@ pl{
             }
             joule{
                 dnam{"J"}
+                few{"{0} J"}
+                many{"{0} J"}
+                one{"{0} J"}
+                other{"{0} J"}
+            }
+            kilocalorie{
+                few{"{0} kcal"}
+                many{"{0} kcal"}
+                one{"{0} kcal"}
+                other{"{0} kcal"}
+            }
+            kilojoule{
+                few{"{0} kJ"}
+                many{"{0} kJ"}
+                one{"{0} kJ"}
+                other{"{0} kJ"}
+            }
+            kilowatt-hour{
+                few{"{0} kWh"}
+                many{"{0} kWh"}
+                one{"{0} kWh"}
+                other{"{0} kWh"}
             }
             therm-us{
                 dnam{"thermy amer."}
@@ -5829,6 +7622,12 @@ pl{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                few{"{0} kWh/100km"}
+                many{"{0} kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
             newton{
                 few{"{0} N"}
                 many{"{0} N"}
@@ -5843,13 +7642,84 @@ pl{
                 other{"{0} lbf"}
             }
         }
+        frequency{
+            gigahertz{
+                few{"{0} GHz"}
+                many{"{0} GHz"}
+                one{"{0} GHz"}
+                other{"{0} GHz"}
+            }
+            hertz{
+                few{"{0} Hz"}
+                many{"{0} Hz"}
+                one{"{0} Hz"}
+                other{"{0} Hz"}
+            }
+            kilohertz{
+                few{"{0} kHz"}
+                many{"{0} kHz"}
+                one{"{0} kHz"}
+                other{"{0} kHz"}
+            }
+            megahertz{
+                few{"{0} MHz"}
+                many{"{0} MHz"}
+                one{"{0} MHz"}
+                other{"{0} MHz"}
+            }
+        }
         graphics{
+            dot{
+                dnam{"px"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            dot-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+            }
             em{
                 dnam{"firet"}
                 few{"{0} firety"}
                 many{"{0} firetów"}
                 one{"{0} firet"}
                 other{"{0} firetu"}
+            }
+            megapixel{
+                few{"{0} MP"}
+                many{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -5859,6 +7729,24 @@ pl{
                 many{"{0} j.a."}
                 one{"{0} j.a."}
                 other{"{0} j.a."}
+            }
+            centimeter{
+                few{"{0} cm"}
+                many{"{0} cm"}
+                one{"{0} cm"}
+                other{"{0} cm"}
+            }
+            decimeter{
+                few{"{0} dm"}
+                many{"{0} dm"}
+                one{"{0} dm"}
+                other{"{0} dm"}
+            }
+            earth-radius{
+                few{"{0} R⊕"}
+                many{"{0} R⊕"}
+                one{"{0} R⊕"}
+                other{"{0} R⊕"}
             }
             fathom{
                 few{"{0} fm"}
@@ -5873,6 +7761,12 @@ pl{
                 one{"{0} ft"}
                 other{"{0} ft"}
             }
+            furlong{
+                few{"{0} fur"}
+                many{"{0} fur"}
+                one{"{0} fur"}
+                other{"{0} fur"}
+            }
             inch{
                 dnam{"cale"}
                 few{"{0} cale"}
@@ -5881,8 +7775,30 @@ pl{
                 other{"{0} cala"}
                 per{"{0}/cal"}
             }
+            kilometer{
+                few{"{0} km"}
+                many{"{0} km"}
+                one{"{0} km"}
+                other{"{0} km"}
+            }
+            light-year{
+                few{"{0} ly"}
+                many{"{0} ly"}
+                one{"{0} ly"}
+                other{"{0} ly"}
+            }
             meter{
                 dnam{"m"}
+                few{"{0} m"}
+                many{"{0} m"}
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            micrometer{
+                few{"{0} μm"}
+                many{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mile"}
@@ -5891,12 +7807,42 @@ pl{
                 one{"{0} mila"}
                 other{"{0} mili"}
             }
+            mile-scandinavian{
+                few{"{0} smi"}
+                many{"{0} smi"}
+                one{"{0} smi"}
+                other{"{0} smi"}
+            }
+            millimeter{
+                few{"{0} mm"}
+                many{"{0} mm"}
+                one{"{0} mm"}
+                other{"{0} mm"}
+            }
+            nanometer{
+                few{"{0} nm"}
+                many{"{0} nm"}
+                one{"{0} nm"}
+                other{"{0} nm"}
+            }
             nautical-mile{
                 dnam{"Mm"}
                 few{"{0} Mm"}
                 many{"{0} Mm"}
                 one{"{0} Mm"}
                 other{"{0} Mm"}
+            }
+            parsec{
+                few{"{0} pc"}
+                many{"{0} pc"}
+                one{"{0} pc"}
+                other{"{0} pc"}
+            }
+            picometer{
+                few{"{0} pm"}
+                many{"{0} pm"}
+                one{"{0} pm"}
+                other{"{0} pm"}
             }
             point{
                 dnam{"pkt."}
@@ -5932,6 +7878,12 @@ pl{
                 many{"{0} lm"}
                 one{"{0} lm"}
                 other{"{0} lm"}
+            }
+            lux{
+                few{"{0} lx"}
+                many{"{0} lx"}
+                one{"{0} lx"}
+                other{"{0} lx"}
             }
             solar-luminosity{
                 few{"{0} L☉"}
@@ -5969,6 +7921,40 @@ pl{
             }
             gram{
                 dnam{"g"}
+                few{"{0} g"}
+                many{"{0} g"}
+                one{"{0} g"}
+                other{"{0} g"}
+            }
+            kilogram{
+                few{"{0} kg"}
+                many{"{0} kg"}
+                one{"{0} kg"}
+                other{"{0} kg"}
+            }
+            microgram{
+                few{"{0} μg"}
+                many{"{0} μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
+            }
+            milligram{
+                few{"{0} mg"}
+                many{"{0} mg"}
+                one{"{0} mg"}
+                other{"{0} mg"}
+            }
+            ounce{
+                few{"{0} oz"}
+                many{"{0} oz"}
+                one{"{0} oz"}
+                other{"{0} oz"}
+            }
+            ounce-troy{
+                few{"{0} oz t"}
+                many{"{0} oz t"}
+                one{"{0} oz t"}
+                other{"{0} oz t"}
             }
             pound{
                 dnam{"funty"}
@@ -5997,8 +7983,20 @@ pl{
                 one{"{0} krótka tona"}
                 other{"{0} krótkiej tony"}
             }
+            tonne{
+                few{"{0} t"}
+                many{"{0} t"}
+                one{"{0} t"}
+                other{"{0} t"}
+            }
         }
         power{
+            gigawatt{
+                few{"{0} GW"}
+                many{"{0} GW"}
+                one{"{0} GW"}
+                other{"{0} GW"}
+            }
             horsepower{
                 dnam{"KM"}
                 few{"{0} KM"}
@@ -6006,11 +8004,57 @@ pl{
                 one{"{0} KM"}
                 other{"{0} KM"}
             }
+            kilowatt{
+                few{"{0} kW"}
+                many{"{0} kW"}
+                one{"{0} kW"}
+                other{"{0} kW"}
+            }
+            megawatt{
+                few{"{0} MW"}
+                many{"{0} MW"}
+                one{"{0} MW"}
+                other{"{0} MW"}
+            }
+            milliwatt{
+                few{"{0} mW"}
+                many{"{0} mW"}
+                one{"{0} mW"}
+                other{"{0} mW"}
+            }
             watt{
                 dnam{"waty"}
+                few{"{0} W"}
+                many{"{0} W"}
+                one{"{0} W"}
+                other{"{0} W"}
             }
         }
         pressure{
+            atmosphere{
+                few{"{0} atm"}
+                many{"{0} atm"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
+            bar{
+                few{"{0} bar"}
+                many{"{0} bar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
+            hectopascal{
+                few{"{0} hPa"}
+                many{"{0} hPa"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+            }
+            inch-ofhg{
+                few{"{0} inHg"}
+                many{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
             kilopascal{
                 dnam{"kPa"}
                 few{"{0} kPa"}
@@ -6025,12 +8069,30 @@ pl{
                 one{"{0} MPa"}
                 other{"{0} MPa"}
             }
+            millibar{
+                few{"{0} mbar"}
+                many{"{0} mbar"}
+                one{"{0} mbar"}
+                other{"{0} mbar"}
+            }
             millimeter-ofhg{
                 dnam{"mmHg"}
                 few{"{0} mmHg"}
                 many{"{0} mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
+            }
+            pascal{
+                few{"{0} Pa"}
+                many{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+            }
+            pound-force-per-square-inch{
+                few{"{0} psi"}
+                many{"{0} psi"}
+                one{"{0} psi"}
+                other{"{0} psi"}
             }
         }
         speed{
@@ -6048,6 +8110,12 @@ pl{
                 one{"{0} w."}
                 other{"{0} w."}
             }
+            meter-per-second{
+                few{"{0} m/s"}
+                many{"{0} m/s"}
+                one{"{0} m/s"}
+                other{"{0} m/s"}
+            }
             mile-per-hour{
                 dnam{"mile/h"}
                 few{"{0} mile/h"}
@@ -6063,6 +8131,24 @@ pl{
                 many{"{0} st. C"}
                 one{"{0} st. C"}
                 other{"{0} st. C"}
+            }
+            fahrenheit{
+                few{"{0}°F"}
+                many{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+            generic{
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            kelvin{
+                few{"{0} K"}
+                many{"{0} K"}
+                one{"{0} K"}
+                other{"{0} K"}
             }
         }
         torque{
@@ -6096,12 +8182,24 @@ pl{
                 one{"{0} bbl"}
                 other{"{0} bbl"}
             }
+            bushel{
+                few{"{0} bu"}
+                many{"{0} bu"}
+                one{"{0} bu"}
+                other{"{0} bu"}
+            }
             centiliter{
                 dnam{"cl"}
                 few{"{0} cl"}
                 many{"{0} cl"}
                 one{"{0} cl"}
                 other{"{0} cl"}
+            }
+            cubic-centimeter{
+                few{"{0} cm³"}
+                many{"{0} cm³"}
+                one{"{0} cm³"}
+                other{"{0} cm³"}
             }
             cubic-foot{
                 dnam{"stopy sześc."}
@@ -6116,6 +8214,18 @@ pl{
                 many{"{0} cali sześc."}
                 one{"{0} cal sześc."}
                 other{"{0} cala sześc."}
+            }
+            cubic-kilometer{
+                few{"{0} km³"}
+                many{"{0} km³"}
+                one{"{0} km³"}
+                other{"{0} km³"}
+            }
+            cubic-meter{
+                few{"{0} m³"}
+                many{"{0} m³"}
+                one{"{0} m³"}
+                other{"{0} m³"}
             }
             cubic-mile{
                 dnam{"mile sześc."}
@@ -6226,6 +8336,10 @@ pl{
             }
             liter{
                 dnam{"litry"}
+                few{"{0} l"}
+                many{"{0} l"}
+                one{"{0} l"}
+                other{"{0} l"}
             }
             megaliter{
                 dnam{"Ml"}

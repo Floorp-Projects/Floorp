@@ -673,6 +673,7 @@ de{
     }
     Languages%short{
         en_GB{"Englisch (GB)"}
+        en_US{"Englisch (USA)"}
     }
     Languages%variant{
         hi_Latn{"Hinglish"}

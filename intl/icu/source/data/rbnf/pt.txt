@@ -145,7 +145,7 @@ pt{
             "2000: <%spellout-cardinal-masculine< mil\u00E9simo[ >>];",
             "1000000: <%spellout-cardinal-masculine< milion\u00E9simo[ >>];",
             "1000000000: <%spellout-cardinal-masculine< bilion\u00E9simo[ >>];",
-            "1000000000000: <%spellout-cardinal-masculine< trilion\u00E9sima[ >>];",
+            "1000000000000: <%spellout-cardinal-masculine< trilion\u00E9simo[ >>];",
             "1000000000000000: <%spellout-cardinal-masculine< quadrilion\u00E9simo[ >>];",
             "1000000000000000000: =#,##0=\u00BA;",
             "%spellout-ordinal-feminine:",

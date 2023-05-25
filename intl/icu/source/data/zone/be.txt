@@ -258,6 +258,9 @@ be{
         "America:Chihuahua"{
             ec{"Чыўаўа"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"Сьюдад-Хуарэс"}
+        }
         "America:Coral_Harbour"{
             ec{"Атыкокан"}
         }

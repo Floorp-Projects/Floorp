@@ -54,7 +54,7 @@ The following names can be supplied as the argument for platform:
     MacOSX              Use the default compilers on MacOS X (Darwin)
     MacOSX/GCC          Use the GNU gcc/g++ compilers on MacOSX (Darwin)
     MinGW               Use the GNU gcc/g++ compilers on MinGW
-    MSYS/MSVC           Use the Microsoft Visual C++ computer on MSYS
+    MSYS/MSVC           Use the Microsoft Visual C++ compiler on MSYS
     QNX                 Use the QNX QCC compiler on QNX/Neutrino
     Solaris             Use the Sun cc/CC compilers on Solaris
     Solaris/GCC         Use the GNU gcc/g++ compilers on Solaris

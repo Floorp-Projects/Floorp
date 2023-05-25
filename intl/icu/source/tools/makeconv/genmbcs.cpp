@@ -167,7 +167,7 @@ MBCSInit(MBCSData *mbcsData, UCMFile *ucm) {
 U_CFUNC NewConverter *
 MBCSOpen(UCMFile *ucm) {
     MBCSData *mbcsData=(MBCSData *)uprv_malloc(sizeof(MBCSData));
-    if(mbcsData==NULL) {
+    if(mbcsData==nullptr) {
         printf("out of memory\n");
         exit(U_MEMORY_ALLOCATION_ERROR);
     }
@@ -186,7 +186,7 @@ U_CDECL_BEGIN
 static void
 MBCSClose(NewConverter *cnvData) {
     MBCSData *mbcsData=(MBCSData *)cnvData;
-    if(mbcsData!=NULL) {
+    if(mbcsData!=nullptr) {
         MBCSDestruct(mbcsData);
         uprv_free(mbcsData);
     }
@@ -209,7 +209,7 @@ MBCSStartMappings(MBCSData *mbcsData) {
 
     if(sum>0) {
         mbcsData->unicodeCodeUnits=(uint16_t *)uprv_malloc(sum*sizeof(uint16_t));
-        if(mbcsData->unicodeCodeUnits==NULL) {
+        if(mbcsData->unicodeCodeUnits==nullptr) {
             fprintf(stderr, "error: out of memory allocating %ld 16-bit code units\n",
                 (long)sum);
             return false;
@@ -231,7 +231,7 @@ MBCSStartMappings(MBCSData *mbcsData) {
         sum=0x100000*maxCharLength;
     }
     mbcsData->fromUBytes=(uint8_t *)uprv_malloc(sum);
-    if(mbcsData->fromUBytes==NULL) {
+    if(mbcsData->fromUBytes==nullptr) {
         fprintf(stderr, "error: out of memory allocating %ld B for target mappings\n", (long)sum);
         return false;
     }
