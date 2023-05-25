@@ -53,7 +53,7 @@ class TabsTrayInactiveTabsOnboardingBinding(
             .ifChanged()
             .collect {
                 val inactiveTabsList =
-                    if (settings.inactiveTabsAreEnabled) { store.state.potentialInactiveTabs } else emptyList()
+                    if (settings.inactiveTabsAreEnabled) { store.state.potentialInactiveTabs } else { emptyList() }
                 if (inactiveTabsList.isNotEmpty() && shouldShowOnboardingForInactiveTabs()) {
                     createInactiveCFR()
                 }
