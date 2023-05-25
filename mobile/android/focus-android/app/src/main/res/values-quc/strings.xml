@@ -167,10 +167,16 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Chi ronojel</string>
 
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Nik’ob’al ya’om chi uloq, ch’ab’al</string>
+
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Mulib\'al rech juq\'attzij chi\'l ukojik</string>
 
     <string name="preference_category_search">Utzukuxik</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">cha’riqa’</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Ya\'om chi uloq</string>

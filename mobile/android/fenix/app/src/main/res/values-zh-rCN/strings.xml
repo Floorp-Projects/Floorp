@@ -515,7 +515,7 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">数据反馈</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">改善用户体验</string>
+    <string name="preferences_data_collection">数据收集</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">通过 USB 远程调试</string>
     <!-- Preference title for switch preference to show search engines -->
