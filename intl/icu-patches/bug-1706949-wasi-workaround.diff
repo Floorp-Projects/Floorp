@@ -299,7 +299,7 @@ diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/un
  #include "uhash.h"
  #include "ucln_cmn.h"
  
- static icu::UnifiedCache *gCache = NULL;
+ static icu::UnifiedCache *gCache = nullptr;
 +#ifndef __wasi__
  static std::mutex *gCacheMutex = nullptr;
  static std::condition_variable *gInProgressValueAddedCond;
@@ -328,7 +328,7 @@ diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/un
  
 @@ -70,12 +76,14 @@ CacheKeyBase::~CacheKeyBase() {
  static void U_CALLCONV cacheInit(UErrorCode &status) {
-     U_ASSERT(gCache == NULL);
+     U_ASSERT(gCache == nullptr);
      ucln_common_registerCleanup(
              UCLN_COMMON_UNIFIED_CACHE, unifiedcache_cleanup);
  
@@ -337,7 +337,7 @@ diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/un
      gInProgressValueAddedCond = STATIC_NEW(std::condition_variable);
 +#endif
      gCache = new UnifiedCache(status);
-     if (gCache == NULL) {
+     if (gCache == nullptr) {
          status = U_MEMORY_ALLOCATION_ERROR;
      }
      if (U_FAILURE(status)) {
@@ -433,7 +433,7 @@ diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/un
      std::lock_guard<std::mutex> lock(*gCacheMutex);
 +#endif
      const UHashElement *element = uhash_find(fHashtable, &key);
-     if (element != NULL && !_inProgress(element)) {
+     if (element != nullptr && !_inProgress(element)) {
          _fetch(element, value, status);
          return;
      }
@@ -441,7 +441,7 @@ diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/un
          const CacheKeyBase &key,
          const SharedObject *&value,
          UErrorCode &status) const {
-     U_ASSERT(value == NULL);
+     U_ASSERT(value == nullptr);
      U_ASSERT(status == U_ZERO_ERROR);
 +#ifndef __wasi__
      std::unique_lock<std::mutex> lock(*gCacheMutex);
@@ -451,7 +451,7 @@ diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/un
      // If the hash table contains an inProgress placeholder entry for this key,
      // this means that another thread is currently constructing the value object.
      // Loop, waiting for that construction to complete.
-      while (element != NULL && _inProgress(element)) {
+      while (element != nullptr && _inProgress(element)) {
 +#ifndef __wasi__
           gInProgressValueAddedCond->wait(lock);
 +#endif
@@ -626,10 +626,11 @@ index 9ecd776..d094289 100644
      /** Small object ownership warehouse for the formatter and parser */
      DecimalFormatWarehouse warehouse;
 diff --git a/intl/icu/source/i18n/numrange_fluent.cpp b/intl/icu/source/i18n/numrange_fluent.cpp
-index f1060b3..66e12ee 100644
 --- a/intl/icu/source/i18n/numrange_fluent.cpp
 +++ b/intl/icu/source/i18n/numrange_fluent.cpp
-@@ -240,29 +240,49 @@ LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(NFS<LNF>&& src) U_N
+@@ -238,33 +238,53 @@ LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(LocalizedNumberRang
+ 
+ LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(NFS<LNF>&& src) noexcept
          : NFS<LNF>(std::move(src)) {
      // Steal the compiled formatter
      LNF&& _src = static_cast<LNF&&>(src);
@@ -655,7 +656,7 @@ index f1060b3..66e12ee 100644
      return *this;
  }
  
- LocalizedNumberRangeFormatter& LocalizedNumberRangeFormatter::operator=(LNF&& src) U_NOEXCEPT {
+ LocalizedNumberRangeFormatter& LocalizedNumberRangeFormatter::operator=(LNF&& src) noexcept {
      NFS<LNF>::operator=(static_cast<NFS<LNF>&&>(src));
      // Steal the compiled formatter
 +#ifndef __wasi__
@@ -679,7 +680,11 @@ index f1060b3..66e12ee 100644
  }
  
  LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(const RangeMacroProps& macros, const Locale& locale) {
-@@ -346,7 +366,11 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+     fMacros = macros;
+     fMacros.locale = locale;
+@@ -344,11 +364,15 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+     if (U_FAILURE(status)) {
+         return nullptr;
      }
  
      // First try to get the pre-computed formatter
@@ -691,7 +696,11 @@ index f1060b3..66e12ee 100644
      if (ptr != nullptr) {
          return ptr;
      }
-@@ -365,6 +389,7 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+ 
+     // Try computing the formatter on our own
+@@ -364,18 +388,23 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+ 
+     // Note: ptr starts as nullptr; during compare_exchange,
      // it is set to what is actually stored in the atomic
      // if another thread beat us to computing the formatter object.
      auto* nonConstThis = const_cast<LocalizedNumberRangeFormatter*>(this);
@@ -699,7 +708,8 @@ index f1060b3..66e12ee 100644
      if (!nonConstThis->fAtomicFormatter.compare_exchange_strong(ptr, temp)) {
          // Another thread beat us to computing the formatter
          delete temp;
-@@ -373,6 +398,10 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+         return ptr;
+     } else {
          // Our copy of the formatter got stored in the atomic
          return temp;
      }
@@ -710,6 +720,8 @@ index f1060b3..66e12ee 100644
  
  }
  
+ 
+ #endif /* #if !UCONFIG_NO_FORMATTING */
 diff --git a/intl/icu/source/i18n/unicode/numberrangeformatter.h b/intl/icu/source/i18n/unicode/numberrangeformatter.h
 index b9a4600..0ba2fa0 100644
 --- a/intl/icu/source/i18n/unicode/numberrangeformatter.h
