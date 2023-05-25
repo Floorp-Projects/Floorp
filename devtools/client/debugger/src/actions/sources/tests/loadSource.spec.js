@@ -227,21 +227,14 @@ describe("loadGeneratedSourceText", () => {
     });
     const id = "foo";
 
-    await dispatch(actions.newGeneratedSource(makeSource(id)));
-
-    let source = selectors.getSourceFromId(getState(), id);
-    let sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+    const source = await dispatch(actions.newGeneratedSource(makeSource(id)));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
       source.id
     );
 
     dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
-    source = selectors.getSourceFromId(getState(), id);
-    sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
     const loading = dispatch(
       actions.loadGeneratedSourceText({ cx, sourceActor })
     );
@@ -282,9 +275,8 @@ describe("loadGeneratedSourceText", () => {
     });
     const id = "foo";
 
-    await dispatch(actions.newGeneratedSource(makeSource(id)));
-    let source = selectors.getSourceFromId(getState(), id);
-    let sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+    const source = await dispatch(actions.newGeneratedSource(makeSource(id)));
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
       source.id
     );
@@ -298,11 +290,6 @@ describe("loadGeneratedSourceText", () => {
     resolve({ source: "yay", contentType: "text/javascript" });
     await loading;
 
-    source = selectors.getSourceFromId(getState(), id);
-    sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
     expect(count).toEqual(1);
 
@@ -333,7 +320,7 @@ describe("loadGeneratedSourceText", () => {
     );
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
-    const prevSource = selectors.getSourceFromId(getState(), "foo1");
+    const prevSource = selectors.getSource(getState(), "foo1");
     const prevSourceSourceActor =
       selectors.getFirstSourceActorForGeneratedSource(
         getState(),
