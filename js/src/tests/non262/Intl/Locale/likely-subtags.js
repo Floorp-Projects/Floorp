@@ -17,12 +17,12 @@ var testDataMinimal = {
     "und-AT": "de-AT",
 
     // https://ssl.icu-project.org/trac/ticket/13786
-    "aae-Latn-IT": "aae-Latn-IT",
+    "aae-Latn-IT": "aae",
     "aae-Thai-CO": "aae-Thai-CO",
 
     // https://ssl.icu-project.org/trac/ticket/10220
     // https://ssl.icu-project.org/trac/ticket/12345
-    "und-CW": "pap-CW",
+    "und-CW": "pap",
     "und-US": "en",
     "zh-Hant": "zh-TW",
     "zh-Hani": "zh-Hani",
