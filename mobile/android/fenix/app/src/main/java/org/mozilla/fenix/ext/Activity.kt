@@ -157,23 +157,6 @@ private fun Activity.openDefaultBrowserSumoPage(
 }
 
 /**
- * Checks for the presence of an activity before starting it. In case it's not present,
- * [onActivityNotPresent] is invoked, preventing ActivityNotFoundException from being thrown.
- * This is useful when navigating to external activities like device permission settings,
- * notification settings, default app settings, etc.
- *
- * @param intent The Intent of the activity to resolve and start.
- * @param onActivityNotPresent Invoked when the activity to handle the intent is not present.
- */
-inline fun Activity.startExternalActivitySafe(intent: Intent, onActivityNotPresent: () -> Unit) {
-    if (intent.resolveActivity(packageManager) != null) {
-        startActivity(intent)
-    } else {
-        onActivityNotPresent()
-    }
-}
-
-/**
  * Sets the icon for the back (up) navigation button.
  * @param icon The resource id of the icon.
  */

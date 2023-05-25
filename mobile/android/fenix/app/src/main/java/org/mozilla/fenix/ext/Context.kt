@@ -88,9 +88,13 @@ val Context.accessibilityManager: AccessibilityManager get() =
     getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 
 /**
- * Used to navigate to system notifications settings for app
+ * Used to navigate to system notifications settings for app.
+ *
+ * @param onError Invoked when the activity described by the intent is not present on the device.
  */
-fun Context.navigateToNotificationsSettings() {
+fun Context.navigateToNotificationsSettings(
+    onError: () -> Unit,
+) {
     val intent = Intent()
     intent.let {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -102,7 +106,24 @@ fun Context.navigateToNotificationsSettings() {
             it.putExtra("app_uid", this.applicationInfo.uid)
         }
     }
-    startActivity(intent)
+    startExternalActivitySafe(intent, onError)
+}
+
+/**
+ * Checks for the presence of an activity before starting it. In case it's not present,
+ * [onActivityNotPresent] is invoked, preventing ActivityNotFoundException from being thrown.
+ * This is useful when navigating to external activities like device permission settings,
+ * notification settings, default app settings, etc.
+ *
+ * @param intent The Intent of the activity to resolve and start.
+ * @param onActivityNotPresent Invoked when the activity to handle the intent is not present.
+ */
+inline fun Context.startExternalActivitySafe(intent: Intent, onActivityNotPresent: () -> Unit) {
+    if (intent.resolveActivity(packageManager) != null) {
+        startActivity(intent)
+    } else {
+        onActivityNotPresent()
+    }
 }
 
 /**

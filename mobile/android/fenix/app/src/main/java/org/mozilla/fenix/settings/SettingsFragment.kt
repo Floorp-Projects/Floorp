@@ -354,7 +354,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataOnQuitFragment()
             }
             resources.getString(R.string.pref_key_notifications) -> {
-                context?.navigateToNotificationsSettings()
+                context?.navigateToNotificationsSettings {}
                 null
             }
             resources.getString(R.string.pref_key_customize) -> {
