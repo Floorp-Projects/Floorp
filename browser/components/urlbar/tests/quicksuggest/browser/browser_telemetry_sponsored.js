@@ -208,7 +208,9 @@ add_task(async function sponsoredBestMatch() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.bestMatch.enabled", true]],
   });
-  QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.BEST_MATCH_CONFIG);
+  await QuickSuggestTestUtils.setConfig(
+    QuickSuggestTestUtils.BEST_MATCH_CONFIG
+  );
   await doTelemetryTest({
     index,
     suggestion: REMOTE_SETTINGS_RESULT,
@@ -360,6 +362,6 @@ add_task(async function sponsoredBestMatch() {
       },
     },
   });
-  QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
+  await QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
   await SpecialPowers.popPrefEnv();
 });
