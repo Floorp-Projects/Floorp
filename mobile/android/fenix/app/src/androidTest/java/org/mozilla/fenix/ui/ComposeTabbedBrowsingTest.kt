@@ -345,36 +345,35 @@ class ComposeTabbedBrowsingTest {
 //        }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832616")
     @Test
     fun verifyContextMenuShortcuts() {
-//        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-//        }.openTabButtonShortcutsMenu {
-//            verifyTabButtonShortcutMenuItems()
-//        }.closeTabFromShortcutsMenu {
-//        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-//        }.openTabButtonShortcutsMenu {
-//        }.openNewPrivateTabFromShortcutsMenu {
-//            verifyKeyboardVisible()
-//            verifyFocusedNavigationToolbar()
-//            // dismiss search dialog
-//            homeScreen { }.pressBack()
-//            verifyCommonMythsLink()
-//            verifyNavigationToolbar()
-//        }
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-//        }.openTabButtonShortcutsMenu {
-//        }.openTabFromShortcutsMenu {
-//            verifyKeyboardVisible()
-//            verifyFocusedNavigationToolbar()
-//            // dismiss search dialog
-//            homeScreen { }.pressBack()
-//            verifyHomeWordmark()
-//            verifyNavigationToolbar()
-//        }
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabButtonShortcutsMenu {
+            verifyTabButtonShortcutMenuItems()
+        }.closeTabFromShortcutsMenu {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabButtonShortcutsMenu {
+        }.openNewPrivateTabFromShortcutsMenu {
+            verifyKeyboardVisible()
+            verifyFocusedNavigationToolbar()
+            // dismiss search dialog
+            homeScreen { }.pressBack()
+            verifyCommonMythsLink()
+            verifyNavigationToolbar()
+        }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openTabButtonShortcutsMenu {
+        }.openTabFromShortcutsMenu {
+            verifyKeyboardVisible()
+            verifyFocusedNavigationToolbar()
+            // dismiss search dialog
+            homeScreen { }.pressBack()
+            verifyHomeWordmark()
+            verifyNavigationToolbar()
+        }
     }
 }
