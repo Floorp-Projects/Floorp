@@ -347,15 +347,14 @@ class TabDrawerRobot {
             tabPosition: Int,
             interact: BrowserRobot.() -> Unit,
         ): BrowserRobot.Transition {
-            val tab = mDevice.findObject(
+            mDevice.findObject(
                 UiSelector()
-                    .className("androidx.compose.ui.platform.ComposeView")
+                    .resourceId("$packageName:id/tab_tray_grid_item")
                     .index(tabPosition),
-            )
-
-            UiScrollable(UiSelector().resourceId("$packageName:id/tray_list_item")).scrollIntoView(tab)
-            tab.waitForExists(waitingTime)
-            tab.click()
+            ).also {
+                it.waitForExists(waitingTime)
+                it.click()
+            }
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
