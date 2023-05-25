@@ -29,7 +29,10 @@ END_PKGCONFIG_WRAPPER
 chmod +x "${TARGET_TRIPLE}-pkg-config"
 popd
 
-export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/clang/bin:${MOZ_FETCHES_DIR}/wrench-deps/meson:${PATH}"
+[ -d "${MOZ_FETCHES_DIR}/clang-mac/clang" ] && cat > ${MOZ_FETCHES_DIR}/clang-mac/clang/bin/llvm-config <<EOF_LLVM_CONFIG
+#!/bin/sh
+${MOZ_FETCHES_DIR}/clang/bin/llvm-config "\$@" | sed 's,${MOZ_FETCHES_DIR}/clang,${MOZ_FETCHES_DIR}/clang-mac/clang,g;s,-lLLVM-[0-9]\+,-lLLVM,g'
+EOF_LLVM_CONFIG
 
 # The x86_64-darwin11-ld linker from cctools requires libraries provided
 # by clang, so we need to set LD_LIBRARY_PATH for that to work.
