@@ -37,54 +37,41 @@ const MERINO_SUGGESTIONS = [
 
 const REMOTE_SETTINGS_RESULTS = [
   {
-    type: "amo_suggestion",
-    schema: 1,
-    amo_suggestion: {
-      url: "https://example.com/first-addon",
-      guid: "first@addon",
-      icon: "https://example.com/first-addon.svg",
-      title: "First Addon",
-      rating: "4.7",
-      keywords: ["first", "1st"],
-      description: "Description for the First Addon",
-      number_of_ratings: 1256,
-      is_top_pick: true,
-    },
-    id: "amo_suggestion_1",
-    last_modified: 1,
-  },
-  {
-    type: "amo_suggestion",
-    schema: 1,
-    amo_suggestion: {
-      url: "https://example.com/second-addon",
-      guid: "second@addon",
-      icon: "https://example.com/second-addon.svg",
-      title: "Second Addon",
-      rating: "1.7",
-      keywords: ["second", "2nd"],
-      description: "Description for the Second Addon",
-      number_of_ratings: 256,
-      is_top_pick: false,
-    },
-    id: "amo_suggestion_2",
-    last_modified: 1,
-  },
-  {
-    type: "amo_suggestion",
-    schema: 1,
-    amo_suggestion: {
-      url: "https://example.com/third-addon",
-      guid: "third@addon",
-      icon: "https://example.com/third-addon.svg",
-      title: "Third Addon",
-      rating: "3.7",
-      keywords: ["third", "3rd"],
-      description: "Description for the Third Addon",
-      number_of_ratings: 3,
-    },
-    id: "amo_suggestion_3",
-    last_modified: 1,
+    type: "amo-suggestions",
+    attachment: [
+      {
+        url: "https://example.com/first-addon",
+        guid: "first@addon",
+        icon: "https://example.com/first-addon.svg",
+        title: "First Addon",
+        rating: "4.7",
+        keywords: ["first", "1st"],
+        description: "Description for the First Addon",
+        number_of_ratings: 1256,
+        is_top_pick: true,
+      },
+      {
+        url: "https://example.com/second-addon",
+        guid: "second@addon",
+        icon: "https://example.com/second-addon.svg",
+        title: "Second Addon",
+        rating: "1.7",
+        keywords: ["second", "2nd"],
+        description: "Description for the Second Addon",
+        number_of_ratings: 256,
+        is_top_pick: false,
+      },
+      {
+        url: "https://example.com/third-addon",
+        guid: "third@addon",
+        icon: "https://example.com/third-addon.svg",
+        title: "Third Addon",
+        rating: "3.7",
+        keywords: ["third", "3rd"],
+        description: "Description for the Third Addon",
+        number_of_ratings: 3,
+      },
+    ],
   },
 ];
 
@@ -267,42 +254,42 @@ add_task(async function remoteSettings() {
     {
       input: "first",
       expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[0].amo_suggestion,
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
     },
     {
       input: "1st",
       expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[0].amo_suggestion,
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
     },
     {
       input: "second",
       expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[1].amo_suggestion,
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[1],
         source: "remote-settings",
       }),
     },
     {
       input: "2nd",
       expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[1].amo_suggestion,
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[1],
         source: "remote-settings",
       }),
     },
     {
       input: "third",
       expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[2].amo_suggestion,
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[2],
         source: "remote-settings",
       }),
     },
     {
       input: "3rd",
       expected: makeExpectedResult({
-        suggestion: REMOTE_SETTINGS_RESULTS[2].amo_suggestion,
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[2],
         source: "remote-settings",
       }),
     },
