@@ -8,6 +8,8 @@
   <CurrentIssues>
     <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
+    <ID>BracesOnIfStatements:Connection.kt$DecryptedMessage$if</ID>
+    <ID>BracesOnIfStatements:WebPush.kt$WebPushSubscription$if</ID>
     <ID>FunctionParameterNaming:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$_: View</ID>
     <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$override</ID>
     <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$val sessionId = openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession)</ID>
@@ -213,8 +215,6 @@
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onFindAll(query: String)</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onNextResult()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onPreviousResult()</ID>
-    <ID>UndocumentedPublicFunction:FirefoxAccountsAuthFeature.kt$FirefoxAccountsAuthFeature$fun beginAuthentication(context: Context)</ID>
-    <ID>UndocumentedPublicFunction:FirefoxAccountsAuthFeature.kt$FirefoxAccountsAuthFeature$fun beginPairingAuthentication(context: Context, pairingUrl: String)</ID>
     <ID>UndocumentedPublicFunction:GeckoEngineSession.kt$GeckoEngineSession$@Suppress("ComplexMethod") fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult?</ID>
     <ID>UndocumentedPublicFunction:GeckoEngineSessionState.kt$GeckoEngineSessionState.Companion$fun fromJSON(json: JSONObject): GeckoEngineSessionState</ID>
     <ID>UndocumentedPublicFunction:GeckoPermissionRequest.kt$GeckoPermissionRequest.Media.Companion$fun mapPermission(mediaSource: MediaSource): Permission</ID>
@@ -327,8 +327,7 @@
     <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
     <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
-    <ID>UnnecessaryAbstractClass:AccountStorage.kt$AbnormalAccountStorageEvent$AbnormalAccountStorageEvent</ID>
-    <ID>UnnecessaryAbstractClass:CrashReporter.kt$CrashReporterException$CrashReporterException</ID>
+    <ID>UnusedParameter:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$_: View</ID>
     <ID>UseRequire:AutoFitTextureView.kt$AutoFitTextureView$throw IllegalArgumentException("Size cannot be negative.")</ID>
     <ID>UseRequire:BrowserStore.kt$BrowserStore$throw IllegalArgumentException("Duplicate tabs found")</ID>
     <ID>UseRequire:BrowserStore.kt$BrowserStore$throw IllegalArgumentException("Selected tab does not exist")</ID>

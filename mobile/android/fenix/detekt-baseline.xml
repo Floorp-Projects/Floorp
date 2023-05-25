@@ -924,7 +924,6 @@
     <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setDateOfUpdate(day: Long)</ID>
     <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setVersion(version: WhatsNewVersion)</ID>
     <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setWhatsNewHasBeenCleared(cleared: Boolean)</ID>
-    <ID>UnnecessaryAbstractClass:AccountAbnormalities.kt$AbnormalFxaEvent$AbnormalFxaEvent</ID>
     <ID>UseRequire:WebsitePermissionsView.kt$WebsitePermissionsView$throw IllegalArgumentException("${permissionState.phoneFeature} is not supported")</ID>
     <ID>UtilityClassWithPublicConstructor:CustomTabContextMenuCandidate.kt$CustomTabContextMenuCandidate</ID>
   </CurrentIssues>
