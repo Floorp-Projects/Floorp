@@ -10,10 +10,17 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
 });
 
-const { WEATHER_SUGGESTION } = MerinoTestUtils;
+const { WEATHER_RS_DATA, WEATHER_SUGGESTION } = MerinoTestUtils;
 
 add_task(async function init() {
-  await QuickSuggestTestUtils.ensureQuickSuggestInit();
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: [
+      {
+        type: "weather",
+        weather: WEATHER_RS_DATA,
+      },
+    ],
+  });
   UrlbarPrefs.set("quicksuggest.enabled", true);
   await MerinoTestUtils.initWeather();
 });
@@ -741,7 +748,12 @@ async function doKeywordsTest({
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
-  QuickSuggest.weather._test_setRsData(settingsData);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: settingsData,
+    },
+  ]);
 
   if (minKeywordLength) {
     UrlbarPrefs.set("weather.minKeywordLength", minKeywordLength);
@@ -779,7 +791,13 @@ async function doKeywordsTest({
   if (!QuickSuggest.weather.suggestion) {
     fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
+    },
+  ]);
+
   UrlbarPrefs.clear("weather.minKeywordLength");
   await fetchPromise;
 }
@@ -806,14 +824,23 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
   UrlbarPrefs.set(pref, true);
   await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
-      id: 1,
-      url: "http://example.com/",
-      title: "Suggestion",
-      keywords: [keyword],
-      click_url: "http://example.com/click",
-      impression_url: "http://example.com/impression",
-      advertiser: "TestAdvertiser",
-      iab_category,
+      type: "data",
+      attachment: [
+        {
+          id: 1,
+          url: "http://example.com/",
+          title: "Suggestion",
+          keywords: [keyword],
+          click_url: "http://example.com/click",
+          impression_url: "http://example.com/impression",
+          advertiser: "TestAdvertiser",
+          iab_category,
+        },
+      ],
+    },
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
     },
   ]);
 
@@ -1232,7 +1259,12 @@ async function doIncrementTest({ desc, setup, tests }) {
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
-  QuickSuggest.weather._test_setRsData(settingsData);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: settingsData,
+    },
+  ]);
 
   if (fetchPromise) {
     info("Waiting for fetch");
@@ -1290,7 +1322,12 @@ async function doIncrementTest({ desc, setup, tests }) {
   if (!QuickSuggest.weather.suggestion) {
     fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
+    },
+  ]);
   UrlbarPrefs.clear("weather.minKeywordLength");
   await fetchPromise;
 }

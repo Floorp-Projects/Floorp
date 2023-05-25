@@ -12,6 +12,14 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 add_setup(async function () {
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsResults: [
+      {
+        type: "weather",
+        weather: MerinoTestUtils.WEATHER_RS_DATA,
+      },
+    ],
+  });
   await MerinoTestUtils.initWeather();
 });
 
@@ -51,11 +59,16 @@ add_task(async function test_weather_result_selection() {
 // repeats both steps until the min keyword length cap is reached.
 add_task(async function showLessFrequentlyCapReached_manySearches() {
   // Set up a min keyword length and cap.
-  QuickSuggest.weather._test_setRsData({
-    keywords: ["weather"],
-    min_keyword_length: 3,
-    min_keyword_length_cap: 4,
-  });
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: {
+        keywords: ["weather"],
+        min_keyword_length: 3,
+        min_keyword_length_cap: 4,
+      },
+    },
+  ]);
 
   // Trigger the suggestion.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -133,7 +146,12 @@ add_task(async function showLessFrequentlyCapReached_manySearches() {
   gURLBar.view.resultMenu.hidePopup(true);
 
   await UrlbarTestUtils.promisePopupClose(window);
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
+    },
+  ]);
   UrlbarPrefs.clear("weather.minKeywordLength");
 });
 
@@ -141,11 +159,16 @@ add_task(async function showLessFrequentlyCapReached_manySearches() {
 // a single search until the min keyword length cap is reached.
 add_task(async function showLessFrequentlyCapReached_oneSearch() {
   // Set up a min keyword length and cap.
-  QuickSuggest.weather._test_setRsData({
-    keywords: ["weather"],
-    min_keyword_length: 3,
-    min_keyword_length_cap: 6,
-  });
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: {
+        keywords: ["weather"],
+        min_keyword_length: 3,
+        min_keyword_length_cap: 6,
+      },
+    },
+  ]);
 
   // Trigger the suggestion.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -196,7 +219,12 @@ add_task(async function showLessFrequentlyCapReached_oneSearch() {
 
   gURLBar.view.resultMenu.hidePopup(true);
   await UrlbarTestUtils.promisePopupClose(window);
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "weather",
+      weather: MerinoTestUtils.WEATHER_RS_DATA,
+    },
+  ]);
   UrlbarPrefs.clear("weather.minKeywordLength");
 });
 
