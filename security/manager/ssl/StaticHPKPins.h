@@ -167,6 +167,10 @@ static const char kGlobalSign_Root_CA___R3Fingerprint[] =
 static const char kGlobalSign_Root_CA___R6Fingerprint[] =
   "aCdH+LpiG4fN07wpXtXKvOciocDANj0daLOJKNJ4fx4=";
 
+/* GlobalSign Root R46 */
+static const char kGlobalSign_Root_R46Fingerprint[] =
+  "rn+WLLnmp9v3uDP7GPqbcaiRdd+UnCMrap73yz3yu/w=";
+
 /* Go Daddy Class 2 CA */
 static const char kGo_Daddy_Class_2_CAFingerprint[] =
   "VjLZe/p3W/PJnd6lL8JVNBCGQBZynFLdZSTIqcO0SJ8=";
@@ -182,6 +186,10 @@ static const char kGoogleBackup2048Fingerprint[] =
 /* ISRG Root X1 */
 static const char kISRG_Root_X1Fingerprint[] =
   "C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=";
+
+/* ISRG Root X2 */
+static const char kISRG_Root_X2Fingerprint[] =
+  "diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=";
 
 /* Let's Encrypt Authority X3 */
 static const char kLet_s_Encrypt_Authority_X3Fingerprint[] =
@@ -330,10 +338,26 @@ static const StaticFingerprints kPinset_tor = {
 };
 
 static const char* const kPinset_facebook_Data[] = {
+  kCOMODO_ECC_Certification_AuthorityFingerprint,
+  kISRG_Root_X1Fingerprint,
+  kUSERTrust_ECC_Certification_AuthorityFingerprint,
+  kGlobalSign_Root_CAFingerprint,
   kGOOGLE_PIN_DigiCertECCSecureServerCAFingerprint,
+  kDigiCert_Trusted_Root_G4Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
+  kGlobalSign_Root_CA___R6Fingerprint,
+  kDigiCert_TLS_RSA4096_Root_G5Fingerprint,
+  kGlobalSign_Root_CA___R3Fingerprint,
+  kISRG_Root_X2Fingerprint,
   kGOOGLE_PIN_SymantecClass3EVG3Fingerprint,
+  kCOMODO_RSA_Certification_AuthorityFingerprint,
+  kDigiCert_Global_Root_G2Fingerprint,
+  kDigiCert_TLS_ECC_P384_Root_G5Fingerprint,
   kFacebookBackupFingerprint,
+  kDigiCert_Global_Root_CAFingerprint,
+  kGlobalSign_Root_R46Fingerprint,
+  kDigiCert_Global_Root_G3Fingerprint,
+  kUSERTrust_RSA_Certification_AuthorityFingerprint,
 };
 static const StaticFingerprints kPinset_facebook = {
   sizeof(kPinset_facebook_Data) / sizeof(const char*),
@@ -855,4 +879,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1693219284406000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1693478562600000);

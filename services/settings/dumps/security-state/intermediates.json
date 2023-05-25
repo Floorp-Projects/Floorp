@@ -1,6 +1,132 @@
 {
   "data": [
     {
+      "schema": 1684964877855,
+      "derHash": "59sAFElASPImpnPCi3JejduczUhnqFUteuhcJSO9JlU=",
+      "subject": "CN=纳网 ECC Extended Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
+      "subjectDN": "MHYxCzAJBgNVBAYTAkNOMS0wKwYDVQQKDCTljqbpl6jnurPnvZHnp5HmioDogqHku73mnInpmZDlhazlj7gxODA2BgNVBAMML+e6s+e9kSBFQ0MgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e2e70967b158b51f6ebb9465975ef70c87a0a9609a9d9ddd7c2341695655a98b",
+        "size": 1284,
+        "filename": "VUzImrZskQ8zq13IGHYIDovNeG2p4c2S7V-A74FiJoQ=.pem",
+        "location": "security-state-staging/intermediates/bf49dba6-b832-4a06-89b8-c3809aa12d44.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VUzImrZskQ8zq13IGHYIDovNeG2p4c2S7V+A74FiJoQ=",
+      "crlite_enrolled": false,
+      "id": "3cd57864-be98-4256-9703-e37f9df3b04e",
+      "last_modified": 1684965423774
+    },
+    {
+      "schema": 1684964877536,
+      "derHash": "NH3x84ctFO7RTbOH5BvuvTm1zwtGjsCIBtBhCNVk9GM=",
+      "subject": "CN=纳网 RSA Domain Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
+      "subjectDN": "MHQxCzAJBgNVBAYTAkNOMS0wKwYDVQQKDCTljqbpl6jnurPnvZHnp5HmioDogqHku73mnInpmZDlhazlj7gxNjA0BgNVBAMMLee6s+e9kSBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b3a0afc057fa2821c5d6d9f4afa6cffe4da5ec6287b5c406a7f81649810dcae2",
+        "size": 2304,
+        "filename": "_6kdazY4w8jF61YK5px0MYqRlxf-uZ8ifGdnGXcoH7M=.pem",
+        "location": "security-state-staging/intermediates/8321c121-3e50-4524-9557-be1bf3aee59f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "/6kdazY4w8jF61YK5px0MYqRlxf+uZ8ifGdnGXcoH7M=",
+      "crlite_enrolled": false,
+      "id": "e1977996-8566-4c1d-b2d1-55cab733f261",
+      "last_modified": 1684965423771
+    },
+    {
+      "schema": 1684964879073,
+      "derHash": "/nnZSRtAvePzL/y2UoI8heR4rFzmOiAn05lVun9qwjs=",
+      "subject": "CN=InCommon RSA IGTF Server CA 3,O=Internet2,C=US",
+      "subjectDN": "MEkxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJbnRlcm5ldDIxJjAkBgNVBAMTHUluQ29tbW9uIFJTQSBJR1RGIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "dc30409c32d14961eb37ebd4a9cb465e3e2cfd2e243eab94bf1e97c36e93245e",
+        "size": 2268,
+        "filename": "0n5wv8lMh2y8--AjkmLotXDjTCsq_4X94TlUlSj90fo=.pem",
+        "location": "security-state-staging/intermediates/467b3a35-dbac-4d77-9bb9-9ed8fa280010.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0n5wv8lMh2y8++AjkmLotXDjTCsq/4X94TlUlSj90fo=",
+      "crlite_enrolled": false,
+      "id": "4a504b13-1f33-4101-beaf-45bec79f60bc",
+      "last_modified": 1684965423768
+    },
+    {
+      "schema": 1684964878772,
+      "derHash": "yss5RaLTCXpe/FT70uDuLh++pxHa1mW8f5UtqSrI1lc=",
+      "subject": "CN=纳网 ECC Organization Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
+      "subjectDN": "MHoxCzAJBgNVBAYTAkNOMS0wKwYDVQQKDCTljqbpl6jnurPnvZHnp5HmioDogqHku73mnInpmZDlhazlj7gxPDA6BgNVBAMMM+e6s+e9kSBFQ0MgT3JnYW5pemF0aW9uIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ca6ec03e4137e696772cd3f6da42519ac11bf0a9f3edff5df125e40632fa35c1",
+        "size": 1301,
+        "filename": "zXnZgoAPwPjgZnOjAfbxXWVY9Gptx_WI6N7kug6MbSE=.pem",
+        "location": "security-state-staging/intermediates/2d2ae0ad-9978-4ebb-82ec-c4f2594f4e68.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zXnZgoAPwPjgZnOjAfbxXWVY9Gptx/WI6N7kug6MbSE=",
+      "crlite_enrolled": false,
+      "id": "01b78d4a-7d1e-4771-ac35-4b829d70db1c",
+      "last_modified": 1684965423765
+    },
+    {
+      "schema": 1684964876862,
+      "derHash": "NxcmTWxdBJsa1Z9LV2HvyUq8MlQoXR5oEJEIQFCGxPI=",
+      "subject": "CN=纳网 ECC Domain Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
+      "subjectDN": "MHQxCzAJBgNVBAYTAkNOMS0wKwYDVQQKDCTljqbpl6jnurPnvZHnp5HmioDogqHku73mnInpmZDlhazlj7gxNjA0BgNVBAMMLee6s+e9kSBFQ0MgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f53c7f18a6e86a68a11c6f7bab89513755179cc3f62806ad5cf9a774ffdd620e",
+        "size": 1293,
+        "filename": "O2mnRlU_q0zBEliHGyx4erLTBw5mfoMDZv8VW4itE4U=.pem",
+        "location": "security-state-staging/intermediates/932f58cc-f4c0-4d94-84c8-805d2d4895de.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "O2mnRlU/q0zBEliHGyx4erLTBw5mfoMDZv8VW4itE4U=",
+      "crlite_enrolled": false,
+      "id": "c3168727-246e-4098-af73-d13bd659b60d",
+      "last_modified": 1684965423762
+    },
+    {
+      "schema": 1684964878171,
+      "derHash": "m3hknb12y14bu0OGNC5FL8h8mbxxGQXl9CkSblgAb7Y=",
+      "subject": "CN=纳网 RSA Extended Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
+      "subjectDN": "MHYxCzAJBgNVBAYTAkNOMS0wKwYDVQQKDCTljqbpl6jnurPnvZHnp5HmioDogqHku73mnInpmZDlhazlj7gxODA2BgNVBAMML+e6s+e9kSBSU0EgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9dee6abfc6cde563ae3d9e6814558eddc86d12f136bfbc6f5ecc0f02f02c4307",
+        "size": 2296,
+        "filename": "eMGAhjVGwujojpRqRpVd5aaCAEjn4Q_NyGwdvcJuefc=.pem",
+        "location": "security-state-staging/intermediates/96bd7b14-f782-454e-819d-ee45f76e48a9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "eMGAhjVGwujojpRqRpVd5aaCAEjn4Q/NyGwdvcJuefc=",
+      "crlite_enrolled": false,
+      "id": "a5f26bbb-896d-42b5-9ce3-0175f7fd1d0c",
+      "last_modified": 1684965423759
+    },
+    {
+      "schema": 1684964878468,
+      "derHash": "HXs2NN457YCjxIPd1asjygvGusmyq6PbeqMyvA/LKlU=",
+      "subject": "CN=纳网 RSA Organization Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
+      "subjectDN": "MHoxCzAJBgNVBAYTAkNOMS0wKwYDVQQKDCTljqbpl6jnurPnvZHnp5HmioDogqHku73mnInpmZDlhazlj7gxPDA6BgNVBAMMM+e6s+e9kSBSU0EgT3JnYW5pemF0aW9uIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "26b943b10363753fceb78009cf25d9b17cdbc7508df383d56b3eda5907af523b",
+        "size": 2312,
+        "filename": "HtvxJEbD34zPX-NkRiH3k8vGQFVm39Kx-DVWmdJnkUI=.pem",
+        "location": "security-state-staging/intermediates/6e46ff71-eb6a-45b0-9868-1f84e45b4efa.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "HtvxJEbD34zPX+NkRiH3k8vGQFVm39Kx+DVWmdJnkUI=",
+      "crlite_enrolled": false,
+      "id": "0306ad62-2908-4659-9e3b-b5639312c133",
+      "last_modified": 1684965423756
+    },
+    {
       "schema": 1684702351141,
       "derHash": "00pbmBqFygddtiy6xBXvZZ2VM5BAykdoaGJdSqI6mEk=",
       "subject": "CN=HiPKI OV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
@@ -6319,24 +6445,6 @@
       "last_modified": 1666727871960
     },
     {
-      "schema": 1666727440238,
-      "derHash": "bINDiPKg0GlJxj788w13eC4lqCUBNZOeVJYCFFQO6kU=",
-      "subject": "CN=Root CA - G3,O=Root Networks\\, LLC,C=US",
-      "subjectDN": "MEExCzAJBgNVBAYTAlVTMRswGQYDVQQKDBJSb290IE5ldHdvcmtzLCBMTEMxFTATBgNVBAMMDFJvb3QgQ0EgLSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "7a25b4650cf78598d30bd2fd71f98a9514917410a9123cf8351a487e3ed9a093",
-        "size": 1678,
-        "filename": "ujBfMmfTX_3dCWQV89ZY2Tw4qhFf2vkDZrrqzCdlxfU=.pem",
-        "location": "security-state-staging/intermediates/66e99cd4-a706-4053-955f-653718c3b045.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ujBfMmfTX/3dCWQV89ZY2Tw4qhFf2vkDZrrqzCdlxfU=",
-      "crlite_enrolled": false,
-      "id": "99a1932a-c19a-4578-9601-9b6ab050b37b",
-      "last_modified": 1666727871946
-    },
-    {
       "schema": 1666727453492,
       "derHash": "nHgvawVYrcscye+EUyDRRZLJIg/PADDAmA2ddTsGYk8=",
       "subject": "CN=International Hellenic University TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -8909,24 +9017,6 @@
       "crlite_enrolled": false,
       "id": "87444841-f26d-4e30-bfcc-f7348f035320",
       "last_modified": 1666727869679
-    },
-    {
-      "schema": 1666727343170,
-      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
-      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
-        "size": 2406,
-        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
-        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
-      "crlite_enrolled": false,
-      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
-      "last_modified": 1666727869665
     },
     {
       "schema": 1666727369598,
@@ -27667,5 +27757,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1684702623265
+  "timestamp": 1684965423774
 }
