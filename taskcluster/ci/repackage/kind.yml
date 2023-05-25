@@ -46,10 +46,8 @@ job-template:
             debug: build-mac-signing
             default:
                 by-project:
-                    autoland: build-mac-signing
-                    try: build-mac-signing
-                    toolchains: build-mac-signing
-                    default: build-mac-notarization
+                    mozilla-(central|beta|release|esr.*): build-mac-notarization
+                    default: build-mac-signing
     worker-type: b-linux-gcp
     worker:
         max-run-time:

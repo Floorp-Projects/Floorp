@@ -30,9 +30,8 @@ job-template:
             debug: release-partner-repack-mac-signing
             default:
                 by-project:
-                    autoland: release-partner-repack-mac-signing
-                    try: release-partner-repack-mac-signing
-                    default: release-partner-repack-mac-notarization
+                    mozilla-(central|beta|release|esr.*): release-partner-repack-mac-notarization
+                    default: release-partner-repack-mac-signing
     mozharness:
         config:
             by-build-platform:
