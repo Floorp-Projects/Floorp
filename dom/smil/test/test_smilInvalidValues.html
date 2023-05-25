@@ -60,8 +60,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
     a.setAttribute("dur", "50s");
     is(b.safeGetStartTime(), 50, "valid simple duration");
 
-    // Check an invalid value also causes the model to be updated
+    // Check invalid values also cause the model to be updated
     a.setAttribute("dur", "abc"); // -> indefinite
+    is(b.safeGetStartTime(), "none", "invalid simple duration");
+
+    a.setAttribute("dur", "50s");
+    a.setAttribute("dur", "-.1s"); // -> indefinite
     is(b.safeGetStartTime(), "none", "invalid simple duration");
 
     // Restore state
