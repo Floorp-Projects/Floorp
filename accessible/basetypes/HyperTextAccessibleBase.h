@@ -245,6 +245,21 @@ class HyperTextAccessibleBase {
                                                      int32_t aEndOffset,
                                                      uint32_t aScrollType);
 
+  //////////////////////////////////////////////////////////////////////////////
+  // EditableTextAccessible
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void ReplaceText(
+      const nsAString& aText) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InsertText(const nsAString& aText,
+                                                      int32_t aPosition) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CopyText(int32_t aStartPos,
+                                                    int32_t aEndPos) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CutText(int32_t aStartPos,
+                                                   int32_t aEndPos) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void DeleteText(int32_t aStartPos,
+                                                      int32_t aEndPos) = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void PasteText(int32_t aPosition) = 0;
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {

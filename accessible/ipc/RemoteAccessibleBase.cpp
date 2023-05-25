@@ -1959,6 +1959,40 @@ void RemoteAccessibleBase<Derived>::Language(nsAString& aLocale) {
 }
 
 template <class Derived>
+void RemoteAccessibleBase<Derived>::ReplaceText(const nsAString& aText) {
+  Unused << mDoc->SendReplaceText(mID, aText);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::InsertText(const nsAString& aText,
+                                               int32_t aPosition) {
+  Unused << mDoc->SendInsertText(mID, aText, aPosition);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::CopyText(int32_t aStartPos,
+                                             int32_t aEndPos) {
+  Unused << mDoc->SendCopyText(mID, aStartPos, aEndPos);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::CutText(int32_t aStartPos,
+                                            int32_t aEndPos) {
+  Unused << mDoc->SendCutText(mID, aStartPos, aEndPos);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::DeleteText(int32_t aStartPos,
+                                               int32_t aEndPos) {
+  Unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::PasteText(int32_t aPosition) {
+  Unused << mDoc->SendPasteText(mID, aPosition);
+}
+
+template <class Derived>
 size_t RemoteAccessibleBase<Derived>::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);

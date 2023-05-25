@@ -164,17 +164,12 @@ child:
                                uint32_t aCoordinateType,
                                int32_t aX, int32_t aY);
 
-  [Nested=inside_sync] sync ReplaceText(uint64_t aID, nsString aText);
-  [Nested=inside_sync] sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
-    returns(bool aValid);
-  [Nested=inside_sync] sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
-    returns(bool aValid);
-  [Nested=inside_sync] sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
-    returns(bool aValid);
-  [Nested=inside_sync] sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
-    returns(bool aValid);
-  [Nested=inside_sync] sync PasteText(uint64_t aID, int32_t aPosition)
-    returns(bool aValid);
+  async ReplaceText(uint64_t aID, nsString aText);
+  async InsertText(uint64_t aID, nsString aText, int32_t aPosition);
+  async CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  async CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  async DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
+  async PasteText(uint64_t aID, int32_t aPosition);
 
   async TakeSelection(uint64_t aID);
   async SetSelected(uint64_t aID, bool aSelected);
