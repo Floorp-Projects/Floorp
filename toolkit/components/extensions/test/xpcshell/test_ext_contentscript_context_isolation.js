@@ -81,7 +81,7 @@ add_task(async function test_contentscript_context_isolation() {
   await extension.awaitMessage("content-script-ready");
 
   // Get the content script context and check that it points to the correct window.
-  await contentPage.spawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async extensionId => {
     const { ExtensionContent } = ChromeUtils.import(
       "resource://gre/modules/ExtensionContent.jsm"
     );
@@ -105,7 +105,7 @@ add_task(async function test_contentscript_context_isolation() {
 
   await extension.awaitMessage("content-script-hide");
 
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     Assert.equal(
       this.context.contentWindow,
       null,
@@ -120,7 +120,7 @@ add_task(async function test_contentscript_context_isolation() {
   await extension.awaitMessage("content-script-show");
 
   async function testWithoutBfcache() {
-    return contentPage.spawn(null, async () => {
+    return contentPage.legacySpawn(null, async () => {
       Assert.equal(
         this.context.contentWindow,
         this.content,
@@ -155,7 +155,7 @@ add_task(async function test_contentscript_context_isolation() {
 
   await extension.awaitMessage("content-script-unload");
 
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     Assert.equal(
       this.context.sandbox,
       null,

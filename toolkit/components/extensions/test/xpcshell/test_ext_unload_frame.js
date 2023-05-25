@@ -147,7 +147,7 @@ add_task(async function testSendMessage_and_remove_frame() {
     "http://example.com/dummy"
   );
 
-  await contentPage.spawn(null, () => {
+  await contentPage.spawn([], () => {
     let { document } = this.content;
     let frame = document.createElement("iframe");
     frame.src = "/data/file_sample.html";
@@ -171,7 +171,7 @@ add_task(async function testConnect_and_remove_frame() {
     "http://example.com/dummy"
   );
 
-  await contentPage.spawn(null, () => {
+  await contentPage.spawn([], () => {
     let { document } = this.content;
     let frame = document.createElement("iframe");
     frame.src = "/data/file_sample.html";

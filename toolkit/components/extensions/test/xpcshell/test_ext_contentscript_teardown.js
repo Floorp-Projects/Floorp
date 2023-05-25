@@ -62,7 +62,7 @@ add_task(async function test_contentscript_reload_and_unload() {
   );
   equal(contextEvents[0].url, tabUrl, "ExtensionContext URL = page");
 
-  await contentPage.spawn(null, () => {
+  await contentPage.spawn([], () => {
     this.content.location.reload();
   });
   await extension.awaitMessage("contentscript-run");

@@ -3,9 +3,6 @@
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
 const { XPCShellContentUtils } = ChromeUtils.importESModule(
   "resource://testing-common/XPCShellContentUtils.sys.mjs"
 );
@@ -19,6 +16,10 @@ XPCShellContentUtils.init(this);
 let contentPage;
 
 async function readBlob(key, sharedData = Services.cpmm.sharedData) {
+  const { ExtensionUtils } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionUtils.jsm"
+  );
+
   let reader = new FileReader();
   reader.readAsText(sharedData.get(key));
   await ExtensionUtils.promiseEvent(reader, "loadend");
@@ -94,21 +95,16 @@ async function checkContentMaps(expected, parentOnly = false) {
 
   if (!parentOnly) {
     info("Checking out-of-process content map");
-    let contents = await contentPage.spawn(undefined, getContents);
+    let contents = await contentPage.spawn([], getContents);
     checkMap(contents, expected);
   }
 }
 
 async function loadContentPage() {
-  let page = await XPCShellContentUtils.loadContentPage("about:blank", {
+  let page = await XPCShellContentUtils.loadContentPage("data:text/html,", {
     remote,
   });
   registerCleanupFunction(() => page.close());
-
-  page.addFrameScriptHelper(`
-    var {ExtensionUtils} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-    Cu.importGlobalProperties(["FileReader"]);
-  `);
   return page;
 }
 
@@ -232,7 +228,7 @@ add_task(async function test_sharedMap() {
   sharedData.set("grick", true);
   sharedData.flush();
   equal(
-    await contentPage.spawn("grick", hasKey),
+    await contentPage.spawn(["grick"], hasKey),
     true,
     "has() should see key after flush"
   );
@@ -240,7 +236,7 @@ add_task(async function test_sharedMap() {
   sharedData.set("grack", true);
   sharedData.flush();
   equal(
-    await contentPage.spawn("gruck", hasKey),
+    await contentPage.spawn(["gruck"], hasKey),
     false,
     "has() should return false for nonexistent key"
   );
@@ -293,12 +289,12 @@ add_task(async function test_blobs() {
   );
 
   equal(
-    await contentPage.spawn("blob0", readBlob),
+    await contentPage.spawn(["blob0"], readBlob),
     text[0],
     "Expected text for blob0 in child 1 cpmm"
   );
   equal(
-    await contentPage.spawn("blob1", readBlob),
+    await contentPage.spawn(["blob1"], readBlob),
     text[1],
     "Expected text for blob1 in child 1 cpmm"
   );
@@ -309,12 +305,12 @@ add_task(async function test_blobs() {
   let page2 = await loadContentPage();
 
   equal(
-    await page2.spawn("blob0", readBlob),
+    await page2.spawn(["blob0"], readBlob),
     text[0],
     "Expected text for blob0 in child 2 cpmm"
   );
   equal(
-    await page2.spawn("blob1", readBlob),
+    await page2.spawn(["blob1"], readBlob),
     text[1],
     "Expected text for blob1 in child 2 cpmm"
   );
@@ -352,29 +348,29 @@ add_task(async function test_blobs() {
   );
 
   equal(
-    await contentPage.spawn("blob0", readBlob),
+    await contentPage.spawn(["blob0"], readBlob),
     text[2],
     "Expected text for blob0 in child 1 cpmm"
   );
   equal(
-    await contentPage.spawn("blob1", readBlob),
+    await contentPage.spawn(["blob1"], readBlob),
     text[1],
     "Expected text for blob1 in child 1 cpmm"
   );
 
   equal(
-    await page2.spawn("blob0", readBlob),
+    await page2.spawn(["blob0"], readBlob),
     text[2],
     "Expected text for blob0 in child 2 cpmm"
   );
   equal(
-    await page2.spawn("blob1", readBlob),
+    await page2.spawn(["blob1"], readBlob),
     text[1],
     "Expected text for blob1 in child 2 cpmm"
   );
 
   deepEqual(
-    await page2.spawn("data", getKey),
+    await page2.spawn(["data"], getKey),
     data,
     "Expected data for data key in child 2 cpmm"
   );

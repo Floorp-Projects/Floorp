@@ -370,7 +370,7 @@ add_task(async function test_ext_page_3rdparty_cookies() {
   clearAllCookies();
 
   await extPage.spawn(
-    "http://example.com/page-with-tracker.html",
+    ["http://example.com/page-with-tracker.html"],
     async iframeURL => {
       const iframe = this.content.document.createElement("iframe");
       iframe.setAttribute("src", iframeURL);
@@ -424,7 +424,7 @@ add_task(
       }
     );
 
-    let results = await extensionPage.spawn(null, async () => {
+    let results = await extensionPage.spawn([], async () => {
       let extFrame = this.content.document.querySelector("iframe#ext");
       let webFrame = this.content.document.querySelector("iframe#web");
 
@@ -459,7 +459,7 @@ add_task(
     );
 
     results.extSubFrameContent = await contentPage.spawn(
-      extension.uuid,
+      [extension.uuid],
       uuid => {
         return new Promise(resolve => {
           let frame = this.content.document.createElement("iframe");

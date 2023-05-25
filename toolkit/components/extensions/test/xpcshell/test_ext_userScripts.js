@@ -290,7 +290,7 @@ add_task(async function test_userScripts_no_webext_apis() {
     url,
     ExtensionTestUtils.remoteContentScripts ? { remote: true } : undefined
   );
-  let result = await contentPage.spawn(undefined, async () => {
+  let result = await contentPage.spawn([], async () => {
     return {
       textContent: this.content.document.body.textContent,
       url: this.content.location.href,
@@ -325,7 +325,7 @@ add_task(async function test_userScripts_no_webext_apis() {
     let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {
       remote: true,
     });
-    let result2 = await contentPage2.spawn(undefined, async () => {
+    let result2 = await contentPage2.spawn([], async () => {
       return {
         textContent: this.content.document.body.textContent,
         url: this.content.location.href,

@@ -79,7 +79,7 @@ async function openAndCloseContentPage(url) {
   // stylesheet with the same URI loaded from the same origin doesn't otherwise
   // guarantee that onBeforeRequest and so on happen, because it may not need
   // to go through necko at all.
-  await contentPage.spawn(null, () =>
+  await contentPage.spawn([], () =>
     content.windowUtils.clearSharedStyleSheetCache()
   );
   await contentPage.close();

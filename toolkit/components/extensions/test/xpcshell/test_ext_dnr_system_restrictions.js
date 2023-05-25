@@ -91,7 +91,7 @@ add_task(async function dnr_ignores_navigation_to_restrictedDomains() {
   let contentPage = await ExtensionTestUtils.loadContentPage(
     "http://restricted/?blockme"
   );
-  await contentPage.spawn(null, () => {
+  await contentPage.spawn([], () => {
     const { document } = content;
     Assert.equal(document.URL, "http://restricted/?blockme", "Same URL");
     Assert.equal(document.body.textContent, "response from server", "body");
@@ -109,7 +109,7 @@ add_task(async function dnr_ignores_css_import_at_restrictedDomains() {
   let contentPage = await ExtensionTestUtils.loadContentPage(
     "http://restricted/"
   );
-  await contentPage.spawn(null, async () => {
+  await contentPage.spawn([], async () => {
     // Use wrappedJSObject so that all operations below are with the principal
     // of the content instead of the system principal (from this ContentTask).
     const { document } = content.wrappedJSObject;
@@ -220,7 +220,7 @@ add_task(
     let contentPage = await ExtensionTestUtils.loadContentPage(
       "about:logo?blockme"
     );
-    await contentPage.spawn(null, async () => {
+    await contentPage.spawn([], async () => {
       const { document } = content;
       // To make sure that the test does not pass trivially, we verify that it
       // is not the system principal (because dnr_ignores_system_requests

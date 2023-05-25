@@ -243,7 +243,7 @@ async function test_frame_matching(meta) {
   ];
 
   // matchesWindowGlobal tests against content frames
-  await contentPage.spawn({ tests, urls, meta }, args => {
+  await contentPage.spawn([{ tests, urls, meta }], args => {
     let { manifestVersion = 2, allowedOrigins = [], expectMatches } = args.meta;
 
     this.windows = new Map();
