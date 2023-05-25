@@ -79,7 +79,7 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
       };
     });
 
-  return extPage.spawn(
+  return extPage.legacySpawn(
     [ExtensionTestCommon.serializeFunction(mockHandleAPIRequest)],
     mockFnText => {
       const { ExtensionAPIRequestHandler } = ChromeUtils.import(
@@ -228,7 +228,7 @@ async function runExtensionAPITest(
 
   async function runTestCaseInWorker({ page, extension }) {
     info(`*** Run test case in an extension service worker`);
-    const result = await page.spawn([], async () => {
+    const result = await page.legacySpawn([], async () => {
       const { active } = await content.navigator.serviceWorker.ready;
       const { port1, port2 } = new MessageChannel();
 

@@ -109,7 +109,7 @@ add_task(async function test_stream_encoding_data() {
     "http://example.com/lorem.html.gz"
   );
 
-  let content = await contentPage.spawn(null, () => {
+  let content = await contentPage.spawn([], () => {
     return this.content.document.body.textContent;
   });
 

@@ -36,12 +36,12 @@ add_task(async function test_content_script_css() {
     return style.maxWidth;
   }
 
-  let maxWidth = await contentPage.spawn(null, task);
+  let maxWidth = await contentPage.spawn([], task);
   equal(maxWidth, "42px", "Stylesheet correctly applied");
 
   await extension.unload();
 
-  maxWidth = await contentPage.spawn(null, task);
+  maxWidth = await contentPage.spawn([], task);
   equal(maxWidth, "none", "Stylesheet correctly removed");
 
   await contentPage.close();

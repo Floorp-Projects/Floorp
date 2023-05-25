@@ -66,7 +66,7 @@ add_task(async function test_sharedMap_static_prefs() {
   registerCleanupFunction(() => contentPage.close());
 
   /* eslint-disable no-shadow */
-  let values = await contentPage.spawn([PREF1_NAME, PREF2_NAME], prefs => {
+  let values = await contentPage.spawn([[PREF1_NAME, PREF2_NAME]], prefs => {
     return prefs.map(pref => Services.prefs.getBoolPref(pref));
   });
   /* eslint-enable no-shadow */

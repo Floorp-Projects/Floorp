@@ -54,7 +54,7 @@ add_task(async function test_contentscript_context() {
   await extension.awaitMessage("content-script-show");
 
   // Get the content script context and check that it points to the correct window.
-  await contentPage.spawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async extensionId => {
     const { ExtensionContent } = ChromeUtils.import(
       "resource://gre/modules/ExtensionContent.jsm"
     );
@@ -78,7 +78,7 @@ add_task(async function test_contentscript_context() {
 
   await extension.awaitMessage("content-script-hide");
 
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     Assert.equal(
       this.context.contentWindow,
       null,
@@ -91,7 +91,7 @@ add_task(async function test_contentscript_context() {
 
   await extension.awaitMessage("content-script-show");
 
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     Assert.equal(
       this.context.contentWindow,
       this.content,
@@ -150,7 +150,7 @@ add_task(async function test_contentscript_context_incognito_not_allowed() {
     { privateBrowsing: true }
   );
 
-  await contentPage.spawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async extensionId => {
     const { ExtensionContent } = ChromeUtils.import(
       "resource://gre/modules/ExtensionContent.jsm"
     );
@@ -183,7 +183,7 @@ add_task(async function test_contentscript_context_unload_while_in_bfcache() {
   await extension.awaitMessage("content-script-ready");
 
   // Get the content script context and check that it points to the correct window.
-  await contentPage.spawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async extensionId => {
     const { ExtensionContent } = ChromeUtils.import(
       "resource://gre/modules/ExtensionContent.jsm"
     );
@@ -224,7 +224,7 @@ add_task(async function test_contentscript_context_unload_while_in_bfcache() {
   await extension.awaitMessage("content-script-hide");
 
   await extension.unload();
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     await this.contextUnloadedPromise;
     Assert.equal(this.context.unloaded, true, "Context has been unloaded");
 
@@ -314,7 +314,7 @@ add_task(async function test_contentscript_context_valid_during_execution() {
   let contentPage = await ExtensionTestUtils.loadContentPage(
     "http://example.com/dummy?first"
   );
-  await contentPage.spawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async extensionId => {
     let context;
     let checkContextIsValid = description => {
       if (!context) {
@@ -340,13 +340,13 @@ add_task(async function test_contentscript_context_valid_during_execution() {
   await extension.startup();
   await extension.awaitMessage("content-script-ready");
 
-  await contentPage.spawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async extensionId => {
     // Navigate so that the content page is frozen in the bfcache.
     this.content.location = "http://example.org/dummy?second";
   });
 
   await extension.awaitMessage("content-script-hide");
-  await contentPage.spawn(null, async () => {
+  await contentPage.legacySpawn(null, async () => {
     // Navigate back so the content page is resurrected from the bfcache.
     this.content.history.back();
   });

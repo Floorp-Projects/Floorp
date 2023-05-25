@@ -108,7 +108,7 @@ async function runAsDNRExtension({ background, manifest }) {
     // The DNR rule does not redirect the main frame.
     let contentPage = await ExtensionTestUtils.loadContentPage("http://from/");
     info(`Loading ${url}`);
-    await contentPage.spawn(url, async url => {
+    await contentPage.spawn([url], async url => {
       let { document } = this.content;
       let frame = document.createElement("iframe");
       frame.src = url;

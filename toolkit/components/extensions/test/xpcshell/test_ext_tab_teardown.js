@@ -52,7 +52,7 @@ add_task(async function test_extension_page_tabs_create_reload_and_close() {
     "ExtensionContext URL after tab creation should be tab URL"
   );
 
-  await contentPage.spawn(null, () => {
+  await contentPage.spawn([], () => {
     this.content.location.reload();
   });
   let extensionPageURL2 = await extension.awaitMessage("extension page loaded");
