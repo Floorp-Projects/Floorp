@@ -12,13 +12,13 @@
 
 #include "nsICSSDeclaration.h"
 
-struct StyleLockedPropertyRule;
+struct StylePropertyRule;
 
 namespace mozilla::dom {
 
 class CSSPropertyRule final : public css::Rule {
  public:
-  CSSPropertyRule(already_AddRefed<StyleLockedPropertyRule> aRawRule,
+  CSSPropertyRule(already_AddRefed<StylePropertyRule> aRawRule,
                   StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                   uint32_t aColumn)
       : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -26,8 +26,8 @@ class CSSPropertyRule final : public css::Rule {
 
   bool IsCCLeaf() const final;
 
-  StyleLockedPropertyRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedPropertyRule> aRaw);
+  StylePropertyRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<StylePropertyRule> aRaw);
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
@@ -53,7 +53,7 @@ class CSSPropertyRule final : public css::Rule {
  private:
   ~CSSPropertyRule() = default;
 
-  RefPtr<StyleLockedPropertyRule> mRawRule;
+  RefPtr<StylePropertyRule> mRawRule;
 };
 
 }  // namespace mozilla::dom
