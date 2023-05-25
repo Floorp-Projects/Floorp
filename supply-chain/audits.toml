@@ -42,7 +42,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-07-23"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.cocoa]]
@@ -51,7 +50,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2022-11-01"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.cocoa-foundation]]
@@ -60,7 +58,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2023-03-16"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.cocoa-foundation]]
@@ -69,7 +66,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2020-07-20"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-foundation]]
@@ -78,7 +74,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-11-12"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-foundation]]
@@ -87,7 +82,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2019-03-29"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-foundation-sys]]
@@ -96,7 +90,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-11-12"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-foundation-sys]]
@@ -105,7 +98,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2020-10-14"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-graphics]]
@@ -114,7 +106,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-10-28"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-graphics]]
@@ -123,7 +114,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2020-12-08"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-graphics-types]]
@@ -132,7 +122,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2020-07-20"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-text]]
@@ -141,7 +130,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-03-29"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.core-text]]
@@ -150,7 +138,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2021-02-14"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.dogear]]
@@ -183,7 +170,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2020-02-28"
 end = "2023-05-04"
-renew = false
 notes = "All code written or reviewed by Mozilla staff."
 
 [[wildcard-audits.gleam]]
@@ -192,7 +178,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-03-18"
 end = "2023-05-04"
-renew = false
 notes = "All code written or reviewed by Mozilla."
 
 [[wildcard-audits.gleam]]
@@ -201,7 +186,6 @@ criteria = "safe-to-deploy"
 user-id = 5946 # Jeff Muizelaar (jrmuizel)
 start = "2023-04-21"
 end = "2023-05-04"
-renew = false
 notes = "All code written or reviewed by Mozilla."
 
 [[wildcard-audits.gleam]]
@@ -210,7 +194,6 @@ criteria = "safe-to-deploy"
 user-id = 1039
 start = "2019-03-01"
 end = "2023-05-04"
-renew = false
 notes = "All code written or reviewed by Mozilla."
 
 [[wildcard-audits.glean]]
@@ -242,7 +225,6 @@ criteria = "safe-to-deploy"
 user-id = 2396 # Josh Matthews (jdm)
 start = "2019-07-23"
 end = "2023-05-04"
-renew = false
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.marionette]]
