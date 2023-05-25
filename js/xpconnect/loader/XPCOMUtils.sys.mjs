@@ -257,8 +257,9 @@ export var XPCOMUtils = {
    *        The name of the getter property to define on aObject.
    * @param aPreference
    *        The name of the preference to read.
-   * @param aDefaultValue
+   * @param aDefaultPrefValue
    *        The default value to use, if the preference is not defined.
+   *        This is the default value of the pref, before applying aTransform.
    * @param aOnUpdate
    *        A function to call upon update. Receives as arguments
    *         `(aPreference, previousValue, newValue)`
@@ -271,11 +272,11 @@ export var XPCOMUtils = {
     aObject,
     aName,
     aPreference,
-    aDefaultValue = null,
+    aDefaultPrefValue = null,
     aOnUpdate = null,
     aTransform = val => val
   ) {
-    if (AppConstants.DEBUG && aDefaultValue !== null) {
+    if (AppConstants.DEBUG && aDefaultPrefValue !== null) {
       let prefType = Services.prefs.getPrefType(aPreference);
       if (prefType != Ci.nsIPrefBranch.PREF_INVALID) {
         // The pref may get defined after the lazy getter is called
@@ -284,7 +285,7 @@ export var XPCOMUtils = {
           boolean: Ci.nsIPrefBranch.PREF_BOOL,
           number: Ci.nsIPrefBranch.PREF_INT,
           string: Ci.nsIPrefBranch.PREF_STRING,
-        }[typeof aDefaultValue];
+        }[typeof aDefaultPrefValue];
         if (prefTypeForDefaultValue != prefType) {
           throw new Error(
             `Default value does not match preference type (Got ${prefTypeForDefaultValue}, expected ${prefType}) for ${aPreference}`
@@ -345,7 +346,7 @@ export var XPCOMUtils = {
             break;
 
           case Ci.nsIPrefBranch.PREF_INVALID:
-            prefValue = aDefaultValue;
+            prefValue = aDefaultPrefValue;
             break;
 
           default:
