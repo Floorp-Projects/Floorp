@@ -795,10 +795,10 @@ urlbar:
       selType: >
         type of the selected result in the urlbar panel. One of:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
-          "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
-          "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
-          "tabtosearch", "quicksuggest", "weather", "dynamic-wikipedia",
-          "navigational", "none"
+          "searchsuggestion", "searchsuggestion_rich", "switchtab",
+          "remotetab", "extension", "oneoff", "keywordoffer", "canonized",
+          "tip", "tiphelp", "formhistory", "tabtosearch", "quicksuggest",
+          "weather", "dynamic-wikipedia", "navigational", "none"
       provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]
