@@ -165,27 +165,14 @@ export class AddonSuggestions extends BaseFeature {
   }
 
   async onRemoteSettingsSync(rs) {
-    const records = await rs.get({ filters: { type: "amo-suggestions" } });
+    const records = await rs.get({ filters: { type: "amo_suggestion" } });
     if (rs != lazy.QuickSuggestRemoteSettings.rs) {
       return;
     }
 
-    const suggestionsMap = new lazy.SuggestionsMap();
-
-    for (const record of records) {
-      const { buffer } = await rs.attachments.download(record);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
-        return;
-      }
-
-      const results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
-      await suggestionsMap.add(results);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
-        return;
-      }
-    }
-
-    this.#suggestionsMap = suggestionsMap;
+    const suggestions = records.map(r => r.amo_suggestion);
+    this.#suggestionsMap = new lazy.SuggestionsMap();
+    this.#suggestionsMap.add(suggestions);
   }
 
   async makeResult(queryContext, suggestion, searchString) {

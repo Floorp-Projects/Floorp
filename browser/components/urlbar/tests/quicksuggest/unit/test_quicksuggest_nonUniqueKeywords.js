@@ -209,12 +209,7 @@ add_task(async function () {
   }
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: [
-      {
-        type: "data",
-        attachment: qsResults,
-      },
-    ],
+    remoteSettingsResults: qsResults,
   });
 
   // Run a test for each keyword.
