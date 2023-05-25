@@ -31,7 +31,12 @@ const position = index + 1;
 
 add_setup(async function () {
   await setUpTelemetryTest({
-    remoteSettingsResults: [REMOTE_SETTINGS_RESULT],
+    remoteSettingsResults: [
+      {
+        type: "data",
+        attachment: [REMOTE_SETTINGS_RESULT],
+      },
+    ],
   });
 });
 
