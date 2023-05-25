@@ -24,10 +24,25 @@ export function makePendingLocationId(location) {
   return `${sourceUrlString}:${line}:${columnString}`;
 }
 
-export function makeBreakpointLocation(state, location) {
+export function makeBreakpointServerLocationId(breakpointServerLocation) {
+  const { sourceUrl, sourceId, line, column } = breakpointServerLocation;
+  const sourceUrlOrId = sourceUrl || sourceId;
+  const columnString = column || "";
+
+  return `${sourceUrlOrId}:${line}:${columnString}`;
+}
+
+/**
+ * Create a location object to set a breakpoint on the server.
+ *
+ * Debugger location objects includes a source and sourceActor attributes
+ * whereas the server don't need them and instead only need either
+ * the source URL -or- a precise source actor ID.
+ */
+export function makeBreakpointServerLocation(state, location) {
   const source = location.source;
   if (!source) {
-    throw new Error("no source");
+    throw new Error("Missing 'source' attribute on location object");
   }
   const breakpointLocation = {
     line: location.line,

@@ -6,7 +6,7 @@ import { setBreakpointPositions } from "./breakpointPositions";
 import {
   assertPendingBreakpoint,
   findPosition,
-  makeBreakpointLocation,
+  makeBreakpointServerLocation,
 } from "../../utils/breakpoint";
 
 import { comparePosition, createLocation } from "../../utils/location";
@@ -73,7 +73,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
       // source mapping. Supply a cancellation callback that will abort the
       // breakpoint if the original source was synced to a different location,
       // in which case the client breakpoint has been removed.
-      const breakpointLocation = makeBreakpointLocation(
+      const breakpointServerLocation = makeBreakpointServerLocation(
         getState(),
         sourceGeneratedLocation
       );
@@ -83,7 +83,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
           sourceGeneratedLocation,
           pendingBreakpoint.options,
           pendingBreakpoint.disabled,
-          () => !client.hasBreakpoint(breakpointLocation)
+          () => !client.hasBreakpoint(breakpointServerLocation)
         )
       );
     }

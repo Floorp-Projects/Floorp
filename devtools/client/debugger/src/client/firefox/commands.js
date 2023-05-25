@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createFrame } from "./create";
-import { makePendingLocationId } from "../../utils/breakpoint";
+import { makeBreakpointServerLocationId } from "../../utils/breakpoint";
 
 import Reps from "devtools/client/shared/components/reps/index";
 
@@ -222,7 +222,7 @@ async function removeWatchpoint(object, property) {
 }
 
 function hasBreakpoint(location) {
-  return !!breakpoints[makePendingLocationId(location)];
+  return !!breakpoints[makeBreakpointServerLocationId(location)];
 }
 
 function getServerBreakpointsList() {
@@ -230,14 +230,14 @@ function getServerBreakpointsList() {
 }
 
 async function setBreakpoint(location, options) {
-  const breakpoint = breakpoints[makePendingLocationId(location)];
+  const breakpoint = breakpoints[makeBreakpointServerLocationId(location)];
   if (
     breakpoint &&
     JSON.stringify(breakpoint.options) == JSON.stringify(options)
   ) {
     return null;
   }
-  breakpoints[makePendingLocationId(location)] = { location, options };
+  breakpoints[makeBreakpointServerLocationId(location)] = { location, options };
 
   // Map frontend options to a more restricted subset of what
   // the server supports. For example frontend uses `hidden` attribute
@@ -275,7 +275,7 @@ async function setBreakpoint(location, options) {
 }
 
 async function removeBreakpoint(location) {
-  delete breakpoints[makePendingLocationId(location)];
+  delete breakpoints[makeBreakpointServerLocationId(location)];
 
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
