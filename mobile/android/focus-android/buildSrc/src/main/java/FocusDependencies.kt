@@ -57,7 +57,7 @@ object FocusVersions {
         const val androidx_orchestrator = "1.4.2"
         const val androidx_runner = "1.5.2"
         const val androidx_uiautomator = "2.2.0"
-        const val detekt = "1.22.0"
+        const val detekt = "1.23.0"
         const val falcon = "2.2.0"
         const val fastlane = "2.1.1"
         const val junit = "5.9.3"

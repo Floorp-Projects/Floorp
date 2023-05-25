@@ -18,7 +18,7 @@ object FenixVersions {
     const val sentry = "6.21.0"
     const val leakcanary = "2.11"
     const val osslicenses_plugin = "0.10.4"
-    const val detekt = "1.22.0"
+    const val detekt = "1.23.0"
     const val ktlint = "0.48.2"
 
     const val maven_ant_tasks = "2.1.3"
