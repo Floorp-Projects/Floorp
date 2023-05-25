@@ -1,5 +1,5 @@
-commit 554845af4cb8d4962620939bc589aaca58dc8855
+commit a4248d02cdf8329364d86e317e34422a894ae2f5
 Author: yumaoka <y.umaoka@gmail.com>
-Date:   Fri Mar 24 11:56:56 2023 -0400
+Date:   Wed Mar 29 08:31:53 2023 -0400
 
-    ICU-22334 Update tzdata to 2023b
+    ICU-22339 Update tzdata to 2023c

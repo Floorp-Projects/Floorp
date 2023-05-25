@@ -3,9 +3,9 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 //---------------------------------------------------------
 // Build tool:  tz2icu
-// Build date:  Thu Mar 23 12:04:20 2023
+// Build date:  Tue Mar 28 17:28:32 2023
 // tz database: ftp://ftp.iana.org/tz/
-// tz version:  2023a
+// tz version:  2023c
 // ICU version: 73.1
 //---------------------------------------------------------
 // >> !!! >>   THIS IS A MACHINE-GENERATED FILE   << !!! <<
@@ -13,7 +13,7 @@
 //---------------------------------------------------------
 
 zoneinfo64:table(nofallback) {
- TZVersion { "2023a" }
+ TZVersion { "2023c" }
  Zones:array { 
   /* ACT */ :int { 357 } //Z#0
   /* AET */ :int { 369 } //Z#1
