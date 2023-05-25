@@ -83,6 +83,9 @@ export class MigrationWizard extends HTMLElement {
                 <label id="form-autofill" data-resource-type="FORMDATA">
                   <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
                 </label>
+                <label id="payment-methods" data-resource-type="PAYMENT_METHODS">
+                  <input type="checkbox"/><span data-l10n-id="migration-payment-methods-option-label"></span>
+                </label>
               </fieldset>
             </details>
 
@@ -117,6 +120,12 @@ export class MigrationWizard extends HTMLElement {
               <div data-resource-type="FORMDATA" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-form-autofill-option-label"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
+
+              <div data-resource-type="PAYMENT_METHODS" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-payment-methods-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
             </div>
@@ -868,6 +877,8 @@ export class MigrationWizard extends HTMLElement {
         "migration-list-history-label",
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]:
         "migration-list-autofill-label",
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]:
+        "migration-list-payment-methods-label",
     };
 
     if (MigrationWizardConstants.USES_FAVORITES.includes(key)) {
