@@ -1052,11 +1052,6 @@ class nsContentUtils {
                                            Document* aContext);
 
   /**
-   * Returns whether the given URI is in the image cache.
-   */
-  static bool IsImageInCache(nsIURI* aURI, Document* aDocument);
-
-  /**
    * Method to get an imgIContainer from an image loading content
    *
    * @param aContent The image loading content.  Must not be null.
@@ -3099,6 +3094,8 @@ class nsContentUtils {
   static bool IsImageAvailable(nsIContent*, nsIURI*,
                                nsIPrincipal* aDefaultTriggeringPrincipal,
                                mozilla::CORSMode);
+  static bool IsImageAvailable(nsIURI*, nsIPrincipal* aTriggeringPrincipal,
+                               mozilla::CORSMode, Document*);
 
   /**
    * Returns the content policy type that should be used for loading images

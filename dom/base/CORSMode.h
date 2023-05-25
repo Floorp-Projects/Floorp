@@ -30,6 +30,9 @@ enum CORSMode : uint8_t {
   CORS_USE_CREDENTIALS
 };
 
+constexpr auto kFirstCORSMode = CORS_NONE;
+constexpr auto kLastCORSMode = CORS_USE_CREDENTIALS;
+
 }  // namespace mozilla
 
 #endif /* CORSMode_h_ */

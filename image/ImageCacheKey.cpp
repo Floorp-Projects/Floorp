@@ -29,26 +29,30 @@ using namespace dom;
 
 namespace image {
 
-ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
+ImageCacheKey::ImageCacheKey(nsIURI* aURI, CORSMode aCORSMode,
+                             const OriginAttributes& aAttrs,
                              Document* aDocument)
     : mURI(aURI),
       mOriginAttributes(aAttrs),
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument)),
-      mIsolationKey(GetIsolationKey(aDocument, aURI)) {}
+      mIsolationKey(GetIsolationKey(aDocument, aURI)),
+      mCORSMode(aCORSMode) {}
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
     : mURI(aOther.mURI),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
-      mHash(aOther.mHash) {}
+      mHash(aOther.mHash),
+      mCORSMode(aOther.mCORSMode) {}
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
     : mURI(std::move(aOther.mURI)),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
-      mHash(aOther.mHash) {}
+      mHash(aOther.mHash),
+      mCORSMode(aOther.mCORSMode) {}
 
 bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   // Don't share the image cache between a controlled document and anything
@@ -64,6 +68,10 @@ bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   }
   // The origin attributes always have to match.
   if (mOriginAttributes != aOther.mOriginAttributes) {
+    return false;
+  }
+
+  if (mCORSMode != aOther.mCORSMode) {
     return false;
   }
 
