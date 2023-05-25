@@ -28,7 +28,7 @@ const SANDBOX_GLOBALS = [
   "URL",
 ];
 const EXTRA_IMPORTS = {
-  EventUtils: "resource://testing-common/SpecialPowersEventUtils.sys.mjs",
+  EventUtils: "resource://specialpowers/SpecialPowersEventUtils.sys.mjs",
 };
 
 let expectFail = false;

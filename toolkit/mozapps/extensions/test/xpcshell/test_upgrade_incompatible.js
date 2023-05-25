@@ -1,3 +1,6 @@
+// turn on Cu.isInAutomation
+Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
+
 // Tests that when an extension manifest that was previously valid becomes
 // unparseable after an application update, the extension becomes
 // disabled.  (See bug 1439600 for a concrete example of a situation where

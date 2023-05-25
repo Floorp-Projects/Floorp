@@ -348,15 +348,15 @@ add_task(async function test_sharedMap_prefs() {
   contentPage.addFrameScriptHelper(getPref);
 
   let prefNames = Object.keys(TESTS);
-  prefValues = await contentPage.legacySpawn(prefNames, getPrefs);
+  prefValues = await contentPage.spawn(prefNames, getPrefs);
 
   await runChecks("contentStartup");
 
-  prefValues = await contentPage.legacySpawn(prefNames, getPrefs);
+  prefValues = await contentPage.spawn(prefNames, getPrefs);
 
   await runChecks("contentUpdate1");
 
-  prefValues = await contentPage.legacySpawn(prefNames, getPrefs);
+  prefValues = await contentPage.spawn(prefNames, getPrefs);
 
   await runChecks("contentUpdate2");
 });

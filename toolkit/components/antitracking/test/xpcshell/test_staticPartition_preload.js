@@ -122,7 +122,7 @@ add_task(async () => {
       "http://example.org/empty"
     );
 
-    await contentPage.spawn([], () =>
+    await contentPage.spawn(null, () =>
       // eslint-disable-next-line no-undef
       content.windowUtils.clearSharedStyleSheetCache()
     );

@@ -234,6 +234,9 @@ async function synthesizeMouse(browser, link, event) {
     browser,
     [link, event],
     (linkInContent, eventInContent) => {
+      const { EventUtils } = ChromeUtils.importESModule(
+        "resource://specialpowers/SpecialPowersEventUtils.sys.mjs"
+      );
       const target = content.document.getElementById(linkInContent);
       EventUtils.synthesizeMouseAtCenter(target, eventInContent, content);
       return target.href;
