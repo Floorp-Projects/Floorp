@@ -342,6 +342,13 @@ tasks:
                   key: firebaseToken
                   path: .firebase_token.json
                   json: true
+            dummy-secrets:
+                - content: |
+                    <?xml version="1.0" encoding="utf-8"?>
+                    <resources>
+                        <string name="leak_canary_test_class_name">org.mozilla.fenix.DebugFenixApplication</string>
+                    </resources>
+                  path: app/src/main/res/values/leakcanary.xml
             pre-commands:
                 - ["cd", "fenix"]
             commands:
