@@ -14,17 +14,10 @@ ChromeUtils.defineESModuleGetters(this, {
 const HISTOGRAM_LATENCY = "FX_URLBAR_MERINO_LATENCY_WEATHER_MS";
 const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE_WEATHER";
 
-const { WEATHER_RS_DATA, WEATHER_SUGGESTION } = MerinoTestUtils;
+const { WEATHER_SUGGESTION } = MerinoTestUtils;
 
 add_task(async function init() {
-  await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: [
-      {
-        type: "weather",
-        weather: WEATHER_RS_DATA,
-      },
-    ],
-  });
+  await QuickSuggestTestUtils.ensureQuickSuggestInit();
   UrlbarPrefs.set("quicksuggest.enabled", true);
 
   await MerinoTestUtils.initWeather();
@@ -130,12 +123,7 @@ add_task(async function keywordsNotDefined() {
   });
 
   // Set RS data without any keywords. Fetching should immediately stop.
-  await QuickSuggestTestUtils.setRemoteSettingsResults([
-    {
-      type: "weather",
-      weather: {},
-    },
-  ]);
+  QuickSuggest.weather._test_setRsData({});
   assertDisabled({
     message: "After setting RS data without keywords",
     pendingFetchCount: 0,
@@ -154,12 +142,7 @@ add_task(async function keywordsNotDefined() {
   // Set keywords. Fetching should immediately start.
   info("Setting keywords");
   let fetchPromise = QuickSuggest.weather.waitForFetches();
-  await QuickSuggestTestUtils.setRemoteSettingsResults([
-    {
-      type: "weather",
-      weather: MerinoTestUtils.WEATHER_RS_DATA,
-    },
-  ]);
+  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
   assertEnabled({
     message: "Immediately after setting keywords",
     hasSuggestion: false,

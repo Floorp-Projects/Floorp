@@ -476,6 +476,11 @@ export class Weather extends BaseFeature {
     await this.#fetch();
   }
 
+  _test_setRsData(data) {
+    this.#rsData = data;
+    this.#updateConfig();
+  }
+
   _test_setSuggestionToNull() {
     this.#suggestion = null;
   }

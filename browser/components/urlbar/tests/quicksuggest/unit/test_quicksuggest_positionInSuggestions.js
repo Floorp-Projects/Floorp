@@ -434,18 +434,13 @@ add_task(async function setup() {
   // Setup for quick suggest result.
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsResults: [
-      {
-        type: "data",
-        attachment: [
-          SPONSORED_SECOND_POSITION_RESULT,
-          SPONSORED_NORMAL_POSITION_RESULT,
-          NONSPONSORED_SECOND_POSITION_RESULT,
-          NONSPONSORED_NORMAL_POSITION_RESULT,
-          FIRST_POSITION_RESULT,
-          SECOND_POSITION_RESULT,
-          THIRD_POSITION_RESULT,
-        ],
-      },
+      SPONSORED_SECOND_POSITION_RESULT,
+      SPONSORED_NORMAL_POSITION_RESULT,
+      NONSPONSORED_SECOND_POSITION_RESULT,
+      NONSPONSORED_NORMAL_POSITION_RESULT,
+      FIRST_POSITION_RESULT,
+      SECOND_POSITION_RESULT,
+      THIRD_POSITION_RESULT,
     ],
   });
 
