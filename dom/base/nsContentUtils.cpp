@@ -3845,19 +3845,6 @@ imgLoader* nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel,
 }
 
 // static
-bool nsContentUtils::IsImageInCache(nsIURI* aURI, Document* aDocument) {
-  imgILoader* loader = GetImgLoaderForDocument(aDocument);
-  nsCOMPtr<imgICache> cache = do_QueryInterface(loader);
-
-  // If something unexpected happened we return false, otherwise if props
-  // is set, the image is cached and we return true
-  nsCOMPtr<nsIProperties> props;
-  nsresult rv =
-      cache->FindEntryProperties(aURI, aDocument, getter_AddRefs(props));
-  return (NS_SUCCEEDED(rv) && props);
-}
-
-// static
 int32_t nsContentUtils::CORSModeToLoadImageFlags(mozilla::CORSMode aMode) {
   switch (aMode) {
     case CORS_ANONYMOUS:
@@ -10026,8 +10013,15 @@ bool nsContentUtils::IsImageAvailable(nsIContent* aLoadingNode, nsIURI* aURI,
   MOZ_ASSERT(triggeringPrincipal);
 
   Document* doc = aLoadingNode->OwnerDoc();
-  imgLoader* imgLoader = GetImgLoaderForDocument(doc);
-  return imgLoader->IsImageAvailable(aURI, triggeringPrincipal, aCORSMode, doc);
+  return IsImageAvailable(aURI, triggeringPrincipal, aCORSMode, doc);
+}
+
+bool nsContentUtils::IsImageAvailable(nsIURI* aURI,
+                                      nsIPrincipal* aTriggeringPrincipal,
+                                      CORSMode aCORSMode, Document* aDoc) {
+  imgLoader* imgLoader = GetImgLoaderForDocument(aDoc);
+  return imgLoader->IsImageAvailable(aURI, aTriggeringPrincipal, aCORSMode,
+                                     aDoc);
 }
 
 /* static */
