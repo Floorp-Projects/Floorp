@@ -22,6 +22,7 @@ import mozilla.components.concept.base.crash.Breadcrumb as MozillaBreadcrumb
 
 @RunWith(AndroidJUnit4::class)
 class SentryServiceTest {
+    class TestException : Exception()
 
     @Before
     fun setup() {

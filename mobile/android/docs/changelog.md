@@ -13,6 +13,9 @@ permalink: /changelog/
 * **lib-crash**
   * Log exceptions that crash the `CrashReporter` to avoid silent failurs. See [bug 1826591](https://bugzilla.mozilla.org/show_bug.cgi?id=1826591).
 
+* **crash-sentry**
+  * Sends exceptions with an attached `Mechanism` to signal to Sentry that it was an uncaught exception. See [bug 1835107](https://bugzilla.mozilla.org/show_bug.cgi?id=1835107)
+
 * **concept-sync**
   *  Bug Fixed [bug #1804274]((https://bugzilla.mozilla.org/show_bug.cgi?id=1804274)) Passes an entrypoint url parameter to FxA when logging-in, that represents the context which the app launches the Firefox Accounts web channel.
 
