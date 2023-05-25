@@ -1714,7 +1714,7 @@ sftk_handleObject(SFTKObject *object, SFTKSession *session)
      * token objects and will have a token object handle assigned to
      * them by a call to sftk_mkHandle in the handler for each object
      * class, invoked below.
-     *  
+     *
      * It may be helpful to note/remember that
      * sftk_narrowToXxxObject uses sftk_isToken,
      * sftk_isToken examines the sign bit of the object's handle, but
@@ -2568,7 +2568,7 @@ sftk_getDefTokName(CK_SLOT_ID slotID)
         default:
             break;
     }
-    sprintf(buf, "NSS Application Token %08x  ", (unsigned int)slotID);
+    snprintf(buf, sizeof(buf), "NSS Application Token %08x  ", (unsigned int)slotID);
     return buf;
 }
 
@@ -2587,9 +2587,9 @@ sftk_getDefSlotName(CK_SLOT_ID slotID)
         default:
             break;
     }
-    sprintf(buf,
-            "NSS Application Slot %08x                                   ",
-            (unsigned int)slotID);
+    snprintf(buf, sizeof(buf),
+             "NSS Application Slot %08x                                   ",
+             (unsigned int)slotID);
     return buf;
 }
 

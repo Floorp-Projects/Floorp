@@ -246,14 +246,13 @@ TEST_F(pkixder_input_tests, ReadWordWithInsufficentData)
   ASSERT_NE(0x1122, readWord1);
 }
 
-TEST_F(pkixder_input_tests, ReadWordWrapAroundPointer)
+static void UNSANITIZED_ReadWordWrapAroundPointer()
+#if defined(__clang__)
+    /* Use "undefined" instead of more specific "pointer-overflow" for
+     * clang 4.0.0 backward compatability. */
+    __attribute__((no_sanitize("undefined")))
+#endif
 {
-  // The original implementation of our buffer read overflow checks was
-  // susceptible to integer overflows which could make the checks ineffective.
-  // This attempts to verify that we've fixed that. Unfortunately, decrementing
-  // a null pointer is undefined behavior according to the C++ language spec.,
-  // but this should catch the problem on at least some compilers, if not all of
-  // them.
   const uint8_t* der = nullptr;
   --der;
   Input buf;
@@ -261,6 +260,16 @@ TEST_F(pkixder_input_tests, ReadWordWrapAroundPointer)
   Reader input(buf);
   uint16_t b;
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Read(b));
+}
+
+TEST_F(pkixder_input_tests, ReadWordWrapAroundPointer) {
+  // The original implementation of our buffer read overflow checks was
+  // susceptible to integer overflows which could make the checks ineffective.
+  // This attempts to verify that we've fixed that. Unfortunately, decrementing
+  // a null pointer is undefined behavior according to the C++ language spec.,
+  // but this should catch the problem on at least some compilers, if not all of
+  // them.
+  UNSANITIZED_ReadWordWrapAroundPointer();
 }
 
 TEST_F(pkixder_input_tests, Skip)
@@ -352,14 +361,13 @@ TEST_F(pkixder_input_tests, Skip_ToInput)
   ASSERT_TRUE(InputsAreEqual(expected, item));
 }
 
-TEST_F(pkixder_input_tests, Skip_WrapAroundPointer)
+static void UNSANITIZED_Skip_WrapAroundPointer()
+#if defined(__clang__)
+    /* Use "undefined" instead of more specific "pointer-overflow" for
+     * clang 4.0.0 backward compatability. */
+    __attribute__((no_sanitize("undefined")))
+#endif
 {
-  // The original implementation of our buffer read overflow checks was
-  // susceptible to integer overflows which could make the checks ineffective.
-  // This attempts to verify that we've fixed that. Unfortunately, decrementing
-  // a null pointer is undefined behavior according to the C++ language spec.,
-  // but this should catch the problem on at least some compilers, if not all of
-  // them.
   const uint8_t* der = nullptr;
   // coverity[FORWARD_NULL]
   --der;
@@ -367,6 +375,16 @@ TEST_F(pkixder_input_tests, Skip_WrapAroundPointer)
   ASSERT_EQ(Success, buf.Init(der, 0));
   Reader input(buf);
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Skip(1));
+}
+
+TEST_F(pkixder_input_tests, Skip_WrapAroundPointer) {
+  // The original implementation of our buffer read overflow checks was
+  // susceptible to integer overflows which could make the checks ineffective.
+  // This attempts to verify that we've fixed that. Unfortunately, decrementing
+  // a null pointer is undefined behavior according to the C++ language spec.,
+  // but this should catch the problem on at least some compilers, if not all of
+  // them.
+  UNSANITIZED_Skip_WrapAroundPointer();
 }
 
 TEST_F(pkixder_input_tests, Skip_ToInputPastEnd)

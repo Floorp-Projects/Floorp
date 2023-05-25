@@ -23,6 +23,8 @@
 
 #include "Hacl_Chacha20Poly1305_32.h"
 
+#include "internal/Hacl_Krmllib.h"
+
 static inline void
 poly1305_padded_32(uint64_t *ctx, uint32_t len, uint8_t *text)
 {
@@ -414,7 +416,9 @@ poly1305_do_32(
     if (aadlen != (uint32_t)0U) {
         poly1305_padded_32(ctx, aadlen, aad);
     }
-    poly1305_padded_32(ctx, mlen, m);
+    if (mlen != (uint32_t)0U) {
+        poly1305_padded_32(ctx, mlen, m);
+    }
     store64_le(block, (uint64_t)aadlen);
     store64_le(block + (uint32_t)8U, (uint64_t)mlen);
     uint64_t *pre = ctx + (uint32_t)5U;
@@ -573,10 +577,12 @@ Hacl_Chacha20Poly1305_32_aead_decrypt(
     uint8_t *key = tmp;
     poly1305_do_32(key, aadlen, aad, mlen, cipher, computed_mac);
     uint8_t res = (uint8_t)255U;
-    for (uint32_t i = (uint32_t)0U; i < (uint32_t)16U; i++) {
-        uint8_t uu____0 = FStar_UInt8_eq_mask(computed_mac[i], mac[i]);
-        res = uu____0 & res;
-    }
+    KRML_MAYBE_FOR16(i,
+                     (uint32_t)0U,
+                     (uint32_t)16U,
+                     (uint32_t)1U,
+                     uint8_t uu____0 = FStar_UInt8_eq_mask(computed_mac[i], mac[i]);
+                     res = uu____0 & res;);
     uint8_t z = res;
     if (z == (uint8_t)255U) {
         Hacl_Chacha20_chacha20_encrypt(mlen, m, cipher, k, n, (uint32_t)1U);

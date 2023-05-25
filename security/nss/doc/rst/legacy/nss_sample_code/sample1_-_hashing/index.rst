@@ -13,7 +13,7 @@ Hashing - sample 1
    The NSS same code below computes the hash of a file and saves it to another file, this
    illustrates the use of NSS message APIs.
 
-   .. code:: brush:
+   .. code:: c
 
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this

@@ -348,3 +348,9 @@ PK11URI_GetQueryAttributeItem;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.90 {         # NSS Utilities 3.90 release
+;+    global:
+NSS_SecureSelect;
+;+    local:
+;+       *;
+;+};

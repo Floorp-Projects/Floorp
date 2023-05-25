@@ -12,7 +12,7 @@ Enc Dec MAC Output Public Key as CSR
 
    Generates encryption/mac keys and outputs public key as certificate signing request
 
-   .. code:: brush:
+   .. code:: c
 
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this

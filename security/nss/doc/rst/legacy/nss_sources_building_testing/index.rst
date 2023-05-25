@@ -27,7 +27,7 @@ NSS sources building testing
    read-only access is sufficient. Create a new directory on your computer that you will use as your
    local work area, and run the following commands.
 
-   .. code:: language-html
+   .. code:: sh
 
       hg clone https://hg.mozilla.org/projects/nspr
       hg clone https://hg.mozilla.org/projects/nss

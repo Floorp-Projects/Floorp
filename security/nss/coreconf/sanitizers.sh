@@ -53,7 +53,7 @@ enable_ubsan()
     if [ -n "$1" ]; then
         ubsan="$1"
     else
-        ubsan=bool,signed-integer-overflow,shift,vptr
+        ubsan=undefined,local-bounds
     fi
     enable_sanitizer ubsan "$ubsan"
 }

@@ -51,7 +51,7 @@
       'conditions': [
         ['fuzz_oss==0', {
           'all_dependent_settings': {
-            'ldflags': [
+            'libraries': [
               '-fsanitize=fuzzer',
              ],
           }

@@ -398,6 +398,9 @@ nssCryptokiTrust_GetAttributes(
     NSSSlot *slot;
     nssSession *session;
     CK_BBOOL isToken = PR_FALSE;
+    /* default values if the trust is record does not exist. In the highly
+     * unlikely case that these change, be sure to update softoken's
+     * 'sftkdb_isNullTrust()' function */
     CK_BBOOL stepUp = PR_FALSE;
     CK_TRUST saTrust = CKT_NSS_TRUST_UNKNOWN;
     CK_TRUST caTrust = CKT_NSS_TRUST_UNKNOWN;
