@@ -203,8 +203,8 @@ add_task(async function test_pref_toggle() {
       relayIntegrationCheckbox.click();
       relayIntegrationCheckbox.click();
       await assertEvents([
-        { object: "pref_change", method: "enabled" },
         { object: "pref_change", method: "disabled" },
+        { object: "pref_change", method: "enabled" },
       ]);
     }
   );
