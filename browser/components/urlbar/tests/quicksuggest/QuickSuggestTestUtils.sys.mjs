@@ -357,10 +357,9 @@ class _QuickSuggestTestUtils {
    *
    * @param {object} config
    *   The config to be applied. See
-   *   {@link QuickSuggestRemoteSettings._test_setConfig}
    */
-  setConfig(config) {
-    lazy.QuickSuggestRemoteSettings._test_setConfig(config);
+  async setConfig(config) {
+    await this.#mockRemoteSettings.update({ config });
   }
 
   /**
@@ -378,9 +377,9 @@ class _QuickSuggestTestUtils {
    */
   async withConfig({ config, callback }) {
     let original = lazy.QuickSuggestRemoteSettings.config;
-    this.setConfig(config);
+    await this.setConfig(config);
     await callback();
-    this.setConfig(original);
+    await this.setConfig(original);
   }
 
   /**

@@ -261,10 +261,6 @@ class _QuickSuggestRemoteSettings {
     return this.#rs;
   }
 
-  _test_setConfig(config) {
-    this.#setConfig(config);
-  }
-
   // The `RemoteSettings` client.
   #rs = null;
 
