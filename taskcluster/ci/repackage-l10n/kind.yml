@@ -38,9 +38,8 @@ job-template:
             debug: shippable-l10n-mac-signing
             default:
                 by-project:
-                    autoland: shippable-l10n-mac-signing
-                    try: shippable-l10n-mac-signing
-                    default: shippable-l10n-mac-notarization
+                    mozilla-(central|beta|release|esr.*): shippable-l10n-mac-notarization
+                    default: shippable-l10n-mac-signing
     worker-type: b-linux-gcp
     mozharness:
         config:
