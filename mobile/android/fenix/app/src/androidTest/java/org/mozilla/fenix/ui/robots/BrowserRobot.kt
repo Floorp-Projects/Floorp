@@ -1127,7 +1127,7 @@ fun homeScreenButton() = onView(withContentDescription(R.string.browser_toolbar_
 private fun threeDotButton() = onView(withContentDescription("Menu"))
 
 private fun tabsCounter() =
-    mDevice.findObject(By.res("$packageName:id/mozac_browser_toolbar_browser_actions"))
+    mDevice.findObject(By.res("$packageName:id/counter_root"))
 
 private val progressBar =
     itemWithResId("$packageName:id/mozac_browser_toolbar_progress")
