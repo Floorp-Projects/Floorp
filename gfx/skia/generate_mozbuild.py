@@ -56,7 +56,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2', '-mf16c', '-mfma']
-    SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
+    if not CONFIG["MOZ_CODE_COVERAGE"]:
+      SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
 elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
