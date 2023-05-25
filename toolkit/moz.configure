@@ -525,14 +525,12 @@ def gl_provider_define(provider):
 set_define("MOZ_GL_PROVIDER", gl_provider_define)
 
 
-@depends(gl_provider, wayland_headers, toolkit_gtk)
-def gl_default_provider(value, wayland, toolkit_gtk):
+@depends(gl_provider, toolkit_gtk)
+def gl_default_provider(value, toolkit_gtk):
     if value:
         return value
-    elif wayland:
-        return "EGL"
     elif toolkit_gtk:
-        return "GLX"
+        return "EGL"
 
 
 set_config("MOZ_GL_PROVIDER", gl_provider)
