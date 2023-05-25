@@ -4108,7 +4108,7 @@ if __name__ == "__main__":
     parser_currency.add_argument(
         "--url",
         metavar="URL",
-        default="https://www.currency-iso.org/dam/downloads/lists/list_one.xml",  # NOQA: E501
+        default="https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml",  # NOQA: E501
         type=EnsureHttps,
         help="Download url for the currency & funds code list (default: "
         "%(default)s)",
