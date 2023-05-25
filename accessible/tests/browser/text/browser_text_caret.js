@@ -5,7 +5,6 @@
 "use strict";
 
 /* import-globals-from ../../mochitest/text.js */
-loadScripts({ name: "text.js", dir: MOCHITESTS_DIR });
 
 /**
  * Test caret retrieval.
