@@ -5,9 +5,6 @@
 // extensions.strictCompatibility, and the strictCompatibility option in
 // install.rdf
 
-// turn on Cu.isInAutomation
-Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
-
 PromiseTestUtils.allowMatchingRejectionsGlobally(
   /IOUtils: Shutting down and refusing additional I\/O tasks/
 );

@@ -669,7 +669,7 @@ var ExtensionTestUtils = {
   profileDir: null,
 
   init(scope) {
-    XPCShellContentUtils.init(scope);
+    XPCShellContentUtils.ensureInitialized(scope);
 
     this.currentScope = scope;
 

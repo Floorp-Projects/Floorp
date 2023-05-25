@@ -34,7 +34,7 @@ const l10n = new Localization([
   "branding/brand.ftl",
 ]);
 // Localization resources need to be first iterated outside a test
-l10n.formatValue("webext-perms-add");
+l10n.formatValue("webext-perms-sideload-text");
 
 // Lazily import ExtensionParent to allow AddonTestUtils.createAppInfo to
 // override Services.appinfo.

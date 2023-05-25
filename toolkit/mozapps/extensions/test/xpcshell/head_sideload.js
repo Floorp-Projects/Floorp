@@ -3,11 +3,6 @@
 
 /* import-globals-from head_addons.js */
 
-Services.prefs.setBoolPref(
-  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-  true
-);
-
 // Enable all scopes.
 Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_ALL);
 // Setting this to all enables the same behavior as before disabling sideloading.

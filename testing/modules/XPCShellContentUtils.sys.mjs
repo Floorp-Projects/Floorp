@@ -22,6 +22,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ContentTask: "resource://testing-common/ContentTask.sys.mjs",
+  SpecialPowersParent: "resource://testing-common/SpecialPowersParent.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
@@ -230,6 +231,10 @@ class ContentPage {
     return this.browser.browsingContext;
   }
 
+  get SpecialPowers() {
+    return this.browser.ownerGlobal.SpecialPowers;
+  }
+
   sendMessage(msg, data) {
     return lazy.MessageChannel.sendMessage(
       this.browser.messageManager,
@@ -323,6 +328,8 @@ export var XPCShellContentUtils = {
     scope.do_get_profile();
 
     this.initCommon(scope);
+
+    lazy.SpecialPowersParent.registerActor();
   },
 
   initMochitest(scope) {
