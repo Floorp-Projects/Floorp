@@ -12,7 +12,7 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-MESON_VER=0.55.1
+MESON_VER=1.1.0
 MESON_BASE_URL="https://github.com/mesonbuild/meson/releases/download"
 
 curl -L ${MESON_BASE_URL}/${MESON_VER}/meson-${MESON_VER}.tar.gz -o meson.tar.gz
