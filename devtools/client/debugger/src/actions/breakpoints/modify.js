@@ -227,8 +227,8 @@ export function removeBreakpoint(cx, initialBreakpoint) {
  * Remove all installed, pending, and client breakpoints associated with a
  * target generated location.
  *
- * @memberof actions/breakpoints
- * @static
+ * @param {Object} target
+ *        Location object where to remove breakpoints.
  */
 export function removeBreakpointAtGeneratedLocation(cx, target) {
   return ({ dispatch, getState, client }) => {
@@ -257,8 +257,8 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
 
     // Remove any remaining pending breakpoints matching the generated location.
     const pending = getPendingBreakpointList(getState());
-    for (const breakpoint of pending) {
-      const { generatedLocation } = breakpoint;
+    for (const pendingBreakpoint of pending) {
+      const { generatedLocation } = pendingBreakpoint;
       if (
         generatedLocation.sourceUrl == target.sourceUrl &&
         comparePosition(generatedLocation, target)
@@ -266,7 +266,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
         dispatch({
           type: "REMOVE_PENDING_BREAKPOINT",
           cx,
-          breakpoint,
+          pendingBreakpoint,
         });
       }
     }

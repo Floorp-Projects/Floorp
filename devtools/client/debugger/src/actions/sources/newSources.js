@@ -15,7 +15,7 @@ import {
   createSourceActor,
 } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
-import { syncBreakpoint } from "../breakpoints";
+import { syncPendingBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
 import { togglePrettyPrint } from "./prettyPrint";
 import { toggleSourceMapIgnoreList } from "../ui";
@@ -177,8 +177,8 @@ function checkPendingBreakpoints(cx, source, sourceActor) {
     );
 
     await Promise.all(
-      pendingBreakpoints.map(bp => {
-        return dispatch(syncBreakpoint(cx, source.id, bp));
+      pendingBreakpoints.map(pendingBp => {
+        return dispatch(syncPendingBreakpoint(cx, source.id, pendingBp));
       })
     );
   };
