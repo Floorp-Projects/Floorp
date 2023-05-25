@@ -13,7 +13,7 @@ const TEST_URI = `
     user-modify: read-only;
   }
   div {
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
   }
   </style>
   <body>
@@ -26,10 +26,7 @@ const TEST_DATA_SELECTED = [
   { property: "user-modify" },
 ];
 
-const TEST_DATA_ALL = [
-  ...TEST_DATA_SELECTED,
-  { property: "font-variant-alternates" },
-];
+const TEST_DATA_ALL = [...TEST_DATA_SELECTED, { property: "scrollbar-width" }];
 
 const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,

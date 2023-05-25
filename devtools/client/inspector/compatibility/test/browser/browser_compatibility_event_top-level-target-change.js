@@ -12,7 +12,7 @@ const TEST_DATA_ISSUES = {
       ruby-align: center;
     }
     div {
-      font-variant-alternates: historical-forms;
+      scrollbar-width: thin;
     }
     </style>
     <body>
@@ -22,7 +22,7 @@ const TEST_DATA_ISSUES = {
   expectedIssuesOnSelected: [{ property: "ruby-align" }],
   expectedIssuesOnAll: [
     { property: "ruby-align" },
-    { property: "font-variant-alternates" },
+    { property: "scrollbar-width" },
   ],
 };
 

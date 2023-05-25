@@ -12,7 +12,7 @@ const TEST_URI = `
   }
 
   .has-issue {
-    font-variant-alternates: historical-forms;
+    scrollbar-width: thin;
     user-modify: read-only;
   }
 
@@ -30,7 +30,7 @@ const TEST_DATA_SELECTED = [
   {
     selector: ".has-issue",
     expectedIssues: [
-      { property: "font-variant-alternates" },
+      { property: "scrollbar-width" },
       { property: "user-modify" },
     ],
   },
@@ -46,7 +46,7 @@ const TEST_DATA_SELECTED = [
 
 const TEST_DATA_ALL = [
   { property: "ruby-align" },
-  { property: "font-variant-alternates" },
+  { property: "scrollbar-width" },
   { property: "user-modify" },
 ];
 
