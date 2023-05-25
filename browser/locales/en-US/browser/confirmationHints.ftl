@@ -13,3 +13,4 @@ confirmation-hint-pin-tab-description = Right-click the tab to unpin it.
 confirmation-hint-send-to-device = Sent!
 confirmation-hint-firefox-relay-mask-created = New mask created!
 confirmation-hint-firefox-relay-mask-reused = Existing mask reused!
+confirmation-hint-screenshot-copied = Screenshot copied!
