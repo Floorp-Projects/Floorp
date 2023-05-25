@@ -111,7 +111,6 @@ jobs:
         fetches:
             toolchain:
                 - linux64-rust-macos
-                - linux64-cctools-port
                 - linux64-clang-14
                 - macosx64-sdk
                 - wrench-deps
@@ -171,7 +170,6 @@ jobs:
         fetches:
             toolchain:
                 - linux64-rust-macos
-                - linux64-cctools-port
                 - linux64-clang
                 - macosx64-sdk
                 - wrench-deps
