@@ -56,6 +56,9 @@ using dom::Promise;
 
 #define RESTRICTED_DOMAINS_PREF "extensions.webextensions.restrictedDomains"
 
+#define QUARANTINED_DOMAINS_PREF "extensions.quarantinedDomains.list"
+#define QUARANTINED_DOMAINS_ENABLED "extensions.quarantinedDomains.enabled"
+
 #define OBS_TOPIC_PRELOAD_SCRIPT "web-extension-preload-content-script"
 #define OBS_TOPIC_LOAD_SCRIPT "web-extension-load-content-script"
 
@@ -71,6 +74,7 @@ using CoreByHostMap = nsTHashMap<nsCStringASCIICaseInsensitiveHashKey,
 static StaticRWLock sEPSLock;
 static StaticAutoPtr<CoreByHostMap> sCoreByHost MOZ_GUARDED_BY(sEPSLock);
 static StaticRefPtr<AtomSet> sRestrictedDomains MOZ_GUARDED_BY(sEPSLock);
+static StaticRefPtr<AtomSet> sQuarantinedDomains MOZ_GUARDED_BY(sEPSLock);
 
 /* static */
 mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
@@ -124,6 +128,7 @@ ExtensionPolicyService::ExtensionPolicyService() {
   }
 
   UpdateRestrictedDomains();
+  UpdateQuarantinedDomains();
 }
 
 ExtensionPolicyService::~ExtensionPolicyService() {
@@ -133,6 +138,7 @@ ExtensionPolicyService::~ExtensionPolicyService() {
     StaticAutoWriteLock lock(sEPSLock);
     sCoreByHost = nullptr;
     sRestrictedDomains = nullptr;
+    sQuarantinedDomains = nullptr;
   }
 }
 
@@ -152,6 +158,10 @@ bool ExtensionPolicyService::IsExtensionProcess() const {
     return remoteType == EXTENSION_REMOTE_TYPE;
   }
   return !isRemote && XRE_IsParentProcess();
+}
+
+bool ExtensionPolicyService::GetQuarantinedDomainsEnabled() const {
+  return Preferences::GetBool(QUARANTINED_DOMAINS_ENABLED);
 }
 
 WebExtensionPolicy* ExtensionPolicyService::GetByURL(const URLInfo& aURL) {
@@ -268,6 +278,8 @@ void ExtensionPolicyService::RegisterObservers() {
   Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF);
   Preferences::AddStrongObserver(this, DEFAULT_CSP_PREF_V3);
   Preferences::AddStrongObserver(this, RESTRICTED_DOMAINS_PREF);
+  Preferences::AddStrongObserver(this, QUARANTINED_DOMAINS_PREF);
+  Preferences::AddStrongObserver(this, QUARANTINED_DOMAINS_ENABLED);
 }
 
 void ExtensionPolicyService::UnregisterObservers() {
@@ -280,6 +292,8 @@ void ExtensionPolicyService::UnregisterObservers() {
   Preferences::RemoveObserver(this, DEFAULT_CSP_PREF);
   Preferences::RemoveObserver(this, DEFAULT_CSP_PREF_V3);
   Preferences::RemoveObserver(this, RESTRICTED_DOMAINS_PREF);
+  Preferences::RemoveObserver(this, QUARANTINED_DOMAINS_PREF);
+  Preferences::RemoveObserver(this, QUARANTINED_DOMAINS_ENABLED);
 }
 
 nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
@@ -305,6 +319,9 @@ nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
       mDefaultCSPV3.SetIsVoid(true);
     } else if (!strcmp(pref, RESTRICTED_DOMAINS_PREF)) {
       UpdateRestrictedDomains();
+    } else if (!strcmp(pref, QUARANTINED_DOMAINS_PREF) ||
+               !strcmp(pref, QUARANTINED_DOMAINS_ENABLED)) {
+      UpdateQuarantinedDomains();
     }
   }
   return NS_OK;
@@ -571,6 +588,12 @@ RefPtr<AtomSet> ExtensionPolicyService::RestrictedDomains() {
   return sRestrictedDomains;
 }
 
+/* static */
+RefPtr<AtomSet> ExtensionPolicyService::QuarantinedDomains() {
+  StaticAutoReadLock lock(sEPSLock);
+  return sQuarantinedDomains;
+}
+
 void ExtensionPolicyService::UpdateRestrictedDomains() {
   nsAutoCString eltsString;
   Unused << Preferences::GetCString(RESTRICTED_DOMAINS_PREF, eltsString);
@@ -584,6 +607,28 @@ void ExtensionPolicyService::UpdateRestrictedDomains() {
 
   StaticAutoWriteLock lock(sEPSLock);
   sRestrictedDomains = atomSet;
+}
+
+void ExtensionPolicyService::UpdateQuarantinedDomains() {
+  if (!GetQuarantinedDomainsEnabled()) {
+    StaticAutoWriteLock lock(sEPSLock);
+    sQuarantinedDomains = nullptr;
+    return;
+  }
+
+  nsAutoCString eltsString;
+  AutoTArray<nsString, 32> elts;
+  if (NS_SUCCEEDED(
+          Preferences::GetCString(QUARANTINED_DOMAINS_PREF, eltsString))) {
+    for (const nsACString& elt : eltsString.Split(',')) {
+      elts.AppendElement(NS_ConvertUTF8toUTF16(elt));
+      elts.LastElement().StripWhitespace();
+    }
+  }
+  RefPtr<AtomSet> atomSet = new AtomSet(elts);
+
+  StaticAutoWriteLock lock(sEPSLock);
+  sQuarantinedDomains = atomSet;
 }
 
 /*****************************************************************************
