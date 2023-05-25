@@ -12,7 +12,7 @@ namespace mozilla::dom {
 
 bool CSSPropertyRule::IsCCLeaf() const { return Rule::IsCCLeaf(); }
 
-void CSSPropertyRule::SetRawAfterClone(RefPtr<StyleLockedPropertyRule> aRaw) {
+void CSSPropertyRule::SetRawAfterClone(RefPtr<StylePropertyRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 

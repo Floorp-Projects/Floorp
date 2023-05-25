@@ -34,7 +34,7 @@ use style::gecko::arc_types::{
     LockedDocumentRule, LockedFontFaceRule, LockedFontFeatureValuesRule,
     LockedFontPaletteValuesRule, LockedImportRule, LockedKeyframe, LockedKeyframesRule,
     LockedLayerBlockRule, LockedLayerStatementRule, LockedMediaList, LockedMediaRule,
-    LockedNamespaceRule, LockedPageRule, LockedPropertyRule, LockedStyleRule, LockedSupportsRule,
+    LockedNamespaceRule, LockedPageRule, LockedStyleRule, LockedSupportsRule,
 };
 use style::gecko::data::{
     AuthorStyles, GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl,
@@ -2354,7 +2354,7 @@ impl_basic_rule_funcs! { (Page, PageRule),
     changed: Servo_StyleSet_PageRuleChanged,
 }
 
-impl_basic_rule_funcs! { (Property, PropertyRule),
+impl_basic_rule_funcs_without_lock! { (Property, PropertyRule),
     getter: Servo_CssRules_GetPropertyRuleAt,
     debug: Servo_PropertyRule_Debug,
     to_css: Servo_PropertyRule_GetCssText,
@@ -2925,39 +2925,31 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_PropertyRule_GetName(rule: &LockedPropertyRule, result: &mut nsACString) {
-    read_locked_arc(rule, |rule: &PropertyRule| {
-        rule.name.to_css(&mut CssWriter::new(result)).unwrap()
-    })
+pub extern "C" fn Servo_PropertyRule_GetName(rule: &PropertyRule, result: &mut nsACString) {
+    rule.name.to_css(&mut CssWriter::new(result)).unwrap()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_PropertyRule_GetSyntax(rule: &LockedPropertyRule, result: &mut nsACString) {
-    read_locked_arc(rule, |rule: &PropertyRule| {
-        if let Some(ref syntax) = rule.syntax {
-            CssWriter::new(result).write_str(syntax.as_str()).unwrap()
-        }
-    })
+pub extern "C" fn Servo_PropertyRule_GetSyntax(rule: &PropertyRule, result: &mut nsACString) {
+    if let Some(ref syntax) = rule.syntax {
+        CssWriter::new(result).write_str(syntax.as_str()).unwrap()
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_PropertyRule_GetInherits(rule: &LockedPropertyRule) -> bool {
-    read_locked_arc(rule, |rule: &PropertyRule| {
-        matches!(rule.inherits, Some(PropertyInherits::True))
-    })
+pub extern "C" fn Servo_PropertyRule_GetInherits(rule: &PropertyRule) -> bool {
+    matches!(rule.inherits, Some(PropertyInherits::True))
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_PropertyRule_GetInitialValue(
-    rule: &LockedPropertyRule,
+    rule: &PropertyRule,
     result: &mut nsACString,
 ) -> bool {
-    read_locked_arc(rule, |rule: &PropertyRule| {
-        rule.initial_value
-            .to_css(&mut CssWriter::new(result))
-            .unwrap();
-        rule.initial_value.is_some()
-    })
+    rule.initial_value
+        .to_css(&mut CssWriter::new(result))
+        .unwrap();
+    rule.initial_value.is_some()
 }
 
 #[no_mangle]

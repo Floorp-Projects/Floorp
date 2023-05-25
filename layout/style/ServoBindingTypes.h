@@ -81,6 +81,7 @@ struct PropertyValuePair;
 struct StyleAnimation;
 struct StyleCssUrlData;
 struct StyleAnimationValue;
+struct StylePropertyRule;
 struct StyleStylesheetContents;
 struct URLExtraData;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
@@ -113,6 +114,7 @@ class Element;
   SERVO_ARC_TYPE(name_, mozilla::Style##style_prefix_##name_)
 #define SERVO_LOCKED_ARC_TYPE(name_) SERVO_ARC_TYPE_WITH_PREFIX(name_, Locked)
 #include "mozilla/ServoLockedArcTypeList.h"
+SERVO_ARC_TYPE_WITH_PREFIX(PropertyRule, )
 SERVO_ARC_TYPE(AnimationValue, mozilla::StyleAnimationValue)
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 SERVO_ARC_TYPE(CssUrlData, mozilla::StyleCssUrlData)
