@@ -441,7 +441,7 @@ def get_branding_list(root, brand_files):
     for brand_path in brand_files:
         brand_file = mozpath.join(root, brand_path)
         if os.path.exists(brand_file):
-            with open(brand_file) as f:
+            with open(brand_file, encoding="utf-8") as f:
                 messages = parse(f.read())
                 extractor.visit(messages)
 
