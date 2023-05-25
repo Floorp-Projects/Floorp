@@ -440,6 +440,7 @@ var MigrationWizard = {
       formdata: "0",
       passwords: "0",
       bookmarks: "0",
+      payment_methods: "0",
 
       // "other" will get incremented, so we keep this as a number for
       // now, and will cast to a string before submitting to Event telemetry.
@@ -468,6 +469,9 @@ var MigrationWizard = {
             break;
           case MigrationUtils.resourceTypes.BOOKMARKS:
             extraKeys.bookmarks = "1";
+            break;
+          case MigrationUtils.resourceTypes.PAYMENT_METHODS:
+            extraKeys.payment_methods = "1";
             break;
           default:
             extraKeys.other++;
@@ -638,6 +642,9 @@ var MigrationWizard = {
       case MigrationUtils.resourceTypes.BOOKMARKS:
         obj.bookmarks = "1";
         break;
+      case MigrationUtils.resourceTypes.PAYMENT_METHODS:
+        obj.payment_methods = "1";
+        break;
       default:
         obj.other++;
     }
@@ -650,6 +657,7 @@ var MigrationWizard = {
       formdata: "0",
       passwords: "0",
       bookmarks: "0",
+      payment_methods: "0",
       // "other" will get incremented, so we keep this as a number for
       // now, and will cast to a string before submitting to Event telemetry.
       other: 0,
@@ -676,6 +684,7 @@ var MigrationWizard = {
           formdata: "0",
           passwords: "0",
           bookmarks: "0",
+          payment_methods: "0",
           // "other" will get incremented, so we keep this as a number for
           // now, and will cast to a string before submitting to Event telemetry.
           other: 0,
@@ -742,6 +751,9 @@ var MigrationWizard = {
             break;
           case MigrationUtils.resourceTypes.BOOKMARKS:
             type = "bookmarks";
+            break;
+          case MigrationUtils.resourceTypes.PAYMENT_METHODS:
+            type = "payment methods";
             break;
           case MigrationUtils.resourceTypes.OTHERDATA:
             type = "misc. data";

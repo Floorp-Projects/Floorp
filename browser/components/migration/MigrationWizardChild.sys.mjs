@@ -137,6 +137,7 @@ export class MigrationWizardChild extends JSWindowActorChild {
       formdata: "0",
       passwords: "0",
       bookmarks: "0",
+      payment_methods: "0",
       other: 0,
     };
 
@@ -159,6 +160,12 @@ export class MigrationWizardChild extends JSWindowActorChild {
 
         case MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS: {
           extraArgs.bookmarks = "1";
+          break;
+        }
+
+        case MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES
+          .PAYMENT_METHODS: {
+          extraArgs.payment_methods = "1";
           break;
         }
 
