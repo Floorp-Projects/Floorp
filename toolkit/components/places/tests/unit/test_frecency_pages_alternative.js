@@ -5,6 +5,8 @@
 // Note: the order of the tests here matters, since we are emulating subsquent
 // starts of the recalculator component with different initial conditions.
 
+Services.prefs.setBoolPref("preferences.force-disable.check.once.policy", true);
+
 const FEATURE_PREF = "places.frecency.pages.alternative.featureGate";
 
 async function restartRecalculator() {

@@ -6,7 +6,6 @@ const PREF_DB_SCHEMA = "extensions.databaseSchema";
 const PREF_IS_EMBEDDED = "extensions.isembedded";
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(PREF_DISABLE_SECURITY);
   Services.prefs.clearUserPref(PREF_IS_EMBEDDED);
 });
 
@@ -16,7 +15,6 @@ profileDir.append("extensions");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
 add_task(async function test_setup() {
-  Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
   await promiseStartupManager();
 });
 

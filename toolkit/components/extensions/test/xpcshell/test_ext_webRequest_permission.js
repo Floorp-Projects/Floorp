@@ -1,9 +1,5 @@
 "use strict";
 
-const PREF_DISABLE_SECURITY =
-  "security.turn_off_all_security_so_that_" +
-  "viruses_can_take_over_this_computer";
-
 const HOSTS = new Set(["example.com", "example.org"]);
 
 const server = createHttpServer({ hosts: HOSTS });
@@ -94,7 +90,6 @@ add_task(async function test_permissions() {
     "Regular webRequest redirect works from an unprivileged page"
   );
 
-  Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
   Services.prefs.setBoolPref("extensions.webapi.testing", true);
   Services.prefs.setBoolPref("extensions.webapi.testing.http", true);
 

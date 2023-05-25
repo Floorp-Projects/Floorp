@@ -34,11 +34,7 @@ AddonTestUtils.createAppInfo(
 );
 AddonTestUtils.overrideCertDB();
 
-// Attempting to set the
-// security.turn_off_all_security_so_that_viruses_can_take_over_this_computer
-// preference to enable Cu.exitIfInAutomation crashes, probably due to
-// shutdown behaviors faked by AddonTestUtils.jsm's cleanup function.
-do_disable_fast_shutdown();
+Services.prefs.setBoolPref("preferences.force-disable.check.once.policy", true);
 
 add_task(async function run_test() {
   _("Test fixtures.");
