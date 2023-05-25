@@ -752,22 +752,20 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   border-radius: var(--arrowpanel-menuitem-border-radius);
 }
 
-.all-tabs-item:hover {
-  background-color: var(--panel-item-hover-bgcolor);
-}
-
-.all-tabs-item:hover:active {
-  background-color: var(--panel-item-active-bgcolor);
-}
-
 .all-tabs-item[selected] {
   font-weight: bold;
 }
 
 .all-tabs-item > toolbarbutton {
   margin: 0;
-  /* Since the background is set on the item, don't set it on the children. */
-  background-color: transparent !important;
+}
+
+.all-tabs-item > toolbarbutton:hover {
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+.all-tabs-item > toolbarbutton:hover:active {
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 .all-tabs-button {
@@ -780,18 +778,27 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   fill: currentColor;
 }
 
-.all-tabs-secondary-button[soundplaying] {
-  list-style-image: url(chrome://global/skin/media/audio.svg);
-}
-
-.all-tabs-secondary-button[muted] {
-  list-style-image: url(chrome://global/skin/media/audio-muted.svg);
+.all-tabs-secondary-button > label {
+  display: none !important; /* override panelUI-shared.css */
 }
 
 .all-tabs-secondary-button:hover {
   opacity: 1;
 }
 
-.all-tabs-secondary-button > label {
-  display: none !important; /* override panelUI-shared.css */
+.all-tabs-mute-button[soundplaying] {
+  list-style-image: url(chrome://global/skin/media/audio.svg);
+}
+
+.all-tabs-mute-button[muted] {
+  list-style-image: url(chrome://global/skin/media/audio-muted.svg);
+}
+
+.all-tabs-close-button {
+  list-style-image: url(chrome://global/skin/icons/close-12.svg);
+}
+
+.all-tabs-close-button > .toolbarbutton-icon {
+  width: 12px;
+  margin-inline: 2px !important; /* override panelUI-shared.css */
 }
