@@ -1849,6 +1849,14 @@ export class OptInFeature {
     return this.#currentPrefValue == OptInFeature.PREF_ENABLED_VALUE;
   }
 
+  get isDisabled() {
+    return this.#currentPrefValue == OptInFeature.PREF_DISABLED_VALUE;
+  }
+
+  markAsAvailable() {
+    this.#markAs(OptInFeature.PREF_AVAILABLE_VALUE);
+  }
+
   markAsOffered() {
     this.#markAs(OptInFeature.PREF_OFFERED_VALUE);
   }
