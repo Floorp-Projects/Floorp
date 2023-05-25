@@ -3,6 +3,38 @@
     {
       "stash": {
         "blocked": [
+          "{5eb24fdc-e6ad-47c4-8c15-44b588636e08}:1.0.0",
+          "{f2a47522-1d86-4828-b6fb-d02e849f1b69}:1.0.0.84",
+          "{f2a47522-1d86-4828-b6fb-d02e849f1b69}:1.0.0.99",
+          "{f2a47522-1d86-4828-b6fb-d02e849f1b69}:1.0.0.72"
+        ],
+        "unblocked": []
+      },
+      "schema": 1684928507098,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1684953309170,
+      "id": "d28066e2-42bf-403a-a1ca-c275dc26114f",
+      "last_modified": 1684953460244
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{3d8a6a24-dc5c-4bb9-94b4-af93bb927769}:1.1.1",
+          "{3d8a6a24-dc5c-4bb9-94b4-af93bb927769}:1.1.0",
+          "{3d8a6a24-dc5c-4bb9-94b4-af93bb927769}:1.0.0",
+          "dattrinhquoc112@gmail.com:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1684348667733,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1684780508803,
+      "id": "b5bc6dc7-67ec-4cd4-92e6-1d7d383bf37f",
+      "last_modified": 1684780660971
+    },
+    {
+      "stash": {
+        "blocked": [
           "{4f124992-67f8-4dc7-bf05-b32d5d8fc103}:0.0.1",
           "{4f124992-67f8-4dc7-bf05-b32d5d8fc103}:0.0.9",
           "{5e488213-b781-4633-93e0-51b6b9a88721}:1.10",
@@ -1699,5 +1731,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1684348667589
+  "timestamp": 1684953460244
 }
