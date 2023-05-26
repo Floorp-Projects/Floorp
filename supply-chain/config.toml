@@ -2,7 +2,7 @@
 # cargo-vet config file
 
 [cargo-vet]
-version = "0.6"
+version = "0.7"
 
 [imports.bytecode-alliance]
 url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
@@ -116,6 +116,12 @@ notes = "This is a first-party crate which is also published to crates.io. We ce
 audit-as-crates-io = false
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
+[policy.mp4parse]
+audit-as-crates-io = false
+
+[policy.mp4parse_capi]
+audit-as-crates-io = false
+
 [policy.naga]
 audit-as-crates-io = true
 notes = "wgpu-core pins this crate."
@@ -123,6 +129,12 @@ notes = "wgpu-core pins this crate."
 [policy.packed_simd_2]
 audit-as-crates-io = true
 notes = "Based on upstream, see bug 1719674."
+
+[policy.peek-poke]
+audit-as-crates-io = false
+
+[policy.peek-poke-derive]
+audit-as-crates-io = false
 
 [policy.pulse]
 audit-as-crates-io = false
@@ -169,6 +181,15 @@ audit-as-crates-io = false
 criteria = "safe-to-run"
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here. It's also used only for automation, so its subtree can be safe-to-run."
 
+[policy.webrender]
+audit-as-crates-io = false
+
+[policy.webrender_api]
+audit-as-crates-io = false
+
+[policy.webrender_build]
+audit-as-crates-io = false
+
 [policy.wgpu-core]
 audit-as-crates-io = true
 notes = "Upstream project which we pin."
@@ -180,6 +201,9 @@ notes = "Upstream project which we pin."
 [policy.wgpu-types]
 audit-as-crates-io = true
 notes = "Upstream project which we pin."
+
+[policy.wr_malloc_size_of]
+audit-as-crates-io = false
 
 [[exemptions.adler]]
 version = "1.0.2"
