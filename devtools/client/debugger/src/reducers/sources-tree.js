@@ -36,7 +36,7 @@ export function initialSourcesTreeState() {
     // This should be all but Source Tree Items.
     expanded: new Set(),
 
-    // `uniquePath` of the currently focused Tree Item.
+    // Reference to the currently focused Tree Item.
     // It can be any type of Tree Item.
     focusedItem: null,
 
@@ -149,18 +149,36 @@ export default function update(state = initialSourcesTreeState(), action) {
       return state;
 
     case "REMOVE_THREAD": {
+      const { threadActorID } = action;
       const index = state.threadItems.findIndex(item => {
-        return item.threadActorID == action.threadActorID;
+        return item.threadActorID == threadActorID;
       });
 
       if (index == -1) {
         return state;
       }
+
+      // Also clear focusedItem and expanded items related
+      // to this thread. These fields store uniquePath which starts
+      // with the thread actor ID.
+      let { focusedItem } = state;
+      if (focusedItem && focusedItem.uniquePath.startsWith(threadActorID)) {
+        focusedItem = null;
+      }
+      const expanded = new Set();
+      for (const path of state.expanded) {
+        if (!path.startsWith(threadActorID)) {
+          expanded.add(path);
+        }
+      }
+
       const threadItems = [...state.threadItems];
       threadItems.splice(index, 1);
       return {
         ...state,
         threadItems,
+        focusedItem,
+        expanded,
       };
     }
 
