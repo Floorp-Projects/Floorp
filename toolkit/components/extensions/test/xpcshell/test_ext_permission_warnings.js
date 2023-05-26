@@ -12,18 +12,11 @@ const {
   "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
 );
 
-const EXTENSION_L10N_PATHS =
-  AppConstants.MOZ_APP_NAME == "thunderbird"
-    ? [
-        "messenger/addons.ftl", // FIXME: mock path, file does not exist
-        "messenger/addonPermissions.ftl", // FIXME: mock path, file does not exist
-        "branding/brand.ftl",
-      ]
-    : [
-        "toolkit/global/extensions.ftl",
-        "toolkit/global/extensionPermissions.ftl",
-        "branding/brand.ftl",
-      ];
+const EXTENSION_L10N_PATHS = [
+  "toolkit/global/extensions.ftl",
+  "toolkit/global/extensionPermissions.ftl",
+  "branding/brand.ftl",
+];
 
 // For Android, these strings are only used in tests. In the actual UI, the
 // warnings are in Android-Components, as explained in bug 1671453.
