@@ -33,6 +33,8 @@ function main() {
   /* Check basic operation */
   anim.setAttribute("dur", "1s");
   is(anim.getSimpleDuration(), 1);
+  anim.setAttribute("dur", ".15s");
+  isfuzzy(anim.getSimpleDuration(), 0.15, 0.001);
   anim.setAttribute("dur", "1.5s");
   is(anim.getSimpleDuration(), 1.5);
 
@@ -52,15 +54,11 @@ function main() {
 
   /* Check range/syntax */
   anim.setAttribute("dur", "100ms");
-  millisecondCompare(anim.getSimpleDuration(), 0.1);
+  isfuzzy(anim.getSimpleDuration(), 0.1, 0.001);
   anim.setAttribute("dur", "24h");
   is(anim.getSimpleDuration(), 60 * 60 * 24);
 
   SimpleTest.finish();
-}
-
-function millisecondCompare(a, b) {
-  is(Math.round(a * 1000), Math.round(b * 1000));
 }
 
 function checkForException(anim, descr) {
