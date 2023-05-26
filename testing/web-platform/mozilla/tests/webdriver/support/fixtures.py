@@ -47,8 +47,10 @@ def browser(full_configuration):
             # to create a new instance for the provided preferences.
             current_browser.quit()
 
+        binary = full_configuration["browser"]["binary"]
         firefox_options = full_configuration["capabilities"]["moz:firefoxOptions"]
         current_browser = Browser(
+            binary,
             firefox_options,
             use_bidi=use_bidi,
             use_cdp=use_cdp,
@@ -103,6 +105,7 @@ def geckodriver(configuration):
 class Browser:
     def __init__(
         self,
+        binary,
         firefox_options,
         use_bidi=False,
         use_cdp=False,
@@ -138,9 +141,6 @@ class Browser:
             )
             with suppress(FileNotFoundError):
                 os.remove(self.webdriver_bidi_file)
-
-        # Prepare Firefox runner
-        binary = firefox_options["binary"]
 
         cmdargs = ["-no-remote"]
         if self.use_bidi or self.use_cdp:
@@ -222,7 +222,7 @@ class Geckodriver:
             + self.extra_args
         )
 
-        print(f"Running command: {self.command}")
+        print(f"Running command: {' '.join(self.command)}")
         self.proc = subprocess.Popen(self.command)
 
         # Wait for the port to become ready

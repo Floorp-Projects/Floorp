@@ -21,12 +21,10 @@ def test_shell_script_binary(new_session, configuration):
     # skipif annotations are forbidden in wpt
     if sys.platform == "linux":
         capabilities = configuration["capabilities"].copy()
-        script = (
-            """#!/bin/bash
+        binary = configuration["browser"]["binary"]
+        script = f"""#!/bin/bash
 
-%s $@"""
-            % capabilities["moz:firefoxOptions"]["binary"]
-        )
+{binary} $@"""
         path = os.path.abspath("firefox.sh")
         assert not os.path.exists(path)
         try:
