@@ -2090,7 +2090,7 @@ function createVersionizedHttpTestServer(testFolderName) {
     let fetchResponse;
 
     if (request.queryString) {
-      const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}.${request.queryString}`;
+      const url = `${URL_ROOT_SSL}${testFolderName}/v${currentVersion}${request.path}.${request.queryString}`;
       try {
         fetchResponse = await fetch(url);
         // Log this only if the request succeed
@@ -2102,7 +2102,7 @@ function createVersionizedHttpTestServer(testFolderName) {
     }
 
     if (!fetchResponse) {
-      const url = `${URL_ROOT}${testFolderName}/v${currentVersion}${request.path}`;
+      const url = `${URL_ROOT_SSL}${testFolderName}/v${currentVersion}${request.path}`;
       info(`[test-http-server] serving: ${url}`);
       fetchResponse = await fetch(url);
     }

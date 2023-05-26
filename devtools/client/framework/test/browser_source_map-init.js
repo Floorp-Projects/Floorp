@@ -6,7 +6,7 @@
 
 "use strict";
 
-const JS_URL = URL_ROOT + "code_bundle_no_race.js";
+const JS_URL = URL_ROOT_SSL + "code_bundle_no_race.js";
 
 const PAGE_URL = `data:text/html,
 <!doctype html>
