@@ -11,6 +11,10 @@
       "$ref": "#/definitions/installTriggerDeprecation",
       "optional": true
     },
+    "quarantinedDomains": {
+      "$ref": "#/definitions/quarantinedDomains",
+      "optional": true
+    },
     "filter_expression": {
       "type": "string",
       "description": "This is NOT directly used by AMRemoteSettings, but has special functionality in Remote Settings.\nSee https://remote-settings.readthedocs.io/en/latest/target-filters.html#how",
@@ -33,6 +37,19 @@
         }
       },
       "description": "These settings control the visibility of the InstallTrigger global and its methods.",
+      "additionalProperties": false
+    },
+    "quarantinedDomains": {
+      "type": "object",
+      "properties": {
+        "extensions.quarantinedDomains.list": {
+          "type": "string",
+          "default": "",
+          "maxLength": 1048576,
+          "description": "Set of domains to be quarantined separated by a comma (e.g. 'domain1.org,domain2.com'). NOTE: this pref value should be set to a ASCII encoded string and its size smaller than 1MB"
+        }
+      },
+      "description": "These settings provide a set of domain names to be quarantined (restricted by default to unverified extensions, which only the app or the user may grant back). IMPORTANT: The add-ons team should be consulted before introducing any new entry of this type.",
       "additionalProperties": false
     }
   }
