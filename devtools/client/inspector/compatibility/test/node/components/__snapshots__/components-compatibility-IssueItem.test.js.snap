@@ -9,10 +9,10 @@ exports[`IssueItem component renders a deprecated issue of CSS property 1`] = `
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -38,10 +38,10 @@ exports[`IssueItem component renders a prefixNeeded issue of CSS property 1`] = 
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -83,10 +83,10 @@ exports[`IssueItem component renders an experimental issue of CSS property 1`] =
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -112,10 +112,10 @@ exports[`IssueItem component renders an issue which has deprecated and experimen
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -157,10 +157,10 @@ exports[`IssueItem component renders an issue which has deprecated and prefixNee
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -202,10 +202,10 @@ exports[`IssueItem component renders an issue which has deprecated, experimental
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -247,10 +247,10 @@ exports[`IssueItem component renders an issue which has experimental and prefixN
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -292,10 +292,10 @@ exports[`IssueItem component renders an issue which has nodes that caused this i
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
@@ -324,10 +324,10 @@ exports[`IssueItem component renders an unsupported issue of CSS property 1`] = 
     className="compatibility-issue-item__description"
   >
     <a
-      className="compatibility-issue-item__mdn-link devtools-monospace"
-      href="test-url"
+      className="compatibility-issue-item__property devtools-monospace compatibility-issue-item__mdn-link"
+      href="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
       onClick={[Function]}
-      title="test-url"
+      title="test-url?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
     >
       test-property
     </a>
