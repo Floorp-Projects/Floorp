@@ -162,8 +162,8 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
             ? nsIWebProgressListener::STATE_REPLACED_FINGERPRINTING_CONTENT
             : nsIWebProgressListener::STATE_ALLOWED_FINGERPRINTING_CONTENT;
 
-    /* Need to set aBlocked to True if we replace the Fingerprinter with a shim,
-      since the shim is treated as a blocked event*/
+    // Need to set aBlocked to True if we replace the Fingerprinter with a shim,
+    //  since the shim is treated as a blocked event
     if (event ==
         nsIWebProgressListener::STATE_REPLACED_FINGERPRINTING_CONTENT) {
       ContentBlockingNotifier::OnEvent(aChannel, event, true);

@@ -154,7 +154,16 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
         decision == ChannelBlockDecision::Replaced
             ? nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT
             : nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT;
-    ContentBlockingNotifier::OnEvent(aChannel, event, false);
+
+    // Need to set aBlocked to True if we replace the Cryptominer with a shim,
+    //  since the shim is treated as a blocked event
+    // Note: If we need to account for which kind of tracker was replaced,
+    //  we need to create a new event type in nsIWebProgressListener
+    if (event == nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT) {
+      ContentBlockingNotifier::OnEvent(aChannel, event, true);
+    } else {
+      ContentBlockingNotifier::OnEvent(aChannel, event, false);
+    }
 
     *aShouldContinue = true;
     return NS_OK;
