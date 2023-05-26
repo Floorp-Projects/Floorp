@@ -956,9 +956,9 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_HARDWARE_VIDEO_DECODING_NO_R600", "");
 
-    // Disable on Release/late Beta
+    // Disable on Release/late Beta on AMD
 #if !defined(EARLY_BETA_OR_EARLIER)
-    APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Linux, DeviceFamily::All,
+    APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Linux, DeviceFamily::AtiAll,
                                nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
                                DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
