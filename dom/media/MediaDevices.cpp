@@ -270,7 +270,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
         if (mCanExposeMicrophoneInfo) {
           exposedMicrophoneGroupIds.Insert(device->mRawGroupID);
         }
-        if (!DeviceInformationCanBeExposed() && !legacy) {
+        if (!mCanExposeMicrophoneInfo && !legacy) {
           dropMics = true;
         }
         break;
@@ -278,7 +278,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
         if (dropCams) {
           continue;
         }
-        if (!DeviceInformationCanBeExposed() && !legacy) {
+        if (!mCanExposeCameraInfo && !legacy) {
           dropCams = true;
         }
         break;

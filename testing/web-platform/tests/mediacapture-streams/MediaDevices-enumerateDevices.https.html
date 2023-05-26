@@ -71,9 +71,12 @@ promise_test(async t => {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   stream.getTracks()[0].stop();
   const devices = await navigator.mediaDevices.enumerateDevices();
-  assert_equals(devices.filter(({kind}) => kind != "audiooutput").length,
-                devices1.filter(({kind}) => kind != "audiooutput").length,
-                "same number of input devices");
+  assert_equals(devices.filter(({kind}) => kind == "videoinput").length,
+                devices1.filter(({kind}) => kind == "videoinput").length,
+                "same number of (previously exposed) videoinput devices");
+  assert_greater_than_equal(devices.filter(d => d.kind == "audioinput").length,
+                            devices1.filter(d => d.kind == "audioinput").length,
+                            "same number or more audioinput devices");
   const order = ["audioinput", "videoinput", "audiooutput"];
   for (const {kind, deviceId} of devices) {
     assert_in_array(kind, order, "expected kind");
