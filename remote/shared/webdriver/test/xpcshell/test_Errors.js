@@ -6,6 +6,40 @@ const { error } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
 
+const errors = [
+  error.WebDriverError,
+
+  error.DetachedShadowRootError,
+  error.ElementClickInterceptedError,
+  error.ElementNotAccessibleError,
+  error.ElementNotInteractableError,
+  error.InsecureCertificateError,
+  error.InvalidArgumentError,
+  error.InvalidCookieDomainError,
+  error.InvalidElementStateError,
+  error.InvalidSelectorError,
+  error.InvalidSessionIDError,
+  error.JavaScriptError,
+  error.MoveTargetOutOfBoundsError,
+  error.NoSuchAlertError,
+  error.NoSuchElementError,
+  error.NoSuchFrameError,
+  error.NoSuchHandleError,
+  error.NoSuchNodeError,
+  error.NoSuchScriptError,
+  error.NoSuchShadowRootError,
+  error.NoSuchWindowError,
+  error.ScriptTimeoutError,
+  error.SessionNotCreatedError,
+  error.StaleElementReferenceError,
+  error.TimeoutError,
+  error.UnableToSetCookieError,
+  error.UnexpectedAlertOpenError,
+  error.UnknownCommandError,
+  error.UnknownError,
+  error.UnsupportedOperationError,
+];
+
 function notok(condition) {
   ok(!condition);
 }
@@ -24,8 +58,8 @@ add_task(function test_isError() {
   ok(error.isError(new SyntaxError()));
   ok(error.isError(new TypeError()));
   ok(error.isError(new URIError()));
-  ok(error.isError(new error.WebDriverError()));
-  ok(error.isError(new error.InvalidArgumentError()));
+
+  errors.forEach(err => ok(error.isError(new err())));
 });
 
 add_task(function test_isWebDriverError() {
@@ -39,42 +73,44 @@ add_task(function test_isWebDriverError() {
   notok(error.isWebDriverError(new TypeError()));
   notok(error.isWebDriverError(new URIError()));
 
-  ok(error.isWebDriverError(new error.WebDriverError()));
-  ok(error.isWebDriverError(new error.InvalidArgumentError()));
-  ok(error.isWebDriverError(new error.JavaScriptError()));
+  errors.forEach(err => ok(error.isWebDriverError(new err())));
 });
 
 add_task(function test_wrap() {
   // webdriver-derived errors should not be wrapped
-  equal(error.wrap(new error.WebDriverError()).name, "WebDriverError");
-  ok(error.wrap(new error.WebDriverError()) instanceof error.WebDriverError);
-  equal(
-    error.wrap(new error.InvalidArgumentError()).name,
-    "InvalidArgumentError"
-  );
-  ok(
-    error.wrap(new error.InvalidArgumentError()) instanceof error.WebDriverError
-  );
-  ok(
-    error.wrap(new error.InvalidArgumentError()) instanceof
-      error.InvalidArgumentError
-  );
+  errors.forEach(err => {
+    const unwrappedError = new err("foo");
+    const wrappedError = error.wrap(unwrappedError);
 
-  // JS errors should be wrapped in UnknownError
-  equal(error.wrap(new Error()).name, "UnknownError");
-  ok(error.wrap(new Error()) instanceof error.UnknownError);
-  equal(error.wrap(new EvalError()).name, "UnknownError");
-  equal(error.wrap(new InternalError()).name, "UnknownError");
-  equal(error.wrap(new RangeError()).name, "UnknownError");
-  equal(error.wrap(new ReferenceError()).name, "UnknownError");
-  equal(error.wrap(new SyntaxError()).name, "UnknownError");
-  equal(error.wrap(new TypeError()).name, "UnknownError");
-  equal(error.wrap(new URIError()).name, "UnknownError");
+    ok(wrappedError instanceof error.WebDriverError);
+    ok(wrappedError instanceof err);
+    equal(wrappedError.name, unwrappedError.name);
+    equal(wrappedError.status, unwrappedError.status);
+    equal(wrappedError.message, "foo");
+  });
 
-  // wrapped JS errors should retain their type
-  // as part of the message field
-  equal(error.wrap(new error.WebDriverError("foo")).message, "foo");
-  equal(error.wrap(new TypeError("foo")).message, "TypeError: foo");
+  // JS errors should be wrapped in UnknownError and retain their type
+  // as part of the message field.
+  const jsErrors = [
+    Error,
+    EvalError,
+    InternalError,
+    RangeError,
+    ReferenceError,
+    SyntaxError,
+    TypeError,
+    URIError,
+  ];
+
+  jsErrors.forEach(err => {
+    const originalError = new err("foo");
+    const wrappedError = error.wrap(originalError);
+
+    ok(wrappedError instanceof error.UnknownError);
+    equal(wrappedError.name, "UnknownError");
+    equal(wrappedError.status, "unknown error");
+    equal(wrappedError.message, `${originalError.name}: foo`);
+  });
 });
 
 add_task(function test_stringify() {
@@ -83,14 +119,26 @@ add_task(function test_stringify() {
   equal("[object Object]", error.stringify({}));
   equal("[object Object]\nfoo", error.stringify({ stack: "foo" }));
   equal("Error: foo", error.stringify(new Error("foo")).split("\n")[0]);
-  equal(
-    "WebDriverError: foo",
-    error.stringify(new error.WebDriverError("foo")).split("\n")[0]
-  );
-  equal(
-    "InvalidArgumentError: foo",
-    error.stringify(new error.InvalidArgumentError("foo")).split("\n")[0]
-  );
+
+  errors.forEach(err => {
+    const e = new err("foo");
+
+    equal(`${e.name}: foo`, error.stringify(e).split("\n")[0]);
+  });
+});
+
+add_task(function test_constructor_from_error() {
+  const data = { a: 3, b: "bar" };
+  const origError = new error.WebDriverError("foo", data);
+
+  errors.forEach(err => {
+    const newError = new err(origError);
+
+    ok(newError instanceof err);
+    equal(newError.message, origError.message);
+    equal(newError.stack, origError.stack);
+    equal(newError.data, origError.data);
+  });
 });
 
 add_task(function test_stack() {
@@ -100,77 +148,81 @@ add_task(function test_stack() {
 });
 
 add_task(function test_toJSON() {
-  let e0 = new error.WebDriverError();
-  let e0s = e0.toJSON();
-  equal(e0s.error, "webdriver error");
-  equal(e0s.message, "");
-  equal(e0s.stacktrace, e0.stack);
+  errors.forEach(err => {
+    const e0 = new err();
+    const e0_json = e0.toJSON();
+    equal(e0_json.error, e0.status);
+    equal(e0_json.message, "");
+    equal(e0_json.stacktrace, e0.stack);
+    equal(e0_json.data, undefined);
 
-  let e1 = new error.WebDriverError("a");
-  let e1s = e1.toJSON();
-  equal(e1s.message, e1.message);
-  equal(e1s.stacktrace, e1.stack);
+    // message property
+    const e1 = new err("a");
+    const e1_json = e1.toJSON();
 
-  let e2 = new error.JavaScriptError("foo");
-  let e2s = e2.toJSON();
-  equal(e2.status, e2s.error);
-  equal(e2.message, e2s.message);
+    equal(e1_json.message, e1.message);
+    equal(e1_json.stacktrace, e1.stack);
+    equal(e1_json.data, undefined);
+
+    // message and optional data property
+    const data = { a: 3, b: "bar" };
+    const e2 = new err("foo", data);
+    const e2_json = e2.toJSON();
+
+    equal(e2.status, e2_json.error);
+    equal(e2.message, e2_json.message);
+    equal(e2_json.data, data);
+  });
 });
 
 add_task(function test_fromJSON() {
-  Assert.throws(
-    () => error.WebDriverError.fromJSON({ error: "foo" }),
-    /Not of WebDriverError descent/
-  );
-  Assert.throws(
-    () => error.WebDriverError.fromJSON({ error: "Error" }),
-    /Not of WebDriverError descent/
-  );
-  Assert.throws(
-    () => error.WebDriverError.fromJSON({}),
-    /Undeserialisable error type/
-  );
-  Assert.throws(() => error.WebDriverError.fromJSON(undefined), /TypeError/);
+  errors.forEach(err => {
+    Assert.throws(
+      () => err.fromJSON({ error: "foo" }),
+      /Not of WebDriverError descent/
+    );
+    Assert.throws(
+      () => err.fromJSON({ error: "Error" }),
+      /Not of WebDriverError descent/
+    );
+    Assert.throws(() => err.fromJSON({}), /Undeserialisable error type/);
+    Assert.throws(() => err.fromJSON(undefined), /TypeError/);
 
-  // stacks will be different
-  let e1 = new error.WebDriverError("1");
-  let e1r = error.WebDriverError.fromJSON({
-    error: "webdriver error",
-    message: "1",
+    // message and stack
+    const e1 = new err("1");
+    const e1_json = { error: e1.status, message: "3", stacktrace: "4" };
+    const e1_fromJSON = error.WebDriverError.fromJSON(e1_json);
+
+    ok(e1_fromJSON instanceof error.WebDriverError);
+    ok(e1_fromJSON instanceof err);
+    equal(e1_fromJSON.name, e1.name);
+    equal(e1_fromJSON.status, e1_json.error);
+    equal(e1_fromJSON.message, e1_json.message);
+    equal(e1_fromJSON.stack, e1_json.stacktrace);
+
+    // message and optional data
+    const e2_data = { a: 3, b: "bar" };
+    const e2 = new err("1", e2_data);
+    const e2_json = { error: e1.status, message: "3", data: e2_data };
+    const e2_fromJSON = error.WebDriverError.fromJSON(e2_json);
+
+    ok(e2_fromJSON instanceof error.WebDriverError);
+    ok(e2_fromJSON instanceof err);
+    equal(e2_fromJSON.name, e2.name);
+    equal(e2_fromJSON.status, e2_json.error);
+    equal(e2_fromJSON.message, e2_json.message);
+    equal(e2_fromJSON.data, e2_json.data);
+
+    // parity with toJSON
+    const e3_data = { a: 3, b: "bar" };
+    const e3 = new err("1", e3_data);
+    const e3_json = e3.toJSON();
+    const e3_fromJSON = error.WebDriverError.fromJSON(e3_json);
+
+    equal(e3_json.error, e3_fromJSON.status);
+    equal(e3_json.message, e3_fromJSON.message);
+    equal(e3_json.stacktrace, e3_fromJSON.stack);
   });
-  ok(e1r instanceof error.WebDriverError);
-  equal(e1r.name, e1.name);
-  equal(e1r.status, e1.status);
-  equal(e1r.message, e1.message);
-
-  // stacks will be different
-  let e2 = new error.InvalidArgumentError("2");
-  let e2r = error.WebDriverError.fromJSON({
-    error: "invalid argument",
-    message: "2",
-  });
-  ok(e2r instanceof error.WebDriverError);
-  ok(e2r instanceof error.InvalidArgumentError);
-  equal(e2r.name, e2.name);
-  equal(e2r.status, e2.status);
-  equal(e2r.message, e2.message);
-
-  // test stacks
-  let e3j = { error: "no such element", message: "3", stacktrace: "4" };
-  let e3r = error.WebDriverError.fromJSON(e3j);
-  ok(e3r instanceof error.WebDriverError);
-  ok(e3r instanceof error.NoSuchElementError);
-  equal(e3r.name, "NoSuchElementError");
-  equal(e3r.status, e3j.error);
-  equal(e3r.message, e3j.message);
-  equal(e3r.stack, e3j.stacktrace);
-
-  // parity with toJSON
-  let e4j = new error.JavaScriptError("foo").toJSON();
-  let e4 = error.WebDriverError.fromJSON(e4j);
-  equal(e4j.error, e4.status);
-  equal(e4j.message, e4.message);
-  equal(e4j.stacktrace, e4.stack);
 });
 
 add_task(function test_WebDriverError() {
@@ -211,7 +263,12 @@ add_task(function test_ElementClickInterceptedError() {
     },
   };
 
-  let err1 = new error.ElementClickInterceptedError(obscuredEl, { x: 1, y: 2 });
+  let err1 = new error.ElementClickInterceptedError(
+    undefined,
+    undefined,
+    obscuredEl,
+    { x: 1, y: 2 }
+  );
   equal("ElementClickInterceptedError", err1.name);
   equal(
     "Element <b> is not clickable at point (1,2) " +
@@ -222,7 +279,12 @@ add_task(function test_ElementClickInterceptedError() {
   ok(err1 instanceof error.WebDriverError);
 
   obscuredEl.style.pointerEvents = "none";
-  let err2 = new error.ElementClickInterceptedError(obscuredEl, { x: 1, y: 2 });
+  let err2 = new error.ElementClickInterceptedError(
+    undefined,
+    undefined,
+    obscuredEl,
+    { x: 1, y: 2 }
+  );
   equal(
     "Element <b> is not clickable at point (1,2) " +
       "because it does not have pointer events enabled, " +
