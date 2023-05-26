@@ -246,7 +246,9 @@ class GeckoViewStartup {
           ged: ["GeckoView:WebExtension:DownloadChanged"],
         });
 
-        ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
+        ChromeUtils.importESModule(
+          "resource://gre/modules/NotificationDB.sys.mjs"
+        );
 
         // Listen for global EventDispatcher messages
         lazy.EventDispatcher.instance.registerListener(this, [
