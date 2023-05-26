@@ -56,7 +56,7 @@ tasks:
             gradlew:
                 - ':samples-browser:assembleGecko'
                 - ':samples-browser:testGeckoDebugUnitTest'
-                - ':samples-browser:lintGecko'
+                - ':samples-browser:lintGeckoDebug'
 
     system:
         attributes:
