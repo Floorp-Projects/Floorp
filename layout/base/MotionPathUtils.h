@@ -41,13 +41,17 @@ struct RayReferenceData {
   CSSPoint mInitialPosition;
   // The rect of the containing block.
   CSSRect mContainingBlockRect;
+  // The size of its border-box in CSS Layout. If it's in SVG layout, this is
+  // the size of view box.
+  CSSSize mBorderBoxSize;
 
   RayReferenceData() = default;
   explicit RayReferenceData(const nsIFrame* aFrame);
 
   bool operator==(const RayReferenceData& aOther) const {
     return mInitialPosition == aOther.mInitialPosition &&
-           mContainingBlockRect == aOther.mContainingBlockRect;
+           mContainingBlockRect == aOther.mContainingBlockRect &&
+           mBorderBoxSize == aOther.mBorderBoxSize;
   }
 };
 
