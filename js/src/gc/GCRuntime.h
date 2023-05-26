@@ -604,7 +604,7 @@ class GCRuntime {
   [[nodiscard]] bool checkAllocatorState(JSContext* cx, AllocKind kind);
   template <AllowGC allowGC>
   void* tryNewNurseryObject(JSContext* cx, size_t thingSize,
-                            const JSClass* clasp, AllocSite* site);
+                            AllocSite* site);
   template <AllowGC allowGC>
   static void* tryNewTenuredThing(JSContext* cx, AllocKind kind,
                                   size_t thingSize);
