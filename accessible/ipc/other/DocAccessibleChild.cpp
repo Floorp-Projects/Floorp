@@ -60,35 +60,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollSubstringToPoint(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvDocType(const uint64_t& aID,
-                                                        nsString* aType) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc && acc->IsDoc()) {
-    acc->AsDoc()->DocType(*aType);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvMimeType(const uint64_t& aID,
                                                          nsString* aMime) {
   LocalAccessible* acc = IdToAccessible(aID);
   if (acc && acc->IsDoc()) {
     acc->AsDoc()->MimeType(*aMime);
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessibleChild::RecvURLDocTypeMimeType(
-    const uint64_t& aID, nsString* aURL, nsString* aDocType,
-    nsString* aMimeType) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc && acc->IsDoc()) {
-    DocAccessible* doc = acc->AsDoc();
-    doc->URL(*aURL);
-    doc->DocType(*aDocType);
-    doc->MimeType(*aMimeType);
   }
 
   return IPC_OK();
