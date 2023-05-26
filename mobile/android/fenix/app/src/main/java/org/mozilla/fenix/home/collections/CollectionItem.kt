@@ -4,31 +4,22 @@
 
 package org.mozilla.fenix.home.collections
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissDirection.EndToStart
 import androidx.compose.material.DismissDirection.StartToEnd
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.painterResource
@@ -42,6 +33,7 @@ import org.mozilla.fenix.R.drawable
 import org.mozilla.fenix.R.string
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.FaviconListItem
+import org.mozilla.fenix.compose.tabstray.DismissedTabBackground
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.theme.FirefoxTheme
 import java.io.File
@@ -83,7 +75,7 @@ fun CollectionItem(
         background = {
             DismissedTabBackground(
                 dismissDirection = dismissState.dismissDirection,
-                isLastInCollection = isLastInCollection,
+                shape = if (isLastInCollection) BOTTOM_TAB_SHAPE else MIDDLE_TAB_SHAPE,
             )
         },
     ) {
@@ -123,56 +115,6 @@ fun CollectionItem(
 }
 
 /**
- * Composable used to display the background of a [Tab] shown in collections that is being swiped left or right.
- *
- * @param dismissDirection [DismissDirection] of the tab being swiped depending on which this composable
- * will also indicate the swipe direction by placing a warning icon at the start of the swipe gesture.
- * If `null` the warning icon will be shown at both ends.
- * @param isLastInCollection Whether the tab is to be shown between others or as the last one in collection.
- */
-@Composable
-private fun DismissedTabBackground(
-    dismissDirection: DismissDirection?,
-    isLastInCollection: Boolean,
-) {
-    Card(
-        modifier = Modifier.fillMaxSize(),
-        backgroundColor = FirefoxTheme.colors.layer3,
-        shape = if (isLastInCollection) BOTTOM_TAB_SHAPE else MIDDLE_TAB_SHAPE,
-        elevation = 0.dp,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(drawable.ic_delete),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 32.dp)
-                    // Only show the delete icon for where the swipe starts.
-                    .alpha(
-                        if (dismissDirection == StartToEnd) 1f else 0f,
-                    ),
-                tint = FirefoxTheme.colors.iconWarning,
-            )
-
-            Icon(
-                painter = painterResource(drawable.ic_delete),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 32.dp)
-                    // Only show the delete icon for where the swipe starts.
-                    .alpha(
-                        if (dismissDirection == EndToStart) 1f else 0f,
-                    ),
-                tint = FirefoxTheme.colors.iconWarning,
-            )
-        }
-    }
-}
-
-/**
  * Clips the Composable this applies to such that it cannot draw content / shadows outside it's top bound.
  */
 private fun Modifier.clipTop() = this.then(
@@ -194,12 +136,6 @@ private fun Modifier.clipTop() = this.then(
 private fun TabInCollectionPreview() {
     FirefoxTheme {
         Column {
-            Box(modifier = Modifier.height(56.dp)) {
-                DismissedTabBackground(
-                    dismissDirection = StartToEnd,
-                    isLastInCollection = false,
-                )
-            }
             CollectionItem(
                 tab = tabPreview,
                 isLastInCollection = false,
@@ -209,12 +145,6 @@ private fun TabInCollectionPreview() {
 
             Spacer(Modifier.height(10.dp))
 
-            Box(modifier = Modifier.height(56.dp)) {
-                DismissedTabBackground(
-                    dismissDirection = EndToStart,
-                    isLastInCollection = true,
-                )
-            }
             CollectionItem(
                 tab = tabPreview,
                 isLastInCollection = true,
