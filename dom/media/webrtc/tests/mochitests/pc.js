@@ -2481,8 +2481,8 @@ var setupIceServerConfig = useIceServer => {
 };
 
 async function runNetworkTest(testFunction, fixtureOptions = {}) {
-  let { AppConstants } = SpecialPowers.ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
+  let { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
   );
 
   await scriptsReady;

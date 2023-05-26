@@ -16,6 +16,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
 });
 
@@ -98,11 +99,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "DiscoveryStreamFeed",
   "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NimbusFeatures",
-  "resource://nimbus/ExperimentAPI.jsm"
 );
 
 const REGION_BASIC_CONFIG =

@@ -5,8 +5,8 @@
 
 // Test whether a visit information is annotated correctly when searching on searchbar.
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
 
 const FRECENCY = {

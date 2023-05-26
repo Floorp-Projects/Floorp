@@ -1,5 +1,5 @@
-const { ChromeMigrationUtils } = ChromeUtils.import(
-  "resource:///modules/ChromeMigrationUtils.jsm"
+const { ChromeMigrationUtils } = ChromeUtils.importESModule(
+  "resource:///modules/ChromeMigrationUtils.sys.mjs"
 );
 const { ExperimentAPI } = ChromeUtils.importESModule(
   "resource://nimbus/ExperimentAPI.sys.mjs"

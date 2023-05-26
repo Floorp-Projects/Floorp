@@ -634,8 +634,8 @@ async function createTranslationModelsRemoteClient(
     }
   }
 
-  const { RemoteSettings } = ChromeUtils.import(
-    "resource://services-settings/remote-settings.js"
+  const { RemoteSettings } = ChromeUtils.importESModule(
+    "resource://services-settings/remote-settings.sys.mjs"
   );
   const client = RemoteSettings("test-translation-models");
   const metadata = {};
@@ -662,8 +662,8 @@ async function createTranslationsWasmRemoteClient(
     schema: Date.now(),
   }));
 
-  const { RemoteSettings } = ChromeUtils.import(
-    "resource://services-settings/remote-settings.js"
+  const { RemoteSettings } = ChromeUtils.importESModule(
+    "resource://services-settings/remote-settings.sys.mjs"
   );
   const client = RemoteSettings("test-translations-wasm");
   const metadata = {};
@@ -692,8 +692,8 @@ async function createLanguageIdModelsRemoteClient(
     },
   ];
 
-  const { RemoteSettings } = ChromeUtils.import(
-    "resource://services-settings/remote-settings.js"
+  const { RemoteSettings } = ChromeUtils.importESModule(
+    "resource://services-settings/remote-settings.sys.mjs"
   );
   const client = RemoteSettings("test-language-id-models");
   const metadata = {};

@@ -316,8 +316,8 @@ class ScreenshotsHelper {
 
   async zoomBrowser(zoom) {
     await SpecialPowers.spawn(this.browser, [zoom], zoomLevel => {
-      const { Layout } = ChromeUtils.import(
-        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+      const { Layout } = ChromeUtils.importESModule(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
       );
       Layout.zoomDocument(content.document, zoomLevel);
     });

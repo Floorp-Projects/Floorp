@@ -3,7 +3,9 @@
 // In an SJS file we need to get the setTimeout bits ourselves, despite
 // what eslint might think applies for browser tests.
 // eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
-let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+let { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 async function handleRequest(request, response) {
   let hinted =

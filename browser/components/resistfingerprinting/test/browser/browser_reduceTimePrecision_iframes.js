@@ -19,11 +19,9 @@
 
 requestLongerTimeout(3);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+});
 
 // =============================================================================================
 // =============================================================================================

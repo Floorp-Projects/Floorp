@@ -20,12 +20,8 @@ import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BackgroundTasksUtils",
-  "resource://gre/modules/BackgroundTasksUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 

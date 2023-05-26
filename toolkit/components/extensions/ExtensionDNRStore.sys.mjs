@@ -17,13 +17,13 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Extension: "resource://gre/modules/Extension.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

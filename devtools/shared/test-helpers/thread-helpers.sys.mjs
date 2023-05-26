@@ -7,6 +7,8 @@
  **/
 
 function getSandboxWithDebuggerSymbol() {
+  // Bug 1835268 - Changing this to an ES module import currently throws an
+  // assertion in test_javascript_tracer.js in debug builds.
   const { addDebuggerToGlobal } = ChromeUtils.import(
     "resource://gre/modules/jsdebugger.jsm"
   );

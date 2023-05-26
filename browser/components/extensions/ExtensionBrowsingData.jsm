@@ -21,10 +21,7 @@ XPCOMUtils.defineLazyGetter(lazy, "makeRange", () => {
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Sanitizer: "resource:///modules/Sanitizer.jsm",
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
 });
 
 class BrowsingDataDelegate {

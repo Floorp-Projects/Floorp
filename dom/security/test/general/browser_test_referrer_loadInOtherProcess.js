@@ -77,8 +77,8 @@ var checkResult = async function (isRemote, browserKey, uri) {
         sessionHistory.count - 1
       );
 
-      var { E10SUtils } = SpecialPowers.ChromeUtils.import(
-        "resource://gre/modules/E10SUtils.jsm"
+      var { E10SUtils } = SpecialPowers.ChromeUtils.importESModule(
+        "resource://gre/modules/E10SUtils.sys.mjs"
       );
 
       Assert.equal(entry.URI.spec, args.uri, "Uri should be correct");

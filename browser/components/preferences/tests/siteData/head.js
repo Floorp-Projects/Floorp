@@ -26,11 +26,9 @@ const TEST_SERVICE_WORKER_URL =
 const REMOVE_DIALOG_URL =
   "chrome://browser/content/preferences/dialogs/siteDataRemoveSelected.xhtml";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SiteDataTestUtils",
-  "resource://testing-common/SiteDataTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

@@ -3,11 +3,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Sanitizer",
-  "resource:///modules/Sanitizer.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
+});
 
 async function test_sanitize_offlineApps(storageHelpersScript) {
   const extension = ExtensionTestUtils.loadExtension({
