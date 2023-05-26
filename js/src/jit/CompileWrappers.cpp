@@ -132,38 +132,20 @@ gc::FreeSpan** CompileZone::addressOfFreeList(gc::AllocKind allocKind) {
   return zone()->arenas.addressOfFreeList(allocKind);
 }
 
+bool CompileZone::allocNurseryObjects() {
+  return zone()->allocNurseryObjects();
+}
+
+bool CompileZone::allocNurseryStrings() {
+  return zone()->allocNurseryStrings();
+}
+
+bool CompileZone::allocNurseryBigInts() {
+  return zone()->allocNurseryBigInts();
+}
+
 void* CompileZone::addressOfNurseryPosition() {
   return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
-}
-
-void* CompileZone::addressOfStringNurseryPosition() {
-  // Objects and strings share a nursery, for now at least.
-  return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
-}
-
-void* CompileZone::addressOfBigIntNurseryPosition() {
-  // Objects and BigInts share a nursery, for now at least.
-  return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
-}
-
-const void* CompileZone::addressOfNurseryCurrentEnd() {
-  return zone()->runtimeFromAnyThread()->gc.addressOfNurseryCurrentEnd();
-}
-
-const void* CompileZone::addressOfStringNurseryCurrentEnd() {
-  // Although objects and strings share a nursery (and this may change)
-  // there is still a separate string end address.  The only time it
-  // is different from the regular end address, is when nursery strings are
-  // disabled (it will be NULL).
-  //
-  // This function returns _a pointer to_ that end address.
-  return zone()->runtimeFromAnyThread()->gc.addressOfStringNurseryCurrentEnd();
-}
-
-const void* CompileZone::addressOfBigIntNurseryCurrentEnd() {
-  // Similar to Strings, BigInts also share the nursery with other nursery
-  // allocatable things.
-  return zone()->runtimeFromAnyThread()->gc.addressOfBigIntNurseryCurrentEnd();
 }
 
 void* CompileZone::addressOfNurseryAllocatedSites() {

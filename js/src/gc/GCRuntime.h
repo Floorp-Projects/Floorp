@@ -368,15 +368,6 @@ class GCRuntime {
   void* addressOfNurseryPosition() {
     return nursery_.refNoCheck().addressOfPosition();
   }
-  const void* addressOfNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentEnd();
-  }
-  const void* addressOfStringNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentStringEnd();
-  }
-  const void* addressOfBigIntNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentBigIntEnd();
-  }
 
   const void* addressOfLastBufferedWholeCell() {
     return storeBuffer_.refNoCheck().addressOfLastBufferedWholeCell();
