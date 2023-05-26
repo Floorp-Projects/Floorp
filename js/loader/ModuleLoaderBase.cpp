@@ -454,7 +454,14 @@ nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
 }
 
 bool ModuleLoaderBase::RemoveFetchedModule(nsIURI* aURL) {
-  MOZ_ASSERT(IsModuleFetched(aURL));
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+  RefPtr<ModuleScript> ms;
+  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aURL, getter_AddRefs(ms)));
+  if (ms && ms->ModuleRecord()) {
+    JS::AssertModuleUnlinked(ms->ModuleRecord());
+  }
+#endif
+
   return mFetchedModules.Remove(aURL);
 }
 
