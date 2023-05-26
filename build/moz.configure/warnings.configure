@@ -304,6 +304,11 @@ check_and_add_warning(
 # Warn if APIs are used without available() checks on macOS.
 check_and_add_warning("-Werror=unguarded-availability-new", when=target_is_osx)
 
+# clang 17 warns about builtins being redefined and... well, we do that in
+# multiple places, some of which are third-party. Until the situation is
+# fixed, disable the new warning.
+check_and_add_warning("-Wno-error=builtin-macro-redefined")
+
 # Please keep the following last in this file
 
 # Avoid requiring complicated logic for extra warning flags in moz.build files.
