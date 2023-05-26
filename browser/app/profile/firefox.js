@@ -2457,7 +2457,11 @@ pref("devtools.inspector.showUserAgentStyles", false);
 // Show native anonymous content and user agent shadow roots
 pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the inline CSS compatiblity warning in inspector rule view
-pref("devtools.inspector.ruleview.inline-compatibility-warning.enabled", false);
+#ifdef NIGHTLY_BUILD
+  pref("devtools.inspector.ruleview.inline-compatibility-warning.enabled", true);
+#else
+  pref("devtools.inspector.ruleview.inline-compatibility-warning.enabled", false);
+#endif
 // Enable the compatibility tool in the inspector.
 pref("devtools.inspector.compatibility.enabled", true);
 // Enable overflow debugging in the inspector.
