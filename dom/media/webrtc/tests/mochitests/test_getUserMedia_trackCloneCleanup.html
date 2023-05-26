@@ -13,8 +13,10 @@
     bug: "1294605"
   });
 
-  runTest(() => getUserMedia({audio: true, video: true}).then(stream => {
-    let clone = stream.clone();
+  runTest(async () => {
+    await pushPrefs(["media.navigator.permission.fake", true]);
+    const stream = await getUserMedia({audio: true, video: true, fake: true});
+    const clone = stream.clone();
     stream.getTracks().forEach(t => t.stop());
     stream.clone().getTracks().forEach(t => stream.addTrack(t));
     is(stream.getTracks().filter(t => t.readyState == "live").length, 0,
@@ -23,7 +25,7 @@
 
     // Bug 1295352: better to be explicit about noGum here wrt future refactoring.
     return noGum();
-  }));
+  });
 </script>
 </pre>
 </body>
