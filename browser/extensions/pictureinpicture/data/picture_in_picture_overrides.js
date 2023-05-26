@@ -244,7 +244,10 @@ let AVAILABLE_PIP_OVERRIDES;
     },
 
     udemy: {
-      "https://*.udemy.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
+      "https://*.udemy.com/*": {
+        videoWrapperScriptPath: "video-wrappers/udemy.js",
+        policy: TOGGLE_POLICIES.ONE_QUARTER,
+      },
     },
 
     voot: {
