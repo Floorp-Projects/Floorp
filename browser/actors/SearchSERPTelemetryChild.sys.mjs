@@ -915,7 +915,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
 
     if (
       lazy.serpEventsEnabled &&
-      providerInfo?.components.length &&
+      providerInfo.components?.length &&
       (eventType == "load" || eventType == "pageshow")
     ) {
       searchAdImpression.pageUrl = new URL(url);
