@@ -602,18 +602,11 @@ class GCRuntime {
   // Allocator
   template <AllowGC allowGC>
   [[nodiscard]] bool checkAllocatorState(JSContext* cx, AllocKind kind);
-  template <AllowGC allowGC>
-  void* tryNewNurseryObject(JSContext* cx, size_t thingSize,
-                            AllocSite* site);
+  template <JS::TraceKind kind, AllowGC allowGC>
+  void* tryNewNurseryCell(JSContext* cx, size_t thingSize, AllocSite* site);
   template <AllowGC allowGC>
   static void* tryNewTenuredThing(JSContext* cx, AllocKind kind,
                                   size_t thingSize);
-  template <AllowGC allowGC>
-  void* tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
-                                AllocKind kind);
-  template <AllowGC allowGC>
-  void* tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
-                                AllocKind kind);
   static void* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   // Delayed marking.
