@@ -155,7 +155,7 @@ class StoreExtensionsKtTest {
 
         val channel = store.channel(owner)
 
-        val job = GlobalScope.launch {
+        val job = launch {
             channel.consumeEach { state ->
                 receivedValue = state.counter
                 latch.countDown()
