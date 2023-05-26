@@ -409,6 +409,49 @@ const tests = [
     ok(offer.sdp.includes("a=simulcast:send foo;bar"), "offer should be simulcast");
   },
 
+  async function checkCompatModeSimulcastRidlessSetParametersRacesLocalOffer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    // unicast offer
+    const aTask = queueAWebrtcTask();
+    const sldPromise =  pc1.setLocalDescription();
+
+    // Right now, we have aTask queued. The success task for sLD is not queued
+    // yet, because Firefox performs the initial steps on the microtask queue,
+    // which we have not allowed to run yet. Awaiting aTask will first clear
+    // the microtask queue, then run the task queue until aTask is finished.
+    // That _should_ result in the success task for sLD(offer) being queued.
+    await aTask;
+
+    // simulcast setParameters; the task to update [[SendEncodings]] should be
+    // queued after the success task for sLD(offer)
+    try {
+      await sender.setParameters({"encodings": [{}, {}]});
+      ok(false, "setParameters with two ridless encodings should fail");
+    } catch (e) {
+      ok(true, "setParameters with two ridless encodings should fail");
+    }
+    await sldPromise;
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    // Compat mode lets this slide, but won't try to negotiate it since we've
+    // already applied a unicast local offer.
+    isDeeply(rids, [undefined]);
+
+    // Let negotiation finish, so we can generate a new offer
+    await pc2.setRemoteDescription(pc1.localDescription);
+    await pc2.setLocalDescription();
+    await pc1.setRemoteDescription(pc2.localDescription);
+
+    const reoffer = await pc1.createOffer();
+    ok(!reoffer.sdp.includes("a=simulcast"), "reoffer should be unicast");
+  },
+
 ];
 
 runNetworkTest(async () => {
