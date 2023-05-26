@@ -42,111 +42,47 @@ int WaylandBufferSHM::mDumpSerial =
 char* WaylandBufferSHM::mDumpDir = PR_GetEnv("MOZ_WAYLAND_DUMP_DIR");
 #endif
 
-static int WaylandAllocateShmMemory(int aSize) {
-  int fd = -1;
-
-  nsAutoCString shmPrefix("/");
-  if (const char* snapName = GetSnapInstanceName()) {
-    shmPrefix.AppendPrintf("snap.%s.", snapName);
-  }
-  shmPrefix.Append("wayland.mozilla.ipc");
-
-  do {
-    static int counter = 0;
-    nsPrintfCString shmName("%s.%d", shmPrefix.get(), counter++);
-    fd = shm_open(shmName.get(), O_CREAT | O_RDWR | O_EXCL, 0600);
-    if (fd >= 0) {
-      // We don't want to use leaked file
-      if (shm_unlink(shmName.get()) != 0) {
-        NS_WARNING("shm_unlink failed");
-        return -1;
-      }
-    }
-  } while (fd < 0 && errno == EEXIST);
-
-  if (fd < 0) {
-    NS_WARNING(nsPrintfCString("shm_open failed: %s", strerror(errno)).get());
-    return -1;
-  }
-
-  int ret = 0;
-#ifdef HAVE_POSIX_FALLOCATE
-  do {
-    ret = posix_fallocate(fd, 0, aSize);
-  } while (ret == EINTR);
-  if (ret == 0) {
-    return fd;
-  }
-  if (ret != ENODEV && ret != EINVAL && ret != EOPNOTSUPP) {
-    NS_WARNING(
-        nsPrintfCString("posix_fallocate() fails to allocate shm memory: %s",
-                        strerror(ret))
-            .get());
-    close(fd);
-    return -1;
-  }
-#endif
-  do {
-    ret = ftruncate(fd, aSize);
-  } while (ret < 0 && errno == EINTR);
-  if (ret < 0) {
-    NS_WARNING(nsPrintfCString("ftruncate() fails to allocate shm memory: %s",
-                               strerror(ret))
-                   .get());
-    close(fd);
-    fd = -1;
-  }
-
-  return fd;
-}
-
 /* static */
 RefPtr<WaylandShmPool> WaylandShmPool::Create(nsWaylandDisplay* aWaylandDisplay,
                                               int aSize) {
   if (!aWaylandDisplay->GetShm()) {
-    NS_WARNING("Missing Wayland shm interface!");
+    NS_WARNING("WaylandShmPool: Missing Wayland shm interface!");
     return nullptr;
   }
 
-  RefPtr<WaylandShmPool> shmPool = new WaylandShmPool(aSize);
+  RefPtr<WaylandShmPool> shmPool = new WaylandShmPool();
 
-  shmPool->mShmPoolFd = WaylandAllocateShmMemory(aSize);
-  if (shmPool->mShmPoolFd < 0) {
+  shmPool->mShm = MakeUnique<base::SharedMemory>();
+  if (!shmPool->mShm->Create(aSize)) {
+    NS_WARNING("WaylandShmPool: Unable to allocate shared memory!");
     return nullptr;
   }
 
-  shmPool->mImageData = mmap(nullptr, aSize, PROT_READ | PROT_WRITE, MAP_SHARED,
-                             shmPool->mShmPoolFd, 0);
-  if (shmPool->mImageData == MAP_FAILED) {
-    NS_WARNING("Unable to map drawing surface!");
-    return nullptr;
-  }
-
-  shmPool->mShmPool =
-      wl_shm_create_pool(aWaylandDisplay->GetShm(), shmPool->mShmPoolFd, aSize);
+  shmPool->mSize = aSize;
+  shmPool->mShmPool = wl_shm_create_pool(
+      aWaylandDisplay->GetShm(), shmPool->mShm->CloneHandle().get(), aSize);
   if (!shmPool->mShmPool) {
+    NS_WARNING("WaylandShmPool: Unable to allocate shared memory pool!");
     return nullptr;
   }
 
   return shmPool;
 }
 
-WaylandShmPool::WaylandShmPool(int aSize)
-    : mShmPool(nullptr),
-      mShmPoolFd(-1),
-      mAllocatedSize(aSize),
-      mImageData(nullptr){};
+void* WaylandShmPool::GetImageData() {
+  if (mImageData) {
+    return mImageData;
+  }
+  if (!mShm->Map(mSize)) {
+    NS_WARNING("WaylandShmPool: Failed to map Shm!");
+    return nullptr;
+  }
+  mImageData = mShm->memory();
+  return mImageData;
+}
 
 WaylandShmPool::~WaylandShmPool() {
-  if (mImageData != MAP_FAILED) {
-    munmap(mImageData, mAllocatedSize);
-    mImageData = MAP_FAILED;
-  }
   MozClearPointer(mShmPool, wl_shm_pool_destroy);
-  if (mShmPoolFd >= 0) {
-    close(mShmPoolFd);
-    mShmPoolFd = -1;
-  }
 }
 
 static const struct wl_buffer_listener sBufferListenerWaylandBuffer = {
