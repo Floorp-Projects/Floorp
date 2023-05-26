@@ -292,6 +292,7 @@ bool MinidumpGenerator::Write(const char *path) {
     &MinidumpGenerator::WriteMiscInfoStream,
     &MinidumpGenerator::WriteBreakpadInfoStream,
     &MinidumpGenerator::WriteCrashInfoStream,
+    &MinidumpGenerator::WriteBootargsStream,
     &MinidumpGenerator::WriteThreadNamesStream,
     // Exception stream needs to be the last entry in this array as it may
     // be omitted in the case where the minidump is written without an
@@ -2027,6 +2028,39 @@ bool MinidumpGenerator::WriteCrashInfoStream(
   }
 
   list_ptr->record_count = crash_info_count;
+
+  return true;
+}
+
+bool MinidumpGenerator::WriteBootargsStream(
+    MDRawDirectory *bootargs_stream) {
+  TypedMDRVA<MDRawMacBootargs> info(&writer_);
+  if (!info.Allocate())
+    return false;
+
+  bootargs_stream->stream_type = MOZ_MACOS_BOOTARGS_STREAM;
+  bootargs_stream->location = info.location();
+
+  // We need to write *something* to the stream -- otherwise it will get
+  // corrupted. So if we fail to get kern.bootargs, or if it's empty, write
+  // an empty string -- a single terminal null.
+  size_t size = 0; // Includes terminal null
+  int rv = sysctlbyname("kern.bootargs", NULL, &size, NULL, 0);
+  if ((rv != 0) || (size == 0))
+    size = 1;
+  vector<uint8_t> bootargs(size);
+  bootargs[0] = 0;
+  if (rv == 0)
+    sysctlbyname("kern.bootargs", &bootargs[0], &size, NULL, 0);
+
+  MDLocationDescriptor bootargs_location;
+  const char *bootargs_ptr = reinterpret_cast<const char *>(&bootargs[0]);
+  if (!writer_.WriteString(bootargs_ptr, 0, &bootargs_location))
+    return false;
+
+  MDRawMacBootargs *info_ptr = info.get();
+  info_ptr->stream_type = MOZ_MACOS_BOOTARGS_STREAM;
+  info_ptr->bootargs = bootargs_location.rva;
 
   return true;
 }

@@ -163,6 +163,7 @@ class MinidumpGenerator {
   bool WriteMiscInfoStream(MDRawDirectory *misc_info_stream);
   bool WriteBreakpadInfoStream(MDRawDirectory *breakpad_info_stream);
   bool WriteCrashInfoStream(MDRawDirectory *crash_info_stream);
+  bool WriteBootargsStream(MDRawDirectory *bootargs_stream);
   bool WriteThreadNamesStream(MDRawDirectory *thread_names_stream);
 
   // Helpers

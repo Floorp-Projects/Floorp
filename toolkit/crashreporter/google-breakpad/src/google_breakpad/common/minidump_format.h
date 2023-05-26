@@ -358,6 +358,10 @@ typedef enum {
   /* Data from the __DATA,__crash_info section of every module which contains
    * one that has useful data. Only available on macOS. 0x4D7A = "Mz". */
   MOZ_MACOS_CRASH_INFO_STREAM    = 0x4d7a0001,
+
+  /* The kernel boot args on the machine where the crashed process is
+   * running. Only available on macOS. 0x4D7A = "Mz". */
+  MOZ_MACOS_BOOTARGS_STREAM      = 0x4d7a0002,
 } MDStreamType;  /* MINIDUMP_STREAM_TYPE */
 
 
@@ -1125,16 +1129,6 @@ typedef struct {
   uint8_t data[0];
 } MDRawMacCrashInfoRecord;
 
-typedef struct __attribute__((packed,aligned(4))) {
-  uint32_t thread_id;
-  MDRVA64 rva_of_thread_name;
-} MDRawThreadName;
-
-typedef struct {
-  uint32_t number_of_thread_names;
-  MDRawThreadName thread_names[0];
-} MDRawThreadNamesList;
-
 /* This is the maximum supported size for each string in
  * (MDRawMacCrashInfoRecord).data. If we encounter a string in the
  * __crash_info section which seems larger than this, that's a sign of data
@@ -1156,6 +1150,25 @@ typedef struct {
   uint32_t record_start_size;
   MDLocationDescriptor records[MAC_CRASH_INFOS_MAX];
 } MDRawMacCrashInfo;
+
+/* macOS kernel boot args */
+
+typedef struct __attribute__((packed,aligned(4))) {
+  uint32_t stream_type; /* MOZ_MACOS_BOOTARGS_STREAM */
+  MDRVA64 bootargs;
+} MDRawMacBootargs;
+
+/* Thread names */
+
+typedef struct __attribute__((packed,aligned(4))) {
+  uint32_t thread_id;
+  MDRVA64 rva_of_thread_name;
+} MDRawThreadName;
+
+typedef struct {
+  uint32_t number_of_thread_names;
+  MDRawThreadName thread_names[0];
+} MDRawThreadNamesList;
 
 #if defined(_MSC_VER)
 #pragma warning(pop)
