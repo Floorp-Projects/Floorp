@@ -1321,11 +1321,15 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                                 NavigatorUserMediaErrorCallback& aOnError,
                                 CallerType aCallerType, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-
   if (!mWindow || !mWindow->IsFullyActive()) {
     aRv.ThrowInvalidStateError("The document is not fully active.");
     return;
   }
+  GetMediaDevices(aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  MOZ_ASSERT(mMediaDevices);
   if (Document* doc = mWindow->GetExtantDoc()) {
     if (!mWindow->IsSecureContext()) {
       doc->SetUseCounter(eUseCounter_custom_MozGetUserMediaInsec);
@@ -1339,7 +1343,7 @@ void Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                                   "audio and/or video is required"),
         __func__);
   } else {
-    sp = MediaManager::Get()->GetUserMedia(mWindow, aConstraints, aCallerType);
+    sp = mMediaDevices->GetUserMedia(mWindow, aConstraints, aCallerType);
   }
   RefPtr<NavigatorUserMediaSuccessCallback> onsuccess(&aOnSuccess);
   RefPtr<NavigatorUserMediaErrorCallback> onerror(&aOnError);

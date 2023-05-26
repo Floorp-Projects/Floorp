@@ -98,33 +98,13 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
       }
     }
   }
-  bool haveFake = aConstraints.mFake.WasPassed() && aConstraints.mFake.Value();
-  const OwningBooleanOrMediaTrackConstraints& audio = aConstraints.mAudio;
-  bool isMicrophone =
-      !haveFake &&
-      (audio.IsBoolean()
-           ? audio.GetAsBoolean()
-           : !audio.GetAsMediaTrackConstraints().mMediaSource.WasPassed());
-  bool isCamera =
-      !haveFake &&
-      (video.IsBoolean()
-           ? video.GetAsBoolean()
-           : !video.GetAsMediaTrackConstraints().mMediaSource.WasPassed());
   RefPtr<MediaDevices> self(this);
-  MediaManager::Get()
-      ->GetUserMedia(owner, aConstraints, aCallerType)
+  GetUserMedia(owner, aConstraints, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this, self, p, isMicrophone,
-           isCamera](RefPtr<DOMMediaStream>&& aStream) {
+          [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
             if (!GetWindowIfCurrent()) {
               return;  // Leave Promise pending after navigation by design.
-            }
-            if (isMicrophone) {
-              mCanExposeMicrophoneInfo = true;
-            }
-            if (isCamera) {
-              mCanExposeCameraInfo = true;
             }
             p->MaybeResolve(std::move(aStream));
           },
@@ -136,6 +116,45 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
             error->Reject(p);
           });
   return p.forget();
+}
+
+RefPtr<MediaDevices::StreamPromise> MediaDevices::GetUserMedia(
+    nsPIDOMWindowInner* aWindow, const MediaStreamConstraints& aConstraints,
+    CallerType aCallerType) {
+  MOZ_ASSERT(NS_IsMainThread());
+  bool haveFake = aConstraints.mFake.WasPassed() && aConstraints.mFake.Value();
+  const OwningBooleanOrMediaTrackConstraints& video = aConstraints.mVideo;
+  const OwningBooleanOrMediaTrackConstraints& audio = aConstraints.mAudio;
+  bool isMicrophone =
+      !haveFake &&
+      (audio.IsBoolean()
+           ? audio.GetAsBoolean()
+           : !audio.GetAsMediaTrackConstraints().mMediaSource.WasPassed());
+  bool isCamera =
+      !haveFake &&
+      (video.IsBoolean()
+           ? video.GetAsBoolean()
+           : !video.GetAsMediaTrackConstraints().mMediaSource.WasPassed());
+
+  RefPtr<MediaDevices> self(this);
+  return MediaManager::Get()
+      ->GetUserMedia(aWindow, aConstraints, aCallerType)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [this, self, isMicrophone,
+           isCamera](RefPtr<DOMMediaStream>&& aStream) {
+            if (isMicrophone) {
+              mCanExposeMicrophoneInfo = true;
+            }
+            if (isCamera) {
+              mCanExposeCameraInfo = true;
+            }
+            return StreamPromise::CreateAndResolve(std::move(aStream),
+                                                   __func__);
+          },
+          [](RefPtr<MediaMgrError>&& aError) {
+            return StreamPromise::CreateAndReject(std::move(aError), __func__);
+          });
 }
 
 already_AddRefed<Promise> MediaDevices::EnumerateDevices(ErrorResult& aRv) {
