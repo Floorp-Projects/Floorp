@@ -9,6 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "DocAccessible.h"
+#include "nsAccUtils.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
@@ -65,21 +66,14 @@ static inline GSList* prependToList(GSList* aList, const char* const aName,
 AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
   nsAutoString url;
   nsAutoString mimeType;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-  if (accWrap) {
-    if (!accWrap->IsDoc()) {
-      return nullptr;
-    }
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aDocument));
 
-    DocAccessible* document = accWrap->AsDoc();
-    document->URL(url);
-    document->MimeType(mimeType);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
-    proxy->AsDoc()->URL(url);
-    proxy->MimeType(mimeType);
-  } else {
+  if (!acc || !acc->IsDoc()) {
     return nullptr;
   }
+
+  nsAccUtils::DocumentURL(acc, url);
+  nsAccUtils::DocumentMimeType(acc, mimeType);
 
   // according to atkobject.h, AtkAttributeSet is a GSList
   GSList* attributes = nullptr;
@@ -91,36 +85,17 @@ AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
 
 const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
                                          const gchar* aAttrName) {
-  RemoteAccessible* proxy = nullptr;
-  DocAccessible* document = nullptr;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-  if (accWrap) {
-    if (!accWrap->IsDoc()) {
-      return nullptr;
-    }
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aDocument));
 
-    document = accWrap->AsDoc();
-  } else {
-    proxy = GetProxy(ATK_OBJECT(aDocument));
-    if (!proxy) {
-      return nullptr;
-    }
-    MOZ_ASSERT(proxy->IsDoc());
+  if (!acc || !acc->IsDoc()) {
+    return nullptr;
   }
 
   nsAutoString attrValue;
   if (!strcasecmp(aAttrName, kDocUrlName)) {
-    if (document) {
-      document->URL(attrValue);
-    } else {
-      proxy->AsDoc()->URL(attrValue);
-    }
+    nsAccUtils::DocumentURL(acc, attrValue);
   } else if (!strcasecmp(aAttrName, kMimeTypeName)) {
-    if (document) {
-      document->MimeType(attrValue);
-    } else {
-      proxy->MimeType(attrValue);
-    }
+    nsAccUtils::DocumentMimeType(acc, attrValue);
   } else {
     return nullptr;
   }

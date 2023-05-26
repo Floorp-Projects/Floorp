@@ -16,6 +16,7 @@ addAccessibleTask(
       (browser.isRemoteBrowser ? CURRENT_CONTENT_DIR : CURRENT_DIR) +
       "e10s/doc_treeupdate_whitespace.html";
     is(docAcc.URL, topUrl, "Initial URL correct");
+    is(docAcc.mimeType, "text/html", "Mime type is correct");
     info("Changing URL");
     await invokeContentTask(browser, [], () => {
       content.history.pushState(
@@ -33,6 +34,7 @@ addAccessibleTask(
     async function testIframe() {
       queryInterfaces(iframeDocAcc, [nsIAccessibleDocument]);
       is(iframeDocAcc.URL, src, "Initial URL correct");
+      is(iframeDocAcc.mimeType, "text/html", "Mime type is correct");
       info("Changing URL");
       await invokeContentTask(browser, [], async () => {
         await SpecialPowers.spawn(content.iframe, [], () => {

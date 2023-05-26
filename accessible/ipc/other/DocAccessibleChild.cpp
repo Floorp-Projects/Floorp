@@ -60,16 +60,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollSubstringToPoint(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvMimeType(const uint64_t& aID,
-                                                         nsString* aMime) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc && acc->IsDoc()) {
-    acc->AsDoc()->MimeType(*aMime);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
   if (FocusManager* focusMgr = FocusMgr()) {
     focusMgr->ForceFocusEvent();

@@ -3824,6 +3824,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(nsGkAtoms::_moz_device_pixel_ratio,
                              appUnitsPerDevPixel);
       }
+
+      nsString mimeType;
+      AsDoc()->MimeType(mimeType);
+      fields->SetAttribute(nsGkAtoms::headerContentType, std::move(mimeType));
     }
   }
 

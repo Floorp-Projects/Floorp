@@ -259,6 +259,13 @@ class nsAccUtils {
   static void DocumentURL(Accessible* aDoc, nsAString& aURL);
 
   /**
+   * Get the mime type for a given document.
+   * This function is needed because there is no unified base class for local
+   * and remote documents.
+   */
+  static void DocumentMimeType(Accessible* aDoc, nsAString& aMimeType);
+
+  /**
    * Accessors for element attributes that are aware of CustomElement ARIA
    * accessibility defaults. If the element does not have the provided
    * attribute defined directly on it, we will then attempt to fetch the

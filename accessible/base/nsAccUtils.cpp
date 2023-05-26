@@ -526,6 +526,14 @@ void nsAccUtils::DocumentURL(Accessible* aDoc, nsAString& aURL) {
   return aDoc->AsRemote()->AsDoc()->URL(aURL);
 }
 
+void nsAccUtils::DocumentMimeType(Accessible* aDoc, nsAString& aMimeType) {
+  MOZ_ASSERT(aDoc && aDoc->IsDoc());
+  if (LocalAccessible* localAcc = aDoc->AsLocal()) {
+    return localAcc->AsDoc()->MimeType(aMimeType);
+  }
+  return aDoc->AsRemote()->AsDoc()->MimeType(aMimeType);
+}
+
 // ARIA Accessibility Default Accessors
 const AttrArray* nsAccUtils::GetARIADefaults(dom::Element* aElement) {
   auto* element = nsGenericHTMLElement::FromNode(aElement);
