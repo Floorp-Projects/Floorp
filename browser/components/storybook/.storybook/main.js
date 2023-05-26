@@ -33,11 +33,14 @@ function rewriteChromeUri(uri) {
 }
 
 module.exports = {
+  // The ordering for this stories array affects the order that they are displayed in Storybook
   stories: [
-    "../**/*.stories.md",
-    "../stories/**/*.stories.mdx",
-    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
+    // Docs section
+    "../**/README.*.stories.md",
+    // UI Widgets section
     `${projectRoot}/toolkit/content/widgets/**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
+    // Everything else
+    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
   ],
   // Additions to the staticDirs might also need to get added to
   // MozXULElement.importCss in preview.mjs to enable auto-reloading.
