@@ -9,6 +9,7 @@
 
 #include "nsIEffectiveTLDService.h"
 #include "nsITrackingDBService.h"
+#include "nsIWebProgressListener.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -102,6 +103,8 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
                         aTrackingFullHashes);
       break;
 
+    case nsIWebProgressListener::STATE_REPLACED_FINGERPRINTING_CONTENT:
+    case nsIWebProgressListener::STATE_ALLOWED_FINGERPRINTING_CONTENT:
     case nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT:
     case nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT:
       RecordLogInternal(aOrigin, aType, blockedValue);
