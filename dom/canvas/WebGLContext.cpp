@@ -923,7 +923,7 @@ constexpr auto MakeArray(Args... args) -> std::array<T, sizeof...(Args)> {
 
 inline gfx::ColorSpace2 ToColorSpace2(const WebGLContextOptions& options) {
   auto ret = gfx::ColorSpace2::UNKNOWN;
-  if (StaticPrefs::gfx_color_management_native_srgb()) {
+  if (true) {
     ret = gfx::ColorSpace2::SRGB;
   }
   if (!options.ignoreColorSpace) {
