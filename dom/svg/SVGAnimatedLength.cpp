@@ -93,7 +93,7 @@ static bool GetValueFromString(const nsAString& aString, float& aValue,
   }
   const nsAString& units = Substring(iter.get(), end.get());
   *aUnitType = SVGLength::GetUnitTypeForString(units);
-  return SVGLength::IsValidUnitType(*aUnitType);
+  return *aUnitType != SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
 }
 
 static float FixAxisLength(float aLength) {

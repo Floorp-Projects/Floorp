@@ -79,6 +79,8 @@ class SVGAnimatedOrient {
       SVGElement* aSVGElement);
   UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
+  static bool IsValidUnitType(uint16_t aUnitType);
+
   static bool GetValueFromString(const nsAString& aString, float& aValue,
                                  uint16_t* aUnitType);
   static float GetDegreesPerUnit(uint8_t aUnit);

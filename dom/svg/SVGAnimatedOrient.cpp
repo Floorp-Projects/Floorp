@@ -73,9 +73,7 @@ class MOZ_RAII AutoChangeOrientNotifier {
   bool mDoSetAttr;
 };
 
-static bool IsValidAngleUnitType(uint16_t aUnitType) {
-  return aUnitType > SVG_ANGLETYPE_UNKNOWN && aUnitType <= SVG_ANGLETYPE_GRAD;
-}
+const unsigned short SVG_ANGLETYPE_TURN = 5;
 
 static void GetAngleUnitString(nsAString& aUnit, uint16_t aUnitType) {
   switch (aUnitType) {
@@ -90,6 +88,9 @@ static void GetAngleUnitString(nsAString& aUnit, uint16_t aUnitType) {
       return;
     case SVG_ANGLETYPE_GRAD:
       aUnit.AssignLiteral("grad");
+      return;
+    case SVG_ANGLETYPE_TURN:
+      aUnit.AssignLiteral("turn");
       return;
   }
 
@@ -109,6 +110,9 @@ static uint16_t GetAngleUnitTypeForString(const nsAString& aUnit) {
   if (aUnit.LowerCaseEqualsLiteral("grad")) {
     return SVG_ANGLETYPE_GRAD;
   }
+  if (aUnit.LowerCaseEqualsLiteral("turn")) {
+    return SVG_ANGLETYPE_TURN;
+  }
   return SVG_ANGLETYPE_UNKNOWN;
 }
 
@@ -119,6 +123,11 @@ static void GetAngleValueString(nsAString& aValueAsString, float aValue,
   nsAutoString unitString;
   GetAngleUnitString(unitString, aUnitType);
   aValueAsString.Append(unitString);
+}
+
+/*static*/
+bool SVGAnimatedOrient::IsValidUnitType(uint16_t aUnitType) {
+  return aUnitType > SVG_ANGLETYPE_UNKNOWN && aUnitType <= SVG_ANGLETYPE_GRAD;
 }
 
 /* static */
@@ -140,7 +149,7 @@ bool SVGAnimatedOrient::GetValueFromString(const nsAString& aString,
 
   const nsAString& units = Substring(iter.get(), end.get());
   *aUnitType = GetAngleUnitTypeForString(units);
-  return IsValidAngleUnitType(*aUnitType);
+  return *aUnitType != SVG_ANGLETYPE_UNKNOWN;
 }
 
 /* static */
@@ -153,6 +162,8 @@ float SVGAnimatedOrient::GetDegreesPerUnit(uint8_t aUnit) {
       return static_cast<float>(180.0 / M_PI);
     case SVG_ANGLETYPE_GRAD:
       return 90.0f / 100.0f;
+    case SVG_ANGLETYPE_TURN:
+      return 360.0f;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown unit type");
       return 0;
@@ -177,7 +188,9 @@ void SVGAnimatedOrient::SetBaseValueInSpecifiedUnits(float aValue,
 
 nsresult SVGAnimatedOrient::ConvertToSpecifiedUnits(uint16_t unitType,
                                                     SVGElement* aSVGElement) {
-  if (!IsValidAngleUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!IsValidUnitType(unitType)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   if (mBaseValUnit == uint8_t(unitType) &&
       mBaseType == SVG_MARKER_ORIENT_ANGLE) {
@@ -195,7 +208,9 @@ nsresult SVGAnimatedOrient::NewValueSpecifiedUnits(uint16_t aUnitType,
                                                    SVGElement* aSVGElement) {
   NS_ENSURE_FINITE(aValueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
-  if (!IsValidAngleUnitType(aUnitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!IsValidUnitType(aUnitType)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   if (mBaseVal == aValueInSpecifiedUnits &&
       mBaseValUnit == uint8_t(aUnitType) &&

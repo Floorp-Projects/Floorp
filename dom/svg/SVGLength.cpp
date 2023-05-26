@@ -46,7 +46,7 @@ bool SVGLength::SetValueFromString(const nsAString& aString) {
 
   const nsAString& units = Substring(iter.get(), end.get());
   uint16_t unitType = GetUnitTypeForString(units);
-  if (!IsValidUnitType(unitType)) {
+  if (unitType == SVG_LENGTHTYPE_UNKNOWN) {
     return false;
   }
   mValue = value;
