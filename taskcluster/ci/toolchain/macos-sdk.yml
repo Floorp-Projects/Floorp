@@ -3,25 +3,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: b-osx-1015
+    attributes:
+        local-toolchain: true
+    worker-type: b-linux-gcp
     worker:
         max-run-time: 1800
         env:
             PATH: "/usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin"
     run:
-        script: pack.sh
+        script: unpack-sdk.py
+        resources:
+            - python/mozbuild/mozpack/macpkg.py
+            - taskcluster/scripts/misc/unpack-sdk.py
     # Expiry similar to that of fetches
     expires-after: 1000 years
 
 macosx64-sdk-13.0:
     description: "MacOSX13.0 SDK"
-    attributes:
-        local-toolchain: true
     treeherder:
         symbol: TM(sdk13.0)
-    worker-type: b-linux-gcp
     run:
-        script: unpack-sdk.py
         arguments:
             - https://swcdn.apple.com/content/downloads/38/50/012-70652-A_2ZHIRHCHLN/f8b81s6tzlzrj0z67ynydjx4x1lwhr08ab/CLTools_macOSNMOS_SDK.pkg
             - 06f4a045854c456a553a5ee6acf678fbe26c06296fc68054ae918c206134aa20
@@ -29,19 +30,12 @@ macosx64-sdk-13.0:
         toolchain-artifact: project/gecko/mac-sdk/MacOSX13.0.sdk.tar.zst
         toolchain-alias:
             - MacOSX13.0.sdk
-        resources:
-            - python/mozbuild/mozpack/macpkg.py
-            - taskcluster/scripts/misc/unpack-sdk.py
 
 macosx64-sdk-13.3:
-    description: "MacOSX13.0 SDK"
-    attributes:
-        local-toolchain: true
+    description: "MacOSX13.3 SDK"
     treeherder:
         symbol: TM(sdk13.3)
-    worker-type: b-linux-gcp
     run:
-        script: unpack-sdk.py
         arguments:
             - https://swcdn.apple.com/content/downloads/38/61/032-64167-A_F8LL7XSTW6/k3kg0uip4kxd3qupgy6y8fzp27mnxdpt6y/CLTools_macOSNMOS_SDK.pkg
             - fd66f6b953aeb62cf9635f4b423ceee985a2d25405c5306306e49102b26bb49b
@@ -51,6 +45,3 @@ macosx64-sdk-13.3:
             - macosx64-sdk
             - macosx64-sdk-toolchain
             - MacOSX13.3.sdk
-        resources:
-            - python/mozbuild/mozpack/macpkg.py
-            - taskcluster/scripts/misc/unpack-sdk.py
