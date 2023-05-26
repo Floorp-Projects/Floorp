@@ -476,15 +476,6 @@ compartment wrapper.
 If <i>value</i> is a native function in the debugger's compartment, return
 whether the referent is a native function for the same C++ native.
 
-### `isSameNativeWithJitInfo(value)`
-If <i>value</i> is a native function in the debugger's compartment, return
-whether the referent is a native function for the same C++ native with the
-same JSJitInfo pointer value.
-
-This can be used to distinguish functions with shared native function
-implementation with different JSJitInfo pointer to define the underlying
-functionality.
-
 ### `isNativeGetterWithJitInfo()`
 Return whether the referent is a native getter function with JSJitInfo.
 
