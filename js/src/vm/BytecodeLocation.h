@@ -159,7 +159,7 @@ class BytecodeLocation {
   }
 
   // Add an offset.
-  BytecodeLocation operator+(const BytecodeLocationOffset& offset) {
+  BytecodeLocation operator+(const BytecodeLocationOffset& offset) const {
     return BytecodeLocation(*this, rawBytecode_ + offset.rawOffset());
   }
 
