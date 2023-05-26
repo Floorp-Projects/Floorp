@@ -345,6 +345,11 @@ interface nsIDNSService : nsISupports
     readonly attribute ACString trrDomain;
 
     /**
+     * returns the telemetry key for current TRR domain.
+     */
+    readonly attribute ACString TRRDomainKey;
+
+    /**
      * Returns true when we have valid ODoHConfigs to encrypt/decrypt oblivious
      * DNS packets.
      */

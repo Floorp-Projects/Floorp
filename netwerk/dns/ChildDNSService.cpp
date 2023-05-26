@@ -501,8 +501,9 @@ void ChildDNSService::SetTRRDomain(const nsACString& aTRRDomain) {
   TRRService::SetProviderDomain(aTRRDomain);
 }
 
-void ChildDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
+nsresult ChildDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
   aTRRDomain = TRRService::ProviderKey();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

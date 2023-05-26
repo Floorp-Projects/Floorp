@@ -1506,6 +1506,11 @@ nsDNSService::GetTrrDomain(nsACString& aTRRDomain) {
   return uri->GetHost(aTRRDomain);
 }
 
+nsresult nsDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
+  aTRRDomain = TRRService::ProviderKey();
+  return NS_OK;
+}
+
 size_t nsDNSService::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it

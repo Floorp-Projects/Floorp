@@ -251,7 +251,6 @@
 #include "mozilla/ipc/IdleSchedulerChild.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/net/ChannelEventQueue.h"
-#include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/RequestContextService.h"
@@ -327,6 +326,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocumentObserver.h"
+#include "nsIDNSService.h"
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
 #include "nsIEffectiveTLDService.h"
@@ -2093,9 +2093,13 @@ void Document::AccumulatePageLoadTelemetry(
     bool resolvedByTRR = false;
     Unused << httpChannel->GetIsResolvedByTRR(&resolvedByTRR);
     if (resolvedByTRR) {
-      RefPtr<net::ChildDNSService> dnsServiceChild =
-          net::ChildDNSService::GetSingleton();
-      dnsServiceChild->GetTRRDomainKey(dnsKey);
+      if (nsCOMPtr<nsIDNSService> dns =
+              do_GetService(NS_DNSSERVICE_CONTRACTID)) {
+        dns->GetTRRDomainKey(dnsKey);
+      } else {
+        // Failed to get the DNS service.
+        dnsKey = "(fail)"_ns;
+      }
       aEventTelemetryDataOut.trrDomain = mozilla::Some(dnsKey);
     }
 
