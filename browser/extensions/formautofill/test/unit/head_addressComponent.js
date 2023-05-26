@@ -6,8 +6,8 @@ const { AddressComparison, AddressComponent } = ChromeUtils.importESModule(
   "resource://gre/modules/shared/AddressComponent.sys.mjs"
 );
 
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
+const { FormAutofill } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofill.sys.mjs"
 );
 
 const BOTH_EMPTY = AddressComparison.BOTH_EMPTY;

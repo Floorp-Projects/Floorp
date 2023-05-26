@@ -60,6 +60,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
   SITEPERMS_ADDON_TYPE:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
+  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -78,7 +79,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
-  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "resourceProtocol", () =>

@@ -9,8 +9,8 @@
  * we clear storage under the correct partition.
  */
 
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 
 const HOST_A = "example.com";

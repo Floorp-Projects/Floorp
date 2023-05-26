@@ -9,8 +9,8 @@ const { ExperimentFakes, ExperimentTestUtils } = ChromeUtils.importESModule(
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
-const { TelemetryEvents } = ChromeUtils.import(
-  "resource://normandy/lib/TelemetryEvents.jsm"
+const { TelemetryEvents } = ChromeUtils.importESModule(
+  "resource://normandy/lib/TelemetryEvents.sys.mjs"
 );
 
 const LOCALIZATIONS = {

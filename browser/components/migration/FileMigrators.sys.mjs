@@ -5,8 +5,10 @@
 const lazy = {};
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginCSVImport: "resource://gre/modules/LoginCSVImport.sys.mjs",
+  MigrationWizardConstants:
+    "chrome://browser/content/migration/migration-wizard-constants.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
@@ -14,11 +16,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
     "branding/brand.ftl",
     "browser/migrationWizard.ftl",
   ]);
-});
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  MigrationWizardConstants:
-    "chrome://browser/content/migration/migration-wizard-constants.mjs",
 });
 
 /**

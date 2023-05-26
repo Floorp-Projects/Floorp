@@ -7,15 +7,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormHistory",
-  "resource://gre/modules/FormHistory.jsm"
-);
 
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;

@@ -55,8 +55,8 @@ worker.onerror = function (event) {
   SimpleTest.finish();
 };
 
-var { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 var isNightly = AppConstants.NIGHTLY_BUILD;
 var isRelease = AppConstants.RELEASE_OR_BETA;

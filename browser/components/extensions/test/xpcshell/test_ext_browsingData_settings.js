@@ -4,12 +4,8 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "Sanitizer",
-  "resource:///modules/Sanitizer.jsm"
-);
 
 const PREF_DOMAIN = "privacy.cpd.";
 const SETTINGS_LIST = [

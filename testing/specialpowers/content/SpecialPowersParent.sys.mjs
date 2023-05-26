@@ -11,13 +11,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
   PerTestCoverageUtils:
     "resource://testing-common/PerTestCoverageUtils.sys.mjs",
+  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
   SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
-  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
 });
 
 class SpecialPowersError extends Error {

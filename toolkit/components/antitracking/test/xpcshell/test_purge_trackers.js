@@ -12,8 +12,8 @@ const FOREIGN_PAGE3 = "https://example.net^partitionKey=(https,example.org)";
 const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
-const { SiteDataTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SiteDataTestUtils.jsm"
+const { SiteDataTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SiteDataTestUtils.sys.mjs"
 );
 const { PermissionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PermissionTestUtils.sys.mjs"

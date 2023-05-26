@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
   UrlbarProvider,
@@ -14,6 +12,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -22,7 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
 });
 
 const DYNAMIC_RESULT_TYPE = "contextualSearch";

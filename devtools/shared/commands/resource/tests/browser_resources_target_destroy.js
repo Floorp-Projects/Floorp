@@ -35,8 +35,8 @@ add_task(async function () {
       const { require } = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs"
       );
-      const { TargetActorRegistry } = ChromeUtils.import(
-        "resource://devtools/server/actors/targets/target-actor-registry.jsm"
+      const { TargetActorRegistry } = ChromeUtils.importESModule(
+        "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
       );
       const {
         getResourceWatcher,

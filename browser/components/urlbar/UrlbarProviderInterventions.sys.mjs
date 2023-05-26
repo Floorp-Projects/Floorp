@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NLP: "resource://gre/modules/NLP.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
@@ -23,7 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "appUpdater", () => new lazy.AppUpdater());

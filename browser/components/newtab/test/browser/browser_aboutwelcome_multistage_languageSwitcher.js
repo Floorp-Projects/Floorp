@@ -1,7 +1,7 @@
 "use strict";
 
-const { getAddonAndLocalAPIsMocker } = ChromeUtils.import(
-  "resource://testing-common/LangPackMatcherTestUtils.jsm"
+const { getAddonAndLocalAPIsMocker } = ChromeUtils.importESModule(
+  "resource://testing-common/LangPackMatcherTestUtils.sys.mjs"
 );
 
 const { AWScreenUtils } = ChromeUtils.import(

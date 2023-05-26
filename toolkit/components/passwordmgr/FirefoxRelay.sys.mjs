@@ -10,9 +10,7 @@ import {
 } from "resource://gre/modules/LoginHelper.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
+import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const lazy = {};
 
