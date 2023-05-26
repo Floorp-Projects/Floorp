@@ -50,8 +50,7 @@ bool ContentCache::IsValid() const {
     }
   } else {
     // mSelection depends on mText.
-    if (mSelection.isSome() && (NS_WARN_IF(mText.isNothing()) ||
-                                NS_WARN_IF(!mSelection->IsValidIn(*mText)))) {
+    if (mSelection.isSome() && NS_WARN_IF(!mSelection->IsValidIn(*mText))) {
       return false;
     }
 
@@ -161,6 +160,7 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
        PrintStringDetail(mText, PrintStringDetail::kMaxLengthForEditor).get()));
 
   mSelection.reset();
+  mCaret.reset();
 
   if (mText.isNothing()) {
     return false;
@@ -203,7 +203,7 @@ bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
                                      const IMENotification* aNotification) {
   mCaret.reset();
 
-  if (MOZ_UNLIKELY(mSelection.isNothing())) {
+  if (mSelection.isNothing()) {
     return false;
   }
 
@@ -274,8 +274,7 @@ bool ContentCacheInChild::CacheCaretAndTextRects(
           ("0x%p CacheCaretAndTextRects(aWidget=0x%p, aNotification=%s)", this,
            aWidget, GetNotificationName(aNotification)));
 
-  const bool caretCached =
-      mSelection.isSome() && CacheCaret(aWidget, aNotification);
+  const bool caretCached = CacheCaret(aWidget, aNotification);
   const bool textRectsCached = CacheTextRects(aWidget, aNotification);
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return caretCached || textRectsCached;
@@ -424,58 +423,51 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     mTextRectArray.reset();
   }
 
-  // Set mSelection->mAnchorCharRects
-  // If we've already have the rect in mTextRectArray, save the query cost.
-  if (mSelection.isSome() && mSelection->mHasRange && mTextRectArray.isSome() &&
-      mTextRectArray->IsOffsetInRange(mSelection->mAnchor) &&
-      (!mSelection->mAnchor ||
-       mTextRectArray->IsOffsetInRange(mSelection->mAnchor - 1))) {
-    mSelection->mAnchorCharRects[eNextCharRect] =
-        mTextRectArray->GetRect(mSelection->mAnchor);
-    if (mSelection->mAnchor) {
-      mSelection->mAnchorCharRects[ePrevCharRect] =
-          mTextRectArray->GetRect(mSelection->mAnchor - 1);
-    }
-  }
-  // Otherwise, get it from content even if there is no selection ranges.
-  else {
-    RectArray rects;
-    const uint32_t startOffset =
-        mSelection.isSome() && mSelection->mHasRange && mSelection->mAnchor
-            ? mSelection->mAnchor - 1u
-            : 0u;
-    const uint32_t length =
-        mSelection.isSome() && mSelection->mHasRange && mSelection->mAnchor
-            ? 2u
-            : 1u;
-    if (NS_WARN_IF(!QueryCharRectArray(aWidget, startOffset, length, rects))) {
-      MOZ_LOG(sContentCacheLog, LogLevel::Error,
-              ("0x%p   CacheTextRects(), FAILED, couldn't retrieve text rect "
-               "array around the selection anchor (%s)",
-               this,
-               mSelection ? ToString(mSelection->mAnchor).c_str() : "Nothing"));
-      MOZ_ASSERT_IF(mSelection.isSome(),
-                    mSelection->mAnchorCharRects[ePrevCharRect].IsEmpty());
-      MOZ_ASSERT_IF(mSelection.isSome(),
-                    mSelection->mAnchorCharRects[eNextCharRect].IsEmpty());
-    } else if (rects.Length()) {
-      if (mSelection.isNothing()) {
-        mSelection.emplace();  // With no range
-      }
-      if (rects.Length() > 1) {
-        mSelection->mAnchorCharRects[ePrevCharRect] = rects[0];
-        mSelection->mAnchorCharRects[eNextCharRect] = rects[1];
-      } else {
-        mSelection->mAnchorCharRects[eNextCharRect] = rects[0];
-        MOZ_ASSERT(mSelection->mAnchorCharRects[ePrevCharRect].IsEmpty());
-      }
-    }
-  }
-
-  // Note that if mSelection is Nothing here, we've already failed to get
-  // rects in the `else` block above.  In such case, we cannot get character
-  // rects around focus point.
   if (mSelection.isSome()) {
+    // Set mSelection->mAnchorCharRects
+    // If we've already have the rect in mTextRectArray, save the query cost.
+    if (mSelection->mHasRange && mTextRectArray.isSome() &&
+        mTextRectArray->IsOffsetInRange(mSelection->mAnchor) &&
+        (!mSelection->mAnchor ||
+         mTextRectArray->IsOffsetInRange(mSelection->mAnchor - 1))) {
+      mSelection->mAnchorCharRects[eNextCharRect] =
+          mTextRectArray->GetRect(mSelection->mAnchor);
+      if (mSelection->mAnchor) {
+        mSelection->mAnchorCharRects[ePrevCharRect] =
+            mTextRectArray->GetRect(mSelection->mAnchor - 1);
+      }
+    }
+    // Otherwise, get it from content even if there is no selection ranges.
+    else {
+      RectArray rects;
+      const uint32_t startOffset = mSelection->mHasRange && mSelection->mAnchor
+                                       ? mSelection->mAnchor - 1u
+                                       : 0u;
+      const uint32_t length =
+          mSelection->mHasRange && mSelection->mAnchor ? 2u : 1u;
+      if (NS_WARN_IF(
+              !QueryCharRectArray(aWidget, startOffset, length, rects))) {
+        MOZ_LOG(
+            sContentCacheLog, LogLevel::Error,
+            ("0x%p   CacheTextRects(), FAILED, couldn't retrieve text rect "
+             "array around the selection anchor (%s)",
+             this,
+             mSelection ? ToString(mSelection->mAnchor).c_str() : "Nothing"));
+        MOZ_ASSERT_IF(mSelection.isSome(),
+                      mSelection->mAnchorCharRects[ePrevCharRect].IsEmpty());
+        MOZ_ASSERT_IF(mSelection.isSome(),
+                      mSelection->mAnchorCharRects[eNextCharRect].IsEmpty());
+      } else if (rects.Length()) {
+        if (rects.Length() > 1) {
+          mSelection->mAnchorCharRects[ePrevCharRect] = rects[0];
+          mSelection->mAnchorCharRects[eNextCharRect] = rects[1];
+        } else {
+          mSelection->mAnchorCharRects[eNextCharRect] = rects[0];
+          MOZ_ASSERT(mSelection->mAnchorCharRects[ePrevCharRect].IsEmpty());
+        }
+      }
+    }
+
     // Set mSelection->mFocusCharRects
     // If selection is collapsed (including no selection case), the focus char
     // rects are same as the anchor char rects so that we can just copy them.
