@@ -297,7 +297,7 @@ class ContentParent final : public PContentParent,
       return *this;
     }
 
-    bool operator!=(const ContentParentIterator& aOther) {
+    bool operator!=(const ContentParentIterator& aOther) const {
       MOZ_ASSERT(mPolicy == aOther.mPolicy);
       return mCurrent != aOther.mCurrent;
     }

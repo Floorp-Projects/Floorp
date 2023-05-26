@@ -828,12 +828,12 @@ class BrowserParent final : public PBrowserParent,
   static void UnsetLastMouseRemoteTarget(BrowserParent* aBrowserParent);
 
   struct APZData {
-    bool operator==(const APZData& aOther) {
+    bool operator==(const APZData& aOther) const {
       return aOther.guid == guid && aOther.blockId == blockId &&
              aOther.apzResponse == apzResponse;
     }
 
-    bool operator!=(const APZData& aOther) { return !(*this == aOther); }
+    bool operator!=(const APZData& aOther) const { return !(*this == aOther); }
 
     ScrollableLayerGuid guid;
     uint64_t blockId;
