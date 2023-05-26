@@ -1930,21 +1930,10 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     }
   }
 
-  if (IsPasswordTextControl()) {
-    // Disable undo for <input type="password">.  Note that we want to do this
-    // at the very end of InitEditor(), so the calls to EnableUndoRedo() when
-    // setting the default value don't screw us up.  Since changing the
-    // control type does a reframe, we don't have to worry about dynamic type
-    // changes here.
-    DebugOnly<bool> disabledUndoRedo = newTextEditor->DisableUndoRedo();
-    NS_WARNING_ASSERTION(disabledUndoRedo,
-                         "Failed to disable undo/redo transaction");
-  } else {
-    DebugOnly<bool> enabledUndoRedo =
-        newTextEditor->EnableUndoRedo(TextControlElement::DEFAULT_UNDO_CAP);
-    NS_WARNING_ASSERTION(enabledUndoRedo,
-                         "Failed to enable undo/redo transaction");
-  }
+  DebugOnly<bool> enabledUndoRedo =
+      newTextEditor->EnableUndoRedo(TextControlElement::DEFAULT_UNDO_CAP);
+  NS_WARNING_ASSERTION(enabledUndoRedo,
+                       "Failed to enable undo/redo transaction");
 
   if (!mEditorInitialized) {
     newTextEditor->PostCreate();
