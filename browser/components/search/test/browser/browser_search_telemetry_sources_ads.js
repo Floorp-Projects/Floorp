@@ -627,9 +627,7 @@ async function track_ad_click(testOrganic) {
   await promiseAdImpressionReceived(1);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
 
@@ -710,9 +708,7 @@ async function track_ad_click(testOrganic) {
   await promiseAdImpressionReceived(2);
 
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
 
@@ -809,9 +805,7 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
   await BrowserTestUtils.switchTab(gBrowser, tab);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
 
   await assertSearchSourcesTelemetry(

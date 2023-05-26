@@ -164,9 +164,7 @@ async function track_ad_click(
   await promiseAdImpressionReceived();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
 
@@ -245,10 +243,11 @@ add_task(async function test_source_urlbar_handoff() {
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:newtab");
 
       info("Focus on search input in newtab content");
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-        const searchInput = content.document.querySelector(".fake-editable");
-        searchInput.click();
-      });
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        ".fake-editable",
+        {},
+        tab.linkedBrowser
+      );
 
       info("Get suggestions");
       for (const c of "searchSuggestion".split("")) {
