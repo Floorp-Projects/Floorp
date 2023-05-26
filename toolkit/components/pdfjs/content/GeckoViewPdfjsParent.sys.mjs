@@ -277,17 +277,20 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       return;
     }
 
-    this.eventDispatcher.unregisterListener(this.#findHandler, [
-      "GeckoView:ClearMatches",
-      "GeckoView:DisplayMatches",
-      "GeckoView:FindInPage",
-    ]);
+    // The eventDispatcher is null when the tab is destroyed.
+    if (this.eventDispatcher) {
+      this.eventDispatcher.unregisterListener(this.#findHandler, [
+        "GeckoView:ClearMatches",
+        "GeckoView:DisplayMatches",
+        "GeckoView:FindInPage",
+      ]);
+      this.eventDispatcher.unregisterListener(this.#fileSaver, [
+        "GeckoView:PDFSave",
+      ]);
+    }
+
     this.#findHandler.cleanup();
     this.#findHandler = null;
-
-    this.eventDispatcher.unregisterListener(this.#fileSaver, [
-      "GeckoView:PDFSave",
-    ]);
     this.#fileSaver.cleanup();
     this.#fileSaver = null;
   }
