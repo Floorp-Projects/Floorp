@@ -775,11 +775,10 @@ nsSocketTransportService::Init() {
     // Install our mThread, protecting against concurrent readers
     thread.swap(mThread);
     mDirectTaskDispatcher = do_QueryInterface(mThread);
-  }
-
   MOZ_DIAGNOSTIC_ASSERT(
       mDirectTaskDispatcher,
       "Underlying thread must support direct task dispatching");
+  }
 
   Preferences::RegisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
   UpdatePrefs();
@@ -852,7 +851,8 @@ nsresult nsSocketTransportService::ShutdownThread() {
   }
 
   // join with thread
-  mThread->Shutdown();
+  nsCOMPtr<nsIThread> thread = GetThreadSafely();
+  thread->Shutdown();
   {
     MutexAutoLock lock(mLock);
     // Drop our reference to mThread and make sure that any concurrent readers
@@ -888,6 +888,7 @@ nsresult nsSocketTransportService::ShutdownThread() {
 
 NS_IMETHODIMP
 nsSocketTransportService::GetOffline(bool* offline) {
+  MutexAutoLock lock(mLock);
   *offline = mOffline;
   return NS_OK;
 }
