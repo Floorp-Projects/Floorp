@@ -216,8 +216,6 @@ class CssCompatibilityTooltipHelper {
    *          alias: <Array>,
    *          // Link to MDN documentation for the particular CSS rule
    *          url: <string>,
-   *          // Link to the spec for the particular CSS rule
-   *          specUrl: <string>,
    *          deprecated: <boolean>,
    *          experimental: <boolean>,
    *          // An array of all the browsers that don't support the given CSS rule
@@ -228,12 +226,10 @@ class CssCompatibilityTooltipHelper {
    */
   getTemplate(data, tooltip) {
     const { doc } = tooltip;
-    const { specUrl, url, unsupportedBrowsers } = data;
+    const { url, unsupportedBrowsers } = data;
 
     this.#currentTooltip = tooltip;
-    this.#currentUrl = url
-      ? `${url}?utm_source=devtools&utm_medium=inspector-css-compatibility&utm_campaign=default`
-      : specUrl;
+    this.#currentUrl = `${url}?utm_source=devtools&utm_medium=inspector-css-compatibility&utm_campaign=default`;
     const templateNode = this.#createElement(doc, "template");
 
     const tooltipContainer = this.#createElement(doc, "div", [
@@ -247,14 +243,12 @@ class CssCompatibilityTooltipHelper {
     );
     if (browserListContainer) {
       tooltipContainer.appendChild(browserListContainer);
-      this.#renderUnsupportedBrowserList(tooltipContainer, unsupportedBrowsers);
     }
 
-    if (this.#currentUrl) {
-      tooltipContainer.appendChild(this.#getLearnMoreMessage(doc, data));
-    }
-
+    tooltipContainer.appendChild(this.#getLearnMoreMessage(doc, data));
     templateNode.content.appendChild(tooltipContainer);
+
+    this.#renderUnsupportedBrowserList(tooltipContainer, unsupportedBrowsers);
     return doc.importNode(templateNode.content, true);
   }
 
