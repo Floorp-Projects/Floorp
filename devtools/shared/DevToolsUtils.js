@@ -28,8 +28,21 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ObjectUtils.jsm"
 );
 
-ChromeUtils.defineLazyGetter(lazy, "eagerEcmaAllowlist", () => {
-  return require("resource://devtools/server/actors/webconsole/eager-ecma-allowlist.js");
+// Native getters which are considered to be side effect free.
+ChromeUtils.defineLazyGetter(lazy, "sideEffectFreeGetters", () => {
+  const {
+    getters,
+  } = require("resource://devtools/server/actors/webconsole/eager-ecma-allowlist.js");
+
+  const map = new Map();
+  for (const n of getters) {
+    if (!map.has(n.name)) {
+      map.set(n.name, []);
+    }
+    map.get(n.name).push(n);
+  }
+
+  return map;
 });
 
 // Using this name lets the eslint plugin know about lazy defines in
@@ -270,28 +283,6 @@ exports.isSafeDebuggerObject = function (obj) {
   return true;
 };
 
-// Native getters which are considered to be side effect free.
-let gSideEffectFreeGetters; // string => Array(Function)
-
-/**
- * Generate gSideEffectFreeGetters map.
- */
-function ensureSideEffectFreeGetters() {
-  if (gSideEffectFreeGetters) {
-    return;
-  }
-
-  const map = new Map();
-  for (const n of lazy.eagerEcmaAllowlist.getters) {
-    if (!map.has(n.name)) {
-      map.set(n.name, []);
-    }
-    map.get(n.name).push(n);
-  }
-
-  gSideEffectFreeGetters = map;
-}
-
 /**
  * Determines if a descriptor has a getter which doesn't call into JavaScript.
  *
@@ -331,8 +322,7 @@ exports.hasSafeGetter = function (desc) {
   }
 
   // Apply explicit allowlist.
-  ensureSideEffectFreeGetters();
-  const natives = gSideEffectFreeGetters.get(fn.name);
+  const natives = lazy.sideEffectFreeGetters.get(fn.name);
   return natives && natives.some(n => fn.isSameNative(n));
 };
 
