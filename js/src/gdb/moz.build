@@ -40,7 +40,14 @@ if CONFIG["CC_TYPE"] != "clang-cl":
     # normally omit those from the debuginfo. The current clang-cl does not support
     # this option.
     SOURCES["tests/test-prettyprinters.cpp"].flags += [
-        "-fno-eliminate-unused-debug-types"
+        "-fno-eliminate-unused-debug-types",
+    ]
+
+if CONFIG["CC_TYPE"] == "clang":
+    # Clang may complain that -fno-eliminate-unused-debug-types is unused when used
+    # in conjunction with other flags such as -gline-tables-only.
+    SOURCES["tests/test-prettyprinters.cpp"].flags += [
+        "-Qunused-arguments",
     ]
 
 DEFINES["EXPORT_JS_API"] = True
