@@ -100,7 +100,6 @@ using RejectCallback = std::function<void(ResponseRejectReason)>;
 enum ChannelState {
   ChannelClosed,
   ChannelConnected,
-  ChannelTimeout,
   ChannelClosing,
   ChannelError
 };
@@ -198,11 +197,9 @@ class MessageChannel : HasResultCodes {
   // Close the underlying transport channel.
   void Close() MOZ_EXCLUDES(*mMonitor);
 
-  // Force the channel to behave as if a channel error occurred. Valid
-  // for process links only, not thread links.
+  // Close the underlying transport channel, treating the closure as a
+  // connection error.
   void CloseWithError() MOZ_EXCLUDES(*mMonitor);
-
-  void CloseWithTimeout() MOZ_EXCLUDES(*mMonitor);
 
   void SetAbortOnError(bool abort) MOZ_EXCLUDES(*mMonitor) {
     MonitorAutoLock lock(*mMonitor);
@@ -439,7 +436,15 @@ class MessageChannel : HasResultCodes {
     return mDispatchingAsyncMessageNestedLevel;
   }
 
+  // Check if there is still a live connection to our peer. This may change to
+  // `false` at any time due to the connection to our peer being closed or
+  // dropped (e.g. due to a crash).
   bool Connected() const MOZ_REQUIRES(*mMonitor);
+
+  // Check if there is either still a live connection to our peer, or we have
+  // received a `Goodbye` from our peer, and are actively shutting down our
+  // connection with our peer.
+  bool ConnectedOrClosing() const MOZ_REQUIRES(*mMonitor);
 
  private:
   // Executed on the IO thread.
@@ -449,9 +454,6 @@ class MessageChannel : HasResultCodes {
   // thread, in which case it shouldn't be delivered to the worker.
   bool MaybeInterceptSpecialIOMessage(const Message& aMsg)
       MOZ_REQUIRES(*mMonitor);
-
-  // Tell the IO thread to close the channel and wait for it to ACK.
-  void SynchronouslyClose() MOZ_REQUIRES(*mMonitor);
 
   // Returns true if ShouldDeferMessage(aMsg) is guaranteed to return true.
   // Otherwise, the result of ShouldDeferMessage(aMsg) may be true or false,
