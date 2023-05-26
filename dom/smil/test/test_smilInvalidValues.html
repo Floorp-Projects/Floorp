@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
   };
 
   function runTests() {
-    [testSimpleDuration, testMin, testMax, testRepeatDur, testRepeatCount]
+    [testSimpleDuration, testSimpleDuration2, testMin, testMax, testRepeatDur, testRepeatCount]
       .forEach(function(test) {
         is(b.getStartTime(), 100, "initial state before running " + test.name);
         test();
@@ -62,6 +62,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
 
     // Check an invalid value also causes the model to be updated
     a.setAttribute("dur", "abc"); // -> indefinite
+    is(b.safeGetStartTime(), "none", "invalid simple duration");
+
+    // Restore state
+    a.setAttribute("dur", "100s");
+  }
+
+  function testSimpleDuration2() {
+    // Check an invalid value causes the model to be updated
+    a.setAttribute("dur", "-.1s"); // -> indefinite
     is(b.safeGetStartTime(), "none", "invalid simple duration");
 
     // Restore state
