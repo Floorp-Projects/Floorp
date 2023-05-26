@@ -26,6 +26,7 @@ function reset() {
   // state changes.
   Services.prefs.clearUserPref("browser.display.document_color_use");
   Services.prefs.clearUserPref("browser.display.permit_backplate");
+  Services.prefs.clearUserPref("browser.display.use_system_colors");
   Services.telemetry.clearEvents();
   TelemetryTestUtils.assertNumberOfEvents(0);
   Services.prefs.clearUserPref("browser.display.foreground_color");
@@ -63,6 +64,18 @@ function verifyBackplate(expectedValue) {
     "Backplate scalar is logged as " + expectedValue
   );
 }
+
+function verifyUseSystemColors(expectedValue) {
+  const snapshot = TelemetryTestUtils.getProcessScalars("parent", false, false);
+  ok("a11y.use_system_colors" in snapshot, "System color usage was logged.");
+  TelemetryTestUtils.assertScalar(
+    snapshot,
+    "a11y.use_system_colors",
+    expectedValue,
+    "System colors scalar is logged as " + expectedValue
+  );
+}
+
 // The magic numbers below are the uint32_t values representing RGB white
 // and RGB black respectively. They're directly captured as nsColors and
 // follow the same bit-shift pattern.
@@ -320,4 +333,35 @@ add_task(async function testBackplate() {
   Services.prefs.setBoolPref("browser.display.permit_backplate", true);
   // Verify correct recorded value
   verifyBackplate(true);
+});
+
+add_task(async function testSystemColors() {
+  let expectedInitVal = false;
+  if (AppConstants.platform == "win") {
+    expectedInitVal = true;
+  }
+
+  is(
+    Services.prefs.getBoolPref("browser.display.use_system_colors"),
+    expectedInitVal,
+    "Use system colours pref is init'd correctly"
+  );
+  verifyUseSystemColors(expectedInitVal);
+
+  const dialogWin = await openColorsDialog();
+  const checkbox = dialogWin.document.getElementById("browserUseSystemColors");
+  checkbox.click();
+
+  is(
+    checkbox.checked,
+    !expectedInitVal,
+    "System colors checkbox should be modified"
+  );
+
+  await closeColorsDialog(dialogWin);
+
+  verifyUseSystemColors(!expectedInitVal);
+
+  reset();
+  gBrowser.removeCurrentTab();
 });
