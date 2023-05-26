@@ -288,7 +288,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   // Pref for String.prototype.{is,to}WellFormed() methods.
   bool wellFormedUnicodeStrings_ = false;
 #endif
-  bool arrayFromAsync_ = false;
+  bool arrayFromAsync_ = true;
   bool changeArrayByCopy_ = false;
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods_ = false;
