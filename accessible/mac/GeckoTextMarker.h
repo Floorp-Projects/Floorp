@@ -9,9 +9,10 @@
 #ifndef _GeckoTextMarker_H_
 #define _GeckoTextMarker_H_
 
+#include <ApplicationServices/ApplicationServices.h>
 #include <Foundation/Foundation.h>
-#import "LegacyTextMarker.h"
-#import "CachedTextMarker.h"
+
+#include "TextLeafRange.h"
 
 namespace mozilla {
 namespace a11y {
@@ -19,29 +20,14 @@ namespace a11y {
 class Accessible;
 class GeckoTextMarkerRange;
 
-class GeckoTextMarker {
+class GeckoTextMarker final {
  public:
-  GeckoTextMarker();
-
-  GeckoTextMarker(const GeckoTextMarker& aOther) {
-    mLegacy = aOther.mLegacy;
-    if (mLegacy) {
-      mLegacyTextMarker = aOther.mLegacyTextMarker;
-    } else {
-      mCachedTextMarker = aOther.mCachedTextMarker;
-    }
-  }
-
-  explicit GeckoTextMarker(const LegacyTextMarker& aTextMarker)
-      : mLegacy(true), mLegacyTextMarker(aTextMarker) {}
-
-  explicit GeckoTextMarker(const CachedTextMarker& aTextMarker)
-      : mLegacy(false), mCachedTextMarker(aTextMarker) {}
+  GeckoTextMarker(Accessible* aAcc, int32_t aOffset);
 
   explicit GeckoTextMarker(const TextLeafPoint& aTextLeafPoint)
-      : mLegacy(false), mCachedTextMarker(aTextLeafPoint) {}
+      : mPoint(aTextLeafPoint) {}
 
-  GeckoTextMarker(Accessible* aContainer, int32_t aOffset);
+  GeckoTextMarker() : mPoint() {}
 
   static GeckoTextMarker MarkerFromAXTextMarker(Accessible* aDoc,
                                                 AXTextMarkerRef aTextMarker);
@@ -50,14 +36,9 @@ class GeckoTextMarker {
 
   AXTextMarkerRef CreateAXTextMarker();
 
-  bool Next() {
-    return mLegacy ? mLegacyTextMarker.Next() : mCachedTextMarker.Next();
-  }
+  bool Next();
 
-  bool Previous() {
-    return mLegacy ? mLegacyTextMarker.Previous()
-                   : mCachedTextMarker.Previous();
-  }
+  bool Previous();
 
   GeckoTextMarkerRange LeftWordRange() const;
 
@@ -73,75 +54,35 @@ class GeckoTextMarker {
 
   GeckoTextMarkerRange StyleRange() const;
 
-  Accessible* Leaf() {
-    return mLegacy ? mLegacyTextMarker.Leaf() : mCachedTextMarker.Leaf();
+  int32_t& Offset() { return mPoint.mOffset; }
+
+  Accessible* Leaf();
+
+  Accessible* Acc() const { return mPoint.mAcc; }
+
+  bool IsValid() const { return !!mPoint; };
+
+  bool operator<(const GeckoTextMarker& aOther) const {
+    return mPoint < aOther.mPoint;
   }
 
-  int32_t& Offset() {
-    return mLegacy ? mLegacyTextMarker.mOffset
-                   : mCachedTextMarker.mPoint.mOffset;
+  bool operator==(const GeckoTextMarker& aOther) const {
+    return mPoint == aOther.mPoint;
   }
 
-  Accessible* Acc() const {
-    return mLegacy ? mLegacyTextMarker.mContainer
-                   : mCachedTextMarker.mPoint.mAcc;
-  }
-
-  bool IsValid() const {
-    return mLegacy ? mLegacyTextMarker.IsValid() : mCachedTextMarker.IsValid();
-  }
-
-  bool operator<(const GeckoTextMarker& aPoint) const {
-    return mLegacy ? (mLegacyTextMarker < aPoint.mLegacyTextMarker)
-                   : (mCachedTextMarker < aPoint.mCachedTextMarker);
-  }
-
-  bool operator==(const GeckoTextMarker& aPoint) const {
-    return mLegacy ? (mLegacyTextMarker == aPoint.mLegacyTextMarker)
-                   : (mCachedTextMarker == aPoint.mCachedTextMarker);
-  }
-
- private:
-  bool mLegacy;
-  union {
-    LegacyTextMarker mLegacyTextMarker;
-    CachedTextMarker mCachedTextMarker;
-  };
-
-  friend class GeckoTextMarkerRange;
+  TextLeafPoint mPoint;
 };
 
-class GeckoTextMarkerRange {
+class GeckoTextMarkerRange final {
  public:
-  GeckoTextMarkerRange();
-
-  GeckoTextMarkerRange(const GeckoTextMarkerRange& aOther) {
-    mLegacy = aOther.mLegacy;
-    if (mLegacy) {
-      mLegacyTextMarkerRange = aOther.mLegacyTextMarkerRange;
-    } else {
-      mCachedTextMarkerRange = aOther.mCachedTextMarkerRange;
-    }
-  }
-
-  explicit GeckoTextMarkerRange(const LegacyTextMarkerRange& aTextMarkerRange)
-      : mLegacy(true), mLegacyTextMarkerRange(aTextMarkerRange) {}
-
-  explicit GeckoTextMarkerRange(const CachedTextMarkerRange& aTextMarkerRange)
-      : mLegacy(false), mCachedTextMarkerRange(aTextMarkerRange) {}
-
   GeckoTextMarkerRange(const GeckoTextMarker& aStart,
-                       const GeckoTextMarker& aEnd) {
-    MOZ_ASSERT(aStart.mLegacy == aEnd.mLegacy);
-    mLegacy = aStart.mLegacy;
-    if (mLegacy) {
-      mLegacyTextMarkerRange = LegacyTextMarkerRange(aStart.mLegacyTextMarker,
-                                                     aEnd.mLegacyTextMarker);
-    } else {
-      mCachedTextMarkerRange = CachedTextMarkerRange(aStart.mCachedTextMarker,
-                                                     aEnd.mCachedTextMarker);
-    }
-  }
+                       const GeckoTextMarker& aEnd)
+      : mRange(aStart.mPoint, aEnd.mPoint) {}
+
+  GeckoTextMarkerRange(const TextLeafPoint& aStart, const TextLeafPoint& aEnd)
+      : mRange(aStart, aEnd) {}
+
+  GeckoTextMarkerRange() {}
 
   explicit GeckoTextMarkerRange(Accessible* aAccessible);
 
@@ -150,76 +91,45 @@ class GeckoTextMarkerRange {
 
   AXTextMarkerRangeRef CreateAXTextMarkerRange();
 
-  bool IsValid() const {
-    return mLegacy ? mLegacyTextMarkerRange.IsValid()
-                   : mCachedTextMarkerRange.IsValid();
-  }
+  bool IsValid() const { return !!mRange.Start() && !!mRange.End(); };
 
-  GeckoTextMarker Start() {
-    return mLegacy ? GeckoTextMarker(mLegacyTextMarkerRange.mStart)
-                   : GeckoTextMarker(mCachedTextMarkerRange.mRange.Start());
-  }
+  GeckoTextMarker Start() { return GeckoTextMarker(mRange.Start()); }
 
-  GeckoTextMarker End() {
-    return mLegacy ? GeckoTextMarker(mLegacyTextMarkerRange.mEnd)
-                   : GeckoTextMarker(mCachedTextMarkerRange.mRange.End());
-  }
+  GeckoTextMarker End() { return GeckoTextMarker(mRange.End()); }
 
   /**
    * Return text enclosed by the range.
    */
-  NSString* Text() const {
-    return mLegacy ? mLegacyTextMarkerRange.Text()
-                   : mCachedTextMarkerRange.Text();
-  }
+  NSString* Text() const;
 
   /**
    * Return the attributed text enclosed by the range.
    */
-  NSAttributedString* AttributedText() const {
-    return mLegacy ? mLegacyTextMarkerRange.AttributedText()
-                   : mCachedTextMarkerRange.AttributedText();
-  }
+  NSAttributedString* AttributedText() const;
 
   /**
    * Return length of characters enclosed by the range.
    */
-  int32_t Length() const {
-    return mLegacy ? mLegacyTextMarkerRange.Length()
-                   : mCachedTextMarkerRange.Length();
-  }
+  int32_t Length() const;
 
   /**
    * Return screen bounds of range.
    */
-  NSValue* Bounds() const {
-    return mLegacy ? mLegacyTextMarkerRange.Bounds()
-                   : mCachedTextMarkerRange.Bounds();
-  }
+  NSValue* Bounds() const;
 
   /**
    * Set the current range as the DOM selection.
    */
-  void Select() const {
-    mLegacy ? mLegacyTextMarkerRange.Select() : mCachedTextMarkerRange.Select();
-  }
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Select() const;
 
   /**
    * Crops the range if it overlaps the given accessible element boundaries.
    * Return true if successfully cropped. false if the range does not intersect
    * with the container.
    */
-  bool Crop(Accessible* aContainer) {
-    return mLegacy ? mLegacyTextMarkerRange.Crop(aContainer)
-                   : mCachedTextMarkerRange.Crop(aContainer);
-  }
+  bool Crop(Accessible* aContainer);
 
- private:
-  bool mLegacy;
-  union {
-    LegacyTextMarkerRange mLegacyTextMarkerRange;
-    CachedTextMarkerRange mCachedTextMarkerRange;
-  };
+  TextLeafRange mRange;
 };
 
 }  // namespace a11y
