@@ -43,7 +43,6 @@ packages="
   libasound2-dev
   libstdc++-${gcc_version}-dev
   libdbus-glib-1-dev
-  libdrm-dev
   libfontconfig1-dev
   libfreetype6-dev
   libgconf2-dev
