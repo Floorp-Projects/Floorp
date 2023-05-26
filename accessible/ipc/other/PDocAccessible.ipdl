@@ -180,9 +180,7 @@ child:
 
   async TakeFocus(uint64_t aID);
 
-  [Nested=inside_sync] sync DocType(uint64_t aID) returns(nsString aType);
   [Nested=inside_sync] sync MimeType(uint64_t aID) returns(nsString aMime);
-  [Nested=inside_sync] sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
 
   /*
    * Verify the cache. Used for testing purposes.

@@ -53,13 +53,8 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       const int32_t& aEndOffset, const uint32_t& aCoordinateType,
       const int32_t& aX, const int32_t& aY) override;
 
-  virtual mozilla::ipc::IPCResult RecvDocType(const uint64_t& aID,
-                                              nsString* aType) override;
   virtual mozilla::ipc::IPCResult RecvMimeType(const uint64_t& aID,
                                                nsString* aMime) override;
-  virtual mozilla::ipc::IPCResult RecvURLDocTypeMimeType(
-      const uint64_t& aID, nsString* aURL, nsString* aDocType,
-      nsString* aMimeType) override;
 
   virtual bool DeallocPDocAccessiblePlatformExtChild(
       PDocAccessiblePlatformExtChild* aActor) override;

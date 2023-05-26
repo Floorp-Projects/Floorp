@@ -39,17 +39,8 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                              aCoordinateType, aX, aY);
 }
 
-void RemoteAccessible::DocType(nsString& aType) {
-  Unused << mDoc->SendDocType(mID, &aType);
-}
-
 void RemoteAccessible::MimeType(nsString aMime) {
   Unused << mDoc->SendMimeType(mID, &aMime);
-}
-
-void RemoteAccessible::URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
-                                          nsString& aMimeType) {
-  Unused << mDoc->SendURLDocTypeMimeType(mID, &aURL, &aDocType, &aMimeType);
 }
 
 }  // namespace a11y

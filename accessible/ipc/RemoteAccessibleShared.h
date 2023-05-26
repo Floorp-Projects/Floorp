@@ -19,9 +19,6 @@ void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
                             uint32_t aCoordinateType, int32_t aX, int32_t aY);
 
-void DocType(nsString& aType);
 void MimeType(nsString aMime);
-void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
-                        nsString& aMimeType);
 
 #endif

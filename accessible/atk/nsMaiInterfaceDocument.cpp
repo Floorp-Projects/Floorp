@@ -16,7 +16,6 @@
 
 using namespace mozilla::a11y;
 
-static const char* const kDocTypeName = "W3C-doctype";
 static const char* const kDocUrlName = "DocURL";
 static const char* const kMimeTypeName = "MimeType";
 
@@ -34,8 +33,6 @@ void documentInterfaceInitCB(AtkDocumentIface* aIface) {
 
   /*
    * We don't support get_document or set_attribute right now.
-   * get_document_type is deprecated, we return DocType in
-   * get_document_attribute_value and get_document_attributes instead.
    */
   aIface->get_document_attributes = getDocumentAttributesCB;
   aIface->get_document_attribute_value = getDocumentAttributeValueCB;
@@ -67,7 +64,6 @@ static inline GSList* prependToList(GSList* aList, const char* const aName,
 
 AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
   nsAutoString url;
-  nsAutoString w3cDocType;
   nsAutoString mimeType;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (accWrap) {
@@ -77,10 +73,10 @@ AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
 
     DocAccessible* document = accWrap->AsDoc();
     document->URL(url);
-    document->DocType(w3cDocType);
     document->MimeType(mimeType);
   } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
-    proxy->URLDocTypeMimeType(url, w3cDocType, mimeType);
+    proxy->AsDoc()->URL(url);
+    proxy->MimeType(mimeType);
   } else {
     return nullptr;
   }
@@ -88,7 +84,6 @@ AtkAttributeSet* getDocumentAttributesCB(AtkDocument* aDocument) {
   // according to atkobject.h, AtkAttributeSet is a GSList
   GSList* attributes = nullptr;
   attributes = prependToList(attributes, kDocUrlName, url);
-  attributes = prependToList(attributes, kDocTypeName, w3cDocType);
   attributes = prependToList(attributes, kMimeTypeName, mimeType);
 
   return attributes;
@@ -114,13 +109,7 @@ const gchar* getDocumentAttributeValueCB(AtkDocument* aDocument,
   }
 
   nsAutoString attrValue;
-  if (!strcasecmp(aAttrName, kDocTypeName)) {
-    if (document) {
-      document->DocType(attrValue);
-    } else {
-      proxy->DocType(attrValue);
-    }
-  } else if (!strcasecmp(aAttrName, kDocUrlName)) {
+  if (!strcasecmp(aAttrName, kDocUrlName)) {
     if (document) {
       document->URL(attrValue);
     } else {
