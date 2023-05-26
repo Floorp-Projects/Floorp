@@ -72,7 +72,6 @@ pref_groups = [
     "permissions",
     "places",
     "plain_text",
-    "plugin",
     "plugins",
     "preferences",
     "print",
