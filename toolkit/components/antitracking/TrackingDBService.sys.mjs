@@ -194,7 +194,10 @@ TrackingDBService.prototype = {
       }
       if (blocked) {
         if (
-          state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT
+          state &
+            Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT ||
+          state &
+            Ci.nsIWebProgressListener.STATE_REPLACED_FINGERPRINTING_CONTENT
         ) {
           result = Ci.nsITrackingDBService.FINGERPRINTERS_ID;
         } else if (

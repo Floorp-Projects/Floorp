@@ -327,6 +327,8 @@ let Fingerprinting = new ProtectionCategory(
   {
     load: Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT,
     block: Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT,
+    shim: Ci.nsIWebProgressListener.STATE_REPLACED_FINGERPRINTING_CONTENT,
+    allow: Ci.nsIWebProgressListener.STATE_ALLOWED_FINGERPRINTING_CONTENT,
   }
 );
 
