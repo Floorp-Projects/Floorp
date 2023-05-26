@@ -226,8 +226,11 @@ class SettingsRobot {
 
         fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit):
             SettingsSubMenuSearchRobot.Transition {
-            fun searchEngineButton() = onView(withText("Search"))
-            searchEngineButton().click()
+            itemWithText(getStringResource(R.string.preferences_search))
+                .also {
+                    it.waitForExists(waitingTimeShort)
+                    it.click()
+                }
 
             SettingsSubMenuSearchRobot().interact()
             return SettingsSubMenuSearchRobot.Transition()
