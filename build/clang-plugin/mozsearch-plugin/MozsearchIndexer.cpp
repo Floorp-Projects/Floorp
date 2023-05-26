@@ -2021,6 +2021,10 @@ public:
         std::string Mangled = getMangledName(CurMangleContext, F);
         visitIdentifier("use", "function", getQualifiedName(F), Loc, Mangled,
                         F->getType(), getContext(Loc));
+      } else if (const FieldDecl *F = dyn_cast<FieldDecl>(D)) {
+        std::string Mangled = getMangledName(CurMangleContext, F);
+        visitIdentifier("use", "field", getQualifiedName(F), Loc, Mangled,
+                        F->getType(), getContext(Loc));
       }
     }
 
