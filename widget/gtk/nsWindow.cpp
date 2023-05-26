@@ -415,6 +415,7 @@ nsWindow::nsWindow()
       mNoAutoHide(false),
       mIsTransparent(false),
       mHasReceivedSizeAllocate(false),
+      mWidgetCursorLocked(false),
       mPopupTrackInHierarchy(false),
       mPopupTrackInHierarchyConfigured(false),
       mHiddenPopupPositioned(false),
@@ -3328,6 +3329,10 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
     return;
   }
 
+  if (mWidgetCursorLocked) {
+    return;
+  }
+
   // Only change cursor if it's actually been changed
   if (!mUpdateCursor && mCursor == aCursor) {
     return;
@@ -4433,6 +4438,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
     }
   }
 
+  mWidgetCursorLocked = false;
   const auto refPoint = GetRefPoint(this, aEvent);
   if (auto edge = CheckResizerEdge(refPoint)) {
     nsCursor cursor = eCursor_none;
@@ -4455,6 +4461,10 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
         break;
     }
     SetCursor(Cursor{cursor});
+    // If we set resize cursor on widget level keep it locked and prevent layout
+    // to switch it back to default (by synthetic mouse events for instance)
+    // until resize is finished.
+    mWidgetCursorLocked = true;
     return;
   }
 
