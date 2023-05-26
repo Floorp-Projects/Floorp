@@ -81,25 +81,31 @@ results = parser.finish()
 # TODO: Bug 1616013 - Move more of these to be part of the pure list.
 pure_output = {
     "Document": {
-        "prototype": [
-            "getSelection",
-            "hasStorageAccess",
-        ],
+        "prototype": {
+            "methods": [
+                "getSelection",
+                "hasStorageAccess",
+            ],
+        },
     },
     "Range": {
-        "prototype": [
-            "isPointInRange",
-            "comparePoint",
-            "intersectsNode",
-            # These two functions aren't pure because they do trigger
-            # layout when they are called, but in the context of eager
-            # evaluation, that should be a totally fine thing to do.
-            "getClientRects",
-            "getBoundingClientRect",
-        ],
+        "prototype": {
+            "methods": [
+                "isPointInRange",
+                "comparePoint",
+                "intersectsNode",
+                # These two functions aren't pure because they do trigger
+                # layout when they are called, but in the context of eager
+                # evaluation, that should be a totally fine thing to do.
+                "getClientRects",
+                "getBoundingClientRect",
+            ],
+        }
     },
     "Selection": {
-        "prototype": ["getRangeAt", "containsNode"],
+        "prototype": {
+            "methods": ["getRangeAt", "containsNode"],
+        }
     },
 }
 unsafe_getters_names = []
@@ -112,27 +118,24 @@ for result in results:
         for member in result.members:
             name = member.identifier.name
 
-            if member.isMethod() and member.affects == "Nothing":
+            if (member.isMethod() or member.isAttr()) and member.affects == "Nothing":
                 if (
                     PURE_INTERFACE_ALLOWLIST and not iface in PURE_INTERFACE_ALLOWLIST
                 ) or name.startswith("_"):
                     continue
 
-                if is_global:
-                    raise Exception(
-                        "Global methods and accessors are not supported: " + iface
-                    )
-
                 if iface not in pure_output:
                     pure_output[iface] = {}
 
-                if member.isStatic():
+                if is_global:
+                    owner_type = "instance"
+                elif member.isStatic():
                     owner_type = "static"
                 else:
                     owner_type = "prototype"
 
                 if owner_type not in pure_output[iface]:
-                    pure_output[iface][owner_type] = []
+                    pure_output[iface][owner_type] = {}
 
                 # All DOM getters are considered eagerly-evaluate-able.
                 # Collect methods only.
@@ -140,7 +143,12 @@ for result in results:
                 # NOTE: We still need to calculate unsafe_getters_names for
                 #       object preview.
                 if member.isMethod():
-                    pure_output[iface][owner_type].append(name)
+                    prop_type = "methods"
+
+                    if prop_type not in pure_output[iface][owner_type]:
+                        pure_output[iface][owner_type][prop_type] = []
+
+                    pure_output[iface][owner_type][prop_type].append(name)
 
             if (
                 not iface in DEPRECATED_INTERFACE__EXCLUDE_LIST
