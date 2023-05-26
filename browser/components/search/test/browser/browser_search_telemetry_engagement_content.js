@@ -126,9 +126,11 @@ add_task(async function test_click_tab() {
   await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("images").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#images",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   await TestUtils.waitForCondition(() => {
@@ -176,9 +178,11 @@ add_task(async function test_click_shopping() {
   await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("shopping").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#shopping",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   await TestUtils.waitForCondition(() => {
@@ -226,9 +230,11 @@ add_task(async function test_click_extra_page() {
   await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("extra").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#extra",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   // This should only have one impression because the subsequent page is not
@@ -273,9 +279,11 @@ add_task(async function test_click_related_search_in_new_tab() {
     ) + "searchTelemetryAd_searchbox_with_content.html?s=test+one+two+three";
 
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, targetUrl, true);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("related-new-tab").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#related-new-tab",
+    {},
+    tab.linkedBrowser
+  );
   let tab2 = await tabPromise;
 
   await TestUtils.waitForCondition(() => {
@@ -333,9 +341,11 @@ add_task(async function test_click_redirect_search_in_newtab() {
     ) + "searchTelemetryAd_searchbox_with_content.html?s=test+one+two+three";
 
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, targetUrl, true);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("related-redirect").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#related-redirect",
+    {},
+    tab.linkedBrowser
+  );
   let tab2 = await tabPromise;
 
   await waitForPageWithAdImpressions();
@@ -387,11 +397,11 @@ add_task(async function test_content_source_reset() {
 
   // Do a text search to trigger a defined target.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    let input = content.document.querySelector("form input");
-    input.click();
-    input.focus();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "form input",
+    {},
+    tab.linkedBrowser
+  );
   EventUtils.synthesizeKey("KEY_Enter");
   await pageLoadPromise;
 
@@ -399,9 +409,11 @@ add_task(async function test_content_source_reset() {
   // have an unknown target.
   await waitForPageWithAdImpressions();
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("related-in-page").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#related-in-page",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   await TestUtils.waitForCondition(() => {
@@ -481,9 +493,11 @@ add_task(async function test_click_refinement_button() {
     gBrowser,
     targetUrl
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("refined-search-button").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#refined-search-button",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   await TestUtils.waitForCondition(() => {

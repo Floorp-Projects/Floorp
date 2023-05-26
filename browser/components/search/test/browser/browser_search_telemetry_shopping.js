@@ -111,9 +111,7 @@ async function loadSerpAndClickShoppingTab(page) {
   await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("shopping").click();
-  });
+  BrowserTestUtils.synthesizeMouseAtCenter("#shopping", {}, tab.linkedBrowser);
   await pageLoadPromise;
 
   assertImpressionEvents([

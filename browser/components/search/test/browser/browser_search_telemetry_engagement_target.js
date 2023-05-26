@@ -161,9 +161,11 @@ add_task(async function test_click_second_ad_in_component() {
   await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("deep_ad_sitelink").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#deep_ad_sitelink",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   assertImpressionEvents([
@@ -350,9 +352,11 @@ add_task(async function test_click_non_ads_link() {
 
   // Click a non ad.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("non_ads_link").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#non_ads_link",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   assertImpressionEvents([
@@ -390,11 +394,11 @@ add_task(async function test_click_and_submit_incontent_searchbox() {
 
   // Click on the searchbox.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    let input = content.document.querySelector("form input");
-    input.click();
-    input.focus();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "form input",
+    {},
+    tab.linkedBrowser
+  );
   EventUtils.synthesizeKey("KEY_Enter");
   await pageLoadPromise;
 
@@ -450,9 +454,11 @@ add_task(async function test_click_autosuggest() {
 
   // Click an autosuggested term.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser, url);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.querySelector("#suggest").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#suggest",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   await TestUtils.waitForCondition(() => {
@@ -544,9 +550,11 @@ add_task(async function test_click_non_ad_with_no_ads() {
     true,
     "https://example.com/hello_world"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], urls => {
-    content.document.getElementById("non_ads_link").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#non_ads_link",
+    {},
+    tab.linkedBrowser
+  );
   await browserLoadedPromise;
 
   assertImpressionEvents([
@@ -597,11 +605,11 @@ add_task(async function test_click_link_with_special_characters_in_path() {
     gBrowser,
     "https://example.com/path'?hello_world&foo=bar%27s"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document
-      .getElementById("non_ads_link_with_special_characters_in_path")
-      .click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#non_ads_link_with_special_characters_in_path",
+    {},
+    tab.linkedBrowser
+  );
   await pageLoadPromise;
 
   assertImpressionEvents([

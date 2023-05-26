@@ -178,9 +178,11 @@ add_task(async function test_click_ad() {
   }, "Should have received an ad impression.");
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.document.querySelector("a").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "a",
+    {},
+    gBrowser.selectedBrowser
+  );
   await browserLoadedPromise;
 
   Assert.equal(

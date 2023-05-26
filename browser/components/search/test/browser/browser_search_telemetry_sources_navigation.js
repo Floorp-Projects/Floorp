@@ -208,9 +208,7 @@ add_task(async function test_reload() {
   await promiseAdImpressionReceived();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
 
   await assertSearchSourcesTelemetry(
@@ -293,9 +291,7 @@ add_task(async function test_fresh_search() {
 
 add_task(async function test_click_ad() {
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
 
   await assertSearchSourcesTelemetry(
@@ -379,9 +375,7 @@ add_task(async function test_go_back() {
   await promiseAdImpressionReceived(2);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
   await pageLoadPromise;
 
   await assertSearchSourcesTelemetry(
@@ -512,9 +506,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
 
   // Click on an ad.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.getElementById("ad1").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
+
   await pageLoadPromise;
   await assertSearchSourcesTelemetry(
     {
