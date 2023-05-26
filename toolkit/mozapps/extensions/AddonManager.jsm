@@ -4551,6 +4551,7 @@ AMRemoteSettings = {
       "extensions.InstallTriggerImpl.enabled",
       "extensions.InstallTrigger.enabled",
     ],
+    quarantinedDomains: ["extensions.quarantinedDomains.list"],
   },
 
   client: null,
@@ -4621,6 +4622,31 @@ AMRemoteSettings = {
       return [];
     });
 
+    const processEntryPref = (entryId, groupName, prefName, prefValue) => {
+      try {
+        logger.debug(
+          `Process AddonManager RemoteSettings "${entryId}" - "${groupName}": ${prefName}`
+        );
+
+        // Support for controlling boolean and string AddonManager settings.
+        switch (typeof prefValue) {
+          case "boolean":
+            Services.prefs.setBoolPref(prefName, prefValue);
+            break;
+          case "string":
+            Services.prefs.setStringPref(prefName, prefValue);
+            break;
+          default:
+            throw new Error(`Unexpected type ${typeof prefValue}`);
+        }
+      } catch (e) {
+        logger.error(
+          `Failed to process AddonManager RemoteSettings "${entryId}" - "${groupName}": ${prefName}`,
+          e
+        );
+      }
+    };
+
     for (const entry of entries) {
       logger.debug(`Processing AddonManager RemoteSettings "${entry.id}"`);
 
@@ -4636,20 +4662,7 @@ AMRemoteSettings = {
             continue;
           }
 
-          try {
-            // Support for controlling boolean AddonManager settings.
-            if (typeof data[pref] == "boolean") {
-              logger.debug(
-                `Process AddonManager RemoteSettings "${entry.id}" - "${groupName}": ${pref}=${data[pref]}`
-              );
-              Services.prefs.setBoolPref(pref, data[pref]);
-            }
-          } catch (e) {
-            logger.error(
-              `Failed to process AddonManager RemoteSettings "${entry.id}" - "${groupName}": ${pref}`,
-              e
-            );
-          }
+          processEntryPref(entry.id, groupName, pref, data[pref]);
         }
       }
     }
