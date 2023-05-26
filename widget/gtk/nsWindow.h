@@ -672,6 +672,7 @@ class nsWindow final : public nsBaseWidget {
   bool mIsTransparent : 1;
   // We can expect at least one size-allocate event after early resizes.
   bool mHasReceivedSizeAllocate : 1;
+  bool mWidgetCursorLocked : 1;
 
   /*  Gkt creates popup in two incarnations - wl_subsurface and xdg_popup.
    *  Kind of popup is choosen before GdkWindow is mapped so we can change
