@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.view.View
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
@@ -16,8 +17,21 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.test.espresso.Espresso
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.action.GeneralLocation
+import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.matcher.ViewMatchers
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import org.hamcrest.Matcher
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.clickAtLocationInView
+import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
+import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorHalfExpandedMaxRatioMatcher
+import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 
 /**
@@ -129,6 +143,18 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         )
     }
 
+    fun verifyTabsTrayBehaviorState(expectedState: Int) {
+        tabsTrayView().check(ViewAssertions.matches(BottomSheetBehaviorStateMatcher(expectedState)))
+    }
+
+    fun verifyMinusculeHalfExpandedRatio() {
+        tabsTrayView().check(ViewAssertions.matches(BottomSheetBehaviorHalfExpandedMaxRatioMatcher(0.001f)))
+    }
+
+    fun verifyTabTrayIsClosed() {
+        composeTestRule.tabsTray().assertDoesNotExist()
+    }
+
     /**
      * Closes a tab when there is only one tab open.
      */
@@ -178,8 +204,72 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickTopBar(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            // The topBar contains other views.
+            // Don't do the default click in the middle, rather click in some free space - top right.
+            Espresso.onView(ViewMatchers.withId(R.id.topBar)).clickAtLocationInView(GeneralLocation.TOP_RIGHT)
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return Transition(composeTestRule)
+        }
+
+        fun waitForTabTrayBehaviorToIdle(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            // Need to get the behavior of tab_wrapper and wait for that to idle.
+            var behavior: BottomSheetBehavior<*>? = null
+
+            // Null check here since it's possible that the view is already animated away from the screen.
+            tabsTrayView()?.perform(
+                object : ViewAction {
+                    override fun getDescription(): String {
+                        return "Postpone actions to after the BottomSheetBehavior has settled"
+                    }
+
+                    override fun getConstraints(): Matcher<View> {
+                        return ViewMatchers.isAssignableFrom(View::class.java)
+                    }
+
+                    override fun perform(uiController: UiController?, view: View?) {
+                        behavior = BottomSheetBehavior.from(view!!)
+                    }
+                },
+            )
+
+            behavior?.let {
+                runWithIdleRes(BottomSheetBehaviorStateIdlingResource(it)) {
+                    ComposeTabDrawerRobot(composeTestRule).interact()
+                }
+            }
+
+            return Transition(composeTestRule)
+        }
+
+        fun advanceToHalfExpandedState(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            tabsTrayView().perform(
+                object : ViewAction {
+                    override fun getDescription(): String {
+                        return "Advance a BottomSheetBehavior to STATE_HALF_EXPANDED"
+                    }
+
+                    override fun getConstraints(): Matcher<View> {
+                        return ViewMatchers.isAssignableFrom(View::class.java)
+                    }
+
+                    override fun perform(uiController: UiController?, view: View?) {
+                        val behavior = BottomSheetBehavior.from(view!!)
+                        behavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+                    }
+                },
+            )
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return Transition(composeTestRule)
+        }
     }
 }
+
+/**
+ * Obtains the root [View] that wraps the Tabs Tray.
+ */
+private fun tabsTrayView() = Espresso.onView(ViewMatchers.withId(R.id.tabs_tray_root))
 
 /**
  * Obtains the root Tabs Tray.
