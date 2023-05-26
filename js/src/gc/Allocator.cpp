@@ -71,7 +71,8 @@ void* gc::CellAllocator::AllocateObjectCell(JSContext* cx, AllocKind kind,
       site = cx->zone()->unknownAllocSite(JS::TraceKind::Object);
     }
 
-    void* obj = rt->gc.tryNewNurseryObject<allowGC>(cx, thingSize, site);
+    void* obj = rt->gc.tryNewNurseryCell<JS::TraceKind::Object, allowGC>(
+        cx, thingSize, site);
     if (obj) {
       return obj;
     }
@@ -97,54 +98,29 @@ template void* gc::CellAllocator::AllocateObjectCell<CanGC>(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
     const JSClass* clasp, gc::AllocSite* site);
 
-// Attempt to allocate a new JSObject out of the nursery. If there is not
-// enough room in the nursery or there is an OOM, this method will return
-// nullptr.
-template <AllowGC allowGC>
-void* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
-                                     AllocSite* site) {
+// Attempt to allocate a new cell in the nursery. If there is not enough room in
+// the nursery or there is an OOM, this method will return nullptr.
+template <JS::TraceKind kind, AllowGC allowGC>
+void* GCRuntime::tryNewNurseryCell(JSContext* cx, size_t thingSize,
+                                   AllocSite* site) {
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
+  MOZ_ASSERT(cx->zone() == site->zone());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  MOZ_ASSERT(cx->zone()->allocKindInNursery(kind));
 
-  void* ptr = cx->nursery().allocateCell(site, thingSize, JS::TraceKind::Object);
+  void* ptr = cx->nursery().allocateCell(site, thingSize, kind);
   if (ptr) {
     return ptr;
   }
 
-  if (allowGC && !cx->suppressGC) {
-    cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
+  if constexpr (allowGC) {
+    if (!cx->suppressGC) {
+      cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
 
-    // Exceeding gcMaxBytes while tenuring can disable the Nursery.
-    if (cx->nursery().isEnabled()) {
-      return cx->nursery().allocateCell(site, thingSize, JS::TraceKind::Object);
-    }
-  }
-
-  return nullptr;
-}
-
-// Attempt to allocate a new string out of the nursery. If there is not enough
-// room in the nursery or there is an OOM, this method will return nullptr.
-template <AllowGC allowGC>
-void* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
-                                         AllocKind kind) {
-  MOZ_ASSERT(IsNurseryAllocable(kind));
-  MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-
-  AllocSite* site = cx->zone()->unknownAllocSite(JS::TraceKind::String);
-  void* ptr = cx->nursery().allocateCell(site, thingSize, JS::TraceKind::String);
-  if (ptr) {
-    return ptr;
-  }
-
-  if (allowGC && !cx->suppressGC) {
-    cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
-
-    // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
-    // other heuristics can disable nursery strings for this zone.
-    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryStrings()) {
-      return cx->nursery().allocateCell(site, thingSize, JS::TraceKind::String);
+      // Exceeding gcMaxBytes while tenuring can disable the Nursery.
+      if (cx->zone()->allocKindInNursery(kind)) {
+        return cx->nursery().allocateCell(site, thingSize, kind);
+      }
     }
   }
 
@@ -166,7 +142,9 @@ void* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
   }
 
   if (heap != TenuredHeap && cx->zone()->allocNurseryStrings()) {
-    void* ptr = rt->gc.tryNewNurseryStringCell<allowGC>(cx, size, kind);
+    AllocSite* site = cx->zone()->unknownAllocSite(JS::TraceKind::String);
+    void* ptr = rt->gc.tryNewNurseryCell<JS::TraceKind::String, allowGC>(
+        cx, size, site);
     if (ptr) {
       return ptr;
     }
@@ -191,34 +169,6 @@ template void* gc::CellAllocator::AllocateStringCell<CanGC>(JSContext*,
                                                             AllocKind, size_t,
                                                             InitialHeap);
 
-// Attempt to allocate a new BigInt out of the nursery. If there is not enough
-// room in the nursery or there is an OOM, this method will return nullptr.
-template <AllowGC allowGC>
-void* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
-                                         AllocKind kind) {
-  MOZ_ASSERT(IsNurseryAllocable(kind));
-  MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-
-  AllocSite* site = cx->zone()->unknownAllocSite(JS::TraceKind::BigInt);
-  void* ptr = cx->nursery().allocateCell(site, thingSize, JS::TraceKind::BigInt);
-  if (ptr) {
-    return ptr;
-  }
-
-  if (allowGC && !cx->suppressGC) {
-    cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
-
-    // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
-    // other heuristics can disable nursery BigInts for this zone.
-    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts()) {
-      return cx->nursery().allocateCell(site, thingSize, JS::TraceKind::BigInt);
-    }
-  }
-
-  return nullptr;
-}
-
 template <AllowGC allowGC /* = CanGC */>
 void* gc::CellAllocator::AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -233,7 +183,9 @@ void* gc::CellAllocator::AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
   }
 
   if (heap != TenuredHeap && cx->zone()->allocNurseryBigInts()) {
-    void* ptr = rt->gc.tryNewNurseryBigIntCell<allowGC>(cx, size, kind);
+    AllocSite* site = cx->zone()->unknownAllocSite(JS::TraceKind::BigInt);
+    void* ptr = rt->gc.tryNewNurseryCell<JS::TraceKind::BigInt, allowGC>(
+        cx, size, site);
     if (ptr) {
       return ptr;
     }
