@@ -22,8 +22,14 @@ const TEST_URI = `
 const TEST_DATA_SELECTED = {
   fullRule: {
     expectedProperties: [
-      { property: "ruby-align" },
-      { property: "scrollbar-width" },
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
     ],
     expectedNodes: [
       {
@@ -37,7 +43,12 @@ const TEST_DATA_SELECTED = {
     ],
   },
   classRule: {
-    expectedProperties: [{ property: "ruby-align" }],
+    expectedProperties: [
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+    ],
     expectedNodes: [
       {
         property: "ruby-align",
@@ -46,7 +57,12 @@ const TEST_DATA_SELECTED = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "scrollbar-width" }],
+    expectedProperties: [
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
+    ],
     expectedNodes: [
       {
         property: "scrollbar-width",
@@ -59,8 +75,14 @@ const TEST_DATA_SELECTED = {
 const TEST_DATA_ALL = {
   fullRule: {
     expectedProperties: [
-      { property: "ruby-align" },
-      { property: "scrollbar-width" },
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
     ],
     expectedNodes: [
       {
@@ -74,7 +96,12 @@ const TEST_DATA_ALL = {
     ],
   },
   classRule: {
-    expectedProperties: [{ property: "ruby-align" }],
+    expectedProperties: [
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+    ],
     expectedNodes: [
       {
         property: "ruby-align",
@@ -83,7 +110,12 @@ const TEST_DATA_ALL = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "scrollbar-width" }],
+    expectedProperties: [
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
+    ],
     expectedNodes: [
       {
         property: "scrollbar-width",

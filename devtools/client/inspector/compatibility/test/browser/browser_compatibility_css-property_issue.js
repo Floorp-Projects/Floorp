@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test whether the deprecated CSS property is shown as issue correctly or not.
+// Test that unsupported CSS properties are correctly reported as issues.
 
 const {
   COMPATIBILITY_ISSUE_TYPE,
@@ -15,6 +15,8 @@ const TEST_URI = `
     color: blue;
     scrollbar-width: thin;
     user-modify: read-only;
+    hyphenate-limit-chars: auto;
+    overflow-clip-box: padding-box;
   }
   div {
     ruby-align: center;
@@ -41,6 +43,22 @@ const TEST_DATA_SELECTED = [
     deprecated: true,
     experimental: false,
   },
+  {
+    type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
+    property: "hyphenate-limit-chars",
+    // No MDN url but a spec one
+    specUrl:
+      "https://drafts.csswg.org/css-text-4/#propdef-hyphenate-limit-chars",
+    deprecated: false,
+    experimental: false,
+  },
+  {
+    // No MDN url nor spec url
+    type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
+    property: "overflow-clip-box",
+    deprecated: false,
+    experimental: false,
+  },
 ];
 
 const TEST_DATA_ALL = [
@@ -59,6 +77,11 @@ add_task(async function () {
 
   const { allElementsPane, selectedElementPane } =
     await openCompatibilityView();
+
+  // If the test fail because the properties used are no longer in the dataset, or they
+  // now have mdn/spec url although we expected them not to, uncomment the next line
+  // to get all the properties in the dataset that don't have a MDN url.
+  // logCssCompatDataPropertiesWithoutMDNUrl()
 
   info("Check the content of the issue list on the selected element");
   await assertIssueList(selectedElementPane, TEST_DATA_SELECTED);
