@@ -702,7 +702,7 @@ DCSurface* DCExternalSurfaceWrapper::EnsureSurfaceForExternalImage(
 
     const auto cprofileIn = color::ColorProfileDesc::From(cspaceDesc);
     auto cprofileOut = mDCLayerTree->OutputColorProfile();
-    bool pretendSrgb = StaticPrefs::gfx_color_management_native_srgb();
+    bool pretendSrgb = true;
     if (pretendSrgb) {
       cprofileOut = color::ColorProfileDesc::From({
           color::Chromaticities::Srgb(),
