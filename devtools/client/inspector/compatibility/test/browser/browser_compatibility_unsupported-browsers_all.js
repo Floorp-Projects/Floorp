@@ -26,6 +26,7 @@ add_task(async function () {
     {
       property: "user-modify",
       unsupportedBrowsers: targetBrowsers,
+      url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
     },
   ];
   await assertIssueList(selectedElementPane, expectedIssues);

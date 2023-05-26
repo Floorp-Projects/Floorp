@@ -142,6 +142,61 @@ async function assertIssueList(panel, expectedIssues) {
         `The value of ${datasetKey} is correct`
       );
     }
+
+    const propertyEl = issueEl.querySelector(
+      ".compatibility-issue-item__property"
+    );
+    const MDN_CLASSNAME = "compatibility-issue-item__mdn-link";
+    const SPEC_CLASSNAME = "compatibility-issue-item__spec-link";
+
+    is(
+      propertyEl.textContent,
+      property,
+      "property name is displayed as expected"
+    );
+
+    is(
+      propertyEl.classList.contains(MDN_CLASSNAME),
+      !!expectedIssue.url,
+      `${property} element ${
+        expectedIssue.url ? "has" : "does not have"
+      } mdn link class`
+    );
+    is(
+      propertyEl.classList.contains(SPEC_CLASSNAME),
+      !!expectedIssue.specUrl,
+      `${property} element ${
+        expectedIssue.specUrl ? "has" : "does not have"
+      } spec link class`
+    );
+
+    if (expectedIssue.url || expectedIssue.specUrl) {
+      is(
+        propertyEl.nodeName.toLowerCase(),
+        "a",
+        `Link rendered for ${property}`
+      );
+
+      const expectedUrl = expectedIssue.url
+        ? expectedIssue.url +
+          "?utm_source=devtools&utm_medium=inspector-compatibility&utm_campaign=default"
+        : expectedIssue.specUrl;
+      const { link } = await simulateLinkClick(propertyEl);
+      is(
+        link,
+        expectedUrl,
+        `Click on ${property} link navigates user to expected url`
+      );
+    } else {
+      is(
+        propertyEl.nodeName.toLowerCase(),
+        "span",
+        `No link rendered for ${property}`
+      );
+
+      const { link } = await simulateLinkClick(propertyEl);
+      is(link, null, `Click on ${property} does not navigate`);
+    }
   }
 }
 
