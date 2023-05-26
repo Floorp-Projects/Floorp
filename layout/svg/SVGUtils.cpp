@@ -268,6 +268,7 @@ float SVGUtils::UserSpace(SVGElement* aSVGElement,
 
 float SVGUtils::UserSpace(nsIFrame* aNonSVGContext,
                           const SVGAnimatedLength* aLength) {
+  MOZ_ASSERT(!aNonSVGContext->IsTextFrame(), "Not expecting text content");
   return aLength->GetAnimValue(aNonSVGContext);
 }
 

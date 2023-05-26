@@ -237,7 +237,7 @@ already_AddRefed<gfxPattern> SVGGradientFrame::GetPaintServerPattern(
     // Set mSource for this consumer.
     // If this gradient is applied to text, our caller will be the glyph, which
     // is not an element, so we need to get the parent
-    mSource = aSource->GetContent()->IsText() ? aSource->GetParent() : aSource;
+    mSource = aSource->IsTextFrame() ? aSource->GetParent() : aSource;
   }
 
   AutoTArray<nsIFrame*, 8> stopFrames;
