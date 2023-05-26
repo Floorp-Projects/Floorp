@@ -129,7 +129,7 @@
   color: var(--compatibility-cause-color);
 }
 
-.compatibility-issue-item__property {
+.compatibility-issue-item__mdn-link {
   color: var(--theme-highlight-blue);
   unicode-bidi: plaintext;
   display: flex;

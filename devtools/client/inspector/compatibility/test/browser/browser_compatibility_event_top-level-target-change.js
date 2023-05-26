@@ -19,21 +19,10 @@ const TEST_DATA_ISSUES = {
       <div>test</div>
     </body>
   `,
-  expectedIssuesOnSelected: [
-    {
-      property: "ruby-align",
-      url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
-    },
-  ],
+  expectedIssuesOnSelected: [{ property: "ruby-align" }],
   expectedIssuesOnAll: [
-    {
-      property: "ruby-align",
-      url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
-    },
-    {
-      property: "scrollbar-width",
-      url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
-    },
+    { property: "ruby-align" },
+    { property: "scrollbar-width" },
   ],
 };
 

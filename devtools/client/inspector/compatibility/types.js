@@ -30,9 +30,7 @@ const issue = {
   // The CSS property which caused this issue.
   property: PropTypes.string.isRequired,
   // The url of MDN documentation for the CSS property.
-  url: PropTypes.string,
-  // The url of the specification for the CSS property.
-  specUrl: PropTypes.string,
+  url: PropTypes.string.isRequired,
   // Whether the CSS property is deprecated or not.
   deprecated: PropTypes.bool.isRequired,
   // Whether the CSS property is experimental or not.

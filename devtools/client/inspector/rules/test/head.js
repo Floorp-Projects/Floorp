@@ -890,19 +890,16 @@ function getTextProperty(view, ruleIndex, declaration) {
  *        The index we expect the rule to have in the rule-view.
  * @param {Object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
- * @param {Object} options
- * @param {string | undefined} options.expected
+ * @param {string | undefined} expected
  *        Expected message ID for the given incompatible property.
  * If the expected message is not specified (undefined), the given declaration
  * is inferred as cross-browser compatible and is tested for same.
- * @param {string | null | undefined} options.expectedLearnMoreUrl
- *        Expected learn more link. Pass `null` to check that no "Learn more" link is displayed.
  */
 async function checkDeclarationCompatibility(
   view,
   ruleIndex,
   declaration,
-  { expected, expectedLearnMoreUrl }
+  expected
 ) {
   const declarations = await getPropertiesForRuleIndex(view, ruleIndex, true);
   const [[name, value]] = Object.entries(declaration);
@@ -924,35 +921,6 @@ async function checkDeclarationCompatibility(
       ruleIndex,
       declaration
     );
-  }
-
-  if (expectedLearnMoreUrl !== undefined) {
-    // Show the tooltip
-    const tooltip = view.tooltips.getTooltip("interactiveTooltip");
-    const onTooltipReady = tooltip.once("shown");
-    const { compatibilityIcon } = declarations.get(dec);
-    await view.tooltips.onInteractiveTooltipTargetHover(compatibilityIcon);
-    tooltip.show(compatibilityIcon);
-    await onTooltipReady;
-
-    const learnMoreEl = tooltip.panel.querySelector(".link");
-    if (expectedLearnMoreUrl === null) {
-      ok(!learnMoreEl, `"${dec}" has no "Learn more" link`);
-    } else {
-      ok(learnMoreEl, `"${dec}" has a "Learn more" link`);
-
-      const { link } = await simulateLinkClick(learnMoreEl);
-      is(
-        link,
-        expectedLearnMoreUrl,
-        `Click on ${dec} "Learn more" link navigates user to expected url`
-      );
-    }
-
-    // Hide the tooltip.
-    const onTooltipHidden = tooltip.once("hidden");
-    tooltip.hide();
-    await onTooltipHidden;
   }
 }
 
@@ -1102,7 +1070,6 @@ async function checkInteractiveTooltip(view, type, ruleIndex, declaration) {
  *                  {
  *                    value: "grab",
  *                    expected: INCOMPATIBILITY_TOOLTIP_MESSAGE.default,
- *                    expectedLearnMoreUrl: "https://developer.mozilla.org/en-US/docs/Web/CSS/cursor",
  *                  },
  *                },
  *              ],
@@ -1124,10 +1091,7 @@ async function runCSSCompatibilityTests(view, inspector, tests) {
           {
             [rule]: rules[rule].value,
           },
-          {
-            expected: rules[rule].expected,
-            expectedLearnMoreUrl: rules[rule].expectedLearnMoreUrl,
-          }
+          rules[rule].expected
         );
       }
     }
