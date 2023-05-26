@@ -302,6 +302,12 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
                                            const AllocSiteInput& allocSite) {
   MOZ_ASSERT(IsNurseryAllocable(allocKind));
 
+  // Currently the JIT does not nursery allocate foreground finalized
+  // objects. This is allowed for objects that support this and have the
+  // JSCLASS_SKIP_NURSERY_FINALIZE class flag set. It's hard to assert that here
+  // though so disallow all foreground finalized objects for now.
+  MOZ_ASSERT(!IsForegroundFinalized(allocKind));
+
   // We still need to allocate in the nursery, per the comment in
   // shouldNurseryAllocate; however, we need to insert into the
   // mallocedBuffers set, so bail to do the nursery allocation in the
