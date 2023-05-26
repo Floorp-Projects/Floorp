@@ -507,6 +507,8 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
   MOZ_ASSERT(size % CellAlignBytes == 0);
   MOZ_ASSERT(size_t(kind) < NurseryTraceKinds);
+  MOZ_ASSERT_IF(kind == JS::TraceKind::String, canAllocateStrings());
+  MOZ_ASSERT_IF(kind == JS::TraceKind::BigInt, canAllocateBigInts());
 
   void* ptr = allocate(sizeof(NurseryCellHeader) + size);
   if (!ptr) {

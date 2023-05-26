@@ -67,16 +67,6 @@ class GCSchedulingTunables;
 class TenuringTracer;
 }  // namespace gc
 
-// Classes with JSCLASS_SKIP_NURSERY_FINALIZE or Wrapper classes with
-// CROSS_COMPARTMENT flags will not have their finalizer called if they are
-// nursery allocated and not promoted to the tenured heap. The finalizers for
-// these classes must do nothing except free data which was allocated via
-// Nursery::allocateBuffer.
-inline bool CanNurseryAllocateFinalizedClass(const JSClass* const clasp) {
-  MOZ_ASSERT(clasp->hasFinalize());
-  return clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE;
-}
-
 class alignas(TypicalCacheLineSize) Nursery {
  public:
   static const size_t Alignment = gc::ChunkSize;
@@ -131,23 +121,6 @@ class alignas(TypicalCacheLineSize) Nursery {
 
   template <typename T>
   inline bool isInside(const SharedMem<T>& p) const;
-
-  // Allocate and return a pointer to a new GC object with its |slots|
-  // pointer pre-filled. Returns nullptr if the Nursery is full.
-  void* allocateObject(gc::AllocSite* site, size_t size, const JSClass* clasp) {
-    MOZ_ASSERT_IF(clasp->hasFinalize() && !clasp->isProxyObject(),
-                  CanNurseryAllocateFinalizedClass(clasp));
-    return allocateCell(site, size, JS::TraceKind::Object);
-  }
-
-  void* allocateBigInt(gc::AllocSite* site, size_t size) {
-    MOZ_ASSERT(canAllocateBigInts());
-    return allocateCell(site, size, JS::TraceKind::BigInt);
-  }
-  void* allocateString(gc::AllocSite* site, size_t size) {
-    MOZ_ASSERT(canAllocateStrings());
-    return allocateCell(site, size, JS::TraceKind::String);
-  }
 
   // Allocate and return a pointer to a new GC thing. Returns nullptr if the
   // Nursery is full.
