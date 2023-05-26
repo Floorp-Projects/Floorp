@@ -327,13 +327,15 @@ class ContentCacheInChild final : public ContentCache {
 
   /**
    * Cache*() retrieves the latest content information and store them.
-   * Be aware, CacheSelection() calls CacheTextRects(), and also CacheText()
-   * calls CacheSelection().  So, related data is also retrieved automatically.
+   * Be aware, CacheSelection() calls CacheCaretAndTextRects(),
+   * CacheCaretAndTextRects() calls CacheCaret() and CacheTextRects(), and
+   * CacheText() calls CacheSelection().  So, related data is also retrieved
+   * automatically.
    */
   bool CacheEditorRect(nsIWidget* aWidget,
                        const IMENotification* aNotification = nullptr);
-  bool CacheSelection(nsIWidget* aWidget,
-                      const IMENotification* aNotification = nullptr);
+  bool CacheCaretAndTextRects(nsIWidget* aWidget,
+                              const IMENotification* aNotification = nullptr);
   bool CacheText(nsIWidget* aWidget,
                  const IMENotification* aNotification = nullptr);
 
@@ -355,6 +357,8 @@ class ContentCacheInChild final : public ContentCache {
                      LayoutDeviceIntRect& aCharRect) const;
   bool QueryCharRectArray(nsIWidget* aWidget, uint32_t aOffset,
                           uint32_t aLength, RectArray& aCharRectArray) const;
+  bool CacheSelection(nsIWidget* aWidget,
+                      const IMENotification* aNotification = nullptr);
   bool CacheCaret(nsIWidget* aWidget,
                   const IMENotification* aNotification = nullptr);
   bool CacheTextRects(nsIWidget* aWidget,
