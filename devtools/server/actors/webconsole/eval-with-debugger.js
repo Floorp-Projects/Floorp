@@ -118,11 +118,7 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
   const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
-  const { dbgGlobal, bindSelf, evalGlobal } = getDbgGlobal(
-    options,
-    dbg,
-    webConsole
-  );
+  const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
 
   const helpers = WebConsoleCommandsManager.getWebConsoleCommands(
     webConsole,
@@ -162,7 +158,7 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
 
   let noSideEffectDebugger = null;
   if (options.eager) {
-    noSideEffectDebugger = makeSideeffectFreeDebugger(evalGlobal);
+    noSideEffectDebugger = makeSideeffectFreeDebugger();
   }
 
   let result;
@@ -352,12 +348,10 @@ function forceLexicalInitForVariableDeclarationsInThrowingExpression(
 /**
  * Creates a side-effect-free debugger instance
  *
- * @param object maybeEvalGlobal
- *        If provided, raw debuggee global to get `window` accessors.
  * @return object
  *         Side-effect-free debugger.
  */
-function makeSideeffectFreeDebugger(maybeEvalGlobal) {
+function makeSideeffectFreeDebugger() {
   // We ensure that the metadata for native functions is loaded before we
   // initialize sideeffect-prevention because the data is lazy-loaded, and this
   // logic can run inside of debuggee compartments because the
@@ -366,7 +360,7 @@ function makeSideeffectFreeDebugger(maybeEvalGlobal) {
   // because building the list of valid native functions is itself a
   // side-effectful operation because it needs to populate a
   // module cache, among any number of other things.
-  ensureSideEffectFreeNatives(maybeEvalGlobal);
+  ensureSideEffectFreeNatives();
 
   // Note: It is critical for debuggee performance that we implement all of
   // this debuggee tracking logic with a separate Debugger instance.
@@ -442,73 +436,18 @@ function makeSideeffectFreeDebugger(maybeEvalGlobal) {
   return dbg;
 }
 
-exports.makeSideeffectFreeDebugger = makeSideeffectFreeDebugger;
-
 // Native functions which are considered to be side effect free.
 let gSideEffectFreeNatives; // string => Array(Function)
 
 /**
  * Generate gSideEffectFreeNatives map.
- *
- * @param object maybeEvalGlobal
- *        If provided, raw debuggee global to get `window` accessors.
  */
-function ensureSideEffectFreeNatives(maybeEvalGlobal) {
+function ensureSideEffectFreeNatives() {
   if (gSideEffectFreeNatives) {
     return;
   }
 
-  const { natives: domNatives, idlPureAllowlist } = eagerFunctionAllowlist;
-
-  const instanceFunctionAllowlist = [];
-
-  function collectMethodsAndGetters(obj, methodsAndGetters) {
-    // This can retrieve xray function if the obj comes from web content.
-    // Xray function has original native and JitInfo even if the property is
-    // modified by the web content.
-
-    if ("methods" in methodsAndGetters) {
-      for (const name of methodsAndGetters.methods) {
-        const func = obj[name];
-        if (func) {
-          instanceFunctionAllowlist.push(func);
-        }
-      }
-    }
-    if ("getters" in methodsAndGetters) {
-      for (const name of methodsAndGetters.getters) {
-        const func = Object.getOwnPropertyDescriptor(obj, name)?.get;
-        if (func) {
-          instanceFunctionAllowlist.push(func);
-        }
-      }
-    }
-  }
-
-  // `Window` can be undefined if this is off main thread.
-  if (
-    maybeEvalGlobal &&
-    typeof Window === "function" &&
-    Window.isInstance(maybeEvalGlobal) &&
-    "Window" in idlPureAllowlist &&
-    "instance" in idlPureAllowlist.Window
-  ) {
-    collectMethodsAndGetters(maybeEvalGlobal, idlPureAllowlist.Window.instance);
-    const maybeLocation = maybeEvalGlobal.location;
-    if (maybeLocation) {
-      collectMethodsAndGetters(
-        maybeLocation,
-        idlPureAllowlist.Location.instance
-      );
-    }
-    const maybeDocument = maybeEvalGlobal.document;
-    if (maybeDocument) {
-      collectMethodsAndGetters(
-        maybeDocument,
-        idlPureAllowlist.Document.instance
-      );
-    }
-  }
+  const { natives: domNatives } = eagerFunctionAllowlist;
 
   const natives = [
     ...eagerEcmaAllowlist.functions,
@@ -517,8 +456,6 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
     // Pull in all of the non-ECMAScript native functions that we want to
     // allow as well.
     ...domNatives,
-
-    ...instanceFunctionAllowlist,
   ];
 
   const map = new Map();
@@ -634,7 +571,6 @@ function getFrameDbg(options, webConsole) {
  *         An object that holds the following properties:
  *         - bindSelf: (optional) the self object for the evaluation
  *         - dbgGlobal: the global object reference in the debugger
- *         - evalGlobal: the raw global object
  */
 function getDbgGlobal(options, dbg, webConsole) {
   let evalGlobal = webConsole.evalGlobal;
@@ -654,7 +590,7 @@ function getDbgGlobal(options, dbg, webConsole) {
   // If we have an object to bind to |_self|, create a Debugger.Object
   // referring to that object, belonging to dbg.
   if (!options.selectedObjectActor) {
-    return { bindSelf: null, dbgGlobal, evalGlobal };
+    return { bindSelf: null, dbgGlobal };
   }
 
   // For objects related to console messages, they will be registered under the Target Actor
@@ -665,12 +601,12 @@ function getDbgGlobal(options, dbg, webConsole) {
     webConsole.parentActor.getActorByID(options.selectedObjectActor);
 
   if (!actor) {
-    return { bindSelf: null, dbgGlobal, evalGlobal };
+    return { bindSelf: null, dbgGlobal };
   }
 
   const jsVal = actor instanceof LongStringActor ? actor.str : actor.rawValue();
   if (!isObject(jsVal)) {
-    return { bindSelf: jsVal, dbgGlobal, evalGlobal };
+    return { bindSelf: jsVal, dbgGlobal };
   }
 
   // If we use the makeDebuggeeValue method of jsVal's own global, then
@@ -678,5 +614,5 @@ function getDbgGlobal(options, dbg, webConsole) {
   // that is, without wrappers. The evalWithBindings call will then wrap
   // jsVal appropriately for the evaluation compartment.
   const bindSelf = dbgGlobal.makeDebuggeeValue(jsVal);
-  return { bindSelf, dbgGlobal, evalGlobal };
+  return { bindSelf, dbgGlobal };
 }

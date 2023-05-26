@@ -8,100 +8,80 @@
 
 module.exports = {
   DOMTokenList: {
-    prototype: {
-      methods: ["item", "contains"],
-    },
+    prototype: ["item", "contains"],
   },
   Document: {
-    prototype: {
-      methods: [
-        "getSelection",
-        "hasStorageAccess",
-        "getElementsByTagName",
-        "getElementsByTagNameNS",
-        "getElementsByClassName",
-        "getElementById",
-        "getElementsByName",
-        "querySelector",
-        "querySelectorAll",
-        "createNSResolver",
-      ],
-    },
+    prototype: [
+      "getSelection",
+      "hasStorageAccess",
+      "getElementsByTagName",
+      "getElementsByTagNameNS",
+      "getElementsByClassName",
+      "getElementById",
+      "getElementsByName",
+      "querySelector",
+      "querySelectorAll",
+      "createNSResolver",
+    ],
   },
   Element: {
-    prototype: {
-      methods: [
-        "getAttributeNames",
-        "getAttribute",
-        "getAttributeNS",
-        "hasAttribute",
-        "hasAttributeNS",
-        "hasAttributes",
-        "closest",
-        "matches",
-        "webkitMatchesSelector",
-        "getElementsByTagName",
-        "getElementsByTagNameNS",
-        "getElementsByClassName",
-        "mozMatchesSelector",
-        "querySelector",
-        "querySelectorAll",
-        "getAsFlexContainer",
-        "getGridFragments",
-        "hasGridFragments",
-        "getElementsWithGrid",
-      ],
-    },
+    prototype: [
+      "getAttributeNames",
+      "getAttribute",
+      "getAttributeNS",
+      "hasAttribute",
+      "hasAttributeNS",
+      "hasAttributes",
+      "closest",
+      "matches",
+      "webkitMatchesSelector",
+      "getElementsByTagName",
+      "getElementsByTagNameNS",
+      "getElementsByClassName",
+      "mozMatchesSelector",
+      "querySelector",
+      "querySelectorAll",
+      "getAsFlexContainer",
+      "getGridFragments",
+      "hasGridFragments",
+      "getElementsWithGrid",
+    ],
   },
   FormData: {
-    prototype: {
-      methods: ["entries", "keys", "values"],
-    },
+    prototype: ["entries", "keys", "values"],
   },
   Headers: {
-    prototype: {
-      methods: ["entries", "keys", "values"],
-    },
+    prototype: ["entries", "keys", "values"],
   },
   Node: {
-    prototype: {
-      methods: [
-        "getRootNode",
-        "hasChildNodes",
-        "isSameNode",
-        "isEqualNode",
-        "compareDocumentPosition",
-        "contains",
-        "lookupPrefix",
-        "lookupNamespaceURI",
-        "isDefaultNamespace",
-      ],
-    },
+    prototype: [
+      "getRootNode",
+      "hasChildNodes",
+      "isSameNode",
+      "isEqualNode",
+      "compareDocumentPosition",
+      "contains",
+      "lookupPrefix",
+      "lookupNamespaceURI",
+      "isDefaultNamespace",
+    ],
   },
   Performance: {
-    prototype: {
-      methods: ["now"],
-    },
+    prototype: ["now"],
   },
   Range: {
-    prototype: {
-      methods: [
-        "isPointInRange",
-        "comparePoint",
-        "intersectsNode",
-        "getClientRects",
-        "getBoundingClientRect",
-      ],
-    },
+    prototype: [
+      "isPointInRange",
+      "comparePoint",
+      "intersectsNode",
+      "getClientRects",
+      "getBoundingClientRect",
+    ],
   },
   Selection: {
-    prototype: {
-      methods: ["getRangeAt", "containsNode"],
-    },
+    prototype: ["getRangeAt", "containsNode"],
   },
   URLSearchParams: {
-    prototype: {
-      methods: ["entries", "keys", "values"],
-    },
+    prototype: ["entries", "keys", "values"],
   },
 };
