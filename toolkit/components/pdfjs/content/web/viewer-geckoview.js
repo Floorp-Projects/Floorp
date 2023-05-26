@@ -870,7 +870,7 @@ const PDFViewerApplication = {
     }
     if (appConfig.toolbar) {
       if (_app_options.AppOptions.get("enableFloatingToolbar")) {
-        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n, await this._nimbusDataPromise);
+        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n, await this._nimbusDataPromise, this.externalServices);
       }
     }
     if (appConfig.secondaryToolbar) {
@@ -4039,7 +4039,7 @@ exports.SimpleLinkService = SimpleLinkService;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.Toolbar = exports.SecondaryToolbar = exports.PDFThumbnailViewer = exports.PDFSidebar = exports.PDFPresentationMode = exports.PDFOutlineViewer = exports.PDFLayerViewer = exports.PDFFindBar = exports.PDFDocumentProperties = exports.PDFCursorTools = exports.PDFAttachmentViewer = exports.AnnotationEditorParams = void 0;
+exports.SecondaryToolbar = exports.PDFThumbnailViewer = exports.PDFSidebar = exports.PDFPresentationMode = exports.PDFOutlineViewer = exports.PDFLayerViewer = exports.PDFFindBar = exports.PDFDocumentProperties = exports.PDFCursorTools = exports.PDFAttachmentViewer = exports.AnnotationEditorParams = void 0;
 const AnnotationEditorParams = null;
 exports.AnnotationEditorParams = AnnotationEditorParams;
 const PDFAttachmentViewer = null;
@@ -4062,8 +4062,6 @@ const PDFThumbnailViewer = null;
 exports.PDFThumbnailViewer = PDFThumbnailViewer;
 const SecondaryToolbar = null;
 exports.SecondaryToolbar = SecondaryToolbar;
-const Toolbar = null;
-exports.Toolbar = Toolbar;
 
 /***/ }),
 /* 10 */
@@ -6096,7 +6094,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.7.67';
+    const viewerVersion = '3.7.95';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9324,8 +9322,10 @@ exports.Toolbar = void 0;
 class Toolbar {
   #buttons;
   #eventBus;
-  constructor(options, eventBus, _l10n, nimbusData) {
+  #externalServices;
+  constructor(options, eventBus, _l10n, nimbusData, externalServices) {
     this.#eventBus = eventBus;
+    this.#externalServices = externalServices;
     const buttons = [{
       element: options.download,
       eventName: "download",
@@ -9371,6 +9371,12 @@ class Toolbar {
           this.#eventBus.dispatch(eventName, {
             source: this,
             ...eventDetails
+          });
+          this.#externalServices.reportTelemetry({
+            type: "gv-buttons",
+            data: {
+              id: `${element.id}_tapped`
+            }
           });
         }
       });
@@ -9632,8 +9638,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.7.67';
-const pdfjsBuild = '38287d943';
+const pdfjsVersion = '3.7.95';
+const pdfjsBuild = 'cbc4b20b1';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

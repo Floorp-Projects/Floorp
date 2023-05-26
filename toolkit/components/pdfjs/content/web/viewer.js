@@ -4355,12 +4355,9 @@ class PDFAttachmentViewer extends _base_tree_viewer.BaseTreeViewer {
       this._dispatchEvent(0);
       return;
     }
-    const names = Object.keys(attachments).sort(function (a, b) {
-      return a.toLowerCase().localeCompare(b.toLowerCase());
-    });
     const fragment = document.createDocumentFragment();
     let attachmentsCount = 0;
-    for (const name of names) {
+    for (const name in attachments) {
       const item = attachments[name];
       const content = item.content,
         filename = (0, _pdfjsLib.getFilenameFromUrl)(item.filename, true);
@@ -8625,7 +8622,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.7.67';
+    const viewerVersion = '3.7.95';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12807,8 +12804,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.7.67';
-const pdfjsBuild = '38287d943';
+const pdfjsVersion = '3.7.95';
+const pdfjsBuild = 'cbc4b20b1';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
