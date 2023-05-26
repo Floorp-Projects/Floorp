@@ -10,7 +10,6 @@ A11Y_MANIFESTS += [
     "aom/a11y.ini",
     "attributes/a11y.ini",
     "bounds/a11y.ini",
-    "editabletext/a11y.ini",
     "elm/a11y.ini",
     "events/a11y.ini",
     "events/docload/a11y.ini",
