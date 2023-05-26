@@ -160,9 +160,6 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   Atomic<bool> mInitialized{false};
   // indicates whether we are currently in the process of shutting down
   Atomic<bool> mShuttingDown{false};
-  Atomic<bool> mSocketThreadShutDown{false};
-  // Effectively owned by the SocketThread
-  RefPtr<nsSocketTransportService> mSelf;
 
   Mutex mLock{"nsSocketTransportService::mLock"};
   // Variables in the next section protected by mLock
