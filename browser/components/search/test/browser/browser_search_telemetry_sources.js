@@ -13,12 +13,6 @@
 
 const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
   ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-const { UrlbarTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/UrlbarTestUtils.sys.mjs"
-);
-const { SearchTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SearchTestUtils.sys.mjs"
-);
 
 const TEST_PROVIDER_INFO = [
   {
@@ -73,7 +67,6 @@ async function waitForIdle() {
 }
 
 SearchTestUtils.init(this);
-UrlbarTestUtils.init(this);
 
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);

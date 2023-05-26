@@ -23,7 +23,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
@@ -49,6 +48,14 @@ XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
   return module;
 });
 
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  );
+  module.init(this);
+  return module;
+});
+
 XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {
   return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
     Ci.nsIObserver
@@ -66,10 +73,6 @@ AddonTestUtils.createAppInfo(
 
 const SUGGESTIONS_ENGINE_NAME = "Suggestions";
 const TAIL_SUGGESTIONS_ENGINE_NAME = "Tail Suggestions";
-
-add_setup(async function initXPCShellDependencies() {
-  await UrlbarTestUtils.initXPCShellDependencies();
-});
 
 /**
  * Gets the database connection.  If the Places connection is invalid it will

@@ -22,7 +22,6 @@ const SUGGEST_PREF = "browser.search.suggest.enabled";
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderTabToSearch:
     "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -121,15 +120,11 @@ add_setup(async function () {
     set: [["browser.urlbar.maxHistoricalSearchSuggestions", 0]],
   });
 
-  // Allows UrlbarTestUtils to access this scope's test helpers, like Assert.
-  UrlbarTestUtils.init(this);
-
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
-    UrlbarTestUtils.uninit();
   });
 });
 

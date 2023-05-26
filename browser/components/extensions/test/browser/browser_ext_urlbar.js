@@ -5,7 +5,14 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  );
+  module.init(this);
+  return module;
 });
 
 async function loadTipExtension(options = {}) {
@@ -92,10 +99,8 @@ async function updateTopSites(condition, searchShortcuts = false) {
 }
 
 add_setup(async function () {
-  UrlbarTestUtils.init(this);
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
   registerCleanupFunction(async () => {
-    UrlbarTestUtils.uninit();
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
   });
   // Set the notification timeout to a really high value to avoid intermittent
