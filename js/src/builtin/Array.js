@@ -832,7 +832,6 @@ function ArrayKeys() {
   return CreateArrayIterator(this, ITEM_KIND_KEY);
 }
 
-#ifdef NIGHTLY_BUILD
 // https://tc39.es/proposal-array-from-async/
 // TODO: Bug 1834560 The step numbers in this will need updating when this is merged
 // into the main spec.
@@ -1006,7 +1005,6 @@ function ArrayFromAsync(asyncItems, mapfn = undefined, thisArg = undefined) {
   // Step 5. Return promiseCapability.[[Promise]].
   return fromAsyncClosure();
 }
-#endif
 
 // ES 2017 draft 0f10dba4ad18de92d47d421f378233a2eae8f077 22.1.2.1
 function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
