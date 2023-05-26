@@ -15,6 +15,7 @@ import org.junit.runners.model.Statement
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.helpers.IdlingResourceHelper.unregisterAllIdlingResources
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.setNetworkEnabled
 
 /**
  *  Rule to retry flaky tests for a given number of times, catching some of the more common exceptions.
@@ -34,6 +35,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                     base.evaluate()
                     break
                 } catch (t: AssertionError) {
+                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
                     runBlocking {
                         permissionStorage.deleteAllSitePermissions()
@@ -50,6 +52,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: UiObjectNotFoundException) {
+                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
                     runBlocking {
                         permissionStorage.deleteAllSitePermissions()
@@ -58,6 +61,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: NoMatchingViewException) {
+                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
                     runBlocking {
                         permissionStorage.deleteAllSitePermissions()
@@ -66,6 +70,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: IdlingResourceTimeoutException) {
+                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
                     runBlocking {
                         permissionStorage.deleteAllSitePermissions()
@@ -74,6 +79,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: RuntimeException) {
+                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
                     runBlocking {
                         permissionStorage.deleteAllSitePermissions()
@@ -82,6 +88,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: NullPointerException) {
+                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
                     runBlocking {
                         permissionStorage.deleteAllSitePermissions()
