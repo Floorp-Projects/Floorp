@@ -18,7 +18,6 @@ UNIFIED_SOURCES += [
     "AccessibleWrap.mm",
     "DocAccessibleWrap.mm",
     "GeckoTextMarker.mm",
-    "HyperTextAccessibleWrap.mm",
     "MacUtils.mm",
     "MOXAccessibleBase.mm",
     "MOXLandmarkAccessibles.mm",

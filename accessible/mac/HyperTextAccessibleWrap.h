@@ -7,89 +7,11 @@
 #define mozilla_a11y_HyperTextAccessibleWrap_h__
 
 #include "HyperTextAccessible.h"
-#include "PlatformExtTypes.h"
-#include "WordMovementType.h"
 
 namespace mozilla {
 namespace a11y {
 
-struct TextPoint;
-
-class HyperTextAccessibleWrap : public HyperTextAccessible {
- public:
-  HyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-      : HyperTextAccessible(aContent, aDoc) {}
-
-  void TextForRange(nsAString& aText, int32_t aStartOffset,
-                    HyperTextAccessible* aEndContainer, int32_t aEndOffset);
-
-  void AttributedTextForRange(nsTArray<nsString>& aStrings,
-                              nsTArray<RefPtr<AccAttributes>>& aProperties,
-                              nsTArray<LocalAccessible*>& aContainers,
-                              int32_t aStartOffset,
-                              HyperTextAccessible* aEndContainer,
-                              int32_t aEndOffset);
-
-  LayoutDeviceIntRect BoundsForRange(int32_t aStartOffset,
-                                     HyperTextAccessible* aEndContainer,
-                                     int32_t aEndOffset);
-
-  int32_t LengthForRange(int32_t aStartOffset,
-                         HyperTextAccessible* aEndContainer,
-                         int32_t aEndOffset);
-
-  void OffsetAtIndex(int32_t aIndex, HyperTextAccessible** aContainer,
-                     int32_t* aOffset);
-
-  void RangeAt(int32_t aOffset, EWhichRange aRangeType,
-               HyperTextAccessible** aStartContainer, int32_t* aStartOffset,
-               HyperTextAccessible** aEndContainer, int32_t* aEndOffset);
-
-  void NextClusterAt(int32_t aOffset, HyperTextAccessible** aNextContainer,
-                     int32_t* aNextOffset);
-
-  void PreviousClusterAt(int32_t aOffset, HyperTextAccessible** aPrevContainer,
-                         int32_t* aPrevOffset);
-
-  void RangeOfChild(LocalAccessible* aChild, int32_t* aStartOffset,
-                    int32_t* aEndOffset);
-
-  LocalAccessible* LeafAtOffset(int32_t aOffset);
-
-  MOZ_CAN_RUN_SCRIPT void SelectRange(int32_t aStartOffset,
-                                      HyperTextAccessible* aEndContainer,
-                                      int32_t aEndOffset);
-
- protected:
-  ~HyperTextAccessibleWrap() {}
-
- private:
-  TextPoint FindTextPoint(int32_t aOffset, nsDirection aDirection,
-                          nsSelectionAmount aAmount,
-                          EWordMovementType aWordMovementType);
-
-  HyperTextAccessibleWrap* EditableRoot();
-
-  void LeftWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
-                  int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
-                  int32_t* aEndOffset);
-
-  void RightWordAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
-                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
-                   int32_t* aEndOffset);
-
-  void LineAt(int32_t aOffset, bool aNextLine,
-              HyperTextAccessible** aStartContainer, int32_t* aStartOffset,
-              HyperTextAccessible** aEndContainer, int32_t* aEndOffset);
-
-  void ParagraphAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
-                   int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
-                   int32_t* aEndOffset);
-
-  void StyleAt(int32_t aOffset, HyperTextAccessible** aStartContainer,
-               int32_t* aStartOffset, HyperTextAccessible** aEndContainer,
-               int32_t* aEndOffset);
-};
+typedef class HyperTextAccessible HyperTextAccessibleWrap;
 
 }  // namespace a11y
 }  // namespace mozilla
