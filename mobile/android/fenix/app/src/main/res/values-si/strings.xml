@@ -67,8 +67,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">එක් තට්ටුවකින් ඊළඟ පෞද්. පටිත්ත අරින්න.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">එක් තට්ටුවකින් ඊළඟ පෞද්. පටිත්ත අරින්න.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">මුල් තිරයට යොදන්න</string>
@@ -123,6 +121,9 @@
     <string name="home_screen_shortcut_open_new_tab_2">නව පටිත්ත</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">නව පෞද්. පටිත්ත</string>
+
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">මුරපද වෙත කෙටිමඟ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -250,9 +251,6 @@
     <string name="search_settings_menu_item">සෙවුම් සැකසුම්</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">මෙවර සෙවීම:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">මෙවර සෙවීම:</string>
 
     <!-- Home onboarding -->
@@ -297,6 +295,12 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">%s පෙරනිමි අතිරික්සුව කරන්න</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් ප්‍රධාන අතිරික්සුව කරන්න</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">පෞද්ගලිකත්‍ව දැන්වීම</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button">පෙරනිමි අතිරික්සුව කරන්න</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -383,9 +387,17 @@
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">අවලංගු</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">සහාය ඉල්ලන්න</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">සහාය ඉල්ලන්න</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">ඉල්ලීම යවන්න</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">දත්තකඩ පතාක අවකරණය</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">දත්තකඩ පතාක අවකරණය</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">මෙම අඩවිය සඳහා සහාය ඉල්ලනවා ද?</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">අඩවිය සඳහා සහාය ඉල්ලීම යොමු කෙරිණි.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">ඉල්ලීම යැවිණි</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">මෙම අඩවියට සක්‍රියයි</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -397,42 +409,18 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s මෙම අඩවියේ දත්තකඩ ඉවත් කර පිටුව නැවුම් කරයි. සියළුම දත්තකඩ මැකීමෙන් බඩු කරත්ත හිස් වීමට හෝ ඔබව නික්මවීමට ඉඩ ඇත.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s සඳහා දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේපයට තැත් කිරීමට හැකිය.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s සහාය දක්වන අඩවිවල තිබෙන සියළුම දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමට උත්සාහ කරයි.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">දත්තකඩ පතාක ඉවරයි!</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">හැකි විට දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කරන්න.</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">%1$s සඳහා හැකි විට දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේපයට ඉඩ දෙනවාද?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">දැන් නොවේ</string>
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">පතාක ඉවතලන්න</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">ඔබ දත්තකඩ ඉල්ලීම් අඩුවෙන් දකිනු ඇත</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">දත්තකඩ උත්පතන අඩුවෙන් දකින්න</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">බාධාවකින් තොර පිරික්සීමකට දත්තකඩ උත්පතන සඳහා ස්වයංක්‍රීයව පිළිතුරු දෙයි. %1$s හැකි නම් සියළුම ඉල්ලීම් ප්‍රතික්‍ෂේප කරයි.</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">උත්පතන ඉවතලන්න</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">දත්තකඩ පතාක අවකරණය</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">%1$s සඳහා හැකි නම් අඩවියක දත්තකඩ ඉල්ලීම ප්‍රතික්‍ෂේප කිරීමට ඉඩ දෙනවාද?</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ඉඩ දෙන්න</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">ඉඩ දෙන්න</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">සක්‍රිය</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">අක්‍රිය</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -741,17 +729,10 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">අවලංගු</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">අඩවි %d</string>
-
 
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">පිටු %d</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">අඩවි %d</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1079,8 +1060,6 @@
     <string name="phone_feature_blocked_by_android">ඇන්ඩ්‍රොයිඩ් මගින් අවහිරයි</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">හැරදැමීම්</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">සක්‍රිය</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">අක්‍රිය</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1320,7 +1299,7 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">මකා දමන කාල පරාසය</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">ඉතිහාසය (අන් උපාංග වලින් සමමුහූර්ත ඉතිහාසය ද), දත්තකඩ හා වෙනත් පිරික්සුම් දත්ත ඉවත් කරයි.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">ඉතිහාසය (අන් උපාංග වලින් සමමුහූර්ත ඉතිහාසය ද), දත්තකඩ හා වෙනත් පිරික්සුම් දත්ත ඉවත් කරයි.</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">පසුගිය පැය</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
