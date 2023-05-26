@@ -122,9 +122,9 @@ AutoDisableProxyCheck::~AutoDisableProxyCheck() {
 }
 
 JS_PUBLIC_API void JS::AssertGCThingMustBeTenured(JSObject* obj) {
-  MOZ_ASSERT(obj->isTenured() &&
-             (!IsNurseryAllocable(obj->asTenured().getAllocKind()) ||
-              obj->getClass()->hasFinalize()));
+  MOZ_ASSERT(obj->isTenured());
+  MOZ_ASSERT(obj->getClass()->hasFinalize() &&
+             !(obj->getClass()->flags & JSCLASS_SKIP_NURSERY_FINALIZE));
 }
 
 JS_PUBLIC_API void JS::AssertGCThingIsNotNurseryAllocable(Cell* cell) {

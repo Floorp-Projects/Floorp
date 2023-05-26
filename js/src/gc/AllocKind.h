@@ -51,7 +51,9 @@ namespace gc {
 //  - their C++ base type
 //  - a C++ type of the correct size
 //  - whether they can be finalized on the background thread
-//  - whether they can be allocated in the nursery
+//  - whether they can be allocated in the nursery (this is true for foreground
+//    finalized objects but these will can only actually be allocated in the
+//    nursery if JSCLASS_SKIP_NURSERY_FINALIZE is set)
 //  - whether they can be compacted
 
 // clang-format off
@@ -59,21 +61,21 @@ namespace gc {
  /* AllocKind              TraceKind     TypeName           SizedType          BGFinal Nursery Compact */ \
     D(FUNCTION,            Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
     D(FUNCTION_EXTENDED,   Object,       JSObject,          JSObject_Slots6,   true,   true,   true) \
-    D(OBJECT0,             Object,       JSObject,          JSObject_Slots0,   false,  false,  true) \
+    D(OBJECT0,             Object,       JSObject,          JSObject_Slots0,   false,  true,   true) \
     D(OBJECT0_BACKGROUND,  Object,       JSObject,          JSObject_Slots0,   true,   true,   true) \
-    D(OBJECT2,             Object,       JSObject,          JSObject_Slots2,   false,  false,  true) \
+    D(OBJECT2,             Object,       JSObject,          JSObject_Slots2,   false,  true,   true) \
     D(OBJECT2_BACKGROUND,  Object,       JSObject,          JSObject_Slots2,   true,   true,   true) \
     D(ARRAYBUFFER4,        Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
-    D(OBJECT4,             Object,       JSObject,          JSObject_Slots4,   false,  false,  true) \
+    D(OBJECT4,             Object,       JSObject,          JSObject_Slots4,   false,  true,   true) \
     D(OBJECT4_BACKGROUND,  Object,       JSObject,          JSObject_Slots4,   true,   true,   true) \
     D(ARRAYBUFFER8,        Object,       JSObject,          JSObject_Slots8,   true,   true,   true) \
-    D(OBJECT8,             Object,       JSObject,          JSObject_Slots8,   false,  false,  true) \
+    D(OBJECT8,             Object,       JSObject,          JSObject_Slots8,   false,  true,   true) \
     D(OBJECT8_BACKGROUND,  Object,       JSObject,          JSObject_Slots8,   true,   true,   true) \
     D(ARRAYBUFFER12,       Object,       JSObject,          JSObject_Slots12,  true,   true,   true) \
-    D(OBJECT12,            Object,       JSObject,          JSObject_Slots12,  false,  false,  true) \
+    D(OBJECT12,            Object,       JSObject,          JSObject_Slots12,  false,  true,   true) \
     D(OBJECT12_BACKGROUND, Object,       JSObject,          JSObject_Slots12,  true,   true,   true) \
     D(ARRAYBUFFER16,       Object,       JSObject,          JSObject_Slots16,  true,   true,   true) \
-    D(OBJECT16,            Object,       JSObject,          JSObject_Slots16,  false,  false,  true) \
+    D(OBJECT16,            Object,       JSObject,          JSObject_Slots16,  false,  true,   true) \
     D(OBJECT16_BACKGROUND, Object,       JSObject,          JSObject_Slots16,  true,   true,   true)
 
 #define FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
