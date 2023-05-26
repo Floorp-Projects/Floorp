@@ -453,6 +453,11 @@ nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
   return NS_OK;
 }
 
+bool ModuleLoaderBase::RemoveFetchedModule(nsIURI* aURL) {
+  MOZ_ASSERT(IsModuleFetched(aURL));
+  return mFetchedModules.Remove(aURL);
+}
+
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
