@@ -314,6 +314,8 @@ class ModuleLoaderBase : public nsISupports {
 
   nsresult GetFetchedModuleURLs(nsTArray<nsCString>& aURLs);
 
+  bool RemoveFetchedModule(nsIURI* aURL);
+
   // Internal methods.
 
  private:
