@@ -27,7 +27,7 @@
                        closemenu="none"
                        oncommand="TranslationsPanel.openSettingsPopup(this)">
           <image class="translations-panel-gear-icon" />
-          <menupopup id="translations-panel-settings-popup">
+          <menupopup>
             <menuitem class="always-translate-language-menuitem"
                       data-l10n-id="translations-panel-settings-always-translate-language"
                       data-l10n-args='{"language": ""}'
@@ -126,7 +126,6 @@
 
       <hbox class="panel-footer translations-panel-footer">
         <button class="subviewbutton panel-subview-footer-button"
-                id="translations-panel-not-now"
                 oncommand="TranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-dual-cancel-button"
                 tabindex="0">
