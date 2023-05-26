@@ -8977,7 +8977,7 @@
 # serial.
 - name: layout.css.stylo-parallelism-threshold
   type: RelaxedAtomicUint32
-  value: 16
+  value: 32
   mirror: always
   rust: true
 
