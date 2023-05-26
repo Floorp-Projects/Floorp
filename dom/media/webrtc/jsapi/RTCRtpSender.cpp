@@ -575,6 +575,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // If any of the following conditions are met,
   // return a promise rejected with a newly created InvalidModificationError:
 
+  bool pendingRidChangeFromCompatMode = false;
   // encodings.length is different from N.
   if (paramsCopy.mEncodings.Length() != oldParams->mEncodings.Length()) {
     nsCString error("Cannot change the number of encodings with setParameters");
@@ -589,7 +590,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     }
     // Make sure we don't use the old rids in SyncToJsep while we wait for the
     // queued task below to update mParameters.
-    mPendingRidChangeFromCompatMode = true;
+    pendingRidChangeFromCompatMode = true;
     mSimulcastEnvelopeSet = true;
     if (!mHaveWarnedBecauseEncodingCountChange) {
       mHaveWarnedBecauseEncodingCountChange = true;
@@ -743,6 +744,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // This also allows PeerConnectionImpl to detect when there is a pending
   // setParameters, which has implcations for the handling of
   // setRemoteDescription.
+  mPendingRidChangeFromCompatMode = pendingRidChangeFromCompatMode;
   mPendingParameters = Some(paramsCopy);
   uint32_t serialNumber = ++mNumSetParametersCalls;
   MaybeUpdateConduit();
