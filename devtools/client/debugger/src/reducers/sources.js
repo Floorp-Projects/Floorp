@@ -188,9 +188,6 @@ function update(state = initialSourcesState(), action) {
       };
     }
 
-    case "NAVIGATE":
-      return initialSourcesState(state);
-
     case "REMOVE_THREAD": {
       return removeSourcesAndActors(state, action);
     }

@@ -47,11 +47,6 @@ export default function update(state = initialSourceActorsState(), action) {
       };
     }
 
-    case "NAVIGATE": {
-      state = initialSourceActorsState();
-      break;
-    }
-
     case "REMOVE_THREAD": {
       for (const sourceActor of state.mutableSourceActors.values()) {
         if (sourceActor.thread == action.threadActorID) {

@@ -132,17 +132,6 @@ export default function update(state = initialSourcesTreeState(), action) {
       return state;
     }
 
-    case "NAVIGATE":
-      state = initialSourcesTreeState();
-      // WebExtension is being special. A navigation is notified when reloading the add-on,
-      // but the top level target is not being destroyed/re-created. It stays up.
-      // So here, we ensure re-registering the thread so that its related sources keep
-      // being displayed.
-      if (action.mainThread.isWebExtension) {
-        addThread(state, action.mainThread);
-      }
-      return state;
-
     case "INSERT_THREAD":
       state = { ...state };
       addThread(state, action.newThread);

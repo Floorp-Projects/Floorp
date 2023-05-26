@@ -36,10 +36,6 @@ function update(state = initialBreakpointsState(), action) {
       return { ...state, breakpoints: {} };
     }
 
-    case "NAVIGATE": {
-      return initialBreakpointsState(state.xhrBreakpoints);
-    }
-
     case "REMOVE_THREAD": {
       return removeBreakpointsForSources(state, action.sources);
     }
