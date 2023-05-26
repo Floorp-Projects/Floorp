@@ -41,10 +41,10 @@ void Zone::updateNurseryAllocFlags(const Nursery& nursery) {
 }
 
 template <JS::TraceKind traceKind, AllowGC allowGC /* = CanGC */>
-void* gc::CellAllocator::AllocateNurseryOrTenuredCell(JSContext* cx,
-                                                      AllocKind allocKind,
-                                                      gc::InitialHeap heap,
-                                                      AllocSite* site) {
+void* gc::CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
+                                                   AllocKind allocKind,
+                                                   gc::InitialHeap heap,
+                                                   AllocSite* site) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT_IF(heap != gc::TenuredHeap, IsNurseryAllocable(allocKind));
   MOZ_ASSERT(MapAllocToTraceKind(allocKind) == traceKind);
@@ -82,9 +82,9 @@ void* gc::CellAllocator::AllocateNurseryOrTenuredCell(JSContext* cx,
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, allocKind, thingSize);
 }
 
-#define INSTANTIATE_ALLOC_NURSERY_CELL(traceKind, allowGc)             \
-  template void*                                                       \
-  gc::CellAllocator::AllocateNurseryOrTenuredCell<traceKind, allowGc>( \
+#define INSTANTIATE_ALLOC_NURSERY_CELL(traceKind, allowGc)          \
+  template void*                                                    \
+  gc::CellAllocator::AllocNurseryOrTenuredCell<traceKind, allowGc>( \
       JSContext*, AllocKind, gc::InitialHeap, AllocSite*);
 INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::Object, NoGC)
 INSTANTIATE_ALLOC_NURSERY_CELL(JS::TraceKind::Object, CanGC)
@@ -124,8 +124,8 @@ void* GCRuntime::tryNewNurseryCell(JSContext* cx, size_t thingSize,
 }
 
 template <AllowGC allowGC /* = CanGC */>
-void* gc::CellAllocator::AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
-                                             size_t size) {
+void* gc::CellAllocator::AllocTenuredCell(JSContext* cx, gc::AllocKind kind,
+                                          size_t size) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(!IsNurseryAllocable(kind));
   MOZ_ASSERT(size == Arena::thingSize(kind));
@@ -139,10 +139,10 @@ void* gc::CellAllocator::AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
 
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
-template void* gc::CellAllocator::AllocateTenuredCell<NoGC>(JSContext*,
-                                                            AllocKind, size_t);
-template void* gc::CellAllocator::AllocateTenuredCell<CanGC>(JSContext*,
-                                                             AllocKind, size_t);
+template void* gc::CellAllocator::AllocTenuredCell<NoGC>(JSContext*, AllocKind,
+                                                         size_t);
+template void* gc::CellAllocator::AllocTenuredCell<CanGC>(JSContext*, AllocKind,
+                                                          size_t);
 
 template <AllowGC allowGC>
 /* static */
