@@ -17,92 +17,72 @@ using namespace mozilla::a11y;
 
 extern "C" {
 static void setTextContentsCB(AtkEditableText* aText, const gchar* aString) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (acc->IsTextRole()) {
       return;
     }
-
-    NS_ConvertUTF8toUTF16 strContent(aString);
-    text->ReplaceText(strContent);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    NS_ConvertUTF8toUTF16 strContent(aString);
-    proxy->ReplaceText(strContent);
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      NS_ConvertUTF8toUTF16 strContent(aString);
+      text->ReplaceText(strContent);
+    }
   }
 }
 
 static void insertTextCB(AtkEditableText* aText, const gchar* aString,
                          gint aLength, gint* aPosition) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (acc->IsTextRole()) {
       return;
     }
-
-    NS_ConvertUTF8toUTF16 strContent(aString);
-    text->InsertText(strContent, *aPosition);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    NS_ConvertUTF8toUTF16 strContent(aString);
-    proxy->InsertText(strContent, *aPosition);
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      NS_ConvertUTF8toUTF16 strContent(aString);
+      text->InsertText(strContent, *aPosition);
+    }
   }
 }
 
 static void copyTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (acc->IsTextRole()) {
       return;
     }
-
-    text->CopyText(aStartPos, aEndPos);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    proxy->CopyText(aStartPos, aEndPos);
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      text->CopyText(aStartPos, aEndPos);
+    }
   }
 }
 
 static void cutTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (acc->IsTextRole()) {
       return;
     }
-
-    text->CutText(aStartPos, aEndPos);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    proxy->CutText(aStartPos, aEndPos);
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      text->CutText(aStartPos, aEndPos);
+    }
   }
 }
 
 static void deleteTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (acc->IsTextRole()) {
       return;
     }
-
-    text->DeleteText(aStartPos, aEndPos);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    proxy->DeleteText(aStartPos, aEndPos);
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      text->DeleteText(aStartPos, aEndPos);
+    }
   }
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 static void pasteTextCB(AtkEditableText* aText, gint aPosition) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    RefPtr<HyperTextAccessible> text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (acc->IsTextRole()) {
       return;
     }
-
-    text->PasteText(aPosition);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    proxy->PasteText(aPosition);
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      text->PasteText(aPosition);
+    }
   }
 }
 }

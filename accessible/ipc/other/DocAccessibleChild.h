@@ -53,34 +53,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       const int32_t& aEndOffset, const uint32_t& aCoordinateType,
       const int32_t& aX, const int32_t& aY) override;
 
-  virtual mozilla::ipc::IPCResult RecvReplaceText(
-      const uint64_t& aID, const nsAString& aText) override;
-
-  virtual mozilla::ipc::IPCResult RecvInsertText(const uint64_t& aID,
-                                                 const nsAString& aText,
-                                                 const int32_t& aPosition,
-                                                 bool* aValid) override;
-
-  virtual mozilla::ipc::IPCResult RecvCopyText(const uint64_t& aID,
-                                               const int32_t& aStartPos,
-                                               const int32_t& aEndPos,
-                                               bool* aValid) override;
-
-  virtual mozilla::ipc::IPCResult RecvCutText(const uint64_t& aID,
-                                              const int32_t& aStartPos,
-                                              const int32_t& aEndPos,
-                                              bool* aValid) override;
-
-  virtual mozilla::ipc::IPCResult RecvDeleteText(const uint64_t& aID,
-                                                 const int32_t& aStartPos,
-                                                 const int32_t& aEndPos,
-                                                 bool* aValid) override;
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual mozilla::ipc::IPCResult RecvPasteText(const uint64_t& aID,
-                                                const int32_t& aPosition,
-                                                bool* aValid) override;
-
   virtual mozilla::ipc::IPCResult RecvDocType(const uint64_t& aID,
                                               nsString* aType) override;
   virtual mozilla::ipc::IPCResult RecvMimeType(const uint64_t& aID,

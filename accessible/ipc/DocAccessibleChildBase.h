@@ -95,6 +95,29 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   virtual mozilla::ipc::IPCResult RecvSetCurValue(
       const uint64_t& aID, const double& aValue) override;
 
+  virtual mozilla::ipc::IPCResult RecvReplaceText(
+      const uint64_t& aID, const nsAString& aText) override;
+
+  virtual mozilla::ipc::IPCResult RecvInsertText(
+      const uint64_t& aID, const nsAString& aText,
+      const int32_t& aPosition) override;
+
+  virtual mozilla::ipc::IPCResult RecvCopyText(const uint64_t& aID,
+                                               const int32_t& aStartPos,
+                                               const int32_t& aEndPos) override;
+
+  virtual mozilla::ipc::IPCResult RecvCutText(const uint64_t& aID,
+                                              const int32_t& aStartPos,
+                                              const int32_t& aEndPos) override;
+
+  virtual mozilla::ipc::IPCResult RecvDeleteText(
+      const uint64_t& aID, const int32_t& aStartPos,
+      const int32_t& aEndPos) override;
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual mozilla::ipc::IPCResult RecvPasteText(
+      const uint64_t& aID, const int32_t& aPosition) override;
+
  protected:
   static void FlattenTree(LocalAccessible* aRoot,
                           nsTArray<LocalAccessible*>& aTree);

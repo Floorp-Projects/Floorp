@@ -997,6 +997,69 @@ void HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
   }
 }
 
+void HyperTextAccessible::ReplaceText(const nsAString& aText) {
+  if (aText.Length() == 0) {
+    DeleteText(0, CharacterCount());
+    return;
+  }
+
+  SetSelectionRange(0, CharacterCount());
+
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (!editorBase) {
+    return;
+  }
+
+  DebugOnly<nsresult> rv = editorBase->InsertTextAsAction(aText);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new text");
+}
+
+void HyperTextAccessible::InsertText(const nsAString& aText,
+                                     int32_t aPosition) {
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (editorBase) {
+    SetSelectionRange(aPosition, aPosition);
+    DebugOnly<nsresult> rv = editorBase->InsertTextAsAction(aText);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the text");
+  }
+}
+
+void HyperTextAccessible::CopyText(int32_t aStartPos, int32_t aEndPos) {
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (editorBase) {
+    SetSelectionRange(aStartPos, aEndPos);
+    editorBase->Copy();
+  }
+}
+
+void HyperTextAccessible::CutText(int32_t aStartPos, int32_t aEndPos) {
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (editorBase) {
+    SetSelectionRange(aStartPos, aEndPos);
+    editorBase->Cut();
+  }
+}
+
+void HyperTextAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos) {
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (!editorBase) {
+    return;
+  }
+  SetSelectionRange(aStartPos, aEndPos);
+  DebugOnly<nsresult> rv =
+      editorBase->DeleteSelectionAsAction(nsIEditor::eNone, nsIEditor::eStrip);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to delete text");
+}
+
+void HyperTextAccessible::PasteText(int32_t aPosition) {
+  RefPtr<EditorBase> editorBase = GetEditor();
+  if (editorBase) {
+    SetSelectionRange(aPosition, aPosition);
+    editorBase->PasteAsAction(nsIClipboard::kGlobalClipboard,
+                              EditorBase::DispatchPasteEvent::Yes);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible public
 

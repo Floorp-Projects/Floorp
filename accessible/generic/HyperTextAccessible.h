@@ -200,15 +200,17 @@ class HyperTextAccessible : public AccessibleWrap,
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ReplaceText(const nsAString& aText);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void InsertText(const nsAString& aText,
-                                              int32_t aPosition);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CopyText(int32_t aStartPos, int32_t aEndPos);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CutText(int32_t aStartPos, int32_t aEndPos);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DeleteText(int32_t aStartPos,
-                                              int32_t aEndPos);
-  MOZ_CAN_RUN_SCRIPT
-  void PasteText(int32_t aPosition);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void ReplaceText(
+      const nsAString& aText) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InsertText(
+      const nsAString& aText, int32_t aPosition) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CopyText(int32_t aStartPos,
+                                                    int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void CutText(int32_t aStartPos,
+                                                   int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void DeleteText(int32_t aStartPos,
+                                                      int32_t aEndPos) override;
+  MOZ_CAN_RUN_SCRIPT virtual void PasteText(int32_t aPosition) override;
 
   /**
    * Return the editor associated with the accessible.
