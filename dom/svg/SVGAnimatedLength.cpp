@@ -189,6 +189,7 @@ float SVGAnimatedLength::GetPixelsPerUnit(SVGViewportElement* aCtx,
 float SVGAnimatedLength::GetPixelsPerUnit(nsIFrame* aFrame,
                                           uint8_t aUnitType) const {
   nsIContent* content = aFrame->GetContent();
+  MOZ_ASSERT(!content->IsText(), "Not expecting text content");
   if (content->IsSVGElement()) {
     return GetPixelsPerUnit(
         SVGElementMetrics(static_cast<SVGElement*>(content)), aUnitType);
