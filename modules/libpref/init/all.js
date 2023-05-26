@@ -3768,13 +3768,17 @@ pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 
 pref("browser.sanitizer.loglevel", "Warn");
 
-// Enable Firefox translations based on Bergamot[1]. This project is in-development and
-// an effort to integrate the Firefox Translations[2] project direcly into Gecko.
+// Enable Firefox translations powered by the Bergamot translations engine[1].
 // See Bug 971044.
 //
 // [1]: https://browser.mt/
 // [2]: https://github.com/mozilla/firefox-translations
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.translations.enable", true);
+#else
 pref("browser.translations.enable", false);
+#endif
+
 // Set to "All" to see all logs, which are useful for debugging. Set to "Info" to see
 // the application logic logs, and not all of the translated messages, which can be
 // slow and overwhelming.
