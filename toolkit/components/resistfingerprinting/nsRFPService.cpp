@@ -920,7 +920,10 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
 static const char* GetSpoofedVersion() {
 #ifdef ANDROID
   // Return Desktop's ESR version.
-  return "102.0";
+  // When Android RFP returns an ESR version >= 120, we can remove the "rv:109"
+  // spoofing in GetSpoofedUserAgent() below and stop #including
+  // StaticPrefs_network.h.
+  return "115.0";
 #else
   return MOZILLA_UAVERSION;
 #endif
