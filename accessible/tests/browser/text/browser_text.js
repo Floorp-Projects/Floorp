@@ -4,12 +4,9 @@
 
 "use strict";
 
-/* import-globals-from ../../mochitest/text.js */
 /* import-globals-from ../../mochitest/attributes.js */
-loadScripts(
-  { name: "text.js", dir: MOCHITESTS_DIR },
-  { name: "attributes.js", dir: MOCHITESTS_DIR }
-);
+/* import-globals-from ../../mochitest/text.js */
+loadScripts({ name: "attributes.js", dir: MOCHITESTS_DIR });
 
 /**
  * Test line and word offsets for various cases for both local and remote
