@@ -39,9 +39,5 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                              aCoordinateType, aX, aY);
 }
 
-void RemoteAccessible::MimeType(nsString aMime) {
-  Unused << mDoc->SendMimeType(mID, &aMime);
-}
-
 }  // namespace a11y
 }  // namespace mozilla

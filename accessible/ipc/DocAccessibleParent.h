@@ -330,6 +330,8 @@ class DocAccessibleParent : public RemoteAccessible,
   void URL(nsAString& aURL) const;
   void URL(nsACString& aURL) const;
 
+  void MimeType(nsAString& aURL) const;
+
   virtual Relation RelationByType(RelationType aType) const override;
 
   // Tracks cached reverse relations (ie. those not set explicitly by an

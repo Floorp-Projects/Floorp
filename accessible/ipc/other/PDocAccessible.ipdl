@@ -180,8 +180,6 @@ child:
 
   async TakeFocus(uint64_t aID);
 
-  [Nested=inside_sync] sync MimeType(uint64_t aID) returns(nsString aMime);
-
   /*
    * Verify the cache. Used for testing purposes.
    */

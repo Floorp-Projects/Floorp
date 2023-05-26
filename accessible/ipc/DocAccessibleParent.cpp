@@ -1204,6 +1204,12 @@ void DocAccessibleParent::URL(nsAString& aURL) const {
   CopyUTF8toUTF16(url, aURL);
 }
 
+void DocAccessibleParent::MimeType(nsAString& aMime) const {
+  if (mCachedFields) {
+    mCachedFields->GetAttribute(nsGkAtoms::headerContentType, aMime);
+  }
+}
+
 Relation DocAccessibleParent::RelationByType(RelationType aType) const {
   // If the accessible is top-level, provide the NODE_CHILD_OF relation so that
   // MSAA clients can easily get to true parent instead of getting to oleacc's
