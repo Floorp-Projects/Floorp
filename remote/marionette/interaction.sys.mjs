@@ -159,12 +159,7 @@ async function webdriverClickElement(el, a11y) {
   let clickPoint = lazy.element.getInViewCentrePoint(rects[0], win);
 
   if (lazy.element.isObscured(containerEl)) {
-    throw new lazy.error.ElementClickInterceptedError(
-      null,
-      {},
-      containerEl,
-      clickPoint
-    );
+    throw new lazy.error.ElementClickInterceptedError(containerEl, clickPoint);
   }
 
   let acc = await a11y.assertAccessible(el, true);
