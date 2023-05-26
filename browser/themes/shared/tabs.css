@@ -799,6 +799,5 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
 }
 
 .all-tabs-close-button > .toolbarbutton-icon {
-  width: 12px;
   margin-inline: 2px !important; /* override panelUI-shared.css */
 }

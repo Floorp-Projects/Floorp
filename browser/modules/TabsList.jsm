@@ -325,8 +325,7 @@ class TabsPanel extends TabsListBase {
     muteButton.classList.add(
       "all-tabs-mute-button",
       "all-tabs-secondary-button",
-      "subviewbutton",
-      "subviewbutton-iconic"
+      "subviewbutton"
     );
     muteButton.setAttribute("closemenu", "none");
     muteButton.tab = tab;
