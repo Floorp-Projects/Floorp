@@ -92,7 +92,7 @@
 
       window.varify = true;
 
-      const Cu_Sandbox = Cu ? Cu.Sandbox : null;
+      var Cu_Sandbox = Cu ? Cu.Sandbox : null;
     `;
     await evaluateExpression(state.webConsoleFront, script);
 
