@@ -24,10 +24,7 @@ runTest(async () => {
     // `fake:true` means that getUserMedia() resolves without any permission
     // check, and so this should not be sufficient to expose real device info.
     const stream = await devices.getUserMedia({ audio: true, fake: true });
-    // permission.disabled exposes labels - bug 1528042
-    const list = await withPrefs(
-      [["media.navigator.permission.disabled", false]],
-      async () => devices.enumerateDevices());
+    const list = await devices.enumerateDevices();
     stream.getTracks()[0].stop();
     const labeledDevices = list.filter(({label}) => label != "");
     is(labeledDevices.length, 0, "number of labeled devices after fake gUM");
