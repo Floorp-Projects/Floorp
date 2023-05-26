@@ -9,12 +9,6 @@
 
 const { SearchSERPTelemetry, SearchSERPTelemetryUtils } =
   ChromeUtils.importESModule("resource:///modules/SearchSERPTelemetry.sys.mjs");
-const { UrlbarTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/UrlbarTestUtils.sys.mjs"
-);
-const { SearchTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SearchTestUtils.sys.mjs"
-);
 
 const TEST_PROVIDER_INFO = [
   {
@@ -75,7 +69,6 @@ function resetTelemetry() {
 }
 
 SearchTestUtils.init(this);
-UrlbarTestUtils.init(this);
 
 let tab;
 

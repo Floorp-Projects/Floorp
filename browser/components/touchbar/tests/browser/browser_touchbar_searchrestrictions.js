@@ -4,8 +4,15 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+});
+
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  );
+  module.init(this);
+  return module;
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -50,13 +57,6 @@ async function searchAndCheckState({ input, token }) {
 
   await UrlbarTestUtils.promisePopupClose(window);
 }
-
-add_setup(async function () {
-  UrlbarTestUtils.init(this);
-  registerCleanupFunction(() => {
-    UrlbarTestUtils.uninit();
-  });
-});
 
 add_task(async function insertTokens() {
   const tests = [

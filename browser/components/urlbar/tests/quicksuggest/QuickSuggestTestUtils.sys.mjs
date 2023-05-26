@@ -45,7 +45,6 @@ Object.defineProperty(lazy, "UrlbarTestUtils", {
       );
       module.init(gTestScope);
       gTestScope.registerCleanupFunction(() => {
-        module.uninit();
         // Make sure the utils are re-initialized during the next test.
         lazy._UrlbarTestUtils = null;
       });

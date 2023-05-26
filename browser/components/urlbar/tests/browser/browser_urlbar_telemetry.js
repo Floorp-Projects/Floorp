@@ -16,7 +16,6 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 function searchInAwesomebar(value, win = window) {
@@ -132,9 +131,6 @@ add_setup(async function () {
     set: [["browser.urlbar.showSearchSuggestionsFirst", false]],
   });
 
-  // Allows UrlbarTestUtils to access this scope's test helpers, like Assert.
-  UrlbarTestUtils.init(this);
-
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -142,7 +138,6 @@ add_setup(async function () {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
-    UrlbarTestUtils.uninit();
   });
 });
 
