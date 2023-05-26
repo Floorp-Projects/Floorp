@@ -13,6 +13,7 @@
 
 #include "gc/AllocKind.h"
 #include "gc/Cell.h"
+#include "js/Class.h"
 #include "js/TypeDecls.h"
 
 namespace js {
@@ -62,9 +63,18 @@ class CellAllocator {
   static T* NewCell(JSContext* cx, Args&&... args);
 
  private:
+  // Allocate a cell in the nursery, unless |heap| is TenuredHeap or nursery
+  // allocation is disabled for |traceKind| in the current zone.
+  template <JS::TraceKind traceKind, AllowGC allowGC = CanGC>
+  static void* AllocateNurseryOrTenuredCell(JSContext* cx,
+                                            gc::AllocKind allocKind,
+                                            gc::InitialHeap heap,
+                                            AllocSite* site);
+
+  // Allocate a cell in the tenured heap.
   template <AllowGC allowGC = CanGC>
-  static void* AllocateStringCell(JSContext* cx, gc::AllocKind kind,
-                                  size_t size, gc::InitialHeap heap);
+  static void* AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
+                                   size_t size);
 
   // Allocate a string. Use cx->newCell<T>([heap]).
   //
@@ -76,50 +86,39 @@ class CellAllocator {
                            Args&&... args) {
     static_assert(std::is_base_of_v<JSString, T>);
     gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
-    void* ptr = AllocateStringCell<allowGC>(cx, kind, sizeof(T), heap);
+    void* ptr = AllocateNurseryOrTenuredCell<JS::TraceKind::String, allowGC>(
+        cx, kind, heap, nullptr);
     if (!ptr) {
       return nullptr;
     }
     return new (mozilla::KnownNotNull, ptr) T(std::forward<Args>(args)...);
   }
 
-  // Use for nursery-allocatable BigInt.
-  template <AllowGC allowGC = CanGC>
-  static void* AllocateBigIntCell(JSContext* cx, gc::InitialHeap heap);
-
   template <typename T, AllowGC allowGC /* = CanGC */>
   static T* AllocateBigInt(JSContext* cx, InitialHeap heap) {
-    void* ptr = AllocateBigIntCell<allowGC>(cx, heap);
+    void* ptr = AllocateNurseryOrTenuredCell<JS::TraceKind::BigInt, allowGC>(
+        cx, gc::AllocKind::BIGINT, heap, nullptr);
     if (ptr) {
       return new (mozilla::KnownNotNull, ptr) T();
     }
     return nullptr;
   }
 
-  // Allocate a JSObject. Use cx->newCell<ObjectT>(kind, ...).
-  //
-  // Parameters support various optimizations. If dynamic slots are requested
-  // they will be allocated and the pointer stored directly in
-  // |NativeObject::slots_|.
-  template <AllowGC allowGC = CanGC>
-  static void* AllocateObjectCell(JSContext* cx, gc::AllocKind kind,
-                                  gc::InitialHeap heap, const JSClass* clasp,
-                                  gc::AllocSite* site);
-
   template <typename T, AllowGC allowGC = CanGC>
   static T* AllocateObject(JSContext* cx, gc::AllocKind kind,
                            gc::InitialHeap heap, const JSClass* clasp,
                            gc::AllocSite* site = nullptr) {
-    void* cell = AllocateObjectCell<allowGC>(cx, kind, heap, clasp, site);
+    MOZ_ASSERT(IsObjectAllocKind(kind));
+    MOZ_ASSERT_IF(heap != gc::TenuredHeap && clasp->hasFinalize() &&
+                      !clasp->isProxyObject(),
+                  CanNurseryAllocateFinalizedClass(clasp));
+    void* cell = AllocateNurseryOrTenuredCell<JS::TraceKind::Object, allowGC>(
+        cx, kind, heap, site);
     if (!cell) {
       return nullptr;
     }
     return new (mozilla::KnownNotNull, cell) T();
   }
-
-  template <AllowGC allowGC = CanGC>
-  static void* AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
-                                   size_t size);
 
   // Allocate all other kinds of GC thing.
   template <typename T, AllowGC allowGC = CanGC, typename... Args>
