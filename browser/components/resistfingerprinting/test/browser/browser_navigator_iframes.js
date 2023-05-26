@@ -145,7 +145,7 @@ const rvVersion =
     Services.prefs.getIntPref("network.http.useragent.forceRVOnly", 0),
     0
   ) || appVersion;
-const spoofedVersion = AppConstants.platform == "android" ? "102" : appVersion;
+const spoofedVersion = AppConstants.platform == "android" ? "115" : appVersion;
 
 const LEGACY_UA_GECKO_TRAIL = "20100101";
 
