@@ -296,12 +296,12 @@ class MDNCompatibility {
     }
 
     const { deprecated, experimental } = compatTable.status || {};
-    const url = compatTable.mdn_url;
 
     return {
       database,
       terms,
-      url,
+      url: compatTable.mdn_url,
+      specUrl: compatTable.spec_url,
       deprecated,
       experimental,
       unsupportedBrowsers,

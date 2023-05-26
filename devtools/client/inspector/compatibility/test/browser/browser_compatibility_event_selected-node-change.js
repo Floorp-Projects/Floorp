@@ -30,8 +30,14 @@ const TEST_DATA_SELECTED = [
   {
     selector: ".has-issue",
     expectedIssues: [
-      { property: "scrollbar-width" },
-      { property: "user-modify" },
+      {
+        property: "scrollbar-width",
+        url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+      },
+      {
+        property: "user-modify",
+        url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
+      },
     ],
   },
   {
@@ -40,14 +46,28 @@ const TEST_DATA_SELECTED = [
   },
   {
     selector: "body",
-    expectedIssues: [{ property: "ruby-align" }],
+    expectedIssues: [
+      {
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+      },
+    ],
   },
 ];
 
 const TEST_DATA_ALL = [
-  { property: "ruby-align" },
-  { property: "scrollbar-width" },
-  { property: "user-modify" },
+  {
+    property: "ruby-align",
+    url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
+  },
+  {
+    property: "scrollbar-width",
+    url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
+  },
+  {
+    property: "user-modify",
+    url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
+  },
 ];
 
 add_task(async function () {
