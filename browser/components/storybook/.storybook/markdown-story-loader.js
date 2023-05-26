@@ -16,6 +16,7 @@
  */
 
 const path = require("path");
+const fs = require("fs");
 
 const projectRoot = path.resolve(__dirname, "../../../../");
 
@@ -33,6 +34,19 @@ const projectRoot = path.resolve(__dirname, "../../../../");
  */
 function getStoryTitle(filePath) {
   let fileName = path.basename(filePath, ".stories.md");
+  if (fileName != "README") {
+    try {
+      let relatedFilePath = path.resolve(
+        "../../../",
+        filePath.replace(".md", ".mjs")
+      );
+      let relatedFile = fs.readFileSync(relatedFilePath).toString();
+      let relatedTitle = relatedFile.match(/title: "(.*)"/)[1];
+      if (relatedTitle) {
+        return relatedTitle + "/README";
+      }
+    } catch {}
+  }
   return separateWords(fileName);
 }
 
@@ -94,14 +108,17 @@ module.exports = function markdownStoryLoader(source) {
   }
 
   let storyTitle = getStoryTitle(relativePath);
+  let title = storyTitle.includes("/")
+    ? storyTitle
+    : `${storyPath}/${storyTitle}`;
 
   // Unfortunately the indentation/spacing here seems to be important for the
   // MDX parser to know what to do in the next step of the Webpack process.
   let mdxSource = `
 import { Meta, Description, Canvas } from "@storybook/addon-docs";
 
-<Meta 
-  title="${storyPath}/${storyTitle}"
+<Meta
+  title="${title}"
   parameters={{
     previewTabs: {
       canvas: { hidden: true },
