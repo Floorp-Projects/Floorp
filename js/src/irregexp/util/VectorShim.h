@@ -124,7 +124,7 @@ class Vector {
     length_ = 0;
   }
 
-  Vector<T> operator+(size_t offset) {
+  Vector<T> operator+(size_t offset) const {
     MOZ_ASSERT(offset <= length_);
     return Vector<T>(start_ + offset, length_ - offset);
   }

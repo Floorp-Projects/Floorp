@@ -30,10 +30,10 @@ struct TypedIndex {
     return *this;
   }
 
-  bool operator<(TypedIndex other) { return index < other.index; }
-  bool operator<=(TypedIndex other) { return index <= other.index; }
-  bool operator>(TypedIndex other) { return index > other.index; }
-  bool operator>=(TypedIndex other) { return index >= other.index; }
+  bool operator<(TypedIndex other) const { return index < other.index; }
+  bool operator<=(TypedIndex other) const { return index <= other.index; }
+  bool operator>(TypedIndex other) const { return index > other.index; }
+  bool operator>=(TypedIndex other) const { return index >= other.index; }
 };
 
 }  // namespace frontend

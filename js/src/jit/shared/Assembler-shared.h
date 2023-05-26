@@ -479,7 +479,7 @@ class CodeLocationLabel {
     raw_ = raw;
   }
 
-  ptrdiff_t operator-(const CodeLocationLabel& other) {
+  ptrdiff_t operator-(const CodeLocationLabel& other) const {
     return raw_ - other.raw_;
   }
 
