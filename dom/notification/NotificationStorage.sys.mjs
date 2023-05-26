@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const DEBUG = false;
 function debug(s) {
   dump("-*- NotificationStorage.js: " + s + "\n");
@@ -21,7 +19,7 @@ const kMessages = [
   kMessageNotificationDeleteKo,
 ];
 
-function NotificationStorage() {
+export function NotificationStorage() {
   this._requests = {};
   this._requestCount = 0;
 
@@ -248,5 +246,3 @@ NotificationStorage.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsINotificationStorage"]),
 };
-
-var EXPORTED_SYMBOLS = ["NotificationStorage"];
