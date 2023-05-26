@@ -299,6 +299,13 @@ async function setupActorTest({
     detectedLanguageConfidence,
   });
 
+  // Create a new tab so each test gets a new actor, and doesn't re-use the old one.
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    BLANK_PAGE,
+    true // waitForLoad
+  );
+
   /** @type {import("../../actors/TranslationsParent.sys.mjs").TranslationsParent} */
   const actor =
     gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
@@ -309,6 +316,7 @@ async function setupActorTest({
     actor,
     remoteClients,
     cleanup() {
+      BrowserTestUtils.removeTab(tab);
       removeMocks();
       return SpecialPowers.popPrefEnv();
     },
