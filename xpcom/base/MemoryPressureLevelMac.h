@@ -26,8 +26,8 @@ class MacMemoryPressureLevel {
   MacMemoryPressureLevel() : mValue(Value::eUnset) {}
   MOZ_IMPLICIT MacMemoryPressureLevel(Value aValue) : mValue(aValue) {}
 
-  bool operator==(const Value& aRhsValue) { return mValue == aRhsValue; }
-  bool operator==(const MacMemoryPressureLevel& aRhs) {
+  bool operator==(const Value& aRhsValue) const { return mValue == aRhsValue; }
+  bool operator==(const MacMemoryPressureLevel& aRhs) const {
     return mValue == aRhs.mValue;
   }
 
