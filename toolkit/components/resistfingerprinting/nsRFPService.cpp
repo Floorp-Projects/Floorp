@@ -34,6 +34,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_javascript.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
@@ -957,7 +958,17 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
   }
 
   userAgent.AppendLiteral("; rv:");
-  userAgent.Append(spoofedVersion);
+
+  // Desktop Firefox (regular and RFP) won't need to spoof "rv:109" in versions
+  // >= 120 (bug 1806690), but Android RFP will need to continue spoofing 109
+  // as long as Android's GetSpoofedVersion() returns a version < 120 above.
+  uint32_t forceRV = mozilla::StaticPrefs::network_http_useragent_forceRVOnly();
+  if (forceRV) {
+    userAgent.Append(nsPrintfCString("%u.0", forceRV));
+  } else {
+    userAgent.Append(spoofedVersion);
+  }
+
   userAgent.AppendLiteral(") Gecko/");
 
 #if defined(ANDROID)
