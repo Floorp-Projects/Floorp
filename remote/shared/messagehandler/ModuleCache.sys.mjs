@@ -186,7 +186,7 @@ export class ModuleCache {
    * @returns {boolean}
    *     True if the module exists.
    */
-  hasModule(moduleName, destination) {
+  hasModuleClass(moduleName, destination) {
     const classes = this.getAllModuleClasses(moduleName, destination);
     return !!classes.length;
   }
