@@ -5066,8 +5066,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       size_t nDynamicSlots, Label* fail,
       const AllocSiteInput& allocSite = AllocSiteInput());
   void bumpPointerAllocate(Register result, Register temp, Label* fail,
-                           CompileZone* zone, void* posAddr,
-                           const void* curEddAddr, JS::TraceKind traceKind,
+                           CompileZone* zone, JS::TraceKind traceKind,
                            uint32_t size,
                            const AllocSiteInput& allocSite = AllocSiteInput());
   void updateAllocSite(Register temp, Register result, CompileZone* zone,
