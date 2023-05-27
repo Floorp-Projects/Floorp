@@ -23,16 +23,15 @@ image.translations-panel-gear-icon {
 }
 
 .translations-panel-content {
-  display: flex;
-  flex-direction: column;
   padding: var(--arrowpanel-padding);
+  gap: var(--arrowpanel-padding);
 }
 
-.translations-panel-content > label:first-child {
+#translations-panel-lang-selection > label:first-child {
   margin-block-start: 0;
 }
 
-.translations-panel-content > label {
+#translations-panel-lang-selection > label {
   margin-block: var(--arrowpanel-padding) 6px;
 }
 
@@ -43,18 +42,35 @@ image.translations-panel-gear-icon {
   background-color: var(--button-primary-bgcolor);
 }
 
-#translations-panel-error {
-  color: #e22850;
-  /* Align the error icon to the start. */
-  align-items: start;
+#translations-panel-translate-hint-action {
+  appearance: none;
+  background-color: var(--button-bgcolor);
+  border-radius: 4px;
+  color: var(--button-color);
+  padding: 8px 16px;
+  font-size: 0.9em;
 }
 
-@media (-moz-platform: windows) {
-  #translations-panel-error {
-    /* On windows the default button in the panel-footer is flipped with the order
-       property. In order to keep the error on the flex-start, it also needs a -1 order. */
-    order: -1;
-  }
+#translations-panel-translate-hint-action:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+#translations-panel-translate-hint-action:hover:active {
+  background-color: var(--button-active-bgcolor);
+}
+
+#translations-panel-translate-hint-action:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
+}
+
+#translations-panel-error-message-hint {
+  margin-inline-start: 21px;
+  margin-block: 8px;
+}
+
+#translations-panel-error-message {
+  font-weight: 600;
 }
 
 .translations-panel-error-icon {
@@ -62,10 +78,15 @@ image.translations-panel-gear-icon {
   fill: currentColor;
   list-style-image: url(chrome://global/skin/icons/error.svg);
   margin-inline-end: 5px;
+  width: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  #translations-panel-error {
-    color: #ff9aa2;
-  }
+.translations-panel-error-header {
+  align-items: start;
+}
+
+#translations-panel-error {
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 12px;
 }

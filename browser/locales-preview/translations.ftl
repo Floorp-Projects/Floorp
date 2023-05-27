@@ -19,33 +19,8 @@ translations-panel-displayname-beta =
 
 translations-panel-settings-manage-languages =
   .label = Manage languages
-translations-panel-settings-change-source-language =
-  .label = Change source language
 # TODO(Bug 1831341): We still need the link for this menu item.
 translations-panel-settings-about = About translations in { -brand-shorter-name }
-
-## The translation panel appears from the url bar, and this view is the default
-## translation view.
-
-translations-panel-default-header = Translate this page?
-
-# If your language requires declining the language name, a possible solution
-# is to adapt the structure of the phrase, or use a support noun, e.g.
-# `Looks like this page is in another language ({ $pageLanguage }). Want to translate it?`
-# Variables:
-#   $pageLanguage (string) - The localized display name of the page's language
-translations-panel-default-description = Looks like this page is in { $pageLanguage }. Want to translate it?
-
-# This label is followed, on a new line, by a dropdown list of language names.
-# If this structure is problematic for your locale, an alternative way is to
-# translate this as `Target language:`
-translations-panel-default-translate-to-label = Translate to
-translations-panel-default-translate-button = Translate
-translations-panel-default-translate-cancel = Not now
-
-translations-panel-error-translating = There was a problem translating. Please try again.
-translations-panel-error-load-languages = Couldn’t load languages
-translations-panel-error-load-languages-hint = Check your internet connection and try again.
 
 # Text displayed for the option to always translate a given language
 # Variables:
@@ -67,19 +42,36 @@ translations-panel-settings-never-translate-unknown-language =
 translations-panel-settings-never-translate-site =
   .label = Never translate this site
 
-## The translation panel appears from the url bar, and this view is the "dual" translate
-## view that lets you choose a source language and target language for translation
+## The translation panel appears from the url bar, and this view is the default
+## translation view.
 
-translations-panel-dual-header =
-  .title = Translate this page?
-translations-panel-dual-cancel-button = Cancel
+translations-panel-header = Translate this page?
+translations-panel-translate-button = Translate
+translations-panel-translate-cancel = Cancel
+
+translations-panel-error-translating = There was a problem translating. Please try again.
+translations-panel-error-load-languages = Couldn’t load languages
+translations-panel-error-load-languages-hint = Check your internet connection and try again.
+translations-panel-error-load-languages-hint-button = Try again
+
+translations-panel-error-unsupported = Translation isn’t available for this page
+translations-panel-error-dismiss-button = Got it
+translations-panel-error-change-button = Change source language
+# If your language requires declining the language name, a possible solution
+# is to adapt the structure of the phrase, or use a support noun, e.g.
+# `Sorry, we don't support the language yet: { $language }
+#
+# Variables:
+#   $language (string) - The language of the document.
+translations-panel-error-unsupported-hint-known = Sorry, we don’t support { $language } yet.
+translations-panel-error-unsupported-hint-unknown = Sorry, we don’t support this language yet.
 
 ## Each label is followed, on a new line, by a dropdown list of language names.
 ## If this structure is problematic for your locale, an alternative way is to
 ## translate them as `Source language:` and `Target language:`
 
-translations-panel-dual-from-label = Translate from
-translations-panel-dual-to-label = Translate to
+translations-panel-from-label = Translate from
+translations-panel-to-label = Translate to
 
 ## The translation panel appears from the url bar, and this view is the "restore" view
 ## that lets a user restore a page to the original language, or translate into another
@@ -92,12 +84,10 @@ translations-panel-dual-to-label = Translate to
 # Variables:
 #   $fromLanguage (string) - The original language of the document.
 #   $toLanguage (string) - The target language of the translation.
-translations-panel-revisit-header = The page is translated from { $fromLanguage } to { $toLanguage }
-translations-panel-revisit-label = Want to try another language?
+translations-panel-revisit-header = This page is translated from { $fromLanguage } to { $toLanguage }
 translations-panel-choose-language =
   .label = Choose a language
-translations-panel-revisit-restore-button = Show original
-translations-panel-revisit-translate-button = Translate
+translations-panel-restore-button = Show original
 
 ## Firefox Translations language management in about:preferences.
 
