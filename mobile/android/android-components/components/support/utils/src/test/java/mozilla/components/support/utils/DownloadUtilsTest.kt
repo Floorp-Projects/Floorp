@@ -110,6 +110,7 @@ class DownloadUtilsTest {
         Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("jpg", "image/jpeg")
         Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("zip", "application/zip")
         Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("tar.gz", "application/gzip")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("bin", "application/octet-stream")
 
         // For one mimetype to multiple extensions mapping
         Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("com", "application/x-msdos-program")
@@ -142,6 +143,10 @@ class DownloadUtilsTest {
         assertEquals("file.data", DownloadUtils.guessFileName(null, null, "http://example.com/file.data", "application/unknown"))
 
         assertEquals("file.jpg", DownloadUtils.guessFileName(null, null, "http://example.com/file.zip", "image/jpeg"))
+
+        // extra information in content-type
+        assertEquals("file.jpg", DownloadUtils.guessFileName(null, null, "http://example.com/file.jpg", "application/octet-stream; Charset=utf-8"))
+
         // Should not change to file.dll
         assertEquals("file.exe", DownloadUtils.guessFileName(null, null, "http://example.com/file.exe", "application/x-msdos-program"))
         assertEquals("file.exe", DownloadUtils.guessFileName(null, null, "http://example.com/file.exe", "application/vnd.microsoft.portable-executable"))

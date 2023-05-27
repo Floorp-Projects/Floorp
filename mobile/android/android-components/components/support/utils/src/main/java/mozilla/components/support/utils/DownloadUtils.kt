@@ -176,7 +176,7 @@ object DownloadUtils {
         val sanitizedMimeType = sanitizeMimeType(mimeType)
 
         val fileName = if (extractedFileName.contains('.')) {
-            if (GENERIC_CONTENT_TYPES.contains(mimeType)) {
+            if (GENERIC_CONTENT_TYPES.contains(sanitizedMimeType)) {
                 extractedFileName
             } else {
                 changeExtension(extractedFileName, sanitizedMimeType)
