@@ -36,4 +36,162 @@
     <string name="browser_menu_find_in_page">ପୃଷ୍ଠାରେ ଖୋଜି ପାଆନ୍ତୁ</string>
 
 
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">%1$sରେ ଖୋଲନ୍ତୁ</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">ଯୋଡ଼ନ୍ତୁ</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">ସମ୍ପାଦନା</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">ମନୋନୀତ ଭାଷା</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">ଡିଭାଇସ୍ ର ଭାଷାକୁ ଅନୁସରଣ କରନ୍ତୁ</string>
+
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">ସନ୍ଧାନ ଇଞ୍ଜିନ୍ ସେଟିଂସ୍</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">ଗୋଟିଏ ନୂଆ %1$s ଟ୍ୟାବ୍ ଖୋଲନ୍ତୁ</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">ସେଟିଂସମୂହ</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">ସାଧାରଣ</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">ଡିଫଲ୍ଟ ସନ୍ଧାନ ଇଞ୍ଜିନ୍</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">ସନ୍ଧାନ</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">ଠିକଣା ଦଣ୍ଡିକା</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">ବିକଶିତ</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">ଗୋପନୀୟତା ଏବଂ ସୁରକ୍ଷା</string>
+
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">ବନ୍ଦ</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">ଅଧିକ ଜାଣନ୍ତୁ</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">ଅଭିଗମ୍ୟତା</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">ଥିମ୍</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">ଭାଷା</string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">ଇତିହାସ</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ହାଲୁକା</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">ଗାଢ଼</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">ଡିଭାଇସ୍ ର ଥିମକୁ ଅନୁସରଣ କରନ୍ତୁ</string>
+
+    <!-- Option in Library to open History page -->
+    <string name="library_history">ଇତିହାସ</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">ନୂଆ ଟ୍ୟାବ୍</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">ସେଟିଂସମୂହ</string>
+
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">ଗୋଟେ ମାସ ପରେ</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ସକ୍ରିୟ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">ଟ୍ୟାବ ଯୋଡ଼ନ୍ତୁ</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">ବ୍ୟକ୍ତିଗତ ଟ୍ୟାବ୍ ଯୋଡ଼ନ୍ତୁ</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">ବ୍ୟକ୍ତିଗତ</string>
+
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">ଆଜି</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">ଗତକାଲି</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">ଗତ ୭ ଦିନ</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">ଗତ ୩୦ ଦିନ</string>
+
+
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">ନୂଆ ଟ୍ୟାବରେ ଖୋଲନ୍ତୁ</string>
+
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">ନୂଆ ସଂଗ୍ରହ ଯୋଡ଼ନ୍ତୁ</string>
+
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">କ୍ଲିପବୋର୍ଡରେ କପି କରିନିଅନ୍ତୁ</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">କ୍ଲିପବୋର୍ଡରେ କପି କରିନିଆଗଲା</string>
+     <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">ଡିଭାଇସକୁ ପଠାନ୍ତୁ</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">ଆପଣଙ୍କ ଥିମ୍ ବାଛନ୍ତୁ</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">ସ୍ୱୟଂଚାଳିତ</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">ଆପଣଙ୍କ ଡିଭାଇସ୍ ସେଟିଂସ୍ ସହ ଖାପ ଖାଇଥାଏ</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">ଗାଢ଼ ଥିମ୍</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">ହାଲୁକା ଥିମ୍</string>
+
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">ଏହା ପରିବର୍ତ୍ତେ ଇମେଲ୍ ବ୍ୟବହାର କରନ୍ତୁ</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">ସୁରକ୍ଷା ସେଟିଂସ୍</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">ମାନକ (ଡିଫଲ୍ଟ)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ଗୋପନୀୟତା ଏବଂ କାର୍ଯ୍ୟଦକ୍ଷତା ପାଇଁ ସନ୍ତୁଳିତ। ପୃଷ୍ଠାଗୁଡିକ ସାଧାରଣ ଭାବରେ ଲୋଡ୍ ହୁଏ।</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">କଡା</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">ବାତିଲ୍ କରନ୍ତୁ</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">ଯୋଡ଼ନ୍ତୁ</string>
+
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">ବ୍ୟତିକ୍ରମଗୁଡ଼ିକ</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">ସବୁ ବ୍ୟତିକ୍ରମ ବିଲୋପ କରନ୍ତୁ</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">ପାସ୍‍ୱାର୍ଡ଼</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">ପାସ୍‍ୱାର୍ଡ଼ କ୍ଲିପବୋର୍ଡରେ କପି କରିନିଆଗଲା</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">ପାସ୍‍ୱାର୍ଡ଼ କପିକରନ୍ତୁ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">ପାସ୍‍ୱାର୍ଡ଼ ଦେଖାନ୍ତୁ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">ପାସ୍‍ୱାର୍ଡ଼ ଲୁଚାନ୍ତୁ</string>
+
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">କୌଣସି ସାଇଟ୍ ବ୍ୟତିକ୍ରମ ହୋଇନାହିଁ</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">ପାସ୍‍ୱାର୍ଡ଼ ଆବଶ୍ୟକ</string>
+
+    <!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ଠିକ୍ ଅଛି</string>
+
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Firefox ପରିବାରର ଏକ ଅଂଶ। %s</string>
+
     </resources>

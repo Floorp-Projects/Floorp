@@ -122,6 +122,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">แท็บส่วนตัวใหม่</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">ทางลัดรหัสผ่าน</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">กลับเข้าไป</string>
@@ -407,15 +410,23 @@
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ยกเลิก</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">ขอการรองรับ</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">ส่งคำขอ</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">การลดแบนเนอร์คุกกี้</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">ขอการรองรับไซต์นี้ไหม?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">ส่งคำขอรองรับไซต์แล้ว</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">ส่งคำขอแล้ว</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">เปิดสำหรับไซต์นี้</string>
 
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">ส่งคำขอรองรับไซต์แล้ว</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">ส่งคำขอรองรับแล้ว</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">ไม่รองรับไซต์ในขณะนี้</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -424,6 +435,8 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">ต้องการปิดการลดแบนเนอร์คุกกี้สำหรับ %1$s หรือไม่?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">ขณะนี้ไซต์นี้ไม่รองรับการลดแบนเนอร์คุกกี้ คุณต้องการให้ทีมงานของเราตรวจสอบเว็บไซต์นี้และเพิ่มการรองรับในอนาคตหรือไม่?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ไม่สามารถปฏิเสธคำขอคุกกี้โดยอัตโนมัติบนไซต์นี้ คุณสามารถส่งคำขอให้รองรับไซต์นี้ในอนาคตได้</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s จะล้างคุกกี้ของไซต์นี้และรีเฟรชหน้า การล้างคุกกี้ทั้งหมดอาจนำคุณออกจากระบบหรือล้างรถเข็นช็อปปิ้ง</string>
 
@@ -1349,6 +1362,8 @@
     <string name="delete_history_prompt_title">ช่วงเวลาที่จะลบ</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">ลบประวัติ (รวมถึงประวัติที่ซิงค์จากอุปกรณ์อื่น) คุกกี้ และข้อมูลการเรียกดูอื่น ๆ</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">ลบประวัติ (รวมถึงประวัติที่ซิงค์จากอุปกรณ์อื่น)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ชั่วโมงที่แล้ว</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

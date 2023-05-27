@@ -400,6 +400,10 @@
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">ඉල්ලීම යැවිණි</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">මෙම අඩවියට සක්‍රියයි</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">අඩවිය සඳහා සහාය ඉල්ලීම යොමු කෙරිණි</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">සහාය ඉල්ලීම යැවිණි</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">අඩවියට සහාය නොදක්වයි</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -497,6 +501,8 @@
     <string name="preferences_open_links_in_apps">යෙදුම්වල සබැඳි අරින්න</string>
     <!-- Preference for open links in third party apps always open in apps option -->
     <string name="preferences_open_links_in_apps_always">සැමවිටම</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">ඇරීමට පෙර අසන්න</string>
     <!-- Preference for open links in third party apps never open in apps option -->
     <string name="preferences_open_links_in_apps_never">කවදාවත්</string>
     <!-- Preference for open download with an external download manager app -->
@@ -1193,6 +1199,9 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">අළෙවිකරණය</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් වේගවත් හා පෞද්ගලිකයි</string>
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
     <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් පෙරනිමි අතිරික්සුව කරන්න</string>
@@ -1201,8 +1210,15 @@
 
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
-    <string name="notification_re_engagement_text">%1$s හි සුරැකින ලද දත්තකඩ හෝ ඉතිහාසයක් නැතිව පිරික්සන්න</string>
+    <string name="notification_re_engagement_text">%1$s හි සුරැකෙන දත්තකඩ හෝ ඉතිහාසයකින් තොරව පිරික්සන්න</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">හෝඩුවාවකින් තොරව පිරික්සන්න</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">ප්‍රථම සෙවීම අරඹන්න</string>
+
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">සමීක්‍ෂණය ගන්න</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey">එපා, ස්තුතියි</string>
 
@@ -1433,6 +1449,8 @@
     <string name="preference_enhanced_tracking_protection_standard_default_1">සම්මත (පෙරනිමි)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ආරක්‍ෂාව හා කාර්ය සාධනය අතර සංතුලිතයි. පිටු සාමාන්‍ය ලෙස පූරණය වේ.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">පිටු සුපුරුදු පරිදි පූරණය වුවත් ලුහුබැඳීම් අඩුවෙන් අවහිර කරයි.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">සම්මත ලුහුබැඳීමේ රැකවරණය මගින් අවහිර කළ දෑ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
