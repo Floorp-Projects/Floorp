@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     "RTCStatsIdGenerator.cpp",
     "RTCStatsReport.cpp",
     "WebrtcGlobalInformation.cpp",
+    "WebrtcGlobalStatsHistory.cpp",
 ]
 
 EXPORTS.mozilla.dom += [
