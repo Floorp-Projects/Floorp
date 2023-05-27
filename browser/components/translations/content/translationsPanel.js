@@ -23,16 +23,11 @@ var TranslationsPanel = new (class {
   #console;
 
   /**
-   * The automatically determined document lang tag.
+   * The cached detected languages for both the document and the user.
    *
-   * @type {null | string}
+   * @type {null | LangTags}
    */
-  #docLangTag = null;
-
-  /**
-   * Keep track if the panel has been shown yet this session.
-   */
-  #wasPanelShown = false;
+  detectedLanguages = null;
 
   /**
    * Lazily get a console instance.
@@ -141,18 +136,29 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Returns the cached, detected language tag of the document if available.
-   * Otherwise, attempts to retrieve the detected language tag for the document.
+   * Fetches the language tags for the document and the user and caches the results
+   * Use `#getCachedDetectedLanguages` when the lang tags do not need to be re-fetched.
+   * This requires a bit of work to do, so prefer the cached version when possible.
    *
-   * @returns {Promise<string | null>} A BCP-47 language tag
+   * @returns {Promise<LangTags>}
    */
-  async #getDocLangTag() {
-    if (!this.#docLangTag) {
-      const { docLangTag } =
-        await this.#getTranslationsActor().getLangTagsForTranslation();
-      this.#docLangTag = docLangTag;
+  async #fetchDetectedLanguages() {
+    this.detectedLanguages =
+      await this.#getTranslationsActor().getLangTagsForTranslation();
+    return this.detectedLanguages;
+  }
+
+  /**
+   * If the detected language tags have been retrieved previously, return the cached
+   * version. Otherwise do a fresh lookup of the document's language tag.
+   *
+   * @returns {Promise<LangTags>}
+   */
+  async #getCachedDetectedLanguages() {
+    if (!this.detectedLanguages) {
+      return this.#fetchDetectedLanguages();
     }
-    return this.#docLangTag;
+    return this.detectedLanguages;
   }
 
   /**
@@ -344,12 +350,8 @@ var TranslationsPanel = new (class {
    * pertain to languages.
    */
   async #updateSettingsMenuLanguageCheckboxStates() {
-    const docLangTag = await this.#getDocLangTag();
-
-    const alwaysTranslateLanguage =
-      TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
-    const neverTranslateLanguage =
-      TranslationsParent.shouldNeverTranslateLanguage(docLangTag);
+    const { docLangTag, isDocLangTagSupported } =
+      await this.#getCachedDetectedLanguages();
 
     const { panel } = this.elements;
     const alwaysTranslateMenuItems = panel.querySelectorAll(
@@ -359,17 +361,38 @@ var TranslationsPanel = new (class {
       ".never-translate-language-menuitem"
     );
 
+    if (
+      !docLangTag ||
+      !isDocLangTagSupported ||
+      docLangTag === new Intl.Locale(Services.locale.appLocaleAsBCP47).language
+    ) {
+      for (const menuitem of alwaysTranslateMenuItems) {
+        menuitem.disabled = true;
+      }
+      for (const menuitem of neverTranslateMenuItems) {
+        menuitem.disabled = true;
+      }
+      return;
+    }
+
+    const alwaysTranslateLanguage =
+      TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
+    const neverTranslateLanguage =
+      TranslationsParent.shouldNeverTranslateLanguage(docLangTag);
+
     for (const menuitem of alwaysTranslateMenuItems) {
       menuitem.setAttribute(
         "checked",
         alwaysTranslateLanguage ? "true" : "false"
       );
+      menuitem.disabled = false;
     }
     for (const menuitem of neverTranslateMenuItems) {
       menuitem.setAttribute(
         "checked",
         neverTranslateLanguage ? "true" : "false"
       );
+      menuitem.disabled = false;
     }
   }
 
@@ -395,11 +418,7 @@ var TranslationsPanel = new (class {
    * localized display name of the document's detected language tag.
    */
   async #populateSettingsMenuItems() {
-    const docLangTag = await this.#getDocLangTag();
-    const displayNames = new Services.intl.DisplayNames(undefined, {
-      type: "language",
-    });
-    const docLangDisplayName = displayNames.of(docLangTag);
+    const { docLangTag } = await this.#getCachedDetectedLanguages();
 
     const { panel } = this.elements;
 
@@ -410,15 +429,45 @@ var TranslationsPanel = new (class {
       ".never-translate-language-menuitem"
     );
 
-    for (const menuitem of alwaysTranslateMenuItems) {
-      document.l10n.setArgs(menuitem, {
-        language: docLangDisplayName,
+    /** @type {string | undefined} */
+    let docLangDisplayName;
+    if (docLangTag) {
+      const displayNames = new Services.intl.DisplayNames(undefined, {
+        type: "language",
+        fallback: "none",
       });
+      // The display name will still be empty if the docLangTag is not known.
+      docLangDisplayName = displayNames.of(docLangTag);
     }
+
+    for (const menuitem of alwaysTranslateMenuItems) {
+      if (docLangDisplayName) {
+        document.l10n.setAttributes(
+          menuitem,
+          "translations-panel-settings-always-translate-language",
+          { language: docLangDisplayName }
+        );
+      } else {
+        document.l10n.setAttributes(
+          menuitem,
+          "translations-panel-settings-always-translate-unknown-language"
+        );
+      }
+    }
+
     for (const menuitem of neverTranslateMenuItems) {
-      document.l10n.setArgs(menuitem, {
-        language: docLangDisplayName,
-      });
+      if (docLangDisplayName) {
+        document.l10n.setAttributes(
+          menuitem,
+          "translations-panel-settings-never-translate-language",
+          { language: docLangDisplayName }
+        );
+      } else {
+        document.l10n.setAttributes(
+          menuitem,
+          "translations-panel-settings-never-translate-unknown-language"
+        );
+      }
     }
 
     await Promise.all([
@@ -597,7 +646,10 @@ var TranslationsPanel = new (class {
    * If auto-translate is currently inactive for the doc language, activates it.
    */
   async onAlwaysTranslateLanguage() {
-    const docLangTag = await this.#getDocLangTag();
+    const { docLangTag } = await this.#getCachedDetectedLanguages();
+    if (!docLangTag) {
+      throw new Error("Expected to have a document language tag.");
+    }
     const toggledOn =
       TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
     const translationsActive = this.#isTranslationsActive();
@@ -620,7 +672,10 @@ var TranslationsPanel = new (class {
    * If never-translate is currently inactive for the doc language, activates it.
    */
   async onNeverTranslateLanguage() {
-    const docLangTag = await this.#getDocLangTag();
+    const { docLangTag } = await this.#getCachedDetectedLanguages();
+    if (!docLangTag) {
+      throw new Error("Expected to have a document language tag.");
+    }
     TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
     this.#updateSettingsMenuLanguageCheckboxStates();
 
@@ -653,7 +708,11 @@ var TranslationsPanel = new (class {
   async onRestore() {
     const { panel } = this.elements;
     PanelMultiView.hidePopup(panel);
-    const docLangTag = await this.#getDocLangTag();
+    const { docLangTag } = await this.#getCachedDetectedLanguages();
+    if (!docLangTag) {
+      throw new Error("Expected to have a document language tag.");
+    }
+
     this.#getTranslationsActor().restorePage(docLangTag);
   }
 
@@ -671,18 +730,43 @@ var TranslationsPanel = new (class {
           error,
           isEngineReady,
         } = event.detail;
+
         const { panel, button, buttonLocale, buttonCircleArrows } =
           this.elements;
 
+        const hasSupportedLanguage =
+          detectedLanguages?.docLangTag &&
+          detectedLanguages?.userLangTag &&
+          detectedLanguages?.isDocLangTagSupported;
+
+        if (detectedLanguages) {
+          // Ensure the cached detected languages are up to date, for instance whenever
+          // the user switches tabs.
+          TranslationsPanel.detectedLanguages = detectedLanguages;
+        }
+
+        /**
+         * Defer this check to the end of the `if` statement since it requires work.
+         */
+        const shouldNeverTranslate = async () => {
+          return Boolean(
+            TranslationsParent.shouldNeverTranslateLanguage(
+              detectedLanguages?.docLangTag
+            ) ||
+              // The site is present in the never-translate list.
+              (await this.#getTranslationsActor().shouldNeverTranslateSite())
+          );
+        };
+
         if (
-          // Valid languages were detected
-          detectedLanguages &&
-          // The docLangTag is not present in the never-translate list
-          !TranslationsParent.shouldNeverTranslateLanguage(
-            detectedLanguages.docLangTag
-          ) &&
-          // The site not present in the never-translate list
-          !(await this.#getTranslationsActor().shouldNeverTranslateSite())
+          // We've already requested to translate this page, so always show the icon.
+          requestedTranslationPair ||
+          // There was an error translating, so always show the icon. This can happen
+          // when a user manually invokes the translation and we wouldn't normally show
+          // the icon.
+          error ||
+          // Finally check that this is a supported language that we should translate.
+          (hasSupportedLanguage && !(await shouldNeverTranslate()))
         ) {
           button.hidden = false;
           if (requestedTranslationPair) {

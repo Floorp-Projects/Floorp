@@ -561,32 +561,47 @@ export class TranslationsChild extends JSWindowActorChild {
 
   /**
    * Determine if the page should be translated by checking the App's languages and
-   * comparing it to the reported language of the page. If we can translate the page,
-   * then return the language pair.
+   * comparing it to the reported language of the page. Return the best translation fit
+   * (if available).
    *
-   * @returns {Promise<null | LangTags>}
+   * @param {number} [translationsStart]
+   * @returns {Promise<LangTags>}
    */
   async getLangTagsForTranslation(translationsStart = this.docShell.now()) {
     if (this.#langTags) {
       return this.#langTags;
     }
 
-    if (this.#isRestrictedPage()) {
-      return null;
-    }
+    const langTags = {
+      docLangTag: null,
+      userLangTag: null,
+      isDocLangTagSupported: false,
+    };
+    this.#langTags = langTags;
 
-    let appLangTag = new Intl.Locale(Services.locale.appLocaleAsBCP47).language;
-    let docLangTag;
+    if (this.#isRestrictedPage()) {
+      // The langTags are still blank here.
+      return langTags;
+    }
+    let languagePairs = await this.getLanguagePairs();
+
+    const determineIsDocLangTagSupported = docLangTag =>
+      Boolean(
+        languagePairs.find(({ fromLang }) => fromLang === langTags.docLangTag)
+      );
 
     // First try to get the langTag from the document's markup.
     try {
       const docLocale = new Intl.Locale(this.document.documentElement.lang);
-      docLangTag = docLocale.language;
+      langTags.docLangTag = docLocale.language;
+      langTags.isDocLangTagSupported = determineIsDocLangTagSupported(
+        docLocale.language
+      );
     } catch (error) {}
 
     // If the document's markup had no specified langTag, attempt
     // to identify the page's language using the LanguageIdEngine.
-    if (!docLangTag) {
+    if (!langTags.docLangTag) {
       let languageIdEngine = await this.createLanguageIdEngine();
       let { langTag, confidence } = await languageIdEngine.identifyLanguage(
         this.#getTextToIdentify()
@@ -595,11 +610,15 @@ export class TranslationsChild extends JSWindowActorChild {
         `${langTag}(${confidence.toFixed(2)}) Detected Page Language`
       );
       if (confidence >= DOC_LANGUAGE_DETECTION_THRESHOLD) {
-        docLangTag = langTag;
+        langTags.docLangTag = langTag;
+        langTags.isDocLangTagSupported =
+          determineIsDocLangTagSupported(langTag);
       }
     }
 
-    if (!docLangTag) {
+    const preferredLanguages = await this.getPreferredLanguages();
+
+    if (!langTags.docLangTag) {
       const message = "No valid language detected.";
       ChromeUtils.addProfilerMarker(
         "TranslationsChild",
@@ -607,7 +626,15 @@ export class TranslationsChild extends JSWindowActorChild {
         message
       );
       lazy.console.log(message, this.contentWindow.location.href);
-      return null;
+
+      const languagePairs = await this.getLanguagePairs();
+
+      // Attempt to find a good language to select for the user.
+      langTags.userLangTag =
+        preferredLanguages.find(langTag => langTag === languagePairs.toLang) ??
+        null;
+
+      return langTags;
     }
 
     ChromeUtils.addProfilerMarker(
@@ -616,7 +643,11 @@ export class TranslationsChild extends JSWindowActorChild {
       "Time to determine langTags"
     );
 
-    if (appLangTag === docLangTag) {
+    // This is a special case where we do not offer a translation if the main app language
+    // and the doc language match. The main app language should be the first preferred
+    // language.
+    if (preferredLanguages[0] === langTags.docLangTag) {
+      // The doc language and the main language match.
       const message =
         "The app and document languages match, so not translating.";
       ChromeUtils.addProfilerMarker(
@@ -625,35 +656,51 @@ export class TranslationsChild extends JSWindowActorChild {
         message
       );
       lazy.console.log(message, this.contentWindow.location.href);
-      return null;
+      // The docLangTag will be set, while the userLangTag will be null.
+      return langTags;
     }
 
-    // There is no reason to look at the language pairs if the engine is already in
-    // the cache.
-    if (!translationsEngineCache.isInCache(docLangTag, appLangTag)) {
-      const languagePairs = await this.getLanguagePairs();
-      if (this.#isDestroyed) {
-        return null;
-      }
+    // Attempt to find a matching language pair for a preferred language.
+    for (const preferredLangTag of preferredLanguages) {
       if (
-        !languagePairs.some(
-          ({ fromLang, toLang }) =>
-            fromLang === docLangTag && toLang === appLangTag
-        )
+        translationsEngineCache.isInCache(langTags.docLangTag, preferredLangTag)
       ) {
-        // No language pairs match.
-        const message = `Translating from "${docLangTag}" to "${appLangTag}" is not supported.`;
-        ChromeUtils.addProfilerMarker(
-          "TranslationsChild",
-          { innerWindowId: this.innerWindowId },
-          message
-        );
-        lazy.console.log(message, languagePairs);
-        return null;
+        // There is no reason to look at the language pairs if the engine is already in
+        // the cache.
+        langTags.userLangTag = preferredLangTag;
+        break;
+      }
+
+      if (
+        languagePairs.some(({ fromLang, toLang }) => {
+          if (langTags.isDocLangTagSupported) {
+            // Match both from and to languages.
+            return (
+              fromLang === langTags.docLangTag && toLang === preferredLangTag
+            );
+          }
+          // Only match the to language, since the "from" is not supported.
+          return toLang === preferredLangTag;
+        })
+      ) {
+        // A match was found in one of the preferred languages.
+        langTags.userLangTag = preferredLangTag;
+        break;
       }
     }
-    this.#langTags = { appLangTag, docLangTag };
-    return this.#langTags;
+
+    if (!langTags.userLangTag) {
+      // No language pairs match.
+      const message = `No matching translation pairs were found for translating from "${langTags.docLangTag}".`;
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        { innerWindowId: this.innerWindowId },
+        message
+      );
+      lazy.console.log(message, languagePairs);
+    }
+
+    return langTags;
   }
 
   /**
@@ -675,7 +722,7 @@ export class TranslationsChild extends JSWindowActorChild {
     this.#langTags = langTags;
     this.reportDetectedLangTagsToParent(langTags);
 
-    if (langTags) {
+    if (langTags.docLangTag && langTags.userLangTag) {
       const { maybeAutoTranslate, maybeNeverTranslate } = await this.sendQuery(
         "Translations:GetTranslationConditions",
         langTags
@@ -683,7 +730,7 @@ export class TranslationsChild extends JSWindowActorChild {
       if (maybeAutoTranslate && !maybeNeverTranslate) {
         this.translatePage(
           langTags.docLangTag,
-          langTags.appLangTag,
+          langTags.userLangTag,
           translationsStart
         );
       }

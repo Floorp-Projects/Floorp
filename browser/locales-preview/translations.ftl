@@ -52,12 +52,16 @@ translations-panel-error-load-languages-hint = Check your internet connection an
 #   $language (string) - The localized display name of the detected language
 translations-panel-settings-always-translate-language =
   .label = Always translate { $language }
+translations-panel-settings-always-translate-unknown-language =
+  .label = Always translate this language
 
 # Text displayed for the option to never translate a given language
 # Variables:
 #   $language (string) - The localized display name of the detected language
 translations-panel-settings-never-translate-language =
   .label = Never translate { $language }
+translations-panel-settings-never-translate-unknown-language =
+  .label = Never translate this language
 
 # Text displayed for the option to never translate this website
 translations-panel-settings-never-translate-site =
