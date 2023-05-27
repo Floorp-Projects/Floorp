@@ -3,6 +3,15 @@
 
 const ps = Services.prefs;
 
+// It is necessary to manually disable `xpc::IsInAutomation` since
+// `resetPrefs` will flip the preference to re-enable `once`-synced
+// preference change assertions, and also change the value of those
+// preferences.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  false
+);
+
 // A little helper to reset the service and load one pref file.
 function resetAndLoadDefaults() {
   ps.resetPrefs();

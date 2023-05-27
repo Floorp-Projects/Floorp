@@ -8,12 +8,6 @@ const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
 
-// Attempting to set the
-// security.turn_off_all_security_so_that_viruses_can_take_over_this_computer
-// preference to enable Cu.exitIfInAutomation crashes, probably due to
-// shutdown behaviors faked by AddonTestUtils.jsm's cleanup function.
-do_disable_fast_shutdown();
-
 add_task(async function run_test() {
   let engine = Service.engineManager.get("prefs");
   let tracker = engine._tracker;

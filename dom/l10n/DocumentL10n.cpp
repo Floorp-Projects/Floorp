@@ -137,6 +137,7 @@ void DocumentL10n::TriggerInitialTranslation() {
   ErrorResult rv;
   promises.AppendElement(TranslateDocument(rv));
   if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     InitialTranslationCompleted(false);
     mReady->MaybeRejectWithUndefined();
     return;
