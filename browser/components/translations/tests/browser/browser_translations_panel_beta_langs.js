@@ -53,11 +53,11 @@ add_task(async function test_translations_panel_display_beta_languages() {
     click(button, "Opening the popup");
   });
 
-  assertBetaDisplay(document.getElementById("translations-panel-default-to"));
+  assertBetaDisplay(document.getElementById("translations-panel-to"));
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
-      getByL10nId("translations-panel-default-translate-cancel"),
+      getByL10nId("translations-panel-translate-cancel"),
       "Click the cancel button."
     );
   });
