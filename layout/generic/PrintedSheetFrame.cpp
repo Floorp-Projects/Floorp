@@ -93,7 +93,8 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   const uint32_t desiredPagesPerSheet = mPD->PagesPerSheetInfo()->mNumPages;
 
   if (desiredPagesPerSheet > 1) {
-    ComputePagesPerSheetOriginAndScale();
+    ComputePagesPerSheetGridMetrics(
+        nsSize(aReflowInput.AvailableISize(), aReflowInput.AvailableBSize()));
   }
 
   // NOTE: I'm intentionally *not* using a range-based 'for' loop here, since
@@ -220,112 +221,68 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aReflowOutput);
 }
 
-void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
+void PrintedSheetFrame::ComputePagesPerSheetGridMetrics(
+    const nsSize& aSheetSize) {
   MOZ_ASSERT(mPD->PagesPerSheetInfo()->mNumPages > 1,
              "Unnecessary to call this in a regular 1-page-per-sheet scenario; "
              "the computed values won't ever be used in that case");
 
-  // The "full-scale" size of a page (if it weren't shrunk down into a grid):
-  const nsSize pageSize = PresContext()->GetPageSize();
-
   // Compute the space available for the pages-per-sheet "page grid" (just
   // subtract the sheet's unwriteable margin area):
-  nsSize availSpaceOnSheet = pageSize;
+  nsSize availSpaceOnSheet = aSheetSize;
   nsMargin uwm = mPD->mPrintSettings->GetIgnoreUnwriteableMargins()
                      ? nsMargin{}
                      : nsPresContext::CSSTwipsToAppUnits(
                            mPD->mPrintSettings->GetUnwriteableMarginInTwips());
 
+  // XXXjwatt Once we support heterogeneous sheet orientations, we'll also need
+  // to rotate uwm if this sheet is not the primary orientation.
   if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
-    // The pages will be rotated to be orthogonal to the physical sheet.  To
-    // account for that, we rotate the components of availSpaceOnSheet and uwm,
-    // so that we can reason about them here from the perspective of a
-    // "pageSize"-oriented *page*.
-    std::swap(availSpaceOnSheet.width, availSpaceOnSheet.height);
-
-    // Note that the pages are rotated 90 degrees clockwise when placed onto a
-    // sheet (so that, e.g. in a scenario with two side-by-side portait pages
-    // that are rotated & placed onto a sheet, the "left" edge of the first
-    // page is at the "top" of the sheet and hence comes out of the printer
-    // first, etc).  So: given `nsMargin uwm` whose sides correspond to the
-    // physical sheet's sides, we have to rotate 90 degrees *counter-clockwise*
-    // in order to "cancel out" the page rotation and to represent it in the
-    // page's perspective. From a page's perspective, its own "top" side
-    // corresponds to the physical sheet's right side, which is why we're
-    // passing "uwm.right" as the "top" component here; and so on.
+    // aSheetSize already takes account of the switch of *sheet* orientation
+    // that we do in this case (the orientation implied by the page size
+    // dimensions in the nsIPrintSettings applies to *pages*). That is not the
+    // case for the unwriteable margins since we got them from the
+    // nsIPrintSettings object ourself, so we need to adjust `uwm` here.
+    //
+    // Note: In practice, sheets with an orientation that is orthogonal to the
+    // physical orientation of sheets output by a printer must be rotated 90
+    // degrees for/by the printer. In that case the convention seems to be that
+    // the "left" edge of the orthogonally oriented sheet becomes the "top",
+    // and so forth. The rotation direction will matter in the case that the
+    // top and bottom unwriteable margins are different, or the left and right
+    // unwriteable margins are different. So we need to match this behavior,
+    // which means we must rotate the `uwm` 90 degrees *counter-clockwise*.
     nsMargin rotated(uwm.right, uwm.bottom, uwm.left, uwm.top);
     uwm = rotated;
   }
 
   availSpaceOnSheet.width -= uwm.LeftRight();
   availSpaceOnSheet.height -= uwm.TopBottom();
-  nsPoint pageGridOrigin(uwm.left, uwm.top);
+
+  if (MOZ_UNLIKELY(availSpaceOnSheet.IsEmpty())) {
+    // This sort of thing should be rare, but it can happen if there are
+    // bizarre page sizes, and/or if there's an unexpectedly large unwriteable
+    // margin area.
+    NS_WARNING("Zero area for pages-per-sheet grid, or zero-sized grid");
+    mGridOrigin = nsPoint(0, 0);
+    mGridNumCols = 1;
+    return;
+  }
 
   // If there are a different number of rows vs. cols, we'll aim to put
   // the larger number of items in the longer axis.
   const auto* ppsInfo = mPD->PagesPerSheetInfo();
   uint32_t smallerNumTracks = ppsInfo->mNumPages / ppsInfo->mLargerNumTracks;
-  bool pageSizeIsPortraitLike = pageSize.width > pageSize.height;
+  bool sheetIsPortraitLike = aSheetSize.width < aSheetSize.height;
   auto numCols =
-      pageSizeIsPortraitLike ? smallerNumTracks : ppsInfo->mLargerNumTracks;
+      sheetIsPortraitLike ? smallerNumTracks : ppsInfo->mLargerNumTracks;
   auto numRows =
-      pageSizeIsPortraitLike ? ppsInfo->mLargerNumTracks : smallerNumTracks;
+      sheetIsPortraitLike ? ppsInfo->mLargerNumTracks : smallerNumTracks;
 
-  // Compute the full size of the "page grid" that we'll be scaling down &
-  // placing onto a given sheet:
-  nsSize pageGridFullSize(numCols * pageSize.width, numRows * pageSize.height);
-
-  if (MOZ_UNLIKELY(availSpaceOnSheet.IsEmpty() || pageGridFullSize.IsEmpty())) {
-    // Either we have a 0-sized available area, or we have a 0-sized page-grid
-    // to draw into the available area. This sort of thing should be rare, but
-    // it can happen if there are bizarre page sizes, and/or if there's an
-    // unexpectedly large unwritable margin area. Regardless: if we get here,
-    // we shouldn't be drawing anything onto the sheet; so let's just use a
-    // scale factor of 0, and bail early to avoid division by 0 in hScale &
-    // vScale computations below.
-    NS_WARNING("Zero area for pages-per-sheet grid, or zero-sized grid");
-    mPagesPerSheetGridOrigin = pageGridOrigin;
-    mPagesPerSheetNumCols = 1;
-    mPagesPerSheetScale = 0.0f;
-    return;
-  }
-
-  // Compute the scale factors required in each axis:
-  float hScale =
-      availSpaceOnSheet.width / static_cast<float>(pageGridFullSize.width);
-  float vScale =
-      availSpaceOnSheet.height / static_cast<float>(pageGridFullSize.height);
-
-  // Choose the more restrictive scale factor (so that we don't overflow the
-  // sheet's printable area in either axis). And center the page-grid in the
-  // other axis (since it probably ends up with extra space).
-  float scale = std::min(hScale, vScale);
-  if (hScale < vScale) {
-    // hScale is the more restrictive scale-factor, so we'll be using that.
-    // Nudge the grid in the vertical axis to center it:
-    nscoord extraSpace = availSpaceOnSheet.height -
-                         NSToCoordFloor(scale * pageGridFullSize.height);
-    if (MOZ_LIKELY(extraSpace > 0)) {
-      pageGridOrigin.y += extraSpace / 2;
-    }
-  } else if (vScale < hScale) {
-    // vScale is the more restrictive scale-factor, so we'll be using that.
-    // Nudge the grid in the vertical axis to center it:
-    nscoord extraSpace = availSpaceOnSheet.width -
-                         NSToCoordFloor(scale * pageGridFullSize.width);
-    if (MOZ_LIKELY(extraSpace > 0)) {
-      pageGridOrigin.x += extraSpace / 2;
-    }
-  }
-  // else, we fit exactly in both axes, with the same scale factor, so there's
-  // no extra space in either axis, i.e. no need to center.
-
-  // Update the nsSharedPageData member data:
-  mPagesPerSheetGridOrigin = pageGridOrigin;
-  mPagesPerSheetNumCols = numCols;
-  mPagesPerSheetScale = scale;
-  mGridCellWidth = float(availSpaceOnSheet.width) / float(numCols);
-  mGridCellHeight = float(availSpaceOnSheet.height) / float(numRows);
+  mGridOrigin = nsPoint(uwm.left, uwm.top);
+  mGridNumCols = numCols;
+  mGridCellWidth = availSpaceOnSheet.width / nscoord(numCols);
+  mGridCellHeight = availSpaceOnSheet.height / nscoord(numRows);
 }
 
 #ifdef DEBUG_FRAME_DUMP
