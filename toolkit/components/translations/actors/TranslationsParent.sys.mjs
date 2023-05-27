@@ -266,6 +266,20 @@ export class TranslationsParent extends JSWindowActorParent {
     return TranslationsParent.#isTranslationsEngineSupported;
   }
 
+  /**
+   * Only translate pages that match certain protocols, that way internal pages like
+   * about:* pages will not be translated.
+   * @param {string} url
+   */
+  static isRestrictedPage(url) {
+    // Keep this logic up to date with TranslationsChild.prototype.#isRestrictedPage.
+    return !(
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("file:///")
+    );
+  }
+
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:GetTranslationsEnginePayload": {
