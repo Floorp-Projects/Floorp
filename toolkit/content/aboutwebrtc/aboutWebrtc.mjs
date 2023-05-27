@@ -70,8 +70,10 @@ const elemRenderer = new Proxy(new Renderer(), {
 
 const graphData = [];
 const mostRecentReports = {};
+const sdpHistories = [];
 
 function appendReportToHistory(report) {
+  appendSdpHistory(report);
   mostRecentReports[report.pcid] = report;
   if (graphData[report.pcid] === undefined) {
     graphData[report.pcid] ??= new GraphDb(report);
@@ -80,8 +82,24 @@ function appendReportToHistory(report) {
   }
 }
 
+function appendSdpHistory({ pcid, sdpHistory: newHistory }) {
+  sdpHistories[pcid] ??= [];
+  let storedHistory = sdpHistories[pcid];
+  newHistory.forEach(({ timestamp, sdp }) => {
+    if (!storedHistory.length || storedHistory.at(-1).timestamp < timestamp) {
+      storedHistory.push({ timestamp, sdp });
+    }
+  });
+}
+
 function recentStats() {
   return Object.values(mostRecentReports);
+}
+
+// Returns the sdpHistory for a given stats report
+function getSdpHistory({ pcid, timestamp: a }) {
+  sdpHistories[pcid] ??= [];
+  return sdpHistories[pcid].filter(({ timestamp: b }) => a >= b);
 }
 
 function appendStats(allStats) {
@@ -107,6 +125,7 @@ async function getStats() {
         WGI.getStatsHistorySince(r, pcid, getAndUpdateTsMemoForPcid(pcid))
       ).then(r => {
         appendStats(r.reports);
+        r.sdpHistories.forEach(hist => appendSdpHistory(hist));
       })
     )
   );
@@ -537,7 +556,7 @@ const renderSDPHistoryTab = (rndr, hist, props) => {
         timestamp,
         "relative-timestamp": timestamp - first,
       }),
-      ...(errs.length ? errorsSubSect() : []),
+      ...(errs && errs.length ? errorsSubSect() : []),
       rndr.text_pre(trimNewlines(sdp)),
     ];
 
@@ -580,7 +599,7 @@ const renderSDPHistoryTab = (rndr, hist, props) => {
 
 function renderSDPStats(
   rndr,
-  { offerer, localSdp, remoteSdp, sdpHistory, pcid }
+  { offerer, localSdp, remoteSdp, pcid, timestamp }
 ) {
   const sdps = offerer
     ? { offer: localSdp, answer: remoteSdp }
@@ -605,7 +624,11 @@ function renderSDPStats(
   const panes = {
     answer: renderSDPTab(rndr, sdps.answer, tabPaneProps("answer")),
     offer: renderSDPTab(rndr, sdps.offer, tabPaneProps("offer")),
-    history: renderSDPHistoryTab(rndr, sdpHistory, tabPaneProps("history")),
+    history: renderSDPHistoryTab(
+      rndr,
+      getSdpHistory({ pcid, timestamp }),
+      tabPaneProps("history")
+    ),
   };
 
   // Creates the properties and l10n label for tab buttons
