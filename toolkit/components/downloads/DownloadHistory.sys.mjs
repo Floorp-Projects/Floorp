@@ -22,12 +22,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 // Places query used to retrieve all history downloads for the related list.
-const HISTORY_PLACES_QUERY =
-  "place:transition=" +
-  Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
-  "&sort=" +
-  Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-
+const HISTORY_PLACES_QUERY = `place:transition=${Ci.nsINavHistoryService.TRANSITION_DOWNLOAD}&sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING}`;
 const DESTINATIONFILEURI_ANNO = "downloads/destinationFileURI";
 const METADATA_ANNO = "downloads/metaData";
 
@@ -42,7 +37,7 @@ const METADATA_STATE_DIRTY = 8;
  * Provides methods to retrieve downloads from previous sessions and store
  * downloads for future sessions.
  */
-export var DownloadHistory = {
+export let DownloadHistory = {
   /**
    * Retrieves the main DownloadHistoryList object which provides a unified view
    * on downloads from both previous browsing sessions and this session.
@@ -69,7 +64,8 @@ export var DownloadHistory = {
         // descending order, to make sure that the list can apply the limit.
         let query =
           HISTORY_PLACES_QUERY +
-          (maxHistoryResults ? "&maxResults=" + maxHistoryResults : "");
+          (maxHistoryResults ? `&maxResults=${maxHistoryResults}` : "");
+
         return new DownloadHistoryList(list, query);
       });
     }
@@ -179,7 +175,7 @@ export var DownloadHistory = {
  * The cache is initialized the first time DownloadHistory.getList is called, or
  * when data is added.
  */
-var DownloadCache = {
+let DownloadCache = {
   _data: new Map(),
   _initializePromise: null,
 
@@ -360,30 +356,57 @@ var DownloadCache = {
  * @param placesNode
  *        The Places node from which the history download should be initialized.
  */
-function HistoryDownload(placesNode) {
-  this.placesNode = placesNode;
+class HistoryDownload {
+  constructor(placesNode) {
+    this.placesNode = placesNode;
 
-  // History downloads should get the referrer from Places (bug 829201).
-  this.source = {
-    url: placesNode.uri,
-    isPrivate: false,
-  };
-  this.target = {
-    path: undefined,
-    exists: false,
-    size: undefined,
-  };
+    // History downloads should get the referrer from Places (bug 829201).
+    this.source = {
+      url: placesNode.uri,
+      isPrivate: false,
+    };
+    this.target = {
+      path: undefined,
+      exists: false,
+      size: undefined,
+    };
 
-  // In case this download cannot obtain its end time from the Places metadata,
-  // use the time from the Places node, that is the start time of the download.
-  this.endTime = placesNode.time / 1000;
-}
+    // In case this download cannot obtain its end time from the Places metadata,
+    // use the time from the Places node, that is the start time of the download.
+    this.endTime = placesNode.time / 1000;
+  }
 
-HistoryDownload.prototype = {
   /**
    * DownloadSlot containing this history download.
+   *
+   * @type {DownloadSlot}
    */
-  slot: null,
+  slot = null;
+
+  /**
+   * History downloads are never in progress.
+   *
+   * @type {Boolean}
+   */
+  stopped = true;
+
+  /**
+   * No percentage indication is shown for history downloads.
+   *
+   * @type {Boolean}
+   */
+  hasProgress = false;
+
+  /**
+   * History downloads cannot be restarted using their partial data, even if
+   * they are indicated as paused in their Places metadata. The only way is to
+   * use the information from a persisted session download, that will be shown
+   * instead of the history download. In case this session download is not
+   * available, we show the history download as canceled, not paused.
+   *
+   * @type {Boolean}
+   */
+  hasPartialData = false;
 
   /**
    * Pushes information from Places metadata into this object.
@@ -443,31 +466,12 @@ HistoryDownload.prototype = {
       this.target.exists = false;
       this.target.size = undefined;
     }
-  },
-
-  /**
-   * History downloads are never in progress.
-   */
-  stopped: true,
-
-  /**
-   * No percentage indication is shown for history downloads.
-   */
-  hasProgress: false,
-
-  /**
-   * History downloads cannot be restarted using their partial data, even if
-   * they are indicated as paused in their Places metadata. The only way is to
-   * use the information from a persisted session download, that will be shown
-   * instead of the history download. In case this session download is not
-   * available, we show the history download as canceled, not paused.
-   */
-  hasPartialData: false,
+  }
 
   /**
    * This method may be called when deleting a history download.
    */
-  async finalize() {},
+  async finalize() {}
 
   /**
    * This method mimicks the "refresh" method of session downloads.
@@ -482,7 +486,7 @@ HistoryDownload.prototype = {
     }
 
     this.slot.list._notifyAllViews("onDownloadChanged", this);
-  },
+  }
 
   /**
    * This method mimicks the "manuallyRemoveData" method of session downloads.
@@ -498,8 +502,8 @@ HistoryDownload.prototype = {
     }
     this.deleted = true;
     await this.refresh();
-  },
-};
+  }
+}
 
 /**
  * Represents one item in the list of public session and history downloads.
@@ -511,31 +515,30 @@ HistoryDownload.prototype = {
  * @param list
  *        The DownloadHistoryList that owns this DownloadSlot object.
  */
-function DownloadSlot(list) {
-  this.list = list;
-}
-
-DownloadSlot.prototype = {
-  list: null,
+class DownloadSlot {
+  constructor(list) {
+    this.list = list;
+  }
 
   /**
    * Download object representing the session download contained in this slot.
    */
-  sessionDownload: null,
+  sessionDownload = null;
+  _historyDownload = null;
 
   /**
    * HistoryDownload object contained in this slot.
    */
   get historyDownload() {
     return this._historyDownload;
-  },
+  }
+
   set historyDownload(historyDownload) {
     this._historyDownload = historyDownload;
     if (historyDownload) {
       historyDownload.slot = this;
     }
-  },
-  _historyDownload: null,
+  }
 
   /**
    * Returns the Download or HistoryDownload object for displaying information
@@ -543,8 +546,8 @@ DownloadSlot.prototype = {
    */
   get download() {
     return this.sessionDownload || this.historyDownload;
-  },
-};
+  }
+}
 
 /**
  * Represents an ordered collection of DownloadSlot objects containing a merged
@@ -563,42 +566,53 @@ DownloadSlot.prototype = {
  * @param place
  *        Places query used to retrieve history downloads.
  */
-var DownloadHistoryList = function (publicList, place) {
-  DownloadList.call(this);
+class DownloadHistoryList extends DownloadList {
+  constructor(publicList, place) {
+    super();
 
-  // While "this._slots" contains all the data in order, the other properties
-  // provide fast access for the most common operations.
-  this._slots = [];
-  this._slotsForUrl = new Map();
-  this._slotForDownload = new WeakMap();
+    // While "this._slots" contains all the data in order, the other properties
+    // provide fast access for the most common operations.
+    this._slots = [];
+    this._slotsForUrl = new Map();
+    this._slotForDownload = new WeakMap();
 
-  // Start the asynchronous queries to retrieve history and session downloads.
-  publicList.addView(this).catch(console.error);
-  let query = {},
-    options = {};
-  lazy.PlacesUtils.history.queryStringToQuery(place, query, options);
+    // Start the asynchronous queries to retrieve history and session downloads.
+    publicList.addView(this).catch(console.error);
+    let query = {},
+      options = {};
+    lazy.PlacesUtils.history.queryStringToQuery(place, query, options);
 
-  // NB: The addObserver call sets our nsINavHistoryResultObserver.result.
-  let result = lazy.PlacesUtils.history.executeQuery(
-    query.value,
-    options.value
-  );
-  result.addObserver(this);
+    // NB: The addObserver call sets our nsINavHistoryResultObserver.result.
+    let result = lazy.PlacesUtils.history.executeQuery(
+      query.value,
+      options.value
+    );
+    result.addObserver(this);
 
-  // Our history result observer is long lived for fast shared views, so free
-  // the reference on shutdown to prevent leaks.
-  Services.obs.addObserver(() => {
-    this.result = null;
-  }, "quit-application-granted");
-};
+    // Our history result observer is long lived for fast shared views, so free
+    // the reference on shutdown to prevent leaks.
+    Services.obs.addObserver(() => {
+      this.result = null;
+    }, "quit-application-granted");
+  }
 
-DownloadHistoryList.prototype = {
   /**
    * This is set when executing the Places query.
    */
+  _result = null;
+
+  /**
+   * Index of the first slot that contains a session download. This is equal to
+   * the length of the list when there are no session downloads.
+   *
+   * @type {Number}
+   */
+  _firstSessionSlotIndex = 0;
+
   get result() {
     return this._result;
-  },
+  }
+
   set result(result) {
     if (this._result == result) {
       return;
@@ -614,8 +628,7 @@ DownloadHistoryList.prototype = {
     if (this._result) {
       this._result.root.containerOpen = true;
     }
-  },
-  _result: null,
+  }
 
   /**
    * Updates the download history item when the meta data or destination file
@@ -638,13 +651,7 @@ DownloadHistoryList.prototype = {
       slot.historyDownload.updateFromMetaData(metaData);
       this._notifyAllViews("onDownloadChanged", slot.download);
     }
-  },
-
-  /**
-   * Index of the first slot that contains a session download. This is equal to
-   * the length of the list when there are no session downloads.
-   */
-  _firstSessionSlotIndex: 0,
+  }
 
   _insertSlot({ slot, index, slotsForUrl }) {
     // Add the slot to the ordered array.
@@ -662,7 +669,7 @@ DownloadHistoryList.prototype = {
     this._notifyAllViews("onDownloadAdded", slot.download, {
       insertBefore: this._downloads[index + 1],
     });
-  },
+  }
 
   _removeSlot({ slot, slotsForUrl }) {
     // Remove the slot from the ordered array.
@@ -681,7 +688,7 @@ DownloadHistoryList.prototype = {
 
     // Remove the associated view items.
     this._notifyAllViews("onDownloadRemoved", slot.download);
-  },
+  }
 
   /**
    * Ensures that the information about a history download is stored in at least
@@ -718,12 +725,12 @@ DownloadHistoryList.prototype = {
     let slot = new DownloadSlot(this);
     slot.historyDownload = historyDownload;
     this._insertSlot({ slot, slotsForUrl, index: this._firstSessionSlotIndex });
-  },
+  }
 
   // nsINavHistoryResultObserver
   containerStateChanged(node, oldState, newState) {
     this.invalidateContainer(node);
-  },
+  }
 
   // nsINavHistoryResultObserver
   invalidateContainer(container) {
@@ -751,12 +758,12 @@ DownloadHistoryList.prototype = {
     }
 
     this._notifyAllViews("onDownloadBatchEnded");
-  },
+  }
 
   // nsINavHistoryResultObserver
   nodeInserted(parent, placesNode) {
     this._insertPlacesNode(placesNode);
-  },
+  }
 
   // nsINavHistoryResultObserver
   nodeRemoved(parent, placesNode, aOldIndex) {
@@ -769,20 +776,20 @@ DownloadHistoryList.prototype = {
         this._removeSlot({ slot, slotsForUrl });
       }
     }
-  },
+  }
 
   // nsINavHistoryResultObserver
-  nodeIconChanged() {},
-  nodeTitleChanged() {},
-  nodeKeywordChanged() {},
-  nodeDateAddedChanged() {},
-  nodeLastModifiedChanged() {},
-  nodeHistoryDetailsChanged() {},
-  nodeTagsChanged() {},
-  sortingChanged() {},
-  nodeMoved() {},
-  nodeURIChanged() {},
-  batching() {},
+  nodeIconChanged() {}
+  nodeTitleChanged() {}
+  nodeKeywordChanged() {}
+  nodeDateAddedChanged() {}
+  nodeLastModifiedChanged() {}
+  nodeHistoryDetailsChanged() {}
+  nodeTagsChanged() {}
+  sortingChanged() {}
+  nodeMoved() {}
+  nodeURIChanged() {}
+  batching() {}
 
   // DownloadList callback
   onDownloadAdded(download) {
@@ -803,13 +810,13 @@ DownloadHistoryList.prototype = {
     slot.sessionDownload = download;
     this._insertSlot({ slot, slotsForUrl, index: this._slots.length });
     this._slotForDownload.set(download, slot);
-  },
+  }
 
   // DownloadList callback
   onDownloadChanged(download) {
     let slot = this._slotForDownload.get(download);
     this._notifyAllViews("onDownloadChanged", slot.download);
-  },
+  }
 
   // DownloadList callback
   onDownloadRemoved(download) {
@@ -837,21 +844,20 @@ DownloadHistoryList.prototype = {
         index: this._firstSessionSlotIndex,
       });
     }
-  },
+  }
 
   // DownloadList
   add() {
     throw new Error("Not implemented.");
-  },
+  }
 
   // DownloadList
   remove() {
     throw new Error("Not implemented.");
-  },
+  }
 
   // DownloadList
   removeFinished() {
     throw new Error("Not implemented.");
-  },
-};
-Object.setPrototypeOf(DownloadHistoryList.prototype, DownloadList.prototype);
+  }
+}
