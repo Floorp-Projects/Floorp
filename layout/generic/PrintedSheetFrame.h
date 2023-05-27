@@ -48,13 +48,12 @@ class PrintedSheetFrame final : public nsContainerFrame {
 
   uint32_t GetNumPages() const { return mNumPages; }
 
-  float GetPagesPerSheetScale() const { return mPagesPerSheetScale; }
-  uint32_t GetPagesPerSheetNumCols() const { return mPagesPerSheetNumCols; }
-  nsPoint GetPagesPerSheetGridOrigin() const {
-    return mPagesPerSheetGridOrigin;
-  }
-  float GetGridCellWidth() const { return mGridCellWidth; }
-  float GetGridCellHeight() const { return mGridCellHeight; }
+  // These methods provide information about the grid that pages should be
+  // placed into in the case that there are multiple pages-per-sheet.
+  uint32_t GetGridNumCols() const { return mGridNumCols; }
+  nsPoint GetGridOrigin() const { return mGridOrigin; }
+  nscoord GetGridCellWidth() const { return mGridCellWidth; }
+  nscoord GetGridCellHeight() const { return mGridCellHeight; }
 
  private:
   // Private construtor & destructor, to avoid accidental (non-FrameArena)
@@ -65,35 +64,40 @@ class PrintedSheetFrame final : public nsContainerFrame {
 
   // Helper function to populate some pages-per-sheet metrics in our
   // nsSharedPageData.
-  void ComputePagesPerSheetOriginAndScale();
+  // XXXjwatt: We should investigate sharing this function for the single
+  // page-per-sheet case. The logic for that case
+  // (nsPageFrame::ComputePageSizeScale) is somewhat different though, since
+  // that case uses no sheet margins and uses the user/CSS specified margins on
+  // the page, with any page scaling reverted to keep the margins unchanged.
+  // We, on the other hand, use the unwriteable margins for the sheet, unscaled,
+  // and use the user/CSS margins on the pages and allow them to be scaled
+  // along with any pages-per-sheet scaling. (This behavior makes maximum use
+  // of the sheet and, by scaling the default on the pages, results in a
+  // a sensible amount of spacing between pages.)
+  void ComputePagesPerSheetGridMetrics(const nsSize& aSheetSize);
 
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
   nsSharedPageData* mPD = nullptr;
+
   // The number of visible pages in this sheet.
   uint32_t mNumPages = 0;
 
-  // The mPagesPerSheet{...} members are only used if
-  // PagesPerSheetInfo()->mNumPages > 1.  They're initialized with reasonable
-  // defaults here (which correspond to what we do for the regular
-  // 1-page-per-sheet scenario, though we don't actually use these members in
-  // that case).  If we're in >1 pages-per-sheet scenario, then these members
-  // will be assigned "real" values during the reflow of the first
-  // PrintedSheetFrame.
-  float mPagesPerSheetScale = 1.0f;
   // Number of "columns" in our pages-per-sheet layout. For example: if we're
   // printing with 6 pages-per-sheet, then this could be either 3 or 2,
   // depending on whether we're printing portrait-oriented pages onto a
   // landscape-oriented sheet (3 cols) vs. if we're printing landscape-oriented
   // pages onto a portrait-oriented sheet (2 cols).
-  uint32_t mPagesPerSheetNumCols = 1;
+  uint32_t mGridNumCols = 1;
 
-  nsPoint mPagesPerSheetGridOrigin;
+  // The offset of the start of the multiple pages-per-sheet grid from the
+  // top-left of the sheet.
+  nsPoint mGridOrigin;
 
   // The size of each cell on the sheet into which pages are to be placed.
   // (The default values are arbitrary.)
-  float mGridCellWidth = 1.0f;
-  float mGridCellHeight = 1.0f;
+  nscoord mGridCellWidth = 1;
+  nscoord mGridCellHeight = 1;
 };
 
 }  // namespace mozilla
