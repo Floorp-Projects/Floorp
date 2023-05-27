@@ -4,7 +4,7 @@
 const ORIGINS_FEATUREGATE = "places.frecency.origins.alternative.featureGate";
 const ORIGINS_DAYSCUTOFF = "places.frecency.origins.alternative.daysCutOff";
 
-add_task(async function () {
+add_task(async function() {
   let reset = await UrlbarTestUtils.initNimbusFeature(
     {
       // Empty for sanity check.
