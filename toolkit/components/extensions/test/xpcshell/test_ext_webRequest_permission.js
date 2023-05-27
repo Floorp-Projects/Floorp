@@ -14,6 +14,10 @@ server.registerPathHandler("/dummy", (request, response) => {
   response.write("<!DOCTYPE html><html></html>");
 });
 
+function sendMessage(page, msg, data) {
+  return MessageChannel.sendMessage(page.browser.messageManager, msg, data);
+}
+
 add_task(async function test_permissions() {
   function background() {
     browser.webRequest.onBeforeRequest.addListener(
@@ -78,7 +82,7 @@ add_task(async function test_permissions() {
   );
   await contentPage.loadFrameScript(frameScript);
 
-  let results = await contentPage.sendMessage("Test:Check", {});
+  let results = await sendMessage(contentPage, "Test:Check", {});
   equal(
     results.page,
     "redirected",
@@ -93,7 +97,7 @@ add_task(async function test_permissions() {
   Services.prefs.setBoolPref("extensions.webapi.testing", true);
   Services.prefs.setBoolPref("extensions.webapi.testing.http", true);
 
-  results = await contentPage.sendMessage("Test:Check", {});
+  results = await sendMessage(contentPage, "Test:Check", {});
   equal(
     results.page,
     "original",

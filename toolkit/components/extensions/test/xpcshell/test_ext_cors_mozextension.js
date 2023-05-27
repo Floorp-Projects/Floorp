@@ -28,7 +28,7 @@ add_task(async function load_moz_extension_with_and_without_cors() {
   let contentPage = await ExtensionTestUtils.loadContentPage(
     "http://example.com/dummy"
   );
-  await contentPage.spawn(EXT_BASE_URL, async EXT_BASE_URL => {
+  await contentPage.spawn([EXT_BASE_URL], async EXT_BASE_URL => {
     const { document, window } = this.content;
     async function checkScriptLoad({ setupScript, expectLoad, description }) {
       const scriptElem = document.createElement("script");

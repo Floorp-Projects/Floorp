@@ -113,7 +113,7 @@ add_task(async function test_web_accessible_resources_csp() {
   let page = await ExtensionTestUtils.loadContentPage(
     `http://example.com/data/file_sample.html`
   );
-  await page.spawn(null, () => {
+  await page.legacySpawn(null, () => {
     this.obs = {
       events: [],
       observe(subject, topic, data) {
@@ -134,7 +134,7 @@ add_task(async function test_web_accessible_resources_csp() {
     extension.awaitMessage("script-ran"),
   ]);
 
-  let events = await page.spawn(null, () => this.obs.done());
+  let events = await page.legacySpawn(null, () => this.obs.done());
   equal(events.length, 2, "Two items were rejected by CSP");
   for (let url of events) {
     ok(

@@ -37,7 +37,7 @@ export const CookieXPCShellUtils = {
   async getCookieStringFromDocument(uri, options = {}) {
     const contentPage = await this.loadContentPage(uri, options);
     const cookies = await contentPage.spawn(
-      null,
+      [],
       // eslint-disable-next-line no-undef
       () => content.document.cookie
     );
@@ -48,7 +48,7 @@ export const CookieXPCShellUtils = {
   async setCookieToDocument(uri, set, options = {}) {
     const contentPage = await this.loadContentPage(uri, options);
     await contentPage.spawn(
-      set,
+      [set],
       // eslint-disable-next-line no-undef
       cookies => (content.document.cookie = cookies)
     );

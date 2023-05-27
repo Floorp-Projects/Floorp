@@ -622,7 +622,7 @@ add_task(async function responseHeaders_set_content_security_policy_header() {
   async function testFetchAndCSP(url) {
     info(`testFetchAndCSP: ${url}`);
     let contentPage = await ExtensionTestUtils.loadContentPage(url);
-    let cspTestResults = await contentPage.spawn(null, async () => {
+    let cspTestResults = await contentPage.spawn([], async () => {
       const { document } = content;
       async function doFetchAndCheckCSP(url) {
         const cspTestResult = { url, violatedCSP: [] };
@@ -852,7 +852,7 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
     const url = `http://cookietest${pathAndQuery}`;
     info(`loadPageAndGetCookies: ${url}`);
     let contentPage = await ExtensionTestUtils.loadContentPage(url);
-    let res = await contentPage.spawn(null, () => {
+    let res = await contentPage.spawn([], () => {
       const { document } = content;
       const sortCookies = s => s.split("; ").sort().join("; ");
       return {
@@ -991,7 +991,7 @@ add_task(async function modifyHeaders_multiple_extensions() {
   );
   async function checkHeaderActionResult(query, expectedHeaders, description) {
     const url = `/responseheadersFixture?${query}`;
-    const result = await contentPage.spawn(url, async url => {
+    const result = await contentPage.spawn([url], async url => {
       const res = await content.fetch(url);
       return {
         a: res.headers.get("a"),

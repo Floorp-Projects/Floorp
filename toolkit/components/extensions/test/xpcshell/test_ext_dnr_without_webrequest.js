@@ -49,11 +49,11 @@ async function contentFetch(initiatorURL, url, options) {
   let contentPage = await ExtensionTestUtils.loadContentPage(initiatorURL);
   // Sanity check: that the initiator is as specified, and not redirected.
   Assert.equal(
-    await contentPage.spawn(null, () => content.document.URL),
+    await contentPage.spawn([], () => content.document.URL),
     initiatorURL,
     `Expected document load at: ${initiatorURL}`
   );
-  let result = await contentPage.spawn({ url, options }, async args => {
+  let result = await contentPage.spawn([{ url, options }], async args => {
     try {
       let req = await content.fetch(args.url, args.options);
       return {
