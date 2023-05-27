@@ -71,9 +71,7 @@ var TranslationsPanel = new (class {
         if (header.contains(settingsButton)) {
           continue;
         }
-        const settingsButtonClone = settingsButton.cloneNode(true);
-        settingsButtonClone.removeAttribute("id");
-        header.appendChild(settingsButtonClone);
+        header.appendChild(settingsButton.cloneNode(true));
       }
 
       // Lazily select the elements.
