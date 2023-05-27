@@ -88,7 +88,7 @@ async function ensureDataCleanup() {
 // resulting install invocation. The installation's call to importScripts when evaluated
 // will load the script directly out of the Cache API.
 function testSWUpdate(contentPage) {
-  return contentPage.spawn([], async () => {
+  return contentPage.legacySpawn([], async () => {
     const oldReg = await this.content.navigator.serviceWorker.ready;
     const reg = await oldReg.update();
     const sw = reg.installing || reg.waiting || reg.active;
@@ -178,7 +178,7 @@ add_task(async function test_extension_invalid_sw_scripts_redirect_ignored() {
   // Register the worker while the test extension isn't loaded and cannot
   // intercept and redirect the importedScripts requests.
   info("Register service worker from a content webpage");
-  let workerMessage = await contentPage.spawn([], async () => {
+  let workerMessage = await contentPage.legacySpawn([], async () => {
     const reg = await this.content.navigator.serviceWorker.register("/sw.js");
     return new Promise(resolve => {
       const { port1, port2 } = new MessageChannel();
@@ -281,7 +281,7 @@ add_task(async function test_filter_sw_script() {
     "http://localhost/page.html"
   );
 
-  let workerMessage = await contentPage.spawn([], async () => {
+  let workerMessage = await contentPage.legacySpawn([], async () => {
     const reg = await this.content.navigator.serviceWorker.register("/sw.js");
     return new Promise(resolve => {
       const { port1, port2 } = new MessageChannel();
@@ -349,7 +349,7 @@ add_task(async function test_extension_redirect_sw_imported_script() {
 
   // Register the worker while the test extension isn't loaded and cannot
   // intercept and redirect the importedScripts requests.
-  let workerMessage = await contentPage.spawn([], async () => {
+  let workerMessage = await contentPage.legacySpawn([], async () => {
     const reg = await this.content.navigator.serviceWorker.register("/sw.js");
     return new Promise(resolve => {
       const { port1, port2 } = new MessageChannel();

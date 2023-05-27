@@ -311,7 +311,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       case "Assert":
         {
           if ("info" in message.data) {
-            this.SimpleTest.info(message.data.info);
+            (this.xpcshellScope || this.SimpleTest).info(message.data.info);
             break;
           }
 
@@ -322,6 +322,8 @@ export class SpecialPowersChild extends JSWindowActorChild {
           if (SimpleTest) {
             let expected = expectFail ? "fail" : "pass";
             SimpleTest.record(passed, name, diag, stack, expected);
+          } else if (this.xpcshellScope) {
+            this.xpcshellScope.do_report_result(passed, name, stack);
           } else {
             // Well, this is unexpected.
             dump(name + "\n");
@@ -1585,7 +1587,9 @@ export class SpecialPowersChild extends JSWindowActorChild {
       args,
       task: String(task),
       caller: Cu.getFunctionSourceLocation(task),
-      hasHarness: typeof this.SimpleTest === "object",
+      hasHarness:
+        typeof this.SimpleTest === "object" ||
+        typeof this.xpcshellScope === "object",
       imports: this._spawnTaskImports,
     });
   }
@@ -1665,6 +1669,13 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
   set SimpleTest(val) {
     this._SimpleTest = val;
+  }
+
+  get xpcshellScope() {
+    return this._xpcshellScope;
+  }
+  set xpcshellScope(val) {
+    this._xpcshellScope = val;
   }
 
   async evictAllContentViewers() {
