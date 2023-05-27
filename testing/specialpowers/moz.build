@@ -15,10 +15,12 @@ FINAL_TARGET_FILES += [
 ]
 
 FINAL_TARGET_FILES.content += [
-    "../modules/Assert.sys.mjs",
     "content/AppTestDelegate.sys.mjs",
     "content/AppTestDelegateChild.sys.mjs",
     "content/AppTestDelegateParent.sys.mjs",
+]
+
+modules = [
     "content/MockColorPicker.sys.mjs",
     "content/MockFilePicker.sys.mjs",
     "content/MockPermissionPrompt.sys.mjs",
@@ -29,9 +31,9 @@ FINAL_TARGET_FILES.content += [
     "content/WrapPrivileged.sys.mjs",
 ]
 
-TESTING_JS_MODULES += [
-    "content/MockFilePicker.sys.mjs",
-]
+TESTING_JS_MODULES += modules
+
+FINAL_TARGET_FILES.modules += modules
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Mochitest")

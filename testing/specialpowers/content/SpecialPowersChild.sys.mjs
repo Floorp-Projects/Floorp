@@ -12,14 +12,16 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ContentTaskUtils: "resource://testing-common/ContentTaskUtils.sys.mjs",
-  MockColorPicker: "resource://specialpowers/MockColorPicker.sys.mjs",
-  MockFilePicker: "resource://specialpowers/MockFilePicker.sys.mjs",
-  MockPermissionPrompt: "resource://specialpowers/MockPermissionPrompt.sys.mjs",
+  MockColorPicker: "resource://testing-common/MockColorPicker.sys.mjs",
+  MockFilePicker: "resource://testing-common/MockFilePicker.sys.mjs",
+  MockPermissionPrompt:
+    "resource://testing-common/MockPermissionPrompt.sys.mjs",
   PerTestCoverageUtils:
     "resource://testing-common/PerTestCoverageUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
-  WrapPrivileged: "resource://specialpowers/WrapPrivileged.sys.mjs",
+  SpecialPowersSandbox:
+    "resource://testing-common/SpecialPowersSandbox.sys.mjs",
+  WrapPrivileged: "resource://testing-common/WrapPrivileged.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
