@@ -545,6 +545,20 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
+   * Only translate pages that match certain protocols, that way internal pages like
+   * about:* pages will not be translated.
+   */
+  #isRestrictedPage() {
+    const { href } = this.contentWindow.location;
+    // Keep this logic up to date with TranslationsParent.isRestrictedPage.
+    return !(
+      href.startsWith("http://") ||
+      href.startsWith("https://") ||
+      href.startsWith("file:///")
+    );
+  }
+
+  /**
    * Determine if the page should be translated by checking the App's languages and
    * comparing it to the reported language of the page. If we can translate the page,
    * then return the language pair.
@@ -556,12 +570,7 @@ export class TranslationsChild extends JSWindowActorChild {
       return this.#langTags;
     }
 
-    const { href } = this.contentWindow.location;
-    if (
-      !href.startsWith("http://") &&
-      !href.startsWith("https://") &&
-      !href.startsWith("file:///")
-    ) {
+    if (this.#isRestrictedPage()) {
       return null;
     }
 
@@ -710,6 +719,11 @@ export class TranslationsChild extends JSWindowActorChild {
       lazy.console.warn("This page was already translated.");
       return;
     }
+    if (this.#isRestrictedPage()) {
+      lazy.console.warn("Attempting to translate a restricted page.");
+      return;
+    }
+
     try {
       const engineLoadStart = this.docShell.now();
       // Create a function to get an engine. These engines are pretty heavy in terms
