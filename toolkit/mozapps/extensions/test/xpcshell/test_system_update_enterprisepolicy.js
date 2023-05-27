@@ -9,13 +9,6 @@ const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
-// Setting PREF_DISABLE_SECURITY tells the policy engine that we are in testing
-// mode and enables restarting the policy engine without restarting the browser.
-Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(PREF_DISABLE_SECURITY);
-});
-
 Services.policies; // Load policy engine
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
