@@ -431,7 +431,7 @@ export class TranslationsParent extends JSWindowActorParent {
     }
     const [modelRecord] = modelRecords;
 
-    await chaosModeError(1 / 3);
+    await chaosMode(1 / 3);
 
     /** @type {{buffer: ArrayBuffer}} */
     const { buffer } = await client.attachments.download(modelRecord);
@@ -501,7 +501,7 @@ export class TranslationsParent extends JSWindowActorParent {
     // this will be running in the parent process. It's not worth holding onto
     // this much memory, so reload it every time it is needed.
 
-    await chaosModeError(1 / 3);
+    await chaosMode(1 / 3);
 
     /** @type {{buffer: ArrayBuffer}} */
     const { buffer } = await client.attachments.download(wasmRecords[0]);
@@ -1167,7 +1167,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
         // Download or retrieve from the local cache:
 
-        await chaosModeError(1 / 3);
+        await chaosMode(1 / 3);
 
         /** @type {{buffer: ArrayBuffer }} */
         const { buffer } = await client.attachments.download(record);
