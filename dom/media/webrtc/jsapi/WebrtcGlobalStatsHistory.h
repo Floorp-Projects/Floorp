@@ -83,8 +83,6 @@ struct WebrtcGlobalStatsHistory {
   WebrtcGlobalStatsHistory() = delete;
 
  private:
-  static auto GetOrCreateHistory(UniquePtr<RTCStatsReportInternal> aReport)
-      -> RefPtr<Entry>;
   static auto Get() -> StatsMap&;
 };
 }  // namespace mozilla::dom
