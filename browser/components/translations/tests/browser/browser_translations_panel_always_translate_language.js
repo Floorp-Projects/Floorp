@@ -168,7 +168,7 @@ add_task(
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
-        getByL10nId("translations-panel-default-translate-button"),
+        getByL10nId("translations-panel-translate-button"),
         "Start translating by clicking the translate button."
       );
     });
@@ -358,7 +358,7 @@ add_task(
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
-        getByL10nId("translations-panel-revisit-restore-button"),
+        getByL10nId("translations-panel-restore-button"),
         "Click the restore language button."
       );
     });

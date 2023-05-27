@@ -32,7 +32,7 @@ add_task(async function test_translations_panel_retry() {
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
-      getByL10nId("translations-panel-default-translate-button"),
+      getByL10nId("translations-panel-translate-button"),
       "Start translating by clicking the translate button."
     );
   });
@@ -53,13 +53,13 @@ add_task(async function test_translations_panel_retry() {
   });
 
   info('Switch to language to "fr"');
-  const toSelect = getById("translations-panel-revisit-to");
+  const toSelect = getById("translations-panel-to");
   toSelect.value = "fr";
   toSelect.dispatchEvent(new Event("command"));
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
-      getByL10nId("translations-panel-revisit-translate-button"),
+      getByL10nId("translations-panel-translate-button"),
       "Re-translate the page by clicking the translate button."
     );
   });
