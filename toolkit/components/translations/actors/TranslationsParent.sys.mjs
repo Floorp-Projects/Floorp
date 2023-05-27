@@ -515,25 +515,6 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * For testing purposes, the LanguageIdEngine can be mocked to always return
-   * a pre-determined language tag and confidence value.
-   *
-   * @returns {LanguageIdEngineMockedPayload | null}
-   */
-  #getLanguageIdEngineMockedPayload() {
-    if (
-      !TranslationsParent.#mockedLangTag ||
-      !TranslationsParent.#mockedLanguageIdConfidence
-    ) {
-      return null;
-    }
-    return {
-      langTag: TranslationsParent.#mockedLangTag,
-      confidence: TranslationsParent.#mockedLanguageIdConfidence,
-    };
-  }
-
-  /**
    * Creates a lookup key that is unique to each fromLanguage-toLanguage pair.
    *
    * @param {string} fromLanguage
