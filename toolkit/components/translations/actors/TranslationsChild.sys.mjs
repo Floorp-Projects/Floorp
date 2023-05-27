@@ -9,6 +9,7 @@
  * @typedef {import("../translations").TranslationsEnginePayload} TranslationsEnginePayload
  * @typedef {import("../translations").LanguagePair} LanguagePair
  * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
+ * @typedef {import("../translations").LangTags} LangTags
  */
 
 /**
@@ -467,7 +468,7 @@ export class TranslationsChild extends JSWindowActorChild {
    * The matched language tags for the page. Used to find a default language pair for
    * translations.
    *
-   * @type {null | { appLangTag: string, docLangTag: string }}
+   * @type {null | LangTags}
    * */
   #langTags = null;
 
@@ -526,7 +527,7 @@ export class TranslationsChild extends JSWindowActorChild {
 
   /**
    * This is used to conditionally add the translations button.
-   * @param {null | { appLangTag: string, docLangTag: string }} langTags
+   * @param {null | LangTags} langTags
    */
   reportDetectedLangTagsToParent(langTags) {
     this.sendAsyncMessage("Translations:ReportDetectedLangTags", {
@@ -563,7 +564,7 @@ export class TranslationsChild extends JSWindowActorChild {
    * comparing it to the reported language of the page. If we can translate the page,
    * then return the language pair.
    *
-   * @returns {Promise<null | { appLangTag: string, docLangTag: string }>}
+   * @returns {Promise<null | LangTags>}
    */
   async getLangTagsForTranslation(translationsStart = this.docShell.now()) {
     if (this.#langTags) {

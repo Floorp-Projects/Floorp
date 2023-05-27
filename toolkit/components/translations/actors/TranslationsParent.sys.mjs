@@ -95,7 +95,7 @@ const VERIFY_SIGNATURES_FROM_FS = false;
  * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").WasmRecord} WasmRecord
- * @typedef {import("../translations").DetectedLanguages} DetectedLanguages
+ * @typedef {import("../translations").LangTags} LangTags
  * @typedef {import("../translations").LanguagePair} LanguagePair
  * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
  * @typedef {import("../translations").LanguageIdModelRecord} LanguageIdModelRecord
@@ -1386,7 +1386,7 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * Returns the lang tags that should be offered for translation.
    *
-   * @returns {Promise<null | { appLangTag: string, docLangTag: string }>}
+   * @returns {Promise<null | LangTags>}
    */
   getLangTagsForTranslation() {
     return this.sendQuery("Translations:GetLangTagsForTranslation");
@@ -1603,7 +1603,7 @@ class TranslationsLanguageState {
   /** @type {TranslationPair | null} */
   #requestedTranslationPair = null;
 
-  /** @type {DetectedLanguages | null} */
+  /** @type {LangTags | null} */
   #detectedLanguages = null;
 
   /** @type {number} */
@@ -1663,7 +1663,7 @@ class TranslationsLanguageState {
    * The TranslationsChild will detect languages and offer them up for translation.
    * The results are stored here.
    *
-   * @returns {DetectedLanguages | null}
+   * @returns {LangTags | null}
    */
   get detectedLanguages() {
     return this.#detectedLanguages;

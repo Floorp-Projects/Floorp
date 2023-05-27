@@ -4,6 +4,12 @@
 
 /* eslint-env mozilla/browser-window */
 
+/* eslint-disable jsdoc/valid-types */
+/**
+ * @typedef {import("../../../../toolkit/components/translations/translations").LangTags} LangTags
+ */
+/* eslint-enable jsdoc/valid-types */
+
 /**
  * This singleton class controls the Translations popup panel.
  *
@@ -293,7 +299,7 @@ var TranslationsPanel = new (class {
     // but should be handled for the MVP. We might want design direction here, as we need
     // a subview for when the language list is still being retrieved.
 
-    /** @type {null | { appLangTag: string, docLangTag: string }} */
+    /** @type {null | LangTags} */
     const langTags = await actor.getLangTagsForTranslation();
 
     if (langTags) {
