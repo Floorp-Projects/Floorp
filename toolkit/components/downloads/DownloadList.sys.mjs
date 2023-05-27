@@ -6,7 +6,7 @@
  * Provides collections of Download objects and aggregate views on them.
  */
 
-const kFileExtensions = [
+const FILE_EXTENSIONS = [
   "aac",
   "adt",
   "adts",
@@ -138,16 +138,18 @@ const TELEMETRY_EVENT_CATEGORY = "downloads";
  * Represents a collection of Download objects that can be viewed and managed by
  * the user interface, and persisted across sessions.
  */
-export var DownloadList = function () {
-  this._downloads = [];
-  this._views = new Set();
-};
+export class DownloadList {
+  constructor() {
+    /**
+     * Array of Download objects currently in the list.
+     */
+    this._downloads = [];
 
-DownloadList.prototype = {
-  /**
-   * Array of Download objects currently in the list.
-   */
-  _downloads: null,
+    /**
+     * Set of currently registered views.
+     */
+    this._views = new Set();
+  }
 
   /**
    * Retrieves a snapshot of the downloads that are currently in the list.  The
@@ -158,9 +160,9 @@ DownloadList.prototype = {
    * @resolves An array of Download objects.
    * @rejects JavaScript exception.
    */
-  getAll: function DL_getAll() {
-    return Promise.resolve(Array.from(this._downloads));
-  },
+  async getAll() {
+    return Array.from(this._downloads);
+  }
 
   /**
    * Adds a new download to the end of the items list.
@@ -171,20 +173,18 @@ DownloadList.prototype = {
    *       added to the list, use the addView method to register for
    *       onDownloadChanged notifications.
    *
-   * @param aDownload
+   * @param download
    *        The Download object to add.
    *
    * @return {Promise}
    * @resolves When the download has been added.
    * @rejects JavaScript exception.
    */
-  add: function DL_add(aDownload) {
-    this._downloads.push(aDownload);
-    aDownload.onchange = this._change.bind(this, aDownload);
-    this._notifyAllViews("onDownloadAdded", aDownload);
-
-    return Promise.resolve();
-  },
+  async add(download) {
+    this._downloads.push(download);
+    download.onchange = this._change.bind(this, download);
+    this._notifyAllViews("onDownloadAdded", download);
+  }
 
   /**
    * Removes a download from the list.  If the download was already removed,
@@ -195,55 +195,48 @@ DownloadList.prototype = {
    * download object, you should cancel it afterwards, and remove any partially
    * downloaded data if needed.
    *
-   * @param aDownload
+   * @param download
    *        The Download object to remove.
    *
    * @return {Promise}
    * @resolves When the download has been removed.
    * @rejects JavaScript exception.
    */
-  remove: function DL_remove(aDownload) {
-    let index = this._downloads.indexOf(aDownload);
+  async remove(download) {
+    let index = this._downloads.indexOf(download);
     if (index != -1) {
       this._downloads.splice(index, 1);
-      aDownload.onchange = null;
-      this._notifyAllViews("onDownloadRemoved", aDownload);
+      download.onchange = null;
+      this._notifyAllViews("onDownloadRemoved", download);
     }
-
-    return Promise.resolve();
-  },
+  }
 
   /**
    * This function is called when "onchange" events of downloads occur.
    *
-   * @param aDownload
+   * @param download
    *        The Download object that changed.
    */
-  _change: function DL_change(aDownload) {
-    this._notifyAllViews("onDownloadChanged", aDownload);
-  },
-
-  /**
-   * Set of currently registered views.
-   */
-  _views: null,
+  _change(download) {
+    this._notifyAllViews("onDownloadChanged", download);
+  }
 
   /**
    * Adds a view that will be notified of changes to downloads.  The newly added
    * view will receive onDownloadAdded notifications for all the downloads that
    * are already in the list.
    *
-   * @param aView
+   * @param view
    *        The view object to add.  The following methods may be defined:
    *        {
-   *          onDownloadAdded: function (aDownload) {
-   *            // Called after aDownload is added to the end of the list.
+   *          onDownloadAdded: function (download) {
+   *            // Called after download is added to the end of the list.
    *          },
-   *          onDownloadChanged: function (aDownload) {
-   *            // Called after the properties of aDownload change.
+   *          onDownloadChanged: function (download) {
+   *            // Called after the properties of download change.
    *          },
-   *          onDownloadRemoved: function (aDownload) {
-   *            // Called after aDownload is removed from the list.
+   *          onDownloadRemoved: function (download) {
+   *            // Called after download is removed from the list.
    *          },
    *          onDownloadBatchStarting: function () {
    *            // Called before multiple changes are made at the same time.
@@ -258,28 +251,26 @@ DownloadList.prototype = {
    *           notifications for the existing downloads have been sent.
    * @rejects JavaScript exception.
    */
-  addView: function DL_addView(aView) {
-    this._views.add(aView);
+  async addView(view) {
+    this._views.add(view);
 
-    if ("onDownloadAdded" in aView) {
+    if ("onDownloadAdded" in view) {
       this._notifyAllViews("onDownloadBatchStarting");
       for (let download of this._downloads) {
         try {
-          aView.onDownloadAdded(download);
+          view.onDownloadAdded(download);
         } catch (ex) {
           console.error(ex);
         }
       }
       this._notifyAllViews("onDownloadBatchEnded");
     }
-
-    return Promise.resolve();
-  },
+  }
 
   /**
    * Removes a view that was previously added using addView.
    *
-   * @param aView
+   * @param view
    *        The view object to remove.
    *
    * @return {Promise}
@@ -287,11 +278,9 @@ DownloadList.prototype = {
    *           will not receive any more notifications.
    * @rejects JavaScript exception.
    */
-  removeView: function DL_removeView(aView) {
-    this._views.delete(aView);
-
-    return Promise.resolve();
-  },
+  async removeView(view) {
+    this._views.delete(view);
+  }
 
   /**
    * Notifies all the views of a download addition, change, removal, or other
@@ -310,7 +299,7 @@ DownloadList.prototype = {
         console.error(ex);
       }
     }
-  },
+  }
 
   /**
    * Removes downloads from the list that have finished, have failed, or have
@@ -320,13 +309,13 @@ DownloadList.prototype = {
    * This method finalizes each removed download, ensuring that any partially
    * downloaded data associated with it is also removed.
    *
-   * @param aFilterFn
+   * @param filterFn
    *        The filter function is called with each download as its only
    *        argument, and should return true to remove the download and false
    *        to keep it.  This parameter may be null or omitted to have no
    *        additional filter.
    */
-  removeFinished: function DL_removeFinished(aFilterFn) {
+  removeFinished(filterFn) {
     (async () => {
       let list = await this.getAll();
       for (let download of list) {
@@ -336,7 +325,7 @@ DownloadList.prototype = {
         if (
           download.stopped &&
           (!download.hasPartialData || download.error) &&
-          (!aFilterFn || aFilterFn(download))
+          (!filterFn || filterFn(download))
         ) {
           // Remove the download first, so that the views don't get the change
           // notifications that may occur during finalization.
@@ -361,8 +350,8 @@ DownloadList.prototype = {
         }
       }
     })().catch(console.error);
-  },
-};
+  }
+}
 
 /**
  * Provides a unified, unordered list combining public and private downloads.
@@ -371,29 +360,28 @@ DownloadList.prototype = {
  * underlying lists, based on their "source.isPrivate" property.  Views on this
  * list will receive notifications for both public and private downloads.
  *
- * @param aPublicList
+ * @param publicList
  *        Underlying DownloadList containing public downloads.
- * @param aPrivateList
+ * @param privateList
  *        Underlying DownloadList containing private downloads.
  */
-export var DownloadCombinedList = function (aPublicList, aPrivateList) {
-  DownloadList.call(this);
-  this._publicList = aPublicList;
-  this._privateList = aPrivateList;
-  aPublicList.addView(this).catch(console.error);
-  aPrivateList.addView(this).catch(console.error);
-};
+export class DownloadCombinedList extends DownloadList {
+  constructor(publicList, privateList) {
+    super();
 
-DownloadCombinedList.prototype = {
-  /**
-   * Underlying DownloadList containing public downloads.
-   */
-  _publicList: null,
+    /**
+     * Underlying DownloadList containing public downloads.
+     */
+    this._publicList = publicList;
 
-  /**
-   * Underlying DownloadList containing private downloads.
-   */
-  _privateList: null,
+    /**
+     * Underlying DownloadList containing private downloads.
+     */
+    this._privateList = privateList;
+
+    publicList.addView(this).catch(console.error);
+    privateList.addView(this).catch(console.error);
+  }
 
   /**
    * Adds a new download to the end of the items list.
@@ -404,17 +392,17 @@ DownloadCombinedList.prototype = {
    *       added to the list, use the addView method to register for
    *       onDownloadChanged notifications.
    *
-   * @param aDownload
+   * @param download
    *        The Download object to add.
    *
    * @return {Promise}
    * @resolves When the download has been added.
    * @rejects JavaScript exception.
    */
-  add(aDownload) {
-    let extension = aDownload.target.path.split(".").pop();
+  add(download) {
+    let extension = download.target.path.split(".").pop();
 
-    if (!kFileExtensions.includes(extension)) {
+    if (!FILE_EXTENSIONS.includes(extension)) {
       extension = "other";
     }
 
@@ -428,15 +416,16 @@ DownloadCombinedList.prototype = {
       );
     } catch (ex) {
       console.error(
-        "DownloadsCommon: error recording telemetry event. " + ex.message
+        `DownloadsCommon: error recording telemetry event. ${ex.message}`
       );
     }
 
-    if (aDownload.source.isPrivate) {
-      return this._privateList.add(aDownload);
+    if (download.source.isPrivate) {
+      return this._privateList.add(download);
     }
-    return this._publicList.add(aDownload);
-  },
+
+    return this._publicList.add(download);
+  }
 
   /**
    * Removes a download from the list.  If the download was already removed,
@@ -447,60 +436,89 @@ DownloadCombinedList.prototype = {
    * download object, you should cancel it afterwards, and remove any partially
    * downloaded data if needed.
    *
-   * @param aDownload
+   * @param download
    *        The Download object to remove.
    *
    * @return {Promise}
    * @resolves When the download has been removed.
    * @rejects JavaScript exception.
    */
-  remove(aDownload) {
-    if (aDownload.source.isPrivate) {
-      return this._privateList.remove(aDownload);
+  remove(download) {
+    if (download.source.isPrivate) {
+      return this._privateList.remove(download);
     }
-    return this._publicList.remove(aDownload);
-  },
+    return this._publicList.remove(download);
+  }
 
   // DownloadList callback
-  onDownloadAdded(aDownload) {
-    this._downloads.push(aDownload);
-    this._notifyAllViews("onDownloadAdded", aDownload);
-  },
+  onDownloadAdded(download) {
+    this._downloads.push(download);
+    this._notifyAllViews("onDownloadAdded", download);
+  }
 
   // DownloadList callback
-  onDownloadChanged(aDownload) {
-    this._notifyAllViews("onDownloadChanged", aDownload);
-  },
+  onDownloadChanged(download) {
+    this._notifyAllViews("onDownloadChanged", download);
+  }
 
   // DownloadList callback
-  onDownloadRemoved(aDownload) {
-    let index = this._downloads.indexOf(aDownload);
+  onDownloadRemoved(download) {
+    let index = this._downloads.indexOf(download);
     if (index != -1) {
       this._downloads.splice(index, 1);
     }
-    this._notifyAllViews("onDownloadRemoved", aDownload);
-  },
-};
-Object.setPrototypeOf(DownloadCombinedList.prototype, DownloadList.prototype);
-
+    this._notifyAllViews("onDownloadRemoved", download);
+  }
+}
 /**
  * Provides an aggregated view on the contents of a DownloadList.
  */
-export var DownloadSummary = function () {
-  this._downloads = [];
-  this._views = new Set();
-};
+export class DownloadSummary {
+  constructor() {
+    /**
+     * Array of Download objects that are currently part of the summary.
+     */
+    this._downloads = [];
 
-DownloadSummary.prototype = {
-  /**
-   * Array of Download objects that are currently part of the summary.
-   */
-  _downloads: null,
+    /**
+     * Set of currently registered views.
+     */
+    this._views = new Set();
+  }
 
   /**
    * Underlying DownloadList whose contents should be summarized.
    */
-  _list: null,
+  _list = null;
+
+  /**
+   * Indicates whether all the downloads are currently stopped.
+   */
+  allHaveStopped = true;
+
+  /**
+   * Indicates whether whether all downloads have an unknown final size.
+   */
+  allUnknownSize = true;
+
+  /**
+   * Indicates the total number of bytes to be transferred before completing all
+   * the downloads that are currently in progress.
+   *
+   * For downloads that do not have a known final size, the number of bytes
+   * currently transferred is reported as part of this property.
+   *
+   * This is zero if no downloads are currently in progress.
+   */
+  progressTotalBytes = 0;
+
+  /**
+   * Number of bytes currently transferred as part of all the downloads that are
+   * currently in progress.
+   *
+   * This is zero if no downloads are currently in progress.
+   */
+  progressCurrentBytes = 0;
 
   /**
    * This method may be called once to bind this object to a DownloadList.
@@ -509,36 +527,30 @@ DownloadSummary.prototype = {
    * to an actual list.  This allows the summary to be used without requiring
    * the initialization of the DownloadList first.
    *
-   * @param aList
+   * @param list
    *        Underlying DownloadList whose contents should be summarized.
    *
    * @return {Promise}
    * @resolves When the view on the underlying list has been registered.
    * @rejects JavaScript exception.
    */
-  bindToList(aList) {
+  async bindToList(list) {
     if (this._list) {
       throw new Error("bindToList may be called only once.");
     }
 
-    return aList.addView(this).then(() => {
-      // Set the list reference only after addView has returned, so that we don't
-      // send a notification to our views for each download that is added.
-      this._list = aList;
-      this._onListChanged();
-    });
-  },
-
-  /**
-   * Set of currently registered views.
-   */
-  _views: null,
+    await list.addView(this);
+    // Set the list reference only after addView has returned, so that we don't
+    // send a notification to our views for each download that is added.
+    this._list = list;
+    this._onListChanged();
+  }
 
   /**
    * Adds a view that will be notified of changes to the summary.  The newly
    * added view will receive an initial onSummaryChanged notification.
    *
-   * @param aView
+   * @param view
    *        The view object to add.  The following methods may be defined:
    *        {
    *          onSummaryChanged: function () {
@@ -551,24 +563,22 @@ DownloadSummary.prototype = {
    *           notification has been sent.
    * @rejects JavaScript exception.
    */
-  addView(aView) {
-    this._views.add(aView);
+  async addView(view) {
+    this._views.add(view);
 
-    if ("onSummaryChanged" in aView) {
+    if ("onSummaryChanged" in view) {
       try {
-        aView.onSummaryChanged();
+        view.onSummaryChanged();
       } catch (ex) {
         console.error(ex);
       }
     }
-
-    return Promise.resolve();
-  },
+  }
 
   /**
    * Removes a view that was previously added using addView.
    *
-   * @param aView
+   * @param view
    *        The view object to remove.
    *
    * @return {Promise}
@@ -576,40 +586,9 @@ DownloadSummary.prototype = {
    *           will not receive any more notifications.
    * @rejects JavaScript exception.
    */
-  removeView(aView) {
-    this._views.delete(aView);
-
-    return Promise.resolve();
-  },
-
-  /**
-   * Indicates whether all the downloads are currently stopped.
-   */
-  allHaveStopped: true,
-
-  /**
-   * Indicates whether whether all downloads have an unknown final size.
-   */
-  allUnknownSize: true,
-
-  /**
-   * Indicates the total number of bytes to be transferred before completing all
-   * the downloads that are currently in progress.
-   *
-   * For downloads that do not have a known final size, the number of bytes
-   * currently transferred is reported as part of this property.
-   *
-   * This is zero if no downloads are currently in progress.
-   */
-  progressTotalBytes: 0,
-
-  /**
-   * Number of bytes currently transferred as part of all the downloads that are
-   * currently in progress.
-   *
-   * This is zero if no downloads are currently in progress.
-   */
-  progressCurrentBytes: 0,
+  async removeView(view) {
+    this._views.delete(view);
+  }
 
   /**
    * This function is called when any change in the list of downloads occurs,
@@ -662,27 +641,27 @@ DownloadSummary.prototype = {
         console.error(ex);
       }
     }
-  },
+  }
 
   // DownloadList callback
-  onDownloadAdded(aDownload) {
-    this._downloads.push(aDownload);
+  onDownloadAdded(download) {
+    this._downloads.push(download);
     if (this._list) {
       this._onListChanged();
     }
-  },
+  }
 
   // DownloadList callback
-  onDownloadChanged(aDownload) {
+  onDownloadChanged(download) {
     this._onListChanged();
-  },
+  }
 
   // DownloadList callback
-  onDownloadRemoved(aDownload) {
-    let index = this._downloads.indexOf(aDownload);
+  onDownloadRemoved(download) {
+    let index = this._downloads.indexOf(download);
     if (index != -1) {
       this._downloads.splice(index, 1);
     }
     this._onListChanged();
-  },
-};
+  }
+}
