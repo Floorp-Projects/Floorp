@@ -821,11 +821,6 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
     return nullptr;
   }
 
-  if (!mCurrentContext) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return nullptr;
-  }
-
   auto stream = MakeRefPtr<CanvasCaptureMediaStream>(window, this);
 
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
