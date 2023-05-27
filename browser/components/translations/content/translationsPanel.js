@@ -11,6 +11,179 @@
 /* eslint-enable jsdoc/valid-types */
 
 /**
+ * The set of actions that can occur from interaction with the
+ * translations panel.
+ */
+const PageAction = Object.freeze({
+  NO_CHANGE: "NO_CHANGE",
+  HIDE_BUTTON: "HIDE_BUTTON",
+  RESTORE_PAGE: "RESTORE_PAGE",
+  TRANSLATE_PAGE: "TRANSLATE_PAGE",
+});
+
+/**
+ * A mechanism for determining the next relevant page action
+ * based on the current translated state of the page and the state
+ * of the persistent options in the translations panel settings.
+ */
+class CheckboxStateMachine {
+  /**
+   * Whether or not translations is active on the page.
+   *
+   * @type {boolean}
+   */
+  #translationsActive = false;
+
+  /**
+   * Whether the always-translate-language menuitem is checked
+   * in the translations panel settings menu.
+   *
+   * @type {boolean}
+   */
+  #alwaysTranslateLanguage = false;
+
+  /**
+   * Whether the never-translate-language menuitem is checked
+   * in the translations panel settings menu.
+   *
+   * @type {boolean}
+   */
+  #neverTranslateLanguage = false;
+
+  /**
+   * Whether the never-translate-site menuitem is checked
+   * in the translations panel settings menu.
+   *
+   * @type {boolean}
+   */
+  #neverTranslateSite = false;
+
+  /**
+   * @param {boolean} translationsActive
+   * @param {boolean} alwaysTranslateLanguage
+   * @param {boolean} neverTranslateLanguage
+   * @param {boolean} neverTranslateSite
+   */
+  constructor(
+    translationsActive,
+    alwaysTranslateLanguage,
+    neverTranslateLanguage,
+    neverTranslateSite
+  ) {
+    this.#translationsActive = translationsActive;
+    this.#alwaysTranslateLanguage = alwaysTranslateLanguage;
+    this.#neverTranslateLanguage = neverTranslateLanguage;
+    this.#neverTranslateSite = neverTranslateSite;
+  }
+
+  /**
+   * Accepts four integers that are either 0 or 1 and returns
+   * a single, unique number for each possible combination of
+   * values.
+   *
+   * @param {number} translationsActive
+   * @param {number} alwaysTranslateLanguage
+   * @param {number} neverTranslateLanguage
+   * @param {number} neverTranslateSite
+   *
+   * @returns {number} - An integer representation of the state
+   */
+  static #computeState(
+    translationsActive,
+    alwaysTranslateLanguage,
+    neverTranslateLanguage,
+    neverTranslateSite
+  ) {
+    return (
+      (translationsActive << 3) |
+      (alwaysTranslateLanguage << 2) |
+      (neverTranslateLanguage << 1) |
+      neverTranslateSite
+    );
+  }
+
+  /**
+   * Returns the current state of the data members as a single number.
+   *
+   * @returns {number} - An integer representation of the state
+   */
+  #state() {
+    return CheckboxStateMachine.#computeState(
+      Number(this.#translationsActive),
+      Number(this.#alwaysTranslateLanguage),
+      Number(this.#neverTranslateLanguage),
+      Number(this.#neverTranslateSite)
+    );
+  }
+
+  /**
+   * Returns the next page action to take when the always-translate-language
+   * menuitem is toggled in the translations panel settings menu.
+   *
+   * @returns {PageAction}
+   */
+  onAlwaysTranslateLanguage() {
+    switch (this.#state()) {
+      case CheckboxStateMachine.#computeState(1, 1, 0, 1):
+      case CheckboxStateMachine.#computeState(1, 1, 0, 0): {
+        return PageAction.RESTORE_PAGE;
+      }
+      case CheckboxStateMachine.#computeState(0, 0, 1, 0):
+      case CheckboxStateMachine.#computeState(0, 0, 0, 0): {
+        return PageAction.TRANSLATE_PAGE;
+      }
+    }
+    return PageAction.NO_CHANGE;
+  }
+
+  /**
+   * Returns the next page action to take when the never-translate-language
+   * menuitem is toggled in the translations panel settings menu.
+   *
+   * @returns {PageAction}
+   */
+  onNeverTranslateLanguage() {
+    switch (this.#state()) {
+      case CheckboxStateMachine.#computeState(1, 1, 0, 1):
+      case CheckboxStateMachine.#computeState(1, 1, 0, 0):
+      case CheckboxStateMachine.#computeState(1, 0, 0, 1):
+      case CheckboxStateMachine.#computeState(1, 0, 0, 0): {
+        return PageAction.RESTORE_PAGE;
+      }
+      case CheckboxStateMachine.#computeState(0, 1, 0, 0):
+      case CheckboxStateMachine.#computeState(0, 0, 0, 0): {
+        return PageAction.HIDE_BUTTON;
+      }
+    }
+    return PageAction.NO_CHANGE;
+  }
+
+  /**
+   * Returns the next page action to take when the never-translate-site
+   * menuitem is toggled in the translations panel settings menu.
+   *
+   * @returns {PageAction}
+   */
+  onNeverTranslateSite() {
+    switch (this.#state()) {
+      case CheckboxStateMachine.#computeState(1, 1, 0, 0):
+      case CheckboxStateMachine.#computeState(1, 0, 1, 0):
+      case CheckboxStateMachine.#computeState(1, 0, 0, 0): {
+        return PageAction.RESTORE_PAGE;
+      }
+      case CheckboxStateMachine.#computeState(0, 1, 0, 0):
+      case CheckboxStateMachine.#computeState(0, 0, 0, 0): {
+        return PageAction.HIDE_BUTTON;
+      }
+      case CheckboxStateMachine.#computeState(0, 1, 0, 1): {
+        return PageAction.TRANSLATE_PAGE;
+      }
+    }
+    return PageAction.NO_CHANGE;
+  }
+}
+
+/**
  * This singleton class controls the Translations popup panel.
  *
  * This component is a `/browser` component, and the actor is a `/toolkit` actor, so care
@@ -83,23 +256,33 @@ var TranslationsPanel = new (class {
       };
 
       /**
-       * Define a getter on #lazyElements that gets the element by an id.
+       * Define a getter on #lazyElements that gets the element by an id
+       * or class name.
        */
-      const getter = (name, id) => {
+      const getter = (name, discriminator) => {
         let element;
         Object.defineProperty(this.#lazyElements, name, {
           get: () => {
             if (!element) {
-              element = document.getElementById(id);
+              if (discriminator[0] === ".") {
+                // Lookup by class
+                element = document.querySelector(discriminator);
+              } else {
+                // Lookup by id
+                element = document.getElementById(discriminator);
+              }
             }
             if (!element) {
-              throw new Error(`Could not find "${name}" at "#${id}".`);
+              throw new Error(
+                `Could not find "${name}" at "#${discriminator}".`
+              );
             }
             return element;
           },
         });
       };
 
+      // Getters by id
       getter("appMenuButton", "PanelUI-menu-button");
       getter("button", "translations-button");
       getter("buttonLocale", "translations-button-locale");
@@ -117,6 +300,17 @@ var TranslationsPanel = new (class {
       getter("restoreButton", "translations-panel-restore-button");
       getter("toMenuList", "translations-panel-to");
       getter("unsupportedHint", "translations-panel-error-unsupported-hint");
+
+      // Getters by class
+      getter(
+        "alwaysTranslateLanguageMenuItem",
+        ".always-translate-language-menuitem"
+      );
+      getter(
+        "neverTranslateLanguageMenuItem",
+        ".never-translate-language-menuitem"
+      );
+      getter("neverTranslateSiteMenuItem", ".never-translate-site-menuitem");
     }
 
     return this.#lazyElements;
@@ -692,12 +886,66 @@ var TranslationsPanel = new (class {
   }
 
   /**
+   * Creates a new CheckboxStateMachine based on the current translated
+   * state of the page and the state of the persistent options in the
+   * translations panel settings.
+   *
+   * @returns {CheckboxStateMachine}
+   */
+  createCheckboxStateMachine() {
+    const {
+      alwaysTranslateLanguageMenuItem,
+      neverTranslateLanguageMenuItem,
+      neverTranslateSiteMenuItem,
+    } = this.elements;
+
+    const alwaysTranslateLanguage =
+      alwaysTranslateLanguageMenuItem.getAttribute("checked") === "true";
+    const neverTranslateLanguage =
+      neverTranslateLanguageMenuItem.getAttribute("checked") === "true";
+    const neverTranslateSite =
+      neverTranslateSiteMenuItem.getAttribute("checked") === "true";
+
+    return new CheckboxStateMachine(
+      this.#isTranslationsActive(),
+      alwaysTranslateLanguage,
+      neverTranslateLanguage,
+      neverTranslateSite
+    );
+  }
+
+  /**
    * Redirect the user to about:preferences
    */
   openManageLanguages() {
     const window =
       gBrowser.selectedBrowser.browsingContext.top.embedderElement.ownerGlobal;
     window.openTrustedLinkIn("about:preferences#general-translations", "tab");
+  }
+
+  /**
+   * Performs the given page action.
+   *
+   * @param {PageAction} pageAction
+   */
+  async #doPageAction(pageAction) {
+    switch (pageAction) {
+      case PageAction.NO_CHANGE: {
+        break;
+      }
+      case PageAction.HIDE_BUTTON: {
+        this.#hideTranslationsButton();
+        break;
+      }
+      case PageAction.RESTORE_PAGE: {
+        await this.onRestore();
+        break;
+      }
+      case PageAction.TRANSLATE_PAGE: {
+        await this.onTranslate();
+        break;
+      }
+    }
   }
 
   /**
@@ -710,20 +958,11 @@ var TranslationsPanel = new (class {
     if (!docLangTag) {
       throw new Error("Expected to have a document language tag.");
     }
-    const toggledOn =
-      TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
-    const translationsActive = this.#isTranslationsActive();
+    const pageAction =
+      this.createCheckboxStateMachine().onAlwaysTranslateLanguage();
+    TranslationsParent.toggleAlwaysTranslateLanguagePref(docLangTag);
     this.#updateSettingsMenuLanguageCheckboxStates();
-
-    if (toggledOn && !translationsActive) {
-      await this.onTranslate();
-    } else if (!toggledOn && translationsActive) {
-      await this.onRestore();
-    }
-
-    // If always-translate was activated while translations is active
-    // If always-translate was deactivated while translations is inactive
-    // There is no need to change the state of the page.
+    await this.#doPageAction(pageAction);
   }
 
   /**
@@ -736,14 +975,11 @@ var TranslationsPanel = new (class {
     if (!docLangTag) {
       throw new Error("Expected to have a document language tag.");
     }
+    const pageAction =
+      this.createCheckboxStateMachine().onNeverTranslateLanguage();
     TranslationsParent.toggleNeverTranslateLanguagePref(docLangTag);
     this.#updateSettingsMenuLanguageCheckboxStates();
-
-    if (this.#isTranslationsActive()) {
-      await this.onRestore();
-    } else {
-      this.#hideTranslationsButton();
-    }
+    await this.#doPageAction(pageAction);
   }
 
   /**
@@ -752,14 +988,10 @@ var TranslationsPanel = new (class {
    * If never-translate is currently inactive for the site, activates it.
    */
   async onNeverTranslateSite() {
+    const pageAction = this.createCheckboxStateMachine().onNeverTranslateSite();
     await this.#getTranslationsActor().toggleNeverTranslateSitePermissions();
     this.#updateSettingsMenuSiteCheckboxStates();
-
-    if (this.#isTranslationsActive()) {
-      await this.onRestore();
-    } else {
-      this.#hideTranslationsButton();
-    }
+    await this.#doPageAction(pageAction);
   }
 
   /**
