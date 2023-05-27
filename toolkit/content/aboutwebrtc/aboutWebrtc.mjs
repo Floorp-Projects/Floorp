@@ -1319,6 +1319,7 @@ function renderUserPrefs() {
     return "";
   };
   const prefs = [
+    "media.aboutwebrtc",
     "media.peerconnection",
     "media.navigator",
     "media.getusermedia",
