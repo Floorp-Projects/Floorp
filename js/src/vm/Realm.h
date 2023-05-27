@@ -381,6 +381,14 @@ class JS::Realm : public JS::shadow::Realm {
   // features are used.
   bool isAsyncStackCapturingEnabled = false;
 
+  // Allow to collect more than 50 stack traces for throw even if the global is
+  // not a debuggee.
+  //
+  // Similarly to isAsyncStackCapturingEnabled, this is a lightweight
+  // alternative for making the global a debuggee, when no actual debugging
+  // features are required.
+  bool isUnlimitedStacksCapturingEnabled = false;
+
  private:
   void updateDebuggerObservesFlag(unsigned flag);
 

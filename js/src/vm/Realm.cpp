@@ -558,8 +558,9 @@ bool Realm::shouldCaptureStackForThrow() {
   // relevant for uncaught exceptions that are not Error objects.
 
   // To match other browsers, we always capture a stack trace if the realm is a
-  // debuggee (this includes the devtools console being open).
-  if (isDebuggee()) {
+  // debuggee (this includes the devtools console being open) or if unlimited
+  // stack traces have been enabled for this realm (used in automation).
+  if (isDebuggee() || isUnlimitedStacksCapturingEnabled) {
     return true;
   }
 
