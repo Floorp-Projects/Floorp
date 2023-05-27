@@ -356,7 +356,7 @@ export class TranslationsParent extends JSWindowActorParent {
           TranslationsParent.shouldNeverTranslateLanguage(data.docLangTag) ||
           (await this.shouldNeverTranslateSite());
 
-        if (maybeAutoTranslate) {
+        if (maybeAutoTranslate && !maybeNeverTranslate) {
           this.languageState.requestedTranslationPair = {
             fromLanguage: data.docLangTag,
             toLanguage: data.appLangTag,
