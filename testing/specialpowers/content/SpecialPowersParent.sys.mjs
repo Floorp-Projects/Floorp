@@ -12,7 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PerTestCoverageUtils:
     "resource://testing-common/PerTestCoverageUtils.sys.mjs",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
-  SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.sys.mjs",
+  SpecialPowersSandbox:
+    "resource://testing-common/SpecialPowersSandbox.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {

@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=960820
 
     // Check Components.stack, but first filter through the SpecialPowers junk.
     var stack = SpecialPowers.wrap(SpecialPowers.Components).stack;
-    while (/specialpowers/.test(stack)) {
+    while (/testing-common/.test(stack)) {
       stack = stack.caller;
     }
     ok(/clickCallback/.test(stack), "clickCallback should be reachable via Components.stack");
