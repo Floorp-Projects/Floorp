@@ -68,9 +68,17 @@ const elemRenderer = new Proxy(new Renderer(), {
   },
 });
 
-const graphData = [];
-const mostRecentReports = {};
-const sdpHistories = [];
+let graphData = [];
+let mostRecentReports = {};
+let sdpHistories = [];
+let historyTsMemoForPcid = {};
+
+function clearStatsHistory() {
+  graphData = [];
+  mostRecentReports = {};
+  sdpHistories = [];
+  historyTsMemoForPcid = {};
+}
 
 function appendReportToHistory(report) {
   appendSdpHistory(report);
@@ -106,14 +114,17 @@ function appendStats(allStats) {
   allStats.forEach(appendReportToHistory);
 }
 
-const historyTsMemoForPcid = {};
 function getAndUpdateTsMemoForPcid(pcid) {
   historyTsMemoForPcid[pcid] = mostRecentReports[pcid]?.timestamp;
   return historyTsMemoForPcid[pcid] || null;
 }
 
-async function getStats() {
-  if (!Services.prefs.getBoolPref("media.aboutwebrtc.hist.enabled")) {
+const REQUEST_FULL_REFRESH = true;
+async function getStats(requestFullRefresh) {
+  if (
+    requestFullRefresh ||
+    !Services.prefs.getBoolPref("media.aboutwebrtc.hist.enabled")
+  ) {
     const { reports } = await new Promise(r => WGI.getAllStats(r));
     appendStats(reports);
     return reports.sort((a, b) => b.timestamp - a.timestamp);
@@ -381,7 +392,8 @@ class ShowTab extends Control {
             className: "no-print",
             onclick: async () => {
               WGI.clearAllStats();
-              reports = await getStats();
+              clearStatsHistory();
+              reports = await getStats(REQUEST_FULL_REFRESH);
               refresh();
             },
           },
