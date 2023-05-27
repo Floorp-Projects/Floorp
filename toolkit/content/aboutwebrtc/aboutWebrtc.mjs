@@ -72,12 +72,14 @@ let graphData = [];
 let mostRecentReports = {};
 let sdpHistories = [];
 let historyTsMemoForPcid = {};
+let sdpHistoryTsMemoForPcid = {};
 
 function clearStatsHistory() {
   graphData = [];
   mostRecentReports = {};
   sdpHistories = [];
   historyTsMemoForPcid = {};
+  sdpHistoryTsMemoForPcid = {};
 }
 
 function appendReportToHistory(report) {
@@ -93,9 +95,11 @@ function appendReportToHistory(report) {
 function appendSdpHistory({ pcid, sdpHistory: newHistory }) {
   sdpHistories[pcid] ??= [];
   let storedHistory = sdpHistories[pcid];
-  newHistory.forEach(({ timestamp, sdp }) => {
+  newHistory.forEach(entry => {
+    const { timestamp } = entry;
     if (!storedHistory.length || storedHistory.at(-1).timestamp < timestamp) {
-      storedHistory.push({ timestamp, sdp });
+      storedHistory.push(entry);
+      sdpHistoryTsMemoForPcid[pcid] = timestamp;
     }
   });
 }
@@ -114,9 +118,13 @@ function appendStats(allStats) {
   allStats.forEach(appendReportToHistory);
 }
 
-function getAndUpdateTsMemoForPcid(pcid) {
+function getAndUpdateStatsTsMemoForPcid(pcid) {
   historyTsMemoForPcid[pcid] = mostRecentReports[pcid]?.timestamp;
   return historyTsMemoForPcid[pcid] || null;
+}
+
+function getSdpTsMemoForPcid(pcid) {
+  return sdpHistoryTsMemoForPcid[pcid] || null;
 }
 
 const REQUEST_FULL_REFRESH = true;
@@ -133,7 +141,12 @@ async function getStats(requestFullRefresh) {
   await Promise.all(
     [...pcids].map(pcid =>
       new Promise(r =>
-        WGI.getStatsHistorySince(r, pcid, getAndUpdateTsMemoForPcid(pcid))
+        WGI.getStatsHistorySince(
+          r,
+          pcid,
+          getAndUpdateStatsTsMemoForPcid(pcid),
+          getSdpTsMemoForPcid(pcid)
+        )
       ).then(r => {
         appendStats(r.reports);
         r.sdpHistories.forEach(hist => appendSdpHistory(hist));
@@ -609,10 +622,13 @@ const renderSDPHistoryTab = (rndr, hist, props) => {
   ]);
 };
 
-function renderSDPStats(
-  rndr,
-  { offerer, localSdp, remoteSdp, pcid, timestamp }
-) {
+function renderSDPStats(rndr, { offerer, pcid, timestamp }) {
+  // Get the most recent (as of timestamp) local and remote SDPs from the
+  // history
+  const sdpEntries = getSdpHistory({ pcid, timestamp });
+  const localSdp = sdpEntries.findLast(({ isLocal }) => isLocal).sdp;
+  const remoteSdp = sdpEntries.findLast(({ isLocal }) => !isLocal).sdp;
+
   const sdps = offerer
     ? { offer: localSdp, answer: remoteSdp }
     : { offer: remoteSdp, answer: localSdp };
