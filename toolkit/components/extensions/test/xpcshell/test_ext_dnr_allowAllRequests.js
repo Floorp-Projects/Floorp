@@ -144,7 +144,7 @@ async function testLoadInFrame({
   const mainFrameUrl = urlEchoHtml(mainFrameDomain, mainFrameHtml);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(mainFrameUrl);
-  let result = await contentPage.spawn(null, () => {
+  let result = await contentPage.spawn([], () => {
     return content.wrappedJSObject.resultPromise;
   });
   await contentPage.close();
@@ -216,13 +216,13 @@ add_task(async function allowAllRequests_allows_request() {
     "http://example.com/"
   );
   Assert.equal(
-    await contentPage.spawn(null, () => content.document.URL),
+    await contentPage.spawn([], () => content.document.URL),
     "http://example.com/",
     "main_frame request should have been allowed by allowAllRequests"
   );
 
   async function checkCanFetch(url) {
-    return contentPage.spawn(url, async url => {
+    return contentPage.spawn([url], async url => {
       try {
         return await (await content.fetch(url)).text();
       } catch (e) {
@@ -876,7 +876,7 @@ add_task(async function allowAllRequests_during_and_after_navigation() {
   const contentPage = await ExtensionTestUtils.loadContentPage(
     "http://example.com/?dummy_see_iframe_for_interesting_stuff"
   );
-  await contentPage.spawn(null, async () => {
+  await contentPage.spawn([], async () => {
     let f = content.document.createElement("iframe");
     f.id = "frame_to_navigate";
     f.src = "/?init_WITH_AAR"; // allowAllRequests initially applies.
@@ -886,7 +886,7 @@ add_task(async function allowAllRequests_during_and_after_navigation() {
     });
   });
   async function navigateIframe(url) {
-    await contentPage.spawn(url, url => {
+    await contentPage.spawn([url], url => {
       let f = content.document.getElementById("frame_to_navigate");
       content.frameLoadedPromise = new Promise(resolve => {
         f.addEventListener("load", resolve, { once: true });
@@ -895,7 +895,7 @@ add_task(async function allowAllRequests_during_and_after_navigation() {
     });
   }
   async function waitForNavigationCompleted(expectLoad = true) {
-    await contentPage.spawn(expectLoad, async expectLoad => {
+    await contentPage.spawn([expectLoad], async expectLoad => {
       if (expectLoad) {
         info("Waiting for frame load - if stuck the load never happened\n");
         return content.frameLoadedPromise.then(() => {});
@@ -913,13 +913,13 @@ add_task(async function allowAllRequests_during_and_after_navigation() {
     });
   }
   async function assertIframePath(expectedPath, description) {
-    let actualPath = await contentPage.spawn(null, () => {
+    let actualPath = await contentPage.spawn([], () => {
       return content.frames[0].location.pathname;
     });
     Assert.equal(actualPath, expectedPath, description);
   }
   async function assertHasAAR(expected, description) {
-    let actual = await contentPage.spawn(null, async () => {
+    let actual = await contentPage.spawn([], async () => {
       try {
         await (await content.frames[0].fetch("/allowed")).text();
         return true; // allowAllRequests overrides block rule.
@@ -1029,20 +1029,20 @@ add_task(
       "http://example.com/bfcache_test?1_aar_no"
     );
     async function navigateBackInHistory(expectedUrl) {
-      await contentPage.spawn(null, () => {
+      await contentPage.spawn([], () => {
         content.history.back();
       });
       await TestUtils.waitForCondition(
         () => contentPage.browsingContext.currentURI.spec === expectedUrl,
         `Waiting for history.back() to trigger navigation to ${expectedUrl}`
       );
-      await contentPage.spawn(expectedUrl, async expectedUrl => {
+      await contentPage.spawn([expectedUrl], async expectedUrl => {
         Assert.equal(content.location.href, expectedUrl, "URL after back");
         Assert.equal(content.document.body.textContent, "true", "from bfcache");
       });
     }
     async function checkCanFetch(url) {
-      return contentPage.spawn(url, async url => {
+      return contentPage.spawn([url], async url => {
         try {
           return await (await content.fetch(url)).text();
         } catch (e) {
@@ -1118,7 +1118,7 @@ add_task(
       "http://example.com/?do_get"
     );
     async function checkCanFetch(url) {
-      return contentPage.spawn(url, async url => {
+      return contentPage.spawn([url], async url => {
         try {
           return await (await content.fetch(url)).text();
         } catch (e) {
@@ -1135,7 +1135,7 @@ add_task(
     );
 
     // Check fetch() after POST navigation in main_frame.
-    await contentPage.spawn(null, () => {
+    await contentPage.spawn([], () => {
       let form = content.document.createElement("form");
       form.action = "/?do_post";
       form.method = "POST";
@@ -1154,7 +1154,7 @@ add_task(
 
     // Navigate back to the beginning and verify that allowAllRequests does not
     // match any more.
-    await contentPage.spawn(null, () => {
+    await contentPage.spawn([], () => {
       content.history.back();
     });
     await TestUtils.waitForCondition(
@@ -1168,7 +1168,7 @@ add_task(
     );
 
     // Now navigate forwards to verify that the POST method is still seen.
-    await contentPage.spawn(null, () => {
+    await contentPage.spawn([], () => {
       content.history.forward();
     });
     await TestUtils.waitForCondition(
@@ -1183,7 +1183,7 @@ add_task(
     );
 
     // Now check that adding a new history entry drops the POST method.
-    await contentPage.spawn(null, () => {
+    await contentPage.spawn([], () => {
       content.history.pushState(null, null, "/?hist_p");
     });
     await TestUtils.waitForCondition(

@@ -242,7 +242,7 @@ async function testPolicy({
   );
 
   let contentCSP = await contentPage.spawn(
-    `${baseURL}/content.html`,
+    [`${baseURL}/content.html`],
     async src => {
       let doc = this.content.document;
 

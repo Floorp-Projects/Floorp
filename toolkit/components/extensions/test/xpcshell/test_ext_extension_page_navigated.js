@@ -56,7 +56,7 @@ function createTestExtPageScript(name) {
   }})("${name}");`;
 }
 
-const getExtensionContextIdAndURL = ([extensionId]) => {
+const getExtensionContextIdAndURL = extensionId => {
   const { ExtensionProcessScript } = ChromeUtils.import(
     "resource://gre/modules/ExtensionProcessScript.jsm"
   );
@@ -78,10 +78,10 @@ const getExtensionContextIdAndURL = ([extensionId]) => {
   return { contextIds, contextURLs };
 };
 
-const getExtensionContextStatusByContextId = ([
+const getExtensionContextStatusByContextId = (
   extensionId,
-  extPageContextId,
-]) => {
+  extPageContextId
+) => {
   const { ExtensionProcessScript } = ChromeUtils.import(
     "resource://gre/modules/ExtensionProcessScript.jsm"
   );

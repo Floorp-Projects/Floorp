@@ -36,7 +36,7 @@ async function testMatchedByDNR(privateBrowsing) {
     "http://example.com/?page",
     { privateBrowsing }
   );
-  let wasRequestBlocked = await contentPage.spawn(null, async () => {
+  let wasRequestBlocked = await contentPage.legacySpawn(null, async () => {
     try {
       await content.fetch("http://example.com/?fetch");
       return false;
