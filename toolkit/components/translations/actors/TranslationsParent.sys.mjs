@@ -309,6 +309,12 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Provide a way for tests to override the system locales.
+   * @type {null | string[]}
+   */
+  mockedSystemLocales = null;
+
+  /**
    * An ordered list of preferred languages based on:
    *
    *   1. App languages
@@ -348,7 +354,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(
       Ci.mozIOSPreferences
     );
-    const { systemLocales } = osPrefs;
+    const systemLocales = this.mockedSystemLocales ?? osPrefs.systemLocales;
 
     // Combine the locales together.
     const preferredLocales = new Set([
