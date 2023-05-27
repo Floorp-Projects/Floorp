@@ -13,6 +13,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/fallible.h"
 #include "mozilla/mozalloc_oom.h"
+#include "nsDOMNavigationTiming.h"
 
 namespace mozilla::dom {
 
@@ -59,10 +60,35 @@ auto WebrtcGlobalStatsHistory::Entry::ReportElement::Timestamp() const
   return report->mTimestamp;
 }
 
-auto WebrtcGlobalStatsHistory::Entry::MakeElement(
+auto WebrtcGlobalStatsHistory::Entry::SdpElement::Timestamp() const
+    -> DOMHighResTimeStamp {
+  return sdp.mTimestamp;
+}
+
+auto WebrtcGlobalStatsHistory::Entry::MakeReportElement(
     UniquePtr<RTCStatsReportInternal> aReport)
     -> WebrtcGlobalStatsHistory::Entry::ReportElement* {
-  return new ReportElement{.report = {std::move(aReport)}};
+  auto* elem = new ReportElement();
+  elem->report = std::move(aReport);
+  // We don't want to store a copy of the SDP history with each stats entry.
+  // SDP History is stored seperately, see MakeSdpElements.
+  elem->report->mSdpHistory.Clear();
+  return elem;
+}
+
+auto WebrtcGlobalStatsHistory::Entry::MakeSdpElementsSince(
+    Sequence<RTCSdpHistoryEntryInternal>&& aSdpHistory,
+    const Maybe<DOMHighResTimeStamp>& aSdpAfter)
+    -> AutoCleanLinkedList<WebrtcGlobalStatsHistory::Entry::SdpElement> {
+  AutoCleanLinkedList<WebrtcGlobalStatsHistory::Entry::SdpElement> result;
+  for (auto& sdpHist : aSdpHistory) {
+    if (!aSdpAfter || aSdpAfter.value() < sdpHist.mTimestamp) {
+      auto* element = new SdpElement();
+      element->sdp = sdpHist;
+      result.insertBack(element);
+    }
+  }
+  return result;
 }
 
 template <typename T>
@@ -102,6 +128,26 @@ auto WebrtcGlobalStatsHistory::Entry::Since(
   return results;
 }
 
+auto WebrtcGlobalStatsHistory::Entry::SdpSince(
+    const Maybe<DOMHighResTimeStamp>& aAfter) const -> RTCSdpHistoryInternal {
+  RTCSdpHistoryInternal results;
+  results.mPcid = mPcid;
+  // If no timestamp was passed copy the entire history
+  const auto* cursor = FindFirstEntryAfter(mSdp.getFirst(), aAfter);
+  const auto count = CountElementsToEndInclusive(cursor);
+  if (!results.mSdpHistory.SetCapacity(count, fallible)) {
+    mozalloc_handle_oom(0);
+  }
+  while (cursor) {
+    if (!results.mSdpHistory.AppendElement(
+            RTCSdpHistoryEntryInternal(cursor->sdp), fallible)) {
+      mozalloc_handle_oom(0);
+    }
+    cursor = cursor->getNext();
+  }
+  return results;
+}
+
 auto WebrtcGlobalStatsHistory::Entry::Prune(const DOMHighResTimeStamp aBefore)
     -> void {
   // Clear everything in the case that we don't keep stats
@@ -114,6 +160,8 @@ auto WebrtcGlobalStatsHistory::Entry::Prune(const DOMHighResTimeStamp aBefore)
        element = mReports.getFirst()) {
     delete mReports.popFirst();
   }
+  // I don't think we should prune SDPs but if we did it would look like this:
+  // Note: we always keep the most recent SDP
 }
 
 auto WebrtcGlobalStatsHistory::InitHistory(const nsAString& aPcId,
@@ -145,11 +193,18 @@ auto WebrtcGlobalStatsHistory::Record(UniquePtr<RTCStatsReportInternal> aReport)
     auto entry = history.value();
     // Remove expired entries
     entry->Prune(earliest);
+    // Find new SDP entries
+    auto sdpAfter = Maybe<DOMHighResTimeStamp>(Nothing());
+    if (auto* lastSdp = entry->mSdp.getLast(); lastSdp) {
+      sdpAfter = Some(lastSdp->Timestamp());
+    }
+    entry->mSdp.extendBack(
+        Entry::MakeSdpElementsSince(std::move(aReport->mSdpHistory), sdpAfter));
     // Reports must be in ascending order by mTimestamp
     const auto* latest = entry->mReports.getLast();
     // Maintain sorted order
     if (!latest || latest->report->mTimestamp < aReport->mTimestamp) {
-      entry->mReports.insertBack(Entry::MakeElement(std::move(aReport)));
+      entry->mReports.insertBack(Entry::MakeReportElement(std::move(aReport)));
     }
   } else {
     WebrtcGlobalStatsHistory::GetOrCreateHistory(std::move(aReport));
@@ -177,7 +232,7 @@ auto WebrtcGlobalStatsHistory::CloseHistory(const nsAString& aPcId) -> void {
   }
   size_t remainingClosedStatsToRetain =
       WebrtcGlobalStatsHistory::Pref::ClosedStatsToRetain();
-  WebrtcGlobalStatsHistory().Get().RemoveIf([&](auto& iter) {
+  WebrtcGlobalStatsHistory::Get().RemoveIf([&](auto& iter) {
     auto& entry = iter.Data();
     if (!entry->mIsClosed) {
       return false;
@@ -222,8 +277,13 @@ auto WebrtcGlobalStatsHistory::GetOrCreateHistory(
   MOZ_ASSERT(XRE_IsParentProcess());
   return WebrtcGlobalStatsHistory::Get().LookupOrInsertWith(
       aReport->mPcid, [&]() {
-        auto entry = MakeRefPtr<Entry>();
-        entry->mReports.insertBack(Entry::MakeElement(std::move(aReport)));
+        auto entry = MakeRefPtr<Entry>(nsString(aReport->mPcid), false);
+        // Grab SDP History first
+        entry->mSdp.extendBack(Entry::MakeSdpElementsSince(
+            std::move(aReport->mSdpHistory), Nothing()));
+        // ReportEntry does not store the SDP history
+        entry->mReports.insertBack(
+            Entry::MakeReportElement(std::move(aReport)));
         return entry;
       });
 }
