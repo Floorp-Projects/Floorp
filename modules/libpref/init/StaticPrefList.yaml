@@ -10837,44 +10837,6 @@
     value: false
     mirror: always
 #endif
-
-  # Interval in milliseconds at which to gather WebRTC stats for use in about:webrtc.
--   name: media.aboutwebrtc.hist.poll_interval_ms
-    type: RelaxedAtomicUint32
-    value: 250
-    mirror: always
-
-  # History time depth in seconds to keep for webrtc:stats for use in about:webrtc.
--   name: media.aboutwebrtc.hist.storage_window_s
-    type: RelaxedAtomicUint32
-    value: 60
-    mirror: always
-
-  # Time in minutes to retain peer connection stats after closing.
--   name: media.aboutwebrtc.hist.prune_after_m
-    type: RelaxedAtomicUint32
-    value: 60 * 24 * 2
-    mirror: always
-
-  # Max number of closed PC stats histories to retain
--   name: media.aboutwebrtc.hist.closed_stats_to_retain
-    type: RelaxedAtomicUint32
-    value: 8
-    mirror: always
-
-  # Gather PeerConnection stats history for display in about:webrtc. If
-  # disabled history will only gather when about:webrtc is open. Additionally,
-  # if disabled and when about:webrtc is not in the foreground history data
-  # will become sparse.
--   name: media.aboutwebrtc.hist.enabled
-    type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_ANDROID)
-    value: false
-#else
-    value: @IS_NIGHTLY_BUILD@
-#endif
-    mirror: always
-
 #endif  # MOZ_WEBRTC
 
 # HTMLMediaElement.allowedToPlay should be exposed to web content when
