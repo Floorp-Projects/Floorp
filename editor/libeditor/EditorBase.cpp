@@ -5612,6 +5612,10 @@ nsresult EditorBase::FinalizeSelection() {
   if (nsCOMPtr<nsINode> node = do_QueryInterface(GetDOMEventTarget())) {
     if (node->OwnerDoc()->GetUnretargetedFocusedContent() != node) {
       selectionController->SelectionWillLoseFocus();
+    } else {
+      // We leave this selection as the focused one. When the focus returns, it
+      // either returns to us (nothing to do), or it returns to something else,
+      // and nsDocumentViewerFocusListener::HandleEvent fixes it up.
     }
   }
   return NS_OK;

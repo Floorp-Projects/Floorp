@@ -652,12 +652,12 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 already_AddRefed<Selection> nsCopySupport::GetSelectionForCopy(
     Document* aDocument) {
   PresShell* presShell = aDocument->GetPresShell();
-  if (!presShell) {
+  if (NS_WARN_IF(!presShell)) {
     return nullptr;
   }
 
   RefPtr<nsFrameSelection> frameSel = presShell->GetLastFocusedFrameSelection();
-  if (!frameSel) {
+  if (NS_WARN_IF(!frameSel)) {
     return nullptr;
   }
 
@@ -666,7 +666,9 @@ already_AddRefed<Selection> nsCopySupport::GetSelectionForCopy(
 }
 
 bool nsCopySupport::CanCopy(Document* aDocument) {
-  if (!aDocument) return false;
+  if (!aDocument) {
+    return false;
+  }
 
   RefPtr<Selection> sel = GetSelectionForCopy(aDocument);
   return sel && !sel->IsCollapsed();
