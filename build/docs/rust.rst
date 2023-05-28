@@ -58,7 +58,7 @@ To link Rust code into libraries other than libxul, create a directory with a
     RustLibrary('crate_name')
 
 where ``crate_name`` matches the name from the ``[package]`` section of your
-``Cargo.toml``. You can refer to `the moz.build file <https://searchfox.org/mozilla-central/rev/3f4c3a3cabaf94958834d3a8935adfb4a887942d/toolkit/library/rust/moz.build#7>`_ and `the Cargo.toml file <https://searchfox.org/mozilla-central/rev/3f4c3a3cabaf94958834d3a8935adfb4a887942d/toolkit/library/rust/Cargo.toml>`_ that are used for libxul.
+``Cargo.toml``. You can refer to `the moz.build file <https://searchfox.org/mozilla-central/rev/603b9fded7a11ff213c0f415198cd637b7c86614/toolkit/library/rust/moz.build#9>`_ and `the Cargo.toml file <https://searchfox.org/mozilla-central/rev/603b9fded7a11ff213c0f415198cd637b7c86614/toolkit/library/rust/Cargo.toml>`_ that are used for libxul.
 
 You can then add ``USE_LIBS += ['crate_name']`` to the ``moz.build`` file
 that defines the binary as you would with any other library in the tree.
