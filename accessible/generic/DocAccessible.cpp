@@ -369,7 +369,7 @@ void DocAccessible::DocType(nsAString& aType) const {
 
 void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
                                      uint64_t aNewDomain) {
-  if (!mIPCDoc || !a11y::IsCacheActive()) {
+  if (!mIPCDoc) {
     return;
   }
   uint64_t& domain = mQueuedCacheUpdates.LookupOrInsert(aAcc, 0);
@@ -379,8 +379,8 @@ void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
 
 void DocAccessible::QueueCacheUpdateForDependentRelations(
     LocalAccessible* aAcc) {
-  if (!mIPCDoc || !a11y::IsCacheActive() || !aAcc || !aAcc->Elm() ||
-      !aAcc->IsInDocument() || aAcc->IsDefunct()) {
+  if (!mIPCDoc || !aAcc || !aAcc->Elm() || !aAcc->IsInDocument() ||
+      aAcc->IsDefunct()) {
     return;
   }
   nsAutoString ID;
@@ -1493,10 +1493,6 @@ void DocAccessible::ProcessInvalidationList() {
 }
 
 void DocAccessible::ProcessQueuedCacheUpdates() {
-  if (!a11y::IsCacheActive()) {
-    return;
-  }
-
   AUTO_PROFILER_MARKER_TEXT("DocAccessible::ProcessQueuedCacheUpdates", A11Y,
                             {}, ""_ns);
   // DO NOT ADD CODE ABOVE THIS BLOCK: THIS CODE IS MEASURING TIMINGS.
@@ -1669,12 +1665,10 @@ void DocAccessible::DoInitialUpdate() {
     DocAccessibleChild* ipcDoc = IPCDoc();
     MOZ_ASSERT(ipcDoc);
     if (ipcDoc) {
-      if (a11y::IsCacheActive()) {
-        // If we're caching, we should send an initial update for this document
-        // and its attributes. Each acc contained in this doc will have its
-        // initial update sent in `InsertIntoIpcTree`.
-        SendCache(CacheDomain::All, CacheUpdateType::Initial);
-      }
+      // Send an initial update for this document and its attributes. Each acc
+      // contained in this doc will have its initial update sent in
+      // `InsertIntoIpcTree`.
+      SendCache(CacheDomain::All, CacheUpdateType::Initial);
 
       for (auto idx = 0U; idx < mChildren.Length(); idx++) {
         ipcDoc->InsertIntoIpcTree(this, mChildren.ElementAt(idx), idx, true);
@@ -2566,7 +2560,7 @@ void DocAccessible::UncacheChildrenInSubtree(LocalAccessible* aRoot) {
   // The parent of the removed subtree is about to be cleared, so we must do
   // this here rather than in LocalAccessible::UnbindFromParent because we need
   // the ancestry for this to work.
-  if (a11y::IsCacheActive() && (aRoot->IsTable() || aRoot->IsTableCell())) {
+  if (aRoot->IsTable() || aRoot->IsTableCell()) {
     CachedTableAccessible::Invalidate(aRoot);
   }
 
