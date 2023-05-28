@@ -366,12 +366,7 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
       mReferrerInfo(new ReferrerInfo(nullptr)),
       mIntegrity(aIntegrity),
       mContents(Servo_StyleSheet_Empty(aParsingMode).Consume()),
-      mURLData(URLExtraData::Dummy())
-#ifdef DEBUG
-      ,
-      mPrincipalSet(false)
-#endif
-{
+      mURLData(URLExtraData::Dummy()) {
   if (!mPrincipal) {
     MOZ_CRASH("NullPrincipal::Init failed");
   }
