@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { BasePromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/PromiseWorker.jsm"
+const { BasePromiseWorker } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseWorker.sys.mjs"
 );
 const { TelemetryStorage } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryStorage.sys.mjs"

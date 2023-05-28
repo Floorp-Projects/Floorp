@@ -43,6 +43,7 @@ const { E10SUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
@@ -59,12 +60,6 @@ const PREF_ABOUT_HOME_CACHE_TESTING =
   "browser.startup.homepage.abouthome_cache.testing";
 const ABOUT_WELCOME_URL =
   "resource://activity-stream/aboutwelcome/aboutwelcome.html";
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BasePromiseWorker",
-  "resource://gre/modules/PromiseWorker.jsm"
-);
 
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
 

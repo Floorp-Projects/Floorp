@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { BasePromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/PromiseWorker.jsm"
+const { BasePromiseWorker } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseWorker.sys.mjs"
 );
 
 // Test that an open file inside the trash directory does not cause
