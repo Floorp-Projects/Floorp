@@ -1636,7 +1636,7 @@
     <string name="add_to_homescreen_text_placeholder">نام میانبر</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description_2">شما به راحتی می‌توانید این وبگاه را به صفحهٔ خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریع‌تری را مانند تجربه کردن یک برنامه داشته باشید.</string>
+    <string name="add_to_homescreen_description_2">به‌راحتی می‌توانید این وبگاه را به صفحهٔ خانگی تلفن خود اضافه کنید تا بی‌درنگ به آن دسترسی داشته باشید و همچون کار با یک برنامه مرور سریع‌تری را تجربه کنید.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ورودها و گذرواژه‌ها</string>
