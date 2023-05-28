@@ -11,13 +11,9 @@
  * - ensures that exceptions thrown on the worker thread are correctly deserialized;
  * - provides some utilities for benchmarking various operations.
  *
- * Generally, you should use PromiseWorker.jsm along with its worker-side
+ * Generally, you should use PromiseWorker.sys.mjs along with its worker-side
  * counterpart PromiseWorker.js.
  */
-
-"use strict";
-
-var EXPORTED_SYMBOLS = ["BasePromiseWorker"];
 
 const lazy = {};
 
@@ -124,7 +120,7 @@ const EXCEPTION_CONSTRUCTORS = {
  *
  * @constructor
  */
-var BasePromiseWorker = function (url) {
+export var BasePromiseWorker = function (url) {
   if (typeof url != "string") {
     throw new TypeError("Expecting a string");
   }
@@ -173,6 +169,7 @@ var BasePromiseWorker = function (url) {
    */
   this.workerTimeStamps = null;
 };
+
 BasePromiseWorker.prototype = {
   log() {
     // By Default, ignore all logs.

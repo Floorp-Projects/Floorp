@@ -35,11 +35,9 @@ const { PREFS_CONFIG } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStream.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BasePromiseWorker",
-  "resource://gre/modules/PromiseWorker.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
+});
 
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
 const NEWTAB_RENDER_URL =

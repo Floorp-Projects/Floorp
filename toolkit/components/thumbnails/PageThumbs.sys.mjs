@@ -20,9 +20,7 @@ const THUMBNAIL_DIRECTORY = "thumbnails";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { BasePromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/PromiseWorker.jsm"
-);
+import { BasePromiseWorker } from "resource://gre/modules/PromiseWorker.sys.mjs";
 
 const lazy = {};
 

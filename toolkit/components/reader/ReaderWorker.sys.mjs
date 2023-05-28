@@ -6,9 +6,7 @@
  * Interface to a dedicated thread handling readability parsing.
  */
 
-const { BasePromiseWorker } = ChromeUtils.import(
-  "resource://gre/modules/PromiseWorker.jsm"
-);
+import { BasePromiseWorker } from "resource://gre/modules/PromiseWorker.sys.mjs";
 
 export var ReaderWorker = new BasePromiseWorker(
   "resource://gre/modules/reader/ReaderWorker.js"
