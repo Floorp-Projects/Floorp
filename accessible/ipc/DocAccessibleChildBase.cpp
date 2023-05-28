@@ -8,7 +8,6 @@
 #include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/ipc/ProcessChild.h"
-#include "nsAccessibilityService.h"
 
 #include "LocalAccessible-inl.h"
 #ifdef A11Y_LOG
@@ -64,8 +63,7 @@ void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
     RefPtr<AccAttributes> fields;
     // Even though we send moves as a hide and a show, we don't want to
     // push the cache again for moves.
-    if (a11y::IsCacheActive() &&
-        !acc->Document()->IsAccessibleBeingMoved(acc)) {
+    if (!acc->Document()->IsAccessibleBeingMoved(acc)) {
       fields =
           acc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
       if (fields->Count() == 0) {
