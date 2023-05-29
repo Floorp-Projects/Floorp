@@ -46,17 +46,22 @@ translations-panel-settings-never-translate-site =
 ## translation view.
 
 translations-panel-header = Translate this page?
-translations-panel-translate-button = Translate
-translations-panel-translate-cancel = Cancel
+translations-panel-translate-button =
+  .label = Translate
+translations-panel-translate-cancel =
+  .label = Cancel
 
 translations-panel-error-translating = There was a problem translating. Please try again.
 translations-panel-error-load-languages = Couldn’t load languages
 translations-panel-error-load-languages-hint = Check your internet connection and try again.
-translations-panel-error-load-languages-hint-button = Try again
+translations-panel-error-load-languages-hint-button =
+  .label = Try again
 
 translations-panel-error-unsupported = Translation isn’t available for this page
-translations-panel-error-dismiss-button = Got it
-translations-panel-error-change-button = Change source language
+translations-panel-error-dismiss-button =
+  .label = Got it
+translations-panel-error-change-button =
+  .label = Change source language
 # If your language requires declining the language name, a possible solution
 # is to adapt the structure of the phrase, or use a support noun, e.g.
 # `Sorry, we don't support the language yet: { $language }
@@ -87,7 +92,8 @@ translations-panel-to-label = Translate to
 translations-panel-revisit-header = This page is translated from { $fromLanguage } to { $toLanguage }
 translations-panel-choose-language =
   .label = Choose a language
-translations-panel-restore-button = Show original
+translations-panel-restore-button =
+  .label = Show original
 
 ## Firefox Translations language management in about:preferences.
 
