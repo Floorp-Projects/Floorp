@@ -581,10 +581,6 @@ class Element : public FragmentOrElement {
     return CreatePopoverData();
   }
 
-  // https://html.spec.whatwg.org/multipage/popover.html#popover-invoker
-  bool HasPopoverInvoker() const;
-  void SetHasPopoverInvoker(bool);
-
   bool IsAutoPopover() const;
   bool IsPopoverOpen() const;
 
