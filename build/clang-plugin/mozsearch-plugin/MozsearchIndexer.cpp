@@ -2028,10 +2028,27 @@ public:
       }
     }
 
-    // Alsoo record this location so that if we have instantiations, we can
+    // Also record this location so that if we have instantiations, we can
     // gather more accurate results from them.
     if (TemplateStack) {
       TemplateStack->visitDependent(Loc);
+    }
+    return true;
+  }
+
+  bool VisitDependentScopeDeclRefExpr(DependentScopeDeclRefExpr *E) {
+    SourceLocation Loc = E->getLocation();
+    normalizeLocation(&Loc);
+    if (!isInterestingLocation(Loc)) {
+      return true;
+    }
+
+    for (const NamedDecl *D : Resolver->resolveDeclRefExpr(E)) {
+      if (const EnumConstantDecl *E = dyn_cast<EnumConstantDecl>(D)) {
+        std::string Mangled = getMangledName(CurMangleContext, E);
+        visitIdentifier("use", "enum", getQualifiedName(E), Loc, Mangled,
+                        E->getType(), getContext(Loc));
+      }
     }
     return true;
   }
