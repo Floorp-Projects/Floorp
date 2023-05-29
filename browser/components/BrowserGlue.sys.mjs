@@ -610,7 +610,6 @@ let JSWINDOWACTORS = {
         "MigrationWizard:RequestState": { wantUntrusted: true },
         "MigrationWizard:BeginMigration": { wantUntrusted: true },
         "MigrationWizard:RequestSafariPermissions": { wantUntrusted: true },
-        "MigrationWizard:SelectSafariPasswordFile": { wantUntrusted: true },
       },
     },
 
