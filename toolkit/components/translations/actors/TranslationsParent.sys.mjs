@@ -586,7 +586,6 @@ export class TranslationsParent extends JSWindowActorParent {
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-identification-models");
-    bypassSignatureVerificationIfDev(client);
 
     TranslationsParent.#languageIdModelsRemoteClient = client;
     return client;
@@ -761,8 +760,6 @@ export class TranslationsParent extends JSWindowActorParent {
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-models");
     TranslationsParent.#translationModelsRemoteClient = client;
-
-    bypassSignatureVerificationIfDev(client);
 
     client.on("sync", async ({ data: { created, updated, deleted } }) => {
       // Language model attachments will only be downloaded when they are used.
@@ -996,8 +993,6 @@ export class TranslationsParent extends JSWindowActorParent {
     const client = lazy.RemoteSettings("translations-wasm");
 
     TranslationsParent.#translationsWasmRemoteClient = client;
-
-    bypassSignatureVerificationIfDev(client);
 
     client.on("sync", async ({ data: { created, updated, deleted } }) => {
       lazy.console.log(`"sync" event for remote bergamot wasm `, {
@@ -1646,29 +1641,6 @@ export class TranslationsParent extends JSWindowActorParent {
         perms.DENY_ACTION
       );
     }
-  }
-}
-
-/**
- * The signature verification can break on the Dev server. Bypass it to ensure new
- * language models can always be tested. On Prod and Staging the signatures will
- * always be verified.
- *
- * @param {RemoteSettingsClient} client
- */
-function bypassSignatureVerificationIfDev(client) {
-  let host;
-  try {
-    const url = new URL(Services.prefs.getCharPref("services.settings.server"));
-    host = url.host;
-  } catch (error) {}
-
-  if (host === "remote-settings-dev.allizom.org") {
-    console.warn(
-      "The translations is set to the Remote Settings dev server. It's bypassing " +
-        "the signature verification."
-    );
-    client.verifySignature = false;
   }
 }
 
