@@ -64,18 +64,21 @@ mochitest-plain:
         - headless+socketprocess_networking
         - http3
         - editor-legacy-direction
+    worker-type:
+        by-test-platform:
+            linux2204-64-wayland.*: t-linux-wayland
+            default: default
     run-on-projects:
         by-variant:
             conditioned_profile:
                 by-test-platform:
-                    .*asan.*: []
-                    .*ccov.*: []
+                    .*(asan|ccov|wayland).*: []
                     linux1804-64(-shippable)?-qr/opt: ['trunk']
                     windows11-64.*(-shippable)?-qr/opt: ['trunk']
                     default: []
             xorigin:
                 by-test-platform:
-                    .*asan.*: []
+                    .*(asan|wayland).*: []
                     windows.*ccov.*: []
                     (linux.*64|macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['trunk']
                     windows.*64-ccov-qr/opt: ['mozilla-central']
@@ -83,8 +86,7 @@ mochitest-plain:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    .*asan.*: []
-                    .*ccov.*: []
+                    .*(asan|ccov|wayland).*: []
                     (linux.*64|macosx.*64|windows11-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw+no-fission:
@@ -103,10 +105,12 @@ mochitest-plain:
                     default: []
             headless:
                 by-test-platform:
+                    .*wayland.*: []
                     linux1804-64.*: ['mozilla-central']
                     default: []
             headless+socketprocess_networking:
                 by-test-platform:
+                    .*wayland.*: []
                     linux1804-64.*: ['mozilla-central']
                     default: []
             no-fission:
@@ -128,6 +132,7 @@ mochitest-plain:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
+                    .*wayland.*: []
                     default: built-projects
     chunks:
         by-test-platform:

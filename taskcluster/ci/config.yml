@@ -605,6 +605,11 @@ workers:
             implementation: generic-worker
             os: linux
             worker-type: 'gecko-{alias}'
+        t-linux-wayland:
+            provisioner: '{trust-domain}-t'
+            implementation: generic-worker
+            os: linux
+            worker-type: 't-linux-vm-2204-wayland'
         t-osx-1015-r8:
             provisioner: releng-hardware
             implementation: generic-worker
