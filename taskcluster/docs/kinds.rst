@@ -716,6 +716,10 @@ geckodriver-signing
 -------------------
 Signing for geckodriver binary.
 
+geckodriver-mac-notarization
+----------------------------
+Apple notarization for mac geckodriver binary.
+
 maybe-release
 -------------
 A shipitscript task that does the following:
