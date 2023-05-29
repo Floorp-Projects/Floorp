@@ -383,8 +383,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
-                            windows.*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             default: []
                     default: []
     max-run-time:
