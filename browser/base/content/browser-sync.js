@@ -353,15 +353,6 @@ var gSync = {
     ));
   },
 
-  get syncStrings() {
-    delete this.syncStrings;
-    // XXXzpao these strings should probably be moved from /services to /browser... (bug 583381)
-    //        but for now just make it work
-    return (this.syncStrings = Services.strings.createBundle(
-      "chrome://weave/locale/sync.properties"
-    ));
-  },
-
   // Returns true if FxA is configured, but the send tab targets list isn't
   // ready yet.
   get sendTabConfiguredAndLoading() {
@@ -1871,37 +1862,34 @@ var gSync = {
      (re-)configured.
   */
   updateSyncButtonsTooltip(state) {
-    const status = state.status;
-
-    // This is a little messy as the Sync buttons are 1/2 Sync related and
-    // 1/2 FxA related - so for some strings we use Sync strings, but for
-    // others we reach into gSync for strings.
-    let tooltiptext;
-    if (status == UIState.STATUS_NOT_VERIFIED) {
-      // "needs verification"
-      tooltiptext = this.fluentStrings.formatValueSync("account-verify", {
-        email: state.email,
-      });
-    } else if (status == UIState.STATUS_NOT_CONFIGURED) {
-      // "needs setup".
-      tooltiptext = this.syncStrings.GetStringFromName(
-        "signInToSync.description"
-      );
-    } else if (status == UIState.STATUS_LOGIN_FAILED) {
-      // "need to reconnect/re-enter your password"
-      tooltiptext = this.fluentStrings.formatValueSync("account-reconnect", {
-        email: state.email,
-      });
-    } else {
-      // Sync appears configured - format the "last synced at" time.
-      let lastSyncDate = this.formatLastSyncDate(state.lastSync);
-      if (lastSyncDate) {
-        tooltiptext = this.fluentStrings.formatValueSync(
-          "appmenu-fxa-last-sync",
-          { time: lastSyncDate }
-        );
+    // Sync buttons are 1/2 Sync related and 1/2 FxA related
+    let l10nId, l10nArgs;
+    switch (state.status) {
+      case UIState.STATUS_NOT_VERIFIED:
+        // "needs verification"
+        l10nId = "account-verify";
+        l10nArgs = { email: state.email };
+        break;
+      case UIState.STATUS_LOGIN_FAILED:
+        // "need to reconnect/re-enter your password"
+        l10nId = "account-reconnect";
+        l10nArgs = { email: state.email };
+        break;
+      case UIState.STATUS_NOT_CONFIGURED:
+        // Button is not shown in this state
+        break;
+      default: {
+        // Sync appears configured - format the "last synced at" time.
+        let lastSyncDate = this.formatLastSyncDate(state.lastSync);
+        if (lastSyncDate) {
+          l10nId = "appmenu-fxa-last-sync";
+          l10nArgs = { time: lastSyncDate };
+        }
       }
     }
+    const tooltiptext = l10nId
+      ? this.fluentStrings.formatValueSync(l10nId, l10nArgs)
+      : null;
 
     let syncNowBtns = [
       "PanelUI-remotetabs-syncnow",
