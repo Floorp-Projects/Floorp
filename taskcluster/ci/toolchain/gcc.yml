@@ -63,13 +63,9 @@ linux64-gcc-11:
         symbol: TL(gcc11)
     run:
         script: build-gcc-linux.sh
-        arguments:
-            - build/unix/build-gcc/PR104142.patch
-        resources:
-            - build/unix/build-gcc/PR104142.patch
     fetches:
         fetch:
-            - gcc-11.3.0
+            - gcc-11.4.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
