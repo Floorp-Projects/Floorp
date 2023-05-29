@@ -105,6 +105,22 @@ export class MigrationWizardChild extends JSWindowActorChild {
         }
         break;
       }
+
+      case "MigrationWizard:SelectSafariPasswordFile": {
+        let path = await this.sendQuery("SelectSafariPasswordFile");
+        if (path) {
+          event.detail.safariPasswordFilePath = path;
+
+          let passwordResourceIndex = event.detail.resourceTypes.indexOf(
+            MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
+          );
+          event.detail.resourceTypes.splice(passwordResourceIndex, 1);
+
+          let extraArgs = this.#constructExtraArgs(event.detail);
+          await this.beginMigration(event.detail, extraArgs);
+        }
+        break;
+      }
     }
   }
 
@@ -234,6 +250,20 @@ export class MigrationWizardChild extends JSWindowActorChild {
    *   message.
    */
   async beginMigration(migrationDetails, extraArgs) {
+    if (
+      migrationDetails.key == "safari" &&
+      migrationDetails.resourceTypes.includes(
+        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
+      ) &&
+      !migrationDetails.safariPasswordFilePath
+    ) {
+      this.#sendTelemetryEvent("safari_password_file");
+      this.setComponentState({
+        page: MigrationWizardConstants.PAGES.SAFARI_PASSWORD_PERMISSION,
+      });
+      return;
+    }
+
     await this.sendQuery("Migrate", migrationDetails);
     this.#sendTelemetryEvent("migration_finished", extraArgs);
 
