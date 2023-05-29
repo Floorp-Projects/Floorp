@@ -5,6 +5,7 @@
 
 [localization] @AB_CD@.jar:
   crashreporter                                    (%crashreporter/**/*.ftl)
+  services                                         (%services/**/*.ftl)
   toolkit                                          (%toolkit/**/*.ftl)
   locales-preview/aboutTranslations.ftl            (../locales-preview/aboutTranslations.ftl)
 #ifdef MOZ_LAYOUT_DEBUGGER

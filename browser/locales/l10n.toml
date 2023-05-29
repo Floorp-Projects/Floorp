@@ -139,10 +139,6 @@ locales = [
     reference = "browser/extensions/report-site-issue/locales/en-US/**"
     l10n = "{l}browser/extensions/report-site-issue/**"
 
-[[paths]]
-    reference = "services/sync/locales/en-US/**"
-    l10n = "{l}services/sync/**"
-
 
 [[includes]]
     path = "toolkit/locales/l10n.toml"

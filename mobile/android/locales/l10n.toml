@@ -166,6 +166,10 @@ exclude-multi-locale = [
     l10n = "{l}toolkit/chrome/global/intl.css"
 
 [[paths]]
+    reference = "toolkit/locales/en-US/toolkit/services/*.ftl"
+    l10n = "{l}toolkit/services/*.ftl"
+
+[[paths]]
     reference = "toolkit/locales/en-US/toolkit/about/*Support.ftl"
     l10n = "{l}toolkit/toolkit/about/*Support.ftl"
 

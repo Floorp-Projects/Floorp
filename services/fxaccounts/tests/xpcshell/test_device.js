@@ -8,9 +8,15 @@ const { getFxAccountsSingleton } = ChromeUtils.importESModule(
 );
 const fxAccounts = getFxAccountsSingleton();
 
-const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
+const { ON_NEW_DEVICE_ID, PREF_ACCOUNT_ROOT } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
+
+function promiseObserved(topic) {
+  return new Promise(res => {
+    Services.obs.addObserver(res, topic);
+  });
+}
 
 _("Misc tests for FxAccounts.device");
 
@@ -85,6 +91,8 @@ add_task(async function test_reset() {
       return { id: "foo" };
     });
   await fxAccounts._internal.setSignedInUser(credentials);
+  // wait for device registration to complete.
+  await promiseObserved(ON_NEW_DEVICE_ID);
   ok(!Services.prefs.prefHasUserValue(testPref));
   // signing the user out should reset the name pref.
   const namePref = PREF_ACCOUNT_ROOT + "device.name";

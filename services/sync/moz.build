@@ -7,8 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Sync")
 
-DIRS += ["locales"]
-
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 EXTRA_COMPONENTS += [
