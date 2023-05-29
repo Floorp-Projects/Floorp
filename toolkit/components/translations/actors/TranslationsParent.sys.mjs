@@ -53,18 +53,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.autoTranslate"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "chaosErrorsPref",
-  "browser.translations.chaos.errors"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "chaosTimeoutMSPref",
-  "browser.translations.chaos.timeoutMS"
-);
-
 /**
  * Returns the always-translate language tags as an array.
  */
@@ -586,6 +574,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-identification-models");
+    bypassSignatureVerificationIfDev(client);
 
     TranslationsParent.#languageIdModelsRemoteClient = client;
     return client;
@@ -760,6 +749,8 @@ export class TranslationsParent extends JSWindowActorParent {
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-models");
     TranslationsParent.#translationModelsRemoteClient = client;
+
+    bypassSignatureVerificationIfDev(client);
 
     client.on("sync", async ({ data: { created, updated, deleted } }) => {
       // Language model attachments will only be downloaded when they are used.
@@ -993,6 +984,8 @@ export class TranslationsParent extends JSWindowActorParent {
     const client = lazy.RemoteSettings("translations-wasm");
 
     TranslationsParent.#translationsWasmRemoteClient = client;
+
+    bypassSignatureVerificationIfDev(client);
 
     client.on("sync", async ({ data: { created, updated, deleted } }) => {
       lazy.console.log(`"sync" event for remote bergamot wasm `, {
@@ -1645,6 +1638,29 @@ export class TranslationsParent extends JSWindowActorParent {
 }
 
 /**
+ * The signature verification can break on the Dev server. Bypass it to ensure new
+ * language models can always be tested. On Prod and Staging the signatures will
+ * always be verified.
+ *
+ * @param {RemoteSettingsClient} client
+ */
+function bypassSignatureVerificationIfDev(client) {
+  let host;
+  try {
+    const url = new URL(Services.prefs.getCharPref("services.settings.server"));
+    host = url.host;
+  } catch (error) {}
+
+  if (host === "remote-settings-dev.allizom.org") {
+    console.warn(
+      "The translations is set to the Remote Settings dev server. It's bypassing " +
+        "the signature verification."
+    );
+    client.verifySignature = false;
+  }
+}
+
+/**
  * WebAssembly modules must be instantiated from a Worker, since it's considered
  * unsafe eval.
  */
@@ -1928,8 +1944,12 @@ async function chaosMode(probability = 0.5) {
  *  - browser.translations.chaos.timeoutMS
  */
 async function chaosModeTimer() {
-  if (lazy.chaosTimeoutMSPref) {
-    const timeout = Math.random() * lazy.chaosTimeoutMSPref;
+  /** @type {number} */
+  const timeoutLimit = Services.prefs.getIntPref(
+    "browser.translations.chaos.timeoutMS"
+  );
+  if (timeoutLimit) {
+    const timeout = Math.random() * timeoutLimit;
     lazy.console.log(
       `Chaos mode timer started for ${(timeout / 1000).toFixed(1)} seconds.`
     );
@@ -1944,7 +1964,10 @@ async function chaosModeTimer() {
  *  - browser.translations.chaos.errors
  */
 async function chaosModeError(probability = 0.5) {
-  if (lazy.chaosErrorsPref && Math.random() < probability) {
+  if (
+    Services.prefs.getBoolPref("browser.translations.chaos.errors") &&
+    Math.random() < probability
+  ) {
     lazy.console.trace(`Chaos mode error generated.`);
     throw new Error(
       `Chaos Mode error from the pref "browser.translations.chaos.errors".`
