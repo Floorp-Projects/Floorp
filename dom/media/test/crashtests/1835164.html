@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<audio id=a src=1835164.opus controls autoplay></audio>
+<script>
+a.onloadedmetadata = function() {
+  a.currentTime = 1e40;
+  a.play();
+}
+a.onplaying = function() {
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</html>
