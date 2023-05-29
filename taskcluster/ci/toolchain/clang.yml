@@ -117,7 +117,7 @@ linux64-clang-16-mingw-x86:
             - clang-16
             - mingw-w64
             - llvm-mingw
-            - gcc-9.4.0
+            - gcc-9.5.0
         toolchain:
             - linux64-clang-16
 
@@ -143,7 +143,7 @@ linux64-clang-16-mingw-x64:
             - clang-16
             - mingw-w64
             - llvm-mingw
-            - gcc-9.4.0
+            - gcc-9.5.0
         toolchain:
             - linux64-clang-16
 
@@ -513,7 +513,7 @@ linux64-clang-trunk-mingw-x86:
             - clang-trunk
             - mingw-w64
             - llvm-mingw
-            - gcc-9.4.0
+            - gcc-9.5.0
         toolchain:
             - linux64-clang-trunk
 
@@ -541,7 +541,7 @@ linux64-clang-trunk-mingw-x64:
             - clang-trunk
             - mingw-w64
             - llvm-mingw
-            - gcc-9.4.0
+            - gcc-9.5.0
         toolchain:
             - linux64-clang-trunk
 
