@@ -62,6 +62,7 @@ describe("Top Sites Feed", () => {
   let fakePageThumbs;
   let fetchStub;
   let fakeNimbusFeatures;
+  let fakeSampling;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -122,6 +123,9 @@ describe("Top Sites Feed", () => {
         getVariable: sinon.stub(),
       },
     };
+    fakeSampling = {
+      ratioSample: sinon.stub(),
+    };
     globals.set({
       PageThumbs: fakePageThumbs,
       NewTabUtils: fakeNewTabUtils,
@@ -130,6 +134,7 @@ describe("Top Sites Feed", () => {
       LinksCache,
       FilterAdult: filterAdultStub,
       Screenshots: fakeScreenshot,
+      Sampling: fakeSampling,
     });
     sandbox.spy(global.XPCOMUtils, "defineLazyGetter");
     FAKE_GLOBAL_PREFS.set("default.sites", "https://foo.com/");
@@ -186,13 +191,18 @@ describe("Top Sites Feed", () => {
   }
 
   describe("#constructor", () => {
-    it("should defineLazyGetter for log and _currentSearchHostname", () => {
-      assert.calledTwice(global.XPCOMUtils.defineLazyGetter);
+    it("should defineLazyGetter for log, contextId, and _currentSearchHostname", () => {
+      assert.calledThrice(global.XPCOMUtils.defineLazyGetter);
 
       let spyCall = global.XPCOMUtils.defineLazyGetter.getCall(0);
       assert.ok(spyCall.calledWith(sinon.match.any, "log", sinon.match.func));
 
       spyCall = global.XPCOMUtils.defineLazyGetter.getCall(1);
+      assert.ok(
+        spyCall.calledWith(sinon.match.any, "contextId", sinon.match.func)
+      );
+
+      spyCall = global.XPCOMUtils.defineLazyGetter.getCall(2);
       assert.ok(
         spyCall.calledWith(feed, "_currentSearchHostname", sinon.match.func)
       );
@@ -2187,6 +2197,73 @@ describe("Top Sites Feed", () => {
       assert.equal(feed._contile.sites.length, 2);
     });
 
+    it("should fetch SOV (Share-of-Voice) settings from Contile", async () => {
+      const sov = {
+        name: "SOV-20230518215316",
+        allocations: [
+          {
+            position: 1,
+            allocation: [
+              {
+                partner: "foo",
+                percentage: 100,
+              },
+              {
+                partner: "bar",
+                percentage: 0,
+              },
+            ],
+          },
+          {
+            position: 2,
+            allocation: [
+              {
+                partner: "foo",
+                percentage: 80,
+              },
+              {
+                partner: "bar",
+                percentage: 20,
+              },
+            ],
+          },
+        ],
+      };
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        headers: new Map([
+          ["cache-control", "private, max-age=859, stale-if-error=10463"],
+        ]),
+        json: () =>
+          Promise.resolve({
+            sov: btoa(JSON.stringify(sov)),
+            tiles: [
+              {
+                url: "https://www.test.com",
+                image_url: "images/test-com.png",
+                click_url: "https://www.test-click.com",
+                impression_url: "https://www.test-impression.com",
+                name: "test",
+              },
+              {
+                url: "https://www.test1.com",
+                image_url: "images/test1-com.png",
+                click_url: "https://www.test1-click.com",
+                impression_url: "https://www.test1-impression.com",
+                name: "test1",
+              },
+            ],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      assert.deepEqual(feed._contile.sov, sov);
+      assert.equal(feed._contile.sites.length, 2);
+    });
+
     it("should not fetch from Contile if it's not enabled", async () => {
       fakeNimbusFeatures.newtab.getVariable.reset();
       fakeNimbusFeatures.newtab.getVariable.returns(false);
@@ -2561,6 +2638,140 @@ describe("Top Sites Feed", () => {
       assert.ok(fetched);
       assert.equal(feed._contile.sites.length, 1);
       assert.equal(feed._contile.sites[0].url, "https://www.test1-cached.com");
+    });
+  });
+
+  describe("#_mergeSponsoredLinks", () => {
+    let fakeSponsoredLinks;
+    let sov;
+    beforeEach(() => {
+      fakeSponsoredLinks = {
+        amp: [
+          {
+            url: "https://www.test.com",
+            image_url: "images/test-com.png",
+            click_url: "https://www.test-click.com",
+            impression_url: "https://www.test-impression.com",
+            name: "test",
+            partner: "amp",
+            sponsored_position: 1,
+          },
+          {
+            url: "https://www.test1.com",
+            image_url: "images/test1-com.png",
+            click_url: "https://www.test1-click.com",
+            impression_url: "https://www.test1-impression.com",
+            name: "test1",
+            partner: "amp",
+            sponsored_position: 2,
+          },
+        ],
+        "moz-sales": [
+          {
+            url: "https://foo.com",
+            image_url: "images/foo-com.png",
+            click_url: "https://www.foo-click.com",
+            impression_url: "https://www.foo-impression.com",
+            name: "foo",
+            partner: "moz-sales",
+            pos: 2,
+          },
+        ],
+      };
+
+      sov = {
+        name: "SOV-20230518215316",
+        allocations: [
+          {
+            position: 1,
+            allocation: [
+              {
+                partner: "amp",
+                percentage: 100,
+              },
+              {
+                partner: "moz-sales",
+                percentage: 0,
+              },
+            ],
+          },
+          {
+            position: 2,
+            allocation: [
+              {
+                partner: "amp",
+                percentage: 80,
+              },
+              {
+                partner: "moz-sales",
+                percentage: 20,
+              },
+            ],
+          },
+        ],
+      };
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should join sponsored links if the sov object is absent", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => null);
+
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.deepEqual(sponsored, Object.values(fakeSponsoredLinks).flat());
+    });
+
+    it("should join sponosred links if the SOV Nimbus variable is disabled", async () => {
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(false);
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.deepEqual(sponsored, Object.values(fakeSponsoredLinks).flat());
+    });
+
+    it("should pick sponsored links based on sov configurations", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(true);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(1);
+
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 2);
+      assert.equal(sponsored[0].partner, "amp");
+      assert.equal(sponsored[0].sponsored_position, 1);
+      assert.equal(sponsored[1].partner, "moz-sales");
+      assert.equal(sponsored[1].sponsored_position, 2);
+      assert.equal(sponsored[1].pos, 1);
+    });
+
+    it("should fall back to other partners if the chosen partner does not have any links", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(true);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(0);
+
+      fakeSponsoredLinks.amp = [];
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 1);
+      assert.equal(sponsored[0].partner, "moz-sales");
+      assert.equal(sponsored[0].sponsored_position, 1);
+      assert.equal(sponsored[0].pos, 0);
+    });
+
+    it("should return an empty array if none of the partners have links", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(true);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(0);
+
+      fakeSponsoredLinks.amp = [];
+      fakeSponsoredLinks["moz-sales"] = [];
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 0);
     });
   });
 

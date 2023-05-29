@@ -7249,8 +7249,9 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
               tile_id: card.id,
               source: "newtab",
               advertiser: card.advertiser,
-              position: card.pos + 1 // positions are 1-based for telemetry
-
+              // Keep the 0-based position, can be adjusted by the telemetry
+              // sender if necessary.
+              position: card.pos
             }
           }));
         }

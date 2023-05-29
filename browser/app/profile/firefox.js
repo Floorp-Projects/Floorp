@@ -1533,6 +1533,13 @@ pref("browser.topsites.useRemoteSetting", true);
 pref("browser.topsites.contile.enabled", true);
 pref("browser.topsites.contile.endpoint", "https://contile.services.mozilla.com/v1/tiles");
 
+// Whether to enable the Share-of-Voice feature for Sponsored Topsites via Contile.
+#if defined(EARLY_BETA_OR_EARLIER)
+  pref("browser.topsites.contile.sov.enabled", true);
+#else
+  pref("browser.topsites.contile.sov.enabled", false);
+#endif
+
 // The base URL for the Quick Suggest anonymizing proxy. To make a request to
 // the proxy, include a campaign ID in the path.
 pref("browser.partnerlink.attributionURL", "https://topsites.services.mozilla.com/cid/");
