@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ['ubuntu-22.04']
+        runs-on: ["buildjet-16vcpu-ubuntu-2204"]
 
     steps:
     - name: Init
@@ -34,7 +34,7 @@ jobs:
         sudo apt update
 
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on == 'ubuntu-22.04'
+      if: matrix.runs-on == 'ubuntu-22.04' || matrix.runs-on == 'ubuntu-latest'
       run: |
         echo Before:
         free -h
@@ -178,7 +178,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ['ubuntu-22.04']
+        runs-on: ["buildjet-16vcpu-ubuntu-2204"]
 
     steps:
     - name: Init
@@ -203,7 +203,7 @@ jobs:
         sudo apt update
 
     - name: Setup Disk & Swap Space 💿
-      if: matrix.runs-on == 'ubuntu-22.04'
+      if: matrix.runs-on == 'ubuntu-22.04' || matrix.runs-on == 'ubuntu-latest'
       run: |
         echo Before:
         free -h
