@@ -78,6 +78,9 @@ class MediaSessionFullscreenFeatureTest {
     @Test
     fun `GIVEN the currently selected tab plays portrait media WHEN the feature is running THEN orientation is set to portrait`() {
         val activity: Activity = mock()
+        val window: Window = mock()
+        whenever(activity.window).thenReturn(window)
+
         val elementMetadata = MediaSession.ElementMetadata(width = 360, height = 640)
         val initialState = BrowserState(
             tabs = listOf(
@@ -109,6 +112,9 @@ class MediaSessionFullscreenFeatureTest {
     @Test
     fun `GIVEN the currently selected tab plays landscape media WHEN it enters fullscreen THEN set orientation to landscape`() {
         val activity: Activity = mock()
+        val window: Window = mock()
+        whenever(activity.window).thenReturn(window)
+
         val elementMetadata = MediaSession.ElementMetadata(width = 640, height = 360)
         val initialState = BrowserState(
             tabs = listOf(
