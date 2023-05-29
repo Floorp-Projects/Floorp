@@ -233,23 +233,6 @@ size_t DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
   return 4;
 }
 
-already_AddRefed<RecordedFrame> Compositor::RecordFrame(
-    const TimeStamp& aTimeStamp) {
-  RefPtr<CompositingRenderTarget> renderTarget = GetWindowRenderTarget();
-  if (!renderTarget) {
-    return nullptr;
-  }
-
-  RefPtr<AsyncReadbackBuffer> buffer =
-      CreateAsyncReadbackBuffer(renderTarget->GetSize());
-
-  if (!ReadbackRenderTarget(renderTarget, buffer)) {
-    return nullptr;
-  }
-
-  return MakeAndAddRef<CompositorRecordedFrame>(aTimeStamp, std::move(buffer));
-}
-
 bool Compositor::ShouldRecordFrames() const {
   return profiler_feature_active(ProfilerFeature::Screenshots) || mRecordFrames;
 }
