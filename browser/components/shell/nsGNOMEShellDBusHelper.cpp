@@ -354,9 +354,10 @@ static void ActivateResultID(
 
   if (strncmp(aResultID, KEYWORD_SEARCH_STRING, KEYWORD_SEARCH_STRING_LEN) ==
       0) {
-    const char* urlList[4] = {"unused", "--new-tab", "--search",
+    const char* urlList[3] = {"unused", "--search",
                               aSearchResult->GetSearchTerm().get()};
-    commandLine = ConstructCommandLine(3, (char**)urlList, nullptr, &tmp);
+    commandLine = ConstructCommandLine(std::size(urlList), (char**)urlList,
+                                       nullptr, &tmp);
   } else {
     int keyIndex = atoi(aResultID);
     nsCOMPtr<nsINavHistoryResultNode> child;
@@ -373,7 +374,8 @@ static void ActivateResultID(
     }
 
     const char* urlList[2] = {"unused", uri.get()};
-    commandLine = ConstructCommandLine(2, (char**)urlList, nullptr, &tmp);
+    commandLine = ConstructCommandLine(std::size(urlList), (char**)urlList,
+                                       nullptr, &tmp);
   }
 
   if (commandLine) {
