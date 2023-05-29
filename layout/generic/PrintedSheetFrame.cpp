@@ -80,10 +80,6 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
 
   const WritingMode wm = aReflowInput.GetWritingMode();
 
-  // This is the app-unit size of each page (in physical & logical units):
-  const nsSize physPageSize = aPresContext->GetPageSize();
-  const LogicalSize pageSize(wm, physPageSize);
-
   // Count the number of pages that are displayed on this sheet (i.e. how many
   // child frames we end up laying out, excluding any pages that are skipped
   // due to not being in the user's page-range selection).
@@ -118,6 +114,14 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
       pageFrame->SetIndexOnSheet(numPagesOnThisSheet);
       numPagesOnThisSheet++;
     }
+
+    // This is the app-unit size of the page (in physical & logical units).
+    // Note: The page sizes come from CSS or else from the user selected size;
+    // pages are never reflowed to fit their sheet - if/when necessary they are
+    // scaled to fit their sheet. Hence why we get the page's own dimensions to
+    // use as its "available space"/"container size" here.
+    const nsSize physPageSize = pageFrame->ComputePageSize();
+    const LogicalSize pageSize(wm, physPageSize);
 
     ReflowInput pageReflowInput(aPresContext, aReflowInput, pageFrame,
                                 pageSize);
