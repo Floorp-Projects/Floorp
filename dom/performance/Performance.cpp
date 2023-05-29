@@ -954,7 +954,10 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   }
 }
 
-void Performance::MemoryPressure() { mUserEntries.Clear(); }
+// We could clear User entries here, but doing so could break sites that call
+// performance.measure() if the marks disappeared without warning.   Chrome
+// allows "infinite" entries.
+void Performance::MemoryPressure() {}
 
 size_t Performance::SizeOfUserEntries(
     mozilla::MallocSizeOf aMallocSizeOf) const {
