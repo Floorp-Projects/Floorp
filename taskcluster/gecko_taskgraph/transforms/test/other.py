@@ -745,6 +745,7 @@ test_setting_description_schema = Schema(
                 Optional("build"): str,
             },
             Optional("device"): str,
+            Optional("display"): "wayland",
             Optional("machine"): Any("ref-hw-2017"),
         },
         "build": {
@@ -839,7 +840,7 @@ def set_test_setting(config, tasks):
         assert match
         os_name, os_version = match.groups()
 
-        device = machine = os_build = None
+        device = machine = os_build = display = None
         if os_name == "android":
             device = parts.pop(0)
             if device == "hw":
@@ -864,6 +865,9 @@ def set_test_setting(config, tasks):
             if parts[0] == "ref-hw-2017":
                 machine = parts.pop(0)
 
+            if parts[0] == "wayland":
+                display = parts.pop(0)
+
         # It's not always possible to glean the exact architecture used from
         # the task, so sometimes this will just be set to "32" or "64".
         setting["platform"]["arch"] = arch
@@ -880,6 +884,9 @@ def set_test_setting(config, tasks):
 
         if machine:
             setting["platform"]["machine"] = machine
+
+        if display:
+            setting["platform"]["display"] = display
 
         # parse remaining parts as build attributes
         setting["build"]["type"] = build_type
