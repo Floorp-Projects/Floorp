@@ -108,7 +108,6 @@ class SettingsSitePermissionsTest {
         }
     }
 
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @SmokeTest
     @Test
     fun verifyAutoplayBlockAudioOnlySettingTest() {
@@ -174,7 +173,6 @@ class SettingsSitePermissionsTest {
         }
     }
 
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @Test
     fun verifyAutoplayAllowAudioVideoSettingTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
@@ -237,7 +235,6 @@ class SettingsSitePermissionsTest {
         }
     }
 
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @Test
     fun verifyAutoplayBlockAudioAndVideoSettingTest() {
         val videoTestPage = getVideoPageAsset(mockWebServer)
@@ -268,7 +265,6 @@ class SettingsSitePermissionsTest {
         }
     }
 
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @Test
     fun verifyAutoplayBlockAudioAndVideoSettingOnMutedVideoTest() {
         val mutedVideoTestPage = getMutedVideoPageAsset(mockWebServer)
