@@ -84,7 +84,7 @@ fun TabGridItem(
     onClick: (tab: TabSessionState) -> Unit,
     onLongClick: (tab: TabSessionState) -> Unit,
 ) {
-    val tabBorderModifier = if (isSelected && !multiSelectionEnabled) {
+    val tabBorderModifier = if (isSelected) {
         Modifier.border(
             4.dp,
             FirefoxTheme.colors.borderAccent,
