@@ -188,6 +188,13 @@ add_task(async function navigate_around() {
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
     },
+    // The translations pref logs the translation decision on each DOMContentLoaded,
+    // and only shows the log by the preferences set in the console.createInstance.
+    // See Bug 1835693. This means that it is invoked on each page load.
+    "browser.translations.logLevel": {
+      min: 50,
+      max: 50,
+    },
   };
 
   if (SpecialPowers.useRemoteSubframes) {
