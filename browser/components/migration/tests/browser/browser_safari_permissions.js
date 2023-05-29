@@ -86,14 +86,10 @@ add_task(async function test_safari_permissions() {
 
     // Let's just choose "Bookmarks" for now.
     let resourceTypeList = shadow.querySelector("#resource-type-list");
-    let resourceNodes = resourceTypeList.querySelectorAll(
-      `label[data-resource-type]`
+    let node = resourceTypeList.querySelector(
+      `label[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS}"]`
     );
-    for (let resourceNode of resourceNodes) {
-      resourceNode.control.checked =
-        resourceNode.dataset.resourceType ==
-        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS;
-    }
+    node.control.checked = true;
 
     let deck = shadow.querySelector("#wizard-deck");
     let switchedToSafariPermissionPage =
