@@ -59,6 +59,12 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "logLevel",
+  "browser.translations.logLevel"
+);
+
 export class LanguageIdEngine {
   /** @type {Worker} */
   #languageIdWorker;
@@ -322,7 +328,7 @@ export class TranslationsEngine {
         enginePayload,
         innerWindowId,
         messageId: this.#messageId++,
-        logLevel: Services.prefs.getCharPref("browser.translations.logLevel"),
+        logLevel: lazy.logLevel,
       },
       transferables
     );
@@ -1001,8 +1007,7 @@ export class TranslationsChild extends JSWindowActorChild {
     const payload = await this.#getLanguageIdEnginePayload();
     const engine = new LanguageIdEngine({
       type: "initialize",
-      isLoggingEnabled:
-        Services.prefs.getCharPref("browser.translations.logLevel") === "All",
+      isLoggingEnabled: lazy.logLevel === "All",
       ...payload,
     });
     await engine.isReady;
