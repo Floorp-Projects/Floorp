@@ -249,7 +249,7 @@ list of acceptable features is given below:
    * - Inline variables (C++17)
      - 7.0
      - 3.9
-     - **No** (clang 5 has bugs with inline variables)
+     - Yes
    * - constexpr_if (C++17)
      - 7.0
      - 3.9
