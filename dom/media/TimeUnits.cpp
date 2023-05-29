@@ -40,10 +40,7 @@ TimeUnit TimeUnit::FromSeconds(double aValue, int64_t aBase) {
           static_cast<double>(std::numeric_limits<int64_t>::max()) ||
       inBase > std::pow(2, std::numeric_limits<double>::digits) - 1) {
     NS_WARNING(nsPrintfCString("Warning: base %" PRId64
-                               " is too high to represent %lfs accurately: "
-                               "overflows int64_t",
-                               " is too high to represent %lfs accurately,"
-                               " returning infinity.",
+                               " is too high to represent %lfs accurately.",
                                aBase, aValue)
                    .get());
     if (inBase > 0) {
