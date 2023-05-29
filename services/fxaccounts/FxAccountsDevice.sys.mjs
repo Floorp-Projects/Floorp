@@ -96,17 +96,6 @@ export class FxAccountsDevice {
       user = Services.env.get("USERNAME");
     }
 
-    let brand = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties"
-    );
-    let brandName;
-    try {
-      brandName = brand.GetStringFromName("brandShortName");
-    } catch (O_o) {
-      // this only fails in tests and markh can't work out why :(
-      brandName = Services.appinfo.name;
-    }
-
     // The DNS service may fail to provide a hostname in edge-cases we don't
     // fully understand - bug 1391488.
     let hostname;
@@ -125,17 +114,12 @@ export class FxAccountsDevice {
         Ci.nsIHttpProtocolHandler
       ).oscpu;
 
-    // It's a little unfortunate that this string is defined as being weave/sync,
-    // but it's not worth moving it.
-    let syncStrings = Services.strings.createBundle(
-      "chrome://weave/locale/sync.properties"
+    const l10n = new Localization(
+      ["services/accounts.ftl", "branding/brand.ftl"],
+      true
     );
     return sanitizeDeviceName(
-      syncStrings.formatStringFromName("client.name2", [
-        user,
-        brandName,
-        system,
-      ])
+      l10n.formatValueSync("account-client-name", { user, system })
     );
   }
 
@@ -453,7 +437,8 @@ export class FxAccountsDevice {
       log.info("registering with available commands", availableCommandsKeys);
 
       let device;
-      if (currentDevice && currentDevice.id) {
+      let is_existing = currentDevice && currentDevice.id;
+      if (is_existing) {
         log.debug("updating existing device details");
         device = await this._fxai.fxAccountsClient.updateDevice(
           sessionToken,
@@ -469,7 +454,6 @@ export class FxAccountsDevice {
           this.getLocalType(),
           deviceOptions
         );
-        Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
       }
 
       // Get the freshest device props before updating them.
@@ -484,6 +468,10 @@ export class FxAccountsDevice {
           registeredCommandsKeys: availableCommandsKeys,
         },
       });
+      // Must send the notification after we've written the storage.
+      if (!is_existing) {
+        Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
+      }
       return device.id;
     } catch (error) {
       return this._handleDeviceError(currentState, error, sessionToken);

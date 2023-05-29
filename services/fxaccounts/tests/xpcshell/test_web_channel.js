@@ -50,6 +50,11 @@ add_test(function () {
 });
 
 add_task(async function test_rejection_reporting() {
+  Services.prefs.setBoolPref(
+    "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
+    false
+  );
+
   let mockMessage = {
     command: "fxaccounts:login",
     messageId: "1234",
