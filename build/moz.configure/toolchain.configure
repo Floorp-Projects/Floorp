@@ -1379,9 +1379,9 @@ def compiler(
                     flags.extend(("-isystem", os.path.join(sysroot.path, path)))
 
         if info.type == "clang-cl":
-            if info.version < "8.0.0":
+            if info.version < "9.0.0":
                 raise FatalCheckError(
-                    "Only clang-cl 8.0 or newer is supported (found version %s)"
+                    "Only clang-cl 9.0 or newer is supported (found version %s)"
                     % info.version
                 )
             if winsysroot and host.os != "WINNT":
