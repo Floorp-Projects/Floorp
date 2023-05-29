@@ -133,8 +133,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-ares6**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -175,8 +175,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-ares6**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-ares6**
         - ❌
         - ❌
@@ -378,8 +378,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-assorted-dom**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -420,8 +420,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-assorted-dom**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-assorted-dom**
         - ❌
         - ❌
@@ -624,8 +624,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-jetstream2**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -666,8 +666,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-jetstream2**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-jetstream2**
         - ❌
         - ❌
@@ -870,8 +870,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-matrix-react-bench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -912,8 +912,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-matrix-react-bench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -1106,8 +1106,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-animometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -1148,8 +1148,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-animometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-motionmark-animometer**
         - ❌
         - ❌
@@ -1347,8 +1347,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -1389,8 +1389,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-motionmark-htmlsuite**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-motionmark-htmlsuite**
         - ❌
         - ❌
@@ -2798,8 +2798,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-stylebench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -2840,8 +2840,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-stylebench**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-stylebench**
         - ❌
         - ❌
@@ -3039,8 +3039,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-sunspider**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -3081,8 +3081,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-sunspider**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-sunspider**
         - ❌
         - ❌
@@ -3276,8 +3276,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-twitch-animation**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -3308,8 +3308,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-twitch-animation**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
@@ -5332,8 +5332,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-webaudio**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -5374,8 +5374,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-webaudio**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-windows10-32-qr/opt**
