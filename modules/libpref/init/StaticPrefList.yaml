@@ -9280,6 +9280,13 @@
   value: 10
   mirror: always
 
+# Whether to reset counting the consecutive scroll-anchoring adjustments during
+# running async scrolling by APZ.
+- name: layout.css.scroll-anchoring.reset-heuristic-during-animation
+  type: bool
+  value: false
+  mirror: always
+
 # The time after which we reset the max-consecutive-adjustments period, in
 # milliseconds.
 #
