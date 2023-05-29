@@ -519,10 +519,6 @@ def make_job_description(config, tasks):
             run["workdir"] = task.pop("workdir")
 
         jobdesc["worker-type"] = task.pop("worker-type")
-
-        if "worker" in task:
-            jobdesc["worker"] = task.pop("worker")
-
         if task.get("fetches"):
             jobdesc["fetches"] = task.pop("fetches")
 
