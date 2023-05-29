@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -20,6 +21,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
   MigrationWizardConstants:
     "chrome://browser/content/migration/migration-wizard-constants.mjs",
+  PasswordFileMigrator: "resource:///modules/FileMigrators.sys.mjs",
+});
+
+if (AppConstants.platform == "macosx") {
+  ChromeUtils.defineESModuleGetters(lazy, {
+    SafariProfileMigrator: "resource:///modules/SafariProfileMigrator.sys.mjs",
+  });
+}
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
 });
 
 /**
@@ -103,7 +115,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
           await this.#doBrowserMigration(
             message.data.key,
             message.data.resourceTypes,
-            message.data.profile
+            message.data.profile,
+            message.data.safariPasswordFilePath
           );
         } else if (
           message.data.type == lazy.MigrationWizardConstants.MIGRATOR_TYPES.FILE
@@ -128,6 +141,12 @@ export class MigrationWizardParent extends JSWindowActorParent {
       case "RequestSafariPermissions": {
         let safariMigrator = await MigrationUtils.getMigrator("safari");
         return safariMigrator.getPermissions(
+          this.browsingContext.topChromeWindow
+        );
+      }
+
+      case "SelectSafariPasswordFile": {
+        return this.#selectSafariPasswordFile(
           this.browsingContext.topChromeWindow
         );
       }
@@ -234,6 +253,46 @@ export class MigrationWizardParent extends JSWindowActorParent {
   }
 
   /**
+   * Handles a request to open a native file picker to get the path to a
+   * CSV file that contains passwords exported from Safari. The returned
+   * path is in the form of a string, or `null` if the user cancelled the
+   * native picker.
+   *
+   * @param {DOMWindow} window
+   *   The window that the native file picker should be associated with. This
+   *   cannot be null. See nsIFilePicker.init for more details.
+   * @returns {Promise<string|null>}
+   */
+  async #selectSafariPasswordFile(window) {
+    let fileMigrator = MigrationUtils.getFileMigrator(
+      lazy.PasswordFileMigrator.key
+    );
+    let filePickerConfig = await fileMigrator.getFilePickerConfig();
+
+    let { result, path } = await new Promise(resolve => {
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(window, filePickerConfig.title, Ci.nsIFilePicker.modeOpen);
+
+      for (let filter of filePickerConfig.filters) {
+        fp.appendFilter(filter.title, filter.extensionPattern);
+      }
+      fp.appendFilters(Ci.nsIFilePicker.filterAll);
+      fp.open(async fileOpenResult => {
+        resolve({ result: fileOpenResult, path: fp.file.path });
+      });
+    });
+
+    if (result == Ci.nsIFilePicker.returnCancel) {
+      // If the user cancels out of the file picker, the migration wizard should
+      // still be in the state that lets the user re-open the file picker if
+      // they closed it by accident, so we don't have to do anything else here.
+      return null;
+    }
+
+    return path;
+  }
+
+  /**
    * Calls into MigrationUtils to perform a migration given the parameters
    * sent via the wizard.
    *
@@ -250,10 +309,20 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *   A unique ID for the user profile.
    * @param {string} profileObj.name
    *   The display name for the user profile.
+   * @param {string} [safariPasswordFilePath=null]
+   *   An optional string argument that points to the path of a passwords
+   *   export file from Safari. This file will have password imported from if
+   *   supplied. This argument is ignored if the migratorKey is not for the
+   *   Safari browser.
    * @returns {Promise<undefined>}
    *   Resolves once the Migration:Ended observer notification has fired.
    */
-  async #doBrowserMigration(migratorKey, resourceTypeNames, profileObj) {
+  async #doBrowserMigration(
+    migratorKey,
+    resourceTypeNames,
+    profileObj,
+    safariPasswordFilePath = null
+  ) {
     let migrator = await MigrationUtils.getMigrator(migratorKey);
     let availableResourceTypes = await migrator.getMigrateData(profileObj);
     let resourceTypesToMigrate = 0;
@@ -270,7 +339,47 @@ export class MigrationWizardParent extends JSWindowActorParent {
       }
     }
 
+    if (
+      migratorKey == lazy.SafariProfileMigrator?.key &&
+      safariPasswordFilePath
+    ) {
+      // The caller supplied a password export file for Safari. We're going to
+      // pretend that there was a PASSWORDS resource for Safari to represent
+      // the state of importing from that file.
+      progress[
+        lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
+      ] = {
+        inProgress: true,
+        message: "",
+      };
+
+      this.sendAsyncMessage("UpdateProgress", { key: migratorKey, progress });
+
+      let summary = await lazy.LoginCSVImport.importFromCSV(
+        safariPasswordFilePath
+      );
+      let quantity = summary.filter(entry => entry.result == "added").length;
+
+      progress[
+        lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
+      ] = {
+        inProgress: false,
+        message: await lazy.gFluentStrings.formatValue(
+          "migration-wizard-progress-success-passwords",
+          {
+            quantity,
+          }
+        ),
+      };
+    }
+
     this.sendAsyncMessage("UpdateProgress", { key: migratorKey, progress });
+
+    // It's possible that only a Safari password file path was sent up, and
+    // there's nothing left to migrate, in which case we're done here.
+    if (safariPasswordFilePath && !resourceTypeNames.length) {
+      return;
+    }
 
     try {
       await migrator.migrate(
@@ -403,7 +512,23 @@ export class MigrationWizardParent extends JSWindowActorParent {
     let availableResourceTypes = [];
 
     for (let resourceType in MigrationUtils.resourceTypes) {
-      if (profileMigrationData & MigrationUtils.resourceTypes[resourceType]) {
+      // Normally, we check each possible resourceType to see if we have one or
+      // more corresponding resourceTypes in profileMigrationData. The exception
+      // is for Safari, where the migrator does not expose a PASSWORDS resource
+      // type, but we allow the user to express that they'd like to import
+      // passwords from it anyways. This is because the Safari migration flow is
+      // special, and allows the user to import passwords from a file exported
+      // from Safari.
+      if (
+        profileMigrationData & MigrationUtils.resourceTypes[resourceType] ||
+        (migrator.constructor.key == lazy.SafariProfileMigrator?.key &&
+          MigrationUtils.resourceTypes[resourceType] ==
+            MigrationUtils.resourceTypes.PASSWORDS &&
+          Services.prefs.getBoolPref(
+            "signon.management.page.fileImport.enabled",
+            false
+          ))
+      ) {
         availableResourceTypes.push(resourceType);
       }
     }

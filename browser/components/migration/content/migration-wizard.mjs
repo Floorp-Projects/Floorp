@@ -24,6 +24,8 @@ export class MigrationWizard extends HTMLElement {
   #importFromFileButton = null;
   #chooseImportFromFile = null;
   #safariPermissionButton = null;
+  #safariPasswordImportSkipButton = null;
+  #safariPasswordImportSelectButton = null;
   #selectAllCheckbox = null;
   #resourceSummary = null;
   #expandedDetails = false;
@@ -177,8 +179,8 @@ export class MigrationWizard extends HTMLElement {
               </li>
             </ol>
             <moz-button-group class="buttons" part="buttons">
-              <button class="cancel-close" data-l10n-id="migration-safari-password-import-skip-button"></button>
-              <button class="primary" data-l10n-id="migration-safari-password-import-select-button"></button>
+              <button id="safari-password-import-skip" data-l10n-id="migration-safari-password-import-skip-button"></button>
+              <button id="safari-password-import-select" class="primary" data-l10n-id="migration-safari-password-import-select-button"></button>
             </moz-button-group>
           </div>
 
@@ -279,6 +281,16 @@ export class MigrationWizard extends HTMLElement {
     this.#safariPermissionButton.addEventListener("click", this);
 
     this.#selectAllCheckbox = shadow.querySelector("#select-all").control;
+
+    this.#safariPasswordImportSkipButton = shadow.querySelector(
+      "#safari-password-import-skip"
+    );
+    this.#safariPasswordImportSkipButton.addEventListener("click", this);
+
+    this.#safariPasswordImportSelectButton = shadow.querySelector(
+      "#safari-password-import-select"
+    );
+    this.#safariPasswordImportSelectButton.addEventListener("click", this);
 
     this.#shadowRoot = shadow;
   }
@@ -853,6 +865,20 @@ export class MigrationWizard extends HTMLElement {
   }
 
   /**
+   * Sends a request to get a string path for a passwords file exported
+   * from Safari.
+   */
+  #selectSafariPasswordFile() {
+    let migrationEventDetail = this.#gatherMigrationEventDetails();
+    this.dispatchEvent(
+      new CustomEvent("MigrationWizard:SelectSafariPasswordFile", {
+        bubbles: true,
+        detail: migrationEventDetail,
+      })
+    );
+  }
+
+  /**
    * Changes selected-data-header text and selected-data text based on
    * how many resources are checked
    */
@@ -996,6 +1022,28 @@ export class MigrationWizard extends HTMLElement {
               },
             })
           );
+        } else if (event.target == this.#safariPasswordImportSkipButton) {
+          // If the user chose to skip importing passwords from Safari, we
+          // programmatically uncheck the PASSWORDS resource type and re-request
+          // import.
+          let checkbox = this.#shadowRoot.querySelector(
+            `label[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS}"]`
+          ).control;
+          checkbox.checked = false;
+
+          // If there are no other checked checkboxes, go back to the selection
+          // screen.
+          let checked = this.#shadowRoot.querySelectorAll(
+            `label[data-resource-type] > input:checked`
+          ).length;
+
+          if (!checked) {
+            this.requestState();
+          } else {
+            this.#doImport();
+          }
+        } else if (event.target == this.#safariPasswordImportSelectButton) {
+          this.#selectSafariPasswordFile();
         }
         break;
       }
