@@ -61,12 +61,15 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
   // Reflow our ::-moz-page-content frame, allowing it only to be as big as we
   // are (minus margins).
   const nsSize pageSize = ComputePageSize();
-  // Scaling applied to the page after rendering, used for down-scaling when a
-  // CSS-specified page-size is too large to fit on the paper we are printing
-  // on. This is needed for scaling margins that are applied as physical sizes,
-  // in this case the user-provided margins from the print UI and the printer-
-  // provided unwriteable margins.
-  const float pageSizeScale = ComputePageSizeScale(pageSize);
+  // Scaling applied to the page in the single page-per-sheet case (used for
+  // down-scaling when the page is too large to fit on the sheet we are printing
+  // on). In the single page-per-sheet case, we need this here to preemptively
+  // increase the margins by the same amount that the scaling will reduce them
+  // in order to make sure that their physical size is unchanged (particularly
+  // important for the unwriteable margins).
+  const auto* ppsInfo = GetSharedPageData()->PagesPerSheetInfo();
+  const float pageSizeScale =
+      ppsInfo->mNumPages == 1 ? ComputeSinglePPSPageSizeScale(pageSize) : 1.0f;
   // Scaling applied to content, as given by the print UI.
   // This is an additional scale factor that is applied to the content in the
   // nsPageContentFrame.
@@ -550,7 +553,7 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
   gfx::Matrix4x4 transform;
 
   if (ppsInfo->mNumPages == 1) {
-    float scale = pageFrame->ComputePageSizeScale(contentPageSize);
+    float scale = pageFrame->ComputeSinglePPSPageSizeScale(contentPageSize);
     transform = gfx::Matrix4x4::Scaling(scale, scale, 1);
     return transform;
   }
@@ -700,7 +703,10 @@ nsSize nsPageFrame::ComputePageSize() const {
   return size;
 }
 
-float nsPageFrame::ComputePageSizeScale(const nsSize aContentPageSize) const {
+float nsPageFrame::ComputeSinglePPSPageSizeScale(
+    const nsSize aContentPageSize) const {
+  MOZ_ASSERT(GetSharedPageData()->PagesPerSheetInfo()->mNumPages == 1,
+             "Only intended for the pps==1 case");
   MOZ_ASSERT(aContentPageSize == ComputePageSize(),
              "Incorrect content page size");
 
