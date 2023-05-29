@@ -906,6 +906,9 @@ async function checkLoadedScripts({
       return !intermittent[scriptType].has(c);
     });
 
+    if (loadedList[scriptType].length) {
+      console.log("Unexpected scripts:", loadedList[scriptType]);
+    }
     is(
       loadedList[scriptType].length,
       0,
