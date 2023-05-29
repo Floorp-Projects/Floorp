@@ -1903,6 +1903,20 @@ public:
     return true;
   }
 
+  bool VisitDependentNameTypeLoc(DependentNameTypeLoc L) {
+    SourceLocation Loc = L.getNameLoc();
+    normalizeLocation(&Loc);
+    if (!isInterestingLocation(Loc)) {
+      return true;
+    }
+
+    for (const NamedDecl *D :
+         Resolver->resolveDependentNameType(L.getTypePtr())) {
+      visitHeuristicResult(Loc, D);
+    }
+    return true;
+  }
+
   bool VisitDeclRefExpr(DeclRefExpr *E) {
     SourceLocation Loc = E->getExprLoc();
     normalizeLocation(&Loc);
@@ -2010,6 +2024,9 @@ public:
     } else if (const EnumConstantDecl *E = dyn_cast<EnumConstantDecl>(ND)) {
       MaybeType = E->getType();
       SyntaxKind = "enum";
+    } else if (const TypedefNameDecl *T = dyn_cast<TypedefNameDecl>(ND)) {
+      MaybeType = T->getUnderlyingType();
+      SyntaxKind = "type";
     }
     if (SyntaxKind) {
       std::string Mangled = getMangledName(CurMangleContext, ND);
