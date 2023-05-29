@@ -106,8 +106,8 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
         return sheetDialog
     }
 
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
         onNegativeButtonClicked?.invoke()
     }
 

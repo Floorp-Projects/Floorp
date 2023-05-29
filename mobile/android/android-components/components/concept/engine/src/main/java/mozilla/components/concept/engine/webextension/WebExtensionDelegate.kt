@@ -101,10 +101,14 @@ interface WebExtensionDelegate {
      *
      * @param extension the extension being installed. The required permissions can be
      * accessed using [WebExtension.getMetadata] and [Metadata.permissions].
+     * @param onPermissionsGranted A callback to indicate whether the user has granted the [extension] permissions
      * @return whether or not installation should process i.e. the permissions have been
      * granted.
      */
-    fun onInstallPermissionRequest(extension: WebExtension): Boolean = false
+    fun onInstallPermissionRequest(
+        extension: WebExtension,
+        onPermissionsGranted: ((Boolean) -> Unit),
+    ) = Unit
 
     /**
      * Invoked when a web extension has changed its permissions while trying to update to a

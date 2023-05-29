@@ -103,7 +103,7 @@ class PermissionsDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        fragment.onDismiss(mock())
+        fragment.onCancel(mock())
 
         assertTrue(denyWasExecuted)
     }

@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.Action
@@ -255,11 +256,15 @@ object WebExtensionSupport {
                     )
                 }
 
-                override fun onInstallPermissionRequest(extension: WebExtension): Boolean {
-                    // Our current installation flow has us approve permissions before we call
-                    // install on the engine. Therefore we can just approve the permission request
-                    // here during installation.
-                    return true
+                override fun onInstallPermissionRequest(
+                    extension: WebExtension,
+                    onPermissionsGranted: ((Boolean) -> Unit),
+                ) {
+                    store.dispatch(
+                        WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                            WebExtensionPromptRequest.Permissions(extension, onPermissionsGranted),
+                        ),
+                    )
                 }
 
                 override fun onUpdatePermissionRequest(

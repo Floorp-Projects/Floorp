@@ -186,6 +186,8 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     private fun assertAddonPermissionPrompt(addonName: String) {
+        mDevice.waitNotNull(Until.findObject(By.text("Add $addonName?")), waitingTime)
+
         onView(allOf(withId(R.id.title), withText("Add $addonName?")))
             .check(matches(isCompletelyDisplayed()))
 
@@ -221,6 +223,8 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     private fun allowPermissionToInstall() {
+        mDevice.waitNotNull(Until.findObject(By.text("Add")), waitingTime)
+
         onView(allOf(withId(R.id.allow_button), withText("Add")))
             .check(matches(isCompletelyDisplayed()))
             .perform(click())

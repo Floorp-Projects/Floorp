@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -434,13 +435,20 @@ class WebExtensionSupportTest {
         val store = spy(BrowserStore())
         val engine: Engine = mock()
         val ext: WebExtension = mock()
+        val onPermissionsGranted: ((Boolean) -> Unit) = mock()
 
         val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
         WebExtensionSupport.initialize(engine, store)
         verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
 
         // Verify they we confirm the permission request
-        assertTrue(delegateCaptor.value.onInstallPermissionRequest(ext))
+        delegateCaptor.value.onInstallPermissionRequest(ext, onPermissionsGranted)
+
+        verify(store).dispatch(
+            WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                WebExtensionPromptRequest.Permissions(ext, onPermissionsGranted),
+            ),
+        )
     }
 
     @Test

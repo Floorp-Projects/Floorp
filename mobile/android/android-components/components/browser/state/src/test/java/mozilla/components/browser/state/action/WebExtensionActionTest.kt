@@ -7,6 +7,7 @@ package mozilla.components.browser.state.action
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
@@ -15,6 +16,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -382,5 +384,37 @@ class WebExtensionActionTest {
 
         store.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(null)).joinBlocking()
         assertNull(store.state.activeWebExtensionTabId)
+    }
+
+    @Test
+    fun `WHEN UpdatePromptRequestWebExtensionAction is dispatched THEN a WebExtensionPromptRequest is added to the store`() {
+        val store = BrowserStore()
+
+        assertNull(store.state.webExtensionPromptRequest)
+
+        val promptRequest = WebExtensionPromptRequest.Permissions(mock(), {})
+
+        store.dispatch(WebExtensionAction.UpdatePromptRequestWebExtensionAction(promptRequest))
+            .joinBlocking()
+
+        assertEquals(promptRequest, store.state.webExtensionPromptRequest)
+    }
+
+    @Test
+    fun `WHEN ConsumePromptRequestWebExtensionAction is dispatched THEN the actual WebExtensionPromptRequest is removed from the store`() {
+        val promptRequest = WebExtensionPromptRequest.Permissions(mock(), {})
+
+        val store = BrowserStore(
+            initialState = BrowserState(
+                webExtensionPromptRequest = promptRequest,
+            ),
+        )
+
+        assertNotNull(store.state.webExtensionPromptRequest)
+
+        store.dispatch(WebExtensionAction.ConsumePromptRequestWebExtensionAction)
+            .joinBlocking()
+
+        assertNull(store.state.webExtensionPromptRequest)
     }
 }

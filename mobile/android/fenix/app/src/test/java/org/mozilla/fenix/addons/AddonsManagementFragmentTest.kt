@@ -32,7 +32,6 @@ class AddonsManagementFragmentTest {
         every { fragment.context } returns context
         every { fragment.view } returns view
         every { fragment.showErrorSnackBar(any()) } returns Unit
-        every { fragment.showPermissionDialog(any()) } returns Unit
         every { fragment.getString(R.string.addon_not_supported_error) } returns addonNotSupportedErrorMessage
         every { fragment.getString(R.string.addon_already_installed) } returns addonAlreadyInstalledErrorMessage
     }
@@ -56,15 +55,5 @@ class AddonsManagementFragmentTest {
 
         fragment.installExternalAddon(supportedAddons, "d1")
         verify { fragment.showErrorSnackBar(addonAlreadyInstalledErrorMessage) }
-    }
-
-    @Test
-    fun `GIVEN add-on is installed from external source WHEN supported and not installed THEN start installation`() {
-        val addon1 = Addon("1", downloadId = "d1", installedState = mockk())
-        val addon2 = Addon("2", downloadId = "d2")
-        val supportedAddons = listOf(addon1, addon2)
-
-        fragment.installExternalAddon(supportedAddons, "d2")
-        verify { fragment.showPermissionDialog(addon2) }
     }
 }

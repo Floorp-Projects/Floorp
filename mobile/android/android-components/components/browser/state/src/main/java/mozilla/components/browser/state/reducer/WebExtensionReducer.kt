@@ -83,6 +83,12 @@ internal object WebExtensionReducer {
             is WebExtensionAction.UpdateActiveWebExtensionTabAction -> {
                 state.copy(activeWebExtensionTabId = action.activeWebExtensionTabId)
             }
+            is WebExtensionAction.UpdatePromptRequestWebExtensionAction -> {
+                state.copy(webExtensionPromptRequest = action.promptRequest)
+            }
+            is WebExtensionAction.ConsumePromptRequestWebExtensionAction -> {
+                state.copy(webExtensionPromptRequest = null)
+            }
         }
     }
 
