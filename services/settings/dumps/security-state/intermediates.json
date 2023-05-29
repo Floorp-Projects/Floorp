@@ -1,6 +1,186 @@
 {
   "data": [
     {
+      "schema": 1685177545543,
+      "derHash": "LJm5F7egaFePfvtPuOYLnLWg5zvzAODh3BEuVlTFrlI=",
+      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 08,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDg=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "91646730acc556a2a24a0a0fe52da02b114c1b20e2979fd02f313cf2eda7e2e2",
+        "size": 1548,
+        "filename": "-9zTtVvIQc70tw3yG1y6divWnxbdAVfzbgea1f2WOtM=.pem",
+        "location": "security-state-staging/intermediates/279ad09c-5a6c-4694-9d25-d445c4b2d300.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+9zTtVvIQc70tw3yG1y6divWnxbdAVfzbgea1f2WOtM=",
+      "crlite_enrolled": false,
+      "id": "2ce90c9b-8702-4e9b-8bda-a8641ca98b4f",
+      "last_modified": 1685177823491
+    },
+    {
+      "schema": 1685177545240,
+      "derHash": "PT9LRA+TP/0mlWXtqeIOjfhjycvjZR07R2xbT0r1zig=",
+      "subject": "CN=Microsoft Azure RSA TLS Issuing CA 03,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBSU0EgVExTIElzc3VpbmcgQ0EgMDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "54a6b6063accaa1cef8092d8fcc1225da0dee42bf8798602862d1c2a7a67a60d",
+        "size": 2694,
+        "filename": "ZkWBotC4nL-Ba_kXaVPx7TpoRSF9uwxEAuufz67J7sQ=.pem",
+        "location": "security-state-staging/intermediates/9913da6f-e2c3-454e-8347-ec82cc9ec231.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ZkWBotC4nL+Ba/kXaVPx7TpoRSF9uwxEAuufz67J7sQ=",
+      "crlite_enrolled": false,
+      "id": "a5b2128d-ca28-45c7-9649-f8a1745bb4b1",
+      "last_modified": 1685177823489
+    },
+    {
+      "schema": 1685177544696,
+      "derHash": "z90GH81M/zu54TMmTKf95Fykm3DPqpd64NxCK0MwqME=",
+      "subject": "CN=Microsoft Azure RSA TLS Issuing CA 08,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBSU0EgVExTIElzc3VpbmcgQ0EgMDg=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "46fef2b9c6e075a266f4adb2cd041b8a7dfff77af85e35d6b288a3658790f3b9",
+        "size": 2694,
+        "filename": "LjZtjXjXZ6xC52xYpbqo-7iCeMHHB3aNu04-PJtDyYg=.pem",
+        "location": "security-state-staging/intermediates/42b6dca2-a884-400a-86c1-b8029edc6aca.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "LjZtjXjXZ6xC52xYpbqo+7iCeMHHB3aNu04+PJtDyYg=",
+      "crlite_enrolled": false,
+      "id": "1c59021b-4ea7-4e2e-a4df-8d6d8e5a26ee",
+      "last_modified": 1685177823486
+    },
+    {
+      "schema": 1685177544409,
+      "derHash": "/Tn/xI8Ug1QmIWKi9V3UbcJWTPwUmTCa1T8JwQmB3Mo=",
+      "subject": "CN=Microsoft Azure RSA TLS Issuing CA 04,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBSU0EgVExTIElzc3VpbmcgQ0EgMDQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "975ca374184140b38ddd263c44d2912adb56b680ae0e82f74b6f5c476491b18c",
+        "size": 2694,
+        "filename": "E--ujdrbZMGIJ0eA9QXCCHs5D8ABeIzQ2mAqHPFN-gs=.pem",
+        "location": "security-state-staging/intermediates/33166e47-0914-4b86-925a-205d56c28869.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "E++ujdrbZMGIJ0eA9QXCCHs5D8ABeIzQ2mAqHPFN+gs=",
+      "crlite_enrolled": false,
+      "id": "c98cdd5b-c263-4578-b5b2-633ddf9bb7e7",
+      "last_modified": 1685177823481
+    },
+    {
+      "schema": 1685177544081,
+      "derHash": "+7eSakUbrfUWvlGGFKd+bjJeKYGZCHltgH9ZMg+RjuI=",
+      "subject": "CN=Microsoft Azure RSA TLS Issuing CA 07,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBSU0EgVExTIElzc3VpbmcgQ0EgMDc=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e61eb99a86811b06dc9ebfaf6aa45d93ad0e1e6f5e8c40ff86ac2782ae9329ed",
+        "size": 2694,
+        "filename": "Mfmoi2wKbxJCpI54JB7B-PPNkO8dRO51Bpbp-Gu4aFg=.pem",
+        "location": "security-state-staging/intermediates/88015f4e-1e50-41ef-b06f-69ce4d987a8a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Mfmoi2wKbxJCpI54JB7B+PPNkO8dRO51Bpbp+Gu4aFg=",
+      "crlite_enrolled": false,
+      "id": "602f8ff0-d290-44ea-9557-d3be1435a522",
+      "last_modified": 1685177823478
+    },
+    {
+      "schema": 1685155973485,
+      "derHash": "TQ9dojsJkgmwSOGHG0uxxLToEuP6Akm7jRngD/qekbw=",
+      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 04,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7f5346bdb6f4bcfeda422b6c63a620a24cc8513c16e2843ded02c47188c618e2",
+        "size": 1548,
+        "filename": "EYyBlNxqiU35_S5DF_T1fpKZju6M94UCcLjRQ471fBY=.pem",
+        "location": "security-state-staging/intermediates/35d0a28f-f9e1-4414-855d-1be5a154c2ec.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "EYyBlNxqiU35/S5DF/T1fpKZju6M94UCcLjRQ471fBY=",
+      "crlite_enrolled": false,
+      "id": "41c0f9dc-64f1-4422-b02f-089d8d66e0b3",
+      "last_modified": 1685156223318
+    },
+    {
+      "schema": 1685155973795,
+      "derHash": "vTgWQjVT7Zk/pEoC9VYkcMDPsNOwBTLjUmpKOuyHUi8=",
+      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 07,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDc=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a680760a267dd36c86922c2e4329f07226955be62171a80683b8ded5fc835d89",
+        "size": 1548,
+        "filename": "VObRTDLlT_F-gUSuQacH62jRPzch1yNU6oGxRzgsyck=.pem",
+        "location": "security-state-staging/intermediates/484b708f-9b55-42e3-b4b1-afa0eecd5726.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VObRTDLlT/F+gUSuQacH62jRPzch1yNU6oGxRzgsyck=",
+      "crlite_enrolled": false,
+      "id": "02a2e1ab-5560-486c-be00-69a4692fe69c",
+      "last_modified": 1685156223316
+    },
+    {
+      "schema": 1685155972855,
+      "derHash": "Lsmlumi2D4Hl+GYvdkV0PM4e3OBq9obHdUMfe7tpq9Q=",
+      "subject": "CN=Microsoft Azure ECC TLS Issuing CA 03,O=Microsoft Corporation,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xLjAsBgNVBAMTJU1pY3Jvc29mdCBBenVyZSBFQ0MgVExTIElzc3VpbmcgQ0EgMDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2514728cefb5b15be4f24444a41f0ac2d28c12f66be304ffe1a7816ee14bf9d4",
+        "size": 1548,
+        "filename": "Z6NGNGtJqKusRdpHxcqa3PDNHEN8vStoX-WLg9xt4t4=.pem",
+        "location": "security-state-staging/intermediates/0f176d85-9191-4d2c-8bd0-df7605a21da3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Z6NGNGtJqKusRdpHxcqa3PDNHEN8vStoX+WLg9xt4t4=",
+      "crlite_enrolled": false,
+      "id": "2c31c9f3-2ac8-4b30-9eaf-4a767dc0a623",
+      "last_modified": 1685156223313
+    },
+    {
+      "schema": 1685137676528,
+      "derHash": "dVhaEddVHU7FB7iqnsBsBsR+QLelzt0YOzw0LsfrejQ=",
+      "subject": "CN=Domain The Net Technologies Ltd CA for TLS R3,O=Domain The Net Technologies Ltd,C=IL",
+      "subjectDN": "MG8xCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTYwNAYDVQQDDC1Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBUTFMgUjM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a230b7548d424355eea3091d0b3067c437e3c43a6072cb41b35156db574471de",
+        "size": 2308,
+        "filename": "ZEzTWkNjnCePaoNdGLycH6AiCbdlBAy0UK-QZLDbixA=.pem",
+        "location": "security-state-staging/intermediates/55a640d8-cd99-4d5f-be18-cb43885bd248.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ZEzTWkNjnCePaoNdGLycH6AiCbdlBAy0UK+QZLDbixA=",
+      "crlite_enrolled": false,
+      "id": "416ce32f-5a4a-4fbc-a298-bcd6763d510f",
+      "last_modified": 1685138223258
+    },
+    {
+      "schema": 1685137676183,
+      "derHash": "ADIpWwucs4p3WvXsAa29LTmJIA2Lf1xzM80cBh+ILjI=",
+      "subject": "CN=Domain The Net Technologies Ltd CA for EV TLS R3,O=Domain The Net Technologies Ltd,C=IL",
+      "subjectDN": "MHIxCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTkwNwYDVQQDDDBEb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBFViBUTFMgUjM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "05090c1f907741bf1a5b862f1f600374511ec6afbc902501c0db425cf3a1b963",
+        "size": 2373,
+        "filename": "0S29nbPcOwPdMAwVJXaUI5BQDk3P33opVyStTq_IY2I=.pem",
+        "location": "security-state-staging/intermediates/4772d4ec-0d5a-4474-8f75-fd02670d8abc.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0S29nbPcOwPdMAwVJXaUI5BQDk3P33opVyStTq/IY2I=",
+      "crlite_enrolled": false,
+      "id": "b8fbe7a4-df7c-4cad-be28-acbe15b86802",
+      "last_modified": 1685138223255
+    },
+    {
       "schema": 1684964877855,
       "derHash": "59sAFElASPImpnPCi3JejduczUhnqFUteuhcJSO9JlU=",
       "subject": "CN=纳网 ECC Extended Validation Secure Server CA,O=厦门纳网科技股份有限公司,C=CN",
@@ -27631,5 +27811,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1685069823592
+  "timestamp": 1685177823491
 }
