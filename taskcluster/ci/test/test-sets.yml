@@ -177,9 +177,6 @@ linux1804-ccov-tests:
     # on ccov builds.
     - jittest
 
-linux2204-wayland-tests:
-    - mochitest-plain
-
 # Windows
 
 windows-7-tests:
