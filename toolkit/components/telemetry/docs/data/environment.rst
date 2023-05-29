@@ -438,6 +438,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``extensions.eventPages.enabled``: Whether non-persistent background pages (also known as Event pages) should be enabled for `"manifest_version": 2` extensions.
 
+- ``extensions.quarantinedDomains.enabled``: Whether "Quarantined Domains" is enabled.
+
 - ``extensions.manifestV3.enabled``: Whether `"manifest_version": 3` extensions should be allowed to install successfully.
 
 - ``media.gmp-gmpopenh264.enabled``: Whether OpenH264 is enabled.
