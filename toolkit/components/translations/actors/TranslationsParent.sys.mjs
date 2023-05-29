@@ -53,6 +53,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.autoTranslate"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "chaosErrorsPref",
+  "browser.translations.chaos.errors"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "chaosTimeoutMSPref",
+  "browser.translations.chaos.timeoutMS"
+);
+
 /**
  * Returns the always-translate language tags as an array.
  */
@@ -1944,12 +1956,8 @@ async function chaosMode(probability = 0.5) {
  *  - browser.translations.chaos.timeoutMS
  */
 async function chaosModeTimer() {
-  /** @type {number} */
-  const timeoutLimit = Services.prefs.getIntPref(
-    "browser.translations.chaos.timeoutMS"
-  );
-  if (timeoutLimit) {
-    const timeout = Math.random() * timeoutLimit;
+  if (lazy.chaosTimeoutMSPref) {
+    const timeout = Math.random() * lazy.chaosTimeoutMSPref;
     lazy.console.log(
       `Chaos mode timer started for ${(timeout / 1000).toFixed(1)} seconds.`
     );
@@ -1964,10 +1972,7 @@ async function chaosModeTimer() {
  *  - browser.translations.chaos.errors
  */
 async function chaosModeError(probability = 0.5) {
-  if (
-    Services.prefs.getBoolPref("browser.translations.chaos.errors") &&
-    Math.random() < probability
-  ) {
+  if (lazy.chaosErrorsPref && Math.random() < probability) {
     lazy.console.trace(`Chaos mode error generated.`);
     throw new Error(
       `Chaos Mode error from the pref "browser.translations.chaos.errors".`
