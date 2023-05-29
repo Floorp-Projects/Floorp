@@ -66,10 +66,14 @@ class PopoverData {
     mPreviouslyFocusedElement = aPreviouslyFocusedElement;
   }
 
-  bool HasPopoverInvoker() const { return mHasPopoverInvoker; }
-  void SetHasPopoverInvoker(bool aHasPopoverInvoker) {
-    mHasPopoverInvoker = aHasPopoverInvoker;
+  RefPtr<Element> GetInvoker() const {
+    return do_QueryReferent(mInvokerElement);
   }
+  void SetInvoker(Element* aInvokerElement) {
+    mInvokerElement =
+        do_GetWeakReference(static_cast<nsINode*>(aInvokerElement));
+  }
+
   PopoverToggleEventTask* GetToggleEventTask() const { return mTask; }
   void SetToggleEventTask(PopoverToggleEventTask* aTask) { mTask = aTask; }
   void ClearToggleEventTask() { mTask = nullptr; }
@@ -85,9 +89,12 @@ class PopoverData {
   // See, https://github.com/whatwg/html/issues/9063
   nsWeakPtr mPreviouslyFocusedElement = nullptr;
 
-  // https://html.spec.whatwg.org/multipage/popover.html#popover-invoker, also
-  // see https://github.com/whatwg/html/issues/9168.
-  bool mHasPopoverInvoker = false;
+  // https://html.spec.whatwg.org/#popover-invoker
+  // Since having a popover invoker only makes a difference if the invoker
+  // is in the document (in another open popover to be precise) we can make
+  // this a weak reference, as if the element goes away it's necessarily not
+  // connected to our document.
+  nsWeakPtr mInvokerElement;
   bool mIsHiding = false;
   RefPtr<PopoverToggleEventTask> mTask;
 };
