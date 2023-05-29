@@ -44,10 +44,10 @@ def main():
 
         for number_type in ("issues", "pulls"):
             for chunk in divide_chunks(numbers[number_type], 100):
-                regex = "regex:(({repo_owner}/)?{repo_name}){repo_suffix}#({current_numbers})(\D|$)==>{url}/\\3\\4\n".format(
+                regex = (r"regex:(\W)(({repo_owner}/)?{repo_name}){repo_suffix}#({current_numbers})(\D|$)==>\1{url}/\4\5" "\n").format(
                     repo_owner=REPO_OWNER,
                     repo_name=f"[{repo_name[0].upper()}{repo_name[0].lower()}]{repo_name[1:]}",
-                    repo_suffix="?" if repo_name == REPO_NAME_TO_IMPORT else "\\s*",
+                    repo_suffix=r"?" if repo_name == REPO_NAME_TO_IMPORT else r"\s*",
                     current_numbers="|".join(str(number) for number in chunk),
                     url=GITHUB_URL_TEMPLATE.format(
                         repo_owner=REPO_OWNER,
