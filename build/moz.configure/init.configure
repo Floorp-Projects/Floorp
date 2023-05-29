@@ -650,15 +650,19 @@ def config_sub(shell, triplet):
     # Config.sub doesn't like the *-windows-msvc/*-windows-gnu triplets, so
     # munge those before and after calling config.sub.
     suffix = None
-    mingw_suffix = "-mingw32"
-    for check_suffix in ("-windows-msvc", "-windows-gnu"):
+    munging = {
+        "-windows-msvc": "-mingw32",
+        "-windows-gnu": "-mingw32",
+    }
+    for check_suffix, replacement in munging.items():
         if triplet.endswith(check_suffix):
             suffix = check_suffix
-            triplet = triplet[: -len(suffix)] + mingw_suffix
+            triplet = triplet[: -len(suffix)] + replacement
+            break
     result = check_cmd_output(shell, config_sub, triplet).strip()
     if suffix:
-        assert result.endswith(mingw_suffix)
-        result = result[: -len(mingw_suffix)] + suffix
+        assert result.endswith(replacement)
+        result = result[: -len(replacement)] + suffix
     return result
 
 
