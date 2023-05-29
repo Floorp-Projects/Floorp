@@ -166,6 +166,12 @@ class nsHttpHeaderArray {
   // injection)
   bool IsSuspectDuplicateHeader(const nsHttpAtom& header);
 
+  // Removes duplicate header values entries
+  // Will return unmodified header value if the header values contains
+  // non-duplicate entries
+  void RemoveDuplicateHeaderValues(const nsACString& aHeaderValue,
+                                   nsACString& aResult);
+
   // All members must be copy-constructable and assignable
   CopyableTArray<nsEntry> mHeaders;
 
@@ -286,6 +292,33 @@ inline bool nsHttpHeaderArray::IsSuspectDuplicateHeader(
              "Only non-mergeable headers should be in this list\n");
 
   return retval;
+}
+
+inline void nsHttpHeaderArray::RemoveDuplicateHeaderValues(
+    const nsACString& aHeaderValue, nsACString& aResult) {
+  mozilla::Maybe<nsAutoCString> result;
+  for (const nsACString& token :
+       nsCCharSeparatedTokenizer(aHeaderValue, ',').ToRange()) {
+    if (result.isNothing()) {
+      // assign the first value
+      result.emplace(token);
+      continue;
+    }
+    if (*result != token) {
+      // non-identical header values. Do not change the header values
+      result.reset();
+      break;
+    }
+  }
+
+  if (result.isSome()) {
+    aResult = *result;
+  } else {
+    // either header values do not have multiple values or
+    // has unequal multiple values
+    // for both the cases restore the original header value
+    aResult = aHeaderValue;
+  }
 }
 
 }  // namespace net
