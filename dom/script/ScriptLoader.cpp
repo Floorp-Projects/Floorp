@@ -995,17 +995,6 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     return false;
   }
 
-  // If there are a preloaded request and an import map, we won't use the
-  // preloaded request and will try to create a new one for this, because the
-  // import map isn't preloaded, and the preloaded request may have used the
-  // wrong module specifiers.
-  if (request && request->IsModuleRequest() &&
-      mModuleLoader->HasImportMapRegistered()) {
-    DebugOnly<bool> removed = mModuleLoader->RemoveFetchedModule(request->mURI);
-    MOZ_ASSERT(removed);
-    request = nullptr;
-  }
-
   if (request) {
     // Use the preload request.
 
