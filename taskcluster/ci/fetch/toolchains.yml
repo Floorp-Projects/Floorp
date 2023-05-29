@@ -6,7 +6,7 @@ binutils-2.31.1:
     description: binutils 2.31.1 source code
     fetch:
         type: static-url
-        url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.31.1.tar.xz
+        url: https://ftp.gnu.org/gnu/binutils/binutils-2.31.1.tar.xz
         sha256: 5d20086ecf5752cc7d9134246e9588fa201740d540f7eb84d795b1f7a93bca86
         size: 20467996
         gpg-signature:
@@ -20,7 +20,7 @@ binutils-2.36.1:
     description: binutils 2.36.1 source code
     fetch:
         type: static-url
-        url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.xz
+        url: https://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.xz
         sha256: e81d9edf373f193af428a0f256674aea62a9d74dfe93f65192d4eae030b0f3b0
         size: 22772248
         gpg-signature:
@@ -34,7 +34,7 @@ gcc-7.5.0:
     description: GCC 7.5.0 source code
     fetch:
         type: static-url
-        url: ftp://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.xz
+        url: https://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.xz
         sha256: b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661
         size: 62783088
         gpg-signature:
@@ -48,7 +48,7 @@ gcc-8.5.0:
     description: GCC 8.5.0 source code
     fetch:
         type: static-url
-        url: ftp://ftp.gnu.org/gnu/gcc/gcc-8.5.0/gcc-8.5.0.tar.xz
+        url: https://ftp.gnu.org/gnu/gcc/gcc-8.5.0/gcc-8.5.0.tar.xz
         sha256: d308841a511bb830a6100397b0042db24ce11f642dab6ea6ee44842e5325ed50
         size: 63841008
         gpg-signature:
@@ -112,7 +112,7 @@ isl-0.16.1:
     description: ISL 0.16.1 source code
     fetch:
         type: static-url
-        url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.16.1.tar.bz2
+        url: https://gcc.gnu.org/pub/gcc/infrastructure/isl-0.16.1.tar.bz2
         sha256: 412538bb65c799ac98e17e8cfcdacbb257a57362acfaaff254b0fcae970126d2
         size: 1626446
         artifact-name: isl-source.tar.zst
@@ -574,7 +574,7 @@ gnumake:
     description: GNU make source
     fetch:
         type: static-url
-        url: http://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+        url: https://ftp.gnu.org/gnu/make/make-4.3.tar.gz
         sha256: e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19
         size: 2317073
         artifact-name: make.tar.zst
