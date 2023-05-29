@@ -8,6 +8,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayInfoBannerBinding.Companion.TAB_COUNT_SHOW_CFR
 import org.mozilla.fenix.utils.Settings
@@ -43,6 +45,8 @@ class TabsTrayInfoBannerBindingTest {
         view = CoordinatorLayout(testContext)
         interactor = mockk(relaxed = true)
         settings = Settings(testContext)
+
+        every { testContext.components.settings } returns settings
     }
 
     @Test
