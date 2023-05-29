@@ -54,6 +54,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
+  Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -66,6 +67,17 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
     "resource://messaging-system/lib/Logger.sys.mjs"
   );
   return new Logger("TopSitesFeed");
+});
+
+// `contextId` is a unique identifier used by Contextual Services
+const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
+XPCOMUtils.defineLazyGetter(lazy, "contextId", () => {
+  let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
+  if (!_contextId) {
+    _contextId = String(Services.uuid.generateUUID());
+    Services.prefs.setStringPref(CONTEXT_ID_PREF, _contextId);
+  }
+  return _contextId;
 });
 
 const DEFAULT_SITES_PREF = "default.sites";
@@ -93,6 +105,8 @@ const NIMBUS_VARIABLE_MAX_SPONSORED = "topSitesMaxSponsored";
 //considered for Top Sites.
 const NIMBUS_VARIABLE_ADDITIONAL_TILES =
   "topSitesUseAdditionalTilesFromContile";
+// Nimbus variable to enable the SOV feature for sponsored tiles.
+const NIMBUS_VARIABLE_CONTILE_SOV_ENABLED = "topSitesContileSovEnabled";
 
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
@@ -123,6 +137,14 @@ const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
 const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";
 const CONTILE_CACHE_LAST_FETCH_PREF = "browser.topsites.contile.lastFetch";
 
+// Partners of sponsored tiles.
+const SPONSORED_TILE_PARTNER_AMP = "amp";
+const SPONSORED_TILE_PARTNER_MOZ_SALES = "moz-sales";
+const SPONSORED_TILE_PARTNERS = new Set([
+  SPONSORED_TILE_PARTNER_AMP,
+  SPONSORED_TILE_PARTNER_MOZ_SALES,
+]);
+
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
   return url;
@@ -133,10 +155,16 @@ class ContileIntegration {
     this._topSitesFeed = topSitesFeed;
     this._lastPeriodicUpdate = 0;
     this._sites = [];
+    // The Share-of-Voice object managed by Shepherd and sent via Contile.
+    this._sov = null;
   }
 
   get sites() {
     return this._sites;
+  }
+
+  get sov() {
+    return this._sov;
   }
 
   periodicUpdate() {
@@ -266,6 +294,10 @@ class ContileIntegration {
         return false;
       }
       const body = await response.json();
+
+      if (body?.sov) {
+        this._sov = JSON.parse(atob(body.sov));
+      }
       if (body?.tiles && Array.isArray(body.tiles)) {
         const useAdditionalTiles = lazy.NimbusFeatures.newtab.getVariable(
           NIMBUS_VARIABLE_ADDITIONAL_TILES
@@ -458,6 +490,7 @@ class TopSitesFeed {
           sponsored_click_url: site.click_url,
           sponsored_impression_url: site.impression_url,
           sponsored_tile_id: site.id,
+          partner: SPONSORED_TILE_PARTNER_AMP,
         };
         if (site.image_url && site.image_size >= MIN_FAVICON_SIZE) {
           // Only use the image from Contile if it's hi-res, otherwise, fallback
@@ -751,7 +784,13 @@ class TopSitesFeed {
     return false;
   }
 
-  insertDiscoveryStreamSpocs(sponsored) {
+  /**
+   * Fetch topsites spocs from the DiscoveryStream feed.
+   *
+   * @returns {Array} An array of sponsored tile objects.
+   */
+  fetchDiscoveryStreamSpocs() {
+    let sponsored = [];
     const { DiscoveryStream } = this.store.getState();
     if (DiscoveryStream) {
       const discoveryStreamSpocs =
@@ -814,11 +853,13 @@ class TopSitesFeed {
             sponsored_position: positionIndex + 1,
             // This is used for topsites deduping.
             hostname: shortURL({ url: spoc.url }),
+            partner: SPONSORED_TILE_PARTNER_MOZ_SALES,
           };
           sponsored.push(link);
         }
       }
     }
+    return sponsored;
   }
 
   // eslint-disable-next-line max-statements
@@ -850,15 +891,8 @@ class TopSitesFeed {
     }
 
     // Get defaults.
-    let date = new Date();
-    let pad = number => number.toString().padStart(2, "0");
-    let yyyymmddhh =
-      String(date.getFullYear()) +
-      pad(date.getMonth() + 1) +
-      pad(date.getDate()) +
-      pad(date.getHours());
+    let contileSponsored = [];
     let notBlockedDefaultSites = [];
-    let sponsored = [];
     for (let link of DEFAULT_TOP_SITES) {
       // For sponsored Yandex links, default filtering is reversed: we only
       // show them if Yandex is the default search engine.
@@ -877,24 +911,6 @@ class TopSitesFeed {
       ) {
         continue;
       }
-      // Process %YYYYMMDDHH% tag in the URL.
-      let url_end;
-      let url_start;
-      if (this._useRemoteSetting) {
-        [url_start, url_end] = link.url.split("%YYYYMMDDHH%");
-      }
-      if (typeof url_end === "string") {
-        link = {
-          ...link,
-          // Save original URL without %YYYYMMDDHH% replaced so it can be
-          // blocked properly.
-          original_url: link.url,
-          url: url_start + yyyymmddhh + url_end,
-        };
-        if (link.url_urlbar) {
-          link.url_urlbar = link.url_urlbar.replace("%YYYYMMDDHH%", yyyymmddhh);
-        }
-      }
       // If we've previously blocked a search shortcut, remove the default top site
       // that matches the hostname
       const searchProvider = getSearchProvider(shortURL(link));
@@ -908,7 +924,7 @@ class TopSitesFeed {
         if (!prefValues[SHOW_SPONSORED_PREF]) {
           continue;
         }
-        sponsored[link.sponsored_position - 1] = link;
+        contileSponsored[link.sponsored_position - 1] = link;
 
         // Unpin search shortcut if present for the sponsored link to be shown
         // instead.
@@ -922,7 +938,12 @@ class TopSitesFeed {
       }
     }
 
-    this.insertDiscoveryStreamSpocs(sponsored);
+    const discoverySponsored = this.fetchDiscoveryStreamSpocs();
+
+    const sponsored = await this._mergeSponsoredLinks({
+      [SPONSORED_TILE_PARTNER_AMP]: contileSponsored,
+      [SPONSORED_TILE_PARTNER_MOZ_SALES]: discoverySponsored,
+    });
 
     this._maybeCapSponsoredLinks(sponsored);
 
@@ -1059,6 +1080,73 @@ class TopSitesFeed {
     if (links.length > maxSponsored) {
       links.length = maxSponsored;
     }
+  }
+
+  /**
+   * Merge sponsored links from all the partners using SOV if present.
+   * For each tile position, the user is assigned to one partner via stable sampling.
+   * If the chosen partner doesn't have a tile to serve, another tile from a different
+   * partner is used as the replacement.
+   *
+   * @param {Object} sponsoredLinks An object with sponsored links from all the partners.
+   * @returns {Array} An array of merged sponsored links.
+   */
+  async _mergeSponsoredLinks(sponsoredLinks) {
+    if (
+      !this._contile.sov ||
+      !lazy.NimbusFeatures.pocketNewtab.getVariable(
+        NIMBUS_VARIABLE_CONTILE_SOV_ENABLED
+      )
+    ) {
+      return Object.values(sponsoredLinks).flat();
+    }
+
+    const sampleInput = `${lazy.contextId}-${this._contile.sov.name}`;
+    let sponsored = [];
+
+    for (const allocation of this._contile.sov.allocations) {
+      let link = null;
+      let chosenPartner = null;
+      const ratios = allocation.allocation.map(alloc => alloc.percentage);
+      if (ratios.length) {
+        const index = await lazy.Sampling.ratioSample(sampleInput, ratios);
+        chosenPartner = allocation.allocation[index].partner;
+        // Unknown partners are allowed so that new parters can be added to Shepherd
+        // sooner without waiting for client changes.
+        link = sponsoredLinks[chosenPartner]?.shift();
+      }
+
+      if (!link) {
+        // If the chosen partner doesn't have a tile for this postion, choose any
+        // one from another group. For simplicity, we do _not_ do resampling here
+        // against the remaining partners.
+        for (const partner of SPONSORED_TILE_PARTNERS) {
+          if (
+            partner === chosenPartner ||
+            sponsoredLinks[partner].length === 0
+          ) {
+            continue;
+          }
+          link = sponsoredLinks[partner].shift();
+          break;
+        }
+
+        if (!link) {
+          // No more links to be added across all the partners, just return.
+          return sponsored;
+        }
+      }
+
+      // Update the position fields. Note that postion is also 1-based in SOV.
+      link.sponsored_position = allocation.position;
+      if (link.pos !== undefined) {
+        // Pocket `pos` is 0-based.
+        link.pos = allocation.position - 1;
+      }
+      sponsored.push(link);
+    }
+
+    return sponsored;
   }
 
   /**

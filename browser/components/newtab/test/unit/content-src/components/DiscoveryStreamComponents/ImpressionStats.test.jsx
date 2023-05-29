@@ -177,7 +177,7 @@ describe("<ImpressionStats>", () => {
       tile_id: 1,
       source: "newtab",
       advertiser: "test advertiser",
-      position: 2,
+      position: 1,
     });
   });
   it("should send an impression when the wrapped item transiting from invisible to visible", () => {
