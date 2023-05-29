@@ -19,7 +19,6 @@ translations-panel-displayname-beta =
 
 translations-panel-settings-manage-languages =
   .label = Manage languages
-# TODO(Bug 1831341): We still need the link for this menu item.
 translations-panel-settings-about = About translations in { -brand-shorter-name }
 
 # Text displayed for the option to always translate a given language
