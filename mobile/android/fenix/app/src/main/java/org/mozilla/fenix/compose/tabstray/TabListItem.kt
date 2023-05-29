@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -22,6 +23,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -159,6 +161,13 @@ private fun Thumbnail(
         )
 
         if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(width = 92.dp, height = 72.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(FirefoxTheme.colors.layerAccentNonOpaque),
+            )
+
             Card(
                 modifier = Modifier
                     .size(size = 40.dp)
