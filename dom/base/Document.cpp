@@ -2056,6 +2056,9 @@ void Document::AccumulatePageLoadTelemetry(
     return;
   }
 
+  // Default duration is 0, use this to check for bogus negative values.
+  const TimeDuration zeroDuration;
+
   TimeStamp responseStart;
   timedChannel->GetResponseStart(&responseStart);
 
@@ -2071,8 +2074,23 @@ void Document::AccumulatePageLoadTelemetry(
   }
 
   if (!redirectStart.IsNull() && !redirectEnd.IsNull()) {
-    aEventTelemetryDataOut.redirectTime = mozilla::Some(
-        static_cast<uint32_t>((redirectEnd - redirectStart).ToMilliseconds()));
+    TimeDuration redirectTime = redirectEnd - redirectStart;
+    if (redirectTime > zeroDuration) {
+      aEventTelemetryDataOut.redirectTime =
+          mozilla::Some(static_cast<uint32_t>(redirectTime.ToMilliseconds()));
+    }
+  }
+
+  TimeStamp dnsLookupStart, dnsLookupEnd;
+  timedChannel->GetDomainLookupStart(&dnsLookupStart);
+  timedChannel->GetDomainLookupEnd(&dnsLookupEnd);
+
+  if (!dnsLookupStart.IsNull() && !dnsLookupEnd.IsNull()) {
+    TimeDuration dnsLookupTime = dnsLookupEnd - dnsLookupStart;
+    if (dnsLookupTime > zeroDuration) {
+      aEventTelemetryDataOut.dnsLookupTime =
+          mozilla::Some(static_cast<uint32_t>(dnsLookupTime.ToMilliseconds()));
+    }
   }
 
   TimeStamp navigationStart =
@@ -2180,8 +2198,11 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,
         responseStart, firstContentfulComposite);
 
-    aEventTelemetryDataOut.fcpTime = mozilla::Some(static_cast<uint32_t>(
-        (firstContentfulComposite - navigationStart).ToMilliseconds()));
+    TimeDuration fcpTime = firstContentfulComposite - navigationStart;
+    if (fcpTime > zeroDuration) {
+      aEventTelemetryDataOut.fcpTime =
+          mozilla::Some(static_cast<uint32_t>(fcpTime.ToMilliseconds()));
+    }
   }
 
   // DOM Content Loaded event
@@ -2220,10 +2241,17 @@ void Document::AccumulatePageLoadTelemetry(
         Telemetry::PERF_PAGE_LOAD_TIME_FROM_RESPONSESTART_MS, responseStart,
         loadEventStart);
 
-    aEventTelemetryDataOut.responseTime = mozilla::Some(static_cast<uint32_t>(
-        (responseStart - navigationStart).ToMilliseconds()));
-    aEventTelemetryDataOut.loadTime = mozilla::Some(static_cast<uint32_t>(
-        (loadEventStart - navigationStart).ToMilliseconds()));
+    TimeDuration responseTime = responseStart - navigationStart;
+    if (responseTime > zeroDuration) {
+      aEventTelemetryDataOut.responseTime =
+          mozilla::Some(static_cast<uint32_t>(responseTime.ToMilliseconds()));
+    }
+
+    TimeDuration loadTime = loadEventStart - navigationStart;
+    if (loadTime > zeroDuration) {
+      aEventTelemetryDataOut.loadTime =
+          mozilla::Some(static_cast<uint32_t>(loadTime.ToMilliseconds()));
+    }
   }
 }
 
