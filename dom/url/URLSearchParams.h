@@ -38,6 +38,8 @@ namespace dom {
 class GlobalObject;
 class URLSearchParams;
 class USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString;
+template <typename T>
+class Optional;
 
 class URLSearchParamsObserver : public nsISupports {
  public:
@@ -82,9 +84,9 @@ class URLSearchParams final : public nsISupports, public nsWrapperCache {
 
   void Append(const nsAString& aName, const nsAString& aValue);
 
-  bool Has(const nsAString& aName);
+  bool Has(const nsAString& aName, const Optional<nsAString>& aValue);
 
-  void Delete(const nsAString& aName);
+  void Delete(const nsAString& aName, const Optional<nsAString>& aValue);
 
   uint32_t GetIterableLength() const;
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;

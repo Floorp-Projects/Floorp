@@ -917,6 +917,13 @@ bool URLParams::Has(const nsAString& aName) {
   return std::any_of(mParams.cbegin(), mParams.cend(), MakeNameMatcher(aName));
 }
 
+bool URLParams::Has(const nsAString& aName, const nsAString& aValue) {
+  return std::any_of(
+      mParams.cbegin(), mParams.cend(), [&aName, &aValue](const auto& param) {
+        return param.mKey.Equals(aName) && param.mValue.Equals(aValue);
+      });
+}
+
 void URLParams::Get(const nsAString& aName, nsString& aRetval) {
   SetDOMStringToNull(aRetval);
 
@@ -971,6 +978,12 @@ void URLParams::Set(const nsAString& aName, const nsAString& aValue) {
 void URLParams::Delete(const nsAString& aName) {
   mParams.RemoveElementsBy(
       [&aName](const auto& param) { return param.mKey.Equals(aName); });
+}
+
+void URLParams::Delete(const nsAString& aName, const nsAString& aValue) {
+  mParams.RemoveElementsBy([&aName, &aValue](const auto& param) {
+    return param.mKey.Equals(aName) && param.mValue.Equals(aValue);
+  });
 }
 
 /* static */
