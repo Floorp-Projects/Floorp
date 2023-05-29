@@ -22,7 +22,12 @@ class RepoFilter(git_filter_repo.RepoFilter):
             old_hash = matchobj_or_oldhash.group(2)
         new_hash = super()._translate_commit_hash(old_hash)
         if new_hash == old_hash:
-            return new_hash
+            # not a firefox-android commit, don't touch it
+            if isinstance(matchobj_or_oldhash, bytes):
+                return matchobj_or_oldhash
+            # return the full match to not lose the URL
+            return matchobj_or_oldhash.group(0)
+        # turn the hash into a URL to avoid a dangling reference
         return b"https://github.com/mozilla-mobile/firefox-android/commit/" + old_hash
 
 
