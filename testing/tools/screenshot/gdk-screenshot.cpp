@@ -37,17 +37,14 @@
 #include <gdk/gdk.h>
 #ifdef MOZ_WAYLAND
 #  include <gdk/gdkwayland.h>
+#  include "mozilla/GUniquePtr.h"
+#  include "mozilla/UniquePtrExtensions.h"
+#  include "mozilla/ScopeExit.h"
 #endif
 
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
-
-#if defined(MOZ_ENABLE_DBUS)
-#  include <glib.h>
-#  include <glib/gstdio.h>
-#  include <dlfcn.h>
-#endif
 
 gboolean save_to_stdout(const gchar* buf, gsize count, GError** error,
                         gpointer data) {
@@ -61,48 +58,38 @@ gboolean save_to_stdout(const gchar* buf, gsize count, GError** error,
   return TRUE;
 }
 
-#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
-static GdkPixbuf* get_screenshot_dbus() {
-  char *path = nullptr, *filename = nullptr, *tmpname = nullptr;
-  GdkPixbuf* screenshot = nullptr;
-  const char* method_name;
-  GVariant* method_params;
-  GDBusConnection* connection;
+#if defined(MOZ_WAYLAND)
+static GdkPixbuf* get_screenshot_gnome(char* aAppName) {
+  char* path =
+      g_build_filename(g_get_user_cache_dir(), "mozilla-screenshot", nullptr);
+  g_mkdir_with_parents(path, 0700);
+  char* tmpname = g_strdup_printf("mozilla-screen-%d.png", g_random_int());
+  char* filename = g_build_filename(path, tmpname, nullptr);
 
-  auto sGApplicationGetDbusConnection = (GDBusConnection * (*)(GApplication*))
-      dlsym(RTLD_DEFAULT, "g_application_get_dbus_connection");
-  if (!sGApplicationGetDbusConnection) {
+  auto autoFree = mozilla::MakeScopeExit([&] {
+    unlink(filename);
+    g_free(path);
+    g_free(tmpname);
+    g_free(filename);
+  });
+
+  mozilla::GUniquePtr<GError> error;
+  char* argv[] = {g_strdup("/usr/bin/gnome-screenshot"), g_strdup("-f"),
+                  filename, nullptr};
+  gboolean ret = g_spawn_sync(
+      nullptr, argv, nullptr, GSpawnFlags(G_SPAWN_LEAVE_DESCRIPTORS_OPEN),
+      nullptr, nullptr, nullptr, nullptr, nullptr, getter_Transfers(error));
+  if (!ret || error) {
+    fprintf(stderr, "%s: g_spawn_sync() of gnome-screenshot failed: %s\n",
+            aAppName, error ? error->message : "");
     return nullptr;
   }
 
-  path =
-      g_build_filename(g_get_user_cache_dir(), "mozilla-screenshot", nullptr);
-  g_mkdir_with_parents(path, 0700);
-
-  tmpname = g_strdup_printf("mozilla-screen-%d.png", g_random_int());
-  filename = g_build_filename(path, tmpname, nullptr);
-
-  method_name = "Screenshot";
-  method_params = g_variant_new("(bbs)", FALSE, /* include pointer */
-                                FALSE,          /* flash */
-                                filename);
-
-  GApplication* app = g_application_new(nullptr, G_APPLICATION_NON_UNIQUE);
-  g_application_register(app, nullptr, nullptr);
-  connection = sGApplicationGetDbusConnection(app);
-  if (g_dbus_connection_call_sync(
-          connection, "org.gnome.Shell.Screenshot",
-          "/org/gnome/Shell/Screenshot", "org.gnome.Shell.Screenshot",
-          method_name, method_params, nullptr, G_DBUS_CALL_FLAGS_NONE, -1,
-          nullptr, nullptr)) {
-    screenshot = gdk_pixbuf_new_from_file(filename, nullptr);
-    unlink(filename);
+  GdkPixbuf* screenshot = gdk_pixbuf_new_from_file(filename, nullptr);
+  if (!screenshot) {
+    fprintf(stderr, "%s: gdk_pixbuf_new_from_file %s failed\n", aAppName,
+            filename);
   }
-
-  g_free(path);
-  g_free(tmpname);
-  g_free(filename);
-
   return screenshot;
 }
 #endif
@@ -112,10 +99,15 @@ int main(int argc, char** argv) {
 
   GdkPixbuf* screenshot = nullptr;
 
-#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
+#if defined(MOZ_WAYLAND)
   GdkDisplay* display = gdk_display_get_default();
   if (display && GDK_IS_WAYLAND_DISPLAY(display)) {
-    screenshot = get_screenshot_dbus();
+    screenshot = get_screenshot_gnome(argv[0]);
+    if (!screenshot) {
+      fprintf(stderr, "%s: failed to create screenshot Wayland/GdkPixbuf\n",
+              argv[0]);
+      return 1;
+    }
   }
 #endif
   if (!screenshot) {
@@ -123,11 +115,11 @@ int main(int argc, char** argv) {
     screenshot =
         gdk_pixbuf_get_from_window(window, 0, 0, gdk_window_get_width(window),
                                    gdk_window_get_height(window));
-  }
-
-  if (!screenshot) {
-    fprintf(stderr, "%s: failed to create screenshot GdkPixbuf\n", argv[0]);
-    return 1;
+    if (!screenshot) {
+      fprintf(stderr, "%s: failed to create screenshot X11/GdkPixbuf\n",
+              argv[0]);
+      return 1;
+    }
   }
 
   GError* error = nullptr;
