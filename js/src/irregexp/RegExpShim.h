@@ -1038,10 +1038,10 @@ inline bool IsIgnoreCase(RegExpFlags flags) { return flags.ignoreCase(); }
 inline bool IsMultiline(RegExpFlags flags) { return flags.multiline(); }
 inline bool IsDotAll(RegExpFlags flags) { return flags.dotAll(); }
 inline bool IsSticky(RegExpFlags flags) { return flags.sticky(); }
-
-// TODO: Support /v flag (bug 1713657)
-inline bool IsUnicodeSets(RegExpFlags flags) { return false; }
-inline bool IsEitherUnicode(RegExpFlags flags) { return flags.unicode(); }
+inline bool IsUnicodeSets(RegExpFlags flags) { return flags.unicodeSets(); }
+inline bool IsEitherUnicode(RegExpFlags flags) {
+  return flags.unicode() || flags.unicodeSets();
+}
 
 class Histogram {
  public:

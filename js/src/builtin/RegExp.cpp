@@ -921,6 +921,16 @@ bool js::regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp) {
   });
 }
 
+// https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.unicodesets
+// 21.2.6.19 get RegExp.prototype.unicodeSets
+bool js::regexp_unicodeSets(JSContext* cx, unsigned argc, JS::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return RegExpGetter(cx, args, "unicodeSets", [args](RegExpObject* unwrapped) {
+    args.rval().setBoolean(unwrapped->unicodeSets());
+    return true;
+  });
+}
+
 const JSPropertySpec js::regexp_properties[] = {
     JS_SELF_HOSTED_GET("flags", "$RegExpFlagsGetter", 0),
     JS_PSG("hasIndices", regexp_hasIndices, 0),
@@ -931,6 +941,7 @@ const JSPropertySpec js::regexp_properties[] = {
     JS_PSG("source", regexp_source, 0),
     JS_PSG("sticky", regexp_sticky, 0),
     JS_PSG("unicode", regexp_unicode, 0),
+    JS_PSG("unicodeSets", regexp_unicodeSets, 0),
     JS_PS_END};
 
 const JSFunctionSpec js::regexp_methods[] = {
@@ -2171,6 +2182,16 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
   }
 
   if (unicodeGetter != regexp_unicode) {
+    return false;
+  }
+
+  JSNative unicodeSetsGetter;
+  if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().unicodeSets),
+                              &unicodeSetsGetter)) {
+    return false;
+  }
+
+  if (unicodeSetsGetter != regexp_unicodeSets) {
     return false;
   }
 
