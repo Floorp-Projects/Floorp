@@ -70,6 +70,10 @@ export async function waitForInitialNavigationCompleted(
   // Start the listener right away to avoid race conditions.
   const listener = new ProgressListener(webProgress, {
     resolveWhenStarted,
+    // For initial navigations, we should consistently get a navigation so we
+    // use a much higher unload timeout compared to the default value.
+    // See Bug 1816538.
+    unloadTimeout: 5000,
   });
   const navigated = listener.start();
 
