@@ -815,7 +815,12 @@ function runAboutDialogUpdateTest(params, steps) {
         await continueFileHandler(continueFile);
       }
 
-      let linkPanels = ["downloadFailed", "manualUpdate", "unsupportedSystem"];
+      let linkPanels = [
+        "downloadFailed",
+        "manualUpdate",
+        "unsupportedSystem",
+        "internalError",
+      ];
       if (linkPanels.includes(panelId)) {
         // The unsupportedSystem panel uses the update's detailsURL and the
         // downloadFailed and manualUpdate panels use the app.update.url.manual
@@ -825,6 +830,24 @@ function runAboutDialogUpdateTest(params, steps) {
           link.href,
           gDetailsURL,
           `The panel's link href should equal ${gDetailsURL}`
+        );
+        const assertNonEmptyText = (node, description) => {
+          let textContent = node.textContent.trim();
+          ok(textContent, `${description}, got "${textContent}"`);
+        };
+        // TODO bug 1835559: Somehow the text content is empty.
+        if (panelId !== "internalError") {
+          assertNonEmptyText(
+            link,
+            `The panel's link should have non-empty textContent`
+          );
+        }
+        let linkWrapperClone = link.parentNode.cloneNode(true);
+        await link.ownerDocument.l10n.translateFragment(linkWrapperClone);
+        linkWrapperClone.querySelector("label.text-link").remove();
+        assertNonEmptyText(
+          linkWrapperClone,
+          `The panel's link should have text around the link`
         );
       }
 
@@ -1104,6 +1127,7 @@ function runAboutPrefsUpdateTest(params, steps) {
             "downloadFailed",
             "manualUpdate",
             "unsupportedSystem",
+            "internalError",
           ];
           if (linkPanels.includes(panelId)) {
             let { selectedPanel } = content.gAppUpdater;
@@ -1127,6 +1151,24 @@ function runAboutPrefsUpdateTest(params, steps) {
               link.href,
               gDetailsURL,
               `The panel's link href should equal ${gDetailsURL}`
+            );
+            const assertNonEmptyText = (node, description) => {
+              let textContent = node.textContent.trim();
+              ok(textContent, `${description}, got "${textContent}"`);
+            };
+            // TODO bug 1835559: Somehow the text content is empty.
+            if (panelId !== "internalError") {
+              assertNonEmptyText(
+                link,
+                `The panel's link should have non-empty textContent`
+              );
+            }
+            let linkWrapperClone = link.parentNode.cloneNode(true);
+            await link.ownerDocument.l10n.translateFragment(linkWrapperClone);
+            linkWrapperClone.querySelector(selector).remove();
+            assertNonEmptyText(
+              linkWrapperClone,
+              `The panel's link should have text around the link`
             );
           }
 
