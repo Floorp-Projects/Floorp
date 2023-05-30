@@ -616,8 +616,6 @@ DCSurface* DCExternalSurfaceWrapper::EnsureSurfaceForExternalImage(
                     << gfx::hexa(texture);
     return nullptr;
   }
-  const auto textureSwgl = texture->AsRenderTextureHostSWGL();
-  MOZ_ASSERT(textureSwgl);  // Covered above.
 
   // Add surface's visual which will contain video data to our root visual.
   const auto surfaceVisual = mSurface->GetVisual();
@@ -641,7 +639,7 @@ DCSurface* DCExternalSurfaceWrapper::EnsureSurfaceForExternalImage(
     // -
 
     const auto cspace = [&]() {
-      const auto rangedCspace = textureSwgl->GetYUVColorSpace();
+      const auto rangedCspace = texture->GetYUVColorSpace();
       const auto info = FromYUVRangedColorSpace(rangedCspace);
       auto ret = ToColorSpace2(info.space);
       if (ret == gfx::ColorSpace2::Display && cmsMode == CMSMode::All) {
@@ -1115,8 +1113,7 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
   // XXX if software decoded video frame format is nv12, it could be used as
   // video overlay.
   if (!texture || !texture->AsRenderDXGITextureHost() ||
-      texture->AsRenderDXGITextureHost()->GetFormat() !=
-          gfx::SurfaceFormat::NV12) {
+      texture->GetFormat() != gfx::SurfaceFormat::NV12) {
     gfxCriticalNote << "Unsupported RenderTexture for overlay: "
                     << gfx::hexa(texture);
     return;
