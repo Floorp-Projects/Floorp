@@ -1558,6 +1558,7 @@ bool WarpBuilder::build_Arguments(BytecodeLocation loc) {
   auto* snapshot = getOpSnapshot<WarpArguments>(loc);
   MOZ_ASSERT(info().needsArgsObj());
   MOZ_ASSERT(snapshot);
+  MOZ_ASSERT(usesEnvironmentChain());
 
   ArgumentsObject* templateObj = snapshot->templateObj();
   MDefinition* env = current->environmentChain();
@@ -1837,6 +1838,8 @@ MConstant* WarpBuilder::globalLexicalEnvConstant() {
 }
 
 bool WarpBuilder::build_GetName(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
   MDefinition* env = current->environmentChain();
   return buildIC(loc, CacheKind::GetName, {env});
 }
@@ -1849,6 +1852,8 @@ bool WarpBuilder::build_GetGName(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_BindName(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
   MDefinition* env = current->environmentChain();
   return buildIC(loc, CacheKind::BindName, {env});
 }
@@ -2210,6 +2215,8 @@ bool WarpBuilder::build_CheckThisReinit(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_Generator(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
   MDefinition* callee = getCallee();
   MDefinition* environmentChain = current->environmentChain();
   MDefinition* argsObj = info().needsArgsObj() ? current->argumentsObject()
