@@ -928,8 +928,6 @@ bool WarpBuilder::build_GetFrameArg(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
-  MOZ_ASSERT(script_->jitScript()->modifiesArguments());
-
   uint32_t arg = loc.arg();
   MDefinition* val = current->peek(-1);
 
