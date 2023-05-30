@@ -1809,6 +1809,17 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
   }
 }
 
+static void AssertArgumentsCustomDataProp(ArgumentsObject* obj,
+                                          PropertyKey key) {
+#ifdef DEBUG
+  // The property must still be a custom data property if it has been resolved.
+  // If this assertion fails, we're probably missing a call to mark this
+  // property overridden.
+  Maybe<PropertyInfo> prop = obj->lookupPure(key);
+  MOZ_ASSERT_IF(prop, prop->isCustomDataProperty());
+#endif
+}
+
 AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
                                                          ObjOperandId objId,
                                                          HandleId id) {
@@ -1832,6 +1843,7 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
 
   if (obj->is<ArgumentsObject>() &&
       !obj->as<ArgumentsObject>().hasOverriddenLength()) {
+    AssertArgumentsCustomDataProp(&obj->as<ArgumentsObject>(), id);
     maybeEmitIdGuard(id);
     if (obj->is<MappedArgumentsObject>()) {
       writer.guardClass(objId, GuardClassKind::MappedArguments);
@@ -2259,6 +2271,8 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectIterator(
     return AttachDecision::NoAction;
   }
 
+  AssertArgumentsCustomDataProp(args, id);
+
   RootedValue iterator(cx_);
   if (!ArgumentsObject::getArgumentsIterator(cx_, &iterator)) {
     cx_->recoverFromOutOfMemory();
@@ -2562,6 +2576,8 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
     return AttachDecision::NoAction;
   }
 
+  AssertArgumentsCustomDataProp(args, PropertyKey::Int(index));
+
   // And finally also check that the argument isn't forwarded.
   if (args->argIsForwarded(index)) {
     return AttachDecision::NoAction;
@@ -2640,9 +2656,12 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectCallee(
   }
 
   // The callee must not have been overridden or deleted.
-  if (obj->as<MappedArgumentsObject>().hasOverriddenCallee()) {
+  MappedArgumentsObject* args = &obj->as<MappedArgumentsObject>();
+  if (args->hasOverriddenCallee()) {
     return AttachDecision::NoAction;
   }
+
+  AssertArgumentsCustomDataProp(args, id);
 
   maybeEmitIdGuard(id);
   writer.guardClass(objId, GuardClassKind::MappedArguments);
