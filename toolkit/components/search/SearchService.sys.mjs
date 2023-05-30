@@ -248,7 +248,7 @@ export class SearchService {
   }
 
   get isInitialized() {
-    return this._initialized;
+    return this.#initialized;
   }
 
   getDefaultEngineInfo() {
@@ -416,7 +416,7 @@ export class SearchService {
    * Test only - reset SearchService data. Ideally this should be replaced
    */
   reset() {
-    this._initialized = false;
+    this.#initialized = false;
     this.#initObservers = PromiseUtils.defer();
     this.#initStarted = false;
     this.#startupExtensions = new Set();
@@ -428,6 +428,11 @@ export class SearchService {
     this.#searchPrivateDefault = null;
     this.#maybeReloadDebounce = false;
     this._settings._batchTask?.disarm();
+  }
+
+  // Test-only function to set SearchService initialization status
+  forceInitializedForTests(isInitialized) {
+    this.#initialized = isInitialized;
   }
 
   // Test-only function to reset just the engine selector so that it can
@@ -606,7 +611,7 @@ export class SearchService {
       // don't add the engine here. This has been called as the result
       // of _makeEngineFromConfig installing the extension, and that is already
       // handling the addition of the engine.
-      if (this._initialized && !this._reloadingEngines) {
+      if (this.#initialized && !this._reloadingEngines) {
         let { engines } = await this._fetchEngineSelectorEngines();
         let inConfig = engines.filter(el => el.webExtension.id == extension.id);
         if (inConfig.length) {
@@ -624,7 +629,7 @@ export class SearchService {
 
     // If we havent started SearchService yet, store this extension
     // to install in SearchService.init().
-    if (!this._initialized) {
+    if (!this.#initialized) {
       this.#startupExtensions.add(extension);
       return [];
     }
@@ -836,7 +841,7 @@ export class SearchService {
   }
 
   parseSubmissionURL(url) {
-    if (!this._initialized) {
+    if (!this.#initialized) {
       // If search is not initialized, do nothing.
       // This allows us to use this function early in telemetry.
       // The only other consumer of this (places) uses it much later.
@@ -981,7 +986,7 @@ export class SearchService {
    *
    * @type {boolean}
    */
-  _initialized = false;
+  #initialized = false;
 
   /**
    * Indicates if we're already waiting for maybeReloadEngines to be called.
@@ -1241,7 +1246,7 @@ export class SearchService {
    * Throws in case of initialization error.
    */
   #ensureInitialized() {
-    if (this._initialized) {
+    if (this.#initialized) {
       if (!Components.isSuccessCode(this.#initRV)) {
         lazy.logConsole.debug("#ensureInitialized: failure");
         throw Components.Exception(
@@ -1718,7 +1723,7 @@ export class SearchService {
       return;
     }
 
-    if (!this._initialized || this._reloadingEngines) {
+    if (!this.#initialized || this._reloadingEngines) {
       this.#maybeReloadDebounce = true;
       // Schedule a reload to happen at most 10 seconds after the current run.
       Services.tm.idleDispatchToMainThread(() => {
@@ -2584,7 +2589,7 @@ export class SearchService {
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!this._initialized && !extension.isAppProvided && !initEngine) {
+    if (!this.#initialized && !extension.isAppProvided && !initEngine) {
       await this.init();
     }
 
@@ -2889,7 +2894,7 @@ export class SearchService {
 
     // Only do this if we're initialized though - this function can get called
     // during initalization.
-    if (this._initialized) {
+    if (this.#initialized) {
       this.#recordDefaultChangedEvent(
         privateMode,
         currentEngine,
@@ -3307,7 +3312,7 @@ export class SearchService {
           // The good news is, that if we don't write the settings here, we'll
           // detect the out-of-date settings on next state, and automatically
           // rebuild it.
-          if (!this._initialized) {
+          if (!this.#initialized) {
             lazy.logConsole.warn(
               "not saving settings on shutdown due to initializing."
             );

@@ -544,8 +544,8 @@ async function settings_write_check(disableFn) {
 }
 
 add_task(async function test_settings_write_prevented_during_init() {
-  await settings_write_check(
-    disable => (Services.search.wrappedJSObject._initialized = !disable)
+  await settings_write_check(disable =>
+    Services.search.wrappedJSObject.forceInitializedForTests(!disable)
   );
 });
 
