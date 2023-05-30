@@ -89,9 +89,6 @@ if CONFIG["FUZZING_JS_FUZZILLI"]:
     # trace-pc instrumentation.
     include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
-CONFIGURE_SUBST_FILES += [
-    "devtools/rootAnalysis/Makefile",
-]
 CONFIGURE_DEFINE_FILES += [
     "js-confdefs.h",
 ]
