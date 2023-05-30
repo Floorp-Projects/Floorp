@@ -130,6 +130,7 @@ def create_confirm_failure_tasks(task_definition, failures, level):
         "crashtest" in task_name
         or "mochitest" in task_name
         or "reftest" in task_name
+        or "xpcshell" in task_name
         and "jsreftest" not in task_name
     ):
         repeatable_task = True
@@ -160,13 +161,13 @@ def create_confirm_failure_tasks(task_definition, failures, level):
         if len(failures[failure_group]) == 0:
             continue
         if failure_group == "dirs":
-            failure_group_suffix = "-id"
+            failure_group_suffix = "-d"
             # execute 5 total loops
             repeat_args = ["--repeat=4"] if repeatable_task else []
         elif failure_group == "tests":
-            failure_group_suffix = "-it"
-            # execute 20 total loops
-            repeat_args = ["--repeat=19"] if repeatable_task else []
+            failure_group_suffix = "-t"
+            # execute 10 total loops
+            repeat_args = ["--repeat=9"] if repeatable_task else []
         else:
             logger.error(
                 "create_confirm_failure_tasks: Unknown failure_group {}".format(

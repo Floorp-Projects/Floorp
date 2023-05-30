@@ -50,7 +50,7 @@ SUITE_CATEGORIES = [
 ]
 SUITE_DEFAULT_E10S = ["mochitest", "reftest"]
 SUITE_NO_E10S = ["xpcshell"]
-SUITE_REPEATABLE = ["mochitest", "reftest"]
+SUITE_REPEATABLE = ["mochitest", "reftest", "xpcshell"]
 
 
 # DesktopUnittest {{{1
