@@ -54,7 +54,8 @@ assertEqArray(rv, [
   "match", "[Symbol.match]",
   "get flags",
   "get hasIndices", "get global", "get ignoreCase", "get multiline",
-  "get dotAll", "get unicode", "get unicodeSets", "get sticky",
+  "get dotAll", "get unicode", "get sticky",
+
   "call", "from", "defineProperty", "join",
 ]);
 
