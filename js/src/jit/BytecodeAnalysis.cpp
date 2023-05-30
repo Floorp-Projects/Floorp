@@ -248,26 +248,8 @@ bool js::jit::ScriptUsesEnvironmentChain(JSScript* script) {
   AllBytecodesIterable iterator(script);
 
   for (const BytecodeLocation& location : iterator) {
-    switch (location.getOp()) {
-      case JSOp::GetName:
-      case JSOp::BindName:
-      case JSOp::BindVar:
-      case JSOp::SetName:
-      case JSOp::StrictSetName:
-      case JSOp::DelName:
-      case JSOp::GetAliasedVar:
-      case JSOp::SetAliasedVar:
-      case JSOp::Lambda:
-      case JSOp::PushLexicalEnv:
-      case JSOp::PopLexicalEnv:
-      case JSOp::PushVarEnv:
-      case JSOp::ImplicitThis:
-      case JSOp::FunWithProto:
-      case JSOp::GlobalOrEvalDeclInstantiation:
-        return true;
-
-      default:
-        break;
+    if (OpUsesEnvironmentChain(location.getOp())) {
+      return true;
     }
   }
 
