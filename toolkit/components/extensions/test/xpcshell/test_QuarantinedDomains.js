@@ -1,5 +1,16 @@
 "use strict";
 
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
+);
+
+const ADDONS_RESTRICTED_DOMAINS_PREF =
+  "extensions.webextensions.addons-restricted-domains@mozilla.com.disabled";
+
 const DOMAINS = [
   "addons-dev.allizom.org",
   "mixed.badssl.com",
@@ -7,6 +18,10 @@ const DOMAINS = [
   "developer.mozilla.org",
   "test.example.com",
 ];
+
+const CAN_ACCESS_ALL = DOMAINS.reduce((map, domain) => {
+  return { ...map, [domain]: true };
+}, {});
 
 function makePolicy(options) {
   return new WebExtensionPolicy({
@@ -71,29 +86,32 @@ function expectHost(desc, host, quarantined) {
   );
 }
 
+function makePolicies() {
+  const plain = makePolicy({ id: "plain@test" });
+  const system = makePolicy({ id: "system@test", isPrivileged: true });
+  const exempt = makePolicy({ id: "exempt@test", ignoreQuarantine: true });
+
+  return { plain, system, exempt };
+}
+
+function makeContentScripts(policies) {
+  return policies.map(makeCS);
+}
+
 add_task(async function test_QuarantinedDomains() {
-  let plain = makePolicy({ id: "plain@test" });
-  let system = makePolicy({ id: "system@test", isPrivileged: true });
-  let exempt = makePolicy({ id: "exempt@test", ignoreQuarantine: true });
-
-  let plainCS = makeCS(plain);
-  let systemCS = makeCS(system);
-  let exemptCS = makeCS(exempt);
-
-  const canAccessAll = {
-    "addons-dev.allizom.org": true,
-    "mixed.badssl.com": true,
-    "careers.mozilla.com": true,
-    "developer.mozilla.org": true,
-    "test.example.com": true,
-  };
+  const { plain, system, exempt } = makePolicies();
+  const [plainCS, systemCS, exemptCS] = makeContentScripts([
+    plain,
+    system,
+    exempt,
+  ]);
 
   info("Initial pref state is an empty list.");
   expectQuarantined([]);
 
-  expectAccess(plain, plainCS, canAccessAll);
-  expectAccess(system, systemCS, canAccessAll);
-  expectAccess(exempt, exemptCS, canAccessAll);
+  expectAccess(plain, plainCS, CAN_ACCESS_ALL);
+  expectAccess(system, systemCS, CAN_ACCESS_ALL);
+  expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
 
   info("Default test domain list.");
   Services.prefs.setStringPref(
@@ -115,16 +133,16 @@ add_task(async function test_QuarantinedDomains() {
     "test.example.com": false,
   });
 
-  expectAccess(system, systemCS, canAccessAll);
-  expectAccess(exempt, exemptCS, canAccessAll);
+  expectAccess(system, systemCS, CAN_ACCESS_ALL);
+  expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
 
   info("Disable the Quarantined Domains feature.");
   Services.prefs.setBoolPref("extensions.quarantinedDomains.enabled", false);
   expectQuarantined([]);
 
-  expectAccess(plain, plainCS, canAccessAll);
-  expectAccess(system, systemCS, canAccessAll);
-  expectAccess(exempt, exemptCS, canAccessAll);
+  expectAccess(plain, plainCS, CAN_ACCESS_ALL);
+  expectAccess(system, systemCS, CAN_ACCESS_ALL);
+  expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
 
   info(
     "Enable again, drop addons-dev.allizom.org and add developer.mozilla.org to the pref."
@@ -149,8 +167,8 @@ add_task(async function test_QuarantinedDomains() {
     "test.example.com": false,
   });
 
-  expectAccess(system, systemCS, canAccessAll);
-  expectAccess(exempt, exemptCS, canAccessAll);
+  expectAccess(system, systemCS, CAN_ACCESS_ALL);
+  expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
 
   expectHost("host with a port", "test.example.com:1025", true);
 
@@ -159,3 +177,41 @@ add_task(async function test_QuarantinedDomains() {
   expectHost("domain with prefix", "pretest.example.com", false);
   expectHost("domain with suffix", "test.example.comsuf", false);
 });
+
+// Make sure we honor the system add-on pref.
+add_task(
+  {
+    pref_set: [
+      [ADDONS_RESTRICTED_DOMAINS_PREF, true],
+      [
+        "extensions.quarantinedDomains.list",
+        "addons-dev.allizom.org,mixed.badssl.com,test.example.com",
+      ],
+    ],
+  },
+  async function test_QuarantinedDomains_with_system_addon_disabled() {
+    await AddonTestUtils.promiseRestartManager();
+
+    const { plain, system, exempt } = makePolicies();
+    const [plainCS, systemCS, exemptCS] = makeContentScripts([
+      plain,
+      system,
+      exempt,
+    ]);
+
+    expectQuarantined([]);
+    expectAccess(plain, plainCS, CAN_ACCESS_ALL);
+    expectAccess(system, systemCS, CAN_ACCESS_ALL);
+    expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
+
+    // When the user changes this pref to re-enable the system add-on...
+    Services.prefs.setBoolPref(ADDONS_RESTRICTED_DOMAINS_PREF, false);
+    // ...after a AOM restart...
+    await AddonTestUtils.promiseRestartManager();
+    // ...we expect no change.
+    expectQuarantined([]);
+    expectAccess(plain, plainCS, CAN_ACCESS_ALL);
+    expectAccess(system, systemCS, CAN_ACCESS_ALL);
+    expectAccess(exempt, exemptCS, CAN_ACCESS_ALL);
+  }
+);

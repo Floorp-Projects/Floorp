@@ -781,6 +781,23 @@ var AddonManagerInternal = {
       gStartedPromise.reject("startup failed");
     }
 
+    // Disable the quarantined domains feature if the system add-on has been
+    // disabled in a previous version.
+    if (
+      Services.prefs.getBoolPref(
+        "extensions.webextensions.addons-restricted-domains@mozilla.com.disabled",
+        false
+      )
+    ) {
+      Services.prefs.setBoolPref(
+        "extensions.quarantinedDomains.enabled",
+        false
+      );
+      logger.debug(
+        "Disabled quarantined domains because the system add-on was disabled"
+      );
+    }
+
     logger.debug("Completed startup sequence");
     this.callManagerListeners("onStartup");
   },
