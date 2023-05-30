@@ -130,7 +130,7 @@ module.exports = function (config) {
               functions: 100,
               branches: 84,
             },
-            "lib/UTEventReporting.jsm": {
+            "lib/UTEventReporting.sys.mjs": {
               statements: 100,
               lines: 100,
               functions: 100,
@@ -333,7 +333,7 @@ module.exports = function (config) {
               path.resolve("lib/ASRouterTargeting.jsm"),
               path.resolve("lib/ASRouterTriggerListeners.jsm"),
               path.resolve("lib/OnboardingMessageProvider.jsm"),
-              path.resolve("lib/CFRMessageProvider.jsm"),
+              path.resolve("lib/CFRMessageProvider.sys.mjs"),
               path.resolve("lib/CFRPageActions.jsm"),
             ],
           },

@@ -10,8 +10,8 @@ let searchShortcuts = {};
 let didSuccessfulImport = false;
 try {
   shortURL = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm");
-  searchShortcuts = ChromeUtils.import(
-    "resource://activity-stream/lib/SearchShortcuts.jsm"
+  searchShortcuts = ChromeUtils.importESModule(
+    "resource://activity-stream/lib/SearchShortcuts.sys.mjs"
   );
   didSuccessfulImport = true;
 } catch (e) {

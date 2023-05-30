@@ -77,7 +77,7 @@ describe("TelemetryFeed", () => {
     EVENTS_TELEMETRY_PREF,
     STRUCTURED_INGESTION_ENDPOINT_PREF,
   } = injector({
-    "lib/UTEventReporting.jsm": { UTEventReporting },
+    "lib/UTEventReporting.sys.mjs": { UTEventReporting },
   });
 
   beforeEach(() => {

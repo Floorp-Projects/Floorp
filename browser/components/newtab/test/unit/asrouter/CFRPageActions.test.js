@@ -3,7 +3,7 @@
 import { CFRPageActions, PageAction } from "lib/CFRPageActions.jsm";
 import { FAKE_RECOMMENDATION } from "./constants";
 import { GlobalOverrider } from "test/unit/utils";
-import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
+import { CFRMessageProvider } from "lib/CFRMessageProvider.sys.mjs";
 
 describe("CFRPageActions", () => {
   let sandbox;

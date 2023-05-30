@@ -1,4 +1,4 @@
-import { LinksCache } from "lib/LinksCache.jsm";
+import { LinksCache } from "lib/LinksCache.sys.mjs";
 
 describe("LinksCache", () => {
   it("throws when failing request", async () => {

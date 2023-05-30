@@ -9,7 +9,7 @@ const TIPPYTOP_JSON_PATH =
 /*
  * Get a domain from a url optionally stripping subdomains.
  */
-function getDomain(url, strip = "www.") {
+export function getDomain(url, strip = "www.") {
   let domain = "";
   try {
     domain = new URL(url).hostname;
@@ -24,7 +24,7 @@ function getDomain(url, strip = "www.") {
   return domain;
 }
 
-class TippyTopProvider {
+export class TippyTopProvider {
   constructor() {
     this._sitesByDomain = new Map();
     this.initialized = false;
@@ -58,5 +58,3 @@ class TippyTopProvider {
     return site;
   }
 }
-
-const EXPORTED_SYMBOLS = ["TippyTopProvider", "getDomain"];

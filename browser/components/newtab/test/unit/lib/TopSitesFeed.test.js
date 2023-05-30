@@ -13,7 +13,7 @@ import {
 import { getDefaultOptions } from "lib/ActivityStreamStorage.jsm";
 import injector from "inject!lib/TopSitesFeed.jsm";
 import { Screenshots } from "lib/Screenshots.jsm";
-import { LinksCache } from "lib/LinksCache.jsm";
+import { LinksCache } from "lib/LinksCache.sys.mjs";
 
 const FAKE_FAVICON = "data987";
 const FAKE_FAVICON_SIZE = 128;
@@ -148,7 +148,9 @@ describe("Top Sites Feed", () => {
       },
       "lib/FilterAdult.jsm": { FilterAdult: filterAdultStub },
       "lib/Screenshots.jsm": { Screenshots: fakeScreenshot },
-      "lib/TippyTopProvider.jsm": { TippyTopProvider: FakeTippyTopProvider },
+      "lib/TippyTopProvider.sys.mjs": {
+        TippyTopProvider: FakeTippyTopProvider,
+      },
       "lib/ShortURL.jsm": { shortURL: shortURLStub },
       "lib/ActivityStreamStorage.jsm": {
         ActivityStreamStorage: function Fake() {},

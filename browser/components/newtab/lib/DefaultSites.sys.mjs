@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const DEFAULT_SITES_MAP = new Map([
   // This first item is the global list fallback for any unexpected geos
   [
@@ -44,7 +42,5 @@ const DEFAULT_SITES_MAP = new Map([
   ],
 ]);
 
-const EXPORTED_SYMBOLS = ["DEFAULT_SITES"];
-
 // Immutable for export.
-const DEFAULT_SITES = Object.freeze(DEFAULT_SITES_MAP);
+export const DEFAULT_SITES = Object.freeze(DEFAULT_SITES_MAP);

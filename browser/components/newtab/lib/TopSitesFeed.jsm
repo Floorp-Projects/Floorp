@@ -10,8 +10,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
-const { TippyTopProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/TippyTopProvider.jsm"
+const { TippyTopProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TippyTopProvider.sys.mjs"
 );
 const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } =
   ChromeUtils.importESModule(
@@ -34,7 +34,9 @@ const {
   checkHasSearchEngine,
   getSearchProvider,
   getSearchFormURL,
-} = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm");
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/SearchShortcuts.sys.mjs"
+);
 
 const lazy = {};
 
@@ -43,17 +45,13 @@ ChromeUtils.defineModuleGetter(
   "FilterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LinksCache",
-  "resource://activity-stream/lib/LinksCache.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

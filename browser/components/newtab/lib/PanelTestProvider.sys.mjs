@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 const TWO_DAYS = 2 * 24 * 3600 * 1000;
 
@@ -615,7 +614,7 @@ const MESSAGES = () => [
   },
 ];
 
-const PanelTestProvider = {
+export const PanelTestProvider = {
   getMessages() {
     return Promise.resolve(
       MESSAGES().map(message => ({
@@ -625,5 +624,3 @@ const PanelTestProvider = {
     );
   },
 };
-
-const EXPORTED_SYMBOLS = ["PanelTestProvider"];

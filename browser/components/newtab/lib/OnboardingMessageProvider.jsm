@@ -10,8 +10,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { FeatureCalloutMessages } = ChromeUtils.import(
-  "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
+const { FeatureCalloutMessages } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/FeatureCalloutMessages.sys.mjs"
 );
 
 const lazy = {};
