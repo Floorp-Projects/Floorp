@@ -48,6 +48,9 @@ third-party-status-blocked = Blocked
 third-party-status-redirected = Redirected
 
 third-party-button-copy-to-clipboard = Copy raw data to clipboard
+third-party-loading-data =
+    .alt = Loading system information…
+    .title = Loading system information…
 third-party-button-reload = Reload with system info
     .title = Reload with system information
 third-party-button-open =
