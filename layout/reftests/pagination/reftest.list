@@ -129,8 +129,8 @@ fuzzy-if(cocoaWidget,0-1,0-5000) fuzzy-if(swgl,0-1,0-9) == 745025-1.html 745025-
 == 1468654-1.html 1468654-1-ref.html
 == 1596310.html 1596310-ref.html
 
-== content-url-element.html image.html
-fuzzy-if(swgl,0-1,0-23) == content-url-pseudo.html content-url-pseudo-ref.html # Fuzz in reftest background
+fuzzy-if(swgl,0-1,0-1) == content-url-element.html image.html # Fuzz in reftest background
+fuzzy-if(swgl,0-1,0-1) == content-url-pseudo.html content-url-pseudo-ref.html # As above
 
 == quirks.html quirks-ref.html
 != quirks.html quirks-notref.html
