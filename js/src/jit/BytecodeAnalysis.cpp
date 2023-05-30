@@ -252,10 +252,6 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
 
   for (const BytecodeLocation& location : iterator) {
     switch (location.getOp()) {
-      case JSOp::SetArg:
-        result.modifiesArguments = true;
-        break;
-
       case JSOp::GetName:
       case JSOp::BindName:
       case JSOp::BindVar:
