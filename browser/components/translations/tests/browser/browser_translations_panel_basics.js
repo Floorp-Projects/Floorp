@@ -64,6 +64,11 @@ add_task(async function test_translations_panel_basics() {
     click(button, "Re-opening the popup");
   });
 
+  ok(
+    getByL10nId("translations-panel-translate-button").disabled,
+    "The translate button is disabled when re-opening."
+  );
+
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
       getByL10nId("translations-panel-restore-button"),

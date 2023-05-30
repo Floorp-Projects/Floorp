@@ -766,13 +766,19 @@ var TranslationsPanel = new (class {
    */
   onChangeLanguages() {
     const { defaultTranslate, toMenuList, fromMenuList } = this.elements;
+    const { requestedTranslationPair } =
+      this.#getTranslationsActor().languageState;
     defaultTranslate.disabled =
       // The translation languages are the same, don't allow this translation.
       toMenuList.value === fromMenuList.value ||
       // No "to" language was provided.
       !toMenuList.value ||
       // No "from" language was provided.
-      !fromMenuList.value;
+      !fromMenuList.value ||
+      // The is the requested translation pair.
+      (requestedTranslationPair &&
+        requestedTranslationPair.fromLanguage === fromMenuList.value &&
+        requestedTranslationPair.toLanguage === toMenuList.value);
   }
 
   /**
