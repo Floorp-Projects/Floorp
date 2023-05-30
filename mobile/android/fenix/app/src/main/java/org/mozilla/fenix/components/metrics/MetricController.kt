@@ -277,6 +277,7 @@ internal class ReleaseMetricController(
         }
         Component.FEATURE_SEARCH to InContentTelemetry.IN_CONTENT_SEARCH -> {
             BrowserSearch.inContent[value!!].add()
+            track(Event.GrowthData.UserActivated(fromSearch = true))
         }
         Component.SUPPORT_WEBEXTENSIONS to WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED -> {
             metadata?.get("installed")?.let { installedAddons ->

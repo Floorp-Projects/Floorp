@@ -46,5 +46,12 @@ sealed class Event {
          * Event recording the first time a URI is loaded in Firefox in a 24 hour period.
          */
         object FirstUriLoadForDay : GrowthData("ja86ek")
+
+        /**
+         * Event recording when User is "activated" in first week of usage.
+         * Activated = if the user is active 3 days in their first week and
+         * if they search once in the latter half of that week (days 4-7).
+         */
+        data class UserActivated(val fromSearch: Boolean) : GrowthData("imgpmr")
     }
 }

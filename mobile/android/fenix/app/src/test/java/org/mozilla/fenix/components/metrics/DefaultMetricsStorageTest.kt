@@ -6,7 +6,9 @@ package org.mozilla.fenix.components.metrics
 
 import android.app.Activity
 import android.app.Application
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -380,6 +382,114 @@ class DefaultMetricsStorageTest {
         storage.updateSentState(Event.GrowthData.FirstUriLoadForDay)
 
         assertTrue(updateSlot.captured > 0)
+    }
+
+    @Test
+    fun `GIVEN first week activated days of use and search use thresholds reached THEN will be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 5)
+        every { settings.growthEarlyUseCount.value } returns 3
+        every { settings.growthEarlySearchUsed } returns true
+        every { settings.growthUserActivatedSent } returns false
+
+        val result = storage.shouldTrack(Event.GrowthData.UserActivated(fromSearch = false))
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `GIVEN first week activated days of use threshold not reached THEN will not be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 5)
+        every { settings.growthEarlyUseCount.value } returns 1
+        every { settings.growthEarlySearchUsed } returns true
+        every { settings.growthUserActivatedSent } returns false
+
+        val result = storage.shouldTrack(Event.GrowthData.UserActivated(fromSearch = false))
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN first week activated search use threshold not reached THEN will not be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 5)
+        every { settings.growthEarlyUseCount.value } returns 3
+        every { settings.growthEarlySearchUsed } returns false
+        every { settings.growthUserActivatedSent } returns false
+
+        val result = storage.shouldTrack(Event.GrowthData.UserActivated(fromSearch = false))
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `GIVEN first week activated already sent WHEN first week activated signal sent THEN userActivated will not be sent`() = runTest(dispatcher) {
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 5)
+        every { settings.growthEarlyUseCount.value } returns 3
+        every { settings.growthEarlySearchUsed } returns true
+        every { settings.growthUserActivatedSent } returns true
+
+        val result = storage.shouldTrack(Event.GrowthData.UserActivated(fromSearch = false))
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN first week usage signal is sent a full day after last sent THEN settings will be updated accordingly`() = runTest(dispatcher) {
+        val captureSent = slot<Long>()
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 3)
+        every { settings.growthEarlyUseCount.value } returns 1
+        every { settings.growthEarlyUseCount.increment() } just Runs
+        every { settings.growthEarlyUseCountLastIncrement } returns 0L
+        every { settings.growthEarlyUseCountLastIncrement = capture(captureSent) } returns Unit
+
+        storage.updatePersistentState(Event.GrowthData.UserActivated(fromSearch = false))
+
+        assertTrue(captureSent.captured > 0L)
+    }
+
+    @Test
+    fun `WHEN first week usage signal is sent less than a full day after last sent THEN settings will not be updated`() = runTest(dispatcher) {
+        val captureSent = slot<Long>()
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 3)
+        val lastUsageIncrementTime = currentTime - (dayMillis / 2)
+        every { settings.growthEarlyUseCount.value } returns 1
+        every { settings.growthEarlyUseCountLastIncrement } returns lastUsageIncrementTime
+        every { settings.growthEarlyUseCountLastIncrement = capture(captureSent) } returns Unit
+
+        storage.updatePersistentState(Event.GrowthData.UserActivated(fromSearch = false))
+
+        assertFalse(captureSent.isCaptured)
+    }
+
+    @Test
+    fun `WHEN first week search activity is sent in second half of first week THEN settings will be updated`() = runTest(dispatcher) {
+        val captureSent = slot<Boolean>()
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 3) - 100
+        every { settings.growthEarlySearchUsed } returns false
+        every { settings.growthEarlySearchUsed = capture(captureSent) } returns Unit
+
+        storage.updatePersistentState(Event.GrowthData.UserActivated(fromSearch = true))
+
+        assertTrue(captureSent.captured)
+    }
+
+    @Test
+    fun `WHEN first week search activity is sent in first half of first week THEN settings will not be updated`() = runTest(dispatcher) {
+        val captureSent = slot<Boolean>()
+        val currentTime = System.currentTimeMillis()
+        installTime = currentTime - (dayMillis * 3) + 100
+        every { settings.growthEarlySearchUsed } returns false
+        every { settings.growthEarlySearchUsed = capture(captureSent) } returns Unit
+
+        storage.updatePersistentState(Event.GrowthData.UserActivated(fromSearch = true))
+
+        assertFalse(captureSent.isCaptured)
     }
 
     private fun Calendar.copy() = clone() as Calendar

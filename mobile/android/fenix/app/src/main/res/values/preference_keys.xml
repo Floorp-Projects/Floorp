@@ -291,6 +291,12 @@
 
     <string name="pref_key_show_collections_placeholder_home" translatable="false">pref_key_show_collections_home</string>
 
+    <!-- Adjust Activated User values-->
+    <string name="pref_key_growth_user_activated_sent" translatable="false">pref_key_growth_user_activated_sent</string>
+    <string name="pref_key_growth_early_browse_count" translatable="false">pref_key_growth_early_browse_count</string>
+    <string name="pref_key_growth_early_browse_count_last_increment" translatable="false">pref_key_growth_early_browse_count_last_increment</string>
+    <string name="pref_key_growth_early_search" translatable="false">pref_key_growth_early_search</string>
+
     <!-- Tabs Settings -->
     <!-- pref_key_tab_view_list_do_not_use is needed for UI implementation only and should be expected to be useful. -->
     <string name="pref_key_tab_view_list_do_not_use" translatable="false">pref_key_tab_view_list</string>

@@ -30,6 +30,7 @@ class MetricsMiddleware(
             metrics.track(Event.GrowthData.FirstAppOpenForDay)
             metrics.track(Event.GrowthData.FirstWeekSeriesActivity)
             metrics.track(Event.GrowthData.UsageThreshold)
+            metrics.track(Event.GrowthData.UserActivated(fromSearch = false))
         }
         else -> Unit
     }

@@ -1735,4 +1735,33 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_enable_tabs_tray_to_compose),
         default = FeatureFlags.composeTabsTray,
     )
+
+    /**
+     * Adjust Activated User sent
+     */
+    var growthUserActivatedSent by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_user_activated_sent),
+        default = false,
+    )
+
+    /**
+     * Indicates how many days in the first week user opened the app.
+     */
+    val growthEarlyUseCount = counterPreference(
+        appContext.getPreferenceKey(R.string.pref_key_growth_early_browse_count),
+        maxCount = 3,
+    )
+
+    var growthEarlyUseCountLastIncrement by longPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_early_browse_count_last_increment),
+        default = 0L,
+    )
+
+    /**
+     * Indicates how many days in the first week user searched in the app.
+     */
+    var growthEarlySearchUsed by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_growth_early_search),
+        default = false,
+    )
 }

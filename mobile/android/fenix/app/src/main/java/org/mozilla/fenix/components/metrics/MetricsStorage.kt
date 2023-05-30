@@ -34,6 +34,11 @@ interface MetricsStorage {
     suspend fun updateSentState(event: Event)
 
     /**
+     * Updates locally-stored data related to an [event] that has just been sent.
+     */
+    suspend fun updatePersistentState(event: Event)
+
+    /**
      * Will try to register this as a recorder of app usage based on whether usage recording is still
      * needed. It will measure usage by to monitoring lifecycle callbacks from [application]'s
      * activities and should update local state using [updateUsageState].
@@ -60,6 +65,7 @@ internal class DefaultMetricsStorage(
     /**
      * Checks local state to see whether the [event] should be sent.
      */
+    @Suppress("CyclomaticComplexMethod")
     override suspend fun shouldTrack(event: Event): Boolean =
         withContext(dispatcher) {
             // The side-effect of storing days of use always needs to happen.
@@ -91,6 +97,9 @@ internal class DefaultMetricsStorage(
                         currentTime.duringFirstMonth() &&
                         settings.uriLoadGrowthLastSent.hasBeenMoreThanDaySince()
                 }
+                is Event.GrowthData.UserActivated -> {
+                    hasUserReachedActivatedThreshold()
+                }
             }
         }
 
@@ -114,6 +123,23 @@ internal class DefaultMetricsStorage(
             Event.GrowthData.FirstUriLoadForDay -> {
                 settings.uriLoadGrowthLastSent = System.currentTimeMillis()
             }
+            is Event.GrowthData.UserActivated -> {
+                settings.growthUserActivatedSent = true
+            }
+        }
+    }
+
+    override suspend fun updatePersistentState(event: Event) {
+        when (event) {
+            is Event.GrowthData.UserActivated -> {
+                if (event.fromSearch && shouldUpdateSearchUsage()) {
+                    settings.growthEarlySearchUsed = true
+                } else if (!event.fromSearch && shouldUpdateUsageCount()) {
+                    settings.growthEarlyUseCount.increment()
+                    settings.growthEarlyUseCountLastIncrement = System.currentTimeMillis()
+                }
+            }
+            else -> Unit
         }
     }
 
@@ -176,12 +202,33 @@ internal class DefaultMetricsStorage(
 
     private fun Long.duringFirstDay() = this < getInstalledTime() + dayMillis
 
+    private fun Long.afterThirdDay() = this > getInstalledTime() + threeDayMillis
+
     private fun Long.duringFirstWeek() = this < getInstalledTime() + fullWeekMillis
 
     private fun Long.duringFirstMonth() = this < getInstalledTime() + shortestMonthMillis
 
     private fun Calendar.createNextDay() = (this.clone() as Calendar).also { calendar ->
         calendar.add(Calendar.DAY_OF_MONTH, 1)
+    }
+
+    private fun hasUserReachedActivatedThreshold(): Boolean {
+        return !settings.growthUserActivatedSent &&
+            settings.growthEarlyUseCount.value >= daysActivatedThreshold &&
+            settings.growthEarlySearchUsed
+    }
+
+    private fun shouldUpdateUsageCount(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        return currentTime.afterFirstDay() &&
+            currentTime.duringFirstWeek() &&
+            settings.growthEarlyUseCountLastIncrement.hasBeenMoreThanDaySince()
+    }
+
+    private fun shouldUpdateSearchUsage(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        return currentTime.afterThirdDay() &&
+            currentTime.duringFirstWeek()
     }
 
     /**
@@ -208,6 +255,7 @@ internal class DefaultMetricsStorage(
 
     companion object {
         private const val dayMillis: Long = 1000 * 60 * 60 * 24
+        private const val threeDayMillis: Long = 3 * dayMillis
         private const val shortestMonthMillis: Long = dayMillis * 28
 
         // Note this is 8 so that recording of FirstWeekSeriesActivity happens throughout the length
@@ -216,6 +264,9 @@ internal class DefaultMetricsStorage(
 
         // The usage threshold we are interested in is currently 340 seconds.
         private const val usageThresholdMillis = 1000 * 340
+
+        // The usage threshold for "activated" growth users.
+        private const val daysActivatedThreshold = 3
 
         /**
          * Determines whether events should be tracked based on some general criteria:

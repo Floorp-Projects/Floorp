@@ -88,9 +88,13 @@ class AdjustMetricsService(
     override fun track(event: Event) {
         CoroutineScope(dispatcher).launch {
             try {
-                if (event is Event.GrowthData && storage.shouldTrack(event)) {
-                    Adjust.trackEvent(AdjustEvent(event.tokenName))
-                    storage.updateSentState(event)
+                if (event is Event.GrowthData) {
+                    if (storage.shouldTrack(event)) {
+                        Adjust.trackEvent(AdjustEvent(event.tokenName))
+                        storage.updateSentState(event)
+                    } else {
+                        storage.updatePersistentState(event)
+                    }
                 }
             } catch (e: Exception) {
                 crashReporter.submitCaughtException(e)
