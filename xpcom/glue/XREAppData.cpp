@@ -48,8 +48,13 @@ void XREAppData::SanitizeNameForDBus(nsACString& aName) {
 }
 
 void XREAppData::GetDBusAppName(nsACString& aName) const {
-  aName.Assign(remotingName);
-  SanitizeNameForDBus(aName);
+  const char* env = getenv("MOZ_DBUS_APP_NAME");
+  if (env) {
+    aName.Assign(env);
+  } else {
+    aName.Assign(remotingName);
+    SanitizeNameForDBus(aName);
+  }
 }
 
 }  // namespace mozilla
