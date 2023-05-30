@@ -10,6 +10,24 @@
 #include "RemoteUtils.h"
 #include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
+#include "nsPrintfCString.h"
+
+#include <glib.h>
+
+#define DBUS_BUS_NAME_TEMPLATE "org.mozilla.%s.SearchProvider"
+#define DBUS_OBJECT_PATH_TEMPLATE "/org/mozilla/%s/SearchProvider"
+
+const char* GetDBusBusName() {
+  static const char* name = ToNewCString(nsPrintfCString(
+      DBUS_BUS_NAME_TEMPLATE, g_get_prgname()));  // Intentionally leak
+  return name;
+}
+
+const char* GetDBusObjectPath() {
+  static const char* path = ToNewCString(nsPrintfCString(
+      DBUS_OBJECT_PATH_TEMPLATE, g_get_prgname()));  // Intentionally leak
+  return path;
+}
 
 static bool GetGnomeSearchTitle(const char* aSearchedTerm,
                                 nsAutoCString& aGnomeSearchTitle) {
@@ -117,7 +135,7 @@ DBusHandlerResult DBusHandleInitialResultSet(
   if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
                              &stringArray, &elements, DBUS_TYPE_INVALID) ||
       elements == 0) {
-    reply = dbus_message_new_error(aMsg, DBUS_BUS_NAME, "Wrong argument");
+    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
     dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
     dbus_message_unref(reply);
   } else {
@@ -150,7 +168,7 @@ DBusHandlerResult DBusHandleSubsearchResultSet(
                              DBUS_TYPE_STRING, &stringArray, &elements,
                              DBUS_TYPE_INVALID) ||
       elements == 0) {
-    reply = dbus_message_new_error(aMsg, DBUS_BUS_NAME, "Wrong argument");
+    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
     dbus_connection_send(aSearchResult->GetDBusConnection(), reply, nullptr);
     dbus_message_unref(reply);
   } else {
@@ -313,7 +331,7 @@ DBusHandlerResult DBusHandleResultMetas(
   if (!dbus_message_get_args(aMsg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
                              &stringArray, &elements, DBUS_TYPE_INVALID) ||
       elements == 0) {
-    reply = dbus_message_new_error(aMsg, DBUS_BUS_NAME, "Wrong argument");
+    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
   } else {
     reply = dbus_message_new_method_return(aMsg);
 
@@ -455,7 +473,7 @@ DBusHandlerResult DBusActivateResult(
                              &elements, DBUS_TYPE_UINT32, &timestamp,
                              DBUS_TYPE_INVALID) ||
       resultID == nullptr) {
-    reply = dbus_message_new_error(aMsg, DBUS_BUS_NAME, "Wrong argument");
+    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
   } else {
     reply = dbus_message_new_method_return(aMsg);
     ActivateResultID(aSearchResult, resultID, timestamp);
@@ -479,7 +497,7 @@ DBusHandlerResult DBusLaunchSearch(
                              &stringArray, &elements, DBUS_TYPE_UINT32,
                              &timestamp, DBUS_TYPE_INVALID) ||
       elements == 0) {
-    reply = dbus_message_new_error(aMsg, DBUS_BUS_NAME, "Wrong argument");
+    reply = dbus_message_new_error(aMsg, GetDBusBusName(), "Wrong argument");
   } else {
     reply = dbus_message_new_method_return(aMsg);
     DBusLaunchWithAllResults(aSearchResult, timestamp);
