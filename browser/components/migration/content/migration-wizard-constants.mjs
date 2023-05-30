@@ -60,6 +60,7 @@ export const MigrationWizardConstants = Object.freeze({
     PASSWORDS_FROM_FILE: "PASSWORDS_FROM_FILE",
     PASSWORDS_NEW: "PASSWORDS_NEW",
     PASSWORDS_UPDATED: "PASSWORDS_UPDATED",
+    BOOKMARKS_FROM_FILE: "BOOKMARKS_FROM_FILE",
   }),
 
   /**

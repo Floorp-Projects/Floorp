@@ -158,6 +158,12 @@ export class MigrationWizard extends HTMLElement {
                 <span data-l10n-id="migration-passwords-updated"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
+
+              <div data-resource-type="BOOKMARKS_FROM_FILE" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-bookmarks-from-file"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
             </div>
             <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
