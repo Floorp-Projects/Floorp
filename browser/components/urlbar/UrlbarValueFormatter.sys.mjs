@@ -49,11 +49,12 @@ export class UrlbarValueFormatter {
     let instance = (this._updateInstance = {});
 
     // _getUrlMetaData does URI fixup, which depends on the search service, so
-    // make sure it's initialized.  It can be uninitialized here on session
-    // restore.  Skip this if the service is already initialized in order to
-    // avoid the async call in the common case.  However, we can't access
-    // Service.search before first paint (delayed startup) because there's a
-    // performance test that prohibits it, so first await delayed startup.
+    // make sure it's initialized, or URIFixup may force synchronous
+    // initialization. It can be uninitialized here on session restore. Skip
+    // this if the service is already initialized in order to avoid the async
+    // call in the common case. However, we can't access Service.search before
+    // first paint (delayed startup) because there's a performance test that
+    // prohibits it, so first await delayed startup.
     if (!this.window.gBrowserInit.delayedStartupFinished) {
       await this.window.delayedStartupPromise;
       if (this._updateInstance != instance) {
@@ -61,7 +62,10 @@ export class UrlbarValueFormatter {
       }
     }
     if (!Services.search.isInitialized) {
-      await Services.search.init();
+      try {
+        await Services.search.init();
+      } catch {}
+
       if (this._updateInstance != instance) {
         return;
       }

@@ -265,7 +265,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     if (aliasEngine) {
       engine = aliasEngine.engine;
     } else if (queryContext.searchMode?.engineName) {
-      engine = Services.search.getEngineByName(
+      engine = lazy.UrlbarSearchUtils.getEngineByName(
         queryContext.searchMode.engineName
       );
     } else {

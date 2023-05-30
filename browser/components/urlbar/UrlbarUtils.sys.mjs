@@ -701,7 +701,7 @@ export var UrlbarUtils = {
     if (token == lazy.UrlbarTokenizer.RESTRICT.SEARCH) {
       return {
         engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate)
-          .name,
+          ?.name,
       };
     }
 

@@ -1837,7 +1837,7 @@ export class UrlbarInput {
     // shortcut to honor historical behaviour.
     this.searchMode = {
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
+      engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate)?.name,
       entry: "shortcut",
     };
     // The searchMode setter clears the input if pageproxystate is valid, so

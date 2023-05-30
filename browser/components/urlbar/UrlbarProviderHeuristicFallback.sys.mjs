@@ -286,7 +286,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
   _engineSearchResult(queryContext, keyword = null) {
     let engine;
     if (queryContext.searchMode?.engineName) {
-      engine = Services.search.getEngineByName(
+      engine = lazy.UrlbarSearchUtils.getEngineByName(
         queryContext.searchMode.engineName
       );
     } else {
