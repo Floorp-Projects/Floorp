@@ -97,7 +97,7 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "NetworkGeolocationProvider.jsm",
+    "NetworkGeolocationProvider.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

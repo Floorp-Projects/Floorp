@@ -49,7 +49,7 @@ UNIFIED_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "txEXSLTRegExFunctions.jsm",
+    "txEXSLTRegExFunctions.sys.mjs",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
