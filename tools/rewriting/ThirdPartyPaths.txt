@@ -1,4 +1,5 @@
 browser/components/newtab/vendor/
+browser/components/pocket/content/panels/css/normalize.scss
 browser/components/pocket/content/panels/js/vendor/
 browser/components/storybook/node_modules/
 browser/extensions/formautofill/content/third-party/
