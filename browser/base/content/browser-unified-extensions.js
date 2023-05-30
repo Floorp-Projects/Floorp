@@ -80,8 +80,10 @@ customElements.define(
             const popup = target.ownerDocument.getElementById(
               "unified-extensions-context-menu"
             );
+            // Anchor to the visible part of the button.
+            const anchor = target.firstElementChild;
             popup.openPopup(
-              target,
+              anchor,
               "after_end",
               0,
               0,
