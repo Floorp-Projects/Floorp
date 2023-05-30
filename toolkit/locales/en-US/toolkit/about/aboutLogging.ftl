@@ -28,6 +28,7 @@ about-logging-logging-to-profiler = Logging to the { -profiler-brand-name }
 about-logging-no-log-modules = None
 about-logging-no-log-file = None
 about-logging-logging-preset-selector-text = Logging preset:
+about-logging-with-profiler-stacks-checkbox = Enable stack traces for log messages
 
 ## Logging presets
 
