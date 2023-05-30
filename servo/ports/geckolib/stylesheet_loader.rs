@@ -18,7 +18,7 @@ use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
-use style::stylesheets::import_rule::{ImportLayer, ImportSupportsCondition, ImportSheet};
+use style::stylesheets::import_rule::{ImportLayer, ImportSheet, ImportSupportsCondition};
 use style::stylesheets::AllowImportRules;
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
 use style::stylesheets::{StylesheetContents, UrlExtraData};
@@ -70,9 +70,8 @@ impl StyleStylesheetLoader for StylesheetLoader {
         // but the Url it points to or the allocating backing the String inside that Url won’t,
         // so this raw pointer will still be valid.
 
-        let child_sheet = unsafe {
-            Gecko_LoadStyleSheet(self.0, self.1, self.2, self.3, &url, media.into())
-        };
+        let child_sheet =
+            unsafe { Gecko_LoadStyleSheet(self.0, self.1, self.2, self.3, &url, media.into()) };
 
         debug_assert!(
             !child_sheet.is_null(),

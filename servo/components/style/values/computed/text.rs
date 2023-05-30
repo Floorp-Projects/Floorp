@@ -124,7 +124,12 @@ impl ToResolvedValue for LineHeight {
         }
         let wm = context.style.writing_mode;
         let vertical = wm.is_vertical() && !wm.is_sideways();
-        Self::Length(context.device.calc_line_height(&self, vertical, context.style.get_font(), Some(context.element_info.element)))
+        Self::Length(context.device.calc_line_height(
+            &self,
+            vertical,
+            context.style.get_font(),
+            Some(context.element_info.element),
+        ))
     }
 
     #[inline]
