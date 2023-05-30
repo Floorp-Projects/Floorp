@@ -154,6 +154,11 @@ const HarExporter = {
         "devtools.netmonitor.har.forceExport"
       );
     }
+    if (typeof options.supportsMultiplePages != "boolean") {
+      options.supportsMultiplePages = Services.prefs.getBoolPref(
+        "devtools.netmonitor.har.multiple-pages"
+      );
+    }
 
     // Build HAR object.
     return this.buildHarData(options)
@@ -198,10 +203,12 @@ const HarExporter = {
 
     options = {
       ...options,
-      title: connector.currentTarget.title,
       getString: connector.getLongString,
       getTimingMarker: connector.getTimingMarker,
+      initialTargetTitle: connector.getInitialTargetTitle(),
       requestData: connector.requestData,
+      targetTitlesPerURL: connector.getTargetTitlesPerURL(),
+      title: connector.currentTarget.title,
     };
 
     // Build HAR object from collected data.

@@ -89,6 +89,9 @@ class Connector {
       owner: this.owner,
     });
 
+    this._initialTargetTitle = this.currentTarget.title;
+    this._targetTitlesPerURL = new Map();
+
     await this.commands.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
     });
@@ -131,11 +134,16 @@ class Connector {
 
     this.dataProvider.destroy();
     this.dataProvider = null;
+
+    this._targetTitlesPerURL = new Map();
   }
 
   clear() {
     // Clear all the caches in the data provider
     this.dataProvider.clear();
+
+    this._initialTargetTitle = this.currentTarget.title;
+    this._targetTitlesPerURL = new Map();
 
     this.commands.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
     this.emitForTests("clear-network-resources");
@@ -339,6 +347,10 @@ class Connector {
     }
 
     if (resource.name === "dom-complete") {
+      this._targetTitlesPerURL.set(
+        resource.targetFront.url,
+        resource.targetFront.title
+      );
       this.navigate();
     }
 
@@ -449,6 +461,20 @@ class Connector {
    */
   getLongString(stringGrip) {
     return this.dataProvider.getLongString(stringGrip);
+  }
+
+  /**
+   * Used for HAR generation.
+   */
+  getTargetTitlesPerURL() {
+    return this._targetTitlesPerURL;
+  }
+
+  /**
+   * Used for HAR generation.
+   */
+  getInitialTargetTitle() {
+    return this._initialTargetTitle;
   }
 
   /**

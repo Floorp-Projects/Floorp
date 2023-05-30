@@ -25,22 +25,34 @@ const {
  * https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HAR/Overview.html
  * http://www.softwareishard.com/blog/har-12-spec/
  *
- * @param {Object} options configuration object
- *
- * The following options are supported:
- *
- * - items {Array}: List of Network requests to be exported.
- *
- * - id {String}: ID of the exported page.
- *
- * - title {String}: Title of the exported page.
- *
- * - includeResponseBodies {Boolean}: Set to true to include HTTP response
- *   bodies in the result data structure.
+ * @param {Object} options
+ *        configuration object
+ * @param {Function} options.getString
+ *        Function to retrieve long strings from DevTools actors.
+ * @param {Function} options.getTimingMarker
+ *        Function to retrieve timing markers.
+ * @param {Map} options.targetTitlesPerURL
+ *        Map of page title by URL captured during the HAR recording.
+ * @param {String} options.id
+ *        ID of the exported page.
+ * @param {Boolean} options.includeResponseBodies
+ *        Set to true to include HTTP response bodies in the result data
+ *        structure.
+ * @param {String} options.initialTargetTitle
+ *        Title of the target when the recording started.
+ * @param {Array} options.items
+ *        List of Network requests to be exported.
+ * @param {Boolean} options.supportsMultiplePages
+ *       Set to true to create distinct page entries for each navigation.
+ * @param {String} options.title
+ *        Title of the exported page.
  */
 var HarBuilder = function (options) {
   this._options = options;
   this._pageMap = [];
+
+  // Page id counter, only used when options.supportsMultiplePages is true.
+  this._pageId = options.supportsMultiplePages ? 0 : options.id;
 };
 
 HarBuilder.prototype = {
@@ -77,36 +89,87 @@ HarBuilder.prototype = {
 
   // Helpers
 
-  buildPage(file) {
+  buildPage(title) {
     const page = {};
 
     // Page start time is set when the first request is processed
     // (see buildEntry)
     page.startedDateTime = 0;
-    page.id = "page_" + this._options.id;
-    page.title = this._options.title;
+
+    page.title = title;
+    page.id = "page_" + this._pageId;
+
+    // Increase the pageId, for upcoming calls to buildPage.
+    // If supportsMultiplePages is disabled this method is only called once.
+    this._pageId++;
 
     return page;
   },
 
-  getPage(log, file) {
+  getPageFromTargetTitlesPerURL(log, entry, isNavigationRequest) {
+    if (isNavigationRequest) {
+      // If this is a navigation request, we should find a target title for the
+      // url of the request.
+      if (this._options.targetTitlesPerURL.has(entry.request.url)) {
+        const title = this._options.targetTitlesPerURL.get(entry.request.url);
+        const page = this.buildPage(title);
+        log.pages.push(page);
+        return page;
+      }
+
+      // We might have requests flagged as navigation requests which didn't lead
+      // to a dom complete event.
+      console.error(
+        `No navigation found for request with url: ${entry.request.url}`
+      );
+    }
+
+    // Otherwise try to find an existing page in the log with a compatible
+    // startedDateTime.
+    const existingPage = log.pages.findLast(
+      ({ startedDateTime }) => startedDateTime <= entry.startedDateTime
+    );
+
+    if (existingPage) {
+      return existingPage;
+    }
+
+    // If this fails, this most likely means this request was performed on the
+    // initial page. It should correspond to the initial target title.
+    const page = this.buildPage(this._options.initialTargetTitle);
+    log.pages.push(page);
+    return page;
+  },
+
+  getPage(log, entry, isNavigationRequest) {
+    // If we support multiple pages, we generate and store the page data based
+    // on the targetTitlesPerURL provided by the connector.
+    if (this._options.supportsMultiplePages) {
+      return this.getPageFromTargetTitlesPerURL(
+        log,
+        entry,
+        isNavigationRequest
+      );
+    }
+
+    // Otherwise we create and store a single page corresponding to the HAR
+    // unique id. This leads to HAR files containing a single page even if
+    // persist logs was enabled and navigations were performed, which is in
+    // theory incorrect, but is the legacy mode for Firefox DevTools HAR files.
     const { id } = this._options;
     let page = this._pageMap[id];
     if (page) {
       return page;
     }
 
-    this._pageMap[id] = page = this.buildPage(file);
+    this._pageMap[id] = page = this.buildPage(this._options.title);
     log.pages.push(page);
 
     return page;
   },
 
   async buildEntry(log, file) {
-    const page = this.getPage(log, file);
-
     const entry = {};
-    entry.pageref = page.id;
     entry.startedDateTime = dateToJSON(new Date(file.startedMs));
 
     let { eventTimings } = file;
@@ -153,11 +216,13 @@ HarBuilder.prototype = {
       entry.connection = file.remotePort + "";
     }
 
+    const page = this.getPage(log, entry, file.isNavigationRequest);
     // Compute page load start time according to the first request start time.
     if (!page.startedDateTime) {
       page.startedDateTime = entry.startedDateTime;
       page.pageTimings = this.buildPageTimings(page, file);
     }
+    entry.pageref = page.id;
 
     return entry;
   },
