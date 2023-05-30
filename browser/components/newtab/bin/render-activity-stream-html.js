@@ -46,24 +46,39 @@ function templateHTML(options) {
     .map(script => `    <script src="${script}"></script>`)
     .join("\n")}`;
 
+  // The markup below needs to be formatted by Prettier. But any diff after
+  // running this script should be caught by try-runnner.js
   return `
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob: chrome:; style-src 'unsafe-inline';">
-    <meta name="color-scheme" content="light dark">
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob: chrome:; style-src 'unsafe-inline';"
+    />
+    <meta name="color-scheme" content="light dark" />
     <title data-l10n-id="newtab-page-title"></title>
-    <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
+    <link
+      rel="icon"
+      type="image/png"
+      href="chrome://branding/content/icon32.png"
+    />
     <link rel="localization" href="branding/brand.ftl" />
     <link rel="localization" href="toolkit/branding/brandings.ftl" />
     <link rel="localization" href="browser/newtab/newtab.ftl" />
-    <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
-    <link rel="stylesheet" href="chrome://activity-stream/content/css/activity-stream.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/contentSearchUI.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://activity-stream/content/css/activity-stream.css"
+    />
   </head>
   <body class="activity-stream">
     <div id="root"></div>
@@ -85,8 +100,8 @@ function templateHTML(options) {
  */
 function writeFiles(destPath, filesMap, options) {
   for (const [file, templater] of filesMap) {
-    console.log("\x1b[32m", `✓ ${file}`, "\x1b[0m");
     fs.writeFileSync(path.join(destPath, file), templater({ options }));
+    console.log("\x1b[32m", `✓ ${file}`, "\x1b[0m");
   }
 }
 
