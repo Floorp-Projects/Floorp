@@ -53,12 +53,6 @@ class IonScript;
 class JitScript;
 class JitZone;
 
-// Information about a script's bytecode, used by WarpBuilder. This is cached
-// in JitScript.
-struct IonBytecodeInfo {
-  bool usesEnvironmentChain = false;
-};
-
 // Magic BaselineScript value indicating Baseline compilation has been disabled.
 static constexpr uintptr_t BaselineDisabledScript = 0x1;
 
@@ -305,7 +299,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   // Analysis data computed lazily the first time this script is compiled or
   // inlined by WarpBuilder.
-  mozilla::Maybe<IonBytecodeInfo> cachedIonBytecodeInfo_;
+  mozilla::Maybe<bool> usesEnvironmentChain_;
 
   // The size of this allocation.
   Offset endOffset_ = 0;
@@ -340,10 +334,6 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // End of fields.
 
   Offset endOffset() const { return endOffset_; }
-
-  const IonBytecodeInfo& cachedIonBytecodeInfo() const {
-    return cachedIonBytecodeInfo_.ref();
-  }
 
  public:
   JitScript(JSScript* script, Offset fallbackStubsOffset, Offset endOffset,
@@ -429,9 +419,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   EnvironmentObject* templateEnvironment() const { return templateEnv_.ref(); }
 
-  bool usesEnvironmentChain() const {
-    return cachedIonBytecodeInfo().usesEnvironmentChain;
-  }
+  bool usesEnvironmentChain() const { return *usesEnvironmentChain_; }
 
   gc::AllocSite* createAllocSite(JSScript* script);
 
