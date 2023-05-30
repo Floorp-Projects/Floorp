@@ -1264,22 +1264,6 @@ panelview .toolbarbutton-1 {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
-#widget-overflow-mainView > toolbarseparator,
-#widget-overflow-mainView > .panel-subview-body > toolbarseparator,
-.PanelUI-subView toolbarseparator,
-#unified-extensions-panel toolbarseparator,
-#permission-popup-mainView > toolbarseparator,
-#editBookmarkPanel toolbarseparator,
-#downloadsFooterButtons > toolbarseparator,
-.cui-widget-panel toolbarseparator {
-  appearance: none;
-  min-height: 0;
-  border-top: 1px solid var(--panel-separator-color);
-  border-bottom: none;
-  margin: var(--panel-separator-margin);
-  padding: 0;
-}
-
 .PanelUI-subView toolbarseparator.proton-zap {
   border-image: var(--panel-separator-zap-gradient, none) 1;
 }
