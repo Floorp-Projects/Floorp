@@ -178,7 +178,7 @@ fn split_from_end<T>(s: &[T], at: usize) -> (&[T], &[T]) {
 
 bitflags! {
     /// Flags that indicate at which point of parsing a selector are we.
-    #[derive(Default, ToShmem)]
+    #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ToShmem)]
     pub (crate) struct SelectorFlags : u8 {
         const HAS_PSEUDO = 1 << 0;
         const HAS_SLOTTED = 1 << 1;

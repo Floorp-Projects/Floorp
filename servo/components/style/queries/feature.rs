@@ -104,7 +104,7 @@ macro_rules! keyword_evaluator {
 bitflags! {
     /// Different flags or toggles that change how a expression is parsed or
     /// evaluated.
-    #[derive(ToShmem)]
+    #[derive(Clone, Copy, ToShmem)]
     pub struct FeatureFlags : u8 {
         /// The feature should only be parsed in chrome and ua sheets.
         const CHROME_AND_UA_ONLY = 1 << 0;

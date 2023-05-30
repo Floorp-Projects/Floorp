@@ -20,7 +20,7 @@ pub fn assert_flags_match() {
 
 impl From<OriginFlags> for OriginSet {
     fn from(flags: OriginFlags) -> Self {
-        Self::from_bits_truncate(flags.0)
+        Self::from_bits_retain(flags.0)
     }
 }
 

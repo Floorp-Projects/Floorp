@@ -26,6 +26,7 @@ pub use crate::gecko::snapshot::SnapshotMap;
 
 bitflags! {
     // See NonTSPseudoClass::is_enabled_in()
+    #[derive(Copy, Clone)]
     struct NonTSPseudoClassFlag: u8 {
         const PSEUDO_CLASS_ENABLED_IN_UA_SHEETS = 1 << 0;
         const PSEUDO_CLASS_ENABLED_IN_CHROME = 1 << 1;
