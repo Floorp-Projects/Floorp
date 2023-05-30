@@ -11,21 +11,29 @@
 #include "nsIStringBundle.h"
 #include "nsServiceManagerUtils.h"
 #include "nsPrintfCString.h"
-
-#include <glib.h>
+#include "mozilla/XREAppData.h"
+#include "nsAppRunner.h"
 
 #define DBUS_BUS_NAME_TEMPLATE "org.mozilla.%s.SearchProvider"
 #define DBUS_OBJECT_PATH_TEMPLATE "/org/mozilla/%s/SearchProvider"
 
 const char* GetDBusBusName() {
-  static const char* name = ToNewCString(nsPrintfCString(
-      DBUS_BUS_NAME_TEMPLATE, g_get_prgname()));  // Intentionally leak
+  static const char* name = []() {
+    nsAutoCString appName;
+    gAppData->GetDBusAppName(appName);
+    return ToNewCString(nsPrintfCString(DBUS_BUS_NAME_TEMPLATE,
+                                        appName.get()));  // Intentionally leak
+  }();
   return name;
 }
 
 const char* GetDBusObjectPath() {
-  static const char* path = ToNewCString(nsPrintfCString(
-      DBUS_OBJECT_PATH_TEMPLATE, g_get_prgname()));  // Intentionally leak
+  static const char* path = []() {
+    nsAutoCString appName;
+    gAppData->GetDBusAppName(appName);
+    return ToNewCString(nsPrintfCString(DBUS_OBJECT_PATH_TEMPLATE,
+                                        appName.get()));  // Intentionally leak
+  }();
   return path;
 }
 
