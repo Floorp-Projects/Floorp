@@ -12,14 +12,52 @@ from html import escape
 
 SRCDIR = pathlib.Path(__file__).parent.parent.parent.absolute()
 
-parser = argparse.ArgumentParser(description="Process some integers.")
-parser.add_argument("--verbose", type=bool, default=False)
-parser.add_argument("rootingHazards", nargs="?", default="rootingHazards.txt")
-parser.add_argument("gcFunctions", nargs="?", default="gcFunctions.txt")
-parser.add_argument("hazards", nargs="?", default="hazards.txt")
-parser.add_argument("extra", nargs="?", default="unnecessary.txt")
-parser.add_argument("refs", nargs="?", default="refs.txt")
-parser.add_argument("html", nargs="?", default="hazards.html")
+parser = argparse.ArgumentParser(
+    description="Convert the JSON output of the hazard analysis into various text files describing the results.",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+parser.add_argument("--verbose", type=bool, default=False, help="verbose output")
+
+inputs = parser.add_argument_group("Input")
+inputs.add_argument(
+    "rootingHazards",
+    nargs="?",
+    default="rootingHazards.json",
+    help="JSON input file describing the output of the hazard analysis",
+)
+
+outputs = parser.add_argument_group("Output")
+outputs.add_argument(
+    "gcFunctions",
+    nargs="?",
+    default="gcFunctions.txt",
+    help="file containing a list of functions that can GC",
+)
+outputs.add_argument(
+    "hazards",
+    nargs="?",
+    default="hazards.txt",
+    help="file containing the rooting hazards found",
+)
+outputs.add_argument(
+    "extra",
+    nargs="?",
+    default="unnecessary.txt",
+    help="file containing unnecessary roots",
+)
+outputs.add_argument(
+    "refs",
+    nargs="?",
+    default="refs.txt",
+    help="file containing a list of unsafe references to unrooted values",
+)
+outputs.add_argument(
+    "html",
+    nargs="?",
+    default="hazards.html",
+    help="HTML-formatted file with the hazards found",
+)
+
 args = parser.parse_args()
 
 
