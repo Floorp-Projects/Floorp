@@ -62,7 +62,13 @@ class IssueItem extends PureComponent {
   _onLinkClicked(e) {
     e.preventDefault();
     e.stopPropagation();
-    openDocLink(e.target.href);
+
+    const isMacOS = Services.appinfo.OS === "Darwin";
+
+    openDocLink(e.target.href, {
+      relatedToCurrent: true,
+      inBackground: isMacOS ? e.metaKey : e.ctrlKey,
+    });
   }
 
   _getTestDataAttributes() {
