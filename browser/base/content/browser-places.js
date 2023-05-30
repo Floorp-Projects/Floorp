@@ -596,7 +596,7 @@ class HistoryMenu extends PlacesMenu {
 
   _getClosedTabCount() {
     try {
-      return SessionStore.getClosedTabCount(window);
+      return SessionStore.getClosedTabCountForWindow(window);
     } catch (ex) {
       // SessionStore doesn't track the hidden window, so just return zero then.
       return 0;

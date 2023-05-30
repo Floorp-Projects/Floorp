@@ -57,12 +57,12 @@ add_task(async function testClosedTabData() {
   );
   await setWindowState(newWin, test_state);
 
-  let closedTabs = SessionStore.getClosedTabData(newWin);
+  let closedTabs = SessionStore.getClosedTabDataForWindow(newWin);
 
   // Verify that non JSON serialized data is the same as JSON serialized data.
   is(
     JSON.stringify(closedTabs),
-    JSON.stringify(SessionStore.getClosedTabData(newWin)),
+    JSON.stringify(SessionStore.getClosedTabDataForWindow(newWin)),
     "Non-serialized data is the same as serialized data"
   );
 
@@ -102,12 +102,12 @@ add_task(async function testClosedTabData() {
   ss.forgetClosedTab(newWin, 2);
   ss.forgetClosedTab(newWin, null);
 
-  closedTabs = SessionStore.getClosedTabData(newWin);
+  closedTabs = SessionStore.getClosedTabDataForWindow(newWin);
 
   // Verify that non JSON serialized data is the same as JSON serialized data.
   is(
     JSON.stringify(closedTabs),
-    JSON.stringify(SessionStore.getClosedTabData(newWin)),
+    JSON.stringify(SessionStore.getClosedTabDataForWindow(newWin)),
     "Non-serialized data is the same as serialized data"
   );
 

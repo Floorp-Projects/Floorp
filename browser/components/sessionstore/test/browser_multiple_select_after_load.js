@@ -37,7 +37,7 @@ add_task(async function () {
   await promiseRemoveTabAndSessionState(tab);
 
   // Verify state of the closed tab.
-  let tabData = ss.getClosedTabData(window);
+  let tabData = ss.getClosedTabDataForWindow(window);
   Assert.deepEqual(
     tabData[0].state.formdata.id.select,
     VALUES,

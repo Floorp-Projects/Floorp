@@ -169,7 +169,7 @@ add_task(async function undo_close_tab() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(win),
+    SessionStore.getClosedTabCountForWindow(win),
     0,
     "Closed tab count after purging session history"
   );
@@ -184,7 +184,7 @@ add_task(async function undo_close_tab() {
   win.gBrowser.removeTab(tab);
   await sessionUpdatePromise;
   is(
-    SessionStore.getClosedTabCount(win),
+    SessionStore.getClosedTabCountForWindow(win),
     1,
     "Closing about:about added to the closed tab count"
   );
@@ -195,7 +195,7 @@ add_task(async function undo_close_tab() {
   closeFirefoxViewTab(win);
   await sessionUpdatePromise;
   is(
-    SessionStore.getClosedTabCount(win),
+    SessionStore.getClosedTabCountForWindow(win),
     1,
     "Closing the Firefox View tab did not add to the closed tab count"
   );

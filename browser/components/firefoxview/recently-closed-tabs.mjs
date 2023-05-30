@@ -133,7 +133,9 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   dismissTabAndUpdateForElement(item) {
-    let recentlyClosedList = lazy.SessionStore.getClosedTabData(getWindow());
+    let recentlyClosedList = lazy.SessionStore.getClosedTabDataForWindow(
+      getWindow()
+    );
     let closedTabIndex = recentlyClosedList.findIndex(closedTab => {
       return closedTab.closedId === parseInt(item.dataset.tabid, 10);
     });
@@ -162,7 +164,7 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   updateRecentlyClosedTabs() {
-    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabData(
+    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabDataForWindow(
       getWindow()
     );
     this.recentlyClosedTabs = recentlyClosedTabsData.slice(
@@ -446,7 +448,7 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
 
   getClosedTabCount = () => {
     try {
-      return lazy.SessionStore.getClosedTabCount(getWindow());
+      return lazy.SessionStore.getClosedTabCountForWindow(getWindow());
     } catch (ex) {
       return 0;
     }

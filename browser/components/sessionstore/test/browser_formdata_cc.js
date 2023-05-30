@@ -80,7 +80,7 @@ add_task(async function () {
   // Test that valid CC numbers are not collected.
   for (let number of validCCNumbers) {
     await createAndRemoveTab(number);
-    let [{ state }] = ss.getClosedTabData(window);
+    let [{ state }] = ss.getClosedTabDataForWindow(window);
     ok(!("formdata" in state), "valid CC numbers are not collected");
   }
 
@@ -91,7 +91,7 @@ add_task(async function () {
       {
         state: { formdata },
       },
-    ] = ss.getClosedTabData(window);
+    ] = ss.getClosedTabDataForWindow(window);
     is(
       formdata.id.txt,
       number,

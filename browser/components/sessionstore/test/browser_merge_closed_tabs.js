@@ -72,7 +72,7 @@ add_task(async function () {
   let win = await promiseNewWindowLoaded({ private: false });
   await setWindowState(win, initialState, true);
   is(
-    SessionStore.getClosedTabCount(win),
+    SessionStore.getClosedTabCountForWindow(win),
     2,
     "2 closed tabs after restoring initial state"
   );
@@ -84,7 +84,7 @@ add_task(async function () {
   // Verify the windows closed tab data is correct.
   let iClosed = initialState.windows[0]._closedTabs;
   let rClosed = restoreState.windows[0]._closedTabs;
-  let cData = SessionStore.getClosedTabData(win);
+  let cData = SessionStore.getClosedTabDataForWindow(win);
 
   is(
     cData.length,

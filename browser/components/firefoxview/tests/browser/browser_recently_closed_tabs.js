@@ -116,7 +116,7 @@ add_task(async function test_empty_list() {
 add_task(async function test_list_ordering() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -229,7 +229,7 @@ add_task(async function test_list_ordering() {
 add_task(async function test_max_list_items() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -303,7 +303,7 @@ add_task(async function test_max_list_items() {
 add_task(async function test_time_updates_correctly() {
   clearHistory();
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -333,7 +333,7 @@ add_task(async function test_time_updates_correctly() {
   await SessionStore.setBrowserState(JSON.stringify(TAB_CLOSED_STATE));
 
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     1,
     "Closed tab count after setting browser state"
   );
@@ -378,7 +378,7 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
   await SpecialPowers.clearUserPref(RECENTLY_CLOSED_STATE_PREF);
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -490,7 +490,7 @@ add_task(async function test_switch_before_closing() {
 add_task(async function test_alt_click_no_launch() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -689,7 +689,7 @@ add_task(async function test_dismiss_tab() {
   const TAB_UPDATE_TIME_MS = 5;
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   Assert.equal(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -856,7 +856,7 @@ add_task(async function test_dismiss_tab() {
 add_task(async function test_button_role() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   Assert.equal(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
