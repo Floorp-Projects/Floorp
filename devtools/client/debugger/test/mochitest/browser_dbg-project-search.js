@@ -38,6 +38,12 @@ add_task(async function testSimpleProjectSearch() {
   );
 
   await openProjectSearch(dbg);
+
+  ok(
+    !!findElementWithSelector(dbg, ".project-text-search"),
+    "Project search is visible"
+  );
+
   const searchTerm = "first";
   await doProjectSearch(dbg, searchTerm);
 
@@ -53,6 +59,21 @@ add_task(async function testSimpleProjectSearch() {
   info("Select a result match to open the location in the source");
   await clickElement(dbg, "fileMatch");
   await waitForSelectedSource(dbg, "script-switching-01.js");
+
+  info("Close start sidebar");
+  const startPanelToggleButtonEl = findElementWithSelector(
+    dbg,
+    ".toggle-button.start"
+  );
+  startPanelToggleButtonEl.click();
+  await waitFor(() => startPanelToggleButtonEl.classList.contains("collapsed"));
+
+  info("Try to open project search again");
+  await openProjectSearch(dbg);
+  ok(
+    !!findElementWithSelector(dbg, ".project-text-search"),
+    "Project search is visible"
+  );
 });
 
 add_task(async function testMatchesForRegexSearches() {

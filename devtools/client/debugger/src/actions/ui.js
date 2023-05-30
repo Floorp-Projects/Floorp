@@ -132,6 +132,15 @@ export function togglePaneCollapse(position, paneCollapsed) {
       return;
     }
 
+    // Set active search to null when closing start panel if project search was active
+    if (
+      position === "start" &&
+      paneCollapsed &&
+      getActiveSearch(getState()) === primaryPaneTabs.PROJECT_SEARCH
+    ) {
+      dispatch(closeActiveSearch());
+    }
+
     dispatch({
       type: "TOGGLE_PANE",
       position,
