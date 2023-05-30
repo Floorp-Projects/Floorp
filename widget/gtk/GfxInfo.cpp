@@ -822,12 +822,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
         "FEATURE_FAILURE_WEBRENDER_NO_LINUX_ATI", "");
 
+    // Disable R600 GPUs with Mesa drivers.
     // Bug 1673939 - Garbled text on RS880 GPUs with Mesa drivers.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         WindowProtocol::All, DriverVendor::MesaAll, DeviceFamily::AmdR600,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-        DRIVER_LESS_THAN, V(22, 2, 0, 0),
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
         "FEATURE_FAILURE_WEBRENDER_BUG_1673939",
         "https://gitlab.freedesktop.org/mesa/mesa/-/issues/3720");
 
