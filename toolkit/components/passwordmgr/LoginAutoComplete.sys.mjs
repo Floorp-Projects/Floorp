@@ -7,6 +7,7 @@
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
@@ -99,22 +100,6 @@ class AutocompleteItem {
 
   removeFromStorage() {
     /* Do nothing by default */
-  }
-}
-
-// This item shows icon, title & subtitle.
-// Once selected it will send fillMessageName with fillMessageData
-// to LoginManagerParent and response will be used to fill into the field.
-class GenericAutocompleteItem extends AutocompleteItem {
-  constructor(icon, title, subtitle, fillMessageName, fillMessageData) {
-    super("generic");
-    this.comment = JSON.stringify({
-      icon,
-      title,
-      subtitle,
-      fillMessageName,
-      fillMessageData,
-    });
   }
 }
 
