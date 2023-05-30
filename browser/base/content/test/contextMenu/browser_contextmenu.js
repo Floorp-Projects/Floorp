@@ -1328,7 +1328,7 @@ add_task(async function test_select_text() {
 
 add_task(async function test_select_text_search_service_not_initialized() {
   // Pretend the search service is not initialised.
-  Services.search.wrappedJSObject._initialized = false;
+  Services.search.wrappedJSObject.forceInitializedForTests(false);
   await test_contextmenu(
     "#test-select-text",
     [
@@ -1355,8 +1355,9 @@ add_task(async function test_select_text_search_service_not_initialized() {
       },
     }
   );
-  // Pretend the search service is not initialised.
-  Services.search.wrappedJSObject._initialized = true;
+
+  // re-initialize the SearchService
+  Services.search.wrappedJSObject.forceInitializedForTests(true);
 });
 
 add_task(async function test_select_text_link() {
