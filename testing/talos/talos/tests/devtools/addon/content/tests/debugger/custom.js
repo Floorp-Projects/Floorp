@@ -48,16 +48,23 @@ module.exports = async function () {
   Services.prefs.setBoolPref("devtools.debugger.features.map-scopes", false);
 
   const toolbox = await openDebuggerAndLog("custom", EXPECTED);
+
+  dump("Waiting for debugger panel\n");
+  const panel = await toolbox.getPanelWhenReady("jsdebugger");
+
+  dump("Creating context\n");
+  const dbg = await createContext(panel);
+
   await reloadDebuggerAndLog("custom", toolbox, EXPECTED);
 
   // these tests are only run on custom.jsdebugger
-  await pauseDebuggerAndLog(tab, toolbox, EXPECTED_FUNCTION);
-  await stepDebuggerAndLog(tab, toolbox, EXPECTED_FUNCTION);
+  await pauseDebuggerAndLog(dbg, tab, EXPECTED_FUNCTION);
+  await stepDebuggerAndLog(dbg, tab, EXPECTED_FUNCTION);
 
-  await testProjectSearch(tab, toolbox);
-  await testPreview(tab, toolbox, EXPECTED_FUNCTION);
-  await testOpeningLargeMinifiedFile(tab, toolbox);
-  await testPrettyPrint(toolbox);
+  await testProjectSearch(dbg, tab);
+  await testPreview(dbg, tab, EXPECTED_FUNCTION);
+  await testOpeningLargeMinifiedFile(dbg, tab);
+  await testPrettyPrint(dbg);
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
@@ -65,13 +72,7 @@ module.exports = async function () {
   await testTeardown();
 };
 
-async function pauseDebuggerAndLog(tab, toolbox, testFunction) {
-  dump("Waiting for debugger panel\n");
-  const panel = await toolbox.getPanelWhenReady("jsdebugger");
-
-  dump("Creating context\n");
-  const dbg = await createContext(panel);
-
+async function pauseDebuggerAndLog(dbg, tab, testFunction) {
   const pauseLocation = { line: 22, file: "App.js" };
 
   dump("Pausing debugger\n");
@@ -84,9 +85,7 @@ async function pauseDebuggerAndLog(tab, toolbox, testFunction) {
   await garbageCollect();
 }
 
-async function stepDebuggerAndLog(tab, toolbox, testFunction) {
-  const panel = await toolbox.getPanelWhenReady("jsdebugger");
-  const dbg = await createContext(panel);
+async function stepDebuggerAndLog(dbg, tab, testFunction) {
   const stepCount = 2;
 
   /*
@@ -123,9 +122,7 @@ async function stepDebuggerAndLog(tab, toolbox, testFunction) {
   }
 }
 
-async function testProjectSearch(tab, toolbox) {
-  const panel = await toolbox.getPanelWhenReady("jsdebugger");
-  const dbg = await createContext(panel);
+async function testProjectSearch(dbg, tab) {
   const cx = dbg.selectors.getContext(dbg.getState());
 
   dump("Executing project search\n");
@@ -148,9 +145,7 @@ async function testProjectSearch(tab, toolbox) {
   await garbageCollect();
 }
 
-async function testPreview(tab, toolbox, testFunction) {
-  const panel = await toolbox.getPanelWhenReady("jsdebugger");
-  const dbg = await createContext(panel);
+async function testPreview(dbg, tab, testFunction) {
   const cx = dbg.selectors.getContext(dbg.getState());
   const pauseLocation = { line: 22, file: "App.js" };
 
@@ -165,13 +160,7 @@ async function testPreview(tab, toolbox, testFunction) {
   await garbageCollect();
 }
 
-async function testOpeningLargeMinifiedFile(tab, toolbox) {
-  dump("Waiting for debugger panel\n");
-  const panel = await toolbox.getPanelWhenReady("jsdebugger");
-
-  dump("Creating context\n");
-  const dbg = await createContext(panel);
-
+async function testOpeningLargeMinifiedFile(dbg, tab) {
   dump("Add minified.js (large minified file)\n");
   const file = `${IFRAME_BASE_URL}custom/debugger/static/js/minified.js`;
 
@@ -207,13 +196,7 @@ async function testOpeningLargeMinifiedFile(tab, toolbox) {
   await garbageCollect();
 }
 
-async function testPrettyPrint(toolbox) {
-  dump("Waiting for debugger panel\n");
-  const panel = await toolbox.getPanelWhenReady("jsdebugger");
-
-  dump("Creating context\n");
-  const dbg = await createContext(panel);
-
+async function testPrettyPrint(dbg) {
   // Close all existing tabs to have a clean state
   const state = dbg.getState();
   const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
