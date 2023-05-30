@@ -107,7 +107,7 @@ const METRICS = [
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] }),
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] }),
   ],
   [
     "labeled_counter",
@@ -116,7 +116,7 @@ const METRICS = [
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] }),
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] }),
   ],
   ["rate", "jog_ipc", "jog_rate", ["test-only"], `"ping"`, false],
 ];

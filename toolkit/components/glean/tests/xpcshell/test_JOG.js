@@ -395,7 +395,7 @@ add_task(async function test_jog_labeled_boolean_with_static_labels_works() {
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] })
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] })
   );
   Assert.equal(
     undefined,
@@ -464,7 +464,7 @@ add_task(async function test_jog_labeled_counter_with_static_labels_works() {
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] })
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] })
   );
   Assert.equal(
     undefined,
@@ -537,7 +537,7 @@ add_task(async function test_jog_labeled_string_with_labels_works() {
     ["test-only"],
     `"ping"`,
     false,
-    JSON.stringify({ labels: ["label_1", "label_2"] })
+    JSON.stringify({ ordered_labels: ["label_1", "label_2"] })
   );
   Assert.equal(
     undefined,
