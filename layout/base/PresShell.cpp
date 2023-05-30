@@ -5288,15 +5288,6 @@ void AddDisplayItemToBottom(nsDisplayListBuilder* aBuilder,
   aList->AppendToTop(&list);
 }
 
-void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
-                                              nsDisplayList* aList,
-                                              nsIFrame* aFrame,
-                                              const nsRect& aBounds) {
-  nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
-      aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
-  AddDisplayItemToBottom(aBuilder, aList, item);
-}
-
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
                                      nsIFrame* aCanvasFrame, nscolor aColor,
                                      bool aCSSBackgroundColor) {
@@ -5451,33 +5442,28 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
   // If we have a frame tree and it has style information that
   // specifies the background color of the canvas, update our local
   // cache of that color.
-  nsIFrame* rootStyleFrame = FrameConstructor()->GetRootElementStyleFrame();
-  if (!rootStyleFrame) {
+  nsIFrame* canvas = GetCanvasFrame();
+  if (!canvas) {
     // If the root element of the document (ie html) has style 'display: none'
     // then the document's background color does not get drawn; return the color
     // we actually draw.
     return {GetDefaultBackgroundColorToDraw(), false};
   }
 
-  const ComputedStyle* bgStyle =
-      nsCSSRendering::FindRootFrameBackground(rootStyleFrame);
-  // XXX We should really be passing the canvasframe, not the root element
-  // style frame but we don't have access to the canvasframe here. It isn't
-  // a problem because only a few frames can return something other than true
-  // and none of them would be a canvas frame or root element style frame.
+  const nsIFrame* bgFrame = nsCSSRendering::FindBackgroundFrame(canvas);
   nscolor color = NS_RGBA(0, 0, 0, 0);
   bool drawBackgroundImage = false;
   bool drawBackgroundColor = false;
-  const nsStyleDisplay* disp = rootStyleFrame->StyleDisplay();
+  const nsStyleDisplay* disp = bgFrame->StyleDisplay();
   StyleAppearance appearance = disp->EffectiveAppearance();
-  if (rootStyleFrame->IsThemed(disp) &&
+  if (bgFrame->IsThemed(disp) &&
       appearance != StyleAppearance::MozWinBorderlessGlass) {
     // Ignore the CSS background-color if -moz-appearance is used and it is
     // not one of the glass values. (Windows 7 Glass has traditionally not
     // overridden background colors, so we preserve that behavior for now.)
   } else {
     color = nsCSSRendering::DetermineBackgroundColor(
-        mPresContext, bgStyle, rootStyleFrame, drawBackgroundImage,
+        mPresContext, bgFrame->Style(), canvas, drawBackgroundImage,
         drawBackgroundColor);
   }
   if (!IsTransparentContainerElement()) {

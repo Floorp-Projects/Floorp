@@ -485,21 +485,13 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         bounds = bounds.ScaleToOtherAppUnitsRoundOut(parentAPD, subdocAPD);
       }
 
-      // If we are in print preview/page layout we want to paint the grey
-      // background behind the page, not the canvas color. The canvas color gets
-      // painted on the page itself.
-      if (nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
-        presShell->AddPrintPreviewBackgroundItem(aBuilder, &childItems, frame,
-                                                 bounds);
-      } else {
-        // Add the canvas background color to the bottom of the list. This
-        // happens after we've built the list so that
-        // AddCanvasBackgroundColorItem can monkey with the contents if
-        // necessary.
-        presShell->AddCanvasBackgroundColorItem(
-            aBuilder, &childItems, frame, bounds, NS_RGBA(0, 0, 0, 0),
-            AddCanvasBackgroundColorFlags::ForceDraw);
-      }
+      // Add the canvas background color to the bottom of the list. This
+      // happens after we've built the list so that
+      // AddCanvasBackgroundColorItem can monkey with the contents if
+      // necessary.
+      presShell->AddCanvasBackgroundColorItem(
+          aBuilder, &childItems, frame, bounds, NS_RGBA(0, 0, 0, 0),
+          AddCanvasBackgroundColorFlags::ForceDraw);
     }
   }
 
