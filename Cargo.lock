@@ -4627,7 +4627,6 @@ dependencies = [
  "derive_more",
  "fxhash",
  "log",
- "matches",
  "new_debug_unreachable",
  "phf",
  "phf_codegen",
