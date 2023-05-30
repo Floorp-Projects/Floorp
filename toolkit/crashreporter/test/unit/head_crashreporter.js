@@ -141,16 +141,12 @@ async function handleMinidump(callback) {
 
   let cleanup = async function () {
     for (let file of [minidump, extrafile, memoryfile]) {
-      if (file.exists()) {
-        let file_removed = false;
-        while (!file_removed) {
-          try {
-            file.remove(false);
-            file_removed = true;
-          } catch (e) {
-            // On Windows the file may be locked, wait briefly and try again
-            await new Promise(resolve => do_timeout(50, resolve));
-          }
+      while (file.exists()) {
+        try {
+          file.remove(false);
+        } catch (e) {
+          // On Windows the file may be locked, wait briefly and try again
+          await new Promise(resolve => do_timeout(50, resolve));
         }
       }
     }
