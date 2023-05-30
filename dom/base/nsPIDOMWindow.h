@@ -136,7 +136,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // Returns true if the document of this window is the active document.  This
   // is identical to IsCurrentInnerWindow() now that document.open() no longer
   // creates new inner windows for the document it is called on.
-  inline bool HasActiveDocument();
+  inline bool HasActiveDocument() const;
 
   // Return true if this object is the currently-active inner window for its
   // BrowsingContext and any container document is also fully active.

@@ -3654,6 +3654,24 @@ void nsGlobalWindowOuter::SetOuterHeightOuter(int32_t aOuterHeight,
   SetOuterSize(aOuterHeight, false, aCallerType, aError);
 }
 
+CSSPoint nsGlobalWindowOuter::ScreenEdgeSlop() {
+  if (NS_WARN_IF(!mDocShell)) {
+    return {};
+  }
+  RefPtr<nsPresContext> pc = mDocShell->GetPresContext();
+  if (NS_WARN_IF(!pc)) {
+    return {};
+  }
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  if (NS_WARN_IF(!widget)) {
+    return {};
+  }
+  LayoutDeviceIntPoint pt = widget->GetScreenEdgeSlop();
+  auto auPoint =
+      LayoutDeviceIntPoint::ToAppUnits(pt, pc->AppUnitsPerDevPixel());
+  return CSSPoint::FromAppUnits(auPoint);
+}
+
 CSSIntPoint nsGlobalWindowOuter::GetScreenXY(CallerType aCallerType,
                                              ErrorResult& aError) {
   // When resisting fingerprinting, always return (0,0)

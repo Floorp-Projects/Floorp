@@ -951,6 +951,12 @@ class nsIWidget : public nsISupports {
   virtual LayoutDeviceIntPoint GetClientOffset() = 0;
 
   /**
+   * Returns the slop from the screen edges in device pixels.
+   * @see Window.screenEdgeSlop{X,Y}
+   */
+  virtual LayoutDeviceIntPoint GetScreenEdgeSlop() { return {}; }
+
+  /**
    * Equivalent to GetClientBounds but only returns the size.
    */
   virtual LayoutDeviceIntSize GetClientSize() {

@@ -3591,6 +3591,14 @@ void nsGlobalWindowInner::SetOuterHeight(JSContext* aCx,
                             "outerHeight", aCallerType, aError);
 }
 
+double nsGlobalWindowInner::ScreenEdgeSlopX() const {
+  FORWARD_TO_OUTER(ScreenEdgeSlopX, (), 0);
+}
+
+double nsGlobalWindowInner::ScreenEdgeSlopY() const {
+  FORWARD_TO_OUTER(ScreenEdgeSlopY, (), 0);
+}
+
 int32_t nsGlobalWindowInner::GetScreenX(CallerType aCallerType,
                                         ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetScreenXOuter, (aCallerType, aError), aError, 0);
