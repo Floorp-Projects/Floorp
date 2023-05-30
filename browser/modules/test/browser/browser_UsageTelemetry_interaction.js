@@ -689,9 +689,12 @@ add_task(async function mainMenu() {
 });
 
 add_task(async function preferences() {
-  let initialized = BrowserTestUtils.waitForEvent(gBrowser, "Initialized");
+  let finalPaneEvent = Services.prefs.getBoolPref("identity.fxaccounts.enabled")
+    ? "sync-pane-loaded"
+    : "privacy-pane-loaded";
+  let finalPrefPaneLoaded = TestUtils.topicObserved(finalPaneEvent, () => true);
   await BrowserTestUtils.withNewTab("about:preferences", async browser => {
-    await initialized;
+    await finalPrefPaneLoaded;
 
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
