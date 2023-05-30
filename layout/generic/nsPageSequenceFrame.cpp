@@ -331,14 +331,6 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   nscoord maxInflatedSheetWidth = 0;
   nscoord maxInflatedSheetHeight = 0;
 
-  // Determine the app-unit size of each printed sheet. This is normally the
-  // same as the app-unit size of a page, but it might need the components
-  // swapped, depending on what HasOrthogonalSheetsAndPages says.
-  nsSize sheetSize = aPresContext->GetPageSize();
-  if (mPageData->mPrintSettings->HasOrthogonalSheetsAndPages()) {
-    std::swap(sheetSize.width, sheetSize.height);
-  }
-
   // Tile the sheets vertically
   for (nsIFrame* kidFrame : mFrames) {
     // Set the shared data into the page frame before reflow
@@ -350,6 +342,8 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     // If we want to reliably access the nsPageFrame before reflowing the sheet
     // frame, we need to call this:
     sheet->ClaimPageFrameFromPrevInFlow();
+
+    const nsSize sheetSize = sheet->PrecomputeSheetSize(aPresContext);
 
     // Reflow the sheet
     ReflowInput kidReflowInput(
@@ -376,6 +370,8 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
     FinishReflowChild(kidFrame, aPresContext, kidReflowOutput, &kidReflowInput,
                       x, y, ReflowChildFlags::Default);
+    MOZ_ASSERT(kidFrame->GetSize() == sheetSize,
+               "PrintedSheetFrame::PrecomputeSheetSize gave the wrong size!");
     y += kidReflowOutput.Height();
     y += pageCSSMargin.bottom;
 

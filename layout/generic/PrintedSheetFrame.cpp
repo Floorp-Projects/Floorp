@@ -225,6 +225,15 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aReflowOutput);
 }
 
+nsSize PrintedSheetFrame::PrecomputeSheetSize(
+    const nsPresContext* aPresContext) {
+  mPrecomputedSize = aPresContext->GetPageSize();
+  if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    std::swap(mPrecomputedSize.width, mPrecomputedSize.height);
+  }
+  return mPrecomputedSize;
+}
+
 void PrintedSheetFrame::ComputePagesPerSheetGridMetrics(
     const nsSize& aSheetSize) {
   MOZ_ASSERT(mPD->PagesPerSheetInfo()->mNumPages > 1,
