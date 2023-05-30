@@ -279,6 +279,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     when (event?.action) {
                         MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
                             isPrivateButtonClicked = isTouchingPrivateButton(event.x, event.y)
+                            // Immediately drop Search Bar focus when the touch is not on the private button.
+                            if (!isPrivateButtonClicked) {
+                                toolbarView.view.clearFocus()
+                            }
                         }
                         MotionEvent.ACTION_UP -> {
                             if (!isTouchingPrivateButton(
