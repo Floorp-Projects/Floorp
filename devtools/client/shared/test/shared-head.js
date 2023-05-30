@@ -57,6 +57,9 @@ if (DEBUG_ALLOCATIONS) {
 const { loader, require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 // When loaded from xpcshell test, this file is loaded via xpcshell.ini's head property
 // and so it loaded first before anything else and isn't having access to Services global.
@@ -2144,8 +2147,6 @@ function createVersionizedHttpTestServer(testFolderName) {
  *
  * @param ElementNode element
  *        The <a> element we want to simulate click on.
- * @param Object clickEventProps
- *        The custom properties which would be used to dispatch a click event
  * @returns Promise
  *          A Promise that is resolved when the link click simulation occured or
  *          when the click is not dispatched.
@@ -2154,66 +2155,29 @@ function createVersionizedHttpTestServer(testFolderName) {
  *          - where: "tab" if tab is active or "tabshifted" if tab is inactive
  *            or null(if event not fired)
  */
-function simulateLinkClick(element, clickEventProps) {
-  return overrideOpenLink(() => {
-    if (clickEventProps) {
-      // Click on the link using the event properties.
-      element.dispatchEvent(clickEventProps);
-    } else {
-      // Click on the link.
-      element.click();
-    }
-  });
-}
-
-/**
- * Override the browserWindow open*Link function, executes the passed function and either
- * wait for:
- * - the link to be "opened"
- * - 1s before timing out
- * Then it puts back the original open*Link functions in browserWindow.
- *
- * @returns {Promise<Object>}: A promise resolving with an object of the following shape:
- * - link: The link that was "opened"
- * - where: If the link was opened in the background (null) or not ("tab").
- */
-function overrideOpenLink(fn) {
+function simulateLinkClick(element) {
   const browserWindow = Services.wm.getMostRecentWindow(
     gDevTools.chromeWindowType
   );
 
-  // Override LinkIn methods to prevent navigating.
-  const oldOpenTrustedLinkIn = browserWindow.openTrustedLinkIn;
-  const oldOpenWebLinkIn = browserWindow.openWebLinkIn;
-
   const onOpenLink = new Promise(resolve => {
-    const openLinkIn = function (link, where) {
-      browserWindow.openTrustedLinkIn = oldOpenTrustedLinkIn;
-      browserWindow.openWebLinkIn = oldOpenWebLinkIn;
-      resolve({ link, where });
-    };
-    browserWindow.openWebLinkIn = browserWindow.openTrustedLinkIn = openLinkIn;
-    fn();
+    const openLinkIn = (link, where) => resolve({ link, where });
+    sinon.replace(browserWindow, "openTrustedLinkIn", openLinkIn);
+    sinon.replace(browserWindow, "openWebLinkIn", openLinkIn);
   });
 
-  // Declare a timeout Promise that we can use to make sure openTrustedLinkIn or
-  // openWebLinkIn was not called.
-  let timeoutId;
+  element.click();
+
+  // Declare a timeout Promise that we can use to make sure spied methods were not called.
   const onTimeout = new Promise(function (resolve) {
-    timeoutId = setTimeout(() => {
-      browserWindow.openTrustedLinkIn = oldOpenTrustedLinkIn;
-      browserWindow.openWebLinkIn = oldOpenWebLinkIn;
-      timeoutId = null;
+    setTimeout(() => {
       resolve({ link: null, where: null });
     }, 1000);
   });
 
-  onOpenLink.then(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  });
-  return Promise.race([onOpenLink, onTimeout]);
+  const raceResult = Promise.race([onOpenLink, onTimeout]);
+  sinon.restore();
+  return raceResult;
 }
 
 /**
