@@ -56,7 +56,6 @@ class PwaTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/28212")
     @SmokeTest
     @Test
     fun emailLinkPWATest() {
@@ -69,6 +68,7 @@ class PwaTest {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
             clickPageObject(itemContainingText("Email link"))
+            clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
             assertNativeAppOpens(GMAIL_APP, emailLink)
         }
     }
