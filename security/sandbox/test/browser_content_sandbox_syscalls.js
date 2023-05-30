@@ -18,9 +18,12 @@ const ERRNO = {
     if (["Linux", "Android"].includes(os)) {
       // https://github.com/torvalds/linux/blob/9a48d604672220545d209e9996c2a1edbb5637f6/include/uapi/asm-generic/errno.h#L18
       return 38;
-    } else if (["Darwin", "FreeBSD", "OpenBSD", "NetBSD"].includes(os)) {
+    } else if (
+      ["Darwin", "DragonFly", "FreeBSD", "OpenBSD", "NetBSD"].includes(os)
+    ) {
       /*
        * Darwin: https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/errno.h.auto.html
+       * DragonFly: https://github.com/DragonFlyBSD/DragonFlyBSD/blob/5e488df32cb01056a5b714a522e51c69ab7b4612/sys/sys/errno.h#L172
        * FreeBSD: https://github.com/freebsd/freebsd-src/blob/7232e6dcc89b978825b30a537bca2e7d3a9b71bb/sys/sys/errno.h#L157
        * OpenBSD: https://github.com/openbsd/src/blob/025fffe4c6e0113862ce4e1927e67517a2841502/sys/sys/errno.h#L151
        * NetBSD: https://github.com/NetBSD/src/blob/ff24f695f5f53540b23b6bb4fa5c0b9d79b369e4/sys/sys/errno.h#L137
