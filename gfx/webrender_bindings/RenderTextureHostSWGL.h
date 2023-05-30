@@ -26,14 +26,8 @@ class RenderTextureHostSWGL : public RenderTextureHost {
 
   virtual size_t GetPlaneCount() const = 0;
 
-  virtual gfx::SurfaceFormat GetFormat() const = 0;
-
   virtual gfx::ColorDepth GetColorDepth() const {
     return gfx::ColorDepth::COLOR_8;
-  }
-
-  virtual gfx::YUVRangedColorSpace GetYUVColorSpace() const {
-    return gfx::YUVRangedColorSpace::Default;
   }
 
   struct PlaneInfo {
