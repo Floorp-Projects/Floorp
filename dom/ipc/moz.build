@@ -23,7 +23,7 @@ XPCOM_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "ManifestMessagesChild.jsm",
+    "ManifestMessagesChild.sys.mjs",
 ]
 
 EXPORTS.mozilla.dom.ipc += [

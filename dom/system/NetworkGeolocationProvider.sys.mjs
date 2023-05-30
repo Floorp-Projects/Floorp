@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -243,7 +239,7 @@ NetworkGeoPositionObject.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGeoPosition"]),
 };
 
-function NetworkGeolocationProvider() {
+export function NetworkGeolocationProvider() {
   /*
     The _wifiMonitorTimeout controls how long we wait on receiving an update
     from the Wifi subsystem.  If this timer fires, we believe the Wifi scan has
@@ -506,5 +502,3 @@ NetworkGeolocationProvider.prototype = {
     return result;
   },
 };
-
-var EXPORTED_SYMBOLS = ["NetworkGeolocationProvider"];

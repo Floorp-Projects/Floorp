@@ -11,9 +11,6 @@
  *
  * BUG: https://bugzilla.mozilla.org/show_bug.cgi?id=1083410
  */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
 const lazy = {};
 
@@ -23,7 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.sys.mjs",
 });
 
-class ManifestMessagesChild extends JSWindowActorChild {
+export class ManifestMessagesChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "DOM:WebManifest:hasManifestLink":

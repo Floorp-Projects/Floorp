@@ -328,7 +328,7 @@ let JSWINDOWACTORS = {
 
   ManifestMessages: {
     child: {
-      moduleURI: "resource://gre/modules/ManifestMessagesChild.jsm",
+      esModuleURI: "resource://gre/modules/ManifestMessagesChild.sys.mjs",
     },
   },
 
