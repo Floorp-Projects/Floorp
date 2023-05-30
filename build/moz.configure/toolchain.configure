@@ -2459,9 +2459,9 @@ def security_hardening_cflags(
             ldflags.append("-guard:cf,nolongjmp")
 
     # ----------------------------------------------------------
-    # If ASAN _is_ on, undefine FORTIFY_SOURCE just to be safe
+    # If ASAN _is_ on, disable FORTIFY_SOURCE just to be safe
     if asan:
-        flags.append("-U_FORTIFY_SOURCE")
+        flags.append("-D_FORTIFY_SOURCE=0")
 
     # fno-common -----------------------------------------
     # Do not merge variables for ASAN; can detect some subtle bugs
