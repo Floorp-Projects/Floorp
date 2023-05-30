@@ -635,6 +635,9 @@ async function onLoad() {
   Promise.all(backgroundTasks)
     .then(() => {
       gBackgroundTasksDone = true;
+      // Reload button will either show or is not needed, so we can hide the
+      // loading indicator.
+      document.getElementById("background-data-loading").hidden = true;
       if (!hasData) {
         // If all async tasks were completed before fetchData,
         // or there was no data available, visualizeData shows
