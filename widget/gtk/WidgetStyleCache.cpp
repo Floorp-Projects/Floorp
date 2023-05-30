@@ -661,13 +661,13 @@ bool IsSolidCSDStyleUsed() {
 
 static void CreateHeaderBarButtons() {
   GtkWidget* headerBar = sWidgetStorage[MOZ_GTK_HEADER_BAR];
-  MOZ_ASSERT(headerBar != nullptr, "We're missing header bar widget!");
+  MOZ_ASSERT(headerBar, "We're missing header bar widget!");
 
   gint buttonSpacing = 6;
   g_object_get(headerBar, "spacing", &buttonSpacing, nullptr);
 
   GtkWidget* buttonBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, buttonSpacing);
-  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_HEADER_BAR)), buttonBox);
+  gtk_container_add(GTK_CONTAINER(headerBar), buttonBox);
   // We support only LTR headerbar layout for now.
   gtk_style_context_add_class(gtk_widget_get_style_context(buttonBox),
                               GTK_STYLE_CLASS_LEFT);
@@ -686,7 +686,7 @@ static void CreateHeaderBarButtons() {
     CreateHeaderBarButton(buttonBox, MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE);
     // We don't pack "restore" headerbar button to box as it's an icon
     // placeholder. Pack it only to header bar to get correct style.
-    CreateHeaderBarButton(GetWidget(MOZ_GTK_HEADER_BAR),
+    CreateHeaderBarButton(GetWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED),
                           MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE);
   }
   if (IsToolbarButtonEnabled(buttonLayout, activeButtons,
@@ -1162,11 +1162,6 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
       // TODO - create from CSS node
       GtkWidget* widget = GetWidget(MOZ_GTK_NOTEBOOK);
       return gtk_widget_get_style_context(widget);
-    }
-    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE: {
-      NS_ASSERTION(
-          false, "MOZ_GTK_HEADER_BAR_BUTTON_RESTORE is used as an icon only!");
-      return nullptr;
     }
     case MOZ_GTK_WINDOW_DECORATION: {
       GtkStyleContext* parentStyle =

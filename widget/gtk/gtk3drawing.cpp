@@ -499,19 +499,16 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
                                             GtkReliefStyle relief,
                                             WidgetNodeType aIconWidgetType,
                                             GtkTextDirection direction) {
-  WidgetNodeType buttonWidgetType =
-      (aIconWidgetType == MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE)
-          ? MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE
-          : aIconWidgetType;
-
   GdkRectangle rect = *aRect;
   // We need to inset our calculated margin because it also
   // contains titlebar button spacing.
-  const ToolbarButtonGTKMetrics* metrics =
-      GetToolbarButtonMetrics(buttonWidgetType);
+  const ToolbarButtonGTKMetrics* metrics = GetToolbarButtonMetrics(
+      aIconWidgetType == MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE
+          ? MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE
+          : aIconWidgetType);
   Inset(&rect, metrics->buttonMargin);
 
-  GtkWidget* buttonWidget = GetWidget(buttonWidgetType);
+  GtkWidget* buttonWidget = GetWidget(aIconWidgetType);
   if (!buttonWidget) {
     return MOZ_GTK_UNKNOWN_WIDGET;
   }
@@ -532,9 +529,6 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
     gtk_style_context_save(style);
     StyleContextSetScale(style, state->image_scale);
     gtk_style_context_set_state(style, state_flags);
-
-    const ToolbarButtonGTKMetrics* metrics =
-        GetToolbarButtonMetrics(buttonWidgetType);
 
     /* This is available since Gtk+ 3.10 as well as GtkHeaderBar */
     gtk_render_icon_surface(style, cr, surface, rect.x + metrics->iconXPosition,
