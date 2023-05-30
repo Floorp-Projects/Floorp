@@ -20,6 +20,22 @@ namespace mozilla::glean {
 NS_IMPL_CLASSINFO(GleanEvent, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanEvent, nsIGleanEvent)
 
+// Convert all capital letters to "_x" where "x" is the corresponding lowercase.
+nsCString camelToSnake(const nsACString& aCamel) {
+  nsCString snake;
+  const auto* start = aCamel.BeginReading();
+  const auto* end = aCamel.EndReading();
+  for (; start != end; ++start) {
+    if ('A' <= *start && *start <= 'Z') {
+      snake.AppendLiteral("_");
+      snake.Append(static_cast<char>(std::tolower(*start)));
+    } else {
+      snake.Append(*start);
+    }
+  }
+  return snake;
+}
+
 NS_IMETHODIMP
 GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
   if (aExtra.isNullOrUndefined()) {
@@ -56,6 +72,9 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
       return NS_OK;
     }
 
+    // We accept camelCase extra keys, but Glean requires snake_case.
+    auto snakeKey = camelToSnake(jsKey);
+
     JS::Rooted<JS::Value> value(aCx);
     if (!JS_GetPropertyById(aCx, obj, ids[i], &value)) {
       LogToBrowserConsole(
@@ -84,7 +103,7 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
       return NS_OK;
     }
 
-    extraKeys.AppendElement(jsKey);
+    extraKeys.AppendElement(snakeKey);
     extraValues.AppendElement(jsValue);
     telExtras.EmplaceBack(Telemetry::EventExtraEntry{jsKey, jsValue});
   }
