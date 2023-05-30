@@ -286,9 +286,7 @@ class ArgumentsObject : public NativeObject {
     setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
   }
 
-  /*
-   * Create the default "length" property and set LENGTH_OVERRIDDEN_BIT.
-   */
+  // Create the default "length" property and set LENGTH_OVERRIDDEN_BIT.
   static bool reifyLength(JSContext* cx, Handle<ArgumentsObject*> obj);
 
   // True iff arguments[@@iterator] has been assigned or deleted.
@@ -303,9 +301,7 @@ class ArgumentsObject : public NativeObject {
     setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
   }
 
-  /*
-   * Create the default @@iterator property and set ITERATOR_OVERRIDDEN_BIT.
-   */
+  // Create the default @@iterator property and set ITERATOR_OVERRIDDEN_BIT.
   static bool reifyIterator(JSContext* cx, Handle<ArgumentsObject*> obj);
 
   /*
@@ -522,6 +518,9 @@ class MappedArgumentsObject : public ArgumentsObject {
   static size_t getCalleeSlotOffset() {
     return getFixedSlotOffset(CALLEE_SLOT);
   }
+
+  // Create the default "callee" property and set CALLEE_OVERRIDDEN_BIT.
+  static bool reifyCallee(JSContext* cx, Handle<MappedArgumentsObject*> obj);
 
  private:
   static bool obj_enumerate(JSContext* cx, HandleObject obj);

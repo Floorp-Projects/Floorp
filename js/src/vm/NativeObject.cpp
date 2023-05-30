@@ -1558,6 +1558,16 @@ bool js::NativeDefineProperty(JSContext* cx, Handle<NativeObject*> obj,
           return false;
         }
       }
+    } else if (id.isAtom(cx->names().callee) &&
+               argsobj->is<MappedArgumentsObject>()) {
+      // Do same thing as .length for .callee on MappedArgumentsObject.
+      if (!desc_.resolving()) {
+        Rooted<MappedArgumentsObject*> mapped(
+            cx, &argsobj->as<MappedArgumentsObject>());
+        if (!MappedArgumentsObject::reifyCallee(cx, mapped)) {
+          return false;
+        }
+      }
     } else if (id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
       // Do same thing as .length for [@@iterator].
       if (!desc_.resolving()) {
