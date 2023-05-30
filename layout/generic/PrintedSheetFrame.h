@@ -55,6 +55,22 @@ class PrintedSheetFrame final : public nsContainerFrame {
   nscoord GetGridCellWidth() const { return mGridCellWidth; }
   nscoord GetGridCellHeight() const { return mGridCellHeight; }
 
+  /**
+   * A helper that is called just prior to this frame being relfowed to
+   * pre-compute and cache the size that the sheet should be given. This is
+   * called before any child nsPageFrames are reflowed, and it is cached so
+   * that those nsPageFrames can obtain their sheet frame's size while they're
+   * reflowing (the normal reflow code doesn't give the sheet frame its size
+   * until after the nsPageFrames have been reflowed).
+   * If we get rid of nsPageFrame::ComputeSinglePPSPageSizeScale (bug 1835782),
+   * which is the only consumer of GetPrecomputedSheetSize, then we can get rid
+   * of GetPrecomputedSheetSize and the member variable and rename
+   * PrecomputeSheetSize to ComputeSheetSize, which will then only be called
+   * once during reflow.
+   */
+  nsSize PrecomputeSheetSize(const nsPresContext* aPresContext);
+  nsSize GetPrecomputedSheetSize() const { return mPrecomputedSize; }
+
  private:
   // Private construtor & destructor, to avoid accidental (non-FrameArena)
   // instantiation/deletion:
@@ -65,7 +81,7 @@ class PrintedSheetFrame final : public nsContainerFrame {
   // Helper function to populate some pages-per-sheet metrics in our
   // nsSharedPageData.
   // XXXjwatt: We should investigate sharing this function for the single
-  // page-per-sheet case. The logic for that case
+  // page-per-sheet case (bug 1835782). The logic for that case
   // (nsPageFrame::ComputePageSizeScale) is somewhat different though, since
   // that case uses no sheet margins and uses the user/CSS specified margins on
   // the page, with any page scaling reverted to keep the margins unchanged.
@@ -75,6 +91,8 @@ class PrintedSheetFrame final : public nsContainerFrame {
   // of the sheet and, by scaling the default on the pages, results in a
   // a sensible amount of spacing between pages.)
   void ComputePagesPerSheetGridMetrics(const nsSize& aSheetSize);
+
+  nsSize mPrecomputedSize;
 
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.

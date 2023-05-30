@@ -75,6 +75,9 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
+  MOZ_ASSERT(aReflowInput.PhysicalSize() == mPrecomputedSize,
+             "We should be passed the size computed by PrecomputeSheetSize!");
+
   // If we have a prev-in-flow, take its overflowing content:
   MoveOverflowToChildList();
 
@@ -223,6 +226,15 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   aReflowOutput.SetOverflowAreasToDesiredBounds();
 
   FinishAndStoreOverflow(&aReflowOutput);
+}
+
+nsSize PrintedSheetFrame::PrecomputeSheetSize(
+    const nsPresContext* aPresContext) {
+  mPrecomputedSize = aPresContext->GetPageSize();
+  if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    std::swap(mPrecomputedSize.width, mPrecomputedSize.height);
+  }
+  return mPrecomputedSize;
 }
 
 void PrintedSheetFrame::ComputePagesPerSheetGridMetrics(
