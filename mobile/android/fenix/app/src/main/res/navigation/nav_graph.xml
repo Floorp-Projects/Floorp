@@ -1272,6 +1272,35 @@
             <action
                 android:id="@+id/action_searchEngineFragment_to_editCustomSearchEngineFragment"
                 app:destination="@+id/editCustomSearchEngineFragment" />
+            <action
+                android:id="@+id/action_searchEngineFragment_to_defaultEngineFragment"
+                app:destination="@+id/defaultEngineFragment" />
+            <action
+                android:id="@+id/action_searchEngineFragment_to_searchShortcutsFragment"
+                app:destination="@+id/searchShortcutsFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/defaultEngineFragment"
+            android:name="org.mozilla.fenix.settings.search.DefaultSearchEngineFragment">
+            <action
+                android:id="@+id/action_defaultEngineFragment_to_saveSearchEngineFragment"
+                app:destination="@+id/saveSearchEngineFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/searchShortcutsFragment"
+            android:name="org.mozilla.fenix.settings.search.SearchShortcutsFragment"
+            tools:layout="@layout/fragment_search_shortcuts">
+            <action
+                android:id="@+id/action_searchShortcutsFragment_to_saveSearchEngineFragment"
+                app:destination="@+id/saveSearchEngineFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/saveSearchEngineFragment"
+            android:name="org.mozilla.fenix.settings.search.SaveSearchEngineFragment">
+            <argument
+                android:name="searchEngineIdentifier"
+                app:argType="string"
+                app:nullable="true"/>
         </fragment>
         <fragment
             android:id="@+id/addSearchEngineFragment"

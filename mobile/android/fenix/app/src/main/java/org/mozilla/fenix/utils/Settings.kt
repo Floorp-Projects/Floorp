@@ -1773,4 +1773,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         key = appContext.getPreferenceKey(R.string.pref_key_growth_early_search),
         default = false,
     )
+
+    /**
+     * Indicates if the new Search settings UI is enabled.
+     */
+    var enableUnifiedSearchSettingsUI: Boolean = showUnifiedSearchFeature && FeatureFlags.unifiedSearchSettings
 }

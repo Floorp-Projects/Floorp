@@ -19,6 +19,8 @@ import mozilla.components.browser.state.search.SearchEngine
  * @property additionalAvailableSearchEngines Additional [SearchEngine]s that the application decided
  * to load and that are available for the user to be added to their list of search engines.
  * @property hiddenSearchEngines The list of bundled [SearchEngine]s the user has explicitly hidden.
+ * @property disabledSearchEngineIds The list of [SearchEngine]s ids the user has explicitly disabled
+ * from being shown in the quick search list.
  * @property userSelectedSearchEngineId The ID of the default [SearchEngine] selected by the user. Or
  * `null` if the user hasn't made an explicit choice.
  * @property userSelectedSearchEngineName The name of the default [SearchEngine] selected by the user.
@@ -38,6 +40,7 @@ data class SearchState(
     val additionalSearchEngines: List<SearchEngine> = emptyList(),
     val additionalAvailableSearchEngines: List<SearchEngine> = emptyList(),
     val hiddenSearchEngines: List<SearchEngine> = emptyList(),
+    val disabledSearchEngineIds: List<String> = emptyList(),
     val userSelectedSearchEngineId: String? = null,
     val userSelectedSearchEngineName: String? = null,
     val regionDefaultSearchEngineId: String? = null,

@@ -2,9 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
-    <!-- Font weights -->
-    <integer name="font_weight_light">400</integer>
-    <integer name="font_weight_medium">500</integer>
-    <integer name="font_weight_semi_bold">600</integer>
-</resources>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="?attr/textDisabled" />
+    <item android:color="?attr/textOnColorPrimary"/>
+</selector>

@@ -56,4 +56,10 @@ object FeatureFlags {
      * Enables compose on the top sites.
      */
     const val composeTopSites = false
+
+    /**
+     * Enables new search settings UI with two extra fragments, for managing the default engine
+     * and managing search shortcuts in the quick search menu.
+     */
+    val unifiedSearchSettings = Config.channel.isNightlyOrDebug
 }

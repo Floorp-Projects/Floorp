@@ -24,6 +24,8 @@ internal object SearchReducer {
             is SearchAction.HideSearchEngineAction -> state.hideSearchEngine(action)
             is SearchAction.AddAdditionalSearchEngineAction -> state.addAdditionalSearchEngine(action)
             is SearchAction.RemoveAdditionalSearchEngineAction -> state.removeAdditionalSearchEngine(action)
+            is SearchAction.UpdateDisabledSearchEngineIdsAction ->
+                state.updateDisabledSearchEngineIds(action)
         }
     }
 }
@@ -39,6 +41,7 @@ private fun BrowserState.setSearchEngines(
             userSelectedSearchEngineName = action.userSelectedSearchEngineName,
             regionDefaultSearchEngineId = action.regionDefaultSearchEngineId,
             hiddenSearchEngines = action.hiddenSearchEngines,
+            disabledSearchEngineIds = action.disabledSearchEngineIds,
             additionalSearchEngines = action.additionalSearchEngines,
             additionalAvailableSearchEngines = action.additionalAvailableSearchEngines,
             regionSearchEnginesOrder = action.regionSearchEnginesOrder,
@@ -171,4 +174,20 @@ private fun BrowserState.removeAdditionalSearchEngine(
     } else {
         this
     }
+}
+
+private fun BrowserState.updateDisabledSearchEngineIds(
+    action: SearchAction.UpdateDisabledSearchEngineIdsAction,
+): BrowserState {
+    val updatedDisabledSearchEngineShortcutIds = if (action.isEnabled) {
+        search.disabledSearchEngineIds - action.searchEngineId
+    } else {
+        search.disabledSearchEngineIds + action.searchEngineId
+    }
+
+    return copy(
+        search = search.copy(
+            disabledSearchEngineIds = updatedDisabledSearchEngineShortcutIds,
+        ),
+    )
 }

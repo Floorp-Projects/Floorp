@@ -769,6 +769,7 @@ class HistoryMetadataMiddlewareTest {
                 regionDefaultSearchEngineId = "google",
                 customSearchEngines = emptyList(),
                 hiddenSearchEngines = emptyList(),
+                disabledSearchEngineIds = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
                 regionSearchEnginesOrder = listOf("google"),

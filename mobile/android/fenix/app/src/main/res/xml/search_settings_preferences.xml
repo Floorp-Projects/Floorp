@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:title="Search Engines"
+        android:selectable="false"
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_category_no_icon_style">
+        <Preference
+            app:iconSpaceReserved="false"
+            android:key="@string/pref_key_default_search_engine"
+            android:title="@string/preferences_default_search_engine"/>
+        <Preference
+            app:iconSpaceReserved="false"
+            android:key="@string/pref_key_manage_search_shortcuts"
+            android:title="@string/preferences_manage_search_shortcuts"
+            android:summary="@string/preferences_manage_search_shortcuts_summary"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preferences_search_address_bar"
+        android:selectable="false"
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_category_no_icon_style">
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_search_engine_shortcuts"
+            android:title="@string/preferences_show_search_engines" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_enable_autocomplete_urls"
+            android:title="@string/preferences_enable_autocomplete_urls" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_clipboard_suggestions"
+            android:title="@string/preferences_show_clipboard_suggestions" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_search_browsing_history"
+            android:title='@string/preferences_search_browsing_history' />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_search_bookmarks"
+            android:title='@string/preferences_search_bookmarks' />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_search_synced_tabs"
+            android:title='@string/preferences_search_synced_tabs' />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_voice_search"
+            android:title="@string/preferences_show_voice_search" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"
+            android:key="@string/pref_key_show_search_suggestions"
+            android:title="@string/preferences_show_search_suggestions" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:dependency="@string/pref_key_show_search_suggestions"
+            android:key="@string/pref_key_show_search_suggestions_in_private"
+            android:layout="@layout/checkbox_left_preference"
+            android:title="@string/preferences_show_search_suggestions_in_private"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -38,6 +38,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isOpenInAppBannerEnabled = settings.shouldShowOpenInAppBanner,
         etpPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled = settings.enableTabsTrayToCompose,
+        newSearchSettingsEnabled = false,
     )
 
     /**
@@ -92,6 +93,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.userOptOutOfReEngageCookieBannerDialog = !featureFlags.isCookieBannerReductionDialogEnabled
         settings.shouldShowOpenInAppBanner = featureFlags.isOpenInAppBannerEnabled
         settings.enableTabsTrayToCompose = featureFlags.tabsTrayRewriteEnabled
+        settings.enableUnifiedSearchSettingsUI = featureFlags.newSearchSettingsEnabled
         setETPPolicy(featureFlags.etpPolicy)
     }
 }
@@ -112,6 +114,7 @@ private data class FeatureFlags(
     var isOpenInAppBannerEnabled: Boolean,
     var etpPolicy: ETPPolicy,
     var tabsTrayRewriteEnabled: Boolean,
+    var newSearchSettingsEnabled: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {

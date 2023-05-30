@@ -15,7 +15,7 @@ import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import androidx.core.view.isVisible
-import androidx.navigation.Navigation
+import androidx.navigation.Navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -82,19 +82,28 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
             it.isGeneral
         }.size == 1
         state.searchEngines.filter { engine ->
-            engine.type != SearchEngine.Type.APPLICATION
+            if (context.settings().enableUnifiedSearchSettingsUI) {
+                engine.type != SearchEngine.Type.APPLICATION && engine.isGeneral
+            } else {
+                engine.type != SearchEngine.Type.APPLICATION
+            }
         }.forEach { engine ->
             val isLastSearchEngineAvailable =
                 state.searchEngines.count { it.type != SearchEngine.Type.APPLICATION } > 1
+            val allowDeletion = if (context.settings().enableUnifiedSearchSettingsUI) {
+                engine.type == SearchEngine.Type.CUSTOM
+            } else {
+                if (context.settings().showUnifiedSearchFeature) {
+                    isLastSearchEngineAvailable && !(engine.isGeneral && isLastGeneralOrCustomSearchEngine)
+                } else {
+                    isLastSearchEngineAvailable
+                }
+            }
             val searchEngineView = makeButtonFromSearchEngine(
                 engine = engine,
                 layoutInflater = layoutInflater,
                 res = context.resources,
-                allowDeletion = if (context.settings().showUnifiedSearchFeature) {
-                    isLastSearchEngineAvailable && !(engine.isGeneral && isLastGeneralOrCustomSearchEngine)
-                } else {
-                    isLastSearchEngineAvailable
-                },
+                allowDeletion = allowDeletion,
                 isSelected = engine == state.selectedOrDefaultSearchEngine,
             )
 
@@ -163,10 +172,14 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
     }
 
     private fun editCustomSearchEngine(view: View, engine: SearchEngine) {
-        val directions = SearchEngineFragmentDirections
-            .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.id)
-
-        Navigation.findNavController(view).navigate(directions)
+        val directions = if (view.context.settings().enableUnifiedSearchSettingsUI) {
+            DefaultSearchEngineFragmentDirections
+                .actionDefaultEngineFragmentToSaveSearchEngineFragment(engine.id)
+        } else {
+            SearchEngineFragmentDirections
+                .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.id)
+        }
+        findNavController(view).navigate(directions)
     }
 
     private fun deleteSearchEngine(

@@ -92,6 +92,7 @@ import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.awesomebar.toSearchProviderState
+import org.mozilla.fenix.search.ext.searchEngineShortcuts
 import org.mozilla.fenix.search.toolbar.IncreasedTapAreaActionDecorator
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.search.toolbar.SearchSelectorToolbarAction
@@ -339,7 +340,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         ),
                     )
 
-                    updateSearchSelectorMenu(search.searchEngines)
+                    updateSearchSelectorMenu(search.searchEngineShortcuts)
                 }
         }
 
@@ -512,7 +513,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         if (selectedSearchEngineId == null) return
 
         val searchState = requireComponents.core.store.state.search
-        searchState.searchEngines.firstOrNull {
+        searchState.searchEngineShortcuts.firstOrNull {
             it.id == selectedSearchEngineId
         }?.let { selectedSearchEngine ->
             if (selectedSearchEngine != searchState.selectedOrDefaultSearchEngine) {

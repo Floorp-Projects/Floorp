@@ -14,12 +14,14 @@ private const val PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_ID = "user_selected
 private const val PREFERENCE_KEY_USER_SELECTED_SEARCH_ENGINE_NAME = "user_selected_search_engine_name"
 private const val PREFERENCE_KEY_HIDDEN_SEARCH_ENGINES = "hidden_search_engines"
 private const val PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES = "additional_search_engines"
+private const val PREFERENCE_KEY_DISABLED_SEARCH_ENGINE_ID = "preference_key_disabled_search_engine_id"
 
 /**
  * Storage for saving additional search related metadata.
  */
 internal class SearchMetadataStorage(
     context: Context,
+    private val disabledByDefaultSearchEngineIds: Set<String> = emptySet(),
     private val preferences: Lazy<SharedPreferences> = lazy {
         context.getSharedPreferences(
             PREFERENCE_FILE,
@@ -76,6 +78,18 @@ internal class SearchMetadataStorage(
         return preferences.value
             .getStringSet(PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES, emptySet())
             ?.toList() ?: emptyList()
+    }
+
+    override suspend fun getDisabledSearchEngineIds(): List<String> {
+        return preferences.value
+            .getStringSet(PREFERENCE_KEY_DISABLED_SEARCH_ENGINE_ID, disabledByDefaultSearchEngineIds)
+            ?.toList() ?: emptyList()
+    }
+
+    override suspend fun setDisabledSearchEngineIds(ids: List<String>) {
+        preferences.value.edit()
+            .putStringSet(PREFERENCE_KEY_DISABLED_SEARCH_ENGINE_ID, ids.toSet())
+            .apply()
     }
 
     /**

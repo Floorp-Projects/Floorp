@@ -25,6 +25,7 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -781,7 +782,7 @@ class SearchMiddlewareTest {
 
     @Test
     fun `Loads additional search engine and honors user choice`() = runTestOnMain {
-        val metadataStorage = SearchMetadataStorage(testContext, lazy { FakeSharedPreferences() })
+        val metadataStorage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
         metadataStorage.setAdditionalSearchEngines(listOf("reddit"))
 
         val searchMiddleware = SearchMiddleware(
@@ -943,7 +944,7 @@ class SearchMiddlewareTest {
 
     @Test
     fun `Updates and persists additional search engines`() {
-        val storage = SearchMetadataStorage(testContext, lazy { FakeSharedPreferences() })
+        val storage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
         val middleware = SearchMiddleware(
             testContext,
             ioDispatcher = dispatcher,
@@ -1182,6 +1183,64 @@ class SearchMiddlewareTest {
 
             assertEquals("updated engine", store.state.search.customSearchEngines[0].name)
         }
+    }
+
+    @Test
+    fun `GIVEN disabled engines list contains elements WHEN metadata storage is created THEN the engines are disabled`() = runTestOnMain {
+        val additionalBundledSearchEngineIds = setOf("reddit", "youtube")
+        val metadataStorage = SearchMetadataStorage(
+            testContext,
+            additionalBundledSearchEngineIds,
+            lazy { FakeSharedPreferences() },
+        )
+        val disabledSearchEngineIds = metadataStorage.getDisabledSearchEngineIds()
+        assertTrue(disabledSearchEngineIds.contains("reddit"))
+        assertTrue(disabledSearchEngineIds.contains("youtube"))
+    }
+
+    @Test
+    fun `WHEN update disabled engine action is sent THEN search state and storage get updated`() = runTestOnMain {
+        val metadataStorage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
+        metadataStorage.setAdditionalSearchEngines(listOf("reddit"))
+
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            additionalBundledSearchEngineIds = listOf("reddit", "youtube"),
+            metadataStorage = metadataStorage,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher),
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware),
+        )
+
+        assertFalse(metadataStorage.getDisabledSearchEngineIds().contains("bing"))
+        assertFalse(store.state.search.disabledSearchEngineIds.contains("bing"))
+
+        store.dispatch(
+            SearchAction.UpdateDisabledSearchEngineIdsAction(
+                "bing",
+                false,
+            ),
+        ).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(metadataStorage.getDisabledSearchEngineIds().contains("bing"))
+        assertTrue(store.state.search.disabledSearchEngineIds.contains("bing"))
+
+        store.dispatch(
+            SearchAction.UpdateDisabledSearchEngineIdsAction(
+                "bing",
+                true,
+            ),
+        ).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertFalse(metadataStorage.getDisabledSearchEngineIds().contains("bing"))
+        assertFalse(store.state.search.disabledSearchEngineIds.contains("bing"))
     }
 
     @Test
