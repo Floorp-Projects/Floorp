@@ -2720,7 +2720,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **gecko profile interval**: 1
    * **lower is better**: false
    * **page cycles**: 5
-   * **page timeout**: 120000
+   * **page timeout**: 140000
    * **subtest lower is better**: true
    * **subtest unit**: ms
    * **test url**: `<http://\<host\>:\<port\>/StyleBench/index.html?raptor>`__
