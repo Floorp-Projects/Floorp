@@ -634,6 +634,23 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
   return true;
 }
 
+/* static */
+bool MappedArgumentsObject::reifyCallee(JSContext* cx,
+                                        Handle<MappedArgumentsObject*> obj) {
+  if (obj->hasOverriddenCallee()) {
+    return true;
+  }
+
+  Rooted<PropertyKey> key(cx, NameToId(cx->names().callee));
+  Rooted<Value> val(cx, ObjectValue(obj->callee()));
+  if (!NativeDefineDataProperty(cx, obj, key, val, JSPROP_RESOLVING)) {
+    return false;
+  }
+
+  obj->markCalleeOverridden();
+  return true;
+}
+
 static bool ResolveArgumentsProperty(JSContext* cx,
                                      Handle<ArgumentsObject*> obj, HandleId id,
                                      PropertyFlags flags, bool* resolvedp) {
