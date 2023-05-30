@@ -82,7 +82,6 @@ jobs:
         args:
             BASE_IMAGE: debian:jessie-20210208
             DIST: jessie
-            SNAPSHOT: '20210208T213147Z'
     debian8-packages:
         symbol: I(deb8-pkg)
         definition: debian-packages
@@ -93,7 +92,6 @@ jobs:
         args:
             BASE_IMAGE: i386/debian:jessie-20210208
             DIST: jessie
-            SNAPSHOT: '20210208T213147Z'
     debian8-i386-packages:
         symbol: I(deb8-32-pkg)
         definition: debian-packages
