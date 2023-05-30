@@ -469,6 +469,7 @@ void FlushAllChildData(
  * @param buf - a bincoded serialized payload that the Rust impl understands.
  */
 void FOGData(ipc::ByteBuf&& buf) {
+  JOG::EnsureRuntimeMetricsRegistered();
   fog_ipc::buffer_sizes.Accumulate(buf.mLen);
   impl::fog_use_ipc_buf(buf.mData, buf.mLen);
 }
