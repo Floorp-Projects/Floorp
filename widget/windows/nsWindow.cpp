@@ -3634,7 +3634,7 @@ void nsWindow::TryDwmResizeHack() {
   // It is not known under what circumstances the bug will trigger. Windows 11
   // is known to be required, but many Windows 11 machines do not exhibit the
   // issue. Even machines that _do_ exhibit it will sometimes not do so when
-  // apparently- irrelevant changes are made to the configuration. (See bug
+  // apparently-irrelevant changes are made to the configuration. (See bug
   // 1763981.)
   //
   // The bug is triggered by Firefox when a maximized window (which has window
@@ -3642,6 +3642,9 @@ void nsWindow::TryDwmResizeHack() {
   // think it may occur, we "flicker-resize" the relevant window -- that is, we
   // reduce its height by 1px, then restore it. This causes DWM to acquire the
   // new client-area metrics.
+  //
+  // Note that, in particular, this bug will not occur when using a separate
+  // compositor window, as our compositor windows never have any nonclient area.
   //
   // This is admittedly a sledgehammer where a screwdriver should suffice.
 

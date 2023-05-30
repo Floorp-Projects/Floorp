@@ -291,6 +291,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mWrScissoredCacheClearsEnabled = true;
     ++mHwStretchingSupport.mBoth;
     mIsWin10OrLater = true;
+    mIsWin11OrLater = true;
     mIsNightly = true;
     mIsEarlyBetaOrEarlier = true;
   }
@@ -645,7 +646,9 @@ TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
 }
 
-TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRate) {
+TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateWin10) {
+  mIsWin10OrLater = true;
+  mIsWin11OrLater = false;
   mMockGfxInfo->mMaxRefreshRate = 120;
   mMockGfxInfo->mHasMixedRefreshRate = true;
   ConfigureWebRender();
@@ -654,6 +657,26 @@ TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRate) {
   EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateWin11) {
+  mIsWin10OrLater = true;
+  mIsWin11OrLater = true;
+  mMockGfxInfo->mMaxRefreshRate = 120;
+  mMockGfxInfo->mHasMixedRefreshRate = true;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());

@@ -110,6 +110,7 @@ class gfxConfigManager {
   bool mIsEarlyBetaOrEarlier;
   bool mSafeMode;
   bool mIsWin10OrLater;
+  bool mIsWin11OrLater;
 };
 
 }  // namespace gfx
