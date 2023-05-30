@@ -135,6 +135,27 @@ This reduces the number of layers in the code path. Note also that business logi
 
 ---
 
+### Reacting to changes: state observations and side-effects in XML
+
+Generally speaking, there are two opportunities to launch side-effects in a Redux pattern:
+1. Reacting to a user-initiated action
+2. Reacting to the result of a state change
+
+The first will be covered in more detail below and is handled by middleware, where side-effects are started in reaction to some dispatched action.
+
+The second requires a mechanism of observation for a Store's state, triggering some logic or work in response to state updates. On Android these observations are often started in the UI layer in order to tie them to lifecycle events. However, UI framework components like activities, fragments, and views are notoriously difficult to test and we want to avoid a situation where these classes become too large or complex.
+
+There are already some existing mechanisms for doing this included in the lib state library:
+
+1. `Fragment.consumeFrom` will setup a Store observation that is triggered on _every_ state update in the Store. The [HistoryFragment updating its view hierarchy with all state updates](https://github.com/mozilla-mobile/firefox-android/blob/910afa889ebc5222a1b9a877837de5c55244d441/fenix/app/src/main/java/org/mozilla/fenix/library/history/HistoryFragment.kt#L196) is one example.
+2. `Flow.distinctUntilChanged` can be combined with things like `Fragment.consumeFlow` or `Store.flowScoped` for finer-grained state observations. This will allow reactions to specific state properties updates, like when the [HistorySearchDialogFragment changes the visibility of the AwesomeBar](https://github.com/mozilla-mobile/firefox-android/blob/910afa889ebc5222a1b9a877837de5c55244d441/fenix/app/src/main/java/org/mozilla/fenix/library/history/HistorySearchDialogFragment.kt#L189).
+
+While both of these options are fine in many situations, they would both be difficult to setup to test. For a testable option, consider inheriting from [AbstractBinding](https://github.com/mozilla-mobile/firefox-android/blob/1cd69fec56725410af855eda923ab1afe99ae0b2/android-components/components/lib/state/src/main/java/mozilla/components/lib/state/helpers/AbstractBinding.kt#L23). This allows for defining a class that accepts dependencies and is isolated, making unit tests much easier. For some examples of that, see the [SelectedItemAdapterBinding](https://github.com/mozilla-mobile/firefox-android/blob/910afa889ebc5222a1b9a877837de5c55244d441/fenix/app/src/main/java/org/mozilla/fenix/tabstray/browser/BrowserTabsAdapter.kt#L61) or the [SwipeToDeleteBinding](https://github.com/mozilla-mobile/firefox-android/blob/910afa889ebc5222a1b9a877837de5c55244d441/fenix/app/src/main/java/org/mozilla/fenix/tabstray/browser/AbstractBrowserTrayList.kt#L35-L37) which are both used in the XML version of the Tabs Tray.
+
+For more details, see the example refactor in the [example refactor section](#an-example-refactor-removing-interactors-and-controllers-from-historyfragment).
+
+---
+
 ### Moving into the future: using lib-state with Compose
 
 Ideally, fragments or top-level views/Composables would register observers of their Store's state and send updates from those observers to their child Composables along with closures containing dispatches to those Stores. We are already close to being familiar with this pattern in some places. The following is a current example that has been edited for brevity and clarity:
@@ -340,6 +361,12 @@ Overall, this should convey the following improvements
 - All state updates are guaranteed to be pure and in a single component, allowing for easy testing and reproduction.
 - All side-effects are logically grouped into middlewares, allowing for testing strategies specific to the type of side-effect.
 - Several indirect abstraction layers are removed, minimizing mental model of code.
+
+---
+
+### An example refactor: removing interactors and controllers from HistoryFragment
+
+A [small example refactor](https://github.com/mozilla-mobile/firefox-android/pull/2347) was done to demonstrate some of the concepts presented throughout the document by removing interactors and controllers from the `HistoryFragment` and package. This is not necessarily an idealized version of that area, but is instead intended to demonstrate the first steps in creating architectural consistency. 
 
 ---
 
