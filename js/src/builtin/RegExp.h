@@ -172,6 +172,8 @@ extern const JSFunctionSpec regexp_methods[];
                                         JS::Value* vp);
 [[nodiscard]] extern bool regexp_unicode(JSContext* cx, unsigned argc,
                                          JS::Value* vp);
+[[nodiscard]] extern bool regexp_unicodeSets(JSContext* cx, unsigned argc,
+                                             JS::Value* vp);
 
 } /* namespace js */
 

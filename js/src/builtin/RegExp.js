@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// ECMAScript 2020 draft (2020/03/12) 21.2.5.4 get RegExp.prototype.flags
-// https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
+// https://github.com/tc39/ecma262/pull/2418 22.2.6.4 get RegExp.prototype.flags
+// https://arai-a.github.io/ecma262-compare/?pr=2418&id=sec-get-regexp.prototype.flags
 // Uncloned functions with `$` prefix are allocated as extended function
 // to store the original name in `SetCanonicalName`.
 function $RegExpFlagsGetter() {
@@ -46,12 +46,17 @@ function $RegExpFlagsGetter() {
     result += "u";
   }
 
-  // Steps 16-17
+  // Steps 16-17.
+  if (R.unicodeSets) {
+    result += "v";
+  }
+
+  // Steps 18-19
   if (R.sticky) {
     result += "y";
   }
 
-  // Step 18.
+  // Step 20.
   return result;
 }
 SetCanonicalName($RegExpFlagsGetter, "get flags");
@@ -268,6 +273,7 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
 //   * dotAll
 //   * sticky
 //   * unicode
+//   * unicodeSets
 //   * exec
 //   * lastIndex
 function IsRegExpMethodOptimizable(rx) {
