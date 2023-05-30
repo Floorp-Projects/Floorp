@@ -808,6 +808,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return GetScreenX(aCallerType, aError);
   }
 
+  double ScreenEdgeSlopX() const;
+  double ScreenEdgeSlopY() const;
+
   int32_t GetScreenTop(mozilla::dom::CallerType aCallerType,
                        mozilla::ErrorResult& aError) {
     return GetScreenY(aCallerType, aError);

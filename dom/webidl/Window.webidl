@@ -464,6 +464,16 @@ partial interface Window {
   [ChromeOnly, Throws]
   readonly attribute double desktopToDeviceScale;
 
+  // Returns the amount of CSS pixels relative to this window we're allowed to
+  // go out of the screen. This is needed so that SessionRestore is able to
+  // position windows that use client-side decorations correctly, but still
+  // pull mispositioned windows into the screen.
+  [ChromeOnly]
+  readonly attribute double screenEdgeSlopX;
+  [ChromeOnly]
+  readonly attribute double screenEdgeSlopY;
+
+
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
   [ChromeOnly, Throws]  readonly attribute long   scrollMinX;

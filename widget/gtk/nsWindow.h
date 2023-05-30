@@ -177,6 +177,7 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntSize GetClientSize() override;
   LayoutDeviceIntPoint GetClientOffset() override { return mClientOffset; }
+  LayoutDeviceIntPoint GetScreenEdgeSlop() override;
 
   // Recomputes the client offset according to our current window position.
   // If aNotify is true, NotifyWindowMoved will be called on client offset
