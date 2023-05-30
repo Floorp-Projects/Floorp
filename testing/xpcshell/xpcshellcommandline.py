@@ -321,6 +321,14 @@ def add_common_arguments(parser):
         dest="disableFission",
         help="disable fission mode (back to e10s || 1proc)",
     )
+    parser.add_argument(
+        "--repeat",
+        action="store",
+        default=0,
+        type=int,
+        dest="repeat",
+        help="repeat the test X times, default [0]",
+    )
 
 
 def add_remote_arguments(parser):
