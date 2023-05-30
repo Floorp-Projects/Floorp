@@ -1854,4 +1854,38 @@ var gUnifiedExtensions = {
       menuButton.classList.toggle("toolbarbutton-1", !inPanel);
     }
   },
+
+  _makeMessageBar({
+    messageFluentId,
+    titleFluentId = null,
+    supportPage = null,
+    type = "warning",
+  }) {
+    const messageBar = document.createElement("message-bar");
+    messageBar.setAttribute("type", type);
+    messageBar.setAttribute("dismissable", "");
+    messageBar.classList.add("unified-extensions-message-bar");
+
+    if (titleFluentId) {
+      const titleEl = document.createElement("strong");
+      document.l10n.setAttributes(titleEl, titleFluentId);
+      messageBar.append(titleEl);
+    }
+
+    const messageEl = document.createElement("span");
+    document.l10n.setAttributes(messageEl, messageFluentId);
+    messageBar.append(messageEl);
+
+    if (supportPage) {
+      window.ensureCustomElements("moz-support-link");
+
+      const supportUrl = document.createElement("a", {
+        is: "moz-support-link",
+      });
+      supportUrl.setAttribute("support-page", supportPage);
+      messageBar.append(supportUrl);
+    }
+
+    return messageBar;
+  },
 };
