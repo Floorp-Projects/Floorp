@@ -15,9 +15,6 @@
 #define KEYWORD_SEARCH_STRING "special:search"
 #define KEYWORD_SEARCH_STRING_LEN 14
 
-#define DBUS_BUS_NAME "org.mozilla.Firefox.SearchProvider"
-#define DBUS_OBJECT_PATH "/org/mozilla/Firefox/SearchProvider"
-
 class nsGNOMEShellHistorySearchResult;
 
 DBusHandlerResult DBusIntrospect(DBusConnection* aConnection,
@@ -33,5 +30,8 @@ DBusHandlerResult DBusActivateResult(
 DBusHandlerResult DBusLaunchSearch(
     RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult, DBusMessage* aMsg);
 bool IsHistoryResultNodeURI(nsINavHistoryResultNode* aHistoryNode);
+
+const char* GetDBusBusName();
+const char* GetDBusObjectPath();
 
 #endif  // __nsGNOMEShellDBusHelper_h__
