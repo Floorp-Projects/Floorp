@@ -450,6 +450,12 @@ export var PictureInPicture = {
       "media.videocontrols.picture-in-picture.respect-disablePictureInPicture",
       respectPipDisabled
     );
+
+    Services.telemetry.recordEvent(
+      "pictureinpicture",
+      "disrespect_disable",
+      "urlBar"
+    );
   },
 
   /**
@@ -632,6 +638,13 @@ export var PictureInPicture = {
       );
 
       pipPanel.openPopup(anchor, "bottomright topright");
+      Services.telemetry.recordEvent(
+        "pictureinpicture",
+        "opened_method",
+        "urlBar",
+        null,
+        { disableDialog: "true" }
+      );
     } else {
       pipPanel.hidePopup();
     }

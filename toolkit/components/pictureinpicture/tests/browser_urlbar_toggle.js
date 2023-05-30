@@ -15,6 +15,20 @@ const PIP_URLBAR_EVENTS = [
   },
 ];
 
+const PIP_DISABLED_EVENTS = [
+  {
+    category: "pictureinpicture",
+    method: "opened_method",
+    object: "urlBar",
+    extra: { disableDialog: "true" },
+  },
+  {
+    category: "pictureinpicture",
+    method: "disrespect_disable",
+    object: "urlBar",
+  },
+];
+
 add_task(async function test_urlbar_toggle_multiple_contexts() {
   await BrowserTestUtils.withNewTab(
     {
@@ -199,6 +213,7 @@ add_task(async function test_pipDisabled() {
       gBrowser,
     },
     async browser => {
+      Services.telemetry.clearEvents();
       await SpecialPowers.pushPrefEnv({
         set: [
           [
@@ -260,6 +275,16 @@ add_task(async function test_pipDisabled() {
 
       await BrowserTestUtils.waitForCondition(async () => {
         return BrowserTestUtils.is_hidden(panel);
+      });
+
+      let filter = {
+        category: "pictureinpicture",
+        object: "urlBar",
+      };
+      await waitForTelemeryEvents(filter, PIP_DISABLED_EVENTS.length, "parent");
+      TelemetryTestUtils.assertEvents(PIP_DISABLED_EVENTS, filter, {
+        clear: true,
+        process: "parent",
       });
 
       // Confirm that the toggle is now visible because we no longer respect disablePictureInPicture

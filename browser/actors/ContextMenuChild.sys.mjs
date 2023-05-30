@@ -119,18 +119,6 @@ export class ContextMenuChild extends JSWindowActorChild {
                     "contextmenu",
                     1
                   );
-                  let args = {
-                    firstTimeToggle: (!Services.prefs.getBoolPref(
-                      "media.videocontrols.picture-in-picture.video-toggle.has-used"
-                    )).toString(),
-                  };
-                  Services.telemetry.recordEvent(
-                    "pictureinpicture",
-                    "opened_method",
-                    "contextMenu",
-                    null,
-                    args
-                  );
                 }
                 let event = new this.contentWindow.CustomEvent(
                   "MozTogglePictureInPicture",

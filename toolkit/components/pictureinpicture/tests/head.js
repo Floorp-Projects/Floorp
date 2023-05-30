@@ -1099,7 +1099,11 @@ async function waitForTelemeryEvents(filter, length, process) {
       info(JSON.stringify(filtered, null, 2));
       return filtered && filtered.length >= length;
     },
-    "Waiting for one create pictureinpicture telemetry event.",
+    `Waiting for ${length} pictureinpicture telemetry event(s) with filter ${JSON.stringify(
+      filter,
+      null,
+      2
+    )}`,
     200,
     100
   );
