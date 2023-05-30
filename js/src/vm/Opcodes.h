@@ -2005,7 +2005,7 @@
      *   Operands:
      *   Stack: => gen
      */ \
-    MACRO(Generator, generator, NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Generator, generator, NULL, 1, 0, 1, JOF_BYTE|JOF_USES_ENV) \
     /*
      * Suspend the current generator and return to the caller.
      *
@@ -3378,7 +3378,7 @@
      *   Operands:
      *   Stack: => arguments
      */ \
-    MACRO(Arguments, arguments, NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Arguments, arguments, NULL, 1, 0, 1, JOF_BYTE|JOF_USES_ENV) \
     /*
      * Create and push the rest parameter array for current function call.
      *
