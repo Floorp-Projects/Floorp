@@ -707,10 +707,19 @@ bool ProcessGeneric(ots::FontFile *header,
   // If there was an fvar table but no gvar, synthesize an empty gvar to avoid
   // issues with rasterizers (e.g. Core Text) that assume it must be present.
   if (font->GetTable(OTS_TAG_FVAR) && !font->GetTable(OTS_TAG_GVAR)) {
-    ots::OpenTypeGVAR *gvar = new ots::OpenTypeGVAR(font, OTS_TAG_GVAR);
-    if (gvar->InitEmpty()) {
-      table_map[OTS_TAG_GVAR] = { OTS_TAG_GVAR, 0, 0, 0, 0 };
-      font->AddTable(gvar);
+    ots::TableEntry table_entry{ OTS_TAG_GVAR, 0, 0, 0, 0 };
+    const auto &it = font->file->tables.find(table_entry);
+    if (it != font->file->tables.end()) {
+      table_map[OTS_TAG_GVAR] = table_entry;
+      font->AddTable(table_entry, it->second);
+    } else {
+      ots::OpenTypeGVAR *gvar = new ots::OpenTypeGVAR(font, OTS_TAG_GVAR);
+      if (gvar->InitEmpty()) {
+        table_map[OTS_TAG_GVAR] = table_entry;
+        font->AddTable(table_entry, gvar);
+      } else {
+        delete gvar;
+      }
     }
   }
 #endif
@@ -867,6 +876,32 @@ bool ProcessGeneric(ots::FontFile *header,
   return true;
 }
 
+bool IsGraphiteTag(uint32_t tag) {
+  if (tag == OTS_TAG_FEAT ||
+      tag == OTS_TAG_GLAT ||
+      tag == OTS_TAG_GLOC ||
+      tag == OTS_TAG_SILE ||
+      tag == OTS_TAG_SILF ||
+      tag == OTS_TAG_SILL) {
+    return true;
+  }
+  return false;
+}
+
+bool IsVariationsTag(uint32_t tag) {
+  if (tag == OTS_TAG_AVAR ||
+      tag == OTS_TAG_CVAR ||
+      tag == OTS_TAG_FVAR ||
+      tag == OTS_TAG_GVAR ||
+      tag == OTS_TAG_HVAR ||
+      tag == OTS_TAG_MVAR ||
+      tag == OTS_TAG_STAT ||
+      tag == OTS_TAG_VVAR) {
+    return true;
+  }
+  return false;
+}
+
 }  // namespace
 
 namespace ots {
@@ -955,14 +990,9 @@ bool Font::ParseTable(const TableEntry& table_entry, const uint8_t* data,
 
     ret = GetTableData(data, table_entry, arena, &table_length, &table_data);
     if (ret) {
-      // FIXME: Parsing some tables will fail if the table is not added to
-      // m_tables first.
-      m_tables[tag] = table;
       ret = table->Parse(table_data, table_length);
       if (ret)
-        file->tables[table_entry] = table;
-      else
-        m_tables.erase(tag);
+        AddTable(table_entry, table);
     }
   }
 
@@ -986,22 +1016,18 @@ Table* Font::GetTypedTable(uint32_t tag) const {
   return NULL;
 }
 
-void Font::AddTable(Table* table) {
+void Font::AddTable(TableEntry entry, Table* table) {
   // Attempting to add a duplicate table would be an error; this should only
   // be used to add a table that does not already exist.
   assert(m_tables.find(table->Tag()) == m_tables.end());
   m_tables[table->Tag()] = table;
+  file->tables[entry] = table;
 }
 
 void Font::DropGraphite() {
   file->context->Message(0, "Dropping all Graphite tables");
   for (const std::pair<uint32_t, Table*> entry : m_tables) {
-    if (entry.first == OTS_TAG_FEAT ||
-        entry.first == OTS_TAG_GLAT ||
-        entry.first == OTS_TAG_GLOC ||
-        entry.first == OTS_TAG_SILE ||
-        entry.first == OTS_TAG_SILF ||
-        entry.first == OTS_TAG_SILL) {
+    if (IsGraphiteTag(entry.first)) {
       entry.second->Drop("Discarding Graphite table");
     }
   }
@@ -1010,14 +1036,7 @@ void Font::DropGraphite() {
 void Font::DropVariations() {
   file->context->Message(0, "Dropping all Variation tables");
   for (const std::pair<uint32_t, Table*> entry : m_tables) {
-    if (entry.first == OTS_TAG_AVAR ||
-        entry.first == OTS_TAG_CVAR ||
-        entry.first == OTS_TAG_FVAR ||
-        entry.first == OTS_TAG_GVAR ||
-        entry.first == OTS_TAG_HVAR ||
-        entry.first == OTS_TAG_MVAR ||
-        entry.first == OTS_TAG_STAT ||
-        entry.first == OTS_TAG_VVAR) {
+    if (IsVariationsTag(entry.first)) {
       entry.second->Drop("Discarding Variations table");
     }
   }
@@ -1070,6 +1089,9 @@ bool Table::DropGraphite(const char *format, ...) {
   va_end(va);
 
   m_font->DropGraphite();
+  if (IsGraphiteTag(m_tag))
+      Drop("Discarding Graphite table");
+
   return true;
 }
 
@@ -1080,6 +1102,9 @@ bool Table::DropVariations(const char *format, ...) {
   va_end(va);
 
   m_font->DropVariations();
+  if (IsVariationsTag(m_tag))
+      Drop("Discarding Variations table");
+
   return true;
 }
 

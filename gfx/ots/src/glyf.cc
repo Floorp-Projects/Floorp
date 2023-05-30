@@ -112,9 +112,9 @@ bool OpenTypeGLYF::ParseSimpleGlyph(Buffer &glyph,
 
   if (this->maxp->version_1 &&
       this->maxp->max_size_glyf_instructions < bytecode_length) {
-    this->maxp->max_size_glyf_instructions = bytecode_length;
     Warning("Bytecode length is bigger than maxp.maxSizeOfInstructions %d: %d",
             this->maxp->max_size_glyf_instructions, bytecode_length);
+    this->maxp->max_size_glyf_instructions = bytecode_length;
   }
 
   if (!glyph.Skip(bytecode_length)) {
@@ -215,10 +215,10 @@ bool OpenTypeGLYF::ParseCompositeGlyph(
 
     if (this->maxp->version_1 &&
         this->maxp->max_size_glyf_instructions < bytecode_length) {
-      this->maxp->max_size_glyf_instructions = bytecode_length;
       Warning("Bytecode length is bigger than maxp.maxSizeOfInstructions "
               "%d: %d",
               this->maxp->max_size_glyf_instructions, bytecode_length);
+      this->maxp->max_size_glyf_instructions = bytecode_length;
     }
 
     if (!glyph.Skip(bytecode_length)) {
