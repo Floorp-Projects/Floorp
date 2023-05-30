@@ -77,16 +77,6 @@ mac64-chromedriver-110:
         sha256: c476ed24f76b23da77726a3800c5d8ea8cbc6e9f8e61ed4ddbbe8497a2039876
         size: 9259405
 
-win32-chromedriver-111:
-    description: "Win32 chromedriver v111"
-    fetch:
-        type: static-url
-        artifact-name: chromedriver_win32_111.tar.zst
-        add-prefix: "111"
-        url: https://chromedriver.storage.googleapis.com/111.0.5563.41/chromedriver_win32.zip
-        sha256: a712114c463696bd52fa73e737393c24c3ea10919bf9c4b5bd590f692ee0562e
-        size: 7122000
-
 linux64-chromedriver-111:
     description: "Linux64 chromedriver v111"
     fetch:
@@ -166,6 +156,36 @@ mac64-chromedriver-113:
         url: https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_mac64.zip
         sha256: 26c6be21536fe91e8972b5ddf1e8fccee6f07792f74270c599d0457a663d6dc1
         size: 9237503
+
+win32-chromedriver-114:
+    description: "Win32 chromedriver v114"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_win32_114.tar.zst
+        add-prefix: "114"
+        url: https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_win32.zip
+        sha256: 9dcad58796e1319cd942575ea8a38b1c9a720170aaf79f3a1451458c1bd485d1
+        size: 6604629
+
+linux64-chromedriver-114:
+    description: "Linux64 chromedriver v114"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_linux64_114.tar.zst
+        add-prefix: "114"
+        url: https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_linux64.zip
+        sha256: 87472593a65e09b700c0e9f54451e4b8ae49bbf92e13a37dcf60e5eb93235875
+        size: 7399878
+
+mac64-chromedriver-114:
+    description: "Mac64 chromedriver v114"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_mac64_114.tar.zst
+        add-prefix: "114"
+        url: https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_mac64.zip
+        sha256: 80f1e41949c017d897d8076e400521691cc018aa2276157c35e44a1e1f984b69
+        size: 8609836
 
 upload-speed-test-file:
     description: "File used for the upload speed performance test"
