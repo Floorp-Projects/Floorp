@@ -30,9 +30,9 @@ use style::driver;
 use style::error_reporting::ParseErrorReporter;
 use style::font_face::{self, FontFaceSourceFormat, FontFaceSourceListComponent, Source};
 use style::gecko::arc_types::{
-    LockedCounterStyleRule, LockedCssRules, LockedDeclarationBlock,
-    LockedFontFaceRule, LockedImportRule, LockedKeyframe, LockedKeyframesRule,
-    LockedMediaList, LockedPageRule, LockedStyleRule,
+    LockedCounterStyleRule, LockedCssRules, LockedDeclarationBlock, LockedFontFaceRule,
+    LockedImportRule, LockedKeyframe, LockedKeyframesRule, LockedMediaList, LockedPageRule,
+    LockedStyleRule,
 };
 use style::gecko::data::{
     AuthorStyles, GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl,
@@ -2781,7 +2781,9 @@ pub extern "C" fn Servo_MediaRule_GetMedia(rule: &MediaRule) -> Strong<LockedMed
 
 #[no_mangle]
 pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &NamespaceRule) -> *mut nsAtom {
-    rule.prefix.as_ref().map_or(atom!("").as_ptr(), |a| a.as_ptr())
+    rule.prefix
+        .as_ref()
+        .map_or(atom!("").as_ptr(), |a| a.as_ptr())
 }
 
 #[no_mangle]
@@ -2902,7 +2904,9 @@ pub extern "C" fn Servo_ContainerRule_GetContainerQuery(
     rule: &ContainerRule,
     result: &mut nsACString,
 ) {
-    rule.query_condition().to_css(&mut CssWriter::new(result)).unwrap();
+    rule.query_condition()
+        .to_css(&mut CssWriter::new(result))
+        .unwrap();
 }
 
 #[no_mangle]
@@ -2939,7 +2943,9 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(
     rule: &FontFeatureValuesRule,
     result: &mut nsACString,
 ) {
-    rule.family_names.to_css(&mut CssWriter::new(result)).unwrap();
+    rule.family_names
+        .to_css(&mut CssWriter::new(result))
+        .unwrap();
 }
 
 #[no_mangle]
@@ -2975,7 +2981,9 @@ pub extern "C" fn Servo_FontPaletteValuesRule_GetBasePalette(
     rule: &FontPaletteValuesRule,
     result: &mut nsACString,
 ) {
-    rule.base_palette.to_css(&mut CssWriter::new(result)).unwrap()
+    rule.base_palette
+        .to_css(&mut CssWriter::new(result))
+        .unwrap()
 }
 
 #[no_mangle]
@@ -5749,8 +5757,7 @@ pub extern "C" fn Servo_CSSSupportsForImport(after_rule: &nsACString) -> bool {
         None,
     );
 
-    let (_layer, supports) =
-        ImportRule::parse_layer_and_supports(&mut input, &mut context);
+    let (_layer, supports) = ImportRule::parse_layer_and_supports(&mut input, &mut context);
 
     supports.map_or(true, |s| s.enabled)
 }
@@ -7626,10 +7633,7 @@ pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> b
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_LayerBlockRule_GetName(
-    rule: &LayerBlockRule,
-    result: &mut nsACString,
-) {
+pub extern "C" fn Servo_LayerBlockRule_GetName(rule: &LayerBlockRule, result: &mut nsACString) {
     if let Some(ref name) = rule.name {
         name.to_css(&mut CssWriter::new(result)).unwrap()
     }
