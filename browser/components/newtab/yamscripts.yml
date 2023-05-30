@@ -40,7 +40,7 @@ scripts:
     eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)
     l10n: (cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings soft browser/locales/en-US/browser/newtab)
     license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_newtab_path)
-    stylelint: stylelint content-src/**/*.scss --quiet-deprecation-warnings
+    stylelint: (cd $npm_package_config_mc_root && ./mach lint -l stylelint $npm_package_config_newtab_path)
 
   # test: Run all tests once
   test: =>testmc

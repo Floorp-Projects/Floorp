@@ -166,57 +166,6 @@ function karma() {
   return errors.length === 0 && !exitCode;
 }
 
-function stylelint() {
-  logStart("stylelint");
-  const { exitCode, out } = execOut(npmCommand, [
-    "run",
-    "--silent",
-    "lint:stylelint",
-    "--",
-    "--formatter",
-    "json",
-  ]);
-
-  // Successful exit and no output means stylelint passed.
-  if (!exitCode && !out.length) {
-    return true;
-  }
-
-  let fileObjects = JSON.parse(out);
-
-  let errs = [];
-  let errorString;
-  for (const file of fileObjects) {
-    let fileErrs = [];
-    for (const warningObj of file.warnings) {
-      let relativePath = path.relative(
-        path.join(__dirname, ".."),
-        path.join(...file.source.split("/"))
-      );
-      errorString = `${relativePath}(${warningObj.line}, ${warningObj.column}): ${warningObj.text}`;
-      fileErrs.push(errorString);
-    }
-    for (const warningObj of file.invalidOptionWarnings) {
-      errorString = `config: ${warningObj.text}`;
-      fileErrs.push(errorString);
-    }
-    for (const warningObj of file.parseErrors) {
-      errorString = `construct-specific parser error: ${warningObj.text}`;
-      fileErrs.push(errorString);
-    }
-    if (fileErrs.length) {
-      errs.push(...fileErrs);
-    } else if (file.errored) {
-      errs.push(`unknown error: ${file.source}`);
-    }
-  }
-
-  const errors = logErrors("stylelint", errs);
-
-  // Pass if there's no detected errors and nothing unexpected.
-  return errors.length === 0 && !exitCode;
-}
-
 function zipCodeCoverage() {
   logStart("zipCodeCoverage");
   const { exitCode, out } = execOut("zip", [
@@ -235,7 +184,7 @@ function zipCodeCoverage() {
 }
 
 const tests = {};
-const success = [checkBundles, karma, zipCodeCoverage, stylelint].every(
+const success = [checkBundles, karma, zipCodeCoverage].every(
   t => (tests[t.name] = t())
 );
 console.log(tests);
