@@ -1559,15 +1559,11 @@ bool nsContentUtils::GetPseudoAttributeValue(const nsString& aSource,
 }
 
 bool nsContentUtils::IsJavaScriptLanguage(const nsString& aName) {
-  return aName.LowerCaseEqualsLiteral("javascript") ||
-         aName.LowerCaseEqualsLiteral("livescript") ||
-         aName.LowerCaseEqualsLiteral("mocha") ||
-         aName.LowerCaseEqualsLiteral("javascript1.0") ||
-         aName.LowerCaseEqualsLiteral("javascript1.1") ||
-         aName.LowerCaseEqualsLiteral("javascript1.2") ||
-         aName.LowerCaseEqualsLiteral("javascript1.3") ||
-         aName.LowerCaseEqualsLiteral("javascript1.4") ||
-         aName.LowerCaseEqualsLiteral("javascript1.5");
+  // Create MIME type as "text/" + given input
+  nsAutoString mimeType(u"text/");
+  mimeType.Append(aName);
+
+  return IsJavascriptMIMEType(mimeType);
 }
 
 void nsContentUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
