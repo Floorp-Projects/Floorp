@@ -36,10 +36,10 @@ const NOTIFY_BROWSER_SHUTDOWN_FLUSH = "sessionstore-browser-shutdown-flush";
 // the browser.sessionstore.max_concurrent_tabs pref.
 const MAX_CONCURRENT_TAB_RESTORES = 3;
 
-// Amount (in CSS px) by which we allow window edges to be off-screen
-// when restoring a window, before we override the saved position to
-// pull the window back within the available screen area.
-const SCREEN_EDGE_SLOP = 8;
+// Minimum amount (in CSS px) by which we allow window edges to be off-screen
+// when restoring a window, before we override the saved position to pull the
+// window back within the available screen area.
+const MIN_SCREEN_EDGE_SLOP = 8;
 
 // global notifications observed
 const OBSERVING = [
@@ -5147,22 +5147,30 @@ var SessionStoreInternal = {
       let cssToDesktopScale =
         screen.defaultCSSScaleFactor / screen.contentsScaleFactor;
 
-      let slop = SCREEN_EDGE_SLOP * cssToDesktopScale;
+      let winSlopX = win.screenEdgeSlopX * cssToDesktopScale;
+      let winSlopY = win.screenEdgeSlopY * cssToDesktopScale;
+
+      let minSlop = MIN_SCREEN_EDGE_SLOP * cssToDesktopScale;
+      let slopX = Math.max(minSlop, winSlopX);
+      let slopY = Math.max(minSlop, winSlopY);
 
       // Pull the window within the screen's bounds (allowing a little slop
       // for windows that may be deliberately placed with their border off-screen
       // as when Win10 "snaps" a window to the left/right edge -- bug 1276516).
       // First, ensure the left edge is large enough...
-      if (aLeft < screenLeft - slop) {
-        aLeft = screenLeft;
+      if (aLeft < screenLeft - slopX) {
+        aLeft = screenLeft - winSlopX;
       }
       // Then check the resulting right edge, and reduce it if necessary.
       let right = aLeft + aWidth * cssToDesktopScale;
-      if (right > screenRight + slop) {
-        right = screenRight;
+      if (right > screenRight + slopX) {
+        right = screenRight + winSlopX;
         // See if we can move the left edge leftwards to maintain width.
         if (aLeft > screenLeft) {
-          aLeft = Math.max(right - aWidth * cssToDesktopScale, screenLeft);
+          aLeft = Math.max(
+            right - aWidth * cssToDesktopScale,
+            screenLeft - winSlopX
+          );
         }
       }
       // Finally, update aWidth to account for the adjusted left and right
@@ -5170,14 +5178,17 @@ var SessionStoreInternal = {
       aWidth = (right - aLeft) / cssToDesktopScale;
 
       // And do the same in the vertical dimension.
-      if (aTop < screenTop - slop) {
-        aTop = screenTop;
+      if (aTop < screenTop - slopY) {
+        aTop = screenTop - winSlopY;
       }
       let bottom = aTop + aHeight * cssToDesktopScale;
-      if (bottom > screenBottom + slop) {
-        bottom = screenBottom;
+      if (bottom > screenBottom + slopY) {
+        bottom = screenBottom + winSlopY;
         if (aTop > screenTop) {
-          aTop = Math.max(bottom - aHeight * cssToDesktopScale, screenTop);
+          aTop = Math.max(
+            bottom - aHeight * cssToDesktopScale,
+            screenTop - winSlopY
+          );
         }
       }
       aHeight = (bottom - aTop) / cssToDesktopScale;
