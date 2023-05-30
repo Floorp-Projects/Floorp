@@ -519,6 +519,13 @@ nsIFrame* FindFrameTargetedByInputEvent(
     return aRootFrame.mFrame;
   }();
 
+  // Ignore retarget if target is editable.
+  nsIContent* targetContent = target ? target->GetContent() : nullptr;
+  if (targetContent && targetContent->IsEditable()) {
+    PET_LOG("Target %p is editable\n", target);
+    return target;
+  }
+
   // If the target element inside an element with a z-index, restrict the
   // search to other elements inside that z-index. This is a heuristic
   // intended to help with a class of scenarios involving web modals or
