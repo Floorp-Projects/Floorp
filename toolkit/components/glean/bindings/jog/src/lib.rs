@@ -24,7 +24,7 @@ struct ExtraMetricArgs {
     bucket_count: Option<u64>,
     histogram_type: Option<HistogramType>,
     numerators: Option<Vec<CommonMetricData>>,
-    labels: Option<Vec<Cow<'static, str>>>,
+    ordered_labels: Option<Vec<Cow<'static, str>>>,
 }
 
 /// Test-only method.
@@ -102,7 +102,7 @@ fn create_and_register_metric(
         extra_args.bucket_count,
         extra_args.histogram_type,
         extra_args.numerators,
-        extra_args.labels,
+        extra_args.ordered_labels,
     );
     extern "C" {
         fn JOG_RegisterMetric(

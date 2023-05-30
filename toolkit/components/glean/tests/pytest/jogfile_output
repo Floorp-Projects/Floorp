@@ -41,7 +41,10 @@
           "metrics"
         ],
         "application",
-        false
+        false,
+        {
+          "ordered_labels": null
+        }
       ],
       [
         "labeled_boolean",
@@ -50,7 +53,21 @@
           "metrics"
         ],
         "application",
-        false
+        false,
+        {
+          "ordered_labels": [
+            "one_label",
+            "two_labels",
+            "three_labels",
+            "four_labels",
+            "five_labels",
+            "six_labels",
+            "seven_labels",
+            "eight_labels",
+            "nine_labels",
+            "ten_labels"
+          ]
+        }
       ],
       [
         "labeled_counter",
@@ -59,7 +76,10 @@
           "metrics"
         ],
         "application",
-        false
+        false,
+        {
+          "ordered_labels": null
+        }
       ],
       [
         "labeled_counter",
@@ -68,7 +88,13 @@
           "metrics"
         ],
         "application",
-        false
+        false,
+        {
+          "ordered_labels": [
+            "one_label",
+            "two_labels"
+          ]
+        }
       ],
       [
         "labeled_string",
@@ -77,7 +103,10 @@
           "metrics"
         ],
         "application",
-        false
+        false,
+        {
+          "ordered_labels": null
+        }
       ],
       [
         "labeled_string",
@@ -86,7 +115,13 @@
           "metrics"
         ],
         "application",
-        false
+        false,
+        {
+          "ordered_labels": [
+            "one_label",
+            "two_labels"
+          ]
+        }
       ],
       [
         "memory_distribution",
