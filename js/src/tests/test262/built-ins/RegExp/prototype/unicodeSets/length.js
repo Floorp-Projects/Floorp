@@ -1,3 +1,4 @@
+// |reftest| skip -- regexp-v-flag is not supported
 // Copyright (C) 2022 Mathias Bynens, Ron Buckton, and André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
