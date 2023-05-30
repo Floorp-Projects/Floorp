@@ -6515,13 +6515,6 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
       return NS_OK;
     }
 
-    nsAutoCString scheme;
-    uri->GetScheme(scheme);
-    if (!scheme.EqualsLiteral("http") && !scheme.EqualsLiteral("https")) {
-      aOrigin.AssignLiteral("null");
-      return NS_OK;
-    }
-
     return GetASCIIOrigin(uri, aOrigin);
   }
 
