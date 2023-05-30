@@ -353,6 +353,22 @@ function test3() {
                  "Event retargeting should not escape out from a z-index ancestor");
   setShowing("t12", false);
 
+  // Click empty area of textarea
+  let textarea = document.getElementById("t3_6");
+  textarea.value = "foo bar baz\nfoo"
+  textarea.style.height = "3.3em";
+  textarea.style.lineHeight = "1.1";
+  setShowing("t3_6", true);
+  textarea.selectionStart = 0;
+  synthesizeMouseAtCenter(textarea, {});
+  is(textarea.selectionStart, textarea.value.length,
+     "selection should be set to last character");
+
+  textarea.value = ""
+  textarea.style.height = "auto";
+  textarea.style.lineHeight = "";
+  setShowing("t3_6", false);
+
   // Not yet tested:
   // -- visited link weight
   // -- "Closest" using Euclidean distance
