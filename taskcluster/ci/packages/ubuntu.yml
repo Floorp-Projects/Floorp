@@ -61,8 +61,8 @@ ub18-mercurial:
         symbol: Ub18(hg)
     run:
         tarball:
-            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
-            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
+            url: https://www.mercurial-scm.org/release/mercurial-6.4.3.tar.gz
+            sha256: a77fb62d325934a83a00b2fc6db109f44c67b86768fc40490366f513640c7f64
         pre-build-command: >-
             apt-get install python3.7-dev &&
             export DEB_HG_PYTHON_VERSIONS="3.7" &&
@@ -71,7 +71,6 @@ ub18-mercurial:
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bionic/" debian/changelog
-        patch: mercurial-timeout.diff
 
 ub20-python-zstandard:
     description: "python-zstandard for Ubuntu focal"
@@ -91,12 +90,11 @@ ub20-mercurial:
         symbol: Ub20(hg)
     run:
         tarball:
-            url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
-            sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
+            url: https://www.mercurial-scm.org/release/mercurial-6.4.3.tar.gz
+            sha256: a77fb62d325934a83a00b2fc6db109f44c67b86768fc40490366f513640c7f64
         dist: focal
         pre-build-command: >-
             cp -r contrib/packaging/debian debian &&
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub20moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/focal/" debian/changelog
-        patch: mercurial-timeout.diff
