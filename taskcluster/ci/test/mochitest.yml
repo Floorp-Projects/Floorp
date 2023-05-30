@@ -662,7 +662,7 @@ mochitest-media:
                     android.*: []
                     windows.*ccov.*: []
                     linux.*64(-asan|-devedition|-shippable)?-qr/(opt|debug): built-projects
-                    linux.*64-tsan-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64-tsan-qr/opt: []  # Linux TSAN disabled until Bug 1835935
                     macosx.*-64(-devedition|-shippable)?-qr/(opt|debug): built-projects
                     windows1.*(-devedition|-shippable)?-qr/(opt|debug): built-projects
                     windows.*-asan-qr/opt: ['autoland', 'mozilla-central']
