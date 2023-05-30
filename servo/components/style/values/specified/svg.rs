@@ -249,7 +249,7 @@ impl ToCss for SVGPaintOrder {
 
 bitflags! {
     /// The context properties we understand.
-    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(Clone, Copy, Eq, Default, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     pub struct ContextPropertyBits: u8 {
         /// `fill`

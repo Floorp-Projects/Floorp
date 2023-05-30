@@ -232,7 +232,7 @@ impl ToComputedValue for TextOverflow {
 }
 
 bitflags! {
-    #[derive(MallocSizeOf, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
     #[css(bitflags(single = "none", mixed = "underline,overline,line-through,blink"))]
     #[repr(C)]
     /// Specified keyword values for the text-decoration-line property.
@@ -408,8 +408,8 @@ pub enum TextTransformCase {
 }
 
 bitflags! {
-    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
-    #[value_info(other_values = "none,full-width,full-size-kana")]
+    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[css(bitflags(mixed = "full-width,full-size-kana"))]
     #[repr(C)]
     /// Specified keyword values for non-case transforms in the text-transform property. (Non-exclusive.)
     pub struct TextTransformOther: u8 {
@@ -417,31 +417,6 @@ bitflags! {
         const FULL_WIDTH = 1 << 0;
         /// full-size-kana
         const FULL_SIZE_KANA = 1 << 1;
-    }
-}
-
-impl ToCss for TextTransformOther {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        let mut writer = SequenceWriter::new(dest, " ");
-        let mut any = false;
-        macro_rules! maybe_write {
-            ($ident:ident => $str:expr) => {
-                if self.contains(TextTransformOther::$ident) {
-                    writer.raw_item($str)?;
-                    any = true;
-                }
-            };
-        }
-
-        maybe_write!(FULL_WIDTH => "full-width");
-        maybe_write!(FULL_SIZE_KANA => "full-size-kana");
-
-        debug_assert!(any || self.is_empty());
-
-        Ok(())
     }
 }
 
@@ -773,7 +748,7 @@ impl Parse for TextEmphasisStyle {
 }
 
 bitflags! {
-    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem, Parse, ToCss)]
+    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     #[css(bitflags(mixed="over,under,left,right", validate_mixed="Self::validate_and_simplify"))]
     /// Values for text-emphasis-position:
@@ -985,7 +960,7 @@ impl TextDecorationLength {
 }
 
 bitflags! {
-    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[value_info(other_values = "auto,from-font,under,left,right")]
     #[repr(C)]
     /// Specified keyword values for the text-underline-position property.
