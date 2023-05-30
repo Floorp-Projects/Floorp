@@ -598,6 +598,12 @@ strong {
   overflow-y: auto;
 }
 
+@media (-moz-overlay-scrollbars) {
+  .devtools-tooltip-events-container {
+    padding-inline: calc(env(scrollbar-inline-size) / 2);
+  }
+}
+
 .devtools-tooltip-events-container .event-header {
   display: flex;
   align-items: center;
