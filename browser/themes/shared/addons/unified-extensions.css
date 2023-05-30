@@ -22,6 +22,10 @@
   --uei-dot-vertical-position-in-panel: max(0px, calc(var(--arrowpanel-menuitem-padding-block) / 2 - var(--uei-attention-dot-size) / 2));
 }
 
+#unified-extensions-view {
+  width: var(--menu-panel-width-wide);
+}
+
 /* Align extensions rendered with custom elements. */
 unified-extensions-item {
   display: flex;
@@ -107,7 +111,6 @@ unified-extensions-item > .subviewbutton {
 .unified-extensions-item-message {
   margin: 0;
   padding-inline-start: .5em;
-  width: 22em;
   word-break: break-word;
 }
 
@@ -156,7 +159,21 @@ unified-extensions-item > .subviewbutton {
   outline-offset: var(--focus-outline-inset);
 }
 
-/* --- browser action CUI widget styles --- */
+/* --- warning messages --- */
+
+#unified-extensions-messages-container {
+  margin: var(--arrowpanel-menuitem-margin);
+}
+
+.unified-extensions-message-bar {
+  padding-bottom: 2px;
+}
+
+/* Stack each child in the message bar. */
+.unified-extensions-message-bar > * {
+  display: inline-block;
+  padding-block: 1px;
+}
 
 /* Hide the menu button and the unified extensions content when the extension
  * item is placed on the toolbar. */
