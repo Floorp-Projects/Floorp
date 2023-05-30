@@ -384,7 +384,7 @@ bool ExecuteCharStringOperator(ots::OpenTypeCFF& cff,
     }
     uint16_t k = cff.region_index_count.at(cs_ctx.vsindex);
     uint16_t n = argument_stack->top();
-    if (stack_size < n * (k + 1) + 1) {
+    if (stack_size < n * (k + 1u) + 1u) {
       return OTS_FAILURE();
     }
 
