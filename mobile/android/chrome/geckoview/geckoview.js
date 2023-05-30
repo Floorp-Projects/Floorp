@@ -403,6 +403,9 @@ class ModuleInfo {
    * Called before the browser is removed
    */
   onDestroyBrowser() {
+    if (this._impl) {
+      this._impl.onDestroyBrowser();
+    }
     this._contentModuleLoaded = false;
   }
 

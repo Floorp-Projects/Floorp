@@ -60,6 +60,9 @@ export class GeckoViewModule {
   // Override to initialize the browser before it is bound to the window.
   onInitBrowser() {}
 
+  // Override to cleanup when the browser is destroyed.
+  onDestroyBrowser() {}
+
   // Override to initialize module.
   onInit() {}
 
