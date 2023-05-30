@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { PanelTestProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PanelTestProvider.jsm"
+const { PanelTestProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
 
 const MESSAGE_VALIDATORS = {};

@@ -6,8 +6,8 @@
 const { actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
-const { getDomain } = ChromeUtils.import(
-  "resource://activity-stream/lib/TippyTopProvider.jsm"
+const { getDomain } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TippyTopProvider.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"

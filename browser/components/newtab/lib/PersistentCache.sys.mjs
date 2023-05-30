@@ -1,12 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /**
  * A file (disk) based persistent cache of a JSON serializable object.
  */
-class PersistentCache {
+export class PersistentCache {
   /**
    * Create a cache object based on a name.
    *
@@ -91,5 +90,3 @@ class PersistentCache {
     });
   }
 }
-
-const EXPORTED_SYMBOLS = ["PersistentCache"];

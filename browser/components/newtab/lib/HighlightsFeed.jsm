@@ -28,12 +28,8 @@ ChromeUtils.defineModuleGetter(
   "FilterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LinksCache",
-  "resource://activity-stream/lib/LinksCache.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
 });

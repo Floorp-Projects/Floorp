@@ -1,13 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /**
  * Methods for setting up and tearing down page event listeners. These are used
  * to dismiss Feature Callouts when the callout's anchor element is clicked.
  */
-class PageEventManager {
+export class PageEventManager {
   /**
    * A set of parameters defining a page event listener.
    * @typedef {Object} PageEventListenerParams
@@ -93,5 +92,3 @@ class PageEventManager {
     this._listeners.clear();
   }
 }
-
-const EXPORTED_SYMBOLS = ["PageEventManager"];

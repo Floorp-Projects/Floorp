@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Note: the schema can be found in
  * https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml
@@ -16,7 +14,7 @@ const EXTRAS_FIELD_NAMES = [
   "action_position",
 ];
 
-class UTEventReporting {
+export class UTEventReporting {
   constructor() {
     Services.telemetry.setEventRecordingEnabled("activity_stream", true);
     this.sendUserEvent = this.sendUserEvent.bind(this);
@@ -62,5 +60,3 @@ class UTEventReporting {
     Services.telemetry.setEventRecordingEnabled("activity_stream", false);
   }
 }
-
-const EXPORTED_SYMBOLS = ["UTEventReporting"];

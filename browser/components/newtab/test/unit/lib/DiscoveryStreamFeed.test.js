@@ -9,7 +9,7 @@ import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
 import { RecommendationProvider } from "lib/RecommendationProvider.jsm";
 import { reducers } from "common/Reducers.sys.mjs";
 
-import { PersistentCache } from "lib/PersistentCache.jsm";
+import { PersistentCache } from "lib/PersistentCache.sys.mjs";
 import { PersonalityProvider } from "lib/PersonalityProvider/PersonalityProvider.jsm";
 
 const CONFIG_PREF_NAME = "discoverystream.config";

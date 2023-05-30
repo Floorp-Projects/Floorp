@@ -7,8 +7,8 @@
 // TODO (Bug 1800937): Remove this whole test along with the migration code
 // after the next watershed release.
 
-const { ASRouterNewTabHook } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
+const { ASRouterNewTabHook } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs"
 );
 const { ASRouterDefaultConfig } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"

@@ -5,9 +5,8 @@
 
 import { MESSAGE_TYPE_HASH } from "resource://activity-stream/common/ActorConstants.sys.mjs";
 
-const { ASRouterNewTabHook } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
-);
+import { ASRouterNewTabHook } from "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs";
+
 const { ASRouterDefaultConfig } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"
 );

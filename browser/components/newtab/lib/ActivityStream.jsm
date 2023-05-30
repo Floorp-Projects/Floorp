@@ -9,13 +9,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DEFAULT_SITES",
-  "resource://activity-stream/lib/DefaultSites.jsm"
-);
-
 ChromeUtils.defineESModuleGetters(lazy, {
+  DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
 });

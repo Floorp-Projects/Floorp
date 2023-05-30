@@ -1,4 +1,4 @@
-import { RemoteL10n, _RemoteL10n } from "lib/RemoteL10n.jsm";
+import { RemoteL10n, _RemoteL10n } from "lib/RemoteL10n.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("RemoteL10n", () => {

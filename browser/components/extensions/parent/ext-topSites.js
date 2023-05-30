@@ -8,12 +8,12 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  getSearchProvider: "resource://activity-stream/lib/SearchShortcuts.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   shortURL: "resource://activity-stream/lib/ShortURL.jsm",
-  getSearchProvider: "resource://activity-stream/lib/SearchShortcuts.jsm",
 });
 
 const SHORTCUTS_PREF =

@@ -23,8 +23,8 @@ const { UIState } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { FeatureCalloutMessages } = ChromeUtils.import(
-  "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
+const { FeatureCalloutMessages } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/FeatureCalloutMessages.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
@@ -349,7 +349,7 @@ async function tearDown(sandbox) {
  * `browser.firefox-view.feature-tour` to change the feature tour's
  * UI state.
  *
- * @see FeatureCalloutMessages.jsm for valid values of "screen"
+ * @see FeatureCalloutMessages.sys.mjs for valid values of "screen"
  *
  * @param {number} screen The full ID of the feature callout screen
  * @return {string} JSON string used to set

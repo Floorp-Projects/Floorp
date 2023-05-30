@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /**
  * The downloaded Fluent file is located in this sub-directory of the local
@@ -132,7 +131,7 @@ const ALL_LOCALES = new Set([
   "zh-TW",
 ]);
 
-class _RemoteL10n {
+export class _RemoteL10n {
   constructor() {
     this._l10n = null;
   }
@@ -247,6 +246,4 @@ class _RemoteL10n {
   }
 }
 
-const RemoteL10n = new _RemoteL10n();
-
-const EXPORTED_SYMBOLS = ["RemoteL10n", "_RemoteL10n"];
+export const RemoteL10n = new _RemoteL10n();

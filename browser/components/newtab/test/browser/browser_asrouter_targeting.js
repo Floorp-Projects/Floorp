@@ -4,7 +4,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  CFRMessageProvider: "resource://activity-stream/lib/CFRMessageProvider.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
 });
@@ -12,6 +11,8 @@ ChromeUtils.defineESModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
+  CFRMessageProvider:
+    "resource://activity-stream/lib/CFRMessageProvider.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",

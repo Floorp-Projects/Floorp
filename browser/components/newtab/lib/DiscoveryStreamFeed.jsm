@@ -9,6 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
+  PersistentCache: "resource://activity-stream/lib/PersistentCache.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
@@ -17,11 +18,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
 );
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PersistentCache",
-  "resource://activity-stream/lib/PersistentCache.jsm"
 );
 
 const CACHE_KEY = "discovery_stream";

@@ -4,8 +4,8 @@ const { ASRouter } = ChromeUtils.import(
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
-const { CFRMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRMessageProvider.jsm"
+const { CFRMessageProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
 const { CFRPageActions } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRPageActions.jsm"

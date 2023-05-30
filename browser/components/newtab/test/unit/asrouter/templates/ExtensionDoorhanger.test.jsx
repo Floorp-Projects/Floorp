@@ -1,4 +1,4 @@
-import { CFRMessageProvider } from "lib/CFRMessageProvider.jsm";
+import { CFRMessageProvider } from "lib/CFRMessageProvider.sys.mjs";
 import CFRDoorhangerSchema from "content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json";
 import CFRChicletSchema from "content-src/asrouter/templates/CFR/templates/CFRUrlbarChiclet.schema.json";
 import InfoBarSchema from "content-src/asrouter/templates/CFR/templates/InfoBar.schema.json";

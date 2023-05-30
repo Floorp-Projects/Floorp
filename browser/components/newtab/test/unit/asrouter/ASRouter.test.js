@@ -15,9 +15,9 @@ import {
 import { ASRouterTriggerListeners } from "lib/ASRouterTriggerListeners.jsm";
 import { CFRPageActions } from "lib/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
-import { PanelTestProvider } from "lib/PanelTestProvider.jsm";
+import { PanelTestProvider } from "lib/PanelTestProvider.sys.mjs";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
-import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
+import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.sys.mjs";
 
 const MESSAGE_PROVIDER_PREF_NAME =
   "browser.newtabpage.activity-stream.asrouter.providers.snippets";

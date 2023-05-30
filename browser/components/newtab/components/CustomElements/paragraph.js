@@ -7,8 +7,8 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const { RemoteL10n } = ChromeUtils.import(
-    "resource://activity-stream/lib/RemoteL10n.jsm"
+  const { RemoteL10n } = ChromeUtils.importESModule(
+    "resource://activity-stream/lib/RemoteL10n.sys.mjs"
   );
   class MozTextParagraph extends HTMLElement {
     constructor() {
