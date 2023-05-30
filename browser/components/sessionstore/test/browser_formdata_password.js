@@ -49,7 +49,7 @@ async function test_hasBeenTypePassword(aURL) {
     {
       state: { formdata },
     },
-  ] = ss.getClosedTabData(window);
+  ] = ss.getClosedTabDataForWindow(window);
   let expected = [
     ["TextValue", "abc"],
     ["TextValuePassword", undefined],

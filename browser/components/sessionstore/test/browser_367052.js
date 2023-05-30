@@ -5,7 +5,7 @@
 "use strict";
 
 add_task(async function () {
-  // make sure that the next closed tab will increase getClosedTabCount
+  // make sure that the next closed tab will increase getClosedTabCountForWindow
   let max_tabs_undo = Services.prefs.getIntPref(
     "browser.sessionstore.max_tabs_undo"
   );
@@ -35,7 +35,7 @@ add_task(async function () {
 
   await promiseRemoveTabAndSessionState(tab);
   is(
-    ss.getClosedTabCount(window),
+    ss.getClosedTabCountForWindow(window),
     0,
     "The closed blank tab wasn't added to Recently Closed Tabs"
   );

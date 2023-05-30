@@ -132,16 +132,16 @@ add_task(async function test_ClosedTabMethods() {
     info(`window ${idx}: ${win.gBrowser.selectedBrowser.currentURI.spec}`);
     Assert.equal(
       winData._closedTabs.length,
-      SessionStore.getClosedTabData(win).length,
-      `getClosedTabData() for window ${idx} returned the expected number of objects`
+      SessionStore.getClosedTabDataForWindow(win).length,
+      `getClosedTabDataForWindow() for window ${idx} returned the expected number of objects`
     );
   }
 
   let closedCount;
-  closedCount = SessionStore.getClosedTabCount(browserWindows[0]);
+  closedCount = SessionStore.getClosedTabCountForWindow(browserWindows[0]);
   Assert.equal(2, closedCount, "2 closed tab for this window");
 
-  closedCount = SessionStore.getClosedTabCount(browserWindows[1]);
+  closedCount = SessionStore.getClosedTabCountForWindow(browserWindows[1]);
   Assert.equal(1, closedCount, "1 closed tab for this window");
 
   sessionStoreUpdated = TestUtils.topicObserved(
@@ -152,12 +152,12 @@ add_task(async function test_ClosedTabMethods() {
 
   Assert.equal(
     1,
-    SessionStore.getClosedTabCount(browserWindows[0]),
+    SessionStore.getClosedTabCountForWindow(browserWindows[0]),
     "Now theres one closed tab"
   );
   Assert.equal(
     1,
-    SessionStore.getClosedTabCount(browserWindows[1]),
+    SessionStore.getClosedTabCountForWindow(browserWindows[1]),
     "Theres still one closed tab in the 2nd window"
   );
 
@@ -169,12 +169,12 @@ add_task(async function test_ClosedTabMethods() {
 
   Assert.equal(
     0,
-    SessionStore.getClosedTabCount(browserWindows[0]),
+    SessionStore.getClosedTabCountForWindow(browserWindows[0]),
     "No closed tabs after forgetting the last one"
   );
   Assert.equal(
     1,
-    SessionStore.getClosedTabCount(browserWindows[1]),
+    SessionStore.getClosedTabCountForWindow(browserWindows[1]),
     "Theres still one closed tab in the 2nd window"
   );
 
@@ -182,7 +182,7 @@ add_task(async function test_ClosedTabMethods() {
 
   Assert.equal(
     0,
-    SessionStore.getClosedTabCount(browserWindows[0]),
+    SessionStore.getClosedTabCountForWindow(browserWindows[0]),
     "Closed tab count is unchanged after closing the other browser window"
   );
 

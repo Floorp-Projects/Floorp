@@ -6512,7 +6512,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     document.getElementById("toolbar-context-selectAllTabs").disabled =
       gBrowser.allTabsSelected();
     document.getElementById("toolbar-context-undoCloseTab").disabled =
-      SessionStore.getClosedTabCount(window) == 0;
+      SessionStore.getClosedTabCountForWindow(window) == 0;
     return;
   }
 
@@ -8107,7 +8107,7 @@ function AddKeywordForSearchField() {
 /**
  * Re-open a closed tab.
  * @param aIndex
- *        The index of the tab (via SessionStore.getClosedTabData)
+ *        The index of the tab (via SessionStore.getClosedTabDataForWindow)
  * @returns a reference to the reopened tab.
  */
 function undoCloseTab(aIndex) {
@@ -8137,7 +8137,7 @@ function undoCloseTab(aIndex) {
     aIndex !== undefined ? [aIndex] : new Array(closedTabCount).fill(0);
   let tabsRemoved = false;
   for (let index of tabsToRemove) {
-    if (SessionStore.getClosedTabCount(window) > index) {
+    if (SessionStore.getClosedTabCountForWindow(window) > index) {
       tab = SessionStore.undoCloseTab(window, index);
       tabsRemoved = true;
     }

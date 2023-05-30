@@ -269,6 +269,9 @@ var gDebuggingEnabled = false;
  */
 var gResistFingerprintingEnabled = false;
 
+/**
+ * @namespace SessionStore
+ */
 export var SessionStore = {
   get promiseInitialized() {
     return SessionStoreInternal.promiseInitialized;
@@ -355,12 +358,12 @@ export var SessionStore = {
     SessionStoreInternal.resetLastClosedTabCount(aWindow);
   },
 
-  getClosedTabCount: function ss_getClosedTabCount(aWindow) {
-    return SessionStoreInternal.getClosedTabCount(aWindow);
+  getClosedTabCountForWindow: function ss_getClosedTabCountForWindow(aWindow) {
+    return SessionStoreInternal.getClosedTabCountForWindow(aWindow);
   },
 
-  getClosedTabData: function ss_getClosedTabData(aWindow) {
-    return SessionStoreInternal.getClosedTabData(aWindow);
+  getClosedTabDataForWindow: function ss_getClosedTabDataForWindow(aWindow) {
+    return SessionStoreInternal.getClosedTabDataForWindow(aWindow);
   },
 
   undoCloseTab: function ss_undoCloseTab(aWindow, aIndex) {
@@ -597,6 +600,11 @@ export var SessionStore = {
 // Freeze the SessionStore object. We don't want anyone to modify it.
 Object.freeze(SessionStore);
 
+/**
+ * @namespace SessionStoreInternal
+ *
+ * @description Internal implementations and helpers for the public SessionStore methods
+ */
 var SessionStoreInternal = {
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
@@ -3293,7 +3301,7 @@ var SessionStoreInternal = {
     if ("__SSi" in aWindow) {
       return Math.min(
         Math.max(this._windows[aWindow.__SSi]._lastClosedTabGroupCount, 1),
-        this.getClosedTabCount(aWindow)
+        this.getClosedTabCountForWindow(aWindow)
       );
     }
 
@@ -3308,7 +3316,7 @@ var SessionStoreInternal = {
     }
   },
 
-  getClosedTabCount: function ssi_getClosedTabCount(aWindow) {
+  getClosedTabCountForWindow: function ssi_getClosedTabCountForWindow(aWindow) {
     if ("__SSi" in aWindow) {
       return this._windows[aWindow.__SSi]._closedTabs.length;
     }
@@ -3323,7 +3331,7 @@ var SessionStoreInternal = {
     return DyingWindowCache.get(aWindow)._closedTabs.length;
   },
 
-  getClosedTabData: function ssi_getClosedTabData(aWindow) {
+  getClosedTabDataForWindow: function ssi_getClosedTabDataForWindow(aWindow) {
     if ("__SSi" in aWindow) {
       return Cu.cloneInto(this._windows[aWindow.__SSi]._closedTabs, {});
     }
@@ -4299,11 +4307,12 @@ var SessionStoreInternal = {
    *        Window reference to the window to use for restoration
    * @param winData
    *        JS object
-   * @param aOptions
-   *        {overwriteTabs: true} to overwrite existing tabs w/ new ones
-   *        {firstWindow: true} if this is the first non-private window we're
-   *                            restoring in this session, that might open an
-   *                            external link as well
+   * @param aOptions.overwriteTabs
+   *        to overwrite existing tabs w/ new ones
+   * @param aOptions.firstWindow
+   *        if this is the first non-private window we're
+   *        restoring in this session, that might open an
+   *        external link as well
    */
   restoreWindow: function ssi_restoreWindow(aWindow, winData, aOptions = {}) {
     let overwriteTabs = aOptions && aOptions.overwriteTabs;
@@ -4573,11 +4582,12 @@ var SessionStoreInternal = {
    *        Additionally required windows will be opened.
    * @param aState
    *        JS object or JSON string
-   * @param aOptions
-   *        {overwriteTabs: true} to overwrite existing tabs w/ new ones
-   *        {firstWindow: true} if this is the first non-private window we're
-   *                            restoring in this session, that might open an
-   *                            external link as well
+   * @param aOptions.overwriteTabs
+   *        to overwrite existing tabs w/ new ones
+   * @param aOptions.firstWindow
+   *        if this is the first non-private window we're
+   *        restoring in this session, that might open an
+   *        external link as well
    */
   restoreWindows: function ssi_restoreWindows(aWindow, aState, aOptions = {}) {
     // initialize window if necessary

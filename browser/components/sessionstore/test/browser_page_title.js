@@ -15,7 +15,7 @@ add_task(async function () {
     {
       state: { entries },
     },
-  ] = ss.getClosedTabData(window);
+  ] = ss.getClosedTabDataForWindow(window);
   is(entries[0].title, "initial title", "correct title");
 });
 
@@ -49,6 +49,6 @@ add_task(async function () {
     {
       state: { entries },
     },
-  ] = ss.getClosedTabData(window);
+  ] = ss.getClosedTabDataForWindow(window);
   is(entries[0].title, "new title", "correct title");
 });

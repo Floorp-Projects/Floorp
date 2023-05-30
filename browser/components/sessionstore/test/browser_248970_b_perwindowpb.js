@@ -100,13 +100,13 @@ function test() {
     windowsToClose.push(aWin);
 
     // get closed tab count
-    let count = ss.getClosedTabCount(aWin);
+    let count = ss.getClosedTabCountForWindow(aWin);
     let max_tabs_undo = Services.prefs.getIntPref(
       "browser.sessionstore.max_tabs_undo"
     );
     ok(
       0 <= count && count <= max_tabs_undo,
-      "getClosedTabCount should return zero or at most max_tabs_undo"
+      "getClosedTabCountForWindow should return zero or at most max_tabs_undo"
     );
 
     // setup a state for tab (A) so we can check later that is restored
@@ -117,7 +117,7 @@ function test() {
     let tab_A = BrowserTestUtils.addTab(aWin.gBrowser, testURL);
     ss.setTabState(tab_A, JSON.stringify(state));
     promiseBrowserLoaded(tab_A.linkedBrowser).then(() => {
-      // make sure that the next closed tab will increase getClosedTabCount
+      // make sure that the next closed tab will increase getClosedTabCountForWindow
       Services.prefs.setIntPref(
         "browser.sessionstore.max_tabs_undo",
         max_tabs_undo + 1
@@ -133,8 +133,8 @@ function test() {
 
       // verify that closedTabCount increased
       ok(
-        ss.getClosedTabCount(aWin) > count,
-        "getClosedTabCount has increased after closing a tab"
+        ss.getClosedTabCountForWindow(aWin) > count,
+        "getClosedTabCountForWindow has increased after closing a tab"
       );
 
       // verify tab: (A), in undo list

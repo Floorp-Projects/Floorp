@@ -30,8 +30,8 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
   getTabsFragment(aWindow, aTagName, aPrefixRestoreAll = false) {
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
-    if (lazy.SessionStore.getClosedTabCount(aWindow) != 0) {
-      let closedTabs = lazy.SessionStore.getClosedTabData(aWindow);
+    if (lazy.SessionStore.getClosedTabCountForWindow(aWindow) != 0) {
+      let closedTabs = lazy.SessionStore.getClosedTabDataForWindow(aWindow);
       for (let i = 0; i < closedTabs.length; i++) {
         createEntry(
           aTagName,

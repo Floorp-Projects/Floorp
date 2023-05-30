@@ -115,7 +115,7 @@ export const CustomizableWidgets = [
       lazy.PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedTabs"
-      ).disabled = lazy.SessionStore.getClosedTabCount(window) == 0;
+      ).disabled = lazy.SessionStore.getClosedTabCountForWindow(window) == 0;
       lazy.PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedWindows"

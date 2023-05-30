@@ -62,7 +62,7 @@ add_task(async function test_keyboard_navigation() {
   await SpecialPowers.clearUserPref(RECENTLY_CLOSED_STATE_PREF);
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
@@ -207,7 +207,7 @@ add_task(async function test_keyboard_navigation() {
 add_task(async function test_dismiss_tab_keyboard() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   Assert.equal(
-    SessionStore.getClosedTabCount(window),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );

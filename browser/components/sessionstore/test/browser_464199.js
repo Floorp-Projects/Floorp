@@ -134,7 +134,7 @@ add_task(async function () {
   await restoring;
   await restored;
 
-  let closedTabs = ss.getClosedTabData(newWin);
+  let closedTabs = ss.getClosedTabDataForWindow(newWin);
   is(
     closedTabs.length,
     test_state.windows[0]._closedTabs.length,
@@ -154,7 +154,7 @@ add_task(async function () {
   let promise = promiseClearHistory();
   await ForgetAboutSite.removeDataFromDomain("example.net");
   await promise;
-  closedTabs = ss.getClosedTabData(newWin);
+  closedTabs = ss.getClosedTabDataForWindow(newWin);
   is(
     closedTabs.length,
     remember_count,

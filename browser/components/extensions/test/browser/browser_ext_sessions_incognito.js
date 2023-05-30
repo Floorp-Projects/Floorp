@@ -85,7 +85,7 @@ add_task(async function test_sessions_tab_value_private() {
   let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
   BrowserTestUtils.removeTab(tab);
   await sessionUpdatePromise;
-  let closedTabData = SessionStore.getClosedTabData(winData.win);
+  let closedTabData = SessionStore.getClosedTabDataForWindow(winData.win);
 
   extension.sendMessage("restore", {
     sessionId: String(closedTabData[0].closedId),
