@@ -531,6 +531,16 @@ add_task(async function test_aboutwelcome_embedded_migration() {
         true /* wantsUntrusted */
       );
       let selector = shadow.querySelector("#browser-profile-selector");
+
+      // The migration wizard programmatically focuses the selector after
+      // the selection page is shown using an rAF. If we click the button
+      // before that occurs, then the focus can shift after the panel opens
+      // which will cause it to immediately close again. So we wait for the
+      // selection button to gain focus before continuing.
+      if (!selector.matches(":focus")) {
+        await ContentTaskUtils.waitForEvent(selector, "focus");
+      }
+
       selector.click();
       await shown;
 
