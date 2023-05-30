@@ -242,6 +242,7 @@ DrawTargetWebgl::~DrawTargetWebgl() {
     if (mTex) {
       mSharedContext->mWebgl->DeleteTexture(mTex);
     }
+    mSharedContext->mWebgl->Flush(false);
   }
 }
 
