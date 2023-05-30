@@ -138,7 +138,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
         if (event.isTrusted) {
           this.togglePictureInPicture({
             video: event.target,
-            reason: event.detail,
+            reason: event.detail?.reason,
           });
         }
         break;
@@ -179,7 +179,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
         "MozStopPictureInPicture",
         {
           bubbles: true,
-          detail: reason,
+          detail: { reason },
         }
       );
       video.dispatchEvent(stopPipEvent);
@@ -225,6 +225,20 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       scrubberPosition,
       timestamp,
     });
+
+    let args = {
+      firstTimeToggle: (!Services.prefs.getBoolPref(
+        TOGGLE_HAS_USED_PREF
+      )).toString(),
+    };
+
+    Services.telemetry.recordEvent(
+      "pictureinpicture",
+      "opened_method",
+      reason,
+      null,
+      args
+    );
   }
 
   /**
@@ -249,7 +263,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
           listOfVideos.sort((a, b) => b.duration - a.duration)[0];
       }
       if (video) {
-        this.togglePictureInPicture({ video });
+        this.togglePictureInPicture({ video, reason: "shortcut" });
       }
     }
   }
@@ -652,20 +666,6 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       this.eligiblePipVideos
     )[0];
     if (video) {
-      if (!video.isCloningElementVisually) {
-        let args = {
-          firstTimeToggle: (!Services.prefs.getBoolPref(
-            "media.videocontrols.picture-in-picture.video-toggle.has-used"
-          )).toString(),
-        };
-        Services.telemetry.recordEvent(
-          "pictureinpicture",
-          "opened_method",
-          "urlBar",
-          null,
-          args
-        );
-      }
       let pipEvent = new this.contentWindow.CustomEvent(
         "MozTogglePictureInPicture",
         {
@@ -1058,23 +1058,12 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       "toggle",
       1
     );
-    let args = {
-      firstTimeToggle: (!Services.prefs.getBoolPref(
-        TOGGLE_HAS_USED_PREF
-      )).toString(),
-    };
-    Services.telemetry.recordEvent(
-      "pictureinpicture",
-      "opened_method",
-      "toggle",
-      null,
-      args
-    );
 
     let pipEvent = new this.contentWindow.CustomEvent(
       "MozTogglePictureInPicture",
       {
         bubbles: true,
+        detail: { reason: "toggle" },
       }
     );
     video.dispatchEvent(pipEvent);

@@ -2906,11 +2906,12 @@ pictureinpicture:
     expiry_version: "never"
     release_channel_collection: opt-out
   opened_method:
-    objects: ["toggle", "contextMenu", "urlBar"]
+    objects: ["toggle", "contextMenu", "urlBar", "shortcut"]
     description: >
       Records the method for opening the Picture-in-Picture window.
     extra_keys:
       firstTimeToggle: If the user has used Picture-in-Picture before
+      disableDialog: True when urlbar button opens the disable PiP dialog
     notification_emails:
       - mconley@mozilla.com
     products:
@@ -2918,10 +2919,11 @@ pictureinpicture:
     record_in_processes: ["main", "content"]
     bug_numbers:
       - 1749585
+      - 1834554
     expiry_version: "never"
     release_channel_collection: opt-out
   closed_method:
-    objects: ["closeButton", "unpip", "pagehide", "fullscreen", "setupFailure", "closePlayerShortcut", "contextMenu", "videoElRemove", "videoElEmptied", "urlBar"]
+    objects: ["closeButton", "unpip", "pagehide", "fullscreen", "setupFailure", "closePlayerShortcut", "contextMenu", "videoElRemove", "videoElEmptied", "urlBar", "shortcut"]
     description: >
       Records the method for closing the Picture-in-Picture window.
     notification_emails:
@@ -2934,6 +2936,7 @@ pictureinpicture:
       - "main"
     bug_numbers:
       - 1756703
+      - 1834554
     expiry_version: "never"
     release_channel_collection: opt-out
   subtitles_shown:
@@ -2968,6 +2971,21 @@ pictureinpicture:
       - "main"
     bug_numbers:
       - 1822395
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  disrespect_disable:
+    objects: ["urlBar"]
+    description: >
+      Recorded when the user chooses to enable PiP anyway on a PiP disabled video
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1834554
     expiry_version: "never"
     release_channel_collection: opt-out
 

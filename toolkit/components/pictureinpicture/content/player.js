@@ -1062,7 +1062,7 @@ let Player = {
    *  Event context data object
    */
   onCommand(event) {
-    this.closePipWindow({ reason: "player-shortcut" });
+    this.closePipWindow({ reason: "shortcut" });
   },
 
   get controls() {
