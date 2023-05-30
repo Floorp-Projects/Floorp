@@ -51,8 +51,13 @@ add_task(async function test_browser_no_programs() {
     );
   });
 
+  // Now disable all file migrators to make sure that the "Import from file"
+  // button is hidden.
   await SpecialPowers.pushPrefEnv({
-    set: [["signon.management.page.fileImport.enabled", false]],
+    set: [
+      ["signon.management.page.fileImport.enabled", false],
+      ["browser.migrate.bookmarks-file.enabled", false],
+    ],
   });
 
   await withMigrationWizardDialog(async prefsWin => {

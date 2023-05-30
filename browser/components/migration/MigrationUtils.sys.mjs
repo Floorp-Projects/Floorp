@@ -112,6 +112,9 @@ const FILE_MIGRATOR_MODULES = Object.freeze({
   PasswordFileMigrator: {
     moduleURI: "resource:///modules/FileMigrators.sys.mjs",
   },
+  BookmarksFileMigrator: {
+    moduleURI: "resource:///modules/FileMigrators.sys.mjs",
+  },
 });
 
 /**

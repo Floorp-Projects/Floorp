@@ -6,6 +6,8 @@ const lazy = {};
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
+  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   LoginCSVImport: "resource://gre/modules/LoginCSVImport.sys.mjs",
   MigrationWizardConstants:
     "chrome://browser/content/migration/migration-wizard-constants.mjs",
@@ -236,6 +238,92 @@ export class PasswordFileMigrator extends FileMigratorBase {
         .PASSWORDS_NEW]: newMessage,
       [lazy.MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES
         .PASSWORDS_UPDATED]: updatedMessage,
+    };
+  }
+}
+
+/**
+ * A file migrator for importing bookmarks from a HTML or JSON file.
+ *
+ * @class BookmarksFileMigrator
+ * @augments {FileMigratorBase}
+ */
+export class BookmarksFileMigrator extends FileMigratorBase {
+  static get key() {
+    return "file-bookmarks";
+  }
+
+  static get displayNameL10nID() {
+    return "migration-wizard-migrator-display-name-file-bookmarks";
+  }
+
+  static get brandImage() {
+    return "chrome://branding/content/document.ico";
+  }
+
+  get enabled() {
+    return Services.prefs.getBoolPref(
+      "browser.migrate.bookmarks-file.enabled",
+      false
+    );
+  }
+
+  get displayedResourceTypes() {
+    return [
+      lazy.MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES
+        .BOOKMARKS_FROM_FILE,
+    ];
+  }
+
+  get progressHeaderL10nID() {
+    return "migration-bookmarks-from-file-progress-header";
+  }
+
+  get successHeaderL10nID() {
+    return "migration-bookmarks-from-file-success-header";
+  }
+
+  async getFilePickerConfig() {
+    let [title, htmlFilterTitle, jsonFilterTitle] =
+      await lazy.gFluentStrings.formatValues([
+        { id: "migration-bookmarks-from-file-picker-title" },
+        { id: "migration-bookmarks-from-file-html-filter-title" },
+        { id: "migration-bookmarks-from-file-json-filter-title" },
+      ]);
+
+    return {
+      title,
+      filters: [
+        {
+          title: htmlFilterTitle,
+          extensionPattern: "*.html",
+        },
+        {
+          title: jsonFilterTitle,
+          extensionPattern: "*.json",
+        },
+      ],
+    };
+  }
+
+  async migrate(filePath) {
+    let pathCheck = filePath.toLowerCase();
+    let importedCount;
+
+    if (pathCheck.endsWith("html")) {
+      importedCount = await lazy.BookmarkHTMLUtils.importFromFile(filePath);
+    } else if (pathCheck.endsWith("json") || pathCheck.endsWith("jsonlz4")) {
+      importedCount = await lazy.BookmarkJSONUtils.importFromFile(filePath);
+    }
+    let importedMessage = await lazy.gFluentStrings.formatValue(
+      "migration-wizard-progress-success-new-bookmarks",
+      {
+        newEntries: importedCount,
+      }
+    );
+    return {
+      [lazy.MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES
+        .BOOKMARKS_FROM_FILE]: importedMessage,
     };
   }
 }
