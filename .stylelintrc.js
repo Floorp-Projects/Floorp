@@ -237,4 +237,12 @@ module.exports = {
       },
     ],
   },
+
+  overrides: [
+    {
+      files: "*.scss",
+      customSyntax: "postcss-scss",
+      extends: "stylelint-config-recommended-scss",
+    },
+  ],
 };
