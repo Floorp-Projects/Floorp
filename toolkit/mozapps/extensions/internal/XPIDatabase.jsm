@@ -1121,6 +1121,10 @@ AddonWrapper = class {
     return [];
   }
 
+  // NOTE: this boolean getter doesn't return true for all recommendation
+  // states at the moment. For the states actually supported on the autograph
+  // side see:
+  // https://github.com/mozilla-services/autograph/blob/8a34847a/autograph.yaml#L1456-L1460
   get isRecommended() {
     return this.recommendationStates.includes("recommended");
   }

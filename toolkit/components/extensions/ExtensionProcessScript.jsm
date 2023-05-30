@@ -158,6 +158,7 @@ ExtensionManager = {
         baseURL: extension.resourceURL,
 
         isPrivileged: extension.isPrivileged,
+        ignoreQuarantine: extension.ignoreQuarantine,
         temporarilyInstalled: extension.temporarilyInstalled,
         permissions: extension.permissions,
         allowedOrigins: extension.allowedOrigins,
