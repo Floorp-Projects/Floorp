@@ -10,7 +10,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -207,7 +206,6 @@ class CollectionTest {
 
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807289")
     @SmokeTest
     @Test
     fun deleteCollectionTest() {
