@@ -175,6 +175,32 @@ add_task(async function testURLParameters() {
       });
     }
   );
+  await BrowserTestUtils.withNewTab(PAGE + "?profilerstacks", async browser => {
+    await SpecialPowers.spawn(browser, [], async () => {
+      let $ = content.document.querySelector.bind(content.document);
+      Assert.ok(
+        !$("#some-elements-unavailable").hidden,
+        "If the profiler stacks config is set via URL, a warning should be displayed."
+      );
+      Assert.ok(
+        $("#with-profiler-stacks-checkbox").disabled,
+        "If the profiler stacks config is set via URL, its checkbox should be disabled."
+      );
+
+      Assert.ok(
+        Services.prefs.getBoolPref("logging.config.profilerstacks"),
+        "The preference for profiler stacks is set initially, as a result of parsing the URL parameter"
+      );
+
+      $("#radio-logging-file").click();
+      $("#radio-logging-profiler").click();
+
+      Assert.ok(
+        $("#with-profiler-stacks-checkbox").disabled,
+        "If the profiler stacks config is set via URL, its checkbox should be disabled even after clicking around."
+      );
+    });
+  });
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -296,8 +322,51 @@ add_task(async function testAboutLoggingPresets() {
   clearLoggingPrefs();
 });
 
-// // Here we test that starting and stopping log collection to the Firefox
-// // Profiler opens a new tab. We don't actually check the content of the profile.
+// Test various things around the profiler stacks feature
+add_task(async function testProfilerStacks() {
+  // Check the initial state before changing anything.
+  Assert.ok(
+    !Services.prefs.getBoolPref("logging.config.profilerstacks", false),
+    "The preference for profiler stacks isn't set initially"
+  );
+  await BrowserTestUtils.withNewTab(PAGE, async browser => {
+    await SpecialPowers.spawn(browser, [], async () => {
+      let $ = content.document.querySelector.bind(content.document);
+      const checkbox = $("#with-profiler-stacks-checkbox");
+      Assert.ok(
+        !checkbox.checked,
+        "The profiler stacks checkbox isn't checked at load time."
+      );
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new content.Event("change"));
+      Assert.ok(
+        Services.prefs.getBoolPref("logging.config.profilerstacks"),
+        "The preference for profiler stacks is now set to true"
+      );
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new content.Event("change"));
+      Assert.ok(
+        !Services.prefs.getBoolPref("logging.config.profilerstacks"),
+        "The preference for profiler stacks is now back to false"
+      );
+
+      $("#radio-logging-file").click();
+      Assert.ok(
+        checkbox.disabled,
+        "The profiler stacks checkbox is disabled when the output type is 'file'"
+      );
+      $("#radio-logging-profiler").click();
+      Assert.ok(
+        !checkbox.disabled,
+        "The profiler stacks checkbox is enabled when the output type is 'profiler'"
+      );
+    });
+  });
+  clearLoggingPrefs();
+});
+
+// Here we test that starting and stopping log collection to the Firefox
+// Profiler opens a new tab. We don't actually check the content of the profile.
 add_task(async function testProfilerOpens() {
   await BrowserTestUtils.withNewTab(PAGE, async browser => {
     let profilerOpenedPromise = BrowserTestUtils.waitForNewTab(
@@ -391,4 +460,5 @@ add_task(async function testLogFileFound() {
     }
     Assert.ok(foundNonEmptyLogFile, "Found at least one non-empty log file.");
   });
+  clearLoggingPrefs();
 });
