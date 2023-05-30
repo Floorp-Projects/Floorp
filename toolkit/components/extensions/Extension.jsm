@@ -317,14 +317,12 @@ function dirname(path) {
 // Returns true if the extension is owned by Mozilla (is either privileged,
 // using one of the @mozilla.com/@mozilla.org protected addon id suffixes).
 //
-// This method throws if the extension's startupReason is not one of the expected
-// ones (either ADDON_INSTALL, ADDON_UPGRADE or ADDON_DOWNGRADE).
+// This method throws if the extension's startupReason is not one of the
+// expected ones (either ADDON_INSTALL, ADDON_UPGRADE or ADDON_DOWNGRADE).
 //
-// NOTE: This methos is internally referring to "addonData.recommendationState" to
-// identify a Mozilla line extension. That property is part of the addonData only when
-// the extension is installed or updated, and so we enforce the expected
-// startup reason values to prevent it from silently returning different results
-// if called with an unexpected startupReason.
+// TODO(Bug 1835787): Consider to remove the restriction based on the
+// startupReason now that the recommendationState property is always
+// included in the addonData with any of the startupReason.
 function isMozillaExtension(extension) {
   const { addonData, id, isPrivileged, startupReason } = extension;
 
@@ -344,7 +342,7 @@ function isMozillaExtension(extension) {
 
   // This check is a subset of what is being checked in AddonWrapper's
   // recommendationStates (states expire dates for line extensions are
-  // not consideredcimportant in determining that the extension is
+  // not considered important in determining that the extension is
   // provided by mozilla, and so they are omitted here on purpose).
   const isMozillaLineExtension =
     addonData.recommendationState?.states?.includes("line");

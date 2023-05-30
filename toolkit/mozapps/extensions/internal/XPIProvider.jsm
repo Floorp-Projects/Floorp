@@ -461,6 +461,7 @@ const JSON_FIELDS = Object.freeze([
   "loader",
   "lastModifiedTime",
   "path",
+  "recommendationState",
   "rootURI",
   "runInSafeMode",
   "signedState",
@@ -553,6 +554,7 @@ class XPIState {
       lastModifiedTime: this.lastModifiedTime,
       loader: this.loader,
       path: this.relativePath,
+      recommendationState: this.recommendationState,
       rootURI: this.rootURI,
       runInSafeMode: this.runInSafeMode,
       signedState: this.signedState,
@@ -656,6 +658,7 @@ class XPIState {
     this.signedDate = aDBAddon.signedDate;
     this.file = aDBAddon._sourceBundle;
     this.rootURI = aDBAddon.rootURI;
+    this.recommendationState = aDBAddon.recommendationState;
 
     if ((aUpdated || mustGetMod) && this.file) {
       this.getModTime(this.file);
