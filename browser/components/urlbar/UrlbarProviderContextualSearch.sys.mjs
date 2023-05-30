@@ -149,7 +149,7 @@ class ProviderContextualSearch extends UrlbarProvider {
       // The default engine will often be used to populate the heuristic result,
       // and we want to avoid ending up with two nearly identical search results.
       let defaultEngine = lazy.UrlbarSearchUtils.getDefaultEngine();
-      if (engine.name === defaultEngine.name) {
+      if (engine.name === defaultEngine?.name) {
         return;
       }
       const [url] = UrlbarUtils.getSearchQueryUrl(

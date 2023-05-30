@@ -501,6 +501,10 @@ URIFixup.prototype = {
     }
     keyword = keyword.trim();
 
+    if (!Services.search.hasSuccessfullyInitialized) {
+      return info;
+    }
+
     // Try falling back to the search service's default search engine
     // We must use an appropriate search engine depending on the private
     // context.

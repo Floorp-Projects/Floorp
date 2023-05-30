@@ -666,7 +666,7 @@ Search.prototype = {
         /\s*\S?$/.test(this._trimmedOriginalSearchString);
       if (
         emptySearchRestriction ||
-        (tokenAliasEngines &&
+        (tokenAliasEngines.length &&
           this._trimmedOriginalSearchString.startsWith("@")) ||
         (this.hasBehavior("search") && this.hasBehavior("restrict"))
       ) {

@@ -261,7 +261,13 @@ class ProvidersManager {
     // The muxer and many providers depend on the search service and our search
     // utils.  Make sure they're initialized now (via UrlbarSearchUtils) so that
     // all query-related urlbar modules don't need to do it.
-    await lazy.UrlbarSearchUtils.init();
+    try {
+      await lazy.UrlbarSearchUtils.init();
+    } catch {
+      // We continue anyway, because we want the user to be able to search their
+      // history and bookmarks even if search engines are not available.
+    }
+
     if (query.canceled) {
       return;
     }

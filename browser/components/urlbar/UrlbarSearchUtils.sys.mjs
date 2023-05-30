@@ -75,7 +75,11 @@ class SearchUtils {
     prefix,
     { matchAllDomainLevels = false, onlyEnabled = false } = {}
   ) {
-    await this.init();
+    try {
+      await this.init();
+    } catch {
+      return [];
+    }
     prefix = prefix.toLowerCase();
 
     let disabledEngines = onlyEnabled
@@ -149,7 +153,12 @@ class SearchUtils {
    *   The matching engine or null if there isn't one.
    */
   async engineForAlias(alias, searchString = null) {
-    await Promise.all([this.init(), this._refreshEnginesByAliasPromise]);
+    try {
+      await Promise.all([this.init(), this._refreshEnginesByAliasPromise]);
+    } catch {
+      return null;
+    }
+
     let engine = this._enginesByAlias.get(alias.toLocaleLowerCase());
     if (engine && searchString) {
       let query = lazy.UrlbarUtils.substringAfter(searchString, alias);
@@ -166,10 +175,16 @@ class SearchUtils {
    * The list of engines with token ("@") aliases.
    *
    * @returns {Array}
-   *   Array of objects { engine, tokenAliases } for token alias engines.
+   *   Array of objects { engine, tokenAliases } for token alias engines or
+   *   null if SearchService has not initialized.
    */
   async tokenAliasEngines() {
-    await this.init();
+    try {
+      await this.init();
+    } catch {
+      return [];
+    }
+
     let tokenAliasEngines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
       let tokenAliases = this._aliasesForEngine(engine).filter(a =>
@@ -209,7 +224,17 @@ class SearchUtils {
     return domainParts.pop();
   }
 
+  /**
+   * @param {boolean} [isPrivate]
+   *   True if in a private context.
+   * @returns {nsISearchEngine}
+   *   The default engine or null if SearchService has not initialized.
+   */
   getDefaultEngine(isPrivate = false) {
+    if (!Services.search.hasSuccessfullyInitialized) {
+      return null;
+    }
+
     return this.separatePrivateDefaultUIEnabled &&
       this.separatePrivateDefault &&
       isPrivate
@@ -286,7 +311,7 @@ class SearchUtils {
    *   or if the default engine hasn't been initialized.
    */
   getSearchTermIfDefaultSerpUri(uri) {
-    if (!Services.search.isInitialized || !uri) {
+    if (!Services.search.hasSuccessfullyInitialized || !uri) {
       return "";
     }
 
@@ -362,6 +387,21 @@ class SearchUtils {
       }
       return aliases;
     }, []);
+  }
+
+  /**
+   * @param {string} engineName
+   *   Name of the search engine.
+   * @returns {nsISearchEngine}
+   *   The engine based on engineName or null if SearchService has not
+   *   initialized.
+   */
+  getEngineByName(engineName) {
+    if (!Services.search.hasSuccessfullyInitialized) {
+      return null;
+    }
+
+    return Services.search.getEngineByName(engineName);
   }
 
   observe(subject, topic, data) {

@@ -291,6 +291,13 @@ interface nsISearchService : nsISupports
   readonly attribute bool isInitialized;
 
   /**
+   * Determine whether initialization has been completed successfully.
+   *
+   */
+  readonly attribute bool hasSuccessfullyInitialized;
+
+
+  /**
    * Runs background checks; Designed to be run on idle.
    */
   Promise runBackgroundChecks();

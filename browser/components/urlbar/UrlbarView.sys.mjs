@@ -2701,7 +2701,7 @@ export class UrlbarView {
     // ongoing. Generally there's no reason for our string-caching paths to be
     // async and it may even be a bad idea (except for the final necessary
     // `this.#l10nCache.ensureAll()` call).
-    if (!Services.search.isInitialized) {
+    if (!Services.search.hasSuccessfullyInitialized) {
       return [];
     }
 

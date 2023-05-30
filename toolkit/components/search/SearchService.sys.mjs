@@ -247,8 +247,40 @@ export class SearchService {
     return this.#appDefaultEngine(this.#separatePrivateDefault);
   }
 
+  /**
+   * Determine whether initialization has been completed.
+   *
+   * Clients of the service can use this attribute to quickly determine whether
+   * initialization is complete, and decide to trigger some immediate treatment,
+   * to launch asynchronous initialization or to bailout.
+   *
+   * Note that this attribute does not indicate that initialization has
+   * succeeded, use hasSuccessfullyInitialized() for that.
+   *
+   * @returns {boolean}
+   *  |true | if the search service has finished its attempt to initialize and
+   *          we have an outcome. It could have failed or succeeded during this
+   *          process.
+   *  |false| if initialization has not been triggered yet or initialization is
+   *          still ongoing.
+   */
   get isInitialized() {
-    return this.#initialized;
+    return (
+      this.#initializationStatus == "success" ||
+      this.#initializationStatus == "failed"
+    );
+  }
+
+  /**
+   * Determine whether initialization has been successfully completed.
+   *
+   * @returns {boolean}
+   *  |true | if the search service has succesfully initialized.
+   *  |false| if initialization has not been started yet, initialization is
+   *          still ongoing or initializaiton has failed.
+   */
+  get hasSuccessfullyInitialized() {
+    return this.#initializationStatus == "success";
   }
 
   getDefaultEngineInfo() {
@@ -361,21 +393,20 @@ export class SearchService {
 
     TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
     this.#initStarted = true;
+    let result;
     try {
       // Complete initialization by calling asynchronous initializer.
-      await this.#init();
+      result = await this.#init();
       TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
     } catch (ex) {
+      this.#initializationStatus = "failed";
       TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
       this.#initObservers.reject(ex.result);
       throw ex;
     }
 
-    if (!Components.isSuccessCode(this.#initRV)) {
-      throw Components.Exception(
-        "SearchService initialization failed",
-        this.#initRV
-      );
+    if (!Components.isSuccessCode(result)) {
+      throw new Error("SearchService failed while it was initializing.");
     } else if (this.#startupRemovedExtensions.size) {
       Services.tm.dispatchToMainThread(async () => {
         // Now that init() has successfully finished, we remove any engines
@@ -397,7 +428,7 @@ export class SearchService {
         this.#startupRemovedExtensions.clear();
       });
     }
-    return this.#initRV;
+    return Cr.NS_OK;
   }
 
   /**
@@ -416,7 +447,7 @@ export class SearchService {
    * Test only - reset SearchService data. Ideally this should be replaced
    */
   reset() {
-    this.#initialized = false;
+    this.#initializationStatus = "not initialized";
     this.#initObservers = PromiseUtils.defer();
     this.#initStarted = false;
     this.#startupExtensions = new Set();
@@ -431,8 +462,8 @@ export class SearchService {
   }
 
   // Test-only function to set SearchService initialization status
-  forceInitializedForTests(isInitialized) {
-    this.#initialized = isInitialized;
+  forceInitializationStatusForTests(status) {
+    this.#initializationStatus = status;
   }
 
   // Test-only function to reset just the engine selector so that it can
@@ -611,7 +642,7 @@ export class SearchService {
       // don't add the engine here. This has been called as the result
       // of _makeEngineFromConfig installing the extension, and that is already
       // handling the addition of the engine.
-      if (this.#initialized && !this._reloadingEngines) {
+      if (this.isInitialized && !this._reloadingEngines) {
         let { engines } = await this._fetchEngineSelectorEngines();
         let inConfig = engines.filter(el => el.webExtension.id == extension.id);
         if (inConfig.length) {
@@ -629,7 +660,7 @@ export class SearchService {
 
     // If we havent started SearchService yet, store this extension
     // to install in SearchService.init().
-    if (!this.#initialized) {
+    if (!this.isInitialized) {
       this.#startupExtensions.add(extension);
       return [];
     }
@@ -841,8 +872,8 @@ export class SearchService {
   }
 
   parseSubmissionURL(url) {
-    if (!this.#initialized) {
-      // If search is not initialized, do nothing.
+    if (!this.hasSuccessfullyInitialized) {
+      // If search is not initialized or failed initializing, do nothing.
       // This allows us to use this function early in telemetry.
       // The only other consumer of this (places) uses it much later.
       return gEmptyParseSubmissionResult;
@@ -964,14 +995,6 @@ export class SearchService {
   #queuedIdle;
 
   /**
-   * The current status of initialization. Note that it does not determine if
-   * initialization is complete, only if an error has been encountered so far.
-   *
-   * @type {number}
-   */
-  #initRV = Cr.NS_OK;
-
-  /**
    * Indicates that the initialization has started or not.
    *
    * @type {boolean}
@@ -979,14 +1002,16 @@ export class SearchService {
   #initStarted = false;
 
   /**
-   * Indicates if initialization has been completed (successful or not).
+   * Indicates if initialization has failed, succeeded or has not finished yet.
    *
-   * This is prefixed with _ rather than # because it is
-   * called in browser/base/content/test/contextMenu/browser_contextmenu.js
+   * There are 3 possible statuses:
+   *   "not initialized" - The SearchService has not finished initialization.
+   *   "success" - The SearchService successfully completed initialization.
+   *   "failed" - The SearchService failed during initialization.
    *
-   * @type {boolean}
+   * @type {string}
    */
-  #initialized = false;
+  #initializationStatus = "not initialized";
 
   /**
    * Indicates if we're already waiting for maybeReloadEngines to be called.
@@ -1246,20 +1271,20 @@ export class SearchService {
    * Throws in case of initialization error.
    */
   #ensureInitialized() {
-    if (this.#initialized) {
-      if (!Components.isSuccessCode(this.#initRV)) {
-        lazy.logConsole.debug("#ensureInitialized: failure");
-        throw Components.Exception(
-          "SearchService previously failed to initialize",
-          this.#initRV
-        );
-      }
+    if (this.#initializationStatus === "success") {
       return;
     }
 
+    if (this.#initializationStatus === "failed") {
+      throw new Error("SearchService failed while it was initializing.");
+    }
+
+    // This Error is thrown when this.#initializationStatus is
+    // "not initialized" because it is in the middle of initialization and
+    // hasn't finished or hasn't started.
     let err = new Error(
-      "Something tried to use the search service before it's been " +
-        "properly intialized. Please examine the stack trace to figure out what and " +
+      "Something tried to use the search service before it finished " +
+        "initializing. Please examine the stack trace to figure out what and " +
         "where to fix it:\n"
     );
     err.message += err.stack;
@@ -1303,6 +1328,7 @@ export class SearchService {
     // straight away.
     Services.obs.addObserver(this, lazy.Region.REGION_TOPIC);
 
+    let result = Cr.NS_OK;
     try {
       // Create the search engine selector.
       this.#engineSelector = new lazy.SearchEngineSelector(
@@ -1327,24 +1353,22 @@ export class SearchService {
       // it is necessary.
       if (Services.startup.shuttingDown) {
         lazy.logConsole.warn("#init: abandoning init due to shutting down");
-        this.#initRV = Cr.NS_ERROR_ABORT;
-        this.#initObservers.reject(this.#initRV);
-        return this.#initRV;
+        this.#initializationStatus = "failed";
+        this.#initObservers.reject(Cr.NS_ERROR_ABORT);
+        return Cr.NS_ERROR_ABORT;
       }
 
       // Make sure the current list of engines is persisted, without the need to wait.
       lazy.logConsole.debug("#init: engines loaded, writing settings");
+      this.#initializationStatus = "success";
       this.#addObservers();
-    } catch (ex) {
-      this.#initRV = ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE;
-      lazy.logConsole.error("#init: failure initializing search:", ex);
-    }
+      this.#initObservers.resolve(result);
+    } catch (error) {
+      this.#initializationStatus = "failed";
+      result = error.result || Cr.NS_ERROR_FAILURE;
 
-    this._initialized = true;
-    if (Components.isSuccessCode(this.#initRV)) {
-      this.#initObservers.resolve(this.#initRV);
-    } else {
-      this.#initObservers.reject(this.#initRV);
+      lazy.logConsole.error("#init: failure initializing search:", error);
+      this.#initObservers.reject(result);
     }
 
     this.#recordTelemetryData();
@@ -1366,7 +1390,7 @@ export class SearchService {
 
     this.#maybeStartOpenSearchUpdateTimer();
 
-    return this.#initRV;
+    return result;
   }
 
   /**
@@ -1723,7 +1747,7 @@ export class SearchService {
       return;
     }
 
-    if (!this.#initialized || this._reloadingEngines) {
+    if (!this.isInitialized || this._reloadingEngines) {
       this.#maybeReloadDebounce = true;
       // Schedule a reload to happen at most 10 seconds after the current run.
       Services.tm.idleDispatchToMainThread(() => {
@@ -2589,7 +2613,7 @@ export class SearchService {
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!this.#initialized && !extension.isAppProvided && !initEngine) {
+    if (!this.isInitialized && !extension.isAppProvided && !initEngine) {
       await this.init();
     }
 
@@ -2894,7 +2918,7 @@ export class SearchService {
 
     // Only do this if we're initialized though - this function can get called
     // during initalization.
-    if (this.#initialized) {
+    if (this.isInitialized) {
       this.#recordDefaultChangedEvent(
         privateMode,
         currentEngine,
@@ -3312,7 +3336,7 @@ export class SearchService {
           // The good news is, that if we don't write the settings here, we'll
           // detect the out-of-date settings on next state, and automatically
           // rebuild it.
-          if (!this.#initialized) {
+          if (!this.isInitialized) {
             lazy.logConsole.warn(
               "not saving settings on shutdown due to initializing."
             );
