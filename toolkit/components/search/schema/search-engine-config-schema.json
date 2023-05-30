@@ -171,49 +171,6 @@
       "title": "Order Hint",
       "description": "A hint to the display order (higher is a higer rank)"
     },
-    "sapCodes": {
-      "type": "object",
-      "title": "Search Access Point Codes",
-      "description": "Codes for the search access points.",
-      "properties": {
-        "any": {
-          "type": "string",
-          "title": "Any",
-          "pattern": "^[a-z0-9]{0,100}$",
-          "description": "SAP code that is used for all access points (overrides the others)."
-        },
-        "contextMenu": {
-          "type": "string",
-          "title": "Context Menu",
-          "pattern": "^[a-z0-9]{0,100}$",
-          "description": "SAP code for searches from the context menu."
-        },
-        "homePage": {
-          "type": "string",
-          "title": "Home page",
-          "pattern": "^[a-z0-9]{0,100}$",
-          "description": "SAP code for searches from the home page."
-        },
-        "keyword": {
-          "type": "string",
-          "title": "Keyword",
-          "pattern": "^[a-z0-9]{0,100}$",
-          "description": "SAP code for searches via keywords."
-        },
-        "newTab": {
-          "type": "string",
-          "title": "New Tab",
-          "pattern": "^[a-z0-9]{0,100}$",
-          "description": "SAP code for searches from the new tab page."
-        },
-        "searchBar": {
-          "type": "string",
-          "title": "Search Bar",
-          "pattern": "^[a-z0-9]{0,100}$",
-          "description": "SAP code for searches from the search bar."
-        }
-      }
-    },
     "searchUrlCodes": {
       "type": "array",
       "title": "Codes",
@@ -260,9 +217,6 @@
           "title": "Suggestion URL POST Parameters",
           "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
           "$ref": "#/definitions/searchUrlCodes"
-        },
-        "sapCodes": {
-          "$ref": "#/definitions/sapCodes"
         }
       }
     },
@@ -287,11 +241,14 @@
           "description": "The identifier (local part) of the associated WebExtension should be of the format example@search.mozilla.org",
           "pattern": "^[a-zA-Z0-9-._]*@search.mozilla.org$"
         },
-        "locale": {
-          "type": "string",
-          "title": "WebExtension Locale",
-          "pattern": "^[a-zA-Z0-9-$_]{0,100}$",
-          "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated."
+        "locales": {
+          "type": "array",
+          "title": "WebExtension Locales",
+          "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9-$_]{0,100}$"
+          }
         }
       }
     },
@@ -408,7 +365,7 @@
         "application": {
           "$ref": "#/definitions/application"
         },
-        "webextension": {
+        "webExtension": {
           "$ref": "#/definitions/webExtension"
         },
         "urls": {
@@ -431,6 +388,11 @@
           "title": "Experiment",
           "pattern": "^[a-zA-Z0-9-]{0,100}$",
           "description": "The experiment this section is associated with, if blank it is associated with any configuration."
+        },
+        "override": {
+          "type": "boolean",
+          "title": "Override",
+          "description": "This section will override previous appliesTo sections, but not add new locations where this engine is deployed to."
         }
       }
     }
