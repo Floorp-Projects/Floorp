@@ -490,6 +490,17 @@ async function resumeAndWaitForPauseCounter(dbg) {
   );
 }
 
+async function assertContextMenuDisabled(dbg, selector, shouldBeDisabled) {
+  const item = await waitFor(() => findContextMenu(dbg, selector));
+  is(
+    item.disabled,
+    shouldBeDisabled,
+    `The the context menu item is ${
+      shouldBeDisabled ? "disabled" : "not disabled"
+    }`
+  );
+}
+
 /**
  * Asserts that the gutter blackbox context menu items which are visible are correct
  * @params {Object} dbg
@@ -517,6 +528,11 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
         : contextMenuItems.unignoreLine;
 
     await assertContextMenuLabel(dbg, item.selector, item.label);
+    await assertContextMenuDisabled(
+      dbg,
+      item.selector,
+      blackboxedSourceState == SOURCE_IS_FULLY_IGNORED
+    );
     await closeContextMenu(dbg, popup);
   }
 
@@ -531,7 +547,7 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
     );
     const item = contextMenuItems.ignoreLine;
     await assertContextMenuLabel(dbg, item.selector, item.label);
-
+    await assertContextMenuDisabled(dbg, item.selector, false);
     await closeContextMenu(dbg, popup);
   }
 }

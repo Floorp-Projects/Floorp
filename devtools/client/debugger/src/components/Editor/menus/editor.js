@@ -131,15 +131,17 @@ export const blackBoxLineMenuItem = (
     ? blackboxRange.start.line == blackboxRange.end.line
     : startLine == endLine;
 
+  const isSourceFullyBlackboxed =
+    blackboxedRanges[selectedSource.url] &&
+    !blackboxedRanges[selectedSource.url].length;
+
   // The ignore/unignore line context menu item should be disabled when
   // 1) The source is on the sourcemap ignore list
   // 2) The whole source is blackboxed or
   // 3) Multiple lines are blackboxed or
   // 4) Multiple lines are selected in the editor
   const shouldDisable =
-    isSourceOnIgnoreList ||
-    !blackboxedRanges[selectedSource.url]?.length ||
-    !isSingleLine;
+    isSourceOnIgnoreList || isSourceFullyBlackboxed || !isSingleLine;
 
   return {
     id: "node-menu-blackbox-line",
