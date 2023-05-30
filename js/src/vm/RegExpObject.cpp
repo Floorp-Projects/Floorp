@@ -56,8 +56,6 @@ static_assert(RegExpFlag::DotAll == REGEXP_DOTALL_FLAG,
               "self-hosted JS and /s flag bits must agree");
 static_assert(RegExpFlag::Unicode == REGEXP_UNICODE_FLAG,
               "self-hosted JS and /u flag bits must agree");
-static_assert(RegExpFlag::UnicodeSets == REGEXP_UNICODESETS_FLAG,
-              "self-hosted JS and /v flag bits must agree");
 static_assert(RegExpFlag::Sticky == REGEXP_STICKY_FLAG,
               "self-hosted JS and /y flag bits must agree");
 
@@ -145,10 +143,6 @@ bool RegExpObject::isOriginalFlagGetter(JSNative native, RegExpFlags* mask) {
   }
   if (native == regexp_unicode) {
     *mask = RegExpFlag::Unicode;
-    return true;
-  }
-  if (native == regexp_unicodeSets) {
-    *mask = RegExpFlag::UnicodeSets;
     return true;
   }
 
@@ -504,9 +498,6 @@ JSLinearString* RegExpObject::toString(JSContext* cx,
     return nullptr;
   }
   if (obj->unicode() && !sb.append('u')) {
-    return nullptr;
-  }
-  if (obj->unicodeSets() && !sb.append('v')) {
     return nullptr;
   }
   if (obj->sticky() && !sb.append('y')) {
@@ -1017,9 +1008,6 @@ static bool ParseRegExpFlags(const CharT* chars, size_t length,
       case 'u':
         flag = RegExpFlag::Unicode;
         break;
-      case 'v':
-        flag = RegExpFlag::UnicodeSets;
-        break;
       case 'y':
         flag = RegExpFlag::Sticky;
         break;
@@ -1031,16 +1019,6 @@ static bool ParseRegExpFlags(const CharT* chars, size_t length,
       *invalidFlag = chars[i];
       return false;
     }
-
-    // /u and /v flags are mutually exclusive.
-    if (((*flagsOut & RegExpFlag::Unicode) &&
-         (flag & RegExpFlag::UnicodeSets)) ||
-        ((*flagsOut & RegExpFlag::UnicodeSets) &&
-         (flag & RegExpFlag::Unicode))) {
-      *invalidFlag = chars[i];
-      return false;
-    }
-
     *flagsOut |= flag;
   }
 

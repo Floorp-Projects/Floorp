@@ -243,9 +243,6 @@ class JSAPIRuntimeTest : public JSAPITest {
     if (flags.unicode()) {
       str += "u";
     }
-    if (flags.unicodeSets()) {
-      str += "v";
-    }
     if (flags.sticky()) {
       str += "y";
     }
