@@ -3457,6 +3457,10 @@ void nsGenericHTMLElement::TogglePopover(const Optional<bool>& aForce,
 
 // https://html.spec.whatwg.org/multipage/popover.html#popover-focusing-steps
 void nsGenericHTMLElement::FocusPopover() {
+  if (RefPtr<Document> doc = GetComposedDoc()) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+
   // This diverges from the spec a bit,
   // see https://github.com/whatwg/html/pull/8998
   RefPtr<Element> control =
