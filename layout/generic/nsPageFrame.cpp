@@ -724,20 +724,26 @@ float nsPageFrame::ComputeSinglePPSPageSizeScale(
     }
   }
 
+  const nsContainerFrame* const parent = GetParent();
+  MOZ_ASSERT(parent && parent->IsPrintedSheetFrame(),
+             "Parent of nsPageFrame should be PrintedSheetFrame");
+  const auto* sheet = static_cast<const PrintedSheetFrame*>(parent);
+
   // Compute scaling due to a possible mismatch in the paper size we are
   // printing to (from the pres context) and the specified page size when the
   // content uses "@page {size: ...}" to specify a page size for the content.
   float scale = 1.0f;
-  const nsSize actualPaperSize = PresContext()->GetPageSize();
+
+  const nsSize sheetSize = sheet->GetPrecomputedSheetSize();
   nscoord contentPageHeight = aContentPageSize.height;
   // Scale down if the target is too wide.
-  if (aContentPageSize.width > actualPaperSize.width) {
-    scale *= float(actualPaperSize.width) / float(aContentPageSize.width);
+  if (aContentPageSize.width > sheetSize.width) {
+    scale *= float(sheetSize.width) / float(aContentPageSize.width);
     contentPageHeight = NSToCoordRound(contentPageHeight * scale);
   }
   // Scale down if the target is too tall.
-  if (contentPageHeight > actualPaperSize.height) {
-    scale *= float(actualPaperSize.height) / float(contentPageHeight);
+  if (contentPageHeight > sheetSize.height) {
+    scale *= float(sheetSize.height) / float(contentPageHeight);
   }
   MOZ_ASSERT(
       scale <= 1.0f,
