@@ -4,6 +4,7 @@
 
 import json
 import os
+import sys
 from argparse import ArgumentParser
 
 try:
@@ -670,9 +671,14 @@ class LcovFileRewriter(object):
                     return None
             except Exception as e:
                 if url not in unknowns:
-                    print(
-                        "Error: %s.\nCouldn't find source info for %s, removing record"
-                        % (e, url)
+                    # The exception can contain random filename used by
+                    # test cases, and there can be character that cannot be
+                    # encoded with the stdout encoding.
+                    sys.stdout.buffer.write(
+                        (
+                            "Error: %s.\nCouldn't find source info for %s, removing record"
+                            % (e, url)
+                        ).encode(sys.stdout.encoding, errors="replace")
                     )
                 unknowns.add(url)
                 return None
