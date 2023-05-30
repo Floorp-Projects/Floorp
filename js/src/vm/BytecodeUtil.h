@@ -531,6 +531,10 @@ inline bool IsSpreadOp(JSOp op) { return CodeSpec(op).format & JOF_SPREAD; }
 
 inline bool IsSpreadPC(const jsbytecode* pc) { return IsSpreadOp(JSOp(*pc)); }
 
+inline bool OpUsesEnvironmentChain(JSOp op) {
+  return CodeSpec(op).format & JOF_USES_ENV;
+}
+
 static inline int32_t GetBytecodeInteger(jsbytecode* pc) {
   switch (JSOp(*pc)) {
     case JSOp::Zero:

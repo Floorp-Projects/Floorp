@@ -55,6 +55,7 @@ enum {
   JOF_SPREAD = 1 << 22,      /* invoke instruction using spread argument */
   JOF_GNAME = 1 << 23,       /* predicted global name */
   JOF_IC = 1 << 24,          /* baseline may use an IC for this op */
+  JOF_USES_ENV = 1 << 25,    /* op uses the frame's environment chain */
 };
 
 #endif /* vm_BytecodeFormatFlags_h */
