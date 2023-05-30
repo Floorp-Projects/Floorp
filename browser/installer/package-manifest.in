@@ -470,3 +470,8 @@ i686/gmp-clearkey/0.1/clearkey.dll
 ; build, which, practically speaking, is the case.
 @BINPATH@/gmp-clearkey/0.1/manifest.json
 #endif
+
+#ifdef MOZ_ARTIFACT_BUILDS
+; Test workers unpack artifact build packages and need `jogfile.json`
+@BINPATH@/jogfile.json
+#endif
