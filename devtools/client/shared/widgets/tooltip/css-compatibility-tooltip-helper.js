@@ -275,7 +275,12 @@ class CssCompatibilityTooltipHelper {
 
     const tooltip = this.#currentTooltip;
     tooltip.hide();
-    openDocLink(this.#currentUrl);
+
+    const isMacOS = Services.appinfo.OS === "Darwin";
+    openDocLink(this.#currentUrl, {
+      relatedToCurrent: true,
+      inBackground: isMacOS ? event.metaKey : event.ctrlKey,
+    });
   }
 
   destroy() {
