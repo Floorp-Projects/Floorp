@@ -583,7 +583,6 @@ export var PanelMultiView = class extends AssociatedToNode {
           typeof options == "object" &&
           options.triggerEvent &&
           (options.triggerEvent.type == "keypress" ||
-            options.triggerEvent.type == "keydown" ||
             options.triggerEvent?.inputSource ==
               MouseEvent.MOZ_SOURCE_KEYBOARD) &&
           this.openViews.length
