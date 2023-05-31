@@ -27,7 +27,7 @@ class CanvasPath final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPath)
   NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(CanvasPath)
 
-  nsCOMPtr<nsISupports> GetParentObject() { return mParent; }
+  nsISupports* GetParentObject() { return mParent; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
