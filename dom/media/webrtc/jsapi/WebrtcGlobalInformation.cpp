@@ -236,6 +236,10 @@ void WebrtcGlobalInformation::GetStatsHistorySince(
     if (!history.mReports.AppendElements(hist->Since(statsAfter), fallible)) {
       mozalloc_handle_oom(0);
     }
+    if (!history.mSdpHistories.AppendElement(hist->SdpSince(sdpAfter),
+                                             fallible)) {
+      mozalloc_handle_oom(0);
+    }
   });
 
   IgnoredErrorResult rv;
