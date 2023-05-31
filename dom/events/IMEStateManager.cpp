@@ -871,6 +871,9 @@ void IMEStateManager::OnClickInEditor(nsPresContext& aPresContext,
 }
 
 // static
+Element* IMEStateManager::GetFocusedElement() { return sFocusedElement; }
+
+// static
 bool IMEStateManager::IsFocusedElement(const nsPresContext& aPresContext,
                                        const Element* aFocusedElement) {
   if (!sFocusedPresContext || &aPresContext != sFocusedPresContext) {
