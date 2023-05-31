@@ -59,6 +59,8 @@ loader.lazyRequireGetter(
 
 const BROWSER_STYLESHEET_URL = "chrome://devtools/skin/devtools-browser.css";
 
+const DEVTOOLS_F12_ENABLED_PREF = "devtools.f12_enabled";
+
 /**
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
  * Firefox instance.
@@ -279,7 +281,12 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         break;
       case "toggleToolboxF12":
-        await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
+        if (Services.prefs.getBoolPref(DEVTOOLS_F12_ENABLED_PREF, true)) {
+          await gDevToolsBrowser.toggleToolboxCommand(
+            window.gBrowser,
+            startTime
+          );
+        }
         break;
       case "browserToolbox":
         lazy.BrowserToolboxLauncher.init();
