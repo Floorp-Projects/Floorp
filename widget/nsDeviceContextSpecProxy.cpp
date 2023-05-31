@@ -130,13 +130,14 @@ nsDeviceContextSpecProxy::EndDocument() {
 }
 
 NS_IMETHODIMP
-nsDeviceContextSpecProxy::BeginPage() {
+nsDeviceContextSpecProxy::BeginPage(const IntSize& aSizeInPoints) {
   if (!mRemotePrintJob || mRemotePrintJob->IsDestroyed()) {
     mRemotePrintJob = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   mRecorder->OpenFD(mRemotePrintJob->GetNextPageFD());
+  mCurrentPageSizeInPoints = aSizeInPoints;
 
   return NS_OK;
 }
@@ -150,7 +151,8 @@ nsDeviceContextSpecProxy::EndPage() {
 
   // Send the page recording to the parent.
   mRecorder->Close();
-  mRemotePrintJob->ProcessPage(std::move(mRecorder->TakeDependentSurfaces()));
+  mRemotePrintJob->ProcessPage(mCurrentPageSizeInPoints,
+                               std::move(mRecorder->TakeDependentSurfaces()));
 
   return NS_OK;
 }

@@ -327,14 +327,14 @@ nsresult nsDeviceContext::AbortDocument() {
   return rv;
 }
 
-nsresult nsDeviceContext::BeginPage() {
+nsresult nsDeviceContext::BeginPage(const IntSize& aSizeInPoints) {
   MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc || mPrintTarget,
                         "What nulled out our print target while printing?");
   if (mDeviceContextSpec) {
-    MOZ_TRY(mDeviceContextSpec->BeginPage());
+    MOZ_TRY(mDeviceContextSpec->BeginPage(aSizeInPoints));
   }
   if (mPrintTarget) {
-    MOZ_TRY(mPrintTarget->BeginPage());
+    MOZ_TRY(mPrintTarget->BeginPage(aSizeInPoints));
   }
   return NS_OK;
 }

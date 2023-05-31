@@ -584,7 +584,9 @@ nsresult nsPageSequenceFrame::PrePrintNextSheet(nsITimerCallback* aCallback,
       nsDeviceContext* dc = PresContext()->DeviceContext();
       PR_PL(("\n"));
       PR_PL(("***************** BeginPage *****************\n"));
-      rv = dc->BeginPage();
+      const IntSize sizeInPoints = currentSheet->GetPrintTargetSizeInPoints(
+          dc->AppUnitsPerPhysicalInch());
+      rv = dc->BeginPage(sizeInPoints);
       NS_ENSURE_SUCCESS(rv, rv);
 
       mCalledBeginPage = true;
@@ -675,7 +677,10 @@ nsresult nsPageSequenceFrame::PrintNextSheet() {
       // page otherwise.
       PR_PL(("\n"));
       PR_PL(("***************** BeginPage *****************\n"));
-      rv = dc->BeginPage();
+      const IntSize sizeInPoints =
+          currentSheetFrame->GetPrintTargetSizeInPoints(
+              dc->AppUnitsPerPhysicalInch());
+      rv = dc->BeginPage(sizeInPoints);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

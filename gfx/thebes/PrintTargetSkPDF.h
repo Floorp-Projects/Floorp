@@ -33,7 +33,7 @@ class PrintTargetSkPDF final : public PrintTarget {
   nsresult EndPrinting() override;
   void Finish() override;
 
-  nsresult BeginPage() override;
+  nsresult BeginPage(const IntSize& aSizeInPoints) override;
   nsresult EndPage() override;
 
   already_AddRefed<DrawTarget> MakeDrawTarget(
