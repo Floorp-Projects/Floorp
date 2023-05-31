@@ -311,8 +311,6 @@ dictionary RTCStatsReportInternal : RTCStatsCollection {
   required unsigned long                    browserId;
   RTCConfigurationInternal                  configuration;
   DOMString                                 jsepSessionErrors;
-  DOMString                                 localSdp;
-  DOMString                                 remoteSdp;
   // TODO demux from RTCStatsReportInternal in bug 1830824
   sequence<RTCSdpHistoryEntryInternal>      sdpHistory = [];
   required DOMHighResTimeStamp              timestamp;
