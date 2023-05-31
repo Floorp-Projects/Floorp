@@ -1101,8 +1101,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
       MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
       // Parse and generate bytecode for the inner function.
-      innerStencil = DelazifyCanonicalScriptedFunction(
-          cx, &fc_, fc_.stackLimit(), &scopeCache, borrow, scriptIndex);
+      innerStencil = DelazifyCanonicalScriptedFunction(cx, &fc_, &scopeCache,
+                                                       borrow, scriptIndex);
       if (!innerStencil) {
         return false;
       }

@@ -1094,8 +1094,7 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
 
   // Finally, compile the script if it really doesn't exist.
   AutoReportFrontendContext fc(cx);
-  if (!frontend::DelazifyCanonicalScriptedFunction(
-          cx, &fc, cx->stackLimitForCurrentPrincipal(), fun)) {
+  if (!frontend::DelazifyCanonicalScriptedFunction(cx, &fc, fun)) {
     // The frontend shouldn't fail after linking the function and the
     // non-lazy script together.
     MOZ_ASSERT(fun->baseScript() == lazy);
