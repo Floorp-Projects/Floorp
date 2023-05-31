@@ -11,6 +11,7 @@
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "js/Modules.h"
 #include "util/DifferentialTesting.h"
+#include "util/NativeStack.h"  // GetNativeStackBase
 #include "vm/JSContext.h"
 
 using namespace js;
@@ -40,6 +41,18 @@ bool FrontendContext::setSupportedImportAssertions(
     return false;
   }
   return true;
+}
+
+void FrontendContext::setStackQuota(JS::NativeStackSize stackSize) {
+#ifdef __wasi__
+  stackLimit_ = JS::WASINativeStackLimit;
+#else   // __wasi__
+  if (stackSize == 0) {
+    stackLimit_ = JS::NativeStackLimitMax;
+  } else {
+    stackLimit_ = JS::GetNativeStackLimit(GetNativeStackBase(), stackSize - 1);
+  }
+#endif  // !__wasi__
 }
 
 bool FrontendContext::allocateOwnedPool() {
@@ -137,6 +150,7 @@ void FrontendContext::setCurrentJSContext(JSContext* cx) {
   maybeCx_ = cx;
   nameCollectionPool_ = &cx->frontendCollectionPool();
   scriptDataTableHolder_ = &cx->runtime()->scriptDataTableHolder();
+  stackLimit_ = cx->stackLimitForCurrentPrincipal();
 }
 
 void FrontendContext::convertToRuntimeError(
