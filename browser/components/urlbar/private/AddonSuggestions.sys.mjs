@@ -161,7 +161,7 @@ export class AddonSuggestions extends BaseFeature {
       number_of_ratings: suggestion.number_of_ratings,
       guid: suggestion.guid,
       score: suggestion.score,
-      is_top_pick: suggestion.is_top_pick ?? true,
+      is_top_pick: suggestion.is_top_pick,
     }));
   }
 
@@ -193,6 +193,9 @@ export class AddonSuggestions extends BaseFeature {
     if (!this.isEnabled || searchString.length < this.#minKeywordLength) {
       return null;
     }
+
+    // If is_top_pick is not specified, handle it as top pick suggestion.
+    suggestion.is_top_pick = suggestion.is_top_pick ?? true;
 
     const { guid, rating, number_of_ratings } =
       suggestion.source === "remote-settings"
