@@ -15,7 +15,7 @@ object FenixVersions {
     const val android_gradle_plugin = "7.4.2"
     const val android_lint_api = "30.4.2"
 
-    const val sentry = "6.19.0"
+    const val sentry = "6.21.0"
     const val leakcanary = "2.11"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.22.0"
