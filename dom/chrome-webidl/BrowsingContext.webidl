@@ -413,6 +413,12 @@ interface CanonicalBrowsingContext : BrowsingContext {
                               unsigned long aPresShellId);
 
   readonly attribute nsISHEntry? mostRecentLoadingSessionHistoryEntry;
+
+  /**
+   * Indicates if the embedder element or an ancestor has hidden
+   * visibility, or no frame.
+   */
+  readonly attribute boolean isUnderHiddenEmbedderElement;
 };
 
 [Exposed=Window, ChromeOnly]

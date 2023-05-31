@@ -250,13 +250,6 @@ IPCResult BrowserBridgeParent::RecvDeactivate(const bool& aWindowLowering,
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvSetIsUnderHiddenEmbedderElement(
-    const bool& aIsUnderHiddenEmbedderElement) {
-  Unused << mBrowserParent->SendSetIsUnderHiddenEmbedderElement(
-      aIsUnderHiddenEmbedderElement);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserBridgeParent::RecvUpdateRemoteStyle(
     const StyleImageRendering& aImageRendering) {
   Unused << mBrowserParent->SendUpdateRemoteStyle(aImageRendering);

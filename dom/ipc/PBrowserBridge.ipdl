@@ -116,8 +116,6 @@ parent:
 
   async Deactivate(bool aWindowLowering, uint64_t aActionId);
 
-  async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
-
   async UpdateRemoteStyle(StyleImageRendering aImageRendering);
 
   async WillChangeProcess();

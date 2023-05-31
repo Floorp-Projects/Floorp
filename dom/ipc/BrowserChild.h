@@ -397,9 +397,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvNormalPrioritySelectionEvent(
       const mozilla::WidgetSelectionEvent& aEvent);
 
-  mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
-      const bool& aIsUnderHiddenEmbedderElement);
-
   mozilla::ipc::IPCResult RecvInsertText(const nsAString& aStringToInsert);
 
   mozilla::ipc::IPCResult RecvUpdateRemoteStyle(

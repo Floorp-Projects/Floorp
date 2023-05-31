@@ -47,8 +47,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void Deactivate(bool aWindowLowering, uint64_t aActionId);
 
-  void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
-
   already_AddRefed<BrowserBridgeHost> FinishInit(nsFrameLoader* aFrameLoader);
 
 #if defined(ACCESSIBILITY)

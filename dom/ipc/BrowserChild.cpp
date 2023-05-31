@@ -1221,14 +1221,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvChildToParentMatrix(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvSetIsUnderHiddenEmbedderElement(
-    const bool& aIsUnderHiddenEmbedderElement) {
-  if (RefPtr<PresShell> presShell = GetTopLevelPresShell()) {
-    presShell->SetIsUnderHiddenEmbedderElement(aIsUnderHiddenEmbedderElement);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemoteStyle(
     const StyleImageRendering& aImageRendering) {
   BrowsingContext* context = GetBrowsingContext();

@@ -164,22 +164,15 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void nsSubDocumentFrame::PropagateIsUnderHiddenEmbedderElementToSubView(
     bool aIsUnderHiddenEmbedderElement) {
-  if (mFrameLoader && mFrameLoader->IsRemoteFrame()) {
-    mFrameLoader->SendIsUnderHiddenEmbedderElement(
-        aIsUnderHiddenEmbedderElement);
+  if (!mFrameLoader) {
     return;
   }
 
-  if (!mInnerView) {
-    return;
-  }
-
-  nsView* subdocView = mInnerView->GetFirstChild();
-  while (subdocView) {
-    if (mozilla::PresShell* presShell = subdocView->GetPresShell()) {
-      presShell->SetIsUnderHiddenEmbedderElement(aIsUnderHiddenEmbedderElement);
+  if (BrowsingContext* bc = mFrameLoader->GetExtantBrowsingContext()) {
+    if (bc->IsUnderHiddenEmbedderElement() != aIsUnderHiddenEmbedderElement) {
+      Unused << bc->SetIsUnderHiddenEmbedderElement(
+          aIsUnderHiddenEmbedderElement);
     }
-    subdocView = subdocView->GetNextSibling();
   }
 }
 
