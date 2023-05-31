@@ -42,7 +42,7 @@ def show_package_content(url, digest=None, size=None):
     #     sys.exit(1)
     for name, content in unxar(BytesIO(package)):
         if name == "Payload":
-            for path, mode, _ in uncpio(Pbzx(content)):
+            for path, _, __ in uncpio(Pbzx(content)):
                 if path:
                     print(path.decode("utf-8"))
 

@@ -14,6 +14,8 @@ import struct
 import zlib
 from xml.etree.ElementTree import XML
 
+from mozbuild.util import ReadOnlyNamespace
+
 
 class ZlibFile(object):
     def __init__(self, fileobj):
@@ -179,6 +181,8 @@ def uncpio(fileobj):
             namesize,
             filesize,
         ) = struct.unpack(">6s6s6s6s6s6s6s11s6s11s", header)
+        dev = int(dev, 8)
+        ino = int(ino, 8)
         mode = int(mode, 8)
         nlink = int(nlink, 8)
         namesize = int(namesize, 8)
@@ -197,7 +201,7 @@ def uncpio(fileobj):
         if name.startswith(b"/"):
             name = name[1:]
         content = Take(fileobj, filesize)
-        yield name, mode, content
+        yield name, ReadOnlyNamespace(mode=mode, nlink=nlink, dev=dev, ino=ino), content
         # Ensure the content is totally consumed
         while content.read(4096):
             pass

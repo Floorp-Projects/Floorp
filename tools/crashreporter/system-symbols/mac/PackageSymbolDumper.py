@@ -181,8 +181,8 @@ def extract_payload(payload_path, output_path):
         elif header == b"pb":
             logging.info("Extracting pbzx payload")
 
-            for path, mode, content in uncpio(Pbzx(open(payload_path, "rb"))):
-                if not path or not stat.S_ISREG(mode):
+            for path, st, content in uncpio(Pbzx(open(payload_path, "rb"))):
+                if not path or not stat.S_ISREG(st.mode):
                     continue
                 out = os.path.join(output_path, path.decode())
                 os.makedirs(os.path.dirname(out), exist_ok=True)
