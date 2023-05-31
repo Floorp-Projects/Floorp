@@ -13,9 +13,10 @@
 
 #include <stddef.h>  // size_t
 
-#include "js/AllocPolicy.h"     // SystemAllocPolicy, AllocFunction
-#include "js/ErrorReport.h"     // JSErrorCallback, JSErrorFormatString
-#include "js/Modules.h"         // JS::ImportAssertionVector
+#include "js/AllocPolicy.h"  // SystemAllocPolicy, AllocFunction
+#include "js/ErrorReport.h"  // JSErrorCallback, JSErrorFormatString
+#include "js/Modules.h"      // JS::ImportAssertionVector
+#include "js/Stack.h"  // JS::NativeStackSize, JS::NativeStackLimit, JS::NativeStackLimitMax
 #include "js/Vector.h"          // Vector
 #include "vm/ErrorReporting.h"  // CompileError
 #include "vm/MallocProvider.h"  // MallocProvider
@@ -73,6 +74,8 @@ class FrontendContext {
 
   JS::ImportAssertionVector supportedImportAssertions_;
 
+  JS::NativeStackLimit stackLimit_ = JS::NativeStackLimitMax;
+
  protected:
   // (optional) Current JSContext to support main-thread-specific
   // handling for error reporting, GC, and memory allocation.
@@ -88,6 +91,9 @@ class FrontendContext {
         scriptDataTableHolder_(&js::globalSharedScriptDataTableHolder),
         supportedImportAssertions_() {}
   ~FrontendContext();
+
+  void setStackQuota(JS::NativeStackSize stackSize);
+  JS::NativeStackLimit stackLimit() const { return stackLimit_; }
 
   bool allocateOwnedPool();
 
@@ -109,6 +115,7 @@ class FrontendContext {
   //   * js::frontend::NameCollectionPool for reusing allocation
   //   * js::SharedScriptDataTableHolder for de-duplicating bytecode
   //     within given runtime
+  //   * Copy the native stack limit from the JSContext
   //
   // And also this JSContext can be retrieved by maybeCurrentJSContext below.
   void setCurrentJSContext(JSContext* cx);
