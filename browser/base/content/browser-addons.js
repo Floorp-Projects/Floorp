@@ -1338,12 +1338,38 @@ var gUnifiedExtensions = {
     // Only add extensions that do not have a browser action in this list since
     // the extensions with browser action have CUI widgets and will appear in
     // the panel (or toolbar) via the CUI mechanism.
-    const policies = this.getActivePolicies(/* all */ false);
-
-    for (const policy of policies) {
+    for (const policy of this.getActivePolicies(/* all */ false)) {
       const item = document.createElement("unified-extensions-item");
       item.setExtension(policy.extension);
       list.appendChild(item);
+    }
+
+    const isQuarantinedDomain = this.getActivePolicies().some(
+      policy =>
+        lazy.OriginControls.getState(policy, window.gBrowser.selectedTab)
+          .quarantined
+    );
+    const container = panelview.querySelector(
+      "#unified-extensions-messages-container"
+    );
+
+    if (isQuarantinedDomain) {
+      if (!this._messageBarQuarantinedDomain) {
+        this._messageBarQuarantinedDomain = this._makeMessageBar({
+          titleFluentId: "unified-extensions-mb-quarantined-domain-title",
+          messageFluentId: "unified-extensions-mb-quarantined-domain-message",
+          supportPage: "quarantined-domains",
+          dismissable: false,
+        });
+      }
+
+      container.appendChild(this._messageBarQuarantinedDomain);
+    } else if (
+      !isQuarantinedDomain &&
+      this._messageBarQuarantinedDomain &&
+      container.contains(this._messageBarQuarantinedDomain)
+    ) {
+      container.removeChild(this._messageBarQuarantinedDomain);
     }
   },
 
@@ -1851,7 +1877,6 @@ var gUnifiedExtensions = {
   }) {
     const messageBar = document.createElement("message-bar");
     messageBar.setAttribute("type", type);
-    messageBar.setAttribute("dismissable", "");
     messageBar.classList.add("unified-extensions-message-bar");
 
     if (titleFluentId) {
