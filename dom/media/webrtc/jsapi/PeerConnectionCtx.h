@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 
+#include "WebrtcGlobalChild.h"
 #include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
 #include "call/audio_state.h"
