@@ -219,7 +219,7 @@ void WebrtcGlobalInformation::GetStatsHistorySince(
     const GlobalObject& aGlobal,
     WebrtcGlobalStatisticsHistoryCallback& aStatsCallback,
     const nsAString& pcIdFilter, const Optional<DOMHighResTimeStamp>& aAfter,
-    ErrorResult& aRv) {
+    const Optional<DOMHighResTimeStamp>& aSdpAfter, ErrorResult& aRv) {
   if (!NS_IsMainThread()) {
     aRv.Throw(NS_ERROR_NOT_SAME_THREAD);
     return;
@@ -229,10 +229,11 @@ void WebrtcGlobalInformation::GetStatsHistorySince(
 
   WebrtcGlobalStatisticsReport history;
 
-  auto after = aAfter.WasPassed() ? Some(aAfter.Value()) : Nothing();
+  auto statsAfter = aAfter.WasPassed() ? Some(aAfter.Value()) : Nothing();
+  auto sdpAfter = aSdpAfter.WasPassed() ? Some(aSdpAfter.Value()) : Nothing();
 
   WebrtcGlobalStatsHistory::GetHistory(pcIdFilter).apply([&](auto& hist) {
-    if (!history.mReports.AppendElements(hist->Since(after), fallible)) {
+    if (!history.mReports.AppendElements(hist->Since(statsAfter), fallible)) {
       mozalloc_handle_oom(0);
     }
   });

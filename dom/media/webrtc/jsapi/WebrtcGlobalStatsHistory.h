@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMString.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsHashKeys.h"
 #include "nsTHashMap.h"
@@ -38,14 +39,33 @@ struct WebrtcGlobalStatsHistory {
       auto Timestamp() const -> DOMHighResTimeStamp;
       virtual ~ReportElement() = default;
     };
+    // And likewise for the SDP history
+    struct SdpElement : public LinkedListElement<SdpElement> {
+      RTCSdpHistoryEntryInternal sdp;
+      auto Timestamp() const -> DOMHighResTimeStamp;
+      virtual ~SdpElement() = default;
+    };
+
+    explicit Entry(const nsString& aPcid, const bool aIsLongTermStatsDisabled)
+        : mPcid(aPcid), mIsLongTermStatsDisabled(aIsLongTermStatsDisabled) {}
+
+    nsString mPcid;
     AutoCleanLinkedList<ReportElement> mReports;
+    AutoCleanLinkedList<SdpElement> mSdp;
     bool mIsLongTermStatsDisabled;
     bool mIsClosed = false;
+
     auto Since(const Maybe<DOMHighResTimeStamp>& aAfter) const
         -> nsTArray<RTCStatsReportInternal>;
+    auto SdpSince(const Maybe<DOMHighResTimeStamp>& aAfter) const
+        -> RTCSdpHistoryInternal;
 
-    static auto MakeElement(UniquePtr<RTCStatsReportInternal> aReport)
+    static auto MakeReportElement(UniquePtr<RTCStatsReportInternal> aReport)
         -> ReportElement*;
+    static auto MakeSdpElementsSince(
+        Sequence<RTCSdpHistoryEntryInternal>&& aSdpHistory,
+        const Maybe<DOMHighResTimeStamp>& aSdpAfter)
+        -> AutoCleanLinkedList<SdpElement>;
     auto Prune(const DOMHighResTimeStamp aBefore) -> void;
 
    private:
