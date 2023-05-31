@@ -144,7 +144,7 @@ constexpr size_t AllocKindCount = size_t(AllocKind::LIMIT);
  * estimated lifetime or lifetime requirements of objects allocated from that
  * site.
  */
-enum InitialHeap : uint8_t { DefaultHeap, TenuredHeap };
+enum InitialHeap : uint8_t { DefaultHeap = 0, TenuredHeap = 1 };
 
 inline bool IsAllocKind(AllocKind kind) {
   return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
