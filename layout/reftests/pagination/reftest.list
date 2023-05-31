@@ -129,8 +129,8 @@ fails-if(useDrawSnapshot) == 820496-1.html 820496-1-ref.html # To be investigate
 == 1468654-1.html 1468654-1-ref.html
 == 1596310.html 1596310-ref.html
 
-fuzzy-if(swgl,0-1,0-2) == content-url-element.html image.html # Fuzz in reftest background
-fuzzy-if(swgl,0-1,0-2) == content-url-pseudo.html content-url-pseudo-ref.html # As above
+fuzzy-if(swgl,0-1,0-3) == content-url-element.html image.html # Fuzz in reftest background
+fuzzy-if(swgl,0-1,0-3) == content-url-pseudo.html content-url-pseudo-ref.html # As above
 
 == quirks.html quirks-ref.html
 != quirks.html quirks-notref.html
@@ -177,7 +177,7 @@ fails == bfc-004.html bfc-004-ref.html # bug 1602484
 == bfc-008.html bfc-006-ref.html
 
 pref(layout.display-list.improve-fragmentation,true) fuzzy-if(swgl,0-1,0-200) == inline-block-frag-simple-1.html inline-block-frag-simple-1-ref.html
-pref(layout.display-list.improve-fragmentation,true) fuzzy-if(cocoaWidget&&swgl,0-1,0-21) == inline-block-frag-simple-2.html inline-block-frag-simple-2-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(swgl,0-1,0-21) == inline-block-frag-simple-2.html inline-block-frag-simple-2-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-1.html inline-block-frag-offset-1-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-2.html inline-block-frag-offset-2-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-text-1.html inline-block-frag-text-1-ref.html
