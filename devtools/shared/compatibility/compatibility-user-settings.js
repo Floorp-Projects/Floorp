@@ -8,19 +8,12 @@ const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
 
-const TARGET_BROWSER_ID = [
-  "firefox",
-  "firefox_android",
-  "chrome",
-  "chrome_android",
-  "safari",
-  "safari_ios",
-  "edge",
-  "ie",
-];
-const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
-
-const TARGET_BROWSER_PREF = "devtools.inspector.compatibility.target-browsers";
+loader.lazyRequireGetter(
+  this,
+  ["TARGET_BROWSER_ID", "TARGET_BROWSER_STATUS", "TARGET_BROWSER_PREF"],
+  "resource://devtools/shared/compatibility/constants.js",
+  true
+);
 
 /**
  * Returns the full list of browsers in the RemoteSetting devtools-compatibility-browsers
@@ -131,6 +124,4 @@ module.exports = {
   getBrowsersList,
   getTargetBrowsers,
   setTargetBrowsers,
-  TARGET_BROWSER_ID,
-  TARGET_BROWSER_PREF,
 };

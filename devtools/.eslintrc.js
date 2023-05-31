@@ -133,6 +133,28 @@ module.exports = {
         "react/no-deprecated": "off",
       },
     },
+    {
+      // These files are used in both browser and node environments,
+      files: [
+        "shared/compatibility/constants.js",
+        "shared/compatibility/helpers.js",
+      ],
+      env: {
+        browser: false,
+        "mozilla/privileged": false,
+        "mozilla/specific": false,
+      },
+    },
+    {
+      // This file is only used in node environment.
+      files: ["shared/compatibility/bin/update.js"],
+      env: {
+        browser: false,
+        node: true,
+        "mozilla/privileged": false,
+        "mozilla/specific": false,
+      },
+    },
   ],
   rules: {
     // These are the rules that have been configured so far to match the
