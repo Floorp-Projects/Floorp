@@ -381,11 +381,6 @@ nsChangeHint nsStylePadding::CalcDifference(
   return hint;
 }
 
-static nscoord TwipsPerPixel(const Document& aDocument) {
-  auto* pc = aDocument.GetPresContext();
-  return pc ? pc->AppUnitsPerDevPixel() : mozilla::AppUnitsPerCSSPixel();
-}
-
 static inline BorderRadius ZeroBorderRadius() {
   auto zero = LengthPercentage::Zero();
   return {{{zero, zero}}, {{zero, zero}}, {{zero, zero}}, {{zero, zero}}};
@@ -409,8 +404,7 @@ nsStyleBorder::nsStyleBorder(const Document& aDocument)
       mBorderRightColor(StyleColor::CurrentColor()),
       mBorderBottomColor(StyleColor::CurrentColor()),
       mBorderLeftColor(StyleColor::CurrentColor()),
-      mComputedBorder(0, 0, 0, 0),
-      mTwipsPerPixel(TwipsPerPixel(aDocument)) {
+      mComputedBorder(0, 0, 0, 0) {
   MOZ_COUNT_CTOR(nsStyleBorder);
 
   nscoord medium = kMediumBorderWidth;
@@ -435,8 +429,7 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
       mBorderBottomColor(aSrc.mBorderBottomColor),
       mBorderLeftColor(aSrc.mBorderLeftColor),
       mComputedBorder(aSrc.mComputedBorder),
-      mBorder(aSrc.mBorder),
-      mTwipsPerPixel(aSrc.mTwipsPerPixel) {
+      mBorder(aSrc.mBorder) {
   MOZ_COUNT_CTOR(nsStyleBorder);
   for (const auto side : mozilla::AllPhysicalSides()) {
     mBorderStyle[side] = aSrc.mBorderStyle[side];
@@ -481,8 +474,7 @@ nsChangeHint nsStyleBorder::CalcDifference(
   // force reflow of all descendants, but the hint would need to force
   // reflow of the frame's children (see how
   // ReflowInput::InitResizeFlags initializes the inline-resize flag).
-  if (mTwipsPerPixel != aNewData.mTwipsPerPixel ||
-      GetComputedBorder() != aNewData.GetComputedBorder() ||
+  if (GetComputedBorder() != aNewData.GetComputedBorder() ||
       mFloatEdge != aNewData.mFloatEdge ||
       mBorderImageOutset != aNewData.mBorderImageOutset ||
       mBoxDecorationBreak != aNewData.mBoxDecorationBreak) {
@@ -557,8 +549,7 @@ nsStyleOutline::nsStyleOutline(const Document& aDocument)
       mOutlineOffset({0.0f}),
       mOutlineColor(StyleColor::CurrentColor()),
       mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None)),
-      mActualOutlineWidth(0),
-      mTwipsPerPixel(TwipsPerPixel(aDocument)) {
+      mActualOutlineWidth(0) {
   MOZ_COUNT_CTOR(nsStyleOutline);
 }
 
@@ -567,8 +558,7 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
       mOutlineOffset(aSrc.mOutlineOffset),
       mOutlineColor(aSrc.mOutlineColor),
       mOutlineStyle(aSrc.mOutlineStyle),
-      mActualOutlineWidth(aSrc.mActualOutlineWidth),
-      mTwipsPerPixel(aSrc.mTwipsPerPixel) {
+      mActualOutlineWidth(aSrc.mActualOutlineWidth) {
   MOZ_COUNT_CTOR(nsStyleOutline);
 }
 
@@ -592,8 +582,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
   }
 
   if (mOutlineWidth != aNewData.mOutlineWidth ||
-      mOutlineOffset != aNewData.mOutlineOffset ||
-      mTwipsPerPixel != aNewData.mTwipsPerPixel) {
+      mOutlineOffset != aNewData.mOutlineOffset) {
     return nsChangeHint_NeutralChange;
   }
 
@@ -719,8 +708,7 @@ nsStyleColumn::nsStyleColumn(const Document& aDocument)
       mColumnRuleColor(StyleColor::CurrentColor()),
       mColumnRuleStyle(StyleBorderStyle::None),
       mColumnRuleWidth(kMediumBorderWidth),
-      mActualColumnRuleWidth(0),
-      mTwipsPerPixel(TwipsPerPixel(aDocument)) {
+      mActualColumnRuleWidth(0) {
   MOZ_COUNT_CTOR(nsStyleColumn);
 }
 
@@ -734,8 +722,7 @@ nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
       mColumnFill(aSource.mColumnFill),
       mColumnSpan(aSource.mColumnSpan),
       mColumnRuleWidth(aSource.mColumnRuleWidth),
-      mActualColumnRuleWidth(aSource.mActualColumnRuleWidth),
-      mTwipsPerPixel(aSource.mTwipsPerPixel) {
+      mActualColumnRuleWidth(aSource.mActualColumnRuleWidth) {
   MOZ_COUNT_CTOR(nsStyleColumn);
 }
 
@@ -762,10 +749,7 @@ nsChangeHint nsStyleColumn::CalcDifference(
     return NS_STYLE_HINT_VISUAL;
   }
 
-  // XXX Is it right that we never check mTwipsPerPixel to return a
-  // non-nsChangeHint_NeutralChange hint?
-  if (mColumnRuleWidth != aNewData.mColumnRuleWidth ||
-      mTwipsPerPixel != aNewData.mTwipsPerPixel) {
+  if (mColumnRuleWidth != aNewData.mColumnRuleWidth) {
     return nsChangeHint_NeutralChange;
   }
 

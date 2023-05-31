@@ -988,8 +988,9 @@ ImgDrawResult nsBCTableCellFrame::PaintBackground(gfxContext& aRenderingContext,
 
   nsStyleBorder myBorder(*StyleBorder());
 
+  const auto a2d = PresContext()->AppUnitsPerDevPixel();
   for (const auto side : mozilla::AllPhysicalSides()) {
-    myBorder.SetBorderWidth(side, borderWidth.Side(side));
+    myBorder.SetBorderWidth(side, borderWidth.Side(side), a2d);
   }
 
   // bypassing nsCSSRendering::PaintBackground is safe because this kind

@@ -189,6 +189,8 @@ static void ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
   nsTArray<int8_t>* columnLinesList =
       FindCellProperty(aFrame, ColumnLinesProperty());
 
+  const auto a2d = aFrame->PresContext()->AppUnitsPerDevPixel();
+
   // We don't place a row line on top of the first row
   if (rowIndex > 0 && rowLinesList) {
     // If the row number is greater than the number of provided rowline
@@ -203,7 +205,7 @@ static void ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
                                   static_cast<StyleBorderStyle>(
                                       rowLinesList->ElementAt(listLength - 1)));
     }
-    aStyleBorder.SetBorderWidth(eSideTop, borderWidth);
+    aStyleBorder.SetBorderWidth(eSideTop, borderWidth, a2d);
   }
 
   // We don't place a column line on the left of the first column.
@@ -220,7 +222,7 @@ static void ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
           eSideLeft, static_cast<StyleBorderStyle>(
                          columnLinesList->ElementAt(listLength - 1)));
     }
-    aStyleBorder.SetBorderWidth(eSideLeft, borderWidth);
+    aStyleBorder.SetBorderWidth(eSideLeft, borderWidth, a2d);
   }
 }
 

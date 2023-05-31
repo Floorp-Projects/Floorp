@@ -181,36 +181,39 @@ void nsColumnSetFrame::CreateBorderRenderers(
   StyleBorderStyle ruleStyle;
 
   // Per spec, inset => ridge and outset => groove
-  if (colStyle->mColumnRuleStyle == StyleBorderStyle::Inset)
+  if (colStyle->mColumnRuleStyle == StyleBorderStyle::Inset) {
     ruleStyle = StyleBorderStyle::Ridge;
-  else if (colStyle->mColumnRuleStyle == StyleBorderStyle::Outset)
+  } else if (colStyle->mColumnRuleStyle == StyleBorderStyle::Outset) {
     ruleStyle = StyleBorderStyle::Groove;
-  else
+  } else {
     ruleStyle = colStyle->mColumnRuleStyle;
+  }
 
   nscoord ruleWidth = colStyle->GetColumnRuleWidth();
-  if (!ruleWidth) return;
+  if (!ruleWidth) {
+    return;
+  }
 
   aBorderRenderers.Clear();
   nscolor ruleColor =
       GetVisitedDependentColor(&nsStyleColumn::mColumnRuleColor);
 
-  nsPresContext* presContext = PresContext();
+  nsPresContext* pc = PresContext();
   // In order to re-use a large amount of code, we treat the column rule as a
   // border. We create a new border style object and fill in all the details of
   // the column rule as the left border. PaintBorder() does all the rendering
   // for us, so we not only save an enormous amount of code but we'll support
   // all the line styles that we support on borders!
-  nsStyleBorder border(*presContext->Document());
+  nsStyleBorder border(*pc->Document());
   Sides skipSides;
   if (isVertical) {
-    border.SetBorderWidth(eSideTop, ruleWidth);
+    border.SetBorderWidth(eSideTop, ruleWidth, pc->AppUnitsPerDevPixel());
     border.SetBorderStyle(eSideTop, ruleStyle);
     border.mBorderTopColor = StyleColor::FromColor(ruleColor);
     skipSides |= mozilla::SideBits::eLeftRight;
     skipSides |= mozilla::SideBits::eBottom;
   } else {
-    border.SetBorderWidth(eSideLeft, ruleWidth);
+    border.SetBorderWidth(eSideLeft, ruleWidth, pc->AppUnitsPerDevPixel());
     border.SetBorderStyle(eSideLeft, ruleStyle);
     border.mBorderLeftColor = StyleColor::FromColor(ruleColor);
     skipSides |= mozilla::SideBits::eTopBottom;
@@ -235,7 +238,7 @@ void nsColumnSetFrame::CreateBorderRenderers(
         bool borderIsEmpty = false;
         Maybe<nsCSSBorderRenderer> br =
             nsCSSRendering::CreateBorderRendererWithStyleBorder(
-                presContext, dt, this, aDirtyRect, aLineRect, border, Style(),
+                pc, dt, this, aDirtyRect, aLineRect, border, Style(),
                 &borderIsEmpty, skipSides);
         if (br.isSome()) {
           MOZ_ASSERT(!borderIsEmpty);
