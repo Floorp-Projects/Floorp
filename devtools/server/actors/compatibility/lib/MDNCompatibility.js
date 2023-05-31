@@ -198,9 +198,9 @@ class MDNCompatibility {
    *       $browserName: {String} $browserName is such as firefox, firefox_android and so on.
    *         [
    *           {
-   *              version_added: {String}
+   *              added: {String}
    *                The version this feature was added.
-   *              version_removed: {String} Optional.
+   *              removed: {String} Optional.
    *                The version this feature was removed. Optional.
    *              prefix: {String} Optional.
    *                The prefix this feature is needed such as "-moz-".
