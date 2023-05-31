@@ -309,18 +309,6 @@ void SocketProcessParent::Destroy(RefPtr<SocketProcessParent>&& aParent) {
       new DeferredDeleteSocketProcessParent(std::move(aParent)));
 }
 
-mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(
-    const bool& aActivated) {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-
-  if (observerService) {
-    observerService->NotifyObservers(nullptr, "odoh-service-activated",
-                                     aActivated ? u"true" : u"false");
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult SocketProcessParent::RecvExcludeHttp2OrHttp3(
     const HttpConnectionInfoCloneArgs& aArgs) {
   RefPtr<nsHttpConnectionInfo> cinfo =

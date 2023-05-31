@@ -12199,42 +12199,6 @@
   value: true
   mirror: always
 
-# Whether to enable odoh.
-- name: network.trr.odoh.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# The uri of Oblivious Proxy.
-- name: network.trr.odoh.proxy_uri
-  type: String
-  value: ""
-  mirror: never
-
-# The host name of Oblivious Target.
-- name: network.trr.odoh.target_host
-  type: String
-  value: ""
-  mirror: never
-
-# The uri path of the odoh uri.
-- name: network.trr.odoh.target_path
-  type: String
-  value: ""
-  mirror: never
-
-# The minimum ttl of the DNS record that contains ODoHConfigs.
-- name: network.trr.odoh.min_ttl
-  type: RelaxedAtomicUint32
-  value: 60
-  mirror: always
-
-# The uri indicates where to get ODoHConfigs.
-- name: network.trr.odoh.configs_uri
-  type: String
-  value: ""
-  mirror: never
-
 # Whether to add padding in the doh dns queries (rfc 7830)
 - name: network.trr.padding
   type: RelaxedAtomicBool

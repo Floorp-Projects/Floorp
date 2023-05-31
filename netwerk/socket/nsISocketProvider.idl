@@ -138,7 +138,7 @@ interface nsISocketProvider : nsISupports
 
     /**
      * If set, indicates that the connection used a privacy-preserving DNS
-     * transport such as DoH, DoQ, ODOH or similar. Currently this field is
+     * transport such as DoH, DoQ or similar. Currently this field is
      * set only when DoH is used via the TRR.
      */
     const unsigned long USED_PRIVATE_DNS = (1 << 12);
