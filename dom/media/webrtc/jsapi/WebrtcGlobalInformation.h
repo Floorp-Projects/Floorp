@@ -43,7 +43,7 @@ class WebrtcGlobalInformation {
       const GlobalObject& aGlobal,
       WebrtcGlobalStatisticsHistoryCallback& aStatsCallback,
       const nsAString& aPcIdFilter, const Optional<DOMHighResTimeStamp>& aAfter,
-      ErrorResult& aRv);
+      const Optional<DOMHighResTimeStamp>& aSdpAfter, ErrorResult& aRv);
 
   static void GatherHistory();
 
