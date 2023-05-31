@@ -7,6 +7,7 @@
 # users of this module (docker images, macos SDK artifacts) when changes are
 # necessary in mozpack.pkg
 import bz2
+import concurrent.futures
 import io
 import lzma
 import os
@@ -105,25 +106,34 @@ class Pbzx(object):
         # check.
         chunk_size = fileobj.read(8)
         chunk_size = struct.unpack(">Q", chunk_size)[0]
-        self.fileobj = fileobj
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count())
+        self.chunk_getter = executor.map(self._uncompress_chunk, self._chunker(fileobj))
         self._init_one_chunk()
+
+    @staticmethod
+    def _chunker(fileobj):
+        while True:
+            header = fileobj.read(16)
+            if header == b"":
+                break
+            if len(header) != 16:
+                raise Exception("Corrupted PBZX payload?")
+            decompressed_size, compressed_size = struct.unpack(">QQ", header)
+            chunk = fileobj.read(compressed_size)
+            yield decompressed_size, compressed_size, chunk
+
+    @staticmethod
+    def _uncompress_chunk(data):
+        decompressed_size, compressed_size, chunk = data
+        if compressed_size != decompressed_size:
+            chunk = lzma.decompress(chunk)
+            if len(chunk) != decompressed_size:
+                raise Exception("Corrupted PBZX payload?")
+        return chunk
 
     def _init_one_chunk(self):
         self.offset = 0
-        header = self.fileobj.read(16)
-        if header == b"":
-            self.chunk = ""
-            return
-        if len(header) != 16:
-            raise Exception("Corrupted PBZX payload?")
-        decompressed_size, compressed_size = struct.unpack(">QQ", header)
-        chunk = self.fileobj.read(compressed_size)
-        if compressed_size == decompressed_size:
-            self.chunk = chunk
-        else:
-            self.chunk = lzma.decompress(chunk)
-            if len(self.chunk) != decompressed_size:
-                raise Exception("Corrupted PBZX payload?")
+        self.chunk = next(self.chunk_getter, "")
 
     def read(self, length=None):
         if length == 0:
