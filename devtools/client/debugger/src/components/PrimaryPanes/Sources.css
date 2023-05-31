@@ -168,19 +168,21 @@ html[dir="rtl"] .sources-list .tree .node > div {
 
 .source-list-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  box-sizing: border-box;
-  border: 1px solid var(--theme-warning-border);
+  gap: 5px;
+  justify-content: center;
+  text-align: center;
+  min-height: var(--editor-footer-height);
+  border-block-start: 1px solid var(--theme-warning-border);
   user-select: none;
   padding: 3px 10px;
   color: var(--theme-warning-color);
   background-color: var(--theme-warning-background);
-  white-space: nowrap;
 }
 
 .source-list-footer .devtools-togglebutton {
   background-color: var(--theme-toolbar-hover);
-  margin-inline-start: 5px;
 }
 
 .source-list-footer .devtools-togglebutton:hover {
