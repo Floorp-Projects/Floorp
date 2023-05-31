@@ -2141,3 +2141,4 @@ pref(image.downscale-during-decode.enabled,true) == 1804872-3.html 1804872-3-ref
 pref(layout.testing.overlay-scrollbars.always-visible,true) pref(ui.useOverlayScrollbars,1) == 1827337-1.html 1827337-1-ref.html
 pref(layout.testing.overlay-scrollbars.always-visible,true) pref(ui.useOverlayScrollbars,1) fuzzy-if(winWidget,0-21,0-134) fuzzy-if(cocoaWidget,0-2,0-12) == 1828879-1.html 1828879-1-ref.html
 skip-if(!OSX) != 1834316-1.html 1834316-1-notref.html
+skip-if(!OSX) test-pref(layout.css.font-visibility.standard,1) ref-pref(layout.css.font-visibility.standard,3) == 1835271-1.html 1835271-1-ref.html
