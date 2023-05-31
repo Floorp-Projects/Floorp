@@ -210,7 +210,7 @@ nsresult PrintTargetCG::AbortPrinting() {
   return EndPrinting();
 }
 
-nsresult PrintTargetCG::BeginPage(const IntSize& aSizeInPoints) {
+nsresult PrintTargetCG::BeginPage() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   CGContextRef context;
@@ -249,7 +249,7 @@ nsresult PrintTargetCG::BeginPage(const IntSize& aSizeInPoints) {
 
   mCairoSurface = surface;
 
-  return PrintTarget::BeginPage(aSizeInPoints);
+  return PrintTarget::BeginPage();
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

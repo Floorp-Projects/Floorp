@@ -33,7 +33,7 @@ class PrintTargetThebes final : public PrintTarget {
                          int32_t aEndPage) override;
   nsresult EndPrinting() override;
   nsresult AbortPrinting() override;
-  nsresult BeginPage(const IntSize& aSizeInPoints) override;
+  nsresult BeginPage() override;
   nsresult EndPage() override;
   void Finish() override;
 
