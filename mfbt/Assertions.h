@@ -38,6 +38,9 @@ MOZ_END_EXTERN_C
 #if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
 static inline void AnnotateMozCrashReason(const char* reason) {
   gMozCrashReason = reason;
+  // See bug 1681846, on 32-bit Android ARM the compiler removes the store to
+  // gMozCrashReason if this barrier is not present.
+  asm volatile("" ::: "memory");
 }
 #  define MOZ_CRASH_ANNOTATE(...) AnnotateMozCrashReason(__VA_ARGS__)
 #else
