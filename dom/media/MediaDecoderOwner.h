@@ -18,6 +18,7 @@ class GMPCrashHelper;
 class VideoFrameContainer;
 class MediaInfo;
 class MediaResult;
+enum class RFPTarget : uint32_t;
 
 namespace dom {
 class Document;
@@ -186,7 +187,7 @@ class MediaDecoderOwner {
   virtual bool IsActuallyInvisible() const = 0;
 
   // Returns true if the owner should resist fingerprinting.
-  virtual bool ShouldResistFingerprinting() const = 0;
+  virtual bool ShouldResistFingerprinting(RFPTarget aTarget) const = 0;
 
   /*
    * Servo only methods go here. Please provide default implementations so they

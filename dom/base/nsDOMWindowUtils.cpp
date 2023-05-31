@@ -2684,8 +2684,9 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetCurrentPreferredSampleRate(uint32_t* aRate) {
   nsCOMPtr<Document> doc = GetDocument();
   *aRate = CubebUtils::PreferredSampleRate(
-      doc ? doc->ShouldResistFingerprinting()
-          : nsContentUtils::ShouldResistFingerprinting("Fallback"));
+      doc ? doc->ShouldResistFingerprinting(RFPTarget::Unknown)
+          : nsContentUtils::ShouldResistFingerprinting("Fallback",
+                                                       RFPTarget::Unknown));
   return NS_OK;
 }
 

@@ -258,7 +258,7 @@ uint32_t HTMLVideoElement::MozParsedFrames() const {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
   }
 
@@ -271,7 +271,7 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
   }
 
@@ -284,7 +284,7 @@ uint32_t HTMLVideoElement::MozPresentedFrames() {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
                                                    VideoWidth(), VideoHeight());
   }
@@ -298,7 +298,7 @@ uint32_t HTMLVideoElement::MozPaintedFrames() {
     return 0;
   }
 
-  if (OwnerDoc()->ShouldResistFingerprinting()) {
+  if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return nsRFPService::GetSpoofedPresentedFrames(TotalPlayTime(),
                                                    VideoWidth(), VideoHeight());
   }
@@ -310,7 +310,8 @@ uint32_t HTMLVideoElement::MozPaintedFrames() {
 double HTMLVideoElement::MozFrameDelay() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
 
-  if (!IsVideoStatsEnabled() || OwnerDoc()->ShouldResistFingerprinting()) {
+  if (!IsVideoStatsEnabled() ||
+      OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     return 0.0;
   }
 
@@ -347,7 +348,7 @@ HTMLVideoElement::GetVideoPlaybackQuality() {
     }
 
     if (mDecoder) {
-      if (OwnerDoc()->ShouldResistFingerprinting()) {
+      if (OwnerDoc()->ShouldResistFingerprinting(RFPTarget::Unknown)) {
         totalFrames = nsRFPService::GetSpoofedTotalFrames(TotalPlayTime());
         droppedFrames = nsRFPService::GetSpoofedDroppedFrames(
             TotalPlayTime(), VideoWidth(), VideoHeight());
