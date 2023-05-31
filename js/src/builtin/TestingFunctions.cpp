@@ -6862,13 +6862,11 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   RefPtr<JS::Stencil> stencil;
   JS::CompilationStorage compileStorage;
   if (isModule) {
-    stencil = JS::CompileModuleScriptToStencil(
-        &fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        compileStorage);
+    stencil =
+        JS::CompileModuleScriptToStencil(&fc, options, srcBuf, compileStorage);
   } else {
-    stencil = JS::CompileGlobalScriptToStencil(
-        &fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        compileStorage);
+    stencil =
+        JS::CompileGlobalScriptToStencil(&fc, options, srcBuf, compileStorage);
   }
   if (!stencil) {
     return false;

@@ -35,7 +35,6 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/CpuCount.h"
-#include "util/NativeStack.h"
 #include "vm/ErrorReporting.h"
 #include "vm/HelperThreadState.h"
 #include "vm/InternalThreadPool.h"
@@ -687,8 +686,8 @@ CompileToStencilTask<Unit>::CompileToStencilTask(
 
 template <typename Unit>
 void CompileToStencilTask<Unit>::parse(FrontendContext* fc) {
-  stencil_ = JS::CompileGlobalScriptToStencil(fc, options, fc->stackLimit(),
-                                              data, compileStorage_);
+  stencil_ =
+      JS::CompileGlobalScriptToStencil(fc, options, data, compileStorage_);
   if (!stencil_) {
     return;
   }
@@ -710,8 +709,8 @@ CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
 
 template <typename Unit>
 void CompileModuleToStencilTask<Unit>::parse(FrontendContext* fc) {
-  stencil_ = JS::CompileModuleScriptToStencil(fc, options, fc->stackLimit(),
-                                              data, compileStorage_);
+  stencil_ =
+      JS::CompileModuleScriptToStencil(fc, options, data, compileStorage_);
   if (!stencil_) {
     return;
   }

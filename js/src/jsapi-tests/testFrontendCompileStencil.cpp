@@ -22,7 +22,6 @@ BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
   CHECK(fc);
 
   JS::CompileOptions options((JS::CompileOptions::ForFrontendContext()));
-  JS::NativeStackLimit stackLimit = JS::NativeStackLimitMax;
 
   {
     const char source[] = "var a = 10;";
@@ -31,8 +30,8 @@ BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
     CHECK(
         srcBuf.init(fc, source, strlen(source), JS::SourceOwnership::Borrowed));
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = JS::CompileGlobalScriptToStencil(
-        fc, options, stackLimit, srcBuf, compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        JS::CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
     CHECK(stencil);
     CHECK(compileStorage.hasInput());
   }
@@ -44,8 +43,8 @@ BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
     CHECK(srcBuf.init(fc, source, std::char_traits<char16_t>::length(source),
                       JS::SourceOwnership::Borrowed));
     JS::CompilationStorage compileStorage;
-    RefPtr<JS::Stencil> stencil = JS::CompileGlobalScriptToStencil(
-        fc, options, stackLimit, srcBuf, compileStorage);
+    RefPtr<JS::Stencil> stencil =
+        JS::CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
     CHECK(stencil);
     CHECK(compileStorage.hasInput());
   }
