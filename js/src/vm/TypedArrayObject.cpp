@@ -316,7 +316,7 @@ static TypedArrayObject* NewTypedArrayObject(JSContext* cx,
                                              const JSClass* clasp,
                                              HandleObject proto,
                                              gc::AllocKind allocKind,
-                                             gc::InitialHeap heap) {
+                                             gc::Heap heap) {
   MOZ_ASSERT(proto);
 
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, clasp));
@@ -410,7 +410,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* newBuiltinClassInstance(JSContext* cx,
                                                    gc::AllocKind allocKind,
-                                                   gc::InitialHeap heap) {
+                                                   gc::Heap heap) {
     RootedObject proto(cx, GlobalObject::getOrCreatePrototype(cx, protoKey()));
     if (!proto) {
       return nullptr;
@@ -422,13 +422,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
                                              gc::AllocKind allocKind) {
     MOZ_ASSERT(proto);
     return NewTypedArrayObject(cx, instanceClass(), proto, allocKind,
-                               gc::DefaultHeap);
+                               gc::Heap::Default);
   }
 
   static TypedArrayObject* makeInstance(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
       size_t byteOffset, size_t len, HandleObject proto,
-      gc::InitialHeap heap = gc::InitialHeap::DefaultHeap) {
+      gc::Heap heap = gc::Heap::Default) {
     MOZ_ASSERT(len <= MaxByteLength / BYTES_PER_ELEMENT);
 
     gc::AllocKind allocKind =
@@ -461,7 +461,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     AutoSetNewObjectMetadata metadata(cx);
 
     Rooted<TypedArrayObject*> tarray(
-        cx, newBuiltinClassInstance(cx, allocKind, gc::TenuredHeap));
+        cx, newBuiltinClassInstance(cx, allocKind, gc::Heap::Tenured));
     if (!tarray) {
       return nullptr;
     }
@@ -897,9 +897,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   // ES2023 draft rev cf86f1cdc28e809170733d74ea64fd0f3dd79f78
   // 23.2.5.1.1 AllocateTypedArray ( constructorName, newTarget, defaultProto [
   // , length ] )
-  static TypedArrayObject* fromLength(
-      JSContext* cx, uint64_t nelements, HandleObject proto = nullptr,
-      gc::InitialHeap heap = gc::InitialHeap::DefaultHeap) {
+  static TypedArrayObject* fromLength(JSContext* cx, uint64_t nelements,
+                                      HandleObject proto = nullptr,
+                                      gc::Heap heap = gc::Heap::Default) {
     Rooted<ArrayBufferObject*> buffer(cx);
     if (!maybeCreateArrayBuffer(cx, nelements, &buffer)) {
       return nullptr;
@@ -1074,7 +1074,7 @@ TypedArrayObject* js::NewTypedArrayWithTemplateAndBuffer(
 }
 
 TypedArrayObject* js::NewUint8ArrayWithLength(JSContext* cx, int32_t len,
-                                              gc::InitialHeap heap) {
+                                              gc::Heap heap) {
   return TypedArrayObjectTemplate<uint8_t>::fromLength(cx, len, nullptr, heap);
 }
 

@@ -1594,7 +1594,7 @@ bool MNewPlainObject::writeRecoverData(CompactBufferWriter& writer) const {
 
   MOZ_ASSERT(gc::AllocKind(uint8_t(allocKind_)) == allocKind_);
   writer.writeByte(uint8_t(allocKind_));
-  MOZ_ASSERT(gc::InitialHeap(uint8_t(initialHeap_)) == initialHeap_);
+  MOZ_ASSERT(gc::Heap(uint8_t(initialHeap_)) == initialHeap_);
   writer.writeByte(uint8_t(initialHeap_));
   return true;
 }
@@ -1602,9 +1602,9 @@ bool MNewPlainObject::writeRecoverData(CompactBufferWriter& writer) const {
 RNewPlainObject::RNewPlainObject(CompactBufferReader& reader) {
   allocKind_ = gc::AllocKind(reader.readByte());
   MOZ_ASSERT(gc::IsValidAllocKind(allocKind_));
-  initialHeap_ = gc::InitialHeap(reader.readByte());
-  MOZ_ASSERT(initialHeap_ == gc::DefaultHeap ||
-             initialHeap_ == gc::TenuredHeap);
+  initialHeap_ = gc::Heap(reader.readByte());
+  MOZ_ASSERT(initialHeap_ == gc::Heap::Default ||
+             initialHeap_ == gc::Heap::Tenured);
 }
 
 bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
@@ -1627,23 +1627,23 @@ bool MNewArrayObject::writeRecoverData(CompactBufferWriter& writer) const {
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArrayObject));
 
   writer.writeUnsigned(length_);
-  MOZ_ASSERT(gc::InitialHeap(uint8_t(initialHeap_)) == initialHeap_);
+  MOZ_ASSERT(gc::Heap(uint8_t(initialHeap_)) == initialHeap_);
   writer.writeByte(uint8_t(initialHeap_));
   return true;
 }
 
 RNewArrayObject::RNewArrayObject(CompactBufferReader& reader) {
   length_ = reader.readUnsigned();
-  initialHeap_ = gc::InitialHeap(reader.readByte());
-  MOZ_ASSERT(initialHeap_ == gc::DefaultHeap ||
-             initialHeap_ == gc::TenuredHeap);
+  initialHeap_ = gc::Heap(reader.readByte());
+  MOZ_ASSERT(initialHeap_ == gc::Heap::Default ||
+             initialHeap_ == gc::Heap::Tenured);
 }
 
 bool RNewArrayObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   iter.read();  // Skip unused shape field.
 
   NewObjectKind kind =
-      initialHeap_ == gc::TenuredHeap ? TenuredObject : GenericObject;
+      initialHeap_ == gc::Heap::Tenured ? TenuredObject : GenericObject;
   JSObject* array = NewArrayOperation(cx, length_, kind);
   if (!array) {
     return false;

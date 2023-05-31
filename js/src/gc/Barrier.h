@@ -78,7 +78,7 @@
  *               handles cycle collector concerns. Most external clients should
  *               use this.
  *
- * TenuredHeap   Like Heap but doesn't allow nursery pointers. Allows storing
+ * Heap::Tenured   Like Heap but doesn't allow nursery pointers. Allows storing
  *               flags in unused lower bits of the pointer.
  *
  * Which class to use?
@@ -104,7 +104,7 @@
  *   No, it's external =>
  *     Can your pointer refer to nursery objects?
  *       Yes => Use JS::Heap<T>
- *       Never => Use JS::TenuredHeap<T> (optimization)
+ *       Never => Use JS::Heap::Tenured<T> (optimization)
  *
  * If in doubt, use HeapPtr<T>.
  *

@@ -244,7 +244,7 @@ ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
 
   AutoSetNewObjectMetadata metadata(cx);
   JSObject* base =
-      NativeObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape);
+      NativeObject::create(cx, FINALIZE_KIND, gc::Heap::Tenured, shape);
   if (!base) {
     return nullptr;
   }
@@ -303,7 +303,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
 
   AutoSetNewObjectMetadata metadata(cx);
   JSObject* base =
-      NativeObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape);
+      NativeObject::create(cx, FINALIZE_KIND, gc::Heap::Default, shape);
   if (!base) {
     return nullptr;
   }

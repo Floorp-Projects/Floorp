@@ -55,7 +55,7 @@ class JitRealm {
   mozilla::EnumeratedArray<StubIndex, StubIndex::Count, WeakHeapPtr<JitCode*>>
       stubs_;
 
-  gc::InitialHeap initialStringHeap;
+  gc::Heap initialStringHeap;
 
   JitCode* generateStringConcatStub(JSContext* cx);
   JitCode* generateRegExpMatcherStub(JSContext* cx);
@@ -103,7 +103,7 @@ class JitRealm {
 
   void setStringsCanBeInNursery(bool allow) {
     MOZ_ASSERT(!hasStubs());
-    initialStringHeap = allow ? gc::DefaultHeap : gc::TenuredHeap;
+    initialStringHeap = allow ? gc::Heap::Default : gc::Heap::Tenured;
   }
 
   JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {

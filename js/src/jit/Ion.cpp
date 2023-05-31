@@ -304,7 +304,7 @@ uint8_t* JitRuntime::allocateIonOsrTempData(size_t size) {
 
 void JitRuntime::freeIonOsrTempData() { ionOsrTempData_.ref().reset(); }
 
-JitRealm::JitRealm() : initialStringHeap(gc::TenuredHeap) {}
+JitRealm::JitRealm() : initialStringHeap(gc::Heap::Tenured) {}
 
 void JitRealm::initialize(bool zoneHasNurseryStrings) {
   setStringsCanBeInNursery(zoneHasNurseryStrings);

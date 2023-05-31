@@ -389,8 +389,8 @@ void WarpCacheIR::traceData(JSTracer* trc) {
         case StubField::Type::AllocSite: {
           mozilla::DebugOnly<uintptr_t> word =
               stubInfo_->getStubRawWord(stubData_, offset);
-          MOZ_ASSERT(word == uintptr_t(gc::DefaultHeap) ||
-                     word == uintptr_t(gc::TenuredHeap));
+          MOZ_ASSERT(word == uintptr_t(gc::Heap::Default) ||
+                     word == uintptr_t(gc::Heap::Tenured));
           break;
         }
         case StubField::Type::Limit:

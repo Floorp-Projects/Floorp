@@ -5769,14 +5769,14 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
   return true;
 }
 
-static gc::InitialHeap InitialBigIntHeap(JSContext* cx) {
+static gc::Heap InitialBigIntHeap(JSContext* cx) {
   JS::Zone* zone = cx->zone();
-  return zone->allocNurseryBigInts() ? gc::DefaultHeap : gc::TenuredHeap;
+  return zone->allocNurseryBigInts() ? gc::Heap::Default : gc::Heap::Tenured;
 }
 
 static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
                                Register temp, const LiveRegisterSet& liveSet,
-                               gc::InitialHeap initialHeap, Label* fail) {
+                               gc::Heap initialHeap, Label* fail) {
   Label fallback, done;
   masm.newGCBigInt(result, temp, initialHeap, &fallback);
   masm.jump(&done);
@@ -5784,7 +5784,7 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
     masm.bind(&fallback);
 
     // Request a minor collection at a later time if nursery allocation failed.
-    bool requestMinorGC = initialHeap == gc::DefaultHeap;
+    bool requestMinorGC = initialHeap == gc::Heap::Default;
 
     masm.PushRegsInMask(liveSet);
     using Fn = void* (*)(JSContext* cx, bool requestMinorGC);
@@ -5841,7 +5841,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     save.takeUnchecked(scratch2);
     save.takeUnchecked(output);
 
-    gc::InitialHeap initialHeap = InitialBigIntHeap(cx_);
+    gc::Heap initialHeap = InitialBigIntHeap(cx_);
     EmitAllocateBigInt(masm, *bigInt, scratch1, save, initialHeap,
                        failure->label());
   }
@@ -6040,7 +6040,7 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
                            liveVolatileFloatRegs());
       save.takeUnchecked(bigInt);
       save.takeUnchecked(bigIntScratch);
-      gc::InitialHeap initialHeap = InitialBigIntHeap(cx_);
+      gc::Heap initialHeap = InitialBigIntHeap(cx_);
       EmitAllocateBigInt(masm, bigInt, bigIntScratch, save, initialHeap, &fail);
       masm.jump(&done);
 
@@ -7960,12 +7960,12 @@ bool CacheIRCompiler::emitCallStringConcatResult(StringOperandId lhsId,
 
   callvm.prepare();
 
-  masm.Push(static_cast<js::jit::Imm32>(js::gc::DefaultHeap));
+  masm.Push(static_cast<js::jit::Imm32>(int32_t(js::gc::Heap::Default)));
   masm.Push(rhs);
   masm.Push(lhs);
 
-  using Fn = JSString* (*)(JSContext*, HandleString, HandleString,
-                           js::gc::InitialHeap);
+  using Fn =
+      JSString* (*)(JSContext*, HandleString, HandleString, js::gc::Heap);
   callvm.call<Fn, ConcatStrings<CanGC>>();
 
   return true;

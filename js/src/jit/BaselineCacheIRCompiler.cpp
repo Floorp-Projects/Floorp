@@ -3604,7 +3604,7 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
   Label fail;
 
   masm.createArrayWithFixedElements(result, shape, scratch, arrayLength,
-                                    arrayCapacity, allocKind, gc::DefaultHeap,
+                                    arrayCapacity, allocKind, gc::Heap::Default,
                                     &fail, AllocSiteInput(site));
   masm.jump(&done);
 
@@ -3660,7 +3660,7 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   Label fail;
 
   masm.createPlainGCObject(obj, shape, scratch, shape, numFixedSlots,
-                           numDynamicSlots, allocKind, gc::DefaultHeap, &fail,
+                           numDynamicSlots, allocKind, gc::Heap::Default, &fail,
                            AllocSiteInput(site));
   masm.jump(&done);
 

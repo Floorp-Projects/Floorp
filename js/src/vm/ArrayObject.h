@@ -52,7 +52,7 @@ class ArrayObject : public NativeObject {
 
   // Make an array object with the specified initial state.
   static MOZ_ALWAYS_INLINE ArrayObject* create(
-      JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+      JSContext* cx, gc::AllocKind kind, gc::Heap heap,
       Handle<SharedShape*> shape, uint32_t length, uint32_t slotSpan,
       AutoSetNewObjectMetadata& metadata, gc::AllocSite* site = nullptr);
 };

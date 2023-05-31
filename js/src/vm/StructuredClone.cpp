@@ -447,8 +447,8 @@ struct JSStructuredCloneReader {
   [[nodiscard]] bool readUint32(uint32_t* num);
 
   template <typename CharT>
-  JSString* readStringImpl(uint32_t nchars, gc::InitialHeap heap);
-  JSString* readString(uint32_t data, gc::InitialHeap heap = gc::DefaultHeap);
+  JSString* readStringImpl(uint32_t nchars, gc::Heap heap);
+  JSString* readString(uint32_t data, gc::Heap heap = gc::Heap::Default);
 
   BigInt* readBigInt(uint32_t data);
 
@@ -484,7 +484,7 @@ struct JSStructuredCloneReader {
   [[nodiscard]] bool readObjectField(HandleObject obj, HandleValue key);
 
   [[nodiscard]] bool startRead(MutableHandleValue vp,
-                               gc::InitialHeap strHeap = gc::DefaultHeap);
+                               gc::Heap strHeap = gc::Heap::Default);
 
   SCInput& in;
 
@@ -2439,7 +2439,7 @@ bool JSStructuredCloneWriter::write(HandleValue v) {
 
 template <typename CharT>
 JSString* JSStructuredCloneReader::readStringImpl(uint32_t nchars,
-                                                  gc::InitialHeap heap) {
+                                                  gc::Heap heap) {
   if (nchars > JSString::MAX_LENGTH) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA, "string length");
@@ -2454,8 +2454,7 @@ JSString* JSStructuredCloneReader::readStringImpl(uint32_t nchars,
   return chars.toStringDontDeflate(context(), nchars, heap);
 }
 
-JSString* JSStructuredCloneReader::readString(uint32_t data,
-                                              gc::InitialHeap heap) {
+JSString* JSStructuredCloneReader::readString(uint32_t data, gc::Heap heap) {
   uint32_t nchars = data & BitMask(31);
   bool latin1 = data & (1 << 31);
   return latin1 ? readStringImpl<Latin1Char>(nchars, heap)
@@ -2848,7 +2847,7 @@ static bool PrimitiveToObject(JSContext* cx, MutableHandleValue vp) {
 }
 
 bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
-                                        gc::InitialHeap strHeap) {
+                                        gc::Heap strHeap) {
   uint32_t tag, data;
   bool alreadAppended = false;
 
@@ -2955,7 +2954,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
         return false;
       }
 
-      JSString* str = readString(stringData, gc::TenuredHeap);
+      JSString* str = readString(stringData, gc::Heap::Tenured);
       if (!str) {
         return false;
       }
@@ -3385,7 +3384,7 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
     }
 
     if (mutedErrors.isBoolean()) {
-      if (!startRead(&source, gc::TenuredHeap) || !source.isString()) {
+      if (!startRead(&source, gc::Heap::Tenured) || !source.isString()) {
         return nullptr;
       }
     } else if (mutedErrors.isString()) {
@@ -3427,7 +3426,7 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
   savedFrame->initSourceId(0);
 
   RootedValue name(context());
-  if (!startRead(&name, gc::TenuredHeap)) {
+  if (!startRead(&name, gc::Heap::Tenured)) {
     return nullptr;
   }
   if (!(name.isString() || name.isNull())) {
@@ -3447,7 +3446,7 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
   savedFrame->initFunctionDisplayName(atomName);
 
   RootedValue cause(context());
-  if (!startRead(&cause, gc::TenuredHeap)) {
+  if (!startRead(&cause, gc::Heap::Tenured)) {
     return nullptr;
   }
   if (!(cause.isString() || cause.isNull())) {

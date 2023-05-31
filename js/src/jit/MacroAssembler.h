@@ -4644,7 +4644,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
    * digits need to be heap allocated.
    */
   void copyBigIntWithInlineDigits(Register src, Register dest, Register temp,
-                                  gc::InitialHeap initialHeap, Label* fail);
+                                  gc::Heap initialHeap, Label* fail);
 
   /**
    * Compare a BigInt and an Int32 value. Falls through to the false case.
@@ -5059,8 +5059,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Inline allocation.
  private:
   void checkAllocatorState(Label* fail);
-  bool shouldNurseryAllocate(gc::AllocKind allocKind,
-                             gc::InitialHeap initialHeap);
+  bool shouldNurseryAllocate(gc::AllocKind allocKind, gc::Heap initialHeap);
   void nurseryAllocateObject(
       Register result, Register temp, gc::AllocKind allocKind,
       size_t nDynamicSlots, Label* fail,
@@ -5075,13 +5074,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind,
                         Label* fail);
   void allocateObject(Register result, Register temp, gc::AllocKind allocKind,
-                      uint32_t nDynamicSlots, gc::InitialHeap initialHeap,
-                      Label* fail,
+                      uint32_t nDynamicSlots, gc::Heap initialHeap, Label* fail,
                       const AllocSiteInput& allocSite = AllocSiteInput());
   void nurseryAllocateString(Register result, Register temp,
                              gc::AllocKind allocKind, Label* fail);
   void allocateString(Register result, Register temp, gc::AllocKind allocKind,
-                      gc::InitialHeap initialHeap, Label* fail);
+                      gc::Heap initialHeap, Label* fail);
   void nurseryAllocateBigInt(Register result, Register temp, Label* fail);
   void copySlotsFromTemplate(Register obj,
                              const TemplateNativeObject& templateObj,
@@ -5099,22 +5097,20 @@ class MacroAssembler : public MacroAssemblerSpecific {
  public:
   void callFreeStub(Register slots);
   void createGCObject(Register result, Register temp,
-                      const TemplateObject& templateObj,
-                      gc::InitialHeap initialHeap, Label* fail,
-                      bool initContents = true);
+                      const TemplateObject& templateObj, gc::Heap initialHeap,
+                      Label* fail, bool initContents = true);
 
   void createPlainGCObject(Register result, Register shape, Register temp,
                            Register temp2, uint32_t numFixedSlots,
                            uint32_t numDynamicSlots, gc::AllocKind allocKind,
-                           gc::InitialHeap initialHeap, Label* fail,
+                           gc::Heap initialHeap, Label* fail,
                            const AllocSiteInput& allocSite,
                            bool initContents = true);
 
   void createArrayWithFixedElements(
       Register result, Register shape, Register temp, uint32_t arrayLength,
-      uint32_t arrayCapacity, gc::AllocKind allocKind,
-      gc::InitialHeap initialHeap, Label* fail,
-      const AllocSiteInput& allocSite = AllocSiteInput());
+      uint32_t arrayCapacity, gc::AllocKind allocKind, gc::Heap initialHeap,
+      Label* fail, const AllocSiteInput& allocSite = AllocSiteInput());
 
   void initGCThing(Register obj, Register temp,
                    const TemplateObject& templateObj, bool initContents = true);
@@ -5126,12 +5122,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                            TypedArrayObject* templateObj,
                            TypedArrayLength lengthKind);
 
-  void newGCString(Register result, Register temp, gc::InitialHeap initialHeap,
+  void newGCString(Register result, Register temp, gc::Heap initialHeap,
                    Label* fail);
   void newGCFatInlineString(Register result, Register temp,
-                            gc::InitialHeap initialHeap, Label* fail);
+                            gc::Heap initialHeap, Label* fail);
 
-  void newGCBigInt(Register result, Register temp, gc::InitialHeap initialHeap,
+  void newGCBigInt(Register result, Register temp, gc::Heap initialHeap,
                    Label* fail);
 
   // Compares two strings for equality based on the JSOP.

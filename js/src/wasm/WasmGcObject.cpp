@@ -353,7 +353,7 @@ bool WasmGcObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
 /* static */
 WasmGcObject* WasmGcObject::create(JSContext* cx,
                                    wasm::TypeDefInstanceData* typeDefData,
-                                   js::gc::InitialHeap initialHeap) {
+                                   js::gc::Heap initialHeap) {
   MOZ_ASSERT(IsWasmGcObjectClass(typeDefData->clasp));
   MOZ_ASSERT(!typeDefData->clasp->isNativeObject());
 
@@ -502,7 +502,7 @@ gc::AllocKind WasmArrayObject::allocKind() {
 template <bool ZeroFields>
 WasmArrayObject* WasmArrayObject::createArray(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap, uint32_t numElements) {
+    js::gc::Heap initialHeap, uint32_t numElements) {
   const TypeDef* typeDef = typeDefData->typeDef;
   STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Array);
@@ -569,10 +569,10 @@ WasmArrayObject* WasmArrayObject::createArray(
 
 template WasmArrayObject* WasmArrayObject::createArray<true>(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap, uint32_t numElements);
+    js::gc::Heap initialHeap, uint32_t numElements);
 template WasmArrayObject* WasmArrayObject::createArray<false>(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap, uint32_t numElements);
+    js::gc::Heap initialHeap, uint32_t numElements);
 
 /* static */
 void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
@@ -705,8 +705,7 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
 template <bool ZeroFields>
 WasmStructObject* WasmStructObject::createStructOOL(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap, uint32_t inlineBytes,
-    uint32_t outlineBytes) {
+    js::gc::Heap initialHeap, uint32_t inlineBytes, uint32_t outlineBytes) {
   // This method is called as the slow path from the (inlineable)
   // WasmStructObject::createStruct.  It handles the case where an object
   // needs OOL storage.  It doesn't handle the non-OOL case at all.
@@ -753,10 +752,10 @@ WasmStructObject* WasmStructObject::createStructOOL(
 
 template WasmStructObject* WasmStructObject::createStruct<true>(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap);
+    js::gc::Heap initialHeap);
 template WasmStructObject* WasmStructObject::createStruct<false>(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap);
+    js::gc::Heap initialHeap);
 
 /* static */
 void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {

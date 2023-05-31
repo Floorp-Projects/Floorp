@@ -333,19 +333,18 @@ inline bool IsInternalFunctionObject(JSObject& funobj) {
   return fun.isInterpreted() && !fun.environment();
 }
 
-inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
-                                      const JSClass* clasp,
-                                      gc::AllocSite* site = nullptr) {
+inline gc::Heap GetInitialHeap(NewObjectKind newKind, const JSClass* clasp,
+                               gc::AllocSite* site = nullptr) {
   if (newKind != GenericObject) {
-    return gc::TenuredHeap;
+    return gc::Heap::Tenured;
   }
   if (clasp->hasFinalize() && !CanNurseryAllocateFinalizedClass(clasp)) {
-    return gc::TenuredHeap;
+    return gc::Heap::Tenured;
   }
   if (site) {
     return site->initialHeap();
   }
-  return gc::DefaultHeap;
+  return gc::Heap::Default;
 }
 
 /*

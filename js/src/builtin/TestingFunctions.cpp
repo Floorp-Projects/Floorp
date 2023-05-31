@@ -3253,7 +3253,7 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
   bool wantTwoByte = false;
   bool forceExternal = false;
   bool maybeExternal = false;
@@ -3296,7 +3296,7 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
       *setting = static_cast<uint32_t>(i32);
     }
 
-    heap = requestTenured ? gc::TenuredHeap : gc::DefaultHeap;
+    heap = requestTenured ? gc::Heap::Tenured : gc::Heap::Default;
     if (forceExternal || maybeExternal) {
       wantTwoByte = true;
       if (capacity != 0) {
@@ -3406,7 +3406,7 @@ static bool NewRope(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  gc::InitialHeap heap = js::gc::DefaultHeap;
+  gc::Heap heap = js::gc::Heap::Default;
   if (args.get(2).isObject()) {
     RootedObject options(cx, &args[2].toObject());
     RootedValue v(cx);
@@ -3414,7 +3414,7 @@ static bool NewRope(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     if (!v.isUndefined() && !ToBoolean(v)) {
-      heap = js::gc::TenuredHeap;
+      heap = js::gc::Heap::Tenured;
     }
   }
 

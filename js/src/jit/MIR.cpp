@@ -4895,7 +4895,7 @@ MArrayState* MArrayState::Copy(TempAllocator& alloc, MArrayState* state) {
 }
 
 MNewArray::MNewArray(uint32_t length, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, bool vmCall)
+                     gc::Heap initialHeap, bool vmCall)
     : MUnaryInstruction(classOpcode, templateConst),
       length_(length),
       initialHeap_(initialHeap),
@@ -7095,7 +7095,7 @@ MDefinition* MGetInlinedArgumentHole::foldsTo(TempAllocator& alloc) {
 MInlineArgumentsSlice* MInlineArgumentsSlice::New(
     TempAllocator& alloc, MDefinition* begin, MDefinition* count,
     MCreateInlinedArgumentsObject* args, JSObject* templateObj,
-    gc::InitialHeap initialHeap) {
+    gc::Heap initialHeap) {
   auto* ins = new (alloc) MInlineArgumentsSlice(templateObj, initialHeap);
 
   uint32_t argc = args->numActuals();

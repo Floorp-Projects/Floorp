@@ -137,7 +137,7 @@ static bool HasLeadingZeroes(BigInt* bi) {
 #endif
 
 BigInt* BigInt::createUninitialized(JSContext* cx, size_t digitLength,
-                                    bool isNegative, gc::InitialHeap heap) {
+                                    bool isNegative, gc::Heap heap) {
   if (digitLength > MaxDigitLength) {
     ReportOversizedAllocation(cx, JSMSG_BIGINT_TOO_LARGE);
     return nullptr;
@@ -208,7 +208,7 @@ size_t BigInt::sizeOfExcludingThisInNursery(
   return mallocSizeOf(heapDigits_);
 }
 
-BigInt* BigInt::zero(JSContext* cx, gc::InitialHeap heap) {
+BigInt* BigInt::zero(JSContext* cx, gc::Heap heap) {
   return createUninitialized(cx, 0, false, heap);
 }
 
@@ -1557,7 +1557,7 @@ template <typename CharT>
 BigInt* BigInt::parseLiteralDigits(JSContext* cx,
                                    const Range<const CharT> chars,
                                    unsigned radix, bool isNegative,
-                                   bool* haveParseError, gc::InitialHeap heap) {
+                                   bool* haveParseError, gc::Heap heap) {
   static_assert(
       std::is_same_v<CharT, JS::Latin1Char> || std::is_same_v<CharT, char16_t>,
       "only the bare minimum character types are supported, to avoid "
@@ -1615,7 +1615,7 @@ BigInt* BigInt::parseLiteralDigits(JSContext* cx,
 // BigInt proposal section 7.2
 template <typename CharT>
 BigInt* BigInt::parseLiteral(JSContext* cx, const Range<const CharT> chars,
-                             bool* haveParseError, js::gc::InitialHeap heap) {
+                             bool* haveParseError, js::gc::Heap heap) {
   RangedPtr<const CharT> start = chars.begin();
   const RangedPtr<const CharT> end = chars.end();
   bool isNegative = false;
@@ -1808,7 +1808,7 @@ BigInt* js::NumberToBigInt(JSContext* cx, double d) {
   return BigInt::createFromDouble(cx, d);
 }
 
-BigInt* BigInt::copy(JSContext* cx, HandleBigInt x, gc::InitialHeap heap) {
+BigInt* BigInt::copy(JSContext* cx, HandleBigInt x, gc::Heap heap) {
   if (x->isZero()) {
     return zero(cx, heap);
   }
@@ -3636,7 +3636,7 @@ BigInt* js::ParseBigIntLiteral(JSContext* cx,
   // This function is only called from the frontend when parsing BigInts. Parsed
   // BigInts are stored in the script's data vector and therefore need to be
   // allocated in the tenured heap.
-  constexpr gc::InitialHeap heap = gc::TenuredHeap;
+  constexpr gc::Heap heap = gc::Heap::Tenured;
 
   bool parseError = false;
   BigInt* res = BigInt::parseLiteral(cx, chars, &parseError, heap);

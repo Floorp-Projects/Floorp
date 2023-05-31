@@ -463,7 +463,7 @@ class CallObject : public EnvironmentObject {
   static constexpr uint32_t CALLEE_SLOT = 1;
 
   static CallObject* create(JSContext* cx, HandleScript script,
-                            HandleObject enclosing, gc::InitialHeap heap);
+                            HandleObject enclosing, gc::Heap heap);
 
  public:
   static const JSClass class_;
@@ -522,11 +522,10 @@ class VarEnvironmentObject : public EnvironmentObject {
   static VarEnvironmentObject* createInternal(JSContext* cx,
                                               Handle<SharedShape*> shape,
                                               HandleObject enclosing,
-                                              gc::InitialHeap heap);
+                                              gc::Heap heap);
 
   static VarEnvironmentObject* create(JSContext* cx, Handle<Scope*> scope,
-                                      HandleObject enclosing,
-                                      gc::InitialHeap heap);
+                                      HandleObject enclosing, gc::Heap heap);
 
   void initScope(Scope* scope) {
     initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
@@ -680,7 +679,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   static LexicalEnvironmentObject* create(JSContext* cx,
                                           Handle<SharedShape*> shape,
                                           HandleObject enclosing,
-                                          gc::InitialHeap heap);
+                                          gc::Heap heap);
 
  public:
   // Is this the global lexical scope?
@@ -721,7 +720,7 @@ class BlockLexicalEnvironmentObject : public ScopedLexicalEnvironmentObject {
   static BlockLexicalEnvironmentObject* create(JSContext* cx,
                                                Handle<LexicalScope*> scope,
                                                HandleObject enclosing,
-                                               gc::InitialHeap heap);
+                                               gc::Heap heap);
 
  public:
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
@@ -756,8 +755,7 @@ class BlockLexicalEnvironmentObject : public ScopedLexicalEnvironmentObject {
 
 class NamedLambdaObject : public BlockLexicalEnvironmentObject {
   static NamedLambdaObject* create(JSContext* cx, HandleFunction callee,
-                                   HandleObject enclosing,
-                                   gc::InitialHeap heap);
+                                   HandleObject enclosing, gc::Heap heap);
 
  public:
   static NamedLambdaObject* createTemplateObject(JSContext* cx,
@@ -780,7 +778,7 @@ class ClassBodyLexicalEnvironmentObject
     : public ScopedLexicalEnvironmentObject {
   static ClassBodyLexicalEnvironmentObject* create(
       JSContext* cx, Handle<ClassBodyScope*> scope, HandleObject enclosing,
-      gc::InitialHeap heap);
+      gc::Heap heap);
 
  public:
   static ClassBodyLexicalEnvironmentObject* createForFrame(

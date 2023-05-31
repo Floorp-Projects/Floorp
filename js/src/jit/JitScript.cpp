@@ -667,8 +667,8 @@ bool JitScript::resetAllocSites(bool resetNurserySites,
   bool anyReset = false;
 
   for (gc::AllocSite* site : allocSites_) {
-    if ((resetNurserySites && site->initialHeap() == gc::DefaultHeap) ||
-        (resetPretenuredSites && site->initialHeap() == gc::TenuredHeap)) {
+    if ((resetNurserySites && site->initialHeap() == gc::Heap::Default) ||
+        (resetPretenuredSites && site->initialHeap() == gc::Heap::Tenured)) {
       if (site->maybeResetState()) {
         anyReset = true;
       }

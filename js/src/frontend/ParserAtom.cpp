@@ -145,10 +145,10 @@ JSString* ParserAtom::instantiateString(JSContext* cx, FrontendContext* fc,
   JSString* str;
   if (hasLatin1Chars()) {
     str = NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
-        cx, latin1Chars(), length(), gc::TenuredHeap);
+        cx, latin1Chars(), length(), gc::Heap::Tenured);
   } else {
     str = NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
-        cx, twoByteChars(), length(), gc::TenuredHeap);
+        cx, twoByteChars(), length(), gc::Heap::Tenured);
   }
   if (!str) {
     return nullptr;
