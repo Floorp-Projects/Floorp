@@ -601,13 +601,8 @@ void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   HelperThreadState().parseFinishedList(locked).insertBack(this);
 }
 
-static inline JS::NativeStackLimit GetStackLimit() {
-  return JS::GetNativeStackLimit(GetNativeStackBase(),
-                                 HelperThreadState().stackQuota);
-}
-
 void ParseTask::runTask(AutoLockHelperThreadState& lock) {
-  stackLimit = GetStackLimit();
+  fc_.setStackQuota(HelperThreadState().stackQuota);
 
   AutoUnlockHelperThreadState unlock(lock);
 
@@ -692,8 +687,8 @@ CompileToStencilTask<Unit>::CompileToStencilTask(
 
 template <typename Unit>
 void CompileToStencilTask<Unit>::parse(FrontendContext* fc) {
-  stencil_ = JS::CompileGlobalScriptToStencil(fc, options, stackLimit, data,
-                                              compileStorage_);
+  stencil_ = JS::CompileGlobalScriptToStencil(fc, options, fc->stackLimit(),
+                                              data, compileStorage_);
   if (!stencil_) {
     return;
   }
@@ -715,8 +710,8 @@ CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
 
 template <typename Unit>
 void CompileModuleToStencilTask<Unit>::parse(FrontendContext* fc) {
-  stencil_ = JS::CompileModuleScriptToStencil(fc, options, stackLimit, data,
-                                              compileStorage_);
+  stencil_ = JS::CompileModuleScriptToStencil(fc, options, fc->stackLimit(),
+                                              data, compileStorage_);
   if (!stencil_) {
     return;
   }
@@ -1080,7 +1075,7 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 }
 
 bool DelazifyTask::runTask(JSContext* cx) {
-  stackLimit = GetStackLimit();
+  fc_.setStackQuota(HelperThreadState().stackQuota);
 
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextFrontendErrors recordErrors(&this->fc_);
@@ -1108,7 +1103,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
 
       // Parse and generate bytecode for the inner function.
       innerStencil = DelazifyCanonicalScriptedFunction(
-          cx, &fc_, stackLimit, &scopeCache, borrow, scriptIndex);
+          cx, &fc_, fc_.stackLimit(), &scopeCache, borrow, scriptIndex);
       if (!innerStencil) {
         return false;
       }
