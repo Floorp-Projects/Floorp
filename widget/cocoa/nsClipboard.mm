@@ -374,13 +374,15 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
 
   *outResult = false;
 
-  if (aWhichClipboard != kGlobalClipboard) {
+  // We only support the set operation on kSelectionCache type, see bug 1835059.
+  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard)) {
     return NS_OK;
   }
 
-  NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
+  NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
+  MOZ_ASSERT(cocoaPasteboard);
   if (mCachedClipboard == aWhichClipboard) {
-    if (mChangeCount != [generalPBoard changeCount]) {
+    if (mChangeCount != [cocoaPasteboard changeCount]) {
       // Clear the cached transferable as it is no longer valid.
       ClearClipboardCache();
     } else if (mTransferable) {
@@ -411,7 +413,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
   }
 
   if (CLIPBOARD_LOG_ENABLED()) {
-    NSArray* types = [generalPBoard types];
+    NSArray* types = [cocoaPasteboard types];
     uint32_t count = [types count];
     CLIPBOARD_LOG("    Pasteboard types (nums %d)\n", count);
     for (uint32_t i = 0; i < count; i++) {
@@ -428,14 +430,14 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
     NSString* pboardType = nil;
     if (nsClipboard::IsStringType(mimeType, &pboardType)) {
       NSString* availableType =
-          [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
+          [cocoaPasteboard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
       if (availableType && [availableType isEqualToString:pboardType]) {
         CLIPBOARD_LOG("    has %s\n", mimeType.get());
         *outResult = true;
         break;
       }
     } else if (mimeType.EqualsLiteral(kCustomTypesMime)) {
-      NSString* availableType = [generalPBoard
+      NSString* availableType = [cocoaPasteboard
           availableTypeFromArray:
               [NSArray arrayWithObject:[UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]];
       if (availableType) {
@@ -445,7 +447,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
       }
     } else if (mimeType.EqualsLiteral(kJPEGImageMime) || mimeType.EqualsLiteral(kJPGImageMime) ||
                mimeType.EqualsLiteral(kPNGImageMime) || mimeType.EqualsLiteral(kGIFImageMime)) {
-      NSString* availableType = [generalPBoard
+      NSString* availableType = [cocoaPasteboard
           availableTypeFromArray:
               [NSArray arrayWithObjects:[UTIHelper stringFromPboardType:NSPasteboardTypeTIFF],
                                         [UTIHelper stringFromPboardType:NSPasteboardTypePNG], nil]];
@@ -455,7 +457,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
         break;
       }
     } else if (mimeType.EqualsLiteral(kFileMime)) {
-      NSArray* items = [generalPBoard pasteboardItems];
+      NSArray* items = [cocoaPasteboard pasteboardItems];
       if (items && [items count] > 0) {
         // XXX we only check the first pasteboard item as we only get data from
         // first item in TransferableFromPasteboard for now.
