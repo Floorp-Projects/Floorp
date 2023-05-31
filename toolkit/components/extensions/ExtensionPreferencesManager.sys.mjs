@@ -21,31 +21,19 @@
 
 export let ExtensionPreferencesManager;
 
-const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
-);
+import { Management } from "resource://gre/modules/Extension.sys.mjs";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionSettingsStore",
-  "resource://gre/modules/ExtensionSettingsStore.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+  ExtensionSettingsStore:
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionCommon",
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { ExtensionError } = ExtensionUtils;
 

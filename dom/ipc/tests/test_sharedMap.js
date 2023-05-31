@@ -16,8 +16,8 @@ XPCShellContentUtils.init(this);
 let contentPage;
 
 async function readBlob(key, sharedData = Services.cpmm.sharedData) {
-  const { ExtensionUtils } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionUtils.jsm"
+  const { ExtensionUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionUtils.sys.mjs"
   );
 
   let reader = new FileReader();

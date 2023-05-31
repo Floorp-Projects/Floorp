@@ -25,15 +25,13 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionContent: "resource://gre/modules/ExtensionContent.sys.mjs",
+  ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.sys.mjs",
+  ExtensionProcessScript:
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+  NativeApp: "resource://gre/modules/NativeMessaging.sys.mjs",
+  PerformanceCounters: "resource://gre/modules/PerformanceCounters.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
-  ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
-  ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
-  NativeApp: "resource://gre/modules/NativeMessaging.jsm",
-  PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
 });
 
 // We're using the pref to avoid loading PerformanceCounters.jsm for nothing.
@@ -43,12 +41,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.webextensions.enablePerformanceCounters",
   false
 );
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { DefaultMap, ExtensionError, LimitedSet, getUniqueId } = ExtensionUtils;
 

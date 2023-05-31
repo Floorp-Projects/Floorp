@@ -3,16 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionCommon",
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionActivityLog",
-  "resource://gre/modules/ExtensionActivityLog.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.sys.mjs",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+});
 
 this.activityLog = class extends ExtensionAPI {
   getAPI(context) {

@@ -26,8 +26,8 @@ add_task(async function test_contentscript_reload_and_unload() {
 
   let events = [];
   {
-    const { Management } = ChromeUtils.import(
-      "resource://gre/modules/Extension.jsm"
+    const { Management } = ChromeUtils.importESModule(
+      "resource://gre/modules/Extension.sys.mjs"
     );
     let record = (type, extensionContext) => {
       let eventType = type == "proxy-context-load" ? "load" : "unload";

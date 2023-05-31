@@ -13,8 +13,8 @@ ChromeUtils.defineESModuleGetters(this, {
 
 var { DefaultMap, ExtensionError, parseMatchPatterns } = ExtensionUtils;
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+var { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
 var { IconDetails, StartupCache } = ExtensionParent;

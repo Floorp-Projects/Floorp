@@ -1,15 +1,16 @@
 "use strict";
 
-/* exported createHttpServer */
-
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-// eslint-disable-next-line no-unused-vars
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionTestUtils:
+    "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
-  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
 });
 
 // Remove this pref once bug 1535365 is fixed.

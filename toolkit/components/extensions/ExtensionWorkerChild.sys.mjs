@@ -9,21 +9,17 @@
  * child process.
  */
 
-const { ExtensionChild, ExtensionActivityLogChild } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionChild.jsm"
-);
+import {
+  ExtensionChild,
+  ExtensionActivityLogChild,
+} from "resource://gre/modules/ExtensionChild.sys.mjs";
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-
-const { ExtensionPageChild, getContextChildManagerGetter } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPageChild.jsm"
-);
-
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import {
+  ExtensionPageChild,
+  getContextChildManagerGetter,
+} from "resource://gre/modules/ExtensionPageChild.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { BaseContext, defineLazyGetter } = ExtensionCommon;
 

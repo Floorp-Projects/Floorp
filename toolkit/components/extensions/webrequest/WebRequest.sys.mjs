@@ -8,12 +8,15 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  SecurityInfo: "resource://gre/modules/SecurityInfo.sys.mjs",
+  WebRequestUpload: "resource://gre/modules/WebRequestUpload.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionDNR: "resource://gre/modules/ExtensionDNR.jsm",
-  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
-  WebRequestUpload: "resource://gre/modules/WebRequestUpload.jsm",
-  SecurityInfo: "resource://gre/modules/SecurityInfo.jsm",
 });
 
 // WebRequest.jsm's only consumer is ext-webRequest.js, so we can depend on

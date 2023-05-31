@@ -3,11 +3,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionStorageIDB",
-  "resource://gre/modules/ExtensionStorageIDB.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
+});
 
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";

@@ -7,11 +7,9 @@ const { XPIInstall } = ChromeUtils.import(
   "resource://gre/modules/addons/XPIInstall.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionPermissions",
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   this,

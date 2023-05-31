@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+var { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 var {
   HiddenExtensionPage,
@@ -13,12 +13,8 @@ var {
   watchExtensionWorkerContextLoaded,
 } = ExtensionParent;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionTelemetry",
-  "resource://gre/modules/ExtensionTelemetry.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 

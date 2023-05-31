@@ -71,8 +71,8 @@ add_task(async function test_permissions() {
       },
     };
 
-    const { MessageChannel } = ChromeUtils.import(
-      "resource://testing-common/MessageChannel.jsm"
+    const { MessageChannel } = ChromeUtils.importESModule(
+      "resource://testing-common/MessageChannel.sys.mjs"
     );
     MessageChannel.addListener(this, "Test:Check", messageListener);
   };

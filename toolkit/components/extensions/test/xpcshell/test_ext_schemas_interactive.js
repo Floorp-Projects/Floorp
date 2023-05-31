@@ -1,7 +1,7 @@
 "use strict";
 
-const { ExtensionProcessScript } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionProcessScript.jsm"
+const { ExtensionProcessScript } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionProcessScript.sys.mjs"
 );
 
 let experimentAPIs = {

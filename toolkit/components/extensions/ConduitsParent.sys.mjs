@@ -47,17 +47,11 @@
  * ```
  */
 
-const {
-  ExtensionUtils: { DefaultWeakMap, ExtensionError },
-} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+import { BaseConduit } from "resource://gre/modules/ConduitsChild.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
+import { WebNavigationFrames } from "resource://gre/modules/WebNavigationFrames.sys.mjs";
 
-const { BaseConduit } = ChromeUtils.import(
-  "resource://gre/modules/ConduitsChild.jsm"
-);
-
-const { WebNavigationFrames } = ChromeUtils.import(
-  "resource://gre/modules/WebNavigationFrames.jsm"
-);
+const { DefaultWeakMap, ExtensionError } = ExtensionUtils;
 
 const BATCH_TIMEOUT_MS = 250;
 const ADDON_ENV = new Set(["addon_child", "devtools_child"]);

@@ -5,8 +5,8 @@
 
 const EXPORTED_SYMBOLS = ["BrowsingDataDelegate"];
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
+const { ExtensionUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionUtils.sys.mjs"
 );
 
 const lazy = {};

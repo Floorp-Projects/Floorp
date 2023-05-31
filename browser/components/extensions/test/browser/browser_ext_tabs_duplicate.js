@@ -118,7 +118,7 @@ add_task(async function testDuplicateTabLazily() {
       Management: {
         global: { tabTracker },
       },
-    } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+    } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
     let tab = tabTracker.getTab(tabId);
     // This is a bit of a hack to load a tab in the background.
