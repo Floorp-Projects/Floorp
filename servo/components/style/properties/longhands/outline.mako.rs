@@ -35,11 +35,10 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "outline-width",
     "BorderSideWidth",
-    "crate::values::computed::NonNegativeLength::new(3.)",
+    "app_units::Au::from_px(3)",
     engines="gecko servo-2013 servo-2020",
     servo_2020_pref="layout.2020.unimplemented",
     initial_specified_value="specified::BorderSideWidth::Medium",
-    computed_type="crate::values::computed::NonNegativeLength",
     animation_value_type="NonNegativeLength",
     spec="https://drafts.csswg.org/css-ui/#propdef-outline-width",
 )}

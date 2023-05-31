@@ -469,9 +469,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
   }
 
   // aBorderWidth is in twips
-  void SetBorderWidth(mozilla::Side aSide, nscoord aBorderWidth) {
+  void SetBorderWidth(mozilla::Side aSide, nscoord aBorderWidth,
+                      nscoord aAppUnitsPerDevPixel) {
     nscoord roundedWidth =
-        NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, mTwipsPerPixel);
+        NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, aAppUnitsPerDevPixel);
     mBorder.Side(aSide) = roundedWidth;
     if (HasVisibleStyle(aSide)) {
       mComputedBorder.Side(aSide) = roundedWidth;
@@ -609,8 +610,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
   nsMargin mBorder;
 
  private:
-  nscoord mTwipsPerPixel;
-
   nsStyleBorder& operator=(const nsStyleBorder& aOther) = delete;
 };
 
@@ -652,7 +651,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
   // length, forced to zero when outline-style is none) rounded to device
   // pixels.  This is the value used by layout.
   nscoord mActualOutlineWidth;
-  nscoord mTwipsPerPixel;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
@@ -928,7 +926,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleTextDecorationSkipInk mTextDecorationSkipInk;
   mozilla::StyleTextUnderlinePosition mTextUnderlinePosition;
 
-  nscoord mWebkitTextStrokeWidth;  // coord
+  mozilla::StyleAu mWebkitTextStrokeWidth;
 
   mozilla::StyleArcSlice<mozilla::StyleSimpleShadow> mTextShadow;
   mozilla::StyleTextEmphasisStyle mTextEmphasisStyle;
@@ -2010,7 +2008,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   // length, forced to zero when column-rule-style is none) rounded to device
   // pixels.  This is the value used by layout.
   nscoord mActualColumnRuleWidth;
-  nscoord mTwipsPerPixel;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
