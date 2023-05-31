@@ -238,3 +238,26 @@ TEST(TimeUnit, InfinityMath)
   EXPECT_EQ(finite + negInf, negInf);
   EXPECT_EQ(finite - negInf, posInf);
 }
+
+TEST(TimeUnit, BaseConversion)
+{
+  const int64_t packetSize = 1024;  // typical for AAC
+  int64_t sampleRates[] = {16000, 44100, 48000, 88200, 96000};
+  const double hnsPerSeconds = 10000000.;
+  for (auto sampleRate : sampleRates) {
+    int64_t frameCount = 0;
+    TimeUnit pts;
+    do {
+      // Compute a time in hundreds of nanoseconds based of frame count, typical
+      // on Windows platform, checking that it round trips properly.
+      int64_t hns = AssertedCast<int64_t>(
+          std::round(hnsPerSeconds * static_cast<double>(frameCount) /
+                     static_cast<double>(sampleRate)));
+      pts = TimeUnit::FromHns(hns, sampleRate);
+      EXPECT_EQ(
+          AssertedCast<int64_t>(std::round(pts.ToSeconds() * hnsPerSeconds)),
+          hns);
+      frameCount += packetSize;
+    } while (pts.ToSeconds() < 36000);
+  }
+}
