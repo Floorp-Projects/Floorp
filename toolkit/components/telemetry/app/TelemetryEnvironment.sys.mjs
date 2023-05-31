@@ -223,7 +223,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.cache.disk.enable", { what: RECORD_PREF_VALUE }],
   ["browser.cache.disk.capacity", { what: RECORD_PREF_VALUE }],
   ["browser.cache.memory.enable", { what: RECORD_PREF_VALUE }],
-  ["browser.cache.offline.enable", { what: RECORD_PREF_VALUE }],
   ["browser.formfill.enable", { what: RECORD_PREF_VALUE }],
   ["browser.fixup.alternate.enabled", { what: RECORD_DEFAULTPREF_VALUE }],
   ["browser.migrate.interactions.bookmarks", { what: RECORD_PREF_VALUE }],

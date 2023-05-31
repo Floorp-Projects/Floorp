@@ -338,7 +338,6 @@ struct HttpChannelOpenArgs
   bool                        uploadStreamHasHeaders;
   bool                        allowSTS;
   bool                        resumeAt;
-  bool                        chooseApplicationCache;
   bool                        allowSpdy;
   bool                        allowHttp3;
   bool                        allowAltSvc;

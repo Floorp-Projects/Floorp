@@ -25,15 +25,11 @@ interface XULControllers;
 interface nsIDOMWindowUtils;
 interface nsIPrintSettings;
 
-typedef OfflineResourceList ApplicationCache;
-
 // http://www.whatwg.org/specs/web-apps/current-work/
 [Global, LegacyUnenumerableNamedProperties, NeedResolve,
  Exposed=Window,
  InstrumentedProps=(AbsoluteOrientationSensor,
                     Accelerometer,
-                    ApplicationCache,
-                    ApplicationCacheErrorEvent,
                     Atomics,
                     AudioParamMap,
                     AudioWorklet,
@@ -248,7 +244,6 @@ typedef OfflineResourceList ApplicationCache;
   readonly attribute Navigator clientInformation;
 
   [Replaceable] readonly attribute External external;
-  [Throws, SecureContext, Pref="browser.cache.offline.enable"] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
   [Throws, NeedsSubjectPrincipal] undefined alert();

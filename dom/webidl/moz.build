@@ -756,7 +756,6 @@ WEBIDL_FILES = [
     "NotificationEvent.webidl",
     "NotifyPaintEvent.webidl",
     "OfflineAudioContext.webidl",
-    "OfflineResourceList.webidl",
     "OffscreenCanvas.webidl",
     "OffscreenCanvasRenderingContext2D.webidl",
     "OscillatorNode.webidl",
