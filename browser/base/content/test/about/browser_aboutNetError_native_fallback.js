@@ -109,7 +109,7 @@ async function verifyError(url, fallbackWarning, testName) {
       "dohwarning",
       "NativeFallbackWarning",
       {
-        mode: "2",
+        mode: "0",
         provider_key: "0.0.0.0",
         skip_reason: "TRR_HEURISTIC_TRIPPED_CANARY",
       },
@@ -146,12 +146,11 @@ add_task(async function nativeFallbackWarnings() {
   Services.prefs.setIntPref("network.proxy.type", 0);
 
   // Switch to TRR first
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIRequest.TRR_FIRST_MODE);
+  Services.prefs.setIntPref(
+    "network.trr.mode",
+    Ci.nsIDNSService.MODE_NATIVEONLY
+  );
   Services.prefs.setBoolPref("network.trr.display_fallback_warning", true);
-
-  await TestUtils.waitForCondition(() => {
-    return Services.dns.currentTrrMode === Ci.nsIRequest.TRR_FIRST_MODE;
-  });
 
   // Simulate a tripped canary network
   Services.dns.setHeuristicDetectionResult(

@@ -380,9 +380,7 @@ export const DoHController = {
       resultsForTelemetry.steeredProvider = results.steeredProvider.id;
     }
 
-    try {
-      Services.dns.setHeuristicDetectionResult(Ci.nsITRRSkipReason.TRR_OK);
-    } catch (e) {}
+    this.setHeuristicResult(Ci.nsITRRSkipReason.TRR_UNSET);
     if (decision === lazy.Heuristics.DISABLE_DOH) {
       let fallbackHeuristicTripped = undefined;
       if (lazy.Preferences.get(NATIVE_FALLBACK_WARNING_PREF, false)) {
@@ -401,18 +399,17 @@ export const DoHController = {
         }
       }
 
-      // With the native fallback warning preference set we won't disable
-      // DoH on select tripped heuristics so that we stay in trr mode 2
+      // If none of the fallback heuristics failed, the detection result will be TRR_OK
+      // Otherwise it will be the skip reason for the failed heuristic.
+      let heuristicSkipReason = Ci.nsITRRSkipReason.TRR_OK;
       if (fallbackHeuristicTripped != undefined) {
-        await this.setState("enabled");
-        try {
-          Services.dns.setHeuristicDetectionResult(
-            lazy.Heuristics.heuristicNameToSkipReason(fallbackHeuristicTripped)
-          );
-        } catch (e) {}
-      } else {
-        await this.setState("disabled");
+        heuristicSkipReason = lazy.Heuristics.heuristicNameToSkipReason(
+          fallbackHeuristicTripped
+        );
       }
+      this.setHeuristicResult(heuristicSkipReason);
+
+      await this.setState("disabled");
     } else {
       await this.setState("enabled");
     }
@@ -477,9 +474,11 @@ export const DoHController = {
         lazy.Preferences.reset(BREADCRUMB_PREF);
       // Fall through.
       case "rollback":
+        this.setHeuristicResult(Ci.nsITRRSkipReason.TRR_UNSET);
         lazy.Preferences.reset(ROLLOUT_MODE_PREF);
         break;
       case "shutdown":
+        this.setHeuristicResult(Ci.nsITRRSkipReason.TRR_UNSET);
         if (lazy.Preferences.get(CLEAR_ON_SHUTDOWN_PREF, true)) {
           lazy.Preferences.reset(ROLLOUT_MODE_PREF);
         }
@@ -616,20 +615,25 @@ export const DoHController = {
     }
   },
 
+  setHeuristicResult(skipReason) {
+    try {
+      Services.dns.setHeuristicDetectionResult(skipReason);
+    } catch (e) {}
+  },
+
   async onPrefChanged(pref) {
     switch (pref) {
       case NETWORK_TRR_URI_PREF:
       case NETWORK_TRR_MODE_PREF:
         lazy.Preferences.set(DISABLED_PREF, true);
         await this.disableHeuristics("manuallyDisabled");
-        try {
-          Services.dns.setHeuristicDetectionResult(Ci.nsITRRSkipReason.TRR_OK);
-        } catch (e) {}
         break;
       case NATIVE_FALLBACK_WARNING_PREF:
       case NATIVE_FALLBACK_WARNING_HEURISTIC_LIST_PREF:
         if (this._heuristicsAreEnabled) {
           await this.runHeuristics("native-fallback-warning-pref-changed");
+        } else {
+          this.setHeuristicResult(Ci.nsITRRSkipReason.TRR_UNSET);
         }
         break;
     }
