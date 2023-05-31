@@ -2849,10 +2849,10 @@ bool EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
                                         aEnumerableOnly);
 }
 
-bool IsGlobalInExposureSet(JSContext* aCx, JSObject* aGlobal,
-                           uint32_t aGlobalSet) {
-  MOZ_ASSERT(aGlobalSet, "Why did we get called?");
-  MOZ_ASSERT((aGlobalSet &
+bool IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
+                        uint32_t aNonExposedGlobals) {
+  MOZ_ASSERT(aNonExposedGlobals, "Why did we get called?");
+  MOZ_ASSERT((aNonExposedGlobals &
               ~(GlobalNames::Window | GlobalNames::DedicatedWorkerGlobalScope |
                 GlobalNames::SharedWorkerGlobalScope |
                 GlobalNames::ServiceWorkerGlobalScope |
@@ -2860,46 +2860,46 @@ bool IsGlobalInExposureSet(JSContext* aCx, JSObject* aGlobal,
                 GlobalNames::AudioWorkletGlobalScope |
                 GlobalNames::PaintWorkletGlobalScope |
                 GlobalNames::ShadowRealmGlobalScope)) == 0,
-             "Unknown global type");
+             "Unknown non-exposed global type");
 
   const char* name = JS::GetClass(aGlobal)->name;
 
-  if ((aGlobalSet & GlobalNames::Window) &&
+  if ((aNonExposedGlobals & GlobalNames::Window) &&
       (!strcmp(name, "Window") || !strcmp(name, "BackstagePass"))) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::DedicatedWorkerGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::DedicatedWorkerGlobalScope) &&
       !strcmp(name, "DedicatedWorkerGlobalScope")) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::SharedWorkerGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::SharedWorkerGlobalScope) &&
       !strcmp(name, "SharedWorkerGlobalScope")) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::ServiceWorkerGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::ServiceWorkerGlobalScope) &&
       !strcmp(name, "ServiceWorkerGlobalScope")) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::WorkerDebuggerGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::WorkerDebuggerGlobalScope) &&
       !strcmp(name, "WorkerDebuggerGlobalScopex")) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::AudioWorkletGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::AudioWorkletGlobalScope) &&
       !strcmp(name, "AudioWorkletGlobalScope")) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::PaintWorkletGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::PaintWorkletGlobalScope) &&
       !strcmp(name, "PaintWorkletGlobalScope")) {
     return true;
   }
 
-  if ((aGlobalSet & GlobalNames::ShadowRealmGlobalScope) &&
+  if ((aNonExposedGlobals & GlobalNames::ShadowRealmGlobalScope) &&
       !strcmp(name, "ShadowRealmGlobalScope")) {
     return true;
   }
