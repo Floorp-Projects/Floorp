@@ -567,6 +567,8 @@ add_task(
 );
 
 const NO_ACCESS = { id: "origin-controls-state-no-access", args: null };
+const QUARANTINED = { id: "origin-controls-state-quarantined", args: null };
+
 const ALWAYS_ON = { id: "origin-controls-state-always-on", args: null };
 const WHEN_CLICKED = { id: "origin-controls-state-when-clicked", args: null };
 const TEMP_ACCESS = {
@@ -588,10 +590,6 @@ const HOVER_RUNNABLE_OPEN_EXT = {
 };
 
 add_task(async function test_messages_origin_controls() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.manifestV3.enabled", true]],
-  });
-
   const TEST_CASES = [
     {
       title: "MV2 - no access",
@@ -907,126 +905,228 @@ add_task(async function test_messages_origin_controls() {
     },
   ];
 
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "https://example.com/" },
-    async () => {
-      let count = 0;
+  async function runTestCases(testCases) {
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: "https://example.com/" },
+      async () => {
+        let count = 0;
 
-      for (const {
-        title,
-        manifest,
-        expectedDefaultMessage,
-        expectedHoverMessage,
-        expectedActionButtonDisabled,
-        grantHostPermissions,
-      } of TEST_CASES) {
-        info(`case: ${title}`);
-
-        const id = `test-origin-controls-${count++}@ext`;
-        const extension = ExtensionTestUtils.loadExtension({
-          manifest: {
-            name: title,
-            browser_specific_settings: { gecko: { id } },
-            ...manifest,
-          },
-          files: {
-            "script.js": "",
-            "popup.html": "",
-          },
-          useAddonManager: "temporary",
-        });
-
-        if (grantHostPermissions) {
-          info("Granting initial permissions.");
-          await ExtensionPermissions.add(id, {
-            permissions: [],
-            origins: manifest.host_permissions,
-          });
-        }
-
-        await extension.startup();
-
-        // Open the extension panel.
-        await openExtensionsPanel();
-
-        const item = getUnifiedExtensionsItem(extension.id);
-        ok(item, `expected item for ${extension.id}`);
-
-        const messageDeck = item.querySelector(
-          ".unified-extensions-item-message-deck"
-        );
-        ok(messageDeck, "expected a message deck element");
-
-        // 1. Verify the default message displayed below the extension's name.
-        const defaultMessage = item.querySelector(
-          ".unified-extensions-item-message-default"
-        );
-        ok(defaultMessage, "expected a default message element");
-
-        Assert.deepEqual(
-          document.l10n.getAttributes(defaultMessage),
+        for (const {
+          title,
+          manifest,
           expectedDefaultMessage,
-          "expected l10n attributes for the default message"
-        );
-
-        is(
-          messageDeck.selectedIndex,
-          gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
-          "expected selected message in the deck to be the default message"
-        );
-
-        // 2. Verify the action button state.
-        const actionButton = item.querySelector(
-          ".unified-extensions-item-action-button"
-        );
-        ok(actionButton, "expected an action button");
-        is(
-          actionButton.disabled,
+          expectedHoverMessage,
           expectedActionButtonDisabled,
-          `expected action button to be ${
-            expectedActionButtonDisabled ? "disabled" : "enabled"
-          }`
-        );
+          grantHostPermissions,
+        } of testCases) {
+          info(`case: ${title}`);
 
-        // 3. Verify the message displayed on hover but only when the action
-        // button isn't disabled to avoid some test failures.
-        if (!expectedActionButtonDisabled) {
-          const hovered = BrowserTestUtils.waitForEvent(
-            actionButton,
-            "mouseover"
-          );
-          EventUtils.synthesizeMouseAtCenter(actionButton, {
-            type: "mouseover",
+          const id = `test-origin-controls-${count++}@ext`;
+          const extension = ExtensionTestUtils.loadExtension({
+            manifest: {
+              name: title,
+              browser_specific_settings: { gecko: { id } },
+              ...manifest,
+            },
+            files: {
+              "script.js": "",
+              "popup.html": "",
+            },
+            useAddonManager: "permanent",
           });
-          await hovered;
 
-          const hoverMessage = item.querySelector(
-            ".unified-extensions-item-message-hover"
+          if (grantHostPermissions) {
+            info("Granting initial permissions.");
+            await ExtensionPermissions.add(id, {
+              permissions: [],
+              origins: manifest.host_permissions,
+            });
+          }
+
+          await extension.startup();
+
+          // Open the extension panel.
+          await openExtensionsPanel();
+
+          const item = getUnifiedExtensionsItem(extension.id);
+          ok(item, `expected item for ${extension.id}`);
+
+          const messageDeck = item.querySelector(
+            ".unified-extensions-item-message-deck"
           );
-          ok(hoverMessage, "expected a hover message element");
+          ok(messageDeck, "expected a message deck element");
+
+          // 1. Verify the default message displayed below the extension's name.
+          const defaultMessage = item.querySelector(
+            ".unified-extensions-item-message-default"
+          );
+          ok(defaultMessage, "expected a default message element");
 
           Assert.deepEqual(
-            document.l10n.getAttributes(hoverMessage),
-            expectedHoverMessage,
-            "expected l10n attributes for the message on hover"
+            document.l10n.getAttributes(defaultMessage),
+            expectedDefaultMessage,
+            "expected l10n attributes for the default message"
           );
 
           is(
             messageDeck.selectedIndex,
-            gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
-            "expected selected message in the deck to be the hover message"
+            gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
+            "expected selected message in the deck to be the default message"
           );
+
+          // 2. Verify the action button state.
+          const actionButton = item.querySelector(
+            ".unified-extensions-item-action-button"
+          );
+          ok(actionButton, "expected an action button");
+          is(
+            actionButton.disabled,
+            expectedActionButtonDisabled,
+            `expected action button to be ${
+              expectedActionButtonDisabled ? "disabled" : "enabled"
+            }`
+          );
+
+          // 3. Verify the message displayed on hover but only when the action
+          // button isn't disabled to avoid some test failures.
+          if (!expectedActionButtonDisabled) {
+            const hovered = BrowserTestUtils.waitForEvent(
+              actionButton,
+              "mouseover"
+            );
+            EventUtils.synthesizeMouseAtCenter(actionButton, {
+              type: "mouseover",
+            });
+            await hovered;
+
+            const hoverMessage = item.querySelector(
+              ".unified-extensions-item-message-hover"
+            );
+            ok(hoverMessage, "expected a hover message element");
+
+            Assert.deepEqual(
+              document.l10n.getAttributes(hoverMessage),
+              expectedHoverMessage,
+              "expected l10n attributes for the message on hover"
+            );
+
+            is(
+              messageDeck.selectedIndex,
+              gUnifiedExtensions.MESSAGE_DECK_INDEX_HOVER,
+              "expected selected message in the deck to be the hover message"
+            );
+          }
+
+          await closeExtensionsPanel();
+
+          // Move cursor elsewhere to avoid issues with previous "hovering".
+          EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});
+
+          await extension.unload();
         }
-
-        await closeExtensionsPanel();
-
-        // Move cursor elsewhere to avoid issues with previous "hovering".
-        EventUtils.synthesizeMouseAtCenter(gURLBar.textbox, {});
-
-        await extension.unload();
       }
-    }
-  );
+    );
+  }
+
+  await runTestCases(TEST_CASES);
+
+  info("Testing again with example.com quarantined.");
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.quarantinedDomains.list", "example.com"]],
+  });
+
+  await runTestCases([
+    {
+      title: "MV2 - no access",
+      manifest: {
+        manifest_version: 2,
+      },
+      expectedDefaultMessage: NO_ACCESS,
+      expectedHoverMessage: NO_ACCESS,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - host permission but quarantined",
+      manifest: {
+        manifest_version: 2,
+        host_permissions: ["*://example.com/*"],
+      },
+      expectedDefaultMessage: QUARANTINED,
+      expectedHoverMessage: QUARANTINED,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - content script but quarantined",
+      manifest: {
+        manifest_version: 2,
+        content_scripts: [
+          {
+            js: ["script.js"],
+            matches: ["*://example.com/*"],
+          },
+        ],
+      },
+      expectedDefaultMessage: QUARANTINED,
+      expectedHoverMessage: QUARANTINED,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV2 - non-matching content script",
+      manifest: {
+        manifest_version: 2,
+        content_scripts: [
+          {
+            js: ["script.js"],
+            matches: ["*://foobar.net/*"],
+          },
+        ],
+      },
+      expectedDefaultMessage: NO_ACCESS,
+      expectedHoverMessage: NO_ACCESS,
+      expectedActionButtonDisabled: true,
+    },
+    {
+      title: "MV3 - content script but quarantined",
+      manifest: {
+        manifest_version: 2,
+        content_scripts: [
+          {
+            js: ["script.js"],
+            matches: ["*://example.com/*"],
+          },
+        ],
+        host_permissions: ["*://example.com/*"],
+      },
+      expectedDefaultMessage: QUARANTINED,
+      expectedHoverMessage: QUARANTINED,
+      expectedActionButtonDisabled: true,
+      grantHostPermissions: true,
+    },
+    {
+      title: "MV3 host permissions already granted but quarantined",
+      manifest: {
+        manifest_version: 3,
+        host_permissions: ["*://example.com/*"],
+      },
+      expectedDefaultMessage: QUARANTINED,
+      expectedHoverMessage: QUARANTINED,
+      expectedActionButtonDisabled: true,
+      grantHostPermissions: true,
+    },
+    {
+      title: "browser action, host permissions already granted, quarantined",
+      manifest: {
+        manifest_version: 3,
+        action: {},
+        host_permissions: ["*://example.com/*"],
+      },
+      expectedDefaultMessage: QUARANTINED,
+      expectedHoverMessage: HOVER_RUNNABLE_RUN_EXT,
+      expectedActionButtonDisabled: false,
+      grantHostPermissions: true,
+    },
+  ]);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_hover_message_when_button_updates_itself() {

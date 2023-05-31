@@ -7283,7 +7283,7 @@ var ToolbarContextMenu = {
     return node?.closest(".unified-extensions-item")?.id;
   },
 
-  async updateExtension(popup) {
+  async updateExtension(popup, event) {
     let removeExtension = popup.querySelector(
       ".customize-context-removeExtension"
     );
@@ -7325,7 +7325,9 @@ var ToolbarContextMenu = {
         addon.permissions & AddonManager.PERM_CAN_UNINSTALL
       );
 
-      ExtensionsUI.originControlsMenu(popup, id);
+      if (event?.target?.id === "toolbar-context-menu") {
+        ExtensionsUI.originControlsMenu(popup, id);
+      }
     }
   },
 
