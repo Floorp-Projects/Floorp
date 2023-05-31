@@ -171,7 +171,6 @@ auto WebrtcGlobalStatsHistory::InitHistory(const nsAString& aPcId,
   if (WebrtcGlobalStatsHistory::Get().MaybeGet(aPcId)) {
     return;
   }
-
   WebrtcGlobalStatsHistory::Get().GetOrInsertNew(aPcId, nsString(aPcId),
                                                  aIsLongTermStatsDisabled);
 };
@@ -206,8 +205,6 @@ auto WebrtcGlobalStatsHistory::Record(UniquePtr<RTCStatsReportInternal> aReport)
     if (!latest || latest->report->mTimestamp < aReport->mTimestamp) {
       entry->mReports.insertBack(Entry::MakeReportElement(std::move(aReport)));
     }
-  } else {
-    WebrtcGlobalStatsHistory::GetOrCreateHistory(std::move(aReport));
   }
   // Close the history if needed
   if (closed) {
@@ -250,7 +247,18 @@ auto WebrtcGlobalStatsHistory::CloseHistory(const nsAString& aPcId) -> void {
 
 auto WebrtcGlobalStatsHistory::Clear() -> void {
   MOZ_ASSERT(XRE_IsParentProcess());
-  WebrtcGlobalStatsHistory::Get().Clear();
+  WebrtcGlobalStatsHistory::Get().RemoveIf([](auto& aIter) {
+    // First clear all the closed histories.
+    if (aIter.Data()->mIsClosed) {
+      return true;
+    }
+    // For all remaining histories clear their stored reports
+    aIter.Data()->mReports.clear();
+    // As an optimization we don't clear the SDP, because that would
+    // be reconstitued in the very next stats gathering polling period.
+    // Those are potentially large allocations which we can skip.
+    return false;
+  });
 }
 
 auto WebrtcGlobalStatsHistory::PcIds() -> dom::Sequence<nsString> {
@@ -270,21 +278,5 @@ auto WebrtcGlobalStatsHistory::GetHistory(const nsAString& aPcId)
   const auto pcid = NS_ConvertUTF16toUTF8(aPcId);
 
   return WebrtcGlobalStatsHistory::Get().MaybeGet(aPcId);
-}
-
-auto WebrtcGlobalStatsHistory::GetOrCreateHistory(
-    UniquePtr<RTCStatsReportInternal> aReport) -> RefPtr<Entry> {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  return WebrtcGlobalStatsHistory::Get().LookupOrInsertWith(
-      aReport->mPcid, [&]() {
-        auto entry = MakeRefPtr<Entry>(nsString(aReport->mPcid), false);
-        // Grab SDP History first
-        entry->mSdp.extendBack(Entry::MakeSdpElementsSince(
-            std::move(aReport->mSdpHistory), Nothing()));
-        // ReportEntry does not store the SDP history
-        entry->mReports.insertBack(
-            Entry::MakeReportElement(std::move(aReport)));
-        return entry;
-      });
 }
 }  // namespace mozilla::dom
