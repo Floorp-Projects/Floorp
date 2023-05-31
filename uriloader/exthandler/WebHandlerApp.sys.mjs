@@ -80,14 +80,38 @@ nsWebHandlerApp.prototype = {
     let policy = WebExtensionPolicy.getByURI(uriToSend);
     let privateAllowed = !policy || policy.privateBrowsingAllowed;
 
-    // If we're in a frame, check if we're a built-in scheme, in which case,
-    // override the target browsingcontext. It's not a good idea to try to
-    // load mail clients or other apps with potential for logged in data into
-    // iframes, and in any case it's unlikely to work due to framing
-    // restrictions employed by the target site.
-    if (aBrowsingContext && aBrowsingContext != aBrowsingContext.top) {
-      if (!scheme.startsWith("web+") && !scheme.startsWith("ext+")) {
+    if (!scheme.startsWith("web+") && !scheme.startsWith("ext+")) {
+      // If we're in a frame, check if we're a built-in scheme, in which case,
+      // override the target browsingcontext. It's not a good idea to try to
+      // load mail clients or other apps with potential for logged in data into
+      // iframes, and in any case it's unlikely to work due to framing
+      // restrictions employed by the target site.
+      if (aBrowsingContext && aBrowsingContext != aBrowsingContext.top) {
         aBrowsingContext = null;
+      }
+
+      // Unset the browsing context when in a pinned tab and changing hosts
+      // to force loading the mail handler in a new unpinned tab.
+      if (aBrowsingContext?.top.isAppTab) {
+        let docURI = aBrowsingContext.currentWindowGlobal.documentURI;
+        let docHost, sendHost;
+
+        try {
+          docHost = docURI?.host;
+          sendHost = uriToSend?.host;
+        } catch (e) {}
+
+        // Special case: ignore "www" prefix if it is part of host string
+        if (docHost?.startsWith("www.")) {
+          docHost = docHost.replace(/^www\./, "");
+        }
+        if (sendHost?.startsWith("www.")) {
+          sendHost = sendHost.replace(/^www\./, "");
+        }
+
+        if (docHost != sendHost) {
+          aBrowsingContext = null;
+        }
       }
     }
 
