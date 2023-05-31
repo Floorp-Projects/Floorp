@@ -6318,8 +6318,8 @@ bool HTMLMediaElement::HadCrossOriginRedirects() {
   return false;
 }
 
-bool HTMLMediaElement::ShouldResistFingerprinting() const {
-  return OwnerDoc()->ShouldResistFingerprinting();
+bool HTMLMediaElement::ShouldResistFingerprinting(RFPTarget aTarget) const {
+  return OwnerDoc()->ShouldResistFingerprinting(aTarget);
 }
 
 already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentVideoPrincipal() {

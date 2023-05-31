@@ -353,7 +353,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // redirects.
   bool HadCrossOriginRedirects();
 
-  bool ShouldResistFingerprinting() const override;
+  bool ShouldResistFingerprinting(RFPTarget aTarget) const override;
 
   // Principal of the currently playing video resource. Anything accessing the
   // image container of this element must have a principal that subsumes this

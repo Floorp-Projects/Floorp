@@ -270,7 +270,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       mIsOwnerConnected(false),
       mForcedHidden(false),
       mHasSuspendTaint(aInit.mHasSuspendTaint),
-      mShouldResistFingerprinting(aInit.mOwner->ShouldResistFingerprinting()),
+      mShouldResistFingerprinting(
+          aInit.mOwner->ShouldResistFingerprinting(RFPTarget::Unknown)),
       mPlaybackRate(aInit.mPlaybackRate),
       mLogicallySeeking(false, "MediaDecoder::mLogicallySeeking"),
       INIT_MIRROR(mBuffered, TimeIntervals()),

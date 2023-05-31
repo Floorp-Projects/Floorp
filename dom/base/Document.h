@@ -4177,7 +4177,7 @@ class Document : public nsINode,
    */
   class HighlightRegistry& HighlightRegistry();
 
-  bool ShouldResistFingerprinting(RFPTarget aTarget = RFPTarget::Unknown) const;
+  bool ShouldResistFingerprinting(RFPTarget aTarget) const;
 
   // Recompute the current resist fingerprinting state. Returns true when
   // the state was changed.
