@@ -4117,6 +4117,9 @@ pref("devtools.remote.adb.extensionURL", "https://ftp.mozilla.org/pub/labs/devto
 // Enable Inactive CSS detection; used both by the client and the server.
 pref("devtools.inspector.inactive.css.enabled", true);
 
+// Should F12 open the Developer Tools toolbox.
+pref("devtools.f12_enabled", true);
+
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 // Define in StaticPrefList.yaml and override here since StaticPrefList.yaml
 // doesn't provide a way to lock the pref
