@@ -69,6 +69,8 @@ user_pref("widget.disable-dark-scrollbar", true);
 // be confusing for tests that send click events before the first paint.
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
 user_pref("media.block-autoplay-until-in-foreground", false);
+// Enable AppCache globally for now whilst it's being removed in Bug 1584984
+user_pref("browser.cache.offline.enable", true);
 // Force a light color scheme unless explicitly overriden by pref.
 user_pref("layout.css.prefers-color-scheme.content-override", 1);
 // Force OffscreenCanvas support
