@@ -701,12 +701,9 @@ mozilla::ipc::IPCResult WebrtcGlobalParent::RecvPeerConnectionDestroyed(
 
 mozilla::ipc::IPCResult WebrtcGlobalParent::RecvPeerConnectionFinalStats(
     const RTCStatsReportInternal& aFinalStats) {
-  mPcids.EnsureRemoved(aFinalStats.mPcid);
-  using Update = WebrtcGlobalInformation::PcTrackingUpdate;
-  auto update = Update::Remove(nsString(aFinalStats.mPcid));
   auto finalStats = MakeUnique<RTCStatsReportInternal>(aFinalStats);
   WebrtcGlobalStatsHistory::Record(std::move(finalStats));
-  WebrtcGlobalInformation::PeerConnectionTracking(update);
+  WebrtcGlobalStatsHistory::CloseHistory(aFinalStats.mPcid);
   return IPC_OK();
 }
 
