@@ -216,6 +216,11 @@ nsresult TRRService::Init() {
     sTRRBackgroundThread = thread;
   }
 
+  mODoHService = new ODoHService();
+  if (!mODoHService->Init()) {
+    return NS_ERROR_FAILURE;
+  }
+
   Preferences::RegisterCallbackAndCall(
       EventTelemetryPrefChanged,
       "network.trr.confirmation_telemetry_enabled"_ns);
