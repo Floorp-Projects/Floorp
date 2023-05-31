@@ -51,9 +51,12 @@ class StaticRange final : public AbstractRange {
                                               nsINode* aEndContainer,
                                               uint32_t aEndOffset,
                                               ErrorResult& aRv) {
-    return StaticRange::Create(RawRangeBoundary(aStartContainer, aStartOffset),
-                               RawRangeBoundary(aEndContainer, aEndOffset),
-                               aRv);
+    return StaticRange::Create(
+        RawRangeBoundary(aStartContainer, aStartOffset,
+                         RangeBoundaryIsMutationObserved::No),
+        RawRangeBoundary(aEndContainer, aEndOffset,
+                         RangeBoundaryIsMutationObserved::No),
+        aRv);
   }
   template <typename SPT, typename SRT, typename EPT, typename ERT>
   static already_AddRefed<StaticRange> Create(
