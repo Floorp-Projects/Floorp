@@ -43,6 +43,8 @@ const DOC_LANGUAGE_DETECTION_THRESHOLD = 0.65;
  */
 const DOC_TEXT_TO_IDENTIFY_LENGTH = 1024;
 
+const PIVOT_LANGUAGE = "en";
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -677,19 +679,39 @@ export class TranslationsChild extends JSWindowActorChild {
         break;
       }
 
+      if (!langTags.isDocLangTagSupported) {
+        if (languagePairs.some(({ toLang }) => toLang === preferredLangTag)) {
+          // Only match the "to" language, since the "from" is not supported.
+          langTags.userLangTag = preferredLangTag;
+        }
+        break;
+      }
+
+      // Is there a direct language pair match?
       if (
-        languagePairs.some(({ fromLang, toLang }) => {
-          if (langTags.isDocLangTagSupported) {
-            // Match both from and to languages.
-            return (
-              fromLang === langTags.docLangTag && toLang === preferredLangTag
-            );
-          }
-          // Only match the to language, since the "from" is not supported.
-          return toLang === preferredLangTag;
-        })
+        languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === langTags.docLangTag && toLang === preferredLangTag
+        )
       ) {
         // A match was found in one of the preferred languages.
+        langTags.userLangTag = preferredLangTag;
+        break;
+      }
+
+      // Is there a pivot language match?
+      if (
+        // Match doc -> pivot
+        languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === langTags.docLangTag && toLang === PIVOT_LANGUAGE
+        ) &&
+        // Match pivot -> preferred language
+        languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === PIVOT_LANGUAGE && toLang === preferredLangTag
+        )
+      ) {
         langTags.userLangTag = preferredLangTag;
         break;
       }
