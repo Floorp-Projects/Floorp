@@ -25,8 +25,6 @@ const kDebuggerPrefs = [
   "devtools.chrome.enabled",
 ];
 
-const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
-
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -350,13 +348,6 @@ DevToolsStartup.prototype = {
     const isInitialLaunch =
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
     if (isInitialLaunch) {
-      // The F12 shortcut might be disabled to avoid accidental usage.
-      // Users who are already considered as devtools users should not be
-      // impacted.
-      if (this.isDevToolsUser()) {
-        Services.prefs.setBoolPref(DEVTOOLS_F12_DISABLED_PREF, false);
-      }
-
       // Store devtoolsFlag to check it later in onWindowReady.
       this.devtoolsFlag = flags.devtools;
 

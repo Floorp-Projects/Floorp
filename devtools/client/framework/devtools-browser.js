@@ -56,19 +56,9 @@ loader.lazyRequireGetter(
   "ResponsiveUIManager",
   "resource://devtools/client/responsive/manager.js"
 );
-loader.lazyRequireGetter(
-  this,
-  "toggleEnableDevToolsPopup",
-  "resource://devtools/client/framework/enable-devtools-popup.js",
-  true
-);
 
 const BROWSER_STYLESHEET_URL = "chrome://devtools/skin/devtools-browser.css";
 
-// XXX: This could also be moved to DevToolsStartup, which is the first
-// "entry point" for DevTools shortcuts and forwards the events
-// devtools-browser.
-const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
 /**
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
  * Firefox instance.
@@ -289,22 +279,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         break;
       case "toggleToolboxF12":
-        // See Bug 1630228. F12 is responsible for most of the accidental usage
-        // of DevTools. The preference here is used as part of an experiment to
-        // disable the F12 shortcut by default.
-        const isF12Disabled = Services.prefs.getBoolPref(
-          DEVTOOLS_F12_DISABLED_PREF,
-          false
-        );
-
-        if (isF12Disabled) {
-          toggleEnableDevToolsPopup(window.document, startTime);
-        } else {
-          await gDevToolsBrowser.toggleToolboxCommand(
-            window.gBrowser,
-            startTime
-          );
-        }
+        await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         break;
       case "browserToolbox":
         lazy.BrowserToolboxLauncher.init();

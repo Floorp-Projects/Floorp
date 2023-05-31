@@ -205,8 +205,6 @@ loader.lazyRequireGetter(
   true
 );
 
-const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
-
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
  * target. Visually, it's a document that includes the tools tabs and all
@@ -238,14 +236,6 @@ function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
   // See devtools/shared/commands/README.md
   this.commands = commands;
   this._descriptorFront = commands.descriptorFront;
-
-  // If the user opened the toolbox, we can now enable the F12 shortcut.
-  if (Services.prefs.getBoolPref(DEVTOOLS_F12_DISABLED_PREF, false)) {
-    // If the toolbox is opening while F12 was disabled, the user might have
-    // pressed F12 and seen the "enable devtools" notification.
-    // Flip the preference.
-    Services.prefs.setBoolPref(DEVTOOLS_F12_DISABLED_PREF, false);
-  }
 
   // Map of the available DevTools WebExtensions:
   //   Map<extensionUUID, extensionName>
