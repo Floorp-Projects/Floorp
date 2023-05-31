@@ -351,37 +351,6 @@ TimeUnit TimeUnit::MultDouble(double aVal) const {
   // static_cast is ok, the magnitude of the number has been checked just above.
   return TimeUnit(static_cast<int64_t>(multiplied), mBase);
 }
-TimeUnit TimeUnit::ToBase(int64_t aTargetBase) const {
-  double dummy = 0.0;
-  return ToBase(aTargetBase, dummy);
-}
-
-TimeUnit TimeUnit::ToBase(const TimeUnit& aTimeUnit) const {
-  double dummy = 0.0;
-  return ToBase(aTimeUnit, dummy);
-}
-
-// Allow returning the same value, in a base that matches another TimeUnit.
-TimeUnit TimeUnit::ToBase(const TimeUnit& aTimeUnit, double& aOutError) const {
-  int64_t targetBase = aTimeUnit.mBase;
-  return ToBase(targetBase, aOutError);
-}
-
-TimeUnit TimeUnit::ToBase(int64_t aTargetBase, double& aOutError) const {
-  aOutError = 0.0;
-  CheckedInt<int64_t> ticks = mTicks * aTargetBase;
-  if (ticks.isValid()) {
-    imaxdiv_t rv = imaxdiv(ticks.value(), mBase);
-    if (!rv.rem) {
-      return TimeUnit(rv.quot, aTargetBase);
-    }
-  }
-  double approx = static_cast<double>(mTicks.value()) *
-                  static_cast<double>(aTargetBase) / static_cast<double>(mBase);
-  double integer;
-  aOutError = modf(approx, &integer);
-  return TimeUnit(AssertedCast<int64_t>(approx), aTargetBase);
-}
 
 bool TimeUnit::IsValid() const { return mTicks.isValid(); }
 

@@ -98,7 +98,8 @@ class TimeUnit final {
     return TimeUnit(aValue, USECS_PER_S);
   }
   static TimeUnit FromHns(int64_t aValue, int64_t aBase) {
-    return TimeUnit::FromNanoseconds(aValue * 100).ToBase(aBase);
+    // Truncating here would mean a loss of precision.
+    return TimeUnit::FromNanoseconds(aValue * 100).ToBase<RoundPolicy>(aBase);
   }
   static constexpr TimeUnit FromNanoseconds(int64_t aValue) {
     return TimeUnit(aValue, NSECS_PER_S);
@@ -158,11 +159,58 @@ class TimeUnit final {
     return TimeUnit(aUnit.mTicks % aVal, aUnit.mBase);
   }
 
-  TimeUnit ToBase(int64_t aTargetBase) const;
-  TimeUnit ToBase(const TimeUnit& aTimeUnit) const;
+  struct TruncatePolicy {
+    template <typename T>
+    static T policy(T& aValue) {
+      return static_cast<T>(aValue);
+    }
+  };
+
+  struct RoundPolicy {
+    template <typename T>
+    static T policy(T& aValue) {
+      return std::round(aValue);
+    }
+  };
+
+  template <class RoundingPolicy = TruncatePolicy>
+  TimeUnit ToBase(int64_t aTargetBase) const {
+    double dummy = 0.0;
+    return ToBase<RoundingPolicy>(aTargetBase, dummy);
+  }
+
+  template <class RoundingPolicy = TruncatePolicy>
+  TimeUnit ToBase(const TimeUnit& aTimeUnit) const {
+    double dummy = 0.0;
+    return ToBase<RoundingPolicy>(aTimeUnit, dummy);
+  }
+
   // Allow returning the same value, in a base that matches another TimeUnit.
-  TimeUnit ToBase(const TimeUnit& aTimeUnit, double& aOutError) const;
-  TimeUnit ToBase(int64_t aTargetBase, double& aOutError) const;
+  template <class RoundingPolicy = TruncatePolicy>
+  TimeUnit ToBase(const TimeUnit& aTimeUnit, double& aOutError) const {
+    int64_t targetBase = aTimeUnit.mBase;
+    return ToBase<RoundingPolicy>(targetBase, aOutError);
+  }
+
+  template <class RoundingPolicy = TruncatePolicy>
+  TimeUnit ToBase(int64_t aTargetBase, double& aOutError) const {
+    aOutError = 0.0;
+    CheckedInt<int64_t> ticks = mTicks * aTargetBase;
+    if (ticks.isValid()) {
+      imaxdiv_t rv = imaxdiv(ticks.value(), mBase);
+      if (!rv.rem) {
+        return TimeUnit(rv.quot, aTargetBase);
+      }
+    }
+    double approx = static_cast<double>(mTicks.value()) *
+                    static_cast<double>(aTargetBase) /
+                    static_cast<double>(mBase);
+    double integer;
+    aOutError = modf(approx, &integer);
+    return TimeUnit(AssertedCast<int64_t>(RoundingPolicy::policy(approx)),
+                    aTargetBase);
+  }
+
   bool IsValid() const;
 
   constexpr TimeUnit() = default;
