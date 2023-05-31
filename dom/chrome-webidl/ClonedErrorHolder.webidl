@@ -11,7 +11,7 @@
  * cloning support, and can be removed once bug 1556604 and bug 1561357 are
  * fixed.
  */
-[ChromeOnly, Exposed=Window]
+[ChromeOnly, Exposed=(Window,Worker)]
 interface ClonedErrorHolder {
   [Throws]
   constructor(object aError);
