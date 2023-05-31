@@ -69,7 +69,10 @@ const elemRenderer = new Proxy(new Renderer(), {
 });
 
 const graphData = [];
+const mostRecentReports = {};
+
 function appendReportToHistory(report) {
+  mostRecentReports[report.pcid] = report;
   if (graphData[report.pcid] === undefined) {
     graphData[report.pcid] ??= new GraphDb(report);
   } else {
@@ -77,14 +80,38 @@ function appendReportToHistory(report) {
   }
 }
 
+function recentStats() {
+  return Object.values(mostRecentReports);
+}
+
 function appendStats(allStats) {
   allStats.forEach(appendReportToHistory);
 }
 
+const historyTsMemoForPcid = {};
+function getAndUpdateTsMemoForPcid(pcid) {
+  historyTsMemoForPcid[pcid] = mostRecentReports[pcid]?.timestamp;
+  return historyTsMemoForPcid[pcid] || null;
+}
+
 async function getStats() {
-  const { reports } = await new Promise(r => WGI.getAllStats(r));
-  appendStats(reports);
-  return [...reports].sort((a, b) => b.timestamp - a.timestamp);
+  if (!Services.prefs.getBoolPref("media.aboutwebrtc.hist.enabled")) {
+    const { reports } = await new Promise(r => WGI.getAllStats(r));
+    appendStats(reports);
+    return reports.sort((a, b) => b.timestamp - a.timestamp);
+  }
+  const pcids = await new Promise(r => WGI.getStatsHistoryPcIds(r));
+  await Promise.all(
+    [...pcids].map(pcid =>
+      new Promise(r =>
+        WGI.getStatsHistorySince(r, pcid, getAndUpdateTsMemoForPcid(pcid))
+      ).then(r => {
+        appendStats(r.reports);
+      })
+    )
+  );
+  let recent = recentStats();
+  return recent.sort((a, b) => b.timestamp - a.timestamp);
 }
 
 const getLog = () => new Promise(r => WGI.getLogging("", r));
