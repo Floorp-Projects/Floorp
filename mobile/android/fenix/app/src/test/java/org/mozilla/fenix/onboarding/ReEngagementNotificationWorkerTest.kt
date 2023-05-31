@@ -4,8 +4,8 @@
 
 package org.mozilla.fenix.onboarding
 
-import io.mockk.spyk
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
@@ -24,21 +24,22 @@ class ReEngagementNotificationWorkerTest {
 
     @Test
     fun `GIVEN last browser activity THEN determine if the user is active correctly`() {
-        val localSetting = spyk(settings)
+        val now = System.currentTimeMillis()
+        val fourHoursAgo = now - Settings.FOUR_HOURS_MS
+        val oneDayAgo = now - Settings.ONE_DAY_MS
 
-        localSetting.lastBrowseActivity = System.currentTimeMillis()
-        assert(ReEngagementNotificationWorker.isActiveUser(localSetting))
+        assertTrue(ReEngagementNotificationWorker.isActiveUser(now, now))
+        assertTrue(ReEngagementNotificationWorker.isActiveUser(fourHoursAgo, now))
 
-        localSetting.lastBrowseActivity = System.currentTimeMillis() - Settings.FOUR_HOURS_MS
-        assert(ReEngagementNotificationWorker.isActiveUser(localSetting))
+        // test inactive user threshold
+        assertTrue(ReEngagementNotificationWorker.isActiveUser(oneDayAgo, now))
+        assertFalse(ReEngagementNotificationWorker.isActiveUser(oneDayAgo - 1, now))
+        assertTrue(ReEngagementNotificationWorker.isActiveUser(oneDayAgo + 1, now))
 
-        localSetting.lastBrowseActivity = System.currentTimeMillis() - Settings.ONE_DAY_MS
-        assertFalse(ReEngagementNotificationWorker.isActiveUser(localSetting))
+        // test default value
+        assertFalse(ReEngagementNotificationWorker.isActiveUser(0, now))
 
-        localSetting.lastBrowseActivity = 0
-        assertFalse(ReEngagementNotificationWorker.isActiveUser(localSetting))
-
-        localSetting.lastBrowseActivity = -1000
-        assertFalse(ReEngagementNotificationWorker.isActiveUser(localSetting))
+        // test unlikely value
+        assertFalse(ReEngagementNotificationWorker.isActiveUser(-1000, now))
     }
 }

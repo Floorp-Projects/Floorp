@@ -37,8 +37,9 @@ class ReEngagementNotificationWorker(
 
     override fun doWork(): Result {
         val settings = applicationContext.settings()
+        val isActiveUser = isActiveUser(settings.lastBrowseActivity, System.currentTimeMillis())
 
-        if (isActiveUser(settings) || !settings.shouldShowReEngagementNotification()) {
+        if (isActiveUser || !settings.shouldShowReEngagementNotification()) {
             return Result.success()
         }
 
@@ -136,8 +137,8 @@ class ReEngagementNotificationWorker(
         }
 
         @VisibleForTesting
-        internal fun isActiveUser(settings: Settings): Boolean {
-            if (System.currentTimeMillis() - settings.lastBrowseActivity > INACTIVE_USER_THRESHOLD) {
+        internal fun isActiveUser(lastBrowseActivity: Long, currentTimeMillis: Long): Boolean {
+            if (currentTimeMillis - lastBrowseActivity > INACTIVE_USER_THRESHOLD) {
                 return false
             }
 
