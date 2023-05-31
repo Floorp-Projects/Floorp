@@ -84,6 +84,14 @@ add_task(async function setup_fakePaths() {
 });
 
 add_task(async function test_credit_cards() {
+  if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    todo_check_true(
+      OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+      "Cannot test OS key store login on official builds."
+    );
+    return;
+  }
+
   let loginCrypto;
   let profilePathSegments;
 
