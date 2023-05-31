@@ -6,6 +6,7 @@
 
 dictionary WebrtcGlobalStatisticsReport {
   sequence<RTCStatsReportInternal> reports = [];
+  sequence<RTCSdpHistoryInternal> sdpHistories = [];
 };
 
 callback WebrtcGlobalStatisticsCallback = undefined (WebrtcGlobalStatisticsReport reports);
@@ -26,7 +27,8 @@ namespace WebrtcGlobalInformation {
   [Throws]
   undefined getStatsHistorySince(WebrtcGlobalStatisticsHistoryCallback callback,
                                  DOMString pcIdFilter,
-                                 optional DOMHighResTimeStamp after);
+                                 optional DOMHighResTimeStamp after,
+                                 optional DOMHighResTimeStamp sdpAfter);
 
   undefined clearAllStats();
 
