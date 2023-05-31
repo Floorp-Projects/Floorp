@@ -20,6 +20,13 @@ const {
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
+// Disable "xpc::IsInAutomation()", since it would override the behavior
+// we're testing for.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  false
+);
+
 Services.prefs.setIntPref(
   "extensions.enabledScopes",
   // SCOPE_PROFILE is enabled by default,
