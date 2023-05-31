@@ -489,6 +489,7 @@
 
 .urlbarView-dynamic-addons-header {
   grid-area: header;
+  display: flex;
 }
 
 .urlbarView-dynamic-addons-description {
