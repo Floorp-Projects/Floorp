@@ -3867,8 +3867,7 @@ bool Parser<FullParseHandler, Unit>::asmJS(ListNodeType list) {
   // function from the beginning. Reparsing is triggered by marking that a
   // new directive has been encountered and returning 'false'.
   bool validated;
-  if (!CompileAsmJS(this->fc_, this->fc_->stackLimit(), this->parserAtoms(),
-                    *this, list, &validated)) {
+  if (!CompileAsmJS(this->fc_, this->parserAtoms(), *this, list, &validated)) {
     return false;
   }
   if (!validated) {

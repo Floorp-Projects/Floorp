@@ -25,7 +25,6 @@
 
 #include "jstypes.h"      // JS_PUBLIC_API
 #include "js/CallArgs.h"  // JSNative
-#include "js/Stack.h"     // JS::NativeStackLimit
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSFunction;
@@ -66,14 +65,12 @@ using AsmJSParser = frontend::Parser<frontend::FullParseHandler, Unit>;
 // beginning.
 
 [[nodiscard]] extern bool CompileAsmJS(FrontendContext* fc,
-                                       JS::NativeStackLimit stackLimit,
                                        frontend::ParserAtomsTable& parserAtoms,
                                        AsmJSParser<mozilla::Utf8Unit>& parser,
                                        frontend::ParseNode* stmtList,
                                        bool* validated);
 
 [[nodiscard]] extern bool CompileAsmJS(FrontendContext* fc,
-                                       JS::NativeStackLimit stackLimit,
                                        frontend::ParserAtomsTable& parserAtoms,
                                        AsmJSParser<char16_t>& parser,
                                        frontend::ParseNode* stmtList,
