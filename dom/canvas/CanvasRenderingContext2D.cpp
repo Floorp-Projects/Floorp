@@ -5868,6 +5868,15 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
       // service) after we call JS_GetUint8ClampedArrayData, we will
       // pre-generate the randomness required for GeneratePlaceholderCanvasData.
       randomData = TryToGenerateRandomDataForPlaceholderCanvasData();
+    } else if (needRandomizePixels) {
+      // Apply the random noises if canvan randomization is enabled. We don't
+      // need to calculate random noises if we are going to use the place
+      // holder.
+
+      const IntSize size = readback->GetSize();
+      nsRFPService::RandomizePixels(GetCookieJarSettings(), rawData.mData,
+                                    size.height * size.width * 4,
+                                    SurfaceFormat::A8R8G8B8_UINT32);
     }
 
     JS::AutoCheckCannotGC nogc;
@@ -5878,14 +5887,6 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     if (usePlaceholder) {
       FillPlaceholderCanvas(randomData, len.value(), data);
       break;
-    }
-
-    // Apply the random noises if canvan randomization is enabled.
-    if (needRandomizePixels) {
-      const IntSize size = readback->GetSize();
-      nsRFPService::RandomizePixels(GetCookieJarSettings(), rawData.mData,
-                                    size.height * size.width * 4,
-                                    SurfaceFormat::A8R8G8B8_UINT32);
     }
 
     uint32_t srcStride = rawData.mStride;
