@@ -49,8 +49,9 @@ bool AudioWorkletGlobalScope::WrapGlobalObject(
 
   JS::RealmOptions options;
 
+  // TODO(bug 1834744)
   options.behaviors().setShouldResistFingerprinting(
-      ShouldResistFingerprinting());
+      ShouldResistFingerprinting(RFPTarget::IsAlwaysEnabledForPrecompute));
 
   // The SharedArrayBuffer global constructor property should not be present in
   // a fresh global object when shared memory objects aren't allowed (because
