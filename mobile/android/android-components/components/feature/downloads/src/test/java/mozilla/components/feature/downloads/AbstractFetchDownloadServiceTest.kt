@@ -102,6 +102,7 @@ import java.io.InputStream
 import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
+@Config(shadows = [ShadowFileProvider::class])
 class AbstractFetchDownloadServiceTest {
 
     @Rule @JvmField
@@ -1534,7 +1535,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() = runTest(testsDispatcher) {
         val download = DownloadState(
             url = "http://www.mozilla.org",
@@ -1655,7 +1655,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `do not pass non-http(s) url to addCompletedDownload`() = runTest(testsDispatcher) {
         val download = DownloadState(
@@ -1683,7 +1682,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `GIVEN a download that throws an exception WHEN adding to the system database THEN handle the exception`() =
         runTest(testsDispatcher) {
@@ -1721,7 +1719,6 @@ class AbstractFetchDownloadServiceTest {
         }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `pass http(s) url to addCompletedDownload`() = runTest(testsDispatcher) {
         val download = DownloadState(
@@ -1749,7 +1746,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowFileProvider::class])
     @Suppress("Deprecation")
     fun `always call addCompletedDownload with a not empty or null mimeType`() = runTest(testsDispatcher) {
         val service = spy(
@@ -2033,7 +2029,6 @@ class AbstractFetchDownloadServiceTest {
     // The String version just overloads and delegates the Uri one but being in a companion object we cannot
     // verify the delegation so we are left to verify the result to prevent any regressions.
     @Test
-    @Config(shadows = [ShadowFileProvider::class])
     fun `getSafeContentType2 - WHEN the file content type is available THEN use it`() {
         val contentTypeFromFile = "application/pdf; qs=0.001"
         val spyContext = spy(testContext)
@@ -2048,7 +2043,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(shadows = [ShadowFileProvider::class])
     fun `getSafeContentType2 - WHEN the file content type is not available THEN use the provided content type`() {
         val contentType = " application/pdf "
         val spyContext = spy(testContext)
@@ -2065,7 +2059,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(shadows = [ShadowFileProvider::class])
     fun `getSafeContentType2 - WHEN none of the provided content types are available THEN return a generic content type`() {
         val spyContext = spy(testContext)
         val contentResolver = mock<ContentResolver>()
@@ -2083,6 +2076,7 @@ class AbstractFetchDownloadServiceTest {
     // Hard to test #getFilePathUri since it only returns the result of a certain Android api call.
     // But let's try.
     @Test
+    @Config(shadows = [DefaultFileProvider::class]) // use default implementation just for this test
     fun `getFilePathUri - WHEN called without a registered provider THEN exception is thrown`() {
         // There is no app registered provider that could expose a file from the filesystem of the machine running this test.
         // Peeking into the exception would indicate whether the code really called "FileProvider.getUriForFile" as expected.
@@ -2098,7 +2092,6 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    @Config(shadows = [ShadowFileProvider::class])
     fun `getFilePathUri - WHEN called THEN return a file provider path for the filePath`() {
         // Test that the String filePath is passed to the provider from which we expect a Uri path
         val result = AbstractFetchDownloadService.getFilePathUri(testContext, "location/test.txt")
@@ -2118,3 +2111,6 @@ object ShadowFileProvider {
         file: File,
     ) = "content://authority/random/location/${file.name}".toUri()
 }
+
+@Implements(FileProvider::class)
+object DefaultFileProvider
