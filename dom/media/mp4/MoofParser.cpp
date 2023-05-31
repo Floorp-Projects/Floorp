@@ -495,8 +495,7 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
             // sample in a Moof, and the first sample in the next Moof, if
             // they're within these many Microseconds of each other.
             const TimeUnit CROSS_MOOF_CTS_MERGE_THRESHOLD =
-                TimeUnit::FromSeconds(aMvhd.mTimescale / 1000000.,
-                                      aMvhd.mTimescale);
+                TimeUnit::FromMicroseconds(1);
             // We have previously parsed a Moof for this track. Smooth the gap
             // between samples for this track across the Moof bounary.
             if (ctsOrder[0]->mCompositionRange.start > prevCts.mCtsEndTime &&
