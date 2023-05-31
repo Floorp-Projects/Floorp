@@ -31,15 +31,17 @@ private class LazyListEagerFlingBehavior(
     private val scope: CoroutineScope,
 ) : FlingBehavior {
     override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
-        val firstItemIndex = lazyRowState.firstVisibleItemIndex
+        if (lazyRowState.canScrollForward) {
+            val firstItemIndex = lazyRowState.firstVisibleItemIndex
 
-        val itemIndexToScrollTo = when (initialVelocity <= 0) {
-            true -> firstItemIndex
-            false -> firstItemIndex + 1
-        }
+            val itemIndexToScrollTo = when (initialVelocity <= 0) {
+                true -> firstItemIndex
+                false -> firstItemIndex + 1
+            }
 
-        scope.launch {
-            lazyRowState.animateScrollToItem(itemIndexToScrollTo)
+            scope.launch {
+                lazyRowState.animateScrollToItem(itemIndexToScrollTo)
+            }
         }
 
         return 0f // we've consumed the entire fling
