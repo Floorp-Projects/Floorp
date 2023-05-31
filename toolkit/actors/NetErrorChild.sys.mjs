@@ -190,8 +190,14 @@ export class NetErrorChild extends RemotePageChild {
 
     let skipReason = this._getTRRSkipReason();
 
+    if (
+      Services.dns.currentTrrMode === Ci.nsIDNSService.MODE_TRRFIRST &&
+      skipReason === Ci.nsITRRSkipReason.TRR_NOT_CONFIRMED
+    ) {
+      return true;
+    }
+
     const warningReasons = new Set([
-      Ci.nsITRRSkipReason.TRR_NOT_CONFIRMED,
       Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH,
       Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_YOUTUBE_SAFESEARCH,
       Ci.nsITRRSkipReason.TRR_HEURISTIC_TRIPPED_ZSCALER_CANARY,
@@ -206,7 +212,7 @@ export class NetErrorChild extends RemotePageChild {
     ]);
 
     return (
-      Services.dns.currentTrrMode == Ci.nsIRequest.TRR_FIRST_MODE &&
+      Services.dns.currentTrrMode === Ci.nsIDNSService.MODE_NATIVEONLY &&
       warningReasons.has(skipReason)
     );
   }
