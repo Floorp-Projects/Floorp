@@ -1,0 +1,257 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+    - 'Toolkit :: Add-ons Manager'
+
+blocklist:
+    last_modified_rs_addons_mblf:
+        type: datetime
+        description: >
+            Keep track of the last time the "addons-bloomfilters" remotesetting
+            blocklist has been successfully updated.
+        lifetime: application
+        bugs:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1572711
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1607744
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1649960
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1689274
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1730037
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+        data_reviews:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1607744#c11
+        data_sensitivity:
+            - technical
+        metadata:
+            tags:
+                - 'Toolkit :: Blocklist Implementation'
+        notification_emails:
+            - addons-dev-internal@mozilla.com
+            - rwu@mozilla.com
+        expires: 122
+    mlbf_source:
+        type: string
+        description: >
+            The source of the RemoteSettings attachment that
+            holds the bloom filter. Possible values are "dump_match",
+            "cache_match", "remote_match","dump_fallback", "cache_fallback",
+            "unknown". "dump_match", "cache_match" and "remote_match"
+            are expected known-good values, and means that the loaded
+            bloomfilter matches the blocklist record in
+            the RemoteSettings collection. The prefix denotes
+            the immediate source of the loaded data: "dump"
+            means packaged with the application, "remote"
+            means a freshly downloaded bloomfilter, "cache"
+            means a previously downloaded bloomfilter. "dump_fallback"
+            and "cache_fallback" means that the last known bloomfilter
+            was used, despite it not matching the latest record
+            in the RemoteSettings collection. In this case
+            the outdated bloomfilter is used as a fallback
+            (e.g. because the latest version cannot be downloaded).
+            "unknown"  means that the bloomfilter cannot
+            be loaded at all. This can happen if the blocklist
+            is disabled via preferences or enterprise policies.
+        lifetime: application
+        bugs:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1662857
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1730037
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+        data_reviews:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155#c?
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155#?
+        data_sensitivity:
+            - technical
+        metadata:
+            tags:
+                - 'Toolkit :: Blocklist Implementation'
+        notification_emails:
+            - addons-dev-internal@mozilla.com
+            - rwu@mozilla.com
+        expires: 122
+        telemetry_mirror: BLOCKLIST_MLBF_SOURCE
+    mlbf_generation_time:
+        type: datetime
+        description: >
+            Keep track of the generation time of the addon
+            blocklist's bloom filter. This marks the point
+            in time until which signed add-ons are recognized
+            by the selected bloom filter from the addons-bloomfilters
+            collection.
+        lifetime: application
+        bugs:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1649960
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1689274
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1730037
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+        data_reviews:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#c3
+        data_sensitivity:
+            - technical
+        metadata:
+            tags:
+                - 'Toolkit :: Blocklist Implementation'
+        notification_emails:
+            - addons-dev-internal@mozilla.com
+            - rwu@mozilla.com
+        expires: 122
+    mlbf_stash_time_oldest:
+        type: datetime
+        description: >
+            Keep track of the timestamp of the oldest stash
+            of the addons blocklist. Only meaningful when
+            mlbf_enabled is true.
+        lifetime: application
+        bugs:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1649960
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1689274
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1730037
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+        data_reviews:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#a1487451_575816
+        data_sensitivity:
+            - technical
+        notification_emails:
+            - addons-dev-internal@mozilla.com
+            - rwu@mozilla.com
+        expires: 122
+    mlbf_stash_time_newest:
+        type: datetime
+        description: >
+            Keep track of the timestamp of the most recent
+            stash of the addons blocklist. Only meaningful
+            when mlbf_enabled is true.
+        lifetime: application
+        bugs:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1649960
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1689274
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1730037
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+        data_reviews:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#a1487451_575816
+        data_sensitivity:
+            - technical
+        metadata:
+            tags:
+                - 'Toolkit :: Blocklist Implementation'
+        notification_emails:
+            - addons-dev-internal@mozilla.com
+            - rwu@mozilla.com
+        expires: 122
+    addon_block_change:
+        type: event
+        description: >
+            An add-on is blocked, or an installed add-on is unblocked.
+            When an add-on install/update is blocked, its installation
+            is aborted and the add-on is no longer listed in the activeAddons
+            field of TelemetryEnvironment.
+        extra_keys:
+            value:
+                type: string
+                description: >
+                    The value is the ID of the add-on.
+            object:
+                type: string
+                description: >
+                    The object represents the reason for triggering
+                    the blocklistState check: "addon_install" is when
+                    an add-on is installed. "addon_update" is when an
+                    add-on is updated after an update check.
+                    "addon_update_check" is when an add-on is blocked
+                    during the update check. "addon_db_modified" is when
+                    an add-on's blocklistState was altered
+                    between application restarts. "blocklist_update"
+                    is when an add-on's blocklistState changed due to a
+                    blocklist update. This may be
+                    due to the blocklist being disabled by preferences
+                    or enterprise policies, but it is more commonly
+                    the result of updating entries in the blocklist.
+                    objects: ["addon_install", "addon_update",
+                    "addon_update_check", "addon_db_modified",
+                    "blocklist_update"]
+            blocklist_state:
+                type: string
+                description: >
+                    The blocklistState of the add-on. 0 is unblocked,
+                    2 is blocked. 1 is soft blocked (only if blocklist
+                    v3 was disabled in favor of v2).
+            addon_version:
+                type: string
+                description: >
+                    Version of the add-on. Used together with an
+                    add-on's ID (value) to identify add-ons to block.
+            signed_date:
+                type: string
+                description: >
+                    Timestamp of the add-on (when it was signed via AMO).
+                    the add-on was installed or updated.
+                    At least zero when the blocklist is updated, -1 otherwise.
+            hours_since:
+                type: string
+                description: >
+                    The number of hours that have passed since this version of
+                    This field is missing (0) for "addon_update_check".
+            mlbf_last_time:
+                type: string
+                description: >
+                    The generation time of the most recent
+                    entry in the blocklist. Time generated by
+                    AMO when the blocklist entry was created.
+                    May be 0 when the blocklist is disabled.
+            mlbf_generation:
+                type: string
+                description: >
+                    The generation time to identify the bloomfilter
+                    that was used for this blocklist decision.
+                    The bloomfilter is updated less frequently
+                    than the so-called stashes in the RemoteSettings
+                    collection that holds the blocklist data.
+                    The stashes take precedence over the bloomfilter
+                    in blocklist decisions.
+                    Time generated by AMO when the blocklist
+                    entry was created.
+                    May be 0 when the blocklist is disabled.
+            mlbf_source:
+                type: string
+                description: >
+                    The source of the RemoteSettings attachment
+                    that holds the bloom filter. This field is
+                    documented in more detail in the definition
+                    of the blocklist.mlbf_source. Possible values
+                    are "dump_match", "cache_match",  "remote_match",
+                    "dump_fallback", "cache_fallback", "unknown".
+        bugs:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1662857
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1730037
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+        data_reviews:
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1662857#c11
+        data_sensitivity:
+            - technical
+        metadata:
+            tags:
+                - 'Toolkit :: Blocklist Implementation'
+        notification_emails:
+            - addons-dev-internal@mozilla.com
+            - rwu@mozilla.com
+        expires: 122

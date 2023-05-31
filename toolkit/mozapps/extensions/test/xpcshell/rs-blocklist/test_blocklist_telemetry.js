@@ -18,14 +18,28 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-function assertTelemetryScalars(expectedScalars) {
-  let scalars = TelemetryTestUtils.getProcessScalars("parent");
+add_setup({ skip_if: () => IS_ANDROID_BUILD }, function test_setup() {
+  // FOG needs a profile directory to put its data in.
+  do_get_profile();
 
-  for (const scalarName of Object.keys(expectedScalars || {})) {
-    equal(
-      scalars[scalarName],
-      expectedScalars[scalarName],
-      `Got the expected value for ${scalarName} scalar`
+  // FOG needs to be initialized in order for data to flow.
+  Services.fog.initializeFOG();
+});
+
+function assertTelemetryScalars(expectedScalars) {
+  if (!IS_ANDROID_BUILD) {
+    let scalars = TelemetryTestUtils.getProcessScalars("parent");
+
+    for (const scalarName of Object.keys(expectedScalars || {})) {
+      equal(
+        scalars[scalarName],
+        expectedScalars[scalarName],
+        `Got the expected value for ${scalarName} scalar`
+      );
+    }
+  } else {
+    info(
+      `Skip assertions on collected samples for ${expectedScalars} on android builds`
     );
   }
 }
@@ -38,6 +52,7 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_blocklist_lastModified_rs_scalars() {
+  resetBlocklistTelemetry();
   const now = Date.now();
 
   const lastEntryTimes = {
@@ -80,9 +95,12 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   }
 
   assertTelemetryScalars({
-    "blocklist.lastModified_rs_addons": undefined,
     "blocklist.lastModified_rs_addons_mlbf": undefined,
   });
+  Assert.equal(
+    undefined,
+    testGetValue(Glean.blocklist.lastModifiedRsAddonsMblf)
+  );
 
   info("Test RS addon blocklist lastModified scalar");
 
@@ -93,9 +111,13 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   ]);
 
   assertTelemetryScalars({
-    "blocklist.lastModified_rs_addons": lastEntryTimesUTC.addons,
     "blocklist.lastModified_rs_addons_mlbf": undefined,
   });
+
+  Assert.equal(
+    undefined,
+    testGetValue(Glean.blocklist.lastModifiedRsAddonsMblf)
+  );
 
   await ExtensionBlocklistMLBF.ensureInitialized();
   await Promise.all([
@@ -107,7 +129,10 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   ]);
 
   assertTelemetryScalars({
-    "blocklist.lastModified_rs_addons": lastEntryTimesUTC.addons,
     "blocklist.lastModified_rs_addons_mlbf": lastEntryTimesUTC.addons_mlbf,
   });
+  Assert.equal(
+    new Date(lastEntryTimesUTC.addons_mlbf).getTime(),
+    testGetValue(Glean.blocklist.lastModifiedRsAddonsMblf).getTime()
+  );
 });

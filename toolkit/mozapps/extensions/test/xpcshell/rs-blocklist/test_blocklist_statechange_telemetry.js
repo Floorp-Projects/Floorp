@@ -40,14 +40,40 @@ const SERVER_UPDATE_URL = `${SERVER_BASE_URL}${SERVER_UPDATE_PATH}`;
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 async function assertEventDetails(expectedExtras) {
-  const expectedEvents = expectedExtras.map(expectedExtra => {
-    let { object, value, ...extra } = expectedExtra;
-    return ["blocklist", "addonBlockChange", object, value, extra];
-  });
-  await TelemetryTestUtils.assertEvents(expectedEvents, {
-    category: "blocklist",
-    method: "addonBlockChange",
-  });
+  if (!IS_ANDROID_BUILD) {
+    const expectedEvents = expectedExtras.map(expectedExtra => {
+      let { object, value, ...extra } = expectedExtra;
+      return ["blocklist", "addonBlockChange", object, value, extra];
+    });
+    await TelemetryTestUtils.assertEvents(expectedEvents, {
+      category: "blocklist",
+      method: "addonBlockChange",
+    });
+  } else {
+    info(
+      `Skip assertions on collected samples for addonBlockChange on android builds`
+    );
+  }
+  assertGleanEventDetails(expectedExtras);
+}
+async function assertGleanEventDetails(expectedExtras) {
+  const snapshot = testGetValue(Glean.blocklist.addonBlockChange);
+  if (expectedExtras.length === 0) {
+    Assert.deepEqual(undefined, snapshot, "Expected zero addonBlockChange");
+    return;
+  }
+  Assert.equal(
+    expectedExtras.length,
+    snapshot?.length,
+    "Number of addonBlockChange records"
+  );
+  for (let i of expectedExtras.keys()) {
+    let actual = snapshot[i].extra;
+    // Glean uses snake_case instead of camelCase.
+    let { blocklistState, ...expected } = expectedExtras[i];
+    expected.blocklist_state = blocklistState;
+    Assert.deepEqual(expected, actual, `Expected addonBlockChange (${i})`);
+  }
 }
 
 // Stage an update on the update server. The add-on must have been created
@@ -93,6 +119,12 @@ async function tryAddonInstall(addonId, addonVersion) {
 }
 
 add_task(async function setup() {
+  if (!IS_ANDROID_BUILD) {
+    // FOG needs a profile directory to put its data in.
+    do_get_profile();
+    // FOG needs to be initialized in order for data to flow.
+    Services.fog.initializeFOG();
+  }
   await TelemetryController.testSetup();
 
   // Disable the packaged record and attachment to make sure that the test
@@ -103,6 +135,7 @@ add_task(async function setup() {
 });
 
 add_task(async function install_update_not_blocked_is_no_events() {
+  resetBlocklistTelemetry();
   // Install an add-on that is not blocked. Then update to the next version.
   let addon = await tryAddonInstall(EXT_ID, "0.1");
 
@@ -117,6 +150,7 @@ add_task(async function install_update_not_blocked_is_no_events() {
 });
 
 add_task(async function blocklist_update_events() {
+  resetBlocklistTelemetry();
   const EXT_HOURS_SINCE_INSTALL = 4321;
   const addon = await AddonManager.getAddonByID(EXT_ID);
   addon.__AddonInternal__.installDate =
@@ -145,6 +179,7 @@ add_task(async function blocklist_update_events() {
 });
 
 add_task(async function update_check_blocked_by_stash() {
+  resetBlocklistTelemetry();
   setupAddonUpdate(EXT_ID, "2");
   let addon = await AddonManager.getAddonByID(EXT_ID);
   let update = await AddonTestUtils.promiseFindAddonUpdates(addon);
@@ -171,6 +206,7 @@ add_task(async function update_check_blocked_by_stash() {
 // Any attempt to re-install a blocked add-on should trigger a telemetry
 // event, even though the blocklistState did not change.
 add_task(async function reinstall_blocked_addon() {
+  resetBlocklistTelemetry();
   let blockedAddon = await AddonManager.getAddonByID(EXT_ID);
   equal(
     blockedAddon.blocklistState,
@@ -201,6 +237,7 @@ add_task(async function reinstall_blocked_addon() {
 // For comparison with the next test task (database_modified), verify that a
 // regular restart without database modifications does not trigger events.
 add_task(async function regular_restart_no_event() {
+  resetBlocklistTelemetry();
   // Version different/higher than the 42.0 that was passed to createAppInfo at
   // the start of this test file to force a database rebuild.
   await promiseRestartManager("90.0");
@@ -211,6 +248,7 @@ add_task(async function regular_restart_no_event() {
 });
 
 add_task(async function database_modified() {
+  resetBlocklistTelemetry();
   const EXT_HOURS_SINCE_INSTALL = 3;
   await promiseShutdownManager();
 
@@ -242,11 +280,13 @@ add_task(async function database_modified() {
     },
   ]);
 
+  resetBlocklistTelemetry();
   await promiseStartupManager();
   await assertEventDetails([]);
 });
 
 add_task(async function install_replaces_blocked_addon() {
+  resetBlocklistTelemetry();
   let addon = await tryAddonInstall(EXT_ID, "3");
   ok(addon, "Update supersedes blocked add-on");
 
@@ -266,6 +306,7 @@ add_task(async function install_replaces_blocked_addon() {
 });
 
 add_task(async function install_blocked_by_mlbf() {
+  resetBlocklistTelemetry();
   await ExtensionBlocklistMLBF._client.db.saveAttachment(
     ExtensionBlocklistMLBF.RS_ATTACHMENT_ID,
     { record: MLBF_RECORD, blob: await load_mlbf_record_as_blob() }
@@ -302,6 +343,7 @@ add_task(async function install_blocked_by_mlbf() {
 // despite the update check tentatively accepting the package.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1649896 for rationale.
 add_task(async function update_check_blocked_by_mlbf() {
+  resetBlocklistTelemetry();
   // Install a version that we can update, lower than EXT_BLOCKED_VERSION.
   let addon = await tryAddonInstall(EXT_BLOCKED_ID, "0.1");
 
@@ -338,6 +380,7 @@ add_task(async function update_check_blocked_by_mlbf() {
 });
 
 add_task(async function update_blocked_to_unblocked() {
+  resetBlocklistTelemetry();
   // was blocked in update_check_blocked_by_mlbf.
   let blockedAddon = await AddonManager.getAddonByID(EXT_BLOCKED_ID);
 

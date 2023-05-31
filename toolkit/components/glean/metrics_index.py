@@ -26,6 +26,7 @@ gecko_metrics = [
     "toolkit/components/cookiebanners/metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/pdfjs/metrics.yaml",
+    "toolkit/mozapps/extensions/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
     "xpcom/metrics.yaml",
 ]
