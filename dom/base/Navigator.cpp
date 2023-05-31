@@ -497,8 +497,8 @@ bool Navigator::PdfViewerEnabled() {
   // We ignore pdfjs.disabled when resisting fingerprinting.
   // See bug 1756280 for an explanation.
   return !StaticPrefs::pdfjs_disabled() ||
-         nsContentUtils::ShouldResistFingerprinting(
-                      GetDocShell(), RFPTarget::Unknown);
+         nsContentUtils::ShouldResistFingerprinting(GetDocShell(),
+                                                    RFPTarget::Unknown);
 }
 
 Permissions* Navigator::GetPermissions(ErrorResult& aRv) {
