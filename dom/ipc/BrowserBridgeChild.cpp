@@ -78,11 +78,6 @@ void BrowserBridgeChild::Deactivate(bool aWindowLowering, uint64_t aActionId) {
   Unused << SendDeactivate(aWindowLowering, aActionId);
 }
 
-void BrowserBridgeChild::SetIsUnderHiddenEmbedderElement(
-    bool aIsUnderHiddenEmbedderElement) {
-  Unused << SendSetIsUnderHiddenEmbedderElement(aIsUnderHiddenEmbedderElement);
-}
-
 /*static*/
 BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {

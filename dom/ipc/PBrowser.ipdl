@@ -696,8 +696,6 @@ child:
     async ChildToParentMatrix(Matrix4x4? aMatrix,
                               ScreenRect aRemoteDocumentRect);
 
-    async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
-
     async UpdateRemoteStyle(StyleImageRendering aImageRendering);
 
     async DynamicToolbarMaxHeightChanged(ScreenIntCoord height);

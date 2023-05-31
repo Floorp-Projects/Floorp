@@ -8,6 +8,16 @@
 <![CDATA[
 const baseURL = "chrome://mochitests/content/chrome/layout/base/tests/chrome/";
 
+function checkHiddenEmbeddederState(window1, window2, expected1, expected2)
+{
+  ok(!window1.browsingContext.isUnderHiddenEmbedderElement, "window1 visible state");
+  ok(!window2.browsingContext.isUnderHiddenEmbedderElement, "window2 visible state");
+  is(window1.document.querySelector("browser").contentWindow.browsingContext.isUnderHiddenEmbedderElement, !expected1,
+     "window1 child visible state");
+  is(window2.document.querySelector("browser").contentWindow.browsingContext.isUnderHiddenEmbedderElement, !expected2,
+     "window2 child visible state");
+}
+
 // Tests that browser visibility is updated when it's swapped.
 add_task(async () => {
   // Open two new windows to swap iframes.
@@ -25,10 +35,14 @@ add_task(async () => {
 
   await Promise.all([ loadWindow1, loadWindow2 ]);
 
+  checkHiddenEmbeddederState(window1, window2, true, true);
+
   // Hide the parent of browser2.
   let parent = window2.document.getElementById("parent");
   parent.style.visibility = "hidden";
   parent.getBoundingClientRect();
+
+  checkHiddenEmbeddederState(window1, window2, true, false);
 
   const browser2 = window2.document.querySelector("browser");
   let target = browser2.contentDocument.getElementById("button");
@@ -42,6 +56,8 @@ add_task(async () => {
   // Make the parent visible.
   parent.style.visibility = "";
   parent.getBoundingClientRect();
+
+  checkHiddenEmbeddederState(window1, window2, true, true);
 
   target.focus();
 
@@ -66,9 +82,13 @@ add_task(async () => {
   isnot(browser1.contentDocument.activeElement, target,
         "Element.focus() shouldn't work in invisible browser");
 
+  checkHiddenEmbeddederState(window1, window2, false, true);
+
   parent = window1.document.getElementById("parent");
   parent.style.visibility = "visible";
   parent.getBoundingClientRect();
+
+  checkHiddenEmbeddederState(window1, window2, true, true);
 
   target.focus();
 
@@ -103,6 +123,10 @@ add_task(async () => {
   let target = grandChildBrowser.contentDocument.getElementById("button");
   target.focus();
 
+  ok(!tabWindow.browsingContext.isUnderHiddenEmbedderElement, "tab window is visible");
+  ok(!childIFrame.browsingContext.isUnderHiddenEmbedderElement, "iframe is visible");
+  ok(!grandChildBrowser.browsingContext.isUnderHiddenEmbedderElement, "grandchild is visible");
+
   is(grandChildBrowser.contentDocument.activeElement, target,
      "Element.focus() should work in visible browser");
   target.blur();
@@ -111,6 +135,10 @@ add_task(async () => {
   let parent = childIFrame.contentDocument.getElementById("parent");
   parent.style.visibility = "hidden";
   parent.getBoundingClientRect();
+
+  ok(!tabWindow.browsingContext.isUnderHiddenEmbedderElement, "tab window is visible");
+  ok(!childIFrame.browsingContext.isUnderHiddenEmbedderElement, "iframe is visible");
+  ok(grandChildBrowser.browsingContext.isUnderHiddenEmbedderElement, "grandchild is not visible");
 
   target.focus();
 
@@ -124,12 +152,20 @@ add_task(async () => {
 
   target.focus();
 
+  ok(!tabWindow.browsingContext.isUnderHiddenEmbedderElement, "tab window is visible");
+  ok(childIFrame.browsingContext.isUnderHiddenEmbedderElement, "iframe is not visible");
+  ok(grandChildBrowser.browsingContext.isUnderHiddenEmbedderElement, "grandchild is not visible");
+
   isnot(grandChildBrowser.contentDocument.activeElement, target,
         "Element.focus() shouldn't work in invisible iframe");
 
   // Make the parent element of the child iframe visible.
   parent.style.visibility = "visible";
   parent.getBoundingClientRect();
+
+  ok(!tabWindow.browsingContext.isUnderHiddenEmbedderElement, "tab window is visible");
+  ok(!childIFrame.browsingContext.isUnderHiddenEmbedderElement, "iframe is visible");
+  ok(grandChildBrowser.browsingContext.isUnderHiddenEmbedderElement, "grandchild is not visible");
 
   target.focus();
 
@@ -159,6 +195,9 @@ add_task(async () => {
   const iframe = tabWindow.document.querySelector("iframe");
   let target = iframe.contentDocument.getElementById("button");
   target.focus();
+
+  ok(!tabWindow.browsingContext.isUnderHiddenEmbedderElement, "tab window is visible");
+  ok(iframe.browsingContext.isUnderHiddenEmbedderElement, "iframe is not visible");
 
   isnot(iframe.contentDocument.activeElement, target,
         "Element.focus() shouldn't work in invisible iframe");

@@ -1034,7 +1034,10 @@ class PresShell final : public nsStubDocumentObserver,
   bool IsUnderHiddenEmbedderElement() const {
     return mUnderHiddenEmbedderElement;
   }
-  void SetIsUnderHiddenEmbedderElement(bool aUnderHiddenEmbedderElement);
+  void SetIsUnderHiddenEmbedderElement(bool aUnderHiddenEmbedderElement) {
+    mUnderHiddenEmbedderElement = aUnderHiddenEmbedderElement;
+  }
+
   MOZ_CAN_RUN_SCRIPT
   void DispatchSynthMouseMove(WidgetGUIEvent* aEvent);
 
