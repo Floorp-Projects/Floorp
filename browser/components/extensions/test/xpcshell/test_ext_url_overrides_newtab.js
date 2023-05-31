@@ -8,11 +8,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Management: "resource://gre/modules/Extension.sys.mjs",
+});
 
 const { AboutNewTab } = ChromeUtils.import(
   "resource:///modules/AboutNewTab.jsm"

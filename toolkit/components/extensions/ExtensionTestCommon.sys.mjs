@@ -22,40 +22,21 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Assert: "resource://testing-common/Assert.sys.mjs",
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Extension",
-  "resource://gre/modules/Extension.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionData",
-  "resource://gre/modules/Extension.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionPermissions",
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
+
 XPCOMUtils.defineLazyGetter(
   lazy,
   "apiManager",
   () => lazy.ExtensionParent.apiManager
 );
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { flushJarCache } = ExtensionUtils;
 

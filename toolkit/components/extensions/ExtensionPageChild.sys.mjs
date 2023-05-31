@@ -11,29 +11,21 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionChildDevToolsUtils",
-  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Schemas",
-  "resource://gre/modules/Schemas.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionChildDevToolsUtils:
+    "resource://gre/modules/ExtensionChildDevToolsUtils.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
+});
 
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-const { ExtensionChild, ExtensionActivityLogChild } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionChild.jsm"
-);
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import {
+  ExtensionChild,
+  ExtensionActivityLogChild,
+} from "resource://gre/modules/ExtensionChild.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { getInnerWindowID, promiseEvent } = ExtensionUtils;
 

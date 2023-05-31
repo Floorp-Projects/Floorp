@@ -2057,14 +2057,14 @@ class ThreadActor extends Actor {
    *        True, if we want to create a source actor.
    */
   _acceptSource(source) {
-    // We have some spurious source created by ExtensionContent.jsm when debugging tabs.
+    // We have some spurious source created by ExtensionContent.sys.mjs when debugging tabs.
     // These sources are internal stuff injected by WebExt codebase to implement content
     // scripts. We can't easily ignore them from Debugger API, so ignore them
     // when debugging a tab (i.e. browser-element). As we still want to debug them
     // from the browser toolbox.
     if (
       this._parent.sessionContext.type == "browser-element" &&
-      source.url.endsWith("ExtensionContent.jsm")
+      source.url.endsWith("ExtensionContent.sys.mjs")
     ) {
       return false;
     }

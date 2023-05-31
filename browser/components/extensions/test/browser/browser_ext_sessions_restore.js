@@ -66,7 +66,7 @@ add_task(async function test_sessions_restore() {
     Management: {
       global: { windowTracker, tabTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   function checkLocalTab(tab, expectedUrl) {
     let realTab = tabTracker.getTab(tab.id);

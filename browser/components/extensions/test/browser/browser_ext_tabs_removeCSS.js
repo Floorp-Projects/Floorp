@@ -126,8 +126,8 @@ add_task(async function testExecuteScript() {
   // Verify that scripts created by tabs.removeCSS are not added to the content scripts
   // that requires cleanup (Bug 1464711).
   await SpecialPowers.spawn(tab.linkedBrowser, [extension.id], async extId => {
-    const { ExtensionContent } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm"
+    const { ExtensionContent } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionContent.sys.mjs"
     );
 
     let contentScriptContext = ExtensionContent.getContextByExtensionId(

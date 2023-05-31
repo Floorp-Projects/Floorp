@@ -9,8 +9,8 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const { ExtensionData } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { ExtensionData } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 async function generateAddon(data) {

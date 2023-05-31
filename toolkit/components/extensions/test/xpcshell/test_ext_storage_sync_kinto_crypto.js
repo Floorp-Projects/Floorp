@@ -8,7 +8,9 @@ Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 
 const {
   KintoStorageTestUtils: { EncryptionRemoteTransformer },
-} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSyncKinto.jsm");
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
+);
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );

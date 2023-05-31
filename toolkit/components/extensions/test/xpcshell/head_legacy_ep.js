@@ -4,8 +4,8 @@
 // migrate to rkv
 
 {
-  const { ExtensionPermissions } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionPermissions.jsm"
+  const { ExtensionPermissions } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionPermissions.sys.mjs"
   );
 
   ExtensionPermissions._useLegacyStorageBackend = true;

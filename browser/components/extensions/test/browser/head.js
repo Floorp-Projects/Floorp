@@ -61,11 +61,9 @@ const { ClientEnvironmentBase } = ChromeUtils.importESModule(
   "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Management: "resource://gre/modules/Extension.sys.mjs",
+});
 
 var { makeWidgetId, promisePopupShown, getPanelForNode, awaitBrowserLoaded } =
   AppUiTestInternals;

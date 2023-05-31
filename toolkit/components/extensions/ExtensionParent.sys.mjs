@@ -18,22 +18,22 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  BroadcastConduit: "resource://gre/modules/ConduitsParent.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+  ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
+  MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.sys.mjs",
+  NativeApp: "resource://gre/modules/NativeMessaging.sys.mjs",
+  PerformanceCounters: "resource://gre/modules/PerformanceCounters.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
+  getErrorNameForTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  BroadcastConduit: "resource://gre/modules/ConduitsParent.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
-  ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.jsm",
-  MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.jsm",
-  NativeApp: "resource://gre/modules/NativeMessaging.jsm",
-  PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
-  Schemas: "resource://gre/modules/Schemas.jsm",
-  getErrorNameForTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -50,12 +50,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.webextensions.enablePerformanceCounters",
   false
 );
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const DUMMY_PAGE_URI = Services.io.newURI(
   "chrome://extensions/content/dummy.xhtml"

@@ -82,8 +82,8 @@ add_task(async function test_contentscript_context_isolation() {
 
   // Get the content script context and check that it points to the correct window.
   await contentPage.legacySpawn(extension.id, async extensionId => {
-    const { ExtensionContent } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm"
+    const { ExtensionContent } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionContent.sys.mjs"
     );
     this.context = ExtensionContent.getContextByExtensionId(
       extensionId,

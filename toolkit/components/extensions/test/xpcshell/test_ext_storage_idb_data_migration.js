@@ -18,14 +18,14 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const { getTrimmedString } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionTelemetry.jsm"
+const { getTrimmedString } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionTelemetry.sys.mjs"
 );
-const { ExtensionStorage } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorage.jsm"
+const { ExtensionStorage } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorage.sys.mjs"
 );
-const { ExtensionStorageIDB } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageIDB.jsm"
+const { ExtensionStorageIDB } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
 );
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"

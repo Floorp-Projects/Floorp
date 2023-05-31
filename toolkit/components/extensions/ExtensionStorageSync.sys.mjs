@@ -12,9 +12,12 @@ const NS_ERROR_DOM_QUOTA_EXCEEDED_ERR = 0x80530016;
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
-  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  // We might end up falling back to kinto...
+  extensionStorageSyncKinto:
+    "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -31,13 +34,6 @@ XPCOMUtils.defineLazyGetter(lazy, "storageSvc", () =>
   Cc["@mozilla.org/extensions/storage/sync;1"]
     .getService(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.mozIExtensionStorageArea)
-);
-
-// We might end up falling back to kinto...
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "extensionStorageSyncKinto",
-  "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
 );
 
 // The interfaces which define the callbacks used by the bridge. There's a

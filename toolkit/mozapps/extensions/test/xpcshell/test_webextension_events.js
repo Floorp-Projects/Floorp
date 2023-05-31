@@ -2,8 +2,8 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 add_task(async function () {
   let triggered = {};
-  const { Management } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm"
+  const { Management } = ChromeUtils.importESModule(
+    "resource://gre/modules/Extension.sys.mjs"
   );
   for (let event of ["install", "uninstall", "update"]) {
     triggered[event] = false;

@@ -5,8 +5,8 @@ Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 const server = createHttpServer({ hosts: ["example.com", "example.net"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
+const { ExtensionPermissions } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
 function grantOptional({ extension: ext }, origins) {

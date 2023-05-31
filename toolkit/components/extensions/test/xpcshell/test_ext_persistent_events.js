@@ -1595,8 +1595,8 @@ add_task(async function test_migrate_startupData_to_new_format() {
   // using the new format.
   info("Verify backward compatibility with old format");
 
-  const { ExtensionUtils } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionUtils.jsm"
+  const { ExtensionUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionUtils.sys.mjs"
   );
   const { DefaultMap } = ExtensionUtils;
   const loadedListeners = new DefaultMap(() => new DefaultMap(() => new Map()));

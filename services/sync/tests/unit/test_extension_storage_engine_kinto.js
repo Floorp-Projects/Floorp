@@ -12,9 +12,10 @@ const { ExtensionStorageEngineKinto: ExtensionStorageEngine } =
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
-const { extensionStorageSyncKinto: extensionStorageSync } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
-);
+const { extensionStorageSyncKinto: extensionStorageSync } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
+  );
 
 let engine;
 

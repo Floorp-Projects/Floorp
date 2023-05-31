@@ -84,8 +84,8 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.legacySpawn(extension.id, async extensionId => {
-    const { ExtensionContent } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm"
+    const { ExtensionContent } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionContent.sys.mjs"
     );
     let frame = this.content.document.querySelector(
       "iframe[src*='file_iframe.html']"
@@ -136,8 +136,8 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.legacySpawn(extension.id, async extensionId => {
-    const { ExtensionContent } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm"
+    const { ExtensionContent } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionContent.sys.mjs"
     );
     let context = ExtensionContent.getContextByExtensionId(
       extensionId,
@@ -188,8 +188,8 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
   await extension.awaitMessage("extensionPageLoaded");
 
   await contentPage.legacySpawn(extension.id, async extensionId => {
-    let { ExtensionPageChild } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionPageChild.jsm"
+    let { ExtensionPageChild } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionPageChild.sys.mjs"
     );
 
     let frame = this.content.document.querySelector(
@@ -238,8 +238,8 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   await extension.awaitMessage("extensionPageLoaded");
 
   await contentPage.legacySpawn(extension.id, async extensionId => {
-    let { ExtensionPageChild } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionPageChild.jsm"
+    let { ExtensionPageChild } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionPageChild.sys.mjs"
     );
 
     let innerWindowID = this.content.windowGlobalChild.innerWindowId;

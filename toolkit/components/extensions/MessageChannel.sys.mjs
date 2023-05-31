@@ -100,17 +100,13 @@ export let MessageChannel;
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "MessageManagerProxy",
-  "resource://gre/modules/MessageManagerProxy.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.sys.mjs",
+});
 
 function getMessageManager(target) {
   if (typeof target.sendAsyncMessage === "function") {

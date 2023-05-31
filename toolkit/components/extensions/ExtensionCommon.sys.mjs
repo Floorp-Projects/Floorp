@@ -19,11 +19,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ConsoleAPI: "resource://gre/modules/Console.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Schemas: "resource://gre/modules/Schemas.jsm",
-  SchemaRoot: "resource://gre/modules/Schemas.jsm",
+  SchemaRoot: "resource://gre/modules/Schemas.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -39,9 +36,7 @@ const ScriptError = Components.Constructor(
   "initWithWindowID"
 );
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 var {
   DefaultMap,
@@ -1857,9 +1852,9 @@ class SchemaAPIManager extends EventEmitter {
     });
 
     XPCOMUtils.defineLazyGetter(global, "console", getConsole);
-
-    XPCOMUtils.defineLazyModuleGetters(global, {
-      ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
+    // eslint-disable-next-line mozilla/lazy-getter-object-name
+    ChromeUtils.defineESModuleGetters(global, {
+      ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
     });
 
     return global;

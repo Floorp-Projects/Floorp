@@ -21,11 +21,9 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Extension",
-  "resource://gre/modules/Extension.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  Extension: "resource://gre/modules/Extension.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
