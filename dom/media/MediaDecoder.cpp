@@ -1295,19 +1295,7 @@ IntervalType MediaDecoder::GetSeekableImpl() {
     return IntervalType();
   }
 
-  // We can seek in buffered range if the media is seekable. Also, we can seek
-  // in unbuffered ranges if the transport level is seekable (local file or the
-  // server supports range requests, etc.) or in cue-less WebMs
-  if (mMediaSeekableOnlyInBufferedRanges) {
-    return IntervalType(GetBuffered());
-  }
-  if (!IsMediaSeekable()) {
-    return IntervalType();
-  }
-  if (!IsTransportSeekable()) {
-    return IntervalType(GetBuffered());
-  }
-  // Return [0, duration] -- When dealing with doubles, use ::GetDuration to
+  // Compute [0, duration] -- When dealing with doubles, use ::GetDuration to
   // avoid rounding the value differently. When dealing with TimeUnit, it's
   // returned directly.
   typename IntervalType::InnerType duration;
@@ -1316,10 +1304,31 @@ IntervalType MediaDecoder::GetSeekableImpl() {
   } else {
     duration = mDuration.as<TimeUnit>();
   }
+  typename IntervalType::ElemType zeroToDuration =
+      typename IntervalType::ElemType(
+          Zero<typename IntervalType::InnerType>(),
+          IsInfinite() ? Infinity<typename IntervalType::InnerType>()
+                       : duration);
+  auto buffered = IntervalType(GetBuffered());
+  // Remove any negative range in the interval -- seeking to a non-positive
+  // position isn't possible.
+  auto positiveBuffered = buffered.Intersection(zeroToDuration);
 
-  return IntervalType(typename IntervalType::ElemType(
-      Zero<typename IntervalType::InnerType>(),
-      IsInfinite() ? Infinity<typename IntervalType::InnerType>() : duration));
+  // We can seek in buffered range if the media is seekable. Also, we can seek
+  // in unbuffered ranges if the transport level is seekable (local file or the
+  // server supports range requests, etc.) or in cue-less WebMs
+  if (mMediaSeekableOnlyInBufferedRanges) {
+    return IntervalType(positiveBuffered);
+  }
+  if (!IsMediaSeekable()) {
+    return IntervalType();
+  }
+  if (!IsTransportSeekable()) {
+    return IntervalType(positiveBuffered);
+  }
+
+  // Common case: seeking is possible at any point of the stream.
+  return IntervalType(zeroToDuration);
 }
 
 media::TimeIntervals MediaDecoder::GetSeekable() {
