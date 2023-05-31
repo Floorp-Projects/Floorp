@@ -37,6 +37,8 @@ interface nsIAccessibleText : nsISupports
    */
   attribute long caretOffset;
 
+  void getCaretRect(out long x, out long y, out long width, out long height);
+
   readonly attribute long characterCount;
   readonly attribute long selectionCount;
 
