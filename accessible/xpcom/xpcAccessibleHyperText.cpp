@@ -247,6 +247,28 @@ xpcAccessibleHyperText::SetCaretOffset(int32_t aCaretOffset) {
 }
 
 NS_IMETHODIMP
+xpcAccessibleHyperText::GetCaretRect(int32_t* aX, int32_t* aY, int32_t* aWidth,
+                                     int32_t* aHeight) {
+  NS_ENSURE_ARG_POINTER(aX);
+  NS_ENSURE_ARG_POINTER(aY);
+  NS_ENSURE_ARG_POINTER(aWidth);
+  NS_ENSURE_ARG_POINTER(aHeight);
+  *aX = *aY = *aWidth = *aHeight;
+
+  if (!mIntl) {
+    return NS_ERROR_FAILURE;
+  }
+  if (mIntl->IsRemote()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsIWidget* widget;
+  LayoutDeviceIntRect rect = IntlLocal()->GetCaretRect(&widget);
+  rect.GetRect(aX, aY, aWidth, aHeight);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 xpcAccessibleHyperText::GetSelectionCount(int32_t* aSelectionCount) {
   NS_ENSURE_ARG_POINTER(aSelectionCount);
   *aSelectionCount = 0;
