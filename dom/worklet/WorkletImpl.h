@@ -83,8 +83,7 @@ class WorkletImpl {
 
   bool IsSharedMemoryAllowed() const { return mSharedMemoryAllowed; }
   bool IsSystemPrincipal() const { return mPrincipal->IsSystemPrincipal(); }
-  bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const {
+  bool ShouldResistFingerprinting(RFPTarget aTarget) const {
     return mShouldResistFingerprinting &&
            nsRFPService::IsRFPEnabledFor(aTarget);
   }
