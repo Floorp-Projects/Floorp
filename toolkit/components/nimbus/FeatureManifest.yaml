@@ -1527,3 +1527,23 @@ deviceMigration:
       description: True if new help menu item should be hidden
       type: boolean
       fallbackPref: browser.device-migration.help-menu.hidden
+
+opaqueResponseBlocking:
+  description: Prefs to enable Opaque Response Blocking
+  owner: farre@mozilla.com
+  isEarlyStartup: true
+  hasExposure: true
+  exposureDescription: Exposure is sent when a response is blocked
+  variables:
+    enabled:
+      description: Whether ORB is enabled
+      type: boolean
+      setPref: "browser.opaqueResponseBlocking"
+    javascriptValidator:
+      description: Whether JavaScript validation for ORB is enabled
+      type: boolean
+      setPref: "browser.opaqueResponseBlocking.javascriptValidator"
+    filterFetchResponse:
+      description: Whether filtering of internal responses in the parent ORB is enabled
+      type: int
+      setPref: "browser.opaqueResponseBlocking.filterFetchResponse"
