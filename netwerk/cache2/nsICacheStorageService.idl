@@ -6,6 +6,7 @@
 
 interface nsICacheStorage;
 interface nsILoadContextInfo;
+interface nsIApplicationCache;
 interface nsIEventTarget;
 interface nsICacheStorageConsumptionObserver;
 interface nsICacheStorageVisitor;

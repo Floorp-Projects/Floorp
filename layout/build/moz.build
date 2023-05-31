@@ -40,6 +40,7 @@ LOCAL_INCLUDES += [
     "/dom/html",
     "/dom/jsurl",
     "/dom/media",
+    "/dom/offline",
     "/dom/storage",
     "/dom/xslt/base",
     "/dom/xslt/xml",

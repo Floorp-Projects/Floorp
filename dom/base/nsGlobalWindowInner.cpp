@@ -209,6 +209,7 @@
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsDOMNavigationTiming.h"
+#include "nsDOMOfflineResourceList.h"
 #include "nsDebug.h"
 #include "nsDeviceContext.h"
 #include "nsDocShell.h"
@@ -1180,6 +1181,12 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   // Remove our reference to the document and the document principal.
   mFocusedElement = nullptr;
 
+  if (mApplicationCache) {
+    static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())
+        ->Disconnect();
+    mApplicationCache = nullptr;
+  }
+
   if (mIndexedDB) {
     mIndexedDB->DisconnectFromGlobal(this);
     mIndexedDB = nullptr;
@@ -1401,6 +1408,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSharedWorkers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStorage)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentCookiePrincipal)
@@ -1512,6 +1520,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStorage)
+  if (tmp->mApplicationCache) {
+    static_cast<nsDOMOfflineResourceList*>(tmp->mApplicationCache.get())
+        ->Disconnect();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
+  }
   if (tmp->mIndexedDB) {
     tmp->mIndexedDB->DisconnectFromGlobal(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
@@ -3323,6 +3336,38 @@ bool nsGlobalWindowInner::CachesEnabled(JSContext* aCx, JSObject*) {
            StaticPrefs::dom_serviceWorkers_testing_enabled();
   }
   return true;
+}
+
+nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache(
+    ErrorResult& aError) {
+  if (!mApplicationCache) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
+    if (!webNav || !mDoc) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    aError = webNav->GetCurrentURI(getter_AddRefs(uri));
+    if (aError.Failed()) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIURI> manifestURI;
+    nsContentUtils::GetOfflineAppManifest(mDoc, getter_AddRefs(manifestURI));
+
+    RefPtr<nsDOMOfflineResourceList> applicationCache =
+        new nsDOMOfflineResourceList(manifestURI, uri, mDoc->NodePrincipal(),
+                                     this);
+
+    mApplicationCache = applicationCache;
+  }
+
+  return mApplicationCache;
+}
+
+nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache() {
+  return GetApplicationCache(IgnoreErrors());
 }
 
 Crypto* nsGlobalWindowInner::GetCrypto(ErrorResult& aError) {
@@ -5403,6 +5448,18 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+  if (!nsCRT::strcmp(aTopic, "offline-cache-update-added")) {
+    if (mApplicationCache) return NS_OK;
+
+    // Instantiate the application object now. It observes update belonging to
+    // this window's document and correctly updates the applicationCache object
+    // state.
+    nsCOMPtr<nsIObserver> observer = GetApplicationCache();
+    if (observer) observer->Observe(aSubject, aTopic, aData);
+
+    return NS_OK;
+  }
+
   if (!nsCRT::strcmp(aTopic, PERMISSION_CHANGED_TOPIC)) {
     nsCOMPtr<nsIPermission> perm(do_QueryInterface(aSubject));
     if (!perm) {
@@ -6095,6 +6152,11 @@ StorageAccess nsGlobalWindowInner::GetStorageAccess() {
 }
 
 nsresult nsGlobalWindowInner::FireDelayedDOMEvents(bool aIncludeSubWindows) {
+  if (mApplicationCache) {
+    static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())
+        ->FirePendingEvents();
+  }
+
   // Fires an offline status event if the offline status has changed
   FireOfflineStatusEventIfChanged();
 
