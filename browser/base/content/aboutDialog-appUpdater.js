@@ -56,10 +56,13 @@ function appUpdater(options = {}) {
       Services.urlFormatter.formatURLPref("app.update.url.manual")
     );
 
-    for (const manualLink of document.getElementsByClassName("manualLink")) {
+    for (const manualLink of document.querySelectorAll(".manualLink")) {
       // Strip hash and search parameters for display text.
-      manualLink.textContent = manualURL.origin + manualURL.pathname;
+      let displayUrl = manualURL.origin + manualURL.pathname;
       manualLink.href = manualURL.href;
+      document.l10n.setArgs(manualLink.closest("[data-l10n-id]"), {
+        displayUrl,
+      });
     }
 
     document.getElementById("failedLink").href = manualURL.href;
@@ -103,7 +106,7 @@ appUpdater.prototype = {
         this.selectPanel("otherInstanceHandlingUpdates");
         break;
       case AppUpdater.STATUS.DOWNLOADING: {
-        let downloadStatus = document.getElementById("downloadStatus");
+        const downloadStatus = document.getElementById("downloading");
         if (!args.length) {
           // Very early in the DOWNLOADING state, `selectedPatch` may not be
           // available yet. But this function will be called again when it is
@@ -113,17 +116,13 @@ appUpdater.prototype = {
           if (this.update.selectedPatch) {
             maxSize = this.update.selectedPatch.size;
           }
-          downloadStatus.textContent = DownloadUtils.getTransferTotal(
-            0,
-            maxSize
-          );
+          const transfer = DownloadUtils.getTransferTotal(0, maxSize);
+          document.l10n.setArgs(downloadStatus, { transfer });
           this.selectPanel("downloading");
         } else {
           let [progress, max] = args;
-          downloadStatus.textContent = DownloadUtils.getTransferTotal(
-            progress,
-            max
-          );
+          const transfer = DownloadUtils.getTransferTotal(progress, max);
+          document.l10n.setArgs(downloadStatus, { transfer });
         }
         break;
       }
