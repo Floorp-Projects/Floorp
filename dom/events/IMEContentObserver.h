@@ -183,6 +183,12 @@ class IMEContentObserver final : public nsStubMutationObserver,
   void BeforeEditAction();
   void CancelEditAction();
 
+  /**
+   * Called when text control value is changed while this is not observing
+   * mRootElement.
+   */
+  void OnTextControlValueChangedDuringNoFrame(const nsAString& aNewValue);
+
   dom::Element* GetObservingElement() const {
     return mIsObserving ? mRootElement.get() : nullptr;
   }
@@ -500,8 +506,12 @@ class IMEContentObserver final : public nsStubMutationObserver,
   EventStateManager* mESM;
 
   const IMENotificationRequests* mIMENotificationRequests;
-  uint32_t mSuppressNotifications;
-  int64_t mPreCharacterDataChangeLength;
+  int64_t mPreCharacterDataChangeLength = -1;
+  uint32_t mSuppressNotifications = 0;
+
+  // If the observing editor is a text control's one, this is set to the value
+  // length.
+  uint32_t mTextControlValueLength = 0;
 
   // mSendingNotification is a notification which is now sending from
   // IMENotificationSender.  When the value is NOTIFY_IME_OF_NOTHING, it's
