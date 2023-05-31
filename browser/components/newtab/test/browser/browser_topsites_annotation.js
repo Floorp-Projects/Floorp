@@ -273,20 +273,20 @@ add_setup(async function () {
 add_task(async function basic() {
   const SPONSORED_LINK = {
     label: "test_label",
-    url: "http://example.com/",
+    url: "https://example.com/",
     sponsored_position: 1,
     sponsored_tile_id: 12345,
-    sponsored_impression_url: "http://impression.example.com/",
-    sponsored_click_url: "http://click.example.com/",
+    sponsored_impression_url: "https://impression.example.com/",
+    sponsored_click_url: "https://click.example.com/",
   };
   const NORMAL_LINK = {
     label: "test_label",
-    url: "http://example.com/",
+    url: "https://example.com/",
   };
   const BOOKMARKS = [
     {
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      url: Services.io.newURI("http://example.com/"),
+      url: Services.io.newURI("https://example.com/"),
       title: "test bookmark",
     },
   ];
@@ -548,14 +548,14 @@ add_task(async function basic() {
 
 add_task(async function redirection() {
   await BrowserTestUtils.withNewTab("about:home", async () => {
-    const redirectTo = "http://example.com/";
+    const redirectTo = "https://example.com/";
     const link = {
       label: "test_label",
-      url: "http://example.com/browser/browser/components/newtab/test/browser/redirect_to.sjs?/",
+      url: "https://example.com/browser/browser/components/newtab/test/browser/redirect_to.sjs?/",
       sponsored_position: 1,
       sponsored_tile_id: 12345,
-      sponsored_impression_url: "http://impression.example.com/",
-      sponsored_click_url: "http://click.example.com/",
+      sponsored_impression_url: "https://impression.example.com/",
+      sponsored_click_url: "https://click.example.com/",
     };
 
     // Setup test tile.
@@ -625,8 +625,8 @@ add_task(async function inherit() {
       url: firstURL,
       sponsored_position: 1,
       sponsored_tile_id: 12345,
-      sponsored_impression_url: "http://impression.example.com/",
-      sponsored_click_url: "http://click.example.com/",
+      sponsored_impression_url: "https://impression.example.com/",
+      sponsored_click_url: "https://click.example.com/",
     };
 
     // Setup test tile.
@@ -802,8 +802,8 @@ add_task(async function timeout() {
       url: firstURL,
       sponsored_position: 1,
       sponsored_tile_id: 12345,
-      sponsored_impression_url: "http://impression.example.com/",
-      sponsored_click_url: "http://click.example.com/",
+      sponsored_impression_url: "https://impression.example.com/",
+      sponsored_click_url: "https://click.example.com/",
     };
 
     // Setup a test tile.
@@ -885,14 +885,14 @@ add_task(async function timeout() {
 
 add_task(async function fixup() {
   await BrowserTestUtils.withNewTab("about:home", async () => {
-    const destinationURL = "http://example.com/?a";
+    const destinationURL = "https://example.com/?a";
     const link = {
       label: "test",
-      url: "http://example.com?a",
+      url: "https://example.com?a",
       sponsored_position: 1,
       sponsored_tile_id: 12345,
-      sponsored_impression_url: "http://impression.example.com/",
-      sponsored_click_url: "http://click.example.com/",
+      sponsored_impression_url: "https://impression.example.com/",
+      sponsored_click_url: "https://click.example.com/",
     };
 
     info("Setup pin");
@@ -935,8 +935,8 @@ add_task(async function noTriggeringURL() {
     Services.telemetry.clearScalars();
 
     const dummyTriggeringSponsoredURL =
-      "http://example.com/dummyTriggeringSponsoredURL";
-    const targetURL = "http://example.com/";
+      "https://example.com/dummyTriggeringSponsoredURL";
+    const targetURL = "https://example.com/";
 
     info("Setup dummy triggering sponsored URL");
     browser.setAttribute("triggeringSponsoredURL", dummyTriggeringSponsoredURL);
