@@ -2502,9 +2502,9 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
   }
   frontend::NoScopeBindingCache scopeCache;
   RefPtr<frontend::CompilationStencil> stencil =
-      frontend::CompileGlobalScriptToStencil(
-          cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-          *input, &scopeCache, srcBuf, ScopeKind::Global);
+      frontend::CompileGlobalScriptToStencil(cx, &fc, cx->tempLifoAlloc(),
+                                             *input, &scopeCache, srcBuf,
+                                             ScopeKind::Global);
   if (!stencil) {
     return false;
   }

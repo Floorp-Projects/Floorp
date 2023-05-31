@@ -77,9 +77,9 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   frontend::NoScopeBindingCache scopeCache;
   LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   RefPtr<frontend::CompilationStencil> stencil_ =
-      frontend::CompileGlobalScriptToStencil(
-          nullptr, fc, fc->stackLimit(), tempLifoAlloc,
-          compilationStorage.getInput(), &scopeCache, data, scopeKind);
+      frontend::CompileGlobalScriptToStencil(nullptr, fc, tempLifoAlloc,
+                                             compilationStorage.getInput(),
+                                             &scopeCache, data, scopeKind);
   return stencil_.forget();
 }
 

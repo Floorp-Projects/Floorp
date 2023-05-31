@@ -7025,8 +7025,7 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
         input.get(), &scopeCache, srcBuf);
   } else {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
-        srcBuf, ScopeKind::Global);
+        cx, &fc, input.get(), &scopeCache, srcBuf, ScopeKind::Global);
   }
   if (!stencil) {
     return false;

@@ -989,9 +989,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
                scopeKind == ScopeKind::NonSyntactic);
 
     AutoReportFrontendContext fc(cx);
-    script = frontend::CompileGlobalScript(cx, &fc,
-                                           cx->stackLimitForCurrentPrincipal(),
-                                           options, srcBuf, scopeKind);
+    script = frontend::CompileGlobalScript(cx, &fc, options, srcBuf, scopeKind);
     if (!script) {
       return false;
     }

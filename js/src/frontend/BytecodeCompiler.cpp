@@ -236,14 +236,15 @@ using BytecodeCompilerOutput =
 //   * CompilationGCOutput (with instantiation).
 template <typename Unit>
 [[nodiscard]] static bool CompileGlobalScriptToStencilAndMaybeInstantiate(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<Unit>& srcBuf,
-    ScopeKind scopeKind, BytecodeCompilerOutput& output) {
+    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind,
+    BytecodeCompilerOutput& output) {
 #ifdef JS_ENABLE_SMOOSH
   if (maybeCx) {
     UniquePtr<ExtensibleCompilationStencil> extensibleStencil;
-    if (!TrySmoosh(maybeCx, fc, stackLimit, input, srcBuf, extensibleStencil)) {
+    if (!TrySmoosh(maybeCx, fc, fc->stackLimit(), input, srcBuf,
+                   extensibleStencil)) {
       return false;
     }
     if (extensibleStencil) {
@@ -297,7 +298,7 @@ template <typename Unit>
   AutoAssertReportedException assertException(maybeCx, fc);
 
   LifoAllocScope parserAllocScope(&tempLifoAlloc);
-  ScriptCompiler<Unit> compiler(fc, stackLimit, parserAllocScope, input,
+  ScriptCompiler<Unit> compiler(fc, fc->stackLimit(), parserAllocScope, input,
                                 srcBuf);
   if (!compiler.init(fc, scopeCache)) {
     return false;
@@ -372,49 +373,48 @@ template <typename Unit>
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil> CompileGlobalScriptToStencilImpl(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<Unit>& srcBuf,
-    ScopeKind scopeKind) {
+    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
-          maybeCx, fc, stackLimit, tempLifoAlloc, input, scopeCache, srcBuf,
-          scopeKind, output)) {
+          maybeCx, fc, tempLifoAlloc, input, scopeCache, srcBuf, scopeKind,
+          output)) {
     return nullptr;
   }
   return output.as<OutputType>().forget();
 }
 
 already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
-    ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, fc, stackLimit, tempLifoAlloc,
-                                          input, scopeCache, srcBuf, scopeKind);
+    JSContext* cx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, fc, tempLifoAlloc, input,
+                                          scopeCache, srcBuf, scopeKind);
 }
 
 already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<Utf8Unit>& srcBuf,
-    ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, fc, stackLimit, tempLifoAlloc,
-                                          input, scopeCache, srcBuf, scopeKind);
+    JSContext* cx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, fc, tempLifoAlloc, input,
+                                          scopeCache, srcBuf, scopeKind);
 }
 
 template <typename Unit>
 static UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencilImpl(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
+CompileGlobalScriptToExtensibleStencilImpl(JSContext* maybeCx,
+                                           FrontendContext* fc,
+                                           CompilationInput& input,
+                                           ScopeBindingCache* scopeCache,
+                                           JS::SourceText<Unit>& srcBuf,
+                                           ScopeKind scopeKind) {
   using OutputType = UniquePtr<ExtensibleCompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
-          maybeCx, fc, stackLimit, maybeCx->tempLifoAlloc(), input, scopeCache,
-          srcBuf, scopeKind, output)) {
+          maybeCx, fc, maybeCx->tempLifoAlloc(), input, scopeCache, srcBuf,
+          scopeKind, output)) {
     return nullptr;
   }
   return std::move(output.as<OutputType>());
@@ -422,20 +422,20 @@ CompileGlobalScriptToExtensibleStencilImpl(
 
 UniquePtr<ExtensibleCompilationStencil>
 frontend::CompileGlobalScriptToExtensibleStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
+    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
+    ScopeKind scopeKind) {
   return CompileGlobalScriptToExtensibleStencilImpl(
-      maybeCx, fc, stackLimit, input, scopeCache, srcBuf, scopeKind);
+      maybeCx, fc, input, scopeCache, srcBuf, scopeKind);
 }
 
 UniquePtr<ExtensibleCompilationStencil>
 frontend::CompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
-  return CompileGlobalScriptToExtensibleStencilImpl(
-      cx, fc, stackLimit, input, scopeCache, srcBuf, scopeKind);
+    JSContext* cx, FrontendContext* fc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<Utf8Unit>& srcBuf,
+    ScopeKind scopeKind) {
+  return CompileGlobalScriptToExtensibleStencilImpl(cx, fc, input, scopeCache,
+                                                    srcBuf, scopeKind);
 }
 
 bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
@@ -481,7 +481,7 @@ bool frontend::PrepareForInstantiate(JSContext* maybeCx, FrontendContext* fc,
 
 template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
@@ -489,27 +489,25 @@ static JSScript* CompileGlobalScriptImpl(
   BytecodeCompilerOutput output(gcOutput.address());
   NoScopeBindingCache scopeCache;
   if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
-          cx, fc, stackLimit, cx->tempLifoAlloc(), input.get(), &scopeCache,
-          srcBuf, scopeKind, output)) {
+          cx, fc, cx->tempLifoAlloc(), input.get(), &scopeCache, srcBuf,
+          scopeKind, output)) {
     return nullptr;
   }
   return gcOutput.get().script;
 }
 
 JSScript* frontend::CompileGlobalScript(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind) {
-  return CompileGlobalScriptImpl(cx, fc, stackLimit, options, srcBuf,
-                                 scopeKind);
+  return CompileGlobalScriptImpl(cx, fc, options, srcBuf, scopeKind);
 }
 
 JSScript* frontend::CompileGlobalScript(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<Utf8Unit>& srcBuf,
     ScopeKind scopeKind) {
-  return CompileGlobalScriptImpl(cx, fc, stackLimit, options, srcBuf,
-                                 scopeKind);
+  return CompileGlobalScriptImpl(cx, fc, options, srcBuf, scopeKind);
 }
 
 template <typename Unit>

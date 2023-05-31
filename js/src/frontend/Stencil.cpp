@@ -5216,8 +5216,8 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   NoScopeBindingCache scopeCache;
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
-      cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-      input.get(), &scopeCache, srcBuf, scopeKind);
+      cx, &fc, cx->tempLifoAlloc(), input.get(), &scopeCache, srcBuf,
+      scopeKind);
   if (!stencil) {
     return nullptr;
   }
