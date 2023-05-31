@@ -206,6 +206,10 @@ extern JS_PUBLIC_API TranscodeResult DecodeStencil(JSContext* cx,
                                                    const DecodeOptions& options,
                                                    const TranscodeRange& range,
                                                    Stencil** stencilOut);
+extern JS_PUBLIC_API TranscodeResult DecodeStencil(JS::FrontendContext* fc,
+                                                   const DecodeOptions& options,
+                                                   const TranscodeRange& range,
+                                                   Stencil** stencilOut);
 
 // Register an encoder on its script source, such that all functions can be
 // encoded as they are delazified.
