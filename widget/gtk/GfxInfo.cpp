@@ -645,7 +645,7 @@ void GfxInfo::GetDataVAAPI() {
   }
   mIsVAAPISupported = Some(false);
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_ENABLE_VAAPI
   char* vaapiData = nullptr;
   auto free = mozilla::MakeScopeExit([&] { g_free((void*)vaapiData); });
 

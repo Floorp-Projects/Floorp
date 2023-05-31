@@ -19,7 +19,7 @@
 #if LIBAVCODEC_VERSION_MAJOR >= 58
 #  include "mozilla/ProfilerMarkers.h"
 #endif
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 #  include "H264.h"
 #  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
@@ -63,7 +63,7 @@
 #endif
 
 // Forward declare from va.h
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 typedef int VAStatus;
 #  define VA_EXPORT_SURFACE_READ_ONLY 0x0001
 #  define VA_EXPORT_SURFACE_SEPARATE_LAYERS 0x0004
@@ -85,7 +85,7 @@ typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 namespace mozilla {
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 nsTArray<AVCodecID> FFmpegVideoDecoder<LIBAV_VER>::mAcceleratedFormats;
 #endif
 
@@ -146,7 +146,7 @@ static AVPixelFormat ChoosePixelFormat(AVCodecContext* aCodecContext,
   return AV_PIX_FMT_NONE;
 }
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
                                             const AVPixelFormat* aFormats) {
   FFMPEG_LOG("Choosing FFmpeg pixel format for VA-API video decoding.");
@@ -373,7 +373,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
   mLastDts = INT64_MIN;
 }
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
   if (!mEnableHardwareDecoding) {
     FFMPEG_LOG("VAAPI is disabled by parent decoder module.");
@@ -425,7 +425,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     bool aLowLatency, bool aDisableHardwareDecoding,
     Maybe<TrackingId> aTrackingId)
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)),
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
       mVAAPIDeviceContext(nullptr),
       mEnableHardwareDecoding(!aDisableHardwareDecoding),
       mDisplay(nullptr),
@@ -447,7 +447,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   // initialization.
   mExtraData = new MediaByteBuffer;
   mExtraData->AppendElements(*aConfig.mExtraData);
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
   InitHWDecodingPrefs();
 #endif
 }
@@ -462,7 +462,7 @@ FFmpegVideoDecoder<LIBAV_VER>::~FFmpegVideoDecoder() {
 RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   MediaResult rv;
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
   if (mEnableHardwareDecoding) {
     rv = InitVAAPIDecoder();
     if (NS_SUCCEEDED(rv)) {
@@ -821,7 +821,7 @@ nsCString FFmpegVideoDecoder<LIBAV_VER>::GetCodecName() const {
 #endif
 }
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
   mCodecContext->width = mInfo.mImage.width;
   mCodecContext->height = mInfo.mImage.height;
@@ -952,7 +952,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
 
-#  ifdef MOZ_WAYLAND_USE_VAAPI
+#  ifdef MOZ_WAYLAND_USE_HWDECODE
     // Release unused VA-API surfaces before avcodec_receive_frame() as
     // ffmpeg recycles VASurface for HW decoding.
     if (mVideoFramePool) {
@@ -981,7 +981,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     decodeStart = TimeStamp::Now();
 
     MediaResult rv;
-#  ifdef MOZ_WAYLAND_USE_VAAPI
+#  ifdef MOZ_WAYLAND_USE_HWDECODE
     if (IsHardwareAccelerated()) {
       if (mMissedDecodeInAverangeTime > HW_DECODE_LATE_FRAMES) {
         PROFILER_MARKER_TEXT("FFmpegVideoDecoder::DoDecode", MEDIA_PLAYBACK, {},
@@ -1325,7 +1325,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   return NS_OK;
 }
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 bool FFmpegVideoDecoder<LIBAV_VER>::GetVAAPISurfaceDescriptor(
     VADRMPRIMESurfaceDescriptor* aVaDesc) {
   VASurfaceID surface_id = (VASurfaceID)(uintptr_t)mFrame->data[3];
@@ -1432,7 +1432,7 @@ AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
 
 void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
   mVideoFramePool = nullptr;
   if (IsHardwareAccelerated()) {
     mLib->av_buffer_unref(&mVAAPIDeviceContext);
@@ -1443,14 +1443,14 @@ void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
 
 bool FFmpegVideoDecoder<LIBAV_VER>::IsHardwareAccelerated(
     nsACString& aFailureReason) const {
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
   return !!mVAAPIDeviceContext;
 #else
   return false;
 #endif
 }
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
+#ifdef MOZ_WAYLAND_USE_HWDECODE
 bool FFmpegVideoDecoder<LIBAV_VER>::IsFormatAccelerated(
     AVCodecID aCodecID) const {
   for (const auto& format : mAcceleratedFormats) {
