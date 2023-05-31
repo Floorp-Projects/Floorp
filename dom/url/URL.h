@@ -69,6 +69,9 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   static bool IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
                          ErrorResult& aRv);
 
+  static bool CanParse(const GlobalObject& aGlobal, const nsAString& aURL,
+                       const Optional<nsAString>& aBase);
+
   void GetHref(nsAString& aHref) const;
 
   void SetHref(const nsAString& aHref, ErrorResult& aRv);

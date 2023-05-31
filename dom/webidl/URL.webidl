@@ -19,6 +19,8 @@ interface URL {
   [Throws]
   constructor(USVString url, optional USVString base);
 
+  static boolean canParse(USVString url, optional USVString base);
+
   [SetterThrows]
   stringifier attribute USVString href;
   readonly attribute USVString origin;
