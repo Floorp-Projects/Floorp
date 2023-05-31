@@ -11,8 +11,8 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionActionHelper: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
 
-const { PageActionBase } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionActions.jsm"
+const { PageActionBase } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionActions.sys.mjs"
 );
 
 const PAGE_ACTION_PROPERTIES = [

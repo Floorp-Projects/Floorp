@@ -23,8 +23,8 @@ async function assertPersistentListeners(
     [extWrapper.id, apiNs, apiEvents, expected],
     async (id, apiNs, apiEvents, expected) => {
       try {
-        const { ExtensionTestCommon } = ChromeUtils.import(
-          "resource://testing-common/ExtensionTestCommon.jsm"
+        const { ExtensionTestCommon } = ChromeUtils.importESModule(
+          "resource://testing-common/ExtensionTestCommon.sys.mjs"
         );
         const ext = { id };
         for (const event of apiEvents) {

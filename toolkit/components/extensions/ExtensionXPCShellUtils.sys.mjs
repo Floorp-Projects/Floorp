@@ -19,24 +19,12 @@ ChromeUtils.defineModuleGetter(
   "AddonTestUtils",
   "resource://testing-common/AddonTestUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionTestCommon",
-  "resource://testing-common/ExtensionTestCommon.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  Management: "resource://gre/modules/Extension.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Management",
-  "resource://gre/modules/Extension.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Schemas",
-  "resource://gre/modules/Schemas.jsm"
-);
 
 let BASE_MANIFEST = Object.freeze({
   browser_specific_settings: Object.freeze({

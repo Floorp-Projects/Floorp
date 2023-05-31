@@ -5,10 +5,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   Service: "resource://services-sync/service.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
+  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
 });
 
 const { ExtensionStorageEngineBridge, ExtensionStorageEngineKinto } =

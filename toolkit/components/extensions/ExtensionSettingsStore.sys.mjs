@@ -39,9 +39,7 @@
  *
  */
 
-const { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+import { ExtensionParent } from "resource://gre/modules/ExtensionParent.sys.mjs";
 
 const lazy = {};
 

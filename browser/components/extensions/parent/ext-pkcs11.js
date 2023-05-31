@@ -5,11 +5,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  NativeManifests: "resource://gre/modules/NativeManifests.sys.mjs",
   ctypes: "resource://gre/modules/ctypes.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  NativeManifests: "resource://gre/modules/NativeManifests.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

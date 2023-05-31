@@ -6,11 +6,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionShortcuts",
-  "resource://gre/modules/ExtensionShortcuts.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionShortcuts: "resource://gre/modules/ExtensionShortcuts.sys.mjs",
+});
 
 this.commands = class extends ExtensionAPIPersistent {
   PERSISTENT_EVENTS = {

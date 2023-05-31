@@ -15,18 +15,16 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
-  ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
-  ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
-  ExtensionWorkerChild: "resource://gre/modules/ExtensionWorkerChild.jsm",
-  Schemas: "resource://gre/modules/Schemas.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionChild: "resource://gre/modules/ExtensionChild.sys.mjs",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+  ExtensionContent: "resource://gre/modules/ExtensionContent.sys.mjs",
+  ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.sys.mjs",
+  ExtensionWorkerChild: "resource://gre/modules/ExtensionWorkerChild.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
 });
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { DefaultWeakMap } = ExtensionUtils;
 

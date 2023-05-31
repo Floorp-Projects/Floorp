@@ -4,11 +4,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WebRequest",
-  "resource://gre/modules/WebRequest.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  WebRequest: "resource://gre/modules/WebRequest.sys.mjs",
+});
 
 var { parseMatchPatterns } = ExtensionUtils;
 

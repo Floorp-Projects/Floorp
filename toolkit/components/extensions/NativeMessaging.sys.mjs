@@ -7,21 +7,17 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-
-const {
-  ExtensionUtils: { ExtensionError, promiseTimeout },
-} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  NativeManifests: "resource://gre/modules/NativeManifests.sys.mjs",
   Subprocess: "resource://gre/modules/Subprocess.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NativeManifests: "resource://gre/modules/NativeManifests.jsm",
-});
+const { ExtensionError, promiseTimeout } = ExtensionUtils;
 
 // For a graceful shutdown (i.e., when the extension is unloaded or when it
 // explicitly calls disconnect() on a native port), how long we give the native

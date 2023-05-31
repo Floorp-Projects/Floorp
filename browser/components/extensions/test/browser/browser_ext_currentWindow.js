@@ -110,7 +110,7 @@ add_task(async function () {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);

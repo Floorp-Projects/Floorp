@@ -1,8 +1,8 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { ExtensionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
 );
 const { BranchedAddonStudyAction } = ChromeUtils.importESModule(
   "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs"
@@ -97,8 +97,8 @@ decorate_task(
           const { AddonStudies } = ChromeUtils.importESModule(
             "resource://normandy/lib/AddonStudies.sys.mjs"
           );
-          const { ExtensionCommon } = ChromeUtils.import(
-            "resource://gre/modules/ExtensionCommon.jsm"
+          const { ExtensionCommon } = ChromeUtils.importESModule(
+            "resource://gre/modules/ExtensionCommon.sys.mjs"
           );
           this.study = class extends ExtensionAPI {
             getAPI(context) {

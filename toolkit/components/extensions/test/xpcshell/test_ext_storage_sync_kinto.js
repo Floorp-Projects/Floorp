@@ -22,7 +22,9 @@ const {
     keyToId,
     KeyRingEncryptionRemoteTransformer,
   },
-} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSyncKinto.jsm");
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
+);
 const { BulkKeyBundle } = ChromeUtils.importESModule(
   "resource://services-sync/keys.sys.mjs"
 );

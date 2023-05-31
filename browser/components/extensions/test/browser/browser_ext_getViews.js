@@ -166,7 +166,7 @@ add_task(async function () {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
@@ -345,7 +345,7 @@ add_task(async function test_getViews_excludes_blocked_parsing_documents() {
     Management: {
       global: { browserActionFor },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
   let ext = WebExtensionPolicy.getByID(extension.id)?.extension;
   let browserAction = browserActionFor(ext);

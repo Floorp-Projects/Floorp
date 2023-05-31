@@ -30,9 +30,7 @@ const KINTO_REQUEST_TIMEOUT = 30000;
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const lazy = {};
 
@@ -41,6 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CollectionKeyManager: "resource://services-sync/record.sys.mjs",
   CommonUtils: "resource://services-common/utils.sys.mjs",
   CryptoUtils: "resource://services-crypto/utils.sys.mjs",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
   FirefoxAdapter: "resource://services-common/kinto-storage-adapter.sys.mjs",
   Observers: "resource://services-common/observers.sys.mjs",
   Utils: "resource://services-sync/util.sys.mjs",
@@ -48,7 +47,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Kinto: "resource://services-common/kinto-offline-client.js",
 });

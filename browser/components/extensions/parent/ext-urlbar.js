@@ -10,8 +10,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderExtension.sys.mjs",
 });
 
-var { ExtensionPreferencesManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
 );
 var { getSettingsAPI } = ExtensionPreferencesManager;
 

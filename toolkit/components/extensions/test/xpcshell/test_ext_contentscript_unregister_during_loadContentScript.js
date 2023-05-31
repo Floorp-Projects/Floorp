@@ -40,9 +40,9 @@ add_task(async function content_script_unregistered_during_loadContentScript() {
     content_scripts.map(() => extension.awaitMessage("content-script-executed"))
   );
 
-  const promiseDone = contentPage.legacySpawn(extension.id, extensionId => {
-    const { ExtensionProcessScript } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionProcessScript.jsm"
+  const promiseDone = contentPage.legacySpawn([extension.id], extensionId => {
+    const { ExtensionProcessScript } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionProcessScript.sys.mjs"
     );
 
     return new Promise(resolve => {

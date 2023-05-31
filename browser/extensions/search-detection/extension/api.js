@@ -9,8 +9,8 @@
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { WebRequest } = ChromeUtils.import(
-  "resource://gre/modules/WebRequest.jsm"
+const { WebRequest } = ChromeUtils.importESModule(
+  "resource://gre/modules/WebRequest.sys.mjs"
 );
 const lazy = {};
 

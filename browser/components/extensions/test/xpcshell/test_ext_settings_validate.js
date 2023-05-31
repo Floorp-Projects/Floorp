@@ -15,11 +15,9 @@ const { AboutNewTab } = ChromeUtils.import(
 );
 
 // Lazy load to avoid having Services.appinfo cached first.
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
 
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 

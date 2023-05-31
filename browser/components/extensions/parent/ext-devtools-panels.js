@@ -6,15 +6,13 @@
 
 "use strict";
 
-var { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
+var { ExtensionParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionParent.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BroadcastConduit",
-  "resource://gre/modules/ConduitsParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BroadcastConduit: "resource://gre/modules/ConduitsParent.sys.mjs",
+});
 
 var { watchExtensionProxyContextLoad } = ExtensionParent;
 

@@ -517,8 +517,8 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
     },
   };
 
-  const { ExtensionSettingsStore } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionSettingsStore.jsm"
+  const { ExtensionSettingsStore } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs"
   );
 
   async function assertExtensionSettingsStore(
