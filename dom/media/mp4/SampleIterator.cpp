@@ -417,7 +417,7 @@ TimeUnit SampleIterator::GetNextKeyframeTime() {
 
 MP4SampleIndex::MP4SampleIndex(const IndiceWrapper& aIndices,
                                ByteStream* aSource, uint32_t aTrackId,
-                               bool aIsAudio, int32_t aTimeScale)
+                               bool aIsAudio, uint32_t aTimeScale)
     : mSource(aSource), mIsAudio(aIsAudio) {
   if (!aIndices.Length()) {
     mMoofParser =
