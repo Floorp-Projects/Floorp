@@ -156,39 +156,7 @@ union NetAddr {
   nsCString ToString() const;
 };
 
-#define ODOH_VERSION 0x0001
-static const char kODoHQuery[] = "odoh query";
-static const char hODoHConfigID[] = "odoh key id";
-static const char kODoHResponse[] = "odoh response";
-static const char kODoHKey[] = "odoh key";
-static const char kODoHNonce[] = "odoh nonce";
-
-struct ObliviousDoHConfigContents {
-  uint16_t mKemId{};
-  uint16_t mKdfId{};
-  uint16_t mAeadId{};
-  nsTArray<uint8_t> mPublicKey;
-};
-
-struct ObliviousDoHConfig {
-  uint16_t mVersion{};
-  uint16_t mLength{};
-  ObliviousDoHConfigContents mContents;
-  nsTArray<uint8_t> mConfigId;
-};
-
-enum ObliviousDoHMessageType : uint8_t {
-  ODOH_QUERY = 1,
-  ODOH_RESPONSE = 2,
-};
-
-struct ObliviousDoHMessage {
-  ObliviousDoHMessageType mType{ODOH_QUERY};
-  nsTArray<uint8_t> mKeyId;
-  nsTArray<uint8_t> mEncryptedMessage;
-};
-
-enum class DNSResolverType : uint32_t { Native = 0, TRR, ODoH };
+enum class DNSResolverType : uint32_t { Native = 0, TRR };
 
 class AddrInfo {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AddrInfo)
@@ -216,10 +184,7 @@ class AddrInfo {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  bool IsTRROrODoH() const {
-    return mResolverType == DNSResolverType::TRR ||
-           mResolverType == DNSResolverType::ODoH;
-  }
+  bool IsTRR() const { return mResolverType == DNSResolverType::TRR; }
   DNSResolverType ResolverType() const { return mResolverType; }
   unsigned int TRRType() { return mTRRType; }
 

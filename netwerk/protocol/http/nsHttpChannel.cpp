@@ -7029,17 +7029,7 @@ static void RecordOnStartTelemetry(nsresult aStatus,
     Others = 2,
   };
 
-  if (StaticPrefs::network_trr_odoh_enabled()) {
-    nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-    if (!dns) {
-      return;
-    }
-    bool ODoHActivated = false;
-    if (NS_SUCCEEDED(dns->GetODoHActivated(&ODoHActivated)) && ODoHActivated) {
-      Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_ODOH,
-                            NS_SUCCEEDED(aStatus));
-    }
-  } else if (TRRService::Get() && TRRService::Get()->IsConfirmed()) {
+  if (TRRService::Get() && TRRService::Get()->IsConfirmed()) {
     // Note this telemetry probe is not working when DNS resolution is done in
     // the socket process.
     HttpOnStartState state = HttpOnStartState::Others;

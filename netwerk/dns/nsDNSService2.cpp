@@ -128,9 +128,7 @@ NS_IMETHODIMP
 nsDNSRecord::IsTRR(bool* retval) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
   if (mHostRecord->addr_info) {
-    // TODO: Let the consumers of nsIDNSRecord be unaware of the difference of
-    // TRR and ODoH. Will let them know the truth when needed.
-    *retval = mHostRecord->addr_info->IsTRROrODoH();
+    *retval = mHostRecord->addr_info->IsTRR();
   } else {
     *retval = false;
   }
@@ -146,7 +144,7 @@ nsDNSRecord::ResolvedInSocketProcess(bool* retval) {
 NS_IMETHODIMP
 nsDNSRecord::GetTrrFetchDuration(double* aTime) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
-  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRROrODoH()) {
+  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRR()) {
     *aTime = mHostRecord->addr_info->GetTrrFetchDuration();
   } else {
     *aTime = 0;
@@ -157,7 +155,7 @@ nsDNSRecord::GetTrrFetchDuration(double* aTime) {
 NS_IMETHODIMP
 nsDNSRecord::GetTrrFetchDurationNetworkOnly(double* aTime) {
   MutexAutoLock lock(mHostRecord->addr_info_lock);
-  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRROrODoH()) {
+  if (mHostRecord->addr_info && mHostRecord->addr_info->IsTRR()) {
     *aTime = mHostRecord->addr_info->GetTrrFetchDurationNetworkOnly();
   } else {
     *aTime = 0;
@@ -847,7 +845,6 @@ nsDNSService::Init() {
     observerService->AddObserver(this, "last-pb-context-exited", false);
     observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    observerService->AddObserver(this, "odoh-service-activated", false);
   }
 
   RefPtr<nsHostResolver> res;
@@ -1304,14 +1301,6 @@ nsDNSService::GetMyHostName(nsACString& result) {
 }
 
 NS_IMETHODIMP
-nsDNSService::GetODoHActivated(bool* aResult) {
-  NS_ENSURE_ARG(aResult);
-
-  *aResult = mODoHActivated;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDNSService::Observe(nsISupports* subject, const char* topic,
                       const char16_t* data) {
   bool flushCache = false;
@@ -1333,8 +1322,6 @@ nsDNSService::Observe(nsISupports* subject, const char* topic,
     }
   } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();
-  } else if (!strcmp(topic, "odoh-service-activated")) {
-    mODoHActivated = u"true"_ns.Equals(data);
   }
 
   if (flushCache && resolver) {

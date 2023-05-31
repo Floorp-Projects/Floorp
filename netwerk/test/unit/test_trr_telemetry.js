@@ -15,7 +15,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 
 function setup() {
   h2Port = trr_test_setup();
-  runningODoHTests = false;
 }
 
 let TRR_OK = 1;
