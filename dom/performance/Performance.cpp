@@ -103,7 +103,8 @@ Performance::Performance(nsIGlobalObject* aGlobal)
       mPendingResourceTimingBufferFullEvent(false),
       mRTPCallerType(aGlobal->GetRTPCallerType()),
       mCrossOriginIsolated(aGlobal->CrossOriginIsolated()),
-      mShouldResistFingerprinting(aGlobal->ShouldResistFingerprinting()) {}
+      mShouldResistFingerprinting(
+          aGlobal->ShouldResistFingerprinting(RFPTarget::Unknown)) {}
 
 Performance::~Performance() = default;
 

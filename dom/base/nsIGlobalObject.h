@@ -249,12 +249,11 @@ class nsIGlobalObject : public nsISupports,
    * Check whether we should avoid leaking distinguishing information to JS/CSS.
    * https://w3c.github.io/fingerprinting-guidance/
    */
-  virtual bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const = 0;
+  virtual bool ShouldResistFingerprinting(RFPTarget aTarget) const = 0;
 
   // CallerType::System callers never have to resist fingerprinting.
   bool ShouldResistFingerprinting(mozilla::dom::CallerType aCallerType,
-                                  RFPTarget aTarget = RFPTarget::Unknown) const;
+                                  RFPTarget aTarget) const;
 
   RTPCallerType GetRTPCallerType() const;
 

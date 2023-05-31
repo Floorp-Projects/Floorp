@@ -3351,7 +3351,8 @@ MediaTrackGraph* MediaTrackGraph::GetInstanceIfExists(
     nsPIDOMWindowInner* aWindow, TrackRate aSampleRate,
     CubebUtils::AudioDeviceID aOutputDeviceID) {
   return MediaTrackGraphImpl::GetInstanceIfExists(
-      aWindow->WindowID(), aWindow->AsGlobal()->ShouldResistFingerprinting(),
+      aWindow->WindowID(),
+      aWindow->AsGlobal()->ShouldResistFingerprinting(RFPTarget::Unknown),
       aSampleRate, aOutputDeviceID);
 }
 
@@ -3403,8 +3404,9 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
     TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID) {
   return MediaTrackGraphImpl::GetInstance(
       aGraphDriverRequested, aWindow->WindowID(),
-      aWindow->AsGlobal()->ShouldResistFingerprinting(), aSampleRate,
-      aOutputDeviceID, aWindow->EventTargetFor(TaskCategory::Other));
+      aWindow->AsGlobal()->ShouldResistFingerprinting(RFPTarget::Unknown),
+      aSampleRate, aOutputDeviceID,
+      aWindow->EventTargetFor(TaskCategory::Other));
 }
 
 MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
