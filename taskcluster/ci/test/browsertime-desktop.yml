@@ -701,8 +701,10 @@ browsertime-regression-tests:
 browsertime-upload:
     raptor:
         apps: [firefox, chrome, chromium, safari]
-        subtests: [upload]
-    description: Raptor (browsertime) file upload performance test
+        subtests:
+            - [upload, upload-h2]
+            - upload-h3
+    description: Raptor (browsertime) http2, http3 file upload performance test
     max-run-time: 2700
     run-on-projects:
         by-app:
