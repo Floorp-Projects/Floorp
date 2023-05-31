@@ -32,6 +32,7 @@ const VIEW_TEMPLATE = {
     {
       name: "content",
       tag: "span",
+      overflowable: true,
       children: [
         {
           name: "icon",
