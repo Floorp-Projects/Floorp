@@ -56,8 +56,8 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
   mSharedMemoryAllowed =
       nsGlobalWindowInner::Cast(aWindow)->IsSharedMemoryAllowed();
 
-  mShouldResistFingerprinting =
-      aWindow->AsGlobal()->ShouldResistFingerprinting();
+  mShouldResistFingerprinting = aWindow->AsGlobal()->ShouldResistFingerprinting(
+      RFPTarget::IsAlwaysEnabledForPrecompute);
 }
 
 WorkletImpl::~WorkletImpl() { MOZ_ASSERT(!mGlobalScope); }
