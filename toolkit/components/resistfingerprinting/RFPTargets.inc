@@ -24,6 +24,14 @@ ITEM_VALUE(CanvasRandomization,         1u << 8)
 ITEM_VALUE(CanvasImageExtractionPrompt, 1u << 9)
 ITEM_VALUE(CanvasExtractionFromThirdPartiesIsBlocked, 1u << 10)
 ITEM_VALUE(CanvasExtractionBeforeUserInputIsBlocked, 1u << 11)
+// Various "client identification" values of the navigator object
+ITEM_VALUE(NavigatorAppName,            1u << 12)
+ITEM_VALUE(NavigatorAppVersion,         1u << 13)
+ITEM_VALUE(NavigatorBuildID,            1u << 14)
+ITEM_VALUE(NavigatorHWConcurrency,      1u << 15)
+ITEM_VALUE(NavigatorOscpu,              1u << 16)
+ITEM_VALUE(NavigatorPlatform,           1u << 17)
+ITEM_VALUE(NavigatorUserAgent,          1u << 18)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
