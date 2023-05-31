@@ -41,8 +41,6 @@ add_task(async function test_check_download_dir() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      // Enable downloads improvements
-      ["browser.download.improvements_to_download_panel", true],
       // Avoid opening dialogs
       ["browser.download.always_ask_before_handling_new_types", false],
       // Switch back to default OS downloads dir (changed in head.js):

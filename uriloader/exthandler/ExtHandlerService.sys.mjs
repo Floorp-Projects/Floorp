@@ -366,11 +366,12 @@ HandlerService.prototype = {
     "image/svg+xml",
   ]),
   _migrateDownloadsImprovementsIfNeeded() {
-    // Migrate if the preference is enabled AND if the migration has never been run before.
+    // Migrate if the migration has never been run before.
     // Otherwise, we risk overwriting preferences for existing profiles!
     if (
       Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
+        "browser.download.improvements_to_download_panel",
+        true
       ) &&
       !Services.policies?.getActivePolicies()?.Handlers &&
       !this._store.data.isDownloadsImprovementsAlreadyMigrated &&
@@ -402,11 +403,12 @@ HandlerService.prototype = {
   },
 
   _migrateSVGXMLIfNeeded() {
-    // Migrate if the preference is enabled AND if the migration has never been run before.
+    // Migrate if the migration has never been run before.
     // We need to make sure we only run this once.
     if (
       Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
+        "browser.download.improvements_to_download_panel",
+        true
       ) &&
       !Services.policies?.getActivePolicies()?.Handlers &&
       !this._store.data.isSVGXMLAlreadyMigrated
@@ -493,7 +495,8 @@ HandlerService.prototype = {
       (handlerInfo.preferredAction == alwaysAsk &&
         this._isMIMEInfo(handlerInfo) &&
         Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
+          "browser.download.improvements_to_download_panel",
+          true
         ))
     ) {
       storedHandlerInfo.action = handlerInfo.preferredAction;

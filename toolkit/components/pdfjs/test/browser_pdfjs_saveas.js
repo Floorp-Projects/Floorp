@@ -129,13 +129,10 @@ add_task(async function test_pdf_saveas_forms() {
  * content disposition filename defaults to using the provided filename.
  */
 add_task(async function test_pdf_saveas_customname() {
-  // Ensure improvements_to_download_panel is enabled so that we render the
-  // attachment directly with the original request in a new tab.
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.helperApps.showOpenOptionForPdfJS", true],
       ["browser.helperApps.showOpenOptionForViewableInternally", true],
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.open_pdf_attachments_inline", true],
     ],

@@ -511,10 +511,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     }
 
     mimeInfoMac->SetDefaultApplication(app);
-
-    mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
-        ? mimeInfoMac->SetPreferredAction(nsIMIMEInfo::saveToDisk)
-        : mimeInfoMac->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+    mimeInfoMac->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
   } else {
     mimeInfoMac->SetPreferredAction(nsIMIMEInfo::saveToDisk);

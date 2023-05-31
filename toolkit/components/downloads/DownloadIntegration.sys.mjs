@@ -559,19 +559,8 @@ export var DownloadIntegration = {
     // this is a permanently downloaded file or a temporary download to be
     // opened read-only with an external application.
     try {
-      // The following logic to determine whether this is a temporary download
-      // is due to the fact that "deleteTempFileOnExit" is false on Mac, where
-      // downloads to be opened with external applications are preserved in
-      // the "Downloads" folder like normal downloads.
       let isTemporaryDownload =
-        aDownload.launchWhenSucceeded &&
-        (aDownload.source.isPrivate ||
-          (Services.prefs.getBoolPref(
-            "browser.helperApps.deleteTempFileOnExit"
-          ) &&
-            !Services.prefs.getBoolPref(
-              "browser.download.improvements_to_download_panel"
-            )));
+        aDownload.launchWhenSucceeded && aDownload.source.isPrivate;
       // Permanently downloaded files are made accessible by other users on
       // this system, while temporary downloads are marked as read-only.
       let unixMode;

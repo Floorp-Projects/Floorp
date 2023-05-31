@@ -298,7 +298,6 @@ export var DownloadsViewUI = {
     // If non default mime-type or cannot be opened internally, display
     // "always open similar files" item instead so that users can add a new
     // mimetype to about:preferences table and set to open with system default.
-    // Only appear if browser.download.improvements_to_download_panel is enabled.
     let alwaysOpenSimilarFilesItem = contextMenu.querySelector(
       ".downloadAlwaysOpenSimilarFilesMenuItem"
     );
@@ -336,12 +335,10 @@ export var DownloadsViewUI = {
       (mimeInfo.type === "text/plain" &&
         lazy.gReputationService.isBinary(download.target.path));
 
-    if (DownloadsViewUI.improvementsIsOn && !canViewInternally) {
-      alwaysOpenSimilarFilesItem.hidden =
-        state !== DOWNLOAD_FINISHED || shouldNotRememberChoice;
-    } else {
-      alwaysOpenSimilarFilesItem.hidden = true;
-    }
+    alwaysOpenSimilarFilesItem.hidden =
+      canViewInternally ||
+      state !== DOWNLOAD_FINISHED ||
+      shouldNotRememberChoice;
 
     // Update checkbox for "always open..." options.
     if (preferredAction === useSystemDefault) {
@@ -353,13 +350,6 @@ export var DownloadsViewUI = {
     }
   },
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  DownloadsViewUI,
-  "improvementsIsOn",
-  "browser.download.improvements_to_download_panel",
-  false
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   DownloadsViewUI,
@@ -696,10 +686,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   _updateStateInner() {
     let progressPaused = false;
 
-    this.element.classList.toggle(
-      "openWhenFinished",
-      DownloadsViewUI.improvementsIsOn && !this.download.stopped
-    );
+    this.element.classList.toggle("openWhenFinished", !this.download.stopped);
 
     if (!this.download.stopped) {
       // The download is in progress, so we don't change the button state
@@ -717,19 +704,14 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
 
-      if (
-        DownloadsViewUI.improvementsIsOn &&
-        this.download.launchWhenSucceeded
-      ) {
+      if (this.download.launchWhenSucceeded) {
         status = lazy.DownloadUtils.getFormattedTimeStatus(
           newEstimatedSecondsLeft
         );
       }
-      let hoverStatus = DownloadsViewUI.improvementsIsOn
-        ? {
-            l10n: { id: "downloading-file-click-to-open" },
-          }
-        : undefined;
+      let hoverStatus = {
+        l10n: { id: "downloading-file-click-to-open" },
+      };
       this.showStatus(status, hoverStatus);
     } else {
       let verdict = "";

@@ -18,10 +18,7 @@ add_task(async function test_tempfilename() {
   });
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
 
   const MimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
