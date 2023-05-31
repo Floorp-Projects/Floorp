@@ -4,7 +4,7 @@
 "use strict";
 
 const RELATIVE_DIR = "toolkit/components/pdfjs/test/";
-const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
+const TESTROOT = "https://example.com/browser/" + RELATIVE_DIR;
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
