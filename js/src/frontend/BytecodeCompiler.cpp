@@ -630,7 +630,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(FrontendContext* fc) {
   MOZ_ASSERT(compilationState_.canLazilyParse ==
              CanLazilyParse(compilationState_.input.options));
   if (compilationState_.canLazilyParse) {
-    syntaxParser.emplace(fc_, fc_->stackLimit(), options, sourceBuffer_.units(),
+    syntaxParser.emplace(fc_, options, sourceBuffer_.units(),
                          sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationState_,
                          /* syntaxParser = */ nullptr);
@@ -639,8 +639,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(FrontendContext* fc) {
     }
   }
 
-  parser.emplace(fc_, fc_->stackLimit(), options, sourceBuffer_.units(),
-                 sourceBuffer_.length(),
+  parser.emplace(fc_, options, sourceBuffer_.units(), sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationState_,
                  syntaxParser.ptrOr(nullptr));
   parser->ss = compilationState_.source.get();
@@ -652,8 +651,7 @@ static bool EmplaceEmitter(CompilationState& compilationState,
                            const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(fc, fc->stackLimit(), parser, sc, compilationState,
-                  emitterMode);
+  emitter.emplace(fc, parser, sc, compilationState, emitterMode);
   return emitter->init();
 }
 
@@ -1177,10 +1175,10 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  Parser<FullParseHandler, Unit> parser(
-      fc, fc->stackLimit(), input.options, units, length,
-      /* foldConstants = */ true, compilationState,
-      /* syntaxParser = */ nullptr);
+  Parser<FullParseHandler, Unit> parser(fc, input.options, units, length,
+                                        /* foldConstants = */ true,
+                                        compilationState,
+                                        /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -1192,8 +1190,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  BytecodeEmitter bce(fc, fc->stackLimit(), &parser, pn->funbox(),
-                      compilationState, BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(fc, &parser, pn->funbox(), compilationState,
+                      BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }

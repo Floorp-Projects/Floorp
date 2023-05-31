@@ -6141,8 +6141,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
-      &fc, cx->stackLimitForCurrentPrincipal(), options, chars.twoByteChars(),
-      length,
+      &fc, options, chars.twoByteChars(), length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {

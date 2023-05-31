@@ -8,7 +8,6 @@
 #define frontend_FoldConstants_h
 
 #include "frontend/SyntaxParseHandler.h"
-#include "js/Stack.h"  // JS::NativeStackLimit
 
 namespace js {
 
@@ -33,17 +32,15 @@ class ParserAtomsTable;
 //    if (!pn) {
 //        return false;
 //    }
-//    if (!FoldConstants(fc, stackLimit, parserAtoms, &pn, parser)) {
+//    if (!FoldConstants(fc, parserAtoms, &pn, parser)) {
 //        return false;
 //    }
 [[nodiscard]] extern bool FoldConstants(FrontendContext* fc,
-                                        JS::NativeStackLimit stackLimit,
                                         ParserAtomsTable& parserAtoms,
                                         ParseNode** pnp,
                                         FullParseHandler* handler);
 
 [[nodiscard]] inline bool FoldConstants(FrontendContext* fc,
-                                        JS::NativeStackLimit stackLimit,
                                         ParserAtomsTable& parserAtoms,
                                         typename SyntaxParseHandler::Node* pnp,
                                         SyntaxParseHandler* handler) {

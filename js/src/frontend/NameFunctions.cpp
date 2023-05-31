@@ -13,7 +13,6 @@
 #include "frontend/ParseNodeVisitor.h"
 #include "frontend/ParserAtom.h"  // ParserAtomsTable
 #include "frontend/SharedContext.h"
-#include "js/Stack.h"  // JS::NativeStackLimit
 #include "util/Poison.h"
 #include "util/StringBuffer.h"
 
@@ -489,9 +488,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     return internalVisitSpecList(pn);
   }
 
-  NameResolver(FrontendContext* fc, JS::NativeStackLimit stackLimit,
-               ParserAtomsTable& parserAtoms)
-      : ParseNodeVisitor(fc, stackLimit),
+  NameResolver(FrontendContext* fc, ParserAtomsTable& parserAtoms)
+      : ParseNodeVisitor(fc),
         fc_(fc),
         parserAtoms_(parserAtoms),
         nparents_(0),
@@ -526,9 +524,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
 } /* anonymous namespace */
 
-bool frontend::NameFunctions(FrontendContext* fc,
-                             JS::NativeStackLimit stackLimit,
-                             ParserAtomsTable& parserAtoms, ParseNode* pn) {
-  NameResolver nr(fc, stackLimit, parserAtoms);
+bool frontend::NameFunctions(FrontendContext* fc, ParserAtomsTable& parserAtoms,
+                             ParseNode* pn) {
+  NameResolver nr(fc, parserAtoms);
   return nr.visit(pn);
 }

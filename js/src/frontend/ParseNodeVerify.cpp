@@ -7,7 +7,6 @@
 #include "frontend/ParseNodeVerify.h"
 
 #include "frontend/ParseNodeVisitor.h"
-#include "js/Stack.h"  // JS::NativeStackLimit
 
 using namespace js;
 
@@ -22,9 +21,8 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
   const LifoAlloc& alloc_;
 
  public:
-  ParseNodeVerifier(FrontendContext* fc, JS::NativeStackLimit stackLimit,
-                    const LifoAlloc& alloc)
-      : Base(fc, stackLimit), alloc_(alloc) {}
+  ParseNodeVerifier(FrontendContext* fc, const LifoAlloc& alloc)
+      : Base(fc), alloc_(alloc) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
     // pn->size() asserts that pn->pn_kind is valid, so we don't redundantly
@@ -43,10 +41,9 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
 }  // namespace frontend
 }  // namespace js
 
-bool frontend::CheckParseTree(FrontendContext* fc,
-                              JS::NativeStackLimit stackLimit,
-                              const LifoAlloc& alloc, ParseNode* pn) {
-  ParseNodeVerifier verifier(fc, stackLimit, alloc);
+bool frontend::CheckParseTree(FrontendContext* fc, const LifoAlloc& alloc,
+                              ParseNode* pn) {
+  ParseNodeVerifier verifier(fc, alloc);
   return verifier.visit(pn);
 }
 

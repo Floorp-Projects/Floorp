@@ -207,10 +207,10 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     return false;
   }
 
-  Parser<FullParseHandler, char16_t> parser(
-      &fc, cx->stackLimitForCurrentPrincipal(), options, chars.get(), length,
-      /* foldConstants = */ true, compilationState,
-      /* syntaxParser = */ nullptr);
+  Parser<FullParseHandler, char16_t> parser(&fc, options, chars.get(), length,
+                                            /* foldConstants = */ true,
+                                            compilationState,
+                                            /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of source, we
     // return false so our caller knows to try to collect more buffered

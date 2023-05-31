@@ -60,7 +60,6 @@
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
 #include "js/friend/ErrorMessages.h"               // JSMSG_*
 #include "js/friend/StackLimits.h"                 // AutoCheckRecursionLimit
-#include "js/Stack.h"                              // JS::NativeStackLimit
 #include "util/StringBuffer.h"                     // StringBuffer
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
 #include "vm/CompletionKind.h"      // CompletionKind
@@ -133,14 +132,12 @@ static bool ShouldSuppressBreakpointsAndSourceNotes(
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* fc,
-                                 JS::NativeStackLimit stackLimit,
                                  SharedContext* sc,
                                  const ErrorReporter& errorReporter,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
       fc(fc),
-      stackLimit(stackLimit),
       parent(parent),
       bytecodeSection_(fc, sc->extent().lineno, sc->extent().column),
       perScriptData_(fc, compilationState),
@@ -149,22 +146,19 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* fc,
       suppressBreakpointsAndSourceNotes(
           ShouldSuppressBreakpointsAndSourceNotes(sc, emitterMode)),
       emitterMode(emitterMode) {
-  MOZ_ASSERT_IF(parent, stackLimit == parent->stackLimit);
   MOZ_ASSERT_IF(parent, fc == parent->fc);
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc)
-    : BytecodeEmitter(parent, parent->fc, parent->stackLimit, sc,
-                      parent->errorReporter_, parent->compilationState,
-                      parent->emitterMode) {}
+    : BytecodeEmitter(parent, parent->fc, sc, parent->errorReporter_,
+                      parent->compilationState, parent->emitterMode) {}
 
 BytecodeEmitter::BytecodeEmitter(FrontendContext* fc,
-                                 JS::NativeStackLimit stackLimit,
                                  const EitherParser& parser, SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(nullptr, fc, stackLimit, sc, parser.errorReporter(),
-                      compilationState, emitterMode) {
+    : BytecodeEmitter(nullptr, fc, sc, parser.errorReporter(), compilationState,
+                      emitterMode) {
   ep_.emplace(parser);
 }
 
@@ -820,7 +814,7 @@ JSOp BytecodeEmitter::strictifySetNameOp(JSOp op) {
 
 bool BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer) {
   AutoCheckRecursionLimit recursion(fc);
-  if (!recursion.check(fc, stackLimit)) {
+  if (!recursion.check(fc)) {
     return false;
   }
 
@@ -2441,7 +2435,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(fc, stackLimit, parserAtoms(), body)) {
+  if (!NameFunctions(fc, parserAtoms(), body)) {
     return false;
   }
 
@@ -2524,7 +2518,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   }
 
   if (funbox->index() == CompilationStencil::TopLevelIndex) {
-    if (!NameFunctions(fc, stackLimit, parserAtoms(), funNode)) {
+    if (!NameFunctions(fc, parserAtoms(), funNode)) {
       return false;
     }
   }
@@ -7633,7 +7627,7 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
                                                 CallOrNewEmitter& cone,
                                                 OptionalEmitter& oe) {
   AutoCheckRecursionLimit recursion(fc);
-  if (!recursion.check(fc, stackLimit)) {
+  if (!recursion.check(fc)) {
     return false;
   }
 
@@ -8302,7 +8296,7 @@ bool BytecodeEmitter::emitOptionalTree(
     ParseNode* pn, OptionalEmitter& oe,
     ValueUsage valueUsage /* = ValueUsage::WantValue */) {
   AutoCheckRecursionLimit recursion(fc);
-  if (!recursion.check(fc, stackLimit)) {
+  if (!recursion.check(fc)) {
     return false;
   }
   ParseNodeKind kind = pn->getKind();
@@ -11251,7 +11245,7 @@ bool BytecodeEmitter::emitTree(
     ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */,
     EmitLineNumberNote emitLineNote /* = EMIT_LINENOTE */) {
   AutoCheckRecursionLimit recursion(fc);
-  if (!recursion.check(fc, stackLimit)) {
+  if (!recursion.check(fc)) {
     return false;
   }
 
