@@ -8,7 +8,7 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
 
 const {
   ExtensionUtils: { makeDataURI },
-} = ChromeUtils.importESModule("resource://gre/modules/ExtensionUtils.sys.mjs");
+} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 // A small 1x1 test png
 const IMAGE_1x1 =

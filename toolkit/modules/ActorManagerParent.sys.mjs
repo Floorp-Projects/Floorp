@@ -38,17 +38,17 @@ let JSPROCESSACTORS = {
 
   ExtensionContent: {
     child: {
-      esModuleURI: "resource://gre/modules/ExtensionContent.sys.mjs",
+      moduleURI: "resource://gre/modules/ExtensionContent.jsm",
     },
     includeParent: true,
   },
 
   ProcessConduits: {
     parent: {
-      esModuleURI: "resource://gre/modules/ConduitsParent.sys.mjs",
+      moduleURI: "resource://gre/modules/ConduitsParent.jsm",
     },
     child: {
-      esModuleURI: "resource://gre/modules/ConduitsChild.sys.mjs",
+      moduleURI: "resource://gre/modules/ConduitsChild.jsm",
     },
   },
 };
@@ -195,11 +195,11 @@ let JSWINDOWACTORS = {
 
   Conduits: {
     parent: {
-      esModuleURI: "resource://gre/modules/ConduitsParent.sys.mjs",
+      moduleURI: "resource://gre/modules/ConduitsParent.jsm",
     },
 
     child: {
-      esModuleURI: "resource://gre/modules/ConduitsChild.sys.mjs",
+      moduleURI: "resource://gre/modules/ConduitsChild.jsm",
     },
 
     allFrames: true,

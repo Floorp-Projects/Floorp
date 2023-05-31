@@ -1,7 +1,7 @@
 "use strict";
 
-const { ExtensionStorageIDB } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
+const { ExtensionStorageIDB } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageIDB.jsm"
 );
 
 async function test_multiple_pages() {

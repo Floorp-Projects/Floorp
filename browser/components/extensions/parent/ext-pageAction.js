@@ -6,9 +6,11 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTelemetry",
+  "resource://gre/modules/ExtensionTelemetry.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "PageActions",
@@ -27,11 +29,11 @@ ChromeUtils.defineModuleGetter(
 
 var { DefaultWeakMap } = ExtensionUtils;
 
-var { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs"
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
 );
-var { PageActionBase } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionActions.sys.mjs"
+var { PageActionBase } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionActions.jsm"
 );
 
 // WeakMap[Extension -> PageAction]

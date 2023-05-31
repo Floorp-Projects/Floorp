@@ -1,13 +1,13 @@
 "use strict";
 
-var { WebRequest } = ChromeUtils.importESModule(
-  "resource://gre/modules/WebRequest.sys.mjs"
+var { WebRequest } = ChromeUtils.import(
+  "resource://gre/modules/WebRequest.jsm"
 );
 var { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );
-var { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs"
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
 );
 
 const server = createHttpServer({ hosts: ["example.com"] });

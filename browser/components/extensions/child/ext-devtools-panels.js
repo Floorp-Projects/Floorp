@@ -12,10 +12,11 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionChildDevToolsUtils:
-    "resource://gre/modules/ExtensionChildDevToolsUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionChildDevToolsUtils",
+  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm"
+);
 
 var { promiseDocumentLoaded } = ExtensionUtils;
 

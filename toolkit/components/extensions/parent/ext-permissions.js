@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
 });
 
 var { ExtensionError } = ExtensionUtils;

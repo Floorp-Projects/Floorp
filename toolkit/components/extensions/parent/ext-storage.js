@@ -4,15 +4,12 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionStorage: "resource://gre/modules/ExtensionStorage.sys.mjs",
-  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
-  NativeManifests: "resource://gre/modules/NativeManifests.sys.mjs",
-  extensionStorageSession: "resource://gre/modules/ExtensionStorage.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
+  extensionStorageSession: "resource://gre/modules/ExtensionStorage.jsm",
+  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
+  NativeManifests: "resource://gre/modules/NativeManifests.jsm",
 });
 
 var { ExtensionError } = ExtensionUtils;
@@ -21,14 +18,14 @@ var { ignoreEvent } = ExtensionCommon;
 XPCOMUtils.defineLazyGetter(this, "extensionStorageSync", () => {
   // TODO bug 1637465: Remove Kinto-based implementation.
   if (Services.prefs.getBoolPref("webextensions.storage.sync.kinto")) {
-    const { extensionStorageSyncKinto } = ChromeUtils.importESModule(
-      "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
+    const { extensionStorageSyncKinto } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
     );
     return extensionStorageSyncKinto;
   }
 
-  const { extensionStorageSync } = ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionStorageSync.sys.mjs"
+  const { extensionStorageSync } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionStorageSync.jsm"
   );
   return extensionStorageSync;
 });

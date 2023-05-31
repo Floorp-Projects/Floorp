@@ -3,8 +3,8 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 /* eslint-disable no-shadow */
 
-const { ExtensionTestCommon } = ChromeUtils.importESModule(
-  "resource://testing-common/ExtensionTestCommon.sys.mjs"
+const { ExtensionTestCommon } = ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
 );
 
 const HOSTS = new Set(["example.com"]);

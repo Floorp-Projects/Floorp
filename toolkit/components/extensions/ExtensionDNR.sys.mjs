@@ -73,14 +73,20 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "WebRequest",
+  "resource://gre/modules/WebRequest.jsm"
+);
+
 ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
-  WebRequest: "resource://gre/modules/WebRequest.sys.mjs",
 });
 
-import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
-
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 const { ExtensionError } = ExtensionUtils;
 
 XPCOMUtils.defineLazyPreferenceGetter(

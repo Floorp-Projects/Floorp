@@ -4,8 +4,8 @@
 
 "use strict";
 
-var { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs"
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -13,10 +13,11 @@ ChromeUtils.defineModuleGetter(
   "ExtensionControlledPopup",
   "resource:///modules/ExtensionControlledPopup.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionSettingsStore:
-    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "AboutNewTab",

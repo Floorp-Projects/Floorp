@@ -3,9 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
 
 /* eslint-disable jsdoc/check-param-names */
 /**

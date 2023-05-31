@@ -3,18 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
-  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
   HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
   PerTestCoverageUtils:
     "resource://testing-common/PerTestCoverageUtils.sys.mjs",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
   SpecialPowersSandbox:
     "resource://testing-common/SpecialPowersSandbox.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ExtensionData: "resource://gre/modules/Extension.jsm",
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
 });
 
 class SpecialPowersError extends Error {
@@ -56,8 +60,8 @@ function doPrefEnvOp(fn) {
 
 async function createWindowlessBrowser({ isPrivate = false } = {}) {
   const { promiseDocumentLoaded, promiseEvent, promiseObserved } =
-    ChromeUtils.importESModule(
-      "resource://gre/modules/ExtensionUtils.sys.mjs"
+    ChromeUtils.import(
+      "resource://gre/modules/ExtensionUtils.jsm"
     ).ExtensionUtils;
 
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);

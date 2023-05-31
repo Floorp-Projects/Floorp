@@ -3,8 +3,8 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const { ExtensionPermissions } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPermissions.sys.mjs"
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
 AddonTestUtils.initMochitest(this);

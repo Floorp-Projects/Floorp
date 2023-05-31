@@ -4,11 +4,21 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionStorage: "resource://gre/modules/ExtensionStorage.sys.mjs",
-  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
-  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionStorage",
+  "resource://gre/modules/ExtensionStorage.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionStorageIDB",
+  "resource://gre/modules/ExtensionStorageIDB.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTelemetry",
+  "resource://gre/modules/ExtensionTelemetry.jsm"
+);
 
 // Wrap a storage operation in a TelemetryStopWatch.
 async function measureOp(telemetryMetric, extension, fn) {

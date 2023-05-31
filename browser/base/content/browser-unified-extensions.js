@@ -6,9 +6,11 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.defineESModuleGetters(this, {
-  OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "OriginControls",
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 /**
  * The `unified-extensions-item` custom element is used to manage an extension

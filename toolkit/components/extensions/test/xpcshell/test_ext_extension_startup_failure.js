@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { ExtensionTestCommon } = ChromeUtils.importESModule(
-  "resource://testing-common/ExtensionTestCommon.sys.mjs"
+const { ExtensionTestCommon } = ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
 );
 
 add_task(async function extension_startup_early_error() {

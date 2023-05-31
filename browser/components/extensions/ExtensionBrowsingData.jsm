@@ -12,8 +12,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "makeRange", () => {
-  const { ExtensionParent } = ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionParent.sys.mjs"
+  const { ExtensionParent } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionParent.jsm"
   );
   // Defined in ext-browsingData.js
   return ExtensionParent.apiManager.global.makeRange;

@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "SecurityInfo.sys.mjs",
-    "WebRequest.sys.mjs",
-    "WebRequestUpload.sys.mjs",
+    "SecurityInfo.jsm",
+    "WebRequest.jsm",
+    "WebRequestUpload.jsm",
 ]
 
 UNIFIED_SOURCES += [

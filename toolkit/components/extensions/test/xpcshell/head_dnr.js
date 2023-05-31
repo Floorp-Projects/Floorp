@@ -6,8 +6,8 @@
 /* exported assertDNRStoreData, getDNRRule, getSchemaNormalizedRule, getSchemaNormalizedRules
  */
 
-ChromeUtils.defineESModuleGetters(this, {
-  Schemas: "resource://gre/modules/Schemas.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Schemas: "resource://gre/modules/Schemas.jsm",
 });
 
 function getDNRRule({

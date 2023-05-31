@@ -24,8 +24,8 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-var { ExtensionCommon } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionCommon.sys.mjs"
+var { ExtensionCommon } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionCommon.jsm"
 );
 
 var { ExtensionError } = ExtensionUtils;

@@ -69,9 +69,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 const {
   ExtensionParent: { GlobalManager },
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 add_task(async function test_1() {
   await promiseStartupManager();

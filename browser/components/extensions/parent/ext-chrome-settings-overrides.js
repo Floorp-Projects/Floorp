@@ -4,19 +4,24 @@
 
 "use strict";
 
-var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
+var { ExtensionPreferencesManager } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
 );
-var { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs"
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
-  ExtensionSettingsStore:
-    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionPermissions",
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "ExtensionControlledPopup",

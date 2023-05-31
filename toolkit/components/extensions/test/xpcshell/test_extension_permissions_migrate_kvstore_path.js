@@ -6,9 +6,7 @@ const {
   RKV_DIRNAME,
   VERSION_KEY,
   VERSION_VALUE,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPermissions.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
 const { FileTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FileTestUtils.sys.mjs"
 );

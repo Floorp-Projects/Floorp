@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { ExtensionUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionUtils.sys.mjs"
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "resourceProtocol", () =>

@@ -5,13 +5,9 @@
 
 requestLongerTimeout(4);
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionSettingsStore:
-    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
 });
 

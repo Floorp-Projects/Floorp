@@ -3,20 +3,18 @@
 const { AsyncShutdown } = ChromeUtils.importESModule(
   "resource://gre/modules/AsyncShutdown.sys.mjs"
 );
-const { NativeManifests } = ChromeUtils.importESModule(
-  "resource://gre/modules/NativeManifests.sys.mjs"
+const { NativeManifests } = ChromeUtils.import(
+  "resource://gre/modules/NativeManifests.jsm"
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-const { Schemas } = ChromeUtils.importESModule(
-  "resource://gre/modules/Schemas.sys.mjs"
-);
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 const { Subprocess } = ChromeUtils.importESModule(
   "resource://gre/modules/Subprocess.sys.mjs"
 );
-const { NativeApp } = ChromeUtils.importESModule(
-  "resource://gre/modules/NativeMessaging.sys.mjs"
+const { NativeApp } = ChromeUtils.import(
+  "resource://gre/modules/NativeMessaging.jsm"
 );
 
 let registry = null;

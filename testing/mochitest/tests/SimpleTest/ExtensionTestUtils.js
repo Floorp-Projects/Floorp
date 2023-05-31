@@ -1,5 +1,5 @@
-const { ExtensionTestCommon } = SpecialPowers.ChromeUtils.importESModule(
-  "resource://testing-common/ExtensionTestCommon.sys.mjs"
+const { ExtensionTestCommon } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
 );
 
 var ExtensionTestUtils = {

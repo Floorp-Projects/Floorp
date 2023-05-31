@@ -14,10 +14,11 @@ const { TelemetryEnvironmentTesting } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryEnvironmentTesting.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionTestUtils:
-    "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTestUtils",
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
 
 async function installXPIFromURL(url) {
   let install = await AddonManager.getInstallForURL(url);
