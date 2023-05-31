@@ -21,6 +21,9 @@ async protocol PWebrtcGlobal {
 parent: // child -> parent messages
   async __delete__();
 #ifdef MOZ_WEBRTC
+  async PeerConnectionCreated(nsString aPcId, bool aIsLongTermStatsDisabled);
+  async PeerConnectionDestroyed(nsString aPcId);
+  async PeerConnectionFinalStats(RTCStatsReportInternal aFinalStats);
 
 child: // parent -> child messages
   async GetStats(nsString aPcIdFilter) returns (RTCStatsReportInternal[] stats);
