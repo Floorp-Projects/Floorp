@@ -30,11 +30,9 @@ class WebrtcGlobalChild : public PWebrtcGlobalChild {
       const bool& aEnable) override;
   virtual mozilla::ipc::IPCResult RecvSetDebugMode(const int& aLevel) override;
 
-  static WebrtcGlobalChild* GetOrSet(const Maybe<WebrtcGlobalChild*>& aChild);
-
  public:
   virtual ~WebrtcGlobalChild();
-  static WebrtcGlobalChild* Get();
+  static WebrtcGlobalChild* Create();
 };
 
 }  // namespace mozilla::dom
