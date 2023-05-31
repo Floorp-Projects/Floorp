@@ -1041,3 +1041,65 @@ add_task(async function testUpgradeNotUsingHTTPSRR() {
 
   await trrServer.stop();
 });
+
+// Test if we fallback to h2 with echConfig.
+add_task(async function testFallbackToH2WithEchConfig() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    0
+  );
+
+  await trrServer.registerDoHAnswers("test.fallback.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.fallback.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.fallback.org",
+          values: [
+            { key: "alpn", value: ["h2", "h3-29"] },
+            { key: "port", value: h2Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.fallback.org", "A", {
+    answers: [
+      {
+        name: "test.fallback.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  await new TRRDNSListener("test.fallback.org", {
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+  });
+
+  await new TRRDNSListener("test.fallback.org", "127.0.0.1");
+
+  let chan = makeChan(`https://test.fallback.org/server-timing`);
+  let [req] = await channelOpenPromise(chan);
+  // Test if this request is done by h2.
+  Assert.equal(req.getResponseHeader("x-connection-http2"), "yes");
+
+  await trrServer.stop();
+});
