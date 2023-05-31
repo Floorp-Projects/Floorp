@@ -276,6 +276,15 @@ async function reorderingTranslator(message) {
 }
 
 /**
+ * @returns {import("../../actors/TranslationsParent.sys.mjs").TranslationsParent}
+ */
+function getTranslationsParent() {
+  return gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+    "Translations"
+  );
+}
+
+/**
  * This is for tests that don't need a browser page to run.
  */
 async function setupActorTest({
@@ -306,14 +315,8 @@ async function setupActorTest({
     true // waitForLoad
   );
 
-  /** @type {import("../../actors/TranslationsParent.sys.mjs").TranslationsParent} */
-  const actor =
-    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-      "Translations"
-    );
-
   return {
-    actor,
+    actor: getTranslationsParent(),
     remoteClients,
     cleanup() {
       BrowserTestUtils.removeTab(tab);
