@@ -8,7 +8,6 @@
 #define DOM_SVG_SVGATTRTEAROFFTABLE_H_
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/UniquePtr.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
@@ -42,15 +41,13 @@ class SVGAttrTearoffTable {
   using SimpleTypePtrKey = nsPtrHashKey<SimpleType>;
   using TearoffTable = nsTHashMap<SimpleTypePtrKey, TearoffType*>;
 
-  UniquePtr<TearoffTable> mTable;
+  TearoffTable* mTable;
 };
 
 template <class SimpleType, class TearoffType>
 TearoffType* SVGAttrTearoffTable<SimpleType, TearoffType>::GetTearoff(
     SimpleType* aSimple) {
-  if (!mTable) {
-    return nullptr;
-  }
+  if (!mTable) return nullptr;
 
   TearoffType* tearoff = nullptr;
 
@@ -65,7 +62,7 @@ template <class SimpleType, class TearoffType>
 void SVGAttrTearoffTable<SimpleType, TearoffType>::AddTearoff(
     SimpleType* aSimple, TearoffType* aTearoff) {
   if (!mTable) {
-    mTable = MakeUnique<TearoffTable>();
+    mTable = new TearoffTable;
   }
 
   // We shouldn't be adding a tear-off if there already is one. If that happens,
@@ -89,6 +86,7 @@ void SVGAttrTearoffTable<SimpleType, TearoffType>::RemoveTearoff(
 
   mTable->Remove(aSimple);
   if (mTable->Count() == 0) {
+    delete mTable;
     mTable = nullptr;
   }
 }
