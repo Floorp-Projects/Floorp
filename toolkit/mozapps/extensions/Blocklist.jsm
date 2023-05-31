@@ -175,10 +175,16 @@ const BlocklistTelemetry = {
     }
 
     let lastModified = await remoteSettingsClient.getLastModified();
-    BlocklistTelemetry.recordTimeScalar(
-      "lastModified_rs_" + blocklistType,
-      lastModified
-    );
+    if (blocklistType === "addons_mlbf") {
+      BlocklistTelemetry.recordTimeScalar(
+        "lastModified_rs_" + blocklistType,
+        lastModified
+      );
+      BlocklistTelemetry.recordGleanDateTime(
+        Glean.blocklist.lastModifiedRsAddonsMblf,
+        lastModified
+      );
+    }
   },
 
   /**
@@ -198,6 +204,24 @@ const BlocklistTelemetry = {
       Services.telemetry.scalarSet("blocklist." + telemetryKey, dateString);
     } else {
       Services.telemetry.scalarSet("blocklist." + telemetryKey, "Missing Date");
+    }
+  },
+
+  /**
+   * Records a glean datetime if time is > than 0, otherwise 0 is submitted.
+   *
+   * @param {nsIGleanDatetime} gleanTelemetry
+   *        A glean telemetry datetime object.
+   * @param {number} time
+   *        A timestamp to record.
+   */
+  recordGleanDateTime(gleanTelemetry, time) {
+    if (time > 0) {
+      // Glean date times are provided in nanoseconds, `getTime()` yields
+      // milliseconds (after the Unix epoch).
+      gleanTelemetry.set(time * 1000);
+    } else {
+      gleanTelemetry.set(0);
     }
   },
 
@@ -233,6 +257,17 @@ const BlocklistTelemetry = {
 
       ...ExtensionBlocklistMLBF.getBlocklistMetadataForTelemetry(),
     };
+    Glean.blocklist.addonBlockChange.record({
+      value,
+      object: reason,
+      blocklist_state: extra.blocklistState,
+      addon_version: extra.addon_version,
+      signed_date: extra.signed_date,
+      hours_since: extra.hours_since,
+      mlbf_last_time: extra.mlbf_last_time,
+      mlbf_generation: extra.mlbf_generation,
+      mlbf_source: extra.mlbf_source,
+    });
 
     Services.telemetry.recordEvent(
       "blocklist",
@@ -1040,12 +1075,15 @@ const ExtensionBlocklistMLBF = {
       "addons_mlbf",
       this._client
     );
-    Services.telemetry.scalarSet(
-      "blocklist.mlbf_source",
+    Glean.blocklist.mlbfSource.set(
       this._mlbfData?.rsAttachmentSource || "unknown"
     );
     BlocklistTelemetry.recordTimeScalar(
       "mlbf_generation_time",
+      this._mlbfData?.generationTime
+    );
+    BlocklistTelemetry.recordGleanDateTime(
+      Glean.blocklist.mlbfGenerationTime,
       this._mlbfData?.generationTime
     );
     // stashes has conveniently already been sorted by stash_time, newest first.
@@ -1056,6 +1094,15 @@ const ExtensionBlocklistMLBF = {
     );
     BlocklistTelemetry.recordTimeScalar(
       "mlbf_stash_time_newest",
+      stashes[0]?.stash_time
+    );
+    BlocklistTelemetry.recordGleanDateTime(
+      Glean.blocklist.mlbfStashTimeOldest,
+      stashes[stashes.length - 1]?.stash_time
+    );
+
+    BlocklistTelemetry.recordGleanDateTime(
+      Glean.blocklist.mlbfStashTimeNewest,
       stashes[0]?.stash_time
     );
   },
@@ -1438,10 +1485,8 @@ let Blocklist = {
       !Services.prefs.getBoolPref(PREF_BLOCKLIST_USE_MLBF, false)
     ) {
       this.ExtensionBlocklist = ExtensionBlocklistRS;
-      Services.telemetry.scalarSet("blocklist.mlbf_enabled", false);
     } else {
       this.ExtensionBlocklist = ExtensionBlocklistMLBF;
-      Services.telemetry.scalarSet("blocklist.mlbf_enabled", true);
     }
   },
 
