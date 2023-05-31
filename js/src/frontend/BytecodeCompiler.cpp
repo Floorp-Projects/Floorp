@@ -1157,9 +1157,9 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool CompileLazyFunctionToStencilMaybeInstantiate(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache, const Unit* units,
-    size_t length, BytecodeCompilerOutput& output) {
+    JSContext* cx, FrontendContext* fc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, const Unit* units, size_t length,
+    BytecodeCompilerOutput& output) {
   MOZ_ASSERT(input.source);
 
   AutoAssertReportedException assertException(cx, fc);
@@ -1189,7 +1189,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   }
 
   Parser<FullParseHandler, Unit> parser(
-      fc, stackLimit, input.options, units, length,
+      fc, fc->stackLimit(), input.options, units, length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
@@ -1203,8 +1203,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  BytecodeEmitter bce(fc, stackLimit, &parser, pn->funbox(), compilationState,
-                      BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(fc, fc->stackLimit(), &parser, pn->funbox(),
+                      compilationState, BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }
@@ -1294,9 +1294,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool DelazifyCanonicalScriptedFunctionImpl(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    ScopeBindingCache* scopeCache, HandleFunction fun, Handle<BaseScript*> lazy,
-    ScriptSource* ss) {
+    JSContext* cx, FrontendContext* fc, ScopeBindingCache* scopeCache,
+    HandleFunction fun, Handle<BaseScript*> lazy, ScriptSource* ss) {
   MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
 
@@ -1335,13 +1334,12 @@ static bool DelazifyCanonicalScriptedFunctionImpl(
   CompilationGCOutput* unusedGcOutput = nullptr;
   BytecodeCompilerOutput output(unusedGcOutput);
   return CompileLazyFunctionToStencilMaybeInstantiate(
-      cx, fc, stackLimit, input.get(), scopeCache, units.get(), sourceLength,
-      output);
+      cx, fc, input.get(), scopeCache, units.get(), sourceLength, output);
 }
 
-bool frontend::DelazifyCanonicalScriptedFunction(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    HandleFunction fun) {
+bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
+                                                 FrontendContext* fc,
+                                                 HandleFunction fun) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
   if (cx) {
     pseudoFrame.emplace(cx, "script delazify",
@@ -1354,21 +1352,20 @@ bool frontend::DelazifyCanonicalScriptedFunction(
 
   if (ss->hasSourceType<Utf8Unit>()) {
     // UTF-8 source text.
-    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(
-        cx, fc, stackLimit, scopeCache, fun, lazy, ss);
+    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, fc, scopeCache,
+                                                           fun, lazy, ss);
   }
 
   MOZ_ASSERT(ss->hasSourceType<char16_t>());
 
   // UTF-16 source text.
-  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(
-      cx, fc, stackLimit, scopeCache, fun, lazy, ss);
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fc, scopeCache,
+                                                         fun, lazy, ss);
 }
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil>
 DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* fc,
-                                      JS::NativeStackLimit stackLimit,
                                       ScopeBindingCache* scopeCache,
                                       CompilationStencil& context,
                                       ScriptIndex scriptIndex) {
@@ -1417,8 +1414,7 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* fc,
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileLazyFunctionToStencilMaybeInstantiate(
-          cx, fc, stackLimit, input.get(), scopeCache, units.get(),
-          sourceLength, output)) {
+          cx, fc, input.get(), scopeCache, units.get(), sourceLength, output)) {
     return nullptr;
   }
   return output.as<OutputType>().forget();
@@ -1426,7 +1422,6 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, FrontendContext* fc,
 
 already_AddRefed<CompilationStencil>
 frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, FrontendContext* fc,
-                                            JS::NativeStackLimit stackLimit,
                                             ScopeBindingCache* scopeCache,
                                             CompilationStencil& context,
                                             ScriptIndex scriptIndex) {
@@ -1440,13 +1435,13 @@ frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, FrontendContext* fc,
   if (ss->hasSourceType<Utf8Unit>()) {
     // UTF-8 source text.
     return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(
-        cx, fc, stackLimit, scopeCache, context, scriptIndex);
+        cx, fc, scopeCache, context, scriptIndex);
   }
 
   // UTF-16 source text.
   MOZ_ASSERT(ss->hasSourceType<char16_t>());
-  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(
-      cx, fc, stackLimit, scopeCache, context, scriptIndex);
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fc, scopeCache,
+                                                         context, scriptIndex);
 }
 
 static JSFunction* CompileStandaloneFunction(
