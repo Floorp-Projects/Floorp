@@ -838,3 +838,43 @@ async function setupAboutPreferences(languagePairs) {
     elements,
   };
 }
+
+function waitForAppLocaleChanged() {
+  new Promise(resolve => {
+    function onChange() {
+      Services.obs.removeObserver(onChange, "intl:app-locales-changed");
+      resolve();
+    }
+    Services.obs.addObserver(onChange, "intl:app-locales-changed");
+  });
+}
+
+async function mockLocales({ systemLocales, appLocales, webLanguages }) {
+  const appLocaleChanged1 = waitForAppLocaleChanged();
+
+  TranslationsParent.mockedSystemLocales = systemLocales;
+  const { availableLocales, requestedLocales } = Services.locale;
+
+  info("Mocking locales, so expect potential .ftl resource errors.");
+  Services.locale.availableLocales = appLocales;
+  Services.locale.requestedLocales = appLocales;
+
+  await appLocaleChanged1;
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["intl.accept_languages", webLanguages.join(",")]],
+  });
+
+  return async () => {
+    const appLocaleChanged2 = waitForAppLocaleChanged();
+
+    // Reset back to the originals.
+    TranslationsParent.mockedSystemLocales = null;
+    Services.locale.availableLocales = availableLocales;
+    Services.locale.requestedLocales = requestedLocales;
+
+    await appLocaleChanged2;
+
+    await SpecialPowers.popPrefEnv();
+  };
+}

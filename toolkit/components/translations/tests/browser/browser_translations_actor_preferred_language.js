@@ -13,38 +13,23 @@ function waitForAppLocaleChanged() {
   });
 }
 
-async function mockLocales({ systemLocales, appLocales, webLanguages, test }) {
-  const appLocaleChanged1 = waitForAppLocaleChanged();
-
-  TranslationsParent.mockedSystemLocales = systemLocales;
-  const { availableLocales, requestedLocales } = Services.locale;
-
-  info("Mocking locales, so expect potential .ftl resource errors.");
-  Services.locale.availableLocales = appLocales;
-  Services.locale.requestedLocales = appLocales;
-
-  await appLocaleChanged1;
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["intl.accept_languages", webLanguages.join(",")]],
+async function testWithLocales({
+  systemLocales,
+  appLocales,
+  webLanguages,
+  test,
+}) {
+  const cleanup = await mockLocales({
+    systemLocales,
+    appLocales,
+    webLanguages,
   });
-
   test();
-
-  const appLocaleChanged2 = waitForAppLocaleChanged();
-
-  // Reset back to the originals.
-  TranslationsParent.mockedSystemLocales = null;
-  Services.locale.availableLocales = availableLocales;
-  Services.locale.requestedLocales = requestedLocales;
-
-  await appLocaleChanged2;
-
-  await SpecialPowers.popPrefEnv();
+  return cleanup();
 }
 
 add_task(async function test_preferred_language() {
-  await mockLocales({
+  await testWithLocales({
     systemLocales: ["en-US"],
     appLocales: ["en-US"],
     webLanguages: ["en-US"],
@@ -57,7 +42,7 @@ add_task(async function test_preferred_language() {
     },
   });
 
-  await mockLocales({
+  await testWithLocales({
     systemLocales: ["es-ES"],
     appLocales: ["en-US"],
     webLanguages: ["en-US"],
@@ -70,7 +55,7 @@ add_task(async function test_preferred_language() {
     },
   });
 
-  await mockLocales({
+  await testWithLocales({
     systemLocales: ["zh-TW", "zh-CN", "de"],
     appLocales: ["pt-BR", "pl"],
     webLanguages: ["cs", "hu"],
