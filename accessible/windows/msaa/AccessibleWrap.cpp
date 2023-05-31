@@ -148,9 +148,8 @@ void AccessibleWrap::UpdateSystemCaretFor(
   if (::CreateCaret(aCaretWnd, caretBitMap, 1,
                     aCaretRect.Height())) {  // Also destroys the last caret
     ::ShowCaret(aCaretWnd);
-    RECT windowRect;
-    ::GetWindowRect(aCaretWnd, &windowRect);
-    ::SetCaretPos(aCaretRect.X() - windowRect.left,
-                  aCaretRect.Y() - windowRect.top);
+    POINT clientPoint{aCaretRect.X(), aCaretRect.Y()};
+    ::ScreenToClient(aCaretWnd, &clientPoint);
+    ::SetCaretPos(clientPoint.x, clientPoint.y);
   }
 }
