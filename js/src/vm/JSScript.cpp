@@ -3406,6 +3406,10 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
     json.endObject();
   }
 
+  if (sp->hadOutOfMemory()) {
+    return false;
+  }
+
   if (!sp->put("\n")) {
     return false;
   }
