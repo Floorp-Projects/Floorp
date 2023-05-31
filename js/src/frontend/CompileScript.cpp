@@ -12,8 +12,6 @@
 #include "frontend/FrontendContext.h"    // frontend::FrontendContext
 #include "frontend/ScopeBindingCache.h"  // frontend::NoScopeBindingCache
 #include "js/SourceText.h"               // JS::SourceText
-#include "js/Stack.h"                    // JS::GetNativeStackLimit
-#include "util/NativeStack.h"            // GetNativeStackBase
 
 using namespace js;
 using namespace js::frontend;
@@ -65,8 +63,7 @@ void JS::CompilationStorage::trace(JSTracer* trc) {
 template <typename CharT>
 static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<CharT>& srcBuf,
-    JS::CompilationStorage& compilationStorage) {
+    JS::SourceText<CharT>& srcBuf, JS::CompilationStorage& compilationStorage) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
@@ -81,16 +78,15 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   RefPtr<frontend::CompilationStencil> stencil_ =
       frontend::CompileGlobalScriptToStencil(
-          nullptr, fc, stackLimit, tempLifoAlloc, compilationStorage.getInput(),
-          &scopeCache, data, scopeKind);
+          nullptr, fc, fc->stackLimit(), tempLifoAlloc,
+          compilationStorage.getInput(), &scopeCache, data, scopeKind);
   return stencil_.forget();
 }
 
 template <typename CharT>
 static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::NativeStackLimit stackLimit, JS::SourceText<CharT>& srcBuf,
-    JS::CompilationStorage& compilationStorage) {
+    JS::SourceText<CharT>& srcBuf, JS::CompilationStorage& compilationStorage) {
   JS::CompileOptions options(nullptr, optionsInput);
   options.setModule();
 
@@ -102,7 +98,7 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   NoScopeBindingCache scopeCache;
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   RefPtr<JS::Stencil> stencil =
-      ParseModuleToStencil(nullptr, fc, stackLimit, tempLifoAlloc,
+      ParseModuleToStencil(nullptr, fc, fc->stackLimit(), tempLifoAlloc,
                            compilationStorage.getInput(), &scopeCache, srcBuf);
   if (!stencil) {
     return nullptr;
@@ -114,33 +110,29 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::CompilationStorage& compileStorage) {
-  return CompileGlobalScriptToStencilImpl(fc, options, stackLimit, srcBuf,
-                                          compileStorage);
+  return CompileGlobalScriptToStencilImpl(fc, options, srcBuf, compileStorage);
 }
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
+    JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage) {
+  return CompileGlobalScriptToStencilImpl(fc, options, srcBuf, compileStorage);
+}
+
+already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::CompilationStorage& compileStorage) {
-  return CompileGlobalScriptToStencilImpl(fc, options, stackLimit, srcBuf,
+  return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf,
                                           compileStorage);
 }
 
 already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    JS::CompilationStorage& compileStorage) {
-  return CompileModuleScriptToStencilImpl(fc, optionsInput, stackLimit, srcBuf,
-                                          compileStorage);
-}
-
-already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
-    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
-    JS::CompilationStorage& compileStorage) {
-  return CompileModuleScriptToStencilImpl(fc, optionsInput, stackLimit, srcBuf,
+    JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage) {
+  return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf,
                                           compileStorage);
 }
 
