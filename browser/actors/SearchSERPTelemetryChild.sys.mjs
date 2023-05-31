@@ -922,7 +922,10 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       providerInfo.components?.length &&
       (eventType == "load" || eventType == "pageshow")
     ) {
+      // Start performance measurements.
       let start = Cu.now();
+      let timerId = Glean.serp.categorizationDuration.start();
+
       let pageActionCallback = info => {
         this.sendAsyncMessage("SearchTelemetry:Action", {
           type: info.type,
@@ -931,18 +934,31 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         });
       };
       documentToEventCallbackMap.set(this.document, pageActionCallback);
-      let { componentToVisibilityMap, hrefToComponentMap } =
-        searchAdImpression.categorize(anchors, doc);
-      ChromeUtils.addProfilerMarker(
-        "SearchSERPTelemetryChild._checkForAdLink",
-        start,
-        "Checked anchors for visibility"
-      );
-      this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
-        adImpressions: componentToVisibilityMap,
-        hrefToComponentMap,
-        url,
-      });
+
+      let componentToVisibilityMap, hrefToComponentMap;
+      try {
+        let result = searchAdImpression.categorize(anchors, doc);
+        componentToVisibilityMap = result.componentToVisibilityMap;
+        hrefToComponentMap = result.hrefToComponentMap;
+      } catch (e) {
+        // Cancel the timer if an error encountered.
+        Glean.serp.categorizationDuration.cancel(timerId);
+      }
+
+      if (componentToVisibilityMap && hrefToComponentMap) {
+        // End measurements.
+        ChromeUtils.addProfilerMarker(
+          "SearchSERPTelemetryChild._checkForAdLink",
+          start,
+          "Checked anchors for visibility"
+        );
+        Glean.serp.categorizationDuration.stopAndAccumulate(timerId);
+        this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
+          adImpressions: componentToVisibilityMap,
+          hrefToComponentMap,
+          url,
+        });
+      }
     }
   }
 

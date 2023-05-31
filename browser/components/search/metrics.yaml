@@ -288,3 +288,18 @@ serp:
           Possible values are:
           `tab_close`, `window_close`, `navigation`
         type: string
+
+  categorization_duration:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time it takes to categorize elements on a SERP.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834100
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834100
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
