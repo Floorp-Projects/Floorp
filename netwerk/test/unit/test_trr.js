@@ -8,6 +8,7 @@ SetParentalControlEnabled(false);
 
 function setup() {
   h2Port = trr_test_setup();
+  runningODoHTests = false;
 }
 
 setup();

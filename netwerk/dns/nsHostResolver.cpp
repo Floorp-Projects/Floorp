@@ -36,6 +36,7 @@
 #include "TRR.h"
 #include "TRRQuery.h"
 #include "TRRService.h"
+#include "ODoHService.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/HashFunctions.h"
@@ -932,7 +933,9 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
   MaybeRenewHostRecordLocked(rec, aLock);
 
   RefPtr<TRRQuery> query = new TRRQuery(this, rec);
-  nsresult rv = query->DispatchLookup(pushedTRR);
+  bool useODoH = gODoHService->Enabled() &&
+                 !((rec->flags & nsIDNSService::RESOLVE_DISABLE_ODOH));
+  nsresult rv = query->DispatchLookup(pushedTRR, useODoH);
   if (NS_FAILED(rv)) {
     rec->RecordReason(TRRSkippedReason::TRR_DID_NOT_MAKE_QUERY);
     return rv;
@@ -1289,7 +1292,7 @@ void nsHostResolver::PrepareRecordExpirationAddrRecord(
   unsigned int grace = mDefaultGracePeriod;
 
   unsigned int ttl = mDefaultCacheLifetime;
-  if (sGetTtlEnabled || rec->addr_info->IsTRR()) {
+  if (sGetTtlEnabled || rec->addr_info->IsTRROrODoH()) {
     if (rec->addr_info && rec->addr_info->TTL() != AddrInfo::NO_TTL_DATA) {
       ttl = rec->addr_info->TTL();
     }
@@ -1601,7 +1604,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
   bool hasNativeResult = false;
   {
     MutexAutoLock lock(addrRec->addr_info_lock);
-    if (addrRec->addr_info && !addrRec->addr_info->IsTRR()) {
+    if (addrRec->addr_info && !addrRec->addr_info->IsTRROrODoH()) {
       hasNativeResult = true;
     }
   }
@@ -1896,7 +1899,7 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
           info.hostaddr.AppendElement(buf);
         }
       }
-      info.TRR = addrRec->addr_info->IsTRR();
+      info.TRR = addrRec->addr_info->IsTRROrODoH();
     }
 
     info.originAttributesSuffix = recordEntry.GetKey().originSuffix;

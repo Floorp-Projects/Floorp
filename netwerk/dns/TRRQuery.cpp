@@ -9,6 +9,7 @@
 #include "nsQueryObject.h"
 #include "TRR.h"
 #include "TRRService.h"
+#include "ODoH.h"
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
 
@@ -64,10 +65,15 @@ void TRRQuery::MarkSendingTRR(TRR* trr, enum TrrType rectype, MutexAutoLock&) {
   }
 }
 
-void TRRQuery::PrepareQuery(enum TrrType aRecType,
+void TRRQuery::PrepareQuery(bool aUseODoH, enum TrrType aRecType,
                             nsTArray<RefPtr<TRR>>& aRequestsToSend) {
   LOG(("TRR Resolve %s type %d\n", mRecord->host.get(), (int)aRecType));
-  RefPtr<TRR> trr = new TRR(this, mRecord, aRecType);
+  RefPtr<TRR> trr;
+  if (aUseODoH) {
+    trr = new ODoH(this, mRecord, aRecType);
+  } else {
+    trr = new TRR(this, mRecord, aRecType);
+  }
 
   {
     MutexAutoLock trrlock(mTrrLock);
@@ -99,9 +105,14 @@ bool TRRQuery::SendQueries(nsTArray<RefPtr<TRR>>& aRequestsToSend) {
   return madeQuery;
 }
 
-nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
+nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
+  if (aUseODoH && pushedTRR) {
+    MOZ_ASSERT(false, "ODoH should not support push");
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
   if (!mRecord->IsAddrRecord()) {
-    return DispatchByTypeLookup(pushedTRR);
+    return DispatchByTypeLookup(pushedTRR, aUseODoH);
   }
 
   RefPtr<AddrHostRecord> addrRec = do_QueryObject(mRecord);
@@ -131,20 +142,21 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
   // same time.
   nsTArray<RefPtr<TRR>> requestsToSend;
   if ((mRecord->af == AF_UNSPEC || mRecord->af == AF_INET6)) {
-    PrepareQuery(TRRTYPE_AAAA, requestsToSend);
+    PrepareQuery(aUseODoH, TRRTYPE_AAAA, requestsToSend);
   }
   if (mRecord->af == AF_UNSPEC || mRecord->af == AF_INET) {
-    PrepareQuery(TRRTYPE_A, requestsToSend);
+    PrepareQuery(aUseODoH, TRRTYPE_A, requestsToSend);
   }
 
   if (SendQueries(requestsToSend)) {
+    mUsingODoH = aUseODoH;
     return NS_OK;
   }
 
   return NS_ERROR_UNKNOWN_HOST;
 }
 
-nsresult TRRQuery::DispatchByTypeLookup(TRR* pushedTRR) {
+nsresult TRRQuery::DispatchByTypeLookup(TRR* pushedTRR, bool aUseODoH) {
   RefPtr<TypeHostRecord> typeRec = do_QueryObject(mRecord);
   MOZ_ASSERT(typeRec);
   if (!typeRec) {
@@ -167,7 +179,12 @@ nsresult TRRQuery::DispatchByTypeLookup(TRR* pushedTRR) {
   }
 
   LOG(("TRR Resolve %s type %d\n", typeRec->host.get(), (int)rectype));
-  RefPtr<TRR> trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
+  RefPtr<TRR> trr;
+  if (aUseODoH) {
+    trr = new ODoH(this, mRecord, rectype);
+  } else {
+    trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
+  }
 
   if (pushedTRR || NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(trr))) {
     MutexAutoLock trrlock(mTrrLock);
@@ -268,7 +285,7 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
       if (newRRSet->TRRType() == TRRTYPE_A) {
         LOG(("A lookup failed. Checking if AAAA record exists"));
         nsTArray<RefPtr<TRR>> requestsToSend;
-        PrepareQuery(TRRTYPE_AAAA, requestsToSend);
+        PrepareQuery(mUsingODoH, TRRTYPE_AAAA, requestsToSend);
         if (SendQueries(requestsToSend)) {
           LOG(("Sent AAAA request"));
           return LOOKUP_OK;
@@ -276,7 +293,7 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
       } else if (newRRSet->TRRType() == TRRTYPE_AAAA) {
         LOG(("AAAA lookup failed. Checking if A record exists"));
         nsTArray<RefPtr<TRR>> requestsToSend;
-        PrepareQuery(TRRTYPE_A, requestsToSend);
+        PrepareQuery(mUsingODoH, TRRTYPE_A, requestsToSend);
         if (SendQueries(requestsToSend)) {
           LOG(("Sent A request"));
           return LOOKUP_OK;
