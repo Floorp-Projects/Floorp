@@ -4897,9 +4897,7 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   AutoReportFrontendContext fc(cx);
-  RootedObject module(
-      cx, frontend::CompileModule(cx, &fc, cx->stackLimitForCurrentPrincipal(),
-                                  options, srcBuf));
+  RootedObject module(cx, frontend::CompileModule(cx, &fc, options, srcBuf));
   if (!module) {
     return false;
   }
@@ -5414,8 +5412,7 @@ template <typename Unit>
         cx, &fc, input.get(), &scopeCache, srcBuf, ScopeKind::Global);
   } else {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-        input.get(), &scopeCache, srcBuf);
+        cx, &fc, cx->tempLifoAlloc(), input.get(), &scopeCache, srcBuf);
   }
 
   if (!stencil) {

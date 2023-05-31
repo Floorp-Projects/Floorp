@@ -5249,8 +5249,7 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   NoScopeBindingCache scopeCache;
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil = js::frontend::ParseModuleToStencil(
-      cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-      input.get(), &scopeCache, srcBuf);
+      cx, &fc, cx->tempLifoAlloc(), input.get(), &scopeCache, srcBuf);
   if (!stencil) {
     return nullptr;
   }

@@ -98,7 +98,7 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   NoScopeBindingCache scopeCache;
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   RefPtr<JS::Stencil> stencil =
-      ParseModuleToStencil(nullptr, fc, fc->stackLimit(), tempLifoAlloc,
+      ParseModuleToStencil(nullptr, fc, tempLifoAlloc,
                            compilationStorage.getInput(), &scopeCache, srcBuf);
   if (!stencil) {
     return nullptr;
