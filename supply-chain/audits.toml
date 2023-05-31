@@ -431,6 +431,12 @@ I'm pretty familiar with this crate. It provides a fixed-point numeric type.
 The code is pretty straight-forward, there's no unsafe code at all.
 """
 
+[[audits.app_units]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+delta = "0.7.1 -> 0.7.2"
+notes = "Adding repr(transparent) plus a couple minor clean-ups, no functional changes from 0.7.1."
+
 [[audits.arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
