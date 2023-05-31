@@ -511,6 +511,10 @@
   margin-inline-end: 9px;
 }
 
+.urlbarView-dynamic-addons-content[treatment=b] > .urlbarView-dynamic-addons-footer > .urlbarView-dynamic-addons-ratingContainer {
+  display: none;
+}
+
 .urlbarView-dynamic-addons-rating {
   display: inline-block;
   width: 16px;

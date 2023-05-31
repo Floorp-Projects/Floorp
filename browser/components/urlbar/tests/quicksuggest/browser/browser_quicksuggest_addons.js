@@ -413,6 +413,49 @@ add_task(async function rowLabel() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function treatmentB() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.addons.featureGate", true]],
+  });
+
+  const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+    addonsUITreatment: "b",
+  });
+  // Sanity check.
+  Assert.equal(UrlbarPrefs.get("addonsUITreatment"), "b");
+
+  const merinoSuggestion = TEST_MERINO_SUGGESTIONS[0];
+  MerinoTestUtils.server.response.body.suggestions = [merinoSuggestion];
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "only match the Merino suggestion",
+  });
+  Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+  const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  const row = element.row;
+  const icon = row.querySelector(".urlbarView-dynamic-addons-icon");
+  Assert.equal(icon.src, merinoSuggestion.icon);
+  const url = row.querySelector(".urlbarView-dynamic-addons-url");
+  Assert.equal(url.textContent, merinoSuggestion.url);
+  const title = row.querySelector(".urlbarView-dynamic-addons-title");
+  Assert.equal(title.textContent, merinoSuggestion.title);
+  const description = row.querySelector(
+    ".urlbarView-dynamic-addons-description"
+  );
+  Assert.equal(description.textContent, merinoSuggestion.description);
+  const ratingContainer = row.querySelector(
+    ".urlbarView-dynamic-addons-ratingContainer"
+  );
+  Assert.ok(BrowserTestUtils.is_hidden(ratingContainer));
+  const reviews = row.querySelector(".urlbarView-dynamic-addons-reviews");
+  Assert.equal(reviews.textContent, "Recommended");
+
+  await cleanUpNimbus();
+  await SpecialPowers.popPrefEnv();
+});
+
 async function doShowLessFrequently({ input, expected }) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,

@@ -236,8 +236,13 @@ export class AddonSuggestions extends BaseFeature {
   }
 
   getViewUpdate(result) {
+    const treatment = lazy.UrlbarPrefs.get("addonsUITreatment");
     const rating = result.payload.rating;
+
     return {
+      content: {
+        attributes: { treatment },
+      },
       icon: {
         attributes: {
           src: result.payload.icon,
@@ -278,12 +283,15 @@ export class AddonSuggestions extends BaseFeature {
         },
       },
       reviews: {
-        l10n: {
-          id: "firefox-suggest-addons-reviews",
-          args: {
-            quantity: result.payload.reviews,
-          },
-        },
+        l10n:
+          treatment === "b"
+            ? { id: "firefox-suggest-addons-recommended" }
+            : {
+                id: "firefox-suggest-addons-reviews",
+                args: {
+                  quantity: result.payload.reviews,
+                },
+              },
       },
     };
   }

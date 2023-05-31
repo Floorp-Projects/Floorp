@@ -94,6 +94,9 @@ firefox-suggest-addons-reviews =
      *[other] { $quantity } reviews
   }
 
+# This string explaining that the add-on suggestion is a recommendation.
+firefox-suggest-addons-recommended = Recommended
+
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.
 

@@ -455,6 +455,7 @@ const PREF_OTHER_DEFAULTS = new Map([
 const NIMBUS_DEFAULTS = {
   addonsKeywordsMinimumLength: 0,
   addonsKeywordsMinimumLengthCap: 0,
+  addonsUITreatment: "a",
   experimentType: "",
   isBestMatchExperiment: false,
   quickSuggestRemoteSettingsDataType: "data",
