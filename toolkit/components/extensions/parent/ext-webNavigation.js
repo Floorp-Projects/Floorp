@@ -9,13 +9,10 @@
 /* global tabTracker */
 
 ChromeUtils.defineESModuleGetters(this, {
+  MatchURLFilters: "resource://gre/modules/MatchURLFilters.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  MatchURLFilters: "resource://gre/modules/MatchURLFilters.jsm",
-  WebNavigation: "resource://gre/modules/WebNavigation.jsm",
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  WebNavigation: "resource://gre/modules/WebNavigation.sys.mjs",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
 });
 
 var { ExtensionError } = ExtensionUtils;

@@ -9,8 +9,8 @@ const { AddonTestUtils } = ChromeUtils.import(
 AddonTestUtils.initMochitest(this);
 
 add_task(async function testExecuteScript() {
-  let { MessageChannel } = ChromeUtils.import(
-    "resource://testing-common/MessageChannel.jsm"
+  let { MessageChannel } = ChromeUtils.importESModule(
+    "resource://testing-common/MessageChannel.sys.mjs"
   );
 
   // When the first extension is started, ProxyMessenger.init adds MessageChannel

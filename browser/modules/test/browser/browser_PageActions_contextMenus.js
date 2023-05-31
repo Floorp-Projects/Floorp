@@ -2,8 +2,8 @@
 
 // This is a test for PageActions.jsm, specifically the context menus.
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
 });
 
 // Initialization.  Must run first.

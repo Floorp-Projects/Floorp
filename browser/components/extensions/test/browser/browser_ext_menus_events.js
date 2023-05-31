@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
+const { ExtensionPermissions } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
 const PAGE =
@@ -657,8 +657,8 @@ add_task(async function test_show_hide_frame() {
         gBrowser.selectedBrowser,
         [],
         function () {
-          const { WebNavigationFrames } = ChromeUtils.import(
-            "resource://gre/modules/WebNavigationFrames.jsm"
+          const { WebNavigationFrames } = ChromeUtils.importESModule(
+            "resource://gre/modules/WebNavigationFrames.sys.mjs"
           );
 
           let { contentWindow } = content.document.getElementById("frame");

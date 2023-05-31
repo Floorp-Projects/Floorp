@@ -192,8 +192,8 @@ add_task(async function overrideContext_permissions() {
     SidebarUI.browser.contentDocument.getElementById("webext-panels-browser"),
     [],
     () => {
-      const { ExtensionCommon } = ChromeUtils.import(
-        "resource://gre/modules/ExtensionCommon.jsm"
+      const { ExtensionCommon } = ChromeUtils.importESModule(
+        "resource://gre/modules/ExtensionCommon.sys.mjs"
       );
       Cu.exportFunction(
         fn => {

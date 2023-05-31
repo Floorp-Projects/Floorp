@@ -42,6 +42,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
+  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
@@ -50,7 +51,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   BuiltInThemesHelpers: "resource://gre/modules/addons/XPIDatabase.jsm",
-  ExtensionData: "resource://gre/modules/Extension.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
   AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
@@ -59,8 +59,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "IconDetails", () => {
-  return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm")
-    .ExtensionParent.IconDetails;
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionParent.sys.mjs"
+  ).ExtensionParent.IconDetails;
 });
 
 const { nsIBlocklistService } = Ci;

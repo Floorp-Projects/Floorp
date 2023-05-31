@@ -18,8 +18,8 @@ AddonTestUtils.createAppInfo(
 let { promiseRestartManager, promiseShutdownManager, promiseStartupManager } =
   AddonTestUtils;
 
-const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
+const { Management } = ChromeUtils.importESModule(
+  "resource://gre/modules/Extension.sys.mjs"
 );
 
 // Crashes a <browser>'s remote process.

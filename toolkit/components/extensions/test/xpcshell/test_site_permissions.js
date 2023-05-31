@@ -38,11 +38,9 @@ l10n.formatValue("webext-perms-sideload-text");
 
 // Lazily import ExtensionParent to allow AddonTestUtils.createAppInfo to
 // override Services.appinfo.
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionParent",
-  "resource://gre/modules/ExtensionParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+});
 
 async function _test_manifest(manifest, expectedError) {
   ExtensionTestUtils.failOnSchemaWarnings(false);

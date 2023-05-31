@@ -41,7 +41,8 @@ const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 );
 
-const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
+const EXTENSION_CONTENT_SYS_MJS =
+  "resource://gre/modules/ExtensionContent.sys.mjs";
 
 const { Pool } = require("resource://devtools/shared/protocol.js");
 const {
@@ -75,7 +76,9 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionContent: EXTENSION_CONTENT_SYS_MJS,
+});
 
 loader.lazyRequireGetter(
   this,
@@ -488,7 +491,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     // Only retrieve the content scripts globals if the ExtensionContent JSM module
     // has been already loaded (which is true if the WebExtensions internals have already
     // been loaded in the same content process).
-    if (Cu.isModuleLoaded(EXTENSION_CONTENT_JSM)) {
+    if (Cu.isESModuleLoaded(EXTENSION_CONTENT_SYS_MJS)) {
       return lazy.ExtensionContent.getContentScriptGlobals(this.window);
     }
 

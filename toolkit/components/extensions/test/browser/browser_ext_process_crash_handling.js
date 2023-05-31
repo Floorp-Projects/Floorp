@@ -7,9 +7,8 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 
-const { ExtensionProcessCrashObserver, Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
-);
+const { ExtensionProcessCrashObserver, Management } =
+  ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
 AddonTestUtils.initMochitest(this);
 

@@ -8,10 +8,10 @@ import { IndexedDB } from "resource://gre/modules/IndexedDB.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
-  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
-  getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionStorage: "resource://gre/modules/ExtensionStorage.sys.mjs",
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  getTrimmedString: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
 });
 
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB

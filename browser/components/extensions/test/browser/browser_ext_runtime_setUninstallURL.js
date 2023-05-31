@@ -7,8 +7,8 @@
 // into the scope, and so although eslint thinks this global is
 // available, it really isn't.
 // eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
-let { ExtensionTestCommon } = ChromeUtils.import(
-  "resource://testing-common/ExtensionTestCommon.jsm"
+let { ExtensionTestCommon } = ChromeUtils.importESModule(
+  "resource://testing-common/ExtensionTestCommon.sys.mjs"
 );
 
 async function makeAndInstallXPI(id, backgroundScript, loadedURL) {

@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { SchemaRoot } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
+const { SchemaRoot } = ChromeUtils.importESModule(
+  "resource://gre/modules/Schemas.sys.mjs"
+);
 
 let { SchemaAPIInterface } = ExtensionCommon;
 

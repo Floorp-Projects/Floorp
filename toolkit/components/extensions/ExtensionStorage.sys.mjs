@@ -5,19 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
-const {
-  ExtensionUtils: { ExtensionError, DefaultWeakMap },
-} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+const { DefaultWeakMap, ExtensionError } = ExtensionUtils;
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
 });
 
 function isStructuredCloneHolder(value) {

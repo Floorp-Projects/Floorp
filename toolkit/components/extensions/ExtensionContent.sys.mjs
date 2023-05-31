@@ -10,15 +10,13 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExtensionProcessScript:
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
   LanguageDetector:
     "resource://gre/modules/translation/LanguageDetector.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
-  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
-  Schemas: "resource://gre/modules/Schemas.jsm",
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -40,15 +38,12 @@ const ScriptError = Components.Constructor(
   "initWithWindowID"
 );
 
-const { ExtensionChild, ExtensionActivityLogChild } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionChild.jsm"
-);
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-const { ExtensionUtils } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
+import {
+  ExtensionChild,
+  ExtensionActivityLogChild,
+} from "resource://gre/modules/ExtensionChild.sys.mjs";
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const {
   DefaultMap,
