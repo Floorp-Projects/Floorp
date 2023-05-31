@@ -49,6 +49,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 
 #ifdef XP_WIN
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/widget/WinCompositorWidget.h"
 #endif
 #if defined(MOZ_WIDGET_GTK)
@@ -2825,11 +2826,17 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvReleaseCompositable(
 TextureFactoryIdentifier WebRenderBridgeParent::GetTextureFactoryIdentifier() {
   MOZ_ASSERT(mApi);
 
+#ifdef XP_WIN
+  const bool supportsD3D11NV12 = gfx::DeviceManagerDx::Get()->CanUseNV12();
+#else
+  const bool supportsD3D11NV12 = false;
+#endif
+
   TextureFactoryIdentifier ident(
       mApi->GetBackendType(), mApi->GetCompositorType(), XRE_GetProcessType(),
       mApi->GetMaxTextureSize(), mApi->GetUseANGLE(), mApi->GetUseDComp(),
       mAsyncImageManager->UseCompositorWnd(), false, false, false,
-      mApi->GetSyncHandle());
+      supportsD3D11NV12, mApi->GetSyncHandle());
   return ident;
 }
 

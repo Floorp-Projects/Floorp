@@ -636,6 +636,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
     WriteParam(aWriter, aParam.mSupportsTextureBlitting);
     WriteParam(aWriter, aParam.mSupportsPartialUploads);
     WriteParam(aWriter, aParam.mSupportsComponentAlpha);
+    WriteParam(aWriter, aParam.mSupportsD3D11NV12);
     WriteParam(aWriter, aParam.mSyncHandle);
   }
 
@@ -651,6 +652,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
                   ReadParam(aReader, &aResult->mSupportsTextureBlitting) &&
                   ReadParam(aReader, &aResult->mSupportsPartialUploads) &&
                   ReadParam(aReader, &aResult->mSupportsComponentAlpha) &&
+                  ReadParam(aReader, &aResult->mSupportsD3D11NV12) &&
                   ReadParam(aReader, &aResult->mSyncHandle);
     return result;
   }
