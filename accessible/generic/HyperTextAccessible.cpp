@@ -33,6 +33,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsIMathMLFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsRange.h"
 #include "nsTextFragment.h"
 #include "mozilla/Assertions.h"
@@ -731,20 +732,25 @@ LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
   nsIFrame* frame = caret->GetGeometry(&rect);
   if (!frame || rect.IsEmpty()) return LayoutDeviceIntRect();
 
-  nsPoint offset;
-  // Offset from widget origin to the frame origin, which includes chrome
-  // on the widget.
-  *aWidget = frame->GetNearestWidget(offset);
-  NS_ENSURE_TRUE(*aWidget, LayoutDeviceIntRect());
-  rect.MoveBy(offset);
-
-  LayoutDeviceIntRect caretRect = LayoutDeviceIntRect::FromUnknownRect(
-      rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel()));
-  // clang-format off
-  // ((content screen origin) - (content offset in the widget)) = widget origin on the screen
-  // clang-format on
-  caretRect.MoveBy((*aWidget)->WidgetToScreenOffset() -
-                   (*aWidget)->GetClientOffset());
+  PresShell* presShell = mDoc->PresShellPtr();
+  // Transform rect to be relative to the root frame.
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  rect = nsLayoutUtils::TransformFrameRectToAncestor(frame, rect, rootFrame);
+  // We need to inverse translate with the offset of the edge of the visual
+  // viewport from top edge of the layout viewport.
+  nsPoint viewportOffset = presShell->GetVisualViewportOffset() -
+                           presShell->GetLayoutViewportOffset();
+  rect.MoveBy(-viewportOffset);
+  // We need to take into account a non-1 resolution set on the presshell.
+  // This happens with async pinch zooming. Here we scale the bounds before
+  // adding the screen-relative offset.
+  rect.ScaleRoundOut(presShell->GetResolution());
+  // Now we need to put the rect in absolute screen coords.
+  nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
+  rect.MoveBy(rootScreenRect.TopLeft());
+  // Finally, convert from app units.
+  auto caretRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
+      rect, presShell->GetPresContext()->AppUnitsPerDevPixel());
 
   // Correct for character size, so that caret always matches the size of
   // the character. This is important for font size transitions, and is
@@ -763,6 +769,8 @@ LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
   if (!charRect.IsEmpty()) {
     caretRect.SetTopEdge(charRect.Y());
   }
+
+  *aWidget = frame->GetNearestWidget();
   return caretRect;
 }
 
