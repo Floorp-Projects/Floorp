@@ -32,7 +32,7 @@ def unpack_sdk(url, sha256, extract_prefix, out_dir="."):
         pkg.seek(0, os.SEEK_SET)
 
         for name, content in unxar(pkg):
-            if name == "Payload":
+            if name in ("Payload", "Content"):
                 extract_payload(content, extract_prefix, out_dir)
 
 
