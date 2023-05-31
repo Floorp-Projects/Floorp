@@ -1234,9 +1234,7 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
 
   // Remove all the overlapping ranges
   for (size_t i = startIndex; i < endIndex; ++i) {
-    if (mRanges[i].mRange->IsDynamicRange()) {
-      mRanges[i].mRange->AsDynamicRange()->UnregisterSelection(mSelection);
-    }
+    mRanges[i].mRange->UnregisterSelection(mSelection);
   }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
@@ -1287,9 +1285,8 @@ nsresult Selection::StyledRanges::RemoveRangeAndUnregisterSelection(
   if (idx < 0) return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   mRanges.RemoveElementAt(idx);
-  if (aRange.IsDynamicRange()) {
-    aRange.AsDynamicRange()->UnregisterSelection(mSelection);
-  }
+  aRange.UnregisterSelection(mSelection);
+
   return NS_OK;
 }
 nsresult Selection::RemoveCollapsedRanges() {
@@ -1987,9 +1984,7 @@ void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
 void Selection::StyledRanges::UnregisterSelection() {
   uint32_t count = mRanges.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    if (mRanges[i].mRange->IsDynamicRange()) {
-      mRanges[i].mRange->AsDynamicRange()->UnregisterSelection(mSelection);
-    }
+    mRanges[i].mRange->UnregisterSelection(mSelection);
   }
 }
 
@@ -2237,10 +2232,8 @@ void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
   MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);
 
   mStyledRanges.mRanges.AppendElement(StyledRange{&aRange});
-  if (aRange.IsDynamicRange()) {
-    RefPtr<nsRange> range = aRange.AsDynamicRange();
-    range->RegisterSelection(*this);
-  }
+  aRange.RegisterSelection(*this);
+
   if (!mFrameSelection) {
     return;  // nothing to do
   }

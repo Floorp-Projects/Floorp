@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -26,10 +27,14 @@ class nsRange;
 struct JSContext;
 
 namespace mozilla::dom {
-class StaticRange;
 class Document;
+class Selection;
+class StaticRange;
 
-class AbstractRange : public nsISupports, public nsWrapperCache {
+class AbstractRange : public nsISupports,
+                      public nsWrapperCache,
+                      // For linking together selection-associated ranges.
+                      public mozilla::LinkedListElement<AbstractRange> {
  protected:
   explicit AbstractRange(nsINode* aNode, bool aIsDynamicRange);
   virtual ~AbstractRange();
@@ -106,6 +111,27 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   inline StaticRange* AsStaticRange();
   inline const StaticRange* AsStaticRange() const;
 
+  /**
+   * Return true if this range is part of a Selection object
+   * and isn't detached.
+   */
+  bool IsInAnySelection() const { return !mSelections.IsEmpty(); }
+
+  MOZ_CAN_RUN_SCRIPT void RegisterSelection(
+      mozilla::dom::Selection& aSelection);
+
+  void UnregisterSelection(const mozilla::dom::Selection& aSelection);
+
+  /**
+   * Returns a list of all Selections the range is associated with.
+   */
+  const nsTArray<WeakPtr<Selection>>& GetSelections() const;
+
+  /**
+   * Return true if this range is in |aSelection|.
+   */
+  bool IsInSelection(const mozilla::dom::Selection& aSelection) const;
+
  protected:
   template <typename SPT, typename SRT, typename EPT, typename ERT,
             typename RangeType>
@@ -133,6 +159,21 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
                    << (aRange.mIsDynamicRange ? "true" : "false") << " }";
   }
 
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void RegisterClosestCommonInclusiveAncestor(nsINode* aNode);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void UnregisterClosestCommonInclusiveAncestor(nsINode* aNode,
+                                                bool aIsUnlinking);
+
+  void UpdateCommonAncestorIfNecessary();
+
+  static void MarkDescendants(const nsINode& aNode);
+  static void UnmarkDescendants(const nsINode& aNode);
+
  private:
   void ClearForReuse();
 
@@ -140,6 +181,13 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   RefPtr<Document> mOwner;
   RangeBoundary mStart;
   RangeBoundary mEnd;
+
+  // A Range can be part of multiple |Selection|s. This is a very rare use case.
+  AutoTArray<WeakPtr<Selection>, 1> mSelections;
+  // mRegisteredClosestCommonInclusiveAncestor is only non-null when the range
+  // IsInAnySelection().
+  nsCOMPtr<nsINode> mRegisteredClosestCommonInclusiveAncestor;
+
   // `true` if `mStart` and `mEnd` are set for StaticRange or set and valid
   // for nsRange.
   bool mIsPositioned;
