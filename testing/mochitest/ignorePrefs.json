@@ -18,5 +18,6 @@
   "media.gmp-manager.lastEmptyCheck",
   "security.webauth.softtoken_counter",
   "toolkit.startup.last_success",
-  "toolkit.telemetry.cachedClientID"
+  "toolkit.telemetry.cachedClientID",
+  "ui.osk.debug.keyboardDisplayReason"
 ]
