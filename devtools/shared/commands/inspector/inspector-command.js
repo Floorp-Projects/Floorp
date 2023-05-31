@@ -6,8 +6,14 @@
 
 loader.lazyRequireGetter(
   this,
-  ["TARGET_BROWSER_PREF", "getTargetBrowsers"],
+  "getTargetBrowsers",
   "resource://devtools/shared/compatibility/compatibility-user-settings.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "TARGET_BROWSER_PREF",
+  "resource://devtools/shared/compatibility/constants.js",
   true
 );
 

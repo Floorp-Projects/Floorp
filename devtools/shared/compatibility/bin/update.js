@@ -12,27 +12,22 @@
 // The MDN compatibility data is available as a node package ("@mdn/browser-compat-data"),
 // which is used here to update `../dataset/css-properties.json`.
 
-/* global __dirname */
+/* eslint-disable mozilla/reject-relative-requires */
 
 "use strict";
 
 const compatData = require("@mdn/browser-compat-data");
 const { properties } = compatData.css;
 
-globalThis.loader = { lazyRequireGetter: () => {} };
-globalThis.ChromeUtils = { importESModule: () => ({}) };
+const { TARGET_BROWSER_ID } = require("../constants.js");
+const { getCompatTable } = require("../helpers.js");
 
-/* eslint-disable mozilla/reject-relative-requires */
-const MDNCompatibility = require("../../../server/actors/compatibility/lib/MDNCompatibility");
-const { TARGET_BROWSER_ID } = require("../compatibility-user-settings");
-
-const mdnCompatibility = new MDNCompatibility(properties);
 // Flatten all CSS properties aliases here so we don't have to do it at runtime,
 // which is costly.
-flattenAliases(mdnCompatibility._cssPropertiesCompatData);
-parseBrowserVersion(mdnCompatibility._cssPropertiesCompatData);
-removeUnusedData(mdnCompatibility._cssPropertiesCompatData);
-exportData(mdnCompatibility._cssPropertiesCompatData, "css-properties.json");
+flattenAliases(properties);
+parseBrowserVersion(properties);
+removeUnusedData(properties);
+exportData(properties, "css-properties.json");
 
 /**
  * Builds a list of aliases between CSS properties, like flex and -webkit-flex,
@@ -46,7 +41,7 @@ function flattenAliases(compatNode) {
       continue;
     }
 
-    const compatTable = mdnCompatibility._getCompatTable(compatNode, [term]);
+    const compatTable = getCompatTable(compatNode, [term]);
     if (compatTable) {
       const aliases = findAliasesFrom(compatTable);
 
@@ -94,7 +89,7 @@ function parseBrowserVersion(compatNode) {
       continue;
     }
 
-    const compatTable = mdnCompatibility._getCompatTable(compatNode, [term]);
+    const compatTable = getCompatTable(compatNode, [term]);
     if (compatTable?.support) {
       for (const [browserId, supportItem] of Object.entries(
         compatTable.support
@@ -147,7 +142,7 @@ function removeUnusedData(compatNode) {
       continue;
     }
 
-    const compatTable = mdnCompatibility._getCompatTable(compatNode, [term]);
+    const compatTable = getCompatTable(compatNode, [term]);
 
     // source_file references the name of the file in the MDN compat data repo where the
     // property is handled. We don't make use of it so we can remove it.
