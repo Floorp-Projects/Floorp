@@ -3737,10 +3737,6 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           mJsepSession->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
       std::string remoteDescription =
           mJsepSession->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
-      report->mLocalSdp.Construct(
-          NS_ConvertASCIItoUTF16(localDescription.c_str()));
-      report->mRemoteSdp.Construct(
-          NS_ConvertASCIItoUTF16(remoteDescription.c_str()));
       if (!report->mSdpHistory.AppendElements(mSdpHistory, fallible)) {
         mozalloc_handle_oom(0);
       }
