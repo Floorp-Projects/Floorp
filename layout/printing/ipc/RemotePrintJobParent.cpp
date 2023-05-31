@@ -106,6 +106,7 @@ nsresult RemotePrintJobParent::PrepareNextPageFD(FileDescriptor* aFd) {
 }
 
 mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
+    const int32_t& aWidthInPoints, const int32_t& aHeightInPoints,
     nsTArray<uint64_t>&& aDeps) {
   if (!mCurrentPageStream.IsOpen()) {
     Unused << SendAbortPrint(NS_ERROR_FAILURE);
@@ -113,8 +114,10 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
   }
   mCurrentPageStream.Seek(0, PR_SEEK_SET);
 
+  gfx::IntSize pageSizeInPoints(aWidthInPoints, aHeightInPoints);
+
   if (aDeps.IsEmpty()) {
-    FinishProcessingPage();
+    FinishProcessingPage(pageSizeInPoints);
     return IPC_OK();
   }
 
@@ -126,20 +129,21 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
   gfx::CrossProcessPaint::Start(std::move(deps))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}](
+          [self = RefPtr{this}, pageSizeInPoints](
               gfx::CrossProcessPaint::ResolvedFragmentMap&& aFragments) {
-            self->FinishProcessingPage(&aFragments);
+            self->FinishProcessingPage(pageSizeInPoints, &aFragments);
           },
-          [self = RefPtr{this}](const nsresult& aRv) {
-            self->FinishProcessingPage();
+          [self = RefPtr{this}, pageSizeInPoints](const nsresult& aRv) {
+            self->FinishProcessingPage(pageSizeInPoints);
           });
 
   return IPC_OK();
 }
 
 void RemotePrintJobParent::FinishProcessingPage(
+    const gfx::IntSize& aSizeInPoints,
     gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments) {
-  nsresult rv = PrintPage(mCurrentPageStream, aFragments);
+  nsresult rv = PrintPage(aSizeInPoints, mCurrentPageStream, aFragments);
 
   mCurrentPageStream.Close();
 
@@ -147,11 +151,11 @@ void RemotePrintJobParent::FinishProcessingPage(
 }
 
 nsresult RemotePrintJobParent::PrintPage(
-    PRFileDescStream& aRecording,
+    const gfx::IntSize& aSizeInPoints, PRFileDescStream& aRecording,
     gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments) {
   MOZ_ASSERT(mPrintDeviceContext);
 
-  nsresult rv = mPrintDeviceContext->BeginPage();
+  nsresult rv = mPrintDeviceContext->BeginPage(aSizeInPoints);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

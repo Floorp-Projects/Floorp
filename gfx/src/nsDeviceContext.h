@@ -20,6 +20,7 @@
 #include "nscore.h"                   // for char16_t, nsAString
 #include "mozilla/AppUnits.h"         // for AppUnits
 #include "nsFontMetrics.h"            // for nsFontMetrics::Params
+#include "mozilla/gfx/Point.h"        // for IntSize
 #include "mozilla/gfx/PrintTarget.h"  // for PrintTarget::PageDoneCallback
 #include "mozilla/gfx/PrintPromise.h"
 
@@ -48,7 +49,8 @@ class Screen;
 
 class nsDeviceContext final {
  public:
-  typedef mozilla::gfx::PrintTarget PrintTarget;
+  using IntSize = mozilla::gfx::IntSize;
+  using PrintTarget = mozilla::gfx::PrintTarget;
 
   nsDeviceContext();
 
@@ -223,9 +225,17 @@ class nsDeviceContext final {
    * Inform the output device that output of a page is beginning
    * Used for print related device contexts. Must be matched 1:1 with
    * EndPage() and within a BeginDocument()/EndDocument() pair.
+   *
+   * @param aSizeInPoints - The physical dimensions of the page in points.
+   *                        Currently only supported (used) by print-to-PDF
+   *                        print targets, and then only to switch the
+   *                        orientation for a specific page (arbitrary page
+   *                        sizes are not supported by the Core Graphics print-
+   *                        to-PDF APIs, for example).
+   *
    * @return error status
    */
-  nsresult BeginPage();
+  nsresult BeginPage(const IntSize& aSizeInPoints);
 
   /**
    * Inform the output device that output of a page is ending
