@@ -356,13 +356,13 @@ class nsContentUtils {
   // This function can be called both in the main thread and worker threads.
   static bool ShouldResistFingerprinting(
       RFPTarget aTarget = RFPTarget::Unknown);
-  static bool ShouldResistFingerprinting(
-      nsIGlobalObject* aGlobalObject, RFPTarget aTarget = RFPTarget::Unknown);
+  static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject,
+                                         RFPTarget aTarget);
   // Similar to the function above, but always allows CallerType::System
   // callers.
-  static bool ShouldResistFingerprinting(
-      mozilla::dom::CallerType aCallerType, nsIGlobalObject* aGlobalObject,
-      RFPTarget aTarget = RFPTarget::Unknown);
+  static bool ShouldResistFingerprinting(mozilla::dom::CallerType aCallerType,
+                                         nsIGlobalObject* aGlobalObject,
+                                         RFPTarget aTarget);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell,
                                          RFPTarget aTarget);
   // These functions are the new, nuanced functions
