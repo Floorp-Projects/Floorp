@@ -48,8 +48,8 @@ const known_scripts = {
     "resource://gre/modules/TelemetryControllerContent.sys.mjs", // bug 1470339
 
     // Extensions
-    "resource://gre/modules/ExtensionProcessScript.jsm",
-    "resource://gre/modules/ExtensionUtils.jsm",
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+    "resource://gre/modules/ExtensionUtils.sys.mjs",
   ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",
