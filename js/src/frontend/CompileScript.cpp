@@ -27,6 +27,11 @@ JS_PUBLIC_API void JS::DestroyFrontendContext(FrontendContext* fc) {
   return js::DestroyFrontendContext(fc);
 }
 
+JS_PUBLIC_API void JS::SetNativeStackQuota(JS::FrontendContext* fc,
+                                           JS::NativeStackSize stackSize) {
+  fc->setStackQuota(stackSize);
+}
+
 JS_PUBLIC_API bool JS::SetSupportedImportAssertions(
     FrontendContext* fc,
     const JS::ImportAssertionVector& supportedImportAssertions) {
