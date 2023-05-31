@@ -5580,8 +5580,7 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
               cx, frontend::CompilationInput(options));
           UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
           if (!Smoosh::tryCompileGlobalScriptToExtensibleStencil(
-                  cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(),
-                  srcBuf, stencil)) {
+                  cx, &fc, input.get(), srcBuf, stencil)) {
             return false;
           }
           if (!stencil) {
