@@ -32,6 +32,9 @@ ITEM_VALUE(NavigatorHWConcurrency,      1u << 15)
 ITEM_VALUE(NavigatorOscpu,              1u << 16)
 ITEM_VALUE(NavigatorPlatform,           1u << 17)
 ITEM_VALUE(NavigatorUserAgent,          1u << 18)
+// Audio/VideoStreamTrack labels
+ITEM_VALUE(StreamTrackLabel,            1u << 19)
+ITEM_VALUE(StreamVideoFacingMode,       1u << 20)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
