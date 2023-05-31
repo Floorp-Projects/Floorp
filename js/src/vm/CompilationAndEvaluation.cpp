@@ -93,9 +93,7 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   JS::Rooted<JSScript*> script(cx);
   {
     AutoReportFrontendContext fc(cx);
-    script = frontend::CompileGlobalScript(cx, &fc,
-                                           cx->stackLimitForCurrentPrincipal(),
-                                           options, srcBuf, scopeKind);
+    script = frontend::CompileGlobalScript(cx, &fc, options, srcBuf, scopeKind);
   }
   return script;
 }
@@ -549,9 +547,8 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setIsRunOnce(true);
 
   AutoReportFrontendContext fc(cx);
-  RootedScript script(cx, frontend::CompileGlobalScript(
-                              cx, &fc, cx->stackLimitForCurrentPrincipal(),
-                              options, srcBuf, scopeKind));
+  RootedScript script(
+      cx, frontend::CompileGlobalScript(cx, &fc, options, srcBuf, scopeKind));
   if (!script) {
     return false;
   }
