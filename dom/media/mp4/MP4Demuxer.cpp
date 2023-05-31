@@ -44,7 +44,7 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
                         public DecoderDoctorLifeLogger<MP4TrackDemuxer> {
  public:
   MP4TrackDemuxer(MediaResource* aResource, UniquePtr<TrackInfo>&& aInfo,
-                  const IndiceWrapper& aIndices, int32_t aTimeScale);
+                  const IndiceWrapper& aIndices, uint32_t aTimeScale);
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
@@ -313,7 +313,7 @@ UniquePtr<EncryptionInfo> MP4Demuxer::GetCrypto() {
 MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
                                  UniquePtr<TrackInfo>&& aInfo,
                                  const IndiceWrapper& aIndices,
-                                 int32_t aTimeScale)
+                                 uint32_t aTimeScale)
     : mResource(aResource),
       mStream(new ResourceStream(aResource)),
       mInfo(std::move(aInfo)),

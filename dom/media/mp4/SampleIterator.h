@@ -99,7 +99,7 @@ class MP4SampleIndex {
   };
 
   MP4SampleIndex(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
-                 uint32_t aTrackId, bool aIsAudio, int32_t aTimeScale);
+                 uint32_t aTrackId, bool aIsAudio, uint32_t aTimeScale);
 
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                        bool aCanEvict);
