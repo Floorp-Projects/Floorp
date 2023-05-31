@@ -8096,12 +8096,12 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
     return true;
   }
 
-  // Check for Dutch "ij" digraph special case.
+  // Check for Dutch "ij" digraph special case, but only if both letters have
+  // the same case.
   if (script == Script::LATIN && LangTagIsDutch(aLang)) {
-    if (ToLowerCase(aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i))) ==
-            'i' &&
-        ToLowerCase(aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i + 1))) ==
-            'j') {
+    char16_t ch1 = aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i));
+    char16_t ch2 = aFrag->CharAt(AssertedCast<uint32_t>(aOffset + i + 1));
+    if ((ch1 == 'i' && ch2 == 'j') || (ch1 == 'I' && ch2 == 'J')) {
       iter.SetOriginalOffset(aOffset + i + 1);
       FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
       i = iter.GetOriginalOffset() - aOffset;
