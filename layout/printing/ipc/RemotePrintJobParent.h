@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/RecordedEvent.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 
@@ -39,9 +38,7 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
                                               const int32_t& aStartPage,
                                               const int32_t& aEndPage) final;
 
-  mozilla::ipc::IPCResult RecvProcessPage(const int32_t& aWidthInPoints,
-                                          const int32_t& aHeightInPoints,
-                                          nsTArray<uint64_t>&& aDeps) final;
+  mozilla::ipc::IPCResult RecvProcessPage(nsTArray<uint64_t>&& aDeps) final;
 
   mozilla::ipc::IPCResult RecvFinalizePrint() final;
 
@@ -75,10 +72,9 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
   nsresult PrepareNextPageFD(FileDescriptor* aFd);
 
   nsresult PrintPage(
-      const gfx::IntSize& aSizeInPoints, PRFileDescStream& aRecording,
+      PRFileDescStream& aRecording,
       gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments = nullptr);
   void FinishProcessingPage(
-      const gfx::IntSize& aSizeInPoints,
       gfx::CrossProcessPaint::ResolvedFragmentMap* aFragments = nullptr);
 
   /**
