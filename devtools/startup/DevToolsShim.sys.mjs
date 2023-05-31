@@ -201,9 +201,6 @@ export const DevToolsShim = {
    */
   inspectA11Y(tab, domReference) {
     if (!this.isEnabled()) {
-      if (!this.isDisabledByPolicy()) {
-        lazy.DevToolsStartup.openInstallPage("ContextMenu");
-      }
       return Promise.resolve();
     }
 
@@ -231,9 +228,6 @@ export const DevToolsShim = {
    */
   inspectNode(tab, domReference) {
     if (!this.isEnabled()) {
-      if (!this.isDisabledByPolicy()) {
-        lazy.DevToolsStartup.openInstallPage("ContextMenu");
-      }
       return Promise.resolve();
     }
 
@@ -258,8 +252,7 @@ export const DevToolsShim = {
 
   /**
    * Initialize DevTools via DevToolsStartup if needed. This method throws if DevTools are
-   * not enabled.. If the entry point is supposed to trigger the onboarding, call it
-   * explicitly via DevToolsStartup.openInstallPage().
+   * not enabled.
    *
    * @param {String} reason
    *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
