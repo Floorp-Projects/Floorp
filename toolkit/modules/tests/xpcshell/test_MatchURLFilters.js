@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { MatchURLFilters } = ChromeUtils.importESModule(
-  "resource://gre/modules/MatchURLFilters.sys.mjs"
+const { MatchURLFilters } = ChromeUtils.import(
+  "resource://gre/modules/MatchURLFilters.jsm"
 );
 
 const { Preferences } = ChromeUtils.importESModule(

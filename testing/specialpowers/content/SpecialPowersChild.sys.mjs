@@ -4,7 +4,9 @@
 /* This code is loaded in every child process that is started by mochitest.
  */
 
-import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
 const lazy = {};
 

@@ -213,7 +213,7 @@ add_task(async function () {
       Management: {
         global: { tabTracker },
       },
-    } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
+    } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
     let tab = tabTracker.getTab(tabId);
 

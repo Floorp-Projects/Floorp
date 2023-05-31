@@ -2,8 +2,8 @@
 
 requestLongerTimeout(2);
 
-const { ExtensionPermissions } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPermissions.sys.mjs"
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
 loadTestSubscript("head_unified_extensions.js");

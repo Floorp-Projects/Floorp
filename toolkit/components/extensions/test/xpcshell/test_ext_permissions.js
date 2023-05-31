@@ -6,8 +6,8 @@ const { AddonManager } = ChromeUtils.import(
 const { permissionToL10nId } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
 );
-const { ExtensionPermissions } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPermissions.sys.mjs"
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
@@ -17,9 +17,11 @@ Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 // will not be returning the version set by AddonTestUtils.createAppInfo and this test will
 // fail on non-nightly builds (because the cached appinfo.version will be undefined and
 // AddonManager startup will fail).
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionParent",
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 const l10n = new Localization([
   "toolkit/global/extensions.ftl",

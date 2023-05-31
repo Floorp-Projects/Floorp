@@ -3,8 +3,8 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
-  let { MessageChannel } = ChromeUtils.importESModule(
-    "resource://testing-common/MessageChannel.sys.mjs"
+  let { MessageChannel } = ChromeUtils.import(
+    "resource://testing-common/MessageChannel.jsm"
   );
 
   function countMM(messageManagerMap) {

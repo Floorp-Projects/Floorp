@@ -102,9 +102,7 @@ add_task(async function test_schema_error_no_error_with_expected_value() {
 });
 
 add_task(async function test_schema_data_not_found_or_unexpected_schema_type() {
-  const { Schemas } = ChromeUtils.importESModule(
-    "resource://gre/modules/Schemas.sys.mjs"
-  );
+  const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
   const mockSchemaExtContext = {};
 

@@ -10,8 +10,11 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
-  ExtensionShortcutKeyMap: "resource://gre/modules/ExtensionShortcuts.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionShortcutKeyMap: "resource://gre/modules/ExtensionShortcuts.jsm",
 });
 
 {

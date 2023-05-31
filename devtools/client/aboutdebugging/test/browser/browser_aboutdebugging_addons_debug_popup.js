@@ -208,8 +208,8 @@ async function installTestAddon(doc) {
  * Helper to retrieve the Extension instance.
  */
 async function waitForExtension(addonName) {
-  const { Management } = ChromeUtils.importESModule(
-    "resource://gre/modules/Extension.sys.mjs"
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm"
   );
 
   return new Promise(resolve => {

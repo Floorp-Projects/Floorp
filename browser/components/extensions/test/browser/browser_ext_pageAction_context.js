@@ -349,7 +349,7 @@ add_task(async function testNavigationClearsData() {
     Management: {
       global: { tabTracker },
     },
-  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
   let extension,
     tabs = [];
   async function addTab(...args) {

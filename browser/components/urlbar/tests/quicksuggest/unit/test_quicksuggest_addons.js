@@ -11,9 +11,11 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTestCommon",
+  "resource://testing-common/ExtensionTestCommon.jsm"
+);
 
 const MERINO_SUGGESTIONS = [
   {

@@ -9,8 +9,8 @@
 /* exported registerContentScript, unregisterContentScript */
 /* global registerContentScript, unregisterContentScript */
 
-var { ExtensionUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionUtils.sys.mjs"
+var { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
 );
 
 var { ExtensionError, getUniqueId } = ExtensionUtils;

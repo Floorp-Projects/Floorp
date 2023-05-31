@@ -6,10 +6,11 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionSettingsStore:
-    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "ExtensionControlledPopup",

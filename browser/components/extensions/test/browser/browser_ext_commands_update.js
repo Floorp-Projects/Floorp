@@ -2,10 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionSettingsStore:
-    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionSettingsStore",
+  "resource://gre/modules/ExtensionSettingsStore.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "AddonManager",

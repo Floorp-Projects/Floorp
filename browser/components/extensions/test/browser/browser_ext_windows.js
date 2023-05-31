@@ -127,7 +127,7 @@ add_task(async function testWindowTitle() {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
   async function createApiWin(options) {
     let promiseLoaded = BrowserTestUtils.waitForNewWindow({ url: START_URL });

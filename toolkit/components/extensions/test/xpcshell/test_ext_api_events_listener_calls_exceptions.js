@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { ExtensionStorageIDB } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
+const { ExtensionStorageIDB } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageIDB.jsm"
 );
 
 // Detect if the current build is still using the legacy storage.sync Kinto-based backend

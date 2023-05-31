@@ -4,7 +4,9 @@
 
 import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
 
-import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
 
 const { ExtensionError } = ExtensionUtils;
 

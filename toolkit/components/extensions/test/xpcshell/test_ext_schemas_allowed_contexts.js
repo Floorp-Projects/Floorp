@@ -1,8 +1,6 @@
 "use strict";
 
-const { Schemas } = ChromeUtils.importESModule(
-  "resource://gre/modules/Schemas.sys.mjs"
-);
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 const global = this;
 

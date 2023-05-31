@@ -10,9 +10,7 @@ const {
   ExtensionScriptingStore,
   makeInternalContentScript,
   makePublicContentScript,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionScriptingStore.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/ExtensionScriptingStore.jsm");
 
 var { ExtensionError, parseMatchPatterns } = ExtensionUtils;
 

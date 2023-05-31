@@ -3,8 +3,8 @@
  */
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  Management: "resource://gre/modules/Extension.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Management: "resource://gre/modules/Extension.jsm",
 });
 
 AddonTestUtils.init(this);

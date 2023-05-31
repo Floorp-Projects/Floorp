@@ -1,7 +1,7 @@
 "use strict";
 
-let { ExtensionTestCommon } = ChromeUtils.importESModule(
-  "resource://testing-common/ExtensionTestCommon.sys.mjs"
+let { ExtensionTestCommon } = ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
 );
 
 const {

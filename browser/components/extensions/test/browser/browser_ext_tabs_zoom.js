@@ -277,7 +277,7 @@ add_task(async function test_zoom_api() {
       Management: {
         global: { tabTracker },
       },
-    } = ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
+    } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
     let resp;
     if (msg == "get-zoom") {

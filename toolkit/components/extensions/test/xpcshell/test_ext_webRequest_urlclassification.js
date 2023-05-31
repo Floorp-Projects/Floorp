@@ -1,8 +1,6 @@
 "use strict";
 
-const { Schemas } = ChromeUtils.importESModule(
-  "resource://gre/modules/Schemas.sys.mjs"
-);
+const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 /**
  * If this test fails, likely nsIClassifiedChannel has added or changed a

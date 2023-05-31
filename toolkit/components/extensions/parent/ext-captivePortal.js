@@ -19,8 +19,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs"
+var { ExtensionPreferencesManager } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
 );
 
 var { getSettingsAPI } = ExtensionPreferencesManager;

@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { ExtensionShortcutKeyMap } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionShortcuts.sys.mjs"
+const { ExtensionShortcutKeyMap } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionShortcuts.jsm"
 );
 
 add_task(function test_ExtensionShortcutKeymap() {

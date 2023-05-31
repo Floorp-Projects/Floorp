@@ -2540,7 +2540,10 @@ ChromeUtils.defineESModuleGetters(nsContextMenu, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   LoginManagerContextMenu:
     "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(nsContextMenu, {
+  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

@@ -5,9 +5,11 @@
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  FindContent: "resource://gre/modules/FindContent.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FindContent",
+  "resource://gre/modules/FindContent.jsm"
+);
 
 export class ExtFindChild extends JSWindowActorChild {
   receiveMessage(message) {

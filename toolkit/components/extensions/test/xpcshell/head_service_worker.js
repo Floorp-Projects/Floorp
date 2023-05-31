@@ -4,8 +4,8 @@
 
 /* exported TestWorkerWatcher */
 
-ChromeUtils.defineESModuleGetters(this, {
-  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
 });
 
 // Ensure that the profile-after-change message has been notified,
