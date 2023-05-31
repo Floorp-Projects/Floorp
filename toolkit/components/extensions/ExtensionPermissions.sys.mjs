@@ -521,17 +521,34 @@ export var OriginControls = {
     let couldRequest = policy.extension.optionalOrigins.matches(uri);
     let hasAccess = policy.canAccessURI(uri);
 
+    // If any of (MV2) content script patterns match the URI.
+    let csPatternMatches = false;
+    let quarantinedFrom = policy.quarantinedFromURI(uri);
+
     if (policy.manifestVersion < 3 && !hasAccess) {
+      csPatternMatches = policy.contentScripts.some(cs =>
+        cs.matches.patterns.some(p => p.matches(uri))
+      );
       // MV2 access through content scripts is implicit.
-      hasAccess = policy.contentScripts.some(cs => cs.matchesURI(uri));
+      hasAccess = csPatternMatches && !quarantinedFrom;
     }
 
+    // If extension is quarantined from this host, but could otherwise have
+    // access (via activeTab, optional, allowedOrigins or content scripts).
+    let quarantined =
+      quarantinedFrom &&
+      (activeTab ||
+        couldRequest ||
+        csPatternMatches ||
+        policy.allowedOrigins.matches(uri));
+
     if (
+      quarantined ||
       !this.allDomains.matches(uri) ||
       WebExtensionPolicy.isRestrictedURI(uri) ||
       (!couldRequest && !hasAccess && !activeTab)
     ) {
-      return { noAccess: true };
+      return { noAccess: true, quarantined };
     }
 
     if (!couldRequest && !hasAccess && activeTab) {
@@ -612,7 +629,9 @@ export var OriginControls = {
 
     if (state.noAccess) {
       return {
-        default: "origin-controls-state-no-access",
+        default: state.quarantined
+          ? "origin-controls-state-quarantined"
+          : "origin-controls-state-no-access",
         onHover: isAction ? onHoverForAction : null,
       };
     }
