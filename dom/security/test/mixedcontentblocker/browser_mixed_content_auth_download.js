@@ -127,10 +127,7 @@ add_setup(async function () {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve);
   });
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["dom.block_download_insecure", true],
-    ],
+    set: [["dom.block_download_insecure", true]],
   });
 });
 //Test description:

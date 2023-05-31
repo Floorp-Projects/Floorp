@@ -154,7 +154,6 @@ async function testDownloadsPanelAfterDialog({
     set: [
       ["browser.download.useDownloadDir", !askWhereToSave],
       ["browser.download.always_ask_before_handling_new_types", openUCT],
-      ["browser.download.improvements_to_download_panel", true],
       ["security.dialog_enable_delay", 0],
     ],
   });
@@ -264,7 +263,6 @@ async function testDownloadsPanelAfterDialog({
 add_task(async function test_downloads_panel_opens() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", true],
     ],
@@ -275,7 +273,6 @@ add_task(async function test_downloads_panel_opens() {
 add_task(async function test_customizemode_doesnt_wreck_things() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", true],
     ],
@@ -335,7 +332,6 @@ add_task(async function test_customizemode_doesnt_wreck_things() {
 add_task(async function test_downloads_panel_opening_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", false],
     ],
@@ -354,7 +350,6 @@ add_task(async function test_downloads_panel_opening_pref() {
 add_task(async function test_downloads_openDownloadsListOnStart_param() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", true],
     ],
@@ -376,7 +371,6 @@ add_task(async function test_downloads_openDownloadsListOnStart_param() {
 add_task(async function test_downloads_panel_on_webext_download_api() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", true],
     ],
@@ -481,10 +475,7 @@ add_task(async function test_downloads_panel_on_webext_download_api() {
  */
 add_task(async function test_downloads_panel_remains_closed() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
   await task_addDownloads([
     { state: DownloadsCommon.DOWNLOAD_DOWNLOADING },
@@ -542,10 +533,7 @@ add_task(async function test_downloads_panel_remains_closed() {
  */
 add_task(async function test_downloads_panel_inactive_window() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
 
   let oldShowEventNotification = DownloadsIndicatorView.showEventNotification;

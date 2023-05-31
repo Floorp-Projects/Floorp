@@ -12,9 +12,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_download_clickable() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
-  });
   Services.telemetry.clearScalars();
 
   startServer();

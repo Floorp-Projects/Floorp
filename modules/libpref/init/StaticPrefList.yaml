@@ -1326,12 +1326,6 @@
   value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
 
-# See bug 1710926
-- name: browser.download.improvements_to_download_panel
-  type: bool
-  value: true
-  mirror: always
-
 # See bug 1738574
 - name: browser.download.start_downloads_in_tmp_dir
   type: bool

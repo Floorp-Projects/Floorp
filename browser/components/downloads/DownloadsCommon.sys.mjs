@@ -977,9 +977,6 @@ DownloadsDataCtor.prototype = {
 
     let shouldOpenDownloadsPanel =
       aType == "start" &&
-      Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
-      ) &&
       DownloadsCommon.summarizeDownloads(this._downloads).numDownloading <= 1 &&
       lazy.gAlwaysOpenPanel;
 

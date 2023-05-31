@@ -243,11 +243,7 @@ add_task(async function test_store_preferredAction() {
   const actions = [
     {
       preferred: Ci.nsIHandlerInfo.alwaysAsk,
-      expected: Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
-      )
-        ? Ci.nsIHandlerInfo.alwaysAsk
-        : Ci.nsIHandlerInfo.useHelperApp,
+      expected: Ci.nsIHandlerInfo.alwaysAsk,
     },
     {
       preferred: Ci.nsIHandlerInfo.handleInternally,

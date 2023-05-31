@@ -104,11 +104,7 @@ examiner.prototype = {
 // 5. Complete download of text file
 add_task(async function test_slow_download() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.security.https_first", true],
-      // ensure that download panel gets opened
-      ["browser.download.improvements_to_download_panel", true],
-    ],
+    set: [["dom.security.https_first", true]],
   });
 
   // remove all previous downloads

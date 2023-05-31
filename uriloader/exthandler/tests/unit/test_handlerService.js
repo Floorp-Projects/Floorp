@@ -461,15 +461,7 @@ function run_test() {
       do_get_file("mailcap").path
     );
     handlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", null);
-    Assert.equal(
-      handlerInfo.preferredAction,
-      prefSvc.getBoolPref(
-        "browser.download.improvements_to_download_panel",
-        false
-      )
-        ? Ci.nsIHandlerInfo.saveToDisk
-        : Ci.nsIHandlerInfo.useSystemDefault
-    );
+    Assert.equal(handlerInfo.preferredAction, Ci.nsIHandlerInfo.saveToDisk);
     Assert.equal(handlerInfo.defaultDescription, "sed");
   }
 }

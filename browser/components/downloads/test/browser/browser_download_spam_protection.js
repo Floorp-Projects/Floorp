@@ -36,7 +36,6 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.enable_spam_prevention", true]],
     clear: [
-      ["browser.download.improvements_to_download_panel"],
       ["browser.download.alwaysOpenPanel"],
       ["browser.download.always_ask_before_handling_new_types"],
     ],

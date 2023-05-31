@@ -59,10 +59,7 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
   const pdfUrl = TESTROOT + "file_pdfjs_test.pdf";
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
 
   await BrowserTestUtils.withNewTab(
