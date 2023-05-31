@@ -33,6 +33,9 @@ JS_PUBLIC_API JS::FrontendContext* NewFrontendContext();
 // Destroy a front-end context allocated with NewFrontendContext.
 JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
 
+JS_PUBLIC_API void SetNativeStackQuota(JS::FrontendContext* fc,
+                                       JS::NativeStackSize stackSize);
+
 /*
  * Set supported import assertions on a FrontendContext to be used with
  * CompileModuleScriptToStencil. May only be set once for each FrontendContext.

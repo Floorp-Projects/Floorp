@@ -9,17 +9,28 @@
 
 #include <string>
 
+#include "frontend/FrontendContext.h"  // js::FrontendContext
 #include "js/CompileOptions.h"
 #include "js/experimental/CompileScript.h"
 #include "js/SourceText.h"
 #include "js/Stack.h"
 #include "jsapi-tests/tests.h"
+#include "util/NativeStack.h"  // js::GetNativeStackBase
 
 using namespace JS;
 
 BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
   JS::FrontendContext* fc = JS::NewFrontendContext();
   CHECK(fc);
+
+  static constexpr JS::NativeStackSize stackSize = 128 * sizeof(size_t) * 1024;
+
+  JS::SetNativeStackQuota(fc, stackSize);
+
+#ifndef __wasi__
+  CHECK(fc->stackLimit() ==
+        JS::GetNativeStackLimit(js::GetNativeStackBase(), stackSize - 1));
+#endif
 
   JS::CompileOptions options((JS::CompileOptions::ForFrontendContext()));
 
