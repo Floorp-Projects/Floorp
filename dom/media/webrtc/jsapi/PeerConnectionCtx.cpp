@@ -4,6 +4,7 @@
 
 #include "PeerConnectionCtx.h"
 
+#include "WebrtcGlobalStatsHistory.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
@@ -16,12 +17,14 @@
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/aec_dump.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsCRTGlue.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
@@ -433,11 +436,16 @@ void PeerConnectionCtx::RemovePeerConnection(const std::string& aKey) {
     nsAutoString pcId = NS_ConvertASCIItoUTF16(it->second->GetName().c_str());
     if (XRE_IsContentProcess()) {
       if (auto* child = WebrtcGlobalChild::Get(); child) {
+        auto pcId = NS_ConvertASCIItoUTF16(it->second->GetName().c_str());
         child->SendPeerConnectionFinalStats(*(it->second->GetFinalStats()));
+        child->SendPeerConnectionDestroyed(pcId);
       }
     } else {
       using Update = WebrtcGlobalInformation::PcTrackingUpdate;
       auto update = Update::Remove(pcId);
+      auto finalStats =
+          MakeUnique<RTCStatsReportInternal>(*(it->second->GetFinalStats()));
+      WebrtcGlobalStatsHistory::Record(std::move(finalStats));
       WebrtcGlobalInformation::PeerConnectionTracking(update);
     }
 
@@ -487,19 +495,17 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
         already_AddRefed(CreateBuiltinAudioDecoderFactory().release()),
         std::move(trials));
     StartTelemetryTimer();
-
-    auto pcId = NS_ConvertASCIItoUTF16(aPeerConnection->GetName().c_str());
-    if (XRE_IsContentProcess()) {
-      if (auto* child = WebrtcGlobalChild::Get(); child) {
-        child->SendPeerConnectionCreated(
-            pcId, aPeerConnection->LongTermStatsIsDisabled());
-      }
-    } else {
-      using Update = WebrtcGlobalInformation::PcTrackingUpdate;
-      auto update =
-          Update::Add(pcId, aPeerConnection->LongTermStatsIsDisabled());
-      WebrtcGlobalInformation::PeerConnectionTracking(update);
+  }
+  auto pcId = NS_ConvertASCIItoUTF16(aPeerConnection->GetName().c_str());
+  if (XRE_IsContentProcess()) {
+    if (auto* child = WebrtcGlobalChild::Get(); child) {
+      child->SendPeerConnectionCreated(
+          pcId, aPeerConnection->LongTermStatsIsDisabled());
     }
+  } else {
+    using Update = WebrtcGlobalInformation::PcTrackingUpdate;
+    auto update = Update::Add(pcId, aPeerConnection->LongTermStatsIsDisabled());
+    WebrtcGlobalInformation::PeerConnectionTracking(update);
   }
   mPeerConnections[aKey] = aPeerConnection;
 }
