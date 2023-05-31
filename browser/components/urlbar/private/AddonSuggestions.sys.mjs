@@ -222,13 +222,16 @@ export class AddonSuggestions extends BaseFeature {
       telemetryType: "amo",
     };
 
-    return new lazy.UrlbarResult(
-      lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
-      lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      )
+    return Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
+        ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+          queryContext.tokens,
+          payload
+        )
+      ),
+      { showFeedbackMenu: true }
     );
   }
 
