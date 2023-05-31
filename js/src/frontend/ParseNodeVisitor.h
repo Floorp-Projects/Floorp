@@ -11,7 +11,6 @@
 
 #include "frontend/ParseNode.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
-#include "js/Stack.h"               // JS::NativeStackLimit
 
 namespace js {
 
@@ -55,14 +54,12 @@ template <typename Derived>
 class ParseNodeVisitor {
  public:
   FrontendContext* fc_;
-  JS::NativeStackLimit stackLimit_;
 
-  ParseNodeVisitor(FrontendContext* fc, JS::NativeStackLimit stackLimit)
-      : fc_(fc), stackLimit_(stackLimit) {}
+  explicit ParseNodeVisitor(FrontendContext* fc) : fc_(fc) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
     AutoCheckRecursionLimit recursion(fc_);
-    if (!recursion.check(fc_, stackLimit_)) {
+    if (!recursion.check(fc_)) {
       return false;
     }
 
@@ -102,15 +99,12 @@ template <typename Derived>
 class RewritingParseNodeVisitor {
  public:
   FrontendContext* fc_;
-  JS::NativeStackLimit stackLimit_;
 
-  RewritingParseNodeVisitor(FrontendContext* fc,
-                            JS::NativeStackLimit stackLimit)
-      : fc_(fc), stackLimit_(stackLimit) {}
+  explicit RewritingParseNodeVisitor(FrontendContext* fc) : fc_(fc) {}
 
   [[nodiscard]] bool visit(ParseNode*& pn) {
     AutoCheckRecursionLimit recursion(fc_);
-    if (!recursion.check(fc_, stackLimit_)) {
+    if (!recursion.check(fc_)) {
       return false;
     }
 
