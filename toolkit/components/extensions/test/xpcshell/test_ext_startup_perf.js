@@ -5,28 +5,28 @@
 const STARTUP_APIS = ["backgroundPage"];
 
 const STARTUP_MODULES = new Set([
-  "resource://gre/modules/Extension.jsm",
-  "resource://gre/modules/ExtensionCommon.jsm",
-  "resource://gre/modules/ExtensionParent.jsm",
+  "resource://gre/modules/Extension.sys.mjs",
+  "resource://gre/modules/ExtensionCommon.sys.mjs",
+  "resource://gre/modules/ExtensionParent.sys.mjs",
   // FIXME: This is only loaded at startup for new extension installs.
   // Otherwise the data comes from the startup cache. We should test for
   // this.
-  "resource://gre/modules/ExtensionPermissions.jsm",
-  "resource://gre/modules/ExtensionProcessScript.jsm",
-  "resource://gre/modules/ExtensionUtils.jsm",
-  "resource://gre/modules/ExtensionTelemetry.jsm",
+  "resource://gre/modules/ExtensionPermissions.sys.mjs",
+  "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+  "resource://gre/modules/ExtensionUtils.sys.mjs",
+  "resource://gre/modules/ExtensionTelemetry.sys.mjs",
 ]);
 
 if (!Services.prefs.getBoolPref("extensions.webextensions.remote")) {
-  STARTUP_MODULES.add("resource://gre/modules/ExtensionChild.jsm");
-  STARTUP_MODULES.add("resource://gre/modules/ExtensionPageChild.jsm");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionChild.sys.mjs");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionPageChild.sys.mjs");
 }
 
 if (AppConstants.MOZ_APP_NAME == "thunderbird") {
   // Imported via mail/components/extensions/processScript.js.
-  STARTUP_MODULES.add("resource://gre/modules/ExtensionChild.jsm");
-  STARTUP_MODULES.add("resource://gre/modules/ExtensionContent.jsm");
-  STARTUP_MODULES.add("resource://gre/modules/ExtensionPageChild.jsm");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionChild.sys.mjs");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionContent.sys.mjs");
+  STARTUP_MODULES.add("resource://gre/modules/ExtensionPageChild.sys.mjs");
 }
 
 AddonTestUtils.init(this);
