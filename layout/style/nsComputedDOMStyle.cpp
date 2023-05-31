@@ -1357,7 +1357,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::MatrixToCSSValue(
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMozOsxFontSmoothing() {
   if (nsContentUtils::ShouldResistFingerprinting(
-          mPresShell->GetPresContext()->GetDocShell())) {
+          mPresShell->GetPresContext()->GetDocShell(), RFPTarget::Unknown)) {
     return nullptr;
   }
 

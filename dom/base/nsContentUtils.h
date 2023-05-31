@@ -363,8 +363,8 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(
       mozilla::dom::CallerType aCallerType, nsIGlobalObject* aGlobalObject,
       RFPTarget aTarget = RFPTarget::Unknown);
-  static bool ShouldResistFingerprinting(
-      nsIDocShell* aDocShell, RFPTarget aTarget = RFPTarget::Unknown);
+  static bool ShouldResistFingerprinting(nsIDocShell* aDocShell,
+                                         RFPTarget aTarget);
   // These functions are the new, nuanced functions
   static bool ShouldResistFingerprinting(
       nsIChannel* aChannel, RFPTarget aTarget = RFPTarget::Unknown);
