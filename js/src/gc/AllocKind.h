@@ -148,10 +148,7 @@ constexpr size_t AllocKindCount = size_t(AllocKind::LIMIT);
  *
  * Order is important as these are numerically compared.
  */
-enum class Heap : uint8_t {
-  Default = 0,
-  Tenured = 1
-};
+enum class Heap : uint8_t { Default = 0, Tenured = 1 };
 
 inline bool IsAllocKind(AllocKind kind) {
   return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
