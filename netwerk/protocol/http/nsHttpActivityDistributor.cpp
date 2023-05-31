@@ -118,8 +118,8 @@ nsHttpActivityDistributor::ObserveActivityWithArgs(
       MOZ_ASSERT(NS_SUCCEEDED(rv));
 
       Unused << self->ObserveActivity(
-          nsCOMPtr<nsISupports>(do_QueryObject(channel)), aActivityType,
-          aActivitySubtype, aTimestamp, aExtraSizeData, extraStringData);
+          static_cast<nsIChannel*>(channel), aActivityType, aActivitySubtype,
+          aTimestamp, aExtraSizeData, extraStringData);
     } else if (args.type() == HttpActivityArgs::THttpConnectionActivity) {
       const HttpConnectionActivity& activity =
           args.get_HttpConnectionActivity();
