@@ -175,6 +175,15 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<size_t> markedStrings;
   js::MainThreadOrGCTaskData<size_t> finalizedStrings;
 
+  // When true, skip calling the metadata callback. We use this:
+  // - to avoid invoking the callback recursively;
+  // - to avoid observing lazy prototype setup (which confuses callbacks that
+  //   want to use the types being set up!);
+  // - to avoid attaching allocation stacks to allocation stack nodes, which
+  //   is silly
+  // And so on.
+  js::MainThreadData<bool> suppressAllocationMetadataBuilder;
+
   // Flags permanently set when nursery allocation is disabled for this zone.
   js::MainThreadData<bool> nurseryStringsDisabled;
   js::MainThreadData<bool> nurseryBigIntsDisabled;
@@ -186,16 +195,12 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrIonCompileData<bool> allocNurseryStrings_;
   js::MainThreadOrIonCompileData<bool> allocNurseryBigInts_;
 
- public:
-  // When true, skip calling the metadata callback. We use this:
-  // - to avoid invoking the callback recursively;
-  // - to avoid observing lazy prototype setup (which confuses callbacks that
-  //   want to use the types being set up!);
-  // - to avoid attaching allocation stacks to allocation stack nodes, which
-  //   is silly
-  // And so on.
-  js::MainThreadData<bool> suppressAllocationMetadataBuilder;
+  // Minimum InitialHeap value which results in tenured allocation.
+  js::MainThreadData<js::gc::InitialHeap> minObjectHeapToTenure_;
+  js::MainThreadData<js::gc::InitialHeap> minStringHeapToTenure_;
+  js::MainThreadData<js::gc::InitialHeap> minBigintHeapToTenure_;
 
+ public:
   // Script side-tables. These used to be held by Realm, but are now placed
   // here in order to allow JSScript to access them during finalize (see bug
   // 1568245; this change in 1575350). The tables are initialized lazily by
@@ -485,6 +490,19 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   bool allocNurseryObjects() const { return allocNurseryObjects_; }
   bool allocNurseryStrings() const { return allocNurseryStrings_; }
   bool allocNurseryBigInts() const { return allocNurseryBigInts_; }
+
+  js::gc::InitialHeap minHeapToTenure(JS::TraceKind kind) const {
+    switch (kind) {
+      case JS::TraceKind::Object:
+        return minObjectHeapToTenure_;
+      case JS::TraceKind::String:
+        return minStringHeapToTenure_;
+      case JS::TraceKind::BigInt:
+        return minBigintHeapToTenure_;
+      default:
+        MOZ_CRASH("Unsupported kind for nursery allocation");
+    }
+  }
 
   mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();
