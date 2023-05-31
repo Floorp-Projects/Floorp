@@ -35,6 +35,7 @@ const TEST_MERINO_SUGGESTIONS = [
       },
     },
     is_sponsored: true,
+    is_top_pick: false,
   },
   {
     provider: "amo",
@@ -47,6 +48,21 @@ const TEST_MERINO_SUGGESTIONS = [
         rating: "0",
         number_of_ratings: "0",
         guid: "third@addon",
+      },
+    },
+    is_top_pick: false,
+  },
+  {
+    provider: "amo",
+    icon: "https://example.com/fourth.svg",
+    url: "https://example.com/fourth-addon",
+    title: "Fourth Addon",
+    description: "This is a fourth addon",
+    custom_details: {
+      amo: {
+        rating: "4",
+        number_of_ratings: "4",
+        guid: "fourth@addon",
       },
     },
   },
@@ -105,7 +121,8 @@ add_task(async function basic() {
       )} reviews`
     );
 
-    if (merinoSuggestion.is_top_pick) {
+    const isTopPick = merinoSuggestion.is_top_pick ?? true;
+    if (isTopPick) {
       Assert.equal(result.suggestedIndex, 1);
     } else if (merinoSuggestion.is_sponsored) {
       Assert.equal(
