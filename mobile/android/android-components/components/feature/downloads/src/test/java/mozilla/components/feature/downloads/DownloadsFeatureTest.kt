@@ -176,6 +176,8 @@ class DownloadsFeatureTest {
         verify(downloadManager, never()).download(any(), anyString())
 
         val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
+        doReturn("id").`when`(downloadManager).download(download)
+
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
