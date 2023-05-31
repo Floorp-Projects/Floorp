@@ -167,6 +167,16 @@ urlbar:
         to increment the minimum length any further.
         If not defines a cap, no cap will be used, and the user will be able to
         increment the minimum length without any limit.
+    addonsUITreatment:
+      type: string
+      enum:
+        - a
+        - b
+      description: >-
+        Define the UI type for addon suggestions.
+        In case of "a", display rating stars and review volume on the bottom of
+        the suggestion. In case of "b", display a label explaining that the
+        addon suggestion is a recommendation.
     autoFillAdaptiveHistoryEnabled:
       type: boolean
       fallbackPref: browser.urlbar.autoFill.adaptiveHistory.enabled
