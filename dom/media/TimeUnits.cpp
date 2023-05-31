@@ -380,7 +380,7 @@ TimeUnit TimeUnit::ToBase(int64_t aTargetBase, double& aOutError) const {
                   static_cast<double>(aTargetBase) / static_cast<double>(mBase);
   double integer;
   aOutError = modf(approx, &integer);
-  return TimeUnit(AssertedCast<int64_t>(approx), aTargetBase);
+  return TimeUnit(AssertedCast<int64_t>(std::round(approx)), aTargetBase);
 }
 
 bool TimeUnit::IsValid() const { return mTicks.isValid(); }
