@@ -2222,8 +2222,8 @@ bool nsContentUtils::ShouldResistFingerprinting(
   return ShouldResistFingerprinting(aGlobalObject, aTarget);
 }
 
-bool nsContentUtils::ShouldResistFingerprinting(
-    nsIDocShell* aDocShell, RFPTarget aTarget /* = RFPTarget::Unknown */) {
+bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell,
+                                                RFPTarget aTarget) {
   if (!aDocShell) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
             ("Called nsContentUtils::ShouldResistFingerprinting(nsIDocShell*) "
