@@ -1362,6 +1362,12 @@ void js::Nursery::freeTrailerBlocks(void) {
   mallocedBlockCache_.preen(0.05 * float(capacity() / (1024 * 1024)));
 }
 
+size_t Nursery::sizeOfTrailerBlockSets(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  return trailersAdded_.sizeOfExcludingThis(mallocSizeOf) +
+         trailersRemoved_.sizeOfExcludingThis(mallocSizeOf);
+}
+
 js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
                                                         JS::GCOptions options,
                                                         JS::GCReason reason) {
@@ -1576,6 +1582,16 @@ bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
   }
 
   return true;
+}
+
+size_t Nursery::sizeOfMallocedBuffers(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t total = 0;
+  for (BufferSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront()) {
+    total += mallocSizeOf(r.front());
+  }
+  total += mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);
+  return total;
 }
 
 void js::Nursery::sweep() {

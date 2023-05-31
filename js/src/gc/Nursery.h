@@ -69,12 +69,6 @@ class TenuringTracer;
 
 class alignas(TypicalCacheLineSize) Nursery {
  public:
-  static const size_t Alignment = gc::ChunkSize;
-  static const size_t ChunkShift = gc::ChunkShift;
-
-  using BufferRelocationOverlay = void*;
-  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
-
   explicit Nursery(gc::GCRuntime* gc);
   ~Nursery();
 
@@ -214,14 +208,7 @@ class alignas(TypicalCacheLineSize) Nursery {
     return cellsWithUid_.append(cell);
   }
 
-  size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
-    size_t total = 0;
-    for (BufferSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront()) {
-      total += mallocSizeOf(r.front());
-    }
-    total += mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);
-    return total;
-  }
+  size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const;
 
   // Wasm "trailer" (C++-heap-allocated) blocks.
   //
@@ -276,10 +263,7 @@ class alignas(TypicalCacheLineSize) Nursery {
     trailersRemovedUsed_++;
   }
 
-  size_t sizeOfTrailerBlockSets(mozilla::MallocSizeOf mallocSizeOf) const {
-    return trailersAdded_.sizeOfExcludingThis(mallocSizeOf) +
-           trailersRemoved_.sizeOfExcludingThis(mallocSizeOf);
-  }
+  size_t sizeOfTrailerBlockSets(mozilla::MallocSizeOf mallocSizeOf) const;
 
   // The number of bytes from the start position to the end of the nursery.
   // pass maxChunkCount(), allocatedChunkCount() or chunkCountLimit()
@@ -487,6 +471,8 @@ class alignas(TypicalCacheLineSize) Nursery {
   // The set of externally malloced buffers potentially kept live by objects
   // stored in the nursery. Any external buffers that do not belong to a
   // tenured thing at the end of a minor GC must be freed.
+  using BufferRelocationOverlay = void*;
+  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
   BufferSet mallocedBuffers;
   size_t mallocedBufferBytes = 0;
 
@@ -537,11 +523,6 @@ class alignas(TypicalCacheLineSize) Nursery {
   // no correctness impact, only a performance impact.
   gc::MallocedBlockCache mallocedBlockCache_;
 
-#ifdef JS_GC_ZEAL
-  struct Canary;
-  Canary* lastCanary_;
-#endif
-
   NurseryChunk& chunk(unsigned index) const { return *chunks_[index]; }
 
   // Set the current chunk. This updates the currentChunk_, position_ and
@@ -583,10 +564,6 @@ class alignas(TypicalCacheLineSize) Nursery {
   void* allocate(size_t size);
 
   void* moveToNextChunkAndAllocate(size_t size);
-
-#ifdef JS_GC_ZEAL
-  void writeCanary(uintptr_t address);
-#endif
 
   struct CollectionResult {
     size_t tenuredBytes;
