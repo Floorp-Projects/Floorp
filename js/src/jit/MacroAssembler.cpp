@@ -285,13 +285,13 @@ void MacroAssembler::checkAllocatorState(Label* fail) {
 }
 
 bool MacroAssembler::shouldNurseryAllocate(gc::AllocKind allocKind,
-                                           gc::InitialHeap initialHeap) {
+                                           gc::Heap initialHeap) {
   // Note that Ion elides barriers on writes to objects known to be in the
   // nursery, so any allocation that can be made into the nursery must be made
   // into the nursery, even if the nursery is disabled. At runtime these will
   // take the out-of-line path, which is required to insert a barrier for the
   // initializing writes.
-  return IsNurseryAllocable(allocKind) && initialHeap != gc::TenuredHeap;
+  return IsNurseryAllocable(allocKind) && initialHeap != gc::Heap::Tenured;
 }
 
 // Inline version of Nursery::allocateObject. If the object has dynamic slots,
@@ -415,14 +415,14 @@ void MacroAssembler::callFreeStub(Register slots) {
 void MacroAssembler::allocateObject(Register result, Register temp,
                                     gc::AllocKind allocKind,
                                     uint32_t nDynamicSlots,
-                                    gc::InitialHeap initialHeap, Label* fail,
+                                    gc::Heap initialHeap, Label* fail,
                                     const AllocSiteInput& allocSite) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
 
   checkAllocatorState(fail);
 
   if (shouldNurseryAllocate(allocKind, initialHeap)) {
-    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateObject(result, temp, allocKind, nDynamicSlots, fail,
                                  allocSite);
   }
@@ -439,7 +439,7 @@ void MacroAssembler::allocateObject(Register result, Register temp,
 
 void MacroAssembler::createGCObject(Register obj, Register temp,
                                     const TemplateObject& templateObj,
-                                    gc::InitialHeap initialHeap, Label* fail,
+                                    gc::Heap initialHeap, Label* fail,
                                     bool initContents /* = true */) {
   gc::AllocKind allocKind = templateObj.getAllocKind();
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
@@ -458,7 +458,7 @@ void MacroAssembler::createGCObject(Register obj, Register temp,
 void MacroAssembler::createPlainGCObject(
     Register result, Register shape, Register temp, Register temp2,
     uint32_t numFixedSlots, uint32_t numDynamicSlots, gc::AllocKind allocKind,
-    gc::InitialHeap initialHeap, Label* fail, const AllocSiteInput& allocSite,
+    gc::Heap initialHeap, Label* fail, const AllocSiteInput& allocSite,
     bool initContents /* = true */) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
   MOZ_ASSERT(shape != temp, "shape can overlap with temp2, but not temp");
@@ -496,8 +496,8 @@ void MacroAssembler::createPlainGCObject(
 
 void MacroAssembler::createArrayWithFixedElements(
     Register result, Register shape, Register temp, uint32_t arrayLength,
-    uint32_t arrayCapacity, gc::AllocKind allocKind,
-    gc::InitialHeap initialHeap, Label* fail, const AllocSiteInput& allocSite) {
+    uint32_t arrayCapacity, gc::AllocKind allocKind, gc::Heap initialHeap,
+    Label* fail, const AllocSiteInput& allocSite) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
   MOZ_ASSERT(shape != temp, "shape can overlap with temp2, but not temp");
   MOZ_ASSERT(result != temp);
@@ -664,14 +664,14 @@ void MacroAssembler::updateAllocSite(Register temp, Register result,
 // allocation requested but unsuccessful.
 void MacroAssembler::allocateString(Register result, Register temp,
                                     gc::AllocKind allocKind,
-                                    gc::InitialHeap initialHeap, Label* fail) {
+                                    gc::Heap initialHeap, Label* fail) {
   MOZ_ASSERT(allocKind == gc::AllocKind::STRING ||
              allocKind == gc::AllocKind::FAT_INLINE_STRING);
 
   checkAllocatorState(fail);
 
   if (shouldNurseryAllocate(allocKind, initialHeap)) {
-    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateString(result, temp, allocKind, fail);
   }
 
@@ -679,23 +679,22 @@ void MacroAssembler::allocateString(Register result, Register temp,
 }
 
 void MacroAssembler::newGCString(Register result, Register temp,
-                                 gc::InitialHeap initialHeap, Label* fail) {
+                                 gc::Heap initialHeap, Label* fail) {
   allocateString(result, temp, js::gc::AllocKind::STRING, initialHeap, fail);
 }
 
 void MacroAssembler::newGCFatInlineString(Register result, Register temp,
-                                          gc::InitialHeap initialHeap,
-                                          Label* fail) {
+                                          gc::Heap initialHeap, Label* fail) {
   allocateString(result, temp, js::gc::AllocKind::FAT_INLINE_STRING,
                  initialHeap, fail);
 }
 
 void MacroAssembler::newGCBigInt(Register result, Register temp,
-                                 gc::InitialHeap initialHeap, Label* fail) {
+                                 gc::Heap initialHeap, Label* fail) {
   checkAllocatorState(fail);
 
   if (shouldNurseryAllocate(gc::AllocKind::BIGINT, initialHeap)) {
-    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateBigInt(result, temp, fail);
   }
 
@@ -1777,7 +1776,7 @@ void MacroAssembler::initializeBigIntAbsolute(Register bigInt, Register val) {
 
 void MacroAssembler::copyBigIntWithInlineDigits(Register src, Register dest,
                                                 Register temp,
-                                                gc::InitialHeap initialHeap,
+                                                gc::Heap initialHeap,
                                                 Label* fail) {
   branch32(Assembler::Above, Address(src, BigInt::offsetOfLength()),
            Imm32(int32_t(BigInt::inlineDigitsLength())), fail);

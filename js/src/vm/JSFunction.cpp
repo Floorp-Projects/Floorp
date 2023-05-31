@@ -1560,7 +1560,7 @@ JSFunction* js::NewFunctionWithProto(
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+  gc::Heap heap = GetInitialHeap(newKind, clasp);
   JSFunction* fun = JSFunction::create(cx, allocKind, heap, shape);
   if (!fun) {
     return nullptr;
@@ -1666,7 +1666,8 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
     }
   }
 
-  JSFunction* clone = JSFunction::create(cx, allocKind, gc::DefaultHeap, shape);
+  JSFunction* clone =
+      JSFunction::create(cx, allocKind, gc::Heap::Default, shape);
   if (!clone) {
     return nullptr;
   }

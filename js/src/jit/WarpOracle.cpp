@@ -1194,7 +1194,7 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::AllocSite: {
         uintptr_t oldWord = stubInfo->getStubRawWord(stub, offset);
         auto* site = reinterpret_cast<gc::AllocSite*>(oldWord);
-        gc::InitialHeap initialHeap = site->initialHeap();
+        gc::Heap initialHeap = site->initialHeap();
         uintptr_t newWord = uintptr_t(initialHeap);
         stubInfo->replaceStubRawWord(stubDataCopy, offset, oldWord, newWord);
         break;

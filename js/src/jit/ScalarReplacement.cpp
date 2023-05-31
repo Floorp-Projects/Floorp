@@ -2324,7 +2324,7 @@ MNewArrayObject* ArgumentsReplacer::inlineArgsArray(MInstruction* ins,
   static_assert(
       gc::CanUseFixedElementsForArray(ArgumentsObject::MaxInlinedArgs));
 
-  gc::InitialHeap heap = gc::DefaultHeap;
+  gc::Heap heap = gc::Heap::Default;
 
   // Allocate an array of the correct size.
   auto* shapeConstant = MConstant::NewShape(alloc(), shape);

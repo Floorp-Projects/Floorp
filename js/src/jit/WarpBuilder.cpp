@@ -3027,7 +3027,7 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
 
     // TODO: support pre-tenuring.
-    gc::InitialHeap heap = gc::DefaultHeap;
+    gc::Heap heap = gc::Heap::Default;
 
     // Allocate an array of the correct size.
     MInstruction* newArray;
@@ -3348,7 +3348,7 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     case CacheKind::NewObject: {
       auto* templateConst = constant(NullValue());
       MNewObject* ins = MNewObject::NewVM(
-          alloc(), templateConst, gc::DefaultHeap, MNewObject::ObjectLiteral);
+          alloc(), templateConst, gc::Heap::Default, MNewObject::ObjectLiteral);
       current->add(ins);
       current->push(ins);
       return resumeAfter(ins, loc);
@@ -3357,7 +3357,7 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
       uint32_t length = loc.getNewArrayLength();
       MConstant* templateConst = constant(NullValue());
       MNewArray* ins =
-          MNewArray::NewVM(alloc(), length, templateConst, gc::DefaultHeap);
+          MNewArray::NewVM(alloc(), length, templateConst, gc::Heap::Default);
       current->add(ins);
       current->push(ins);
       return true;

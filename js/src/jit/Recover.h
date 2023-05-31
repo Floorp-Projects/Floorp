@@ -763,7 +763,7 @@ class RNewObject final : public RInstruction {
 class RNewPlainObject final : public RInstruction {
  private:
   gc::AllocKind allocKind_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewPlainObject, 1)
@@ -775,7 +775,7 @@ class RNewPlainObject final : public RInstruction {
 class RNewArrayObject final : public RInstruction {
  private:
   uint32_t length_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewArrayObject, 1)

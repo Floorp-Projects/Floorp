@@ -63,11 +63,11 @@ class CellAllocator {
   static T* NewCell(JSContext* cx, Args&&... args);
 
  private:
-  // Allocate a cell in the nursery, unless |heap| is TenuredHeap or nursery
+  // Allocate a cell in the nursery, unless |heap| is Heap::Tenured or nursery
   // allocation is disabled for |traceKind| in the current zone.
   template <JS::TraceKind traceKind, AllowGC allowGC = CanGC>
   static void* AllocNurseryOrTenuredCell(JSContext* cx, gc::AllocKind allocKind,
-                                         gc::InitialHeap heap, AllocSite* site);
+                                         gc::Heap heap, AllocSite* site);
 
   // Allocate a cell in the tenured heap.
   template <AllowGC allowGC = CanGC>
@@ -79,7 +79,7 @@ class CellAllocator {
   // type. Non-nursery-allocatable strings will go through the fallback
   // tenured-only allocation path.
   template <typename T, AllowGC allowGC = CanGC, typename... Args>
-  static T* NewString(JSContext* cx, gc::InitialHeap heap, Args&&... args) {
+  static T* NewString(JSContext* cx, gc::Heap heap, Args&&... args) {
     static_assert(std::is_base_of_v<JSString, T>);
     gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
     void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::String, allowGC>(
@@ -91,7 +91,7 @@ class CellAllocator {
   }
 
   template <typename T, AllowGC allowGC /* = CanGC */>
-  static T* NewBigInt(JSContext* cx, InitialHeap heap) {
+  static T* NewBigInt(JSContext* cx, Heap heap) {
     void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::BigInt, allowGC>(
         cx, gc::AllocKind::BIGINT, heap, nullptr);
     if (ptr) {
@@ -101,10 +101,10 @@ class CellAllocator {
   }
 
   template <typename T, AllowGC allowGC = CanGC>
-  static T* NewObject(JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+  static T* NewObject(JSContext* cx, gc::AllocKind kind, gc::Heap heap,
                       const JSClass* clasp, gc::AllocSite* site = nullptr) {
     MOZ_ASSERT(IsObjectAllocKind(kind));
-    MOZ_ASSERT_IF(heap != gc::TenuredHeap && clasp->hasFinalize() &&
+    MOZ_ASSERT_IF(heap != gc::Heap::Tenured && clasp->hasFinalize() &&
                       !clasp->isProxyObject(),
                   CanNurseryAllocateFinalizedClass(clasp));
     void* cell = AllocNurseryOrTenuredCell<JS::TraceKind::Object, allowGC>(

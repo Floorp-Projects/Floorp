@@ -126,7 +126,7 @@ class WasmGcObject : public JSObject {
   // from `typeDefData`; the initial heap must be specified separately.
   static WasmGcObject* create(JSContext* cx,
                               wasm::TypeDefInstanceData* typeDefData,
-                              js::gc::InitialHeap initialHeap);
+                              js::gc::Heap initialHeap);
 };
 
 //=========================================================================
@@ -157,7 +157,7 @@ class WasmArrayObject : public WasmGcObject {
   template <bool ZeroFields = true>
   static WasmArrayObject* createArray(JSContext* cx,
                                       wasm::TypeDefInstanceData* typeDefData,
-                                      js::gc::InitialHeap initialHeap,
+                                      js::gc::Heap initialHeap,
                                       uint32_t numElements);
 
   // JIT accessors
@@ -231,8 +231,7 @@ class WasmStructObject : public WasmGcObject {
   template <bool ZeroFields>
   static MOZ_NEVER_INLINE WasmStructObject* createStructOOL(
       JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-      js::gc::InitialHeap initialHeap, uint32_t inlineBytes,
-      uint32_t outlineBytes);
+      js::gc::Heap initialHeap, uint32_t inlineBytes, uint32_t outlineBytes);
 
   // Creates a new struct typed object, optionally initialized to zero.
   // Reports if there is an out of memory error.  The structure's type, shape,
@@ -243,7 +242,7 @@ class WasmStructObject : public WasmGcObject {
   template <bool ZeroFields = true>
   static inline WasmStructObject* createStruct(
       JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-      js::gc::InitialHeap initialHeap) {
+      js::gc::Heap initialHeap) {
     const wasm::TypeDef* typeDef = typeDefData->typeDef;
     MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
 

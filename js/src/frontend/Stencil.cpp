@@ -1828,7 +1828,7 @@ static JSFunction* CreateFunctionFast(JSContext* cx,
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
 
-  JSFunction* fun = JSFunction::create(cx, allocKind, gc::TenuredHeap, shape);
+  JSFunction* fun = JSFunction::create(cx, allocKind, gc::Heap::Tenured, shape);
   if (!fun) {
     return nullptr;
   }

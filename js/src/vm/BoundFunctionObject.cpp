@@ -346,7 +346,7 @@ BoundFunctionObject* BoundFunctionObject::functionBindImpl(
       Rooted<SharedShape*> shape(
           cx, cx->global()->maybeBoundFunctionShapeWithDefaultProto());
       JSObject* obj =
-          NativeObject::create(cx, allocKind, gc::DefaultHeap, shape);
+          NativeObject::create(cx, allocKind, gc::Heap::Default, shape);
       if (!obj) {
         return nullptr;
       }
@@ -418,7 +418,7 @@ BoundFunctionObject* BoundFunctionObject::functionBindImpl(
 BoundFunctionObject* BoundFunctionObject::createWithTemplate(
     JSContext* cx, Handle<BoundFunctionObject*> templateObj) {
   Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
-  JSObject* obj = NativeObject::create(cx, allocKind, gc::DefaultHeap, shape);
+  JSObject* obj = NativeObject::create(cx, allocKind, gc::Heap::Default, shape);
   if (!obj) {
     return nullptr;
   }

@@ -897,7 +897,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
 static BigInt* AllocateBigIntTenuredNoGC() {
   JSContext* cx = TlsContext.get();  // Cold code (the caller is elaborate)
 
-  return cx->newCell<BigInt, NoGC>(gc::TenuredHeap);
+  return cx->newCell<BigInt, NoGC>(gc::Heap::Tenured);
 }
 
 static int64_t DivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi,

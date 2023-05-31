@@ -5276,7 +5276,7 @@ ArrayObject* js::NewDenseFullyAllocatedArrayWithTemplate(
 
   Rooted<SharedShape*> shape(cx, templateObject->sharedShape());
 
-  gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
+  gc::Heap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
   ArrayObject* arr = ArrayObject::create(cx, allocKind, heap, shape, length,
                                          shape->slotSpan(), metadata);
   if (!arr) {

@@ -2258,11 +2258,11 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
 // Called from CreateDependentString::generateFallback.
 void* AllocateDependentString(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
-  return cx->newCell<JSDependentString, NoGC>(js::gc::DefaultHeap);
+  return cx->newCell<JSDependentString, NoGC>(js::gc::Heap::Default);
 }
 void* AllocateFatInlineString(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
-  return cx->newCell<JSFatInlineString, NoGC>(js::gc::DefaultHeap);
+  return cx->newCell<JSFatInlineString, NoGC>(js::gc::Heap::Default);
 }
 
 // Called to allocate a BigInt if inline allocation failed.
@@ -2273,7 +2273,7 @@ void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
     cx->nursery().requestMinorGC(JS::GCReason::OUT_OF_NURSERY);
   }
 
-  return cx->newCell<JS::BigInt, NoGC>(js::gc::TenuredHeap);
+  return cx->newCell<JS::BigInt, NoGC>(js::gc::Heap::Tenured);
 }
 
 void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
@@ -2312,7 +2312,7 @@ void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
   MOZ_ASSERT(nDynamicSlots);
 
   AutoUnsafeCallWithABI unsafe;
-  ArrayObject* array = cx->newCell<ArrayObject, NoGC>(kind, gc::DefaultHeap,
+  ArrayObject* array = cx->newCell<ArrayObject, NoGC>(kind, gc::Heap::Default,
                                                       &ArrayObject::class_);
   if (!array || !array->allocateInitialSlots(cx, nDynamicSlots)) {
     return nullptr;

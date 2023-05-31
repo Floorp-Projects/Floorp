@@ -316,10 +316,10 @@ class JSObject
 
 #ifdef DEBUG
   static void debugCheckNewObject(js::Shape* shape, js::gc::AllocKind allocKind,
-                                  js::gc::InitialHeap heap);
+                                  js::gc::Heap heap);
 #else
   static void debugCheckNewObject(js::Shape* shape, js::gc::AllocKind allocKind,
-                                  js::gc::InitialHeap heap) {}
+                                  js::gc::Heap heap) {}
 #endif
 
   /*

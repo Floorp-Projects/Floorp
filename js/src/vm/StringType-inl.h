@@ -27,7 +27,7 @@ namespace js {
 // Allocate a thin inline string if possible, and a fat inline string if not.
 template <AllowGC allowGC, typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString* AllocateInlineString(
-    JSContext* cx, size_t len, CharT** chars, js::gc::InitialHeap heap) {
+    JSContext* cx, size_t len, CharT** chars, js::gc::Heap heap) {
   MOZ_ASSERT(JSInlineString::lengthFits<CharT>(len));
 
   if (JSThinInlineString::lengthFits<CharT>(len)) {
@@ -52,7 +52,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateInlineAtom(JSContext* cx, size_t len,
 template <AllowGC allowGC, typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
     JSContext* cx, mozilla::Range<const CharT> chars,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    js::gc::Heap heap = js::gc::Heap::Default) {
   /*
    * Don't bother trying to find a static atom; measurement shows that not
    * many get here (for one, Atomize is catching them).
@@ -88,7 +88,7 @@ static MOZ_ALWAYS_INLINE JSAtom* NewInlineAtom(JSContext* cx,
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
     JSContext* cx, Handle<JSLinearString*> base, size_t start, size_t length,
-    js::gc::InitialHeap heap) {
+    js::gc::Heap heap) {
   MOZ_ASSERT(JSInlineString::lengthFits<CharT>(length));
 
   CharT* chars;
@@ -181,7 +181,7 @@ MOZ_ALWAYS_INLINE JSRope* JSRope::new_(
     JSContext* cx,
     typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
     typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
-    size_t length, js::gc::InitialHeap heap) {
+    size_t length, js::gc::Heap heap) {
   if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, length))) {
     return nullptr;
   }
@@ -207,7 +207,7 @@ inline JSDependentString::JSDependentString(JSLinearString* base, size_t start,
 
 MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
     JSContext* cx, JSLinearString* baseArg, size_t start, size_t length,
-    js::gc::InitialHeap heap) {
+    js::gc::Heap heap) {
   /*
    * Try to avoid long chains of dependent strings. We can't avoid these
    * entirely, however, due to how ropes are flattened.
@@ -268,7 +268,7 @@ void JSLinearString::disownCharsBecauseError() {
 template <js::AllowGC allowGC, typename CharT>
 MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
     JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
-    js::gc::InitialHeap heap) {
+    js::gc::Heap heap) {
   if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, length))) {
     return nullptr;
   }
@@ -279,7 +279,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
 template <js::AllowGC allowGC, typename CharT>
 MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
     JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
-    js::gc::InitialHeap heap) {
+    js::gc::Heap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   JSLinearString* str =
       cx->newCell<JSLinearString, allowGC>(heap, chars.get(), length);
@@ -346,14 +346,14 @@ inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
 
 template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(
-    JSContext* cx, js::gc::InitialHeap heap) {
+    JSContext* cx, js::gc::Heap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   return cx->newCell<JSThinInlineString, allowGC>(heap);
 }
 
 template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(
-    JSContext* cx, js::gc::InitialHeap heap) {
+    JSContext* cx, js::gc::Heap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   return cx->newCell<JSFatInlineString, allowGC>(heap);
 }
@@ -475,7 +475,7 @@ inline JSLinearString* js::StaticStrings::getUnitStringForElement(
     return getUnit(c);
   }
   return js::NewInlineString<CanGC>(cx, mozilla::Range<const char16_t>(&c, 1),
-                                    js::gc::DefaultHeap);
+                                    js::gc::Heap::Default);
 }
 
 MOZ_ALWAYS_INLINE void JSString::finalize(JS::GCContext* gcx) {

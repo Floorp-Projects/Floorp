@@ -2534,7 +2534,7 @@ WasmStructObject* Instance::constantStructNewDefault(JSContext* cx,
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
   // We assume that constant structs will have a long lifetime and hence
   // allocate them directly in the tenured heap.
-  return WasmStructObject::createStruct(cx, typeDefData, gc::TenuredHeap);
+  return WasmStructObject::createStruct(cx, typeDefData, gc::Heap::Tenured);
 }
 
 WasmArrayObject* Instance::constantArrayNewDefault(JSContext* cx,
@@ -2543,7 +2543,7 @@ WasmArrayObject* Instance::constantArrayNewDefault(JSContext* cx,
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
   // We assume that constant arrays will have a long lifetime and hence
   // allocate them directly in the tenured heap.
-  return WasmArrayObject::createArray(cx, typeDefData, gc::TenuredHeap,
+  return WasmArrayObject::createArray(cx, typeDefData, gc::Heap::Tenured,
                                       numElements);
 }
 

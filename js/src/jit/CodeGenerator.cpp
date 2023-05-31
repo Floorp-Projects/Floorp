@@ -1767,7 +1767,7 @@ void CodeGenerator::visitRegExp(LRegExp* lir) {
       lir, ArgList(ImmGCPtr(source)), StoreRegisterTo(output));
   if (lir->mir()->hasShared()) {
     TemplateObject templateObject(source);
-    masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
+    masm.createGCObject(output, temp, templateObject, gc::Heap::Default,
                         ool->entry());
   } else {
     masm.jump(ool->entry());
@@ -1854,8 +1854,7 @@ static void StepBackToLeadSurrogate(MacroAssembler& masm, Register regexpShared,
 static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                                 Register input, Register lastIndex,
                                 Register staticsReg, Register temp1,
-                                Register temp2,
-                                gc::InitialHeap initialStringHeap,
+                                Register temp2, gc::Heap initialStringHeap,
                                 LiveGeneralRegisterSet& volatileRegs) {
   Address pendingInputAddress(staticsReg,
                               RegExpStatics::offsetOfPendingInput());
@@ -1868,7 +1867,7 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
   masm.guardedCallPreBarrier(matchesInputAddress, MIRType::String);
   masm.guardedCallPreBarrier(lazySourceAddress, MIRType::String);
 
-  if (initialStringHeap == gc::DefaultHeap) {
+  if (initialStringHeap == gc::Heap::Default) {
     // Writing into RegExpStatics tenured memory; must post-barrier.
     if (staticsReg.volatile_()) {
       volatileRegs.add(staticsReg);
@@ -1920,8 +1919,8 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
                                     Register lastIndex, Register temp1,
                                     Register temp2, Register temp3,
                                     int32_t inputOutputDataStartOffset,
-                                    gc::InitialHeap initialStringHeap,
-                                    Label* notFound, Label* failure) {
+                                    gc::Heap initialStringHeap, Label* notFound,
+                                    Label* failure) {
   JitSpew(JitSpew_Codegen, "# Emitting PrepareAndExecuteRegExp");
 
   using irregexp::InputOutputData;
@@ -2188,7 +2187,7 @@ class CreateDependentString {
   void generate(MacroAssembler& masm, const JSAtomState& names,
                 CompileRuntime* runtime, Register base,
                 BaseIndex startIndexAddress, BaseIndex limitIndexAddress,
-                gc::InitialHeap initialStringHeap);
+                gc::Heap initialStringHeap);
 
   // Generate fallback path for creating DependentString.
   void generateFallback(MacroAssembler& masm);
@@ -2199,7 +2198,7 @@ void CreateDependentString::generate(MacroAssembler& masm,
                                      CompileRuntime* runtime, Register base,
                                      BaseIndex startIndexAddress,
                                      BaseIndex limitIndexAddress,
-                                     gc::InitialHeap initialStringHeap) {
+                                     gc::Heap initialStringHeap) {
   JitSpew(JitSpew_Codegen, "# Emitting CreateDependentString (encoding=%s)",
           (encoding_ == CharEncoding::Latin1 ? "Latin-1" : "Two-Byte"));
 
@@ -2442,7 +2441,7 @@ static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
 // but RegExpExecMatch also has to load and update .lastIndex for global/sticky
 // regular expressions.
 static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
-                                              gc::InitialHeap initialStringHeap,
+                                              gc::Heap initialStringHeap,
                                               bool isExecMatch) {
   if (isExecMatch) {
     JitSpew(JitSpew_Codegen, "# Emitting RegExpExecMatch stub");
@@ -2538,7 +2537,7 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   // Construct the result.
   Register object = temp1;
   Label matchResultFallback, matchResultJoin;
-  masm.createGCObject(object, temp2, templateObj, gc::DefaultHeap,
+  masm.createGCObject(object, temp2, templateObj, gc::Heap::Default,
                       &matchResultFallback);
   masm.bind(&matchResultJoin);
 
@@ -3596,7 +3595,7 @@ void CodeGenerator::visitLambda(LLambda* lir) {
       lir, ArgList(ImmGCPtr(fun), envChain), StoreRegisterTo(output));
 
   TemplateObject templateObject(fun);
-  masm.createGCObject(output, tempReg, templateObject, gc::DefaultHeap,
+  masm.createGCObject(output, tempReg, templateObject, gc::Heap::Default,
                       ool->entry());
 
   masm.storeValue(JSVAL_TYPE_OBJECT, envChain,
@@ -4110,7 +4109,7 @@ void CodeGenerator::visitNewLexicalEnvironmentObject(
   auto* templateObj = ToConstantObject<BlockLexicalEnvironmentObject>(
       lir->mir()->templateObj());
   auto* scope = &templateObj->scope();
-  gc::InitialHeap initialHeap = gc::DefaultHeap;
+  gc::Heap initialHeap = gc::Heap::Default;
 
   using Fn =
       BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>);
@@ -4132,7 +4131,7 @@ void CodeGenerator::visitNewClassBodyEnvironmentObject(
   auto* templateObj = ToConstantObject<ClassBodyLexicalEnvironmentObject>(
       lir->mir()->templateObj());
   auto* scope = &templateObj->scope();
-  gc::InitialHeap initialHeap = gc::DefaultHeap;
+  gc::Heap initialHeap = gc::Heap::Default;
 
   using Fn = ClassBodyLexicalEnvironmentObject* (*)(JSContext*,
                                                     Handle<ClassBodyScope*>);
@@ -4154,7 +4153,7 @@ void CodeGenerator::visitNewVarEnvironmentObject(
   auto* templateObj =
       ToConstantObject<VarEnvironmentObject>(lir->mir()->templateObj());
   auto* scope = &templateObj->scope().as<VarScope>();
-  gc::InitialHeap initialHeap = gc::DefaultHeap;
+  gc::Heap initialHeap = gc::Heap::Default;
 
   using Fn = VarEnvironmentObject* (*)(JSContext*, Handle<VarScope*>);
   auto* ool = oolCallVM<Fn, VarEnvironmentObject::createWithoutEnclosing>(
@@ -7020,7 +7019,7 @@ void CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir) {
   Register tempReg = ToRegister(lir->temp0());
 
   JSObject* templateObject = lir->mir()->templateObject();
-  gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+  gc::Heap initialHeap = lir->mir()->initialHeap();
 
   using Fn = ArrayObject* (*)(JSContext*, Handle<ArrayObject*>, int32_t length);
   OutOfLineCode* ool = oolCallVM<Fn, ArrayConstructorOneArg>(
@@ -7089,7 +7088,7 @@ void CodeGenerator::visitNewIterator(LNewIterator* lir) {
   }
 
   TemplateObject templateObject(lir->mir()->templateObject());
-  masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap,
+  masm.createGCObject(objReg, tempReg, templateObject, gc::Heap::Default,
                       ool->entry());
 
   masm.bind(ool->rejoin());
@@ -7102,7 +7101,7 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   LiveRegisterSet liveRegs = liveVolatileRegs(lir);
 
   JSObject* templateObject = lir->mir()->templateObject();
-  gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+  gc::Heap initialHeap = lir->mir()->initialHeap();
 
   TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
 
@@ -7132,7 +7131,7 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   LiveRegisterSet liveRegs = liveVolatileRegs(lir);
 
   JSObject* templateObject = lir->mir()->templateObject();
-  gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+  gc::Heap initialHeap = lir->mir()->initialHeap();
 
   TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
 
@@ -7183,7 +7182,7 @@ void CodeGenerator::visitBindFunction(LBindFunction* lir) {
   // If this fails, we set temp1 to nullptr so we do the allocation in C++.
   TemplateObject templateObject(lir->mir()->templateObject());
   Label allocOk, allocFailed;
-  masm.createGCObject(temp1, temp2, templateObject, gc::DefaultHeap,
+  masm.createGCObject(temp1, temp2, templateObject, gc::Heap::Default,
                       &allocFailed);
   masm.jump(&allocOk);
 
@@ -7224,7 +7223,7 @@ void CodeGenerator::visitNewBoundFunction(LNewBoundFunction* lir) {
       lir, ArgList(ImmGCPtr(templateObj)), StoreRegisterTo(output));
 
   TemplateObject templateObject(templateObj);
-  masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
+  masm.createGCObject(output, temp, templateObject, gc::Heap::Default,
                       ool->entry());
 
   masm.bind(ool->rejoin());
@@ -7398,14 +7397,15 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
 
   auto* mir = lir->mir();
   const Shape* shape = mir->shape();
-  gc::InitialHeap initialHeap = mir->initialHeap();
+  gc::Heap initialHeap = mir->initialHeap();
   gc::AllocKind allocKind = mir->allocKind();
 
-  using Fn = JSObject* (*)(JSContext*, Handle<SharedShape*>, gc::AllocKind,
-                           gc::InitialHeap);
+  using Fn =
+      JSObject* (*)(JSContext*, Handle<SharedShape*>, gc::AllocKind, gc::Heap);
   OutOfLineCode* ool = oolCallVM<Fn, NewPlainObjectOptimizedFallback>(
       lir,
-      ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)), Imm32(initialHeap)),
+      ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)),
+              Imm32(int32_t(initialHeap))),
       StoreRegisterTo(objReg));
 
   bool initContents = ShouldInitFixedSlots(lir, shape, mir->numFixedSlots());
@@ -7450,7 +7450,7 @@ void CodeGenerator::visitNewArrayObject(LNewArrayObject* lir) {
   const Shape* shape = mir->shape();
 
   NewObjectKind objectKind =
-      mir->initialHeap() == gc::TenuredHeap ? TenuredObject : GenericObject;
+      mir->initialHeap() == gc::Heap::Tenured ? TenuredObject : GenericObject;
 
   using Fn =
       ArrayObject* (*)(JSContext*, uint32_t, gc::AllocKind, NewObjectKind);
@@ -7478,7 +7478,7 @@ void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
 
   TemplateObject templateObject(lir->mir()->templateObj());
 
-  masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap,
+  masm.createGCObject(objReg, tempReg, templateObject, gc::Heap::Default,
                       ool->entry());
 
   masm.bind(ool->rejoin());
@@ -7497,7 +7497,7 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
 
   // Inline call object creation, using the OOL path only for tricky cases.
   TemplateObject templateObject(templateObj);
-  masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap,
+  masm.createGCObject(objReg, tempReg, templateObject, gc::Heap::Default,
                       ool->entry());
 
   masm.bind(ool->rejoin());
@@ -7515,7 +7515,7 @@ void CodeGenerator::visitNewStringObject(LNewStringObject* lir) {
                                                       StoreRegisterTo(output));
 
   TemplateObject templateObject(templateObj);
-  masm.createGCObject(output, temp, templateObject, gc::DefaultHeap,
+  masm.createGCObject(output, temp, templateObject, gc::Heap::Default,
                       ool->entry());
 
   masm.loadStringLength(input, temp);
@@ -7608,7 +7608,7 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
     // initialize these slots in ArgumentsObject::finishForIonPure.
     Label failure;
     TemplateObject templateObject(templateObj);
-    masm.createGCObject(objTemp, temp0, templateObject, gc::DefaultHeap,
+    masm.createGCObject(objTemp, temp0, templateObject, gc::Heap::Default,
                         &failure,
                         /* initContents = */ false);
 
@@ -7692,7 +7692,7 @@ void CodeGenerator::visitCreateInlinedArgumentsObject(
     // slots in ArgumentsObject::finishForIonPure.
     Label failure;
     TemplateObject templateObject(templateObj);
-    masm.createGCObject(argsObj, temp3, templateObject, gc::DefaultHeap,
+    masm.createGCObject(argsObj, temp3, templateObject, gc::Heap::Default,
                         &failure,
                         /* initContents = */ false);
 
@@ -10865,10 +10865,10 @@ void CodeGenerator::visitSameValue(LSameValue* lir) {
 
 void CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs,
                                Register output) {
-  using Fn = JSString* (*)(JSContext*, HandleString, HandleString,
-                           js::gc::InitialHeap);
+  using Fn =
+      JSString* (*)(JSContext*, HandleString, HandleString, js::gc::Heap);
   OutOfLineCode* ool = oolCallVM<Fn, ConcatStrings<CanGC>>(
-      lir, ArgList(lhs, rhs, static_cast<Imm32>(gc::DefaultHeap)),
+      lir, ArgList(lhs, rhs, static_cast<Imm32>(int32_t(gc::Heap::Default))),
       StoreRegisterTo(output));
 
   const JitRealm* jitRealm = gen->realm->jitRealm();
@@ -10964,7 +10964,7 @@ static void CopyStringCharsMaybeInflate(MacroAssembler& masm, Register input,
 
 static void AllocateThinOrFatInlineString(MacroAssembler& masm, Register output,
                                           Register length, Register temp,
-                                          gc::InitialHeap initialStringHeap,
+                                          gc::Heap initialStringHeap,
                                           Label* failure,
                                           CharEncoding encoding) {
 #ifdef DEBUG
@@ -11016,8 +11016,7 @@ static void AllocateThinOrFatInlineString(MacroAssembler& masm, Register output,
 
 static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
                                Register output, Register temp1, Register temp2,
-                               Register temp3,
-                               gc::InitialHeap initialStringHeap,
+                               Register temp3, gc::Heap initialStringHeap,
                                Label* failure, CharEncoding encoding) {
   JitSpew(JitSpew_Codegen, "# Emitting ConcatInlineString (encoding=%s)",
           (encoding == CharEncoding::Latin1 ? "Latin-1" : "Two-Byte"));
@@ -11266,7 +11265,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   masm.branch32(Assembler::Above, temp2, Imm32(JSString::MAX_LENGTH), &failure);
 
   // Allocate a new rope, guaranteed to be in the nursery if initialStringHeap
-  // == gc::DefaultHeap. (As a result, no post barriers are needed below.)
+  // == gc::Heap::Default. (As a result, no post barriers are needed below.)
   masm.newGCString(output, temp3, initialStringHeap, &failure);
 
   // Store rope length and flags. temp1 still holds the result of AND'ing the
@@ -13251,8 +13250,8 @@ void CodeGenerator::visitRest(LRest* lir) {
     Label joinAlloc, failAlloc;
     masm.movePtr(ImmGCPtr(shape), temp0);
     masm.createArrayWithFixedElements(temp2, temp0, temp1, arrayLength,
-                                      arrayCapacity, allocKind, gc::DefaultHeap,
-                                      &failAlloc);
+                                      arrayCapacity, allocKind,
+                                      gc::Heap::Default, &failAlloc);
     masm.jump(&joinAlloc);
     {
       masm.bind(&failAlloc);

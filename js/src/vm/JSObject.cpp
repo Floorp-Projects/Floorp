@@ -769,7 +769,7 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(JSContext* cx,
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+  gc::Heap heap = GetInitialHeap(newKind, clasp);
   NativeObject* obj = NativeObject::create(cx, kind, heap, shape);
   if (!obj) {
     return nullptr;
@@ -3605,7 +3605,7 @@ void js::AssertJSClassInvariants(const JSClass* clasp) {
 
 /* static */
 void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
-                                   js::gc::InitialHeap heap) {
+                                   js::gc::Heap heap) {
   const JSClass* clasp = shape->getObjectClass();
 
   if (!ClassCanHaveFixedData(clasp)) {
@@ -3638,7 +3638,7 @@ void JSObject::debugCheckNewObject(Shape* shape, js::gc::AllocKind allocKind,
   }
 
   MOZ_ASSERT_IF(clasp->hasFinalize(),
-                heap == gc::TenuredHeap ||
+                heap == gc::Heap::Tenured ||
                     CanNurseryAllocateFinalizedClass(clasp) ||
                     clasp->isProxyObject());
 

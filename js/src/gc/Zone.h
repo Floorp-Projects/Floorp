@@ -195,10 +195,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrIonCompileData<bool> allocNurseryStrings_;
   js::MainThreadOrIonCompileData<bool> allocNurseryBigInts_;
 
-  // Minimum InitialHeap value which results in tenured allocation.
-  js::MainThreadData<js::gc::InitialHeap> minObjectHeapToTenure_;
-  js::MainThreadData<js::gc::InitialHeap> minStringHeapToTenure_;
-  js::MainThreadData<js::gc::InitialHeap> minBigintHeapToTenure_;
+  // Minimum Heap value which results in tenured allocation.
+  js::MainThreadData<js::gc::Heap> minObjectHeapToTenure_;
+  js::MainThreadData<js::gc::Heap> minStringHeapToTenure_;
+  js::MainThreadData<js::gc::Heap> minBigintHeapToTenure_;
 
  public:
   // Script side-tables. These used to be held by Realm, but are now placed
@@ -491,7 +491,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   bool allocNurseryStrings() const { return allocNurseryStrings_; }
   bool allocNurseryBigInts() const { return allocNurseryBigInts_; }
 
-  js::gc::InitialHeap minHeapToTenure(JS::TraceKind kind) const {
+  js::gc::Heap minHeapToTenure(JS::TraceKind kind) const {
     switch (kind) {
       case JS::TraceKind::Object:
         return minObjectHeapToTenure_;

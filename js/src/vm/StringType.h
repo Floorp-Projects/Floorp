@@ -739,7 +739,7 @@ class JSRope : public JSString {
       JSContext* cx,
       typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
       typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
-      size_t length, js::gc::InitialHeap = js::gc::DefaultHeap);
+      size_t length, js::gc::Heap = js::gc::Heap::Default);
 
   js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1Chars(
       JSContext* maybecx, arena_id_t destArenaId) const;
@@ -836,12 +836,12 @@ class JSLinearString : public JSString {
   template <js::AllowGC allowGC, typename CharT>
   static inline JSLinearString* new_(
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
-      size_t length, js::gc::InitialHeap heap);
+      size_t length, js::gc::Heap heap);
 
   template <js::AllowGC allowGC, typename CharT>
   static inline JSLinearString* newValidLength(
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
-      size_t length, js::gc::InitialHeap heap);
+      size_t length, js::gc::Heap heap);
 
   // Convert a plain linear string to an extensible string. For testing. The
   // caller must ensure that it is a plain or extensible string already, and
@@ -995,7 +995,7 @@ class JSDependentString : public JSLinearString {
   // string.
   static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                      size_t start, size_t length,
-                                     js::gc::InitialHeap heap);
+                                     js::gc::Heap heap);
 
   template <typename T>
   void relocateNonInlineChars(T chars, size_t offset) {
@@ -1096,8 +1096,7 @@ class JSThinInlineString : public JSInlineString {
   static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE;
 
   template <js::AllowGC allowGC>
-  static inline JSThinInlineString* new_(JSContext* cx,
-                                         js::gc::InitialHeap heap);
+  static inline JSThinInlineString* new_(JSContext* cx, js::gc::Heap heap);
 
   template <typename CharT>
   static bool lengthFits(size_t length);
@@ -1143,8 +1142,7 @@ class JSFatInlineString : public JSInlineString {
 
  public:
   template <js::AllowGC allowGC>
-  static inline JSFatInlineString* new_(JSContext* cx,
-                                        js::gc::InitialHeap heap);
+  static inline JSFatInlineString* new_(JSContext* cx, js::gc::Heap heap);
 
   static const size_t MAX_LENGTH_LATIN1 =
       JSString::NUM_INLINE_CHARS_LATIN1 + INLINE_EXTENSION_CHARS_LATIN1;
@@ -1440,35 +1438,36 @@ static inline UniqueChars StringToNewUTF8CharsZ(JSContext* cx, JSString& str) {
  * trigger a GC.
  */
 template <js::AllowGC allowGC, typename CharT>
-extern JSLinearString* NewString(
-    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+extern JSLinearString* NewString(JSContext* cx,
+                                 UniquePtr<CharT[], JS::FreePolicy> chars,
+                                 size_t length,
+                                 js::gc::Heap heap = js::gc::Heap::Default);
 
 /* Like NewString, but doesn't try to deflate to Latin1. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSLinearString* NewStringDontDeflate(
     JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 extern JSLinearString* NewDependentString(
     JSContext* cx, JSString* base, size_t start, size_t length,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 /* Take ownership of an array of Latin1Chars. */
 extern JSLinearString* NewLatin1StringZ(
     JSContext* cx, UniqueChars chars,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSLinearString* NewStringCopyN(
     JSContext* cx, const CharT* s, size_t n,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 template <js::AllowGC allowGC>
 inline JSLinearString* NewStringCopyN(
     JSContext* cx, const char* s, size_t n,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    js::gc::Heap heap = js::gc::Heap::Default) {
   return NewStringCopyN<allowGC>(cx, reinterpret_cast<const Latin1Char*>(s), n,
                                  heap);
 }
@@ -1487,7 +1486,7 @@ extern JSAtom* NewAtomCopyNDontDeflateValidLength(JSContext* cx, const CharT* s,
 template <js::AllowGC allowGC, typename CharT>
 inline JSLinearString* NewStringCopy(
     JSContext* cx, mozilla::Span<const CharT> s,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    js::gc::Heap heap = js::gc::Heap::Default) {
   return NewStringCopyN<allowGC>(cx, s.data(), s.size(), heap);
 }
 
@@ -1495,7 +1494,7 @@ inline JSLinearString* NewStringCopy(
 template <js::AllowGC allowGC, typename CharT>
 inline JSLinearString* NewStringCopy(
     JSContext* cx, std::basic_string_view<CharT> s,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    js::gc::Heap heap = js::gc::Heap::Default) {
   return NewStringCopyN<allowGC>(cx, s.data(), s.size(), heap);
 }
 
@@ -1503,43 +1502,42 @@ inline JSLinearString* NewStringCopy(
 template <js::AllowGC allowGC, typename CharT>
 extern JSLinearString* NewStringCopyNDontDeflate(
     JSContext* cx, const CharT* s, size_t n,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 template <js::AllowGC allowGC, typename CharT>
 extern JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(
     JSContext* cx, const CharT* s, size_t n,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC>
 inline JSLinearString* NewStringCopyZ(
     JSContext* cx, const char16_t* s,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    js::gc::Heap heap = js::gc::Heap::Default) {
   return NewStringCopyN<allowGC>(cx, s, js_strlen(s), heap);
 }
 
 template <js::AllowGC allowGC>
 inline JSLinearString* NewStringCopyZ(
-    JSContext* cx, const char* s,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    JSContext* cx, const char* s, js::gc::Heap heap = js::gc::Heap::Default) {
   return NewStringCopyN<allowGC>(cx, s, strlen(s), heap);
 }
 
 extern JSLinearString* NewStringCopyUTF8N(
     JSContext* cx, const JS::UTF8Chars utf8,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 inline JSLinearString* NewStringCopyUTF8Z(
     JSContext* cx, const JS::ConstUTF8CharsZ utf8,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
+    js::gc::Heap heap = js::gc::Heap::Default) {
   return NewStringCopyUTF8N(
       cx, JS::UTF8Chars(utf8.c_str(), strlen(utf8.c_str())), heap);
 }
 
-JSString* NewMaybeExternalString(
-    JSContext* cx, const char16_t* s, size_t n,
-    const JSExternalStringCallbacks* callbacks, bool* allocatedExternal,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
+                                 const JSExternalStringCallbacks* callbacks,
+                                 bool* allocatedExternal,
+                                 js::gc::Heap heap = js::gc::Heap::Default);
 
 static_assert(sizeof(HashNumber) == 4);
 
@@ -1547,7 +1545,7 @@ template <AllowGC allowGC>
 extern JSString* ConcatStrings(
     JSContext* cx, typename MaybeRooted<JSString*, allowGC>::HandleType left,
     typename MaybeRooted<JSString*, allowGC>::HandleType right,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+    js::gc::Heap heap = js::gc::Heap::Default);
 
 /*
  * Test if strings are equal. The caller can call the function even if str1

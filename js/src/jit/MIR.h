@@ -1886,20 +1886,19 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t length_;
 
   // Heap where the array should be allocated.
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
   bool vmCall_;
 
-  MNewArray(uint32_t length, MConstant* templateConst,
-            gc::InitialHeap initialHeap, bool vmCall = false);
+  MNewArray(uint32_t length, MConstant* templateConst, gc::Heap initialHeap,
+            bool vmCall = false);
 
  public:
   INSTRUCTION_HEADER(NewArray)
   TRIVIAL_NEW_WRAPPERS
 
   static MNewArray* NewVM(TempAllocator& alloc, uint32_t length,
-                          MConstant* templateConst,
-                          gc::InitialHeap initialHeap) {
+                          MConstant* templateConst, gc::Heap initialHeap) {
     return new (alloc) MNewArray(length, templateConst, initialHeap, true);
   }
 
@@ -1909,7 +1908,7 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
     return getOperand(0)->toConstant()->toObjectOrNull();
   }
 
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   bool isVMCall() const { return vmCall_; }
 
@@ -1931,9 +1930,9 @@ class MNewArray : public MUnaryInstruction, public NoTypePolicy::Data {
 };
 
 class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
-  MNewTypedArray(MConstant* templateConst, gc::InitialHeap initialHeap)
+  MNewTypedArray(MConstant* templateConst, gc::Heap initialHeap)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap) {
     setResultType(MIRType::Object);
@@ -1947,7 +1946,7 @@ class MNewTypedArray : public MUnaryInstruction, public NoTypePolicy::Data {
     return &getOperand(0)->toConstant()->toObject().as<TypedArrayObject>();
   }
 
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
 
@@ -1961,11 +1960,11 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   enum Mode { ObjectLiteral, ObjectCreate };
 
  private:
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
   Mode mode_;
   bool vmCall_;
 
-  MNewObject(MConstant* templateConst, gc::InitialHeap initialHeap, Mode mode,
+  MNewObject(MConstant* templateConst, gc::Heap initialHeap, Mode mode,
              bool vmCall = false)
       : MUnaryInstruction(classOpcode, templateConst),
         initialHeap_(initialHeap),
@@ -1993,7 +1992,7 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
   TRIVIAL_NEW_WRAPPERS
 
   static MNewObject* NewVM(TempAllocator& alloc, MConstant* templateConst,
-                           gc::InitialHeap initialHeap, Mode mode) {
+                           gc::Heap initialHeap, Mode mode) {
     return new (alloc) MNewObject(templateConst, initialHeap, mode, true);
   }
 
@@ -2003,7 +2002,7 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
     return getOperand(0)->toConstant()->toObjectOrNull();
   }
 
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   bool isVMCall() const { return vmCall_; }
 
@@ -2021,11 +2020,11 @@ class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t numFixedSlots_;
   uint32_t numDynamicSlots_;
   gc::AllocKind allocKind_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
   MNewPlainObject(MConstant* shapeConst, uint32_t numFixedSlots,
                   uint32_t numDynamicSlots, gc::AllocKind allocKind,
-                  gc::InitialHeap initialHeap)
+                  gc::Heap initialHeap)
       : MUnaryInstruction(classOpcode, shapeConst),
         numFixedSlots_(numFixedSlots),
         numDynamicSlots_(numDynamicSlots),
@@ -2050,7 +2049,7 @@ class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t numFixedSlots() const { return numFixedSlots_; }
   uint32_t numDynamicSlots() const { return numDynamicSlots_; }
   gc::AllocKind allocKind() const { return allocKind_; }
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
@@ -2062,10 +2061,10 @@ class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
 class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
  private:
   uint32_t length_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
   MNewArrayObject(TempAllocator& alloc, MConstant* shapeConst, uint32_t length,
-                  gc::InitialHeap initialHeap)
+                  gc::Heap initialHeap)
       : MUnaryInstruction(classOpcode, shapeConst),
         length_(length),
         initialHeap_(initialHeap) {
@@ -2079,7 +2078,7 @@ class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
   TRIVIAL_NEW_WRAPPERS
 
   static MNewArrayObject* New(TempAllocator& alloc, MConstant* shapeConst,
-                              uint32_t length, gc::InitialHeap initialHeap) {
+                              uint32_t length, gc::Heap initialHeap) {
     return new (alloc) MNewArrayObject(alloc, shapeConst, length, initialHeap);
   }
 
@@ -2089,7 +2088,7 @@ class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   uint32_t length() const { return length_; }
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
@@ -3252,9 +3251,9 @@ class MInlineArgumentsSlice
       public MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1>,
                        NoFloatPolicyAfter<2>>::Data {
   JSObject* templateObj_;
-  gc::InitialHeap initialHeap_;
+  gc::Heap initialHeap_;
 
-  MInlineArgumentsSlice(JSObject* templateObj, gc::InitialHeap initialHeap)
+  MInlineArgumentsSlice(JSObject* templateObj, gc::Heap initialHeap)
       : MVariadicInstruction(classOpcode),
         templateObj_(templateObj),
         initialHeap_(initialHeap) {
@@ -3269,11 +3268,11 @@ class MInlineArgumentsSlice
                                     MDefinition* count,
                                     MCreateInlinedArgumentsObject* args,
                                     JSObject* templateObj,
-                                    gc::InitialHeap initialHeap);
+                                    gc::Heap initialHeap);
   NAMED_OPERANDS((0, begin), (1, count))
 
   JSObject* templateObj() const { return templateObj_; }
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
+  gc::Heap initialHeap() const { return initialHeap_; }
 
   MDefinition* getArg(uint32_t idx) const {
     return getOperand(idx + NumNonArgumentOperands);
