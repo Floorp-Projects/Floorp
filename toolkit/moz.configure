@@ -505,6 +505,31 @@ def wayland_headers(wayland, toolkit_gtk, artifacts):
 set_config("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
 set_define("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
 
+# Hardware-accelerated video decode with VAAPI and V4L2
+# ==============================================================
+
+
+@depends(target, wayland_headers)
+def vaapi(target, wayland_headers):
+    # VAAPI is only used in Wayland. It's mostly used on x86(-64) but is
+    # sometimes used on ARM/ARM64 SOCs. Wayland implies GTK and Linux.
+    if target.cpu in ("arm", "aarch64", "x86", "x86_64") and wayland_headers:
+        return True
+
+
+@depends(target, wayland_headers)
+def v4l2(target, wayland_headers):
+    # V4L2 decode is only used in Wayland, and generally only appears on
+    # embedded SOCs. Wayland implies GTK and Linux.
+    if target.cpu in ("arm", "aarch64", "riscv64") and wayland_headers:
+        return True
+
+
+set_config("MOZ_ENABLE_VAAPI", True, when=vaapi)
+set_config("MOZ_ENABLE_V4L2", True, when=v4l2)
+set_define("MOZ_ENABLE_VAAPI", True, when=vaapi)
+set_define("MOZ_ENABLE_V4L2", True, when=v4l2)
+
 # GL Provider
 # ==============================================================
 option("--with-gl-provider", nargs=1, help="Set GL provider backend type")
