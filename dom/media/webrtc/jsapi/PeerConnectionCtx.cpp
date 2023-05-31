@@ -430,9 +430,18 @@ void PeerConnectionCtx::RemovePeerConnection(const std::string& aKey) {
     if (it->second->GetFinalStats() && !it->second->LongTermStatsIsDisabled()) {
       WebrtcGlobalInformation::StashStats(*(it->second->GetFinalStats()));
     }
+    nsAutoString pcId = NS_ConvertASCIItoUTF16(it->second->GetName().c_str());
+    if (XRE_IsContentProcess()) {
+      if (auto* child = WebrtcGlobalChild::Get(); child) {
+        child->SendPeerConnectionFinalStats(*(it->second->GetFinalStats()));
+      }
+    } else {
+      using Update = WebrtcGlobalInformation::PcTrackingUpdate;
+      auto update = Update::Remove(pcId);
+      WebrtcGlobalInformation::PeerConnectionTracking(update);
+    }
 
     mPeerConnections.erase(it);
-
     if (mPeerConnections.empty()) {
       mSharedWebrtcState = nullptr;
       StopTelemetryTimer();
@@ -478,6 +487,19 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
         already_AddRefed(CreateBuiltinAudioDecoderFactory().release()),
         std::move(trials));
     StartTelemetryTimer();
+
+    auto pcId = NS_ConvertASCIItoUTF16(aPeerConnection->GetName().c_str());
+    if (XRE_IsContentProcess()) {
+      if (auto* child = WebrtcGlobalChild::Get(); child) {
+        child->SendPeerConnectionCreated(
+            pcId, aPeerConnection->LongTermStatsIsDisabled());
+      }
+    } else {
+      using Update = WebrtcGlobalInformation::PcTrackingUpdate;
+      auto update =
+          Update::Add(pcId, aPeerConnection->LongTermStatsIsDisabled());
+      WebrtcGlobalInformation::PeerConnectionTracking(update);
+    }
   }
   mPeerConnections[aKey] = aPeerConnection;
 }
@@ -503,12 +525,13 @@ void PeerConnectionCtx::ClearClosedStats() {
 }
 
 nsresult PeerConnectionCtx::Initialize() {
+  MOZ_ASSERT(NS_IsMainThread());
   initGMP();
   SdpRidAttributeList::kMaxRidLength =
       webrtc::BaseRtpStringExtension::kMaxValueSizeBytes;
 
   if (XRE_IsContentProcess()) {
-    WebrtcGlobalChild::Create();
+    WebrtcGlobalChild::Get();
   }
 
   return NS_OK;
