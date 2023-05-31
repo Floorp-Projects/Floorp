@@ -299,6 +299,11 @@ dictionary RTCConfigurationInternal {
   DOMString                      sdpSemantics;
 };
 
+dictionary RTCSdpHistoryInternal {
+  required DOMString pcid;
+  sequence<RTCSdpHistoryEntryInternal> sdpHistory = [];
+};
+
 // A collection of RTCStats dictionaries, plus some other info. Used by
 // WebrtcGlobalInformation for about:webrtc, and telemetry.
 dictionary RTCStatsReportInternal : RTCStatsCollection {
@@ -308,6 +313,7 @@ dictionary RTCStatsReportInternal : RTCStatsCollection {
   DOMString                                 jsepSessionErrors;
   DOMString                                 localSdp;
   DOMString                                 remoteSdp;
+  // TODO demux from RTCStatsReportInternal in bug 1830824
   sequence<RTCSdpHistoryEntryInternal>      sdpHistory = [];
   required DOMHighResTimeStamp              timestamp;
   double                                    callDurationMs;
