@@ -457,6 +457,10 @@ async function doShowLessFrequently({ input, expected }) {
       gURLBar.view.isOpen,
       "The view should remain open clicking the command"
     );
+    Assert.ok(
+      details.element.row.hasAttribute("feedback-acknowledgment"),
+      "Row should have feedback acknowledgment after clicking command"
+    );
   } catch (e) {
     Assert.ok(!expected.isMenuItemShown);
     Assert.ok(
