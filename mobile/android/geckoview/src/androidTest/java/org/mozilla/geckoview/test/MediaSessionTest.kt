@@ -1004,8 +1004,8 @@ class MediaSessionTest : BaseSessionTest() {
 
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "media.autoplay.default" to 0,
-            ),
+                "media.autoplay.default" to 0
+            )
         )
 
         mainSession.loadUri("about:blank")
@@ -1019,7 +1019,7 @@ class MediaSessionTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onPlay(
                 session: GeckoSession,
-                mediaSession: MediaSession,
+                mediaSession: MediaSession
             ) {
                 onPlayCalled.complete(null)
             }
