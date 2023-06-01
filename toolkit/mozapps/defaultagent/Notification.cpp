@@ -11,6 +11,10 @@
 #include <windows.h>
 #include <winnt.h>
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
@@ -216,6 +220,37 @@ static bool GetStrings(Strings& strings) {
   return true;
 }
 
+static mozilla::WindowsError LaunchFirefoxToHandleDefaultBrowserAgent() {
+  // Could also be `MOZ_APP_NAME.exe`, but there's no generality to be gained:
+  // the WDBA is Firefox-only.
+  FilePathResult firefoxPathResult = GetRelativeBinaryPath(L"firefox.exe");
+  if (firefoxPathResult.isErr()) {
+    return firefoxPathResult.unwrapErr();
+  }
+  std::wstring firefoxPath = firefoxPathResult.unwrap();
+
+  const wchar_t* firefoxArgs[] = {firefoxPath.c_str(),
+                                  L"-to-handle-default-browser-agent"};
+  mozilla::UniquePtr<wchar_t[]> firefoxCmdLine(mozilla::MakeCommandLine(
+      mozilla::ArrayLength(firefoxArgs), const_cast<wchar_t**>(firefoxArgs)));
+
+  PROCESS_INFORMATION pi;
+  STARTUPINFOW si = {sizeof(si)};
+  if (!::CreateProcessW(firefoxPath.c_str(), firefoxCmdLine.get(), nullptr,
+                        nullptr, false,
+                        DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr,
+                        nullptr, &si, &pi)) {
+    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+    LOG_ERROR(hr);
+    return mozilla::WindowsError::FromHResult(hr);
+  }
+
+  CloseHandle(pi.hThread);
+  CloseHandle(pi.hProcess);
+
+  return mozilla::WindowsError::CreateSuccess();
+}
+
 /*
  * Set the default browser.
  *
@@ -239,7 +274,11 @@ static HRESULT SetDefaultBrowserFromNotification(const wchar_t* aumi) {
     hr = SetDefaultBrowserUserChoice(aumi);
   }
 
-  if (FAILED(hr)) {
+  if (!FAILED(hr)) {
+    mozilla::Unused << LaunchFirefoxToHandleDefaultBrowserAgent();
+  } else {
+    LOG_ERROR_MESSAGE(L"Failed to SetDefaultBrowserUserChoice: %#X",
+                      GetLastError());
     LaunchModernSettingsDialogDefaultApps();
   }
   return hr;
