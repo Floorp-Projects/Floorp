@@ -1,5 +1,4 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'titovartem' reviewed: '2021-04-12'} *-->
+<?% config.freshness.reviewed = '2021-04-12' %?>
 
 # PeerConnection level framework fixture architecture
 

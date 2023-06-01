@@ -1,5 +1,5 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'hta' reviewed: '2021-04-12'} *-->
+<?% config.freshness.owner = 'hta' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
 
 # The WebRTC API
 

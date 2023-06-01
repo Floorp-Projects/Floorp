@@ -1,7 +1,6 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'titovartem' reviewed: '2021-03-01'} *-->
-
 # Network Emulation Framework
+
+<?% config.freshness.reviewed = '2021-03-01' %?>
 
 [TOC]
 

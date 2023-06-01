@@ -1,7 +1,7 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'peah' reviewed: '2021-04-13'} *-->
-
 # Audio Processing Module (APM)
+
+<?% config.freshness.owner = 'peah' %?>
+<?% config.freshness.reviewed = '2021-04-13' %?>
 
 ## Overview
 

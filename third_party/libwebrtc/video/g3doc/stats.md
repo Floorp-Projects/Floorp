@@ -1,5 +1,5 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'asapersson' reviewed: '2021-04-14'} *-->
+<?% config.freshness.reviewed = '2021-04-14' %?>
+<?% config.freshness.owner = 'asapersson' %?>
 
 # Video stats
 

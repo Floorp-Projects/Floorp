@@ -1,5 +1,5 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'jakobi' reviewed: '2021-04-13'} *-->
+<?% config.freshness.reviewed = '2021-04-13' %?>
+<?% config.freshness.owner = 'jakobi' %?>
 
 # NetEq
 

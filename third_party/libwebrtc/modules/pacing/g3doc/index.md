@@ -1,5 +1,5 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'sprang' reviewed: '2021-04-12'} *-->
+<?% config.freshness.reviewed = '2021-04-12' %?>
+<?% config.freshness.owner = 'sprang' %?>
 
 # Paced Sending
 

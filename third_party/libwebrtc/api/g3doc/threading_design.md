@@ -1,6 +1,5 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'hta' reviewed: '2021-04-12'} *-->
-
+<?% config.freshness.owner = 'hta' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
 # API Threading Design considerations
 
 The header files in this directory form the API to the WebRTC library
