@@ -20,6 +20,8 @@ DEFAULT_C99 = {"__STDC_VERSION__": "199901L"}
 
 DEFAULT_C11 = {"__STDC_VERSION__": "201112L"}
 
+DEFAULT_C17 = {"__STDC_VERSION__": "201710L"}
+
 DEFAULT_CXX_97 = {"__cplusplus": "199711L"}
 
 DEFAULT_CXX_11 = {"__cplusplus": "201103L"}
@@ -91,9 +93,11 @@ GCC_7 = GCC("7.3.0") + DEFAULT_C11
 GXX_7 = GXX("7.3.0") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
 GCC_8 = GCC("8.3.0") + DEFAULT_C11
 GXX_8 = GXX("8.3.0") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
+GCC_10 = GCC("10.2.1") + DEFAULT_C17
+GXX_10 = GXX("10.2.1") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
 
-DEFAULT_GCC = GCC_7
-DEFAULT_GXX = GXX_7
+DEFAULT_GCC = GCC_8
+DEFAULT_GXX = GXX_8
 
 GCC_PLATFORM_LITTLE_ENDIAN = {
     "__ORDER_LITTLE_ENDIAN__": 1234,
@@ -420,7 +424,7 @@ class BaseToolchainTest(BaseConfigureTest):
 
 
 def old_gcc_message(old_ver):
-    return "Only GCC 7.1 or newer is supported (found version {}).".format(old_ver)
+    return "Only GCC 8.1 or newer is supported (found version {}).".format(old_ver)
 
 
 class LinuxToolchainTest(BaseToolchainTest):
@@ -437,6 +441,8 @@ class LinuxToolchainTest(BaseToolchainTest):
         "/usr/bin/g++-7": GXX_7 + GCC_PLATFORM_X86_64_LINUX,
         "/usr/bin/gcc-8": GCC_8 + GCC_PLATFORM_X86_64_LINUX,
         "/usr/bin/g++-8": GXX_8 + GCC_PLATFORM_X86_64_LINUX,
+        "/usr/bin/gcc-10": GCC_10 + GCC_PLATFORM_X86_64_LINUX,
+        "/usr/bin/g++-10": GXX_10 + GCC_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang": DEFAULT_CLANG + CLANG_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang++": DEFAULT_CLANGXX + CLANG_PLATFORM_X86_64_LINUX,
         "/usr/bin/clang-7.0": CLANG_7_0 + CLANG_PLATFORM_X86_64_LINUX,
@@ -455,20 +461,8 @@ class LinuxToolchainTest(BaseToolchainTest):
     GXX_5_RESULT = GCC_5_RESULT
     GCC_6_RESULT = old_gcc_message("6.4.0")
     GXX_6_RESULT = GCC_6_RESULT
-    GCC_7_RESULT = CompilerResult(
-        flags=["-std=gnu99"],
-        version="7.3.0",
-        type="gcc",
-        compiler="/usr/bin/gcc-7",
-        language="C",
-    )
-    GXX_7_RESULT = CompilerResult(
-        flags=["-std=gnu++17"],
-        version="7.3.0",
-        type="gcc",
-        compiler="/usr/bin/g++-7",
-        language="C++",
-    )
+    GCC_7_RESULT = old_gcc_message("7.3.0")
+    GXX_7_RESULT = GCC_7_RESULT
     GCC_8_RESULT = CompilerResult(
         flags=["-std=gnu99"],
         version="8.3.0",
@@ -483,8 +477,8 @@ class LinuxToolchainTest(BaseToolchainTest):
         compiler="/usr/bin/g++-8",
         language="C++",
     )
-    DEFAULT_GCC_RESULT = GCC_7_RESULT + {"compiler": "/usr/bin/gcc"}
-    DEFAULT_GXX_RESULT = GXX_7_RESULT + {"compiler": "/usr/bin/g++"}
+    DEFAULT_GCC_RESULT = GCC_8_RESULT + {"compiler": "/usr/bin/gcc"}
+    DEFAULT_GXX_RESULT = GXX_8_RESULT + {"compiler": "/usr/bin/g++"}
 
     CLANG_3_3_RESULT = (
         "Only clang/llvm 7.0 or newer is supported (found version 3.3.0)."
@@ -573,12 +567,12 @@ class LinuxToolchainTest(BaseToolchainTest):
             {
                 "c_compiler": self.DEFAULT_GCC_RESULT,
                 "cxx_compiler": (
-                    "The target C compiler is version 7.3.0, while the target "
-                    "C++ compiler is version 8.3.0. Need to use the same compiler "
+                    "The target C compiler is version 8.3.0, while the target "
+                    "C++ compiler is version 10.2.1. Need to use the same compiler "
                     "version."
                 ),
             },
-            environ={"CC": "gcc", "CXX": "g++-8"},
+            environ={"CC": "gcc", "CXX": "g++-10"},
         )
 
         self.do_toolchain_test(
@@ -588,12 +582,12 @@ class LinuxToolchainTest(BaseToolchainTest):
                 "cxx_compiler": self.DEFAULT_GXX_RESULT,
                 "host_c_compiler": self.DEFAULT_GCC_RESULT,
                 "host_cxx_compiler": (
-                    "The host C compiler is version 7.3.0, while the host "
-                    "C++ compiler is version 8.3.0. Need to use the same compiler "
+                    "The host C compiler is version 8.3.0, while the host "
+                    "C++ compiler is version 10.2.1. Need to use the same compiler "
                     "version."
                 ),
             },
-            environ={"CC": "gcc", "HOST_CXX": "g++-8"},
+            environ={"CC": "gcc", "HOST_CXX": "g++-10"},
         )
 
     def test_mismatched_compiler(self):
@@ -849,8 +843,8 @@ class OSXToolchainTest(BaseToolchainTest):
     PATHS = {
         "/usr/bin/gcc-5": GCC_5 + GCC_PLATFORM_X86_64_OSX,
         "/usr/bin/g++-5": GXX_5 + GCC_PLATFORM_X86_64_OSX,
-        "/usr/bin/gcc-7": GCC_7 + GCC_PLATFORM_X86_64_OSX,
-        "/usr/bin/g++-7": GXX_7 + GCC_PLATFORM_X86_64_OSX,
+        "/usr/bin/gcc-8": GCC_8 + GCC_PLATFORM_X86_64_OSX,
+        "/usr/bin/g++-8": GXX_8 + GCC_PLATFORM_X86_64_OSX,
         "/usr/bin/clang": XCODE_CLANG_7_0 + CLANG_PLATFORM_X86_64_OSX,
         "/usr/bin/clang++": XCODE_CLANGXX_7_0 + CLANG_PLATFORM_X86_64_OSX,
         "/usr/bin/clang-4.0": XCODE_CLANG_4_0 + CLANG_PLATFORM_X86_64_OSX,
@@ -887,8 +881,8 @@ class OSXToolchainTest(BaseToolchainTest):
     )
     GCC_5_RESULT = LinuxToolchainTest.GCC_5_RESULT
     GXX_5_RESULT = LinuxToolchainTest.GXX_5_RESULT
-    GCC_7_RESULT = LinuxToolchainTest.GCC_7_RESULT
-    GXX_7_RESULT = LinuxToolchainTest.GXX_7_RESULT
+    GCC_8_RESULT = LinuxToolchainTest.GCC_8_RESULT
+    GXX_8_RESULT = LinuxToolchainTest.GXX_8_RESULT
     SYSROOT_FLAGS = {
         "flags": PrependFlags(
             [
@@ -944,10 +938,10 @@ class OSXToolchainTest(BaseToolchainTest):
         self.do_toolchain_test(
             self.PATHS,
             {
-                "c_compiler": self.GCC_7_RESULT + self.SYSROOT_FLAGS,
-                "cxx_compiler": self.GXX_7_RESULT + self.SYSROOT_FLAGS,
+                "c_compiler": self.GCC_8_RESULT + self.SYSROOT_FLAGS,
+                "cxx_compiler": self.GXX_8_RESULT + self.SYSROOT_FLAGS,
             },
-            environ={"CC": "gcc-7", "CXX": "g++-7"},
+            environ={"CC": "gcc-8", "CXX": "g++-8"},
         )
 
     def test_forced_unsupported_gcc(self):
@@ -1297,12 +1291,8 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
     ARM_DEFAULT_GXX_RESULT = LinuxToolchainTest.DEFAULT_GXX_RESULT + {
         "compiler": "/usr/bin/arm-linux-gnu-g++"
     }
-    ARM_GCC_7_RESULT = LinuxToolchainTest.GCC_7_RESULT + {
-        "compiler": "/usr/bin/arm-linux-gnu-gcc-7"
-    }
-    ARM_GXX_7_RESULT = LinuxToolchainTest.GXX_7_RESULT + {
-        "compiler": "/usr/bin/arm-linux-gnu-g++-7"
-    }
+    ARM_GCC_7_RESULT = LinuxToolchainTest.GCC_7_RESULT
+    ARM_GXX_7_RESULT = LinuxToolchainTest.GXX_7_RESULT
     DEFAULT_CLANG_RESULT = LinuxToolchainTest.DEFAULT_CLANG_RESULT
     DEFAULT_CLANGXX_RESULT = LinuxToolchainTest.DEFAULT_CLANGXX_RESULT
     DEFAULT_GCC_RESULT = LinuxToolchainTest.DEFAULT_GCC_RESULT

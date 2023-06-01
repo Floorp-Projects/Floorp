@@ -1139,7 +1139,7 @@ host_multiarch_dir = multiarch_dir(host)
 
 
 def minimum_gcc_version():
-    return Version("7.1.0")
+    return Version("8.1.0")
 
 
 @template

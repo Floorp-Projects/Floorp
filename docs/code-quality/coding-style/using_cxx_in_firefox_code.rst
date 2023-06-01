@@ -43,7 +43,7 @@ list of acceptable features is given below:
      - Clang
      -
    * - Current minimal requirement
-     - 7.1
+     - 8.1
      - 7.0
      -
    * - Feature
