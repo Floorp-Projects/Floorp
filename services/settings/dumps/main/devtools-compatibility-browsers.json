@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1685539443254,
+      "status": "nightly",
+      "version": "115",
+      "browserid": "edge",
+      "id": "8b77aeb1-59b4-46f3-a998-5e155ebf6d3e",
+      "last_modified": 1685598590165
+    },
+    {
+      "name": "Samsung Internet",
+      "schema": 1685539443809,
+      "status": "current",
+      "version": "21.0",
+      "browserid": "samsunginternet_android",
+      "id": "6c54a46f-80dc-4cee-a1e1-1c26f98ff227",
+      "last_modified": 1685598590162
+    },
+    {
+      "name": "Edge",
+      "schema": 1685539443065,
+      "status": "current",
+      "version": "113",
+      "browserid": "edge",
+      "id": "a191ad56-e312-4b3b-93ce-12d33b1e7fdd",
+      "last_modified": 1685598590152
+    },
+    {
+      "name": "Edge",
+      "schema": 1685539443159,
+      "status": "beta",
+      "version": "114",
+      "browserid": "edge",
+      "id": "4b52fc2d-7fef-432b-befe-ffe9725fb5ef",
+      "last_modified": 1685598590148
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1685539443621,
+      "status": "current",
+      "version": "16.5",
+      "browserid": "safari_ios",
+      "id": "74469cfd-7aef-497e-b7e4-6ba8a5acc06e",
+      "last_modified": 1685598590145
+    },
+    {
+      "name": "Safari",
+      "schema": 1685539443440,
+      "status": "current",
+      "version": "16.5",
+      "browserid": "safari",
+      "id": "b64d9974-5490-41eb-bea7-a3ee78d10632",
+      "last_modified": 1685598590142
+    },
+    {
       "name": "Chrome",
       "schema": 1684589054680,
       "status": "nightly",
@@ -17,24 +71,6 @@
       "browserid": "chrome_android",
       "id": "59f1ba2b-76e6-46cb-a44f-5563d1bd4161",
       "last_modified": 1684755688003
-    },
-    {
-      "name": "Safari",
-      "schema": 1684589055112,
-      "status": "beta",
-      "version": "16.5",
-      "browserid": "safari",
-      "id": "b64d9974-5490-41eb-bea7-a3ee78d10632",
-      "last_modified": 1684755688000
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1684589055198,
-      "status": "beta",
-      "version": "16.5",
-      "browserid": "safari_ios",
-      "id": "74469cfd-7aef-497e-b7e4-6ba8a5acc06e",
-      "last_modified": 1684755687998
     },
     {
       "name": "WebView Android",
@@ -181,51 +217,6 @@
       "last_modified": 1682319518056
     },
     {
-      "name": "Edge",
-      "schema": 1681910646625,
-      "status": "nightly",
-      "version": "114",
-      "browserid": "edge",
-      "id": "4b52fc2d-7fef-432b-befe-ffe9725fb5ef",
-      "last_modified": 1681914299806
-    },
-    {
-      "name": "Edge",
-      "schema": 1681910646444,
-      "status": "current",
-      "version": "112",
-      "browserid": "edge",
-      "id": "d72d44fe-f840-4042-9689-be25f8f3fc48",
-      "last_modified": 1681914299775
-    },
-    {
-      "name": "Edge",
-      "schema": 1681910646533,
-      "status": "beta",
-      "version": "113",
-      "browserid": "edge",
-      "id": "a191ad56-e312-4b3b-93ce-12d33b1e7fdd",
-      "last_modified": 1681914299758
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1680096245567,
-      "status": "current",
-      "version": "16.4",
-      "browserid": "safari_ios",
-      "id": "13737476-bd8e-49a0-bde7-d01e4aac6019",
-      "last_modified": 1681198174479
-    },
-    {
-      "name": "Safari",
-      "schema": 1680096245388,
-      "status": "current",
-      "version": "16.4",
-      "browserid": "safari",
-      "id": "622fe41e-3628-478d-966b-8ed00e0b5b56",
-      "last_modified": 1681198174475
-    },
-    {
       "name": "Opera Android",
       "schema": 1679145859850,
       "status": "current",
@@ -260,15 +251,6 @@
       "browserid": "opera",
       "id": "ea3999af-d75b-41c7-b744-ef9badfb4723",
       "last_modified": 1678458552562
-    },
-    {
-      "name": "Samsung Internet",
-      "schema": 1677245063433,
-      "status": "current",
-      "version": "20.0",
-      "browserid": "samsunginternet_android",
-      "id": "74a1c6f7-709f-410d-8540-a0a4545b042b",
-      "last_modified": 1677256449920
     },
     {
       "name": "Node.js",
@@ -415,5 +397,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1684755688006
+  "timestamp": 1685598590165
 }
