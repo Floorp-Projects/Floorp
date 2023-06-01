@@ -173,6 +173,8 @@ class PhysicalSocket : public Socket, public sigslot::has_slots<> {
 
   SocketServer* socketserver() { return ss_; }
 
+  SOCKET GetSocketFD() const { return s_; }
+
  protected:
   int DoConnect(const SocketAddress& connect_addr);
 
