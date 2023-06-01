@@ -476,26 +476,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1719846 - Add UA override for https://covid.cdc.gov/covid-data-tracker/
-     * Webcompat issue #76944 - https://webcompat.com/issues/76944
-     *
-     * The application locks out Firefox via User Agent sniffing, but in our
-     * tests, there appears to be no reason for this. Everything looks fine if
-     * we spoof as Chrome.
-     */
-    id: "bug1719846",
-    platform: "all",
-    domain: "covid.cdc.gov",
-    bug: "1719846",
-    config: {
-      matches: ["*://covid.cdc.gov/covid-data-tracker/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1719859 - Add UA override for saxoinvestor.fr
      * Webcompat issue #74678 - https://webcompat.com/issues/74678
      *
@@ -1230,6 +1210,159 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://www.otsuka.co.jp/fib/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1831441 - UA override for luna.amazon.com
+     *
+     * Games are unplayable unless a Chrome UA is used.
+     */
+    id: "bug1831441",
+    platform: "all",
+    domain: "luna.amazon.com",
+    bug: "1831441",
+    config: {
+      matches: ["*://luna.amazon.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836109 - UA override for watch.tonton.com.my
+     *
+     * The site's content is not loaded unless a Chrome UA is used.
+     */
+    id: "bug1836109",
+    platform: "all",
+    domain: "watch.tonton.com.my",
+    bug: "1836109",
+    config: {
+      matches: ["*://watch.tonton.com.my/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836112 - UA override for www.capcut.cn
+     *
+     * The site's content is not loaded unless a Chrome UA is used.
+     */
+    id: "bug1836112",
+    platform: "all",
+    domain: "www.capcut.cn",
+    bug: "1836112",
+    config: {
+      matches: ["*://www.capcut.cn/editor*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836116 - UA override for www.slushy.com
+     *
+     * The site's content is not loaded without a Chrome UA spoof.
+     */
+    id: "bug1836116",
+    platform: "all",
+    domain: "www.slushy.com",
+    bug: "1836116",
+    config: {
+      matches: ["*://www.slushy.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome/113.0.0.0";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836135 - UA override for gts-pro.sdimedia.com
+     *
+     * The site's content is not loaded without a Chrome UA spoof.
+     */
+    id: "bug1836135",
+    platform: "all",
+    domain: "gts-pro.sdimedia.com",
+    bug: "1836135",
+    config: {
+      matches: ["*://gts-pro.sdimedia.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Firefox/", "Fx/") + " Chrome/113.0.0.0";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836140 - UA override for indices.iriworldwide.com
+     *
+     * The site's content is not loaded without a UA spoof.
+     */
+    id: "bug1836140",
+    platform: "all",
+    domain: "indices.iriworldwide.com",
+    bug: "1836140",
+    config: {
+      matches: ["*://indices.iriworldwide.com/covid19/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Firefox/", "Fx/");
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836178 - UA override for atracker.pro
+     *
+     * The site's content is not loaded without a Chrome UA spoof.
+     */
+    id: "bug1836178",
+    platform: "all",
+    domain: "atracker.pro",
+    bug: "1836178",
+    config: {
+      matches: ["*://atracker.pro/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome/113.0.0.0";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836181 - UA override for conference.amwell.com
+     *
+     * The site's content is not loaded unless a Chrome UA is used.
+     */
+    id: "bug1836181",
+    platform: "all",
+    domain: "conference.amwell.com",
+    bug: "1836181",
+    config: {
+      matches: ["*://conference.amwell.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1836182 - UA override for www.flatsatshadowglen.com
+     *
+     * The site's content is not loaded without a Chrome UA spoof.
+     */
+    id: "bug1836182",
+    platform: "all",
+    domain: "www.flatsatshadowglen.com",
+    bug: "1836182",
+    config: {
+      matches: ["*://www.flatsatshadowglen.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome/113.0.0.0";
       },
     },
   },
