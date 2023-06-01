@@ -26,6 +26,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/sanitizer.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/time_utils.h"
 
 namespace webrtc {
 
@@ -694,6 +695,7 @@ void SharedScreenCastStreamPrivate::NotifyCallbackOfNewFrame(
 
 RTC_NO_SANITIZE("cfi-icall")
 void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+  int64_t capture_start_time_nanos = rtc::TimeNanos();
   if (callback_) {
     callback_->OnFrameCaptureStart();
   }
@@ -865,7 +867,11 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
 
   if (callback_) {
-    NotifyCallbackOfNewFrame(queue_.current_frame()->Share());
+    std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
+    frame->set_capturer_id(DesktopCapturerId::kWaylandCapturerLinux);
+    frame->set_capture_time_ms((rtc::TimeNanos() - capture_start_time_nanos) /
+                               rtc::kNumNanosecsPerMillisec);
+    NotifyCallbackOfNewFrame(std::move(frame));
   }
 }
 
