@@ -10,11 +10,13 @@ const MULTIPAGE_PAGE_URL = HAR_EXAMPLE_URL + "html_har_multipage_page.html";
  * Tests HAR export with navigations and multipage support
  */
 add_task(async function () {
-  await testHARWithNavigation({ enableMultipage: false });
-  await testHARWithNavigation({ enableMultipage: true });
+  await testHARWithNavigation({ enableMultipage: false, filter: false });
+  await testHARWithNavigation({ enableMultipage: true, filter: false });
+  await testHARWithNavigation({ enableMultipage: false, filter: true });
+  await testHARWithNavigation({ enableMultipage: true, filter: true });
 });
 
-async function testHARWithNavigation({ enableMultipage }) {
+async function testHARWithNavigation({ enableMultipage, filter }) {
   await pushPref("devtools.netmonitor.persistlog", true);
   await pushPref("devtools.netmonitor.har.multiple-pages", enableMultipage);
 
@@ -29,7 +31,7 @@ async function testHARWithNavigation({ enableMultipage }) {
   const { HarMenuUtils } = windowRequire(
     "devtools/client/netmonitor/src/har/har-menu-utils"
   );
-  const { getSortedRequests } = windowRequire(
+  const { getDisplayedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
   );
 
@@ -76,9 +78,14 @@ async function testHARWithNavigation({ enableMultipage }) {
   );
   await onNetworkEvents;
 
+  if (filter) {
+    info("Start filtering requests");
+    store.dispatch(Actions.setRequestFilterText("?request"));
+  }
+
   // Copy HAR into the clipboard (asynchronous).
   const jsonString = await HarMenuUtils.copyAllAsHar(
-    getSortedRequests(store.getState()),
+    getDisplayedRequests(store.getState()),
     connector
   );
   const har = JSON.parse(jsonString);
@@ -92,14 +99,19 @@ async function testHARWithNavigation({ enableMultipage }) {
     is(har.log.pages.length, 1, "There must be one page");
   }
 
-  // Expect 9 requests:
-  // - 3 requests performed with sendRequests on the first page
-  // - 1 navigation request to the second page
-  // - 1 navigation request to the third page
-  // - 2 requests performed with sendRequests on the third page
-  // - 1 request to load an iframe on the third page
-  // - 1 request from the iframe on the third page
-  is(har.log.entries.length, 9, "There must be 9 requests");
+  if (!filter) {
+    // Expect 9 requests:
+    // - 3 requests performed with sendRequests on the first page
+    // - 1 navigation request to the second page
+    // - 1 navigation request to the third page
+    // - 2 requests performed with sendRequests on the third page
+    // - 1 request to load an iframe on the third page
+    // - 1 request from the iframe on the third page
+    is(har.log.entries.length, 9, "There must be 9 requests");
+  } else {
+    // Same but we only expect the fetch requests
+    is(har.log.entries.length, 6, "There must be 6 requests");
+  }
 
   if (enableMultipage) {
     // With multipage enabled, check that the page entries are valid and that
@@ -108,10 +120,18 @@ async function testHARWithNavigation({ enableMultipage }) {
     assertPageRequests(har.log.entries, 0, 2, har.log.pages[0].id);
 
     assertPageDetails(har.log.pages[1], "page_1", "HAR Multipage test page");
-    assertPageRequests(har.log.entries, 3, 3, har.log.pages[1].id);
+    if (filter) {
+      // When filtering, we don't expect any request to match page_1
+    } else {
+      assertPageRequests(har.log.entries, 3, 3, har.log.pages[1].id);
+    }
 
     assertPageDetails(har.log.pages[2], "page_2", "HAR Multipage test page");
-    assertPageRequests(har.log.entries, 4, 8, har.log.pages[2].id);
+    if (filter) {
+      assertPageRequests(har.log.entries, 3, 5, har.log.pages[2].id);
+    } else {
+      assertPageRequests(har.log.entries, 4, 8, har.log.pages[2].id);
+    }
   } else {
     is(har.log.pages[0].id, "page_1");
     // Without multipage, all requests are associated with the only page entry.
