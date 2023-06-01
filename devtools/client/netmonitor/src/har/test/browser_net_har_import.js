@@ -14,8 +14,14 @@ add_task(async () => {
 
   info("Starting test... ");
 
-  const { actions, store, windowRequire } = monitor.panelWin;
+  const { actions, connector, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  const { HarMenuUtils } = windowRequire(
+    "devtools/client/netmonitor/src/har/har-menu-utils"
+  );
+  const { getSortedRequests } = windowRequire(
+    "devtools/client/netmonitor/src/selectors/index"
+  );
   const { HarImporter } = windowRequire(
     "devtools/client/netmonitor/src/har/har-importer"
   );
@@ -30,18 +36,31 @@ add_task(async () => {
   await wait;
 
   // Copy HAR into the clipboard
-  const json1 = await copyAllAsHARWithContextMenu(monitor, { asString: true });
+  const json1 = await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()),
+    connector
+  );
 
   // Import HAR string
   const importer = new HarImporter(actions);
   importer.import(json1);
 
   // Copy HAR into the clipboard again
-  const json2 = await copyAllAsHARWithContextMenu(monitor, { asString: true });
+  const json2 = await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()),
+    connector
+  );
 
   // Compare exported HAR data
   const har1 = JSON.parse(json1);
   const har2 = JSON.parse(json2);
+
+  dump("---------------\n");
+  dump(json1 + "\n");
+  dump("---------------\n");
+  dump("---------------\n");
+  dump(json2 + "\n");
+  dump("---------------\n");
 
   // Explicit tests
   is(har2.log.entries.length, 3, "There must be expected number of requests");
