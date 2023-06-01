@@ -13521,6 +13521,7 @@ if (
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],
     other_values: [
+      "normal",
       "left bottom",
       "center center",
       "calc(20% + 10px) center",
