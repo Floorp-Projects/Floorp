@@ -185,10 +185,21 @@ TEST(TimeUnit, Comparisons)
   // cast scenario.
   TimeUnit n = TimeUnit(123123123123123, 1000000000);
   TimeUnit o = TimeUnit(123123123123123, 1000000001);
-  EXPECT_LE(n, o);
-  EXPECT_LT(n, o);
-  EXPECT_GE(o, n);
-  EXPECT_GT(o, n);
+  EXPECT_LE(o, n);
+  EXPECT_LT(o, n);
+  EXPECT_GE(n, o);
+  EXPECT_GT(n, o);
+
+  // Values taken from a real website somehow (this is about 53 years).
+  TimeUnit leftBound(74332508253360, 44100);
+  TimeUnit rightBound(74332508297392, 44100);
+  TimeUnit fuzz(250000, 1000000);
+  TimeUnit time(1685544404790205, 1000000);
+
+  EXPECT_LT(leftBound - fuzz, time);
+  EXPECT_GT(time, leftBound - fuzz);
+  EXPECT_GE(rightBound + fuzz, time);
+  EXPECT_LT(time, rightBound + fuzz);
 }
 
 TEST(TimeUnit, InfinityMath)
