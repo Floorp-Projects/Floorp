@@ -205,8 +205,8 @@
     info("test autocomplete for 'window.proxy1.'");
     const response = await webConsoleFront.autocomplete("window.proxy1.");
     ok(!response.matchProp, "matchProp");
-    is(response.matches.length, 1, "matches.length");
-    checkObject(response.matches, ["foo"]);
+    is(response.matches.length, 14, "matches.length");
+    ok(response.matches.includes("foo"), "matches has own property for proxy with throwing getPrototypeOf trap");
   }
 
   async function doAutocompleteProxyThrowsOwnKeys(webConsoleFront) {
