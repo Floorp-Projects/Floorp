@@ -68,6 +68,12 @@ EarlyHintsPreConnectOverride::GetAllow1918(bool* allow) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetIgnoreUserCertCheck(bool* ignore) {
+  *ignore = !!mConnectionLimit;
+  return NS_OK;
+}
+
 }  // namespace
 
 void EarlyHintPreconnect::MaybePreconnect(const LinkHeader& aHeader,

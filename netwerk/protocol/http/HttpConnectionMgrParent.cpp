@@ -241,6 +241,7 @@ nsresult HttpConnectionMgrParent::SpeculativeConnect(
     overriderArgs->ignoreIdle() = overrider->GetIgnoreIdle();
     overriderArgs->isFromPredictor() = overrider->GetIsFromPredictor();
     overriderArgs->allow1918() = overrider->GetAllow1918();
+    overriderArgs->ignoreUserCertCheck() = overrider->GetIgnoreUserCertCheck();
   }
 
   HttpConnectionInfoCloneArgs connInfo;

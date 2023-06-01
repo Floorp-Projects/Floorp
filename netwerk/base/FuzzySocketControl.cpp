@@ -179,7 +179,5 @@ FuzzySocketControl::AsyncGetSecurityInfo(JSContext* aCx,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP FuzzySocketControl::Claim() { return NS_OK; }
-
 }  // namespace net
 }  // namespace mozilla

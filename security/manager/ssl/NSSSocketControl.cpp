@@ -46,7 +46,6 @@ NSSSocketControl::NSSSocketControl(const nsCString& aHostName, int32_t aPort,
       mProviderTlsFlags(providerTlsFlags),
       mSocketCreationTimestamp(TimeStamp::Now()),
       mPlaintextBytesRead(0),
-      mClaimed(!(providerFlags & nsISocketProvider::IS_SPECULATIVE_CONNECTION)),
       mPendingSelectClientAuthCertificate(nullptr) {}
 
 NS_IMETHODIMP
@@ -691,11 +690,4 @@ void NSSSocketControl::SetPreliminaryHandshakeInfo(
   mSignatureSchemeName.emplace(getSignatureName(channelInfo.signatureScheme));
   mIsDelegatedCredential.emplace(channelInfo.peerDelegCred);
   mIsAcceptedEch.emplace(channelInfo.echAccepted);
-}
-
-NS_IMETHODIMP NSSSocketControl::Claim() {
-  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-  mClaimed = true;
-  MaybeDispatchSelectClientAuthCertificate();
-  return NS_OK;
 }

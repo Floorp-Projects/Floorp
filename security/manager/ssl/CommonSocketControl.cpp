@@ -521,5 +521,3 @@ CommonSocketControl::AsyncGetSecurityInfo(JSContext* aCx,
   promise.forget(aPromise);
   return NS_OK;
 }
-
-NS_IMETHODIMP CommonSocketControl::Claim() { return NS_ERROR_NOT_IMPLEMENTED; }

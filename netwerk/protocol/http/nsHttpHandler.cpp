@@ -2183,9 +2183,19 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
         }
       }
     }
+  } else if (!strcmp(topic, "psm:user-certificate-added")) {
+    // A user certificate has just been added.
+    // We should immediately disable speculative connect
+    mSpeculativeConnectEnabled = false;
+  } else if (!strcmp(topic, "psm:user-certificate-deleted")) {
+    // If a user certificate has been removed, we need to check if there
+    // are others installed
+    MaybeEnableSpeculativeConnect();
   } else if (!strcmp(topic, "intl:app-locales-changed")) {
     // If the locale changed, there's a chance the accept language did too
     mAcceptLanguagesIsDirty = true;
+  } else if (!strcmp(topic, "browser-delayed-startup-finished")) {
+    MaybeEnableSpeculativeConnect();
   } else if (!strcmp(topic, "network:captive-portal-connectivity")) {
     nsAutoCString data8 = NS_ConvertUTF16toUTF8(data);
     mThroughCaptivePortal = data8.EqualsLiteral("captive");
@@ -2202,6 +2212,48 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
 }
 
 // nsISpeculativeConnect
+
+static bool CanEnableSpeculativeConnect() {
+  nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
+
+  MOZ_ASSERT(!NS_IsMainThread(), "Must run on the background thread");
+  // Check if any 3rd party PKCS#11 module are installed, as they may produce
+  // client certificates
+  bool activeSmartCards = false;
+  nsresult rv = component->HasActiveSmartCards(&activeSmartCards);
+  if (NS_FAILED(rv) || activeSmartCards) {
+    return false;
+  }
+
+  // If there are any client certificates installed, we can't enable speculative
+  // connect, as it may pop up the certificate chooser at any time.
+  bool hasUserCerts = false;
+  rv = component->HasUserCertsInstalled(&hasUserCerts);
+  if (NS_FAILED(rv) || hasUserCerts) {
+    return false;
+  }
+
+  // No smart cards and no client certificates means
+  // we can enable speculative connect.
+  return true;
+}
+
+void nsHttpHandler::MaybeEnableSpeculativeConnect() {
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+
+  // We don't need to and can't check this in the child and socket process.
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  net_EnsurePSMInit();
+
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("CanEnableSpeculativeConnect", [] {
+        gHttpHandler->mSpeculativeConnectEnabled =
+            CanEnableSpeculativeConnect();
+      }));
+}
 
 nsresult nsHttpHandler::SpeculativeConnectInternal(
     nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
@@ -2276,6 +2328,20 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
   }
   // Ensure that this is HTTP or HTTPS, otherwise we don't do preconnect here
   else if (!scheme.EqualsLiteral("http")) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
+      do_GetInterface(aCallbacks);
+  bool ignoreUserCertCheck =
+      overrider ? overrider->GetIgnoreUserCertCheck() : false;
+
+  // Construct connection info object
+  if (aURI->SchemeIs("https") && !mSpeculativeConnectEnabled &&
+      !ignoreUserCertCheck) {
+    glean::networking::speculative_connect_outcome
+        .Get("aborted_https_not_enabled"_ns)
+        .Add(1);
     return NS_ERROR_UNEXPECTED;
   }
 
