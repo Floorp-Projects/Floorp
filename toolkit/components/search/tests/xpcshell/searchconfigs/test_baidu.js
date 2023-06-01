@@ -30,8 +30,6 @@ const test = new SearchConfigTest({
       included: [{}],
       domain: "baidu.com",
       telemetryId: "baidu",
-      searchUrlCode: "tn=monline_7_dg",
-      suggestUrlCode: "tn=monline_7_dg",
     },
   ],
 });
