@@ -714,6 +714,21 @@ var DebuggerObjectSupport = {
     while (obj) {
       yield obj;
       try {
+        // There could be transparent security wrappers, unwrap to check if it's a proxy.
+        const unwrapped = DevToolsUtils.unwrap(obj);
+        if (unwrapped === undefined) {
+          // Objects belonging to an invisible-to-debugger compartment can't be unwrapped.
+          return;
+        }
+
+        if (unwrapped.isProxy) {
+          // Proxies might have a `getPrototypeOf` method, which is triggered by `obj.proto`,
+          // but this does not impact the actual prototype chain.
+          // In such case, we need to use the proxy target prototype.
+          // We retrieve proxyTarget from `obj` (and not `unwrapped`) to avoid exposing
+          // the unwrapped target.
+          obj = unwrapped.proxyTarget;
+        }
         obj = obj.proto;
       } catch (error) {
         // The above can throw e.g. for some proxy objects.
