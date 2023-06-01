@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * patient.alphalabs.ca - "Continue" button is overlapped by displaced page footer
- * Bug #1741234 - https://bugzilla.mozilla.org/show_bug.cgi?id=1741234
- * WebCompat issue #93156 - https://webcompat.com/issues/93156
+ * autostar-novoross.ru - Map is not as tall as expected
+ * Bug #1836103 - https://bugzilla.mozilla.org/show_bug.cgi?id=1836103
+ * WebCompat issue #80763 - https://github.com/webcompat/web-bugs/issues/80763
  */
 
-body {
+.t396 .tn-atom {
   height: 100%;
 }
