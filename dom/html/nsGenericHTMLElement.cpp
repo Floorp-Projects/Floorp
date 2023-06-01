@@ -100,6 +100,7 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 #include "nsComputedDOMStyle.h"
+#include "mozilla/dom/HTMLDialogElement.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/CustomElementRegistry.h"
@@ -3460,6 +3461,10 @@ void nsGenericHTMLElement::TogglePopover(const Optional<bool>& aForce,
 
 // https://html.spec.whatwg.org/multipage/popover.html#popover-focusing-steps
 void nsGenericHTMLElement::FocusPopover() {
+  if (auto* dialog = HTMLDialogElement::FromNode(this)) {
+    return MOZ_KnownLive(dialog)->FocusDialog();
+  }
+
   if (RefPtr<Document> doc = GetComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
