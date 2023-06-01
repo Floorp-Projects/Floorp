@@ -448,6 +448,7 @@ cbindgen-types = [
     { gecko = "StyleFontLanguageOverride", servo = "crate::values::computed::font::FontLanguageOverride" },
     { gecko = "StyleOffsetPath", servo = "crate::values::computed::motion::OffsetPath" },
     { gecko = "StyleGenericOffsetPath", servo = "crate::values::generics::motion::OffsetPath" },
+    { gecko = "StyleOffsetPosition", servo = "crate::values::computed::motion::OffsetPosition" },
     { gecko = "StyleOffsetRotate", servo = "crate::values::computed::motion::OffsetRotate" },
     { gecko = "StylePathCommand", servo = "crate::values::specified::svg_path::PathCommand" },
     { gecko = "StyleRayFunction", servo = "crate::values::generics::motion::RayFunction" },
