@@ -1188,14 +1188,6 @@ static bool GetThemeIsDark() {
          RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg));
 }
 
-void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  GtkSettings* settings = gtk_settings_get_default();
-  g_object_set(settings, "gtk-theme-name", aTheme.themeName().get(),
-               "gtk-application-prefer-dark-theme",
-               aTheme.preferDarkTheme() ? TRUE : FALSE, nullptr);
-}
-
 void nsLookAndFeel::RestoreSystemTheme() {
   LOGLNF("RestoreSystemTheme(%s, %d, %d)\n", mSystemTheme.mName.get(),
          mSystemTheme.mPreferDarkTheme, mSystemThemeOverridden);
@@ -1551,19 +1543,6 @@ void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
     moz_gtk_refresh();
     mSystemThemeOverridden = true;
   }
-}
-
-void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
-  if (NS_SUCCEEDED(Preferences::GetCString("widget.content.gtk-theme-override",
-                                           aTheme.themeName()))) {
-    return;
-  }
-
-  auto& theme = StaticPrefs::widget_content_allow_gtk_dark_theme()
-                    ? mSystemTheme
-                    : LightTheme();
-  aTheme.preferDarkTheme() = theme.mPreferDarkTheme;
-  aTheme.themeName() = theme.mName;
 }
 
 static nscolor GetBackgroundColor(

@@ -17,7 +17,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
  public:
   using FullLookAndFeel = mozilla::widget::FullLookAndFeel;
   using LookAndFeelFont = mozilla::widget::LookAndFeelFont;
-  using LookAndFeelTheme = mozilla::widget::LookAndFeelTheme;
 
   virtual ~nsXPLookAndFeel();
 
@@ -67,7 +66,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual void NativeInit() = 0;
 
-  virtual void GetGtkContentTheme(LookAndFeelTheme&) {}
   virtual void GetThemeInfo(nsACString&) {}
 
  protected:

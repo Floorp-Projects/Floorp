@@ -48,21 +48,11 @@ struct LookAndFeelTables {
     bool passwordEcho;
 };
 
-struct LookAndFeelTheme {
-#ifdef MOZ_WIDGET_GTK
-    nsCString themeName;
-    bool preferDarkTheme;
-#endif
-};
-
 /**
  * Stores the entirety of a LookAndFeel's data.
  */
 struct FullLookAndFeel {
     LookAndFeelTables tables;
-#ifdef MOZ_WIDGET_GTK
-    LookAndFeelTheme theme;
-#endif
 };
 
 } // namespace widget
