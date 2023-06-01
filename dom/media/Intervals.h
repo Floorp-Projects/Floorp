@@ -8,13 +8,17 @@
 #define DOM_MEDIA_INTERVALS_H_
 
 #include <algorithm>
+#include <type_traits>
 
 #include "nsTArray.h"
+#include "nsString.h"
+#include "nsPrintfCString.h"
 
 // Specialization for nsTArray CopyChooser.
 namespace mozilla::media {
 template <class T>
 class IntervalSet;
+class TimeUnit;
 }  // namespace mozilla::media
 
 template <class E>
@@ -225,11 +229,18 @@ class Interval {
     return aOther.mStart <= mStart && mStart <= aOther.mEnd;
   }
 
+  nsCString ToString() const {
+    if constexpr (std::is_same_v<T, TimeUnit>) {
+      return nsPrintfCString("[%s, %s](%s)", mStart.ToString().get(),
+                             mEnd.ToString().get(), mFuzz.ToString().get());
+    } else if constexpr (std::is_same_v<T, double>) {
+      return nsPrintfCString("[%lf, %lf](%lf)", mStart, mEnd, mFuzz);
+    }
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
-
- private:
 };
 
 // An IntervalSet in a collection of Intervals. The IntervalSet is always
