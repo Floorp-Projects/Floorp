@@ -939,6 +939,7 @@ class NodeServer {
     const serverIP =
       AppConstants.platform == "android" ? "10.0.2.2" : "127.0.0.1";
     req.open("POST", `http://${serverIP}:${h2Port}${path}`);
+    req.channel.QueryInterface(Ci.nsIHttpChannelInternal).bypassProxy = true;
 
     // Passing a function to NodeServer.execute will define that function
     // in node. It can be called in a later execute command.
