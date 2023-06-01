@@ -85,8 +85,13 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable, nsIClipboard
                                     int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !aTransferable)
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT(aTransferable);
+  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
+  if (aWhichClipboard == kSelectionCache) {
+    SetSelectionCache(aTransferable);
+    return NS_OK;
+  }
 
   NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(aTransferable);
   if (!pasteboardOutputDict) return NS_ERROR_FAILURE;
@@ -747,38 +752,17 @@ NSString* nsClipboard::WrapHtmlForSystemPasteboard(NSString* aString) {
   return wrapped;
 }
 
-/**
- * Sets the transferable object
- *
- */
-NS_IMETHODIMP
-nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
-                     int32_t aWhichClipboard) {
-  NS_ASSERTION(aTransferable, "clipboard given a null transferable");
-
-  if (aWhichClipboard == kSelectionCache) {
-    if (aTransferable) {
-      SetSelectionCache(aTransferable);
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsBaseClipboard::SetData(aTransferable, anOwner, aWhichClipboard);
-}
-
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (aWhichClipboard == kSelectionCache) {
-    ClearSelectionCache();
-    return NS_OK;
-  }
-
   if (!mEmptyingForSetData) {
-    if (NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard)) {
-      [cocoaPasteboard clearContents];
+    if (aWhichClipboard == kSelectionCache) {
+      ClearSelectionCache();
+    } else {
+      if (NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard)) {
+        [cocoaPasteboard clearContents];
+      }
       if (mCachedClipboard == aWhichClipboard) {
         mCachedClipboard = -1;
         mChangeCount = 0;

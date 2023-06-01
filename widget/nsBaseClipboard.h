@@ -38,10 +38,6 @@ class ClipboardSetDataHelper : public nsIClipboard {
   ClipboardSetDataHelper() = default;
 
   // nsIClipboard
-  // XXX the Cocoa widget currently overrides `SetData` for `kSelectionCache`
-  // type, so it cannot be marked as final. Once the Cocoa widget handles
-  // `kSelectionCache` type more generic after bug 1812078, it can be marked
-  // as final, too.
   NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
                      int32_t aWhichClipboard) override;
   NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
@@ -108,7 +104,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
 
   // nsIClipboard
   NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
-                     int32_t aWhichClipboard) override;
+                     int32_t aWhichClipboard) override final;
   NS_IMETHOD GetData(nsITransferable* aTransferable,
                      int32_t aWhichClipboard) override;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
