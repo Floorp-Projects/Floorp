@@ -21,6 +21,7 @@
 struct spa_pod;
 struct spa_pod_builder;
 struct spa_rectangle;
+struct spa_fraction;
 
 namespace webrtc {
 
@@ -44,7 +45,8 @@ struct PipeWireVersion {
 spa_pod* BuildFormat(spa_pod_builder* builder,
                      uint32_t format,
                      const std::vector<uint64_t>& modifiers,
-                     const struct spa_rectangle* resolution);
+                     const struct spa_rectangle* resolution,
+                     const struct spa_fraction* frame_rate);
 
 }  // namespace webrtc
 

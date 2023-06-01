@@ -90,8 +90,10 @@ TestScreenCastStreamProvider::TestScreenCastStreamProvider(Observer* observer,
 
     spa_rectangle resolution =
         SPA_RECTANGLE(uint32_t(width_), uint32_t(height_));
+    struct spa_fraction default_frame_rate = SPA_FRACTION(60, 1);
     params.push_back(BuildFormat(&builder, SPA_VIDEO_FORMAT_BGRx,
-                                 /*modifiers=*/{}, &resolution));
+                                 /*modifiers=*/{}, &resolution,
+                                 &default_frame_rate));
 
     auto flags =
         pw_stream_flags(PW_STREAM_FLAG_DRIVER | PW_STREAM_FLAG_ALLOC_BUFFERS);

@@ -76,7 +76,7 @@ index dc24b387d5..5211f1acec 100644
  
  DelegatedSourceListController*
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 3e8f0dcac5..d336723f18 100644
+index 9a054b6f13..68554b24ac 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
 @@ -32,6 +32,8 @@
