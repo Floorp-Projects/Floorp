@@ -21,7 +21,7 @@ linux64-binutils-2.31.1:
             - binutils-2.31.1
         toolchain:
             # C++ code in gold doesn't compile with recent versions of GCC.
-            - linux64-gcc-7
+            - linux64-gcc-8
             - linux64-toolchain-sysroot
 
 linux64-binutils:

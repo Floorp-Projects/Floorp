@@ -56,10 +56,10 @@ deb11-python-zstandard:
         pre-build-command: debchange -v 0.19.0-1.deb11moz --distribution bullseye "Mozilla backport for buster"
         name: python-zstandard
 
-deb8-gcc-7:
-    description: "gcc 7 for Debian jessie"
+deb8-gcc-8:
+    description: "gcc 8 for Debian jessie"
     treeherder:
-        symbol: Deb8(gcc-7)
+        symbol: Deb8(gcc-8)
     worker:
         max-run-time: 3600
         env:
@@ -70,8 +70,8 @@ deb8-gcc-7:
         using: debian-package
         dist: jessie
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
-            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
+            url: http://snapshot.debian.org/archive/debian/20210202T150504Z/pool/main/g/gcc-8/gcc-8_8.4.0-7.dsc
+            sha256: b93f13bc67f5a8f16e837fbb543d00d3475d5c95777a1b0b5a448fa2310a98c5
         # autoconf2.64 and quilt necessary to run the `debian/rules control` command to
         # generate an updated debian/control.
         # uncommenting `with_common_libs` makes the packaging create the libstdc++6 package.
@@ -90,10 +90,10 @@ deb8-gcc-7:
             echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
             debian/rules control NT=
 
-deb8-32-gcc-7:
-    description: "gcc 7 for Debian jessie"
+deb8-32-gcc-8:
+    description: "gcc 8 for Debian jessie"
     treeherder:
-        symbol: Deb8-32(gcc-7)
+        symbol: Deb8-32(gcc-8)
     worker:
         max-run-time: 3600
         env:
@@ -104,8 +104,8 @@ deb8-32-gcc-7:
         using: debian-package
         dist: jessie
         dsc:
-            url: http://snapshot.debian.org/archive/debian/20200323T214010Z/pool/main/g/gcc-7/gcc-7_7.5.0-6.dsc
-            sha256: 94f2c35ddcf84a62ae152f2f290be2bba1263157b3970776d0c8b43dec4e6fd5
+            url: http://snapshot.debian.org/archive/debian/20210202T150504Z/pool/main/g/gcc-8/gcc-8_8.4.0-7.dsc
+            sha256: b93f13bc67f5a8f16e837fbb543d00d3475d5c95777a1b0b5a448fa2310a98c5
         pre-build-command: >-
             apt install autoconf2.64 quilt &&
             sed -i 's/#with_common_libs/with_common_libs/' debian/rules.defs &&

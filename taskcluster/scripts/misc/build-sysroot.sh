@@ -20,7 +20,7 @@ case "$arch" in
 i386|amd64)
   dist=jessie
   if [ -n "$PACKAGES_TASKS" ]; then
-    gcc_version=7
+    gcc_version=8
   else
     gcc_version=4.9
   fi

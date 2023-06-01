@@ -30,20 +30,6 @@ binutils-2.36.1:
         strip-components: 1
         add-prefix: binutils-source/
 
-gcc-7.5.0:
-    description: GCC 7.5.0 source code
-    fetch:
-        type: static-url
-        url: https://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.xz
-        sha256: b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661
-        size: 62783088
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/7F74F97C103468EE5D750B583AB00996FC26A641.key
-        artifact-name: gcc-source.tar.zst
-        strip-components: 1
-        add-prefix: gcc-source/
-
 gcc-8.5.0:
     description: GCC 8.5.0 source code
     fetch:
