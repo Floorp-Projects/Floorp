@@ -524,14 +524,20 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
-    nsIURI* aURI, nsIPrincipal* aPrincipal, const bool& aAnonymous) {
+    nsIURI* aURI, nsIPrincipal* aPrincipal,
+    Maybe<OriginAttributes>&& aOriginAttributes, const bool& aAnonymous) {
   nsCOMPtr<nsISpeculativeConnect> speculator(gIOService);
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
   if (!aURI) {
     return IPC_FAIL(this, "aURI must not be null");
   }
   if (aURI && speculator) {
-    speculator->SpeculativeConnect(aURI, principal, nullptr, aAnonymous);
+    if (aOriginAttributes) {
+      speculator->SpeculativeConnectWithOriginAttributesNative(
+          aURI, std::move(aOriginAttributes.ref()), nullptr, aAnonymous);
+    } else {
+      speculator->SpeculativeConnect(aURI, principal, nullptr, aAnonymous);
+    }
   }
   return IPC_OK();
 }

@@ -2204,10 +2204,12 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
 // nsISpeculativeConnect
 
 nsresult nsHttpHandler::SpeculativeConnectInternal(
-    nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
-    bool anonymous) {
+    nsIURI* aURI, nsIPrincipal* aPrincipal,
+    Maybe<OriginAttributes>&& aOriginAttributes,
+    nsIInterfaceRequestor* aCallbacks, bool anonymous) {
   if (IsNeckoChild()) {
-    gNeckoChild->SendSpeculativeConnect(aURI, aPrincipal, anonymous);
+    gNeckoChild->SendSpeculativeConnect(
+        aURI, aPrincipal, std::move(aOriginAttributes), anonymous);
     return NS_OK;
   }
 
@@ -2243,14 +2245,17 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
   OriginAttributes originAttributes;
   // If the principal is given, we use the originAttributes from this
   // principal. Otherwise, we use the originAttributes from the loadContext.
-  if (aPrincipal) {
+  if (aOriginAttributes) {
+    originAttributes = std::move(aOriginAttributes.ref());
+  } else if (aPrincipal) {
     originAttributes = aPrincipal->OriginAttributesRef();
+    StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
+        aURI, originAttributes);
   } else if (loadContext) {
     loadContext->GetOriginAttributes(originAttributes);
+    StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
+        aURI, originAttributes);
   }
-
-  StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
-      aURI, originAttributes);
 
   nsCOMPtr<nsIURI> clone;
   if (NS_SUCCEEDED(sss->IsSecureURI(aURI, originAttributes, &isStsHost)) &&
@@ -2304,7 +2309,31 @@ NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
                                   nsIInterfaceRequestor* aCallbacks,
                                   bool aAnonymous) {
-  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, aAnonymous);
+  return SpeculativeConnectInternal(aURI, aPrincipal, Nothing(), aCallbacks,
+                                    aAnonymous);
+}
+
+NS_IMETHODIMP nsHttpHandler::SpeculativeConnectWithOriginAttributes(
+    nsIURI* aURI, JS::Handle<JS::Value> aOriginAttributes,
+    nsIInterfaceRequestor* aCallbacks, bool aAnonymous, JSContext* aCx) {
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  SpeculativeConnectWithOriginAttributesNative(aURI, std::move(attrs),
+                                               aCallbacks, aAnonymous);
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsHttpHandler::SpeculativeConnectWithOriginAttributesNative(
+    nsIURI* aURI, OriginAttributes&& aOriginAttributes,
+    nsIInterfaceRequestor* aCallbacks, bool aAnonymous) {
+  Maybe<OriginAttributes> originAttributes;
+  originAttributes.emplace(aOriginAttributes);
+  Unused << SpeculativeConnectInternal(
+      aURI, nullptr, std::move(originAttributes), aCallbacks, aAnonymous);
 }
 
 void nsHttpHandler::TickleWifi(nsIInterfaceRequestor* cb) {

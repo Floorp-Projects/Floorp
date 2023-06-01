@@ -99,7 +99,10 @@ parent:
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 
-  async SpeculativeConnect(nullable nsIURI uri, nullable nsIPrincipal principal, bool anonymous);
+  async SpeculativeConnect(nullable nsIURI uri,
+                           nullable nsIPrincipal principal,
+                           OriginAttributes? originAttributes,
+                           bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, bool isHttps,
                         OriginAttributes originAttributes, DNSFlags flags);
   async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,

@@ -123,9 +123,9 @@ class NeckoParent : public PNeckoParent {
       const nsACString& trrServer, const int32_t& aPort, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
       const nsIDNSService::DNSFlags& flags) override;
-  mozilla::ipc::IPCResult RecvSpeculativeConnect(nsIURI* aURI,
-                                                 nsIPrincipal* aPrincipal,
-                                                 const bool& aAnonymous);
+  mozilla::ipc::IPCResult RecvSpeculativeConnect(
+      nsIURI* aURI, nsIPrincipal* aPrincipal,
+      Maybe<OriginAttributes>&& aOriginAttributes, const bool& aAnonymous);
   mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
       const nsAString& hostname, const bool& isHttps,
       const OriginAttributes& aOriginAttributes,
