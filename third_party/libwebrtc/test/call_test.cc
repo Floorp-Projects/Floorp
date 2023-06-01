@@ -292,6 +292,8 @@ void CallTest::CreateAudioAndFecSendConfigs(size_t num_audio_streams,
 
     audio_send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
         kAudioSendPayloadType, {"opus", 48000, 2, {{"stereo", "1"}}});
+    audio_send_config.min_bitrate_bps = 6000;
+    audio_send_config.max_bitrate_bps = 60000;
     audio_send_config.encoder_factory = audio_encoder_factory_;
     SetAudioConfig(audio_send_config);
   }
