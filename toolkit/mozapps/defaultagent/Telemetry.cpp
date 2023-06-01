@@ -148,27 +148,6 @@ static FilePathResult GetPingFilePath(std::wstring& uuid) {
   return std::wstring(pingFilePath);
 }
 
-static FilePathResult GetPingsenderPath() {
-  // The Path* functions don't set LastError, but this is the only thing that
-  // can really cause them to fail, so if they ever do we assume this is why.
-  HRESULT hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-
-  mozilla::UniquePtr<wchar_t[]> thisBinaryPath = mozilla::GetFullBinaryPath();
-  if (!PathRemoveFileSpecW(thisBinaryPath.get())) {
-    LOG_ERROR(hr);
-    return FilePathResult(mozilla::WindowsError::FromHResult(hr));
-  }
-
-  wchar_t pingsenderPath[MAX_PATH] = L"";
-
-  if (!PathCombineW(pingsenderPath, thisBinaryPath.get(), L"pingsender.exe")) {
-    LOG_ERROR(hr);
-    return FilePathResult(mozilla::WindowsError::FromHResult(hr));
-  }
-
-  return std::wstring(pingsenderPath);
-}
-
 static mozilla::WindowsError SendPing(
     const std::string defaultBrowser, const std::string previousDefaultBrowser,
     const std::string defaultPdf, const std::string osVersion,
@@ -222,7 +201,8 @@ static mozilla::WindowsError SendPing(
   }
 
   // Hand the file off to pingsender to submit.
-  FilePathResult pingsenderPathResult = GetPingsenderPath();
+  FilePathResult pingsenderPathResult =
+      GetRelativeBinaryPath(L"pingsender.exe");
   if (pingsenderPathResult.isErr()) {
     return pingsenderPathResult.unwrapErr();
   }
