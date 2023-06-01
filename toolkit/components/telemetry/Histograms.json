@@ -10845,12 +10845,24 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["fx-search-telemetry@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "122",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 15,
-    "bug_numbers": [1489524],
+    "bug_numbers": [1489524, 1832509],
+    "description": "Time (ms) it takes to initialize the search service"
+  },
+  "SEARCH_SERVICE_INIT2_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["fx-search-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1832509],
     "description": "Time (ms) it takes to initialize the search service"
   },
   "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {

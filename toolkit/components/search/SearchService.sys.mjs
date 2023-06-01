@@ -392,15 +392,18 @@ export class SearchService {
     lazy.logConsole.debug("init");
 
     TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
+    const timerId = Glean.searchService.startupTime.start();
     this.#initStarted = true;
     let result;
     try {
       // Complete initialization by calling asynchronous initializer.
       result = await this.#init();
       TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
+      Glean.searchService.startupTime.stopAndAccumulate(timerId);
     } catch (ex) {
       this.#initializationStatus = "failed";
       TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
+      Glean.searchService.startupTime.cancel(timerId);
       this.#initObservers.reject(ex.result);
       throw ex;
     }
