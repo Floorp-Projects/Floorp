@@ -78,21 +78,6 @@ tests.push({
   region: "CN",
   distribution: "MozillaOnline",
   test: engines =>
-    hasParams(engines, "百度", "searchbar", "tn=monline_4_dg") &&
-    hasParams(engines, "百度", "suggestions", "tn=monline_4_dg") &&
-    hasParams(engines, "百度", "homepage", "tn=monline_3_dg") &&
-    hasParams(engines, "百度", "newtab", "tn=monline_3_dg") &&
-    hasParams(engines, "百度", "contextmenu", "tn=monline_4_dg") &&
-    hasParams(engines, "百度", "keyword", "tn=monline_4_dg") &&
-    hasDefault(engines, "百度") &&
-    hasEnginesFirst(engines, ["百度", "Bing", "Google", "亚马逊", "维基百科"]),
-});
-
-tests.push({
-  locale: "zh-CN",
-  region: "CN",
-  distribution: "MozillaOnline",
-  test: engines =>
     hasParams(engines, "亚马逊", "searchbar", "ie=UTF8") &&
     hasParams(engines, "亚马逊", "suggestions", "tag=mozilla") &&
     hasParams(engines, "亚马逊", "homepage", "camp=536") &&
