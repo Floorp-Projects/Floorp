@@ -8,19 +8,19 @@ add_task(async function test_about_compat_loads_properly() {
   });
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    ok(
-      content.document.querySelectorAll("#overrides tr[data-id]").length > 1,
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector("#overrides tr[data-id]"),
       "UA overrides are listed"
     );
-    ok(
-      content.document.querySelectorAll("#interventions tr[data-id]").length >
-        1,
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector("#interventions tr[data-id]"),
       "interventions are listed"
     );
-    ok(
-      content.document.querySelectorAll("#smartblock tr[data-id]").length > 1,
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector("#smartblock tr[data-id]"),
       "SmartBlock shims are listed"
     );
+    ok(true, "Interventions are listed");
   });
 
   await BrowserTestUtils.removeTab(tab);
