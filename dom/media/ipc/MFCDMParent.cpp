@@ -170,8 +170,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
 
   MFCDMCapabilitiesIPDL capabilities;
 
-  // TODO: check HW CDM creation
-
+  // TODO : check HW CDM creation
+  // TODO : add HEVC support?
   static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
       KeySystemConfig::EME_CODEC_H264,
       KeySystemConfig::EME_CODEC_VP8,
