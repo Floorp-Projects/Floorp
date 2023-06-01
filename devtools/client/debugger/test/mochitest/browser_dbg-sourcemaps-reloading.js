@@ -38,15 +38,15 @@ add_task(async function () {
   await waitForBreakpointCount(dbg, 2);
   is(getBreakpointCount(), 2, "Two breakpoints exist");
 
-  ok(
-    getBreakpoint({
-      sourceId: entrySrc.id,
+  const bp = getBreakpoint(
+    createLocation({
+      source: entrySrc,
       line: 15,
       column: 0,
-      disabled: true,
-    }),
-    "Breakpoint is on the correct line and is disabled"
+    })
   );
+  ok(bp, "Breakpoint is on the correct line");
+  ok(bp.disabled, "Breakpoint is disabled");
   await assertBreakpoint(dbg, 15);
 
   await resume(dbg);

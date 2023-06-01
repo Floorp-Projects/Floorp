@@ -111,7 +111,7 @@ function assertBreakpointExists(dbg, source, line) {
   } = dbg;
 
   ok(
-    getBreakpoint({ sourceId: source.id, line }),
+    getBreakpoint(createLocation({ source, line })),
     "Breakpoint has correct line"
   );
 }
