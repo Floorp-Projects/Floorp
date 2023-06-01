@@ -25,13 +25,6 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/components/throttling/profiles.js"
 );
 
-loader.lazyRequireGetter(
-  this,
-  "HarMetadataCollector",
-  "resource://devtools/client/netmonitor/src/connector/har-metadata-collector.js",
-  true
-);
-
 const DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF = "devtools.netmonitor.persistlog";
 
 /**
@@ -96,8 +89,8 @@ class Connector {
       owner: this.owner,
     });
 
-    this._harMetadataCollector = new HarMetadataCollector(this.commands);
-    await this._harMetadataCollector.connect();
+    this._initialTargetTitle = this.currentTarget.title;
+    this._targetTitlesPerURL = new Map();
 
     await this.commands.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
@@ -141,14 +134,16 @@ class Connector {
 
     this.dataProvider.destroy();
     this.dataProvider = null;
-    this._harMetadataCollector.destroy();
+
+    this._targetTitlesPerURL = new Map();
   }
 
   clear() {
     // Clear all the caches in the data provider
     this.dataProvider.clear();
 
-    this._harMetadataCollector.clear();
+    this._initialTargetTitle = this.currentTarget.title;
+    this._targetTitlesPerURL = new Map();
 
     this.commands.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
     this.emitForTests("clear-network-resources");
@@ -352,6 +347,10 @@ class Connector {
     }
 
     if (resource.name === "dom-complete") {
+      this._targetTitlesPerURL.set(
+        resource.targetFront.url,
+        resource.targetFront.title
+      );
       this.navigate();
     }
 
@@ -467,8 +466,15 @@ class Connector {
   /**
    * Used for HAR generation.
    */
-  getHarData() {
-    return this._harMetadataCollector.getHarData();
+  getTargetTitlesPerURL() {
+    return this._targetTitlesPerURL;
+  }
+
+  /**
+   * Used for HAR generation.
+   */
+  getInitialTargetTitle() {
+    return this._initialTargetTitle;
   }
 
   /**

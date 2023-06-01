@@ -145,10 +145,20 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
     content.document.querySelector("iframe").remove();
   });
 
+  const { connector, store, windowRequire } = monitor.panelWin;
+  const { HarMenuUtils } = windowRequire(
+    "devtools/client/netmonitor/src/har/har-menu-utils"
+  );
   // HAR will try to re-fetch lazy data and may throw on the iframe fetch request.
   // This subtest is meants to verify we aren't throwing here and HAR export
   // works fine, even if some requests can't be fetched.
-  const har = await copyAllAsHARWithContextMenu(monitor);
+  await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()),
+    connector
+  );
+
+  const jsonString = SpecialPowers.getClipboardData("text/plain");
+  const har = JSON.parse(jsonString);
   is(har.log.entries.length, 2, "There must be two requests");
   is(
     har.log.entries[0].request.url,
@@ -197,7 +207,10 @@ async function reloadAndCopyAllAsHar({
   toolbox,
   reloadTwice = false,
 }) {
-  const { store, windowRequire } = monitor.panelWin;
+  const { connector, store, windowRequire } = monitor.panelWin;
+  const { HarMenuUtils } = windowRequire(
+    "devtools/client/netmonitor/src/har/har-menu-utils"
+  );
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -216,5 +229,11 @@ async function reloadAndCopyAllAsHar({
   info("Waiting for DOCUMENT_EVENT dom-complete resource");
   await onDomCompleteResource;
 
-  return copyAllAsHARWithContextMenu(monitor);
+  await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()),
+    connector
+  );
+
+  const jsonString = SpecialPowers.getClipboardData("text/plain");
+  return JSON.parse(jsonString);
 }
