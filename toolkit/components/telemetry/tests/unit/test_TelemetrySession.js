@@ -1970,6 +1970,8 @@ add_task(async function test_schedulerEnvironmentReschedules() {
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
   await TelemetryStorage.testClearPendingPings();
+  // bug 1829855 - Sometimes the idle dispatch from a previous test interferes.
+  TelemetryScheduler.testReset();
   PingServer.clearRequests();
 
   // Set a fake current date and start Telemetry.
@@ -1995,14 +1997,20 @@ add_task(async function test_schedulerEnvironmentReschedules() {
   Preferences.set(PREF_TEST, 1);
 
   // Wait for the environment-changed ping.
-  await PingServer.promiseNextPing();
+  let ping = await PingServer.promiseNextPing();
+  Assert.equal(ping.type, "main", `Expected 'main' ping on ${ping.id}`);
+  Assert.equal(
+    ping.payload.info.reason,
+    "environment-change",
+    `Expected 'environment-change' reason on ${ping.id}`
+  );
 
   // We don't expect to receive any daily ping in this test, so assert if we do.
   PingServer.registerPingHandler((req, res) => {
     const receivedPing = decodeRequestPayload(req);
     Assert.ok(
       false,
-      `No ping should be received in this test (got ${receivedPing.id}).`
+      `No ping should be received in this test (got ${receivedPing.id} type: ${receivedPing.type} reason: ${receivedPing.payload.info.reason}).`
     );
   });
 
@@ -2341,5 +2349,9 @@ add_task(async function test_changeThrottling() {
 });
 
 add_task(async function stopServer() {
+  // It is important to shut down the TelemetryController first as, due to test
+  // environment changes, failure to upload pings here during shutdown results
+  // in an infinite loop of send failures and retries.
+  await TelemetryController.testShutdown();
   await PingServer.stop();
 });
