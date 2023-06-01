@@ -67,9 +67,6 @@ class SearchProviders {
           extraAdServersRegexps: p.extraAdServersRegexps.map(
             r => new RegExp(r)
           ),
-          nonAdsLinkRegexps: p.nonAdsLinkRegexps?.length
-            ? p.nonAdsLinkRegexps.map(r => new RegExp(r))
-            : [],
         };
       });
 
@@ -388,13 +385,6 @@ class SearchAdImpression {
         if (result.relatedElements?.length) {
           this.#addEventListenerToElements(result.relatedElements, result.type);
         }
-        // If an anchor doesn't match any component, and it doesn't have a non
-        // ads link regexp, cache the anchor so the parent process can observe
-        // them.
-      } else if (!this.#providerInfo.nonAdsLinkRegexps.length) {
-        this.#recordElementData(anchor, {
-          type: "non_ads_link",
-        });
       }
     }
   }

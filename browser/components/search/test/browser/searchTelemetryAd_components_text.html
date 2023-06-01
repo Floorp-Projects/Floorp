@@ -15,7 +15,6 @@
         <a href="https://example.com/ad/1">
           <h2>Example Result</h2>
         </a>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
         <span><a href="https://example.com/ad/2">Ad link that says there are 10 Locations nearby</a></span>
         <div class="multi-col">
           <div>
@@ -47,10 +46,9 @@
       </div>
       <div class="moz_ad">
         <h5 test-label>ad_link</h5>
-        <a href="https://example.com/ad/7">
+        <a id="ad_link_redirect" href="https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_adsLink_redirect.html">
           <h2>Example Shop</h2>
         </a>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
         <div class="factrow">
           <a href="https://example.com/ad/8">Home Page</a>
           <a href="https://example.com/ad/9">Products</a>
@@ -62,23 +60,23 @@
         <a href="https://example.com/ad/11">
           <h2>Example Shop</h2>
         </a>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
-        <div class="factrow">
-          <a href="https://example.com/ad/12">Home Page</a>
-          <a href="https://example.com/ad/13">Products</a>
-          <a href="https://example.com/ad/14">Sales</a>
-        </div>
       </div>
       <div>
         <h5 test-label>non_ads_link</h5>
         <a id="non_ads_link" href="https://example.com/browser/browser/components/search/test/browser/cacheable.html">
-          <h2>Example of a cached non ad</h2>
-        </a>
-      </div>
-      <div>
-        <h5 test-label>non_ads_link</h5>
+          Example of a cached non ad
+        </a><br />
+        <a id="non_ads_link_redirected" href="https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_nonAdsLink_redirect.html">
+          Example of a redirected non ad link
+        </a><br />
+        <a id="non_ads_link_redirected_no_top_level" href="#">
+          Example of a redirected non ad link that isn't initially top level loaded
+        </a><br />
+        <a id="non_ads_link_multiple_redirects" href="https://example.com/browser/browser/components/search/test/browser/redirect_thrice.sjs">
+          Example of a redirected non ad link that's redirected multiple times
+        </a><br />
         <a id="non_ads_link_with_special_characters_in_path" href="https://example.com/path'?hello_world&foo=bar's">
-          <h2>Example of a non ad</h2>
+          Example of a non ad with special characters in path
         </a>
       </div>
     </div>
@@ -96,5 +94,19 @@
       </div>
     </div>
   </section>
+  <iframe style="display: none;"></iframe>
+  <script>
+    window.addEventListener("message", (event) => {
+      if (event.origin == "https://example.org") {
+        window.location.href = event.data;
+      }
+    });
+    document.getElementById("non_ads_link_redirected_no_top_level")
+      .addEventListener("click", (event) => {
+        event.preventDefault();
+        let iframe = document.querySelector("iframe");
+        iframe.src = "https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_nonAdsLink_redirect_nonTopLoaded.html";
+    });
+  </script>
 </body>
 </html>
