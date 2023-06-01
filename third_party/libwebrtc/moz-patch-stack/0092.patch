@@ -1,146 +1,34 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 09:59:00 -0500
-Subject: Bug 1828517 - (fix-794d599741) account for moved files in BUILD.gn
- that we don't want to build.
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 27 Feb 2023 16:22:00 +0000
+Subject: Bug 1817024 - (fix-fdcfefa708) In PhysicalSocket avoid a non-trivial
+ designated initializer. r=mjf,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4a969f6709183d4f55215adaffb8a52b790a8492
+This fixes a build failure in the base-toolchain job with GCC 7.5.0:
+  In file included from Unified_cpp_threading_gn0.cpp:38:0:
+  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc: In member function 'int rtc::PhysicalSocket::DoReadFromSocket(void*, size_t, rtc::SocketAddress*, int64_t*)':
+  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc:463:51: sorry, unimplemented: non-trivial designated initializers not supported
+       msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
+                                                   ^
+
+Differential Revision: https://phabricator.services.mozilla.com/D171057
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a282ca40f29b7a5ea76d5b68d
 ---
- api/BUILD.gn   | 10 ++++++++++
- media/BUILD.gn | 20 ++++++++++----------
- 2 files changed, 20 insertions(+), 10 deletions(-)
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 56afc5efce..7c16b45e05 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -175,6 +175,10 @@ rtc_source_set("ice_transport_interface") {
- }
- 
- rtc_library("dtls_transport_interface") {
-+# Previously, Mozilla has tried to limit including this dep, but as
-+# upstream changes, it requires whack-a-mole.  Making it an empty
-+# definition has the same effect, but only requires one change.
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
- 
-   sources = [
-@@ -191,6 +195,7 @@ rtc_library("dtls_transport_interface") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_library("dtmf_sender_interface") {
-   visibility = [ "*" ]
-@@ -203,6 +208,10 @@ rtc_library("dtmf_sender_interface") {
- }
- 
- rtc_library("rtp_sender_interface") {
-+# Previously, Mozilla has tried to limit including this dep, but as
-+# upstream changes, it requires whack-a-mole.  Making it an empty
-+# definition has the same effect, but only requires one change.
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
- 
-   sources = [
-@@ -224,6 +233,7 @@ rtc_library("rtp_sender_interface") {
-     "video_codecs:video_codecs_api",
-   ]
- }
-+}
- 
- rtc_library("rtp_sender_setparameters_callback") {
-   visibility = [ "*" ]
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 80662563b0..36c3aa9d1c 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -154,23 +154,14 @@ rtc_library("rtc_media_base") {
-       "base/audio_source.h",
-       "base/delayable.h",
-       "base/media_channel.h",
--      "base/media_channel_impl.cc",
--      "base/media_channel_impl.h",
-       "base/media_engine.cc",
-       "base/media_engine.h",
--      "base/rid_description.cc",
--      "base/rid_description.h",
--      "base/rtp_utils.cc",
--      "base/rtp_utils.h",
--      "base/stream_params.cc",
--      "base/stream_params.h",
--      "base/turn_utils.cc",
--      "base/turn_utils.h",
-     ]
-   }
- }
- 
- rtc_library("media_channel_impl") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/media_channel_impl.cc",
-     "base/media_channel_impl.h",
-@@ -219,6 +210,7 @@ rtc_library("media_channel_impl") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- }
-+}
- 
- rtc_source_set("media_channel") {
-   sources = [ "base/media_channel.h" ]
-@@ -292,6 +284,7 @@ rtc_library("codec") {
- }
- 
- rtc_library("rtp_utils") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/rtp_utils.cc",
-     "base/rtp_utils.h",
-@@ -308,8 +301,10 @@ rtc_library("rtp_utils") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("stream_params") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/stream_params.cc",
-     "base/stream_params.h",
-@@ -322,6 +317,7 @@ rtc_library("stream_params") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
- }
-+}
- 
- rtc_library("media_constants") {
-   sources = [
-@@ -332,6 +328,7 @@ rtc_library("media_constants") {
- }
- 
- rtc_library("turn_utils") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/turn_utils.cc",
-     "base/turn_utils.h",
-@@ -342,14 +339,17 @@ rtc_library("turn_utils") {
-     "../rtc_base/system:rtc_export",
-   ]
- }
-+}
- 
- rtc_library("rid_description") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/rid_description.cc",
-     "base/rid_description.h",
-   ]
-   deps = []
- }
-+}
- 
- rtc_library("rtc_simulcast_encoder_adapter") {
-   visibility = [ "*" ]
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 60d024c769..3b112e6188 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -460,7 +460,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
+   int received = 0;
+   if (read_scm_timestamp_experiment_) {
+     iovec iov = {.iov_base = buffer, .iov_len = length};
+-    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
++    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
+     if (out_addr) {
+       out_addr->Clear();
+       msg.msg_name = addr;
 -- 
 2.34.1
 

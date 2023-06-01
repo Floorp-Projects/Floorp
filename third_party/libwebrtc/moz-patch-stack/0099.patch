@@ -1,28 +1,86 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 07:47:00 +0000
-Subject: Bug 1810949 - In webrtc_libyuv.cc put a label at end of compound
- statement. CLOSED TREE
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 7e5d9edfdf.
+ r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Differential Revision: https://phabricator.services.mozilla.com/D177600
+Upstream commit: https://webrtc.googlesource.com/src/+/7e5d9edfdfe82e06182b790afe848cd0da179a87
+    webrtc_libyuv: Raise warnings for unhandled types at compile time
 
-Depends on D177599
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac8147fee0323be3bf1d7f292a2a408a9901159
+    Bug: webrtc:14830
+    Change-Id: Ib5141e585f673098bbedd2872dbd6e6ed9df4864
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291528
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Commit-Queue: Erik Språng <sprang@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39408}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177228
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2bc179dfe25391e4b621ce407239beaebbe09be8
 ---
- common_video/libyuv/webrtc_libyuv.cc | 1 +
- 1 file changed, 1 insertion(+)
+ common_video/libyuv/webrtc_libyuv.cc | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
 diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 8c68162624..05a4b184c2 100644
+index 8998af191d..d07d739119 100644
 --- a/common_video/libyuv/webrtc_libyuv.cc
 +++ b/common_video/libyuv/webrtc_libyuv.cc
-@@ -47,6 +47,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-       return width * height * 4;
-     case VideoType::kMJPEG:
-     case VideoType::kUnknown:
-+      break;
+@@ -22,7 +22,6 @@ namespace webrtc {
+ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(width, 0);
+   RTC_DCHECK_GE(height, 0);
+-  size_t buffer_size = 0;
+   switch (type) {
+     case VideoType::kI420:
+     case VideoType::kNV21:
+@@ -31,28 +30,24 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+     case VideoType::kNV12: {
+       int half_width = (width + 1) >> 1;
+       int half_height = (height + 1) >> 1;
+-      buffer_size = width * height + half_width * half_height * 2;
+-      break;
++      return width * height + half_width * half_height * 2;
+     }
+     case VideoType::kARGB4444:
+     case VideoType::kRGB565:
+     case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+-      buffer_size = width * height * 2;
+-      break;
++      return width * height * 2;
+     case VideoType::kRGB24:
+-      buffer_size = width * height * 3;
+-      break;
++      return width * height * 3;
+     case VideoType::kBGRA:
+     case VideoType::kARGB:
+-      buffer_size = width * height * 4;
+-      break;
+-    default:
+-      RTC_DCHECK_NOTREACHED();
+-      break;
++      return width * height * 4;
++    case VideoType::kMJPEG:
++    case VideoType::kUnknown:
    }
-   RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
-   return 0;
+-  return buffer_size;
++  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
++  return 0;
+ }
+ 
+ int ExtractBuffer(const rtc::scoped_refptr<I420BufferInterface>& input_frame,
+@@ -120,7 +115,7 @@ int ConvertVideoType(VideoType video_type) {
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
+   }
+-  RTC_DCHECK_NOTREACHED();
++  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << video_type;
+   return libyuv::FOURCC_ANY;
+ }
+ 
 -- 
 2.34.1
 

@@ -1,37 +1,46 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jul 2021 18:14:00 -0500
-Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+From: Johannes Kron <kron@webrtc.org>
+Date: Wed, 15 Feb 2023 10:05:33 +0000
+Subject: (cherry-pick-branch-heads/5563) M111: Fix
+ WebRTC.Screenshare.DesktopCapturerFullscreenDetector logging issue
 
-Differential Revision: https://phabricator.services.mozilla.com/D119674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+The histogram WebRTC.Screenshare.DesktopCapturerFullscreenDetector
+incorrectly counted every time a presentation application was shared
+instead of only counting sessions where the presentation was
+presented in fullscreen. This bug affected Windows, macOS works as
+intended.
+
+The try-bots are not working on the M111 branch due to a change in the setup.
+
+(cherry picked from commit f4c04286bc361011660492fc1860ea72d59165ec)
+
+Bug: chromium:1348011
+Change-Id: I9e84e9d1f4310703ba94e2af2e35a52d74a25842
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293461
+Commit-Queue: Johannes Kron <kron@webrtc.org>
+Reviewed-by: Henrik Andreassson <henrika@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39314}
+No-Try: True
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294860
+Cr-Commit-Position: refs/branch-heads/5563@{#4}
+Cr-Branched-From: 6c032cb8356b0d3f717c4fcf50796241f2bba6c2-refs/heads/main@{#39207}
 ---
- rtc_base/logging.cc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ modules/desktop_capture/cropping_window_capturer_win.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index d71d6a3e1b..d6ae7612fc 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -265,8 +265,8 @@ void LogMessage::LogTimestamps(bool on) {
- }
- 
- void LogMessage::LogToDebug(LoggingSeverity min_sev) {
--  g_dbg_sev = min_sev;
-   webrtc::MutexLock lock(&GetLoggingLock());
-+  g_dbg_sev = min_sev;
-   UpdateMinLogSeverity();
- }
- 
-@@ -455,6 +455,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
- 
- // static
- bool LogMessage::IsNoop(LoggingSeverity severity) {
-+  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-+  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-+  webrtc::MutexLock lock(&GetLoggingLock());
-   if (severity >= g_dbg_sev || severity >= g_min_sev)
-     return false;
-   return streams_empty_.load(std::memory_order_relaxed);
+diff --git a/modules/desktop_capture/cropping_window_capturer_win.cc b/modules/desktop_capture/cropping_window_capturer_win.cc
+index 5d99cb6b2b..ab2f807d33 100644
+--- a/modules/desktop_capture/cropping_window_capturer_win.cc
++++ b/modules/desktop_capture/cropping_window_capturer_win.cc
+@@ -310,7 +310,8 @@ WindowId CroppingWindowCapturerWin::GetWindowToCapture() const {
+       full_screen_window_detector_
+           ? full_screen_window_detector_->FindFullScreenWindow(selected_source)
+           : 0;
+-  if (full_screen_source != selected_source && !fullscreen_usage_logged_) {
++  if (full_screen_source && full_screen_source != selected_source &&
++      !fullscreen_usage_logged_) {
+     fullscreen_usage_logged_ = true;
+     LogDesktopCapturerFullscreenDetectorUsage();
+   }
 -- 
 2.34.1
 

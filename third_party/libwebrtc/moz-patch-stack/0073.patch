@@ -1,81 +1,23 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 12 Dec 2022 15:47:00 +0000
-Subject: Bug 1451394 - Expose mac camera capture backend in .gn and switch it
- to gecko libyuv. r=webrtc-reviewers,mjf
+From: Michael Froman <mjfroman@mac.com>
+Date: Wed, 13 Jul 2022 12:50:36 -0500
+Subject: Bug 1766646 - (fix-4d12174ca5) add missing include to fix build
 
-Differential Revision: https://phabricator.services.mozilla.com/D163682
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0658888969395dca938597783c8a377b9bea209
 ---
- BUILD.gn     | 4 ++++
- sdk/BUILD.gn | 6 ++++++
- 2 files changed, 10 insertions(+)
+ modules/audio_processing/aec3/multi_channel_content_detector.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 0272f6a8fe..6515866c2d 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -559,6 +559,10 @@ if (!build_with_chromium) {
-       ]
-     }
+diff --git a/modules/audio_processing/aec3/multi_channel_content_detector.h b/modules/audio_processing/aec3/multi_channel_content_detector.h
+index be8717f3af..1742c5fc17 100644
+--- a/modules/audio_processing/aec3/multi_channel_content_detector.h
++++ b/modules/audio_processing/aec3/multi_channel_content_detector.h
+@@ -11,6 +11,7 @@
+ #ifndef MODULES_AUDIO_PROCESSING_AEC3_MULTI_CHANNEL_CONTENT_DETECTOR_H_
+ #define MODULES_AUDIO_PROCESSING_AEC3_MULTI_CHANNEL_CONTENT_DETECTOR_H_
  
-+    if (build_with_mozilla && is_mac) {
-+      deps += [ "sdk:videocapture_objc" ]
-+    }
-+
-     if (rtc_enable_protobuf) {
-       deps += [ "logging:rtc_event_log_proto" ]
-     }
-diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index a361656a59..65d1b10124 100644
---- a/sdk/BUILD.gn
-+++ b/sdk/BUILD.gn
-@@ -449,6 +449,7 @@ if (is_ios || is_mac) {
-       ]
-     }
++#include <memory>
+ #include <stddef.h>
  
-+    if (!build_with_mozilla) {
-     rtc_library("videosource_objc") {
-       sources = [
-         "objc/api/peerconnection/RTCVideoSource+Private.h",
-@@ -478,6 +479,7 @@ if (is_ios || is_mac) {
-         ":used_from_extension",
-       ]
-     }
-+    }
- 
-     rtc_library("videoframebuffer_objc") {
-       visibility = [ "*" ]
-@@ -510,6 +512,7 @@ if (is_ios || is_mac) {
-       ]
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("opengl_objc") {
-       sources = [
-         "objc/components/renderer/opengl/RTCDefaultShader.h",
-@@ -662,6 +665,7 @@ if (is_ios || is_mac) {
-         ":videoframebuffer_objc",
-       ]
-     }
-+    }
- 
-     rtc_library("videocapture_objc") {
-       visibility = [ "*" ]
-@@ -690,6 +694,7 @@ if (is_ios || is_mac) {
-       ]
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("videocodec_objc") {
-       visibility = [ "*" ]
-       configs += [ "..:no_global_constructors" ]
-@@ -1747,5 +1752,6 @@ if (is_ios || is_mac) {
-         "VideoToolbox.framework",
-       ]
-     }
-+    }
-   }
- }
+ #include <memory>
 -- 
 2.34.1
 

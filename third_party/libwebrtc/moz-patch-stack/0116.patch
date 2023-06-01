@@ -1,0 +1,144 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Tue, 23 May 2023 06:14:00 +0000
+Subject: Bug 1832751 - cherry-pick upstream libwebrtc commit 3da04a93cd.
+ r=webrtc-reviewers,mjf
+
+Upstream commit: https://webrtc.googlesource.com/src/+/3da04a93cd18dc7b65c6756910cc8a9cbf20fb8c
+    Allow SequenceChecker to be initialized detached.
+
+    The motivation for this is to not have to implement this pattern:
+
+    foo.h:
+
+    class Foo {
+     public:
+      Foo();
+     private:
+      SequenceChecker checker_;
+    };
+
+    foo.cc:
+
+    Foo::Foo() {
+      checker_.Detach();
+    }
+
+    And instead be able to do this inline in the .h file:
+
+    class Foo {
+     public:
+      Foo();
+     private:
+      SequenceChecker checker_{SequenceChecker::kDetached};
+    };
+
+    Bug: none
+    Change-Id: Idd7ca82d15c2f77f3aaccf26f1943a49f4b40661
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298445
+    Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+    Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39616}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177874
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/757b62d9ee50da83b1e460dcb356a099efc9e335
+---
+ api/sequence_checker.h                        |  5 +++++
+ api/sequence_checker_unittest.cc              | 21 +++++++++++++++++--
+ .../sequence_checker_internal.cc              |  4 ++--
+ .../sequence_checker_internal.h               |  3 ++-
+ 4 files changed, 28 insertions(+), 5 deletions(-)
+
+diff --git a/api/sequence_checker.h b/api/sequence_checker.h
+index a79d04f61f..33e0f3c074 100644
+--- a/api/sequence_checker.h
++++ b/api/sequence_checker.h
+@@ -44,6 +44,11 @@ class RTC_LOCKABLE SequenceChecker
+   using Impl = webrtc_sequence_checker_internal::SequenceCheckerDoNothing;
+ #endif
+  public:
++  enum InitialState : bool { kDetached = false, kAttached = true };
++
++  explicit SequenceChecker(InitialState initial_state = kAttached)
++      : Impl(initial_state) {}
++
+   // Returns true if sequence checker is attached to the current sequence.
+   bool IsCurrent() const { return Impl::IsCurrent(); }
+   // Detaches checker from sequence to which it is attached. Next attempt
+diff --git a/api/sequence_checker_unittest.cc b/api/sequence_checker_unittest.cc
+index a929c59655..3efb5c78ee 100644
+--- a/api/sequence_checker_unittest.cc
++++ b/api/sequence_checker_unittest.cc
+@@ -122,8 +122,7 @@ TEST(SequenceCheckerTest, DetachFromTaskQueueInDebug) {
+ TEST(SequenceCheckerTest, ExpectationToString) {
+   TaskQueueForTest queue1;
+ 
+-  SequenceChecker sequence_checker;
+-  sequence_checker.Detach();
++  SequenceChecker sequence_checker(SequenceChecker::kDetached);
+ 
+   rtc::Event blocker;
+   queue1.PostTask([&blocker, &sequence_checker]() {
+@@ -149,6 +148,24 @@ TEST(SequenceCheckerTest, ExpectationToString) {
+ #endif
+ }
+ 
++TEST(SequenceCheckerTest, InitiallyDetached) {
++  TaskQueueForTest queue1;
++
++  SequenceChecker sequence_checker(SequenceChecker::kDetached);
++
++  rtc::Event blocker;
++  queue1.PostTask([&blocker, &sequence_checker]() {
++    EXPECT_TRUE(sequence_checker.IsCurrent());
++    blocker.Set();
++  });
++
++  blocker.Wait(rtc::Event::kForever);
++
++#if RTC_DCHECK_IS_ON
++  EXPECT_FALSE(sequence_checker.IsCurrent());
++#endif
++}
++
+ class TestAnnotations {
+  public:
+   TestAnnotations() : test_var_(false) {}
+diff --git a/rtc_base/synchronization/sequence_checker_internal.cc b/rtc_base/synchronization/sequence_checker_internal.cc
+index 2612e9ee84..9831f07d7d 100644
+--- a/rtc_base/synchronization/sequence_checker_internal.cc
++++ b/rtc_base/synchronization/sequence_checker_internal.cc
+@@ -33,8 +33,8 @@ const void* GetSystemQueueRef() {
+ 
+ }  // namespace
+ 
+-SequenceCheckerImpl::SequenceCheckerImpl()
+-    : attached_(true),
++SequenceCheckerImpl::SequenceCheckerImpl(bool attach_to_current_thread)
++    : attached_(attach_to_current_thread),
+       valid_thread_(rtc::CurrentThreadRef()),
+       valid_queue_(TaskQueueBase::Current()),
+       valid_system_queue_(GetSystemQueueRef()) {}
+diff --git a/rtc_base/synchronization/sequence_checker_internal.h b/rtc_base/synchronization/sequence_checker_internal.h
+index a20fbb0a54..a66e9ee8ec 100644
+--- a/rtc_base/synchronization/sequence_checker_internal.h
++++ b/rtc_base/synchronization/sequence_checker_internal.h
+@@ -30,7 +30,7 @@ namespace webrtc_sequence_checker_internal {
+ // right version for your build configuration.
+ class RTC_EXPORT SequenceCheckerImpl {
+  public:
+-  SequenceCheckerImpl();
++  explicit SequenceCheckerImpl(bool attach_to_current_thread);
+   ~SequenceCheckerImpl() = default;
+ 
+   bool IsCurrent() const;
+@@ -59,6 +59,7 @@ class RTC_EXPORT SequenceCheckerImpl {
+ // right version for your build configuration.
+ class SequenceCheckerDoNothing {
+  public:
++  explicit SequenceCheckerDoNothing(bool attach_to_current_thread) {}
+   bool IsCurrent() const { return true; }
+   void Detach() {}
+ };
+-- 
+2.34.1
+

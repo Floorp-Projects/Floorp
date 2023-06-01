@@ -1,34 +1,30 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 12 Apr 2023 16:03:00 +0000
-Subject: Bug 1826428 - remove libwebrtc's jvm_android.cc from build
- r=ng,webrtc-reviewers
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748458 - Add TRACE_EVENT for keyframe requests. r=bwc
 
-Based on info from John Lin and previous try runs, we're almost
-certainly not using this.  Let's try removing it from the build
-and landing it.  If no problems emerge, we'll be able to remove
-our custom changes to upstream code in jvm_android.cc.
-
-Differential Revision: https://phabricator.services.mozilla.com/D174793
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dca1b97525487ae57d43ced1ebdb4a2d9c9dae89
+Differential Revision: https://phabricator.services.mozilla.com/D135113
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5b2a7894ef1cf096d0e8977754507c0820e757fc
 ---
- modules/utility/BUILD.gn | 4 ++++
- 1 file changed, 4 insertions(+)
+ video/rtp_video_stream_receiver2.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/modules/utility/BUILD.gn b/modules/utility/BUILD.gn
-index 3fe4ca8c92..46bca17f02 100644
---- a/modules/utility/BUILD.gn
-+++ b/modules/utility/BUILD.gn
-@@ -47,6 +47,10 @@ rtc_source_set("utility") {
-       "../../rtc_base:platform_thread",
-       "../../rtc_base/system:arch",
-     ]
-+
-+    if (build_with_mozilla) {
-+      sources -= [ "source/jvm_android.cc" ]
-+    }
-   }
- }
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index eb0a7787ac..8055ac0e0f 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -735,6 +735,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
  
+ void RtpVideoStreamReceiver2::RequestKeyFrame() {
+   RTC_DCHECK_RUN_ON(&worker_task_checker_);
++  TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
++               "remote_ssrc", config_.rtp.remote_ssrc, "method",
++               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
++               : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
++               : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
++                                                                      : "Other");
+   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
+   // issued by anything other than the LossNotificationController if it (the
+   // sender) is relying on LNTF alone.
 -- 
 2.34.1
 

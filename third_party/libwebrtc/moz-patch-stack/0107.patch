@@ -1,0 +1,52 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 08:01:00 +0000
+Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit adf55790b6.
+ r=webrtc-reviewers,mjf
+
+Upstream commit: https://webrtc.googlesource.com/src/+/adf55790b6ecf50c4bb2b2cf7d58441303b9d946
+    In DeviceInfoDS free the frame duration list after use
+
+    Per the docs, the caller is responsible for freeing the memory.
+
+    Bug: chromium:1441804
+    Change-Id: I9aaae493a1a86d8ab4f03930715a643a3c9fb61b
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304061
+    Reviewed-by: Per Kjellander <perkj@webrtc.org>
+    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39983}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177237
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/854cc79e99130e6537eebe8433a6a7adf5e1578d
+---
+ modules/video_capture/windows/device_info_ds.cc | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index 2c192fe4f6..2b01fc6930 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -520,11 +520,18 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+         hrVC = videoControlConfig->GetFrameRateList(
+             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+ 
++        if (hrVC == S_OK) {
++          maxFPS = GetMaxOfFrameArray(frameDurationList, listSize);
++        }
++
++        CoTaskMemFree(frameDurationList);
++        frameDurationList = NULL;
++        listSize = 0;
++
+         // On some odd cameras, you may get a 0 for duration. Some others may
+         // not update the out vars. GetMaxOfFrameArray returns the lowest
+         // duration (highest FPS), or 0 if there was no list with elements.
+-        if (hrVC == S_OK &&
+-            0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
++        if (0 != maxFPS) {
+           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
+           capability.supportFrameRateControl = true;
+         } else  // use existing method
+-- 
+2.34.1
+
