@@ -65,7 +65,7 @@ class SVGMarkerElement final : public SVGMarkerElementBase {
   already_AddRefed<DOMSVGAnimatedEnumeration> OrientType();
   already_AddRefed<DOMSVGAnimatedAngle> OrientAngle();
   void SetOrientToAuto();
-  void SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv);
+  void SetOrientToAngle(DOMSVGAngle& aAngle);
 
  protected:
   void SetParentCoordCtxProvider(SVGViewportElement* aContext);
