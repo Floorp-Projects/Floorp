@@ -314,6 +314,67 @@ function checkLoginForm(
   );
 }
 
+/**
+ * Check repeatedly for a while to see if a particular condition still applies.
+ * This function checks the return value of `condition` repeatedly until either
+ * the condition has a falsy return value, or `retryTimes` is exceeded.
+ */
+
+function ensureCondition(
+  condition,
+  errorMsg = "Condition did not last.",
+  retryTimes = 10
+) {
+  return new Promise((resolve, reject) => {
+    let tries = 0;
+    let conditionFailed = false;
+    let interval = setInterval(async function () {
+      try {
+        const conditionPassed = await condition();
+        conditionFailed ||= !conditionPassed;
+      } catch (e) {
+        ok(false, e + "\n" + e.stack);
+        conditionFailed = true;
+      }
+      if (conditionFailed || tries >= retryTimes) {
+        ok(!conditionFailed, errorMsg);
+        clearInterval(interval);
+        if (conditionFailed) {
+          reject(errorMsg);
+        } else {
+          resolve();
+        }
+      }
+      tries++;
+    }, 100);
+  });
+}
+
+/**
+ * Wait a while to ensure login form stays filled with username and password
+ * @see `checkLoginForm` below for a similar function.
+ * @returns a promise, resolving when done
+ *
+ * TODO: eventually get rid of this time based check, and transition to an
+ * event based approach. See Bug 1811142.
+ * Filling happens by `_fillForm()` which can report it's decision and we can
+ * wait for it. One of the options is to have `didFillFormAsync()` from
+ * https://phabricator.services.mozilla.com/D167214#change-3njWgUgqswws
+ */
+function ensureLoginFormStaysFilledWith(
+  usernameField,
+  expectedUsername,
+  passwordField,
+  expectedPassword
+) {
+  return ensureCondition(() => {
+    return (
+      Object.is(usernameField.value, expectedUsername) &&
+      Object.is(passwordField.value, expectedPassword)
+    );
+  }, `Ensuring form ${usernameField.parentNode.id} stays filled with "${expectedUsername}:${expectedPassword}"`);
+}
+
 function checkLoginFormInFrame(
   iframeBC,
   usernameFieldId,

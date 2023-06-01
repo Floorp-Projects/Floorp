@@ -20,8 +20,6 @@
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
-
 // Restore the form to the default state.
 function restoreForm(form) {
   form.uname.value = "";
@@ -33,10 +31,6 @@ function sendFakeAutocompleteEvent(element) {
   var acEvent = document.createEvent("HTMLEvents");
   acEvent.initEvent("DOMAutoComplete", true, false);
   element.dispatchEvent(acEvent);
-}
-
-function spinEventLoop() {
-  return Promise.resolve();
 }
 
 async function promiseACPopupClosed() {
@@ -58,7 +52,7 @@ add_task(async function form1_initial_empty() {
 
   // Make sure initial form is empty.
   checkLoginForm(form.uname, "", form.pword, "");
-  let popupState = await getPopupState();
+  const popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
 
@@ -75,30 +69,33 @@ add_task(async function form1_warning_entry() {
     action: "http://autocomplete:8888/formtest.js"
   });
   await promiseFormsProcessedInSameProcess();
+
   // Trigger autocomplete popup
   form.uname.focus();
   const autocompleteItems = await popupByArrowDown();
 
-  let popupState = await getPopupState();
+  const popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-  let expectedMenuItems = ["This connection is not secure. Logins entered here could be compromised. Learn More",
-                           "user-1",
-                           "user-2",
-                           "user-3"];
+  const expectedMenuItems = [
+    "This connection is not secure. Logins entered here could be compromised. Learn More",
+    "user-1",
+    "user-2",
+    "user-3"
+  ];
   checkAutoCompleteResults(autocompleteItems, expectedMenuItems, "mochi.test", "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // select insecure warning
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
-  await spinEventLoop(); // let focus happen
+  await promiseACPopupClosed();
   checkLoginForm(form.uname, "", form.pword, "");
 });
 
 add_task(async function form1_first_entry() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -121,8 +118,8 @@ add_task(async function form1_first_entry() {
 
 add_task(async function form1_second_entry() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -142,8 +139,8 @@ add_task(async function form1_second_entry() {
 
 add_task(async function form1_wraparound_first_entry() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -167,8 +164,8 @@ add_task(async function form1_wraparound_first_entry() {
 
 add_task(async function form1_wraparound_up_last_entry() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -187,8 +184,8 @@ add_task(async function form1_wraparound_up_last_entry() {
 
 add_task(async function form1_wraparound_down_up_up() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -209,8 +206,8 @@ add_task(async function form1_wraparound_down_up_up() {
 
 add_task(async function form1_wraparound_up_last() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -236,8 +233,8 @@ add_task(async function form1_wraparound_up_last() {
 
 add_task(async function form1_fill_username_without_autofill_right() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -257,8 +254,8 @@ add_task(async function form1_fill_username_without_autofill_right() {
 
 add_task(async function form1_fill_username_without_autofill_left() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -278,8 +275,8 @@ add_task(async function form1_fill_username_without_autofill_left() {
 
 add_task(async function form1_pageup_first() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -301,8 +298,8 @@ add_task(async function form1_pageup_first() {
 
 add_task(async function form1_pagedown_last() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -324,8 +321,8 @@ add_task(async function form1_pagedown_last() {
 
 add_task(async function form1_untrusted_event() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -338,15 +335,14 @@ add_task(async function form1_untrusted_event() {
   checkLoginForm(form.uname, "", form.pword, "");
   form.uname.value = "user-2";
   sendFakeAutocompleteEvent(form.uname);
-  await spinEventLoop();
-  checkLoginForm(form.uname, "user-2", form.pword, "");
+  await ensureLoginFormStaysFilledWith(form.uname, "user-2", form.pword, "");
 });
 
 add_task(async function form1_delete() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -355,6 +351,8 @@ add_task(async function form1_delete() {
   // Trigger autocomplete popup
   form.uname.focus();
   await popupByArrowDown();
+  // should have 5 menu items by now: 3 logins plus insecure warning + footer
+  await notifyMenuChanged(5);
 
   // XXX tried sending character "t" before/during dropdown to test
   // filtering, but had no luck. Seemed like the character was getting lost.
@@ -364,7 +362,7 @@ add_task(async function form1_delete() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Delete the first entry (of 3), "user-1"
   synthesizeKey("KEY_ArrowDown");
-  const numLoginsBeforeDeletion = await LoginManager.countLogins(origin, "http://autocomplete:8888", null);
+  const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "http://autocomplete:8888", null);
   is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
 
   const countChangedPromise = notifyMenuChanged(4);
@@ -375,7 +373,7 @@ add_task(async function form1_delete() {
   await deletionPromise;
 
   checkLoginForm(form.uname, "", form.pword, "");
-  const numLoginsAfterDeletion = await LoginManager.countLogins(origin, "http://autocomplete:8888", null);
+  const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "http://autocomplete:8888", null);
   is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
@@ -385,9 +383,9 @@ add_task(async function form1_delete() {
 
 add_task(async function form1_delete_second() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -403,7 +401,7 @@ add_task(async function form1_delete_second() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkLoginForm(form.uname, "", form.pword, "");
-  const numLoginsAfterDeletion = await LoginManager.countLogins(origin, "http://autocomplete:8888", null);
+  const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "http://autocomplete:8888", null);
   is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseACPopupClosed();
@@ -412,9 +410,9 @@ add_task(async function form1_delete_second() {
 
 add_task(async function form1_delete_last() {
   await setStoredLoginsAsync(
-    [origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [origin, "http://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    [location.origin, "http://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [location.origin, "http://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
   );
   const form = createLoginForm({
     action: "http://autocomplete:8888/formtest.js"
@@ -430,11 +428,11 @@ add_task(async function form1_delete_last() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
-  const numLoginsBeforeDeletion = await LoginManager.countLogins(origin, "http://autocomplete:8888", null);
+  const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "http://autocomplete:8888", null);
   is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkLoginForm(form.uname, "", form.pword, "");
-  const numLoginsAfterDeletion = await LoginManager.countLogins(origin, "http://autocomplete:8888", null);
+  const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "http://autocomplete:8888", null);
   is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
@@ -574,8 +572,7 @@ add_task(async function changing_username_does_not_touch_password() {
   synthesizeKey("X", {shiftKey: true});
   // Trigger the 'blur' event on uname
   form.pword.focus();
-  await spinEventLoop();
-  checkLoginForm(form.uname, "userX", form.pword, "pass");
+  await ensureLoginFormStaysFilledWith(form.uname, "userX", form.pword, "pass");
 });
 
 add_task(async function form7() {
@@ -596,8 +593,7 @@ add_task(async function form7() {
   newField.setAttribute("type", "text");
   newField.setAttribute("name", "uname2");
   form.insertBefore(newField, form.pword);
-  await spinEventLoop();
-  is(newField.value, "", "Verifying empty uname2");
+  await ensureLoginFormStaysFilledWith(newField, "", form.pword, "");
 });
 
 add_task(async function form7_2() {
@@ -808,10 +804,8 @@ add_task(async function form11_formless() {
   // Trigger autocomplete
   synthesizeKey("KEY_ArrowDown");
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
-  const processedPromise = promiseFormsProcessedInSameProcess();
   synthesizeKey("KEY_Enter");
-  await processedPromise;
-  await promiseACPopupClosed();
+  await promiseFormsProcessedInSameProcess();
   checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
@@ -837,10 +831,9 @@ add_task(async function form13_stays_open_upon_empty_search() {
   form.uname.select();
   synthesizeKey("KEY_Delete");
 
-  await spinEventLoop();
+  await ensureLoginFormStaysFilledWith(form.uname, "", form.pword, "prefilled");
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup is still open");
-  checkLoginForm(form.uname, "", form.pword, "prefilled");
 
   info("testing password field");
   synthesizeMouseAtCenter(form.pword, {});
