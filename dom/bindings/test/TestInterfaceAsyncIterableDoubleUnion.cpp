@@ -8,6 +8,7 @@
 #include "mozilla/dom/TestInterfaceJSMaplikeSetlikeIterableBinding.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla::dom {
 
