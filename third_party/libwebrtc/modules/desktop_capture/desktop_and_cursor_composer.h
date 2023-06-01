@@ -80,6 +80,7 @@ class RTC_EXPORT DesktopAndCursorComposer
                            MouseCursorMonitor* mouse_monitor);
 
   // DesktopCapturer::Callback interface.
+  void OnFrameCaptureStart() override;
   void OnCaptureResult(DesktopCapturer::Result result,
                        std::unique_ptr<DesktopFrame> frame) override;
 
