@@ -670,6 +670,9 @@ class Editor extends PureComponent {
       inlinePreviewEnabled,
       editorWrappingEnabled,
       highlightedLineRange,
+      blackboxedRanges,
+      isSourceOnIgnoreList,
+      selectedSourceIsBlackBoxed,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
@@ -688,7 +691,16 @@ class Editor extends PureComponent {
         {highlightedLineRange ? (
           <HighlightLines editor={editor} range={highlightedLineRange} />
         ) : null}
-        <BlackboxLines editor={editor} />
+        {isSourceOnIgnoreList || selectedSourceIsBlackBoxed ? (
+          <BlackboxLines
+            editor={editor}
+            selectedSource={selectedSource}
+            isSourceOnIgnoreList={isSourceOnIgnoreList}
+            blackboxedRangesForSelectedSource={
+              blackboxedRanges[selectedSource.url]
+            }
+          />
+        ) : null}
         <Exceptions />
         <EditorMenu
           editor={editor}
