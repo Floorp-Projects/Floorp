@@ -71,8 +71,8 @@ if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
 // - Add the preference to `geckoinstance.py`
 // - If the preference has to be set before startup:
 //   - Add the preference to `prefs.rs`
-//   - Add the preference `FirefoxLauncher.ts`
-//   - Create a PR to upstream the change on `FirefoxLauncher.ts` to puppeteer
+//   - Add the preference `browser-data/firefox.ts` in the puppeteer folder
+//   - Create a PR to upstream the change on `browser-data/firefox.ts` to puppeteer
 // - Otherwise, if the preference can be set after startup:
 //   - Add the preference to `RecommendedPreferences.sys.mjs`
 const COMMON_PREFERENCES = new Map([
