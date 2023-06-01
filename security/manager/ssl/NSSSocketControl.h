@@ -70,7 +70,6 @@ class NSSSocketControl final : public CommonSocketControl {
   NS_IMETHOD DisableEarlyData(void) override;
   NS_IMETHOD SetHandshakeCallbackListener(
       nsITlsHandshakeCallbackListener* callback) override;
-  NS_IMETHOD Claim() override;
 
   PRStatus CloseSocketAndDestroy();
 
@@ -237,7 +236,7 @@ class NSSSocketControl final : public CommonSocketControl {
 
   void MaybeDispatchSelectClientAuthCertificate() {
     COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-    if (!IsWaitingForCertVerification() && mClaimed &&
+    if (!IsWaitingForCertVerification() &&
         mPendingSelectClientAuthCertificate) {
       MOZ_LOG(gPIPNSSLog, mozilla::LogLevel::Debug,
               ("[%p] dispatching pending select client auth certificate",
@@ -301,7 +300,6 @@ class NSSSocketControl final : public CommonSocketControl {
   mozilla::TimeStamp mSocketCreationTimestamp;
   uint64_t mPlaintextBytesRead;
 
-  bool mClaimed;
   nsCOMPtr<nsIRunnable> mPendingSelectClientAuthCertificate;
 
   // Regarding the client certificate message in the TLS handshake, RFC 5246

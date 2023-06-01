@@ -179,9 +179,4 @@ interface nsITLSSocketControl : nsISupports {
      */
     [implicit_jscontext, must_use]
     Promise asyncGetSecurityInfo();
-
-    /**
-     * Claim a speculative connection.
-     */
-    void claim();
 };

@@ -826,7 +826,6 @@ bool DnsAndConnectSocket::Claim() {
         NS_SUCCEEDED(
             mPrimaryTransport.mSocketTransport->GetConnectionFlags(&flags))) {
       flags &= ~nsISocketTransport::DISABLE_RFC1918;
-      flags &= ~nsISocketTransport::IS_SPECULATIVE_CONNECTION;
       mPrimaryTransport.mSocketTransport->SetConnectionFlags(flags);
     }
 
@@ -850,19 +849,8 @@ bool DnsAndConnectSocket::Claim() {
 
   if (mFreeToUse) {
     mFreeToUse = false;
-
-    if (mPrimaryTransport.mSocketTransport) {
-      nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
-      if (NS_SUCCEEDED(mPrimaryTransport.mSocketTransport->GetTlsSocketControl(
-              getter_AddRefs(tlsSocketControl))) &&
-          tlsSocketControl) {
-        Unused << tlsSocketControl->Claim();
-      }
-    }
-
     return true;
   }
-
   return false;
 }
 
@@ -1223,11 +1211,6 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
 
   if (!dnsAndSock->Allow1918()) {
     tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
-  }
-
-  if (dnsAndSock->mSpeculative) {
-    MOZ_ASSERT(!mIsBackup);
-    tmpFlags |= nsISocketTransport::IS_SPECULATIVE_CONNECTION;
   }
 
   socketTransport->SetConnectionFlags(tmpFlags);
