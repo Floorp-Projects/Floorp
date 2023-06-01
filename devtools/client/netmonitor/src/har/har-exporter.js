@@ -196,27 +196,15 @@ const HarExporter = {
    * long strings).
    */
   async buildHarData(options) {
-    const { connector } = options;
-
     // Disconnect from redux actions/store.
-    connector.enableActions(false);
-
-    options = {
-      ...options,
-      getString: connector.getLongString,
-      getTimingMarker: connector.getTimingMarker,
-      initialTargetTitle: connector.getInitialTargetTitle(),
-      requestData: connector.requestData,
-      targetTitlesPerURL: connector.getTargetTitlesPerURL(),
-      title: connector.currentTarget.title,
-    };
+    options.connector.enableActions(false);
 
     // Build HAR object from collected data.
     const builder = new HarBuilder(options);
     const result = await builder.build();
 
     // Connect to redux actions again.
-    connector.enableActions(true);
+    options.connector.enableActions(true);
 
     return result;
   },

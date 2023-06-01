@@ -4,5 +4,6 @@
 
 DevToolsModules(
     "firefox-data-provider.js",
+    "har-metadata-collector.js",
     "index.js",
 )
