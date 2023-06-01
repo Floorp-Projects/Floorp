@@ -131,6 +131,7 @@ class WheelTransaction {
    * scrollable frame.
    */
   static nsIFrame* GetEventTargetFrame() { return sEventTargetFrame; }
+  static bool HandledByApz() { return sHandledByApz; }
   static void EndTransaction();
   /**
    * WillHandleDefaultAction() is called before handling aWheelEvent on
@@ -192,6 +193,10 @@ class WheelTransaction {
    * set.
    */
   static AutoWeakFrame sEventTargetFrame;
+  /**
+   * The wheel events for this transaction are handled by APZ.
+   */
+  static bool sHandledByApz;
   static uint32_t sTime;        // in milliseconds
   static uint32_t sMouseMoved;  // in milliseconds
   static nsITimer* sTimer;
