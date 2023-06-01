@@ -2,7 +2,7 @@
 *   How to contribute
     *   Code
         * [Style guide](/g3doc/style-guide.md)
-            * [`.h` and `.cc` files come in pairs](g3doc/style-guide/h-cc-pairs.md)
+            * [`.h` and `.cc` files come in pairs](/g3doc/style-guide/h-cc-pairs.md)
         * [How to write code in the `api/` directory](/api/README.md)
         * [Using Abseil in WebRTC](/g3doc/abseil-in-webrtc.md)
     *   [Code of conduct](/CODE_OF_CONDUCT.md)
