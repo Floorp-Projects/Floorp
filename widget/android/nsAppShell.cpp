@@ -141,7 +141,7 @@ class GeckoThreadSupport final
     OriginAttributes attrs;
     nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateContentPrincipal(uri, attrs);
-    specConn->SpeculativeConnect(uri, principal, nullptr);
+    specConn->SpeculativeConnect(uri, principal, nullptr, false);
   }
 
   static void OnPause() {

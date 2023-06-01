@@ -12485,11 +12485,8 @@ void Document::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode) {
     return;
   }
 
-  if (aCORSMode == CORS_ANONYMOUS) {
-    speculator->SpeculativeAnonymousConnect(uri, NodePrincipal(), nullptr);
-  } else {
-    speculator->SpeculativeConnect(uri, NodePrincipal(), nullptr);
-  }
+  speculator->SpeculativeConnect(uri, NodePrincipal(), nullptr,
+                                 aCORSMode == CORS_ANONYMOUS);
 }
 
 void Document::ForgetImagePreload(nsIURI* aURI) {

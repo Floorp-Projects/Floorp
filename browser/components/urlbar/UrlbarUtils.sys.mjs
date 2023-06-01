@@ -752,7 +752,8 @@ export var UrlbarUtils = {
       Services.io.speculativeConnect(
         uri,
         window.gBrowser.contentPrincipal,
-        null
+        null,
+        false
       );
     } catch (ex) {
       // Can't setup speculative connection for this url, just ignore it.

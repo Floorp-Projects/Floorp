@@ -99,11 +99,8 @@ void EarlyHintPreconnect::MaybePreconnect(const LinkHeader& aHeader,
   // connections we can make, so it should be fine we don't check duplicate
   // preconnect attempts here.
   CORSMode corsMode = dom::Element::StringToCORSMode(aHeader.mCrossOrigin);
-  if (corsMode == CORS_ANONYMOUS) {
-    gIOService->SpeculativeAnonymousConnect(uri, aPrincipal, callbacks);
-  } else {
-    gIOService->SpeculativeConnect(uri, aPrincipal, callbacks);
-  }
+  gIOService->SpeculativeConnect(uri, aPrincipal, callbacks,
+                                 corsMode == CORS_ANONYMOUS);
 }
 
 }  // namespace mozilla::net

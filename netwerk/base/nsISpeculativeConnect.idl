@@ -26,15 +26,13 @@ interface nsISpeculativeConnect : nsISupports
      *        channel of the hinted transaction.
      * @param aCallbacks any security callbacks for use with SSL for interfaces.
      *        May be null.
+     * @param aAnonymous indicates if this is an anonymous connection.
      *
      */
     void speculativeConnect(in nsIURI aURI,
                             in nsIPrincipal aPrincipal,
-                            in nsIInterfaceRequestor aCallbacks);
-
-    void speculativeAnonymousConnect(in nsIURI aURI,
-                                     in nsIPrincipal aPrincipal,
-                                     in nsIInterfaceRequestor aCallbacks);
+                            in nsIInterfaceRequestor aCallbacks,
+                            in boolean aAnonymous);
 };
 
 /**

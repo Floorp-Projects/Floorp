@@ -1961,11 +1961,8 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable* request,
 
   nsLoadFlags loadFlags = 0;
   channel->GetLoadFlags(&loadFlags);
-  if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-    speculativeHandler->SpeculativeAnonymousConnect(uri, principal, mCallbacks);
-  } else {
-    speculativeHandler->SpeculativeConnect(uri, principal, mCallbacks);
-  }
+  bool anonymous = !!(loadFlags & nsIRequest::LOAD_ANONYMOUS);
+  speculativeHandler->SpeculativeConnect(uri, principal, mCallbacks, anonymous);
 
   return NS_OK;
 }
@@ -2059,14 +2056,9 @@ nsresult nsIOService::SpeculativeConnectInternal(
 
 NS_IMETHODIMP
 nsIOService::SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                nsIInterfaceRequestor* aCallbacks) {
-  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
-}
-
-NS_IMETHODIMP
-nsIOService::SpeculativeAnonymousConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                         nsIInterfaceRequestor* aCallbacks) {
-  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
+                                nsIInterfaceRequestor* aCallbacks,
+                                bool aAnonymous) {
+  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, aAnonymous);
 }
 
 NS_IMETHODIMP

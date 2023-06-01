@@ -531,11 +531,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
     return IPC_FAIL(this, "aURI must not be null");
   }
   if (aURI && speculator) {
-    if (aAnonymous) {
-      speculator->SpeculativeAnonymousConnect(aURI, principal, nullptr);
-    } else {
-      speculator->SpeculativeConnect(aURI, principal, nullptr);
-    }
+    speculator->SpeculativeConnect(aURI, principal, nullptr, aAnonymous);
   }
   return IPC_OK();
 }
