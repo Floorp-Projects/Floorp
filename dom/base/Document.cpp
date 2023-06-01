@@ -12485,8 +12485,10 @@ void Document::MaybePreconnect(nsIURI* aOrigURI, mozilla::CORSMode aCORSMode) {
     return;
   }
 
-  speculator->SpeculativeConnect(uri, NodePrincipal(), nullptr,
-                                 aCORSMode == CORS_ANONYMOUS);
+  OriginAttributes oa;
+  StoragePrincipalHelper::GetOriginAttributesForNetworkState(this, oa);
+  speculator->SpeculativeConnectWithOriginAttributesNative(
+      uri, std::move(oa), nullptr, aCORSMode == CORS_ANONYMOUS);
 }
 
 void Document::ForgetImagePreload(nsIURI* aURI) {
