@@ -26,14 +26,8 @@ async function testHARWithNavigation({ enableMultipage, filter }) {
 
   info("Starting test... ");
 
-  const { connector, store, windowRequire } = monitor.panelWin;
+  const { store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const { HarMenuUtils } = windowRequire(
-    "devtools/client/netmonitor/src/har/har-menu-utils"
-  );
-  const { getDisplayedRequests } = windowRequire(
-    "devtools/client/netmonitor/src/selectors/index"
-  );
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -83,12 +77,8 @@ async function testHARWithNavigation({ enableMultipage, filter }) {
     store.dispatch(Actions.setRequestFilterText("?request"));
   }
 
-  // Copy HAR into the clipboard (asynchronous).
-  const jsonString = await HarMenuUtils.copyAllAsHar(
-    getDisplayedRequests(store.getState()),
-    connector
-  );
-  const har = JSON.parse(jsonString);
+  info("Trigger Copy All As HAR from the context menu");
+  const har = await copyAllAsHARWithContextMenu(monitor);
 
   // Check out the HAR log.
   isnot(har.log, null, "The HAR log must exist");
