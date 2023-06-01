@@ -1,5 +1,5 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'hta' reviewed: '2021-05-07'} *-->
+<?% config.freshness.reviewed = '2021-05-07' %?>
+<?% config.freshness.owner = 'hta' %?>
 
 ## Overview
 

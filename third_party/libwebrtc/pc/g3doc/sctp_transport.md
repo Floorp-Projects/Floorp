@@ -1,5 +1,6 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'hta' reviewed: '2021-04-13'} *-->
+
+<?% config.freshness.reviewed = '2021-04-13' %?>
+<?% config.freshness.owner = 'hta' %?>
 
 # SctpTransport
 

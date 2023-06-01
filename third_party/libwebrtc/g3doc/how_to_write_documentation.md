@@ -1,7 +1,7 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'titovartem' reviewed: '2023-01-16'} *-->
-
 # How to write WebRTC documentation
+
+<?% config.freshness.owner = 'titovartem' %?>
+<?% config.freshness.reviewed = '2021-03-01' %?>
 
 ## Audience
 
@@ -15,7 +15,7 @@ documentation can skip some edge cases in favor of clarity. The main point
 is to impart understanding.
 
 Conceptual documentation often cannot be embedded directly within the source
-code because it usually describes multiple APIs and entities, so the only
+code because it usually describes multiple APIs and entites, so the only
 logical place to document such complex behavior is through a separate
 conceptual document.
 
@@ -28,14 +28,7 @@ usage and leave rare ones or side effects for class/function level comments.
 In the WebRTC repo, conceptual documentation is located in `g3doc` subfolders
 of related components. To add a new document for the component `Foo` find a
 `g3doc` subfolder for this component and create a `.md` file there with
-desired documentation. If there is no `g3doc` subfolder, create a new one.
-
-Please put the following file header into any created documentation file as the
-first line:
-
-```markdown
-<!-- go/cmark -->
-```
+desired documentation. If there is no `g3doc` subfolder, create a new one;
 
 When you want to specify a link from one page to another - use the absolute
 path:
@@ -49,7 +42,17 @@ keeping this documentation updated, by adding the next lines at the beginning
 of your `.md` file immediately after page title:
 
 ```markdown
-<!--* freshness: {owner: '<user name>' reviewed: '<last review date in format yyyy-mm-dd>' *-->
+<?\% config.freshness.owner = '<user name>' %?>
+<?\% config.freshness.reviewed = '<last review date in format yyyy-mm-dd>' %?>
+```
+
+If you want to configure the owner for all pages under a directory, create a
+`g3doc.lua` file in that directory with the content:
+
+```lua
+config = super()
+config.freshness.owner = '<user name>'
+return config
 ```
 
 After the document is ready you should add it into `/g3doc/sitemap.md`, so it

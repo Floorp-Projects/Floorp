@@ -1,7 +1,7 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'danilchap' reviewed: '2021-05-12'} *-->
-
 # Using Abseil in WebRTC
+
+<?% config.freshness.owner = 'danilchap' %?>
+<?% config.freshness.reviewed = '2021-05-12' %?>
 
 You may use a subset of the utilities provided by the [Abseil][abseil]
 library when writing WebRTC C++ code. Below, we list the explicitly

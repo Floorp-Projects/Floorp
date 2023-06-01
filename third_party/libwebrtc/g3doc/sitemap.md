@@ -2,14 +2,9 @@
 *   How to contribute
     *   Code
         * [Style guide](/g3doc/style-guide.md)
-            * [`.h` and `.cc` files come in pairs](g3doc/style-guide/h-cc-pairs.md)
-        * [How to write code in the `api/` directory](/api/README.md)
-        * [Using Abseil in WebRTC](/g3doc/abseil-in-webrtc.md)
-    *   [Code of conduct](/CODE_OF_CONDUCT.md)
     *   [Documentation](/g3doc/how_to_write_documentation.md)
     *   [Become a committer](/g3doc/become_a_committer.md)
 *   [Public C++ API](/api/g3doc/index.md)
-    *   [API header files](/native-api.md)
     *   [Threading](/api/g3doc/threading_design.md)
 *   Implementation
     *   [Basic concepts](/g3doc/implementation_basics.md)

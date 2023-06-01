@@ -1,7 +1,7 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'jonaso' reviewed: '2021-04-12'} *-->
-
 # ICE
+
+<?% config.freshness.owner = 'jonaso' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
 
 ## Overview
 

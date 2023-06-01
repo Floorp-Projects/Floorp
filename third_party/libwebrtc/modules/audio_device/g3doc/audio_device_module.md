@@ -1,7 +1,7 @@
-<!-- go/cmark -->
-<!--* freshness: {owner: 'henrika' reviewed: '2021-04-12'} *-->
-
 # Audio Device Module (ADM)
+
+<?% config.freshness.owner = 'henrika' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
 
 ## Overview
 
