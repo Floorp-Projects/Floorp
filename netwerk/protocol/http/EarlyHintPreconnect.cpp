@@ -70,9 +70,9 @@ EarlyHintsPreConnectOverride::GetAllow1918(bool* allow) {
 
 }  // namespace
 
-void EarlyHintPreconnect::MaybePreconnect(const LinkHeader& aHeader,
-                                          nsIURI* aBaseURI,
-                                          nsIPrincipal* aPrincipal) {
+void EarlyHintPreconnect::MaybePreconnect(
+    const LinkHeader& aHeader, nsIURI* aBaseURI,
+    OriginAttributes&& aOriginAttributes) {
   if (!StaticPrefs::network_early_hints_preconnect_enabled()) {
     return;
   }
@@ -99,8 +99,8 @@ void EarlyHintPreconnect::MaybePreconnect(const LinkHeader& aHeader,
   // connections we can make, so it should be fine we don't check duplicate
   // preconnect attempts here.
   CORSMode corsMode = dom::Element::StringToCORSMode(aHeader.mCrossOrigin);
-  gIOService->SpeculativeConnect(uri, aPrincipal, callbacks,
-                                 corsMode == CORS_ANONYMOUS);
+  gIOService->SpeculativeConnectWithOriginAttributesNative(
+      uri, std::move(aOriginAttributes), callbacks, corsMode == CORS_ANONYMOUS);
 }
 
 }  // namespace mozilla::net
