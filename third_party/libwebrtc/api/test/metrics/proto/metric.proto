@@ -15,6 +15,8 @@ package webrtc.test_metrics;
 // Root message of the proto file. Contains collection of all the metrics.
 message MetricsSet {
   repeated Metric metrics = 1;
+  // Metadata associated with the whole metrics set.
+  map<string, string> metadata = 2;
 }
 
 enum Unit {
