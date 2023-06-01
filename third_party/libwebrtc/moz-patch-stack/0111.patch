@@ -24,10 +24,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47978aa145282f737
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index b804dc6740..1aba42cd69 100644
+index bcad5ab803..1872a86841 100644
 --- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 +++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -450,7 +450,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+@@ -451,7 +451,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
  
      if (fd >= 0) {
        pw_core_ = pw_context_connect_fd(
