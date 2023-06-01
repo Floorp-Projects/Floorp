@@ -2827,24 +2827,6 @@
       "last_modified": 1666727875111
     },
     {
-      "schema": 1666727382349,
-      "derHash": "OLJs9FyTLqKAGdk+RArHK66D+cv1LWrZE2mLGPzIcX0=",
-      "subject": "CN=EINS/PKI Public Certification Authority V4,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
-      "subjectDN": "MGkxCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMTMwMQYDVQQDEypFSU5TL1BLSSBQdWJsaWMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgVjQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3b9ae4a74d5261ecc85f6b9d358b4c4079b49f0f3a8e227d829b9ac02d03ca98",
-        "size": 1674,
-        "filename": "hMBp2m4PvojCldfsrzoX4dPk_9MctmHJZLUZTqPmBYk=.pem",
-        "location": "security-state-staging/intermediates/dc89c814-2876-4b30-b10a-bc5d94abe445.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "hMBp2m4PvojCldfsrzoX4dPk/9MctmHJZLUZTqPmBYk=",
-      "crlite_enrolled": false,
-      "id": "179db5f9-cfdb-44f1-a333-5ce2db577865",
-      "last_modified": 1666727875097
-    },
-    {
       "schema": 1666727370608,
       "derHash": "rB7FVjGOPqcPjwTgOg8mM7/nOZI1moEBRf/fGkJzlu4=",
       "subject": "CN=TeleSec ServerPass Class 2 CA,OU=T-Systems Trust Center,O=T-Systems International GmbH,POSTALCODE=57250,STREET=Untere Industriestr. 20,L=Netphen,ST=Nordrhein Westfalen,C=DE",
@@ -2915,24 +2897,6 @@
       "crlite_enrolled": false,
       "id": "4f5ba09a-4228-4ae3-b9fb-e261273f7b68",
       "last_modified": 1666727875018
-    },
-    {
-      "schema": 1666727332982,
-      "derHash": "TmKiUlkvnXH/4gN3V/hV1KAjXWY4vRBenvFwhs4rvCU=",
-      "subject": "CN=SECOM Passport for Web MH CA,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMSUwIwYDVQQDExxTRUNPTSBQYXNzcG9ydCBmb3IgV2ViIE1IIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4325c7065bb83e9d92f3718a9948fddc4a55dc191e11a5d9b3164c843c5def37",
-        "size": 1670,
-        "filename": "q9I-r-WPX4f6FsDftbkgFglISBQJtf5Dqt8hXHPa7-U=.pem",
-        "location": "security-state-staging/intermediates/4c0cdeb1-6b0a-4cc1-8425-c5d64b1a5c3a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "q9I+r+WPX4f6FsDftbkgFglISBQJtf5Dqt8hXHPa7+U=",
-      "crlite_enrolled": false,
-      "id": "a48f8f7b-e4c4-4695-b74a-c002a3d4d4c9",
-      "last_modified": 1666727875003
     },
     {
       "schema": 1666727404592,
@@ -13789,24 +13753,6 @@
       "last_modified": 1666727866121
     },
     {
-      "schema": 1666727405470,
-      "derHash": "5vpISoWJQNEBl4VVRUqkZlMatsSrxK0rAAYmqqwNBPk=",
-      "subject": "CN=RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxMzAxBgNVBAMTKlJhcGlkU1NMIFRMUyBEViBSU0EgTWl4ZWQgU0hBMjU2IDIwMjAgQ0EtMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ce06902050a1d292108abc7a82d7849f8885c4a89cab6e60d848b7e5481585e5",
-        "size": 1902,
-        "filename": "48hXNwn3laJAzsrIBprOcewUb097BGNL7e-MVM7Rcis=.pem",
-        "location": "security-state-staging/intermediates/45a314a9-8e95-47be-ac09-68cc6935adcc.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "48hXNwn3laJAzsrIBprOcewUb097BGNL7e+MVM7Rcis=",
-      "crlite_enrolled": false,
-      "id": "2c30341e-de02-4e9b-aba4-46f5e84fa680",
-      "last_modified": 1666727866108
-    },
-    {
       "schema": 1666727389863,
       "derHash": "rshjiY8oTWzUxqP2w+ZSNICjWcM9r2b60zgYSbi7AYs=",
       "subject": "CN=Cloudflare Inc RSA CA-2,O=Cloudflare\\, Inc.,C=US",
@@ -14111,24 +14057,6 @@
       "crlite_enrolled": false,
       "id": "3cc06076-083d-4333-bdaf-0a479cc50aa0",
       "last_modified": 1666727865801
-    },
-    {
-      "schema": 1666727407683,
-      "derHash": "jEPF40DsZA+T6ndKxTU8ypBC92T/g3+HDYtkdjxFikE=",
-      "subject": "CN=GeoTrust TLS DV RSA Mixed SHA256 2020 CA-1,O=DigiCert Inc,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxMzAxBgNVBAMTKkdlb1RydXN0IFRMUyBEViBSU0EgTWl4ZWQgU0hBMjU2IDIwMjAgQ0EtMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8f93397aaa187e95bb620112ea5ae24070adb0e6a08bc71b8425cf11a9a701ac",
-        "size": 1902,
-        "filename": "n5dIU-KFaI00Y_prmvaZhqXOquF72TlPANCLxCA9HE8=.pem",
-        "location": "security-state-staging/intermediates/4d8ec942-f6ba-4f33-9698-aa5141874bcf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "n5dIU+KFaI00Y/prmvaZhqXOquF72TlPANCLxCA9HE8=",
-      "crlite_enrolled": false,
-      "id": "0c1467c2-b751-416d-b6ec-a4d50f03f2b4",
-      "last_modified": 1666727865782
     },
     {
       "schema": 1666727375325,
@@ -27811,5 +27739,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1685177823491
+  "timestamp": 1685609823422
 }
