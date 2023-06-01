@@ -99,7 +99,7 @@ export class RemoteWebNavigation {
             attrs
           );
         }
-        Services.io.speculativeConnect(uri, principal, null);
+        Services.io.speculativeConnect(uri, principal, null, false);
       }
     } catch (ex) {
       // Can't setup speculative connection for this uri for some

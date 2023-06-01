@@ -3262,7 +3262,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
             nsCOMPtr<nsISpeculativeConnect> sc =
                 do_QueryInterface(nsContentUtils::GetIOService());
             nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(shell);
-            sc->SpeculativeConnect(absURI, NodePrincipal(), ir);
+            sc->SpeculativeConnect(absURI, NodePrincipal(), ir, false);
           }
         }
       }

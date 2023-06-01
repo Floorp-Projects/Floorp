@@ -4496,7 +4496,7 @@ var SessionStoreInternal = {
       let sc = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
       let uri = Services.io.newURI(url);
       try {
-        sc.speculativeConnect(uri, principal, null);
+        sc.speculativeConnect(uri, principal, null, false);
         return true;
       } catch (error) {
         // Can't setup speculative connection for this url.

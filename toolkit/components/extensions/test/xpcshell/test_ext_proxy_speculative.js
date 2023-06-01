@@ -44,7 +44,8 @@ add_task(async function test_speculative_connect() {
   Services.io.speculativeConnect(
     uri,
     Services.scriptSecurityManager.getSystemPrincipal(),
-    null
+    null,
+    false
   );
   await notificationPromise;
 

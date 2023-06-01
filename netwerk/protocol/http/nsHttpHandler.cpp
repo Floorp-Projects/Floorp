@@ -2302,15 +2302,9 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
 
 NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                  nsIInterfaceRequestor* aCallbacks) {
-  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
-}
-
-NS_IMETHODIMP
-nsHttpHandler::SpeculativeAnonymousConnect(nsIURI* aURI,
-                                           nsIPrincipal* aPrincipal,
-                                           nsIInterfaceRequestor* aCallbacks) {
-  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
+                                  nsIInterfaceRequestor* aCallbacks,
+                                  bool aAnonymous) {
+  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, aAnonymous);
 }
 
 void nsHttpHandler::TickleWifi(nsIInterfaceRequestor* cb) {

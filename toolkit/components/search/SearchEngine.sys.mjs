@@ -1719,7 +1719,7 @@ export class SearchEngine {
     );
 
     try {
-      connector.speculativeConnect(searchURI, principal, callbacks);
+      connector.speculativeConnect(searchURI, principal, callbacks, false);
     } catch (e) {
       // Can't setup speculative connection for this url, just ignore it.
       console.error(e);
@@ -1732,7 +1732,7 @@ export class SearchEngine {
       ).uri;
       if (suggestURI.prePath != searchURI.prePath) {
         try {
-          connector.speculativeConnect(suggestURI, principal, callbacks);
+          connector.speculativeConnect(suggestURI, principal, callbacks, false);
         } catch (e) {
           // Can't setup speculative connection for this url, just ignore it.
           console.error(e);
