@@ -40,7 +40,6 @@ interface SVGMarkerElement : SVGElement {
   readonly attribute SVGAnimatedAngle orientAngle;
 
   undefined setOrientToAuto();
-  [Throws]
   undefined setOrientToAngle(SVGAngle angle);
 };
 
