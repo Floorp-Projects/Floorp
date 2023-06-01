@@ -1202,6 +1202,28 @@ nsDefaultCommandLineHandler.prototype = {
       console.error(e);
     }
 
+    if (
+      AppConstants.platform == "win" &&
+      cmdLine.handleFlag("to-handle-default-browser-agent", false)
+    ) {
+      // The Default Browser Agent launches Firefox in response to a Windows
+      // native notification, but it does so in a non-standard manner.
+      Services.telemetry.setEventRecordingEnabled(
+        "browser.launched_to_handle",
+        true
+      );
+      Glean.browserLaunchedToHandle.systemNotification.record({
+        name: "default-browser-agent",
+      });
+
+      let thanksURI = Services.io.newURI(
+        Services.urlFormatter.formatURLPref(
+          "browser.shell.defaultBrowserAgent.thanksURL"
+        )
+      );
+      urilist.push(thanksURI);
+    }
+
     if (cmdLine.findFlag("screenshot", true) != -1) {
       lazy.HeadlessShell.handleCmdLineArgs(
         cmdLine,
