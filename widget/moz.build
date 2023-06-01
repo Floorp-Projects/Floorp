@@ -374,11 +374,8 @@ else:
     ]
 
 IPDL_SOURCES += [
-    "PClipboardWriteRequest.ipdl",
-]
-
-PREPROCESSED_IPDL_SOURCES += [
     "LookAndFeelTypes.ipdlh",
+    "PClipboardWriteRequest.ipdl",
 ]
 
 LOCAL_INCLUDES += [

@@ -15405,12 +15405,6 @@
   mirror: always
 #endif
 
-# Whether to allow gtk dark themes in content.
-- name: widget.content.allow-gtk-dark-theme
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether native GTK context menus are enabled.
 # Disabled because at the very least there's missing custom icon support.
 - name: widget.gtk.native-context-menus
