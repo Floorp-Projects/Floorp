@@ -112,8 +112,8 @@ void EarlyHintsService::Cancel(const nsACString& aReason) {
 }
 
 void EarlyHintsService::RegisterLinksAndGetConnectArgs(
-    nsTArray<EarlyHintConnectArgs>& aOutLinks) {
-  mOngoingEarlyHints->RegisterLinksAndGetConnectArgs(aOutLinks);
+    dom::ContentParentId aCpId, nsTArray<EarlyHintConnectArgs>& aOutLinks) {
+  mOngoingEarlyHints->RegisterLinksAndGetConnectArgs(aCpId, aOutLinks);
 }
 
 void EarlyHintsService::CollectTelemetry(Maybe<uint32_t> aResponseStatus) {

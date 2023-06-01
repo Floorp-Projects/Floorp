@@ -8,6 +8,7 @@
 #define mozilla_net_EarlyHintRegistrar_h__
 
 #include "mozilla/RefCounted.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/AlreadyAddRefed.h"
 
@@ -50,7 +51,8 @@ class EarlyHintRegistrar final : public RefCounted<EarlyHintRegistrar> {
    * @param aChannelId the id of the nsIChannel connecting to the
    *        EarlyHintPreloader.
    */
-  bool LinkParentChannel(uint64_t aEarlyHintPreloaderId,
+  bool LinkParentChannel(dom::ContentParentId aCpId,
+                         uint64_t aEarlyHintPreloaderId,
                          nsIParentChannel* aParent);
 
   /*
@@ -58,7 +60,7 @@ class EarlyHintRegistrar final : public RefCounted<EarlyHintRegistrar> {
    *
    * @param aEarlyHintPreloaderId identifying the EarlyHintPreloader
    */
-  void DeleteEntry(uint64_t aEarlyHintPreloaderId);
+  void DeleteEntry(dom::ContentParentId aCpId, uint64_t aEarlyHintPreloaderId);
 
   /*
    * This is called when "profile-change-net-teardown" is observed. We use this

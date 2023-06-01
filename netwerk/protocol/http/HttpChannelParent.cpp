@@ -361,14 +361,18 @@ void HttpChannelParent::InvokeEarlyHintPreloader(
        this, static_cast<uint32_t>(rv)));
   MOZ_ASSERT(NS_IsMainThread());
 
+  ContentParentId cpId =
+      static_cast<ContentParent*>(Manager()->Manager())->ChildID();
+
   RefPtr<EarlyHintRegistrar> ehr = EarlyHintRegistrar::GetOrCreate();
   if (NS_SUCCEEDED(rv)) {
-    rv = ehr->LinkParentChannel(aEarlyHintPreloaderId, this) ? NS_OK
-                                                             : NS_ERROR_FAILURE;
+    rv = ehr->LinkParentChannel(cpId, aEarlyHintPreloaderId, this)
+             ? NS_OK
+             : NS_ERROR_FAILURE;
   }
 
   if (NS_FAILED(rv)) {
-    ehr->DeleteEntry(aEarlyHintPreloaderId);
+    ehr->DeleteEntry(cpId, aEarlyHintPreloaderId);
     AsyncOpenFailed(NS_ERROR_FAILURE);
   }
 }
