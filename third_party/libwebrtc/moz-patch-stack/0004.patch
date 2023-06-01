@@ -1,46 +1,64 @@
-From: Johannes Kron <kron@webrtc.org>
-Date: Wed, 15 Feb 2023 10:05:33 +0000
-Subject: (cherry-pick-branch-heads/5563) M111: Fix
- WebRTC.Screenshare.DesktopCapturerFullscreenDetector logging issue
+From: Jakob Ivarsson <jakobi@webrtc.org>
+Date: Thu, 16 Feb 2023 17:21:20 +0100
+Subject: (cherry-pick-branch-heads/5563) Disable stop CNG after a timeout.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-The histogram WebRTC.Screenshare.DesktopCapturerFullscreenDetector
-incorrectly counted every time a presentation application was shared
-instead of only counting sessions where the presentation was
-presented in fullscreen. This bug affected Windows, macOS works as
-intended.
+This is still a behavior that we want, but a more careful rollout is needed.
 
-The try-bots are not working on the M111 branch due to a change in the setup.
+(cherry picked from commit 48d784225972b7dd0542acfad7cd2d0eed25ad1c)
 
-(cherry picked from commit f4c04286bc361011660492fc1860ea72d59165ec)
-
-Bug: chromium:1348011
-Change-Id: I9e84e9d1f4310703ba94e2af2e35a52d74a25842
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293461
-Commit-Queue: Johannes Kron <kron@webrtc.org>
-Reviewed-by: Henrik Andreassson <henrika@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39314}
 No-Try: True
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294860
-Cr-Commit-Position: refs/branch-heads/5563@{#4}
+Bug: webrtc:12790, chromium:1418687
+Change-Id: Ic74c7b4945c0cdeda2b17f52301069424ad91162
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293860
+Commit-Queue: Jakob Ivarsson‎ <jakobi@webrtc.org>
+Reviewed-by: Henrik Lundin <henrik.lundin@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39333}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294760
+Reviewed-by: Alessio Bazzica <alessiob@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5563@{#3}
 Cr-Branched-From: 6c032cb8356b0d3f717c4fcf50796241f2bba6c2-refs/heads/main@{#39207}
 ---
- modules/desktop_capture/cropping_window_capturer_win.cc | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ modules/audio_coding/neteq/decision_logic.h           | 2 +-
+ modules/audio_coding/neteq/decision_logic_unittest.cc | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/cropping_window_capturer_win.cc b/modules/desktop_capture/cropping_window_capturer_win.cc
-index 5d99cb6b2b..ab2f807d33 100644
---- a/modules/desktop_capture/cropping_window_capturer_win.cc
-+++ b/modules/desktop_capture/cropping_window_capturer_win.cc
-@@ -310,7 +310,8 @@ WindowId CroppingWindowCapturerWin::GetWindowToCapture() const {
-       full_screen_window_detector_
-           ? full_screen_window_detector_->FindFullScreenWindow(selected_source)
-           : 0;
--  if (full_screen_source != selected_source && !fullscreen_usage_logged_) {
-+  if (full_screen_source && full_screen_source != selected_source &&
-+      !fullscreen_usage_logged_) {
-     fullscreen_usage_logged_ = true;
-     LogDesktopCapturerFullscreenDetectorUsage();
-   }
+diff --git a/modules/audio_coding/neteq/decision_logic.h b/modules/audio_coding/neteq/decision_logic.h
+index 69b13a9048..8d1ff4d622 100644
+--- a/modules/audio_coding/neteq/decision_logic.h
++++ b/modules/audio_coding/neteq/decision_logic.h
+@@ -175,7 +175,7 @@ class DecisionLogic : public NetEqController {
+     int reinit_after_expands = 100;
+     int deceleration_target_level_offset_ms = 85;
+     int packet_history_size_ms = 2000;
+-    absl::optional<int> cng_timeout_ms = 1000;
++    absl::optional<int> cng_timeout_ms;
+   };
+   Config config_;
+   std::unique_ptr<DelayManager> delay_manager_;
+diff --git a/modules/audio_coding/neteq/decision_logic_unittest.cc b/modules/audio_coding/neteq/decision_logic_unittest.cc
+index d0473d0264..6150c9a6db 100644
+--- a/modules/audio_coding/neteq/decision_logic_unittest.cc
++++ b/modules/audio_coding/neteq/decision_logic_unittest.cc
+@@ -18,6 +18,7 @@
+ #include "modules/audio_coding/neteq/delay_manager.h"
+ #include "modules/audio_coding/neteq/mock/mock_buffer_level_filter.h"
+ #include "modules/audio_coding/neteq/mock/mock_delay_manager.h"
++#include "test/field_trial.h"
+ #include "test/gtest.h"
+ 
+ namespace webrtc {
+@@ -53,6 +54,8 @@ using ::testing::Return;
+ class DecisionLogicTest : public ::testing::Test {
+  protected:
+   DecisionLogicTest() {
++    test::ScopedFieldTrials trials(
++        "WebRTC-Audio-NetEqDecisionLogicConfig/cng_timeout_ms:1000/");
+     NetEqController::Config config;
+     config.tick_timer = &tick_timer_;
+     config.allow_time_stretching = true;
 -- 
 2.34.1
 
