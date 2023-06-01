@@ -19,6 +19,7 @@
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "threading/Thread.h"
+#include "util/CompleteFile.h"  // js::FileContents
 #include "vm/GeckoProfiler.h"
 #include "vm/Monitor.h"
 
@@ -252,10 +253,26 @@ struct ShellContext {
   JS::PersistentRooted<FunctionVector> finalizationRegistryCleanupCallbacks;
 };
 
+// A JSContext, the associated global object, the ShellContext, and
+// other miscellaneous bits that need to live as long as the
+// shell. This is used to wrap up the shell state when it needs to be
+// persisted (e.g., in a Wizer snapshot).
+struct JSAndShellContext {
+  JSContext* cx;
+  JSObject* glob;
+  UniquePtr<ShellContext> shellCx;
+  mozilla::Maybe<js::FileContents> selfHostedXDRBuffer;
+  RCFile rcStdout;
+  RCFile rcStderr;
+};
+
 extern ShellContext* GetShellContext(JSContext* cx);
 
 [[nodiscard]] extern bool PrintStackTrace(JSContext* cx,
                                           JS::Handle<JSObject*> stackObj);
+
+mozilla::Variant<JSAndShellContext, int> ShellMain(int argc, char** argv,
+                                                   bool retainContext);
 
 } /* namespace shell */
 } /* namespace js */

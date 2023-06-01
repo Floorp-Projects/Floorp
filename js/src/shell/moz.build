@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     "OSObject.cpp",
     "ShellModuleObjectWrapper.cpp",
     "WasmTesting.cpp",
+    "wizer.cpp",
 ]
 
 if CONFIG["FUZZING_INTERFACES"]:
@@ -38,6 +39,7 @@ DEFINES["EXPORT_JS_API"] = True
 LOCAL_INCLUDES += [
     "!..",
     "..",
+    "/third_party/wizer",
 ]
 
 OS_LIBS += CONFIG["EDITLINE_LIBS"]
