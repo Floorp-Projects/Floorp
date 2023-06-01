@@ -9,7 +9,7 @@ These articles describe how to use the debugger.
 - :doc:`Debug eval sources <debug_eval_sources/index>`
 - :doc:`Disable breakpoints <disable_breakpoints/index>`
 - :doc:`Highlight and inspect DOM nodes <highlight_and_inspect_dom_nodes/index>`
-- :doc:`Ignore a source <ignore_a_source/index>`
+- :doc:`Ignoring sources <ignoring_sources/index>`
 - :doc:`Open the debugger <open_the_debugger/index>`
 - :doc:`Pretty-print a minified file <pretty-print_a_minified_file/index>`
 - :doc:`Search <search/index>`

@@ -50,7 +50,7 @@ Control execution
 What can you do after execution pauses?
 
 - :doc:`Step through code <how_to/step_through_code/index>`
-- :doc:`Black box a source <how_to/ignore_a_source/index>`
+- :doc:`Ignoring sources <how_to/ignoring_sources/index>`
 - `Debug worker threads <https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers#debugging_worker_threads>`_
 - :doc:`Debug eval sources <how_to/debug_eval_sources/index>`
 
