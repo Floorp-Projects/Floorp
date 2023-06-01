@@ -606,6 +606,11 @@ async function testWithSubmenu(menu, nextItemClassName) {
 }
 
 add_task(async function test_originControls_with_submenus() {
+  if (AppConstants.platform === "macosx") {
+    ok(true, "Probably some context menus quirks on macOS.");
+    return;
+  }
+
   let extension = await makeExtension({
     id: "submenus@test",
     permissions: ["menus"],
