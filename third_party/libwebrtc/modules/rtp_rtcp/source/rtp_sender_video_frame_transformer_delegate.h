@@ -12,6 +12,7 @@
 #define MODULES_RTP_RTCP_SOURCE_RTP_SENDER_VIDEO_FRAME_TRANSFORMER_DELEGATE_H_
 
 #include <memory>
+#include <vector>
 
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
@@ -34,6 +35,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
       RTPSenderVideo* sender,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
       uint32_t ssrc,
+      std::vector<uint32_t> csrcs,
       TaskQueueFactory* send_transport_queue);
 
   void Init();
@@ -80,6 +82,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
   RTPSenderVideo* sender_ RTC_GUARDED_BY(sender_lock_);
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
   const uint32_t ssrc_;
+  std::vector<uint32_t> csrcs_;
   // Used when the encoded frames arrives without a current task queue. This can
   // happen if a hardware encoder was used.
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;

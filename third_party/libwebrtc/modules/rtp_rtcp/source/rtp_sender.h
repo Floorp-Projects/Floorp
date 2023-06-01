@@ -63,6 +63,7 @@ class RTPSender {
   uint16_t SequenceNumber() const RTC_LOCKS_EXCLUDED(send_mutex_);
   void SetSequenceNumber(uint16_t seq) RTC_LOCKS_EXCLUDED(send_mutex_);
 
+  std::vector<uint32_t> Csrcs() const;
   void SetCsrcs(const std::vector<uint32_t>& csrcs)
       RTC_LOCKS_EXCLUDED(send_mutex_);
 
