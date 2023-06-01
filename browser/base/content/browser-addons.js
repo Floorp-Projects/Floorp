@@ -1361,6 +1361,11 @@ var gUnifiedExtensions = {
           supportPage: "quarantined-domains",
           dismissable: false,
         });
+        this._messageBarQuarantinedDomain
+          .querySelector("a")
+          .addEventListener("click", () => {
+            this.togglePanel();
+          });
       }
 
       container.appendChild(this._messageBarQuarantinedDomain);
