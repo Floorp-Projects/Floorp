@@ -1,90 +1,29 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 8 Jul 2020 17:35:00 +0000
-Subject: Bug 1650572 - Check V4L2_CAP_DEVICE_CAPS before accessing
- device_caps; r=ng
+Date: Wed, 9 Oct 2019 20:12:00 +0000
+Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
 
-The capabilities field is for the physical device, device_caps is for the
-specific /dev/videoX device that has been opened. The device_caps field is
-only populated if V4L2_CAP_DEVICE_CAPS is set, so we should check that, and
-fall back to capabilities if it is not set.
+Left shifting a negative value results in undefined behaviour. It is safer to
+multiply in this case.
 
-Differential Revision: https://phabricator.services.mozilla.com/D82377
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c939a61bde34ad93b1977a604
+Differential Revision: https://phabricator.services.mozilla.com/D48751
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 17 ++++++++++++-----
- modules/video_capture/linux/device_info_v4l2.h  |  3 +++
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ modules/third_party/g722/g722_encode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index f87fe53abe..d506f3a448 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -202,8 +202,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -235,8 +234,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
-     sprintf(device, "/dev/video%d", device_index);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -321,7 +319,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     struct v4l2_capability cap;
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
--      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (!IsVideoCaptureDevice(&cap)) {
-         continue;
-       }
+diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
+index 10a5bcfe7c..fedf9f5961 100644
+--- a/modules/third_party/g722/g722_encode.c
++++ b/modules/third_party/g722/g722_encode.c
+@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
+     /* Block 4, UPPOL2 */
+     for (i = 0;  i < 3;  i++)
+         s->band[band].sg[i] = s->band[band].p[i] >> 15;
+-    wd1 = saturate(s->band[band].a[1] << 2);
++    wd1 = saturate(s->band[band].a[1] * 4);
  
-@@ -383,6 +381,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
-   return false;
- }
- 
-+bool DeviceInfoV4l2::IsVideoCaptureDevice(struct v4l2_capability* cap)
-+{
-+  if (cap->capabilities & V4L2_CAP_DEVICE_CAPS) {
-+    return cap->device_caps & V4L2_CAP_VIDEO_CAPTURE;
-+  } else {
-+    return cap->capabilities & V4L2_CAP_VIDEO_CAPTURE;
-+  }
-+}
-+
- int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
-   // set image format
-   struct v4l2_format video_fmt;
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 95432a509d..e3c2395f49 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -18,6 +18,8 @@
- #include "rtc_base/platform_thread.h"
- #include <sys/inotify.h>
- 
-+struct v4l2_capability;
-+
- namespace webrtc {
- namespace videocapturemodule {
- class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -49,6 +51,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
- 
-  private:
-   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-+  bool IsVideoCaptureDevice(struct v4l2_capability* cap);
- 
- #ifdef WEBRTC_LINUX
-   void HandleEvent(inotify_event* event, int fd);
+     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
+     if (wd2 > 32767)
 -- 
 2.34.1
 

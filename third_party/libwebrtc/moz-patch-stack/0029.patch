@@ -1,36 +1,58 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 12 Feb 2020 17:19:00 +0000
-Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
- r=snorp
+From: Wang Qing <wangqing-hf@loongson.cn>
+Date: Wed, 25 Sep 2019 14:15:00 +0000
+Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
 
-Depends on D61861
-
-Differential Revision: https://phabricator.services.mozilla.com/D62457
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
+Differential Revision: https://phabricator.services.mozilla.com/D45620
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
 ---
- sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
- 1 file changed, 2 insertions(+)
+ modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
+ modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
-index dec97a2c25..d5ee80c73e 100644
---- a/sdk/android/src/java/org/webrtc/Camera2Session.java
-+++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
-@@ -10,6 +10,7 @@
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+index 1ac71899ee..3fe86f2f85 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
+ const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
  
- package org.webrtc;
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
+ constexpr bool kIsArm = true;
+ #else
+ constexpr bool kIsArm = false;
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+index 8e401fcc7b..cc84605ce7 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+@@ -687,7 +687,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
  
-+import android.annotation.SuppressLint;
- import android.content.Context;
- import android.hardware.camera2.CameraAccessException;
- import android.hardware.camera2.CameraCaptureSession;
-@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
-     Logging.d(TAG, "Using capture format: " + captureFormat);
-   }
+ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   // On mobile platform, use a lower speed setting for lower resolutions for
+   // CPUs with 4 or more cores.
+   RTC_DCHECK_GT(number_of_cores_, 0);
+@@ -720,7 +720,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ }
  
-+  @SuppressLint("MissingPermission")
-   private void openCamera() {
-     checkIsOnCameraThread();
- 
+ int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
+-#if defined(WEBRTC_ANDROID)
++#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   if (width * height >= 320 * 180) {
+     if (cpus >= 4) {
+       // 3 threads for CPUs with 4 and more cores since most of times only 4
+@@ -794,7 +794,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+   // multi-res encoding feature?
+   denoiserState denoiser_state = kDenoiserOnYOnly;
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   denoiser_state = kDenoiserOnYOnly;
+ #else
+   denoiser_state = kDenoiserOnAdaptive;
 -- 
 2.34.1
 

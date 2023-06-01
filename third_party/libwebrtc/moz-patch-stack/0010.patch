@@ -1,56 +1,49 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Feb 2021 14:27:00 +0000
-Subject: Bug 1654112 - Get OS X build working.
- r=ng,firefox-build-system-reviewers,glandium
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 18 Nov 2020 13:33:00 -0500
+Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
 
-* Pull in sdk/objc/base and sdk/objc/helpers
-* Add gclient_args.gni to keep build happy.
-* Add a missing include path for libyuv
-* Support .m files in build.
+This needs some investigation to see why we get this warning when it is not
+present upstream.
 
-Differential Revision: https://phabricator.services.mozilla.com/D105015
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
+Since both were doing the same thing for different compiler chains,
+also includes:
+Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D130086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
 ---
- modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
- modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ rtc_base/logging.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 115f6440b1..cad0c5b65b 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -276,7 +276,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
-   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
-        it != desktop_config_.displays.end();
-        ++it) {
--    screens->push_back({it->id, std::string()});
-+    Source value = {it->id, 0, std::string()};
-+    screens->push_back(value);
-   }
-   return true;
- }
-diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
-index 5d881662ea..989ec7ea54 100644
---- a/modules/desktop_capture/mac/window_list_utils.cc
-+++ b/modules/desktop_capture/mac/window_list_utils.cc
-@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-             // the check in the map. Also skip the window if owner name is
-             // empty too.
-             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
--              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
-+              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
-               RTC_DCHECK(!sources.empty());
-               // Get an iterator on the last valid element in the source list.
-               std::list<DesktopCapturer::Source>::const_iterator last_source =
-@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-                       pid, last_source));
-             }
-           } else {
--            sources.push_back(DesktopCapturer::Source{window_id, title});
-+            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
-             // Once the window with empty title has been removed no other empty
-             // windows are allowed for the same pid.
-             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index 8f490c44a2..9340fe2c55 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -48,6 +48,14 @@
+ #ifndef RTC_BASE_LOGGING_H_
+ #define RTC_BASE_LOGGING_H_
+ 
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wvarargs"
++
++#if defined(__clang__)
++#  pragma clang diagnostic push
++#  pragma clang diagnostic ignored "-Wclass-varargs"
++#endif
++
+ #include <errno.h>
+ 
+ #include <atomic>
+@@ -769,4 +777,9 @@ inline const char* AdaptString(const std::string& str) {
+ 
+ }  // namespace rtc
+ 
++#pragma GCC diagnostic pop
++#if defined(__clang__)
++#  pragma clang diagnostic pop
++#endif
++
+ #endif  // RTC_BASE_LOGGING_H_
 -- 
 2.34.1
 

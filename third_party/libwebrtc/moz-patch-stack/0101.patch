@@ -1,71 +1,56 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 08:01:00 +0000
-Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 11 May 2023 12:02:36 -0500
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit b1a174041d.
  r=webrtc-reviewers,mjf
 
-Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
-    In DeviceInfoDS check that out vars were set
+Upstream commit: https://webrtc.googlesource.com/src/+/b1a174041ddf3057f5d6d2f87affa0f11f9413df
+    Relax VideoCaptureImpl::IncomingFrame size check
 
-    Bug: chromium:1441804
-    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
+    When testing manually with gstreamer and v4l2loopback, the incoming
+    buffer is often larger than the expected size. This change allows
+    such frames, while still logging the error.
+
+    Bug: webrtc:14830
+    Change-Id: I399aa55af6437d75b50830166a667547f6d144d4
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291530
+    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
     Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Reviewed-by: Per Kjellander <perkj@webrtc.org>
-    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39982}
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39972}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177236
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
+Differential Revision: https://phabricator.services.mozilla.com/D177230
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/19b5723ad94d55e52d89aad38d5219b72ab0473e
 ---
- modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
- modules/video_capture/windows/help_functions_ds.cc |  3 +++
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ modules/video_capture/video_capture_impl.cc | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 6b4c57d01e..2c192fe4f6 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -505,9 +505,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-       }
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index d227d41c34..9d9a1471e8 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -160,11 +160,17 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+   }
  
-       if (hrVC == S_OK) {
--        LONGLONG* frameDurationList;
--        LONGLONG maxFPS;
--        long listSize;
-+        LONGLONG* frameDurationList = NULL;
-+        LONGLONG maxFPS = 0;
-+        long listSize = 0;
-         SIZE size;
-         size.cx = capability.width;
-         size.cy = capability.height;
-@@ -520,9 +520,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-         hrVC = videoControlConfig->GetFrameRateList(
-             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+   // Not encoded, convert to I420.
+-  if (frameInfo.videoType != VideoType::kMJPEG &&
+-      CalcBufferSize(frameInfo.videoType, width, abs(height)) !=
+-          videoFrameLength) {
+-    RTC_LOG(LS_ERROR) << "Wrong incoming frame length.";
+-    return -1;
++  if (frameInfo.videoType != VideoType::kMJPEG) {
++    // Allow buffers larger than expected. On linux gstreamer allocates buffers
++    // page-aligned and v4l2loopback passes us the buffer size verbatim which
++    // for most cases is larger than expected.
++    // See https://github.com/umlaeute/v4l2loopback/issues/190.
++    if (auto size = CalcBufferSize(frameInfo.videoType, width, abs(height));
++        videoFrameLength < size) {
++      RTC_LOG(LS_ERROR) << "Wrong incoming frame length. Expected " << size
++                        << ", Got " << videoFrameLength << ".";
++      return -1;
++    }
+   }
  
--        // On some odd cameras, you may get a 0 for duration.
--        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
--        if (hrVC == S_OK && listSize > 0 &&
-+        // On some odd cameras, you may get a 0 for duration. Some others may
-+        // not update the out vars. GetMaxOfFrameArray returns the lowest
-+        // duration (highest FPS), or 0 if there was no list with elements.
-+        if (hrVC == S_OK &&
-             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
-           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
-           capability.supportFrameRateControl = true;
-diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
-index b767726107..47fecfe4a1 100644
---- a/modules/video_capture/windows/help_functions_ds.cc
-+++ b/modules/video_capture/windows/help_functions_ds.cc
-@@ -21,6 +21,9 @@ namespace webrtc {
- namespace videocapturemodule {
- // This returns minimum :), which will give max frame rate...
- LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
-+  if (!maxFps || size <= 0) {
-+    return 0;
-+  }
-   LONGLONG maxFPS = maxFps[0];
-   for (int i = 0; i < size; i++) {
-     if (maxFPS > maxFps[i])
+   int target_width = width;
 -- 
 2.34.1
 

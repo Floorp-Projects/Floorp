@@ -1,269 +1,169 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 31 Mar 2023 16:21:00 -0500
-Subject: Bug 1822194 - (fix-acabb3641b) Break the new SetParametersCallback
- stuff into stand-alone files.
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Mon, 20 Feb 2023 21:25:00 +0000
+Subject: Bug 1817263 - fix OS picker behavior under Wayland r=ng,jib,stransky
 
-acabb3641b from upstream added a callback mechanism to allow failures to be
-propagated back to RTCRtpSender.setParameters. Unfortunately, this callback
-mechanism was (needlessly) tightly coupled to libwebrtc's implementation of
-RTCRtpSender, and also their media channel code. This introduced a lot of
-unnecessary dependencies throughout libwebrtc, that spilled into our code as
-well.
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7b7bd3d6befca129149e2bf5
+Recent WebRTC backports and changes that are about to be backported from
+upstream to Firefox breaks and will break how we work with PipWire based
+desktop capturer. Currently when constructing device list, a fallback to
+ScreenCapturerX11 is used, as we don't call set_allow_pipewire(), which
+wouldn't make a difference anyway. In such case the only thing we need
+is a placeholder for a screen that will request OS level prompt. We also
+need a way to request both screens and windows in one xdg-desktop-portal
+call as recent WebRTC made each type be called separately, therefore the
+introduction of GenericCapturer. Lastly we need to make sure when there
+is a MediaDevice requesting the OS prompt, that it will be checked as
+first.
+
+In order to use unmodified libwebrtc, Firefox would need to rework the
+OS picker to request each type (screens and windows) separately so we
+can just use regular ScreenCapturer and WindowCapturer. This should be
+done ideally the way Chromium does it, where users can actually see
+even the preview of what they picked over xdg-desktop-portal before it
+is actually shared with requesting web page and they also have option
+to make the request again in case they picked a wrong window or screen.
+
+Differential Revision: https://phabricator.services.mozilla.com/D169627
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/acd6266642951aacf8915a56777c780cae9e9af3
 ---
- api/BUILD.gn                             | 14 +++++++++++-
- api/rtp_sender_interface.h               |  4 ++--
- api/rtp_sender_setparameters_callback.cc | 27 +++++++++++++++++++++++
- api/rtp_sender_setparameters_callback.h  | 28 ++++++++++++++++++++++++
- call/BUILD.gn                            |  4 ++--
- call/audio_send_stream.h                 |  2 +-
- call/video_send_stream.h                 |  2 +-
- media/BUILD.gn                           |  2 +-
- media/base/media_channel.h               |  4 ----
- media/base/media_channel_impl.cc         | 13 -----------
- video/BUILD.gn                           |  4 ++--
- 11 files changed, 77 insertions(+), 27 deletions(-)
- create mode 100644 api/rtp_sender_setparameters_callback.cc
- create mode 100644 api/rtp_sender_setparameters_callback.h
+ .../desktop_capture/desktop_capture_types.h   |  2 +-
+ modules/desktop_capture/desktop_capturer.cc   | 28 +++++++++++++++++++
+ modules/desktop_capture/desktop_capturer.h    | 13 +++++++++
+ .../linux/wayland/base_capturer_pipewire.cc   | 11 +-------
+ .../linux/wayland/screencast_portal.cc        |  2 ++
+ 5 files changed, 45 insertions(+), 11 deletions(-)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 3f313e2743..56afc5efce 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {
-     ":dtmf_sender_interface",
-     ":frame_transformer_interface",
-     ":media_stream_interface",
--    ":rtc_error",
-     ":rtp_parameters",
-+    ":rtp_sender_setparameters_callback",
-     ":scoped_refptr",
-     "../rtc_base:checks",
-     "../rtc_base:refcount",
-@@ -223,6 +223,18 @@ rtc_library("rtp_sender_interface") {
-     "crypto:frame_encryptor_interface",
-     "video_codecs:video_codecs_api",
-   ]
-+}
-+
-+rtc_library("rtp_sender_setparameters_callback") {
-+  visibility = [ "*" ]
-+
-+  sources = [
-+    "rtp_sender_setparameters_callback.cc",
-+    "rtp_sender_setparameters_callback.h",
-+  ]
-+  deps = [
-+    ":rtc_error",
-+  ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
- }
- 
-diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
-index 2786a2ac19..98ee91b1cc 100644
---- a/api/rtp_sender_interface.h
-+++ b/api/rtp_sender_interface.h
-@@ -32,9 +32,9 @@
- #include "rtc_base/ref_count.h"
- #include "rtc_base/system/rtc_export.h"
- 
--namespace webrtc {
-+#include "api/rtp_sender_setparameters_callback.h"
- 
--using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
-+namespace webrtc {
- 
- class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
-  public:
-diff --git a/api/rtp_sender_setparameters_callback.cc b/api/rtp_sender_setparameters_callback.cc
-new file mode 100644
-index 0000000000..99728ef95e
---- /dev/null
-+++ b/api/rtp_sender_setparameters_callback.cc
-@@ -0,0 +1,27 @@
-+/*
-+ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
-+ *
-+ *  Use of this source code is governed by a BSD-style license
-+ *  that can be found in the LICENSE file in the root of the source
-+ *  tree. An additional intellectual property rights grant can be found
-+ *  in the file PATENTS.  All contributing project authors may
-+ *  be found in the AUTHORS file in the root of the source tree.
-+ */
-+
-+// File added by mozilla, to decouple this from libwebrtc's implementation of
-+// RTCRtpSender.
-+
-+#include "api/rtp_sender_setparameters_callback.h"
-+
-+namespace webrtc {
-+
-+webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
-+                                             RTCError error) {
-+  if (callback) {
-+    std::move(callback)(error);
-+    callback = nullptr;
-+  }
-+  return error;
-+}
-+
-+} // namespace webrtc
-diff --git a/api/rtp_sender_setparameters_callback.h b/api/rtp_sender_setparameters_callback.h
-new file mode 100644
-index 0000000000..45194f5ace
---- /dev/null
-+++ b/api/rtp_sender_setparameters_callback.h
-@@ -0,0 +1,28 @@
-+/*
-+ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
-+ *
-+ *  Use of this source code is governed by a BSD-style license
-+ *  that can be found in the LICENSE file in the root of the source
-+ *  tree. An additional intellectual property rights grant can be found
-+ *  in the file PATENTS.  All contributing project authors may
-+ *  be found in the AUTHORS file in the root of the source tree.
-+ */
-+
-+// File added by mozilla, to decouple this from libwebrtc's implementation of
-+// RTCRtpSender.
-+
-+#ifndef API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
-+#define API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
-+
-+#include "api/rtc_error.h"
-+#include "absl/functional/any_invocable.h"
-+
-+namespace webrtc {
-+
-+using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
-+
-+webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
-+                                             RTCError error);
-+} // namespace webrtc
-+
-+#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
-diff --git a/call/BUILD.gn b/call/BUILD.gn
-index fb23b7ef39..2bc7aaec92 100644
---- a/call/BUILD.gn
-+++ b/call/BUILD.gn
-@@ -52,7 +52,7 @@ rtc_library("call_interfaces") {
-     "../api:rtc_error",
-     "../api:rtp_headers",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api:transport_api",
-     "../api/adaptation:resource_adaptation_api",
-@@ -389,7 +389,7 @@ rtc_library("video_stream_api") {
-     "../api:frame_transformer_interface",
-     "../api:rtp_headers",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api:transport_api",
-     "../api/adaptation:resource_adaptation_api",
-diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index bafa22d312..187ec65ed8 100644
---- a/call/audio_send_stream.h
-+++ b/call/audio_send_stream.h
-@@ -25,7 +25,7 @@
- #include "api/crypto/frame_encryptor_interface.h"
- #include "api/frame_transformer_interface.h"
- #include "api/rtp_parameters.h"
--#include "api/rtp_sender_interface.h"
-+#include "api/rtp_sender_setparameters_callback.h"
- #include "api/scoped_refptr.h"
- #include "call/audio_sender.h"
- #include "call/rtp_config.h"
-diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index 431c267e1e..de18fc7b92 100644
---- a/call/video_send_stream.h
-+++ b/call/video_send_stream.h
-@@ -23,7 +23,7 @@
- #include "api/crypto/crypto_options.h"
- #include "api/frame_transformer_interface.h"
- #include "api/rtp_parameters.h"
--#include "api/rtp_sender_interface.h"
-+#include "api/rtp_sender_setparameters_callback.h"
- #include "api/scoped_refptr.h"
- #include "api/video/video_content_type.h"
- #include "api/video/video_frame.h"
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index daca67e033..80662563b0 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
-     "../api:media_stream_interface",
-     "../api:rtc_error",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api:sequence_checker",
-     "../api:transport_api",
-diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 43e09290bd..138d28ae4c 100644
---- a/media/base/media_channel.h
-+++ b/media/base/media_channel.h
-@@ -64,10 +64,6 @@ class Timing;
+diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
+index 381d1021c4..e777a45f92 100644
+--- a/modules/desktop_capture/desktop_capture_types.h
++++ b/modules/desktop_capture/desktop_capture_types.h
+@@ -19,7 +19,7 @@ typedef int pid_t; // matching what used to be in
  
  namespace webrtc {
- class VideoFrame;
--
--webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
--                                             RTCError error);
--
- }  // namespace webrtc
  
- namespace cricket {
-diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index a72b97413d..0e72f47d6d 100644
---- a/media/base/media_channel_impl.cc
-+++ b/media/base/media_channel_impl.cc
-@@ -31,19 +31,6 @@
- #include "modules/rtp_rtcp/include/report_block_data.h"
- #include "rtc_base/checks.h"
+-enum class CaptureType { kWindow, kScreen };
++enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
  
--namespace webrtc {
+ // Type used to identify windows on the desktop. Values are platform-specific:
+ //   - On Windows: HWND cast to intptr_t.
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 4baa93cab9..7df6becb4e 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -26,6 +26,10 @@
+ #include "rtc_base/win/windows_version.h"
+ #endif  // defined(RTC_ENABLE_WIN_WGC)
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++#include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
++#endif
++
+ namespace webrtc {
+ 
+ void LogDesktopCapturerFullscreenDetectorUsage() {
+@@ -84,6 +88,30 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+   return capturer;
+ }
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
++    const DesktopCaptureOptions& options) {
++  std::unique_ptr<DesktopCapturer> capturer = CreateRawGenericCapturer(options);
++  if (capturer && options.detect_updated_region()) {
++    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
++  }
++
++  return capturer;
++}
++
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
++    const DesktopCaptureOptions& options) {
++  if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
++    return std::make_unique<BaseCapturerPipeWire>(options,
++                                                  CaptureType::kAnyScreenContent);
++  }
++
++  return nullptr;
++}
++#endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++
+ // static
+ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+     const DesktopCaptureOptions& options) {
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index cf75004af5..951c4a9b10 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -170,6 +170,12 @@ class RTC_EXPORT DesktopCapturer {
+   // The return value if `pos` is out of the scope of the source is undefined.
+   virtual bool IsOccluded(const DesktopVector& pos);
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++  // Creates a DesktopCapturer instance which targets to capture windows and screens.
++  static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
++      const DesktopCaptureOptions& options);
++#endif
++
+   // Creates a DesktopCapturer instance which targets to capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
+       const DesktopCaptureOptions& options);
+@@ -198,6 +204,13 @@ class RTC_EXPORT DesktopCapturer {
+   // CroppingWindowCapturer needs to create raw capturers without wrappers, so
+   // the following two functions are protected.
+ 
++#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++  // Creates a platform specific DesktopCapturer instance which targets to
++  // capture windows and screens.
++  static std::unique_ptr<DesktopCapturer> CreateRawGenericCapturer(
++      const DesktopCaptureOptions& options);
++#endif
++
+   // Creates a platform specific DesktopCapturer instance which targets to
+   // capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
+diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
+index dae2b70510..cf4f7dc9aa 100644
+--- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
++++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
+@@ -165,15 +165,6 @@ void BaseCapturerPipeWire::CaptureFrame() {
+   callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
+ }
+ 
+-// Keep in sync with defines at browser/actors/WebRTCParent.jsm
+-// With PipeWire we can't select which system resource is shared so
+-// we don't create a window/screen list. Instead we place these constants
+-// as window name/id so frontend code can identify PipeWire backend
+-// and does not try to create screen/window preview.
 -
--webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
--                                             RTCError error) {
--  if (callback) {
--    std::move(callback)(error);
--    callback = nullptr;
--  }
--  return error;
--}
+-#define PIPEWIRE_ID   0xaffffff
+-#define PIPEWIRE_NAME "####_PIPEWIRE_PORTAL_####"
 -
--}  // namespace webrtc
--
- namespace cricket {
- using webrtc::FrameDecryptorInterface;
- using webrtc::FrameEncryptorInterface;
-diff --git a/video/BUILD.gn b/video/BUILD.gn
-index e21e1c7ea8..2c0a411e35 100644
---- a/video/BUILD.gn
-+++ b/video/BUILD.gn
-@@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
-     "../api:fec_controller_api",
-     "../api:rtc_error",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api/adaptation:resource_adaptation_api",
-     "../api/units:data_rate",
-@@ -410,7 +410,7 @@ rtc_library("video_stream_encoder_impl") {
-     ":video_stream_encoder_interface",
-     "../api:field_trials_view",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:sequence_checker",
-     "../api/adaptation:resource_adaptation_api",
-     "../api/task_queue:pending_task_safety_flag",
+ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
+   RTC_DCHECK(sources->size() == 0);
+   // List of available screens is already presented by the xdg-desktop-portal,
+@@ -190,7 +181,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
+ bool BaseCapturerPipeWire::SelectSource(SourceId id) {
+   // Screen selection is handled by the xdg-desktop-portal.
+   selected_source_id_ = id;
+-  return id == PIPEWIRE_ID;
++  return true;
+ }
+ 
+ DelegatedSourceListController*
+diff --git a/modules/desktop_capture/linux/wayland/screencast_portal.cc b/modules/desktop_capture/linux/wayland/screencast_portal.cc
+index abfade56e7..e7aaee001b 100644
+--- a/modules/desktop_capture/linux/wayland/screencast_portal.cc
++++ b/modules/desktop_capture/linux/wayland/screencast_portal.cc
+@@ -41,6 +41,8 @@ ScreenCastPortal::CaptureSourceType ScreenCastPortal::ToCaptureSourceType(
+       return ScreenCastPortal::CaptureSourceType::kScreen;
+     case CaptureType::kWindow:
+       return ScreenCastPortal::CaptureSourceType::kWindow;
++    case CaptureType::kAnyScreenContent:
++      return ScreenCastPortal::CaptureSourceType::kAnyScreenContent;
+   }
+ }
+ 
 -- 
 2.34.1
 

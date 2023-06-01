@@ -1,102 +1,64 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 21 Aug 2018 13:39:00 -0400
-Subject: Bug 1376873 - Fix up logging in WebrtcLog.cpp; r=ng
+From: Jakob Ivarsson <jakobi@webrtc.org>
+Date: Thu, 16 Feb 2023 17:21:20 +0100
+Subject: (cherry-pick-branch-heads/5563) Disable stop CNG after a timeout.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-The webrtc::Trace code is removed by this update. We already had support for
-LOG (now RTC_LOG) in WebrtcLog.cpp. This removes the trace code from
-WebRtcLog.cpp and moves the aec logging code from webrtc::Trace to
-rtc::LogMessage.
+This is still a behavior that we want, but a more careful rollout is needed.
 
-This also disables logging to stderr in rtc_base/logging.cc. We could disable
-it using the API, but that happens through peerconnection resulting in some
-logging occuring during getusermedia.
+(cherry picked from commit 48d784225972b7dd0542acfad7cd2d0eed25ad1c)
 
-The aec logs were testing with --disable-e10s. Rather than trying to
-work around sandboxing, I think it makes more sense to fix Bug 1404982 and
-store the logs in memory for retrieval from about:webrtc.
-
-Differential Revision: https://phabricator.services.mozilla.com/D7429
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e84c60e2c9373f4d2dc24e769375a92c17c2a0ad
+No-Try: True
+Bug: webrtc:12790, chromium:1418687
+Change-Id: Ic74c7b4945c0cdeda2b17f52301069424ad91162
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293860
+Commit-Queue: Jakob Ivarsson‎ <jakobi@webrtc.org>
+Reviewed-by: Henrik Lundin <henrik.lundin@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39333}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294760
+Reviewed-by: Alessio Bazzica <alessiob@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5563@{#3}
+Cr-Branched-From: 6c032cb8356b0d3f717c4fcf50796241f2bba6c2-refs/heads/main@{#39207}
 ---
- .../audio_processing/logging/apm_data_dumper.cc    |  2 +-
- rtc_base/logging.cc                                | 11 ++++++++++-
- rtc_base/logging.h                                 | 14 ++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+ modules/audio_coding/neteq/decision_logic.h           | 2 +-
+ modules/audio_coding/neteq/decision_logic_unittest.cc | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
-index f787b65604..a15321ad48 100644
---- a/modules/audio_processing/logging/apm_data_dumper.cc
-+++ b/modules/audio_processing/logging/apm_data_dumper.cc
-@@ -42,7 +42,7 @@ std::string FormFileName(absl::string_view output_dir,
- #endif
+diff --git a/modules/audio_coding/neteq/decision_logic.h b/modules/audio_coding/neteq/decision_logic.h
+index 69b13a9048..8d1ff4d622 100644
+--- a/modules/audio_coding/neteq/decision_logic.h
++++ b/modules/audio_coding/neteq/decision_logic.h
+@@ -175,7 +175,7 @@ class DecisionLogic : public NetEqController {
+     int reinit_after_expands = 100;
+     int deceleration_target_level_offset_ms = 85;
+     int packet_history_size_ms = 2000;
+-    absl::optional<int> cng_timeout_ms = 1000;
++    absl::optional<int> cng_timeout_ms;
+   };
+   Config config_;
+   std::unique_ptr<DelayManager> delay_manager_;
+diff --git a/modules/audio_coding/neteq/decision_logic_unittest.cc b/modules/audio_coding/neteq/decision_logic_unittest.cc
+index d0473d0264..6150c9a6db 100644
+--- a/modules/audio_coding/neteq/decision_logic_unittest.cc
++++ b/modules/audio_coding/neteq/decision_logic_unittest.cc
+@@ -18,6 +18,7 @@
+ #include "modules/audio_coding/neteq/delay_manager.h"
+ #include "modules/audio_coding/neteq/mock/mock_buffer_level_filter.h"
+ #include "modules/audio_coding/neteq/mock/mock_delay_manager.h"
++#include "test/field_trial.h"
+ #include "test/gtest.h"
  
-   std::stringstream ss;
--  std::string base = webrtc::Trace::aec_debug_filename();
-+  std::string base = rtc::LogMessage::aec_debug_filename();
-   ss << base;
- 
-   if (base.length() && base.back() != sep) {
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 4bc9183d97..d71d6a3e1b 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -54,6 +54,15 @@ static const int kMaxLogLineSize = 1024 - 60;
- #include "rtc_base/time_utils.h"
- 
- namespace rtc {
-+
-+bool LogMessage::aec_debug_ = false;
-+uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
-+std::string LogMessage::aec_filename_base_;
-+
-+std::string LogMessage::aec_debug_filename() {
-+  return aec_filename_base_;
-+}
-+
- namespace {
- 
- // By default, release builds don't log, debug builds at info level
-@@ -114,7 +123,7 @@ std::string LogLineRef::DefaultLogLine() const {
- // LogMessage
- /////////////////////////////////////////////////////////////////////////////
- 
--bool LogMessage::log_to_stderr_ = true;
-+bool LogMessage::log_to_stderr_ = false;
- 
- // The list of logging streams currently configured.
- // Note: we explicitly do not clean this up, because of the uncertain ordering
-diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index d59b9a0ef7..8f490c44a2 100644
---- a/rtc_base/logging.h
-+++ b/rtc_base/logging.h
-@@ -581,6 +581,16 @@ class LogMessage {
-   }
- #endif  // RTC_LOG_ENABLED()
- 
-+  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
-+  static void set_aec_debug(bool enable) { aec_debug_ = enable; }
-+  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
-+  static bool aec_debug() { return aec_debug_; }
-+  static uint32_t aec_debug_size() { return aec_debug_size_; }
-+  static std::string aec_debug_filename();
-+  static void set_aec_debug_filename(const char* filename) {
-+    aec_filename_base_ = filename;
-+  }
-+
-  private:
-   friend class LogMessageForTesting;
- 
-@@ -636,6 +646,10 @@ class LogMessage {
- 
-   // The stringbuilder that buffers the formatted message before output
-   rtc::StringBuilder print_stream_;
-+
-+  static bool aec_debug_;
-+  static uint32_t aec_debug_size_;
-+  static std::string aec_filename_base_;
- };
- 
- //////////////////////////////////////////////////////////////////////
+ namespace webrtc {
+@@ -53,6 +54,8 @@ using ::testing::Return;
+ class DecisionLogicTest : public ::testing::Test {
+  protected:
+   DecisionLogicTest() {
++    test::ScopedFieldTrials trials(
++        "WebRTC-Audio-NetEqDecisionLogicConfig/cng_timeout_ms:1000/");
+     NetEqController::Config config;
+     config.tick_timer = &tick_timer_;
+     config.allow_time_stretching = true;
 -- 
 2.34.1
 
