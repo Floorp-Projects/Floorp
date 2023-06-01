@@ -11,6 +11,7 @@
 
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
+using mozilla::UniquePtr;
 using mozilla::dom::ClipboardCapabilities;
 
 NS_IMPL_ISUPPORTS(ClipboardSetDataHelper::AsyncSetClipboardData,
@@ -131,7 +132,20 @@ NS_IMETHODIMP ClipboardSetDataHelper::AsyncSetData(
 }
 
 nsBaseClipboard::nsBaseClipboard(const ClipboardCapabilities& aClipboardCaps)
-    : mClipboardCaps(aClipboardCaps) {}
+    : mClipboardCaps(aClipboardCaps) {
+  using mozilla::MakeUnique;
+  // Initialize clipboard cache.
+  mCaches[kGlobalClipboard] = MakeUnique<ClipboardCache>();
+  if (mClipboardCaps.supportsSelectionClipboard()) {
+    mCaches[kSelectionClipboard] = MakeUnique<ClipboardCache>();
+  }
+  if (mClipboardCaps.supportsFindClipboard()) {
+    mCaches[kFindClipboard] = MakeUnique<ClipboardCache>();
+  }
+  if (mClipboardCaps.supportsSelectionCache()) {
+    mCaches[kSelectionCache] = MakeUnique<ClipboardCache>();
+  }
+}
 
 nsBaseClipboard::~nsBaseClipboard() {
   EmptyClipboard(kSelectionClipboard);
@@ -152,15 +166,16 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
 
   CLIPBOARD_LOG("%s", __FUNCTION__);
 
-  if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
-    CLIPBOARD_LOG("%s: skipping update.", __FUNCTION__);
-    return NS_OK;
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    return NS_ERROR_FAILURE;
   }
 
-  if (!nsIClipboard::IsClipboardTypeSupported(kSelectionClipboard) &&
-      !nsIClipboard::IsClipboardTypeSupported(kFindClipboard) &&
-      aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_FAILURE;
+  const auto& clipboardCache = mCaches[aWhichClipboard];
+  MOZ_ASSERT(clipboardCache);
+  if (aTransferable == clipboardCache->GetTransferable() &&
+      anOwner == clipboardCache->GetClipboardOwner()) {
+    CLIPBOARD_LOG("%s: skipping update.", __FUNCTION__);
+    return NS_OK;
   }
 
   mEmptyingForSetData = true;
@@ -169,11 +184,10 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   }
   mEmptyingForSetData = false;
 
-  mClipboardOwner = anOwner;
-  mTransferable = aTransferable;
+  clipboardCache->Update(aTransferable, anOwner);
 
   nsresult rv = NS_ERROR_FAILURE;
-  if (mTransferable) {
+  if (aTransferable) {
     mIgnoreEmptyNotification = true;
     rv = ClipboardSetDataHelper::SetData(aTransferable, anOwner,
                                          aWhichClipboard);
@@ -221,9 +235,7 @@ RefPtr<GenericPromise> nsBaseClipboard::AsyncGetData(
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   CLIPBOARD_LOG("%s: clipboard=%i", __FUNCTION__, aWhichClipboard);
 
-  if (!nsIClipboard::IsClipboardTypeSupported(kSelectionClipboard) &&
-      !nsIClipboard::IsClipboardTypeSupported(kFindClipboard) &&
-      aWhichClipboard != kGlobalClipboard) {
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -232,7 +244,10 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
     return NS_OK;
   }
 
-  ClearClipboardCache();
+  const auto& clipboardCache = mCaches[aWhichClipboard];
+  MOZ_ASSERT(clipboardCache);
+  clipboardCache->Clear();
+
   return NS_OK;
 }
 
@@ -283,7 +298,7 @@ nsBaseClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard,
   }
 }
 
-void nsBaseClipboard::ClearClipboardCache() {
+void nsBaseClipboard::ClipboardCache::Clear() {
   if (mClipboardOwner) {
     mClipboardOwner->LosingOwnership(mTransferable);
     mClipboardOwner = nullptr;
