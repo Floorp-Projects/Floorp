@@ -348,3 +348,20 @@ search.engine.private:
           The source of the change of engine. For possible values,
           see `REASON_CHANGE_MAP` in
           https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchService.sys.mjs
+
+search.service:
+  startup_time:
+    type: timing_distribution
+    time_unit: nanosecond
+    description: |
+      The time duration it takes for the search service to start up.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832509
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832509#c3
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    data_sensitivity:
+      - technical
+    expires: never
+    telemetry_mirror: SEARCH_SERVICE_INIT2_MS
