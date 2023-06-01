@@ -518,11 +518,14 @@ class Editor extends PureComponent {
     }
 
     if (isCmd(ev)) {
-      continueToHere(cx, {
-        line: sourceLine,
-        column: undefined,
-        sourceId: selectedSource.id,
-      });
+      continueToHere(
+        cx,
+        createLocation({
+          line: sourceLine,
+          column: undefined,
+          source: selectedSource,
+        })
+      );
       return;
     }
 
