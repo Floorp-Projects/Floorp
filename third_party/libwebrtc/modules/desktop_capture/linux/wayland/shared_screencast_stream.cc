@@ -79,6 +79,7 @@ class SharedScreenCastStreamPrivate {
                              uint32_t height = 0,
                              bool is_cursor_embedded = false);
   void UpdateScreenCastStreamResolution(uint32_t width, uint32_t height);
+  void UpdateScreenCastStreamFrameRate(uint32_t frame_rate);
   void SetUseDamageRegion(bool use_damage_region) {
     use_damage_region_ = use_damage_region;
   }
@@ -137,9 +138,8 @@ class SharedScreenCastStreamPrivate {
   // Resolution parameters.
   uint32_t width_ = 0;
   uint32_t height_ = 0;
-  webrtc::Mutex resolution_lock_;
-  // Resolution changes are processed during buffer processing.
-  bool pending_resolution_change_ RTC_GUARDED_BY(&resolution_lock_) = false;
+  // Frame rate.
+  uint32_t frame_rate_ = 60;
 
   bool use_damage_region_ = true;
 
@@ -261,6 +261,12 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
 
   spa_format_video_raw_parse(format, &that->spa_video_format_);
 
+  if (that->observer_ && that->spa_video_format_.max_framerate.denom) {
+    that->observer_->OnFrameRateChanged(
+        that->spa_video_format_.max_framerate.num /
+        that->spa_video_format_.max_framerate.denom);
+  }
+
   auto width = that->spa_video_format_.size.width;
   auto height = that->spa_video_format_.size.height;
   auto stride = SPA_ROUND_UP_N(width * kBytesPerPixel, 4);
@@ -359,22 +365,22 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
     std::vector<const spa_pod*> params;
     struct spa_rectangle resolution =
         SPA_RECTANGLE(that->width_, that->height_);
+    struct spa_fraction frame_rate = SPA_FRACTION(that->frame_rate_, 1);
 
-    webrtc::MutexLock lock(&that->resolution_lock_);
     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
       if (!that->modifiers_.empty()) {
-        params.push_back(BuildFormat(
-            &builder, format, that->modifiers_,
-            that->pending_resolution_change_ ? &resolution : nullptr));
+        params.push_back(
+            BuildFormat(&builder, format, that->modifiers_,
+                        that->width_ && that->height_ ? &resolution : nullptr,
+                        &frame_rate));
       }
       params.push_back(BuildFormat(
           &builder, format, /*modifiers=*/{},
-          that->pending_resolution_change_ ? &resolution : nullptr));
+          that->width_ && that->height_ ? &resolution : nullptr, &frame_rate));
     }
 
     pw_stream_update_params(that->pw_stream_, params.data(), params.size());
-    that->pending_resolution_change_ = false;
   }
 }
 
@@ -483,6 +489,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
       resolution = SPA_RECTANGLE(width, height);
       set_resolution = true;
     }
+    struct spa_fraction default_frame_rate = SPA_FRACTION(frame_rate_, 1);
     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
       // Modifiers can be used with PipeWire >= 0.3.33
@@ -491,12 +498,14 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
 
         if (!modifiers_.empty()) {
           params.push_back(BuildFormat(&builder, format, modifiers_,
-                                       set_resolution ? &resolution : nullptr));
+                                       set_resolution ? &resolution : nullptr,
+                                       &default_frame_rate));
         }
       }
 
       params.push_back(BuildFormat(&builder, format, /*modifiers=*/{},
-                                   set_resolution ? &resolution : nullptr));
+                                   set_resolution ? &resolution : nullptr,
+                                   &default_frame_rate));
     }
 
     if (pw_stream_connect(pw_stream_, PW_DIRECTION_INPUT, pw_stream_node_id_,
@@ -532,10 +541,24 @@ void SharedScreenCastStreamPrivate::UpdateScreenCastStreamResolution(
   if (width_ != width || height_ != height) {
     width_ = width;
     height_ = height;
-    {
-      webrtc::MutexLock lock(&resolution_lock_);
-      pending_resolution_change_ = true;
-    }
+    pw_loop_signal_event(pw_thread_loop_get_loop(pw_main_loop_), renegotiate_);
+  }
+}
+
+RTC_NO_SANITIZE("cfi-icall")
+void SharedScreenCastStreamPrivate::UpdateScreenCastStreamFrameRate(
+    uint32_t frame_rate) {
+  if (!pw_main_loop_) {
+    RTC_LOG(LS_WARNING) << "No main pipewire loop, ignoring frame rate change";
+    return;
+  }
+  if (!renegotiate_) {
+    RTC_LOG(LS_WARNING) << "Can not renegotiate stream params, ignoring "
+                        << "frame rate change";
+    return;
+  }
+  if (frame_rate_ != frame_rate) {
+    frame_rate_ = frame_rate;
     pw_loop_signal_event(pw_thread_loop_get_loop(pw_main_loop_), renegotiate_);
   }
 }
@@ -928,6 +951,11 @@ bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id,
 void SharedScreenCastStream::UpdateScreenCastStreamResolution(uint32_t width,
                                                               uint32_t height) {
   private_->UpdateScreenCastStreamResolution(width, height);
+}
+
+void SharedScreenCastStream::UpdateScreenCastStreamFrameRate(
+    uint32_t frame_rate) {
+  private_->UpdateScreenCastStreamFrameRate(frame_rate);
 }
 
 void SharedScreenCastStream::SetUseDamageRegion(bool use_damage_region) {

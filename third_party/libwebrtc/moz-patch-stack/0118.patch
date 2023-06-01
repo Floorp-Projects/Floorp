@@ -36,10 +36,10 @@ index 1af19a1fd2..7f601821fc 100644
  bool DesktopCapturer::IsRunningUnderWayland() {
    const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 12ef57ba26..5c3420710f 100644
+index a7e1b9ca48..b3269e297a 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -182,10 +182,6 @@ class RTC_EXPORT DesktopCapturer {
+@@ -188,10 +188,6 @@ class RTC_EXPORT DesktopCapturer {
    static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
        const DesktopCaptureOptions& options);
  
@@ -50,7 +50,7 @@ index 12ef57ba26..5c3420710f 100644
  #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
    static bool IsRunningUnderWayland();
  
-@@ -216,10 +212,6 @@ class RTC_EXPORT DesktopCapturer {
+@@ -222,10 +218,6 @@ class RTC_EXPORT DesktopCapturer {
    // capture screens.
    static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
        const DesktopCaptureOptions& options);

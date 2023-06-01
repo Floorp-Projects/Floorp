@@ -56,6 +56,7 @@ class PipeWireStreamTest : public ::testing::Test,
   MOCK_METHOD(void, OnDesktopFrameChanged, (), (override));
   MOCK_METHOD(void, OnFailedToProcessBuffer, (), (override));
   MOCK_METHOD(void, OnStreamConfigured, (), (override));
+  MOCK_METHOD(void, OnFrameRateChanged, (uint32_t), (override));
 
   void SetUp() override {
     shared_screencast_stream_ = SharedScreenCastStream::CreateDefault();
@@ -80,6 +81,8 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
   // Set expectations for PipeWire to successfully connect both streams
   rtc::Event waitConnectEvent;
   rtc::Event waitStartStreamingEvent;
+  rtc::Event waitStreamParamChangedEvent1;
+  rtc::Event waitStreamParamChangedEvent2;
 
   EXPECT_CALL(*this, OnStreamReady(_))
       .WillOnce(Invoke(this, &PipeWireStreamTest::StartScreenCastStream));
@@ -90,6 +93,7 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
   EXPECT_CALL(*this, OnStartStreaming).WillOnce([&waitStartStreamingEvent] {
     waitStartStreamingEvent.Set();
   });
+  EXPECT_CALL(*this, OnFrameRateChanged(60)).Times(1);  // Default frame rate.
 
   // Give it some time to connect, the order between these shouldn't matter, but
   // we need to be sure we are connected before we proceed to work with frames.
@@ -151,6 +155,23 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
   // First frame should be now overwritten with blue color
   frameRetrievedEvent.Wait(kShortWait);
   EXPECT_EQ(RgbaColor(frame->data()), blue_color);
+
+  // Update stream parameters.
+  EXPECT_CALL(*this, OnFrameRateChanged(0))
+      .Times(1)
+      .WillOnce([&waitStreamParamChangedEvent1] {
+        waitStreamParamChangedEvent1.Set();
+      });
+  shared_screencast_stream_->UpdateScreenCastStreamFrameRate(0);
+  waitStreamParamChangedEvent1.Wait(kShortWait);
+
+  EXPECT_CALL(*this, OnFrameRateChanged(22))
+      .Times(1)
+      .WillOnce([&waitStreamParamChangedEvent2] {
+        waitStreamParamChangedEvent2.Set();
+      });
+  shared_screencast_stream_->UpdateScreenCastStreamFrameRate(22);
+  waitStreamParamChangedEvent2.Wait(kShortWait);
 
   // Test disconnection from stream
   EXPECT_CALL(*this, OnStopStreaming);
