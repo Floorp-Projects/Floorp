@@ -52,3 +52,19 @@ To ignore multiple lines in a source file:
   :alt: Screenshot showing the context menu item to ignore a selection of lines in a source file.
   :width: 1150px
   :class: border
+
+
+Ignore third-party scripts
+****************************
+
+Frameworks and bundlers can define third-party scripts which should be ignored, using the `x_google_ignoreList <https://developer.chrome.com/articles/x-google-ignore-list/>`_ sourcemap extension.
+The debugger parses and reads this field from the sourcemap to automatically ignore these sources.
+
+To ignore third-party scripts:
+
+- Click the debugger settings menu and choose **Ignore Known Third-party Scripts**
+
+.. image:: ignore-third-party-sources.png
+  :alt: Screenshot showing the settings menu item to ignore third party sources off the sourcemaps x_google_ignoreList field.
+  :width: 1150px
+  :class: border
