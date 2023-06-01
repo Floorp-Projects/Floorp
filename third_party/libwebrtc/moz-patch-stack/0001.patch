@@ -1,123 +1,152 @@
-From: Johannes Kron <kron@webrtc.org>
-Date: Tue, 7 Feb 2023 14:46:36 +0000
-Subject: (cherry-pick-branch-heads/5563) M111: Add UMA histograms to track
- usage of fullscreen detection
+From: Mikhail Pavlov <mpavlov@google.com>
+Date: Fri, 10 Feb 2023 16:46:52 +0000
+Subject: (tmp-cherry-pick) Revert "sdp: add rtcp-fb:* lines for common
+ feedback" (55c5173220)
 
-Cherry picked from commits:
-b311f6aba82cd93b2d748b8e47c6f8d29a21746d
-fd29662c61b2145d6de4c38eb55e48421a4d427b
+This reverts commit 815522782a92e168b80edc760b2e53e4d0e4ea0d.
 
-(cherry picked from commit b311f6aba82cd93b2d748b8e47c6f8d29a21746d)
+Reason for revert: Breaks a downstream project.
 
-No-Try: True
-Bug: chromium:1348011
-Change-Id: I3219e74c49ff77e00b2224c8cf82f78d1e0fd9cf
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291708
+The internal investigation is still in-progress.
+
+Original change's description:
+> sdp: add rtcp-fb:* lines for common feedback
+>
+> which potentially allows switching to that pattern in the future.
+> Video FEC mechanisms (ulpfec, flexfec-03, RED) that currently
+> do not have any feedback parameters but will still be considered "common" and feedback may be sent for them.
+>
+> For audio this causes rtcp-feedback to be sent for G711 and G722 if negotiated.
+>
+> BUG=webrtc:14802
+>
+> Change-Id: I54852d39e176f918d4b36462526ceb40617b8fbe
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290702
+> Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+> Reviewed-by: Per Kjellander <perkj@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#39224}
+
+Bug: webrtc:14802
+Change-Id: I4dc3c0c53ad1bc06050c0d73b088303312ac58b2
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293020
+Owners-Override: Jeremy Leconte <jleconte@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Johannes Kron <kron@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39254}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/292460
-Cr-Commit-Position: refs/branch-heads/5563@{#1}
-Cr-Branched-From: 6c032cb8356b0d3f717c4fcf50796241f2bba6c2-refs/heads/main@{#39207}
+Reviewed-by: Jeremy Leconte <jleconte@webrtc.org>
+Commit-Queue: Jeremy Leconte <jleconte@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#39296}
 ---
- .../desktop_capture/cropping_window_capturer_win.cc  |  7 +++++++
- modules/desktop_capture/desktop_capturer.cc          |  6 ++++++
- modules/desktop_capture/desktop_capturer.h           |  2 ++
- modules/desktop_capture/window_capturer_mac.mm       | 12 +++++++++++-
- 4 files changed, 26 insertions(+), 1 deletion(-)
+ pc/webrtc_sdp.cc          | 32 +-------------------------------
+ pc/webrtc_sdp_unittest.cc | 32 --------------------------------
+ 2 files changed, 1 insertion(+), 63 deletions(-)
 
-diff --git a/modules/desktop_capture/cropping_window_capturer_win.cc b/modules/desktop_capture/cropping_window_capturer_win.cc
-index 64d9219e24..5d99cb6b2b 100644
---- a/modules/desktop_capture/cropping_window_capturer_win.cc
-+++ b/modules/desktop_capture/cropping_window_capturer_win.cc
-@@ -153,6 +153,9 @@ class CroppingWindowCapturerWin : public CroppingWindowCapturer {
-   bool enumerate_current_process_windows_;
+diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
+index 7a63ae41ea..3b347466d8 100644
+--- a/pc/webrtc_sdp.cc
++++ b/pc/webrtc_sdp.cc
+@@ -1890,7 +1890,7 @@ void AddPacketizationLine(const T& codec, std::string* message) {
  
-   rtc::scoped_refptr<FullScreenWindowDetector> full_screen_window_detector_;
-+
-+  // Used to make sure that we only log the usage of fullscreen detection once.
-+  mutable bool fullscreen_usage_logged_ = false;
- };
- 
- void CroppingWindowCapturerWin::CaptureFrame() {
-@@ -307,6 +310,10 @@ WindowId CroppingWindowCapturerWin::GetWindowToCapture() const {
-       full_screen_window_detector_
-           ? full_screen_window_detector_->FindFullScreenWindow(selected_source)
-           : 0;
-+  if (full_screen_source != selected_source && !fullscreen_usage_logged_) {
-+    fullscreen_usage_logged_ = true;
-+    LogDesktopCapturerFullscreenDetectorUsage();
-+  }
-   return full_screen_source ? full_screen_source : selected_source;
+ template <class T>
+ void AddRtcpFbLines(const T& codec, std::string* message) {
+-  for (const auto& param : codec.feedback_params.params()) {
++  for (const cricket::FeedbackParam& param : codec.feedback_params.params()) {
+     rtc::StringBuilder os;
+     WriteRtcpFbHeader(codec.id, &os);
+     os << " " << param.id();
+@@ -1901,30 +1901,6 @@ void AddRtcpFbLines(const T& codec, std::string* message) {
+   }
  }
  
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index dc24b387d5..5211f1acec 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -19,6 +19,7 @@
- #include "modules/desktop_capture/cropping_window_capturer.h"
- #include "modules/desktop_capture/desktop_capture_options.h"
- #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
-+#include "system_wrappers/include/metrics.h"
+-template <class T>
+-void AddWildcardRtcpFbLines(const std::vector<T>& codecs,
+-                            std::string* message) {
+-  if (codecs.empty()) {
+-    return;
+-  }
+-  for (const auto& param : codecs[0].feedback_params.params()) {
+-    bool is_common_feedback = absl::c_all_of(codecs, [&param](const T& codec) {
+-      // FEC mechanisms like RED, ulpfec and flexfec have empty feedback.
+-      return codec.feedback_params.params().empty() ||
+-             codec.feedback_params.Has(param);
+-    });
+-    if (is_common_feedback) {
+-      rtc::StringBuilder os;
+-      WriteRtcpFbHeader(kWildcardPayloadType, &os);
+-      os << " " << param.id();
+-      if (!param.param().empty()) {
+-        os << " " << param.param();
+-      }
+-      AddLine(os.str(), message);
+-    }
+-  }
+-}
+-
+ bool GetMinValue(const std::vector<int>& values, int* value) {
+   if (values.empty()) {
+     return false;
+@@ -1968,9 +1944,6 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
+       AddRtcpFbLines(codec, message);
+       AddFmtpLine(codec, message);
+     }
+-    // rtcp-fb:* is added in addition to the per-codec feedback to allow
+-    // downstream users time to upgrade their parsers.
+-    AddWildcardRtcpFbLines(media_desc->as_video()->codecs(), message);
+   } else if (media_type == cricket::MEDIA_TYPE_AUDIO) {
+     std::vector<int> ptimes;
+     std::vector<int> maxptimes;
+@@ -2002,9 +1975,6 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
+         maxptimes.push_back(maxptime);
+       }
+     }
+-    // rtcp-fb:* is added in addition to the per-codec feedback to allow
+-    // downstream users time to upgrade their parsers.
+-    AddWildcardRtcpFbLines(media_desc->as_audio()->codecs(), message);
+     // Populate the maxptime attribute with the smallest maxptime of all codecs
+     // under the same m-line.
+     int min_maxptime = INT_MAX;
+diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
+index 3e5e9a0d08..9f1cfc9c96 100644
+--- a/pc/webrtc_sdp_unittest.cc
++++ b/pc/webrtc_sdp_unittest.cc
+@@ -3296,38 +3296,6 @@ TEST_F(WebRtcSdpTest, DeserializeSerializeRtcpFbWildcard) {
+   TestSerialize(jdesc_output);
+ }
  
- #if defined(RTC_ENABLE_WIN_WGC)
- #include "modules/desktop_capture/win/wgc_capturer_win.h"
-@@ -27,6 +28,11 @@
+-TEST_F(WebRtcSdpTest, SerializeRtcpFbWildcard) {
+-  std::string sdp =
+-      "v=0\r\n"
+-      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+-      "s=-\r\n"
+-      "t=0 0\r\n"
+-      "m=video 3457 RTP/SAVPF 100 101 102 103\r\n"
+-      "a=rtpmap:100 VP8/90000\r\n"
+-      "a=rtcp-fb:100 nack\r\n"
+-      "a=rtcp-fb:100 nack pli\r\n"
+-      "a=rtpmap:101 rtx/90000\r\n"
+-      "a=fmtp:101 apt=100\r\n"
+-      "a=rtpmap:102 VP9/90000\r\n"
+-      "a=rtcp-fb:102 nack\r\n"
+-      "a=rtpmap:103 rtx/90000\r\n"
+-      "a=fmtp:103 apt=102\r\n";
+-  JsepSessionDescription jdesc(kDummyType);
+-  SdpParseError error;
+-  EXPECT_TRUE(webrtc::SdpDeserialize(sdp, &jdesc, &error));
+-
+-  std::string message = webrtc::SdpSerialize(jdesc);
+-  // NACK is a common parameter so serialized with wildcard in addition to
+-  // per-codec entries.
+-  EXPECT_NE(message.find("\r\na=rtcp-fb:100 nack\r\n"), std::string::npos);
+-  EXPECT_NE(message.find("\r\na=rtcp-fb:102 nack\r\n"), std::string::npos);
+-  EXPECT_NE(message.find("\r\na=rtcp-fb:* nack\r\n"), std::string::npos);
+-  // PLI is not a common parameter so no wildcard.
+-  EXPECT_NE(message.find("\r\na=rtcp-fb:100 nack pli\r\n"), std::string::npos);
+-  EXPECT_EQ(message.find("\r\na=rtcp-fb:102 nack pli\r\n"), std::string::npos);
+-  EXPECT_EQ(message.find("\r\na=rtcp-fb:* nack pli\r\n"), std::string::npos);
+-}
+-
+ TEST_F(WebRtcSdpTest, DeserializeVideoFmtp) {
+   JsepSessionDescription jdesc_output(kDummyType);
  
- namespace webrtc {
- 
-+void LogDesktopCapturerFullscreenDetectorUsage() {
-+  RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.DesktopCapturerFullscreenDetector",
-+                        true);
-+}
-+
- DesktopCapturer::~DesktopCapturer() = default;
- 
- DelegatedSourceListController*
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 04991f20ea..fd884f13ff 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -32,6 +32,8 @@
- 
- namespace webrtc {
- 
-+void RTC_EXPORT LogDesktopCapturerFullscreenDetectorUsage();
-+
- class DesktopCaptureOptions;
- class DesktopFrame;
- 
-diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
-index f0b413b0a6..f99b4a74d1 100644
---- a/modules/desktop_capture/window_capturer_mac.mm
-+++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -73,6 +73,9 @@ class WindowCapturerMac : public DesktopCapturer {
-   const rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
- 
-   WindowFinderMac window_finder_;
-+
-+  // Used to make sure that we only log the usage of fullscreen detection once.
-+  bool fullscreen_usage_logged_ = false;
- };
- 
- WindowCapturerMac::WindowCapturerMac(
-@@ -178,7 +181,14 @@ void WindowCapturerMac::CaptureFrame() {
- 
-     CGWindowID full_screen_window = full_screen_window_detector_->FindFullScreenWindow(window_id_);
- 
--    if (full_screen_window != kCGNullWindowID) on_screen_window = full_screen_window;
-+    if (full_screen_window != kCGNullWindowID) {
-+      // If this is the first time this happens, report to UMA that the feature is active.
-+      if (!fullscreen_usage_logged_) {
-+        LogDesktopCapturerFullscreenDetectorUsage();
-+        fullscreen_usage_logged_ = true;
-+      }
-+      on_screen_window = full_screen_window;
-+    }
-   }
- 
-   std::unique_ptr<DesktopFrame> frame = DesktopFrameCGImage::CreateForWindow(on_screen_window);
 -- 
 2.34.1
 
