@@ -27,6 +27,7 @@ rtc_library("congestion_controller") {
   ]
 
   deps = [
+    "../../api:rtp_parameters",
     "../../api/transport:network_control",
     "../../api/units:data_rate",
     "../../api/units:time_delta",
