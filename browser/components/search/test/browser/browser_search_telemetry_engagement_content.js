@@ -323,11 +323,8 @@ add_task(async function test_click_related_search_in_new_tab() {
   BrowserTestUtils.removeTab(tab2);
 });
 
-// We consider regular expressions in nonAdsLinkRegexps and
-// searchPageRegexp/extraPageRegexps as valid non ads links when recording
-// an engagement event. However, if a nonAdsLinkRegexp leads to a
-// searchPageRegexp/extraPageRegexps, than we risk double counting in the case
-// of a re-direct occuring in a new tab.
+// We consider regular expressions in nonAdsLinkRegexps and searchPageRegexp
+// as valid non ads links when recording an engagement event.
 add_task(async function test_click_redirect_search_in_newtab() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");

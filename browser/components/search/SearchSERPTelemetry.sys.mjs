@@ -925,8 +925,15 @@ class ContentHandler {
     }
 
     let wrappedChannel = ChannelWrapper.get(channel);
+    // The channel we're observing might be a redirect of a channel we've
+    // observed before.
     if (wrappedChannel._adClickRecorded) {
       lazy.logConsole.debug("Ad click already recorded");
+      return;
+      // When _adClickRecorded is false but _recordedClick is true, it means we
+      // recorded a non-ad link click, and it is being re-directed.
+    } else if (wrappedChannel._recordedClick) {
+      lazy.logConsole.debug("Non ad-click already recorded");
       return;
     }
 
@@ -953,15 +960,35 @@ class ContentHandler {
         return provider.telemetryId == providerInfo;
       });
 
-      // The SERP "clicked" action is implied if a user loads another page from
-      // the context of a SERP. At this point, we don't know if the request is
-      // from a SERP but we want to avoid inspecting requests that are not
-      // documents, or not a top level load.
+      // Some channels re-direct by loading pages that return 200. The result
+      // is the channel will have an originURL that changes from the SERP to
+      // either a nonAdsRegexp or an extraAdServersRegexps. This is typical
+      // for loading a page in a new tab. The channel will have changed so any
+      // properties attached to them to record state (e.g. _recordedClick)
+      // won't be present.
+      if (
+        info.nonAdsLinkRegexps.some(r => r.test(originURL)) ||
+        info.extraAdServersRegexps.some(r => r.test(originURL))
+      ) {
+        return;
+      }
+
+      // A click event is recorded if a user loads a resource from an
+      // originURL that is a SERP.
+      //
+      // Typically, we only want top level loads containing documents to avoid
+      // recording any event on an in-page resource a SERP might load
+      // (e.g. CSS files).
+      //
+      // The exception to this is if a subframe loads a resource that matches
+      // a non ad link. Some SERPs encode non ad search results with a URL
+      // that gets loaded into an iframe, which then tells the container of
+      // the iframe to change the location of the page.
       if (
         lazy.serpEventsEnabled &&
         channel.isDocument &&
-        channel.loadInfo.isTopLevelLoad &&
-        !wrappedChannel._countedClick
+        (channel.loadInfo.isTopLevelLoad ||
+          info.nonAdsLinkRegexps.some(r => r.test(URL)))
       ) {
         let start = Cu.now();
 
@@ -1018,26 +1045,11 @@ class ContentHandler {
               }
             }
           }
-          // Check if the href matches a non-ads link. Do this after looking at
-          // hrefToComponentMap because a link that looks like a non-ad might
-          // have a more specific component type.
+
+          // Default value for URLs that don't match any components categorized
+          // on the page.
           if (!type) {
-            type = info.nonAdsLinkRegexps.some(r => r.test(URL))
-              ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
-              : "";
-          }
-          // The SERP may have moved onto another page that matches a SERP page
-          // e.g. Related Search
-          if (!type && isSerp) {
             type = SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK;
-          }
-          // There might be other types of pages on a SERP that don't fall
-          // neatly into expected non-ad expressions or SERPs, such as Image
-          // Search, Maps, etc.
-          if (!type) {
-            type = info.extraPageRegexps?.some(r => r.test(URL))
-              ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
-              : "";
           }
 
           if (isSerp && isFromNewtab) {
@@ -1047,35 +1059,22 @@ class ContentHandler {
             );
           }
 
-          // Step 3: If we have a type, record an engagement.
-          // Exceptions:
-          // - Related searches on some SERPs can be encoded with a URL that
-          //   match a nonAdsLinkRegexp. This means we'll have seen the link
-          //   twice, once with the nonAdsLinkRegexp and again with a SERP URL
-          //   matching a searchPageRegexp. We don't want to record the
-          //   engagement twice, so if the origin of the request was
-          //   nonAdsLinkRegexp, skip the categorization. The reason why we
-          //   don't do this check earlier is because if the final URL is a
-          //   SERP, we'll want to define the source property of the subsequent
-          //   SERP impression.
-          if (type && !info.nonAdsLinkRegexps.some(r => r.test(originURL))) {
-            impressionIdsWithoutEngagementsSet.delete(
-              telemetryState.impressionId
-            );
-            Glean.serp.engagement.record({
-              impression_id: telemetryState.impressionId,
-              action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-              target: type,
-            });
-            lazy.logConsole.debug("Counting click:", {
-              impressionId: telemetryState.impressionId,
-              type,
-              URL,
-            });
-            wrappedChannel._countedClick = true;
-          } else if (!type) {
-            lazy.logConsole.warn(`Could not find a component type for ${URL}`);
-          }
+          // Step 3: Record the engagement.
+          impressionIdsWithoutEngagementsSet.delete(
+            telemetryState.impressionId
+          );
+          Glean.serp.engagement.record({
+            impression_id: telemetryState.impressionId,
+            action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+            target: type,
+          });
+          lazy.logConsole.debug("Counting click:", {
+            impressionId: telemetryState.impressionId,
+            type,
+            URL,
+          });
+          // Prevent re-directed channels from being examined more than once.
+          wrappedChannel._recordedClick = true;
         }
         ChromeUtils.addProfilerMarker(
           "SearchSERPTelemetry._observeActivity",

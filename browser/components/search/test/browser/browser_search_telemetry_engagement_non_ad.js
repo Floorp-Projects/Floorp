@@ -2,7 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * These tests load SERPs and click on cacheable links.
+ * These tests load SERPs and click on links that are non ads. Non ads can have
+ * slightly different behavior from ads.
  */
 
 "use strict";
@@ -22,62 +23,6 @@ const TEST_PROVIDER_INFO = [
     nonAdsLinkRegexps: [],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
     components: [
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
-        included: {
-          parent: {
-            selector: ".moz-carousel",
-          },
-          children: [
-            {
-              selector: ".moz-carousel-card",
-              countChildren: true,
-            },
-          ],
-          related: {
-            selector: "button",
-          },
-        },
-      },
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
-        included: {
-          parent: {
-            selector: ".moz_ad",
-          },
-          children: [
-            {
-              selector: ".multi-col",
-              type: SearchSERPTelemetryUtils.COMPONENTS.AD_SITELINK,
-            },
-          ],
-          related: {
-            selector: "button",
-          },
-        },
-        excluded: {
-          parent: {
-            selector: ".rhs",
-          },
-        },
-      },
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
-        included: {
-          parent: {
-            selector: "form",
-          },
-          children: [
-            {
-              selector: "input",
-            },
-          ],
-          related: {
-            selector: "div",
-          },
-        },
-        topDown: true,
-      },
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         default: true,
@@ -112,8 +57,6 @@ add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   // Enable local telemetry recording for the duration of the tests.
-  let oldCanRecord = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = true;
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.log", true],
@@ -123,38 +66,24 @@ add_setup(async function () {
 
   registerCleanupFunction(async () => {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
-    Services.telemetry.canRecordExtended = oldCanRecord;
     resetTelemetry();
   });
 });
 
-add_task(async function test_click_cached_page() {
+// If an anchor is a non_ads_link and it doesn't match a non-ads regular
+// expression, it should still be categorize it as a non ad.
+add_task(async function test_click_non_ads_link() {
+  await waitForIdle();
+
+  resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
-  let cacheableUrl =
-    "https://example.com/browser/browser/components/search/test/browser/cacheable.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await waitForPageWithAdImpressions();
 
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(
-    gBrowser,
-    cacheableUrl
-  );
+  // Click a non ad.
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    "a#non_ads_link",
-    {},
-    tab.linkedBrowser
-  );
-  await pageLoadPromise;
-
-  gBrowser.goBack();
-  await waitForPageWithAdImpressions();
-
-  pageLoadPromise = BrowserTestUtils.waitForLocationChange(
-    gBrowser,
-    cacheableUrl
-  );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "a#non_ads_link",
+    "#non_ads_link",
     {},
     tab.linkedBrowser
   );
@@ -177,12 +106,44 @@ add_task(async function test_click_cached_page() {
         },
       ],
     },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+
+  // Reset state for other tests.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
+});
+
+// Click on an non-ad element while no ads are present.
+add_task(async function test_click_non_ad_with_no_ads() {
+  await waitForIdle();
+
+  resetTelemetry();
+
+  let url = getSERPUrl("searchTelemetryAd_searchbox.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    true,
+    "https://example.com/hello_world"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#non_ads_link",
+    {},
+    tab.linkedBrowser
+  );
+  await browserLoadedPromise;
+
+  assertImpressionEvents([
     {
       impression: {
         provider: "example",
         tagged: "true",
         partner_code: "ff",
-        source: "tabhistory",
+        source: "unknown",
         is_shopping_page: "false",
         shopping_tab_displayed: "false",
       },
@@ -196,4 +157,8 @@ add_task(async function test_click_cached_page() {
   ]);
 
   BrowserTestUtils.removeTab(tab);
+
+  // Reset state for other tests.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
 });

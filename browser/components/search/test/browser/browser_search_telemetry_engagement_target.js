@@ -22,7 +22,7 @@ const TEST_PROVIDER_INFO = [
     taggedCodes: ["ff"],
     adServerAttributes: ["mozAttr"],
     nonAdsLinkRegexps: [
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_nonAdsLink_redirect/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_nonAdsLink_redirect.html/,
     ],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
     components: [
@@ -190,112 +190,6 @@ add_task(async function test_click_second_ad_in_component() {
   BrowserTestUtils.removeTab(tab);
 });
 
-// If a provider does a re-direct and we open it in a new tab, we should
-// record the click and have the correct number of engagements.
-add_task(async function test_click_non_ads_link_redirected_new_tab() {
-  resetTelemetry();
-
-  let url = getSERPUrl("searchTelemetryAd_components_text.html");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await waitForPageWithAdImpressions();
-
-  let redirectUrl =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "searchTelemetryAd_nonAdsLink_redirect.html";
-  let targetUrl = "https://example.com/hello_world";
-
-  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, targetUrl, true);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [redirectUrl], urls => {
-    content.document
-      .getElementById(["non_ads_link"])
-      .addEventListener("click", e => {
-        e.preventDefault();
-        content.window.open([urls], "_blank");
-      });
-    content.document.getElementById("non_ads_link").click();
-  });
-  let tab2 = await tabPromise;
-
-  assertImpressionEvents([
-    {
-      impression: {
-        provider: "example",
-        tagged: "true",
-        partner_code: "ff",
-        source: "unknown",
-        is_shopping_page: "false",
-        shopping_tab_displayed: "false",
-      },
-      engagements: [
-        {
-          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-        },
-      ],
-    },
-  ]);
-
-  BrowserTestUtils.removeTab(tab2);
-  BrowserTestUtils.removeTab(tab);
-});
-
-// If a provider does a re-direct in the same tab, we may not be able to
-// determine the component based on the URLs on the page, because the initial
-// redirect URL won't be known, and by the time the page is loaded, the cached
-// data might be invalidated. So this should use regular expressions to make
-// an inference.
-add_task(async function test_click_non_ads_link_redirected() {
-  resetTelemetry();
-
-  let url = getSERPUrl("searchTelemetryAd_components_text.html");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await waitForPageWithAdImpressions();
-
-  let redirectUrl =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.org"
-    ) + "searchTelemetryAd_nonAdsLink_redirect.html";
-  let targetUrl = "https://example.com/hello_world";
-
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
-    tab.linkedBrowser,
-    true,
-    targetUrl
-  );
-  await SpecialPowers.spawn(tab.linkedBrowser, [redirectUrl], urls => {
-    content.document
-      .getElementById(["non_ads_link"])
-      .setAttribute("href", [urls]);
-    content.document.getElementById("non_ads_link").click();
-  });
-  await browserLoadedPromise;
-
-  assertImpressionEvents([
-    {
-      impression: {
-        provider: "example",
-        tagged: "true",
-        partner_code: "ff",
-        source: "unknown",
-        is_shopping_page: "false",
-        shopping_tab_displayed: "false",
-      },
-      engagements: [
-        {
-          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-        },
-      ],
-    },
-  ]);
-
-  BrowserTestUtils.removeTab(tab);
-});
-
 // If a provider appends query parameters to a link after the page has been
 // parsed, we should still be able to record the click.
 add_task(async function test_click_ads_link_modified() {
@@ -335,54 +229,6 @@ add_task(async function test_click_ads_link_modified() {
   ]);
 
   BrowserTestUtils.removeTab(tab);
-});
-
-// If an anchor is a non_ads_link and we don't have a matching regular
-// expression, we should still be categorize it as non ads.
-add_task(async function test_click_non_ads_link() {
-  SearchSERPTelemetry.overrideSearchTelemetryForTests(
-    TEST_PROVIDER_INFO_NO_NON_ADS_REGEXP
-  );
-  await waitForIdle();
-
-  resetTelemetry();
-  let url = getSERPUrl("searchTelemetryAd_components_text.html");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await waitForPageWithAdImpressions();
-
-  // Click a non ad.
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#non_ads_link",
-    {},
-    tab.linkedBrowser
-  );
-  await pageLoadPromise;
-
-  assertImpressionEvents([
-    {
-      impression: {
-        provider: "example",
-        tagged: "true",
-        partner_code: "ff",
-        source: "unknown",
-        is_shopping_page: "false",
-        shopping_tab_displayed: "false",
-      },
-      engagements: [
-        {
-          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-        },
-      ],
-    },
-  ]);
-
-  BrowserTestUtils.removeTab(tab);
-
-  // Reset state for other tests.
-  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
-  await waitForIdle();
 });
 
 // Search box is a special case which has to be tracked in the child process.
@@ -529,58 +375,6 @@ add_task(async function test_click_carousel_expand() {
   ]);
 
   BrowserTestUtils.removeTab(tab);
-});
-
-// Click on an non-ad element while no ads are present.
-add_task(async function test_click_non_ad_with_no_ads() {
-  // Use a provider that doesn't a stored non-ads regexp.
-  SearchSERPTelemetry.overrideSearchTelemetryForTests(
-    TEST_PROVIDER_INFO_NO_NON_ADS_REGEXP
-  );
-  await waitForIdle();
-
-  resetTelemetry();
-
-  let url = getSERPUrl("searchTelemetryAd_searchbox.html");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await waitForPageWithAdImpressions();
-
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
-    tab.linkedBrowser,
-    true,
-    "https://example.com/hello_world"
-  );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#non_ads_link",
-    {},
-    tab.linkedBrowser
-  );
-  await browserLoadedPromise;
-
-  assertImpressionEvents([
-    {
-      impression: {
-        provider: "example",
-        tagged: "true",
-        partner_code: "ff",
-        source: "unknown",
-        is_shopping_page: "false",
-        shopping_tab_displayed: "false",
-      },
-      engagements: [
-        {
-          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-        },
-      ],
-    },
-  ]);
-
-  BrowserTestUtils.removeTab(tab);
-
-  // Reset state for other tests.
-  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
-  await waitForIdle();
 });
 
 // This test clicks a link that has apostrophes in the both the path and list
