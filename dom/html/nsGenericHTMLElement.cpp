@@ -704,11 +704,7 @@ void nsGenericHTMLElement::AfterSetPopoverAttr() {
   const PopoverAttributeState oldState = GetPopoverAttributeState();
 
   if (newState != oldState) {
-    if (newState == PopoverAttributeState::None) {
-      ClearPopoverData();
-    } else {
-      EnsurePopoverData().SetPopoverAttributeState(newState);
-    }
+    EnsurePopoverData().SetPopoverAttributeState(newState);
 
     HidePopoverInternal(/* aFocusPreviousElement = */ true,
                         /* aFireEvents = */ true, IgnoreErrors());
@@ -717,6 +713,12 @@ void nsGenericHTMLElement::AfterSetPopoverAttr() {
     // changes and don't overwrite anything here.
     if (newState == GetPopoverAttributeState()) {
       if (newState == PopoverAttributeState::None) {
+        // `HidePopoverInternal` above didn't remove the element from the top
+        // layer, because in that call, the element's popover attribute state
+        // was already `None`. Revisit this, when the spec is corrected
+        // (bug 1835811).
+        OwnerDoc()->RemovePopoverFromTopLayer(*this);
+
         ClearPopoverData();
         RemoveStates(ElementState::POPOVER_OPEN);
       } else {
