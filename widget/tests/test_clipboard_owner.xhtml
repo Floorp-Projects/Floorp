@@ -50,17 +50,14 @@ function testClipboardOwner(aClipboardType, aAsync) {
       }
     });
 
-    // XXX We don't support clipboard owner for kSelectionCache type.
-    if (aClipboardType != clipboard.kSelectionCache) {
-      // Test whether should lose ownership.
-      losingOwnership = false;
-      writeRandomStringToClipboard("text/plain", aClipboardType, clipboardOwner);
-      ok(losingOwnership, `Should lose ownership while setting data to type ${aClipboardType}`);
+    // Test whether should lose ownership.
+    losingOwnership = false;
+    writeRandomStringToClipboard("text/plain", aClipboardType, clipboardOwner);
+    ok(losingOwnership, `Should lose ownership while setting data to type ${aClipboardType}`);
 
-      losingOwnership = false;
-      writeRandomStringToClipboard("text/plain", aClipboardType, null, true);
-      ok(losingOwnership, `Should lose ownership while async setting data to type ${aClipboardType}`);
-    }
+    losingOwnership = false;
+    writeRandomStringToClipboard("text/plain", aClipboardType, null, true);
+    ok(losingOwnership, `Should lose ownership while async setting data to type ${aClipboardType}`);
 
     // Clean clipboard data.
     cleanupAllClipboard();
