@@ -9,7 +9,17 @@ interface nsIPrincipal;
 interface nsIURI;
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(d74a17ac-5b8a-4824-a309-b1f04a3c4aed)]
+%{C++
+namespace mozilla {
+
+class OriginAttributes;
+
+}
+%}
+
+native OriginAttributes(mozilla::OriginAttributes&&);
+
+[scriptable, builtinclass, uuid(d74a17ac-5b8a-4824-a309-b1f04a3c4aed)]
 interface nsISpeculativeConnect : nsISupports
 {
     /**
@@ -33,6 +43,25 @@ interface nsISpeculativeConnect : nsISupports
                             in nsIPrincipal aPrincipal,
                             in nsIInterfaceRequestor aCallbacks,
                             in boolean aAnonymous);
+
+    /**
+     * This method is similar to speculativeConnect, but it use
+     * the partition key of the originAttributes directly to create the
+     * connection.
+     */
+    [implicit_jscontext]
+    void speculativeConnectWithOriginAttributes(
+        in nsIURI aURI,
+        in jsval originAttributes,
+        in nsIInterfaceRequestor aCallbacks,
+        in boolean aAnonymous);
+
+    [notxpcom]
+    void speculativeConnectWithOriginAttributesNative(
+        in nsIURI aURI,
+        in OriginAttributes originAttributes,
+        in nsIInterfaceRequestor aCallbacks,
+        in boolean aAnonymous);
 };
 
 /**

@@ -1916,12 +1916,16 @@ class IOServiceProxyCallback final : public nsIProtocolProxyCallback {
   NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
   IOServiceProxyCallback(nsIInterfaceRequestor* aCallbacks,
-                         nsIOService* aIOService)
-      : mCallbacks(aCallbacks), mIOService(aIOService) {}
+                         nsIOService* aIOService,
+                         Maybe<OriginAttributes>&& aOriginAttributes)
+      : mCallbacks(aCallbacks),
+        mIOService(aIOService),
+        mOriginAttributes(std::move(aOriginAttributes)) {}
 
  private:
   RefPtr<nsIInterfaceRequestor> mCallbacks;
   RefPtr<nsIOService> mIOService;
+  Maybe<OriginAttributes> mOriginAttributes;
 };
 
 NS_IMPL_ISUPPORTS(IOServiceProxyCallback, nsIProtocolProxyCallback)
@@ -1962,14 +1966,21 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable* request,
   nsLoadFlags loadFlags = 0;
   channel->GetLoadFlags(&loadFlags);
   bool anonymous = !!(loadFlags & nsIRequest::LOAD_ANONYMOUS);
-  speculativeHandler->SpeculativeConnect(uri, principal, mCallbacks, anonymous);
+  if (mOriginAttributes) {
+    speculativeHandler->SpeculativeConnectWithOriginAttributesNative(
+        uri, std::move(mOriginAttributes.ref()), mCallbacks, anonymous);
+  } else {
+    speculativeHandler->SpeculativeConnect(uri, principal, mCallbacks,
+                                           anonymous);
+  }
 
   return NS_OK;
 }
 
 nsresult nsIOService::SpeculativeConnectInternal(
-    nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
-    bool aAnonymous) {
+    nsIURI* aURI, nsIPrincipal* aPrincipal,
+    Maybe<OriginAttributes>&& aOriginAttributes,
+    nsIInterfaceRequestor* aCallbacks, bool aAnonymous) {
   NS_ENSURE_ARG(aURI);
 
   if (!aURI->SchemeIs("http") && !aURI->SchemeIs("https")) {
@@ -1978,7 +1989,8 @@ nsresult nsIOService::SpeculativeConnectInternal(
   }
 
   if (IsNeckoChild()) {
-    gNeckoChild->SendSpeculativeConnect(aURI, aPrincipal, aAnonymous);
+    gNeckoChild->SendSpeculativeConnect(
+        aURI, aPrincipal, std::move(aOriginAttributes), aAnonymous);
     return NS_OK;
   }
 
@@ -1992,10 +2004,16 @@ nsresult nsIOService::SpeculativeConnectInternal(
 
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aPrincipal;
 
-  MOZ_ASSERT(aPrincipal, "We expect passing a principal here.");
+  MOZ_ASSERT(aPrincipal || aOriginAttributes,
+             "We expect passing a principal or OriginAttributes here.");
 
-  if (!aPrincipal) {
+  if (!aPrincipal && !aOriginAttributes) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  if (aOriginAttributes) {
+    loadingPrincipal =
+        BasePrincipal::CreateContentPrincipal(aURI, aOriginAttributes.ref());
   }
 
   // XXX Bug 1724080: Avoid TCP connections on port 80 when https-only
@@ -2043,8 +2061,8 @@ nsresult nsIOService::SpeculativeConnectInternal(
   }
 
   nsCOMPtr<nsICancelable> cancelable;
-  RefPtr<IOServiceProxyCallback> callback =
-      new IOServiceProxyCallback(aCallbacks, this);
+  RefPtr<IOServiceProxyCallback> callback = new IOServiceProxyCallback(
+      aCallbacks, this, std::move(aOriginAttributes));
   nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
   if (pps2) {
     return pps2->AsyncResolve2(channel, 0, callback, nullptr,
@@ -2058,7 +2076,31 @@ NS_IMETHODIMP
 nsIOService::SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
                                 nsIInterfaceRequestor* aCallbacks,
                                 bool aAnonymous) {
-  return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, aAnonymous);
+  return SpeculativeConnectInternal(aURI, aPrincipal, Nothing(), aCallbacks,
+                                    aAnonymous);
+}
+
+NS_IMETHODIMP nsIOService::SpeculativeConnectWithOriginAttributes(
+    nsIURI* aURI, JS::Handle<JS::Value> aOriginAttributes,
+    nsIInterfaceRequestor* aCallbacks, bool aAnonymous, JSContext* aCx) {
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  SpeculativeConnectWithOriginAttributesNative(aURI, std::move(attrs),
+                                               aCallbacks, aAnonymous);
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsIOService::SpeculativeConnectWithOriginAttributesNative(
+    nsIURI* aURI, OriginAttributes&& aOriginAttributes,
+    nsIInterfaceRequestor* aCallbacks, bool aAnonymous) {
+  Maybe<OriginAttributes> originAttributes;
+  originAttributes.emplace(aOriginAttributes);
+  Unused << SpeculativeConnectInternal(
+      aURI, nullptr, std::move(originAttributes), aCallbacks, aAnonymous);
 }
 
 NS_IMETHODIMP
