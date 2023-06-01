@@ -1,7 +1,7 @@
-# WebRTC coding style guide
+<!-- go/cmark -->
+<!--* freshness: {owner: 'danilchap' reviewed: '2022-01-17'} *-->
 
-<?% config.freshness.owner = 'danilchap' %?>
-<?% config.freshness.reviewed = '2022-01-17' %?>
+# WebRTC coding style guide
 
 ## General advice
 
