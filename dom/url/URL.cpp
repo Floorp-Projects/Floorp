@@ -131,6 +131,34 @@ bool URL::IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
   return URLWorker::IsValidURL(aGlobal, aURL, aRv);
 }
 
+bool URL::CanParse(const GlobalObject& aGlobal, const nsAString& aURL,
+                   const Optional<nsAString>& aBase) {
+  nsCOMPtr<nsIURI> baseUri;
+  if (aBase.WasPassed()) {
+    // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
+    nsAutoCString base;
+    if (!AppendUTF16toUTF8(aBase.Value(), base, fallible)) {
+      // Just return false with OOM errors as no ErrorResult.
+      return false;
+    }
+
+    nsresult rv = NS_NewURI(getter_AddRefs(baseUri), base);
+    if (NS_FAILED(rv)) {
+      // Invalid base URL, return false.
+      return false;
+    }
+  }
+
+  nsAutoCString urlStr;
+  if (!AppendUTF16toUTF8(aURL, urlStr, fallible)) {
+    // Just return false with OOM errors as no ErrorResult.
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  return NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), urlStr, nullptr, baseUri));
+}
+
 URLSearchParams* URL::SearchParams() {
   CreateSearchParamsIfNeeded();
   return mSearchParams;
