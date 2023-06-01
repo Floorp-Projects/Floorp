@@ -158,3 +158,12 @@ tabbrowser-ctrl-tab-list-all-tabs =
         { $tabCount ->
            *[other] List All { $tabCount } Tabs
         }
+
+## Tab manager menu buttons
+
+tabbrowser-manager-mute-tab =
+  .tooltiptext = Mute tab
+tabbrowser-manager-unmute-tab =
+  .tooltiptext = Unmute tab
+tabbrowser-manager-close-tab =
+  .tooltiptext = Close tab

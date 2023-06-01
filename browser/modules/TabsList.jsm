@@ -338,6 +338,7 @@ class TabsPanel extends TabsListBase {
       "subviewbutton"
     );
     closeButton.setAttribute("closemenu", "none");
+    doc.l10n.setAttributes(closeButton, "tabbrowser-manager-close-tab");
     closeButton.tab = tab;
     row.appendChild(closeButton);
 
@@ -361,6 +362,11 @@ class TabsPanel extends TabsListBase {
     this._setImageAttributes(row, tab);
 
     let muteButton = row.querySelector(".all-tabs-mute-button");
+    let muteButtonTooltipString = tab.muted
+      ? "tabbrowser-manager-unmute-tab"
+      : "tabbrowser-manager-mute-tab";
+    this.doc.l10n.setAttributes(muteButton, muteButtonTooltipString);
+
     setAttributes(muteButton, {
       muted: tab.muted,
       soundplaying: tab.soundPlaying,
