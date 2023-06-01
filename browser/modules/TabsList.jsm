@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 var EXPORTED_SYMBOLS = ["TabsPanel"];
 
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
-const l10n = new Localization(["browser/tabbrowser.ftl"]);
 
 function setAttributes(element, attrs) {
   for (let [name, value] of Object.entries(attrs)) {
@@ -54,7 +53,7 @@ class TabsListBase {
     return this.tabToElement.values();
   }
 
-  async handleEvent(event) {
+  handleEvent(event) {
     switch (event.type) {
       case "TabAttrModified":
         this._tabAttrModified(event.target);
@@ -63,7 +62,7 @@ class TabsListBase {
         this._tabClose(event.target);
         break;
       case "TabMove":
-        await this._moveTab(event.target);
+        this._moveTab(event.target);
         break;
       case "TabPinned":
         if (!this.filterFn(event.target)) {
@@ -105,13 +104,12 @@ class TabsListBase {
   /*
    * Populate the popup with menuitems and setup the listeners.
    */
-  async _populate(event) {
+  _populate(event) {
     let fragment = this.doc.createDocumentFragment();
 
     for (let tab of this.gBrowser.tabs) {
       if (this.filterFn(tab)) {
-        let row = await this._createRow(tab);
-        fragment.appendChild(row);
+        fragment.appendChild(this._createRow(tab));
       }
     }
 
@@ -188,18 +186,18 @@ class TabsListBase {
     }
   }
 
-  async _moveTab(tab) {
+  _moveTab(tab) {
     let item = this.tabToElement.get(tab);
     if (item) {
       this._removeItem(item, tab);
-      await this._addTab(tab);
+      this._addTab(tab);
     }
   }
-  async _addTab(newTab) {
+  _addTab(newTab) {
     if (!this.filterFn(newTab)) {
       return;
     }
-    let newRow = await this._createRow(newTab);
+    let newRow = this._createRow(newTab);
     let nextTab = newTab.nextElementSibling;
 
     while (nextTab && !this.filterFn(nextTab)) {
@@ -300,7 +298,7 @@ class TabsPanel extends TabsListBase {
     this.panelMultiView.removeEventListener(TABS_PANEL_EVENTS.hide, this);
   }
 
-  async _createRow(tab) {
+  _createRow(tab) {
     let { doc } = this;
     let row = doc.createXULElement("toolbaritem");
     row.setAttribute("class", "all-tabs-item");
@@ -340,12 +338,6 @@ class TabsPanel extends TabsListBase {
       "subviewbutton"
     );
     closeButton.setAttribute("closemenu", "none");
-
-    let closeButtonTooltipText = await l10n.formatMessages([
-      { id: "tabbrowser-close-tabs-tooltip", args: { tabCount: 1 } },
-    ]);
-    closeButtonTooltipText = closeButtonTooltipText[0].attributes[0].value;
-    closeButton.setAttribute("tooltiptext", closeButtonTooltipText);
     closeButton.tab = tab;
     row.appendChild(closeButton);
 
@@ -354,7 +346,7 @@ class TabsPanel extends TabsListBase {
     return row;
   }
 
-  async _setRowAttributes(row, tab) {
+  _setRowAttributes(row, tab) {
     setAttributes(row, { selected: tab.selected });
 
     let busy = tab.getAttribute("busy");
@@ -369,19 +361,10 @@ class TabsPanel extends TabsListBase {
     this._setImageAttributes(row, tab);
 
     let muteButton = row.querySelector(".all-tabs-mute-button");
-    let muteButtonTooltipString = tab.muted
-      ? "tabbrowser-unmute-tab-audio-background-tooltip"
-      : "tabbrowser-mute-tab-audio-background-tooltip";
-    let muteButtonTooltipText = await l10n.formatMessages([
-      { id: muteButtonTooltipString, args: { tabCount: 1 } },
-    ]);
-    muteButtonTooltipText = muteButtonTooltipText[0].attributes[0].value;
-
     setAttributes(muteButton, {
       muted: tab.muted,
       soundplaying: tab.soundPlaying,
       hidden: !(tab.muted || tab.soundPlaying),
-      tooltiptext: muteButtonTooltipText,
     });
   }
 
