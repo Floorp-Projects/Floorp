@@ -162,7 +162,6 @@ object DownloadUtils {
      * which unfortunately does not implement RFC 5987.
      */
 
-    @Suppress("Deprecation")
     @JvmStatic
     fun guessFileName(
         contentDisposition: String?,
@@ -210,14 +209,16 @@ object DownloadUtils {
      * Checks if the file exists so as not to overwrite one already in the destination directory
      */
     fun uniqueFileName(directory: File, fileName: String): String {
-        var fileExtension = ".${fileName.substringAfterLast(".")}"
-
-        // Check if an extension was found or not
-        if (fileExtension == ".$fileName") { fileExtension = "" }
-
-        val baseFileName = fileName.replace(fileExtension, "")
-
         var potentialFileName = File(directory, fileName)
+        val baseFileName = potentialFileName.nameWithoutExtension
+        val fileExtension = potentialFileName.extension.let {
+            if (it.isNotEmpty()) {
+                ".$it"
+            } else {
+                it
+            }
+        }
+
         var copyVersionNumber = 1
 
         while (potentialFileName.exists()) {

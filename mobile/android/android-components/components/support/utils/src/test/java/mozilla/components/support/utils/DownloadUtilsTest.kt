@@ -87,6 +87,9 @@ class DownloadUtilsTest {
 
         folder.newFile("test")
         assertEquals("test(1)", DownloadUtils.uniqueFileName(folder.root, "test"))
+
+        folder.newFile("test(1)")
+        assertEquals("test(2)", DownloadUtils.uniqueFileName(folder.root, "test"))
     }
 
     @Test
@@ -95,6 +98,9 @@ class DownloadUtilsTest {
 
         folder.newFile("test.zip")
         assertEquals("test(1).zip", DownloadUtils.uniqueFileName(folder.root, "test.zip"))
+
+        folder.newFile("test(1).zip")
+        assertEquals("test(2).zip", DownloadUtils.uniqueFileName(folder.root, "test.zip"))
     }
 
     @Test
