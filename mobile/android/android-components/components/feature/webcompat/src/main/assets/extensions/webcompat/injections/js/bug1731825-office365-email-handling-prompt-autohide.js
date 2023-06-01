@@ -24,7 +24,7 @@ const { registerProtocolHandler } = nav;
 const { localStorage } = window.wrappedJSObject;
 
 Object.defineProperty(navigator.wrappedJSObject, "registerProtocolHandler", {
-  value: exportFunction(function(scheme, url, title) {
+  value: exportFunction(function (scheme, url, title) {
     if (localStorage.getItem(localStorageKey)) {
       console.info(warning);
       return undefined;

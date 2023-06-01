@@ -27,26 +27,26 @@ if (!navigator.platform.includes("Win")) {
   );
 
   Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
-    get: exportFunction(function() {
+    get: exportFunction(function () {
       return WINDOWS_UA;
     }, window),
 
-    set: exportFunction(function() {}, window),
+    set: exportFunction(function () {}, window),
   });
 
   Object.defineProperty(window.navigator.wrappedJSObject, "appVersion", {
-    get: exportFunction(function() {
+    get: exportFunction(function () {
       return "appVersion";
     }, window),
 
-    set: exportFunction(function() {}, window),
+    set: exportFunction(function () {}, window),
   });
 
   Object.defineProperty(window.navigator.wrappedJSObject, "platform", {
-    get: exportFunction(function() {
+    get: exportFunction(function () {
       return "Win64";
     }, window),
 
-    set: exportFunction(function() {}, window),
+    set: exportFunction(function () {}, window),
   });
 }

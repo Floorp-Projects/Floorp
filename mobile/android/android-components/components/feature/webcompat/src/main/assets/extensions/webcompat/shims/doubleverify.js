@@ -14,7 +14,7 @@
 
 if (!window?.PQ?.loaded) {
   const cmd = [];
-  cmd.push = function(c) {
+  cmd.push = function (c) {
     try {
       c?.();
     } catch (_) {}

@@ -7,7 +7,7 @@
 if (!window.ramblerIdHelper) {
   const originalScript = document.currentScript.src;
 
-  const sendMessageToAddon = (function() {
+  const sendMessageToAddon = (function () {
     const shimId = "Rambler";
     const pendingMessages = new Map();
     const channel = new MessageChannel();
@@ -30,11 +30,9 @@ if (!window.ramblerIdHelper) {
     }
     window.addEventListener("ShimHelperReady", reconnect);
     reconnect();
-    return function(message) {
+    return function (message) {
       const messageId =
-        Math.random()
-          .toString(36)
-          .substring(2) + Date.now().toString(36);
+        Math.random().toString(36).substring(2) + Date.now().toString(36);
       return new Promise(resolve => {
         const payload = {
           message,
@@ -52,7 +50,7 @@ if (!window.ramblerIdHelper) {
       successCallback({});
     },
     openAuth: () => {
-      sendMessageToAddon("optIn").then(function() {
+      sendMessageToAddon("optIn").then(function () {
         const openAuthArgs = arguments;
         window.ramblerIdHelper = undefined;
         const s = document.createElement("script");

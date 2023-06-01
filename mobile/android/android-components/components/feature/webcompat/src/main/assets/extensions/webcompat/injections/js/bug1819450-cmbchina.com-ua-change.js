@@ -21,9 +21,9 @@ console.info(
 const MODIFIED_UA = navigator.userAgent + " SAMSUNG";
 
 Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return MODIFIED_UA;
   }, window),
 
-  set: exportFunction(function() {}, window),
+  set: exportFunction(function () {}, window),
 });

@@ -21,9 +21,9 @@ console.info(
 );
 
 Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return "Mozilla/5.0 (Linux; Android 11; Pixel 4a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Mobile Safari/537.36";
   }, window),
 
-  set: exportFunction(function() {}, window),
+  set: exportFunction(function () {}, window),
 });

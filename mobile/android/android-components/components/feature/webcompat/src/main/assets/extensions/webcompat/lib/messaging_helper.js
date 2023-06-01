@@ -13,7 +13,7 @@
 // This way, about:compat and the shims library can both get a chance to
 // process a message, and just return undefined if they wish to ignore it.
 
-const onMessageFromTab = (function() {
+const onMessageFromTab = (function () {
   const handlers = new Set();
 
   browser.runtime.onMessage.addListener((msg, sender) => {
@@ -30,7 +30,7 @@ const onMessageFromTab = (function() {
     });
   });
 
-  return function(handler) {
+  return function (handler) {
     handlers.add(handler);
   };
 })();

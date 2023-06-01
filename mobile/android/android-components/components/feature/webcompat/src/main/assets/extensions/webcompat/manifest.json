@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "114.0.0",
+  "version": "115.0.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -61,7 +61,7 @@
     }
   },
 
-  "content_security_policy": "script-src 'self' 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo='; default-src 'self'; base-uri moz-extension://*; object-src 'none'",
+  "content_security_policy": "script-src 'self' 'sha256-PeZc2H1vv7M8NXqlFyNbN4y4oM6wXmYEbf73m+Aqpak='; default-src 'self'; base-uri moz-extension://*; object-src 'none'",
 
   "permissions": [
     "mozillaAddons",

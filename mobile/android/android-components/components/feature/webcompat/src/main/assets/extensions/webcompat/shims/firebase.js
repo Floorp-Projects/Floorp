@@ -14,12 +14,12 @@
 
 /* globals cloneInto */
 
-(function() {
+(function () {
   const win = window.wrappedJSObject;
   const emptyObj = new win.Object();
   const emptyArr = new win.Array();
   const emptyMsg = cloneInto({ message: "" }, window);
-  const noOpFn = cloneInto(function() {}, window, { cloneFunctions: true });
+  const noOpFn = cloneInto(function () {}, window, { cloneFunctions: true });
 
   if (!win.indexedDB) {
     const idb = {

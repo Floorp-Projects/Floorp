@@ -14,11 +14,11 @@ const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const classID = Components.ID("{97bf9550-2a7b-11e9-b56e-0800200c9a66}");
 
 if (!Cm.isCIDRegistered(classID)) {
-  const { ComponentUtils } = ChromeUtils.import(
-    "resource://gre/modules/ComponentUtils.jsm"
+  const { ComponentUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/ComponentUtils.sys.mjs"
   );
 
-  const factory = ComponentUtils.generateSingletonFactory(function() {
+  const factory = ComponentUtils.generateSingletonFactory(function () {
     const { AboutCompat } = ChromeUtils.import(
       "resource://webcompat/AboutCompat.jsm"
     );

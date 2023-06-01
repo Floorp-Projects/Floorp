@@ -27,7 +27,7 @@ class AboutCompatBroker {
 
     browser.runtime.onConnect.addListener(port => {
       ports.add(port);
-      port.onDisconnect.addListener(function() {
+      port.onDisconnect.addListener(function () {
         ports.delete(port);
       });
     });

@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attributes: true,
     subtree: true,
   };
-  const mo = new MutationObserver(function(records) {
+  const mo = new MutationObserver(function (records) {
     for (const { target } of records) {
       if (target.matches(selector)) {
         target.disabled = false;

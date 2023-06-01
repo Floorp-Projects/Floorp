@@ -29,7 +29,7 @@ for (const [obj, name] of Remapped) {
   const { prototype } = obj;
   const orig = prototype[name];
   Object.defineProperty(prototype, name, {
-    value: exportFunction(function(type, b, c, d) {
+    value: exportFunction(function (type, b, c, d) {
       if (type?.toLowerCase() === "textinput") {
         type = "beforeinput";
       }
@@ -39,7 +39,7 @@ for (const [obj, name] of Remapped) {
 }
 
 if (location.host === "www.reddit.com") {
-  (function() {
+  (function () {
     const EditorCSS = ".public-DraftEditor-content[contenteditable=true]";
     let obsEditor, obsStart, obsText, obsKey, observer;
     const obsConfig = { characterData: true, childList: true, subtree: true };

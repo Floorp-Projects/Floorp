@@ -19,10 +19,10 @@ if (typeof window.print === "undefined") {
   );
 
   Object.defineProperty(window.wrappedJSObject, "print", {
-    get: exportFunction(function() {
+    get: exportFunction(function () {
       return true;
     }, window),
 
-    set: exportFunction(function() {}, window),
+    set: exportFunction(function () {}, window),
   });
 }

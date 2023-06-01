@@ -23,9 +23,9 @@ console.info(
 );
 
 Object.defineProperty(navigator.wrappedJSObject, "appVersion", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return "5.0 (Linux)";
   }, window),
 
-  set: exportFunction(function() {}, window),
+  set: exportFunction(function () {}, window),
 });

@@ -19,8 +19,8 @@ console.info(
 );
 
 Object.defineProperty(window.wrappedJSObject, "InstallTrigger", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return "This property has been shimed for Web Compatibility reasons.";
   }, window),
-  set: exportFunction(function(_) {}, window),
+  set: exportFunction(function (_) {}, window),
 });

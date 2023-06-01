@@ -20,10 +20,7 @@ if (!window.nol_t) {
   try {
     const url = document?.currentScript?.src;
     const { pathname, protocol, host } = new URL(url);
-    domain = host
-      .split(".")
-      .slice(0, -2)
-      .join(".");
+    domain = host.split(".").slice(0, -2).join(".");
     schemeHost = `${protocol}//${host}/`;
     scriptName = pathname.split("/").pop();
   } catch (_) {}

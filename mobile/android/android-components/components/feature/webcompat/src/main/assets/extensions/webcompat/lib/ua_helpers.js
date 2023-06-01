@@ -60,7 +60,7 @@ var UAHelpers = {
     const chromeUA = UAHelpers.getDeviceAppropriateChromeUA(config);
     Object.defineProperty(window.navigator.wrappedJSObject, "userAgent", {
       get: exportFunction(() => chromeUA, window),
-      set: exportFunction(function() {}, window),
+      set: exportFunction(function () {}, window),
     });
   },
   capVersionTo99(originalUA) {

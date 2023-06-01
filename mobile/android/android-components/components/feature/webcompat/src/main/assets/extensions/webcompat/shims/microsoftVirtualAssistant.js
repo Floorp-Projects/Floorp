@@ -15,7 +15,7 @@
 
 /* globals cloneInto */
 
-(function() {
+(function () {
   const win = window.wrappedJSObject;
 
   try {

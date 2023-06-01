@@ -15,12 +15,12 @@
 
 /* globals exportFunction */
 
-(function() {
+(function () {
   const proto = CSS2Properties.prototype.wrappedJSObject;
   const descriptor = Object.getOwnPropertyDescriptor(proto, "touchAction");
   const { get } = descriptor;
 
-  descriptor.get = exportFunction(function() {
+  descriptor.get = exportFunction(function () {
     try {
       throw Error();
     } catch (e) {

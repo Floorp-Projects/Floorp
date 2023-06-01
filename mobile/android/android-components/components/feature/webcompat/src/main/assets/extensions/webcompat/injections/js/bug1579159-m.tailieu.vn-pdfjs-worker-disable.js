@@ -21,11 +21,11 @@ console.info(
 let globals = {};
 
 Object.defineProperty(window.wrappedJSObject, "PDFJS", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return globals;
   }, window),
 
-  set: exportFunction(function(value = {}) {
+  set: exportFunction(function (value = {}) {
     globals = value;
     globals.disableWorker = true;
   }, window),
