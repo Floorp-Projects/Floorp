@@ -622,10 +622,10 @@ index 4ab6baad83..aa8496819b 100644
  };
  
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 68554b24ac..206dfffd31 100644
+index fd884f13ff..f39852b58e 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -79,6 +79,7 @@ class RTC_EXPORT DesktopCapturer {
+@@ -82,6 +82,7 @@ class RTC_EXPORT DesktopCapturer {
    struct Source {
      // The unique id to represent a Source of current DesktopCapturer.
      SourceId id;

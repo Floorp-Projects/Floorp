@@ -16,6 +16,7 @@
 #include "absl/types/optional.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
+#include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
@@ -49,7 +50,8 @@ class RTC_EXPORT SharedScreenCastStream
                              int fd,
                              uint32_t width = 0,
                              uint32_t height = 0,
-                             bool is_cursor_embedded = false);
+                             bool is_cursor_embedded = false,
+                             DesktopCapturer::Callback* callback = nullptr);
   void UpdateScreenCastStreamResolution(uint32_t width, uint32_t height);
   void UpdateScreenCastStreamFrameRate(uint32_t frame_rate);
   void SetUseDamageRegion(bool use_damage_region);

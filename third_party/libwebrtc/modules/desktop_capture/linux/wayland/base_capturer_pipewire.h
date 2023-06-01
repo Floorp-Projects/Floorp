@@ -65,11 +65,16 @@ class RTC_EXPORT BaseCapturerPipeWire
 
   xdg_portal::SessionDetails GetSessionDetails();
 
+  // Notifies the callback about the available frames as soon as a frame is
+  // received.
+  void SendFramesImmediately(bool send_frames_immediately);
+
  private:
   ScreenCastPortal* GetScreenCastPortal();
 
   DesktopCaptureOptions options_ = {};
   Callback* callback_ = nullptr;
+  bool send_frames_immediately_ = false;
   bool capturer_failed_ = false;
   bool is_screencast_portal_ = false;
   bool is_portal_open_ = false;
