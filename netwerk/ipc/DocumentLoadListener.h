@@ -110,7 +110,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
         mStreamFilterEndpoints;
     uint32_t mRedirectFlags;
     uint32_t mLoadFlags;
-    nsTArray<EarlyHintConnectArgs> mEarlyHints;
     uint32_t mEarlyHintLinkType;
     RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>
         mPromise;
@@ -279,6 +278,15 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   base::ProcessId OtherPid() const;
 
   [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter();
+
+  // EarlyHints aren't supported on ParentProcessDocumentChannels yet, allow
+  // EarlyHints to be cancelled from there (Bug 1819886)
+  void CancelEarlyHintPreloads();
+
+  // Gets the EarlyHint preloads for this document to pass them to the
+  // ContentProcess. Registers them in the EarlyHintRegister
+  void RegisterEarlyHintLinksAndGetConnectArgs(
+      dom::ContentParentId aCpId, nsTArray<EarlyHintConnectArgs>& aOutLinks);
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.

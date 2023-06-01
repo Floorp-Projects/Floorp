@@ -94,10 +94,14 @@ already_AddRefed<EarlyHintRegistrar> EarlyHintRegistrar::GetOrCreate() {
   return do_AddRef(gSingleton);
 }
 
-void EarlyHintRegistrar::DeleteEntry(uint64_t aEarlyHintPreloaderId) {
+void EarlyHintRegistrar::DeleteEntry(dom::ContentParentId aCpId,
+                                     uint64_t aEarlyHintPreloaderId) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mEarlyHint.Remove(aEarlyHintPreloaderId);
+  RefPtr<EarlyHintPreloader> ehp = mEarlyHint.Get(aEarlyHintPreloaderId);
+  if (ehp && ehp->IsFromContentParent(aCpId)) {
+    mEarlyHint.Remove(aEarlyHintPreloaderId);
+  }
 }
 
 void EarlyHintRegistrar::RegisterEarlyHint(uint64_t aEarlyHintPreloaderId,
@@ -108,14 +112,15 @@ void EarlyHintRegistrar::RegisterEarlyHint(uint64_t aEarlyHintPreloaderId,
   mEarlyHint.InsertOrUpdate(aEarlyHintPreloaderId, RefPtr{aEhp});
 }
 
-bool EarlyHintRegistrar::LinkParentChannel(uint64_t aEarlyHintPreloaderId,
+bool EarlyHintRegistrar::LinkParentChannel(dom::ContentParentId aCpId,
+                                           uint64_t aEarlyHintPreloaderId,
                                            nsIParentChannel* aParent) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
 
   RefPtr<EarlyHintPreloader> ehp;
   bool found = mEarlyHint.Get(aEarlyHintPreloaderId, getter_AddRefs(ehp));
-  if (ehp) {
+  if (ehp && ehp->IsFromContentParent(aCpId)) {
     ehp->OnParentReady(aParent);
   }
   MOZ_ASSERT(ehp || !found);
