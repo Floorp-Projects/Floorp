@@ -12,6 +12,7 @@
 #define API_VIDEO_VIDEO_FRAME_METADATA_H_
 
 #include <cstdint>
+#include <vector>
 
 #include "absl/container/inlined_vector.h"
 #include "absl/types/optional.h"
@@ -88,6 +89,9 @@ class RTC_EXPORT VideoFrameMetadata {
   void SetRTPVideoHeaderCodecSpecifics(
       RTPVideoHeaderCodecSpecifics codec_specifics);
 
+  std::vector<uint32_t> GetCsrcs() const;
+  void SetCsrcs(std::vector<uint32_t> csrcs);
+
  private:
   VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
   int16_t width_ = 0;
@@ -106,6 +110,8 @@ class RTC_EXPORT VideoFrameMetadata {
   uint8_t simulcast_idx_ = 0;
   VideoCodecType codec_ = VideoCodecType::kVideoCodecGeneric;
   RTPVideoHeaderCodecSpecifics codec_specifics_;
+
+  std::vector<uint32_t> csrcs_;
 };
 }  // namespace webrtc
 

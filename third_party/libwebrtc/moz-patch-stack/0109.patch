@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0a46882336b7e5e97
  4 files changed, 117 insertions(+), 12 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 336a117f4e..d5e8bdcccb 100644
+index 231a1fa457..3ca9aee94f 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -558,6 +558,39 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
+@@ -559,6 +559,39 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
    return packet;
  }
  
@@ -56,10 +56,10 @@ index 336a117f4e..d5e8bdcccb 100644
    MutexLock lock(&send_mutex_);
    sending_media_ = enabled;
 diff --git a/modules/rtp_rtcp/source/rtp_sender.h b/modules/rtp_rtcp/source/rtp_sender.h
-index 55dee7f219..b49afe0dec 100644
+index c45f597951..fb6c8001f0 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.h
 +++ b/modules/rtp_rtcp/source/rtp_sender.h
-@@ -106,6 +106,9 @@ class RTPSender {
+@@ -107,6 +107,9 @@ class RTPSender {
    absl::optional<uint32_t> RtxSsrc() const RTC_LOCKS_EXCLUDED(send_mutex_) {
      return rtx_ssrc_;
    }
@@ -70,10 +70,10 @@ index 55dee7f219..b49afe0dec 100644
    void SetRtxPayloadType(int payload_type, int associated_payload_type)
        RTC_LOCKS_EXCLUDED(send_mutex_);
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
-index e1ac4e41c3..99a00025c1 100644
+index e1f1697047..0f0ff6d997 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
-@@ -493,6 +493,13 @@ bool RTPSenderVideo::SendVideo(
+@@ -496,6 +496,13 @@ bool RTPSenderVideo::SendVideo(
      // Backward compatibility for older receivers without temporal layer logic.
      retransmission_settings = kRetransmitBaseLayer | kRetransmitHigherLayers;
    }
@@ -87,7 +87,7 @@ index e1ac4e41c3..99a00025c1 100644
  
    MaybeUpdateCurrentPlayoutDelay(video_header);
    if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
-@@ -514,16 +521,19 @@ bool RTPSenderVideo::SendVideo(
+@@ -517,16 +524,19 @@ bool RTPSenderVideo::SendVideo(
          video_header.generic->frame_id, video_header.generic->chain_diffs);
    }
  
@@ -111,7 +111,7 @@ index e1ac4e41c3..99a00025c1 100644
  
    absl::optional<Timestamp> capture_time;
    if (capture_time_ms > 0) {
-@@ -652,14 +662,6 @@ bool RTPSenderVideo::SendVideo(
+@@ -657,14 +667,6 @@ bool RTPSenderVideo::SendVideo(
    std::unique_ptr<RtpPacketizer> packetizer =
        RtpPacketizer::Create(codec_type, payload, limits, video_header);
  
@@ -127,7 +127,7 @@ index e1ac4e41c3..99a00025c1 100644
  
    if (num_packets == 0)
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
-index 72dfd0238d..d6fbba7bd8 100644
+index 0cfa24c834..883b98aa7e 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
 @@ -29,6 +29,9 @@

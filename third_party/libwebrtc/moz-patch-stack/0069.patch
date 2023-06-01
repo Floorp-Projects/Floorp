@@ -111,7 +111,7 @@ index 9495841984..fd2f5c5ae8 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 0ed7243d0a..336a117f4e 100644
+index 0b1e3e98c2..231a1fa457 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -108,7 +108,9 @@ bool IsNonVolatile(RTPExtensionType type) {
