@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketStory
 import org.junit.Before
 import org.junit.Test
@@ -219,6 +220,13 @@ class SessionControlInteractorTest {
     fun `WHEN onSponsorPrivacyClicked is called THEN handleSponsorPrivacyClicked is called`() {
         interactor.onSponsorPrivacyClicked()
         verify { controller.handleSponsorPrivacyClicked() }
+    }
+
+    @Test
+    fun `WHEN a top site is long clicked THEN the click is handled`() {
+        val topSite: TopSite = mockk()
+        interactor.onTopSiteLongClicked(topSite)
+        verify { controller.handleTopSiteLongClicked(topSite) }
     }
 
     @Test

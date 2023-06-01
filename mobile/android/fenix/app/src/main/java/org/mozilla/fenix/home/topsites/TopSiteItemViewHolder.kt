@@ -37,7 +37,6 @@ import org.mozilla.fenix.ext.bitmapForUrl
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isSystemInDarkTheme
 import org.mozilla.fenix.ext.loadIntoView
-import org.mozilla.fenix.ext.name
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.view.ViewHolder
@@ -54,7 +53,7 @@ class TopSiteItemViewHolder(
 
     init {
         itemView.setOnLongClickListener {
-            TopSites.longPress.record(TopSites.LongPressExtra(topSite.name()))
+            interactor.onTopSiteLongClicked(topSite)
 
             val topSiteMenu = TopSiteItemMenu(
                 context = view.context,

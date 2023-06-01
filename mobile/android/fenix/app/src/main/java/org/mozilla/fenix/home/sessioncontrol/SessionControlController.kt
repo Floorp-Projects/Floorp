@@ -131,6 +131,11 @@ interface SessionControlController {
     fun handleSponsorPrivacyClicked()
 
     /**
+     * @see [TopSiteInteractor.onTopSiteLongClicked]
+     */
+    fun handleTopSiteLongClicked(topSite: TopSite)
+
+    /**
      * @see [CollectionInteractor.onToggleCollectionExpanded]
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
@@ -410,6 +415,10 @@ class DefaultSessionControlController(
             newTab = true,
             from = BrowserDirection.FromHome,
         )
+    }
+
+    override fun handleTopSiteLongClicked(topSite: TopSite) {
+        TopSites.longPress.record(TopSites.LongPressExtra(topSite.type))
     }
 
     @VisibleForTesting

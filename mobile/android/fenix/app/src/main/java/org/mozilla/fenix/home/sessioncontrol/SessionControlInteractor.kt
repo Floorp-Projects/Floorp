@@ -181,6 +181,14 @@ interface TopSiteInteractor {
      * "Our sponsors & your privacy" top site menu item.
      */
     fun onSponsorPrivacyClicked()
+
+    /**
+     * Handles long click event for the given top site. Called when an user long clicks on a top
+     * site.
+     *
+     * @param topSite The top site that was long clicked.
+     */
+    fun onTopSiteLongClicked(topSite: TopSite)
 }
 
 interface MessageCardInteractor {
@@ -291,6 +299,10 @@ class SessionControlInteractor(
 
     override fun onSponsorPrivacyClicked() {
         controller.handleSponsorPrivacyClicked()
+    }
+
+    override fun onTopSiteLongClicked(topSite: TopSite) {
+        controller.handleTopSiteLongClicked(topSite)
     }
 
     override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {

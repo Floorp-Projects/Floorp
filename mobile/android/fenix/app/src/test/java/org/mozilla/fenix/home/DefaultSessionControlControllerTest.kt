@@ -1052,6 +1052,25 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
+    fun `WHEN top site long clicked is called THEN report the top site long click telemetry`() {
+        assertNull(TopSites.longPress.testGetValue())
+
+        val topSite = TopSite.Provided(
+            id = 1L,
+            title = "Mozilla",
+            url = "mozilla.org",
+            clickUrl = "",
+            imageUrl = "",
+            impressionUrl = "",
+            createdAt = 0,
+        )
+
+        createController().handleTopSiteLongClicked(topSite)
+
+        assertEquals(topSite.type, TopSites.longPress.testGetValue()!!.single().extra!!["type"])
+    }
+
+    @Test
     fun `WHEN handleOpenInPrivateTabClicked is called with a TopSite#Provided site THEN Event#TopSiteOpenContileInPrivateTab is reported`() {
         val topSite = TopSite.Provided(
             id = 1L,

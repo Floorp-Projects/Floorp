@@ -12,6 +12,7 @@ sealed class TopSite {
     abstract val title: String?
     abstract val url: String
     abstract val createdAt: Long?
+    abstract val type: String
 
     /**
      * This top site was added as a default by the application.
@@ -20,12 +21,14 @@ sealed class TopSite {
      * @property title The title of the top site.
      * @property url The URL of the top site.
      * @property createdAt The optional date the top site was added.
+     * @property type The type name of the top site.
      */
     data class Default(
         override val id: Long?,
         override val title: String?,
         override val url: String,
         override val createdAt: Long?,
+        override val type: String = "DEFAULT",
     ) : TopSite()
 
     /**
@@ -35,12 +38,14 @@ sealed class TopSite {
      * @property title The title of the top site.
      * @property url The URL of the top site.
      * @property createdAt The optional date the top site was added.
+     * @property type The type name of the top site.
      */
     data class Pinned(
         override val id: Long?,
         override val title: String?,
         override val url: String,
         override val createdAt: Long?,
+        override val type: String = "PINNED",
     ) : TopSite()
 
     /**
@@ -50,12 +55,14 @@ sealed class TopSite {
      * @property title The title of the top site.
      * @property url The URL of the top site.
      * @property createdAt The optional date the top site was added.
+     * @property type The type name of the top site.
      */
     data class Frecent(
         override val id: Long?,
         override val title: String?,
         override val url: String,
         override val createdAt: Long?,
+        override val type: String = "FRECENT",
     ) : TopSite()
 
     /**
@@ -68,6 +75,7 @@ sealed class TopSite {
      * @property imageUrl The image URL of the top site.
      * @property impressionUrl The URL that needs to be fired when the top site is displayed.
      * @property createdAt The optional date the top site was added.
+     * @property type The type name of the top site.
      */
     data class Provided(
         override val id: Long?,
@@ -77,5 +85,6 @@ sealed class TopSite {
         val imageUrl: String,
         val impressionUrl: String,
         override val createdAt: Long?,
+        override val type: String = "PROVIDED",
     ) : TopSite()
 }

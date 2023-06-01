@@ -8,16 +8,6 @@ import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.settings.SupportUtils
 
 /**
- * Returns the type name of the [TopSite].
- */
-fun TopSite.name(): String = when (this) {
-    is TopSite.Default -> "DEFAULT"
-    is TopSite.Frecent -> "FRECENT"
-    is TopSite.Pinned -> "PINNED"
-    is TopSite.Provided -> "PROVIDED"
-}
-
-/**
  * Returns a sorted list of [TopSite] with the default Google top site always appearing
  * as the first item.
  */
