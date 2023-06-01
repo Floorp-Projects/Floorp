@@ -87,6 +87,7 @@ void HTMLDialogElement::Show(ErrorResult& aError) {
 
   StorePreviouslyFocusedElement();
 
+  OwnerDoc()->HideAllPopoversWithoutRunningScript();
   FocusDialog();
 }
 
@@ -148,6 +149,7 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
 
   StorePreviouslyFocusedElement();
 
+  OwnerDoc()->HideAllPopoversWithoutRunningScript();
   FocusDialog();
 
   aError.SuppressException();
@@ -161,8 +163,6 @@ void HTMLDialogElement::FocusDialog() {
   if (IsInComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
-
-  doc->HideAllPopoversWithoutRunningScript();
 
   RefPtr<Element> control = GetFocusDelegate(false /* aWithMouse */);
 
