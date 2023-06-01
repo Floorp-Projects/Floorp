@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "rtc_base/system/rtc_export.h"
+
 namespace cricket {
 
 enum class IceSwitchReason {
@@ -31,7 +33,7 @@ enum class IceSwitchReason {
   ICE_CONTROLLER_RECHECK,
 };
 
-std::string IceSwitchReasonToString(IceSwitchReason reason);
+RTC_EXPORT std::string IceSwitchReasonToString(IceSwitchReason reason);
 
 }  // namespace cricket
 
