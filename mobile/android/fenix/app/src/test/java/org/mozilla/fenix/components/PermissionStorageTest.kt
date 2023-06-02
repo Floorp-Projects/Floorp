@@ -28,9 +28,20 @@ class PermissionStorageTest {
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
 
-        storage.add(sitePermissions)
+        storage.add(sitePermissions, false)
 
         coVerify { sitePermissionsStorage.save(sitePermissions, private = false) }
+    }
+
+    @Test
+    fun `add permission in privateBrowsing`() = runTest {
+        val sitePermissions: SitePermissions = mockk(relaxed = true)
+        val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
+        val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
+
+        storage.add(sitePermissions, true)
+
+        coVerify { sitePermissionsStorage.save(sitePermissions, private = true) }
     }
 
     @Test

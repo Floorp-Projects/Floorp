@@ -120,6 +120,7 @@ class DefaultQuickSettingsController(
     private val displayPermissions: () -> Unit,
     private val engine: Engine = context.components.core.engine,
 ) : QuickSettingsController {
+
     override fun handlePermissionsShown() {
         displayPermissions()
     }
@@ -170,7 +171,7 @@ class DefaultQuickSettingsController(
             }
             val sitePermissions =
                 autoplayValue.createSitePermissionsFromCustomRules(origin, settings)
-            handleAutoplayAdd(sitePermissions)
+            handleAutoplayAdd(sitePermissions, tab?.content?.private ?: false)
             sitePermissions
         } else {
             val newPermission = autoplayValue.updateSitePermissions(permissions)
@@ -298,9 +299,9 @@ class DefaultQuickSettingsController(
     }
 
     @VisibleForTesting
-    internal fun handleAutoplayAdd(sitePermissions: SitePermissions) {
+    internal fun handleAutoplayAdd(sitePermissions: SitePermissions, private: Boolean) {
         ioScope.launch {
-            permissionStorage.add(sitePermissions)
+            permissionStorage.add(sitePermissions, private)
             reload(sessionId)
         }
     }

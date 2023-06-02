@@ -210,14 +210,14 @@ class DefaultQuickSettingsControllerTest {
         val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
 
         every { store.dispatch(any()) } returns mockk()
-        every { controller.handleAutoplayAdd(any()) } returns Unit
+        every { controller.handleAutoplayAdd(any(), any()) } returns Unit
 
         controller.sitePermissions = null
 
         controller.handleAutoplayChanged(autoplayValue)
 
         verify {
-            controller.handleAutoplayAdd(any())
+            controller.handleAutoplayAdd(any(), any())
             store.dispatch(any())
         }
     }
@@ -227,7 +227,7 @@ class DefaultQuickSettingsControllerTest {
         val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
 
         every { store.dispatch(any()) } returns mockk()
-        every { controller.handleAutoplayAdd(any()) } returns Unit
+        every { controller.handleAutoplayAdd(any(), any()) } returns Unit
         every { controller.handlePermissionsChange(any()) } returns Unit
         every { autoplayValue.updateSitePermissions(any()) } returns mockk()
 
@@ -296,11 +296,11 @@ class DefaultQuickSettingsControllerTest {
         runTestOnMain {
             val testPermissions = mockk<SitePermissions>()
 
-            controller.handleAutoplayAdd(testPermissions)
+            controller.handleAutoplayAdd(testPermissions, true)
             advanceUntilIdle()
 
             coVerifyOrder {
-                permissionStorage.add(testPermissions)
+                permissionStorage.add(testPermissions, true)
                 reload(tab.id)
             }
         }

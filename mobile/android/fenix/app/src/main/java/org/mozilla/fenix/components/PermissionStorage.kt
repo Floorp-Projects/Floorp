@@ -24,8 +24,8 @@ class PermissionStorage(
      * Persists the [sitePermissions] provided as a parameter.
      * @param sitePermissions the [sitePermissions] to be stored.
      */
-    suspend fun add(sitePermissions: SitePermissions) = withContext(dispatcher) {
-        permissionsStorage.save(sitePermissions, private = false)
+    suspend fun add(sitePermissions: SitePermissions, private: Boolean) = withContext(dispatcher) {
+        permissionsStorage.save(sitePermissions, private = private)
     }
 
     /**
