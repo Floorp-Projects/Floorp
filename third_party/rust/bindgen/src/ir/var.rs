@@ -301,11 +301,11 @@ impl ClangSubItemParser for Var {
                 let ty = match Item::from_ty(&ty, cursor, None, ctx) {
                     Ok(ty) => ty,
                     Err(e) => {
-                        assert_eq!(
-                            ty.kind(),
-                            CXType_Auto,
+                        assert!(
+                            matches!(ty.kind(), CXType_Auto | CXType_Unexposed),
                             "Couldn't resolve constant type, and it \
-                             wasn't an nondeductible auto type!"
+                             wasn't an nondeductible auto type or unexposed \
+                             type!"
                         );
                         return Err(e);
                     }

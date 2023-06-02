@@ -54,6 +54,11 @@ impl Cursor {
         unsafe { clang_isDeclaration(self.kind()) != 0 }
     }
 
+    /// Is this cursor's referent an anonymous record or so?
+    pub fn is_anonymous(&self) -> bool {
+        unsafe { clang_Cursor_isAnonymous(self.x) != 0 }
+    }
+
     /// Get this cursor's referent's spelling.
     pub fn spelling(&self) -> String {
         unsafe { cxstring_into_string(clang_getCursorSpelling(self.x)) }
