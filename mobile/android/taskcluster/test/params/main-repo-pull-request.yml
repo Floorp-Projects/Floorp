@@ -24,4 +24,4 @@ release_type: ''
 repository_type: git
 target_tasks_method: default
 tasks_for: github-pull-request
-version: 108.0.0
+version: 113.0a1

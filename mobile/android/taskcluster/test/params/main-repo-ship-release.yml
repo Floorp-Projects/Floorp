@@ -1,4 +1,4 @@
-base_ref: releases_v107
+base_ref: releases_v112
 base_repository: https://github.com/mozilla-mobile/firefox-android
 base_rev: ed304a0910c87b952925961b783282751c1b83dd
 build_date: 1667234607
@@ -149,15 +149,15 @@ existing_tasks:
   toolchain-linux64-android-sdk-linux-repack: Q5dP-ntmQ-61FFp9y-fTSw
 filters:
 - target_tasks_method
-head_ref: releases_v107
+head_ref: releases_v112
 head_repository: https://github.com/mozilla-mobile/firefox-android
 head_rev: 382516387821e0dc28bdc4699efe46554ebaef8b
-head_tag: v107.0.4
+head_tag: v112.2.0
 level: '3'
 moz_build_date: '20221031164327'
-next_version: 107.0.5
+next_version: 112.2.1
 optimize_target_tasks: true
-owner: jlorenzo@mozilla.com
+owner: user@example.com
 project: firefox-android
 pull_request_number: null
 pushdate: 0
@@ -167,4 +167,4 @@ repository_type: git
 shipping_phase: ship
 target_tasks_method: ship
 tasks_for: action
-version: 107.0.4
+version: 112.2.0
