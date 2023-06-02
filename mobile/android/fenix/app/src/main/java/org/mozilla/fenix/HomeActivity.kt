@@ -55,8 +55,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.media.ext.findActiveMediaTab
@@ -514,11 +512,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     applicationContext,
                     showMobileRoot = false,
                 ).withOptionalDesktopFolders(it)
-                settings().desktopBookmarksSize = getBookmarkCount(desktopRootNode)
+                settings().desktopBookmarksSize = desktopRootNode.count()
             }
 
             components.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id, true)?.let {
-                settings().mobileBookmarksSize = getBookmarkCount(it)
+                settings().mobileBookmarksSize = it.count()
             }
         }
 
@@ -546,25 +544,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         super.onProvideAssistContent(outContent)
         val currentTabUrl = components.core.store.state.selectedTab?.content?.url
         outContent?.webUri = currentTabUrl?.let { Uri.parse(it) }
-    }
-
-    private fun getBookmarkCount(node: BookmarkNode): Int {
-        val children = node.children
-        return if (children == null) {
-            0
-        } else {
-            var count = 0
-
-            for (child in children) {
-                if (child.type == BookmarkNodeType.FOLDER) {
-                    count += getBookmarkCount(child)
-                } else if (child.type == BookmarkNodeType.ITEM) {
-                    count++
-                }
-            }
-
-            count
-        }
     }
 
     override fun onDestroy() {

@@ -138,7 +138,30 @@ data class BookmarkNode(
     val url: String?,
     val dateAdded: Long,
     val children: List<BookmarkNode>?,
-)
+) {
+    /**
+     * Calculates the number of bookmark items in the node. Returns 0 if [children] is
+     * null or empty.
+     *
+     * @return number of bookmarks in the node and it's children.
+     */
+    fun count(): Int =
+        children?.fold(initial = 0) { accumulator, child ->
+            when (child.type) {
+                BookmarkNodeType.FOLDER -> accumulator + child.count()
+                BookmarkNodeType.ITEM -> accumulator.inc()
+                BookmarkNodeType.SEPARATOR -> accumulator
+            }
+        } ?: 0
+
+    /**
+     * Removes [children] from [BookmarkNode.children] and returns the new modified [BookmarkNode].
+     */
+    operator fun minus(children: Set<BookmarkNode>): BookmarkNode {
+        val removedChildrenGuids = children.map { it.guid }
+        return this.copy(children = this.children?.filterNot { removedChildrenGuids.contains(it.guid) })
+    }
+}
 
 /**
  * Class for making alterations to any bookmark node
