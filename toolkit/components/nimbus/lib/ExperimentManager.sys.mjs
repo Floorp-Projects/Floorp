@@ -522,7 +522,10 @@ export class _ExperimentManager {
         );
         this.unenroll(recipe.slug, "bucketing");
         return false;
-      } else if (!enrollment.active) {
+      } else if (
+        !enrollment.active &&
+        enrollment.unenrollReason !== "individual-opt-out"
+      ) {
         lazy.log.debug(`Re-enrolling in rollout "${recipe.slug}`);
         return !!(await this.enroll(recipe, source, { reenroll: true }));
       }
@@ -600,7 +603,10 @@ export class _ExperimentManager {
     lazy.TelemetryEnvironment.setExperimentInactive(slug);
     // We also need to set the experiment inactive in the Glean Experiment API
     Services.fog.setExperimentInactive(slug);
-    this.store.updateExperiment(slug, { active: false });
+    this.store.updateExperiment(slug, {
+      active: false,
+      unenrollReason: reason,
+    });
 
     lazy.TelemetryEvents.sendEvent("unenroll", TELEMETRY_EVENT_OBJECT, slug, {
       reason,
