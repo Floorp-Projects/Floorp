@@ -77,7 +77,7 @@ const startupPhases = {
   "before handling user events": {
     denylist: {
       modules: new Set([
-        "resource://gre/modules/Blocklist.jsm",
+        "resource://gre/modules/Blocklist.sys.mjs",
         // Bug 1391495 - BrowserWindowTracker.jsm is intermittently used.
         // "resource:///modules/BrowserWindowTracker.jsm",
         "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",

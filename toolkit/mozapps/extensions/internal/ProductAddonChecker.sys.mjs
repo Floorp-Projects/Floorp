@@ -2,16 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ProductAddonChecker", "ProductAddonCheckerTestUtils"];
-
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { CertUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/CertUtils.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { CertUtils } from "resource://gre/modules/CertUtils.sys.mjs";
 
 const lazy = {};
 
@@ -519,7 +511,7 @@ var verifyFile = async function (properties, path) {
   }
 };
 
-const ProductAddonChecker = {
+export const ProductAddonChecker = {
   // More specific error names to help debug and report failures.
   NETWORK_REQUEST_ERR: "NetworkRequestError",
   NETWORK_TIMEOUT_ERR: "NetworkTimeoutError",
@@ -588,7 +580,7 @@ const ProductAddonChecker = {
 };
 
 // For test use only.
-const ProductAddonCheckerTestUtils = {
+export const ProductAddonCheckerTestUtils = {
   /**
    * Used to override ServiceRequest calls with a mock request.
    * @param mockRequest The mocked ServiceRequest object.

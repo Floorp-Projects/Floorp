@@ -7,10 +7,6 @@
  * from an add-on's remote update manifest.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AddonUpdateChecker"];
-
 const TIMEOUT = 60 * 1000;
 const TOOLKIT_ID = "toolkit@mozilla.org";
 
@@ -41,9 +37,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/addons/AddonSettings.jsm"
 );
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker
@@ -468,7 +463,7 @@ function matchesVersions(
   return result;
 }
 
-var AddonUpdateChecker = {
+export var AddonUpdateChecker = {
   /**
    * Retrieves the best matching compatibility update for the application from
    * a list of available update objects.

@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -42,8 +38,6 @@ XPCOMUtils.defineLazyGetter(lazy, "PLATFORM", () => {
   }
   return platform;
 });
-
-var EXPORTED_SYMBOLS = ["AddonRepository"];
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
@@ -82,9 +76,8 @@ const BLANK_DB = function () {
   };
 };
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+
 const LOGGER_ID = "addons.repository";
 
 // Create a new logger for use by the Addons Repository
@@ -316,7 +309,7 @@ AddonSearchResult.prototype = {
  * that are compatible with the current application and are not already
  * installed.
  */
-var AddonRepository = {
+export var AddonRepository = {
   /**
    * The homepage for visiting this repository. If the corresponding preference
    * is not defined, defaults to about:blank.

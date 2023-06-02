@@ -2,17 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -101,7 +93,7 @@ RemoteMediator.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 };
 
-function InstallTrigger() {}
+export function InstallTrigger() {}
 
 InstallTrigger.prototype = {
   // We've declared ourselves as providing the nsIDOMGlobalPropertyInitializer
@@ -277,5 +269,3 @@ InstallTrigger.prototype = {
   contractID: "@mozilla.org/addons/installtrigger;1",
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 };
-
-var EXPORTED_SYMBOLS = ["InstallTrigger"];

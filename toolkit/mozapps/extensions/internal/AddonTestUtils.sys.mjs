@@ -7,26 +7,17 @@
 /* eslint "semi": [2, "always"] */
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
-var EXPORTED_SYMBOLS = ["AddonTestUtils", "MockAsyncShutdown"];
-
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 
 const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { AsyncShutdown } = ChromeUtils.importESModule(
-  "resource://gre/modules/AsyncShutdown.sys.mjs"
-);
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
+import { AsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { EventEmitter } = ChromeUtils.importESModule(
-  "resource://gre/modules/EventEmitter.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 
 const lazy = {};
 
@@ -113,7 +104,7 @@ class MockBarrier {
 
 // Mock out AddonManager's reference to the AsyncShutdown module so we can shut
 // down AddonManager from the test
-var MockAsyncShutdown = {
+export var MockAsyncShutdown = {
   profileBeforeChange: new MockBarrier("profileBeforeChange"),
   profileChangeTeardown: new MockBarrier("profileChangeTeardown"),
   quitApplicationGranted: new MockBarrier("quitApplicationGranted"),
@@ -203,7 +194,7 @@ class AddonsList {
   }
 }
 
-var AddonTestUtils = {
+export var AddonTestUtils = {
   addonIntegrationService: null,
   addonsList: null,
   appInfo: null,

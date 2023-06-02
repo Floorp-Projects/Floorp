@@ -4,18 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
-var EXPORTED_SYMBOLS = ["Blocklist", "BlocklistPrivate"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -1379,7 +1373,7 @@ function LOG(string) {
   }
 }
 
-let Blocklist = {
+export let Blocklist = {
   _init() {
     Services.obs.addObserver(this, "xpcom-shutdown");
     gLoggingEnabled = Services.prefs.getBoolPref(
@@ -1498,7 +1492,7 @@ let Blocklist = {
 Blocklist._init();
 
 // Allow tests to reach implementation objects.
-const BlocklistPrivate = {
+export const BlocklistPrivate = {
   BlocklistTelemetry,
   ExtensionBlocklistMLBF,
   ExtensionBlocklistRS,

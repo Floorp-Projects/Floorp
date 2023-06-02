@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const XPI_CONTENT_TYPE = "application/x-xpinstall";
 const MSG_INSTALL_ADDON = "WebInstallerInstallAddonFromWebpage";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -17,7 +13,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   ThirdPartyUtil: ["@mozilla.org/thirdpartyutil;1", "mozIThirdPartyUtil"],
 });
 
-function amContentHandler() {}
+export function amContentHandler() {}
 
 amContentHandler.prototype = {
   /**
@@ -105,5 +101,3 @@ amContentHandler.prototype = {
     dump(msg + "\n");
   },
 };
-
-var EXPORTED_SYMBOLS = ["amContentHandler"];

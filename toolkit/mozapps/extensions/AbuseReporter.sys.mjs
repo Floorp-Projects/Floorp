@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["AbuseReporter", "AbuseReportError"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";
 const PREF_AMO_DETAILS_API_URL = "extensions.abuseReport.amoDetailsURL";
@@ -69,7 +64,7 @@ const ERROR_TYPES = Object.freeze([
   "ERROR_AMODETAILS_FAILURE",
 ]);
 
-class AbuseReportError extends Error {
+export class AbuseReportError extends Error {
   constructor(errorType, errorInfo = undefined) {
     if (!ERROR_TYPES.includes(errorType)) {
       throw new Error(`Unknown AbuseReportError type "${errorType}"`);
@@ -104,7 +99,7 @@ async function responseToErrorInfo(response) {
  * A singleton object used to create new AbuseReport instances for a given addonId
  * and enforce a minium amount of time between two report submissions .
  */
-const AbuseReporter = {
+export const AbuseReporter = {
   _lastReportTimestamp: null,
 
   // Error types.
