@@ -12,16 +12,11 @@
 class nsIOutputStream;
 class nsIRandomAccessStream;
 
-namespace mozilla::dom {
-
-class FileSystemWritableFileStream;
-
-namespace fs {
+namespace mozilla::dom::fs {
 
 class FileSystemThreadSafeStreamOwner {
  public:
-  FileSystemThreadSafeStreamOwner(
-      FileSystemWritableFileStream* aWritableFileStream,
+  explicit FileSystemThreadSafeStreamOwner(
       nsCOMPtr<nsIRandomAccessStream>&& aStream);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemThreadSafeStreamOwner)
@@ -38,13 +33,11 @@ class FileSystemThreadSafeStreamOwner {
   virtual ~FileSystemThreadSafeStreamOwner() = default;
 
  private:
-  FileSystemWritableFileStream* MOZ_NON_OWNING_REF mWritableFileStream;
   nsCOMPtr<nsIRandomAccessStream> mStream;
 
   bool mClosed;
 };
 
-}  // namespace fs
-}  // namespace mozilla::dom
+}  // namespace mozilla::dom::fs
 
 #endif  // DOM_FS_FILESYSTEMTHREADSAFESTREAMOWNER_H_

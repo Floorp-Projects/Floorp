@@ -8,7 +8,6 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/FileSystemLog.h"
-#include "mozilla/dom/FileSystemWritableFileStream.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsIOutputStream.h"
@@ -37,17 +36,11 @@ nsresult TruncFile(nsCOMPtr<nsIRandomAccessStream>& aStream, int64_t aEOF) {
 }  // namespace
 
 FileSystemThreadSafeStreamOwner::FileSystemThreadSafeStreamOwner(
-    FileSystemWritableFileStream* aWritableFileStream,
     nsCOMPtr<nsIRandomAccessStream>&& aStream)
-    : mWritableFileStream(aWritableFileStream),
-      mStream(std::forward<nsCOMPtr<nsIRandomAccessStream>>(aStream)),
-      mClosed(false) {
-  MOZ_ASSERT(mWritableFileStream);
-}
+    : mStream(std::forward<nsCOMPtr<nsIRandomAccessStream>>(aStream)),
+      mClosed(false) {}
 
 nsresult FileSystemThreadSafeStreamOwner::Truncate(uint64_t aSize) {
-  MOZ_DIAGNOSTIC_ASSERT(mWritableFileStream->IsCommandActive());
-
   if (mClosed) {  // Multiple closes can end up in a queue
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -69,8 +62,6 @@ nsresult FileSystemThreadSafeStreamOwner::Truncate(uint64_t aSize) {
 }
 
 nsresult FileSystemThreadSafeStreamOwner::Seek(uint64_t aPosition) {
-  MOZ_DIAGNOSTIC_ASSERT(mWritableFileStream->IsCommandActive());
-
   if (mClosed) {  // Multiple closes can end up in a queue
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -93,8 +84,6 @@ void FileSystemThreadSafeStreamOwner::Close() {
 }
 
 nsCOMPtr<nsIOutputStream> FileSystemThreadSafeStreamOwner::OutputStream() {
-  MOZ_DIAGNOSTIC_ASSERT(mWritableFileStream->IsCommandActive());
-
   return mStream->OutputStream();
 }
 
