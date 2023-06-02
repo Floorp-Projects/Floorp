@@ -47,7 +47,7 @@ class NavigationInteractorTest {
     val gleanTestRule = GleanTestRule(testContext)
 
     @get:Rule
-    val chain: RuleChain = RuleChain.outerRule(coroutinesTestRule).around(gleanTestRule)
+    val chain: RuleChain = RuleChain.outerRule(gleanTestRule).around(coroutinesTestRule)
 
     @Before
     fun setup() {

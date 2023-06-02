@@ -106,11 +106,10 @@ class DefaultTabsTrayControllerTest {
     private val coroutinesTestRule: MainCoroutineRule = MainCoroutineRule()
     private val testDispatcher = coroutinesTestRule.testDispatcher
 
-    @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
     @get:Rule
-    val chain: RuleChain = RuleChain.outerRule(coroutinesTestRule).around(gleanTestRule)
+    val chain: RuleChain = RuleChain.outerRule(gleanTestRule).around(coroutinesTestRule)
 
     @Before
     fun setup() {
