@@ -130,7 +130,10 @@ nsresult nsPrefetchNode::OpenChannel() {
   if (httpChannel) {
     DebugOnly<nsresult> success = httpChannel->SetReferrerInfo(mReferrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(success));
-    success = httpChannel->SetRequestHeader("X-Moz"_ns, "prefetch"_ns, false);
+
+    // https://fetch.spec.whatwg.org/#http-sec-purpose
+    success =
+        httpChannel->SetRequestHeader("Sec-Purpose"_ns, "prefetch"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(success));
   }
 
@@ -290,7 +293,8 @@ nsPrefetchNode::AsyncOnChannelRedirect(
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aNewChannel);
   NS_ENSURE_STATE(httpChannel);
 
-  rv = httpChannel->SetRequestHeader("X-Moz"_ns, "prefetch"_ns, false);
+  // https://fetch.spec.whatwg.org/#http-sec-purpose
+  rv = httpChannel->SetRequestHeader("Sec-Purpose"_ns, "prefetch"_ns, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Assign to mChannel after we get notification about success of the
