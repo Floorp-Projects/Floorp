@@ -154,6 +154,8 @@ def lint(paths, config, log, **lintargs):
         if matches:
             fixed = int(matches[1])
 
+    log.debug(f"Running with args: {args}")
+
     output = run_process(config, args + ["--format=json"], **process_kwargs)
     if not output:
         return []
