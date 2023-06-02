@@ -116,6 +116,9 @@ class MediaDevices final : public DOMEventTargetHelper {
   void ResolveEnumerateDevicesPromise(
       Promise* aPromise, const LocalMediaDeviceSet& aDevices) const;
 
+  // See https://www.w3.org/TR/mediacapture-streams/#device-information-exposure
+  bool DeviceInformationCanBeExposed() const;
+
   nsTHashSet<nsString> mExplicitlyGrantedAudioOutputRawIds;
   nsTArray<RefPtr<Promise>> mPendingEnumerateDevicesPromises;
   // Set only once, if and when required.
