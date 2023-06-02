@@ -47,7 +47,12 @@ class nsJXLDecoder final : public Decoder {
   JxlThreadParallelRunnerPtr mParallelRunner;
   Vector<uint8_t> mBuffer;
   Vector<uint8_t> mOutBuffer;
-  JxlBasicInfo mInfo{};
+  JxlBasicInfo mInfo;
+  JxlPixelFormat mFormat;
+
+  bool mUsePipeTransform;
+  uint8_t mChannels;
+  uint8_t* mCMSLine;
 };
 
 }  // namespace mozilla::image

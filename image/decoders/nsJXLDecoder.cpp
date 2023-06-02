@@ -45,9 +45,16 @@ nsJXLDecoder::nsJXLDecoder(RasterImage* aImage)
              Transition::TerminateSuccess()),
       mDecoder(JxlDecoderMake(nullptr)),
       mParallelRunner(
-          JxlThreadParallelRunnerMake(nullptr, PreferredThreadCount())) {
-  JxlDecoderSubscribeEvents(mDecoder.get(),
-                            JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE);
+          JxlThreadParallelRunnerMake(nullptr, PreferredThreadCount())),
+      mUsePipeTransform(true),
+      mCMSLine(nullptr) {
+  int events = JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE;
+
+  if (mCMSMode != CMSMode::Off) {
+    events |= JXL_DEC_COLOR_ENCODING;
+  }
+
+  JxlDecoderSubscribeEvents(mDecoder.get(), events);
   JxlDecoderSetParallelRunner(mDecoder.get(), JxlThreadParallelRunner,
                               mParallelRunner.get());
 
@@ -58,6 +65,10 @@ nsJXLDecoder::nsJXLDecoder(RasterImage* aImage)
 nsJXLDecoder::~nsJXLDecoder() {
   MOZ_LOG(sJXLLog, LogLevel::Debug,
           ("[this=%p] nsJXLDecoder::~nsJXLDecoder", this));
+
+  if (mCMSLine) {
+    free(mCMSLine);
+  }
 }
 
 size_t nsJXLDecoder::PreferredThreadCount() {
@@ -112,35 +123,111 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
       case JXL_DEC_BASIC_INFO: {
         JXL_TRY(JxlDecoderGetBasicInfo(mDecoder.get(), &mInfo));
         PostSize(mInfo.xsize, mInfo.ysize);
+
         if (mInfo.alpha_bits > 0) {
           PostHasTransparency();
         }
+
         if (IsMetadataDecode()) {
           return Transition::TerminateSuccess();
         }
+
+        // If CMS is off or the image is RGB, always output in RGBA.
+        // If the image is grayscale, then the pipe transform can't be used.
+        if (mCMSMode != CMSMode::Off) {
+          mChannels = mInfo.num_color_channels == 1
+                          ? 1 + (mInfo.alpha_bits > 0 ? 1 : 0)
+                          : 4;
+        } else {
+          mChannels = 4;
+        }
+
+        mFormat = {mChannels, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+
         break;
       }
 
       case JXL_DEC_NEED_IMAGE_OUT_BUFFER: {
         size_t size = 0;
-        JxlPixelFormat format{4, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
-        JXL_TRY(JxlDecoderImageOutBufferSize(mDecoder.get(), &format, &size));
+        JXL_TRY(JxlDecoderImageOutBufferSize(mDecoder.get(), &mFormat, &size));
 
         mOutBuffer.clear();
         JXL_TRY_BOOL(mOutBuffer.growBy(size));
-        JXL_TRY(JxlDecoderSetImageOutBuffer(mDecoder.get(), &format,
+        JXL_TRY(JxlDecoderSetImageOutBuffer(mDecoder.get(), &mFormat,
                                             mOutBuffer.begin(), size));
+        break;
+      }
+
+      case JXL_DEC_COLOR_ENCODING: {
+        size_t size = 0;
+        JXL_TRY(JxlDecoderGetICCProfileSize(
+            mDecoder.get(), &mFormat, JXL_COLOR_PROFILE_TARGET_DATA, &size))
+        std::vector<uint8_t> icc_profile(size);
+        JXL_TRY(JxlDecoderGetColorAsICCProfile(mDecoder.get(), &mFormat,
+                                               JXL_COLOR_PROFILE_TARGET_DATA,
+                                               icc_profile.data(), size))
+
+        mInProfile = qcms_profile_from_memory((char*)icc_profile.data(), size);
+
+        uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
+
+        // Skip color management if color profile is not compatible with number
+        // of channels.
+        if (profileSpace != icSigRgbData &&
+            (mInfo.num_color_channels == 3 || profileSpace != icSigGrayData)) {
+          break;
+        }
+
+        mUsePipeTransform =
+            profileSpace == icSigRgbData && mInfo.num_color_channels == 3;
+
+        qcms_data_type inType;
+        if (mInfo.num_color_channels == 3) {
+          inType = QCMS_DATA_RGBA_8;
+        } else if (mInfo.alpha_bits > 0) {
+          inType = QCMS_DATA_GRAYA_8;
+        } else {
+          inType = QCMS_DATA_GRAY_8;
+        }
+
+        if (!mUsePipeTransform) {
+          mCMSLine =
+              static_cast<uint8_t*>(malloc(sizeof(uint32_t) * mInfo.xsize));
+        }
+
+        int intent = gfxPlatform::GetRenderingIntent();
+        if (intent == -1) {
+          intent = qcms_profile_get_rendering_intent(mInProfile);
+        }
+
+        mTransform =
+            qcms_transform_create(mInProfile, inType, GetCMSOutputProfile(),
+                                  QCMS_DATA_RGBA_8, (qcms_intent)intent);
+
         break;
       }
 
       case JXL_DEC_FULL_IMAGE: {
         OrientedIntSize size(mInfo.xsize, mInfo.ysize);
+
+        qcms_transform* pipeTransform =
+            mUsePipeTransform ? mTransform : nullptr;
+
         Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
             this, size, OutputSize(), FullFrame(), SurfaceFormat::R8G8B8A8,
-            SurfaceFormat::OS_RGBA, Nothing(), nullptr, SurfacePipeFlags());
+            SurfaceFormat::OS_RGBA, Nothing(), pipeTransform,
+            SurfacePipeFlags());
+
         for (uint8_t* rowPtr = mOutBuffer.begin(); rowPtr < mOutBuffer.end();
-             rowPtr += mInfo.xsize * 4) {
-          pipe->WriteBuffer(reinterpret_cast<uint32_t*>(rowPtr));
+             rowPtr += mInfo.xsize * mChannels) {
+          uint8_t* rowToWrite = rowPtr;
+
+          if (!mUsePipeTransform && mTransform) {
+            qcms_transform_data(mTransform, rowToWrite, mCMSLine, mInfo.xsize);
+            rowToWrite = mCMSLine;
+          }
+
+          pipe->WriteBuffer(reinterpret_cast<uint32_t*>(rowToWrite));
         }
 
         if (Maybe<SurfaceInvalidRect> invalidRect = pipe->TakeInvalidRect()) {
