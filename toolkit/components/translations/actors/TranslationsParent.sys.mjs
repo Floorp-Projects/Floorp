@@ -1424,7 +1424,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {any[]} args - Any args to pass on to console.error.
    */
   static reportError(error, ...args) {
-    lazy.console.error(error, ...args);
+    lazy.console.log(error, ...args);
   }
 
   /**
