@@ -53,7 +53,7 @@ add_task(function test_weird_data() {
     Assert.equal(
       Glean.messagingSystem.invalidNestedData[
         invalidNestedDataKey
-      ].testGetValue(),
+      ].testGetValue("messaging-system"),
       1,
       "caught the invalid nested data"
     );
