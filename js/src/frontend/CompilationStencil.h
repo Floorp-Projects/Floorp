@@ -64,12 +64,6 @@ class ScriptStencilIterable;
 struct InputName;
 class ScopeBindingCache;
 
-// When delazifying modules' inner functions, the actual global scope is used.
-// However, when doing a delazification the global scope is not available. We
-// use this dummy type to be a placeholder to be used as part of the InputScope
-// variants to mimic what the Global scope would be used for.
-struct FakeStencilGlobalScope {};
-
 // Reference to a Scope within a CompilationStencil.
 struct ScopeStencilRef {
   const CompilationStencil& context_;
@@ -86,16 +80,12 @@ struct ScopeStencilRef {
 // scope, such as the enclosingScope at the end of a scope chain. See `isNull`
 // helper.
 class InputScope {
-  using InputScopeStorage =
-      mozilla::Variant<Scope*, ScopeStencilRef, FakeStencilGlobalScope>;
+  using InputScopeStorage = mozilla::Variant<Scope*, ScopeStencilRef>;
   InputScopeStorage scope_;
 
  public:
   // Create an InputScope given an instantiated scope.
   explicit InputScope(Scope* ptr) : scope_(ptr) {}
-
-  // Create an InputScope for a global.
-  explicit InputScope(FakeStencilGlobalScope global) : scope_(global) {}
 
   // Create an InputScope given a CompilationStencil and the ScopeIndex which is
   // an offset within the same CompilationStencil given as argument.
@@ -135,24 +125,19 @@ class InputScope {
   bool isNull() const {
     return scope_.match(
         [](const Scope* ptr) { return !ptr; },
-        [](const ScopeStencilRef& ref) { return !ref.scopeIndex_.isValid(); },
-        [](const FakeStencilGlobalScope&) { return false; });
+        [](const ScopeStencilRef& ref) { return !ref.scopeIndex_.isValid(); });
   }
 
   ScopeKind kind() const {
     return scope_.match(
         [](const Scope* ptr) { return ptr->kind(); },
-        [](const ScopeStencilRef& ref) { return ref.scope().kind(); },
-        [](const FakeStencilGlobalScope&) { return ScopeKind::Global; });
+        [](const ScopeStencilRef& ref) { return ref.scope().kind(); });
   };
   bool hasEnvironment() const {
-    return scope_.match(
-        [](const Scope* ptr) { return ptr->hasEnvironment(); },
-        [](const ScopeStencilRef& ref) { return ref.scope().hasEnvironment(); },
-        [](const FakeStencilGlobalScope&) {
-          // See Scope::hasEnvironment
-          return true;
-        });
+    return scope_.match([](const Scope* ptr) { return ptr->hasEnvironment(); },
+                        [](const ScopeStencilRef& ref) {
+                          return ref.scope().hasEnvironment();
+                        });
   };
   inline InputScope enclosing() const;
   bool hasOnChain(ScopeKind kind) const {
@@ -165,19 +150,12 @@ class InputScope {
             if (scope.kind() == kind) {
               return true;
             }
-            if (scope.kind() == ScopeKind::Module &&
-                kind == ScopeKind::Global) {
-              return true;
-            }
             if (!scope.hasEnclosing()) {
               break;
             }
             new (&it) ScopeStencilRef{ref.context_, scope.enclosing()};
           }
           return false;
-        },
-        [=](const FakeStencilGlobalScope&) {
-          return kind == ScopeKind::Global;
         });
   }
   uint32_t environmentChainLength() const {
@@ -192,32 +170,16 @@ class InputScope {
                 scope.kind() != ScopeKind::NonSyntactic) {
               length++;
             }
-            if (scope.kind() == ScopeKind::Module) {
-              // Stencil do not encode the Global scope, as it used to be
-              // assumed to already exists. As moving delazification off-thread,
-              // we need to materialize a fake-stencil version of the Global
-              // Scope.
-              MOZ_ASSERT(!scope.hasEnclosing());
-              length += js::ModuleScope::EnclosingEnvironmentChainLength;
-            }
             if (!scope.hasEnclosing()) {
               break;
             }
             new (&it) ScopeStencilRef{ref.context_, scope.enclosing()};
           }
           return length;
-        },
-        [=](const FakeStencilGlobalScope&) {
-          // Stencil-based delazification needs to calculate
-          // environmentChainLength where the global is not available.
-          //
-          // The FakeStencilGlobalScope is used to represent what the global
-          // would be if we had access to it while delazifying.
-          return uint32_t(js::ModuleScope::EnclosingEnvironmentChainLength);
         });
   }
   void trace(JSTracer* trc);
-  bool isStencil() const { return !scope_.is<Scope*>(); };
+  bool isStencil() const { return scope_.is<ScopeStencilRef>(); };
 
   // Various accessors which are valid only when the InputScope is a
   // FunctionScope. Some of these accessors are returning values associated with
@@ -395,10 +357,6 @@ struct InputName {
   InputName(BaseScript*, JSAtom* ptr) : variant_(ptr) {}
   InputName(const ScriptStencilRef& script, TaggedParserAtomIndex index)
       : variant_(NameStencilRef{script.context_, index}) {}
-
-  // Dummy for empty global.
-  InputName(const FakeStencilGlobalScope&, TaggedParserAtomIndex)
-      : variant_(static_cast<JSAtom*>(nullptr)) {}
 
   // The InputName is either from an instantiated name, or from another
   // CompilationStencil. This method interns the current name in the parser atom
@@ -1824,15 +1782,8 @@ InputScope InputScope::enclosing() const {
         if (ref.scope().hasEnclosing()) {
           return InputScope(ref.context_, ref.scope().enclosing());
         }
-        // The global scope is not known by the Stencil, while parsing inner
-        // functions from Stencils where they are known at the execution using
-        // the GlobalScope.
-        if (ref.scope().kind() == ScopeKind::Module) {
-          return InputScope(FakeStencilGlobalScope{});
-        }
         return InputScope(nullptr);
-      },
-      [](const FakeStencilGlobalScope&) { return InputScope(nullptr); });
+      });
 }
 
 FunctionFlags InputScope::functionFlags() const {
@@ -1846,9 +1797,6 @@ FunctionFlags InputScope::functionFlags() const {
         ScriptIndex scriptIndex = ref.scope().functionIndex();
         ScriptStencil& data = ref.context_.scriptData[scriptIndex];
         return data.functionFlags;
-      },
-      [](const FakeStencilGlobalScope&) -> FunctionFlags {
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("No functionFlags on global.");
       });
 }
 
@@ -1863,9 +1811,6 @@ ImmutableScriptFlags InputScope::immutableFlags() const {
         ScriptIndex scriptIndex = ref.scope().functionIndex();
         ScriptStencilExtra& extra = ref.context_.scriptExtra[scriptIndex];
         return extra.immutableFlags;
-      },
-      [](const FakeStencilGlobalScope&) -> ImmutableScriptFlags {
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("No immutableFlags on global.");
       });
 }
 
@@ -1880,10 +1825,6 @@ MemberInitializers InputScope::getMemberInitializers() const {
         ScriptIndex scriptIndex = ref.scope().functionIndex();
         ScriptStencilExtra& extra = ref.context_.scriptExtra[scriptIndex];
         return extra.memberInitializers();
-      },
-      [](const FakeStencilGlobalScope&) -> MemberInitializers {
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
-            "No getMemberInitializers on global.");
       });
 }
 
