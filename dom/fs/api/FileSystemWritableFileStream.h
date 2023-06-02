@@ -63,9 +63,10 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void ClearActor();
 
-  void NoteActiveCommand();
+  class Command;
+  RefPtr<Command> CreateCommand();
 
-  void NoteFinishedCommand();
+  bool IsCommandActive() const;
 
   bool IsOpen() const;
 
@@ -112,6 +113,8 @@ class FileSystemWritableFileStream final : public WritableStream {
   void Seek(uint64_t aPosition, const RefPtr<Promise>& aPromise);
 
   void Truncate(uint64_t aSize, const RefPtr<Promise>& aPromise);
+
+  void NoteFinishedCommand();
 
   [[nodiscard]] RefPtr<BoolPromise> Finish();
 
