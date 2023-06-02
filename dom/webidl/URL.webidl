@@ -51,7 +51,7 @@ partial interface URL {
   [Throws]
   static undefined revokeObjectURL(DOMString url);
   [ChromeOnly, Throws]
-  static boolean isValidURL(DOMString url);
+  static boolean isValidObjectURL(DOMString url);
 
   // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html
   [Throws]
