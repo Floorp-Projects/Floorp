@@ -30,30 +30,67 @@
       type="module"
       src="chrome://browser/content/firefoxview/opentabs.mjs"
     ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/fxview-category-navigation.mjs"
+    ></script>
     <script src="chrome://browser/content/contentTheme.js"></script>
   </head>
 
   <body>
-    <div id="navigation">
-      <ul>
-        <li data-l10n-id="firefoxview-overview-navigation" page="overview"></li>
-        <li data-l10n-id="firefoxview-history-navigation" page="history"></li>
-        <li data-l10n-id="firefoxview-opentabs-navigation" page="opentabs"></li>
-      </ul>
-    </div>
-    <named-deck id="pages">
-      <view-overview name="overview">
-        <div>
-          <view-history slot="history"></view-history>
-        </div>
-        <h2 data-l10n-id="firefoxview-opentabs-header"></h2>
-        <div>
-          <view-opentabs slot="opentabs"></view-opentabs>
-        </div>
-      </view-overview>
-      <view-history name="history"></view-history>
-      <view-opentabs name="opentabs"></view-opentabs>
-    </named-deck>
+    <fxview-category-navigation>
+      <h2 slot="category-nav-header" data-l10n-id="firefoxview-page-title"></h2>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="overview"
+        data-l10n-id="firefoxview-overview-nav"
+      >
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="opentabs"
+        data-l10n-id="firefoxview-opentabs-nav"
+      >
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="recently-closed"
+        data-l10n-id="firefoxview-recently-closed-nav"
+      >
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="synced-tabs"
+        data-l10n-id="firefoxview-synced-tabs-nav"
+      >
+      </fxview-category-button>
+      <fxview-category-button
+        class="category"
+        slot="category-button"
+        name="history"
+        data-l10n-id="firefoxview-history-nav"
+      >
+      </fxview-category-button>
+    </fxview-category-navigation>
+    <main id="pages">
+      <named-deck>
+        <view-overview name="overview">
+          <div>
+            <view-history slot="history"></view-history>
+          </div>
+          <h2 data-l10n-id="firefoxview-opentabs-header"></h2>
+          <div>
+            <view-opentabs slot="opentabs"></view-opentabs>
+          </div>
+        </view-overview>
+        <view-history name="history"></view-history>
+        <view-opentabs name="opentabs"></view-opentabs>
+      </named-deck>
+    </main>
     <script src="chrome://browser/content/firefoxview/firefoxview-next.mjs"></script>
   </body>
 </html>
