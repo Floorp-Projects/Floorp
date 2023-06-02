@@ -56,6 +56,7 @@ class PathBuilderD2D : public PathBuilder {
   RefPtr<ID2D1PathGeometry> mGeometry;
 
   bool mFigureActive;
+  bool mFigureEmpty = true;
   FillRule mFillRule;
   BackendType mBackendType;
 };
@@ -63,10 +64,11 @@ class PathBuilderD2D : public PathBuilder {
 class PathD2D : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathD2D, override)
-  PathD2D(ID2D1PathGeometry* aGeometry, bool aEndedActive,
+  PathD2D(ID2D1PathGeometry* aGeometry, bool aEndedActive, bool aIsEmpty,
           const Point& aEndPoint, FillRule aFillRule, BackendType aBackendType)
       : mGeometry(aGeometry),
         mEndedActive(aEndedActive),
+        mIsEmpty(aIsEmpty),
         mEndPoint(aEndPoint),
         mFillRule(aFillRule),
         mBackendType(aBackendType) {}
@@ -93,6 +95,8 @@ class PathD2D : public Path {
 
   virtual FillRule GetFillRule() const { return mFillRule; }
 
+  bool IsEmpty() const override { return mIsEmpty; }
+
   ID2D1Geometry* GetGeometry() { return mGeometry; }
 
  private:
@@ -101,6 +105,7 @@ class PathD2D : public Path {
 
   mutable RefPtr<ID2D1PathGeometry> mGeometry;
   bool mEndedActive;
+  bool mIsEmpty;
   Point mEndPoint;
   FillRule mFillRule;
   BackendType mBackendType;
