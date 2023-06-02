@@ -26,7 +26,6 @@
 #include "nsStringStream.h"
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
-#include "ODoH.h"
 #include "ObliviousHttpChannel.h"
 #include "TRR.h"
 #include "TRRService.h"
@@ -881,9 +880,7 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
   LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(), mCname.get(),
        mCnameLoop));
   RefPtr<TRR> trr =
-      ResolverType() == DNSResolverType::ODoH
-          ? new ODoH(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB)
-          : new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
+      new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
   if (!TRRService::Get()) {
     return NS_ERROR_FAILURE;
   }

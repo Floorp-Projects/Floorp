@@ -21,7 +21,6 @@ const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
 function setup() {
   h2Port = trr_test_setup();
-  runningODoHTests = false;
   SetParentalControlEnabled(false);
 }
 

@@ -386,14 +386,6 @@ ChildDNSService::GetMyHostName(nsACString& result) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP
-ChildDNSService::GetODoHActivated(bool* aResult) {
-  NS_ENSURE_ARG(aResult);
-
-  *aResult = mODoHActivated;
-  return NS_OK;
-}
-
 void ChildDNSService::NotifyRequestDone(DNSRequestSender* aDnsRequest) {
   // We need the original flags and listener for the pending requests hash.
   nsIDNSService::DNSFlags originalFlags =
@@ -436,12 +428,6 @@ nsresult ChildDNSService::Init() {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     AddPrefObserver(prefs);
-  }
-
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(this, "odoh-service-activated", false);
   }
 
   return NS_OK;
@@ -489,10 +475,7 @@ ChildDNSService::Observe(nsISupports* subject, const char* topic,
   if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     // Reread prefs
     ReadPrefs(NS_ConvertUTF16toUTF8(data).get());
-  } else if (!strcmp(topic, "odoh-service-activated")) {
-    mODoHActivated = u"true"_ns.Equals(data);
   }
-
   return NS_OK;
 }
 

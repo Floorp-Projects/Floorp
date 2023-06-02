@@ -4174,15 +4174,6 @@
     "bug_numbers": [1682552],
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
   },
-  "HTTP_CHANNEL_ONSTART_SUCCESS_ODOH": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Successfully started HTTP channels when ODoH is enabled",
-    "bug_numbers": [1689987],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
-  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
@@ -17914,50 +17905,6 @@
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
     "description": "Whether an HTTP request gets upgraded to HTTPS because HTTPS RR is presented"
-  },
-  "DNS_ODOH_LOOKUP_TIME": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 60000,
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1689987],
-    "n_buckets": 50,
-    "description": "Time for a completed ODoH resolution (msec)"
-  },
-  "ODOH_SKIP_REASON_ODOH_FIRST": {
-    "record_in_processes": ["main", "socket"],
-    "products": ["firefox"],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 50,
-    "bug_numbers": [1689987],
-    "releaseChannelCollection": "opt-out",
-    "description": "When in ODoH-first mode, it lists the reason we may have skipped ODoH"
-  },
-  "HTTP_PAGE_DNS_ODOH_LOOKUP_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP page channel: ODoH lookup time (ms)",
-    "bug_numbers": [1689987]
-  },
-  "HTTP_SUB_DNS_ODOH_LOOKUP_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "bug_numbers": [1689987],
-    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "description": "HTTP subitem channel: ODoH lookup time (ms)"
   },
   "HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY": {
     "record_in_processes": ["content"],
