@@ -3771,16 +3771,10 @@ pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 
 pref("browser.sanitizer.loglevel", "Warn");
 
-// Enable Firefox translations powered by the Bergamot translations engine[1].
-// See Bug 971044.
-//
-// [1]: https://browser.mt/
-// [2]: https://github.com/mozilla/firefox-translations
-#ifdef EARLY_BETA_OR_EARLIER
-pref("browser.translations.enable", true);
-#else
+// Enable Firefox translations powered by the Bergamot translations
+// engine https://browser.mt/. See Bug 971044. Note that this pref can be turned
+// on in different apps like Firefox Desktop, even if it's disabled by default here.
 pref("browser.translations.enable", false);
-#endif
 
 // Set to "All" to see all logs, which are useful for debugging. Set to "Info" to see
 // the application logic logs, and not all of the translated messages, which can be
