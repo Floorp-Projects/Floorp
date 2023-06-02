@@ -6,9 +6,7 @@
 
 import { ExtensionTestUtils } from "resource://testing-common/ExtensionXPCShellUtils.sys.mjs";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
+import { AddonTestUtils } from "resource://testing-common/AddonTestUtils.sys.mjs";
 
 export const CookieXPCShellUtils = {
   init(scope) {

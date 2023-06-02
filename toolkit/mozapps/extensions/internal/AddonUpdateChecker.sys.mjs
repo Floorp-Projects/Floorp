@@ -22,20 +22,12 @@ ChromeUtils.defineModuleGetter(
   "AddonManagerPrivate",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Blocklist",
-  "resource://gre/modules/Blocklist.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
+  Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonSettings",
-  "resource://gre/modules/addons/AddonSettings.jsm"
-);
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 

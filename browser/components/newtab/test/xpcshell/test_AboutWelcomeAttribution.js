@@ -13,8 +13,8 @@ const { sinon } = ChromeUtils.importESModule(
 const { AttributionCode } = ChromeUtils.importESModule(
   "resource:///modules/AttributionCode.sys.mjs"
 );
-const { AddonRepository } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonRepository.jsm"
+const { AddonRepository } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonRepository.sys.mjs"
 );
 
 const TEST_ATTRIBUTION_DATA = {

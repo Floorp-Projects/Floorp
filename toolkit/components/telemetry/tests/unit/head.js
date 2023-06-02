@@ -9,6 +9,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
@@ -21,7 +22,6 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });

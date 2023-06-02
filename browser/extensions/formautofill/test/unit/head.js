@@ -16,8 +16,8 @@ var { FormLikeFactory } = ChromeUtils.importESModule(
 var { FormAutofillHandler } = ChromeUtils.importESModule(
   "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
 );
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 var { ExtensionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"

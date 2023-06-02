@@ -10,8 +10,8 @@
 // is used (from service.js).
 /* global Service */
 
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 var { Async } = ChromeUtils.importESModule(
   "resource://services-common/async.sys.mjs"

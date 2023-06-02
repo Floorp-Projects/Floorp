@@ -57,11 +57,9 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonRepository",
-  "resource://gre/modules/addons/AddonRepository.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
+});
 
 // 7 days in milliseconds.
 const PRUNE_ADDON_CHANGES_THRESHOLD = 60 * 60 * 24 * 7 * 1000;

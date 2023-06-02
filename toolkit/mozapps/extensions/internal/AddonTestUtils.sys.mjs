@@ -666,8 +666,8 @@ export var AddonTestUtils = {
    *        The data to load.
    */
   async loadBlocklistRawData(data) {
-    const { BlocklistPrivate } = ChromeUtils.import(
-      "resource://gre/modules/Blocklist.jsm"
+    const { BlocklistPrivate } = ChromeUtils.importESModule(
+      "resource://gre/modules/Blocklist.sys.mjs"
     );
     const blocklistMapping = {
       extensions: BlocklistPrivate.ExtensionBlocklistRS,

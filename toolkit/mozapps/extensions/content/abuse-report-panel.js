@@ -5,11 +5,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AbuseReporter",
-  "resource://gre/modules/AbuseReporter.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
+});
 
 const IS_DIALOG_WINDOW = window.arguments && window.arguments.length;
 

@@ -20,8 +20,8 @@ var {
   setTimeout,
   setTimeoutWithTarget,
 } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {

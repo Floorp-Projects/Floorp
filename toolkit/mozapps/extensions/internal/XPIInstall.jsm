@@ -41,18 +41,19 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  ProductAddonChecker:
+    "resource://gre/modules/addons/ProductAddonChecker.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   BuiltInThemesHelpers: "resource://gre/modules/addons/XPIDatabase.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
   AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
@@ -2879,8 +2880,8 @@ var UpdateChecker = function (
     throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
   }
 
-  ({ AddonUpdateChecker } = ChromeUtils.import(
-    "resource://gre/modules/addons/AddonUpdateChecker.jsm"
+  ({ AddonUpdateChecker } = ChromeUtils.importESModule(
+    "resource://gre/modules/addons/AddonUpdateChecker.sys.mjs"
   ));
 
   this.addon = aAddon;

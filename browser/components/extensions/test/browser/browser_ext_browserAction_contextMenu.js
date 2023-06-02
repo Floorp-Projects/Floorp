@@ -2,11 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AbuseReporter",
-  "resource://gre/modules/AbuseReporter.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,

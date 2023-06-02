@@ -55,8 +55,8 @@ add_task(async function test_check_matching_works() {
     extensions: BLOCKLIST_DATA,
   });
 
-  const { BlocklistPrivate } = ChromeUtils.import(
-    "resource://gre/modules/Blocklist.jsm"
+  const { BlocklistPrivate } = ChromeUtils.importESModule(
+    "resource://gre/modules/Blocklist.sys.mjs"
   );
   let parsedEntries = BlocklistPrivate.ExtensionBlocklistRS._entries;
 
@@ -165,8 +165,8 @@ add_task(async function check_all_properties() {
     ],
   });
 
-  let { Blocklist } = ChromeUtils.import(
-    "resource://gre/modules/Blocklist.jsm"
+  let { Blocklist } = ChromeUtils.importESModule(
+    "resource://gre/modules/Blocklist.sys.mjs"
   );
   // Check 'wrong' creator doesn't match.
   Assert.ok(

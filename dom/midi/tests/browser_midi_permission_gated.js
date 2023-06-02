@@ -23,11 +23,9 @@ const l10n = new Localization(
 );
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonTestUtils",
-  "resource://testing-common/AddonTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
+});
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({

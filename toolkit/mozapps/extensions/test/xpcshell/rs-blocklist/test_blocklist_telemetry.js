@@ -72,7 +72,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
       ExtensionBlocklistMLBF,
       ExtensionBlocklistRS,
     },
-  } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Blocklist.sys.mjs");
 
   // Return a promise resolved when the recordRSBlocklistLastModified method
   // has been called (by temporarily replacing the method with a function that

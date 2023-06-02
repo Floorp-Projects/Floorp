@@ -27,8 +27,8 @@ const { UpdateUtils } = ChromeUtils.importESModule(
 const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.importESModule(
   "resource://gre/modules/GMPUtils.sys.mjs"
 );
-const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
-  "resource://gre/modules/addons/ProductAddonChecker.jsm"
+const { ProductAddonCheckerTestUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/ProductAddonChecker.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"

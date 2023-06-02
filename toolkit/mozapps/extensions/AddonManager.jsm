@@ -88,6 +88,8 @@ const { PromiseUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TelemetryTimestamps: "resource://gre/modules/TelemetryTimestamps.sys.mjs",
@@ -97,11 +99,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
   isPrincipalInSitePermissionsBlocklist:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
