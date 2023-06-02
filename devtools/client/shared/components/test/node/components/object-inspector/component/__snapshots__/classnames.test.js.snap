@@ -49,6 +49,7 @@ exports[`ObjectInspector - classnames has the expected class 1`] = `
         addWatchpoint={[Function]}
         arrow={null}
         autoExpandDepth={0}
+        autoReleaseObjectActors={true}
         closeObjectInspector={[Function]}
         depth={0}
         evaluations={Map {}}
@@ -164,6 +165,7 @@ exports[`ObjectInspector - classnames has the inline class when inline prop is t
         addWatchpoint={[Function]}
         arrow={null}
         autoExpandDepth={0}
+        autoReleaseObjectActors={true}
         closeObjectInspector={[Function]}
         depth={0}
         evaluations={Map {}}
@@ -280,6 +282,7 @@ exports[`ObjectInspector - classnames has the nowrap class when disableWrap prop
         addWatchpoint={[Function]}
         arrow={null}
         autoExpandDepth={0}
+        autoReleaseObjectActors={true}
         closeObjectInspector={[Function]}
         depth={0}
         disableWrap={true}
