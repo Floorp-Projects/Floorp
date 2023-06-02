@@ -1000,7 +1000,7 @@ messaging_system:
       - chutten@mozilla.com
     expires: never
     send_in_pings:
-      - metrics
+      - messaging-system
 
 
 messaging_system.attribution:
