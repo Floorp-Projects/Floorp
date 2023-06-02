@@ -24,6 +24,7 @@ namespace mozilla {
 namespace dom {
 class DocGroup;
 class TestExternalInterface;
+class TestUnionArguments;
 class Promise;
 }  // namespace dom
 }  // namespace mozilla

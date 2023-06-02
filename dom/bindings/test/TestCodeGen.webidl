@@ -126,10 +126,6 @@ callback TestOptionalArguments = undefined(optional DOMString aString,
                                            optional TestInterface? anInterface,
                                            optional TestInterface anotherInterface,
                                            optional long aLong);
-callback TestUnionArguments = undefined((DOMString or long) arg1,
-                                        (DOMString or long)? arg2,
-                                        optional (DOMString or long) arg3,
-                                        optional (DOMString or long)? arg4);
 // Callback constructor return value tests
 callback constructor TestUndefinedConstruction = undefined(TestDictionaryTypedef arg);
 callback constructor TestIntegerConstruction = unsigned long();
