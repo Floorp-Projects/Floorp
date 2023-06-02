@@ -1168,6 +1168,9 @@ add_task(async function test_reenroll_rollout_resized() {
     "Should unenroll from rollout"
   );
 
+  const enrollment = manager.store.get(rollout.slug);
+  Assert.equal(enrollment.unenrollReason, "bucketing");
+
   rollout.bucketConfig.count = 1000;
   await loader.updateRecipes();
 
@@ -1175,6 +1178,16 @@ add_task(async function test_reenroll_rollout_resized() {
     manager.store.getRolloutForFeature("testFeature")?.slug,
     rollout.slug,
     "Should re-enroll in rollout"
+  );
+
+  const newEnrollment = manager.store.get(rollout.slug);
+  Assert.ok(
+    !Object.is(enrollment, newEnrollment),
+    "Should have new enrollment object"
+  );
+  Assert.ok(
+    !("unenrollReason" in newEnrollment),
+    "New enrollment should not have unenroll reason"
   );
 
   manager.unenroll(rollout.slug);
@@ -1216,6 +1229,42 @@ add_task(async function test_experiment_reenroll() {
   Assert.ok(
     !manager.store.getExperimentForFeature("testFeature"),
     "Should not re-enroll in experiment"
+  );
+
+  await assertEmptyStore(manager.store, { cleanup: true });
+});
+
+add_task(async function test_rollout_reenroll_optout() {
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  await loader.init();
+  await manager.onStartup();
+  await manager.store.ready();
+
+  const rollout = ExperimentFakes.recipe("experiment", { isRollout: true });
+  rollout.bucketConfig = {
+    ...rollout.bucketConfig,
+    start: 0,
+    count: 1000,
+    total: 1000,
+  };
+
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([rollout]);
+  await loader.updateRecipes();
+
+  Assert.ok(
+    manager.store.getRolloutForFeature("testFeature"),
+    "Should enroll in rollout"
+  );
+
+  manager.unenroll(rollout.slug, "individual-opt-out");
+
+  await loader.updateRecipes();
+
+  Assert.ok(
+    !manager.store.getRolloutForFeature("testFeature"),
+    "Should not re-enroll in rollout"
   );
 
   await assertEmptyStore(manager.store, { cleanup: true });
