@@ -19,7 +19,8 @@ const SEARCH_AD_CLICKS_SCALAR_BASE = "browser.search.adclicks.";
 const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
-const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
+// Exported for tests.
+export const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
 
 const impressionIdsWithoutEngagementsSet = new Set();
 
