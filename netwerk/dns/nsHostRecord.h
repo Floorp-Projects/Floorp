@@ -321,7 +321,7 @@ class AddrHostRecord final : public nsHostRecord {
   mozilla::TimeDuration mTrrDuration;
   mozilla::TimeDuration mNativeDuration;
 
-  // TRR or ODoH was used on this record
+  // TRR was used on this record
   mozilla::Atomic<DNSResolverType> mResolverType{DNSResolverType::Native};
 
   // clang-format off

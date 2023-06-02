@@ -78,8 +78,6 @@ UNIFIED_SOURCES += [
     "nsHostRecord.cpp",
     "nsHostResolver.cpp",
     "nsIDNService.cpp",
-    "ODoH.cpp",
-    "ODoHService.cpp",
     "punycode.c",
     "TRR.cpp",
     "TRRQuery.cpp",

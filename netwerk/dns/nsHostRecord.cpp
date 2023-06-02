@@ -245,7 +245,7 @@ bool AddrHostRecord::HasUsableResultInternal(
 bool AddrHostRecord::RemoveOrRefresh(bool aTrrToo) {
   // no need to flush TRRed names, they're not resolved "locally"
   MutexAutoLock lock(addr_info_lock);
-  if (addr_info && !aTrrToo && addr_info->IsTRROrODoH()) {
+  if (addr_info && !aTrrToo && addr_info->IsTRR()) {
     return false;
   }
   if (LoadNative()) {
@@ -282,21 +282,6 @@ void AddrHostRecord::ResolveComplete() {
         TRRService::ProviderKey(),
         mNativeSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::osOK
                        : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::osFail);
-  }
-
-  if (mResolverType == DNSResolverType::ODoH) {
-    // XXX(kershaw): Consider adding the failed host name into a blocklist.
-    if (mTRRSuccess) {
-      uint32_t millis = static_cast<uint32_t>(mTrrDuration.ToMilliseconds());
-      Telemetry::Accumulate(Telemetry::DNS_ODOH_LOOKUP_TIME, millis);
-    }
-
-    if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
-      Telemetry::Accumulate(Telemetry::ODOH_SKIP_REASON_ODOH_FIRST,
-                            static_cast<uint32_t>(mTRRSkippedReason));
-    }
-
-    return;
   }
 
   if (mResolverType == DNSResolverType::TRR) {

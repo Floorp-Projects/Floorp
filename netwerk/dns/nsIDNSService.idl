@@ -88,8 +88,6 @@ interface nsIDNSService : nsISupports
         RESOLVE_IGNORE_SOCKS_DNS = (1 << 13),
         // If set, only cached IP hint addresses will be returned from resolve/asyncResolve.
         RESOLVE_IP_HINT = (1 << 14),
-        // If set, do not use ODoH for resolving the host name.
-        RESOLVE_DISABLE_ODOH = (1 << 15),
         // If set, the DNS service will pass a DNS record to
         // OnLookupComplete even when there was a resolution error.
         RESOLVE_WANT_RECORD_ON_ERROR = (1 << 16),
@@ -348,12 +346,6 @@ interface nsIDNSService : nsISupports
      * returns the telemetry key for current TRR domain.
      */
     readonly attribute ACString TRRDomainKey;
-
-    /**
-     * Returns true when we have valid ODoHConfigs to encrypt/decrypt oblivious
-     * DNS packets.
-     */
-    readonly attribute boolean ODoHActivated;
 
     /*************************************************************************
      * Listed below are the various flags that may be OR'd together to form
