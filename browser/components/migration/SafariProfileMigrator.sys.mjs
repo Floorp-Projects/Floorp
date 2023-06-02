@@ -279,38 +279,6 @@ Bookmarks.prototype = {
     ).path;
 
     for (const entry of entries) {
-      try {
-        // Try to get the favicon data for each bookmark we have.
-        // We use uri.spec as our unique identifier since bookmark links
-        // don't completely match up in the Safari data.
-        let uri = Services.io.newURI(entry.get("URLString"));
-        let uriSpec = uri.spec;
-
-        // Safari's favicon database doesn't include forward slashes for
-        // the page URLs, despite adding them in the Bookmarks.plist file.
-        // We'll strip any off here for our favicon lookup.
-        if (uriSpec.endsWith("/")) {
-          uriSpec = uriSpec.replace(/\/+$/, "");
-        }
-
-        let uuid = bookmarkURLToUUIDMap.get(uriSpec);
-        if (uuid) {
-          // Hash the UUID with md5 to give us the favicon file name
-          let hashedUUID = lazy.PlacesUtils.md5(uuid, {
-            format: "hex",
-          }).toUpperCase();
-          let faviconFile = PathUtils.join(
-            faviconFolder,
-            "favicons",
-            hashedUUID
-          );
-          let faviconData = await IOUtils.read(faviconFile);
-          favicons.push({ faviconData, uri });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
       let type = entry.get("WebBookmarkType");
       if (type == "WebBookmarkTypeList" && entry.has("Children")) {
         let convertedChildren = await this._convertEntries(
@@ -339,6 +307,40 @@ Bookmarks.prototype = {
           title = entry.get("URIDictionary").get("title");
         }
         convertedEntries.push({ url, title });
+
+        try {
+          // Try to get the favicon data for each bookmark we have.
+          // We use uri.spec as our unique identifier since bookmark links
+          // don't completely match up in the Safari data.
+          let uri = Services.io.newURI(url);
+          let uriSpec = uri.spec;
+
+          // Safari's favicon database doesn't include forward slashes for
+          // the page URLs, despite adding them in the Bookmarks.plist file.
+          // We'll strip any off here for our favicon lookup.
+          if (uriSpec.endsWith("/")) {
+            uriSpec = uriSpec.replace(/\/+$/, "");
+          }
+
+          let uuid = bookmarkURLToUUIDMap.get(uriSpec);
+          if (uuid) {
+            // Hash the UUID with md5 to give us the favicon file name.
+            let hashedUUID = lazy.PlacesUtils.md5(uuid, {
+              format: "hex",
+            }).toUpperCase();
+            let faviconFile = PathUtils.join(
+              faviconFolder,
+              "favicons",
+              hashedUUID
+            );
+            let faviconData = await IOUtils.read(faviconFile);
+            favicons.push({ faviconData, uri });
+          }
+        } catch (error) {
+          // Even if we fail, still continue the import process
+          // since favicons aren't as essential as the bookmarks themselves.
+          console.error(error);
+        }
       }
     }
 
