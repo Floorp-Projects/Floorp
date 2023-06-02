@@ -47,8 +47,12 @@ nsJXLDecoder::nsJXLDecoder(RasterImage* aImage)
       mParallelRunner(
           JxlThreadParallelRunnerMake(nullptr, PreferredThreadCount())),
       mUsePipeTransform(true),
-      mCMSLine(nullptr) {
-  int events = JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE;
+      mCMSLine(nullptr),
+      mNumFrames(0),
+      mTimeout(FrameTimeout::Forever()),
+      mSurfaceFormat(SurfaceFormat::OS_RGBX),
+      mContinue(false) {
+  int events = JXL_DEC_BASIC_INFO | JXL_DEC_FRAME | JXL_DEC_FULL_IMAGE;
 
   if (mCMSMode != CMSMode::Off) {
     events |= JXL_DEC_COLOR_ENCODING;
@@ -97,14 +101,19 @@ LexerResult nsJXLDecoder::DoDecode(SourceBufferIterator& aIterator,
 
 LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
     const char* aData, size_t aLength) {
-  const uint8_t* input = (const uint8_t*)aData;
-  size_t length = aLength;
-  if (mBuffer.length() != 0) {
-    JXL_TRY_BOOL(mBuffer.append(aData, aLength));
-    input = mBuffer.begin();
-    length = mBuffer.length();
+  // Ignore data we have already read.
+  // This will only occur as a result of a yield for animation.
+  if (!mContinue) {
+    const uint8_t* input = (const uint8_t*)aData;
+    size_t length = aLength;
+    if (mBuffer.length() != 0) {
+      JXL_TRY_BOOL(mBuffer.append(aData, aLength));
+      input = mBuffer.begin();
+      length = mBuffer.length();
+    }
+    JXL_TRY(JxlDecoderSetInput(mDecoder.get(), input, length));
   }
-  JXL_TRY(JxlDecoderSetInput(mDecoder.get(), input, length));
+  mContinue = false;
 
   while (true) {
     JxlDecoderStatus status = JxlDecoderProcessInput(mDecoder.get());
@@ -125,10 +134,11 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
         PostSize(mInfo.xsize, mInfo.ysize);
 
         if (mInfo.alpha_bits > 0) {
+          mSurfaceFormat = SurfaceFormat::OS_RGBA;
           PostHasTransparency();
         }
 
-        if (IsMetadataDecode()) {
+        if (!mInfo.have_animation && IsMetadataDecode()) {
           return Transition::TerminateSuccess();
         }
 
@@ -144,17 +154,6 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
 
         mFormat = {mChannels, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
-        break;
-      }
-
-      case JXL_DEC_NEED_IMAGE_OUT_BUFFER: {
-        size_t size = 0;
-        JXL_TRY(JxlDecoderImageOutBufferSize(mDecoder.get(), &mFormat, &size));
-
-        mOutBuffer.clear();
-        JXL_TRY_BOOL(mOutBuffer.growBy(size));
-        JXL_TRY(JxlDecoderSetImageOutBuffer(mDecoder.get(), &mFormat,
-                                            mOutBuffer.begin(), size));
         break;
       }
 
@@ -207,16 +206,73 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
         break;
       }
 
+      case JXL_DEC_FRAME: {
+        if (mInfo.have_animation) {
+          JXL_TRY(JxlDecoderGetFrameHeader(mDecoder.get(), &mFrameHeader));
+          int32_t duration = (int32_t)(1000.0 * mFrameHeader.duration *
+                                       mInfo.animation.tps_denominator /
+                                       mInfo.animation.tps_numerator);
+
+          mTimeout = FrameTimeout::FromRawMilliseconds(duration);
+
+          if (!HasAnimation()) {
+            PostIsAnimated(mTimeout);
+          }
+        }
+
+        bool is_last = mInfo.have_animation ? mFrameHeader.is_last : true;
+        MOZ_LOG(sJXLLog, LogLevel::Debug,
+                ("[this=%p] nsJXLDecoder::ReadJXLData - frame %d, is_last %d, "
+                 "metadata decode %d, first frame decode %d\n",
+                 this, mNumFrames, is_last, IsMetadataDecode(),
+                 IsFirstFrameDecode()));
+
+        if (IsMetadataDecode()) {
+          return Transition::TerminateSuccess();
+        }
+
+        break;
+      }
+
+      case JXL_DEC_NEED_IMAGE_OUT_BUFFER: {
+        size_t size = 0;
+        JXL_TRY(JxlDecoderImageOutBufferSize(mDecoder.get(), &mFormat, &size));
+
+        mOutBuffer.clear();
+        JXL_TRY_BOOL(mOutBuffer.growBy(size));
+        JXL_TRY(JxlDecoderSetImageOutBuffer(mDecoder.get(), &mFormat,
+                                            mOutBuffer.begin(), size));
+        break;
+      }
+
       case JXL_DEC_FULL_IMAGE: {
         OrientedIntSize size(mInfo.xsize, mInfo.ysize);
+
+        Maybe<AnimationParams> animParams;
+        if (!IsFirstFrameDecode()) {
+          animParams.emplace(FullFrame().ToUnknownRect(), mTimeout, mNumFrames,
+                             BlendMethod::SOURCE, DisposalMethod::CLEAR);
+        }
+
+        SurfacePipeFlags pipeFlags = SurfacePipeFlags();
+
+        if (mSurfaceFormat == SurfaceFormat::OS_RGBA &&
+            !(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA)) {
+          pipeFlags |= SurfacePipeFlags::PREMULTIPLY_ALPHA;
+        }
 
         qcms_transform* pipeTransform =
             mUsePipeTransform ? mTransform : nullptr;
 
         Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
             this, size, OutputSize(), FullFrame(), SurfaceFormat::R8G8B8A8,
-            SurfaceFormat::OS_RGBA, Nothing(), pipeTransform,
-            SurfacePipeFlags());
+            mSurfaceFormat, animParams, pipeTransform, pipeFlags);
+
+        if (!pipe) {
+          MOZ_LOG(sJXLLog, LogLevel::Debug,
+                  ("[this=%p] nsJXLDecoder::ReadJXLData - no pipe\n", this));
+          return Transition::TerminateFailure();
+        }
 
         for (uint8_t* rowPtr = mOutBuffer.begin(); rowPtr < mOutBuffer.end();
              rowPtr += mInfo.xsize * mChannels) {
@@ -234,8 +290,26 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
           PostInvalidation(invalidRect->mInputSpaceRect,
                            Some(invalidRect->mOutputSpaceRect));
         }
-        PostFrameStop();
-        PostDecodeDone();
+
+        Opacity opacity = mSurfaceFormat == SurfaceFormat::OS_RGBA
+                              ? Opacity::SOME_TRANSPARENCY
+                              : Opacity::FULLY_OPAQUE;
+        PostFrameStop(opacity);
+
+        if (!IsFirstFrameDecode() && mInfo.have_animation &&
+            !mFrameHeader.is_last) {
+          mNumFrames++;
+          mContinue = true;
+          // Notify for a new frame but there may be data in the current buffer
+          // that can immediately be processed.
+          return Transition::ToAfterYield(State::JXL_DATA);
+        }
+        [[fallthrough]];  // We are done.
+      }
+
+      case JXL_DEC_SUCCESS: {
+        PostDecodeDone(HasAnimation() ? (int32_t)mInfo.animation.num_loops - 1
+                                      : 0);
         return Transition::TerminateSuccess();
       }
     }
