@@ -10862,7 +10862,7 @@
   # will become sparse.
 -   name: media.aboutwebrtc.hist.enabled
     type: RelaxedAtomicBool
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_ANDROID)
     value: false
 #else
     value: @IS_NIGHTLY_BUILD@
