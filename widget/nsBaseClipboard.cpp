@@ -147,12 +147,6 @@ nsBaseClipboard::nsBaseClipboard(const ClipboardCapabilities& aClipboardCaps)
   }
 }
 
-nsBaseClipboard::~nsBaseClipboard() {
-  EmptyClipboard(kSelectionClipboard);
-  EmptyClipboard(kGlobalClipboard);
-  EmptyClipboard(kFindClipboard);
-}
-
 NS_IMPL_ISUPPORTS_INHERITED0(nsBaseClipboard, ClipboardSetDataHelper)
 
 /**

@@ -119,7 +119,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
  protected:
-  virtual ~nsBaseClipboard();
+  virtual ~nsBaseClipboard() = default;
 
   // Implement the native clipboard behavior.
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
