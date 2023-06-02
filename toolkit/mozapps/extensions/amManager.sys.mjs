@@ -8,11 +8,8 @@
  * as passing new installs from webpages to the AddonManager.
  */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -47,7 +44,8 @@ const MSG_ADDON_EVENT_REQ = "WebAPIAddonEventRequest";
 const MSG_ADDON_EVENT = "WebAPIAddonEvent";
 
 var AddonManager, AddonManagerPrivate;
-function amManager() {
+
+export function amManager() {
   ({ AddonManager, AddonManagerPrivate } = ChromeUtils.import(
     "resource://gre/modules/AddonManager.jsm"
   ));
@@ -331,7 +329,7 @@ amManager.prototype = {
 const BLOCKLIST_JSM = "resource://gre/modules/Blocklist.jsm";
 ChromeUtils.defineModuleGetter(lazy, "Blocklist", BLOCKLIST_JSM);
 
-function BlocklistService() {
+export function BlocklistService() {
   this.wrappedJSObject = this;
 }
 
@@ -359,6 +357,3 @@ BlocklistService.prototype = {
     "nsITimerCallback",
   ]),
 };
-
-// eslint-disable-next-line no-unused-vars
-var EXPORTED_SYMBOLS = ["amManager", "BlocklistService"];
