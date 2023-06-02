@@ -86,6 +86,10 @@ static ParserBindingIter InputBindingIter(const ScopeStencilRef& ref) {
   return ParserBindingIter(ref);
 }
 
+static ParserBindingIter InputBindingIter(const FakeStencilGlobalScope&) {
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("No bindings on empty global.");
+}
+
 InputName InputScript::displayAtom() const {
   return script_.match(
       [](BaseScript* ptr) {
@@ -265,6 +269,10 @@ bool ScopeBindingCache::canCacheFor(ScopeStencilRef ref) {
   MOZ_CRASH("Unexpected scope chain type: ScopeStencilRef");
 }
 
+bool ScopeBindingCache::canCacheFor(const FakeStencilGlobalScope& ref) {
+  MOZ_CRASH("Unexpected scope chain type: FakeStencilGlobalScope");
+}
+
 BindingMap<JSAtom*>* ScopeBindingCache::createCacheFor(Scope* ptr) {
   MOZ_CRASH("Unexpected scope chain type: Scope*");
 }
@@ -284,9 +292,23 @@ BindingMap<TaggedParserAtomIndex>* ScopeBindingCache::lookupScope(
   MOZ_CRASH("Unexpected scope chain type: ScopeStencilRef");
 }
 
+BindingMap<TaggedParserAtomIndex>* ScopeBindingCache::createCacheFor(
+    const FakeStencilGlobalScope& ref) {
+  MOZ_CRASH("Unexpected scope chain type: FakeStencilGlobalScope");
+}
+
+BindingMap<TaggedParserAtomIndex>* ScopeBindingCache::lookupScope(
+    const FakeStencilGlobalScope& ref, CacheGeneration gen) {
+  MOZ_CRASH("Unexpected scope chain type: FakeStencilGlobalScope");
+}
+
 bool NoScopeBindingCache::canCacheFor(Scope* ptr) { return false; }
 
 bool NoScopeBindingCache::canCacheFor(ScopeStencilRef ref) { return false; }
+
+bool NoScopeBindingCache::canCacheFor(const FakeStencilGlobalScope& ref) {
+  return false;
+}
 
 bool RuntimeScopeBindingCache::canCacheFor(Scope* ptr) { return true; }
 
@@ -333,6 +355,33 @@ BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::lookupScope(
   AssertBorrowingSpan(ref.context_.scopeNames, merger_.getResult().scopeNames);
 #endif
   auto* dataPtr = ref.context_.scopeNames[ref.scopeIndex_];
+  auto ptr = scopeMap.lookup(dataPtr);
+  if (!ptr) {
+    return nullptr;
+  }
+  return &ptr->value();
+}
+
+static AbstractBaseScopeData<TaggedParserAtomIndex> moduleGlobalAbstractScopeData;
+
+bool StencilScopeBindingCache::canCacheFor(const FakeStencilGlobalScope& ref) {
+  return true;
+}
+
+BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::createCacheFor(
+    const FakeStencilGlobalScope& ref) {
+  auto* dataPtr = &moduleGlobalAbstractScopeData;
+  BindingMap<TaggedParserAtomIndex> bindingCache;
+  if (!scopeMap.putNew(dataPtr, std::move(bindingCache))) {
+    return nullptr;
+  }
+
+  return lookupScope(ref, 1);
+}
+
+BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::lookupScope(
+    const FakeStencilGlobalScope& ref, CacheGeneration gen) {
+  auto* dataPtr = &moduleGlobalAbstractScopeData;
   auto ptr = scopeMap.lookup(dataPtr);
   if (!ptr) {
     return nullptr;
@@ -899,6 +948,10 @@ static bool IsPrivateField(ScopeStencilRef& scope, TaggedParserAtomIndex atom) {
   return false;
 }
 
+static bool IsPrivateField(const FakeStencilGlobalScope&, TaggedParserAtomIndex) {
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("No private fields on empty global.");
+}
+
 bool ScopeContext::cachePrivateFieldsForEval(FrontendContext* fc,
                                              CompilationInput& input,
                                              JSObject* enclosingEnvironment,
@@ -962,6 +1015,12 @@ static bool NameIsOnEnvironment(FrontendContext* fc,
                                 InputScope& scope, TaggedParserAtomIndex name) {
   JSAtom* jsname = nullptr;
   return scope.match([&](auto& scope_ref) {
+    if (std::is_same_v<decltype(scope_ref), FakeStencilGlobalScope&>) {
+      // This condition is added to handle the FakeStencilGlobalScope which is
+      // used to emulate the global object when delazifying while executing, and
+      // which is not provided by the Stencil.
+      return true;
+    }
     for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
       // If found, the name must already be on the environment or an import,
       // or else there is a bug in the closed-over name analysis in the
