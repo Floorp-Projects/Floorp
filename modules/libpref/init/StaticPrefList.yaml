@@ -11792,11 +11792,7 @@
 # be limited by "network.http.speculative-parallel-limit".
 - name: network.early-hints.preconnect.max_connections
   type: uint32_t
-#if defined(NIGHTLY_BUILD)
   value: 10
-#else
-  value: 0
-#endif
   mirror: always
 
 # How long we should wait for EarlyHintPreloader to be used.
