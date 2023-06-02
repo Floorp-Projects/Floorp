@@ -191,7 +191,7 @@ class TranslationsEngineCache {
 
       // Remove the engine if it fails to initialize.
       enginePromise.catch(error => {
-        lazy.console.error(
+        lazy.console.log(
           `The engine failed to load for translating "${fromLanguage}" to "${toLanguage}". Removing it from the cache.`,
           error
         );
@@ -519,7 +519,7 @@ export class TranslationsChild extends JSWindowActorChild {
     switch (event.type) {
       case "DOMContentLoaded":
         this.innerWindowId = this.contentWindow.windowGlobalChild.innerWindowId;
-        this.maybeOfferTranslation().catch(error => lazy.console.error(error));
+        this.maybeOfferTranslation().catch(error => lazy.console.log(error));
         break;
       case "pagehide":
         lazy.console.log(
@@ -824,11 +824,11 @@ export class TranslationsChild extends JSWindowActorChild {
           );
         },
         error => {
-          lazy.console.error("Failed to load the translations engine.", error);
+          lazy.console.log("Failed to load the translations engine.", error);
         }
       );
     } catch (error) {
-      lazy.console.error(
+      lazy.console.log(
         "Failed to load the translations engine",
         error,
         this.contentWindow.location.href
