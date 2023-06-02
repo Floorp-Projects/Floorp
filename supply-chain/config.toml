@@ -365,10 +365,6 @@ criteria = "safe-to-deploy"
 version = "0.6.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.derive_more]]
-version = "0.99.17"
-criteria = "safe-to-deploy"
-
 [[exemptions.devd-rs]]
 version = "0.3.4"
 criteria = "safe-to-deploy"
@@ -499,10 +495,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.hexf-parse]]
 version = "0.2.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.ident_case]]
-version = "1.0.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.instant]]
