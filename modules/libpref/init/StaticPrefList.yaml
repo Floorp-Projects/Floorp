@@ -10769,11 +10769,9 @@
 # getUserMedia calls. Should only be turned on to resolve web compat issues,
 # since doing so reveals more user fingerprinting information to trackers.
 #
-# This mode is marginally more permissive than the legacy behavior it attempts
-# to emulate in that device labels do not disappear when tracks are stopped and
-# temporary permission expires. That behavior isn't emulated due to low relative
-# privacy value  compared to spec and it not being being conducive to spec
-# convergence.
+# In this mode, camera and microphone device labels are exposed if the site has a
+# persisted permission to either kind, as well as while actively capturing either
+# kind (temporary and tab-specific grace-period permissions do not count).
 #
 # Planned next steps: true → @IS_NOT_NIGHTLY_BUILD@ → false
 - name: media.devices.enumerate.legacy.enabled
