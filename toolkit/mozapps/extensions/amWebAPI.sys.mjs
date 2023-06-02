@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -205,7 +201,7 @@ class AddonInstall extends APIObject {
   }
 }
 
-class WebAPI extends APIObject {
+export class WebAPI extends APIObject {
   constructor() {
     super();
     this.allInstalls = [];
@@ -284,10 +280,10 @@ class WebAPI extends APIObject {
     }
   }
 }
+
 WebAPI.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIDOMGlobalPropertyInitializer",
 ]);
 WebAPI.prototype.classID = Components.ID(
   "{8866d8e3-4ea5-48b7-a891-13ba0ac15235}"
 );
-var EXPORTED_SYMBOLS = ["WebAPI"];
