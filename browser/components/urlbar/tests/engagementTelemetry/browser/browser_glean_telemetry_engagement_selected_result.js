@@ -806,6 +806,72 @@ add_task(async function selected_result_trending() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function selected_result_trending_rich() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.richSuggestions.featureGate", true],
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.trending.featureGate", true],
+      ["browser.urlbar.trending.requireSearchMode", false],
+      ["browser.urlbar.trending.maxResultsNoSearchMode", 1],
+      ["browser.urlbar.weather.featureGate", false],
+    ],
+  });
+
+  let defaultEngine = await Services.search.getDefault();
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "mozengine",
+      search_url: "https://example.org/",
+    },
+    { setAsDefault: true, skipUnload: true }
+  );
+
+  SearchTestUtils.useMockIdleService();
+  await SearchTestUtils.updateRemoteSettingsConfig([
+    {
+      webExtension: { id: "mozengine@tests.mozilla.org" },
+      urls: {
+        trending: {
+          fullPath:
+            "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs?richsuggestions=true",
+          query: "",
+        },
+      },
+      appliesTo: [{ included: { everywhere: true } }],
+      default: "yes",
+    },
+  ]);
+
+  await doTest(async browser => {
+    await openPopup("");
+    await selectRowByProvider("SearchSuggestions");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "trending_search_rich",
+        selected_result_subtype: "",
+        provider: "SearchSuggestions",
+        results: "trending_search_rich",
+      },
+    ]);
+  });
+
+  await extension.unload();
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  let settingsWritten = SearchTestUtils.promiseSearchNotification(
+    "write-settings-to-disk-complete"
+  );
+  await SearchTestUtils.updateRemoteSettingsConfig();
+  await settingsWritten;
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function selected_result_addons() {
   await SpecialPowers.pushPrefEnv({
     set: [
