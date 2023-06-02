@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-05-25T15:33:30.460947'
+updated_at: '2023-06-02T12:15:59.982018'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3493,15 +3493,18 @@ modules:
           owners_emeritus:
             - Michael de Boer
             - Kashav Madan
+            - *daleharvey
           peers_emeritus:
             - Anny Gakhokidze
           components:
             - Firefox::Session Restore
         owners:
           - *dao
-          - *daleharvey
         peers:
+          - *daleharvey
           - *farre
+          - *sclements
+          - *sfoster
         machine_name: session_restore
 
       - name: Settings UI
@@ -4102,5 +4105,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 79226a33cf48ced78a9a6e00f9fc97e9b52f2c7a
-  export: b2c4d32d8f9ed97d56497f44b4ecc8d8211cee45
+  config: d6ca20525e7cdc4dfd962b03d957892136be787d
+  export: 9909fc4158a83f3004594960a36b257941ed272e
