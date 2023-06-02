@@ -111,6 +111,7 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
       input = mBuffer.begin();
       length = mBuffer.length();
     }
+
     JXL_TRY(JxlDecoderSetInput(mDecoder.get(), input, length));
   }
   mContinue = false;
@@ -126,6 +127,34 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
         size_t remaining = JxlDecoderReleaseInput(mDecoder.get());
         mBuffer.clear();
         JXL_TRY_BOOL(mBuffer.append(aData + aLength - remaining, remaining));
+
+        if (mNumFrames == 0 && InFrame()) {
+          // If an image was flushed by JxlDecoderFlushImage, then we know that
+          // JXL_DEC_FRAME has already been run and there is a pipe.
+          if (JxlDecoderFlushImage(mDecoder.get()) == JXL_DEC_SUCCESS) {
+            // A full frame partial image is written to the buffer.
+            mPipe.ResetToFirstRow();
+            for (uint8_t* rowPtr = mOutBuffer.begin();
+                 rowPtr < mOutBuffer.end(); rowPtr += mInfo.xsize * mChannels) {
+              uint8_t* rowToWrite = rowPtr;
+
+              if (!mUsePipeTransform && mTransform) {
+                qcms_transform_data(mTransform, rowToWrite, mCMSLine,
+                                    mInfo.xsize);
+                rowToWrite = mCMSLine;
+              }
+
+              mPipe.WriteBuffer(reinterpret_cast<uint32_t*>(rowToWrite));
+            }
+
+            if (Maybe<SurfaceInvalidRect> invalidRect =
+                    mPipe.TakeInvalidRect()) {
+              PostInvalidation(invalidRect->mInputSpaceRect,
+                               Some(invalidRect->mOutputSpaceRect));
+            }
+          }
+        }
+
         return Transition::ContinueUnbuffered(State::JXL_DATA);
       }
 
@@ -231,21 +260,6 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
           return Transition::TerminateSuccess();
         }
 
-        break;
-      }
-
-      case JXL_DEC_NEED_IMAGE_OUT_BUFFER: {
-        size_t size = 0;
-        JXL_TRY(JxlDecoderImageOutBufferSize(mDecoder.get(), &mFormat, &size));
-
-        mOutBuffer.clear();
-        JXL_TRY_BOOL(mOutBuffer.growBy(size));
-        JXL_TRY(JxlDecoderSetImageOutBuffer(mDecoder.get(), &mFormat,
-                                            mOutBuffer.begin(), size));
-        break;
-      }
-
-      case JXL_DEC_FULL_IMAGE: {
         OrientedIntSize size(mInfo.xsize, mInfo.ysize);
 
         Maybe<AnimationParams> animParams;
@@ -255,6 +269,11 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
         }
 
         SurfacePipeFlags pipeFlags = SurfacePipeFlags();
+
+        if (mNumFrames == 0) {
+          // The first frame may be displayed progressively.
+          pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
+        }
 
         if (mSurfaceFormat == SurfaceFormat::OS_RGBA &&
             !(GetSurfaceFlags() & SurfaceFlags::NO_PREMULTIPLY_ALPHA)) {
@@ -274,6 +293,24 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
           return Transition::TerminateFailure();
         }
 
+        mPipe = std::move(*pipe);
+
+        break;
+      }
+
+      case JXL_DEC_NEED_IMAGE_OUT_BUFFER: {
+        size_t size = 0;
+        JXL_TRY(JxlDecoderImageOutBufferSize(mDecoder.get(), &mFormat, &size));
+
+        mOutBuffer.clear();
+        JXL_TRY_BOOL(mOutBuffer.growBy(size));
+        JXL_TRY(JxlDecoderSetImageOutBuffer(mDecoder.get(), &mFormat,
+                                            mOutBuffer.begin(), size));
+        break;
+      }
+
+      case JXL_DEC_FULL_IMAGE: {
+        mPipe.ResetToFirstRow();
         for (uint8_t* rowPtr = mOutBuffer.begin(); rowPtr < mOutBuffer.end();
              rowPtr += mInfo.xsize * mChannels) {
           uint8_t* rowToWrite = rowPtr;
@@ -283,10 +320,10 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
             rowToWrite = mCMSLine;
           }
 
-          pipe->WriteBuffer(reinterpret_cast<uint32_t*>(rowToWrite));
+          mPipe.WriteBuffer(reinterpret_cast<uint32_t*>(rowToWrite));
         }
 
-        if (Maybe<SurfaceInvalidRect> invalidRect = pipe->TakeInvalidRect()) {
+        if (Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect()) {
           PostInvalidation(invalidRect->mInputSpaceRect,
                            Some(invalidRect->mOutputSpaceRect));
         }

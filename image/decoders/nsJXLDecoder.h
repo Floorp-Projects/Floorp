@@ -58,6 +58,7 @@ class nsJXLDecoder final : public Decoder {
   uint32_t mNumFrames;
   FrameTimeout mTimeout;
   gfx::SurfaceFormat mSurfaceFormat;
+  SurfacePipe mPipe;
   bool mContinue;
 };
 
