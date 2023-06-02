@@ -7,11 +7,11 @@
 :root {
   /* override --in-content-page-background from common-shared.css */
   background-color: transparent;
-  --fxview-background-color: var(--newtab-background-color, #F9F9FB);
+  --fxview-background-color: var(--newtab-background-color, var(--in-content-page-background));
   --fxview-background-color-secondary: var(--newtab-background-color-secondary, #FFFFFF);
   --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
   --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
-  --fxview-text-primary-color: var(--newtab-text-primary-color, #15141a);
+  --fxview-text-primary-color: var(--newtab-text-primary-color, var(--in-content-page-color));
   --fxview-text-color-hover: var(--newtab-text-primary-color);
   --fxview-primary-action-background: var(--newtab-primary-action-background, #0061e0);
 
@@ -19,6 +19,9 @@
   --in-content-button-background-hover: var(--fxview-element-background-hover);
   --in-content-button-background-active: var(--fxview-element-background-active);
   --in-content-button-text-color-hover: var(--fxview-text-color-hover);
+
+  --fxview-sidebar-width: 286px;
+  --fxview-margin-top: 72px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -41,16 +44,43 @@
 }
 
 body {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--fxview-sidebar-width) 1fr;
   background-color: var(--fxview-background-color);
   color: var(--fxview-text-primary-color);
-}
-
-#navigation {
-  width: var(--in-content-sidebar-width);
+  margin-block-start: var(--fxview-margin-top);
 }
 
 #pages {
-  width: calc(100% - var(--in-content-sidebar-width));
-  margin: 10px;
+  width: 90%;
+  margin: 0 auto;
+  max-width: 1136px;
+}
+
+fxview-category-button[name="overview"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="opentabs"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="recently-closed"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="synced-tabs"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+fxview-category-button[name="history"]::part(icon) {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+
+@media (max-width: 52rem) {
+  :root {
+    --fxview-sidebar-width: 82px;
+  }
+}
+
+@media (min-width: 120rem) {
+  #pages {
+    margin-inline-start: 148px;
+  }
 }

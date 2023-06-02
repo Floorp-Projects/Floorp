@@ -72,6 +72,7 @@ class CardContainer extends MozLitElement {
             id="header"
             class="card-container-header"
             ?hidden=${ifDefined(this.hideHeader)}
+            ?withViewAll=${ifDefined(this.viewAllPage)}
           >
             <span class="icon chevron-icon" aria-role="presentation"></span>
             <slot name="header"></slot>

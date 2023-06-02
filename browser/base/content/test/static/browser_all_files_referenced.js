@@ -296,15 +296,6 @@ var whitelist = [
   { file: "chrome://browser/content/firefoxview/fxview-tab-list.mjs" },
   { file: "chrome://browser/content/firefoxview/fxview-tab-row.css" },
 
-  // Should be removed in bug 1832668
-  {
-    file: "chrome://browser/content/firefoxview/fxview-category-navigation.mjs",
-  },
-  {
-    file: "chrome://browser/content/firefoxview/fxview-category-navigation.css",
-  },
-  { file: "chrome://browser/content/firefoxview/fxview-category-button.css" },
-
   // Bug 1834176 - Imports of NetUtil can't be converted until hostutils is
   // updated.
   { file: "resource://gre/modules/NetUtil.sys.mjs" },
