@@ -893,12 +893,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OfflineAudioContext", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "OfflineResourceList",
-    insecureContext: false,
-    disabled: isEarlyBetaOrEarlier,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OffscreenCanvas", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OffscreenCanvasRenderingContext2D", insecureContext: true },
