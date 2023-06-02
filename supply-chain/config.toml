@@ -353,10 +353,6 @@ criteria = "safe-to-deploy"
 version = "0.13.4"
 criteria = "safe-to-deploy"
 
-[[exemptions.dashmap]]
-version = "4.0.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.data-encoding]]
 version = "2.3.2"
 criteria = "safe-to-deploy"
@@ -635,10 +631,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.os_str_bytes]]
 version = "6.1.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.oslog]]
-version = "0.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.owning_ref]]
