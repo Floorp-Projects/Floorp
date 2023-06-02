@@ -968,11 +968,6 @@
   value: true
   mirror: always
 
-- name: browser.cache.offline.enable
-  type: bool
-  value: false
-  mirror: always
-
 - name: browser.cache.disk.enable
   type: RelaxedAtomicBool
   value: true
