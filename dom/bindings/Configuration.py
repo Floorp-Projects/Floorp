@@ -1083,7 +1083,7 @@ def getAllTypes(descriptors, dictionaries, callbacks):
             yield (t, dictionary)
     for callback in callbacks:
         for t in getTypesFromCallback(callback):
-            yield (t, None)
+            yield (t, callback)
 
 
 # For sync value iterators, we use default array implementation, for async

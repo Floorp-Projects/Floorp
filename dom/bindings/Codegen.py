@@ -1363,15 +1363,21 @@ class CGHeaders(CGWrapper):
         bindingHeaders = set()
         declareIncludes = set(declareIncludes)
 
-        def addHeadersForType(typeAndPossibleDictionary):
+        def addHeadersForType(typeAndPossibleOriginType):
             """
-            Add the relevant headers for this type.  We use dictionary, if
+            Add the relevant headers for this type.  We use its origin type, if
             passed, to decide what to do with interface types.
             """
-            t, dictionary = typeAndPossibleDictionary
+            t, originType = typeAndPossibleOriginType
+            isFromDictionary = originType and originType.isDictionary()
+            isFromCallback = originType and originType.isCallback()
             # Dictionaries have members that need to be actually
             # declared, not just forward-declared.
-            if dictionary:
+            # Callbacks have nullable union arguments that need to be actually
+            # declared, not just forward-declared.
+            if isFromDictionary:
+                headerSet = declareIncludes
+            elif isFromCallback and t.nullable() and t.isUnion():
                 headerSet = declareIncludes
             else:
                 headerSet = bindingHeaders
@@ -1446,13 +1452,13 @@ class CGHeaders(CGWrapper):
             elif unrolled.isPrimitive():
                 bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
             elif unrolled.isRecord():
-                if dictionary or jsImplementedDescriptors:
+                if isFromDictionary or jsImplementedDescriptors:
                     declareIncludes.add("mozilla/dom/Record.h")
                 else:
                     bindingHeaders.add("mozilla/dom/Record.h")
                 # Also add headers for the type the record is
                 # parametrized over, if needed.
-                addHeadersForType((t.inner, dictionary))
+                addHeadersForType((t.inner, originType if isFromDictionary else None))
 
         for t in getAllTypes(
             descriptors + callbackDescriptors, dictionaries, callbacks

@@ -17,6 +17,7 @@ MOCHITEST_MANIFESTS += ["mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["chrome.ini"]
 
 TEST_WEBIDL_FILES += [
+    "TestCallback.webidl",
     "TestDictionary.webidl",
     "TestJSImplInheritanceGen.webidl",
     "TestTypedef.webidl",
