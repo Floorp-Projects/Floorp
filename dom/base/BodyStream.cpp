@@ -567,7 +567,7 @@ BodyStream::Observe(nsISupports* aSubject, const char* aTopic,
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
   if (SameCOMIdentity(aSubject, window)) {
-    Close();
+    CloseInputAndReleaseObjects();
   }
 
   return NS_OK;
