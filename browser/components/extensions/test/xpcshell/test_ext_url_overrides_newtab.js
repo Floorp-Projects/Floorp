@@ -16,8 +16,8 @@ const { AboutNewTab } = ChromeUtils.import(
   "resource:///modules/AboutNewTab.jsm"
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 const {

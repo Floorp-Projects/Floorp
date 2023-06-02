@@ -15,9 +15,7 @@ import {
   WIDEVINE_ID,
 } from "resource://gre/modules/GMPUtils.sys.mjs";
 
-const { ProductAddonChecker } = ChromeUtils.import(
-  "resource://gre/modules/addons/ProductAddonChecker.jsm"
-);
+import { ProductAddonChecker } from "resource://gre/modules/addons/ProductAddonChecker.sys.mjs";
 
 const lazy = {};
 

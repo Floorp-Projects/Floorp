@@ -23,8 +23,8 @@ const EXTENSION_URL_EXPECTED_STRING = gL10n.formatValueSync(
   { extension: EXTENSION_NAME }
 );
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
 const { ExtensionTestUtils } = ChromeUtils.importESModule(

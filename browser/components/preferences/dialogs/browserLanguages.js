@@ -12,12 +12,8 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonRepository",
-  "resource://gre/modules/addons/AddonRepository.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

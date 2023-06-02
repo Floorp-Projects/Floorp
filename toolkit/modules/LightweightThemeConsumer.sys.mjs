@@ -163,8 +163,8 @@ export function LightweightThemeConsumer(aDocument) {
   this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
   this.darkThemeMediaQuery.addListener(this);
 
-  const { LightweightThemeManager } = ChromeUtils.import(
-    "resource://gre/modules/LightweightThemeManager.jsm"
+  const { LightweightThemeManager } = ChromeUtils.importESModule(
+    "resource://gre/modules/LightweightThemeManager.sys.mjs"
   );
   this._update(LightweightThemeManager.themeData);
 

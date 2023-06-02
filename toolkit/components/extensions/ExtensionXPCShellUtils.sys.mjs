@@ -14,12 +14,8 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonTestUtils",
-  "resource://testing-common/AddonTestUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Management: "resource://gre/modules/Extension.sys.mjs",

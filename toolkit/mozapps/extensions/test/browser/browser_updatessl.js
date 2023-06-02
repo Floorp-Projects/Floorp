@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let { AddonUpdateChecker } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonUpdateChecker.jsm"
+let { AddonUpdateChecker } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonUpdateChecker.sys.mjs"
 );
 
 const updatejson = RELATIVE_DIR + "browser_updatessl.json";

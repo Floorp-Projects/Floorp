@@ -1,7 +1,7 @@
 "use strict";
 
-const { AddonSettings } = ChromeUtils.import(
-  "resource://gre/modules/addons/AddonSettings.jsm"
+const { AddonSettings } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/AddonSettings.sys.mjs"
 );
 
 // This test checks that theme warnings are properly emitted.

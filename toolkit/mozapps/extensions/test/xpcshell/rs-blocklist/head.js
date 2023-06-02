@@ -86,8 +86,8 @@ function enable_blocklist_v2_instead_of_useMLBF() {
   Blocklist.allowDeprecatedBlocklistV2 = true;
   Services.prefs.setBoolPref("extensions.blocklist.useMLBF", false);
   // Sanity check: blocklist v2 has been enabled.
-  const { BlocklistPrivate } = ChromeUtils.import(
-    "resource://gre/modules/Blocklist.jsm"
+  const { BlocklistPrivate } = ChromeUtils.importESModule(
+    "resource://gre/modules/Blocklist.sys.mjs"
   );
   Assert.equal(
     Blocklist.ExtensionBlocklist,
@@ -109,7 +109,7 @@ function getExtensionBlocklistMLBF() {
   // pref is set to true.
   const {
     BlocklistPrivate: { ExtensionBlocklistMLBF },
-  } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
+  } = ChromeUtils.importESModule("resource://gre/modules/Blocklist.sys.mjs");
   if (Blocklist.allowDeprecatedBlocklistV2) {
     Assert.ok(
       Services.prefs.getBoolPref("extensions.blocklist.useMLBF", false),

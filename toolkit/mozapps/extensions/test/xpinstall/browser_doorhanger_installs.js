@@ -5,8 +5,8 @@
 // TODO(Bug 1789718): adapt to synthetic addon type implemented by the SitePermAddonProvider
 // or remove if redundant, after the deprecated XPIProvider-based implementation is also removed.
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 const { ExtensionPermissions } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"

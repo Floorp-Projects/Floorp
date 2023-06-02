@@ -13,11 +13,9 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonRepository",
-  "resource://gre/modules/addons/AddonRepository.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
+});
 
 function AddonUtilsInternal() {
   this._log = Log.repository.getLogger("Sync.AddonUtils");

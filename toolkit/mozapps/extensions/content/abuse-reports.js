@@ -11,8 +11,8 @@
  * helpers used for the Abuse Reporting submission (and related message bars).
  */
 
-const { AbuseReporter } = ChromeUtils.import(
-  "resource://gre/modules/AbuseReporter.jsm"
+const { AbuseReporter } = ChromeUtils.importESModule(
+  "resource://gre/modules/AbuseReporter.sys.mjs"
 );
 
 // Message Bars definitions.
