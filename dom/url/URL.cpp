@@ -123,12 +123,12 @@ void URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
   }
 }
 
-bool URL::IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
-                     ErrorResult& aRv) {
+bool URL::IsValidObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
+                           ErrorResult& aRv) {
   if (NS_IsMainThread()) {
-    return URLMainThread::IsValidURL(aGlobal, aURL, aRv);
+    return URLMainThread::IsValidObjectURL(aGlobal, aURL, aRv);
   }
-  return URLWorker::IsValidURL(aGlobal, aURL, aRv);
+  return URLWorker::IsValidObjectURL(aGlobal, aURL, aRv);
 }
 
 bool URL::CanParse(const GlobalObject& aGlobal, const nsAString& aURL,

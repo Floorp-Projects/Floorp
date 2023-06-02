@@ -66,8 +66,8 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   static void RevokeObjectURL(const GlobalObject& aGlobal,
                               const nsAString& aURL, ErrorResult& aRv);
 
-  static bool IsValidURL(const GlobalObject& aGlobal, const nsAString& aURL,
-                         ErrorResult& aRv);
+  static bool IsValidObjectURL(const GlobalObject& aGlobal,
+                               const nsAString& aURL, ErrorResult& aRv);
 
   static bool CanParse(const GlobalObject& aGlobal, const nsAString& aURL,
                        const Optional<nsAString>& aBase);
