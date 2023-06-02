@@ -64,6 +64,35 @@ add_task(async function () {
     },
     { line: 51, column: 39, expression: "this.#privateVar", result: 2 },
   ]);
+
+  info(
+    "Check that closing the preview tooltip doesn't release the underlying object actor"
+  );
+  invokeInTab("classPreview");
+  await waitForPaused(dbg);
+  info("Display popup a first time and hide it");
+  await assertPreviews(dbg, [
+    {
+      line: 60,
+      column: 7,
+      expression: "y",
+      fields: [["hello", "{…}"]],
+    },
+  ]);
+  await closePreviewAtPos(dbg, 60, 7);
+
+  info("Display the popup again and try to expand a property");
+  const popupEl = await tryHovering(dbg, 60, 7, "popup");
+  const nodes = popupEl.querySelectorAll(".preview-popup .node");
+  const initialNodesLength = nodes.length;
+  nodes[0].querySelector(".arrow").click();
+  await waitFor(
+    () =>
+      popupEl.querySelectorAll(".preview-popup .node").length >
+      initialNodesLength
+  );
+  ok(true, `"hello" was expanded`);
+  await resume(dbg);
 });
 
 async function testPreviews(dbg, fnName, previews) {

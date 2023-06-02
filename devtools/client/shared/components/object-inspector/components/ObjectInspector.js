@@ -74,7 +74,9 @@ const {
 // children.
 
 class ObjectInspector extends Component {
-  static defaultProps;
+  static defaultProps = {
+    autoReleaseObjectActors: true
+  };
   constructor(props) {
     super();
     this.cachedNodes = new Map();
@@ -168,7 +170,9 @@ class ObjectInspector extends Component {
   }
 
   componentWillUnmount() {
-    this.props.closeObjectInspector(this.props.roots);
+    if (this.props.autoReleaseObjectActors){
+      this.props.closeObjectInspector(this.props.roots);
+    }
   }
 
   getItemChildren(item) {

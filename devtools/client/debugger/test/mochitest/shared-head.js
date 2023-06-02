@@ -2189,6 +2189,12 @@ async function closePreviewAtPos(dbg, line, column) {
   InspectorUtils.removePseudoClassLock(tokenEl, ":hover");
 
   const gutterEl = await getEditorLineGutter(dbg, line);
+
+  // The popup gets hidden when "mouseleave" is emitted on the tokenEl.
+  // EventUtils can't send "mouseleave" event, and since the mouse could have been moved
+  // since the tooltip was displayed, move it back to the token and then to the gutter,
+  // which should trigger a mouseleave event.
+  EventUtils.synthesizeMouseAtCenter(tokenEl, { type: "mousemove" }, dbg.win);
   EventUtils.synthesizeMouseAtCenter(gutterEl, { type: "mousemove" }, dbg.win);
   await waitUntil(() => findElement(dbg, "previewPopup") == null);
 }

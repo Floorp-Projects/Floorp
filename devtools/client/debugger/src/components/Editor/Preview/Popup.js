@@ -148,6 +148,7 @@ export class Popup extends Component {
         <ObjectInspector
           roots={roots}
           autoExpandDepth={0}
+          autoReleaseObjectActors={false}
           mode={usesCustomFormatter ? MODE.LONG : null}
           disableWrap={true}
           focusable={false}
