@@ -254,7 +254,12 @@
     <string name="preference_privacy_block_content_summary2">Le utzijik wene kub\'ano chi jujun taq uxaq wuj man eye\'tal ta le kkib\'ano</string>
     <string name="preference_privacy_category_cookies">Chaq\'atej cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Ja‘i‘ tyox</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">&quot;Xew chaq\'atej cookies kech 3urox &quot;</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Je‘ chab‘ana‘ jun toq‘ob‘</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->

@@ -861,6 +861,9 @@
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Vichi nchua ni kanta ndau. Kitsa tuku.</string>
 
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">A Kuncheu nixi ndukuku</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">No</string>
 
@@ -912,6 +915,8 @@
 
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Vaa Xikua</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Kue ku nuna xikua yoo</string>
     <!-- Subtitle for the tab crash report screen -->
     <string name="tab_crash_report_description">Ña Ntukú sèè, kue nchikavai ña ntsinu tsi xikua ntsinu sata.</string>
     <!-- Label for button to close the tab-->
@@ -976,6 +981,12 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Tatyu´un ña inka nu kaa ndusu ku</string>
 
+     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Sitio yo kue ku kuni HTTPS</string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conexión ntu va´a</string>
+
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Kasi xikua</string>
@@ -992,7 +1003,18 @@
 
     <!-- Promote SearchWidget Dialog -->
 
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">Kasi</string>
+
     <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">¡Koo ña ntsinu ! 🎉</string>
 
-    </resources>
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Chika\'a nu pantalla xina</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Tyika Widget xina</string>
+</resources>
