@@ -3369,9 +3369,9 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
   bool shouldRestoreFocus = false;
   nsWeakPtr originallyFocusedElement;
   if (IsAutoPopover()) {
-    RefPtr<Element> ancestor = GetTopmostPopoverAncestor();
+    RefPtr<nsINode> ancestor = GetTopmostPopoverAncestor();
     if (!ancestor) {
-      ancestor = document->GetDocumentElement();
+      ancestor = document;
     }
     document->HideAllPopoversUntil(*ancestor, false, true);
 

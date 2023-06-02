@@ -15002,29 +15002,47 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
     return;
   }
 
-  RefPtr<const Element> lastToHide = nullptr;
-  bool foundEndpoint = false;
-  for (const Element* popover : AutoPopoverList()) {
-    if (popover == &aEndpoint) {
-      foundEndpoint = true;
-    } else if (foundEndpoint) {
-      lastToHide = popover;
-      break;
-    }
-  }
+  // https://github.com/whatwg/html/pull/9198
+  auto needRepeatingHide = [&]() {
+    auto autoList = AutoPopoverList();
+    return autoList.Contains(&aEndpoint) &&
+           &aEndpoint != autoList.LastElement();
+  };
 
-  if (!foundEndpoint) {
-    closeAllOpenPopovers();
-    return;
-  }
-
-  while (lastToHide && lastToHide->IsPopoverOpen()) {
-    RefPtr<Element> topmost = GetTopmostAutoPopover();
-    if (!topmost) {
-      break;
+  MOZ_ASSERT((&aEndpoint)->IsElement() &&
+             (&aEndpoint)->AsElement()->IsAutoPopover());
+  bool repeatingHide = false;
+  bool fireEvents = aFireEvents;
+  do {
+    RefPtr<const Element> lastToHide = nullptr;
+    bool foundEndpoint = false;
+    for (const Element* popover : AutoPopoverList()) {
+      if (popover == &aEndpoint) {
+        foundEndpoint = true;
+      } else if (foundEndpoint) {
+        lastToHide = popover;
+        break;
+      }
     }
-    HidePopover(*topmost, aFocusPreviousElement, aFireEvents, IgnoreErrors());
-  }
+
+    if (!foundEndpoint) {
+      closeAllOpenPopovers();
+      return;
+    }
+
+    while (lastToHide && lastToHide->IsPopoverOpen()) {
+      RefPtr<Element> topmost = GetTopmostAutoPopover();
+      if (!topmost) {
+        break;
+      }
+      HidePopover(*topmost, aFocusPreviousElement, fireEvents, IgnoreErrors());
+    }
+
+    repeatingHide = needRepeatingHide();
+    if (repeatingHide) {
+      fireEvents = false;
+    }
+  } while (repeatingHide);
 }
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void
