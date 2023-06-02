@@ -794,6 +794,12 @@ criteria = "safe-to-deploy"
 violation = "<0.20.0"
 notes = "Specified crate license does not include licenses of embedded fonts if using default features or the `default_fonts` feature. Tracked in: https://github.com/emilk/egui/issues/2321"
 
+[[audits.embark-studios.audits.ident_case]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "1.0.1"
+notes = "No unsafe usage or ambient capabilities"
+
 [[audits.google.audits.ash]]
 who = "David Koloski <dkoloski@google.com>"
 criteria = "safe-to-deploy"
