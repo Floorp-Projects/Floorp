@@ -973,11 +973,14 @@ static nsresult AppendErrorPointer(tainted_expat<XML_Size> aColNumber,
                              "Unexpected value of column");
 
   // Last character will be '^'.
-  XML_Size last = (aColNumber - 1).copy_and_verify([&](XML_Size val) {
-    MOZ_RELEASE_ASSERT(val <= aSourceLineLength,
-                       "Unexpected value of last column");
-    return val;
-  });
+  XML_Size last =
+      (aColNumber - 1).copy_and_verify([&](XML_Size val) -> XML_Size {
+        if (val > aSourceLineLength) {
+          // Unexpected value of last column, just return a safe value
+          return 0;
+        }
+        return val;
+      });
 
   XML_Size i;
   uint32_t minuses = 0;
