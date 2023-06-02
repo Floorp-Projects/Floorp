@@ -15,8 +15,6 @@ import android.content.pm.ResolveInfo
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.resetMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
@@ -473,10 +471,6 @@ class DownloadsFeatureTest {
 
     @Test
     fun `showDownloadNotSupportedError shows toast`() {
-        // We need to create a Toast on the actual main thread (with a Looper) and therefore reset
-        // the main dispatcher that was set to a TestDispatcher in setUp().
-        Dispatchers.resetMain()
-
         grantPermissions()
 
         val downloadManager: DownloadManager = mock()
