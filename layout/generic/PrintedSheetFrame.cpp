@@ -298,6 +298,16 @@ void PrintedSheetFrame::ComputePagesPerSheetGridMetrics(
   mGridCellHeight = availSpaceOnSheet.height / nscoord(numRows);
 }
 
+gfx::IntSize PrintedSheetFrame::GetPrintTargetSizeInPoints(
+    const int32_t aAppUnitsPerPhysicalInch) const {
+  const auto size = GetSize();
+  MOZ_ASSERT(size.width > 0 && size.height > 0);
+  const float pointsPerAppUnit =
+      POINTS_PER_INCH_FLOAT / float(aAppUnitsPerPhysicalInch);
+  return IntSize::Ceil(float(size.width) * pointsPerAppUnit,
+                       float(size.height) * pointsPerAppUnit);
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult PrintedSheetFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(u"PrintedSheet"_ns, aResult);

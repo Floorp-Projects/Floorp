@@ -54,10 +54,11 @@ nsresult PrintTargetSkPDF::BeginPrinting(const nsAString& aTitle,
   return mPDFDoc ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult PrintTargetSkPDF::BeginPage() {
+nsresult PrintTargetSkPDF::BeginPage(const IntSize& aSizeInPoints) {
   mPageCanvas = mPDFDoc->beginPage(mSize.width, mSize.height);
 
-  return !mPageCanvas ? NS_ERROR_FAILURE : PrintTarget::BeginPage();
+  return !mPageCanvas ? NS_ERROR_FAILURE
+                      : PrintTarget::BeginPage(aSizeInPoints);
 }
 
 nsresult PrintTargetSkPDF::EndPage() {

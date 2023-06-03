@@ -11,6 +11,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PrintedSheetFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/StaticPresData.h"
 
 #include "nsCOMPtr.h"
@@ -584,7 +585,10 @@ nsresult nsPageSequenceFrame::PrePrintNextSheet(nsITimerCallback* aCallback,
       nsDeviceContext* dc = PresContext()->DeviceContext();
       PR_PL(("\n"));
       PR_PL(("***************** BeginPage *****************\n"));
-      rv = dc->BeginPage();
+      const gfx::IntSize sizeInPoints =
+          currentSheet->GetPrintTargetSizeInPoints(
+              dc->AppUnitsPerPhysicalInch());
+      rv = dc->BeginPage(sizeInPoints);
       NS_ENSURE_SUCCESS(rv, rv);
 
       mCalledBeginPage = true;
@@ -675,7 +679,10 @@ nsresult nsPageSequenceFrame::PrintNextSheet() {
       // page otherwise.
       PR_PL(("\n"));
       PR_PL(("***************** BeginPage *****************\n"));
-      rv = dc->BeginPage();
+      const gfx::IntSize sizeInPoints =
+          currentSheetFrame->GetPrintTargetSizeInPoints(
+              dc->AppUnitsPerPhysicalInch());
+      rv = dc->BeginPage(sizeInPoints);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
