@@ -7,7 +7,6 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsCOMPtr.h"
-#include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/PrintPromise.h"
 
 class nsDeviceContextSpecAndroid final : public nsIDeviceContextSpec {
@@ -15,8 +14,6 @@ class nsDeviceContextSpecAndroid final : public nsIDeviceContextSpec {
   virtual ~nsDeviceContextSpecAndroid();
 
  public:
-  using IntSize = mozilla::gfx::IntSize;
-
   NS_DECL_ISUPPORTS
 
   already_AddRefed<PrintTarget> MakePrintTarget() final;
@@ -26,7 +23,7 @@ class nsDeviceContextSpecAndroid final : public nsIDeviceContextSpec {
                            const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) override;
   RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocument() override;
-  NS_IMETHOD BeginPage(const IntSize& aSizeInPoints) override { return NS_OK; }
+  NS_IMETHOD BeginPage() override { return NS_OK; }
   NS_IMETHOD EndPage() override { return NS_OK; }
 
  private:

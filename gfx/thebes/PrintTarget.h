@@ -43,11 +43,7 @@ class PrintTarget {
 #endif
     return NS_OK;
   }
-  /**
-   * Note: not all print devices implement mixed page sizing. Most PrintTarget
-   * subclasses will ignore `aSizeInPoints`.
-   */
-  virtual nsresult BeginPage(const IntSize& aSizeInPoints) {
+  virtual nsresult BeginPage() {
 #ifdef DEBUG
     MOZ_ASSERT(!mHasActivePage, "Missing EndPage() call");
     mHasActivePage = true;

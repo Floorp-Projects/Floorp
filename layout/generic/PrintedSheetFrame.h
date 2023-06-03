@@ -9,7 +9,6 @@
 #ifndef LAYOUT_GENERIC_PRINTEDSHEETFRAME_H_
 #define LAYOUT_GENERIC_PRINTEDSHEETFRAME_H_
 
-#include "mozilla/gfx/Point.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 
@@ -19,8 +18,6 @@ namespace mozilla {
 
 class PrintedSheetFrame final : public nsContainerFrame {
  public:
-  using IntSize = mozilla::gfx::IntSize;
-
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(PrintedSheetFrame)
 
@@ -29,7 +26,6 @@ class PrintedSheetFrame final : public nsContainerFrame {
 
   void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
-  // XXX: this needs a better name, since it also updates style.
   // Invokes MoveOverflowToChildList.
   // This is intended for use by callers that need to be able to get our first/
   // only nsPageFrame from our child list to examine its computed style just
@@ -59,37 +55,21 @@ class PrintedSheetFrame final : public nsContainerFrame {
   nscoord GetGridCellWidth() const { return mGridCellWidth; }
   nscoord GetGridCellHeight() const { return mGridCellHeight; }
 
-  nsSize ComputeSheetSize(const nsPresContext* aPresContext);
-
   /**
-   * When we're printing one page-per-sheet and `page-orientation` on our
-   * single nsPageFrame child should cause the page to rotate, then we want to
-   * essentially rotate the sheet. We implement that by switching the
-   * dimensions of this sheet (changing its orientation), sizing the
-   * nsPageFrame to the original dimensions, and then applying the rotation to
-   * the nsPageFrame child.
-   *
-   * This returns the dimensions that this frame would have without any
-   * dimension swap we may have done to implement `page-orientation`. If
-   * there is no rotation caused by `page-orientation`, then the value returned
-   * and mRect.Size() are identical.
+   * A helper that is called just prior to this frame being relfowed to
+   * pre-compute and cache the size that the sheet should be given. This is
+   * called before any child nsPageFrames are reflowed, and it is cached so
+   * that those nsPageFrames can obtain their sheet frame's size while they're
+   * reflowing (the normal reflow code doesn't give the sheet frame its size
+   * until after the nsPageFrames have been reflowed).
+   * If we get rid of nsPageFrame::ComputeSinglePPSPageSizeScale (bug 1835782),
+   * which is the only consumer of GetPrecomputedSheetSize, then we can get rid
+   * of GetPrecomputedSheetSize and the member variable and rename
+   * PrecomputeSheetSize to ComputeSheetSize, which will then only be called
+   * once during reflow.
    */
-  nsSize GetSizeForChildren() const { return mSizeForChildren; }
-
-  /**
-   * This method returns the dimensions of the physical page that the target
-   * [pseudo-]printer should create. This may be different from our own
-   * dimensions in the case where CSS `page-orientation` causes us to be
-   * rotated, but we only support that if the PrintTarget backend supports
-   * different page sizes/orientations. That's only the case for our Save-to-PDF
-   * backends (possibly other save-to-file outputs in future).
-   *
-   * The dimensions returned are expected to be passed to
-   * nsDeviceContext::BeginPage, which will pass them on to
-   * PrintTarget::BeginPage to use as the physical dimensions of the page.
-   */
-  IntSize GetPrintTargetSizeInPoints(
-      const int32_t aAppUnitsPerPhysicalInch) const;
+  nsSize PrecomputeSheetSize(const nsPresContext* aPresContext);
+  nsSize GetPrecomputedSheetSize() const { return mPrecomputedSize; }
 
  private:
   // Private construtor & destructor, to avoid accidental (non-FrameArena)
@@ -112,8 +92,7 @@ class PrintedSheetFrame final : public nsContainerFrame {
   // a sensible amount of spacing between pages.)
   void ComputePagesPerSheetGridMetrics(const nsSize& aSheetSize);
 
-  // See GetSizeForChildren.
-  nsSize mSizeForChildren;
+  nsSize mPrecomputedSize;
 
   // Note: this will be set before reflow, and it's strongly owned by our
   // nsPageSequenceFrame, which outlives us.
