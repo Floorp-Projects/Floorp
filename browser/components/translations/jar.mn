@@ -3,4 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/translations/translationsPanel.js     (content/translationsPanel.js)
+    content/browser/translations/translationsPanel.js          (content/translationsPanel.js)
+    content/browser/translations/TranslationsTelemetry.sys.mjs (TranslationsTelemetry.sys.mjs)
