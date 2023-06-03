@@ -1,0 +1,29 @@
+{
+  "name": "You.com",
+  "description": "You.com Search Engine",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "you.com@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "keyword": "@you",
+      "name": "You.com",
+      "search_url": "https://you.com/search",
+      "search_form": "https://you.com/",
+      "search_url_get_params": "q={searchTerms}",
+      "suggest_url": "https://you.com/api/ac",
+      "suggest_url_get_params": "q={searchTerms}"
+    }
+  }
+}

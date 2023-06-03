@@ -1,0 +1,172 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ :root {
+   --memo-list-sidebar-width: 20vw;
+   --main-content-padding-to-sidebar: 2vw;
+   font: message-box;
+   appearance: none;
+   background-color: var(--in-content-box-background-odd) !important;
+   color: var(--in-content-page-color) !important;
+ }
+
+ button {
+  background-color: var(--in-content-box-info-background) !important;
+ }
+ 
+ #header {
+   margin: 0 !important;
+ }
+ 
+ body, html {
+   display: flex;
+   min-height: 100% !important;
+   height: 100% !important;
+   width: 100% !important;
+   padding: 10px !important;
+   flex-direction: column;
+   box-sizing: border-box;
+   align-items: stretch;
+   justify-content: stretch;
+   overflow-x: hidden;
+   overflow-y: auto;
+ }
+ 
+ #memo-title-input {
+   display: inherit;
+   width: 18em;
+   margin-bottom: 2vw;
+   background: var(--in-content-box-background-odd);
+ }
+ 
+ #memo-contents {
+   padding: 0 var(--main-content-padding-to-sidebar);
+   width: 100%;
+   height: 100%;
+ }
+ 
+ .memo-list-item {
+   margin: 0;
+   border-bottom: solid 1px gray;
+   padding: 15px;
+   text-align: left;
+ }
+ 
+ #memo-lists-sidebar {
+   height: 25vh;
+ }
+ 
+ #header-box {
+   display: flex;
+   border-bottom: solid 1px gray;
+   height: 3em;
+ }
+ 
+ #memo-input {
+   resize: none;
+   max-width: 100%;
+   width: 100%;
+   background: var(--in-content-box-background-odd);
+ }
+ 
+ #memo-list {
+   overflow: auto;
+   display: block;
+   height: 100%;
+ }
+ 
+ #memo-add {
+  margin: 0 auto;
+  position: absolute;
+  right: 2%;
+ }
+ 
+ #button-box {
+   padding-bottom: 0;
+   margin-left: auto;
+ }
+ 
+ #memo-input-box {
+   display: flex;
+   height: 90%;
+ }
+ 
+ #memo-delete {
+   background-image: url("chrome://global/skin/icons/delete.svg");
+   background-repeat: no-repeat;
+   background-position: 5px;
+   -moz-context-properties: fill;
+   fill: currentColor;
+   min-width: auto;
+   flex: 0 0 auto;
+   max-height: 20px;
+   margin-left: auto;
+ }
+ 
+ #titleAndDelete {
+   display: flex;
+ }
+ 
+ #memo-form {
+   margin-top: 2vw;
+   height: 55%;
+   margin-bottom: 1vw;
+ }
+ 
+ #memo-save {
+   height: 2.5vw;
+ }
+ 
+ #beta {
+   margin: auto 1vw 1vw;
+   font-style: italic;
+   color: gray;
+ }
+ 
+ #title-box {
+   display: flex;
+ }
+ 
+ #html-output {
+   overflow: auto;
+ }
+ 
+ #button-box {
+   display: flex;
+   justify-content: space-between;
+   margin-top: 2.5%;
+ }
+ 
+ #header-items {
+   display: flex;
+   justify-content: space-between;
+ }
+ 
+ #memo-markdown-preview {
+   margin-right: auto;
+ }
+ 
+ #html-output {
+   display: block;
+   border: solid 1px gray;
+   box-shadow: 0 1px 4px var(--grey-90-a10);
+   background: var(--in-content-box-background-odd);
+   border: 1px solid transparent;
+   border-radius: 4px;
+   box-shadow: var(--card-shadow);
+   margin: 0 0 0.8vw;
+   margin-bottom: 0.8vw;
+   padding: calc(var(--card-padding) - 0.1vw);
+   transition: box-shadow 150ms;
+ }
+ 
+ #offline-label {
+   font-weight: 600;
+   line-height: 1.4em;
+   margin: auto;
+   margin-right: auto;
+   opacity: 0.7;
+   font-size: 15px;
+   margin-right: 1em;
+ }
