@@ -1358,7 +1358,7 @@ CacheIRStubInfo* CacheIRStubInfo::New(CacheKind kind, ICStubEngine engine,
   fieldTypes[numStubFields] = uint8_t(StubField::Type::Limit);
 
   return new (p) CacheIRStubInfo(kind, engine, makesGCCalls, stubDataOffset,
-                                 codeStart, writer.codeLength(), fieldTypes);
+                                 writer.codeLength());
 }
 
 bool OperandLocation::operator==(const OperandLocation& other) const {
