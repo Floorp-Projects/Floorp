@@ -57,7 +57,7 @@ EXTRA_PP_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     "AbuseReporter.sys.mjs",
-    "AddonManager.jsm",
+    "AddonManager.sys.mjs",
     "amContentHandler.sys.mjs",
     "amInstallTrigger.sys.mjs",
     "amManager.sys.mjs",
