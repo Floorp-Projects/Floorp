@@ -28,6 +28,7 @@ gecko_metrics = [
     "toolkit/components/pdfjs/metrics.yaml",
     "toolkit/mozapps/extensions/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
+    "toolkit/components/translations/metrics.yaml",
     "xpcom/metrics.yaml",
 ]
 
