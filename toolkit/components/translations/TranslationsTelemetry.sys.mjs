@@ -7,6 +7,18 @@
  */
 export class TranslationsTelemetry {
   /**
+   * Records a telemetry event when full page translation fails.
+   *
+   * @param {Error} error
+   */
+  static onError(error) {
+    Glean.translations.errorRate.addToNumerator(1);
+    Glean.translations.error.record({
+      reason: String(error),
+    });
+  }
+
+  /**
    * Records a telemetry event when a translation request is sent.
    *
    * @param {object} data
@@ -15,6 +27,7 @@ export class TranslationsTelemetry {
    * @param {boolean} data.autoTranslate
    */
   static onTranslate(data) {
+    Glean.translations.requestsCount.add(1);
     Glean.translations.translationRequest.record({
       from_language: data.fromLanguage,
       to_language: data.toLanguage,
