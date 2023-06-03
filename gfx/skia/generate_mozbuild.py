@@ -61,6 +61,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
 elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
+DEFINES['MOZ_SKIA'] = True
+
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 
 DEFINES['SK_PDF_USE_HARFBUZZ_SUBSETTING'] = 1
