@@ -1,0 +1,26 @@
+Hey Chris,
+
+I apologize to ask this of you, but I was wondering if you might be able to find time to prioritize these data reviews today:
+
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1835502 (Already done)
+
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1836381 (new)
+
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1836436 (new)
+
+I've been working hard to try to get some of the most critical metrics implemented for our first round of QA testing
+while Translations is enabled in Nightly and Early Beta. 
+
+I apologize about the rushed nature of this. I've never done telemetry before and there was a lot of knowledge
+to take in in a short time. 
+
+My plan is to revisit these metrics and add more over the next month before our second round of beta testing.
+
+If you think it would be better to set an expiration for these, rather than `never`, I think that's reasonable.
+
+The ultimate intent is to have them never expire, but I realize these exact metrics may not be perfect or
+idiomatic.
+
+I'm also happy to make any changes today if you find something undesirable about them, but I'm really
+hoping to land these during this soft freeze, given that it doesn't change any implementation details
+(only adds telemetry), and we really want to have some measurements in this first early-beta cycle.
