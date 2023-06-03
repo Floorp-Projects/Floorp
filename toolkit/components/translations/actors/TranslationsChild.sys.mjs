@@ -835,6 +835,7 @@ export class TranslationsChild extends JSWindowActorChild {
         }
       );
     } catch (error) {
+      lazy.TranslationsTelemetry.onError(error);
       lazy.console.log(
         "Failed to load the translations engine",
         error,
@@ -851,6 +852,7 @@ export class TranslationsChild extends JSWindowActorChild {
     try {
       await this.#getTranslationsEngine();
     } catch (error) {
+      lazy.TranslationsTelemetry.onError(error);
       this.sendAsyncMessage("Translations:FullPageTranslationFailed", {
         reason: "engine-load-failure",
       });
