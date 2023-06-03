@@ -1,0 +1,235 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+:root {
+  /* https://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/themes/shared/in-content/common.inc.css */
+  --in-content-page-color: var(--grey-90);
+  --in-content-page-background: var(--grey-10);
+  --in-content-text-color: var(--in-content-page-color);
+  --in-content-deemphasized-text: var(--grey-60);
+  --in-content-selected-text: #fff;
+  --in-content-box-background: #fff;
+  --in-content-box-background-hover: var(--grey-20);
+  --in-content-box-background-active: var(--grey-30);
+  --in-content-box-border-color: var(--grey-90-a30);
+  --in-content-box-border-color-mixed: rgb(calc((249 * 0.7) + (12 * 0.3)), calc((249 * 0.7) + (12 * 0.3)), calc((250 * 0.7) + (13 * 0.3)));
+  --in-content-box-info-background: var(--grey-20);
+  --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
+  --in-content-item-hover-mixed: rgb(calc((249 * 0.8) + (69 * 0.2)), calc((249 * 0.8) + (161 * 0.2)), calc((250 * 0.8) + (255 * 0.2)));
+  --in-content-item-selected: var(--blue-50);
+  --in-content-border-highlight: var(--blue-50);
+  --in-content-border-focus: var(--blue-50);
+  --in-content-border-hover: var(--grey-90-a50);
+  --in-content-border-hover-mixed: rgb(calc((249 * 0.5) + (12 * 0.5)), calc((249 * 0.5) + (12 * 0.5)), calc((250 * 0.5) + (13 * 0.5)));
+  --in-content-border-active: var(--blue-50);
+  --in-content-border-active-shadow: var(--blue-50-a30);
+  --in-content-border-invalid: var(--red-50);
+  --in-content-border-invalid-shadow: var(--red-50-a30);
+  --in-content-border-color: var(--grey-30);
+  --in-content-border-color-mixed: #d7d7db;
+  --in-content-category-outline-focus: 1px dotted var(--blue-50);
+  --in-content-category-text-selected: var(--blue-50);
+  --in-content-category-text-selected-active: var(--blue-60);
+  --in-content-category-background-hover: rgba(12,12,13,0.1);
+  --in-content-category-background-active: rgba(12,12,13,0.15);
+  --in-content-category-background-selected-hover: rgba(12,12,13,0.15);
+  --in-content-category-background-selected-active: rgba(12,12,13,0.2);
+  --in-content-tab-color: #424f5a;
+  --in-content-link-color: var(--blue-60);
+  --in-content-link-color-hover: var(--blue-70);
+  --in-content-link-color-active: var(--blue-80);
+  --in-content-link-color-visited: var(--blue-60);
+  --in-content-button-background: var(--grey-90-a10);
+  --in-content-button-background-mixed: rgb(calc((249 * 0.9) + (12 * 0.1)), calc((249 * 0.9) + (12 * 0.1)), calc((250 * 0.9) + (13 * 0.1)));
+  --in-content-button-background-hover: var(--grey-90-a20);
+  --in-content-button-background-hover-mixed: rgb(calc((249 * 0.8) + (12 * 0.2)), calc((249 * 0.8) + (12 * 0.2)), calc((250 * 0.8) + (13 * 0.2)));
+  --in-content-button-background-active: var(--grey-90-a30);
+  --in-content-button-background-active-mixed: rgb(calc((249 * 0.7) + (12 * 0.3)), calc((249 * 0.7) + (12 * 0.3)), calc((250 * 0.7) + (13 * 0.3)));
+
+  --blue-40: #45a1ff;
+  --blue-40-a10: rgb(69, 161, 255, 0.1);
+  --blue-50: #0a84ff;
+  --blue-50-a30: rgba(10, 132, 255, 0.3);
+  --blue-60: #0060df;
+  --blue-70: #003eaa;
+  --blue-80: #002275;
+  --grey-10: #f9f9fa;
+  --grey-10-a015: rgba(249, 249, 250, 0.015);
+  --grey-10-a20: rgba(249, 249, 250, 0.2);
+  --grey-20: #ededf0;
+  --grey-30: #d7d7db;
+  --grey-40: #b1b1b3;
+  --grey-60: #4a4a4f;
+  --grey-90: #0c0c0d;
+  --grey-90-a10: rgba(12, 12, 13, 0.1);
+  --grey-90-a11: rgba(12, 12, 13, 0.11);
+  --grey-90-a20: rgba(12, 12, 13, 0.2);
+  --grey-90-a30: rgba(12, 12, 13, 0.3);
+  --grey-90-a40: rgba(12, 12, 13, 0.4);
+  --grey-90-a50: rgba(12, 12, 13, 0.5);
+  --grey-90-a60: rgba(12, 12, 13, 0.6);
+  --green-50: #30e60b;
+  --green-60: #12bc00;
+  --green-70: #058b00;
+  --green-80: #006504;
+  --green-90: #003706;
+  --orange-50: #ff9400;
+  --purple-70: #6200a4;
+  --red-50: #ff0039;
+  --red-50-a10: rgba(255, 0, 57, 0.1);
+  --red-50-a30: rgba(255, 0, 57, 0.3);
+  --red-60: #d70022;
+  --red-70: #a4000f;
+  --red-80: #5a0002;
+  --red-90: #3e0200;
+  --yellow-10: #ffff98;
+  --yellow-50: #ffe900;
+  --yellow-60: #d7b600;
+  --yellow-60-a30: rgba(215, 182, 0, 0.3);
+  --yellow-70: #a47f00;
+  --yellow-80: #715100;
+  --yellow-90: #3e2800;
+
+  /* https://hg.mozilla.org/mozilla-central/raw-file/tip/browser/themes/addons/dark/manifest.json */
+  --dark-frame: #1c1b22;
+  --dark-icons: rgb(251,251,254);
+  --dark-ntp-background: #2A2A2E;
+  --dark-ntp-text: rgb(251, 251, 254);
+  --dark-popup: rgb(66,65,77);
+  --dark-popup-border: rgb(82,82,94);
+  --dark-popup-text: rgb(251,251,254);
+  --dark-sidebar: #38383D;
+  --dark-sidebar-text: rgb(249, 249, 250);
+  --dark-sidebar-border: rgba(255, 255, 255, 0.1);
+  --dark-tab-background-text: #fbfbfe;
+  --dark-tab-line: transparent;
+  --dark-toolbar: rgb(43,42,51);
+  --dark-toolbar-bottom-separator: hsl(240, 5%, 5%);
+  --dark-toolbar-field: rgb(28,27,34);
+  --dark-toolbar-field-border: transparent;
+  --dark-toolbar-field-separator: #5F6670;
+  --dark-toolbar-field-text: rgb(251,251,254);
+
+  /* https://searchfox.org/mozilla-central/rev/35873cfc312a6285f54aa5e4ec2d4ab911157522/browser/themes/shared/tabs.inc.css#24 */
+  --tab-loading-fill: #0A84FF;
+
+  --focus-outline-color: #0061E0; /* https://searchfox.org/mozilla-central/rev/f60e5304300b286376664b25143cdc6b38a0f0d7/browser/themes/shared/browser-shared.css#124 */
+  --focus-outline-color-a40: #0061E066; /* 40% alpha */
+
+
+  --bg-color: var(--grey-10);
+  --text-color: var(--grey-90);
+}
+
+:link {
+  color: var(--in-content-link-color);
+}
+:visited {
+  color: var(--in-content-link-color-visited);
+}
+
+:link:hover,
+:visited:hover {
+  color: var(--in-content-link-color-hover);
+}
+
+:link:active,
+:visited:active {
+  color: var(--in-content-link-color-active);
+}
+
+textarea,
+input {
+  background: var(--in-content-box-background);
+  border: thin solid var(--in-content-box-border-color-mixed);
+  color: var(--in-content-text-color);
+}
+textarea:hover,
+input:hover {
+  border-color: var(--in-content-border-hover-mixed);
+}
+textarea:focus,
+input:focus {
+  border-color: var(--in-content-border-focus);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+              0 0 0 4px var(--in-content-border-active-shadow);
+}
+button,
+select {
+  background: var(--in-content-button-background-mixed);
+  border: 0 none transparent;
+  color: var(--in-content-text-color);
+}
+button:hover,
+select:hover {
+  background: var(--in-content-button-background-hover-mixed);
+}
+button:focus,
+select:focus {
+  background: var(--in-content-button-background-active-mixed);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+              0 0 0 4px var(--in-content-border-active-shadow);
+}
+option {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+option:active,
+option:focus {
+  background: var(--in-content-item-selected);
+}
+option:hover {
+  background: var(--in-content-item-hover-mixed);
+}
+
+fieldset,
+hr {
+  border: thin solid var(--in-content-box-border-color-mixed);
+}
+
+hr {
+  border-width: thin 0 0 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root.sidebar,
+  :root:not(.sidebar) {
+    /* https://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/themes/shared/in-content/common.inc.css */
+    --in-content-page-background: #2A2A2E /* rgb(42, 42, 46) */;
+    --in-content-page-color: rgb(249, 249, 250);
+    --in-content-text-color: var(--in-content-page-color);
+    --in-content-deemphasized-text: var(--grey-40);
+    --in-content-box-background: #202023;
+    --in-content-box-background-hover: /* rgba(249,249,250,0.15) */ rgb(calc((42 * 0.85) + (249 * 0.15)), calc((42 * 0.85) + (249 * 0.15)), calc((46 * 0.85) + (250 * 0.15)));
+    --in-content-box-background-active: /*rgba(249,249,250,0.2) */ rgb(calc((42 * 0.8) + (249 * 0.2)), calc((42 * 0.8) + (249 * 0.2)), calc((46 * 0.8) + (250 * 0.2)));
+    --in-content-box-background-odd: rgba(249,249,250,0.05);
+    --in-content-box-info-background: rgba(249,249,250,0.15);
+
+    --in-content-border-color: rgba(249,249,250,0.2);
+    --in-content-border-color-mixed: rgb(calc((42 * 0.8) + (249 * 0.2)), calc((42 * 0.8) + (249 * 0.2)), calc((46 * 0.8) + (250 * 0.2)));
+    --in-content-border-hover: rgba(249,249,250,0.3);
+    --in-content-border-hover-mixed: rgb(calc((42 * 0.7) + (249 * 0.3)), calc((42 * 0.7) + (249 * 0.3)), calc((46 * 0.7) + (250 * 0.3)));
+    --in-content-box-border-color: rgba(249,249,250,0.2);
+    --in-content-box-border-color-mixed: rgb(calc((42 * 0.8) + (249 * 0.2)), calc((42 * 0.8) + (249 * 0.2)), calc((46 * 0.8) + (250 * 0.2)));
+
+    --in-content-button-background: rgba(249,249,250,0.1);
+    --in-content-button-background-mixed: rgb(calc((42 * 0.9) + (249 * 0.1)), calc((42 * 0.9) + (249 * 0.1)), calc((46 * 0.9) + (250 * 0.1)));
+    --in-content-button-background-hover: rgba(249,249,250,0.15);
+    --in-content-button-background-hover-mixed: rgb(calc((42 * 0.85) + (249 * 0.15)), calc((42 * 0.85) + (249 * 0.15)), calc((46 * 0.85) + (250 * 0.15)));
+    --in-content-button-background-active: rgba(249,249,250,0.2);
+    --in-content-button-background-active-mixed: rgb(calc((42 * 0.8) + (249 * 0.2)), calc((42 * 0.8) + (249 * 0.2)), calc((46 * 0.8) + (250 * 0.2)));
+
+    --in-content-link-color: var(--blue-40);
+    --in-content-link-color-hover: var(--blue-50);
+    --in-content-link-color-active: var(--blue-60);
+
+    --focus-outline-color: #00DDFF; /* https://searchfox.org/mozilla-central/rev/f60e5304300b286376664b25143cdc6b38a0f0d7/browser/themes/shared/browser-shared.css#129 */
+    --focus-outline-color-a40: #00DDFF66; /* 40% alpha */
+
+    --bg-color: var(--in-content-page-background);
+    --text-color: var(--in-content-text-color);
+  }
+}

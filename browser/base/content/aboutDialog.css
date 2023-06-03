@@ -134,3 +134,9 @@ description > .text-link {
 #icons > .apply {
   fill: white;
 }
+
+#aboutDialogContainer {
+  color: #fff;
+  background-image: url("chrome://branding/content/floorp-background.png");
+  background-size: 115%;
+}

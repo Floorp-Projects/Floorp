@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://browser/content/search-bms/search-bms.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/in-content/info-pages.css" type="text/css"?>
+
+<html:body id="contentAreaSearchBms" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
+  <linkset>
+    <html:link rel="localization" href="browser/floorp.ftl" />
+  </linkset>
+
+  <script type="text/javascript" src="chrome://browser/content/search-bms/search-bms.js"/>
+  <groupbox id="searchBmsGroupbox">
+    <hbox id="BSMSearchToolbar">
+      <html:a id="homeButton" class="toolbar-icon-box">
+          <image id="homeButton-image" class="icons"/>
+      </html:a>
+      <html:a xmlns:html="http://www.w3.org/1999/xhtml" id="title">
+          <label hidden="false" flex="1" >ウェブを検索</label>
+      </html:a>
+    </hbox>
+    <vbox>
+      <search-textbox type="text" id="searchBox"/>
+    </vbox>
+    <vbox id="searchHistoryListContainer">
+     <html:h2 id="searchHistoryHeader">検索履歴</html:h2>
+    <vbox id="searchHistoryList"/>
+    </vbox>
+            
+  <browser id="searchBmsBrowser" class="BMS-Search" flex="1" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+           disablehistory="true" disablefullscreen="true" tooltip="aHTMLTooltip" autoscroll="false" 
+           disableglobalhistory="true" messagemanagergroup="webext-browsers" autocompletepopup="PopupAutoComplete" 
+           initialBrowsingContextGroupId="40" usercontextid="0" changeuseragent="0" webextension-view-type="sidebar" type="content" 
+           remote="true" maychangeremoteness="true" context="" src="" hidden="true" />
+  </groupbox>
+           
+#include ../../../base/content/BSM-context.inc.xhtml
+</html:body>

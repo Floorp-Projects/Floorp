@@ -170,6 +170,7 @@ static mozilla::WindowsError SendPing(
     const std::string osLocale, const std::string notificationType,
     const std::string notificationShown, const std::string notificationAction,
     const std::string prevNotificationAction) {
+  return mozilla::WindowsError::CreateSuccess();
   // Fill in the ping JSON object.
   Json::Value ping;
   ping["build_channel"] = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
@@ -427,6 +428,7 @@ HRESULT MaybeWritePreviousNotificationAction(
 HRESULT SendDefaultBrowserPing(
     const DefaultBrowserInfo& browserInfo, const DefaultPdfInfo& pdfInfo,
     const NotificationActivities& activitiesPerformed) {
+  return S_OK;
   std::string currentDefaultBrowser =
       GetStringForBrowser(browserInfo.currentDefaultBrowser);
   std::string currentDefaultPdf = pdfInfo.currentDefaultPdf;

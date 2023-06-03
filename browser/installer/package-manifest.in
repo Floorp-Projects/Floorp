@@ -127,7 +127,7 @@
 ; [Base Browser Files]
 #ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
-@BINPATH@/firefox.VisualElementsManifest.xml
+@BINPATH@/floorp.VisualElementsManifest.xml
 @BINPATH@/browser/VisualElements/VisualElements_150.png
 @BINPATH@/browser/VisualElements/VisualElements_70.png
 #else
@@ -266,9 +266,11 @@
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
+@RESPATH@/browser/@PREF_DIR@/000-floorp.js
 @RESPATH@/browser/@PREF_DIR@/firefox.js
 @RESPATH@/browser/@PREF_DIR@/firefox-branding.js
 @RESPATH@/greprefs.js
+@RESPATH@/defaults/autoconfig/legacy_component.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
 @RESPATH@/browser/defaults/permissions
 ; Remote Settings JSON dumps
@@ -424,9 +426,11 @@ bin/libfreebl_64int_3.so
 @BINPATH@/minidump-analyzer@BIN_SUFFIX@
 #endif
 
-; [ Ping Sender ]
+; [ Notification COM Server ]
 ;
-@BINPATH@/pingsender@BIN_SUFFIX@
+#if defined(XP_WIN)
+@BINPATH@/@DLL_PREFIX@notificationserver@DLL_SUFFIX@
+#endif
 
 ; Shutdown Terminator
 @RESPATH@/components/terminator.manifest
