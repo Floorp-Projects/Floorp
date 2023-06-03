@@ -523,7 +523,7 @@ add_task(async function test_click_refinement_button() {
         provider: "example",
         tagged: "false",
         partner_code: "",
-        source: "unknown",
+        source: "follow_on_from_refine_on_SERP",
         is_shopping_page: "false",
         shopping_tab_displayed: "true",
       },

@@ -15,7 +15,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_components_/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -40,11 +40,11 @@ const TEST_PROVIDER_INFO = [
         type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
         included: {
           parent: {
-            selector: ".moz-rich-suggestions",
+            selector: ".refined-search-buttons",
           },
           children: [
             {
-              selector: ".moz-rich-suggestion a",
+              selector: "a",
             },
           ],
         },
@@ -384,9 +384,7 @@ add_task(async function test_ad_visibility() {
 
 add_task(async function test_impressions_without_ads() {
   resetTelemetry();
-  let url = getSERPUrl(
-    "searchTelemetryAd_components_refined_search_button.html"
-  );
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await promiseAdImpressionReceived();
