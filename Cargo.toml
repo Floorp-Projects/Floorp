@@ -106,6 +106,9 @@ web-sys = { path = "build/rust/dummy-web/web-sys" }
 # Overrides to allow easier use of common internal crates.
 moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 
+# Patch bindgen to work around issues with some unsound transmutes when compiling with LLVM 16+.
+bindgen = { path = "third_party/rust/bindgen" }
+
 # Other overrides
 async-task = { git = "https://github.com/smol-rs/async-task", rev="f6488e35beccb26eb6e85847b02aa78a42cd3d0e" }
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }

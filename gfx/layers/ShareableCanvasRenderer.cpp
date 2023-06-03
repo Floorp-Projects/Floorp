@@ -131,17 +131,20 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
 
   // -
 
-  const auto fnGetExistingTc = [&]() -> RefPtr<TextureClient> {
+  const auto fnGetExistingTc =
+      [&](bool& aOutLostFrontTexture) -> RefPtr<TextureClient> {
     const auto desc = context->GetFrontBuffer(nullptr);
     if (desc) {
       return GetFrontBufferFromDesc(*desc, flags);
     }
     if (provider) {
-      if (!provider->SetKnowsCompositor(forwarder)) {
+      if (!provider->SetKnowsCompositor(forwarder, aOutLostFrontTexture)) {
         gfxCriticalNote << "BufferProvider::SetForwarder failed";
         return nullptr;
       }
-
+      if (aOutLostFrontTexture) {
+        return nullptr;
+      }
       return provider->GetTextureClient();
     }
     return nullptr;
@@ -188,7 +191,12 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
     FirePreTransactionCallback();
 
     // First, let's see if we can get a no-copy TextureClient from the canvas.
-    auto tc = fnGetExistingTc();
+    bool lostFrontTexture = false;
+    auto tc = fnGetExistingTc(lostFrontTexture);
+    if (lostFrontTexture) {
+      // Device reset could cause this.
+      return;
+    }
     if (!tc) {
       // Otherwise, snapshot the surface and copy into a TexClient.
       tc = fnMakeTcFromSnapshot();

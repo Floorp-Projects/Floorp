@@ -1706,6 +1706,7 @@ var Policies = {
         "security.insecure_connection_text.pbmode.enabled",
         "security.insecure_field_warning.contextual.enabled",
         "security.mixed_content.block_active_content",
+        "security.osclientcerts.assume_rsa_pss_support",
         "security.osclientcerts.autoload",
         "security.OCSP.enabled",
         "security.OCSP.require",
@@ -2158,14 +2159,34 @@ var Policies = {
 
   SecurityDevices: {
     onProfileAfterChange(manager, param) {
-      let securityDevices = param;
       let pkcs11db = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
         Ci.nsIPKCS11ModuleDB
       );
-      let moduleList = pkcs11db.listModules();
+      let securityDevices;
+      if (param.Add || param.Delete) {
+        // We're using the new syntax.
+        securityDevices = param.Add;
+        if (param.Delete) {
+          for (let deviceName of param.Delete) {
+            try {
+              pkcs11db.deleteModule(deviceName);
+            } catch (e) {
+              // Ignoring errors here since it might stick around in policy
+              // after removing. Alternative would be to listModules and
+              // make sure it's there before removing, but that seems
+              // like unnecessary work.
+            }
+          }
+        }
+      } else {
+        securityDevices = param;
+      }
+      if (!securityDevices) {
+        return;
+      }
       for (let deviceName in securityDevices) {
         let foundModule = false;
-        for (let module of moduleList) {
+        for (let module of pkcs11db.listModules()) {
           if (module && module.libName === securityDevices[deviceName]) {
             foundModule = true;
             break;

@@ -27,8 +27,10 @@
 #include <algorithm>
 #include "mozilla/dom/NodeInfoInlines.h"
 #include "mozilla/MruCache.h"
+#include "mozilla/StaticPtr.h"
 
 #include "PLDHashTable.h"
+#include "nsTHashtable.h"
 
 #ifdef DEBUG_CONTENT_LIST
 #  define ASSERT_IN_SYNC AssertInSync()
@@ -144,9 +146,6 @@ void nsEmptyContentList::GetSupportedNames(nsTArray<nsString>& aNames) {}
 
 nsIContent* nsEmptyContentList::Item(uint32_t aIndex) { return nullptr; }
 
-// Hashtable for storing nsContentLists
-static PLDHashTable* gContentListHashTable;
-
 struct ContentListCache
     : public MruCache<nsContentListKey, nsContentList*, ContentListCache> {
   static HashNumber Hash(const nsContentListKey& aKey) {
@@ -159,24 +158,52 @@ struct ContentListCache
 
 static ContentListCache sRecentlyUsedContentLists;
 
-struct ContentListHashEntry : public PLDHashEntryHdr {
-  nsContentList* mContentList;
+class nsContentList::HashEntry : public PLDHashEntryHdr {
+ public:
+  using KeyType = const nsContentListKey*;
+  using KeyTypePointer = KeyType;
+
+  // Note that this is creating a blank entry, so you'll have to manually
+  // initialize it after it has been inserted into the hash table.
+  explicit HashEntry(KeyTypePointer aKey) : mContentList(nullptr) {}
+
+  HashEntry(HashEntry&& aEnt) : mContentList(std::move(aEnt.mContentList)) {}
+
+  ~HashEntry() {
+    if (mContentList) {
+      MOZ_RELEASE_ASSERT(mContentList->mInHashtable);
+      mContentList->mInHashtable = false;
+    }
+  }
+
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mContentList->MatchesKey(*aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->GetHash(); }
+
+  nsContentList* GetContentList() const { return mContentList; }
+  void SetContentList(nsContentList* aContentList) {
+    MOZ_RELEASE_ASSERT(!mContentList);
+    MOZ_ASSERT(aContentList);
+    MOZ_RELEASE_ASSERT(!aContentList->mInHashtable);
+    mContentList = aContentList;
+    mContentList->mInHashtable = true;
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  nsContentList* MOZ_UNSAFE_REF(
+      "This entry will be removed in nsContentList::RemoveFromHashtable "
+      "before mContentList is destroyed") mContentList;
 };
 
-static PLDHashNumber ContentListHashtableHashKey(const void* key) {
-  const nsContentListKey* list = static_cast<const nsContentListKey*>(key);
-  return list->GetHash();
-}
-
-static bool ContentListHashtableMatchEntry(const PLDHashEntryHdr* entry,
-                                           const void* key) {
-  const ContentListHashEntry* e =
-      static_cast<const ContentListHashEntry*>(entry);
-  const nsContentList* list = e->mContentList;
-  const nsContentListKey* ourKey = static_cast<const nsContentListKey*>(key);
-
-  return list->MatchesKey(*ourKey);
-}
+// Hashtable for storing nsContentLists
+static StaticAutoPtr<nsTHashtable<nsContentList::HashEntry>>
+    gContentListHashTable;
 
 already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
                                                   int32_t aMatchNameSpaceId,
@@ -192,20 +219,16 @@ already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
     return list.forget();
   }
 
-  static const PLDHashTableOps hash_table_ops = {
-      ContentListHashtableHashKey, ContentListHashtableMatchEntry,
-      PLDHashTable::MoveEntryStub, PLDHashTable::ClearEntryStub};
-
   // Initialize the hashtable if needed.
   if (!gContentListHashTable) {
-    gContentListHashTable =
-        new PLDHashTable(&hash_table_ops, sizeof(ContentListHashEntry));
+    gContentListHashTable = new nsTHashtable<nsContentList::HashEntry>();
   }
 
   // First we look in our hashtable.  Then we create a content list if needed
-  auto entry = static_cast<ContentListHashEntry*>(
-      gContentListHashTable->Add(&hashKey, fallible));
-  if (entry) list = entry->mContentList;
+  auto entry = gContentListHashTable->PutEntry(&hashKey, fallible);
+  if (entry) {
+    list = entry->GetContentList();
+  }
 
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
@@ -221,7 +244,7 @@ already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
     }
     list = new nsContentList(aRootNode, aMatchNameSpaceId, htmlAtom, xmlAtom);
     if (entry) {
-      entry->mContentList = list;
+      entry->SetContentList(list);
     }
   }
 
@@ -238,28 +261,55 @@ const nsCacheableFuncStringContentList::ContentListType
         nsCacheableFuncStringContentList::eHTMLCollection;
 #endif
 
-// Hashtable for storing nsCacheableFuncStringContentList
-static PLDHashTable* gFuncStringContentListHashTable;
+class nsCacheableFuncStringContentList::HashEntry : public PLDHashEntryHdr {
+ public:
+  using KeyType = const nsFuncStringCacheKey*;
+  using KeyTypePointer = KeyType;
 
-struct FuncStringContentListHashEntry : public PLDHashEntryHdr {
-  nsCacheableFuncStringContentList* mContentList;
+  // Note that this is creating a blank entry, so you'll have to manually
+  // initialize it after it has been inserted into the hash table.
+  explicit HashEntry(KeyTypePointer aKey) : mContentList(nullptr) {}
+
+  HashEntry(HashEntry&& aEnt) : mContentList(std::move(aEnt.mContentList)) {}
+
+  ~HashEntry() {
+    if (mContentList) {
+      MOZ_RELEASE_ASSERT(mContentList->mInHashtable);
+      mContentList->mInHashtable = false;
+    }
+  }
+
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mContentList->Equals(aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->GetHash(); }
+
+  nsCacheableFuncStringContentList* GetContentList() const {
+    return mContentList;
+  }
+  void SetContentList(nsCacheableFuncStringContentList* aContentList) {
+    MOZ_RELEASE_ASSERT(!mContentList);
+    MOZ_ASSERT(aContentList);
+    MOZ_RELEASE_ASSERT(!aContentList->mInHashtable);
+    mContentList = aContentList;
+    mContentList->mInHashtable = true;
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  nsCacheableFuncStringContentList* MOZ_UNSAFE_REF(
+      "This entry will be removed in "
+      "nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable "
+      "before mContentList is destroyed") mContentList;
 };
 
-static PLDHashNumber FuncStringContentListHashtableHashKey(const void* key) {
-  const nsFuncStringCacheKey* funcStringKey =
-      static_cast<const nsFuncStringCacheKey*>(key);
-  return funcStringKey->GetHash();
-}
-
-static bool FuncStringContentListHashtableMatchEntry(
-    const PLDHashEntryHdr* entry, const void* key) {
-  const FuncStringContentListHashEntry* e =
-      static_cast<const FuncStringContentListHashEntry*>(entry);
-  const nsFuncStringCacheKey* ourKey =
-      static_cast<const nsFuncStringCacheKey*>(key);
-
-  return e->mContentList->Equals(ourKey);
-}
+// Hashtable for storing nsCacheableFuncStringContentList
+static StaticAutoPtr<nsTHashtable<nsCacheableFuncStringContentList::HashEntry>>
+    gFuncStringContentListHashTable;
 
 template <class ListType>
 already_AddRefed<nsContentList> GetFuncStringContentList(
@@ -271,26 +321,20 @@ already_AddRefed<nsContentList> GetFuncStringContentList(
 
   RefPtr<nsCacheableFuncStringContentList> list;
 
-  static const PLDHashTableOps hash_table_ops = {
-      FuncStringContentListHashtableHashKey,
-      FuncStringContentListHashtableMatchEntry, PLDHashTable::MoveEntryStub,
-      PLDHashTable::ClearEntryStub};
-
   // Initialize the hashtable if needed.
   if (!gFuncStringContentListHashTable) {
-    gFuncStringContentListHashTable = new PLDHashTable(
-        &hash_table_ops, sizeof(FuncStringContentListHashEntry));
+    gFuncStringContentListHashTable =
+        new nsTHashtable<nsCacheableFuncStringContentList::HashEntry>();
   }
 
-  FuncStringContentListHashEntry* entry = nullptr;
+  nsCacheableFuncStringContentList::HashEntry* entry = nullptr;
   // First we look in our hashtable.  Then we create a content list if needed
   if (gFuncStringContentListHashTable) {
     nsFuncStringCacheKey hashKey(aRootNode, aFunc, aString);
 
-    entry = static_cast<FuncStringContentListHashEntry*>(
-        gFuncStringContentListHashTable->Add(&hashKey, fallible));
+    entry = gFuncStringContentListHashTable->PutEntry(&hashKey, fallible);
     if (entry) {
-      list = entry->mContentList;
+      list = entry->GetContentList();
 #ifdef DEBUG
       MOZ_ASSERT_IF(list, list->mType == ListType::sType);
 #endif
@@ -303,7 +347,7 @@ already_AddRefed<nsContentList> GetFuncStringContentList(
     list =
         new ListType(aRootNode, aFunc, aDestroyFunc, aDataAllocator, aString);
     if (entry) {
-      entry->mContentList = list;
+      entry->SetContentList(list);
     }
   }
 
@@ -344,7 +388,8 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
       mDeep(aDeep),
       mFuncMayDependOnAttr(false),
       mIsHTMLDocument(aRootNode->OwnerDoc()->IsHTMLDocument()),
-      mIsLiveList(aLiveList) {
+      mIsLiveList(aLiveList),
+      mInHashtable(false) {
   NS_ASSERTION(mRootNode, "Must have root");
   if (nsGkAtoms::_asterisk == mHTMLMatchAtom) {
     NS_ASSERTION(mXMLMatchAtom == nsGkAtoms::_asterisk,
@@ -353,7 +398,8 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
   } else {
     mMatchAll = false;
   }
-  if (mIsLiveList) {
+  // This is aLiveList instead of mIsLiveList to avoid Valgrind errors.
+  if (aLiveList) {
     mRootNode->AddMutationObserver(this);
   }
 
@@ -384,9 +430,11 @@ nsContentList::nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
       mDeep(aDeep),
       mFuncMayDependOnAttr(aFuncMayDependOnAttr),
       mIsHTMLDocument(false),
-      mIsLiveList(aLiveList) {
+      mIsLiveList(aLiveList),
+      mInHashtable(false) {
   NS_ASSERTION(mRootNode, "Must have root");
-  if (mIsLiveList) {
+  // This is aLiveList instead of mIsLiveList to avoid Valgrind errors.
+  if (aLiveList) {
     mRootNode->AddMutationObserver(this);
   }
 
@@ -810,7 +858,12 @@ void nsContentList::PopulateSelf(uint32_t aNeededLength,
 
 void nsContentList::RemoveFromHashtable() {
   if (mFunc) {
-    // This can't be in the table anyway
+    // nsCacheableFuncStringContentList can be in a hash table without being
+    // in gContentListHashTable, but it will have been removed from the hash
+    // table in its dtor before it runs the nsContentList dtor.
+    MOZ_RELEASE_ASSERT(!mInHashtable);
+
+    // This can't be in gContentListHashTable.
     return;
   }
 
@@ -818,14 +871,15 @@ void nsContentList::RemoveFromHashtable() {
   nsContentListKey key(mRootNode, mMatchNameSpaceId, str, mIsHTMLDocument);
   sRecentlyUsedContentLists.Remove(key);
 
-  if (!gContentListHashTable) return;
+  if (gContentListHashTable) {
+    gContentListHashTable->RemoveEntry(&key);
 
-  gContentListHashTable->Remove(&key);
-
-  if (gContentListHashTable->EntryCount() == 0) {
-    delete gContentListHashTable;
-    gContentListHashTable = nullptr;
+    if (gContentListHashTable->Count() == 0) {
+      gContentListHashTable = nullptr;
+    }
   }
+
+  MOZ_RELEASE_ASSERT(!mInHashtable);
 }
 
 void nsContentList::BringSelfUpToDate(bool aDoFlush) {
@@ -851,16 +905,18 @@ nsCacheableFuncStringContentList::~nsCacheableFuncStringContentList() {
 
 void nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable() {
   if (!gFuncStringContentListHashTable) {
+    MOZ_RELEASE_ASSERT(!mInHashtable);
     return;
   }
 
   nsFuncStringCacheKey key(mRootNode, mFunc, mString);
-  gFuncStringContentListHashTable->Remove(&key);
+  gFuncStringContentListHashTable->RemoveEntry(&key);
 
-  if (gFuncStringContentListHashTable->EntryCount() == 0) {
-    delete gFuncStringContentListHashTable;
+  if (gFuncStringContentListHashTable->Count() == 0) {
     gFuncStringContentListHashTable = nullptr;
   }
+
+  MOZ_RELEASE_ASSERT(!mInHashtable);
 }
 
 #ifdef DEBUG_CONTENT_LIST

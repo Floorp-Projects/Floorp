@@ -75,6 +75,7 @@ vendored:third_party/python/ecdsa
 vendored:third_party/python/esprima
 vendored:third_party/python/fluent.migrate
 vendored:third_party/python/fluent.syntax
+vendored:third_party/python/glean_parser
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/idna
 vendored:third_party/python/idna-ssl
