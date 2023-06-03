@@ -177,13 +177,13 @@ UICustomPrefHandler("floorp.browser.sidebar.right", function(event) {
     var Tag = document.createElement("style");
     Tag.textContent = `
     .browser-sidebar2 {
-      -moz-box-ordinal-group: 10 !important;
+      order: 10 !important;
     }
     #sidebar-select-box{
-      -moz-box-ordinal-group: 15 !important;
+      order: 15 !important;
     }
     #sidebar-splitter2 {
-      -moz-box-ordinal-group: 9 !important;
+      order: 9 !important;
     }`;
     Tag.setAttribute("id", "floorp-sidebar2css");
     document.head.appendChild(Tag);

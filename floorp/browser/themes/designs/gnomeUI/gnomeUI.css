@@ -578,7 +578,7 @@ dialog {
 
 /* Main menu */
 #appMenu-popup .panel-banner-item:after {
-	-moz-box-ordinal-group: 0;
+	order: 0;
 	margin: 0 8px 0 0 !important;
 }
 #appMenu-popup .toolbaritem-combined-buttons {
@@ -1122,8 +1122,8 @@ menupopup menu:not([disabled="true"]):is(:hover, [_moz-menuactive]),
 .subviewbutton-back {
 	opacity: 1 !important;
 	width: 100%;
-	-moz-box-align: center !important;
-	-moz-box-pack: start !important;
+	align-items: center !important;
+	justify-content: start !important;
 }
 .subviewbutton-back + h1 {
 	font-weight: bold !important;
@@ -1718,7 +1718,7 @@ button.close::before {
 /* Switchers */
 .protections-popup-tp-switch-box {
 	padding: 0 !important;
-	-moz-box-pack: start !important;
+	justify-content: start !important;
 }
 #protections-popup-tp-switch:not([enabled])[showdotindicator]::after {
 	display: none !important;
@@ -2076,7 +2076,7 @@ button.close {
 
 /* Identity popup expander button */
 #identity-popup-security {
-	-moz-box-align: center;
+	align-items: center;
 }
 #identity-popup-security-expander {
 	width: 34px !important;
@@ -2222,10 +2222,10 @@ button.close,
 	color: var(--gnome-toolbar-color) !important;
 	outline: 0 !important;
 	font: menu !important;
-	-moz-box-align: center !important;
+	align-items: center !important;
 }
 .subviewbutton-iconic {
-	-moz-box-pack: center !important;
+	justify-content: center !important;
 }
 
 /* Flat Buttons */
@@ -3552,19 +3552,19 @@ toolbarspring {
  
  /* Reorder toolbars */
  #navigator-toolbox #nav-bar {
-	 -moz-box-ordinal-group: 0;
+	 order: 0;
  }
  #navigator-toolbox #PersonalToolbar {
-	 -moz-box-ordinal-group: 1;
+	 order: 1;
  }
  #navigator-toolbox #titlebar {
-	 -moz-box-ordinal-group: 2;
+	 order: 2;
  }
  #navigator-toolbox toolbar {
-	 -moz-box-ordinal-group: 10;
+	 order: 10;
  }
  #navigator-toolbox #TabsToolbar {
-	 -moz-box-ordinal-group: 100;
+	 order: 100;
  }
  
  /* Overrides: Don't shift other toolbars on tab drag and drop */
@@ -3634,10 +3634,10 @@ toolbarspring {
  /* OPTIONAL: Move Bookmarks toolbar under tabs */
  @supports -moz-bool-pref("gnomeTheme.bookmarksToolbarUnderTabs") {
 	 #navigator-toolbox #titlebar {
-		 -moz-box-ordinal-group: 1 !important;
+		 order: 1 !important;
 	 }
 	 #navigator-toolbox #PersonalToolbar {
-		 -moz-box-ordinal-group: 2 !important;
+		 order: 2 !important;
 	 }
  }
  

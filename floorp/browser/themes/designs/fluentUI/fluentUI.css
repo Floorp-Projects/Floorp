@@ -341,10 +341,10 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
     --button-hover-bgcolor: color-mix(in srgb, currentColor 14%, transparent) !important;
     --button-active-bgcolor: color-mix(in srgb, currentColor 20%, transparent) !important;
     --button-color: currentColor !important;
-    --button-primary-bgcolor: -moz-accent-color !important;
-    --button-primary-hover-bgcolor: color-mix(in srgb, black 10%, -moz-accent-color) !important;
-    --button-primary-active-bgcolor: color-mix(in srgb, black 20%, -moz-accent-color) !important;
-    --button-primary-color: -moz-accent-color-foreground !important;
+    --button-primary-bgcolor: AccentColor !important;
+    --button-primary-hover-bgcolor: color-mix(in srgb, black 10%, AccentColor) !important;
+    --button-primary-active-bgcolor: color-mix(in srgb, black 20%, AccentColor) !important;
+    --button-primary-color: AccentColor-foreground !important;
     --autocomplete-popup-hover-background: var(--arrowpanel-dimmed) !important;
     --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 14%, transparent) !important;
     --urlbar-box-bgcolor: var(--button-bgcolor) !important;
@@ -357,7 +357,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
     --urlbar-popup-url-color: -moz-nativehyperlinktext !important;
     --lwt-brighttext-url-color: #00ddff !important;
     --toolbarbutton-icon-fill-attention: -moz-nativehyperlinktext !important;
-    --focus-outline-color: -moz-accent-color !important;
+    --focus-outline-color: AccentColor !important;
     --arrowpanel-background: Field !important;
     --arrowpanel-color: FieldText !important;
     --arrowpanel-border-color: ThreeDShadow !important;
@@ -371,7 +371,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
     --toolbar-field-border-color: ThreeDShadow !important;
     --toolbar-field-focus-background-color: Field !important;
     --toolbar-field-focus-color: FieldText !important;
-    --toolbar-field-focus-border-color: -moz-accent-color !important;
+    --toolbar-field-focus-border-color: AccentColor !important;
     --toolbarbutton-hover-background: color-mix(in srgb, -moz-dialogtext 14%, transparent) !important;
     --toolbarbutton-active-background: color-mix(in srgb, -moz-dialogtext 20%, transparent) !important;
     --uc-urlbar-shadow: none;
@@ -383,8 +383,8 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
     --panel-item-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent) !important;
     --panel-separator-color: ThreeDShadow !important;
     --panel-banner-item-update-supported-bgcolor: #1bba6b !important;
-    --focus-outline-color: -moz-accent-color !important;
-    --uc-private-browsing-indicator: -moz-accent-color !important;
+    --focus-outline-color: AccentColor !important;
+    --uc-private-browsing-indicator: AccentColor !important;
     --uc-private-browding-indicator-hover: var(--button-primary-hover-bgcolor);
     --uc-private-browding-indicator-active: var(--button-primary-active-bgcolor);
     --uc-private-browding-indicator-text: var(--button-primary-color);
@@ -748,7 +748,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
   }
   
   #PopupAutoComplete .autocomplete-richlistitem[originaltype="loginsFooter"] {
-    -moz-box-pack: start !important;
+    justify-content: start !important;
     color: inherit !important;
     background-color: transparent !important;
     height: 28px !important;
@@ -1034,7 +1034,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
     }
   
     #context-navigation>.menuitem-iconic {
-      -moz-box-pack: center !important;
+      justify-content: center !important;
     }
   
     #context-navigation>.menuitem-iconic {
@@ -1319,7 +1319,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
         }
   
         #context-navigation>.menuitem-iconic {
-          -moz-box-pack: start !important;
+          justify-content: start !important;
         }
   
         #context-navigation .menu-iconic-text {
@@ -2309,7 +2309,7 @@ menuitem[id="placesContext_new:separator"] {
 }
 
 .findbar-textbox:focus {
-  outline: 2px solid var(--focus-outline-color, -moz-accent-color) !important;
+  outline: 2px solid var(--focus-outline-color, AccentColor) !important;
   outline-offset: -1px !important;
 }
 
@@ -2402,16 +2402,16 @@ menuitem[id="placesContext_new:separator"] {
   
   @media (-moz-gtk-csd-available) {
     :root[privatebrowsingmode] #fxa-toolbar-menu-button:not(:-moz-lwtheme) {
-      background: -moz-accent-color !important;
-      color: -moz-accent-color-foreground !important;
+      background: AccentColor !important;
+      color: AccentColor-foreground !important;
     }
     
     :root[privatebrowsingmode] #fxa-toolbar-menu-button:not(:-moz-lwtheme):hover {
-      background:color-mix(in srgb, black 8%, -moz-accent-color) !important;
+      background:color-mix(in srgb, black 8%, AccentColor) !important;
     }
     
     :root[privatebrowsingmode] #fxa-toolbar-menu-button:not(:-moz-lwtheme):not([disabled=true]):is([open], [checked], :hover:active) {
-      background: color-mix(in srgb, black 16%, -moz-accent-color) !important;
+      background: color-mix(in srgb, black 16%, AccentColor) !important;
     }
   }
   
@@ -2954,7 +2954,7 @@ menuitem[id="placesContext_new:separator"] {
   /* move tracking protection button */
   #tracking-protection-icon-container,
   #page-action-buttons {
-    -moz-box-ordinal-group: 2 !important;
+    order: 2 !important;
   }
   
   #urlbar-container:not(:hover) #tracking-protection-icon-container:not([open]) {

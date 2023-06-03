@@ -79,23 +79,23 @@
  /* Reorder toolbars */
  #navigator-toolbox #nav-bar,
  findbar {
-	 -moz-box-ordinal-group: 0;
+	 order: 0;
  }
  
  #navigator-toolbox #PersonalToolbar {
-	 -moz-box-ordinal-group: 1;
+	 order: 1;
  }
  
  #navigator-toolbox #titlebar {
-	 -moz-box-ordinal-group: 2;
+	 order: 2;
  }
  
  #navigator-toolbox toolbar {
-	 -moz-box-ordinal-group: 10;
+	 order: 10;
  }
  
  #navigator-toolbox #TabsToolbar {
-	 -moz-box-ordinal-group: 100;
+	 order: 100;
  }
  
  /* Overrides: Don't shift other toolbars on tab drag and drop */
@@ -1159,7 +1159,7 @@ panelview {
 	border-radius: 8px !important;
 	color: var(--gnome-toolbar-color) !important;
 	font: menu !important;
-	/* -moz-box-pack: inherit !important; */
+	/* justify-content: inherit !important; */
 }
 
 .subviewbutton:not(.subviewbutton-back),
@@ -1717,7 +1717,7 @@ tab[selected]:-moz-window-inactive {
 	}
 	/*Align personal bookmarks v89 */
 	#personal-bookmarks {
-		-moz-box-align: center !important;
+		align-items: center !important;
 	}
 	/* fix misc spacing between tabs */
 	.tabbrowser-tab {
@@ -2217,7 +2217,7 @@ toolbarbutton#alltabs-button {
     :root[tabsintitlebar][inFullscreen]  #titlebar .titlebar-buttonbox-container{
     margin-top: -34px;
     margin-bottom: 44px !important;
-    -moz-box-ordinal-group: 0 !important;
+    order: 0 !important;
     }
 
     tab {
@@ -2242,7 +2242,7 @@ toolbarbutton#alltabs-button {
     }
 
     .titlebar-close {
-        -moz-box-ordinal-group: 0;
+        order: 0;
     }
 
     .titlebar-button {

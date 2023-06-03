@@ -212,9 +212,15 @@ function init_all() {
   Services.telemetry.setEventRecordingEnabled("aboutpreferences", true);
 
   register_module("paneGeneral", gMainPane);
+  register_module("paneDesign", gDesign);
   register_module("paneHome", gHomePane);
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
+  register_module("paneLepton", gLeptonPane);
+  register_module("paneNotes", gNotesPane);
+  register_module("paneBSB", gBSBPane);
+  register_module("paneDownloads", gDownloads);
+  register_module("paneUserjs", gUserjsPane);
   register_module("paneContainers", gContainersPane);
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.

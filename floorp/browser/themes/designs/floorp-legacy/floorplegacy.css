@@ -23,14 +23,14 @@
     }
     #fxa-menu-avatar {
     display: -moz-inline-box;
-    -moz-box-ordinal-group: 2;
+    order: 2;
     }
     #fxa-manage-account-button vbox {
     margin-inline-start: 24px;
     }
     .syncNowBtn {
     visibility: visible !important;
-    -moz-box-ordinal-group: 0 !important;
+    order: 0 !important;
     margin-inline-end: 8px;
     }
     #PanelUI-fxa-menu-setup-sync-button {
@@ -813,7 +813,7 @@
     {
       background-color: var(--toolbar-field-focus-background-color) !important;
       /* won't work in a var... */
-      border: 2px solid -moz-accent-color !important;
+      border: 2px solid AccentColor !important;
       margin: -1px !important;
       padding: 1px !important;
       height: 30px !important;
@@ -882,7 +882,7 @@
     
     #navigator-toolbox :-moz-any(toolbar, #nav-bar-customization-target):not(#toolbar-menubar)
     {
-      -moz-box-align: center !important;
+      align-items: center !important;
       min-height: 36px !important;
     }
     
@@ -1521,7 +1521,7 @@
       padding: 2px !important;
       background-clip: padding-box !important;
       transition: background-color .1s var(--ease-basic) !important;
-      -moz-box-align: center !important;
+      align-items: center !important;
       display: block !important;
       margin: 0 !important;
       top: 0 !important;
@@ -1555,8 +1555,8 @@
     #urlbar[focused],
     #searchbar[focused]
     {
-      /* -moz-accent-color won't work in a var... */
-      border: 2px solid -moz-accent-color !important;
+      /* AccentColor won't work in a var... */
+      border: 2px solid AccentColor !important;
       padding: 0 !important;
       margin: 0 !important;
     }
@@ -2423,7 +2423,7 @@
 
 .tab-content[pinned]
 {
-	-moz-box-pack: center !important;
+	justify-content: center !important;
 }
 
 .tab-icon-image[pinned],
@@ -2458,7 +2458,7 @@
 	
 	#tabbrowser-tabs[overflow] .tab-content
 	{
-		-moz-box-pack: center !important;
+		justify-content: center !important;
 	}
 	
 	#tabbrowser-tabs[overflow] .tab-icon-image

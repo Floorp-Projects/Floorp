@@ -467,7 +467,7 @@
   
   .checkbox-check {
     /* Move Checkboxes to Right */
-    -moz-box-ordinal-group: 2 !important;
+    order: 2 !important;
     width: 40px !important;
     height: 20px !important;
     padding: 4px !important;

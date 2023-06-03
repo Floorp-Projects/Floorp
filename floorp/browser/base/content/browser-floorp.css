@@ -43,7 +43,7 @@
 }
 
 .browser-sidebar2 {
-  -moz-box-ordinal-group: 1 !important;
+  order: 1 !important;
   background: var(--toolbar-bgcolor);
   border: var(--toolbar-bgcolor) 0.1px solid;
   border-bottom: solid 5px var(--toolbar-bgcolor);
@@ -71,7 +71,7 @@
 }
 
 #sidebar-select-box {
-  -moz-box-ordinal-group: 0 !important;
+  order: 0 !important;
   scrollbar-width: thin;
 }
 

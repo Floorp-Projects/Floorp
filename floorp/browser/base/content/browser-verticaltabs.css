@@ -25,7 +25,7 @@
    }
    
    #toolbar-items-verticaltabs {
-     -moz-box-ordinal-group: 0 !important;
+     order: 0 !important;
      width: -moz-available;
      display: block;
      overflow-y: scroll;

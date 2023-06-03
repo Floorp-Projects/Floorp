@@ -33,14 +33,14 @@ See the above repository for updates as well as full license text. */
 .titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
 
 #titlebar{
-  -moz-box-ordinal-group: 2;
+  order: 2;
   -moz-appearance: none !important;
   --tabs-navbar-shadow-size: 0px;
 }
 /* Re-order window and tab notification boxes */
 #navigator-toolbox > div{ display: contents }
 .global-notificationbox,
-#tab-notification-deck{ -moz-box-ordinal-group: 2 }
+#tab-notification-deck{ order: 2 }
 
 #TabsToolbar .titlebar-spacer{ display: none; }
 /* Also hide the toolbox bottom border which isn't at bottom with this setup */
@@ -64,7 +64,7 @@ toolbox#navigator-toolbox > toolbar#nav-bar.browser-toolbar{ animation: none; }
 
 /* Uncomment the following if you want bookmarks toolbar to be below tabs */
 /*
-#PersonalToolbar{ -moz-box-ordinal-group: 2 }
+#PersonalToolbar{ order: 2 }
 */
 
 /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/window_control_placeholder_support.css made available under Mozilla Public License v. 2.0

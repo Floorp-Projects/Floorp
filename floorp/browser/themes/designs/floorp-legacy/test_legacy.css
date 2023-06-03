@@ -227,7 +227,7 @@
 /* move tracking protection button */
 #tracking-protection-icon-container,
 #page-action-buttons {
-  -moz-box-ordinal-group: 2 !important;
+  order: 2 !important;
 }
 
 #urlbar {
@@ -523,7 +523,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
 }
 
 #PopupAutoComplete .autocomplete-richlistitem[originaltype="loginsFooter"] {
-  -moz-box-pack: start !important;
+  justify-content: start !important;
   color: inherit !important;
   background-color: transparent !important;
   height: 28px !important;
@@ -783,7 +783,7 @@ menuitem[checked="true"]>.menu-iconic-left,
 }
 
 #context-navigation>.menuitem-iconic {
-  -moz-box-pack: center !important;
+  justify-content: center !important;
 }
 
 #context-navigation>.menuitem-iconic {
@@ -1086,7 +1086,7 @@ menuitem>.menu-iconic-text {
       }
 
       #context-navigation>.menuitem-iconic {
-        -moz-box-pack: start !important;
+        justify-content: start !important;
       }
 
       #context-navigation .menu-iconic-text {
@@ -1133,10 +1133,10 @@ menuitem>.menu-iconic-text {
     --button-hover-bgcolor: color-mix(in srgb, currentColor 14%, transparent) !important;
     --button-active-bgcolor: color-mix(in srgb, currentColor 20%, transparent) !important;
     --button-color: currentColor !important;
-    --button-primary-bgcolor: -moz-accent-color !important;
-    --button-primary-hover-bgcolor: color-mix(in srgb, black 10%, -moz-accent-color) !important;
-    --button-primary-active-bgcolor: color-mix(in srgb, black 20%, -moz-accent-color) !important;
-    --button-primary-color: -moz-accent-color-foreground !important;
+    --button-primary-bgcolor: AccentColor !important;
+    --button-primary-hover-bgcolor: color-mix(in srgb, black 10%, AccentColor) !important;
+    --button-primary-active-bgcolor: color-mix(in srgb, black 20%, AccentColor) !important;
+    --button-primary-color: AccentColor-foreground !important;
     --autocomplete-popup-hover-background: var(--arrowpanel-dimmed) !important;
     --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 14%, transparent) !important;
     --urlbar-box-bgcolor: var(--button-bgcolor) !important;
@@ -1149,7 +1149,7 @@ menuitem>.menu-iconic-text {
     --urlbar-popup-url-color: -moz-nativehyperlinktext !important;
     --lwt-brighttext-url-color: #00ddff !important;
     --toolbarbutton-icon-fill-attention: -moz-nativehyperlinktext !important;
-    --focus-outline-color: -moz-accent-color !important;
+    --focus-outline-color: AccentColor !important;
     --arrowpanel-background: Field !important;
     --arrowpanel-color: FieldText !important;
     --arrowpanel-border-color: ThreeDShadow !important;
@@ -1163,7 +1163,7 @@ menuitem>.menu-iconic-text {
     --toolbar-field-border-color: ThreeDShadow !important;
     --toolbar-field-focus-background-color: Field !important;
     --toolbar-field-focus-color: FieldText !important;
-    --toolbar-field-focus-border-color: -moz-accent-color !important;
+    --toolbar-field-focus-border-color: AccentColor !important;
     --toolbarbutton-hover-background: color-mix(in srgb, -moz-dialogtext 14%, transparent) !important;
     --toolbarbutton-active-background: color-mix(in srgb, -moz-dialogtext 20%, transparent) !important;
     --uc-urlbar-shadow: none;
@@ -1175,8 +1175,8 @@ menuitem>.menu-iconic-text {
     --panel-item-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent) !important;
     --panel-separator-color: ThreeDShadow !important;
     --panel-banner-item-update-supported-bgcolor: #1bba6b !important;
-    --focus-outline-color: -moz-accent-color !important;
-    --uc-private-browsing-indicator: -moz-accent-color !important;
+    --focus-outline-color: AccentColor !important;
+    --uc-private-browsing-indicator: AccentColor !important;
     --uc-private-browding-indicator-hover: var(--button-primary-hover-bgcolor);
     --uc-private-browding-indicator-active: var(--button-primary-active-bgcolor);
     --uc-private-browding-indicator-text: var(--button-primary-color);
@@ -1220,16 +1220,16 @@ menuitem>.menu-iconic-text {
   }
 
   :root[privatebrowsingmode] #fxa-toolbar-menu-button:not(:-moz-lwtheme) {
-    background: -moz-accent-color !important;
-    color: -moz-accent-color-foreground !important;
+    background: AccentColor !important;
+    color: AccentColor-foreground !important;
   }
 
   :root[privatebrowsingmode] #fxa-toolbar-menu-button:not(:-moz-lwtheme):hover {
-    background: color-mix(in srgb, black 8%, -moz-accent-color) !important;
+    background: color-mix(in srgb, black 8%, AccentColor) !important;
   }
 
   :root[privatebrowsingmode] #fxa-toolbar-menu-button:not(:-moz-lwtheme):not([disabled=true]):is([open], [checked], :hover:active) {
-    background: color-mix(in srgb, black 16%, -moz-accent-color) !important;
+    background: color-mix(in srgb, black 16%, AccentColor) !important;
   }
 }
 
@@ -1331,7 +1331,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 
 
 #navigator-toolbox :-moz-any(toolbar:not(#TabsToolbar), #nav-bar-customization-target):not(#toolbar-menubar) {
-  -moz-box-align: center !important;
+  align-items: center !important;
   min-height: 36px !important;
 }
 
@@ -2124,7 +2124,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 
 .tab-content[pinned] {
   padding: 0 12px !important;
-  -moz-box-pack: center !important;
+  justify-content: center !important;
   width: 36px !important;
 }
 
@@ -2147,7 +2147,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
   }
 
   #tabbrowser-tabs[overflow] .tab-content {
-    -moz-box-pack: center !important;
+    justify-content: center !important;
   }
 
   #tabbrowser-tabs[overflow] .tab-icon-image {
@@ -2460,7 +2460,7 @@ spacer[part="overflow-end-indicator"] {
   /*padding: 2px !important;*/
   background-clip: padding-box !important;
   transition: background-color .1s var(--ease-basic) !important;
-  -moz-box-align: center !important;
+  align-items: center !important;
   display: block !important;
   margin: 0 !important;
   color: inherit !important;
@@ -2657,7 +2657,7 @@ spacer[part="overflow-end-indicator"] {
   padding: 0 !important;
   width: 8px !important;
   order: 3 !important;
-  -moz-box-ordinal-group: 2;
+  order: 2;
   margin-right: 16px !important;
 }
 

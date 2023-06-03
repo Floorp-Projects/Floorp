@@ -4,7 +4,7 @@
     /* Note that privacy.resistFingerprinting.letterboxing prevents this from working properly */
     
     findbar{
-        -moz-box-ordinal-group: 0;
+        order: 0;
         margin-bottom: -33px;
         position: relative;
         border-top: none !important;
@@ -30,7 +30,7 @@
         pointer-events: auto;
       }
       findbar > .findbar-container{
-        -moz-box-direction: reverse;
+        flex-direction: reverse;
         border-left-width: 1px;
         border-bottom-left-radius: 4px;
       }
