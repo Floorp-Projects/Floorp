@@ -103,8 +103,8 @@ nsresult PrintTargetWindows::AbortPrinting() {
   return (result <= 0) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-nsresult PrintTargetWindows::BeginPage() {
-  PrintTarget::BeginPage();
+nsresult PrintTargetWindows::BeginPage(const IntSize& aSizeInPoints) {
+  PrintTarget::BeginPage(aSizeInPoints);
   int result = ::StartPage(mDC);
   return (result <= 0) ? NS_ERROR_FAILURE : NS_OK;
 }

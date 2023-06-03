@@ -79,7 +79,7 @@ nsresult PrintTargetThebes::AbortPrinting() {
   return mGfxSurface->AbortPrinting();
 }
 
-nsresult PrintTargetThebes::BeginPage() {
+nsresult PrintTargetThebes::BeginPage(const IntSize& aSizeInPoints) {
 #ifdef DEBUG
   mHasActivePage = true;
 #endif

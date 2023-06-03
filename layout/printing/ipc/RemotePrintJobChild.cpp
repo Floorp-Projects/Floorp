@@ -56,12 +56,14 @@ void RemotePrintJobChild::SetNextPageFD(
   mNextPageFD = PR_ImportFile(PROsfd(handle.release()));
 }
 
-void RemotePrintJobChild::ProcessPage(nsTArray<uint64_t>&& aDeps) {
+void RemotePrintJobChild::ProcessPage(const IntSize& aSizeInPoints,
+                                      nsTArray<uint64_t>&& aDeps) {
   MOZ_ASSERT(mPagePrintTimer);
 
   mPagePrintTimer->WaitForRemotePrint();
   if (!mDestroyed) {
-    Unused << SendProcessPage(std::move(aDeps));
+    Unused << SendProcessPage(aSizeInPoints.width, aSizeInPoints.height,
+                              std::move(aDeps));
   }
 }
 
