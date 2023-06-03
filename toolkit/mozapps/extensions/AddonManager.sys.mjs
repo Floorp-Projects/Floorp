@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // Cannot use Services.appinfo here, or else xpcshell-tests will blow up, as
 // most tests later register different nsIAppInfo implementations, which
 // wouldn't be reflected in Services.appinfo anymore, as the lazy getter
@@ -17,9 +15,7 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
   }
 }
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const MOZ_COMPATIBILITY_NIGHTLY = ![
   "aurora",
@@ -73,17 +69,15 @@ const AMO_ATTRIBUTION_DATA_KEYS = [
 ];
 const AMO_ATTRIBUTION_DATA_MAX_LENGTH = 40;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 // This global is overridden by xpcshell tests, and therefore cannot be
 // a const.
-var { AsyncShutdown } = ChromeUtils.importESModule(
-  "resource://gre/modules/AsyncShutdown.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+import { AsyncShutdown as realAsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
+
+var AsyncShutdown = realAsyncShutdown;
+
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const lazy = {};
 
@@ -118,18 +112,9 @@ Services.ppmm.loadProcessScript(
 
 const INTEGER = /^[1-9]\d*$/;
 
-var EXPORTED_SYMBOLS = [
-  "AddonManager",
-  "AddonManagerPrivate",
-  "AMTelemetry",
-  "AMRemoteSettings",
-];
-
 const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 // Configure a logger at the parent 'addons' level to format
 // messages for all the modules under addons.*
 const PARENT_LOGGER_ID = "addons";
@@ -502,8 +487,8 @@ var gRepoShutdownState = "";
 var gShutdownInProgress = false;
 var gBrowserUpdated = null;
 
-var AMTelemetry;
-var AMRemoteSettings;
+export var AMTelemetry;
+export var AMRemoteSettings;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -3674,7 +3659,7 @@ var AddonManagerInternal = {
  * AddonManagerInternal for documentation however note that these methods are
  * subject to change at any time.
  */
-var AddonManagerPrivate = {
+export var AddonManagerPrivate = {
   startup() {
     AddonManagerInternal.startup();
   },
@@ -3969,7 +3954,7 @@ var AddonManagerPrivate = {
  * just forward to AddonManagerInternal.
  * @class
  */
-var AddonManager = {
+export var AddonManager = {
   // Map used to convert the known install source hostnames into the value to set into the
   // telemetry events.
   _installHostSource: new Map([
