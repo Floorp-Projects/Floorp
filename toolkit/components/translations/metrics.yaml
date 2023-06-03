@@ -11,6 +11,53 @@ $tags:
   - 'Firefox :: Translation'
 
 translations:
+  requests_count:
+    type: counter
+    description: >
+      The count of translation requests.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  error_rate:
+    type: rate
+    description: >
+      The rate of failed translations requests.
+    denominator_metric: translations.requests_count
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
+  error:
+    type: event
+    description: >
+      The specific translations error that caused a full-page translation failure.
+    extra_keys:
+      reason:
+        type: string
+        description: The reason for the error.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
   translation_request:
     type: event
     description: >
