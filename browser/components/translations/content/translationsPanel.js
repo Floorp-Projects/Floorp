@@ -10,11 +10,6 @@
  */
 /* eslint-enable jsdoc/valid-types */
 
-ChromeUtils.defineESModuleGetters(this, {
-  TranslationsTelemetry:
-    "chrome://browser/content/translations/TranslationsTelemetry.sys.mjs",
-});
-
 /**
  * The set of actions that can occur from interaction with the
  * translations panel.
@@ -839,15 +834,9 @@ var TranslationsPanel = new (class {
 
     this.#populateSettingsMenuItems();
 
-    const [targetButton, openedFromAppMenu] = button.contains(event.target)
-      ? [button, false]
-      : [this.elements.appMenuButton, true];
-
-    panel.addEventListener(
-      "ViewShown",
-      () => TranslationsTelemetry.onOpenPanel(openedFromAppMenu),
-      { once: true }
-    );
+    const targetButton = button.contains(event.target)
+      ? button
+      : this.elements.appMenuButton;
 
     PanelMultiView.openPopup(panel, targetButton, {
       position: "bottomright topright",
