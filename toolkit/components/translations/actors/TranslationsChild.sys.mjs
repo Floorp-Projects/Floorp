@@ -52,6 +52,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   TranslationsDocument:
     "chrome://global/content/translations/translations-document.sys.mjs",
+  TranslationsTelemetry:
+    "chrome://global/content/translations/TranslationsTelemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
@@ -756,6 +758,11 @@ export class TranslationsChild extends JSWindowActorChild {
         langTags
       );
       if (maybeAutoTranslate && !maybeNeverTranslate) {
+        lazy.TranslationsTelemetry.onTranslate({
+          fromLanguage: langTags.docLangTag,
+          toLanguage: langTags.userLangTag,
+          autoTranslate: maybeAutoTranslate,
+        });
         this.translatePage(
           langTags.docLangTag,
           langTags.userLangTag,
@@ -910,6 +917,11 @@ export class TranslationsChild extends JSWindowActorChild {
           );
           break;
         }
+        lazy.TranslationsTelemetry.onTranslate({
+          fromLanguage: langTags.fromLanguage,
+          toLanguage: langTags.toLanguage,
+          autoTranslate: false,
+        });
         this.translatePage(langTags.fromLanguage, langTags.toLanguage);
         break;
       case "Translations:GetLangTagsForTranslation":
