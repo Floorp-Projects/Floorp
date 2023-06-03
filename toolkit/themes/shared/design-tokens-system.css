@@ -18,7 +18,7 @@
     --color-accent-primary: var(--system-color-accent);
     --color-accent-primary-hover: var(--system-color-accent-hover);
     --color-accent-primary-active: var(--system-color-accent-active);
-    --system-color-accent: var(--button-primary-bgcolor);
+    --system-color-accent: var(--button-primary-bgcolor, AccentColor);
     --system-color-accent-hover: var(--button-primary-hover-bgcolor);
     --system-color-accent-active: var(--button-primary-active-bgcolor);
     --color-canvas: Canvas;
