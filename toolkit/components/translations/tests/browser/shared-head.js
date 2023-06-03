@@ -429,6 +429,16 @@ async function loadTestPage({
       );
     },
 
+    /**
+     * @param {number} count - Count of the language pairs expected.
+     */
+    async rejectDownloads(count) {
+      await remoteClients.translationsWasm.rejectPendingDownloads(1);
+      await remoteClients.translationModels.rejectPendingDownloads(
+        FILES_PER_LANGUAGE_PAIR * count
+      );
+    },
+
     async resolveLanguageIdDownloads() {
       await remoteClients.translationsWasm.resolvePendingDownloads(1);
       await remoteClients.languageIdModels.resolvePendingDownloads(1);
@@ -889,9 +899,28 @@ async function mockLocales({ systemLocales, appLocales, webLanguages }) {
  */
 class TestTranslationsTelemetry {
   /**
+   * Asserts qualities about a counter telemetry metric.
+   *
+   * @param {string} name - The name of the metric.
+   * @param {Object} counter - The Glean counter object.
+   * @param {Object} expectedCount - The expected value of the counter.
+   */
+  static async assertCounter(name, counter, expectedCount) {
+    // Ensures that glean metrics are collected from all child processes
+    // so that calls to testGetValue() are up to date.
+    await Services.fog.testFlushAllChildren();
+    const count = counter.testGetValue() ?? 0;
+    is(
+      count,
+      expectedCount,
+      `Telemetry counter ${name} should have expected count`
+    );
+  }
+
+  /**
    * Asserts qualities about an event telemetry metric.
    *
-   * @param {string} name - The name of the event.
+   * @param {string} name - The name of the metric.
    * @param {Object} event - The Glean event object.
    * @param {Object} expectations - The test expectations.
    * @param {number} expectations.expectedLength - The expected length of the event.
@@ -948,5 +977,35 @@ class TestTranslationsTelemetry {
         );
       }
     }
+  }
+
+  /**
+   * Asserts qualities about a rate telemetry metric.
+   *
+   * @param {string} name - The name of the metric.
+   * @param {Object} rate - The Glean rate object.
+   * @param {Object} expectations - The test expectations.
+   * @param {number} expectations.expectedNumerator - The expected value of the numerator.
+   * @param {number} expectations.expectedDenominator - The expected value of the denominator.
+   */
+  static async assertRate(
+    name,
+    rate,
+    { expectedNumerator, expectedDenominator }
+  ) {
+    // Ensures that glean metrics are collected from all child processes
+    // so that calls to testGetValue() are up to date.
+    await Services.fog.testFlushAllChildren();
+    const { numerator = 0, denominator = 0 } = rate.testGetValue() ?? {};
+    is(
+      numerator,
+      expectedNumerator,
+      `Telemetry rate ${name} should have expected numerator`
+    );
+    is(
+      denominator,
+      expectedDenominator,
+      `Telemetry rate ${name} should have expected denominator`
+    );
   }
 }
