@@ -61,6 +61,7 @@ export var SearchSERPTelemetryUtils = {
   },
   INCONTENT_SOURCES: {
     OPENED_IN_NEW_TAB: "opened_in_new_tab",
+    REFINE_ON_SERP: "follow_on_from_refine_on_SERP",
     SEARCHBOX: "follow_on_from_refine_on_incontent_search",
   },
 };
@@ -121,26 +122,14 @@ class TelemetryHandler {
    *
    * @param {browser} browser
    *   The browser object associated with the page that should be a SERP.
-   * @param {string} type
+   * @param {string} source
    *   The source that started the load. One of
-   *   SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX or
-   *   SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB.
+   *   SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+   *   SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB or
+   *   SearchSERPTelemetryUtils.INCONTENT_SOURCES.REFINE_ON_SERP.
    */
-  setBrowserContentSource(browser, type) {
-    switch (type) {
-      case SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX:
-        this.#browserContentSourceMap.set(
-          browser,
-          SearchSERPTelemetryUtils.INCONTENT_SOURCES.SEARCHBOX
-        );
-        break;
-      case SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB:
-        this.#browserContentSourceMap.set(
-          browser,
-          SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB
-        );
-        break;
-    }
+  setBrowserContentSource(browser, source) {
+    this.#browserContentSourceMap.set(browser, source);
   }
 
   // _browserNewtabSessionMap is a map of the newtab session id for particular
@@ -1053,7 +1042,14 @@ class ContentHandler {
             type = SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK;
           }
 
-          if (isSerp && isFromNewtab) {
+          if (
+            type == SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS
+          ) {
+            SearchSERPTelemetry.setBrowserContentSource(
+              browser,
+              SearchSERPTelemetryUtils.INCONTENT_SOURCES.REFINE_ON_SERP
+            );
+          } else if (isSerp && isFromNewtab) {
             SearchSERPTelemetry.setBrowserContentSource(
               browser,
               SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB
@@ -1262,7 +1258,10 @@ class ContentHandler {
         info.action == SearchSERPTelemetryUtils.ACTIONS.SUBMITTED
       ) {
         telemetryState.searchBoxSubmitted = true;
-        SearchSERPTelemetry.setBrowserContentSource(browser, info.type);
+        SearchSERPTelemetry.setBrowserContentSource(
+          browser,
+          SearchSERPTelemetryUtils.INCONTENT_SOURCES.SEARCHBOX
+        );
       }
     } else {
       lazy.logConsole.warn(
