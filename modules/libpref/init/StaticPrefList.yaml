@@ -8264,7 +8264,7 @@
 # Whether CSS nesting is enabled.
 - name: layout.css.nesting.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
