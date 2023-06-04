@@ -37,7 +37,6 @@ smallvec = "1.0"
 
 [dependencies.cssparser-macros]
 version = "0.6"
-path = "./macros"
 
 [dependencies.phf]
 version = ">=0.8,<=0.11"
