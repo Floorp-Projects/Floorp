@@ -563,7 +563,9 @@ async function confirmRestartPrompt(
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
     {
-      id: aRestartToEnable
+      id: aRestartToEnable === null
+        ? "feature-requires-restart"
+        : aRestartToEnable
         ? "feature-enable-requires-restart"
         : "feature-disable-requires-restart",
     },
