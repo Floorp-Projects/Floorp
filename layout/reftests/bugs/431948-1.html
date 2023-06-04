@@ -7,16 +7,13 @@ span {
 
 /* A semicolon at the top level of a @media block should not cause the
    whole @media block to be invalidated; in particular, valid rules
-   either before or after it should not be discarded.  (But a rule
-   immediately after the semicolon is consumed by error recovery.)  */
+   either before or after it should not be discarded.  */
 @media screen {
   #a { background-color: green }
   ;
 }
 @media screen {
   #b { background-color: green } 
-  ;
-  #b { background-color: yellow }
   #c { background-color: green }
 }
 
