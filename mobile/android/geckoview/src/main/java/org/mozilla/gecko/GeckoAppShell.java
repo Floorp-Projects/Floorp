@@ -1052,7 +1052,7 @@ public class GeckoAppShell {
     }
   }
 
-  @WrapForJNI(calledFrom = "gecko")
+  @WrapForJNI(calledFrom = "gecko", exceptionMode = "nsresult")
   private static String getDNSDomains() {
     if (Build.VERSION.SDK_INT < 23) {
       return "";
