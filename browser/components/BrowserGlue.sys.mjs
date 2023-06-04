@@ -7,6 +7,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+try {
+  ChromeUtils.import("resource:///modules/FloorpStartup.jsm");
+} catch (e) { console.error(e) }
+
 // Ignore unused lazy property for PluginManager.
 // eslint-disable-next-line mozilla/valid-lazy
 ChromeUtils.defineESModuleGetters(lazy, {
