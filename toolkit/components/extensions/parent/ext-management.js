@@ -11,11 +11,9 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", function () {
     "chrome://global/locale/extensions.properties"
   );
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 // We can't use Services.prompt here at the moment, as tests need to mock
 // the prompt service. We could use sinon, but that didn't seem to work

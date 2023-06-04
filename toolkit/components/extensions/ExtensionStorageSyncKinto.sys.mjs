@@ -35,6 +35,7 @@ import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BulkKeyBundle: "resource://services-sync/keys.sys.mjs",
   CollectionKeyManager: "resource://services-sync/record.sys.mjs",
   CommonUtils: "resource://services-common/utils.sys.mjs",
@@ -46,7 +47,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Kinto: "resource://services-common/kinto-offline-client.js",
 });

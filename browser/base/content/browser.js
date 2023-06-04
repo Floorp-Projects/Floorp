@@ -14,7 +14,9 @@ ChromeUtils.importESModule("resource://gre/modules/NotificationDB.sys.mjs");
 // lazy module getters
 
 ChromeUtils.defineESModuleGetters(this, {
+  AMTelemetry: "resource://gre/modules/AddonManager.sys.mjs",
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.sys.mjs",
   Color: "resource://gre/modules/Color.sys.mjs",
@@ -82,8 +84,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   NewTabPagePreloading: "resource:///modules/NewTabPagePreloading.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",

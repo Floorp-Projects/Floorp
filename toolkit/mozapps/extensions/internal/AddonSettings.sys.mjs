@@ -5,9 +5,7 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+import { AddonManager } from "resource://gre/modules/AddonManager.sys.mjs";
 
 const PREF_SIGNATURES_REQUIRED = "xpinstall.signatures.required";
 const PREF_LANGPACK_SIGNATURES = "extensions.langpacks.signatures.required";

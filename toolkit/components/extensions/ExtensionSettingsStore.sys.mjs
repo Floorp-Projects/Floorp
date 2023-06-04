@@ -43,12 +43,8 @@ import { ExtensionParent } from "resource://gre/modules/ExtensionParent.sys.mjs"
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });
 

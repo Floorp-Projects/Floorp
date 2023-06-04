@@ -10,11 +10,8 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 const kLushSoftID = "lush-soft-colorway@mozilla.org";

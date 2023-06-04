@@ -49,11 +49,9 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 /**
  * Browser-specific actors.

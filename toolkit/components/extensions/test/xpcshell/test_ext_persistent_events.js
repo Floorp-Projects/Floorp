@@ -1,11 +1,9 @@
 "use strict";
 
 // Delay loading until createAppInfo is called and setup.
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 const { ExtensionAPI } = ExtensionCommon;
 

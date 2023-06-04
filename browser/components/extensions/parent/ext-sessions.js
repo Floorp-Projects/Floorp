@@ -8,12 +8,8 @@
 
 var { ExtensionError, promiseObserved } = ExtensionUtils;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManagerPrivate",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 

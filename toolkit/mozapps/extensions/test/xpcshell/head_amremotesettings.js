@@ -9,8 +9,8 @@ async function setAndEmitFakeRemoteSettingsData(
   data,
   expectClientInitialized = true
 ) {
-  const { AMRemoteSettings } = ChromeUtils.import(
-    "resource://gre/modules/AddonManager.jsm"
+  const { AMRemoteSettings } = ChromeUtils.importESModule(
+    "resource://gre/modules/AddonManager.sys.mjs"
   );
   let client;
   if (expectClientInitialized) {

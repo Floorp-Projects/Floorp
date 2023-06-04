@@ -6,8 +6,8 @@
 
 /* global ExtensionCommon, ExtensionAPI, Services, XPCOMUtils, ExtensionUtils */
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { WebRequest } = ChromeUtils.importESModule(
   "resource://gre/modules/WebRequest.sys.mjs"

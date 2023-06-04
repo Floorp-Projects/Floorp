@@ -44,11 +44,9 @@ XPCOMUtils.defineLazyGetter(lazy, "PREFS_GUID", () =>
   CommonUtils.encodeBase64URL(Services.appinfo.ID)
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 // In bug 1538015, we decided that it isn't always safe to allow all "incoming"
 // preferences to be applied locally. So we have introduced another preference,

@@ -5,14 +5,11 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.sys.mjs",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
   NativeManifests: "resource://gre/modules/NativeManifests.sys.mjs",
   extensionStorageSession: "resource://gre/modules/ExtensionStorage.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
 });
 
 var { ExtensionError } = ExtensionUtils;
