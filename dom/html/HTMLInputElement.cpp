@@ -5698,14 +5698,23 @@ nsresult HTMLInputElement::SetDefaultValueAsValue() {
 
 void HTMLInputElement::SetDirectionFromValue(bool aNotify,
                                              const nsAString* aKnownValue) {
-  if (IsSingleLineTextControl(true)) {
-    nsAutoString value;
-    if (!aKnownValue) {
-      GetValue(value, CallerType::System);
-      aKnownValue = &value;
-    }
-    SetDirectionalityFromValue(this, *aKnownValue, aNotify);
+  // FIXME(emilio): https://html.spec.whatwg.org/#the-directionality says this
+  // applies to Text, Search, Telephone, URL, or Email state, but the check
+  // below doesn't filter out week/month/number.
+  if (!IsSingleLineTextControl(true)) {
+    return;
   }
+  nsAutoString value;
+  if (!aKnownValue) {
+    // It's unclear if per spec we should use the sanitized or unsanitized
+    // value to set the directionality, but aKnownValue is unsanitized, so be
+    // consistent. Using what the user is seeing to determine directionality
+    // instead of the sanitized (empty if invalid) value probably makes more
+    // sense.
+    GetValueInternal(value, CallerType::System);
+    aKnownValue = &value;
+  }
+  SetDirectionalityFromValue(this, *aKnownValue, aNotify);
 }
 
 NS_IMETHODIMP
