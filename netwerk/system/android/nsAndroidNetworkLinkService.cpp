@@ -14,8 +14,10 @@
 
 #include "AndroidBridge.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
+#include "mozilla/jni/Utils.h"
 
 namespace java = mozilla::java;
+namespace jni = mozilla::jni;
 
 static mozilla::LazyLogModule gNotifyAddrLog("nsAndroidNetworkLinkService");
 #define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
@@ -135,13 +137,18 @@ NS_IMETHODIMP
 nsAndroidNetworkLinkService::GetDnsSuffixList(
     nsTArray<nsCString>& aDnsSuffixList) {
   aDnsSuffixList.Clear();
-  if (!mozilla::AndroidBridge::Bridge()) {
-    NS_WARNING("GetDnsSuffixList is not supported without a bridge connection");
+  if (!jni::IsAvailable()) {
+    NS_WARNING("GetDnsSuffixList is not supported without JNI");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  auto suffixList = java::GeckoAppShell::GetDNSDomains();
-  if (!suffixList) {
+  jni::String::LocalRef suffixList;
+  nsresult rv = java::GeckoAppShell::GetDNSDomains(&suffixList);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!suffixList || !suffixList->Length()) {
     return NS_OK;
   }
 
