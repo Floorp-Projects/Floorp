@@ -15,6 +15,7 @@ jobs:
     steps:
     - name: Package 📦
       run: |
+        sudo apt update
         sudo apt install flatpak aria2 fakeroot
 
         aria2c '${{ inputs.tarball-url }}' -o floorp.tar.bz2
