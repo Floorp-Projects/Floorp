@@ -13,8 +13,8 @@ jobs:
   pull-upstream:
     name: Pull upstream
     
-    runs-on: ubuntu-22.04
-    
+    runs-on: ubuntu-latest
+
     steps:
     - name: Setup 🪛
       run: |
@@ -41,8 +41,8 @@ jobs:
         export PATH=~/git-cinnabar:$PATH
         git clone hg::https://hg.mozilla.org/mozilla-unified
         cd mozilla-unified
-        git rev-list --count origin/bookmarks/central
-        git checkout -b upstream-central-${DATE_STR} origin/bookmarks/central
+        git rev-list --count origin/bookmarks/esr115
+        git checkout -b upstream-esr115-${DATE_STR} origin/bookmarks/esr115
 
     - name: Fetch Floorp 📥
       run: |
@@ -53,11 +53,11 @@ jobs:
     - name: Push 🎁
       run: |
         cd mozilla-unified
-        git push floorp upstream-central-${DATE_STR}
+        git push floorp upstream-esr115-${DATE_STR}
 
     - name: Create Pull Request
       run: |
         cd mozilla-unified
-        gh pr create --repo ${{ github.repository }} --base master --head upstream-central-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
+        gh pr create --repo ${{ github.repository }} --base ESR115 --head upstream-central-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
       env:
         GH_TOKEN: ${{ github.token }}
