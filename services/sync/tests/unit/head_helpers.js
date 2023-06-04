@@ -56,11 +56,9 @@ var {
 } = ChromeUtils.importESModule(
   "resource://testing-common/services/sync/utils.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 add_setup(async function head_setup() {
   // Initialize logging. This will sometimes be reset by a pref reset,

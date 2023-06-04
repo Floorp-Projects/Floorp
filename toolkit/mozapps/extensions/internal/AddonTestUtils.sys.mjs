@@ -9,9 +9,10 @@
 
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+import {
+  AddonManager,
+  AddonManagerPrivate,
+} from "resource://gre/modules/AddonManager.sys.mjs";
 import { AsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 

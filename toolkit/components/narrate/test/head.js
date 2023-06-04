@@ -13,11 +13,9 @@ const TEST_ARTICLE =
 const TEST_ITALIAN_ARTICLE =
   "http://example.com/browser/toolkit/components/narrate/test/inferno.html";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 const TEST_PREFS = {
   "reader.parse-on-load.enabled": true,

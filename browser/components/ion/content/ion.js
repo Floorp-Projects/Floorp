@@ -11,8 +11,8 @@
  *        this may change in the future.
  */
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 
 const { RemoteSettings } = ChromeUtils.importESModule(

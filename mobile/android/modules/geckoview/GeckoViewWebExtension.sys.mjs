@@ -14,6 +14,7 @@ const PRIVATE_BROWSING_PERMISSION = {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
@@ -21,10 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   Management: "resource://gre/modules/Extension.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

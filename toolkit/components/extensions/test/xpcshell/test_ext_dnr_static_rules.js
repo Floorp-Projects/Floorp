@@ -257,8 +257,8 @@ add_task(async function test_load_static_rules() {
   dnrStore._dataPromises.delete(extUUID);
 
   info("Verify the expected DNRStore data persisted on disk is loaded back");
-  const { AddonManager } = ChromeUtils.import(
-    "resource://gre/modules/AddonManager.jsm"
+  const { AddonManager } = ChromeUtils.importESModule(
+    "resource://gre/modules/AddonManager.sys.mjs"
   );
   const addon = await AddonManager.getAddonByID(extension.id);
   await addon.disable();

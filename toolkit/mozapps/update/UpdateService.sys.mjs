@@ -19,6 +19,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
@@ -26,10 +27,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   ctypes: "resource://gre/modules/ctypes.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

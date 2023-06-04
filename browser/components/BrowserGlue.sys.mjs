@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ASRouterNewTabHook:
     "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
@@ -80,7 +81,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   ASRouterDefaultConfig:
     "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",

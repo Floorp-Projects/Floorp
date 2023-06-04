@@ -30,12 +30,9 @@ const SUPPORTED_ADDON_TYPES = [
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AMTelemetry: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

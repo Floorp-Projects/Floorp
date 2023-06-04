@@ -16,7 +16,7 @@ function run_test() {
   updateAppInfo();
   Services.appinfo.processType = Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
   try {
-    ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+    ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
     do_throw("AddonManager should have refused to load");
   } catch (ex) {
     info(ex.message);

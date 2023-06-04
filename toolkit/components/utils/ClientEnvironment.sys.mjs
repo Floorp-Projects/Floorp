@@ -6,13 +6,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",

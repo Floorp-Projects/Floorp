@@ -7,21 +7,12 @@
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManagerPrivate",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   jexlFilterFunc: "resource://services-settings/remote-settings.sys.mjs",
 });

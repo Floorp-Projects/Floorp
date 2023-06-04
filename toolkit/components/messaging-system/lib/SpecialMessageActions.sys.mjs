@@ -10,6 +10,7 @@ const NETWORK_TRR_MODE_PREF = "network.trr.mode";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
@@ -17,7 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
 });
 

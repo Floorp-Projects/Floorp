@@ -10,17 +10,12 @@
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   Assert: "resource://testing-common/Assert.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",

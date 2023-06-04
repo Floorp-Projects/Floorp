@@ -25,12 +25,8 @@ const {
 } = require("resource://devtools/server/actors/watcher/session-context.js");
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
 });
 loader.lazyRequireGetter(

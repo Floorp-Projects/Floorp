@@ -52,12 +52,8 @@ import { CollectionValidator } from "resource://services-sync/collection_validat
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
 });
 

@@ -7,6 +7,7 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   QuickSuggestRemoteSettings:
     "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
@@ -17,12 +18,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 
 const VIEW_TEMPLATE = {
   attributes: {

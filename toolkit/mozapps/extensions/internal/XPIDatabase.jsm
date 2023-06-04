@@ -36,6 +36,8 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
@@ -46,8 +48,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",

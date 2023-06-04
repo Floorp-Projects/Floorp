@@ -46,8 +46,8 @@ const MSG_ADDON_EVENT = "WebAPIAddonEvent";
 var AddonManager, AddonManagerPrivate;
 
 export function amManager() {
-  ({ AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-    "resource://gre/modules/AddonManager.jsm"
+  ({ AddonManager, AddonManagerPrivate } = ChromeUtils.importESModule(
+    "resource://gre/modules/AddonManager.sys.mjs"
   ));
 
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);

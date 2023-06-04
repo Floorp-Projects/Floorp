@@ -30,15 +30,11 @@ const lazy = {};
 
 ChromeUtils.defineModuleGetter(
   lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "BrowserUIUtils",
   "resource:///modules/BrowserUIUtils.jsm"
 );
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",

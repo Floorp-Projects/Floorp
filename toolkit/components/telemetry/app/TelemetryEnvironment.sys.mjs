@@ -14,9 +14,10 @@ import { UpdateUtils } from "resource://gre/modules/UpdateUtils.sys.mjs";
 
 const Utils = TelemetryUtils;
 
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
+import {
+  AddonManager,
+  AddonManagerPrivate,
+} from "resource://gre/modules/AddonManager.sys.mjs";
 
 const lazy = {};
 

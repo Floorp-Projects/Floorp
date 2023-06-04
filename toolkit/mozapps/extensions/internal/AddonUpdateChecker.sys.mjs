@@ -12,17 +12,9 @@ const TOOLKIT_ID = "toolkit@mozilla.org";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManagerPrivate",
-  "resource://gre/modules/AddonManager.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
   CertUtils: "resource://gre/modules/CertUtils.sys.mjs",

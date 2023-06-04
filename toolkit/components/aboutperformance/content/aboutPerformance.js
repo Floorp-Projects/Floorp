@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { ExtensionParent } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionParent.sys.mjs"

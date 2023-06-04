@@ -299,9 +299,6 @@ var whitelist = [
   // Bug 1834176 - Imports of NetUtil can't be converted until hostutils is
   // updated.
   { file: "resource://gre/modules/NetUtil.sys.mjs" },
-
-  // Bug 1836482 - Need to rewrite imports.
-  { file: "resource://gre/modules/AddonManager.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

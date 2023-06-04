@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
@@ -23,7 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   AboutWelcomeDefaults:

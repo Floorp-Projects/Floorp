@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { AddonManager } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 const { CHANGE_INSTALLED } = ChromeUtils.importESModule(
   "resource://services-sync/addonsreconciler.sys.mjs"

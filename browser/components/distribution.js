@@ -15,13 +15,9 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
 
 function DistributionCustomizer() {}
 

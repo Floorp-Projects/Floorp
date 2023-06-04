@@ -308,8 +308,8 @@ add_task(
       `moz-extension://${extension.uuid}/extpage.html`
     );
 
-    const { AddonManager } = ChromeUtils.import(
-      "resource://gre/modules/AddonManager.jsm"
+    const { AddonManager } = ChromeUtils.importESModule(
+      "resource://gre/modules/AddonManager.sys.mjs"
     );
     function assertManagementAPIAddonListener(expect) {
       let found = false;

@@ -1,10 +1,8 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+});
 
 const { Management } = ChromeUtils.importESModule(
   "resource://gre/modules/Extension.sys.mjs"

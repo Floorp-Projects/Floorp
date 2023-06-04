@@ -1,21 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   Assert: "resource://testing-common/Assert.sys.mjs",
   // AttributionCode is only needed for Firefox
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
-  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
-});
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
 });
 
 const gIsWindows = AppConstants.platform == "win";

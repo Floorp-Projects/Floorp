@@ -26,8 +26,8 @@ const MAX_TIME_DIFFERENCE = 3000;
 // times are modified (10 hours old).
 const MAKE_FILE_OLD_DIFFERENCE = 10 * 3600 * 1000;
 
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
+const { AddonManager, AddonManagerPrivate } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
 );
 var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
