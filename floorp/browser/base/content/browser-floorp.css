@@ -50,8 +50,9 @@
 }
 
 #sidebar-box[positionend] + .sidebar-splitter {
-  border-inline-width: unset !important;
-  margin-inline: 0 auto !important;
+  /*border-inline-width: unset !important;
+  margin-inline: 0 auto !important;*/
+  border-color: transparent;
 }
 
 .extension-icon-add-white > .toolbarbutton-icon {
