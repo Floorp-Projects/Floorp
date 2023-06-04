@@ -1,0 +1,89 @@
+.. _mozilla_projects_nss_nss_3_90_release_notes:
+
+NSS 3.90 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.90 was released on *4 June 2023**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_90_RTM. NSS 3.90 requires NSPR 4.35 or newer.
+
+   NSS 3.90 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_90_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.90:
+
+`Changes in NSS 3.90 <#changes_in_nss_3.90>`__
+----------------------------------------------------
+
+.. container::
+
+
+- Bug 1623338 - ride along: remove a duplicated doc page
+- Bug 1623338 - remove a reference to IRC
+- Bug 1831983 - clang-format lib/freebl/stubs.c
+- Bug 1831983 - Add a constant time select function
+- Bug 1774657 - Updating an old dbm with lots of certs with keys to sql results in a database that is slow to access.
+- Bug 1830973 - output early build errors by default
+- Bug 1804505 - Update the technical constraints for KamuSM
+- Bug 1822921 - Add BJCA Global Root CA1 and CA2 root certificates
+- Bug 1790763 - Enable default UBSan Checks
+- Bug 1786018 - Add explicit handling of zero length records
+- Bug 1829391 - Tidy up DTLS ACK Error Handling Path
+- Bug 1786018 - Refactor zero length record tests
+- Bug 1829112 - Fix compiler warning via correct assert
+- Bug 1755267 - run linux tests on nss-t/t-linux-xlarge-gcp
+- Bug 1806496 - In FIPS mode, nss should reject RSASSA-PSS salt lengths larger than the output size of the hash function used, or provide an indicator
+- Bug 1784163 - Fix reading raw negative numbers
+- Bug 1748237 - Repairing unreachable code in clang built with gyp
+- Bug 1783647 - Integrate Vale Curve25519
+- Bug 1799468 - Removing unused flags for Hacl*
+- Bug 1748237 - Adding a better error message
+- Bug 1727555 - Update HACL* till 51a72a953a4ee6f91e63b2816ae5c4e62edf35d6
+- Bug 1782980 - Fall back to the softokn when writing certificate trust
+- Bug 1806010 - FIPS-104-3 requires we restart post programmatically
+- Bug 1826650 - cmd/ecperf: fix dangling pointer warning on gcc 13
+- Bug 1818766 - Update ACVP dockerfile for compatibility with debian package changes
+- Bug 1815796 - Add a CI task for tracking ECCKiila code status, update whitespace in ECCKiila files
+- Bug 1819958 - Removed deprecated sprintf function and replaced with snprintf
+- Bug 1822076 - fix rst warnings in nss doc
+- Bug 1821997 - Fix incorrect pygment style
+- Bug 1821292 - Change GYP directive to apply across platforms
+- Add libsmime3 abi-check exception for NSS_CMSSignerInfo_GetDigestAlgTag
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.90 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
