@@ -93,11 +93,6 @@ class nsUserIdleServiceDaily : public nsIObserver,
   nsCategoryCache<nsIObserver> mCategoryObservers;
 
   /**
-   * Boolean set to true when daily idle notifications should be disabled.
-   */
-  bool mShutdownInProgress;
-
-  /**
    * Next time we expect an idle-daily timer to fire, in case timers aren't
    * very reliable on the platform. Value is in PR_Now microsecond units.
    */
@@ -139,6 +134,9 @@ class nsUserIdleService : public nsIUserIdleServiceInternal {
    *       ResetIdleTimeOut(), unless you overwrite that function too...
    */
   virtual bool PollIdleTime(uint32_t* aIdleTime);
+
+ public:
+  void SetDisabledForShutdown();
 
  private:
   /**
