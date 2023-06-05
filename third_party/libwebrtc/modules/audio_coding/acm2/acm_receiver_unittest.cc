@@ -44,11 +44,10 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
   ~AcmReceiverTestOldApi() {}
 
   void SetUp() override {
-    acm_.reset(AudioCodingModule::Create(config_));
+    acm_ = AudioCodingModule::Create();
     receiver_.reset(new AcmReceiver(config_));
     ASSERT_TRUE(receiver_.get() != NULL);
     ASSERT_TRUE(acm_.get() != NULL);
-    acm_->InitializeReceiver();
     acm_->RegisterTransportCallback(this);
 
     rtp_header_.sequenceNumber = 0;
@@ -135,7 +134,7 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
       CreateBuiltinAudioEncoderFactory();
   const rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_ =
       CreateBuiltinAudioDecoderFactory();
-  AudioCodingModule::Config config_;
+  acm2::AcmReceiver::Config config_;
   std::unique_ptr<AcmReceiver> receiver_;
   std::unique_ptr<AudioCodingModule> acm_;
   RTPHeader rtp_header_;
@@ -381,6 +380,24 @@ TEST_F(AcmReceiverTestOldApi, MAYBE_InitializedToZero) {
   EXPECT_EQ(0, stats.decoded_neteq_plc);
   EXPECT_EQ(0, stats.decoded_plc_cng);
   EXPECT_EQ(0, stats.decoded_muted_output);
+}
+
+#if defined(WEBRTC_ANDROID)
+#define MAYBE_VerifyOutputFrame DISABLED_VerifyOutputFrame
+#else
+#define MAYBE_VerifyOutputFrame VerifyOutputFrame
+#endif
+TEST_F(AcmReceiverTestOldApi, MAYBE_VerifyOutputFrame) {
+  AudioFrame audio_frame;
+  const int kSampleRateHz = 32000;
+  bool muted;
+  EXPECT_EQ(0, receiver_->GetAudio(kSampleRateHz, &audio_frame, &muted));
+  ASSERT_FALSE(muted);
+  EXPECT_EQ(0u, audio_frame.timestamp_);
+  EXPECT_GT(audio_frame.num_channels_, 0u);
+  EXPECT_EQ(static_cast<size_t>(kSampleRateHz / 100),
+            audio_frame.samples_per_channel_);
+  EXPECT_EQ(kSampleRateHz, audio_frame.sample_rate_hz_);
 }
 
 // Insert some packets and pull audio. Check statistics are valid. Then,

@@ -338,7 +338,7 @@ index bde8c8b615..1918354009 100644
        LntfConfig lntf;
  
 diff --git a/modules/audio_coding/acm2/acm_receiver.h b/modules/audio_coding/acm2/acm_receiver.h
-index 25105ec1ca..fa728e705c 100644
+index 820150aede..39653be00b 100644
 --- a/modules/audio_coding/acm2/acm_receiver.h
 +++ b/modules/audio_coding/acm2/acm_receiver.h
 @@ -18,6 +18,7 @@
@@ -349,7 +349,7 @@ index 25105ec1ca..fa728e705c 100644
  
  #include "absl/types/optional.h"
  #include "api/array_view.h"
-@@ -235,12 +236,15 @@ class AcmReceiver {
+@@ -230,12 +231,15 @@ class AcmReceiver {
  
    mutable Mutex mutex_;
    absl::optional<DecoderInfo> last_decoder_ RTC_GUARDED_BY(mutex_);

@@ -1082,8 +1082,6 @@ if (rtc_include_tests) {
       "test/TestVADDTX.cc",
       "test/TestVADDTX.h",
       "test/Tester.cc",
-      "test/TwoWayCommunication.cc",
-      "test/TwoWayCommunication.h",
       "test/target_delay_unittest.cc",
     ]
     deps = [

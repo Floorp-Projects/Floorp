@@ -29,9 +29,9 @@ namespace webrtc {
 
 namespace {
 
-AudioCodingModule::Config CreateAcmConfig(
+acm2::AcmReceiver::Config CreateAcmConfig(
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory) {
-  AudioCodingModule::Config acm_config;
+  acm2::AcmReceiver::Config acm_config;
   acm_config.neteq_config.enable_muted_state = true;
   acm_config.decoder_factory = decoder_factory;
   return acm_config;
