@@ -9,8 +9,6 @@ add_task(async function test_fetch() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: URL },
     async function (newTabBrowser) {
-      const win = newTabBrowser.ownerGlobal;
-      await openProtectionsPanel(false, win);
       let contentBlockingEvent = waitForContentBlockingEvent();
       await SpecialPowers.spawn(newTabBrowser, [], async function () {
         await content.wrappedJSObject
@@ -20,7 +18,7 @@ add_task(async function test_fetch() {
       });
       await contentBlockingEvent;
 
-      const gProtectionsHandler = win.gProtectionsHandler;
+      let gProtectionsHandler = newTabBrowser.ownerGlobal.gProtectionsHandler;
       ok(gProtectionsHandler, "got CB object");
 
       ok(
@@ -32,10 +30,8 @@ add_task(async function test_fetch() {
         "icon box is active"
       );
       is(
-        gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
-          "data-l10n-id"
-        ),
-        "tracking-protection-icon-active",
+        gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+        gNavigatorBundle.getString("trackingProtection.icon.activeTooltip2"),
         "correct tooltip"
       );
     }
