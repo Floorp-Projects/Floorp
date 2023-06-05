@@ -41,7 +41,7 @@ async function makeExtension({
 
     useAddonManager,
 
-    background() {
+    async background() {
       browser.permissions.onAdded.addListener(({ origins }) => {
         browser.test.sendMessage("granted", origins.join());
       });
@@ -60,12 +60,19 @@ async function makeExtension({
           title: "child1",
           parentId: submenu,
         });
-        browser.menus.create({
-          id: "child2",
-          title: "child2",
-          parentId: submenu,
+        await new Promise(resolve => {
+          browser.menus.create(
+            {
+              id: "child2",
+              title: "child2",
+              parentId: submenu,
+            },
+            resolve
+          );
         });
       }
+
+      browser.test.sendMessage("ready");
     },
 
     files: {
@@ -79,6 +86,7 @@ async function makeExtension({
   }
 
   await ext.startup();
+  await ext.awaitMessage("ready");
   return ext;
 }
 
@@ -588,29 +596,28 @@ async function testWithSubmenu(menu, nextItemClassName) {
     is(next.className, nextItemClassName, "All items accounted for.");
   }
 
-  // Repeat a few times.
+  const [submenu] = menu.children;
+  const popup = submenu.querySelector("menupopup");
+
+  // Open and close the submenu repeatedly a few times.
   for (let i = 0; i < 3; i++) {
     expectMenuItems();
 
-    let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-    menu.children[0].click();
-    let popup = (await shown).target;
+    const popupShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
+    submenu.openMenu(true);
+    await popupShown;
 
     expectMenuItems();
-    let closed = promiseContextMenuClosed(popup);
-    popup.hidePopup();
-    await closed;
+
+    const popupHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+    submenu.openMenu(false);
+    await popupHidden;
   }
 
   menu.hidePopup();
 }
 
 add_task(async function test_originControls_with_submenus() {
-  if (AppConstants.platform === "macosx") {
-    ok(true, "Probably some context menus quirks on macOS.");
-    return;
-  }
-
   let extension = await makeExtension({
     id: "submenus@test",
     permissions: ["menus"],
@@ -634,6 +641,8 @@ add_task(async function test_originControls_with_submenus() {
       await openUnifiedExtensionsContextMenu(extension.id),
       "unified-extensions-context-menu-pin-to-toolbar"
     );
+
+    await closeExtensionsPanel();
   });
 
   await extension.unload();
