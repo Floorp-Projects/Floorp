@@ -197,80 +197,109 @@
   </hbox>
 </groupbox>
 
-<hbox id="languageAndAppearanceCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <html:h1 data-l10n-id="language-and-appearance-header"/>
-</hbox>
+<!-- Languages -->
+<groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
+  <label><html:h2 data-l10n-id="language-header"/></label>
 
-<!-- Website appearance -->
-<groupbox id="webAppearanceGroup" data-category="paneGeneral" hidden="true">
-  <html:h2 data-l10n-id="preferences-web-appearance-header"/>
-  <html:div id="webAppearanceSettings">
-    <description data-l10n-id="preferences-web-appearance-description"/>
-    <html:div id="web-appearance-override-warning" class="info-box-container">
-      <html:div class="info-icon-container">
-        <html:img class="info-icon"/>
-      </html:div>
-      <description data-l10n-id="preferences-web-appearance-override-warning">
-        <html:a class="text-link" data-l10n-name="colors-link" id="web-appearance-manage-colors-link" href="#"/>
-      </description>
-    </html:div>
-    <form xmlns="http://www.w3.org/1999/xhtml" id="web-appearance-chooser" autocomplete="off">
-      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-auto">
-        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
-        <div class="web-appearance-choice-footer">
-          <input type="radio" name="web-appearance" value="auto" data-l10n-id="preferences-web-appearance-choice-input-auto"
-          /><span data-l10n-id="preferences-web-appearance-choice-auto" />
-        </div>
-      </label>
-      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-light">
-        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
-        <div class="web-appearance-choice-footer">
-          <input type="radio" name="web-appearance" value="light" data-l10n-id="preferences-web-appearance-choice-input-light"
-          /><span data-l10n-id="preferences-web-appearance-choice-light" />
-        </div>
-      </label>
-      <label class="web-appearance-choice" data-l10n-id="preferences-web-appearance-choice-tooltip-dark">
-        <div class="web-appearance-choice-image-container"><img role="presentation" alt="" width="54" height="42" /></div>
-        <div class="web-appearance-choice-footer">
-          <input type="radio" name="web-appearance" value="dark" data-l10n-id="preferences-web-appearance-choice-input-dark"
-          /><span data-l10n-id="preferences-web-appearance-choice-dark" />
-        </div>
-      </label>
-    </form>
-    <html:div data-l10n-id="preferences-web-appearance-footer">
-      <html:a id="web-appearance-manage-themes-link" class="text-link" data-l10n-name="themes-link" href="about:addons" target="_blank" />
-    </html:div>
-  </html:div>
-</groupbox>
+  <vbox id="browserLanguagesBox" align="start" hidden="true">
+    <description flex="1" controls="chooseBrowserLanguage" data-l10n-id="choose-browser-language-description"/>
+    <hbox>
+      <menulist id="primaryBrowserLocale">
+        <menupopup/>
+      </menulist>
+      <button id="manageBrowserLanguagesButton"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="manage-browser-languages-button"/>
+    </hbox>
+  </vbox>
+  <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">
+    <html:img class="message-bar-icon"/>
+    <vbox class="message-bar-content-container" align="stretch" flex="1"/>
+  </hbox>
 
-<!-- Colors -->
-<groupbox id="colorsGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="preferences-colors-header"/></label>
-
-  <hbox id="colorsSettings" align="center" flex="1">
-    <description flex="1" control="colors" data-l10n-id="preferences-colors-description"/>
-    <button id="colors"
+  <hbox id="languagesBox" align="center">
+    <description flex="1" control="chooseLanguage" data-l10n-id="choose-language-description"/>
+    <button id="chooseLanguage"
             is="highlightable-button"
             class="accessory-button"
-            data-l10n-id="preferences-colors-manage-button"
+            data-l10n-id="choose-button"
             search-l10n-ids="
-              colors-page-override,
-              colors-page-override-option-always.label,
-              colors-page-override-option-auto.label,
-              colors-page-override-option-never.label,
-              colors-text-and-background,
-              colors-text-header,
-              colors-background,
-              colors-use-system,
-              colors-underline-links,
-              colors-links-header,
-              colors-unvisited-links,
-              colors-visited-links
-            "/>
+              webpage-languages-window2.title,
+              languages-description,
+              languages-customize-moveup.label,
+              languages-customize-movedown.label,
+              languages-customize-remove.label,
+              languages-customize-select-language.placeholder,
+              languages-customize-add.label,
+            " />
   </hbox>
+
+  <checkbox id="useSystemLocale" hidden="true"
+            data-l10n-id="use-system-locale"
+            data-l10n-args='{"localeName": "und"}'
+            preference="intl.regional_prefs.use_os_locales"/>
+
+  <!-- TODO (Bug 1817084) This older implementation will be removed soon -->
+  <hbox id="translationBox" hidden="true">
+    <hbox align="center" flex="1">
+      <checkbox id="translate" preference="browser.translation.detectLanguage"
+                data-l10n-id="translate-web-pages"/>
+      <hbox id="bingAttribution" hidden="true" align="center">
+        <label data-l10n-id="translate-attribution">
+          <html:img id="translationAttributionImage" aria-label="Microsoft Translator"
+            src="chrome://browser/content/microsoft-translator-attribution.png"
+            data-l10n-name="logo"/>
+        </label>
+      </hbox>
+    </hbox>
+    <button id="translateButton"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="translate-exceptions"/>
+  </hbox>
+
+  <hbox id="fxtranslationsBox" hidden="true" data-subcategory="fxtranslations">
+    <description flex="1" control="fxtranslateButton" data-l10n-id="fx-translate-web-pages"/>
+    <button id="fxtranslateButton"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="translate-exceptions"/>
+  </hbox>
+
+  <checkbox id="checkSpelling"
+          data-l10n-id="check-user-spelling"
+          preference="layout.spellcheckDefault"/>
+
+  <!-- Translations -->
+  <vbox id="translationsGroup" hidden="true" data-subcategory="translations">
+    <label><html:h2 data-l10n-id="translations-manage-header"/></label>
+    <description data-l10n-id="translations-manage-description"/>
+    <vbox>
+      <html:div id="translations-manage-install-list" hidden="true">
+        <hbox class="translations-manage-language">
+          <label data-l10n-id="translations-manage-all-language"></label>
+          <button id="translations-manage-install-all"
+                  data-l10n-id="translations-manage-download-button"></button>
+          <button id="translations-manage-delete-all"
+                  data-l10n-id="translations-manage-delete-button"></button>
+        </hbox>
+        <!-- The downloadable languages will be listed here. -->
+      </html:div>
+      <description id="translations-manage-error" hidden="true"></description>
+    </vbox>
+  </vbox>
+
+  <vbox id="TWS-box" class="TWS ContentBlockBox">
+    <html:h3 class="TWS addonRecommend-header" data-l10n-id="TWS"/>
+    <hbox class="addonRecommend-box">
+      <image id="TWSImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/2623/2623538-64.png');"/>
+      <vbox class="addonRecommend-label-box">
+       <description id="AddonRecommend" data-l10n-id="about-TWS"/>
+       <label class="AMO-Link" is="text-link" href="https://addons.mozilla.org/firefox/addon/traduzir-paginas-web" data-l10n-id="view-at-AMO"></label>
+      </vbox>
+    </hbox>
+  </vbox>
 </groupbox>
 
 <!-- Fonts -->
@@ -377,124 +406,6 @@
   <checkbox id="zoomText"
     data-l10n-id="preferences-zoom-text-only"/>
 
-</groupbox>
-
-<!-- Languages -->
-<groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="language-header"/></label>
-
-  <vbox id="browserLanguagesBox" align="start" hidden="true">
-    <description flex="1" controls="chooseBrowserLanguage" data-l10n-id="choose-browser-language-description"/>
-    <hbox>
-      <menulist id="primaryBrowserLocale">
-        <menupopup/>
-      </menulist>
-      <button id="manageBrowserLanguagesButton"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="manage-browser-languages-button"/>
-    </hbox>
-  </vbox>
-  <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">
-    <html:img class="message-bar-icon"/>
-    <vbox class="message-bar-content-container" align="stretch" flex="1"/>
-  </hbox>
-
-  <hbox id="languagesBox" align="center">
-    <description flex="1" control="chooseLanguage" data-l10n-id="choose-language-description"/>
-    <button id="chooseLanguage"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="choose-button"
-            search-l10n-ids="
-              webpage-languages-window2.title,
-              languages-description,
-              languages-customize-moveup.label,
-              languages-customize-movedown.label,
-              languages-customize-remove.label,
-              languages-customize-select-language.placeholder,
-              languages-customize-add.label,
-            " />
-  </hbox>
-
-  <checkbox id="useSystemLocale" hidden="true"
-            data-l10n-id="use-system-locale"
-            data-l10n-args='{"localeName": "und"}'
-            preference="intl.regional_prefs.use_os_locales"/>
-
-  <!-- TODO (Bug 1817084) This older implementation will be removed soon -->
-  <hbox id="translationBox" hidden="true">
-    <hbox align="center" flex="1">
-      <checkbox id="translate" preference="browser.translation.detectLanguage"
-                data-l10n-id="translate-web-pages"/>
-      <hbox id="bingAttribution" hidden="true" align="center">
-        <label data-l10n-id="translate-attribution">
-          <html:img id="translationAttributionImage" aria-label="Microsoft Translator"
-            src="chrome://browser/content/microsoft-translator-attribution.png"
-            data-l10n-name="logo"/>
-        </label>
-      </hbox>
-    </hbox>
-    <button id="translateButton"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="translate-exceptions"/>
-  </hbox>
-
-  <hbox id="fxtranslationsBox" hidden="true" data-subcategory="fxtranslations">
-    <description flex="1" control="fxtranslateButton" data-l10n-id="fx-translate-web-pages"/>
-    <button id="fxtranslateButton"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="translate-exceptions"/>
-  </hbox>
-
-  <checkbox id="checkSpelling"
-          data-l10n-id="check-user-spelling"
-          preference="layout.spellcheckDefault"/>
-
-  <!-- Translations -->
-  <vbox id="translationsGroup" hidden="true" data-subcategory="translations">
-    <label><html:h2 data-l10n-id="translations-manage-header"/></label>
-    <description data-l10n-id="translations-manage-description"/>
-    <vbox>
-      <html:div id="translations-manage-install-list" hidden="true">
-        <hbox class="translations-manage-language">
-          <label data-l10n-id="translations-manage-all-language"></label>
-          <button id="translations-manage-install-all"
-                  data-l10n-id="translations-manage-download-button"></button>
-          <button id="translations-manage-delete-all"
-                  data-l10n-id="translations-manage-delete-button"></button>
-        </hbox>
-        <!-- The downloadable languages will be listed here. -->
-      </html:div>
-      <description id="translations-manage-error" hidden="true"></description>
-    </vbox>
-  </vbox>
-
-  <vbox id="TWS-box" class="TWS ContentBlockBox">
-    <html:h3 class="TWS addonRecommend-header" data-l10n-id="TWS"/>
-    <hbox class="addonRecommend-box">
-      <image id="TWSImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/2623/2623538-64.png');"/>
-      <vbox class="addonRecommend-label-box">
-       <description id="AddonRecommend" data-l10n-id="about-TWS"/>
-       <label class="AMO-Link" is="text-link" href="https://addons.mozilla.org/firefox/addon/traduzir-paginas-web" data-l10n-id="view-at-AMO"></label>
-      </vbox>
-    </hbox>
-  </vbox>
-</groupbox>
-
-<!-- DRM Content -->
-<groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
-  <label><html:h2 data-l10n-id="drm-content-header"/></label>
-  <hbox align="center">
-    <checkbox id="playDRMContent" preference="media.eme.enabled"
-              class="tail-with-learn-more" data-l10n-id="play-drm-content" />
-    <html:a is="moz-support-link"
-      data-l10n-id="play-drm-content-learn-more"
-      support-page="drm-content"
-    />
-  </hbox>
 </groupbox>
 
 <hbox id="updatesCategory"

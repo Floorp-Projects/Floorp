@@ -36,7 +36,7 @@ async function UCTFirst(){
         }
       }
   });
-  if (ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm").isFirstRun) {
+  if (ChromeUtils.import("resource:///modules/FloorpStartup.jsm").isFirstRun) {
     CustomizableUI.addWidgetToArea("undo-closed-tab", CustomizableUI.AREA_NAVBAR, -1);
   }
 }
@@ -60,7 +60,7 @@ async function switchSidebarPositionButton() {
       SidebarUI.reversePosition();
     }
   });
-  if (ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm").isFirstRun) {
+  if (ChromeUtils.import("resource:///modules/FloorpStartup.jsm").isFirstRun) {
     CustomizableUI.addWidgetToArea("sidebar-button", CustomizableUI.AREA_NAVBAR, 3);
     CustomizableUI.addWidgetToArea("sidebar-reverse-position-toolbar", CustomizableUI.AREA_NAVBAR, 4);
   }

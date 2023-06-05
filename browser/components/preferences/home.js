@@ -20,7 +20,7 @@
  *   false = about:blank is shown
  */
 
-const { OS } = ChromeUtils.import(
+var { OS } = ChromeUtils.import(
   "resource://gre/modules/osfile.jsm"
   );
 
