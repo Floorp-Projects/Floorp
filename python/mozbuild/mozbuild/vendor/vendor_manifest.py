@@ -399,7 +399,12 @@ class VendorManifest(MozbuildObject):
 
             tar.extractall(path, members=_files(tar, path), numeric_owner=numeric_owner)
 
-        url = self.source_host.upstream_snapshot(revision)
+        release_artifact = self.manifest["vendoring"].get("release-artifact", False)
+
+        if release_artifact:
+            url = self.source_host.upstream_release_artifact(revision, release_artifact)
+        else:
+            url = self.source_host.upstream_snapshot(revision)
         self.logInfo({"url": url}, "Fetching code archive from {url}")
 
         with mozfile.NamedTemporaryFile() as tmptarfile:

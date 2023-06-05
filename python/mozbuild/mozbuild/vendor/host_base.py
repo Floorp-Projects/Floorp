@@ -75,3 +75,6 @@ class BaseHost:
 
     def upstream_path_to_file(self, revision, filepath):
         raise Exception("Unimplemented for this subclass...")
+
+    def upstream_release_artifact(self, revision, release_artifact):
+        raise Exception("Unimplemented for this subclass...")
