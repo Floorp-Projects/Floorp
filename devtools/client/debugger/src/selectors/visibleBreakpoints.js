@@ -24,7 +24,7 @@ export const getVisibleBreakpoints = createSelector(
     return breakpoints.filter(
       bp =>
         selectedSource &&
-        getSelectedLocation(bp, selectedSource).sourceId === selectedSource.id
+        getSelectedLocation(bp, selectedSource)?.source.id === selectedSource.id
     );
   }
 );

@@ -36,7 +36,7 @@ class InlinePreviews extends Component {
     // Render only if currently open file is the one where debugger is paused
     if (
       !selectedFrame ||
-      selectedFrame.location.sourceId !== selectedSource.id ||
+      selectedFrame.location.source.id !== selectedSource.id ||
       !hasPreviews(previews)
     ) {
       return null;

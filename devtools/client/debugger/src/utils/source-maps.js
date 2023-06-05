@@ -23,7 +23,7 @@ import { waitForSourceToBeRegisteredInStore } from "../client/firefox/create";
  *        The matching generated location.
  */
 export async function getGeneratedLocation(location, thunkArgs) {
-  if (!isOriginalId(location.sourceId)) {
+  if (!isOriginalId(location.source.id)) {
     return location;
   }
 
@@ -62,7 +62,7 @@ export async function getOriginalLocation(
   thunkArgs,
   waitForSource = false
 ) {
-  if (isOriginalId(location.sourceId)) {
+  if (isOriginalId(location.source.id)) {
     return location;
   }
   const { getState, sourceMapLoader } = thunkArgs;
@@ -83,11 +83,7 @@ export async function getOriginalLocation(
 }
 
 export async function getMappedLocation(location, thunkArgs) {
-  if (!location.source) {
-    throw new Error(`no source ${location.sourceId}`);
-  }
-
-  if (isOriginalId(location.sourceId)) {
+  if (isOriginalId(location.source.id)) {
     const generatedLocation = await getGeneratedLocation(location, thunkArgs);
     return { location, generatedLocation };
   }
@@ -114,7 +110,7 @@ export async function getRelatedMapLocation(location, thunkArgs) {
     return location;
   }
 
-  if (isOriginalId(location.sourceId)) {
+  if (isOriginalId(location.source.id)) {
     return getGeneratedLocation(location, thunkArgs);
   }
 
