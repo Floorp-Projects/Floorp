@@ -15,6 +15,7 @@ use crate::stream::{Inspect, Map};
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 use core::pin::Pin;
+
 use futures_core::{
     future::{Future, TryFuture},
     stream::TryStream,
@@ -87,6 +88,14 @@ pub use self::try_filter_map::TryFilterMap;
 mod try_flatten;
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
 pub use self::try_flatten::TryFlatten;
+
+#[cfg(not(futures_no_atomic_cas))]
+#[cfg(feature = "alloc")]
+mod try_flatten_unordered;
+#[cfg(not(futures_no_atomic_cas))]
+#[cfg(feature = "alloc")]
+#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
+pub use self::try_flatten_unordered::TryFlattenUnordered;
 
 mod try_collect;
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
@@ -709,6 +718,63 @@ pub trait TryStreamExt: TryStream {
         Self: Sized,
     {
         assert_stream::<Result<T, Self::Error>, _>(TryFilterMap::new(self, f))
+    }
+
+    /// Flattens a stream of streams into just one continuous stream. Produced streams
+    /// will be polled concurrently and any errors will be passed through without looking at them.
+    /// If the underlying base stream returns an error, it will be **immediately** propagated.
+    ///
+    /// The only argument is an optional limit on the number of concurrently
+    /// polled streams. If this limit is not `None`, no more than `limit` streams
+    /// will be polled at the same time. The `limit` argument is of type
+    /// `Into<Option<usize>>`, and so can be provided as either `None`,
+    /// `Some(10)`, or just `10`. Note: a limit of zero is interpreted as
+    /// no limit at all, and will have the same result as passing in `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # futures::executor::block_on(async {
+    /// use futures::channel::mpsc;
+    /// use futures::stream::{StreamExt, TryStreamExt};
+    /// use std::thread;
+    ///
+    /// let (tx1, rx1) = mpsc::unbounded();
+    /// let (tx2, rx2) = mpsc::unbounded();
+    /// let (tx3, rx3) = mpsc::unbounded();
+    ///
+    /// thread::spawn(move || {
+    ///     tx1.unbounded_send(Ok(1)).unwrap();
+    /// });
+    /// thread::spawn(move || {
+    ///     tx2.unbounded_send(Ok(2)).unwrap();
+    ///     tx2.unbounded_send(Err(3)).unwrap();
+    ///     tx2.unbounded_send(Ok(4)).unwrap();
+    /// });
+    /// thread::spawn(move || {
+    ///     tx3.unbounded_send(Ok(rx1)).unwrap();
+    ///     tx3.unbounded_send(Ok(rx2)).unwrap();
+    ///     tx3.unbounded_send(Err(5)).unwrap();
+    /// });
+    ///
+    /// let stream = rx3.try_flatten_unordered(None);
+    /// let mut values: Vec<_> = stream.collect().await;
+    /// values.sort();
+    ///
+    /// assert_eq!(values, vec![Ok(1), Ok(2), Ok(4), Err(3), Err(5)]);
+    /// # });
+    /// ```
+    #[cfg(not(futures_no_atomic_cas))]
+    #[cfg(feature = "alloc")]
+    fn try_flatten_unordered(self, limit: impl Into<Option<usize>>) -> TryFlattenUnordered<Self>
+    where
+        Self::Ok: TryStream + Unpin,
+        <Self::Ok as TryStream>::Error: From<Self::Error>,
+        Self: Sized,
+    {
+        assert_stream::<Result<<Self::Ok as TryStream>::Ok, <Self::Ok as TryStream>::Error>, _>(
+            TryFlattenUnordered::new(self, limit),
+        )
     }
 
     /// Flattens a stream of streams into just one continuous stream.

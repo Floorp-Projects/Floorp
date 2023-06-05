@@ -1,6 +1,4 @@
 use futures_core::task::{Context, Poll};
-#[cfg(feature = "read_initializer")]
-use futures_io::Initializer;
 use futures_io::{AsyncBufRead, AsyncRead, AsyncSeek, AsyncWrite, IoSlice, IoSliceMut, SeekFrom};
 use std::io;
 use std::pin::Pin;
@@ -159,12 +157,6 @@ where
 }
 
 impl<T: AsRef<[u8]> + Unpin> AsyncRead for Cursor<T> {
-    #[cfg(feature = "read_initializer")]
-    #[inline]
-    unsafe fn initializer(&self) -> Initializer {
-        io::Read::initializer(&self.inner)
-    }
-
     fn poll_read(
         mut self: Pin<&mut Self>,
         _cx: &mut Context<'_>,

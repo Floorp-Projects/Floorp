@@ -1,34 +1,38 @@
+#![cfg(feature = "bilock")]
+
+use futures::executor::block_on;
 use futures::future;
 use futures::stream;
-use futures::task;
+use futures::task::{Context, Poll};
+use futures::Future;
+use futures::StreamExt;
+use futures_test::task::noop_context;
 use futures_util::lock::BiLock;
+use std::pin::Pin;
 use std::thread;
-
-// mod support;
-// use support::*;
 
 #[test]
 fn smoke() {
-    let future = future::lazy(|_| {
+    let future = future::lazy(|cx| {
         let (a, b) = BiLock::new(1);
 
         {
-            let mut lock = match a.poll_lock() {
+            let mut lock = match a.poll_lock(cx) {
                 Poll::Ready(l) => l,
                 Poll::Pending => panic!("poll not ready"),
             };
             assert_eq!(*lock, 1);
             *lock = 2;
 
-            assert!(b.poll_lock().is_pending());
-            assert!(a.poll_lock().is_pending());
+            assert!(b.poll_lock(cx).is_pending());
+            assert!(a.poll_lock(cx).is_pending());
         }
 
-        assert!(b.poll_lock().is_ready());
-        assert!(a.poll_lock().is_ready());
+        assert!(b.poll_lock(cx).is_ready());
+        assert!(a.poll_lock(cx).is_ready());
 
         {
-            let lock = match b.poll_lock() {
+            let lock = match b.poll_lock(cx) {
                 Poll::Ready(l) => l,
                 Poll::Pending => panic!("poll not ready"),
             };
@@ -40,34 +44,32 @@ fn smoke() {
         Ok::<(), ()>(())
     });
 
-    assert!(task::spawn(future)
-        .poll_future_notify(&notify_noop(), 0)
-        .expect("failure in poll")
-        .is_ready());
+    assert_eq!(block_on(future), Ok(()));
 }
 
 #[test]
 fn concurrent() {
     const N: usize = 10000;
+    let mut cx = noop_context();
     let (a, b) = BiLock::new(0);
 
     let a = Increment { a: Some(a), remaining: N };
-    let b = stream::iter_ok(0..N).fold(b, |b, _n| {
-        b.lock().map(|mut b| {
-            *b += 1;
-            b.unlock()
-        })
+    let b = stream::iter(0..N).fold(b, |b, _n| async {
+        let mut g = b.lock().await;
+        *g += 1;
+        drop(g);
+        b
     });
 
-    let t1 = thread::spawn(move || a.wait());
-    let b = b.wait().expect("b error");
-    let a = t1.join().unwrap().expect("a error");
+    let t1 = thread::spawn(move || block_on(a));
+    let b = block_on(b);
+    let a = t1.join().unwrap();
 
-    match a.poll_lock() {
+    match a.poll_lock(&mut cx) {
         Poll::Ready(l) => assert_eq!(*l, 2 * N),
         Poll::Pending => panic!("poll not ready"),
     }
-    match b.poll_lock() {
+    match b.poll_lock(&mut cx) {
         Poll::Ready(l) => assert_eq!(*l, 2 * N),
         Poll::Pending => panic!("poll not ready"),
     }
@@ -80,22 +82,22 @@ fn concurrent() {
     }
 
     impl Future for Increment {
-        type Item = BiLock<usize>;
-        type Error = ();
+        type Output = BiLock<usize>;
 
-        fn poll(&mut self) -> Poll<BiLock<usize>, ()> {
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<BiLock<usize>> {
             loop {
                 if self.remaining == 0 {
-                    return Ok(self.a.take().unwrap().into());
+                    return self.a.take().unwrap().into();
                 }
 
-                let a = self.a.as_ref().unwrap();
-                let mut a = match a.poll_lock() {
+                let a = self.a.as_mut().unwrap();
+                let mut a = match a.poll_lock(cx) {
                     Poll::Ready(l) => l,
-                    Poll::Pending => return Ok(Poll::Pending),
+                    Poll::Pending => return Poll::Pending,
                 };
-                self.remaining -= 1;
                 *a += 1;
+                drop(a);
+                self.remaining -= 1;
             }
         }
     }

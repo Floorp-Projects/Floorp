@@ -41,9 +41,10 @@ impl<St: TryStream> TryChunks<St> {
     delegate_access_inner!(stream, St, (. .));
 }
 
+type TryChunksStreamError<St> = TryChunksError<<St as TryStream>::Ok, <St as TryStream>::Error>;
+
 impl<St: TryStream> Stream for TryChunks<St> {
-    #[allow(clippy::type_complexity)]
-    type Item = Result<Vec<St::Ok>, TryChunksError<St::Ok, St::Error>>;
+    type Item = Result<Vec<St::Ok>, TryChunksStreamError<St>>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.as_mut().project();

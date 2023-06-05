@@ -38,7 +38,7 @@ Add this to your `Cargo.toml`:
 futures = "0.3"
 ```
 
-The current `futures` requires Rust 1.45 or later.
+The current `futures` requires Rust 1.56 or later.
 
 ### Feature `std`
 
