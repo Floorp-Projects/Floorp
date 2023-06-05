@@ -4150,7 +4150,7 @@ name = "profiler-macros"
 version = "0.1.0"
 dependencies = [
  "quote",
- "syn 1.0.107",
+ "syn 2.0.18",
 ]
 
 [[package]]
