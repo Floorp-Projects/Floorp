@@ -21,8 +21,9 @@ function check_results_callback(aSequence) {
   let includeHidden = aSequence[0];
   let maxResults = aSequence[1];
   let sortingMode = aSequence[2];
-  print(
-    "\nTESTING: includeHidden(" +
+  info(" - - - ");
+  info(
+    "TESTING: includeHidden(" +
       includeHidden +
       ")," +
       " maxResults(" +
@@ -221,7 +222,6 @@ add_task(async function test_add_visits_to_database() {
     // Would make hard sorting by visit date because last_visit_date is actually
     // calculated excluding download transitions, but the query includes
     // downloads.
-    // TODO: Bug 488966 could fix this behavior.
     // Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   ];
 

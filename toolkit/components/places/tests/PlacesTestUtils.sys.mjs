@@ -4,6 +4,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "PlacesFrecencyRecalculator", () => {
+  return Cc["@mozilla.org/places/frecency-recalculator;1"].getService(
+    Ci.nsIObserver
+  ).wrappedJSObject;
+});
+
 export var PlacesTestUtils = Object.freeze({
   /**
    * Asynchronously adds visits to a page.
@@ -36,6 +42,7 @@ export var PlacesTestUtils = Object.freeze({
     }
 
     // Create a PageInfo for each entry.
+    let seenUrls = new Set();
     let lastStoredVisit;
     for (let obj of places) {
       let place;
@@ -83,6 +90,7 @@ export var PlacesTestUtils = Object.freeze({
           referrer,
         },
       ];
+      seenUrls.add(info.url);
       infos.push(info);
       if (
         !place.transition ||
@@ -92,6 +100,11 @@ export var PlacesTestUtils = Object.freeze({
       }
     }
     await lazy.PlacesUtils.history.insertMany(infos);
+    if (seenUrls.size > 1) {
+      // If there's only one URL then history has updated frecency already,
+      // otherwise we must force a recalculation.
+      await lazy.PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+    }
     if (lastStoredVisit) {
       await lazy.TestUtils.waitForCondition(
         () => lazy.PlacesUtils.history.fetch(lastStoredVisit.url),

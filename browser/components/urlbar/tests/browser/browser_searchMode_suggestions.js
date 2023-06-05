@@ -134,13 +134,13 @@ add_task(async function emptySearch_withRestyledHistory() {
         heuristic: false,
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        url: `http://mochi.test/redirect`,
+        url: `http://mochi.test/`,
       },
       {
         heuristic: false,
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        url: `http://mochi.test/`,
+        url: `http://mochi.test/redirect`,
       },
     ]);
 

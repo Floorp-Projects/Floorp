@@ -1133,7 +1133,15 @@ add_task(async function test_typed_hidden_not_overwritten() {
 });
 
 add_task(async function test_omit_frecency_notifications() {
+  // When multiple entries are inserted, frecency is calculated delayed, so
+  // we won't get a ranking changed notification until recalculation happens.
   await PlacesUtils.history.clear();
+  let notified = false;
+  let listener = events => {
+    notified = true;
+    PlacesUtils.observers.removeListener(["pages-rank-changed"], listener);
+  };
+  PlacesUtils.observers.addListener(["pages-rank-changed"], listener);
   let places = [
     {
       uri: NetUtil.newURI("http://mozilla.org/"),
@@ -1146,12 +1154,10 @@ add_task(async function test_omit_frecency_notifications() {
       visits: [new VisitInfo(TRANSITION_TYPED)],
     },
   ];
-
-  const promiseRankingChanged =
-    PlacesTestUtils.waitForNotification("pages-rank-changed");
-
   await promiseUpdatePlaces(places);
-  await promiseRankingChanged;
+  Assert.ok(!notified);
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  Assert.ok(notified);
 });
 
 add_task(async function test_ignore_errors() {
