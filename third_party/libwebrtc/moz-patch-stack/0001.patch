@@ -1,152 +1,147 @@
-From: Mikhail Pavlov <mpavlov@google.com>
-Date: Fri, 10 Feb 2023 16:46:52 +0000
-Subject: (tmp-cherry-pick) Revert "sdp: add rtcp-fb:* lines for common
- feedback" (55c5173220)
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Mon, 27 Mar 2023 10:19:52 +0200
+Subject: (tmp-cherry-pick) [M112] Revert "Only serialize non-stopped RTP
+ header extensions" (d75b9e9ff0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 815522782a92e168b80edc760b2e53e4d0e4ea0d.
+This reverts commit be03c0971863c9e6807fcbdb4175754e8242a652.
+Causes regression in web projects that
+1/ add a stopped-by-default extension in SRD
+2/ call createAnswer
+3/ munge the stopped-by-default extension back in SLD
+4/ create a subsequent offer and expect the extension to be present
 
-Reason for revert: Breaks a downstream project.
+BUG=chromium:1427442,chromium:1051821
 
-The internal investigation is still in-progress.
-
-Original change's description:
-> sdp: add rtcp-fb:* lines for common feedback
->
-> which potentially allows switching to that pattern in the future.
-> Video FEC mechanisms (ulpfec, flexfec-03, RED) that currently
-> do not have any feedback parameters but will still be considered "common" and feedback may be sent for them.
->
-> For audio this causes rtcp-feedback to be sent for G711 and G722 if negotiated.
->
-> BUG=webrtc:14802
->
-> Change-Id: I54852d39e176f918d4b36462526ceb40617b8fbe
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290702
-> Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-> Reviewed-by: Per Kjellander <perkj@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#39224}
-
-Bug: webrtc:14802
-Change-Id: I4dc3c0c53ad1bc06050c0d73b088303312ac58b2
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293020
-Owners-Override: Jeremy Leconte <jleconte@webrtc.org>
+Change-Id: I2e48831e92384963a254d873398f54eaee96739a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299143
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Jeremy Leconte <jleconte@webrtc.org>
-Commit-Queue: Jeremy Leconte <jleconte@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#39296}
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5615@{#2}
+Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
 ---
- pc/webrtc_sdp.cc          | 32 +-------------------------------
- pc/webrtc_sdp_unittest.cc | 32 --------------------------------
- 2 files changed, 1 insertion(+), 63 deletions(-)
+ pc/media_session.cc                           |  7 +--
+ pc/media_session_unittest.cc                  |  5 +-
+ ...er_connection_header_extension_unittest.cc | 62 -------------------
+ 3 files changed, 5 insertions(+), 69 deletions(-)
 
-diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
-index 7a63ae41ea..3b347466d8 100644
---- a/pc/webrtc_sdp.cc
-+++ b/pc/webrtc_sdp.cc
-@@ -1890,7 +1890,7 @@ void AddPacketizationLine(const T& codec, std::string* message) {
- 
- template <class T>
- void AddRtcpFbLines(const T& codec, std::string* message) {
--  for (const auto& param : codec.feedback_params.params()) {
-+  for (const cricket::FeedbackParam& param : codec.feedback_params.params()) {
-     rtc::StringBuilder os;
-     WriteRtcpFbHeader(codec.id, &os);
-     os << " " << param.id();
-@@ -1901,30 +1901,6 @@ void AddRtcpFbLines(const T& codec, std::string* message) {
-   }
- }
- 
--template <class T>
--void AddWildcardRtcpFbLines(const std::vector<T>& codecs,
--                            std::string* message) {
--  if (codecs.empty()) {
--    return;
--  }
--  for (const auto& param : codecs[0].feedback_params.params()) {
--    bool is_common_feedback = absl::c_all_of(codecs, [&param](const T& codec) {
--      // FEC mechanisms like RED, ulpfec and flexfec have empty feedback.
--      return codec.feedback_params.params().empty() ||
--             codec.feedback_params.Has(param);
--    });
--    if (is_common_feedback) {
--      rtc::StringBuilder os;
--      WriteRtcpFbHeader(kWildcardPayloadType, &os);
--      os << " " << param.id();
--      if (!param.param().empty()) {
--        os << " " << param.param();
--      }
--      AddLine(os.str(), message);
--    }
--  }
--}
--
- bool GetMinValue(const std::vector<int>& values, int* value) {
-   if (values.empty()) {
-     return false;
-@@ -1968,9 +1944,6 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
-       AddRtcpFbLines(codec, message);
-       AddFmtpLine(codec, message);
-     }
--    // rtcp-fb:* is added in addition to the per-codec feedback to allow
--    // downstream users time to upgrade their parsers.
--    AddWildcardRtcpFbLines(media_desc->as_video()->codecs(), message);
-   } else if (media_type == cricket::MEDIA_TYPE_AUDIO) {
-     std::vector<int> ptimes;
-     std::vector<int> maxptimes;
-@@ -2002,9 +1975,6 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
-         maxptimes.push_back(maxptime);
+diff --git a/pc/media_session.cc b/pc/media_session.cc
+index 92fe80f3d1..e703b44101 100644
+--- a/pc/media_session.cc
++++ b/pc/media_session.cc
+@@ -684,11 +684,8 @@ static bool CreateContentOffer(
+       if (extension_with_id.uri == extension.uri) {
+         // TODO(crbug.com/1051821): Configure the extension direction from
+         // the information in the media_description_options extension
+-        // capability. For now, do not include stopped extensions.
+-        // See also crbug.com/webrtc/7477 about the general lack of direction.
+-        if (extension.direction != RtpTransceiverDirection::kStopped) {
+-          extensions.push_back(extension_with_id);
+-        }
++        // capability.
++        extensions.push_back(extension_with_id);
        }
      }
--    // rtcp-fb:* is added in addition to the per-codec feedback to allow
--    // downstream users time to upgrade their parsers.
--    AddWildcardRtcpFbLines(media_desc->as_audio()->codecs(), message);
-     // Populate the maxptime attribute with the smallest maxptime of all codecs
-     // under the same m-line.
-     int min_maxptime = INT_MAX;
-diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
-index 3e5e9a0d08..9f1cfc9c96 100644
---- a/pc/webrtc_sdp_unittest.cc
-+++ b/pc/webrtc_sdp_unittest.cc
-@@ -3296,38 +3296,6 @@ TEST_F(WebRtcSdpTest, DeserializeSerializeRtcpFbWildcard) {
-   TestSerialize(jdesc_output);
+   }
+diff --git a/pc/media_session_unittest.cc b/pc/media_session_unittest.cc
+index 6dc6d76021..8f38f6a1b4 100644
+--- a/pc/media_session_unittest.cc
++++ b/pc/media_session_unittest.cc
+@@ -2018,7 +2018,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
  }
  
--TEST_F(WebRtcSdpTest, SerializeRtcpFbWildcard) {
--  std::string sdp =
--      "v=0\r\n"
--      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
--      "s=-\r\n"
--      "t=0 0\r\n"
--      "m=video 3457 RTP/SAVPF 100 101 102 103\r\n"
--      "a=rtpmap:100 VP8/90000\r\n"
--      "a=rtcp-fb:100 nack\r\n"
--      "a=rtcp-fb:100 nack pli\r\n"
--      "a=rtpmap:101 rtx/90000\r\n"
--      "a=fmtp:101 apt=100\r\n"
--      "a=rtpmap:102 VP9/90000\r\n"
--      "a=rtcp-fb:102 nack\r\n"
--      "a=rtpmap:103 rtx/90000\r\n"
--      "a=fmtp:103 apt=102\r\n";
--  JsepSessionDescription jdesc(kDummyType);
--  SdpParseError error;
--  EXPECT_TRUE(webrtc::SdpDeserialize(sdp, &jdesc, &error));
+ TEST_F(MediaSessionDescriptionFactoryTest,
+-       AllowsStoppedExtensionsToBeRemovedFromSubsequentOffer) {
++       AppendsStoppedExtensionIfKnownAndPresentInTheOffer) {
+   MediaSessionOptions opts;
+   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
+                              RtpTransceiverDirection::kSendRecv, kActive,
+@@ -2043,7 +2043,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+       ElementsAre(Property(
+           &ContentInfo::media_description,
+           Pointee(Property(&MediaContentDescription::rtp_header_extensions,
+-                           ElementsAre(Field(&RtpExtension::uri, "uri1")))))));
++                           ElementsAre(Field(&RtpExtension::uri, "uri1"),
++                                       Field(&RtpExtension::uri, "uri2")))))));
+ }
+ 
+ TEST_F(MediaSessionDescriptionFactoryTest,
+diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
+index 9bbc32b7e0..1a452b0a1f 100644
+--- a/pc/peer_connection_header_extension_unittest.cc
++++ b/pc/peer_connection_header_extension_unittest.cc
+@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
+                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
+ }
+ 
+-TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
+-  cricket::MediaType media_type;
+-  SdpSemantics semantics;
+-  std::tie(media_type, semantics) = GetParam();
+-  if (semantics != SdpSemantics::kUnifiedPlan)
+-    return;
+-  std::unique_ptr<PeerConnectionWrapper> pc1 =
+-      CreatePeerConnection(media_type, semantics);
+-  auto transceiver1 = pc1->AddTransceiver(media_type);
+-  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+-  auto transceiver2 = pc1->AddTransceiver(media_type);
 -
--  std::string message = webrtc::SdpSerialize(jdesc);
--  // NACK is a common parameter so serialized with wildcard in addition to
--  // per-codec entries.
--  EXPECT_NE(message.find("\r\na=rtcp-fb:100 nack\r\n"), std::string::npos);
--  EXPECT_NE(message.find("\r\na=rtcp-fb:102 nack\r\n"), std::string::npos);
--  EXPECT_NE(message.find("\r\na=rtcp-fb:* nack\r\n"), std::string::npos);
--  // PLI is not a common parameter so no wildcard.
--  EXPECT_NE(message.find("\r\na=rtcp-fb:100 nack pli\r\n"), std::string::npos);
--  EXPECT_EQ(message.find("\r\na=rtcp-fb:102 nack pli\r\n"), std::string::npos);
--  EXPECT_EQ(message.find("\r\na=rtcp-fb:* nack pli\r\n"), std::string::npos);
+-  auto session_description = pc1->CreateOffer();
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[0]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3")));
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[1]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3"),
+-                          Field(&RtpExtension::uri, "uri4")));
 -}
 -
- TEST_F(WebRtcSdpTest, DeserializeVideoFmtp) {
-   JsepSessionDescription jdesc_output(kDummyType);
- 
+-TEST_P(PeerConnectionHeaderExtensionTest, RemovalAfterRenegotiation) {
+-  cricket::MediaType media_type;
+-  SdpSemantics semantics;
+-  std::tie(media_type, semantics) = GetParam();
+-  if (semantics != SdpSemantics::kUnifiedPlan)
+-    return;
+-  std::unique_ptr<PeerConnectionWrapper> pc1 =
+-      CreatePeerConnection(media_type, semantics);
+-  std::unique_ptr<PeerConnectionWrapper> pc2 =
+-      CreatePeerConnection(media_type, semantics);
+-  auto transceiver1 = pc1->AddTransceiver(media_type);
+-
+-  auto offer = pc1->CreateOfferAndSetAsLocal(
+-      PeerConnectionInterface::RTCOfferAnswerOptions());
+-  pc2->SetRemoteDescription(std::move(offer));
+-  auto answer = pc2->CreateAnswerAndSetAsLocal(
+-      PeerConnectionInterface::RTCOfferAnswerOptions());
+-  pc1->SetRemoteDescription(std::move(answer));
+-
+-  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+-  auto session_description = pc1->CreateOffer();
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[0]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3")));
+-}
+-
+ INSTANTIATE_TEST_SUITE_P(
+     ,
+     PeerConnectionHeaderExtensionTest,
 -- 
 2.34.1
 
