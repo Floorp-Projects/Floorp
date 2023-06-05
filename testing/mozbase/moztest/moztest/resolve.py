@@ -844,6 +844,13 @@ class TestResolver(MozbuildObject):
         if test["name"].startswith(("/webdriver", "/_mozilla/webdriver")):
             depth = depth + 1
 
+        # Webdriver BiDi tests are nested even further as tests are grouped by
+        # module but also by command / event name.
+        if test["name"].startswith(
+            ("/webdriver/tests/bidi", "/_mozilla/webdriver/bidi")
+        ):
+            depth = depth + 1
+
         group = os.path.dirname(test["name"])
         while group.count("/") > depth:
             group = os.path.dirname(group)
