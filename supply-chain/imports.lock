@@ -400,6 +400,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.serde_repr]]
+version = "0.1.12"
+when = "2023-03-18"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.serde_yaml]]
 version = "0.8.26"
 when = "2022-07-16"
