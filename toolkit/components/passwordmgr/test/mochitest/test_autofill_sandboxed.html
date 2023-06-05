@@ -20,15 +20,15 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+const { TestUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
 /** Test for Login Manager: form field autofill in sandboxed documents (null principal) **/
 
 const sandboxed = document.getElementById("sandboxed");
 let uname;
 let pword;
-
-function promiseExecuteSoon() {
-  return new Promise(SimpleTest.executeSoon);
-}
 
 add_setup(async () => {
   await setStoredLoginsAsync(["https://example.com", "", null, "tempuser1", "temppass1", "uname", "pword"]);
@@ -55,19 +55,18 @@ add_task(async function test_no_autofill_in_form() {
   uname = frameDoc.getElementById("form-basic-username");
   pword = frameDoc.getElementById("form-basic-password");
 
-  await promiseExecuteSoon();
   // Autofill shouldn't happen in the sandboxed frame but would have happened by
   // now since DOMFormHasPassword was observed above.
-  checkLoginForm(uname, "", pword, "");
+  await ensureLoginFormStaysFilledWith(uname, "", pword, "");
 
   info("blurring the username field after typing the username");
   uname.focus();
   uname.setUserInput("tempuser1");
   synthesizeKey("VK_TAB", {}, frameWindow);
-  await promiseExecuteSoon();
-  await promiseExecuteSoon();
-  await promiseExecuteSoon();
-  checkLoginForm(uname, "tempuser1", pword, "");
+
+  await TestUtils.waitForCondition(() => {
+    return uname.value === "tempuser1" & pword.value === "";
+  }, "Username and password field should be filled");
 });
 
 add_task(async function test_no_autofill_outside_form() {
@@ -91,10 +90,9 @@ add_task(async function test_no_autofill_outside_form() {
   uname = frameDoc.getElementById("form-basic-username");
   pword = frameDoc.getElementById("form-basic-password");
 
-  await promiseExecuteSoon();
   // Autofill shouldn't happen in the sandboxed frame but would have happened by
   // now since DOMInputPasswordAdded was observed above.
-  checkLoginForm(uname, "", pword, "");
+  await ensureLoginFormStaysFilledWith(uname, "", pword, "");
 });
 </script>
 </pre>
