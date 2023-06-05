@@ -86,7 +86,7 @@ struct VisitData {
         visitCount(0),
         referrerVisitId(0),
         titleChanged(false),
-        shouldUpdateFrecency(true),
+        isUnrecoverableError(false),
         useFrecencyRedirectBonus(false),
         source(nsINavHistoryService::VISIT_SOURCE_ORGANIC),
         triggeringPlaceId(0),
@@ -114,7 +114,7 @@ struct VisitData {
         visitCount(0),
         referrerVisitId(0),
         titleChanged(false),
-        shouldUpdateFrecency(true),
+        isUnrecoverableError(false),
         useFrecencyRedirectBonus(false),
         source(nsINavHistoryService::VISIT_SOURCE_ORGANIC),
         triggeringPlaceId(0),
@@ -178,8 +178,8 @@ struct VisitData {
   // TODO bug 626836 hook up hidden and typed change tracking too!
   bool titleChanged;
 
-  // Indicates whether frecency should be updated for this visit.
-  bool shouldUpdateFrecency;
+  // Indicates whether the visit ended up in an unrecoverable error.
+  bool isUnrecoverableError;
 
   // Whether to override the visit type bonus with a redirect bonus when
   // calculating frecency on the most recent visit.
@@ -1064,7 +1064,7 @@ class InsertVisitedURIs final : public Runnable {
     // rather only for each unique place to save disk I/O.
 
     // Don't update frecency if the page should not appear in autocomplete.
-    if (aPlace.shouldUpdateFrecency) {
+    if (!aPlace.isUnrecoverableError) {
       rv = UpdateFrecency(aPlace);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1168,7 +1168,7 @@ class InsertVisitedURIs final : public Runnable {
    *        The VisitData for the place we want to update.
    */
   nsresult UpdateFrecency(const VisitData& aPlace) {
-    MOZ_ASSERT(aPlace.shouldUpdateFrecency);
+    MOZ_ASSERT(!aPlace.isUnrecoverableError);
     MOZ_ASSERT(aPlace.placeId > 0);
 
     nsresult rv;
@@ -1618,7 +1618,7 @@ nsresult History::InsertPlace(VisitData& aPlace) {
   NS_ENSURE_SUCCESS(rv, rv);
   // When inserting a page for a first visit that should not appear in
   // autocomplete, for example an error page, use a zero frecency.
-  int32_t frecency = aPlace.shouldUpdateFrecency ? aPlace.frecency : 0;
+  int32_t frecency = aPlace.isUnrecoverableError ? 0 : aPlace.frecency;
   rv = stmt->BindInt32ByName("frecency"_ns, frecency);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName("hidden"_ns, aPlace.hidden);
@@ -1991,9 +1991,7 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   place.hidden = GetHiddenState(isRedirect, place.transitionType);
 
   // Error pages should never be autocompleted.
-  if (aFlags & IHistory::UNRECOVERABLE_ERROR) {
-    place.shouldUpdateFrecency = false;
-  }
+  place.isUnrecoverableError = aFlags & IHistory::UNRECOVERABLE_ERROR;
 
   // Do not save a reloaded uri if we have visited the same URI recently.
   if (reload) {
