@@ -6,6 +6,8 @@
 requestLongerTimeout(4);
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionControlledPopup:
+    "resource:///modules/ExtensionControlledPopup.sys.mjs",
   ExtensionSettingsStore:
     "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
 });
@@ -13,11 +15,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionControlledPopup",
-  "resource:///modules/ExtensionControlledPopup.jsm"
 );
 
 function getNotificationSetting(extensionId) {

@@ -50,8 +50,8 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Receiving end does not exist/
 );
 
-const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.import(
-  "resource://testing-common/AppUiTestDelegate.jsm"
+const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.importESModule(
+  "resource://testing-common/AppUiTestDelegate.sys.mjs"
 );
 
 const { Preferences } = ChromeUtils.importESModule(

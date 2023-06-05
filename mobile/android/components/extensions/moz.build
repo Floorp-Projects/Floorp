@@ -7,7 +7,7 @@
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    "ExtensionBrowsingData.jsm",
+    "ExtensionBrowsingData.sys.mjs",
 ]
 
 EXTRA_COMPONENTS += [

@@ -5,14 +5,11 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  // This helper contains the platform-specific bits of browsingData.
+  BrowsingDataDelegate: "resource:///modules/ExtensionBrowsingData.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  // This helper contains the platform-specific bits of browsingData.
-  BrowsingDataDelegate: "resource:///modules/ExtensionBrowsingData.jsm",
 });
 
 /**
