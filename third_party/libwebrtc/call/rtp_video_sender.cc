@@ -715,7 +715,7 @@ uint32_t RtpVideoSender::GetPacketizationOverheadRate() const {
 void RtpVideoSender::DeliverRtcp(const uint8_t* packet, size_t length) {
   // Runs on a network thread.
   for (const RtpStreamSender& stream : rtp_streams_)
-    stream.rtp_rtcp->IncomingRtcpPacket(packet, length);
+    stream.rtp_rtcp->IncomingRtcpPacket(rtc::MakeArrayView(packet, length));
 }
 
 void RtpVideoSender::ConfigureSsrcs(

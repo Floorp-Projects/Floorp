@@ -1153,7 +1153,8 @@ bool RtpVideoStreamReceiver2::DeliverRtcp(const uint8_t* rtcp_packet,
     return false;
   }
 
-  rtp_rtcp_->IncomingRtcpPacket(rtcp_packet, rtcp_packet_length);
+  rtp_rtcp_->IncomingRtcpPacket(
+      rtc::MakeArrayView(rtcp_packet, rtcp_packet_length));
 
   int64_t rtt = 0;
   rtp_rtcp_->RTT(config_.rtp.remote_ssrc, &rtt, nullptr, nullptr, nullptr);

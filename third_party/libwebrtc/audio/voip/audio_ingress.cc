@@ -210,7 +210,7 @@ void AudioIngress::ReceivedRTCPPacket(
   }
 
   // Deliver RTCP packet to RTP/RTCP module for parsing and processing.
-  rtp_rtcp_->IncomingRtcpPacket(rtcp_packet.data(), rtcp_packet.size());
+  rtp_rtcp_->IncomingRtcpPacket(rtcp_packet);
 
   int64_t rtt = 0;
   if (rtp_rtcp_->RTT(remote_ssrc_, &rtt, nullptr, nullptr, nullptr) != 0) {

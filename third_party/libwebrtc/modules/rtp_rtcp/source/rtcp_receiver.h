@@ -98,7 +98,9 @@ class RTCPReceiver final {
 
   ~RTCPReceiver();
 
-  void IncomingPacket(const uint8_t* packet, size_t packet_size) {
+  [[deprecated("Use ArrayView verwsion")]] void IncomingPacket(
+      const uint8_t* packet,
+      size_t packet_size) {
     IncomingPacket(rtc::MakeArrayView(packet, packet_size));
   }
   void IncomingPacket(rtc::ArrayView<const uint8_t> packet);
