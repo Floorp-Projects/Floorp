@@ -19,6 +19,7 @@
 #  include "SharedMemoryBasic.h"
 #  include "base/rand_util.h"
 #  include "chrome/common/mach_ipc_mac.h"
+#  include "mozilla/StaticPrefs_media.h"
 #  include "nsILocalFileMac.h"
 #endif
 
@@ -564,6 +565,22 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
     return pathType;
   }
 
+#ifdef MOZ_WIDGET_COCOA
+  // The GMP child process runs via the Media Plugin Helper executable
+  // which is a clone of plugin-container allowing for GMP-specific
+  // codesigning entitlements.
+  nsCString bundleName;
+  std::string executableLeafName;
+  if (processType == GeckoProcessType_GMPlugin &&
+      mozilla::StaticPrefs::media_plugin_helper_process_enabled()) {
+    bundleName = MOZ_EME_PROCESS_BUNDLENAME;
+    executableLeafName = MOZ_EME_PROCESS_NAME_BRANDED;
+  } else {
+    bundleName = MOZ_CHILD_PROCESS_BUNDLENAME;
+    executableLeafName = MOZ_CHILD_PROCESS_NAME;
+  }
+#endif
+
   if (ShouldHaveDirectoryService()) {
     MOZ_ASSERT(gGREBinPath);
 #ifdef OS_WIN
@@ -575,7 +592,7 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
 
     // We need to use an App Bundle on OS X so that we can hide
     // the dock icon. See Bug 557225.
-    childProcPath->AppendNative("plugin-container.app"_ns);
+    childProcPath->AppendNative(bundleName);
     childProcPath->AppendNative("Contents"_ns);
     childProcPath->AppendNative("MacOS"_ns);
     nsCString tempCPath;
@@ -598,7 +615,11 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
     exePath = exePath.DirName();
   }
 
+#ifdef MOZ_WIDGET_COCOA
+  exePath = exePath.Append(executableLeafName);
+#else
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+#endif
 
   return pathType;
 }
