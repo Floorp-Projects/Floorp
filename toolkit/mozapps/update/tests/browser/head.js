@@ -1109,7 +1109,16 @@ function runAboutPrefsUpdateTest(params, steps) {
             let actualText = await SpecialPowers.spawn(
               tab.linkedBrowser,
               [],
-              () => content.document.getElementById("downloading").textContent
+              async () => {
+                const { document } = content;
+                if (document.hasPendingL10nMutations) {
+                  await ContentTaskUtils.waitForEvent(
+                    document,
+                    "L10nMutationsFinished"
+                  );
+                }
+                return document.getElementById("downloading").textContent;
+              }
             );
             let expectedSuffix = DownloadUtils.getTransferTotal(
               data[resultName] == gBadSizeResult ? 0 : patch.size,
@@ -1158,7 +1167,7 @@ function runAboutPrefsUpdateTest(params, steps) {
               selector = "a.manualLink";
             }
             if (selectedPanel.ownerDocument.hasPendingL10nMutations) {
-              await BrowserTestUtils.waitForEvent(
+              await ContentTaskUtils.waitForEvent(
                 selectedPanel.ownerDocument,
                 "L10nMutationsFinished"
               );
