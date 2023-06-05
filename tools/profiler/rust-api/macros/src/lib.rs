@@ -28,11 +28,16 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, ItemFn};
+use syn::{parse_macro_input, ItemFn};
 
 #[proc_macro_attribute]
 pub fn gecko_profiler_fn_label(attrs: TokenStream, input: TokenStream) -> TokenStream {
-    let attr_args = parse_macro_input!(attrs as AttributeArgs);
+    let mut attr_args = Vec::new();
+    let attr_parser = syn::meta::parser(|meta| {
+        attr_args.push(meta.path);
+        Ok(())
+    });
+    parse_macro_input!(attrs with attr_parser);
     let input = parse_macro_input!(input as ItemFn);
 
     if attr_args.is_empty() || attr_args.len() > 2 {
