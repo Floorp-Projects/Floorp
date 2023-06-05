@@ -14,6 +14,7 @@ use futures::stream::{self, StreamExt};
 use futures::task::Poll;
 use futures::{ready, FutureExt};
 use futures_core::Stream;
+use futures_executor::ThreadPool;
 use futures_test::task::noop_context;
 
 #[test]
@@ -65,6 +66,7 @@ fn flatten_unordered() {
     use futures::task::*;
     use std::convert::identity;
     use std::pin::Pin;
+    use std::sync::atomic::{AtomicBool, Ordering};
     use std::thread;
     use std::time::Duration;
 
@@ -322,6 +324,78 @@ fn flatten_unordered() {
             assert_eq!(values, (0..60).collect::<Vec<u8>>());
         });
     }
+
+    fn timeout<I: Clone>(time: Duration, value: I) -> impl Future<Output = I> {
+        let ready = Arc::new(AtomicBool::new(false));
+        let mut spawned = false;
+
+        future::poll_fn(move |cx| {
+            if !spawned {
+                let waker = cx.waker().clone();
+                let ready = ready.clone();
+
+                std::thread::spawn(move || {
+                    std::thread::sleep(time);
+                    ready.store(true, Ordering::Release);
+
+                    waker.wake_by_ref()
+                });
+                spawned = true;
+            }
+
+            if ready.load(Ordering::Acquire) {
+                Poll::Ready(value.clone())
+            } else {
+                Poll::Pending
+            }
+        })
+    }
+
+    fn build_nested_fu<S: Stream + Unpin>(st: S) -> impl Stream<Item = S::Item> + Unpin
+    where
+        S::Item: Clone,
+    {
+        let inner = st
+            .then(|item| timeout(Duration::from_millis(50), item))
+            .enumerate()
+            .map(|(idx, value)| {
+                stream::once(if idx % 2 == 0 {
+                    future::ready(value).left_future()
+                } else {
+                    timeout(Duration::from_millis(100), value).right_future()
+                })
+            })
+            .flatten_unordered(None);
+
+        stream::once(future::ready(inner)).flatten_unordered(None)
+    }
+
+    // nested `flatten_unordered`
+    let te = ThreadPool::new().unwrap();
+    let base_handle = te
+        .spawn_with_handle(async move {
+            let fu = build_nested_fu(stream::iter(1..=10));
+
+            assert_eq!(fu.count().await, 10);
+        })
+        .unwrap();
+
+    block_on(base_handle);
+
+    let empty_state_move_handle = te
+        .spawn_with_handle(async move {
+            let mut fu = build_nested_fu(stream::iter(1..10));
+            {
+                let mut cx = noop_context();
+                let _ = fu.poll_next_unpin(&mut cx);
+                let _ = fu.poll_next_unpin(&mut cx);
+            }
+
+            assert_eq!(fu.count().await, 9);
+        })
+        .unwrap();
+
+    block_on(empty_state_move_handle);
 }
 
 #[test]

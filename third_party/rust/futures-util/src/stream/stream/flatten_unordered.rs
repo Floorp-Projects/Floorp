@@ -3,6 +3,7 @@ use core::{
     cell::UnsafeCell,
     convert::identity,
     fmt,
+    marker::PhantomData,
     num::NonZeroUsize,
     pin::Pin,
     sync::atomic::{AtomicU8, Ordering},
@@ -22,8 +23,11 @@ use futures_task::{waker, ArcWake};
 
 use crate::stream::FuturesUnordered;
 
-/// There is nothing to poll and stream isn't being
-/// polled or waking at the moment.
+/// Stream for the [`flatten_unordered`](super::StreamExt::flatten_unordered)
+/// method.
+pub type FlattenUnordered<St> = FlattenUnorderedWithFlowController<St, ()>;
+
+/// There is nothing to poll and stream isn't being polled/waking/woken at the moment.
 const NONE: u8 = 0;
 
 /// Inner streams need to be polled.
@@ -32,26 +36,19 @@ const NEED_TO_POLL_INNER_STREAMS: u8 = 1;
 /// The base stream needs to be polled.
 const NEED_TO_POLL_STREAM: u8 = 0b10;
 
-/// It needs to poll base stream and inner streams.
+/// Both base stream and inner streams need to be polled.
 const NEED_TO_POLL_ALL: u8 = NEED_TO_POLL_INNER_STREAMS | NEED_TO_POLL_STREAM;
 
 /// The current stream is being polled at the moment.
 const POLLING: u8 = 0b100;
 
-/// Inner streams are being woken at the moment.
-const WAKING_INNER_STREAMS: u8 = 0b1000;
-
-/// The base stream is being woken at the moment.
-const WAKING_STREAM: u8 = 0b10000;
-
-/// The base stream and inner streams are being woken at the moment.
-const WAKING_ALL: u8 = WAKING_STREAM | WAKING_INNER_STREAMS;
+/// Stream is being woken at the moment.
+const WAKING: u8 = 0b1000;
 
 /// The stream was waked and will be polled.
-const WOKEN: u8 = 0b100000;
+const WOKEN: u8 = 0b10000;
 
-/// Determines what needs to be polled, and is stream being polled at the
-/// moment or not.
+/// Internal polling state of the stream.
 #[derive(Clone, Debug)]
 struct SharedPollState {
     state: Arc<AtomicU8>,
@@ -64,14 +61,14 @@ impl SharedPollState {
     }
 
     /// Attempts to start polling, returning stored state in case of success.
-    /// Returns `None` if some waker is waking at the moment.
+    /// Returns `None` if either waker is waking at the moment.
     fn start_polling(
         &self,
     ) -> Option<(u8, PollStateBomb<'_, impl FnOnce(&SharedPollState) -> u8>)> {
         let value = self
             .state
             .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |value| {
-                if value & WAKING_ALL == NONE {
+                if value & WAKING == NONE {
                     Some(POLLING)
                 } else {
                     None
@@ -83,23 +80,20 @@ impl SharedPollState {
         Some((value, bomb))
     }
 
-    /// Starts the waking process and performs bitwise or with the given value.
+    /// Attempts to start the waking process and performs bitwise or with the given value.
+    ///
+    /// If some waker is already in progress or stream is already woken/being polled, waking process won't start, however
+    /// state will be disjuncted with the given value.
     fn start_waking(
         &self,
         to_poll: u8,
-        waking: u8,
     ) -> Option<(u8, PollStateBomb<'_, impl FnOnce(&SharedPollState) -> u8>)> {
         let value = self
             .state
             .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |value| {
-                // Waking process for this waker already started
-                if value & waking != NONE {
-                    return None;
-                }
                 let mut next_value = value | to_poll;
-                // Only start the waking process if we're not in the polling phase and the stream isn't woken already
                 if value & (WOKEN | POLLING) == NONE {
-                    next_value |= waking;
+                    next_value |= WAKING;
                 }
 
                 if next_value != value {
@@ -110,8 +104,9 @@ impl SharedPollState {
             })
             .ok()?;
 
-        if value & (WOKEN | POLLING) == NONE {
-            let bomb = PollStateBomb::new(self, move |state| state.stop_waking(waking));
+        // Only start the waking process if we're not in the polling/waking phase and the stream isn't woken already
+        if value & (WOKEN | POLLING | WAKING) == NONE {
+            let bomb = PollStateBomb::new(self, SharedPollState::stop_waking);
 
             Some((value, bomb))
         } else {
@@ -123,7 +118,7 @@ impl SharedPollState {
     /// - `!POLLING` allowing to use wakers
     /// - `WOKEN` if the state was changed during `POLLING` phase as waker will be called,
     ///   or `will_be_woken` flag supplied
-    /// - `!WAKING_ALL` as
+    /// - `!WAKING` as
     ///   * Wakers called during the `POLLING` phase won't propagate their calls
     ///   * `POLLING` phase can't start if some of the wakers are active
     ///   So no wrapped waker can touch the inner waker's cell, it's safe to poll again.
@@ -138,20 +133,17 @@ impl SharedPollState {
                 }
                 next_value |= value;
 
-                Some(next_value & !POLLING & !WAKING_ALL)
+                Some(next_value & !POLLING & !WAKING)
             })
             .unwrap()
     }
 
     /// Toggles state to non-waking, allowing to start polling.
-    fn stop_waking(&self, waking: u8) -> u8 {
-        self.state
+    fn stop_waking(&self) -> u8 {
+        let value = self
+            .state
             .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |value| {
-                let mut next_value = value & !waking;
-                // Waker will be called only if the current waking state is the same as the specified waker state
-                if value & WAKING_ALL == waking {
-                    next_value |= WOKEN;
-                }
+                let next_value = value & !WAKING | WOKEN;
 
                 if next_value != value {
                     Some(next_value)
@@ -159,12 +151,15 @@ impl SharedPollState {
                     None
                 }
             })
-            .unwrap_or_else(identity)
+            .unwrap_or_else(identity);
+
+        debug_assert!(value & (WOKEN | POLLING | WAKING) == WAKING);
+        value
     }
 
     /// Resets current state allowing to poll the stream and wake up wakers.
     fn reset(&self) -> u8 {
-        self.state.swap(NEED_TO_POLL_ALL, Ordering::AcqRel)
+        self.state.swap(NEED_TO_POLL_ALL, Ordering::SeqCst)
     }
 }
 
@@ -184,11 +179,6 @@ impl<'a, F: FnOnce(&SharedPollState) -> u8> PollStateBomb<'a, F> {
     fn deactivate(mut self) {
         self.drop.take();
     }
-
-    /// Manually fires the bomb, returning supplied state.
-    fn fire(mut self) -> Option<u8> {
-        self.drop.take().map(|drop| (drop)(self.state))
-    }
 }
 
 impl<F: FnOnce(&SharedPollState) -> u8> Drop for PollStateBomb<'_, F> {
@@ -201,16 +191,16 @@ impl<F: FnOnce(&SharedPollState) -> u8> Drop for PollStateBomb<'_, F> {
 
 /// Will update state with the provided value on `wake_by_ref` call
 /// and then, if there is a need, call `inner_waker`.
-struct InnerWaker {
+struct WrappedWaker {
     inner_waker: UnsafeCell<Option<Waker>>,
     poll_state: SharedPollState,
     need_to_poll: u8,
 }
 
-unsafe impl Send for InnerWaker {}
-unsafe impl Sync for InnerWaker {}
+unsafe impl Send for WrappedWaker {}
+unsafe impl Sync for WrappedWaker {}
 
-impl InnerWaker {
+impl WrappedWaker {
     /// Replaces given waker's inner_waker for polling stream/futures which will
     /// update poll state on `wake_by_ref` call. Use only if you need several
     /// contexts.
@@ -218,25 +208,19 @@ impl InnerWaker {
     /// ## Safety
     ///
     /// This function will modify waker's `inner_waker` via `UnsafeCell`, so
-    /// it should be used only during `POLLING` phase.
-    unsafe fn replace_waker(self_arc: &mut Arc<Self>, cx: &Context<'_>) -> Waker {
+    /// it should be used only during `POLLING` phase by one thread at the time.
+    unsafe fn replace_waker(self_arc: &mut Arc<Self>, cx: &Context<'_>) {
         *self_arc.inner_waker.get() = cx.waker().clone().into();
-        waker(self_arc.clone())
     }
 
     /// Attempts to start the waking process for the waker with the given value.
     /// If succeeded, then the stream isn't yet woken and not being polled at the moment.
     fn start_waking(&self) -> Option<(u8, PollStateBomb<'_, impl FnOnce(&SharedPollState) -> u8>)> {
-        self.poll_state.start_waking(self.need_to_poll, self.waking_state())
-    }
-
-    /// Returns the corresponding waking state toggled by this waker.
-    fn waking_state(&self) -> u8 {
-        self.need_to_poll << 3
+        self.poll_state.start_waking(self.need_to_poll)
     }
 }
 
-impl ArcWake for InnerWaker {
+impl ArcWake for WrappedWaker {
     fn wake_by_ref(self_arc: &Arc<Self>) {
         if let Some((_, state_bomb)) = self_arc.start_waking() {
             // Safety: now state is not `POLLING`
@@ -244,24 +228,17 @@ impl ArcWake for InnerWaker {
 
             if let Some(inner_waker) = waker_opt.clone() {
                 // Stop waking to allow polling stream
-                let poll_state_value = state_bomb.fire().unwrap();
+                drop(state_bomb);
 
-                // Here we want to call waker only if stream isn't woken yet and
-                // also to optimize the case when two wakers are called at the same time.
-                //
-                // In this case the best strategy will be to propagate only the latest waker's awake,
-                // and then poll both entities in a single `poll_next` call
-                if poll_state_value & (WOKEN | WAKING_ALL) == self_arc.waking_state() {
-                    // Wake up inner waker
-                    inner_waker.wake();
-                }
+                // Wake up inner waker
+                inner_waker.wake();
             }
         }
     }
 }
 
 pin_project! {
-    /// Future which contains optional stream.
+    /// Future which polls optional inner stream.
     ///
     /// If it's `Some`, it will attempt to call `poll_next` on it,
     /// returning `Some((item, next_item_fut))` in case of `Poll::Ready(Some(...))`
@@ -303,10 +280,10 @@ impl<St: Stream + Unpin> Future for PollStreamFut<St> {
 
 pin_project! {
     /// Stream for the [`flatten_unordered`](super::StreamExt::flatten_unordered)
-    /// method.
-    #[project = FlattenUnorderedProj]
+    /// method with ability to specify flow controller.
+    #[project = FlattenUnorderedWithFlowControllerProj]
     #[must_use = "streams do nothing unless polled"]
-    pub struct FlattenUnordered<St> where St: Stream {
+    pub struct FlattenUnorderedWithFlowController<St, Fc> where St: Stream {
         #[pin]
         inner_streams: FuturesUnordered<PollStreamFut<St::Item>>,
         #[pin]
@@ -314,80 +291,110 @@ pin_project! {
         poll_state: SharedPollState,
         limit: Option<NonZeroUsize>,
         is_stream_done: bool,
-        inner_streams_waker: Arc<InnerWaker>,
-        stream_waker: Arc<InnerWaker>,
+        inner_streams_waker: Arc<WrappedWaker>,
+        stream_waker: Arc<WrappedWaker>,
+        flow_controller: PhantomData<Fc>
     }
 }
 
-impl<St> fmt::Debug for FlattenUnordered<St>
+impl<St, Fc> fmt::Debug for FlattenUnorderedWithFlowController<St, Fc>
 where
     St: Stream + fmt::Debug,
     St::Item: Stream + fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FlattenUnordered")
+        f.debug_struct("FlattenUnorderedWithFlowController")
             .field("poll_state", &self.poll_state)
             .field("inner_streams", &self.inner_streams)
             .field("limit", &self.limit)
             .field("stream", &self.stream)
             .field("is_stream_done", &self.is_stream_done)
+            .field("flow_controller", &self.flow_controller)
             .finish()
     }
 }
 
-impl<St> FlattenUnordered<St>
+impl<St, Fc> FlattenUnorderedWithFlowController<St, Fc>
 where
     St: Stream,
+    Fc: FlowController<St::Item, <St::Item as Stream>::Item>,
     St::Item: Stream + Unpin,
 {
-    pub(super) fn new(stream: St, limit: Option<usize>) -> FlattenUnordered<St> {
+    pub(crate) fn new(
+        stream: St,
+        limit: Option<usize>,
+    ) -> FlattenUnorderedWithFlowController<St, Fc> {
         let poll_state = SharedPollState::new(NEED_TO_POLL_STREAM);
 
-        FlattenUnordered {
+        FlattenUnorderedWithFlowController {
             inner_streams: FuturesUnordered::new(),
             stream,
             is_stream_done: false,
             limit: limit.and_then(NonZeroUsize::new),
-            inner_streams_waker: Arc::new(InnerWaker {
+            inner_streams_waker: Arc::new(WrappedWaker {
                 inner_waker: UnsafeCell::new(None),
                 poll_state: poll_state.clone(),
                 need_to_poll: NEED_TO_POLL_INNER_STREAMS,
             }),
-            stream_waker: Arc::new(InnerWaker {
+            stream_waker: Arc::new(WrappedWaker {
                 inner_waker: UnsafeCell::new(None),
                 poll_state: poll_state.clone(),
                 need_to_poll: NEED_TO_POLL_STREAM,
             }),
             poll_state,
+            flow_controller: PhantomData,
         }
     }
 
     delegate_access_inner!(stream, St, ());
 }
 
-impl<St> FlattenUnorderedProj<'_, St>
+/// Returns the next flow step based on the received item.
+pub trait FlowController<I, O> {
+    /// Handles an item producing `FlowStep` describing the next flow step.
+    fn next_step(item: I) -> FlowStep<I, O>;
+}
+
+impl<I, O> FlowController<I, O> for () {
+    fn next_step(item: I) -> FlowStep<I, O> {
+        FlowStep::Continue(item)
+    }
+}
+
+/// Describes the next flow step.
+#[derive(Debug, Clone)]
+pub enum FlowStep<C, R> {
+    /// Just yields an item and continues standard flow.
+    Continue(C),
+    /// Immediately returns an underlying item from the function.
+    Return(R),
+}
+
+impl<St, Fc> FlattenUnorderedWithFlowControllerProj<'_, St, Fc>
 where
     St: Stream,
 {
-    /// Checks if current `inner_streams` size is less than optional limit.
+    /// Checks if current `inner_streams` bucket size is greater than optional limit.
     fn is_exceeded_limit(&self) -> bool {
         self.limit.map_or(false, |limit| self.inner_streams.len() >= limit.get())
     }
 }
 
-impl<St> FusedStream for FlattenUnordered<St>
+impl<St, Fc> FusedStream for FlattenUnorderedWithFlowController<St, Fc>
 where
     St: FusedStream,
-    St::Item: FusedStream + Unpin,
+    Fc: FlowController<St::Item, <St::Item as Stream>::Item>,
+    St::Item: Stream + Unpin,
 {
     fn is_terminated(&self) -> bool {
         self.stream.is_terminated() && self.inner_streams.is_empty()
     }
 }
 
-impl<St> Stream for FlattenUnordered<St>
+impl<St, Fc> Stream for FlattenUnorderedWithFlowController<St, Fc>
 where
     St: Stream,
+    Fc: FlowController<St::Item, <St::Item as Stream>::Item>,
     St::Item: Stream + Unpin,
 {
     type Item = <St::Item as Stream>::Item;
@@ -398,17 +405,21 @@ where
 
         let mut this = self.as_mut().project();
 
-        let (mut poll_state_value, state_bomb) = match this.poll_state.start_polling() {
-            Some(value) => value,
-            _ => {
-                // Waker was called, just wait for the next poll
-                return Poll::Pending;
+        // Attempt to start polling, in case some waker is holding the lock, wait in loop
+        let (mut poll_state_value, state_bomb) = loop {
+            if let Some(value) = this.poll_state.start_polling() {
+                break value;
             }
         };
 
+        // Safety: now state is `POLLING`.
+        unsafe {
+            WrappedWaker::replace_waker(this.stream_waker, cx);
+            WrappedWaker::replace_waker(this.inner_streams_waker, cx)
+        };
+
         if poll_state_value & NEED_TO_POLL_STREAM != NONE {
-            // Safety: now state is `POLLING`.
-            let stream_waker = unsafe { InnerWaker::replace_waker(this.stream_waker, cx) };
+            let mut stream_waker = None;
 
             // Here we need to poll the base stream.
             //
@@ -424,15 +435,35 @@ where
 
                     break;
                 } else {
-                    match this.stream.as_mut().poll_next(&mut Context::from_waker(&stream_waker)) {
-                        Poll::Ready(Some(inner_stream)) => {
+                    let mut cx = Context::from_waker(
+                        stream_waker.get_or_insert_with(|| waker(this.stream_waker.clone())),
+                    );
+
+                    match this.stream.as_mut().poll_next(&mut cx) {
+                        Poll::Ready(Some(item)) => {
+                            let next_item_fut = match Fc::next_step(item) {
+                                // Propagates an item immediately (the main use-case is for errors)
+                                FlowStep::Return(item) => {
+                                    need_to_poll_next |= NEED_TO_POLL_STREAM
+                                        | (poll_state_value & NEED_TO_POLL_INNER_STREAMS);
+                                    poll_state_value &= !NEED_TO_POLL_INNER_STREAMS;
+
+                                    next_item = Some(item);
+
+                                    break;
+                                }
+                                // Yields an item and continues processing (normal case)
+                                FlowStep::Continue(inner_stream) => {
+                                    PollStreamFut::new(inner_stream)
+                                }
+                            };
                             // Add new stream to the inner streams bucket
-                            this.inner_streams.as_mut().push(PollStreamFut::new(inner_stream));
+                            this.inner_streams.as_mut().push(next_item_fut);
                             // Inner streams must be polled afterward
                             poll_state_value |= NEED_TO_POLL_INNER_STREAMS;
                         }
                         Poll::Ready(None) => {
-                            // Mark the stream as done
+                            // Mark the base stream as done
                             *this.is_stream_done = true;
                         }
                         Poll::Pending => {
@@ -444,15 +475,10 @@ where
         }
 
         if poll_state_value & NEED_TO_POLL_INNER_STREAMS != NONE {
-            // Safety: now state is `POLLING`.
-            let inner_streams_waker =
-                unsafe { InnerWaker::replace_waker(this.inner_streams_waker, cx) };
+            let inner_streams_waker = waker(this.inner_streams_waker.clone());
+            let mut cx = Context::from_waker(&inner_streams_waker);
 
-            match this
-                .inner_streams
-                .as_mut()
-                .poll_next(&mut Context::from_waker(&inner_streams_waker))
-            {
+            match this.inner_streams.as_mut().poll_next(&mut cx) {
                 Poll::Ready(Some(Some((item, next_item_fut)))) => {
                     // Push next inner stream item future to the list of inner streams futures
                     this.inner_streams.as_mut().push(next_item_fut);
@@ -472,15 +498,16 @@ where
         // We didn't have any `poll_next` panic, so it's time to deactivate the bomb
         state_bomb.deactivate();
 
+        // Call the waker at the end of polling if
         let mut force_wake =
             // we need to poll the stream and didn't reach the limit yet
             need_to_poll_next & NEED_TO_POLL_STREAM != NONE && !this.is_exceeded_limit()
-            // or we need to poll inner streams again
+            // or we need to poll the inner streams again
             || need_to_poll_next & NEED_TO_POLL_INNER_STREAMS != NONE;
 
         // Stop polling and swap the latest state
         poll_state_value = this.poll_state.stop_polling(need_to_poll_next, force_wake);
-        // If state was changed during `POLLING` phase, need to manually call a waker
+        // If state was changed during `POLLING` phase, we also need to manually call a waker
         force_wake |= poll_state_value & NEED_TO_POLL_ALL != NONE;
 
         let is_done = *this.is_stream_done && this.inner_streams.is_empty();
@@ -499,7 +526,7 @@ where
 
 // Forwarding impl of Sink from the underlying stream
 #[cfg(feature = "sink")]
-impl<St, Item> Sink<Item> for FlattenUnordered<St>
+impl<St, Item, Fc> Sink<Item> for FlattenUnorderedWithFlowController<St, Fc>
 where
     St: Stream + Sink<Item>,
 {

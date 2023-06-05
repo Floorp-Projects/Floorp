@@ -11,7 +11,7 @@ Add this to your `Cargo.toml`:
 futures-util = "0.3"
 ```
 
-The current `futures-util` requires Rust 1.45 or later.
+The current `futures-util` requires Rust 1.56 or later.
 
 ## License
 

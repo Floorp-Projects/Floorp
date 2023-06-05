@@ -8,29 +8,24 @@ use futures_core::ready;
 use futures_core::stream::{FusedStream, Stream};
 use futures_core::task::{Context, Poll};
 
-use pin_project_lite::pin_project;
-
 use super::assert_stream;
 use crate::stream::{futures_unordered, FuturesUnordered, StreamExt, StreamFuture};
 
-pin_project! {
-    /// An unbounded set of streams
-    ///
-    /// This "combinator" provides the ability to maintain a set of streams
-    /// and drive them all to completion.
-    ///
-    /// Streams are pushed into this set and their realized values are
-    /// yielded as they become ready. Streams will only be polled when they
-    /// generate notifications. This allows to coordinate a large number of streams.
-    ///
-    /// Note that you can create a ready-made `SelectAll` via the
-    /// `select_all` function in the `stream` module, or you can start with an
-    /// empty set with the `SelectAll::new` constructor.
-    #[must_use = "streams do nothing unless polled"]
-    pub struct SelectAll<St> {
-        #[pin]
-        inner: FuturesUnordered<StreamFuture<St>>,
-    }
+/// An unbounded set of streams
+///
+/// This "combinator" provides the ability to maintain a set of streams
+/// and drive them all to completion.
+///
+/// Streams are pushed into this set and their realized values are
+/// yielded as they become ready. Streams will only be polled when they
+/// generate notifications. This allows to coordinate a large number of streams.
+///
+/// Note that you can create a ready-made `SelectAll` via the
+/// `select_all` function in the `stream` module, or you can start with an
+/// empty set with the `SelectAll::new` constructor.
+#[must_use = "streams do nothing unless polled"]
+pub struct SelectAll<St> {
+    inner: FuturesUnordered<StreamFuture<St>>,
 }
 
 impl<St: Debug> Debug for SelectAll<St> {

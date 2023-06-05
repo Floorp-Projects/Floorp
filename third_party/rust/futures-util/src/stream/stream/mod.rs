@@ -199,7 +199,7 @@ pub use self::buffered::Buffered;
 
 #[cfg(not(futures_no_atomic_cas))]
 #[cfg(feature = "alloc")]
-mod flatten_unordered;
+pub(crate) mod flatten_unordered;
 
 #[cfg(not(futures_no_atomic_cas))]
 #[cfg(feature = "alloc")]
@@ -774,7 +774,14 @@ pub trait StreamExt: Stream {
     }
 
     /// Flattens a stream of streams into just one continuous stream. Polls
-    /// inner streams concurrently.
+    /// inner streams produced by the base stream concurrently.
+    ///
+    /// The only argument is an optional limit on the number of concurrently
+    /// polled streams. If this limit is not `None`, no more than `limit` streams
+    /// will be polled at the same time. The `limit` argument is of type
+    /// `Into<Option<usize>>`, and so can be provided as either `None`,
+    /// `Some(10)`, or just `10`. Note: a limit of zero is interpreted as
+    /// no limit at all, and will have the same result as passing in `None`.
     ///
     /// # Examples
     ///
@@ -814,7 +821,7 @@ pub trait StreamExt: Stream {
         Self::Item: Stream + Unpin,
         Self: Sized,
     {
-        FlattenUnordered::new(self, limit.into())
+        assert_stream::<<Self::Item as Stream>::Item, _>(FlattenUnordered::new(self, limit.into()))
     }
 
     /// Maps a stream like [`StreamExt::map`] but flattens nested `Stream`s.
@@ -863,7 +870,7 @@ pub trait StreamExt: Stream {
     ///
     /// The first argument is an optional limit on the number of concurrently
     /// polled streams. If this limit is not `None`, no more than `limit` streams
-    /// will be polled concurrently. The `limit` argument is of type
+    /// will be polled at the same time. The `limit` argument is of type
     /// `Into<Option<usize>>`, and so can be provided as either `None`,
     /// `Some(10)`, or just `10`. Note: a limit of zero is interpreted as
     /// no limit at all, and will have the same result as passing in `None`.
@@ -901,7 +908,7 @@ pub trait StreamExt: Stream {
         F: FnMut(Self::Item) -> U,
         Self: Sized,
     {
-        FlatMapUnordered::new(self, limit.into(), f)
+        assert_stream::<U::Item, _>(FlatMapUnordered::new(self, limit.into(), f))
     }
 
     /// Combinator similar to [`StreamExt::fold`] that holds internal state

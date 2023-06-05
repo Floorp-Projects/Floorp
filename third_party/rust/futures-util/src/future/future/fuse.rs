@@ -1,6 +1,5 @@
 use core::pin::Pin;
 use futures_core::future::{FusedFuture, Future};
-use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use pin_project_lite::pin_project;
 
@@ -81,13 +80,12 @@ impl<Fut: Future> Future for Fuse<Fut> {
     type Output = Fut::Output;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Fut::Output> {
-        Poll::Ready(match self.as_mut().project().inner.as_pin_mut() {
-            Some(fut) => {
-                let output = ready!(fut.poll(cx));
+        match self.as_mut().project().inner.as_pin_mut() {
+            Some(fut) => fut.poll(cx).map(|output| {
                 self.project().inner.set(None);
                 output
-            }
-            None => return Poll::Pending,
-        })
+            }),
+            None => Poll::Pending,
+        }
     }
 }

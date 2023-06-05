@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.45"
+rust-version = "1.56"
 name = "futures-executor"
-version = "0.3.26"
+version = "0.3.28"
 description = """
 Executors for asynchronous tasks based on the futures-rs library.
 """
@@ -30,15 +30,15 @@ rustdoc-args = [
 ]
 
 [dependencies.futures-core]
-version = "0.3.26"
+version = "0.3.28"
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.26"
+version = "0.3.28"
 default-features = false
 
 [dependencies.futures-util]
-version = "0.3.26"
+version = "0.3.28"
 default-features = false
 
 [dependencies.num_cpus]

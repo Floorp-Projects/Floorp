@@ -51,7 +51,7 @@ impl Parse for Select {
                 CaseKind::Default
             } else {
                 // `<pat> = <expr>`
-                let pat = input.parse()?;
+                let pat = Pat::parse_multi_with_leading_vert(input)?;
                 input.parse::<Token![=]>()?;
                 let expr = input.parse()?;
                 CaseKind::Normal(pat, expr)
