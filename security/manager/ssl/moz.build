@@ -98,10 +98,6 @@ EXPORTS.mozilla.psm += [
     "VerifySSLServerCertParent.h",
 ]
 
-EXPORTS.ipc += [
-    "DataStorageIPCUtils.h",
-]
-
 UNIFIED_SOURCES += [
     "AppSignatureVerification.cpp",
     "AppTrustDomain.cpp",

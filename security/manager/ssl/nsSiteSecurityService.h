@@ -137,6 +137,18 @@ class nsSiteSecurityService : public nsISiteSecurityService,
                         const OriginAttributes& aOriginAttributes,
                         bool* aResult);
 
+  void GetWithMigration(const nsACString& aHostname,
+                        const OriginAttributes& aOriginAttributes,
+                        mozilla::DataStorageType aDataStorageType,
+                        nsCString& aValue);
+  nsresult PutWithMigration(const nsACString& aHostname,
+                            const OriginAttributes& aOriginAttributes,
+                            mozilla::DataStorageType aDataStorageType,
+                            const nsCString& aStateString);
+  void RemoveWithMigration(const nsACString& aHostname,
+                           const OriginAttributes& aOriginAttributes,
+                           mozilla::DataStorageType aDataStorageType);
+
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
   RefPtr<mozilla::DataStorage> mSiteStateStorage;

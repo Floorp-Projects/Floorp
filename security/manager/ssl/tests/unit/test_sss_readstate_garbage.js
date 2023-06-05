@@ -61,24 +61,24 @@ function run_test() {
   let expiryTime = Date.now() + 100000;
   let lines = [
     // General state file entry tests.
-    `example1.example.com:HSTS\t0\t0\t${expiryTime},1,0`,
+    `example1.example.com\t0\t0\t${expiryTime},1,0`,
     "I'm a lumberjack and I'm okay; I work all night and I sleep all day!",
     "This is a totally bogus entry\t",
     "0\t0\t0\t0\t",
     "\t\t\t\t\t\t\t",
-    "example.com:HSTS\t\t\t\t\t\t\t",
-    "example3.example.com:HSTS\t0\t\t\t\t\t\t",
-    `example2.example.com:HSTS\t0\t0\t${expiryTime},1,0`,
+    "example.com\t\t\t\t\t\t\t",
+    "example3.example.com\t0\t\t\t\t\t\t",
+    `example2.example.com\t0\t0\t${expiryTime},1,0`,
     // HSTS state string parsing tests
-    `extra.comma.example.com:HSTS\t0\t0\t${expiryTime},,1,0`,
-    "empty.statestring.example.com:HSTS\t0\t0\t",
-    "rubbish.statestring.example.com:HSTS\t0\t0\tfoobar",
-    `spaces.statestring.example.com:HSTS\t0\t0\t${expiryTime}, 1,0 `,
-    `invalid.expirytime.example.com:HSTS\t0\t0\t${expiryTime}foo123,1,0`,
-    `text.securitypropertystate.example.com:HSTS\t0\t0\t${expiryTime},1foo,0`,
-    `invalid.securitypropertystate.example.com:HSTS\t0\t0\t${expiryTime},999,0`,
-    `text.includesubdomains.example.com:HSTS\t0\t0\t${expiryTime},1,1foo`,
-    `invalid.includesubdomains.example.com:HSTS\t0\t0\t${expiryTime},1,0foo`,
+    `extra.comma.example.com\t0\t0\t${expiryTime},,1,0`,
+    "empty.statestring.example.com\t0\t0\t",
+    "rubbish.statestring.example.com\t0\t0\tfoobar",
+    `spaces.statestring.example.com\t0\t0\t${expiryTime}, 1,0 `,
+    `invalid.expirytime.example.com\t0\t0\t${expiryTime}foo123,1,0`,
+    `text.securitypropertystate.example.com\t0\t0\t${expiryTime},1foo,0`,
+    `invalid.securitypropertystate.example.com\t0\t0\t${expiryTime},999,0`,
+    `text.includesubdomains.example.com\t0\t0\t${expiryTime},1,1foo`,
+    `invalid.includesubdomains.example.com\t0\t0\t${expiryTime},1,0foo`,
   ];
   writeLinesAndClose(lines, outputStream);
   Services.obs.addObserver(checkStateRead, "data-storage-ready");

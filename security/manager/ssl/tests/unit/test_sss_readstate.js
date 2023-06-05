@@ -105,13 +105,13 @@ function run_test() {
   let outputStream = FileUtils.openFileOutputStream(stateFile);
   let now = Date.now();
   let lines = [
-    `expired.example.com:HSTS\t0\t0\t${now - 100000},1,0`,
-    `notexpired.example.com:HSTS\t0\t0\t${now + 100000},1,0`,
+    `expired.example.com\t0\t0\t${now - 100000},1,0`,
+    `notexpired.example.com\t0\t0\t${now + 100000},1,0`,
     // This overrides an entry on the preload list.
-    `includesubdomains.preloaded.test:HSTS\t0\t0\t${now + 100000},1,0`,
-    `incsubdomain.example.com:HSTS\t0\t0\t${now + 100000},1,1`,
+    `includesubdomains.preloaded.test\t0\t0\t${now + 100000},1,0`,
+    `incsubdomain.example.com\t0\t0\t${now + 100000},1,1`,
     // This overrides an entry on the preload list.
-    "includesubdomains2.preloaded.test:HSTS\t0\t0\t0,2,0",
+    "includesubdomains2.preloaded.test\t0\t0\t0,2,0",
   ];
   writeLinesAndClose(lines, outputStream);
   Services.obs.addObserver(checkStateRead, "data-storage-ready");
