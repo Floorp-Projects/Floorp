@@ -1,6 +1,6 @@
-use proc_macro2::Span;
-use syn::parse::{Error, Parse, ParseStream, Parser, Result};
-use syn::{parenthesized, Data, DeriveInput, Fields, Ident, Meta, NestedMeta};
+use proc_macro2::{Span, TokenTree};
+use syn::parse::{Error, Parse, ParseStream, Result};
+use syn::{token, Attribute, Data, DeriveInput, Expr, Fields, Ident, Meta, Token};
 
 pub struct Input {
     pub ident: Ident,
@@ -20,26 +20,29 @@ pub struct VariantAttrs {
     pub is_default: bool,
 }
 
-fn parse_meta(attrs: &mut VariantAttrs, meta: &Meta) {
-    if let Meta::List(value) = meta {
-        for meta in &value.nested {
-            if let NestedMeta::Meta(Meta::Path(path)) = meta {
-                if path.is_ident("other") {
-                    attrs.is_default = true;
-                }
+fn parse_serde_attr(attrs: &mut VariantAttrs, attr: &Attribute) {
+    if let Meta::List(_) = attr.meta {
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.input.peek(Token![=]) {
+                let _value: Expr = meta.value()?.parse()?;
+            } else if meta.input.peek(token::Paren) {
+                let _group: TokenTree = meta.input.parse()?;
+            } else if meta.path.is_ident("other") {
+                attrs.is_default = true;
             }
-        }
+            Ok(())
+        });
     }
 }
 
-fn parse_attrs(variant: &syn::Variant) -> Result<VariantAttrs> {
+fn parse_attrs(variant: &syn::Variant) -> VariantAttrs {
     let mut attrs = VariantAttrs { is_default: false };
     for attr in &variant.attrs {
-        if attr.path.is_ident("serde") {
-            parse_meta(&mut attrs, &attr.parse_meta()?);
+        if attr.path().is_ident("serde") {
+            parse_serde_attr(&mut attrs, attr);
         }
     }
-    Ok(attrs)
+    attrs
 }
 
 impl Parse for Input {
@@ -59,7 +62,7 @@ impl Parse for Input {
             .into_iter()
             .map(|variant| match variant.fields {
                 Fields::Unit => {
-                    let attrs = parse_attrs(&variant)?;
+                    let attrs = parse_attrs(&variant);
                     Ok(Variant {
                         ident: variant.ident,
                         attrs,
@@ -82,15 +85,12 @@ impl Parse for Input {
 
         let mut repr = None;
         for attr in derive_input.attrs {
-            if attr.path.is_ident("repr") {
-                fn repr_arg(input: ParseStream) -> Result<Ident> {
-                    let content;
-                    parenthesized!(content in input);
-                    content.parse()
+            if attr.path().is_ident("repr") {
+                if let Meta::List(_) = &attr.meta {
+                    let ty: Ident = attr.parse_args()?;
+                    repr = Some(ty);
+                    break;
                 }
-                let ty = repr_arg.parse2(attr.tokens)?;
-                repr = Some(ty);
-                break;
             }
         }
         let repr = repr.ok_or_else(|| Error::new(call_site, "missing #[repr(...)] attribute"))?;
