@@ -13,9 +13,8 @@ import lzma
 import os
 import struct
 import zlib
+from collections import namedtuple
 from xml.etree.ElementTree import XML
-
-from mozbuild.util import ReadOnlyNamespace
 
 
 class ZlibFile(object):
@@ -170,6 +169,9 @@ class Take(object):
         return result
 
 
+CpioInfo = namedtuple("CpioInfo", ["mode", "nlink", "dev", "ino"])
+
+
 def uncpio(fileobj):
     while True:
         magic = fileobj.read(6)
@@ -211,7 +213,7 @@ def uncpio(fileobj):
         if name.startswith(b"/"):
             name = name[1:]
         content = Take(fileobj, filesize)
-        yield name, ReadOnlyNamespace(mode=mode, nlink=nlink, dev=dev, ino=ino), content
+        yield name, CpioInfo(mode=mode, nlink=nlink, dev=dev, ino=ino), content
         # Ensure the content is totally consumed
         while content.read(4096):
             pass
