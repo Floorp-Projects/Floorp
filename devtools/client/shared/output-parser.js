@@ -91,27 +91,26 @@ const TRUNCATE_NODE_CLASSNAME = "propertyvalue-long-text";
  *   const parser = new OutputParser(document, cssProperties);
  *   parser.parseCssProperty("color", "red"); // Returns document fragment.
  *
- * @param {Document} document
- *        Used to create DOM nodes.
- * @param {Object} cssProperties
- *        Instance of CssProperties, an object which provides an interface for
- *        working with the database of supported CSS properties and values.
- *        Two items are of interest from this object:
- *        - supportsTypes - A function that returns a boolean when asked if a css
- *          property name supports a given css type.  The function is
- *          executed like supportsType("color", "timing-function")
  */
-function OutputParser(document, { supportsType }) {
-  this.parsed = [];
-  this.doc = document;
-  this.supportsType = supportsType;
-  this.colorSwatches = new WeakMap();
-  this.angleSwatches = new WeakMap();
-  this._onColorSwatchMouseDown = this._onColorSwatchMouseDown.bind(this);
-  this._onAngleSwatchMouseDown = this._onAngleSwatchMouseDown.bind(this);
-}
+class OutputParser {
+  /**
+   * @param {Document} document
+   *        Used to create DOM nodes.
+   * @param {CssProperties} cssProperties
+   *        Instance of CssProperties, an object which provides an interface for
+   *        working with the database of supported CSS properties and values.
+   */
+  constructor(document, cssProperties) {
+    this.#doc = document;
+    this.#cssProperties = cssProperties;
+  }
 
-OutputParser.prototype = {
+  #angleSwatches = new WeakMap();
+  #colorSwatches = new WeakMap();
+  #cssProperties;
+  #doc;
+  #parsed = [];
+
   /**
    * Parse a CSS property value given a property name.
    *
@@ -121,15 +120,21 @@ OutputParser.prototype = {
    *         CSS Property value
    * @param  {Object} [options]
    *         Options object. For valid options and default values see
-   *         _mergeOptions().
+   *         #mergeOptions().
    * @return {DocumentFragment}
    *         A document fragment containing color swatches etc.
    */
   parseCssProperty(name, value, options = {}) {
-    options = this._mergeOptions(options);
+    options = this.#mergeOptions(options);
 
-    options.expectCubicBezier = this.supportsType(name, "timing-function");
-    options.expectLinearEasing = this.supportsType(name, "timing-function");
+    options.expectCubicBezier = this.#cssProperties.supportsType(
+      name,
+      "timing-function"
+    );
+    options.expectLinearEasing = this.#cssProperties.supportsType(
+      name,
+      "timing-function"
+    );
     options.expectDisplay = name === "display";
     options.expectFilter =
       name === "filter" ||
@@ -137,20 +142,20 @@ OutputParser.prototype = {
     options.expectShape = name === "clip-path" || name === "shape-outside";
     options.expectFont = name === "font-family";
     options.supportsColor =
-      this.supportsType(name, "color") ||
-      this.supportsType(name, "gradient") ||
+      this.#cssProperties.supportsType(name, "color") ||
+      this.#cssProperties.supportsType(name, "gradient") ||
       (name.startsWith("--") && InspectorUtils.isValidCSSColor(value));
 
     // The filter property is special in that we want to show the
     // swatch even if the value is invalid, because this way the user
     // can easily use the editor to fix it.
-    if (options.expectFilter || this._cssPropertySupportsValue(name, value)) {
-      return this._parse(value, options);
+    if (options.expectFilter || this.#cssPropertySupportsValue(name, value)) {
+      return this.#parse(value, options);
     }
-    this._appendTextNode(value);
+    this.#appendTextNode(value);
 
-    return this._toDOM();
-  },
+    return this.#toDOM();
+  }
 
   /**
    * Read tokens from |tokenStream| and collect all the (non-comment)
@@ -164,7 +169,7 @@ OutputParser.prototype = {
    * @param  {CSSLexer} tokenStream
    *         The token stream from which to read.
    * @param  {Object} options
-   *         The options object in use; @see _mergeOptions.
+   *         The options object in use; @see #mergeOptions.
    * @param  {Boolean} stopAtComma
    *         If true, stop at a comma.
    * @return {Object}
@@ -178,7 +183,7 @@ OutputParser.prototype = {
    *         |sawComma| is true if the stop was due to a comma, or false otherwise.
    *         |sawVariable| is true if a variable was seen while parsing the text.
    */
-  _parseMatchingParens(text, tokenStream, options, stopAtComma) {
+  #parseMatchingParens(text, tokenStream, options, stopAtComma) {
     let depth = 1;
     const functionData = [];
     const tokens = [];
@@ -210,7 +215,7 @@ OutputParser.prototype = {
         options.getVariableValue
       ) {
         sawVariable = true;
-        const { node } = this._parseVariable(token, text, tokenStream, options);
+        const { node } = this.#parseVariable(token, text, tokenStream, options);
         functionData.push(node);
       } else if (token.tokenType === "function") {
         ++depth;
@@ -230,7 +235,7 @@ OutputParser.prototype = {
     }
 
     return { tokens, functionData, sawComma: false, sawVariable };
-  },
+  }
 
   /**
    * Parse var() use and return a variable node to be added to the output state.
@@ -244,7 +249,7 @@ OutputParser.prototype = {
    * @param  {CSSLexer} tokenStream
    *         The token stream from which to read.
    * @param  {Object} options
-   *         The options object in use; @see _mergeOptions.
+   *         The options object in use; @see #mergeOptions.
    * @return {Object}
    *         - node: A node for the variable, with the appropriate text and
    *           title. Eg. a span with "var(--var1)" as the textContent
@@ -252,17 +257,17 @@ OutputParser.prototype = {
    *           "--var1 is not set".
    *         - value: The value for the variable.
    */
-  _parseVariable(initialToken, text, tokenStream, options) {
+  #parseVariable(initialToken, text, tokenStream, options) {
     // Handle the "var(".
     const varText = text.substring(
       initialToken.startOffset,
       initialToken.endOffset
     );
-    const variableNode = this._createNode("span", {}, varText);
+    const variableNode = this.#createNode("span", {}, varText);
 
     // Parse the first variable name within the parens of var().
     const { tokens, functionData, sawComma, sawVariable } =
-      this._parseMatchingParens(text, tokenStream, options, true);
+      this.#parseMatchingParens(text, tokenStream, options, true);
 
     const result = sawVariable ? "" : functionData.join("");
 
@@ -299,40 +304,40 @@ OutputParser.prototype = {
       );
     }
 
-    variableNode.appendChild(this._createNode("span", firstOpts, result));
+    variableNode.appendChild(this.#createNode("span", firstOpts, result));
 
     // If we saw a ",", then append it and show the remainder using
     // the correct highlighting.
     if (sawComma) {
-      variableNode.appendChild(this.doc.createTextNode(","));
+      variableNode.appendChild(this.#doc.createTextNode(","));
 
       // Parse the text up until the close paren, being sure to
       // disable the special case for filter.
       const subOptions = Object.assign({}, options);
       subOptions.expectFilter = false;
-      const saveParsed = this.parsed;
+      const saveParsed = this.#parsed;
       this.parsed = [];
-      const rest = this._doParse(text, subOptions, tokenStream, true);
+      const rest = this.#doParse(text, subOptions, tokenStream, true);
       this.parsed = saveParsed;
 
-      const span = this._createNode("span", secondOpts);
+      const span = this.#createNode("span", secondOpts);
       span.appendChild(rest);
       variableNode.appendChild(span);
     }
-    variableNode.appendChild(this.doc.createTextNode(")"));
+    variableNode.appendChild(this.#doc.createTextNode(")"));
 
     return { node: variableNode, value: varValue };
-  },
+  }
 
   /**
-   * The workhorse for @see _parse. This parses some CSS text,
+   * The workhorse for @see #parse. This parses some CSS text,
    * stopping at EOF; or optionally when an umatched close paren is
    * seen.
    *
    * @param  {String} text
    *         The original input text.
    * @param  {Object} options
-   *         The options object in use; @see _mergeOptions.
+   *         The options object in use; @see #mergeOptions.
    * @param  {CSSLexer} tokenStream
    *         The token stream from which to read
    * @param  {Boolean} stopAtCloseParen
@@ -341,7 +346,7 @@ OutputParser.prototype = {
    *         A document fragment.
    */
   // eslint-disable-next-line complexity
-  _doParse(text, options, tokenStream, stopAtCloseParen) {
+  #doParse(text, options, tokenStream, stopAtCloseParen) {
     let parenDepth = stopAtCloseParen ? 1 : 0;
     let outerMostFunctionTakesColor = false;
     const colorFunctions = [];
@@ -368,7 +373,7 @@ OutputParser.prototype = {
       const token = tokenStream.nextToken();
       if (!token) {
         if (options.expectFont && fontFamilyNameParts.length !== 0) {
-          this._appendFontFamily(fontFamilyNameParts.join(""), options);
+          this.#appendFontFamily(fontFamilyNameParts.join(""), options);
         }
         break;
       }
@@ -392,7 +397,7 @@ OutputParser.prototype = {
             // it isn't special in some other way. So, we let it
             // through to the ordinary parsing loop so that the value
             // can be handled in a single place.
-            this._appendTextNode(
+            this.#appendTextNode(
               text.substring(token.startOffset, token.endOffset)
             );
             if (parenDepth === 0) {
@@ -403,23 +408,23 @@ OutputParser.prototype = {
             }
             ++parenDepth;
           } else if (token.text === "var" && options.getVariableValue) {
-            const { node: variableNode, value } = this._parseVariable(
+            const { node: variableNode, value } = this.#parseVariable(
               token,
               text,
               tokenStream,
               options
             );
             if (value && colorOK() && InspectorUtils.isValidCSSColor(value)) {
-              this._appendColor(value, {
+              this.#appendColor(value, {
                 ...options,
                 variableContainer: variableNode,
                 colorFunction: colorFunctions.at(-1)?.functionName,
               });
             } else {
-              this.parsed.push(variableNode);
+              this.#parsed.push(variableNode);
             }
           } else {
-            const { functionData, sawVariable } = this._parseMatchingParens(
+            const { functionData, sawVariable } = this.#parseMatchingParens(
               text,
               tokenStream,
               options
@@ -433,32 +438,32 @@ OutputParser.prototype = {
             if (sawVariable) {
               // If function contains variable, we need to add both strings
               // and nodes.
-              this._appendTextNode(functionName);
+              this.#appendTextNode(functionName);
               for (const data of functionData) {
                 if (typeof data === "string") {
-                  this._appendTextNode(data);
+                  this.#appendTextNode(data);
                 } else if (data) {
-                  this.parsed.push(data);
+                  this.#parsed.push(data);
                 }
               }
-              this._appendTextNode(")");
+              this.#appendTextNode(")");
             } else {
               // If no variable in function, join the text together and add
               // to DOM accordingly.
               const functionText = functionName + functionData.join("") + ")";
 
               if (options.expectCubicBezier && token.text === "cubic-bezier") {
-                this._appendCubicBezier(functionText, options);
+                this.#appendCubicBezier(functionText, options);
               } else if (
                 options.expectLinearEasing &&
                 token.text === "linear"
               ) {
-                this._appendLinear(functionText, options);
+                this.#appendLinear(functionText, options);
               } else if (
                 colorOK() &&
                 InspectorUtils.isValidCSSColor(functionText)
               ) {
-                this._appendColor(functionText, {
+                this.#appendColor(functionText, {
                   ...options,
                   colorFunction: colorFunctions.at(-1)?.functionName,
                 });
@@ -466,9 +471,9 @@ OutputParser.prototype = {
                 options.expectShape &&
                 BASIC_SHAPE_FUNCTIONS.includes(token.text)
               ) {
-                this._appendShape(functionText, options);
+                this.#appendShape(functionText, options);
               } else {
-                this._appendTextNode(functionText);
+                this.#appendTextNode(functionText);
               }
             }
           }
@@ -480,27 +485,27 @@ OutputParser.prototype = {
             options.expectCubicBezier &&
             BEZIER_KEYWORDS.includes(token.text)
           ) {
-            this._appendCubicBezier(token.text, options);
+            this.#appendCubicBezier(token.text, options);
           } else if (options.expectLinearEasing && token.text == "linear") {
-            this._appendLinear(token.text, options);
-          } else if (this._isDisplayFlex(text, token, options)) {
-            this._appendHighlighterToggle(token.text, options.flexClass);
-          } else if (this._isDisplayGrid(text, token, options)) {
-            this._appendHighlighterToggle(token.text, options.gridClass);
+            this.#appendLinear(token.text, options);
+          } else if (this.#isDisplayFlex(text, token, options)) {
+            this.#appendHighlighterToggle(token.text, options.flexClass);
+          } else if (this.#isDisplayGrid(text, token, options)) {
+            this.#appendHighlighterToggle(token.text, options.gridClass);
           } else if (colorOK() && InspectorUtils.isValidCSSColor(token.text)) {
-            this._appendColor(token.text, {
+            this.#appendColor(token.text, {
               ...options,
               colorFunction: colorFunctions.at(-1)?.functionName,
             });
           } else if (angleOK(token.text)) {
-            this._appendAngle(token.text, options);
+            this.#appendAngle(token.text, options);
           } else if (options.expectFont && !previousWasBang) {
             // We don't append the identifier if the previous token
             // was equal to '!', since in that case we expect the
             // identifier to be equal to 'important'.
             fontFamilyNameParts.push(token.text);
           } else {
-            this._appendTextNode(
+            this.#appendTextNode(
               text.substring(token.startOffset, token.endOffset)
             );
           }
@@ -513,28 +518,28 @@ OutputParser.prototype = {
             if (spaceNeeded) {
               // Insert a space to prevent token pasting when a #xxx
               // color is changed to something like rgb(...).
-              this._appendTextNode(" ");
+              this.#appendTextNode(" ");
             }
-            this._appendColor(original, {
+            this.#appendColor(original, {
               ...options,
               colorFunction: colorFunctions.at(-1)?.functionName,
             });
           } else {
-            this._appendTextNode(original);
+            this.#appendTextNode(original);
           }
           break;
         }
         case "dimension":
           const value = text.substring(token.startOffset, token.endOffset);
           if (angleOK(value)) {
-            this._appendAngle(value, options);
+            this.#appendAngle(value, options);
           } else {
-            this._appendTextNode(value);
+            this.#appendTextNode(value);
           }
           break;
         case "url":
         case "bad_url":
-          this._appendURL(
+          this.#appendURL(
             text.substring(token.startOffset, token.endOffset),
             token.text,
             options
@@ -547,7 +552,7 @@ OutputParser.prototype = {
               text.substring(token.startOffset, token.endOffset)
             );
           } else {
-            this._appendTextNode(
+            this.#appendTextNode(
               text.substring(token.startOffset, token.endOffset)
             );
           }
@@ -557,7 +562,7 @@ OutputParser.prototype = {
           if (options.expectFont) {
             fontFamilyNameParts.push(" ");
           } else {
-            this._appendTextNode(
+            this.#appendTextNode(
               text.substring(token.startOffset, token.endOffset)
             );
           }
@@ -586,12 +591,12 @@ OutputParser.prototype = {
             options.expectFont &&
             fontFamilyNameParts.length !== 0
           ) {
-            this._appendFontFamily(fontFamilyNameParts.join(""), options);
+            this.#appendFontFamily(fontFamilyNameParts.join(""), options);
             fontFamilyNameParts = [];
           }
         // falls through
         default:
-          this._appendTextNode(
+          this.#appendTextNode(
             text.substring(token.startOffset, token.endOffset)
           );
           break;
@@ -611,14 +616,14 @@ OutputParser.prototype = {
       previousWasBang = token.tokenType === "symbol" && token.text === "!";
     }
 
-    let result = this._toDOM();
+    let result = this.#toDOM();
 
     if (options.expectFilter && !options.filterSwatch) {
-      result = this._wrapFilter(text, options, result);
+      result = this.#wrapFilter(text, options, result);
     }
 
     return result;
-  },
+  }
 
   /**
    * Parse a string.
@@ -627,17 +632,17 @@ OutputParser.prototype = {
    *         Text to parse.
    * @param  {Object} [options]
    *         Options object. For valid options and default values see
-   *         _mergeOptions().
+   *         #mergeOptions().
    * @return {DocumentFragment}
    *         A document fragment.
    */
-  _parse(text, options = {}) {
+  #parse(text, options = {}) {
     text = text.trim();
-    this.parsed.length = 0;
+    this.#parsed.length = 0;
 
     const tokenStream = getCSSLexer(text);
-    return this._doParse(text, options, tokenStream, false);
-  },
+    return this.#doParse(text, options, tokenStream, false);
+  }
 
   /**
    * Returns true if it's a "display: [inline-]flex" token.
@@ -647,14 +652,14 @@ OutputParser.prototype = {
    * @param  {Object} token
    *         The parsed token.
    * @param  {Object} options
-   *         The options given to _parse.
+   *         The options given to #parse.
    */
-  _isDisplayFlex(text, token, options) {
+  #isDisplayFlex(text, token, options) {
     return (
       options.expectDisplay &&
       (token.text === "flex" || token.text === "inline-flex")
     );
-  },
+  }
 
   /**
    * Returns true if it's a "display: [inline-]grid" token.
@@ -664,14 +669,14 @@ OutputParser.prototype = {
    * @param  {Object} token
    *         The parsed token.
    * @param  {Object} options
-   *         The options given to _parse.
+   *         The options given to #parse.
    */
-  _isDisplayGrid(text, token, options) {
+  #isDisplayGrid(text, token, options) {
     return (
       options.expectDisplay &&
       (token.text === "grid" || token.text === "inline-grid")
     );
-  },
+  }
 
   /**
    * Append a cubic-bezier timing function value to the output
@@ -680,15 +685,15 @@ OutputParser.prototype = {
    *        The cubic-bezier timing function
    * @param {Object} options
    *        Options object. For valid options and default values see
-   *        _mergeOptions()
+   *        #mergeOptions()
    */
-  _appendCubicBezier(bezier, options) {
-    const container = this._createNode("span", {
+  #appendCubicBezier(bezier, options) {
+    const container = this.#createNode("span", {
       "data-bezier": bezier,
     });
 
     if (options.bezierSwatchClass) {
-      const swatch = this._createNode("span", {
+      const swatch = this.#createNode("span", {
         class: options.bezierSwatchClass,
         tabindex: "0",
         role: "button",
@@ -696,7 +701,7 @@ OutputParser.prototype = {
       container.appendChild(swatch);
     }
 
-    const value = this._createNode(
+    const value = this.#createNode(
       "span",
       {
         class: options.bezierClass,
@@ -705,16 +710,16 @@ OutputParser.prototype = {
     );
 
     container.appendChild(value);
-    this.parsed.push(container);
-  },
+    this.#parsed.push(container);
+  }
 
-  _appendLinear(text, options) {
-    const container = this._createNode("span", {
+  #appendLinear(text, options) {
+    const container = this.#createNode("span", {
       "data-linear": text,
     });
 
     if (options.linearEasingSwatchClass) {
-      const swatch = this._createNode("span", {
+      const swatch = this.#createNode("span", {
         class: options.linearEasingSwatchClass,
         tabindex: "0",
         role: "button",
@@ -723,7 +728,7 @@ OutputParser.prototype = {
       container.appendChild(swatch);
     }
 
-    const value = this._createNode(
+    const value = this.#createNode(
       "span",
       {
         class: options.linearEasingClass,
@@ -732,8 +737,8 @@ OutputParser.prototype = {
     );
 
     container.appendChild(value);
-    this.parsed.push(container);
-  },
+    this.#parsed.push(container);
+  }
 
   /**
    * Append a Flexbox|Grid highlighter toggle icon next to the value in a
@@ -744,20 +749,20 @@ OutputParser.prototype = {
    * @param {String} className
    *        The class name for the toggle span
    */
-  _appendHighlighterToggle(text, className) {
-    const container = this._createNode("span", {});
+  #appendHighlighterToggle(text, className) {
+    const container = this.#createNode("span", {});
 
-    const toggle = this._createNode("span", {
+    const toggle = this.#createNode("span", {
       class: className,
     });
 
-    const value = this._createNode("span", {});
+    const value = this.#createNode("span", {});
     value.textContent = text;
 
     container.appendChild(toggle);
     container.appendChild(value);
-    this.parsed.push(container);
-  },
+    this.#parsed.push(container);
+  }
 
   /**
    * Append a CSS shapes highlighter toggle next to the value, and parse the value
@@ -767,31 +772,31 @@ OutputParser.prototype = {
    *        The shape text value to append
    * @param {Object} options
    *        Options object. For valid options and default values see
-   *        _mergeOptions()
+   *        #mergeOptions()
    */
-  _appendShape(shape, options) {
+  #appendShape(shape, options) {
     const shapeTypes = [
       {
         prefix: "polygon(",
-        coordParser: this._addPolygonPointNodes.bind(this),
+        coordParser: this.#addPolygonPointNodes.bind(this),
       },
       {
         prefix: "circle(",
-        coordParser: this._addCirclePointNodes.bind(this),
+        coordParser: this.#addCirclePointNodes.bind(this),
       },
       {
         prefix: "ellipse(",
-        coordParser: this._addEllipsePointNodes.bind(this),
+        coordParser: this.#addEllipsePointNodes.bind(this),
       },
       {
         prefix: "inset(",
-        coordParser: this._addInsetPointNodes.bind(this),
+        coordParser: this.#addInsetPointNodes.bind(this),
       },
     ];
 
-    const container = this._createNode("span", {});
+    const container = this.#createNode("span", {});
 
-    const toggle = this._createNode("span", {
+    const toggle = this.#createNode("span", {
       class: options.shapeSwatchClass,
       tabindex: "0",
       role: "button",
@@ -801,7 +806,7 @@ OutputParser.prototype = {
       if (shape.includes(prefix)) {
         const coordsBegin = prefix.length;
         const coordsEnd = shape.lastIndexOf(")");
-        let valContainer = this._createNode("span", {
+        let valContainer = this.#createNode("span", {
           class: options.shapeClass,
         });
 
@@ -817,8 +822,8 @@ OutputParser.prototype = {
       }
     }
 
-    this.parsed.push(container);
-  },
+    this.#parsed.push(container);
+  }
 
   /**
    * Parse the given polygon coordinates and create a span for each coordinate pair,
@@ -831,7 +836,7 @@ OutputParser.prototype = {
    * @returns {Node} The container to which spans have been added.
    */
   // eslint-disable-next-line complexity
-  _addPolygonPointNodes(coords, container) {
+  #addPolygonPointNodes(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
     let coord = "";
@@ -839,7 +844,7 @@ OutputParser.prototype = {
     let depth = 0;
     let isXCoord = true;
     let fillRule = false;
-    let coordNode = this._createNode("span", {
+    let coordNode = this.#createNode("span", {
       class: "ruleview-shape-point",
       "data-point": `${i}`,
     });
@@ -849,7 +854,7 @@ OutputParser.prototype = {
         // Comma separating coordinate pairs; add coordNode to container and reset vars
         if (!isXCoord) {
           // Y coord not added to coordNode yet
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -877,7 +882,7 @@ OutputParser.prototype = {
         coord = "";
         depth = 0;
         isXCoord = true;
-        coordNode = this._createNode("span", {
+        coordNode = this.#createNode("span", {
           class: "ruleview-shape-point",
           "data-point": `${i}`,
         });
@@ -895,7 +900,7 @@ OutputParser.prototype = {
         );
       } else if (token.tokenType === "whitespace" && depth === 0) {
         // Whitespace signifying end of coord
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -919,7 +924,7 @@ OutputParser.prototype = {
       ) {
         if (isXCoord && coord && depth === 0) {
           // Whitespace is not necessary between x/y coords.
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -955,7 +960,7 @@ OutputParser.prototype = {
 
     // Add coords if any are left over
     if (coord) {
-      const node = this._createNode(
+      const node = this.#createNode(
         "span",
         {
           class: "ruleview-shape-point",
@@ -968,7 +973,7 @@ OutputParser.prototype = {
       container.appendChild(coordNode);
     }
     return container;
-  },
+  }
 
   /**
    * Parse the given circle coordinates and populate the given container appropriately
@@ -981,13 +986,13 @@ OutputParser.prototype = {
    * @returns {Node} The container to which the definition has been added.
    */
   // eslint-disable-next-line complexity
-  _addCirclePointNodes(coords, container) {
+  #addCirclePointNodes(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
     let point = "radius";
-    const centerNode = this._createNode("span", {
+    const centerNode = this.#createNode("span", {
       class: "ruleview-shape-point",
       "data-point": "center",
     });
@@ -1010,7 +1015,7 @@ OutputParser.prototype = {
         depth === 0
       ) {
         // Whitespace signifying end of radius
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1028,7 +1033,7 @@ OutputParser.prototype = {
         depth = 0;
       } else if (token.tokenType === "whitespace" && depth === 0) {
         // Whitespace signifying end of cx/cy
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1048,7 +1053,7 @@ OutputParser.prototype = {
       } else if (token.tokenType === "ident" && token.text === "at") {
         // "at"; Add radius to container if not already done so
         if (point === "radius" && coord) {
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1075,7 +1080,7 @@ OutputParser.prototype = {
           // Center coords don't require whitespace between x/y. So if current point is
           // cx, we have the cx coord, and depth is 0, then this token is actually cy.
           // Add cx to centerNode and set point to cy.
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1102,7 +1107,7 @@ OutputParser.prototype = {
     // Add coords if any are left over.
     if (coord) {
       if (point === "radius") {
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1112,7 +1117,7 @@ OutputParser.prototype = {
         );
         container.appendChild(node);
       } else {
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1129,7 +1134,7 @@ OutputParser.prototype = {
       container.appendChild(centerNode);
     }
     return container;
-  },
+  }
 
   /**
    * Parse the given ellipse coordinates and populate the given container appropriately
@@ -1142,13 +1147,13 @@ OutputParser.prototype = {
    * @returns {Node} The container to which the definition has been added.
    */
   // eslint-disable-next-line complexity
-  _addEllipsePointNodes(coords, container) {
+  #addEllipsePointNodes(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
     let depth = 0;
     let coord = "";
     let point = "rx";
-    const centerNode = this._createNode("span", {
+    const centerNode = this.#createNode("span", {
       class: "ruleview-shape-point",
       "data-point": "center",
     });
@@ -1168,7 +1173,7 @@ OutputParser.prototype = {
       } else if (token.tokenType === "whitespace" && depth === 0) {
         if (point === "rx" || point === "ry") {
           // Whitespace signifying end of rx/ry
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1186,7 +1191,7 @@ OutputParser.prototype = {
           depth = 0;
         } else {
           // Whitespace signifying end of cx/cy
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1207,7 +1212,7 @@ OutputParser.prototype = {
       } else if (token.tokenType === "ident" && token.text === "at") {
         // "at"; Add radius to container if not already done so
         if (point === "ry" && coord) {
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1232,7 +1237,7 @@ OutputParser.prototype = {
       ) {
         if (point === "rx" && coord && depth === 0) {
           // Radius coords don't require whitespace between x/y.
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1246,7 +1251,7 @@ OutputParser.prototype = {
         }
         if (point === "cx" && coord && depth === 0) {
           // Center coords don't require whitespace between x/y.
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1273,7 +1278,7 @@ OutputParser.prototype = {
     // Add coords if any are left over.
     if (coord) {
       if (point === "rx" || point === "ry") {
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1283,7 +1288,7 @@ OutputParser.prototype = {
         );
         container.appendChild(node);
       } else {
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1300,7 +1305,7 @@ OutputParser.prototype = {
       container.appendChild(centerNode);
     }
     return container;
-  },
+  }
 
   /**
    * Parse the given inset coordinates and populate the given container appropriately.
@@ -1312,7 +1317,7 @@ OutputParser.prototype = {
    * @returns {Node} The container to which the definition has been added.
    */
   // eslint-disable-next-line complexity
-  _addInsetPointNodes(coords, container) {
+  #addInsetPointNodes(coords, container) {
     const insetPoints = ["top", "right", "bottom", "left"];
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -1342,7 +1347,7 @@ OutputParser.prototype = {
         otherText[i].push(coords.substring(token.startOffset, token.endOffset));
       } else if (token.tokenType === "whitespace" && depth === 0) {
         // Whitespace signifying end of coord; create node and push to nodes
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1362,7 +1367,7 @@ OutputParser.prototype = {
       ) {
         if (coord && depth === 0) {
           // Inset coords don't require whitespace between each coord.
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1382,7 +1387,7 @@ OutputParser.prototype = {
       } else if (token.tokenType === "ident" && token.text === "round") {
         if (coord && depth === 0) {
           // Whitespace is not necessary before "round"; create a new node for the coord
-          const node = this._createNode(
+          const node = this.#createNode(
             "span",
             {
               class: "ruleview-shape-point",
@@ -1407,7 +1412,7 @@ OutputParser.prototype = {
       if (round) {
         otherText[i].push(coord);
       } else {
-        const node = this._createNode(
+        const node = this.#createNode(
           "span",
           {
             class: "ruleview-shape-point",
@@ -1445,7 +1450,7 @@ OutputParser.prototype = {
     }
 
     return container;
-  },
+  }
 
   /**
    * Append a angle value to the output
@@ -1454,22 +1459,22 @@ OutputParser.prototype = {
    *        angle to append
    * @param {Object} options
    *        Options object. For valid options and default values see
-   *        _mergeOptions()
+   *        #mergeOptions()
    */
-  _appendAngle(angle, options) {
+  #appendAngle(angle, options) {
     const angleObj = new angleUtils.CssAngle(angle);
-    const container = this._createNode("span", {
+    const container = this.#createNode("span", {
       "data-angle": angle,
     });
 
     if (options.angleSwatchClass) {
-      const swatch = this._createNode("span", {
+      const swatch = this.#createNode("span", {
         class: options.angleSwatchClass,
         tabindex: "0",
         role: "button",
       });
-      this.angleSwatches.set(swatch, angleObj);
-      swatch.addEventListener("mousedown", this._onAngleSwatchMouseDown);
+      this.#angleSwatches.set(swatch, angleObj);
+      swatch.addEventListener("mousedown", this.#onAngleSwatchMouseDown);
 
       // Add click listener to stop event propagation when shift key is pressed
       // in order to prevent the value input to be focused.
@@ -1484,7 +1489,7 @@ OutputParser.prototype = {
       container.appendChild(swatch);
     }
 
-    const value = this._createNode(
+    const value = this.#createNode(
       "span",
       {
         class: options.angleClass,
@@ -1493,8 +1498,8 @@ OutputParser.prototype = {
     );
 
     container.appendChild(value);
-    this.parsed.push(container);
-  },
+    this.#parsed.push(container);
+  }
 
   /**
    * Check if a CSS property supports a specific value.
@@ -1504,23 +1509,23 @@ OutputParser.prototype = {
    * @param  {String} value
    *         CSS Property value to check
    */
-  _cssPropertySupportsValue(name, value) {
+  #cssPropertySupportsValue(name, value) {
     // Checking pair as a CSS declaration string to account for "!important" in value.
     const declaration = `${name}:${value}`;
-    return this.doc.defaultView.CSS.supports(declaration);
-  },
+    return this.#doc.defaultView.CSS.supports(declaration);
+  }
 
   /**
    * Tests if a given colorObject output by CssColor is valid for parsing.
    * Valid means it's really a color, not any of the CssColor SPECIAL_VALUES
    * except transparent
    */
-  _isValidColor(colorObj) {
+  #isValidColor(colorObj) {
     return (
       colorObj.valid &&
       (!colorObj.specialValue || colorObj.specialValue === "transparent")
     );
-  },
+  }
 
   /**
    * Append a color to the output.
@@ -1529,13 +1534,13 @@ OutputParser.prototype = {
    *         Color to append
    * @param  {Object} [options]
    *         Options object. For valid options and default values see
-   *         _mergeOptions().
+   *         #mergeOptions().
    */
-  _appendColor(color, options = {}) {
+  #appendColor(color, options = {}) {
     const colorObj = new colorUtils.CssColor(color);
 
-    if (this._isValidColor(colorObj)) {
-      const container = this._createNode("span", {
+    if (this.#isValidColor(colorObj)) {
+      const container = this.#createNode("span", {
         "data-color": color,
       });
 
@@ -1554,12 +1559,12 @@ OutputParser.prototype = {
         // The swatch is a <span> instead of a <button> intentionally. See Bug 1597125.
         // It is made keyboard accessible via `tabindex` and has keydown handlers
         // attached for pressing SPACE and RETURN in SwatchBasedEditorTooltip.js
-        const swatch = this._createNode("span", attributes);
-        this.colorSwatches.set(swatch, colorObj);
+        const swatch = this.#createNode("span", attributes);
+        this.#colorSwatches.set(swatch, colorObj);
         if (options.colorFunction) {
           swatch.dataset.colorFunction = options.colorFunction;
         }
-        swatch.addEventListener("mousedown", this._onColorSwatchMouseDown);
+        swatch.addEventListener("mousedown", this.#onColorSwatchMouseDown);
         EventEmitter.decorate(swatch);
 
         container.appendChild(swatch);
@@ -1585,7 +1590,7 @@ OutputParser.prototype = {
         container.appendChild(options.variableContainer);
       } else {
         // Otherwise we create a new element with the `color` as textContent.
-        const value = this._createNode(
+        const value = this.#createNode(
           "span",
           {
             class: options.colorClass,
@@ -1596,11 +1601,11 @@ OutputParser.prototype = {
         container.appendChild(value);
       }
 
-      this.parsed.push(container);
+      this.#parsed.push(container);
     } else {
-      this._appendTextNode(color);
+      this.#appendTextNode(color);
     }
-  },
+  }
 
   /**
    * Wrap some existing nodes in a filter editor.
@@ -1610,18 +1615,18 @@ OutputParser.prototype = {
    * @param {object} options
    *        The options object passed to parseCssProperty().
    * @param {object} nodes
-   *        Nodes created by _toDOM().
+   *        Nodes created by #toDOM().
    *
    * @returns {object}
    *        A new node that supplies a filter swatch and that wraps |nodes|.
    */
-  _wrapFilter(filters, options, nodes) {
-    const container = this._createNode("span", {
+  #wrapFilter(filters, options, nodes) {
+    const container = this.#createNode("span", {
       "data-filters": filters,
     });
 
     if (options.filterSwatchClass) {
-      const swatch = this._createNode("span", {
+      const swatch = this.#createNode("span", {
         class: options.filterSwatchClass,
         tabindex: "0",
         role: "button",
@@ -1629,16 +1634,16 @@ OutputParser.prototype = {
       container.appendChild(swatch);
     }
 
-    const value = this._createNode("span", {
+    const value = this.#createNode("span", {
       class: options.filterClass,
     });
     value.appendChild(nodes);
     container.appendChild(value);
 
     return container;
-  },
+  }
 
-  _onColorSwatchMouseDown(event) {
+  #onColorSwatchMouseDown = event => {
     if (!event.shiftKey) {
       return;
     }
@@ -1647,15 +1652,15 @@ OutputParser.prototype = {
     event.stopPropagation();
 
     const swatch = event.target;
-    const color = this.colorSwatches.get(swatch);
+    const color = this.#colorSwatches.get(swatch);
     const val = color.nextColorUnit();
 
     swatch.nextElementSibling.textContent = val;
     swatch.parentNode.dataset.color = val;
     swatch.emit("unit-change", val);
-  },
+  };
 
-  _onAngleSwatchMouseDown(event) {
+  #onAngleSwatchMouseDown = event => {
     if (!event.shiftKey) {
       return;
     }
@@ -1663,17 +1668,17 @@ OutputParser.prototype = {
     event.stopPropagation();
 
     const swatch = event.target;
-    const angle = this.angleSwatches.get(swatch);
+    const angle = this.#angleSwatches.get(swatch);
     const val = angle.nextAngleUnit();
 
     swatch.nextElementSibling.textContent = val;
     swatch.emit("unit-change", val);
-  },
+  };
 
   /**
    * A helper function that sanitizes a possibly-unterminated URL.
    */
-  _sanitizeURL(url) {
+  #sanitizeURL(url) {
     // Re-lex the URL and add any needed termination characters.
     const urlTokenizer = getCSSLexer(url);
     // Just read until EOF; there will only be a single token.
@@ -1682,7 +1687,7 @@ OutputParser.prototype = {
     }
 
     return urlTokenizer.performEOFFixup(url, true);
-  },
+  }
 
   /**
    * Append a URL to the output.
@@ -1693,14 +1698,14 @@ OutputParser.prototype = {
    *         Actual URL
    * @param  {Object} [options]
    *         Options object. For valid options and default values see
-   *         _mergeOptions().
+   *         #mergeOptions().
    */
-  _appendURL(match, url, options) {
+  #appendURL(match, url, options) {
     if (options.urlClass) {
       // Sanitize the URL.  Note that if we modify the URL, we just
       // leave the termination characters.  This isn't strictly
       // "as-authored", but it makes a bit more sense.
-      match = this._sanitizeURL(match);
+      match = this.#sanitizeURL(match);
       // This regexp matches a URL token.  It puts the "url(", any
       // leading whitespace, and any opening quote into |leader|; the
       // URL text itself into |body|, and any trailing quote, trailing
@@ -1712,13 +1717,13 @@ OutputParser.prototype = {
 
       // Bail out if that didn't match anything.
       if (!urlParts) {
-        this._appendTextNode(match);
+        this.#appendTextNode(match);
         return;
       }
 
       const [, leader, , body, trailer] = urlParts;
 
-      this._appendTextNode(leader);
+      this.#appendTextNode(leader);
 
       let href = url;
       if (options.baseURI) {
@@ -1729,7 +1734,7 @@ OutputParser.prototype = {
         }
       }
 
-      this._appendNode(
+      this.#appendNode(
         "a",
         {
           target: "_blank",
@@ -1739,11 +1744,11 @@ OutputParser.prototype = {
         body
       );
 
-      this._appendTextNode(trailer);
+      this.#appendTextNode(trailer);
     } else {
-      this._appendTextNode(match);
+      this.#appendTextNode(match);
     }
-  },
+  }
 
   /**
    * Append a font family to the output.
@@ -1752,9 +1757,9 @@ OutputParser.prototype = {
    *         Font family to append
    * @param  {Object} options
    *         Options object. For valid options and default values see
-   *         _mergeOptions().
+   *         #mergeOptions().
    */
-  _appendFontFamily(fontFamily, options) {
+  #appendFontFamily(fontFamily, options) {
     let spanContents = fontFamily;
     let quoteChar = null;
     let trailingWhitespace = false;
@@ -1766,7 +1771,7 @@ OutputParser.prototype = {
     // not inside the span element.
 
     if (spanContents[0] === " ") {
-      this._appendTextNode(" ");
+      this.#appendTextNode(" ");
       spanContents = spanContents.slice(1);
     }
 
@@ -1780,11 +1785,11 @@ OutputParser.prototype = {
     }
 
     if (quoteChar) {
-      this._appendTextNode(quoteChar);
+      this.#appendTextNode(quoteChar);
       spanContents = spanContents.slice(1, -1);
     }
 
-    this._appendNode(
+    this.#appendNode(
       "span",
       {
         class: options.fontFamilyClass,
@@ -1793,13 +1798,13 @@ OutputParser.prototype = {
     );
 
     if (quoteChar) {
-      this._appendTextNode(quoteChar);
+      this.#appendTextNode(quoteChar);
     }
 
     if (trailingWhitespace) {
-      this._appendTextNode(" ");
+      this.#appendTextNode(" ");
     }
-  },
+  }
 
   /**
    * Create a node.
@@ -1813,8 +1818,8 @@ OutputParser.prototype = {
    *         the tag. This is useful e.g. for span tags.
    * @return {Node} Newly created Node.
    */
-  _createNode(tagName, attributes, value = "") {
-    const node = this.doc.createElementNS(HTML_NS, tagName);
+  #createNode(tagName, attributes, value = "") {
+    const node = this.#doc.createElementNS(HTML_NS, tagName);
     const attrs = Object.getOwnPropertyNames(attributes);
 
     for (const attr of attrs) {
@@ -1824,12 +1829,12 @@ OutputParser.prototype = {
     }
 
     if (value) {
-      const textNode = this.doc.createTextNode(value);
+      const textNode = this.#doc.createTextNode(value);
       node.appendChild(textNode);
     }
 
     return node;
-  },
+  }
 
   /**
    * Append a node to the output.
@@ -1842,14 +1847,14 @@ OutputParser.prototype = {
    *         If a value is included it will be appended as a text node inside
    *         the tag. This is useful e.g. for span tags.
    */
-  _appendNode(tagName, attributes, value = "") {
-    const node = this._createNode(tagName, attributes, value);
+  #appendNode(tagName, attributes, value = "") {
+    const node = this.#createNode(tagName, attributes, value);
     if (value.length > TRUNCATE_LENGTH_THRESHOLD) {
       node.classList.add(TRUNCATE_NODE_CLASSNAME);
     }
 
-    this.parsed.push(node);
-  },
+    this.#parsed.push(node);
+  }
 
   /**
    * Append a text node to the output. If the previously output item was a text
@@ -1858,18 +1863,18 @@ OutputParser.prototype = {
    * @param  {String} text
    *         Text to append
    */
-  _appendTextNode(text) {
-    const lastItem = this.parsed[this.parsed.length - 1];
+  #appendTextNode(text) {
+    const lastItem = this.#parsed[this.#parsed.length - 1];
     if (text.length > TRUNCATE_LENGTH_THRESHOLD) {
       // If the text is too long, force creating a node, which will add the
       // necessary classname to truncate the property correctly.
-      this._appendNode("span", {}, text);
+      this.#appendNode("span", {}, text);
     } else if (typeof lastItem === "string") {
-      this.parsed[this.parsed.length - 1] = lastItem + text;
+      this.#parsed[this.#parsed.length - 1] = lastItem + text;
     } else {
-      this.parsed.push(text);
+      this.#parsed.push(text);
     }
-  },
+  }
 
   /**
    * Take all output and append it into a single DocumentFragment.
@@ -1877,26 +1882,26 @@ OutputParser.prototype = {
    * @return {DocumentFragment}
    *         Document Fragment
    */
-  _toDOM() {
-    const frag = this.doc.createDocumentFragment();
+  #toDOM() {
+    const frag = this.#doc.createDocumentFragment();
 
-    for (const item of this.parsed) {
+    for (const item of this.#parsed) {
       if (typeof item === "string") {
-        frag.appendChild(this.doc.createTextNode(item));
+        frag.appendChild(this.#doc.createTextNode(item));
       } else {
         frag.appendChild(item);
       }
     }
 
-    this.parsed.length = 0;
+    this.#parsed.length = 0;
     return frag;
-  },
+  }
 
   /**
    * Merges options objects. Default values are set here.
    *
    * @param  {Object} overrides
-   *         The option values to override e.g. _mergeOptions({colors: false})
+   *         The option values to override e.g. #mergeOptions({colors: false})
    *
    *         Valid options are:
    *           - defaultColorType: true // Convert colors to the default type
@@ -1913,7 +1918,7 @@ OutputParser.prototype = {
    *           - filterSwatch: false    // A special case for parsing a
    *                                    // "filter" property, causing the
    *                                    // parser to skip the call to
-   *                                    // _wrapFilter.  Used only for
+   *                                    // #wrapFilter.  Used only for
    *                                    // previewing with the filter swatch.
    *           - flexClass: ""          // The class to use for the flex icon.
    *           - gridClass: ""          // The class to use for the grid icon.
@@ -1936,7 +1941,7 @@ OutputParser.prototype = {
    * @return {Object}
    *         Overridden options object
    */
-  _mergeOptions(overrides) {
+  #mergeOptions(overrides) {
     const defaults = {
       defaultColorType: true,
       angleClass: "",
@@ -1962,7 +1967,7 @@ OutputParser.prototype = {
       defaults[item] = overrides[item];
     }
     return defaults;
-  },
-};
+  }
+}
 
 module.exports = OutputParser;
