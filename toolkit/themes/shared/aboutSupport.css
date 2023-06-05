@@ -30,6 +30,79 @@ td.integer {
   font-family: monospace;
 }
 
+/* Codec support table w/ zebra striping */
+:root {
+  --codec-bg-header: #bfbfc9;
+  --codec-bg-supported-even: #b3ffe3;
+  --codec-bg-supported-odd: #54ffbd;
+  --codec-bg-unsupported-even: #ffdfe7;
+  --codec-bg-unsupported-odd: #ffbdc5;
+  --codec-text-name-even: var(--in-content-box-background);
+  --codec-text-name-odd: var(--in-content-box-background-odd);
+  --codec-text-other: var(--in-content-text-color);
+  --codec-text-supported: #15141a;
+  --codec-text-unsupported: #15141a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --codec-bg-header: #42414d;
+  }
+}
+
+#codec-table {
+  text-align: center;
+  white-space: nowrap;
+  width: auto;
+}
+
+#codec-table tr {
+  color: var(--codec-text-other);
+}
+
+#codec-table th {
+  color: var(--codec-text-other);
+  background-color: var(--codec-bg-header);
+}
+
+#codec-table td:first-child {
+  text-align: start;
+  unicode-bidi: normal;
+  font-weight: 600;
+}
+
+#codec-table tr:nth-child(even) {
+  background-color: var(--codec-text-name-even);
+}
+
+#codec-table tr:nth-child(odd) {
+  background-color: var(--codec-text-name-odd);
+}
+
+#codec-table tr > td.unsupported {
+  color: var(--codec-text-unsupported);
+}
+
+#codec-table tr > td.supported {
+  color: var(--codec-text-supported);
+}
+
+#codec-table tr:nth-child(even) > td.unsupported {
+  background-color: var(--codec-bg-unsupported-even);
+}
+
+#codec-table tr:nth-child(odd) > td.unsupported {
+  background-color: var(--codec-bg-unsupported-odd);
+}
+
+#codec-table tr:nth-child(even) > td.supported {
+  background-color: var(--codec-bg-supported-even);
+}
+
+#codec-table tr:nth-child(odd) > td.supported {
+  background-color: var(--codec-bg-supported-odd);
+}
+
 #update-dir-row > td:dir(rtl),
 #profile-row > td:dir(rtl) {
   /* Overrides info-pages.css to display the buttons in the right order compared to the text */
