@@ -19,8 +19,6 @@
 #ifndef HIGHWAY_HWY_EXAMPLES_SKELETON_H_
 #define HIGHWAY_HWY_EXAMPLES_SKELETON_H_
 
-#include <stddef.h>
-
 // Platform-specific definitions used for declaring an interface, independent of
 // the SIMD instruction set.
 #include "hwy/base.h"  // HWY_RESTRICT
@@ -28,8 +26,8 @@
 namespace skeleton {
 
 // Computes base-2 logarithm by converting to float. Supports dynamic dispatch.
-HWY_DLLEXPORT void CallFloorLog2(const uint8_t* HWY_RESTRICT in,
-                                 const size_t count, uint8_t* HWY_RESTRICT out);
+HWY_DLLEXPORT void CallFloorLog2(const uint8_t* HWY_RESTRICT in, size_t count,
+                                 uint8_t* HWY_RESTRICT out);
 
 }  // namespace skeleton
 

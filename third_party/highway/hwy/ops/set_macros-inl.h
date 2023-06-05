@@ -26,7 +26,8 @@
 
 #endif  // HWY_SET_MACROS_PER_TARGET
 
-#include "hwy/detect_targets.h"
+#include "hwy/detect_compiler_arch.h"  // IWYU: export
+#include "hwy/detect_targets.h"        // IWYU: export
 
 #undef HWY_NAMESPACE
 #undef HWY_ALIGN
@@ -34,6 +35,7 @@
 #undef HWY_LANES
 
 #undef HWY_HAVE_SCALABLE
+#undef HWY_HAVE_TUPLE
 #undef HWY_HAVE_INTEGER64
 #undef HWY_HAVE_FLOAT16
 #undef HWY_HAVE_FLOAT64
@@ -41,6 +43,41 @@
 #undef HWY_NATIVE_FMA
 #undef HWY_CAP_GE256
 #undef HWY_CAP_GE512
+
+// Supported on all targets except RVV (requires GCC 14 or upcoming Clang)
+#if HWY_TARGET == HWY_RVV && \
+    (HWY_COMPILER_GCC_ACTUAL < 1400 || HWY_COMPILER_CLANG)
+#define HWY_HAVE_TUPLE 0
+#else
+#define HWY_HAVE_TUPLE 1
+#endif
+
+// For internal use (clamping/validating N for Simd<>)
+#undef HWY_MAX_N
+#if HWY_TARGET == HWY_SCALAR
+#define HWY_MAX_N 1
+#else
+#define HWY_MAX_N 65536
+#endif
+
+// For internal use (clamping kPow2 for Simd<>)
+#undef HWY_MAX_POW2
+// For HWY_TARGET == HWY_RVV, LMUL <= 8. Even on other targets, we want to
+// support say Rebind<uint64_t, Simd<uint8_t, 1, 0>> d; whose kPow2 is also 3.
+// However, those other targets do not actually support multiple vectors, and
+// thus Lanes(d) must not exceed Lanes(ScalableTag<T>()).
+#define HWY_MAX_POW2 3
+
+// User-visible. Loose lower bound that guarantees HWY_MAX_BYTES >>
+// (-HWY_MIN_POW2) <= 1. Useful for terminating compile-time recursions.
+#undef HWY_MIN_POW2
+#if HWY_TARGET == HWY_RVV
+#define HWY_MIN_POW2 -16
+#else
+// Tighter bound for other targets, whose vectors are smaller, to potentially
+// save compile time.
+#define HWY_MIN_POW2 -8
+#endif  // HWY_TARGET == HWY_RVV
 
 #undef HWY_TARGET_STR
 
@@ -62,6 +99,8 @@
 #define HWY_TARGET_STR_F16C ",f16c"
 #endif
 
+#define HWY_TARGET_STR_SSE2 "sse2"
+
 #define HWY_TARGET_STR_SSSE3 "sse2,ssse3"
 
 #define HWY_TARGET_STR_SSE4 \
@@ -70,14 +109,53 @@
 #define HWY_TARGET_STR_AVX2 \
   HWY_TARGET_STR_SSE4 ",avx,avx2" HWY_TARGET_STR_BMI2_FMA HWY_TARGET_STR_F16C
 #define HWY_TARGET_STR_AVX3 \
-  HWY_TARGET_STR_AVX2 ",avx512f,avx512vl,avx512dq,avx512bw"
+  HWY_TARGET_STR_AVX2 ",avx512f,avx512cd,avx512vl,avx512dq,avx512bw"
+#define HWY_TARGET_STR_AVX3_DL                                       \
+  HWY_TARGET_STR_AVX3                                                \
+  ",vpclmulqdq,avx512vbmi,avx512vbmi2,vaes,avx512vnni,avx512bitalg," \
+  "avx512vpopcntdq,gfni"
+
+#if defined(HWY_DISABLE_PPC8_CRYPTO)
+#define HWY_TARGET_STR_PPC8_CRYPTO ""
+#else
+#define HWY_TARGET_STR_PPC8_CRYPTO ",crypto"
+#endif
+
+#define HWY_TARGET_STR_PPC8 \
+  "altivec,vsx,power8-vector" HWY_TARGET_STR_PPC8_CRYPTO
+#define HWY_TARGET_STR_PPC9 HWY_TARGET_STR_PPC8 ",power9-vector"
+
+#if HWY_COMPILER_CLANG
+#define HWY_TARGET_STR_PPC10 HWY_TARGET_STR_PPC9 ",power10-vector"
+#else
+#define HWY_TARGET_STR_PPC10 HWY_TARGET_STR_PPC9 ",cpu=power10"
+#endif
 
 // Before include guard so we redefine HWY_TARGET_STR on each include,
 // governed by the current HWY_TARGET.
 
 //-----------------------------------------------------------------------------
+// SSE2
+#if HWY_TARGET == HWY_SSE2
+
+#define HWY_NAMESPACE N_SSE2
+#define HWY_ALIGN alignas(16)
+#define HWY_MAX_BYTES 16
+#define HWY_LANES(T) (16 / sizeof(T))
+
+#define HWY_HAVE_SCALABLE 0
+#define HWY_HAVE_INTEGER64 1
+#define HWY_HAVE_FLOAT16 1
+#define HWY_HAVE_FLOAT64 1
+#define HWY_MEM_OPS_MIGHT_FAULT 1
+#define HWY_NATIVE_FMA 0
+#define HWY_CAP_GE256 0
+#define HWY_CAP_GE512 0
+
+#define HWY_TARGET_STR HWY_TARGET_STR_SSE2
+//-----------------------------------------------------------------------------
 // SSSE3
-#if HWY_TARGET == HWY_SSSE3
+#elif HWY_TARGET == HWY_SSSE3
 
 #define HWY_NAMESPACE N_SSSE3
 #define HWY_ALIGN alignas(16)
@@ -143,7 +221,8 @@
 
 //-----------------------------------------------------------------------------
 // AVX3[_DL]
-#elif HWY_TARGET == HWY_AVX3 || HWY_TARGET == HWY_AVX3_DL
+#elif HWY_TARGET == HWY_AVX3 || HWY_TARGET == HWY_AVX3_DL || \
+    HWY_TARGET == HWY_AVX3_ZEN4
 
 #define HWY_ALIGN alignas(64)
 #define HWY_MAX_BYTES 64
@@ -166,18 +245,22 @@
 #elif HWY_TARGET == HWY_AVX3_DL
 
 #define HWY_NAMESPACE N_AVX3_DL
-#define HWY_TARGET_STR                                            \
-  HWY_TARGET_STR_AVX3                                             \
-  ",vpclmulqdq,avx512vbmi,avx512vbmi2,vaes,avxvnni,avx512bitalg," \
-  "avx512vpopcntdq"
+#define HWY_TARGET_STR HWY_TARGET_STR_AVX3_DL
+
+#elif HWY_TARGET == HWY_AVX3_ZEN4
+
+#define HWY_NAMESPACE N_AVX3_ZEN4
+// Currently the same as HWY_AVX3_DL: both support Icelake.
+#define HWY_TARGET_STR HWY_TARGET_STR_AVX3_DL
 
 #else
 #error "Logic error"
-#endif  // HWY_TARGET == HWY_AVX3_DL
+#endif  // HWY_TARGET == HWY_AVX3_ZEN4
 
 //-----------------------------------------------------------------------------
-// PPC8
-#elif HWY_TARGET == HWY_PPC8
+// PPC8, PPC9, PPC10
+#elif HWY_TARGET == HWY_PPC8 || HWY_TARGET == HWY_PPC9 || \
+    HWY_TARGET == HWY_PPC10
 
 #define HWY_ALIGN alignas(16)
 #define HWY_MAX_BYTES 16
@@ -185,20 +268,35 @@
 
 #define HWY_HAVE_SCALABLE 0
 #define HWY_HAVE_INTEGER64 1
-#define HWY_HAVE_FLOAT16 0
+#define HWY_HAVE_FLOAT16 1
 #define HWY_HAVE_FLOAT64 1
 #define HWY_MEM_OPS_MIGHT_FAULT 1
 #define HWY_NATIVE_FMA 1
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
-#define HWY_NAMESPACE N_PPC8
+#if HWY_TARGET == HWY_PPC8
 
-#define HWY_TARGET_STR "altivec,vsx"
+#define HWY_NAMESPACE N_PPC8
+#define HWY_TARGET_STR HWY_TARGET_STR_PPC8
+
+#elif HWY_TARGET == HWY_PPC9
+
+#define HWY_NAMESPACE N_PPC9
+#define HWY_TARGET_STR HWY_TARGET_STR_PPC9
+
+#elif HWY_TARGET == HWY_PPC10
+
+#define HWY_NAMESPACE N_PPC10
+#define HWY_TARGET_STR HWY_TARGET_STR_PPC10
+
+#else
+#error "Logic error"
+#endif  // HWY_TARGET == HWY_PPC10
 
 //-----------------------------------------------------------------------------
 // NEON
-#elif HWY_TARGET == HWY_NEON
+#elif HWY_TARGET == HWY_NEON || HWY_TARGET == HWY_NEON_WITHOUT_AES
 
 #define HWY_ALIGN alignas(16)
 #define HWY_MAX_BYTES 16
@@ -225,16 +323,37 @@
 #define HWY_CAP_GE256 0
 #define HWY_CAP_GE512 0
 
+#if HWY_TARGET == HWY_NEON_WITHOUT_AES
+#define HWY_NAMESPACE N_NEON_WITHOUT_AES
+#else
 #define HWY_NAMESPACE N_NEON
+#endif
 
 // Can use pragmas instead of -march compiler flag
 #if HWY_HAVE_RUNTIME_DISPATCH
 #if HWY_ARCH_ARM_V7
+
+// The __attribute__((target(+neon-vfpv4)) was introduced in gcc >= 8.
+#if HWY_COMPILER_GCC_ACTUAL >= 800
 #define HWY_TARGET_STR "+neon-vfpv4"
+#else   // GCC < 7
+// Do not define HWY_TARGET_STR (no pragma).
+#endif  // HWY_COMPILER_GCC_ACTUAL
+
+#else  // !HWY_ARCH_ARM_V7
+
+#if HWY_TARGET == HWY_NEON_WITHOUT_AES
+// Do not define HWY_TARGET_STR (no pragma).
 #else
+#if HWY_COMPILER_GCC_ACTUAL
+#define HWY_TARGET_STR "arch=armv8-a+crypto"
+#else  // clang
 #define HWY_TARGET_STR "+crypto"
+#endif  // HWY_COMPILER_*
+#endif  // HWY_TARGET == HWY_NEON_WITHOUT_AES
+
 #endif  // HWY_ARCH_ARM_V7
-#else
+#else   // !HWY_HAVE_RUNTIME_DISPATCH
 // HWY_TARGET_STR remains undefined
 #endif
 
@@ -250,7 +369,6 @@
 // overallocation.
 #define HWY_LANES(T) ((HWY_MAX_BYTES) / sizeof(T))
 
-#define HWY_HAVE_SCALABLE 1
 #define HWY_HAVE_INTEGER64 1
 #define HWY_HAVE_FLOAT16 1
 #define HWY_HAVE_FLOAT64 1
@@ -262,15 +380,19 @@
 #if HWY_TARGET == HWY_SVE2
 #define HWY_NAMESPACE N_SVE2
 #define HWY_MAX_BYTES 256
+#define HWY_HAVE_SCALABLE 1
 #elif HWY_TARGET == HWY_SVE_256
 #define HWY_NAMESPACE N_SVE_256
 #define HWY_MAX_BYTES 32
+#define HWY_HAVE_SCALABLE 0
 #elif HWY_TARGET == HWY_SVE2_128
 #define HWY_NAMESPACE N_SVE2_128
 #define HWY_MAX_BYTES 16
+#define HWY_HAVE_SCALABLE 0
 #else
 #define HWY_NAMESPACE N_SVE
 #define HWY_MAX_BYTES 256
+#define HWY_HAVE_SCALABLE 1
 #endif
 
 // Can use pragmas instead of -march compiler flag

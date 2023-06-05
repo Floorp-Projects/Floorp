@@ -105,7 +105,6 @@ class FromLinearStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("FromLinear");
     const HWY_FULL(float) d;
     const size_t xsize_v = RoundUpTo(xsize, Lanes(d));
     float* JXL_RESTRICT row0 = GetInputRow(input_rows, 0, 0);

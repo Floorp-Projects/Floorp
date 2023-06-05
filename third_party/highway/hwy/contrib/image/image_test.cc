@@ -16,18 +16,14 @@
 #include "hwy/contrib/image/image.h"
 
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <random>
-#include <utility>
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/image/image_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
-// After foreach_target:
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -102,6 +98,7 @@ struct TestUnalignedT {
         // Ensure padding was zero
         const size_t N = Lanes(d);
         auto lanes = AllocateAligned<T>(N);
+        HWY_ASSERT(lanes);
         Store(accum, d, lanes.get());
         for (size_t i = 0; i < N; ++i) {
           HWY_ASSERT(lanes[i] < 16);

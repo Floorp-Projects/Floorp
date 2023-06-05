@@ -22,11 +22,11 @@
 
 #include <algorithm>   // std::sort, std::min, std::max
 #include <functional>  // std::less, std::greater
-#include <thread>      // NOLINT
 #include <vector>
 
 #include "hwy/base.h"
 #include "hwy/contrib/sort/vqsort.h"
+#include "hwy/print.h"
 
 // Third-party algorithms
 #define HAVE_AVX2SORT 0
@@ -36,6 +36,15 @@
 #define HAVE_PDQSORT 0
 #define HAVE_SORT512 0
 #define HAVE_VXSORT 0
+#if HWY_ARCH_X86
+#define HAVE_INTEL 0
+#else
+#define HAVE_INTEL 0
+#endif
+
+#if HAVE_PARALLEL_IPS4O
+#include <thread>  // NOLINT
+#endif
 
 #if HAVE_AVX2SORT
 HWY_PUSH_ATTRIBUTES("avx2,avx")
@@ -131,20 +140,24 @@ class InputStats {
   }
 
   bool operator==(const InputStats& other) const {
+    char type_name[100];
+    detail::TypeName(hwy::detail::MakeTypeInfo<T>(), 1, type_name);
+
     if (count_ != other.count_) {
-      HWY_ABORT("count %d vs %d\n", static_cast<int>(count_),
-                static_cast<int>(other.count_));
+      HWY_ABORT("Sort %s: count %d vs %d\n", type_name,
+                static_cast<int>(count_), static_cast<int>(other.count_));
     }
 
     if (min_ != other.min_ || max_ != other.max_) {
-      HWY_ABORT("minmax %f/%f vs %f/%f\n", static_cast<double>(min_),
-                static_cast<double>(max_), static_cast<double>(other.min_),
+      HWY_ABORT("Sort %s: minmax %f/%f vs %f/%f\n", type_name,
+                static_cast<double>(min_), static_cast<double>(max_),
+                static_cast<double>(other.min_),
                 static_cast<double>(other.max_));
     }
 
     // Sum helps detect duplicated/lost values
     if (sum_ != other.sum_) {
-      HWY_ABORT("Sum mismatch %g %g; min %g max %g\n",
+      HWY_ABORT("Sort %s: Sum mismatch %g %g; min %g max %g\n", type_name,
                 static_cast<double>(sum_), static_cast<double>(other.sum_),
                 static_cast<double>(min_), static_cast<double>(max_));
     }
@@ -160,6 +173,9 @@ class InputStats {
 };
 
 enum class Algo {
+#if HAVE_INTEL
+  kIntel,
+#endif
 #if HAVE_AVX2SORT
   kSEA,
 #endif
@@ -185,6 +201,10 @@ enum class Algo {
 
 static inline const char* AlgoName(Algo algo) {
   switch (algo) {
+#if HAVE_INTEL
+    case Algo::kIntel:
+      return "intel";
+#endif
 #if HAVE_AVX2SORT
     case Algo::kSEA:
       return "sea";
@@ -237,8 +257,24 @@ static inline const char* AlgoName(Algo algo) {
 #include "hwy/tests/test_util-inl.h"
 
 HWY_BEFORE_NAMESPACE();
+
+// Requires target pragma set by HWY_BEFORE_NAMESPACE
+#if HAVE_INTEL && HWY_TARGET <= HWY_AVX3
+// #include "avx512-16bit-qsort.hpp"  // requires vbmi2
+#include "avx512-32bit-qsort.hpp"
+#include "avx512-64bit-qsort.hpp"
+#endif
+
 namespace hwy {
 namespace HWY_NAMESPACE {
+
+#if HAVE_INTEL  // only supports ascending order
+template <typename T>
+using OtherOrder = detail::OrderAscending<T>;
+#else
+template <typename T>
+using OtherOrder = detail::OrderDescending<T>;
+#endif
 
 class Xorshift128Plus {
   static HWY_INLINE uint64_t SplitMix64(uint64_t z) {
@@ -359,22 +395,17 @@ InputStats<T> GenerateInput(const Dist dist, T* v, size_t num) {
   return input_stats;
 }
 
-struct ThreadLocal {
-  Sorter sorter;
-};
-
 struct SharedState {
 #if HAVE_PARALLEL_IPS4O
   const unsigned max_threads = hwy::LimitsMax<unsigned>();  // 16 for Table 1a
   ips4o::StdThreadPool pool{static_cast<int>(
       HWY_MIN(max_threads, std::thread::hardware_concurrency() / 2))};
 #endif
-  std::vector<ThreadLocal> tls{1};
 };
 
 // Bridge from keys (passed to Run) to lanes as expected by HeapSort. For
 // non-128-bit keys they are the same:
-template <class Order, typename KeyType, HWY_IF_NOT_LANE_SIZE(KeyType, 16)>
+template <class Order, typename KeyType, HWY_IF_NOT_T_SIZE(KeyType, 16)>
 void CallHeapSort(KeyType* HWY_RESTRICT keys, const size_t num_keys) {
   using detail::TraitsLane;
   using detail::SharedTraits;
@@ -421,11 +452,20 @@ void CallHeapSort(K64V64* HWY_RESTRICT keys, const size_t num_keys) {
 
 template <class Order, typename KeyType>
 void Run(Algo algo, KeyType* HWY_RESTRICT inout, size_t num,
-         SharedState& shared, size_t thread) {
+         SharedState& shared, size_t /*thread*/) {
   const std::less<KeyType> less;
   const std::greater<KeyType> greater;
 
+#if !HAVE_PARALLEL_IPS4O
+  (void)shared;
+#endif
+
   switch (algo) {
+#if HAVE_INTEL && HWY_TARGET <= HWY_AVX3
+    case Algo::kIntel:
+      return avx512_qsort<KeyType>(inout, static_cast<int64_t>(num));
+#endif
+
 #if HAVE_AVX2SORT
     case Algo::kSEA:
       return avx2::quicksort(inout, static_cast<int>(num));
@@ -495,7 +535,7 @@ void Run(Algo algo, KeyType* HWY_RESTRICT inout, size_t num,
       }
 
     case Algo::kVQSort:
-      return shared.tls[thread].sorter(inout, num, Order());
+      return VQSort(inout, num, Order());
 
     case Algo::kHeap:
       return CallHeapSort<Order>(inout, num);

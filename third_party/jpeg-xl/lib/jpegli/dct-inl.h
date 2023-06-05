@@ -240,22 +240,30 @@ void QuantizeBlockNoAQ(const float* dct, const float* qmc, T* block) {
 
 template <typename T>
 void ComputeCoefficientBlock(const float* JXL_RESTRICT pixels, size_t stride,
-                             const float* JXL_RESTRICT qmc, float aq_strength,
+                             const float* JXL_RESTRICT qmc,
+                             int16_t last_dc_coeff, float aq_strength,
                              const float* zero_bias_offset,
                              const float* zero_bias_mul,
                              float* JXL_RESTRICT tmp, T* block) {
   float* JXL_RESTRICT dct = tmp;
   float* JXL_RESTRICT scratch_space = tmp + DCTSIZE2;
   TransformFromPixels(pixels, stride, dct, scratch_space);
+  float dc_threshold = 0.0f;
   if (aq_strength > 0.0f) {
     QuantizeBlock(dct, qmc, aq_strength, zero_bias_offset, zero_bias_mul,
                   block);
+    dc_threshold = zero_bias_offset[0] + aq_strength * zero_bias_mul[0];
   } else {
     QuantizeBlockNoAQ(dct, qmc, block);
   }
   // Center DC values around zero.
   static constexpr float kDCBias = 128.0f;
-  block[0] = std::round((dct[0] - kDCBias) * qmc[0]);
+  const float dc = (dct[0] - kDCBias) * qmc[0];
+  if (std::abs(dc - last_dc_coeff) < dc_threshold) {
+    block[0] = last_dc_coeff;
+  } else {
+    block[0] = std::round(dc);
+  }
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

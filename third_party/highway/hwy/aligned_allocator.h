@@ -18,11 +18,10 @@
 
 // Memory allocator with support for alignment and offsets.
 
-#include <stddef.h>
-
 #include <memory>
+#include <utility>
 
-#include "hwy/highway_export.h"
+#include "hwy/base.h"
 
 namespace hwy {
 

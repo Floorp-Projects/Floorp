@@ -20,9 +20,6 @@
 #include <windows.h>
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
-
 #include <algorithm>  // std::fill
 
 #undef HWY_TARGET_INCLUDE
@@ -43,6 +40,10 @@ struct TestLoadStore {
     const auto hi = Iota(d, static_cast<T>(1 + N));
     const auto lo = Iota(d, 1);
     auto lanes = AllocateAligned<T>(2 * N);
+    auto lanes2 = AllocateAligned<T>(2 * N);
+    auto lanes3 = AllocateAligned<T>(N);
+    HWY_ASSERT(lanes && lanes2 && lanes3);
+
     Store(hi, d, &lanes[N]);
     Store(lo, d, &lanes[0]);
 
@@ -51,7 +52,6 @@ struct TestLoadStore {
     HWY_ASSERT_VEC_EQ(d, lo2, lo);
 
     // Aligned store
-    auto lanes2 = AllocateAligned<T>(2 * N);
     Store(lo2, d, &lanes2[0]);
     Store(hi, d, &lanes2[N]);
     for (size_t i = 0; i < 2 * N; ++i) {
@@ -60,7 +60,6 @@ struct TestLoadStore {
 
     // Unaligned load
     const auto vu = LoadU(d, &lanes[1]);
-    auto lanes3 = AllocateAligned<T>(N);
     Store(vu, d, lanes3.get());
     for (size_t i = 0; i < N; ++i) {
       HWY_ASSERT_EQ(T(i + 2), lanes3[i]);
@@ -93,6 +92,7 @@ struct TestSafeCopyN {
     const auto v = Iota(d, 1);
     auto from = AllocateAligned<T>(N + 2);
     auto to = AllocateAligned<T>(N + 2);
+    HWY_ASSERT(from && to);
     Store(v, d, from.get());
 
     // 0: nothing changes
@@ -147,6 +147,7 @@ struct TestLoadDup128 {
 
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
     for (size_t i = 0; i < N; ++i) {
       expected[i] = static_cast<T>(i % N128 + 1);
     }
@@ -171,6 +172,7 @@ struct TestStream {
         ~size_t(HWY_STREAM_MULTIPLE - 1);
     const size_t affected_lanes = affected_bytes / sizeof(T);
     auto out = AllocateAligned<T>(2 * affected_lanes);
+    HWY_ASSERT(out);
     std::fill(out.get(), out.get() + 2 * affected_lanes, T(0));
 
     Stream(v, d, out.get());
@@ -200,6 +202,7 @@ struct TestScatter {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     using Offset = MakeSigned<T>;
+    const Rebind<Offset, D> d_offsets;
 
     const size_t N = Lanes(d);
     const size_t range = 4 * N;                  // number of items to scatter
@@ -207,19 +210,18 @@ struct TestScatter {
 
     RandomState rng;
 
-    // Data to be scattered
     auto bytes = AllocateAligned<uint8_t>(max_bytes);
+    auto offsets = AllocateAligned<Offset>(N);  // or indices
+    // Scatter into these regions, ensure vector results match scalar
+    auto expected = AllocateAligned<T>(range);
+    auto actual = AllocateAligned<T>(range);
+    HWY_ASSERT(bytes && offsets && expected && actual);
+
+    // Data to be scattered
     for (size_t i = 0; i < max_bytes; ++i) {
       bytes[i] = static_cast<uint8_t>(Random32(&rng) & 0xFF);
     }
     const auto data = Load(d, reinterpret_cast<const T*>(bytes.get()));
-
-    // Scatter into these regions, ensure vector results match scalar
-    auto expected = AllocateAligned<T>(range);
-    auto actual = AllocateAligned<T>(range);
-
-    const Rebind<Offset, D> d_offsets;
-    auto offsets = AllocateAligned<Offset>(N);  // or indices
 
     for (size_t rep = 0; rep < 100; ++rep) {
       // Byte offsets
@@ -273,16 +275,16 @@ struct TestGather {
     const size_t max_bytes = range * sizeof(T);  // upper bound on offset
 
     RandomState rng;
-
-    // Data to be gathered from
     auto bytes = AllocateAligned<uint8_t>(max_bytes);
-    for (size_t i = 0; i < max_bytes; ++i) {
-      bytes[i] = static_cast<uint8_t>(Random32(&rng) & 0xFF);
-    }
-
     auto expected = AllocateAligned<T>(N);
     auto offsets = AllocateAligned<Offset>(N);
     auto indices = AllocateAligned<Offset>(N);
+    HWY_ASSERT(bytes && expected && offsets && indices);
+
+    // Data to be gathered from
+    for (size_t i = 0; i < max_bytes; ++i) {
+      bytes[i] = static_cast<uint8_t>(Random32(&rng) & 0xFF);
+    }
 
     for (size_t rep = 0; rep < 100; ++rep) {
       // Offsets

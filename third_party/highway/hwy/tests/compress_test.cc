@@ -13,13 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stdio.h>
 #include <string.h>  // memset
 
 #include <array>  // IWYU pragma: keep
-
-#include "hwy/base.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/compress_test.cc"
@@ -73,6 +70,7 @@ struct TestCompress {
     using TU = MakeUnsigned<T>;
     const Rebind<TI, D> di;
     const size_t N = Lanes(d);
+    const size_t bits_size = RoundUpTo((N + 7) / 8, 8);
 
     for (int frac : {0, 2, 3}) {
       // For CompressStore
@@ -83,10 +81,11 @@ struct TestCompress {
       auto garbage = AllocateAligned<TU>(N);
       auto expected = AllocateAligned<T>(N);
       auto actual_a = AllocateAligned<T>(misalign + N);
-      T* actual_u = actual_a.get() + misalign;
-
-      const size_t bits_size = RoundUpTo((N + 7) / 8, 8);
       auto bits = AllocateAligned<uint8_t>(bits_size);
+      HWY_ASSERT(in_lanes && mask_lanes && garbage && expected && actual_a &&
+                 bits);
+
+      T* actual_u = actual_a.get() + misalign;
       memset(bits.get(), 0, bits_size);  // for MSAN
 
       // Each lane should have a chance of having mask=true.
@@ -203,6 +202,7 @@ struct TestCompressBlocks {
     auto mask_lanes = AllocateAligned<TI>(N);
     auto expected = AllocateAligned<T>(N);
     auto actual = AllocateAligned<T>(N);
+    HWY_ASSERT(in_lanes && mask_lanes && expected && actual);
 
     // Each lane should have a chance of having mask=true.
     for (size_t rep = 0; rep < AdjustedReps(200); ++rep) {

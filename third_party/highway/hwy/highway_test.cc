@@ -13,13 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stdio.h>
 
 #include <algorithm>  // std::fill
 #include <bitset>
-
-#include "hwy/base.h"
+#include <string>
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "highway_test.cc"
@@ -42,6 +40,7 @@ HWY_NOINLINE void TestCappedLimit(T /* tag */) {
   const size_t N = Lanes(d);
   if (kLimit < N) {
     auto lanes = AllocateAligned<T>(N);
+    HWY_ASSERT(lanes);
     std::fill(lanes.get(), lanes.get() + N, T{0});
     Store(Set(d, T{1}), d, lanes.get());
     for (size_t i = kLimit; i < N; ++i) {
@@ -115,29 +114,37 @@ struct TestSet {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     // Zero
-    const auto v0 = Zero(d);
+    const Vec<D> v0 = Zero(d);
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
-    std::fill(expected.get(), expected.get() + N, T(0));
+    HWY_ASSERT(expected);
+    std::fill(expected.get(), expected.get() + N, T{0});
     HWY_ASSERT_VEC_EQ(d, expected.get(), v0);
 
     // Set
-    const auto v2 = Set(d, T(2));
+    const Vec<D> v2 = Set(d, T{2});
     for (size_t i = 0; i < N; ++i) {
       expected[i] = 2;
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), v2);
 
     // Iota
-    const auto vi = Iota(d, T(5));
+    const Vec<D> vi = Iota(d, T(5));
     for (size_t i = 0; i < N; ++i) {
       expected[i] = T(5 + i);
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), vi);
 
-    // Undefined
-    const auto vu = Undefined(d);
+    // Undefined. This may result in a 'using uninitialized memory' warning
+    // here, even though we already suppress warnings in Undefined.
+    HWY_DIAGNOSTICS(push)
+    HWY_DIAGNOSTICS_OFF(disable : 4700, ignored "-Wuninitialized")
+#if HWY_COMPILER_GCC_ACTUAL
+    HWY_DIAGNOSTICS_OFF(disable : 4701, ignored "-Wmaybe-uninitialized")
+#endif
+    const Vec<D> vu = Undefined(d);
     Store(vu, d, expected.get());
+    HWY_DIAGNOSTICS(pop)
   }
 };
 
@@ -147,9 +154,9 @@ HWY_NOINLINE void TestAllSet() { ForAllTypes(ForPartialVectors<TestSet>()); }
 struct TestOverflow {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(1));
-    const auto vmax = Set(d, LimitsMax<T>());
-    const auto vmin = Set(d, LimitsMin<T>());
+    const Vec<D> v1 = Set(d, T{1});
+    const Vec<D> vmax = Set(d, LimitsMax<T>());
+    const Vec<D> vmin = Set(d, LimitsMin<T>());
     // Unsigned underflow / negative -> positive
     HWY_ASSERT_VEC_EQ(d, vmax, Sub(vmin, v1));
     // Unsigned overflow / positive -> negative
@@ -164,9 +171,9 @@ HWY_NOINLINE void TestAllOverflow() {
 struct TestClamp {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
-    const auto v1 = Set(d, 1);
-    const auto v2 = Set(d, 2);
+    const Vec<D> v0 = Zero(d);
+    const Vec<D> v1 = Set(d, T{1});
+    const Vec<D> v2 = Set(d, T{2});
 
     HWY_ASSERT_VEC_EQ(d, v1, Clamp(v2, v0, v1));
     HWY_ASSERT_VEC_EQ(d, v1, Clamp(v0, v1, v2));
@@ -180,10 +187,10 @@ HWY_NOINLINE void TestAllClamp() {
 struct TestSignBitInteger {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
-    const auto all = VecFromMask(d, Eq(v0, v0));
-    const auto vs = SignBit(d);
-    const auto other = Sub(vs, Set(d, 1));
+    const Vec<D> v0 = Zero(d);
+    const Vec<D> all = VecFromMask(d, Eq(v0, v0));
+    const Vec<D> vs = SignBit(d);
+    const Vec<D> other = Sub(vs, Set(d, T{1}));
 
     // Shifting left by one => overflow, equal zero
     HWY_ASSERT_VEC_EQ(d, v0, Add(vs, vs));
@@ -196,10 +203,10 @@ struct TestSignBitInteger {
 struct TestSignBitFloat {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
-    const auto vs = SignBit(d);
-    const auto vp = Set(d, 2.25);
-    const auto vn = Set(d, -2.25);
+    const Vec<D> v0 = Zero(d);
+    const Vec<D> vs = SignBit(d);
+    const Vec<D> vp = Set(d, static_cast<T>(2.25));
+    const Vec<D> vn = Set(d, static_cast<T>(-2.25));
     HWY_ASSERT_VEC_EQ(d, Or(vp, vs), vn);
     HWY_ASSERT_VEC_EQ(d, AndNot(vs, vn), vp);
     HWY_ASSERT_VEC_EQ(d, v0, vs);
@@ -239,7 +246,7 @@ struct TestNaN {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const Vec<D> v1 = Set(d, static_cast<T>(Unpredictable1()));
-    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T{1})), NaN(d), v1);
     HWY_ASSERT_NAN(d, nan);
 
     // Arithmetic
@@ -293,6 +300,7 @@ struct TestNaN {
 
     // Reduction
     HWY_ASSERT_NAN(d, SumOfLanes(d, nan));
+    HWY_ASSERT_NAN(d, Set(d, ReduceSum(d, nan)));
 // TODO(janwas): re-enable after QEMU/Spike are fixed
 #if HWY_TARGET != HWY_RVV
     HWY_ASSERT_NAN(d, MinOfLanes(d, nan));
@@ -306,8 +314,8 @@ struct TestNaN {
     HWY_ASSERT_VEC_EQ(d, v1, Max(nan, v1));
     HWY_ASSERT_NAN(d, Min(v1, nan));
     HWY_ASSERT_NAN(d, Max(v1, nan));
-#elif HWY_TARGET == HWY_NEON && HWY_ARCH_ARM_V7
-    // ARMv7 NEON returns NaN if any input is NaN.
+#elif HWY_TARGET <= HWY_NEON_WITHOUT_AES && HWY_ARCH_ARM_V7
+    // Armv7 NEON returns NaN if any input is NaN.
     HWY_ASSERT_NAN(d, Min(v1, nan));
     HWY_ASSERT_NAN(d, Max(v1, nan));
     HWY_ASSERT_NAN(d, Min(nan, v1));
@@ -329,8 +337,8 @@ struct TestNaN {
 struct TestF32NaN {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    const Vec<D> v1 = Set(d, static_cast<T>(Unpredictable1()));
+    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T{1})), NaN(d), v1);
     HWY_ASSERT_NAN(d, ApproximateReciprocal(nan));
     HWY_ASSERT_NAN(d, ApproximateReciprocalSqrt(nan));
     HWY_ASSERT_NAN(d, AbsDiff(nan, v1));
@@ -346,10 +354,10 @@ HWY_NOINLINE void TestAllNaN() {
 struct TestIsNaN {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto inf = IfThenElse(Eq(v1, Set(d, T(1))), Inf(d), v1);
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
-    const auto neg = Set(d, T{-1});
+    const Vec<D> v1 = Set(d, static_cast<T>(Unpredictable1()));
+    const Vec<D> inf = IfThenElse(Eq(v1, Set(d, T{1})), Inf(d), v1);
+    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T{1})), NaN(d), v1);
+    const Vec<D> neg = Set(d, T{-1});
     HWY_ASSERT_NAN(d, nan);
     HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(inf));
     HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(CopySign(inf, neg)));
@@ -369,10 +377,10 @@ HWY_NOINLINE void TestAllIsNaN() {
 struct TestIsInf {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto inf = IfThenElse(Eq(v1, Set(d, T(1))), Inf(d), v1);
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
-    const auto neg = Set(d, T{-1});
+    const Vec<D> v1 = Set(d, static_cast<T>(Unpredictable1()));
+    const Vec<D> inf = IfThenElse(Eq(v1, Set(d, T{1})), Inf(d), v1);
+    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T{1})), NaN(d), v1);
+    const Vec<D> neg = Set(d, T{-1});
     HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsInf(inf));
     HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsInf(CopySign(inf, neg)));
     HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(nan));
@@ -391,10 +399,10 @@ HWY_NOINLINE void TestAllIsInf() {
 struct TestIsFinite {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v1 = Set(d, T(Unpredictable1()));
-    const auto inf = IfThenElse(Eq(v1, Set(d, T(1))), Inf(d), v1);
-    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
-    const auto neg = Set(d, T{-1});
+    const Vec<D> v1 = Set(d, static_cast<T>(Unpredictable1()));
+    const Vec<D> inf = IfThenElse(Eq(v1, Set(d, T{1})), Inf(d), v1);
+    const Vec<D> nan = IfThenElse(Eq(v1, Set(d, T{1})), NaN(d), v1);
+    const Vec<D> neg = Set(d, T{-1});
     HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(inf));
     HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(CopySign(inf, neg)));
     HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(nan));
@@ -415,7 +423,7 @@ struct TestCopyAndAssign {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     // copy V
-    const auto v3 = Iota(d, 3);
+    const Vec<D> v3 = Iota(d, 3);
     auto v3b(v3);
     HWY_ASSERT_VEC_EQ(d, v3, v3b);
 
@@ -433,8 +441,8 @@ HWY_NOINLINE void TestAllCopyAndAssign() {
 struct TestGetLane {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    HWY_ASSERT_EQ(T(0), GetLane(Zero(d)));
-    HWY_ASSERT_EQ(T(1), GetLane(Set(d, 1)));
+    HWY_ASSERT_EQ(T{0}, GetLane(Zero(d)));
+    HWY_ASSERT_EQ(T{1}, GetLane(Set(d, T{1})));
   }
 };
 
@@ -445,9 +453,9 @@ HWY_NOINLINE void TestAllGetLane() {
 struct TestDFromV {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
+    const Vec<D> v0 = Zero(d);
     using D0 = DFromV<decltype(v0)>;         // not necessarily same as D
-    const auto v0b = And(v0, Set(D0(), 1));  // but vectors can interoperate
+    const Vec<D> v0b = And(v0, Set(D0(), T{1}));  // vectors can interoperate
     HWY_ASSERT_VEC_EQ(d, v0, v0b);
   }
 };

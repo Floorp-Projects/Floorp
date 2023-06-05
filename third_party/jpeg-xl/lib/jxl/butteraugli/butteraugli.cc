@@ -33,16 +33,11 @@
 #include <new>
 #include <vector>
 
-#if JXL_PROFILER_ENABLED
-#include <chrono>
-#endif  // JXL_PROFILER_ENABLED
-
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/butteraugli/butteraugli.cc"
 #include <hwy/foreach_target.h>
 
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/fast_math-inl.h"
@@ -89,7 +84,6 @@ void ConvolveBorderColumn(const ImageF& in, const std::vector<float>& kernel,
 void ConvolutionWithTranspose(const ImageF& in,
                               const std::vector<float>& kernel,
                               ImageF* BUTTERAUGLI_RESTRICT out) {
-  PROFILER_FUNC;
   JXL_CHECK(out->xsize() == in.ysize());
   JXL_CHECK(out->ysize() == in.xsize());
   const size_t len = kernel.size();
@@ -109,7 +103,6 @@ void ConvolutionWithTranspose(const ImageF& in,
   // middle
   switch (len) {
     case 7: {
-      PROFILER_ZONE("conv7");
       const float sk0 = scaled_kernel[0];
       const float sk1 = scaled_kernel[1];
       const float sk2 = scaled_kernel[2];
@@ -127,7 +120,6 @@ void ConvolutionWithTranspose(const ImageF& in,
       }
     } break;
     case 13: {
-      PROFILER_ZONE("conv15");
       for (size_t y = 0; y < in.ysize(); ++y) {
         const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y) + border1 - offset;
         for (size_t x = border1; x < border2; ++x, ++row_in) {
@@ -145,7 +137,6 @@ void ConvolutionWithTranspose(const ImageF& in,
       break;
     }
     case 15: {
-      PROFILER_ZONE("conv15");
       for (size_t y = 0; y < in.ysize(); ++y) {
         const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y) + border1 - offset;
         for (size_t x = border1; x < border2; ++x, ++row_in) {
@@ -164,7 +155,6 @@ void ConvolutionWithTranspose(const ImageF& in,
       break;
     }
     case 33: {
-      PROFILER_ZONE("conv33");
       for (size_t y = 0; y < in.ysize(); ++y) {
         const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y) + border1 - offset;
         for (size_t x = border1; x < border2; ++x, ++row_in) {
@@ -367,7 +357,6 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
                                 const ButteraugliParams& params,
                                 BlurTemp* blur_temp, const Image3F& xyb,
                                 PsychoImage& ps) {
-  PROFILER_FUNC;
   const HWY_FULL(float) d;
 
   // Extract lf ...
@@ -919,7 +908,6 @@ static BUTTERAUGLI_INLINE float PaddedMaltaUnit(const ImageF& diffs,
     return GetLane(MaltaUnit(Tag(), df, d, diffs.PixelsPerRow()));
   }
 
-  PROFILER_ZONE("Padded Malta");
   float borderimage[12 * 9];  // round up to 4
   for (int dy = 0; dy < 9; ++dy) {
     int y = y0 + dy - 4;
@@ -1060,7 +1048,6 @@ void MaltaDiffMapLF(const ImageF& lum0, const ImageF& lum1, const double w_0gt1,
 }
 
 void DiffPrecompute(const ImageF& xyb, float mul, float bias_arg, ImageF* out) {
-  PROFILER_FUNC;
   const size_t xsize = xyb.xsize();
   const size_t ysize = xyb.ysize();
   const float bias = mul * bias_arg;
@@ -1153,7 +1140,6 @@ void Mask(const ImageF& mask0, const ImageF& mask1,
   // Only X and Y components are involved in masking. B's influence
   // is considered less important in the high frequency area, and we
   // don't model masking from lower frequency signals.
-  PROFILER_FUNC;
   const size_t xsize = mask0.xsize();
   const size_t ysize = mask0.ysize();
   *mask = ImageF(xsize, ysize);
@@ -1247,7 +1233,6 @@ inline float MaskColor(const float color[3], const float mask) {
 void CombineChannelsToDiffmap(const ImageF& mask, const Image3F& block_diff_dc,
                               const Image3F& block_diff_ac, float xmul,
                               ImageF* result) {
-  PROFILER_FUNC;
   JXL_CHECK(SameSize(mask, *result));
   size_t xsize = mask.xsize();
   size_t ysize = mask.ysize();
@@ -1422,7 +1407,6 @@ BUTTERAUGLI_INLINE void OpsinAbsorbance(const DF df, const V& in0, const V& in1,
 // `blurred` is a temporary image used inside this function and not returned.
 Image3F OpsinDynamicsImage(const Image3F& rgb, const ButteraugliParams& params,
                            Image3F* blurred, BlurTemp* blur_temp) {
-  PROFILER_FUNC;
   Image3F xyb(rgb.xsize(), rgb.ysize());
   const double kSigma = 1.2;
   Blur(rgb.Plane(0), kSigma, params, blur_temp, &blurred->Plane(0));
@@ -1530,7 +1514,6 @@ static inline bool IsNan(const double x) {
 }
 
 static inline void CheckImage(const ImageF& image, const char* name) {
-  PROFILER_FUNC;
   for (size_t y = 0; y < image.ysize(); ++y) {
     const float* BUTTERAUGLI_RESTRICT row = image.Row(y);
     for (size_t x = 0; x < image.xsize(); ++x) {
@@ -1647,7 +1630,6 @@ void ButteraugliComparator::Mask(ImageF* BUTTERAUGLI_RESTRICT mask) const {
 }
 
 void ButteraugliComparator::Diffmap(const Image3F& rgb1, ImageF& result) const {
-  PROFILER_FUNC;
   if (xsize_ < 8 || ysize_ < 8) {
     ZeroFillImage(&result);
     return;
@@ -1671,7 +1653,6 @@ void ButteraugliComparator::Diffmap(const Image3F& rgb1, ImageF& result) const {
 
 void ButteraugliComparator::DiffmapOpsinDynamicsImage(const Image3F& xyb1,
                                                       ImageF& result) const {
-  PROFILER_FUNC;
   if (xsize_ < 8 || ysize_ < 8) {
     ZeroFillImage(&result);
     return;
@@ -1689,7 +1670,6 @@ void MaltaDiffMap(const ImageF& lum0, const ImageF& lum1, const double w_0gt1,
                   const double w_0lt1, const double norm1,
                   ImageF* HWY_RESTRICT diffs,
                   Image3F* HWY_RESTRICT block_diff_ac, size_t c) {
-  PROFILER_FUNC;
   const double len = 3.75;
   static const double mulli = 0.39905817637;
   HWY_DYNAMIC_DISPATCH(MaltaDiffMap)
@@ -1700,7 +1680,6 @@ void MaltaDiffMapLF(const ImageF& lum0, const ImageF& lum1, const double w_0gt1,
                     const double w_0lt1, const double norm1,
                     ImageF* HWY_RESTRICT diffs,
                     Image3F* HWY_RESTRICT block_diff_ac, size_t c) {
-  PROFILER_FUNC;
   const double len = 3.75;
   static const double mulli = 0.611612573796;
   HWY_DYNAMIC_DISPATCH(MaltaDiffMapLF)
@@ -1711,7 +1690,6 @@ void MaltaDiffMapLF(const ImageF& lum0, const ImageF& lum1, const double w_0gt1,
 
 void ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
                                                ImageF& diffmap) const {
-  PROFILER_FUNC;
   if (xsize_ < 8 || ysize_ < 8) {
     ZeroFillImage(&diffmap);
     return;
@@ -1786,7 +1764,6 @@ void ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
 
 double ButteraugliScoreFromDiffmap(const ImageF& diffmap,
                                    const ButteraugliParams* params) {
-  PROFILER_FUNC;
   float retval = 0.0f;
   for (size_t y = 0; y < diffmap.ysize(); ++y) {
     const float* BUTTERAUGLI_RESTRICT row = diffmap.ConstRow(y);
@@ -1807,7 +1784,6 @@ bool ButteraugliDiffmap(const Image3F& rgb0, const Image3F& rgb1,
 
 bool ButteraugliDiffmap(const Image3F& rgb0, const Image3F& rgb1,
                         const ButteraugliParams& params, ImageF& diffmap) {
-  PROFILER_FUNC;
   const size_t xsize = rgb0.xsize();
   const size_t ysize = rgb0.ysize();
   if (xsize < 1 || ysize < 1) {
@@ -1868,18 +1844,9 @@ bool ButteraugliInterface(const Image3F& rgb0, const Image3F& rgb1,
 bool ButteraugliInterface(const Image3F& rgb0, const Image3F& rgb1,
                           const ButteraugliParams& params, ImageF& diffmap,
                           double& diffvalue) {
-#if JXL_PROFILER_ENABLED
-  auto trace_start = std::chrono::steady_clock::now();
-#endif
   if (!ButteraugliDiffmap(rgb0, rgb1, params, diffmap)) {
     return false;
   }
-#if JXL_PROFILER_ENABLED
-  auto trace_end = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed = trace_end - trace_start;
-  const size_t mp = rgb0.xsize() * rgb0.ysize();
-  printf("diff MP/s %f\n", mp / elapsed.count() * 1E-6);
-#endif
   diffvalue = ButteraugliScoreFromDiffmap(diffmap, &params);
   return true;
 }

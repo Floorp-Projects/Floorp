@@ -13,11 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
 #include <string.h>  // memcpy
-
-#include "hwy/aligned_allocator.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/crypto_test.cc"
@@ -67,6 +63,7 @@ class TestAES {
     const size_t N = Lanes(d);
     const size_t padded = RoundUpTo(256, N);
     auto expected = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected);
     // Must wrap around to match the input (Iota).
     for (size_t pos = 0; pos < padded;) {
       const size_t remaining = HWY_MIN(padded - pos, size_t(256));
@@ -85,25 +82,25 @@ class TestAES {
   HWY_NOINLINE void operator()(T t, D d) {
     // Test vector (after first KeyAddition) from
     // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/AES_Core128.pdf
-    alignas(16) constexpr uint8_t test_lanes[16] = {
+    alignas(16) static constexpr uint8_t test_lanes[16] = {
         0x40, 0xBF, 0xAB, 0xF4, 0x06, 0xEE, 0x4D, 0x30,
         0x42, 0xCA, 0x6B, 0x99, 0x7A, 0x5C, 0x58, 0x16};
     const auto test = LoadDup128(d, test_lanes);
 
     // = ShiftRow result
-    alignas(16) constexpr uint8_t expected_sr_lanes[16] = {
+    alignas(16) static constexpr uint8_t expected_sr_lanes[16] = {
         0x09, 0x28, 0x7F, 0x47, 0x6F, 0x74, 0x6A, 0xBF,
         0x2C, 0x4A, 0x62, 0x04, 0xDA, 0x08, 0xE3, 0xEE};
     const auto expected_sr = LoadDup128(d, expected_sr_lanes);
 
     // = MixColumn result
-    alignas(16) constexpr uint8_t expected_mc_lanes[16] = {
+    alignas(16) static constexpr uint8_t expected_mc_lanes[16] = {
         0x52, 0x9F, 0x16, 0xC2, 0x97, 0x86, 0x15, 0xCA,
         0xE0, 0x1A, 0xAE, 0x54, 0xBA, 0x1A, 0x26, 0x59};
     const auto expected_mc = LoadDup128(d, expected_mc_lanes);
 
     // = KeyAddition result
-    alignas(16) constexpr uint8_t expected_lanes[16] = {
+    alignas(16) static constexpr uint8_t expected_lanes[16] = {
         0xF2, 0x65, 0xE8, 0xD5, 0x1F, 0xD2, 0x39, 0x7B,
         0xC3, 0xB9, 0x97, 0x6D, 0x90, 0x76, 0x50, 0x5C};
     const auto expected = LoadDup128(d, expected_lanes);
@@ -125,8 +122,171 @@ class TestAES {
 };
 HWY_NOINLINE void TestAllAES() { ForGEVectors<128, TestAES>()(uint8_t()); }
 
+class TestAESInverse {
+  template <typename T, class D>
+  HWY_NOINLINE void TestInverseSBox(T /*unused*/, D d) {
+    // The generic implementation of the inverse S-box is difficult to verify by
+    // inspection, so we add a white-box test that verifies it using enumeration
+    // (outputs for 0..255 vs. https://en.wikipedia.org/wiki/Rijndael_S-box).
+    const uint8_t inv_sbox[256] = {
+        0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e,
+        0x81, 0xf3, 0xd7, 0xfb, 0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87,
+        0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb, 0x54, 0x7b, 0x94, 0x32,
+        0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+        0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49,
+        0x6d, 0x8b, 0xd1, 0x25, 0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16,
+        0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92, 0x6c, 0x70, 0x48, 0x50,
+        0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+        0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05,
+        0xb8, 0xb3, 0x45, 0x06, 0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02,
+        0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b, 0x3a, 0x91, 0x11, 0x41,
+        0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+        0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8,
+        0x1c, 0x75, 0xdf, 0x6e, 0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89,
+        0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b, 0xfc, 0x56, 0x3e, 0x4b,
+        0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+        0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59,
+        0x27, 0x80, 0xec, 0x5f, 0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d,
+        0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef, 0xa0, 0xe0, 0x3b, 0x4d,
+        0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+        0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63,
+        0x55, 0x21, 0x0c, 0x7d};
+
+    // Ensure it's safe to load an entire vector by padding.
+    const size_t N = Lanes(d);
+    const size_t padded = RoundUpTo(256, N);
+    auto expected = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected);
+    // Must wrap around to match the input (Iota).
+    for (size_t pos = 0; pos < padded;) {
+      const size_t remaining = HWY_MIN(padded - pos, size_t(256));
+      memcpy(expected.get() + pos, inv_sbox, remaining);
+      pos += remaining;
+    }
+
+    for (size_t i = 0; i < 256; i += N) {
+      const auto in = Iota(d, static_cast<T>(i));
+      HWY_ASSERT_VEC_EQ(d, expected.get() + i, detail::InvSubBytes(in));
+    }
+  }
+
+  template <typename T, class D>
+  HWY_INLINE void TestAESRoundInv(T /*unused*/, D d) {
+    // Test vector (after first KeyAddition) from page 37 of
+    // https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf
+    alignas(16) static constexpr uint8_t test_lanes[16] = {
+        0x7A, 0xD5, 0xFD, 0xA7, 0x89, 0xEF, 0x4E, 0x27,
+        0x2B, 0xCA, 0x10, 0x0B, 0x3D, 0x9F, 0xF5, 0x9F};
+    const auto test = LoadDup128(d, test_lanes);
+
+    // = InvShiftRow result
+    alignas(16) static constexpr uint8_t expected_isr_lanes[16] = {
+        0xBD, 0x6E, 0x7C, 0x3D, 0xF2, 0xB5, 0x77, 0x9E,
+        0x0B, 0x61, 0x21, 0x6E, 0x8B, 0x10, 0xB6, 0x89};
+    const auto expected_isr = LoadDup128(d, expected_isr_lanes);
+
+    // = InvMixColumn result
+    alignas(16) static constexpr uint8_t expected_imc_lanes[16] = {
+        0x47, 0x73, 0xB9, 0x1F, 0xF7, 0x2F, 0x35, 0x43,
+        0x61, 0xCB, 0x01, 0x8E, 0xA1, 0xE6, 0xCF, 0x2C};
+    const auto expected_imc = LoadDup128(d, expected_imc_lanes);
+
+    // = KeyAddition result
+    alignas(16) static constexpr uint8_t expected_lanes[16] = {
+        0x13, 0xAA, 0x29, 0xBE, 0x9C, 0x8F, 0xAF, 0xF6,
+        0xF7, 0x70, 0xF5, 0x80, 0x00, 0xF7, 0xBF, 0x03};
+    const auto expected = LoadDup128(d, expected_lanes);
+
+    alignas(16) uint8_t key_lanes[16];
+    for (size_t i = 0; i < 16; ++i) {
+      key_lanes[i] = expected_imc_lanes[i] ^ expected_lanes[i];
+    }
+    const auto round_key = LoadDup128(d, key_lanes);
+
+    HWY_ASSERT_VEC_EQ(d, expected_isr, AESLastRoundInv(test, Zero(d)));
+    HWY_ASSERT_VEC_EQ(d, expected_imc, AESRoundInv(test, Zero(d)));
+    HWY_ASSERT_VEC_EQ(d, expected_imc,
+                      AESInvMixColumns(AESLastRoundInv(test, Zero(d))));
+    HWY_ASSERT_VEC_EQ(d, expected, AESRoundInv(test, round_key));
+  }
+
+  template <typename T, class D>
+  HWY_INLINE void TestAESLastRoundInv(T /*unused*/, D d) {
+    // Test vector (after the KeyAddition operation of round 9) from page 38 of
+    // https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf
+    alignas(16) static constexpr uint8_t test_lanes[16] = {
+        0x63, 0x53, 0xE0, 0x8C, 0x09, 0x60, 0xE1, 0x04,
+        0xCD, 0x70, 0xB7, 0x51, 0xBA, 0xCA, 0xD0, 0xE7};
+    const auto test = LoadDup128(d, test_lanes);
+
+    // = InvShiftRow result
+    alignas(16) static constexpr uint8_t expected_isr_lanes[16] = {
+        0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70,
+        0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0};
+    const auto expected_isr = LoadDup128(d, expected_isr_lanes);
+
+    // = KeyAddition result
+    alignas(16) static constexpr uint8_t expected_lanes[16] = {
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+        0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+    const auto expected = LoadDup128(d, expected_lanes);
+
+    alignas(16) uint8_t key_lanes[16];
+    for (size_t i = 0; i < 16; ++i) {
+      key_lanes[i] = expected_isr_lanes[i] ^ expected_lanes[i];
+    }
+    const auto round_key = LoadDup128(d, key_lanes);
+
+    HWY_ASSERT_VEC_EQ(d, expected_isr, AESLastRoundInv(test, Zero(d)));
+    HWY_ASSERT_VEC_EQ(d, expected, AESLastRoundInv(test, round_key));
+  }
+
+ public:
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T t, D d) {
+    TestAESRoundInv(t, d);
+    TestAESLastRoundInv(t, d);
+    TestInverseSBox(t, d);
+  }
+};
+HWY_NOINLINE void TestAllAESInverse() {
+  ForGEVectors<128, TestAESInverse>()(uint8_t());
+}
+
+struct TestAESKeyGenAssist {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*t*/, D d) {
+    alignas(16) static constexpr uint8_t kTestVect1[16] = {
+        0x27, 0xCF, 0x73, 0xC3, 0x27, 0xCF, 0x73, 0xC3,
+        0x74, 0x01, 0x90, 0x5A, 0x74, 0x01, 0x90, 0x5A};
+    alignas(16) static constexpr uint8_t kExpectedResult1[16] = {
+        0xCC, 0x8A, 0x8F, 0x2E, 0xAA, 0x8F, 0x2E, 0xCC,
+        0x92, 0x7C, 0x60, 0xBE, 0x5C, 0x60, 0xBE, 0x92};
+
+    const auto expected_1 = LoadDup128(d, kExpectedResult1);
+    const auto actual_1 = AESKeyGenAssist<0x20>(LoadDup128(d, kTestVect1));
+    HWY_ASSERT_VEC_EQ(d, expected_1, actual_1);
+
+    alignas(16) static constexpr uint8_t kTestVect2[16] = {
+        0xD0, 0x14, 0xF9, 0xA8, 0x57, 0x5C, 0x00, 0x6E,
+        0xE1, 0x3F, 0x0C, 0xC8, 0xC9, 0xEE, 0x25, 0x89};
+    alignas(16) static constexpr uint8_t kExpectedResult2[16] = {
+        0x5B, 0x4A, 0x63, 0x9F, 0x7C, 0x63, 0x9F, 0x5B,
+        0xDD, 0x28, 0x3F, 0xA7, 0x1E, 0x3F, 0xA7, 0xDD};
+
+    const auto expected_2 = LoadDup128(d, kExpectedResult2);
+    const auto actual_2 = AESKeyGenAssist<0x36>(LoadDup128(d, kTestVect2));
+    HWY_ASSERT_VEC_EQ(d, expected_2, actual_2);
+  }
+};
+
+HWY_NOINLINE void TestAllAESKeyGenAssist() {
+  ForGEVectors<128, TestAESKeyGenAssist>()(uint8_t());
+}
+
 #else
 HWY_NOINLINE void TestAllAES() {}
+HWY_NOINLINE void TestAllAESInverse() {}
 #endif  // HWY_TARGET != HWY_SCALAR
 
 struct TestCLMul {
@@ -139,6 +299,7 @@ struct TestCLMul {
 
     auto in1 = AllocateAligned<T>(N);
     auto in2 = AllocateAligned<T>(N);
+    HWY_ASSERT(in1 && in2);
 
     constexpr size_t kCLMulNum = 512;
     // Depends on rng!
@@ -492,6 +653,7 @@ struct TestCLMul {
     const size_t padded = RoundUpTo(kCLMulNum, N);
     auto expected_lower = AllocateAligned<T>(padded);
     auto expected_upper = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected_lower && expected_upper);
     CopyBytes<kCLMulNum * sizeof(T)>(kCLMulLower, expected_lower.get());
     CopyBytes<kCLMulNum * sizeof(T)>(kCLMulUpper, expected_upper.get());
     const size_t padding_size = (padded - kCLMulNum) * sizeof(T);
@@ -547,6 +709,7 @@ HWY_AFTER_NAMESPACE();
 namespace hwy {
 HWY_BEFORE_TEST(HwyCryptoTest);
 HWY_EXPORT_AND_TEST_P(HwyCryptoTest, TestAllAES);
+HWY_EXPORT_AND_TEST_P(HwyCryptoTest, TestAllAESInverse);
 HWY_EXPORT_AND_TEST_P(HwyCryptoTest, TestAllCLMul);
 }  // namespace hwy
 

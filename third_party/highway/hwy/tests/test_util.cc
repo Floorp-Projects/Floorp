@@ -15,7 +15,6 @@
 
 #include "hwy/tests/test_util.h"
 
-#include <stddef.h>
 #include <stdio.h>
 
 #include <cmath>

@@ -13,7 +13,6 @@
 #include "lib/jpegli/bit_writer.h"
 #include "lib/jpegli/bitstream.h"
 #include "lib/jpegli/color_transform.h"
-#include "lib/jpegli/dct.h"
 #include "lib/jpegli/downsample.h"
 #include "lib/jpegli/encode_internal.h"
 #include "lib/jpegli/entropy_coding.h"
@@ -40,6 +39,10 @@ void CheckState(j_compress_ptr cinfo, int state1, int state2) {
                  cinfo->global_state, state1, state2);
   }
 }
+
+//
+// Parameter setup
+//
 
 // Initialize cinfo fields that are not dependent on input image. This is shared
 // between jpegli_CreateCompress() and jpegli_set_defaults()
@@ -83,6 +86,10 @@ void SetSentTableFlag(T** table_ptrs, size_t num, boolean val) {
     if (table_ptrs[i]) table_ptrs[i]->sent_table = val;
   }
 }
+
+//
+// Compressor initialization
+//
 
 struct ProgressiveScan {
   int Ss, Se, Ah, Al;
@@ -313,20 +320,53 @@ void ProcessCompressionParams(j_compress_ptr cinfo) {
   cinfo->progressive_mode =
       cinfo->scan_info->Ss != 0 || cinfo->scan_info->Se != DCTSIZE2 - 1;
   ValidateScanScript(cinfo);
-}
-
-void ResetForImage(j_compress_ptr cinfo) {
-  (*cinfo->err->reset_error_mgr)(reinterpret_cast<j_common_ptr>(cinfo));
-  (*cinfo->dest->init_destination)(cinfo);
-  jpeg_comp_master* m = cinfo->master;
-  m->next_iMCU_row = 0;
-  m->last_restart_interval = 0;
-  m->last_dht_index = 0;
-  m->num_huffman_codes = 0;
-  if (cinfo->num_scans > 0) {
-    m->scan_coding_info =
-        Allocate<ScanCodingInfo>(cinfo, cinfo->num_scans, JPOOL_IMAGE_ALIGNED);
+  m->scan_token_info =
+      Allocate<ScanTokenInfo>(cinfo, cinfo->num_scans, JPOOL_IMAGE);
+  memset(m->scan_token_info, 0, cinfo->num_scans * sizeof(ScanTokenInfo));
+  m->ac_ctx_offset = Allocate<uint8_t>(cinfo, cinfo->num_scans, JPOOL_IMAGE);
+  size_t num_ac_contexts = 0;
+  for (int i = 0; i < cinfo->num_scans; ++i) {
+    const jpeg_scan_info* scan_info = &cinfo->scan_info[i];
+    m->ac_ctx_offset[i] = 4 + num_ac_contexts;
+    if (scan_info->Se > 0) {
+      num_ac_contexts += scan_info->comps_in_scan;
+    }
+    if (num_ac_contexts > 252) {
+      JPEGLI_ERROR("Too many AC scans in image");
+    }
+    ScanTokenInfo* sti = &m->scan_token_info[i];
+    if (scan_info->comps_in_scan == 1) {
+      int comp_idx = scan_info->component_index[0];
+      jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+      sti->MCUs_per_row = comp->width_in_blocks;
+      sti->MCU_rows_in_scan = comp->height_in_blocks;
+      sti->blocks_in_MCU = 1;
+    } else {
+      sti->MCUs_per_row =
+          DivCeil(cinfo->image_width, DCTSIZE * cinfo->max_h_samp_factor);
+      sti->MCU_rows_in_scan =
+          DivCeil(cinfo->image_height, DCTSIZE * cinfo->max_v_samp_factor);
+      sti->blocks_in_MCU = 0;
+      for (int j = 0; j < scan_info->comps_in_scan; ++j) {
+        int comp_idx = scan_info->component_index[j];
+        jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+        sti->blocks_in_MCU += comp->h_samp_factor * comp->v_samp_factor;
+      }
+    }
+    size_t num_MCUs = sti->MCU_rows_in_scan * sti->MCUs_per_row;
+    sti->num_blocks = num_MCUs * sti->blocks_in_MCU;
+    if (cinfo->restart_in_rows <= 0) {
+      sti->restart_interval = cinfo->restart_interval;
+    } else {
+      sti->restart_interval =
+          std::min<size_t>(sti->MCUs_per_row * cinfo->restart_in_rows, 65535u);
+    }
+    sti->num_restarts = sti->restart_interval > 0
+                            ? DivCeil(num_MCUs, sti->restart_interval)
+                            : 1;
+    sti->restarts = Allocate<size_t>(cinfo, sti->num_restarts, JPOOL_IMAGE);
   }
+  m->num_contexts = 4 + num_ac_contexts;
 }
 
 bool IsStreamingSupported(j_compress_ptr cinfo) {
@@ -337,19 +377,27 @@ bool IsStreamingSupported(j_compress_ptr cinfo) {
   if (cinfo->restart_interval > 0 || cinfo->restart_in_rows > 0) {
     return false;
   }
-  if (cinfo->optimize_coding || cinfo->num_scans > 1) {
+  if (cinfo->num_scans > 1) {
     return false;
   }
   return true;
 }
 
-bool IsSinglePassOptimizerSupported(j_compress_ptr cinfo) {
-  return cinfo->num_scans == 1 && cinfo->optimize_coding &&
-         cinfo->restart_interval == 0 && cinfo->restart_in_rows == 0;
-}
-
 void AllocateBuffers(j_compress_ptr cinfo) {
   jpeg_comp_master* m = cinfo->master;
+  memset(m->last_dc_coeff, 0, sizeof(m->last_dc_coeff));
+  if (!IsStreamingSupported(cinfo) || cinfo->optimize_coding) {
+    int ysize_blocks = DivCeil(cinfo->image_height, DCTSIZE);
+    int num_arrays = cinfo->num_scans * ysize_blocks;
+    m->token_arrays = Allocate<TokenArray>(cinfo, num_arrays, JPOOL_IMAGE);
+    m->cur_token_array = 0;
+    memset(m->token_arrays, 0, num_arrays * sizeof(TokenArray));
+    m->num_tokens = 0;
+    m->total_num_tokens = 0;
+  }
+  if (cinfo->global_state == kEncWriteCoeffs) {
+    return;
+  }
   size_t iMCU_width = DCTSIZE * cinfo->max_h_samp_factor;
   size_t iMCU_height = DCTSIZE * cinfo->max_v_samp_factor;
   size_t total_iMCU_cols = DivCeil(cinfo->image_width, iMCU_width);
@@ -415,6 +463,65 @@ void AllocateBuffers(j_compress_ptr cinfo) {
   }
 }
 
+void InitProgressMonitor(j_compress_ptr cinfo) {
+  if (cinfo->progress == nullptr) {
+    return;
+  }
+  if (IsStreamingSupported(cinfo)) {
+    // We have only one input pass.
+    cinfo->progress->total_passes = 1;
+  } else {
+    // We have one input pass, a histogram pass for each scan, and an encode
+    // pass for each scan.
+    cinfo->progress->total_passes = 1 + 2 * cinfo->num_scans;
+  }
+}
+
+// Common setup code between streaming and transcoding code paths. Called in
+// both jpegli_start_compress() and jpegli_write_coefficients().
+void InitCompress(j_compress_ptr cinfo, boolean write_all_tables) {
+  (*cinfo->err->reset_error_mgr)(reinterpret_cast<j_common_ptr>(cinfo));
+  ProcessCompressionParams(cinfo);
+  InitProgressMonitor(cinfo);
+  AllocateBuffers(cinfo);
+  if (cinfo->global_state != kEncWriteCoeffs) {
+    ChooseInputMethod(cinfo);
+    if (!cinfo->raw_data_in) {
+      ChooseColorTransform(cinfo);
+      ChooseDownsampleMethods(cinfo);
+    }
+    InitQuantizer(cinfo);
+  }
+  if (write_all_tables) {
+    jpegli_suppress_tables(cinfo, FALSE);
+  }
+  if (!cinfo->optimize_coding && !cinfo->progressive_mode) {
+    CopyHuffmanTables(cinfo);
+    InitEntropyCoder(cinfo);
+  }
+  (*cinfo->dest->init_destination)(cinfo);
+  WriteFileHeader(cinfo);
+  JpegBitWriterInit(cinfo);
+  jpeg_comp_master* m = cinfo->master;
+  m->next_iMCU_row = 0;
+  m->last_restart_interval = 0;
+  m->next_dht_index = 0;
+}
+
+//
+// Input streaming
+//
+
+void ProgressMonitorInputPass(j_compress_ptr cinfo) {
+  if (cinfo->progress == nullptr) {
+    return;
+  }
+  cinfo->progress->completed_passes = 0;
+  cinfo->progress->pass_counter = cinfo->next_scanline;
+  cinfo->progress->pass_limit = cinfo->image_height;
+  (*cinfo->progress->progress_monitor)(reinterpret_cast<j_common_ptr>(cinfo));
+}
+
 void ReadInputRow(j_compress_ptr cinfo, const uint8_t* scanline,
                   float* row[kMaxComponents]) {
   jpeg_comp_master* m = cinfo->master;
@@ -465,11 +572,8 @@ void ProcessiMCURow(j_compress_ptr cinfo) {
     DownsampleInputBuffer(cinfo);
   }
   ComputeAdaptiveQuantField(cinfo);
-  if (IsStreamingSupported(cinfo)) {
-    WriteiMCURow(cinfo);
-  } else {
-    ComputeDCTCoefficients(cinfo);
-  }
+  bool streaming = IsStreamingSupported(cinfo);
+  EncodeiMCURow(cinfo, streaming);
   ++cinfo->master->next_iMCU_row;
 }
 
@@ -487,91 +591,35 @@ void ProcessiMCURows(j_compress_ptr cinfo) {
   }
 }
 
-void InitProgressMonitor(j_compress_ptr cinfo) {
-  if (cinfo->progress == nullptr) {
-    return;
-  }
-  if (IsStreamingSupported(cinfo)) {
-    // We have only one input pass.
-    cinfo->progress->total_passes = 1;
-  } else if (IsSinglePassOptimizerSupported(cinfo)) {
-    // We have one input pass and an encode pass for each scan.
-    cinfo->progress->total_passes = 1 + cinfo->num_scans;
-  } else {
-    // We have one input pass, a histogram pass for each scan, and an encode
-    // pass for each scan.
-    cinfo->progress->total_passes = 1 + 2 * cinfo->num_scans;
-  }
-}
+//
+// Non-streaming part
+//
 
-void ProgressMonitorInputPass(j_compress_ptr cinfo) {
-  if (cinfo->progress == nullptr) {
-    return;
-  }
-  cinfo->progress->completed_passes = 0;
-  cinfo->progress->pass_counter = cinfo->next_scanline;
-  cinfo->progress->pass_limit = cinfo->image_height;
-  (*cinfo->progress->progress_monitor)(reinterpret_cast<j_common_ptr>(cinfo));
-}
-
-void WriteFileHeader(j_compress_ptr cinfo) {
-  WriteOutput(cinfo, {0xFF, 0xD8});  // SOI
-  if (cinfo->write_JFIF_header) {
-    EncodeAPP0(cinfo);
-  }
-  if (cinfo->write_Adobe_marker) {
-    EncodeAPP14(cinfo);
-  }
-}
-
-void WriteScanHeader(j_compress_ptr cinfo, size_t scan_idx) {
+void ZigZagShuffleBlocks(j_compress_ptr cinfo) {
   jpeg_comp_master* m = cinfo->master;
-  cinfo->restart_interval = RestartIntervalForScan(cinfo, scan_idx);
-  if (cinfo->restart_interval != m->last_restart_interval) {
-    EncodeDRI(cinfo);
-    m->last_restart_interval = cinfo->restart_interval;
-  }
-  size_t num_dht = cinfo->master->scan_coding_info[scan_idx].num_huffman_codes;
-  if (num_dht > 0) {
-    bool pre_shifted = IsStreamingSupported(cinfo);
-    EncodeDHT(cinfo, m->huffman_codes + m->last_dht_index, num_dht,
-              pre_shifted);
-    m->last_dht_index += num_dht;
-  }
-  EncodeSOS(cinfo, scan_idx);
-}
-
-void WriteHeaderMarkers(j_compress_ptr cinfo) {
-  bool is_baseline = true;
-  CopyHuffmanCodes(cinfo, &is_baseline);
-  EncodeDQT(cinfo, /*write_all_tables=*/false, &is_baseline);
-  EncodeSOF(cinfo, is_baseline);
-  WriteScanHeader(cinfo, 0);
-  memset(cinfo->master->last_dc_coeff, 0, sizeof(cinfo->master->last_dc_coeff));
-}
-
-void EncodeScans(j_compress_ptr cinfo) {
-  if (IsSinglePassOptimizerSupported(cinfo)) {
-    EncodeSingleScan(cinfo);
-    return;
-  }
-  bool is_baseline = false;
-  if (cinfo->optimize_coding || cinfo->progressive_mode) {
-    OptimizeHuffmanCodes(cinfo, &is_baseline);
-  } else {
-    CopyHuffmanCodes(cinfo, &is_baseline);
-  }
-  EncodeDQT(cinfo, /*write_all_tables=*/false, &is_baseline);
-  EncodeSOF(cinfo, is_baseline);
-  for (int i = 0; i < cinfo->num_scans; ++i) {
-    WriteScanHeader(cinfo, i);
-    if (!EncodeScan(cinfo, i)) {
-      JPEGLI_ERROR("Failed to encode scan.");
+  JCOEF tmp[DCTSIZE2];
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    jpeg_component_info* comp = &cinfo->comp_info[c];
+    for (JDIMENSION by = 0; by < comp->height_in_blocks; ++by) {
+      JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(
+          reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[c], by, 1,
+          true);
+      for (JDIMENSION bx = 0; bx < comp->width_in_blocks; ++bx) {
+        JCOEF* block = &ba[0][bx][0];
+        for (int k = 0; k < DCTSIZE2; ++k) {
+          tmp[k] = block[kJPEGNaturalOrder[k]];
+        }
+        memcpy(block, tmp, sizeof(tmp));
+      }
     }
   }
 }
 
 }  // namespace jpegli
+
+//
+// Parameter setup
+//
 
 void jpegli_CreateCompress(j_compress_ptr cinfo, int version,
                            size_t structsize) {
@@ -909,43 +957,26 @@ void jpegli_suppress_tables(j_compress_ptr cinfo, boolean suppress) {
   jpegli::SetSentTableFlag(cinfo->ac_huff_tbl_ptrs, NUM_HUFF_TBLS, suppress);
 }
 
+//
+// Compressor initialization
+//
+
 void jpegli_start_compress(j_compress_ptr cinfo, boolean write_all_tables) {
   CheckState(cinfo, jpegli::kEncStart);
-  jpegli::ProcessCompressionParams(cinfo);
-  jpegli::InitProgressMonitor(cinfo);
-  jpegli::AllocateBuffers(cinfo);
-  jpegli::ChooseInputMethod(cinfo);
-  if (!cinfo->raw_data_in) {
-    jpegli::ChooseColorTransform(cinfo);
-    jpegli::ChooseDownsampleMethods(cinfo);
-  }
-  jpegli::InitQuantizer(cinfo);
-  if (write_all_tables) {
-    jpegli_suppress_tables(cinfo, FALSE);
-  }
-  (*cinfo->mem->realize_virt_arrays)(reinterpret_cast<j_common_ptr>(cinfo));
-  jpegli::ResetForImage(cinfo);
-  jpegli::WriteFileHeader(cinfo);
-  jpegli::JpegBitWriterInit(cinfo);
+  cinfo->global_state = jpegli::kEncHeader;
+  jpegli::InitCompress(cinfo, write_all_tables);
   cinfo->next_scanline = 0;
   cinfo->master->next_input_row = 0;
-  cinfo->global_state = jpegli::kEncHeader;
 }
 
 void jpegli_write_coefficients(j_compress_ptr cinfo,
                                jvirt_barray_ptr* coef_arrays) {
   CheckState(cinfo, jpegli::kEncStart);
-  jpegli::ProcessCompressionParams(cinfo);
-  jpegli::InitProgressMonitor(cinfo);
-  (*cinfo->mem->realize_virt_arrays)(reinterpret_cast<j_common_ptr>(cinfo));
+  cinfo->global_state = jpegli::kEncWriteCoeffs;
+  jpegli::InitCompress(cinfo, /*write_all_tables=*/true);
   cinfo->master->coeff_buffers = coef_arrays;
-  jpegli_suppress_tables(cinfo, FALSE);
-  jpegli::ResetForImage(cinfo);
-  jpegli::WriteFileHeader(cinfo);
-  jpegli::JpegBitWriterInit(cinfo);
   cinfo->next_scanline = cinfo->image_height;
   cinfo->master->next_input_row = cinfo->image_height;
-  cinfo->global_state = jpegli::kEncWriteCoeffs;
 }
 
 void jpegli_write_tables(j_compress_ptr cinfo) {
@@ -953,17 +984,21 @@ void jpegli_write_tables(j_compress_ptr cinfo) {
   if (cinfo->dest == nullptr) {
     JPEGLI_ERROR("Missing destination.");
   }
-  jpegli::ResetForImage(cinfo);
-  bool is_baseline = true;
   jpeg_comp_master* m = cinfo->master;
+  (*cinfo->err->reset_error_mgr)(reinterpret_cast<j_common_ptr>(cinfo));
+  (*cinfo->dest->init_destination)(cinfo);
   jpegli::WriteOutput(cinfo, {0xFF, 0xD8});  // SOI
-  jpegli::EncodeDQT(cinfo, /*write_all_tables=*/true, &is_baseline);
-  jpegli::CopyHuffmanCodes(cinfo, &is_baseline);
-  jpegli::EncodeDHT(cinfo, m->huffman_codes, m->num_huffman_codes);
+  jpegli::EncodeDQT(cinfo, /*write_all_tables=*/true);
+  jpegli::CopyHuffmanTables(cinfo);
+  jpegli::EncodeDHT(cinfo, 0, m->num_huffman_tables);
   jpegli::WriteOutput(cinfo, {0xFF, 0xD9});  // EOI
   (*cinfo->dest->term_destination)(cinfo);
   jpegli_suppress_tables(cinfo, TRUE);
 }
+
+//
+// Marker writing
+//
 
 void jpegli_write_m_header(j_compress_ptr cinfo, int marker,
                            unsigned int datalen) {
@@ -1018,6 +1053,10 @@ void jpegli_write_icc_profile(j_compress_ptr cinfo, const JOCTET* icc_data_ptr,
   }
 }
 
+//
+// Input streaming
+//
+
 JDIMENSION jpegli_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
                                   JDIMENSION num_lines) {
   CheckState(cinfo, jpegli::kEncHeader, jpegli::kEncReadImage);
@@ -1026,8 +1065,9 @@ JDIMENSION jpegli_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
   }
   jpegli::ProgressMonitorInputPass(cinfo);
   if (cinfo->global_state == jpegli::kEncHeader &&
-      jpegli::IsStreamingSupported(cinfo)) {
-    jpegli::WriteHeaderMarkers(cinfo);
+      jpegli::IsStreamingSupported(cinfo) && !cinfo->optimize_coding) {
+    jpegli::WriteFrameHeader(cinfo);
+    jpegli::WriteScanHeader(cinfo, 0);
   }
   cinfo->global_state = jpegli::kEncReadImage;
   jpeg_comp_master* m = cinfo->master;
@@ -1068,8 +1108,9 @@ JDIMENSION jpegli_write_raw_data(j_compress_ptr cinfo, JSAMPIMAGE data,
   }
   jpegli::ProgressMonitorInputPass(cinfo);
   if (cinfo->global_state == jpegli::kEncHeader &&
-      jpegli::IsStreamingSupported(cinfo)) {
-    jpegli::WriteHeaderMarkers(cinfo);
+      jpegli::IsStreamingSupported(cinfo) && !cinfo->optimize_coding) {
+    jpegli::WriteFrameHeader(cinfo);
+    jpegli::WriteScanHeader(cinfo, 0);
   }
   cinfo->global_state = jpegli::kEncReadImage;
   jpeg_comp_master* m = cinfo->master;
@@ -1117,6 +1158,10 @@ JDIMENSION jpegli_write_raw_data(j_compress_ptr cinfo, JSAMPIMAGE data,
   return iMCU_height;
 }
 
+//
+// Non-streaming part
+//
+
 void jpegli_finish_compress(j_compress_ptr cinfo) {
   CheckState(cinfo, jpegli::kEncReadImage, jpegli::kEncWriteCoeffs);
   jpeg_comp_master* m = cinfo->master;
@@ -1125,16 +1170,35 @@ void jpegli_finish_compress(j_compress_ptr cinfo) {
                  cinfo->image_height, cinfo->next_scanline);
   }
 
-  if (jpegli::IsStreamingSupported(cinfo)) {
-    jpegli::JumpToByteBoundary(&m->bw);
-    if (!jpegli::EmptyBitWriterBuffer(&m->bw)) {
-      JPEGLI_ERROR("Output suspension is not supported in finish_compress");
-    }
-    if (!m->bw.healthy) {
-      JPEGLI_ERROR("Failed to encode scan.");
+  if (cinfo->global_state == jpegli::kEncWriteCoeffs) {
+    // Zig-zag shuffle all the blocks. For non-transcoding case it was already
+    // done in EncodeiMCURow().
+    jpegli::ZigZagShuffleBlocks(cinfo);
+  }
+
+  const bool tokens_done = jpegli::IsStreamingSupported(cinfo);
+  const bool bitstream_done = tokens_done && !cinfo->optimize_coding;
+
+  if (!tokens_done) {
+    jpegli::TokenizeJpeg(cinfo);
+  }
+
+  if (cinfo->optimize_coding || cinfo->progressive_mode) {
+    jpegli::OptimizeHuffmanCodes(cinfo);
+    jpegli::InitEntropyCoder(cinfo);
+  }
+
+  if (!bitstream_done) {
+    jpegli::WriteFrameHeader(cinfo);
+    for (int i = 0; i < cinfo->num_scans; ++i) {
+      jpegli::WriteScanHeader(cinfo, i);
+      jpegli::WriteScanData(cinfo, i);
     }
   } else {
-    jpegli::EncodeScans(cinfo);
+    JumpToByteBoundary(&m->bw);
+    if (!EmptyBitWriterBuffer(&m->bw)) {
+      JPEGLI_ERROR("Output suspension is not supported in finish_compress");
+    }
   }
 
   jpegli::WriteOutput(cinfo, {0xFF, 0xD9});  // EOI

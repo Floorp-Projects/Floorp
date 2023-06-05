@@ -17,7 +17,6 @@ class PatchDictionaryStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("RenderPatches");
     JXL_ASSERT(xpos == 0 || xpos >= xextra);
     size_t x0 = xpos ? xpos - xextra : 0;
     std::vector<float*> row_ptrs(num_channels_);

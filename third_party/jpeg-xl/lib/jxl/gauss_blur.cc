@@ -17,7 +17,6 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/matrix_ops.h"
@@ -377,7 +376,6 @@ void VerticalStrip(const hwy::AlignedUniquePtr<RecursiveGaussian>& rg,
 void FastGaussianVertical(const hwy::AlignedUniquePtr<RecursiveGaussian>& rg,
                           const ImageF& in, ThreadPool* /*pool*/,
                           ImageF* JXL_RESTRICT out) {
-  PROFILER_FUNC;
   JXL_CHECK(SameSize(in, *out));
 
   constexpr size_t kCacheLineLanes = 64 / sizeof(float);
@@ -497,7 +495,6 @@ ImageF ConvolveAndSample(const ImageF& in, const std::vector<float>& kernel,
 // Implements "Recursive Implementation of the Gaussian Filter Using Truncated
 // Cosine Functions" by Charalampidis [2016].
 hwy::AlignedUniquePtr<RecursiveGaussian> CreateRecursiveGaussian(double sigma) {
-  PROFILER_FUNC;
   auto rg = hwy::MakeUniqueAligned<RecursiveGaussian>();
   constexpr double kPi = 3.141592653589793238;
 
@@ -595,7 +592,6 @@ namespace {
 void FastGaussianHorizontal(const hwy::AlignedUniquePtr<RecursiveGaussian>& rg,
                             const ImageF& in, ThreadPool* pool,
                             ImageF* JXL_RESTRICT out) {
-  PROFILER_FUNC;
   JXL_CHECK(SameSize(in, *out));
 
   const intptr_t xsize = in.xsize();

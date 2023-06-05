@@ -115,6 +115,24 @@ static constexpr jpeg_scan_info kScanScript5[] = {
 };
 static constexpr size_t kNumScans5 = ARRAY_SIZE(kScanScript5);
 
+// default progressive mode of jpegli
+static constexpr jpeg_scan_info kScanScript6[] = {
+    {3, {0, 1, 2}, 0, 0, 0, 0},  //
+    {1, {0}, 1, 2, 0, 0},        //
+    {1, {1}, 1, 2, 0, 0},        //
+    {1, {2}, 1, 2, 0, 0},        //
+    {1, {0}, 3, 63, 0, 2},       //
+    {1, {1}, 3, 63, 0, 2},       //
+    {1, {2}, 3, 63, 0, 2},       //
+    {1, {0}, 3, 63, 2, 1},       //
+    {1, {1}, 3, 63, 2, 1},       //
+    {1, {2}, 3, 63, 2, 1},       //
+    {1, {0}, 3, 63, 1, 0},       //
+    {1, {1}, 3, 63, 1, 0},       //
+    {1, {2}, 3, 63, 1, 0},       //
+};
+static constexpr size_t kNumScans6 = ARRAY_SIZE(kScanScript6);
+
 // Adapt RGB scan info to grayscale jpegs.
 void FilterScanComponents(const jpeg_compress_struct* cinfo,
                           jpeg_scan_info* si) {
@@ -138,11 +156,11 @@ Status SetJpegProgression(int progressive_id,
     jpeg_simple_progression(cinfo);
     return true;
   }
-  constexpr const jpeg_scan_info* kScanScripts[] = {
-      kScanScript1, kScanScript2, kScanScript3, kScanScript4, kScanScript5,
-  };
+  constexpr const jpeg_scan_info* kScanScripts[] = {kScanScript1, kScanScript2,
+                                                    kScanScript3, kScanScript4,
+                                                    kScanScript5, kScanScript6};
   constexpr size_t kNumScans[] = {kNumScans1, kNumScans2, kNumScans3,
-                                  kNumScans4, kNumScans5};
+                                  kNumScans4, kNumScans5, kNumScans6};
   if (progressive_id > static_cast<int>(ARRAY_SIZE(kNumScans))) {
     return JXL_FAILURE("Unknown jpeg scan script id %d", progressive_id);
   }

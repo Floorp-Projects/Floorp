@@ -13,13 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <cmath>  // std::isfinite
-
-#include "hwy/base.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/convert_test.cc"
@@ -30,6 +26,42 @@
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
+
+template <typename T, size_t N, int kPow2>
+size_t DeduceN(Simd<T, N, kPow2>) {
+  return N;
+}
+
+template <typename ToT>
+struct TestRebind {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const Rebind<ToT, D> dto;
+    const size_t N = Lanes(d);
+    HWY_ASSERT(N <= MaxLanes(d));
+    const size_t NTo = Lanes(dto);
+    if (NTo != N) {
+      HWY_ABORT("u%zu -> u%zu: lanes %zu %zu pow2 %d %d cap %zu %zu\n",
+                8 * sizeof(T), 8 * sizeof(ToT), N, NTo, d.Pow2(), dto.Pow2(),
+                DeduceN(d), DeduceN(dto));
+    }
+  }
+};
+
+// Lane count remains the same when we rebind to smaller/equal/larger types.
+HWY_NOINLINE void TestAllRebind() {
+#if HWY_HAVE_INTEGER64
+  ForShrinkableVectors<TestRebind<uint8_t>, 3>()(uint64_t());
+#endif  // HWY_HAVE_INTEGER64
+  ForShrinkableVectors<TestRebind<uint8_t>, 2>()(uint32_t());
+  ForShrinkableVectors<TestRebind<uint8_t>, 1>()(uint16_t());
+  ForPartialVectors<TestRebind<uint8_t>>()(uint8_t());
+  ForExtendableVectors<TestRebind<uint16_t>, 1>()(uint8_t());
+  ForExtendableVectors<TestRebind<uint32_t>, 2>()(uint8_t());
+#if HWY_HAVE_INTEGER64
+  ForExtendableVectors<TestRebind<uint64_t>, 3>()(uint8_t());
+#endif  // HWY_HAVE_INTEGER64
+}
 
 // Cast and ensure bytes are the same. Called directly from TestAllBitCast or
 // via TestBitCastFrom.
@@ -47,6 +79,7 @@ struct TestBitCast {
     // Must return the same bits
     auto from_lanes = AllocateAligned<T>(Lanes(d));
     auto to_lanes = AllocateAligned<ToT>(Lanes(dto));
+    HWY_ASSERT(from_lanes && to_lanes);
     Store(vf, d, from_lanes.get());
     Store(vt, dto, to_lanes.get());
     HWY_ASSERT(
@@ -143,6 +176,159 @@ HWY_NOINLINE void TestAllBitCast() {
 #endif
 }
 
+template <class TTo>
+struct TestResizeBitCastToOneLaneVect {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const size_t N = Lanes(d);
+    if (N == 0) {
+      return;
+    }
+
+    auto from_lanes = AllocateAligned<T>(N);
+    HWY_ASSERT(from_lanes);
+    auto v = Iota(d, 1);
+    Store(v, d, from_lanes.get());
+
+    const size_t num_of_bytes_to_copy = HWY_MIN(N * sizeof(T), sizeof(TTo));
+
+    int8_t active_bits_mask_i8_arr[sizeof(TTo)] = {};
+    for (size_t i = 0; i < num_of_bytes_to_copy; i++) {
+      active_bits_mask_i8_arr[i] = int8_t{-1};
+    }
+
+    TTo active_bits_int_mask;
+    CopyBytes<sizeof(TTo)>(active_bits_mask_i8_arr, &active_bits_int_mask);
+
+    const FixedTag<TTo, 1> d_to;
+    TTo expected_bits = 0;
+    memcpy(&expected_bits, from_lanes.get(), num_of_bytes_to_copy);
+
+    const auto expected = Set(d_to, expected_bits);
+    const auto v_active_bits_mask = Set(d_to, active_bits_int_mask);
+
+    const auto actual_1 = And(v_active_bits_mask, ResizeBitCast(d_to, v));
+    const auto actual_2 = ZeroExtendResizeBitCast(d_to, d, v);
+
+    HWY_ASSERT_VEC_EQ(d_to, expected, actual_1);
+    HWY_ASSERT_VEC_EQ(d_to, expected, actual_2);
+  }
+};
+
+HWY_NOINLINE void TestAllResizeBitCastToOneLaneVect() {
+  ForAllTypes(ForPartialVectors<TestResizeBitCastToOneLaneVect<uint32_t>>());
+#if HWY_HAVE_INTEGER64
+  ForAllTypes(ForPartialVectors<TestResizeBitCastToOneLaneVect<uint64_t>>());
+#endif
+}
+
+// Cast and ensure bytes are the same. Called directly from
+// TestAllSameSizeResizeBitCast or via TestSameSizeResizeBitCastFrom.
+template <typename ToT>
+struct TestSameSizeResizeBitCast {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const Repartition<ToT, D> dto;
+    const auto v = Iota(d, 1);
+    const auto expected = BitCast(dto, v);
+
+    const VFromD<decltype(dto)> actual_1 = ResizeBitCast(dto, v);
+    const VFromD<decltype(dto)> actual_2 = ZeroExtendResizeBitCast(dto, d, v);
+
+    HWY_ASSERT_VEC_EQ(dto, expected, actual_1);
+    HWY_ASSERT_VEC_EQ(dto, expected, actual_2);
+  }
+};
+
+// From D to all types.
+struct TestSameSizeResizeBitCastFrom {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T t, D d) {
+    TestSameSizeResizeBitCast<uint8_t>()(t, d);
+    TestSameSizeResizeBitCast<uint16_t>()(t, d);
+    TestSameSizeResizeBitCast<uint32_t>()(t, d);
+#if HWY_HAVE_INTEGER64
+    TestSameSizeResizeBitCast<uint64_t>()(t, d);
+#endif
+    TestSameSizeResizeBitCast<int8_t>()(t, d);
+    TestSameSizeResizeBitCast<int16_t>()(t, d);
+    TestSameSizeResizeBitCast<int32_t>()(t, d);
+#if HWY_HAVE_INTEGER64
+    TestSameSizeResizeBitCast<int64_t>()(t, d);
+#endif
+    TestSameSizeResizeBitCast<float>()(t, d);
+#if HWY_HAVE_FLOAT64
+    TestSameSizeResizeBitCast<double>()(t, d);
+#endif
+  }
+};
+
+HWY_NOINLINE void TestAllSameSizeResizeBitCast() {
+  // For HWY_SCALAR and partial vectors, we can only cast to same-sized types:
+  // the former can't partition its single lane, and the latter can be smaller
+  // than a destination type.
+  const ForPartialVectors<TestSameSizeResizeBitCast<uint8_t>> to_u8;
+  to_u8(uint8_t());
+  to_u8(int8_t());
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<int8_t>> to_i8;
+  to_i8(uint8_t());
+  to_i8(int8_t());
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<uint16_t>> to_u16;
+  to_u16(uint16_t());
+  to_u16(int16_t());
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<int16_t>> to_i16;
+  to_i16(uint16_t());
+  to_i16(int16_t());
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<uint32_t>> to_u32;
+  to_u32(uint32_t());
+  to_u32(int32_t());
+  to_u32(float());
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<int32_t>> to_i32;
+  to_i32(uint32_t());
+  to_i32(int32_t());
+  to_i32(float());
+
+#if HWY_HAVE_INTEGER64
+  const ForPartialVectors<TestSameSizeResizeBitCast<uint64_t>> to_u64;
+  to_u64(uint64_t());
+  to_u64(int64_t());
+#if HWY_HAVE_FLOAT64
+  to_u64(double());
+#endif
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<int64_t>> to_i64;
+  to_i64(uint64_t());
+  to_i64(int64_t());
+#if HWY_HAVE_FLOAT64
+  to_i64(double());
+#endif
+#endif  // HWY_HAVE_INTEGER64
+
+  const ForPartialVectors<TestSameSizeResizeBitCast<float>> to_float;
+  to_float(uint32_t());
+  to_float(int32_t());
+  to_float(float());
+
+#if HWY_HAVE_FLOAT64
+  const ForPartialVectors<TestSameSizeResizeBitCast<double>> to_double;
+  to_double(double());
+#if HWY_HAVE_INTEGER64
+  to_double(uint64_t());
+  to_double(int64_t());
+#endif  // HWY_HAVE_INTEGER64
+#endif  // HWY_HAVE_FLOAT64
+
+#if HWY_TARGET != HWY_SCALAR
+  // For non-scalar vectors, we can cast all types to all.
+  ForAllTypes(ForGEVectors<64, TestSameSizeResizeBitCastFrom>());
+#endif
+}
+
 template <typename ToT>
 struct TestPromoteTo {
   template <typename T, class D>
@@ -198,6 +384,21 @@ HWY_NOINLINE void TestAllPromoteTo() {
 
   const ForPromoteVectors<TestPromoteTo<int64_t>, 1> to_i64div2;
   to_i64div2(int32_t());
+  to_i64div2(uint32_t());
+
+  const ForPromoteVectors<TestPromoteTo<uint64_t>, 2> to_u64div4;
+  to_u64div4(uint16_t());
+
+  const ForPromoteVectors<TestPromoteTo<int64_t>, 2> to_i64div4;
+  to_i64div4(int16_t());
+  to_i64div4(uint16_t());
+
+  const ForPromoteVectors<TestPromoteTo<uint64_t>, 3> to_u64div8;
+  to_u64div8(uint8_t());
+
+  const ForPromoteVectors<TestPromoteTo<int64_t>, 3> to_i64div8;
+  to_i64div8(int8_t());
+  to_i64div8(uint8_t());
 #endif
 
 #if HWY_HAVE_FLOAT64
@@ -236,7 +437,7 @@ AlignedFreeUniquePtr<float[]> F16TestCases(D d, size_t& padded) {
       2.00390625f, 3.99609375f,
       // negative +/- delta
       -2.00390625f, -3.99609375f,
-      // No infinity/NaN - implementation-defined due to ARM.
+      // No infinity/NaN - implementation-defined due to Arm.
   };
   constexpr size_t kNumTestCases = sizeof(test_cases) / sizeof(test_cases[0]);
   const size_t N = Lanes(d);
@@ -329,7 +530,8 @@ struct TestBF16 {
 #endif
     const Half<decltype(dbf16)> dbf16_half;
     const size_t N = Lanes(d32);
-    HWY_ASSERT(Lanes(dbf16_half) <= N);
+
+    HWY_ASSERT(Lanes(dbf16_half) == N);
     auto temp16 = AllocateAligned<TBF16>(N);
 
     for (size_t i = 0; i < padded; i += N) {
@@ -365,7 +567,7 @@ HWY_NOINLINE void TestAllConvertU8() {
 template <typename From, typename To, class D>
 constexpr bool IsSupportedTruncation() {
   return (sizeof(To) < sizeof(From)) &&
-         (Pow2(Rebind<To, D>()) + 3 >= static_cast<int>(CeilLog2(sizeof(To))));
+         (Rebind<To, D>().Pow2() + 3 >= static_cast<int>(CeilLog2(sizeof(To))));
 }
 
 struct TestTruncateTo {
@@ -398,12 +600,58 @@ HWY_NOINLINE void TestAllTruncate() {
   ForUnsignedTypes(ForPartialVectors<TestTruncateTo>());
 }
 
-// Separate function to attempt to work around a compiler bug on ARM: when this
+struct TestOrderedTruncate2To {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*t*/, D d) {
+#if HWY_TARGET != HWY_SCALAR
+    const Repartition<MakeNarrow<T>, decltype(d)> dn;
+    using TN = TFromD<decltype(dn)>;
+
+    const size_t N = Lanes(d);
+    const size_t twiceN = N * 2;
+    auto from = AllocateAligned<T>(twiceN);
+    auto expected = AllocateAligned<TN>(twiceN);
+
+    const T max = LimitsMax<TN>();
+
+    constexpr uint32_t iota_base = 0xFA578D00;
+    const auto src_iota_a = Iota(d, static_cast<T>(iota_base));
+    const auto src_iota_b = Iota(d, static_cast<T>(iota_base + N));
+    const auto expected_iota_trunc_result =
+        Iota(dn, static_cast<TN>(iota_base));
+    const auto actual_iota_trunc_result =
+        OrderedTruncate2To(dn, src_iota_a, src_iota_b);
+    HWY_ASSERT_VEC_EQ(dn, expected_iota_trunc_result, actual_iota_trunc_result);
+
+    RandomState rng;
+    for (size_t rep = 0; rep < AdjustedReps(1000); ++rep) {
+      for (size_t i = 0; i < twiceN; ++i) {
+        const uint64_t bits = rng();
+        CopyBytes<sizeof(T)>(&bits, &from[i]);  // not same size
+        expected[i] = static_cast<TN>(from[i] & max);
+      }
+
+      const auto in_1 = Load(d, from.get());
+      const auto in_2 = Load(d, from.get() + N);
+      const auto actual = OrderedTruncate2To(dn, in_1, in_2);
+      HWY_ASSERT_VEC_EQ(dn, expected.get(), actual);
+    }
+#else
+    (void)d;
+#endif
+  }
+};
+
+HWY_NOINLINE void TestAllOrderedTruncate2To() {
+  ForU163264(ForShrinkableVectors<TestOrderedTruncate2To>());
+}
+
+// Separate function to attempt to work around a compiler bug on Arm: when this
 // is merged with TestIntFromFloat, outputs match a previous Iota(-(N+1)) input.
 struct TestIntFromFloatHuge {
   template <typename TF, class DF>
   HWY_NOINLINE void operator()(TF /*unused*/, const DF df) {
-    // The ARMv7 manual says that float->int saturates, i.e. chooses the
+    // The Armv7 manual says that float->int saturates, i.e. chooses the
     // nearest representable value. This works correctly on armhf with GCC, but
     // not with clang. For reasons unknown, MSVC also runs into an out-of-memory
     // error here.
@@ -618,7 +866,6 @@ HWY_NOINLINE void TestAllI32F64() {
 #endif
 }
 
-
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace hwy
@@ -628,12 +875,16 @@ HWY_AFTER_NAMESPACE();
 
 namespace hwy {
 HWY_BEFORE_TEST(HwyConvertTest);
+HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllRebind);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllBitCast);
+HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllResizeBitCastToOneLaneVect);
+HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllSameSizeResizeBitCast);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllPromoteTo);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllF16);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllBF16);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllConvertU8);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllTruncate);
+HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllOrderedTruncate2To);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllIntFromFloat);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllFloatFromInt);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllFloatFromUint);

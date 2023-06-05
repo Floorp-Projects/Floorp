@@ -484,6 +484,53 @@ void AllocateCoefficientBuffer(j_decompress_ptr cinfo) {
   (*cinfo->mem->realize_virt_arrays)(comptr);
 }
 
+void AllocateOutputBuffers(j_decompress_ptr cinfo) {
+  jpeg_decomp_master* m = cinfo->master;
+  size_t iMCU_width = cinfo->max_h_samp_factor * m->min_scaled_dct_size;
+  size_t output_stride = m->iMCU_cols_ * iMCU_width;
+  m->need_context_rows_ = false;
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    if (cinfo->do_fancy_upsampling && m->v_factor[c] == 2) {
+      m->need_context_rows_ = true;
+    }
+  }
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    const auto& comp = cinfo->comp_info[c];
+    size_t cheight = comp.v_samp_factor * m->scaled_dct_size[c];
+    int downsampled_width = output_stride / m->h_factor[c];
+    m->raw_height_[c] = cinfo->total_iMCU_rows * cheight;
+    if (m->need_context_rows_) {
+      cheight *= 3;
+    }
+    m->raw_output_[c].Allocate(cinfo, cheight, downsampled_width);
+  }
+  int num_all_components =
+      std::max(cinfo->out_color_components, cinfo->num_components);
+  for (int c = 0; c < num_all_components; ++c) {
+    m->render_output_[c].Allocate(cinfo, cinfo->max_v_samp_factor,
+                                  output_stride);
+  }
+  m->idct_scratch_ = Allocate<float>(cinfo, 5 * DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+  // Padding for horizontal chroma upsampling.
+  constexpr size_t kPaddingLeft = 64;
+  constexpr size_t kPaddingRight = 64;
+  m->upsample_scratch_ = Allocate<float>(
+      cinfo, output_stride + kPaddingLeft + kPaddingRight, JPOOL_IMAGE_ALIGNED);
+  size_t bytes_per_sample = jpegli_bytes_per_sample(m->output_data_type_);
+  size_t bytes_per_pixel = cinfo->out_color_components * bytes_per_sample;
+  size_t scratch_stride = RoundUpTo(output_stride, HWY_ALIGNMENT);
+  m->output_scratch_ = Allocate<uint8_t>(
+      cinfo, bytes_per_pixel * scratch_stride, JPOOL_IMAGE_ALIGNED);
+  m->smoothing_scratch_ =
+      Allocate<int16_t>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+  size_t coeffs_per_block = cinfo->num_components * DCTSIZE2;
+  m->nonzeros_ = Allocate<int>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  m->sumabs_ = Allocate<int>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  m->biases_ = Allocate<float>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  m->dequant_ = Allocate<float>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
+  memset(m->dequant_, 0, coeffs_per_block * sizeof(float));
+}
+
 }  // namespace jpegli
 
 void jpegli_CreateDecompress(j_decompress_ptr cinfo, int version,
@@ -720,6 +767,7 @@ boolean jpegli_start_decompress(j_decompress_ptr cinfo) {
       }
     }
     jpegli::InitProgressMonitor(cinfo, /*coef_only=*/false);
+    jpegli::AllocateOutputBuffers(cinfo);
     if (cinfo->buffered_image == TRUE) {
       cinfo->output_scan_number = 0;
       return TRUE;
@@ -766,7 +814,6 @@ boolean jpegli_start_output(j_decompress_ptr cinfo, int scan_number) {
         std::min(cinfo->output_scan_number, cinfo->input_scan_number);
   }
   jpegli::InitProgressMonitorForOutput(cinfo);
-  // TODO(szabadka): Figure out how much we can reuse.
   jpegli::PrepareForOutput(cinfo);
   if (cinfo->quantize_colors) {
     return jpegli::PrepareQuantizedOutput(cinfo);

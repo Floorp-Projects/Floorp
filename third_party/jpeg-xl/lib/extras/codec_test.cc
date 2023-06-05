@@ -61,6 +61,8 @@ std::string ExtensionFromCodec(Codec codec, const bool is_gray,
       return ".gif";
     case Codec::kEXR:
       return ".exr";
+    case Codec::kJXL:
+      return ".jxl";
     case Codec::kUnknown:
       return std::string();
   }

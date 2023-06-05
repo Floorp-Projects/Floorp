@@ -54,7 +54,6 @@ TEST(ThreadParallelRunnerTest, TestPool) {
 
 // Verify "thread" parameter when processing few tasks.
 TEST(ThreadParallelRunnerTest, TestSmallAssignments) {
-  // WARNING: cumulative total threads must not exceed profiler.h kMaxThreads.
   const int kMaxThreads = 8;
   for (int num_threads = 1; num_threads <= kMaxThreads; ++num_threads) {
     ThreadPoolForTests pool(num_threads);

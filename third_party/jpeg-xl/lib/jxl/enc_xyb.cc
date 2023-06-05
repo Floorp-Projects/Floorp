@@ -16,7 +16,6 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
@@ -311,8 +310,6 @@ void Image3FToXYB(const Image3F& in, const ColorEncoding& color_encoding,
 const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
                          Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
                          ImageBundle* const JXL_RESTRICT linear) {
-  PROFILER_FUNC;
-
   const size_t xsize = in.xsize();
   const size_t ysize = in.ysize();
   JXL_ASSERT(SameSize(in, *xyb));

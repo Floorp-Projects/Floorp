@@ -27,11 +27,10 @@ HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 
-void SortU32Asc(uint32_t* HWY_RESTRICT keys, size_t num,
-                uint32_t* HWY_RESTRICT buf) {
+void SortU32Asc(uint32_t* HWY_RESTRICT keys, size_t num) {
   SortTag<uint32_t> d;
   detail::SharedTraits<detail::TraitsLane<detail::OrderAscending<uint32_t>>> st;
-  Sort(d, st, keys, num, buf);
+  Sort(d, st, keys, num);
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -45,9 +44,8 @@ namespace {
 HWY_EXPORT(SortU32Asc);
 }  // namespace
 
-void Sorter::operator()(uint32_t* HWY_RESTRICT keys, size_t n,
-                        SortAscending) const {
-  HWY_DYNAMIC_DISPATCH(SortU32Asc)(keys, n, Get<uint32_t>());
+void VQSort(uint32_t* HWY_RESTRICT keys, size_t n, SortAscending) {
+  HWY_DYNAMIC_DISPATCH(SortU32Asc)(keys, n);
 }
 
 }  // namespace hwy

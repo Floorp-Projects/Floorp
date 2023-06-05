@@ -18,15 +18,13 @@
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS  // before inttypes.h
 #endif
-#include <inttypes.h>
-#include <stddef.h>
+#include <inttypes.h>  // IWYU pragma: keep
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>    // clock_gettime
 
 #include <algorithm>  // std::sort, std::find_if
 #include <array>
-#include <atomic>
 #include <chrono>  //NOLINT
 #include <limits>
 #include <numeric>  // std::iota
@@ -326,28 +324,10 @@ T MedianAbsoluteDeviation(const T* values, const size_t num_values,
 namespace platform {
 namespace {
 
-// Prevents the compiler from eliding the computations that led to "output".
-template <class T>
-inline void PreventElision(T&& output) {
-#if HWY_COMPILER_MSVC == 0
-  // Works by indicating to the compiler that "output" is being read and
-  // modified. The +r constraint avoids unnecessary writes to memory, but only
-  // works for built-in types (typically FuncOutput).
-  asm volatile("" : "+r"(output) : : "memory");
-#else
-  // MSVC does not support inline assembly anymore (and never supported GCC's
-  // RTL constraints). Self-assignment with #pragma optimize("off") might be
-  // expected to prevent elision, but it does not with MSVC 2015. Type-punning
-  // with volatile pointers generates inefficient code on MSVC 2017.
-  static std::atomic<T> dummy(T{});
-  dummy.store(output, std::memory_order_relaxed);
-#endif
-}
-
 // Measures the actual current frequency of Ticks. We cannot rely on the nominal
 // frequency encoded in x86 BrandString because it is misleading on M1 Rosetta,
 // and not reported by AMD. CPUID 0x15 is also not yet widely supported. Also
-// used on RISC-V and ARM64.
+// used on RISC-V and aarch64.
 HWY_MAYBE_UNUSED double MeasureNominalClockRate() {
   double max_ticks_per_sec = 0.0;
   // Arbitrary, enough to ignore 2 outliers without excessive init time.
@@ -577,7 +557,7 @@ size_t NumSkip(const Func func, const uint8_t* arg, const InputVec& unique,
     double rel_mad;
     const timer::Ticks total = SampleUntilStable(
         p.target_rel_mad, &rel_mad, p,
-        [func, arg, input]() { platform::PreventElision(func(arg, input)); });
+        [func, arg, input]() { PreventElision(func(arg, input)); });
     min_duration = HWY_MIN(min_duration, total - timer_resolution);
   }
 
@@ -665,7 +645,7 @@ timer::Ticks TotalDuration(const Func func, const uint8_t* arg,
   const timer::Ticks duration =
       SampleUntilStable(p.target_rel_mad, &rel_mad, p, [func, arg, inputs]() {
         for (const FuncInput input : *inputs) {
-          platform::PreventElision(func(arg, input));
+          PreventElision(func(arg, input));
         }
       });
   *max_rel_mad = HWY_MAX(*max_rel_mad, rel_mad);
@@ -685,7 +665,7 @@ timer::Ticks Overhead(const uint8_t* arg, const InputVec* inputs,
   // Zero tolerance because repeatability is crucial and EmptyFunc is fast.
   return SampleUntilStable(0.0, &rel_mad, p, [arg, inputs]() {
     for (const FuncInput input : *inputs) {
-      platform::PreventElision(EmptyFunc(arg, input));
+      PreventElision(EmptyFunc(arg, input));
     }
   });
 }

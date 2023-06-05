@@ -44,13 +44,14 @@ struct TestFloorLog2 {
     const size_t count = 5 * hn::Lanes(df);
     auto in = hwy::AllocateAligned<uint8_t>(count);
     auto expected = hwy::AllocateAligned<uint8_t>(count);
+    auto out = hwy::AllocateAligned<uint8_t>(count);
+    HWY_ASSERT(in && expected && out);
 
     hwy::RandomState rng;
     for (size_t i = 0; i < count; ++i) {
       expected[i] = Random32(&rng) & 7;
       in[i] = static_cast<uint8_t>(1u << expected[i]);
     }
-    auto out = hwy::AllocateAligned<uint8_t>(count);
     CallFloorLog2(in.get(), count, out.get());
     int sum = 0;
     for (size_t i = 0; i < count; ++i) {
@@ -71,7 +72,7 @@ struct TestSumMulAdd {
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     hwy::RandomState rng;
     const size_t count = 4096;
-    EXPECT_EQ(0, count % hn::Lanes(d));
+    HWY_ASSERT_EQ(size_t{0}, count % hn::Lanes(d));
     auto mul = hwy::AllocateAligned<T>(count);
     auto x = hwy::AllocateAligned<T>(count);
     auto add = hwy::AllocateAligned<T>(count);

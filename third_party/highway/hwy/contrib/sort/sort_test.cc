@@ -16,8 +16,7 @@
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS  // before inttypes.h
 #endif
-#include <inttypes.h>
-#include <stdint.h>
+#include <inttypes.h>  // IWYU pragma: keep
 #include <stdio.h>
 #include <string.h>  // memcpy
 
@@ -28,7 +27,7 @@
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/sort/sort_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
+#include "hwy/highway.h"
 #include "hwy/contrib/sort/vqsort.h"
 // After foreach_target
 #include "hwy/contrib/sort/algo-inl.h"
@@ -44,10 +43,10 @@ namespace HWY_NAMESPACE {
 namespace {
 
 using detail::OrderAscending;
-using detail::OrderDescending;
 using detail::SharedTraits;
 using detail::TraitsLane;
 #if VQSORT_ENABLED || HWY_IDE
+#if !HAVE_INTEL
 using detail::OrderAscending128;
 using detail::OrderAscendingKV128;
 using detail::OrderAscendingKV64;
@@ -55,6 +54,7 @@ using detail::OrderDescending128;
 using detail::OrderDescendingKV128;
 using detail::OrderDescendingKV64;
 using detail::Traits128;
+#endif
 
 template <class Traits>
 static HWY_NOINLINE void TestMedian3() {
@@ -84,12 +84,13 @@ static HWY_NOINLINE void TestBaseCaseAscDesc() {
   SharedTraits<Traits> st;
   const SortTag<LaneType> d;
   const size_t N = Lanes(d);
-  const size_t base_case_num = SortConstants::BaseCaseNum(N);
-  const size_t N1 = st.LanesPerKey();
+  constexpr size_t N1 = st.LanesPerKey();
+  const size_t base_case_num = SortConstants::BaseCaseNumLanes<N1>(N);
 
   constexpr int kDebug = 0;
   auto aligned_lanes = hwy::AllocateAligned<LaneType>(N + base_case_num + N);
   auto buf = hwy::AllocateAligned<LaneType>(base_case_num + 2 * N);
+  HWY_ASSERT(aligned_lanes && buf);
 
   std::vector<size_t> lengths;
   lengths.push_back(HWY_MAX(1, N1));
@@ -113,7 +114,7 @@ static HWY_NOINLINE void TestBaseCaseAscDesc() {
         LaneType* HWY_RESTRICT lanes = aligned_lanes.get() + misalign;
         if (kDebug) {
           printf("============%s asc %d N1 %d len %d misalign %d\n",
-                 st.KeyString().c_str(), asc, static_cast<int>(N1),
+                 st.KeyString(), asc, static_cast<int>(N1),
                  static_cast<int>(len), static_cast<int>(misalign));
         }
 
@@ -133,7 +134,7 @@ static HWY_NOINLINE void TestBaseCaseAscDesc() {
           lanes[i] = hwy::LowestValue<LaneType>();
         }
 
-        detail::BaseCase(d, st, lanes, lanes + len, len, buf.get());
+        detail::BaseCase(d, st, lanes, len, buf.get());
 
         if (kDebug >= 2) {
           printf("out>>>>>>\n");
@@ -162,12 +163,13 @@ static HWY_NOINLINE void TestBaseCase01() {
   SharedTraits<Traits> st;
   const SortTag<LaneType> d;
   const size_t N = Lanes(d);
-  const size_t base_case_num = SortConstants::BaseCaseNum(N);
-  const size_t N1 = st.LanesPerKey();
+  constexpr size_t N1 = st.LanesPerKey();
+  const size_t base_case_num = SortConstants::BaseCaseNumLanes<N1>(N);
 
   constexpr int kDebug = 0;
   auto lanes = hwy::AllocateAligned<LaneType>(base_case_num + N);
   auto buf = hwy::AllocateAligned<LaneType>(base_case_num + 2 * N);
+  HWY_ASSERT(lanes && buf);
 
   std::vector<size_t> lengths;
   lengths.push_back(HWY_MAX(1, N1));
@@ -179,7 +181,7 @@ static HWY_NOINLINE void TestBaseCase01() {
 
   for (size_t len : lengths) {
     if (kDebug) {
-      printf("============%s 01 N1 %d len %d\n", st.KeyString().c_str(),
+      printf("============%s 01 N1 %d len %d\n", st.KeyString(),
              static_cast<int>(N1), static_cast<int>(len));
     }
     const uint64_t kMaxBits = AdjustedLog2Reps(HWY_MIN(len, size_t{14}));
@@ -196,7 +198,7 @@ static HWY_NOINLINE void TestBaseCase01() {
         lanes[i] = hwy::LowestValue<LaneType>();
       }
 
-      detail::BaseCase(d, st, lanes.get(), lanes.get() + len, len, buf.get());
+      detail::BaseCase(d, st, lanes.get(), len, buf.get());
 
       if (kDebug >= 2) {
         printf("out>>>>>>\n");
@@ -226,9 +228,11 @@ HWY_NOINLINE void TestAllBaseCase() {
   return;
 #endif
   TestBaseCase<TraitsLane<OrderAscending<int32_t> > >();
-  TestBaseCase<TraitsLane<OrderDescending<int64_t> > >();
+  TestBaseCase<TraitsLane<OtherOrder<int64_t> > >();
+#if !HAVE_INTEL
   TestBaseCase<Traits128<OrderAscending128> >();
   TestBaseCase<Traits128<OrderDescending128> >();
+#endif
 }
 
 template <class Traits>
@@ -250,7 +254,7 @@ static HWY_NOINLINE void VerifyPartition(
       HWY_ABORT(
           "%s: asc %d left[%d] piv %.0f %.0f compares before %.0f %.0f "
           "border %d",
-          st.KeyString().c_str(), asc, static_cast<int>(i),
+          st.KeyString(), asc, static_cast<int>(i),
           static_cast<double>(pivot[1]), static_cast<double>(pivot[0]),
           static_cast<double>(lanes[i + 1]), static_cast<double>(lanes[i + 0]),
           static_cast<int>(border));
@@ -261,7 +265,7 @@ static HWY_NOINLINE void VerifyPartition(
       HWY_ABORT(
           "%s: asc %d right[%d] piv %.0f %.0f compares after %.0f %.0f "
           "border %d",
-          st.KeyString().c_str(), asc, static_cast<int>(i),
+          st.KeyString(), asc, static_cast<int>(i),
           static_cast<double>(pivot[1]), static_cast<double>(pivot[0]),
           static_cast<double>(lanes[i + 1]), static_cast<double>(lanes[i]),
           static_cast<int>(border));
@@ -277,22 +281,22 @@ static HWY_NOINLINE void TestPartition() {
   const bool asc = typename Traits::Order().IsAscending();
   const size_t N = Lanes(d);
   constexpr int kDebug = 0;
-  const size_t base_case_num = SortConstants::BaseCaseNum(N);
+  constexpr size_t N1 = st.LanesPerKey();
+  const size_t base_case_num = SortConstants::BaseCaseNumLanes<N1>(N);
   // left + len + align
   const size_t total = 32 + (base_case_num + 4 * HWY_MAX(N, 4)) + 2 * N;
   auto aligned_lanes = hwy::AllocateAligned<LaneType>(total);
-  auto buf = hwy::AllocateAligned<LaneType>(SortConstants::PartitionBufNum(N));
+  HWY_ALIGN LaneType buf[SortConstants::BufBytes<LaneType, N1>(HWY_MAX_BYTES) /
+                         sizeof(LaneType)];
 
-  const size_t N1 = st.LanesPerKey();
   for (bool in_asc : {false, true}) {
-    for (int left_i : {0, 1, 4, 6, 7, 8, 12, 15, 22, 28, 30, 31}) {
+    for (int left_i : {0, 1, 7, 8, 30, 31}) {
       const size_t left = static_cast<size_t>(left_i) & ~(N1 - 1);
-      for (size_t ofs : {N, N + 1, N + 3, 2 * N, 2 * N + 2, 2 * N + 3,
-                         3 * N - 1, 4 * N - 3, 4 * N - 2}) {
+      for (size_t ofs :
+           {N, N + 3, 2 * N, 2 * N + 2, 2 * N + 3, 3 * N - 1, 4 * N - 2}) {
         const size_t len = (base_case_num + ofs) & ~(N1 - 1);
-        for (LaneType pivot1 :
-             {LaneType(0), LaneType(len / 3), LaneType(len / 2),
-              LaneType(2 * len / 3), LaneType(len)}) {
+        for (LaneType pivot1 : {LaneType(0), LaneType(len / 3),
+                                LaneType(2 * len / 3), LaneType(len)}) {
           const LaneType pivot2[2] = {pivot1, 0};
           const auto pivot = st.SetKey(d, pivot2);
           for (size_t misalign = 0; misalign < N;
@@ -302,7 +306,7 @@ static HWY_NOINLINE void TestPartition() {
             if (kDebug) {
               printf(
                   "=========%s asc %d left %d len %d right %d piv %.0f %.0f\n",
-                  st.KeyString().c_str(), asc, static_cast<int>(left),
+                  st.KeyString(), asc, static_cast<int>(left),
                   static_cast<int>(len), static_cast<int>(right),
                   static_cast<double>(pivot2[1]),
                   static_cast<double>(pivot2[0]));
@@ -328,9 +332,8 @@ static HWY_NOINLINE void TestPartition() {
               lanes[i] = hwy::LowestValue<LaneType>();
             }
 
-            size_t border =
-                left + detail::Partition(d, st, lanes + left, right - left,
-                                         pivot, buf.get());
+            size_t border = left + detail::Partition(d, st, lanes + left,
+                                                     right - left, pivot, buf);
 
             if (kDebug >= 2) {
               printf("out>>>>>>\n");
@@ -371,17 +374,21 @@ static HWY_NOINLINE void TestPartition() {
 }
 
 HWY_NOINLINE void TestAllPartition() {
-  TestPartition<TraitsLane<OrderDescending<int32_t> > >();
+  TestPartition<TraitsLane<OtherOrder<int32_t> > >();
+#if !HAVE_INTEL
   TestPartition<Traits128<OrderAscending128> >();
+#endif
 
 #if !HWY_IS_DEBUG_BUILD
   TestPartition<TraitsLane<OrderAscending<int16_t> > >();
   TestPartition<TraitsLane<OrderAscending<int64_t> > >();
-  TestPartition<TraitsLane<OrderDescending<float> > >();
+  TestPartition<TraitsLane<OtherOrder<float> > >();
 #if HWY_HAVE_FLOAT64
-  TestPartition<TraitsLane<OrderDescending<double> > >();
+  TestPartition<TraitsLane<OtherOrder<double> > >();
 #endif
+#if !HAVE_INTEL
   TestPartition<Traits128<OrderDescending128> >();
+#endif
 #endif
 }
 
@@ -392,7 +399,20 @@ static HWY_NOINLINE void TestRandomGenerator() {
   SortTag<TU> du;
   const size_t N = Lanes(du);
 
-  detail::Generator rng(&N, N);
+  uint64_t* state = GetGeneratorState();
+
+  // Ensure lower and upper 32 bits are uniformly distributed.
+  uint64_t sum_lo = 0, sum_hi = 0;
+  for (size_t i = 0; i < 1000; ++i) {
+    const uint64_t bits = detail::RandomBits(state);
+    sum_lo += bits & 0xFFFFFFFF;
+    sum_hi += bits >> 32;
+  }
+  const double expected = 1000 * (1ULL << 31);
+  HWY_ASSERT(0.9 * expected <= static_cast<double>(sum_lo) &&
+             static_cast<double>(sum_lo) <= 1.1 * expected);
+  HWY_ASSERT(0.9 * expected <= static_cast<double>(sum_hi) &&
+             static_cast<double>(sum_hi) <= 1.1 * expected);
 
   const size_t lanes_per_block = HWY_MAX(64 / sizeof(TU), N);  // power of two
 
@@ -402,7 +422,7 @@ static HWY_NOINLINE void TestRandomGenerator() {
     uint64_t sum = 0;
     constexpr size_t kReps = 10000;
     for (size_t rep = 0; rep < kReps; ++rep) {
-      const uint32_t bits = rng() & 0xFFFFFFFF;
+      const uint32_t bits = detail::RandomBits(state) & 0xFFFFFFFF;
       const size_t index = detail::RandomChunkIndex(num_blocks, bits);
       HWY_ASSERT(((index + 1) * lanes_per_block) <=
                  num_blocks * lanes_per_block);
@@ -465,14 +485,15 @@ class CompareResults {
         if (sizeof(KeyType) == 16) {
           fprintf(stderr,
                   "%s Asc %d mismatch at %d of %d: %" PRIu64 " %" PRIu64 "\n",
-                  st.KeyString().c_str(), Order().IsAscending(),
-                  static_cast<int>(i), static_cast<int>(copy_.size()),
+                  st.KeyString(), Order().IsAscending(), static_cast<int>(i),
+                  static_cast<int>(copy_.size()),
                   static_cast<uint64_t>(copy_[i]),
                   static_cast<uint64_t>(output[i]));
         } else {
-          fprintf(stderr, "Type %s Asc %d mismatch at %d of %d: ",
-                  st.KeyString().c_str(), Order().IsAscending(),
-                  static_cast<int>(i), static_cast<int>(copy_.size()));
+          fprintf(stderr,
+                  "Type %s Asc %d mismatch at %d of %d: ", st.KeyString(),
+                  Order().IsAscending(), static_cast<int>(i),
+                  static_cast<int>(copy_.size()));
           PrintValue(copy_[i]);
           PrintValue(output[i]);
           fprintf(stderr, "\n");
@@ -524,6 +545,7 @@ void TestSort(size_t num_lanes) {
   constexpr size_t kMaxMisalign = 16;
   auto aligned =
       hwy::AllocateAligned<LaneType>(kMaxMisalign + num_lanes + kMaxMisalign);
+  HWY_ASSERT(aligned);
   for (Algo algo : AlgoForTest()) {
     for (Dist dist : AllDist()) {
       for (size_t misalign : {size_t{0}, size_t{st.LanesPerKey()},
@@ -571,11 +593,13 @@ void TestSort(size_t num_lanes) {
 void TestAllSort() {
   for (int num : {129, 504, 3 * 1000, 34567}) {
     const size_t num_lanes = AdjustedReps(static_cast<size_t>(num));
+#if !HAVE_INTEL
     TestSort<TraitsLane<OrderAscending<int16_t> > >(num_lanes);
-    TestSort<TraitsLane<OrderDescending<uint16_t> > >(num_lanes);
+    TestSort<TraitsLane<OtherOrder<uint16_t> > >(num_lanes);
+#endif
 
-    TestSort<TraitsLane<OrderDescending<int32_t> > >(num_lanes);
-    TestSort<TraitsLane<OrderDescending<uint32_t> > >(num_lanes);
+    TestSort<TraitsLane<OtherOrder<int32_t> > >(num_lanes);
+    TestSort<TraitsLane<OtherOrder<uint32_t> > >(num_lanes);
 
     TestSort<TraitsLane<OrderAscending<int64_t> > >(num_lanes);
     TestSort<TraitsLane<OrderAscending<uint64_t> > >(num_lanes);
@@ -585,13 +609,13 @@ void TestAllSort() {
     // generating denormal inputs.
     TestSort<TraitsLane<OrderAscending<float> > >(num_lanes);
 #if HWY_HAVE_FLOAT64  // protects algo-inl's GenerateRandom
-    if (Sorter::HaveFloat64()) {
-      TestSort<TraitsLane<OrderDescending<double> > >(num_lanes);
+    if (HWY_HAVE_FLOAT64) {
+      TestSort<TraitsLane<OtherOrder<double> > >(num_lanes);
     }
 #endif
 
-// Our HeapSort does not support 128-bit keys.
-#if VQSORT_ENABLED
+// Other algorithms do not support 128-bit keys.
+#if !HAVE_VXSORT && !HAVE_INTEL && VQSORT_ENABLED
     TestSort<Traits128<OrderAscending128> >(num_lanes);
     TestSort<Traits128<OrderDescending128> >(num_lanes);
 

@@ -25,7 +25,7 @@
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/bit_pack/bit_pack_test.cc"  // NOLINT
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
+#include "hwy/highway.h"
 #include "hwy/contrib/bit_pack/bit_pack-inl.h"
 #include "hwy/tests/test_util-inl.h"
 // clang-format on
@@ -90,6 +90,7 @@ struct TestPack {
     AlignedFreeUniquePtr<T[]> raw = hwy::AllocateAligned<T>(num);
     AlignedFreeUniquePtr<T[]> raw2 = hwy::AllocateAligned<T>(num);
     AlignedFreeUniquePtr<T[]> packed = hwy::AllocateAligned<T>(num_packed);
+    HWY_ASSERT(raw && raw2 && packed);
 
     for (size_t i = 0; i < num; ++i) {
       raw[i] = Random<kBits, T>(rng);

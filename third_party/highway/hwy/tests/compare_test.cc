@@ -13,10 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>  // memset
-
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/compare_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
@@ -78,6 +74,34 @@ void EnsureGreater(D d, TFromD<D> a, TFromD<D> b, const char* file, int line) {
 
 #define HWY_ENSURE_GREATER(d, a, b) EnsureGreater(d, a, b, __FILE__, __LINE__)
 
+// a >= b should be true, verify that for Ge/Le and with swapped args.
+template <class D>
+void EnsureGreaterOrEqual(D d, TFromD<D> a, TFromD<D> b, const char* file, int line) {
+  const auto mask_true = MaskTrue(d);
+
+  const auto va = Set(d, a);
+  const auto vb = Set(d, b);
+
+  const auto mask_eq = Eq(va, vb);
+
+  AssertMaskEqual(d, mask_true, Ge(va, vb), file, line);
+  AssertMaskEqual(d, mask_eq,   Le(va, vb), file, line);
+
+  // Swapped order
+  AssertMaskEqual(d, mask_eq,   Ge(vb, va), file, line);
+  AssertMaskEqual(d, mask_true, Le(vb, va), file, line);
+
+  // va >= va, vb >= vb, va <= va, and vb <= vb should all be true if
+  // both a and b are non-NaN values
+  AssertMaskEqual(d, mask_true, Ge(va, va), file, line);
+  AssertMaskEqual(d, mask_true, Ge(vb, vb), file, line);
+  AssertMaskEqual(d, mask_true, Le(va, va), file, line);
+  AssertMaskEqual(d, mask_true, Le(vb, vb), file, line);
+}
+
+#define HWY_ENSURE_GREATER_OR_EQUAL(d, a, b) \
+  EnsureGreaterOrEqual(d, a, b, __FILE__, __LINE__)
+
 struct TestStrictUnsigned {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
@@ -106,6 +130,57 @@ struct TestStrictUnsigned {
 };
 
 HWY_NOINLINE void TestAllStrictUnsigned() {
+  ForUnsignedTypes(ForPartialVectors<TestStrictUnsigned>());
+}
+
+struct TestWeakUnsigned {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const T max = LimitsMax<T>();
+    const auto v0 = Zero(d);
+    const auto v1 = Set(d, T(1));
+    const auto v2 = And(Iota(d, T(2)), Set(d, 255));  // 0..255
+
+    const auto mask_true = MaskTrue(d);
+
+    // Individual values of interest
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 2, 2);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 2, 1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 1, 1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 1, 0);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 0, 0);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 128, 127);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 128, 128);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 127, 127);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, max);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, max / 2);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, 1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, 0);
+
+    // Also use Iota to ensure lanes are independent
+    const auto mask_v2_is_eq_to_v0 = Eq(v2, v0);
+    HWY_ASSERT_MASK_EQ(d, mask_v2_is_eq_to_v0, Le(v2, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_v2_is_eq_to_v0, Ge(v0, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Le(v0, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ge(v0, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Le(v2, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ge(v2, v2));
+
+    const auto v2_plus_1 = Add(v2, v1);
+    HWY_ASSERT_MASK_EQ(d, Lt(v2, v2_plus_1), Le(v2, v2_plus_1));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2, v2_plus_1), Ge(v2, v2_plus_1));
+    HWY_ASSERT_MASK_EQ(d, Lt(v2_plus_1, v2), Le(v2_plus_1, v2));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2_plus_1, v2), Ge(v2_plus_1, v2));
+
+    const auto v2_minus_1 = Sub(v2, v1);
+    HWY_ASSERT_MASK_EQ(d, Lt(v2, v2_minus_1), Le(v2, v2_minus_1));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2, v2_minus_1), Ge(v2, v2_minus_1));
+    HWY_ASSERT_MASK_EQ(d, Lt(v2_minus_1, v2), Le(v2_minus_1, v2));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2_minus_1, v2), Ge(v2_minus_1, v2));
+  }
+};
+
+HWY_NOINLINE void TestAllWeakUnsigned() {
   ForUnsignedTypes(ForPartialVectors<TestStrictUnsigned>());
 }
 
@@ -164,6 +239,70 @@ struct TestStrictInt64 {
 HWY_NOINLINE void TestAllStrictInt() {
   ForSignedTypes(ForPartialVectors<TestStrictInt>());
   ForPartialVectors<TestStrictInt64>()(int64_t());
+}
+
+struct TestWeakInt {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const T min = LimitsMin<T>();
+    const T max = LimitsMax<T>();
+    const auto v0 = Zero(d);
+    const auto v1 = Set(d, T(1));
+    const auto v2 = And(Iota(d, T(2)), Set(d, 127));  // 0..127
+    const auto vn = Sub(Neg(v2), Set(d, 1));          // -1..-128
+
+    const auto mask_false = MaskFalse(d);
+    const auto mask_true = MaskTrue(d);
+
+    // Individual values of interest
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 2, 2);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 2, 1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 1, 1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 1, 0);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 0, 0);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 0, -1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, -1, -1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, -1, -2);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, -2, -2);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, max);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, max / 2);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, 1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, 0);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, -1);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, max, min);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, 0, min);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, min / 2, min);
+    HWY_ENSURE_GREATER_OR_EQUAL(d, min, min);
+
+    // Also use Iota to ensure lanes are independent
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ge(v2, vn));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Le(vn, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Le(v2, vn));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ge(vn, v2));
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Le(v0, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Le(v2, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Le(vn, vn));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ge(v0, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ge(v2, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ge(vn, vn));
+
+    const auto v2_plus_1 = Add(v2, v1);
+    HWY_ASSERT_MASK_EQ(d, Lt(v2, v2_plus_1), Le(v2, v2_plus_1));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2, v2_plus_1), Ge(v2, v2_plus_1));
+    HWY_ASSERT_MASK_EQ(d, Lt(v2_plus_1, v2), Le(v2_plus_1, v2));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2_plus_1, v2), Ge(v2_plus_1, v2));
+
+    const auto v2_minus_1 = Sub(v2, v1);
+    HWY_ASSERT_MASK_EQ(d, Lt(v2, v2_minus_1), Le(v2, v2_minus_1));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2, v2_minus_1), Ge(v2, v2_minus_1));
+    HWY_ASSERT_MASK_EQ(d, Lt(v2_minus_1, v2), Le(v2_minus_1, v2));
+    HWY_ASSERT_MASK_EQ(d, Gt(v2_minus_1, v2), Ge(v2_minus_1, v2));
+  }
+};
+
+HWY_NOINLINE void TestAllWeakInt() {
+  ForSignedTypes(ForPartialVectors<TestWeakInt>());
 }
 
 struct TestStrictFloat {
@@ -499,6 +638,8 @@ HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllEquality);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictUnsigned);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictInt);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictFloat);
+HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllWeakUnsigned);
+HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllWeakInt);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllWeakFloat);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllLt128);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllLt128Upper);

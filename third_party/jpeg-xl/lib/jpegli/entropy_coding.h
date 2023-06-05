@@ -11,34 +11,20 @@
 #include <jpeglib.h>
 /* clang-format on */
 
-#include <vector>
-
-#include "lib/jpegli/encode_internal.h"
-
 namespace jpegli {
 
-void CopyHuffmanCodes(j_compress_ptr cinfo, bool* is_baseline);
+size_t MaxNumTokensPerMCURow(j_compress_ptr cinfo);
 
-size_t RestartIntervalForScan(j_compress_ptr cinfo, size_t scan_index);
+size_t EstimateNumTokens(j_compress_ptr cinfo, size_t mcu_y, size_t ysize_mcus,
+                         size_t num_tokens, size_t max_per_row);
 
-struct Histogram {
-  int count[kJpegHuffmanAlphabetSize];
-  Histogram() { memset(count, 0, sizeof(count)); }
-};
+void TokenizeJpeg(j_compress_ptr cinfo);
 
-struct JpegClusteredHistograms {
-  std::vector<Histogram> histograms;
-  std::vector<uint32_t> histogram_indexes;
-  std::vector<uint32_t> slot_ids;
-};
+void CopyHuffmanTables(j_compress_ptr cinfo);
 
-void ClusterJpegHistograms(const Histogram* histograms, size_t num,
-                           JpegClusteredHistograms* clusters);
+void OptimizeHuffmanCodes(j_compress_ptr cinfo);
 
-void AddJpegHuffmanCode(const Histogram& histogram, size_t slot_id,
-                        JPEGHuffmanCode* huff_codes, size_t* num_huff_codes);
-
-void OptimizeHuffmanCodes(j_compress_ptr cinfo, bool* is_baseline);
+void InitEntropyCoder(j_compress_ptr cinfo);
 
 }  // namespace jpegli
 

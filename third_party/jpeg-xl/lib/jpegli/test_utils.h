@@ -54,26 +54,148 @@ static constexpr uint8_t kMarkerSequence[] = {0xe6, 0xe8, 0xe7,
                                               0xe6, 0xe7, 0xe8};
 static constexpr size_t kMarkerSequenceLen = ARRAY_SIZE(kMarkerSequence);
 
+// Sequential non-interleaved.
 static constexpr jpeg_scan_info kScript1[] = {
     {1, {0}, 0, 63, 0, 0},
     {1, {1}, 0, 63, 0, 0},
     {1, {2}, 0, 63, 0, 0},
 };
-
+// Sequential partially interleaved, chroma first.
 static constexpr jpeg_scan_info kScript2[] = {
+    {2, {1, 2}, 0, 63, 0, 0},
+    {1, {0}, 0, 63, 0, 0},
+};
+
+// Rest of the scan scripts are progressive.
+
+static constexpr jpeg_scan_info kScript3[] = {
+    // Interleaved full DC.
     {3, {0, 1, 2}, 0, 0, 0, 0},
+    // Full AC scans.
     {1, {0}, 1, 63, 0, 0},
     {1, {1}, 1, 63, 0, 0},
     {1, {2}, 1, 63, 0, 0},
 };
-static constexpr jpeg_scan_info kScript3[] = {
-    {1, {0}, 0, 0, 0, 0},  {1, {1}, 0, 0, 0, 0},  {1, {2}, 0, 0, 0, 0},
-    {1, {0}, 1, 63, 0, 0}, {1, {1}, 1, 63, 0, 0}, {1, {2}, 1, 63, 0, 0},
-};
 static constexpr jpeg_scan_info kScript4[] = {
-    {3, {0, 1, 2}, 0, 0, 0, 0}, {1, {0}, 1, 63, 0, 1}, {1, {1}, 1, 63, 0, 1},
-    {1, {2}, 1, 63, 0, 1},      {1, {0}, 1, 63, 1, 0}, {1, {1}, 1, 63, 1, 0},
+    // Non-interleaved full DC.
+    {1, {0}, 0, 0, 0, 0},
+    {1, {1}, 0, 0, 0, 0},
+    {1, {2}, 0, 0, 0, 0},
+    // Full AC scans.
+    {1, {0}, 1, 63, 0, 0},
+    {1, {1}, 1, 63, 0, 0},
+    {1, {2}, 1, 63, 0, 0},
+};
+static constexpr jpeg_scan_info kScript5[] = {
+    // Partially interleaved full DC, chroma first.
+    {2, {1, 2}, 0, 0, 0, 0},
+    {1, {0}, 0, 0, 0, 0},
+    // AC shifted by 1 bit.
+    {1, {0}, 1, 63, 0, 1},
+    {1, {1}, 1, 63, 0, 1},
+    {1, {2}, 1, 63, 0, 1},
+    // AC refinement scan.
+    {1, {0}, 1, 63, 1, 0},
+    {1, {1}, 1, 63, 1, 0},
     {1, {2}, 1, 63, 1, 0},
+};
+static constexpr jpeg_scan_info kScript6[] = {
+    // Interleaved DC shifted by 2 bits.
+    {3, {0, 1, 2}, 0, 0, 0, 2},
+    // Interleaved DC refinement scans.
+    {3, {0, 1, 2}, 0, 0, 2, 1},
+    {3, {0, 1, 2}, 0, 0, 1, 0},
+    // Full AC scans.
+    {1, {0}, 1, 63, 0, 0},
+    {1, {1}, 1, 63, 0, 0},
+    {1, {2}, 1, 63, 0, 0},
+};
+
+static constexpr jpeg_scan_info kScript7[] = {
+    // Non-interleaved DC shifted by 2 bits.
+    {1, {0}, 0, 0, 0, 2},
+    {1, {1}, 0, 0, 0, 2},
+    {1, {2}, 0, 0, 0, 2},
+    // Non-interleaved DC first refinement scans.
+    {1, {0}, 0, 0, 2, 1},
+    {1, {1}, 0, 0, 2, 1},
+    {1, {2}, 0, 0, 2, 1},
+    // Non-interleaved DC second refinement scans.
+    {1, {0}, 0, 0, 1, 0},
+    {1, {1}, 0, 0, 1, 0},
+    {1, {2}, 0, 0, 1, 0},
+    // Full AC scans.
+    {1, {0}, 1, 63, 0, 0},
+    {1, {1}, 1, 63, 0, 0},
+    {1, {2}, 1, 63, 0, 0},
+};
+
+static constexpr jpeg_scan_info kScript8[] = {
+    // Partially interleaved DC shifted by 2 bits, chroma first
+    {2, {1, 2}, 0, 0, 0, 2},
+    {1, {0}, 0, 0, 0, 2},
+    // Partially interleaved DC first refinement scans.
+    {2, {0, 2}, 0, 0, 2, 1},
+    {1, {1}, 0, 0, 2, 1},
+    // Partially interleaved DC first refinement scans, chroma first.
+    {2, {1, 2}, 0, 0, 1, 0},
+    {1, {0}, 0, 0, 1, 0},
+    // Full AC scans.
+    {1, {0}, 1, 63, 0, 0},
+    {1, {1}, 1, 63, 0, 0},
+    {1, {2}, 1, 63, 0, 0},
+};
+
+static constexpr jpeg_scan_info kScript9[] = {
+    // Interleaved full DC.
+    {3, {0, 1, 2}, 0, 0, 0, 0},
+    // AC scans for component 0
+    // shifted by 1 bit, two spectral ranges
+    {1, {0}, 1, 6, 0, 1},
+    {1, {0}, 7, 63, 0, 1},
+    // refinement scan, full
+    {1, {0}, 1, 63, 1, 0},
+    // AC scans for component 1
+    // shifted by 1 bit, full
+    {1, {1}, 1, 63, 0, 1},
+    // refinement scan, two spectral ranges
+    {1, {1}, 1, 6, 1, 0},
+    {1, {1}, 7, 63, 1, 0},
+    // AC scans for component 2
+    // shifted by 1 bit, two spectral ranges
+    {1, {2}, 1, 6, 0, 1},
+    {1, {2}, 7, 63, 0, 1},
+    // refinement scan, two spectral ranges (but different from above)
+    {1, {2}, 1, 16, 1, 0},
+    {1, {2}, 17, 63, 1, 0},
+};
+
+static constexpr jpeg_scan_info kScript10[] = {
+    // Interleaved full DC.
+    {3, {0, 1, 2}, 0, 0, 0, 0},
+    // AC scans for spectral range 1..16
+    // shifted by 1
+    {1, {0}, 1, 16, 0, 1},
+    {1, {1}, 1, 16, 0, 1},
+    {1, {2}, 1, 16, 0, 1},
+    // refinement scans, two sub-ranges
+    {1, {0}, 1, 8, 1, 0},
+    {1, {0}, 9, 16, 1, 0},
+    {1, {1}, 1, 8, 1, 0},
+    {1, {1}, 9, 16, 1, 0},
+    {1, {2}, 1, 8, 1, 0},
+    {1, {2}, 9, 16, 1, 0},
+    // AC scans for spectral range 17..63
+    {1, {0}, 17, 63, 0, 1},
+    {1, {1}, 17, 63, 0, 1},
+    {1, {2}, 17, 63, 0, 1},
+    // refinement scans, two sub-ranges
+    {1, {0}, 17, 28, 1, 0},
+    {1, {0}, 29, 63, 1, 0},
+    {1, {1}, 17, 28, 1, 0},
+    {1, {1}, 29, 63, 1, 0},
+    {1, {2}, 17, 28, 1, 0},
+    {1, {2}, 29, 63, 1, 0},
 };
 
 struct ScanScript {
@@ -82,10 +204,11 @@ struct ScanScript {
 };
 
 static constexpr ScanScript kTestScript[] = {
-    {ARRAY_SIZE(kScript1), kScript1},
-    {ARRAY_SIZE(kScript2), kScript2},
-    {ARRAY_SIZE(kScript3), kScript3},
-    {ARRAY_SIZE(kScript4), kScript4},
+    {ARRAY_SIZE(kScript1), kScript1}, {ARRAY_SIZE(kScript2), kScript2},
+    {ARRAY_SIZE(kScript3), kScript3}, {ARRAY_SIZE(kScript4), kScript4},
+    {ARRAY_SIZE(kScript5), kScript5}, {ARRAY_SIZE(kScript6), kScript6},
+    {ARRAY_SIZE(kScript7), kScript7}, {ARRAY_SIZE(kScript8), kScript8},
+    {ARRAY_SIZE(kScript9), kScript9}, {ARRAY_SIZE(kScript10), kScript10},
 };
 static constexpr int kNumTestScripts = ARRAY_SIZE(kTestScript);
 

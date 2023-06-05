@@ -32,7 +32,8 @@ enum class Codec : uint32_t {
   kPGX,
   kJPG,
   kGIF,
-  kEXR
+  kEXR,
+  kJXL
 };
 
 std::vector<Codec> AvailableCodecs();

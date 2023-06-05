@@ -1,3 +1,15 @@
+highway (1.0.4-1) UNRELEASED; urgency=medium
+
+* Add PPC8..10, SSE2, AVX3_ZEN4, NEON_WITHOUT_AES targets
+* Add Expand, LoadExpand, integer AbsDiff, SumsOf8AbsDiff
+* Improved Half/Twice support, codegen for Shift*Same
+* Support Wasm in Godbolt
+* Faster KV128 sorting
+* Fix armv7 build config, CMake config mode
+* Update RVV intrinsics for 1.0-draft
+
+ -- Jan Wassenberg <janwas@google.com>  Fri, 17 Mar 2023 15:00:00 +0200
+
 highway (1.0.3-1) UNRELEASED; urgency=medium
 
 * Add RearrangeToOddPlusEven, Xor3, 8-bit CompressStore, HWY_ASSUME

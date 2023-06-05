@@ -4,6 +4,8 @@
 
 Highway is a C++ library that provides portable SIMD/vector intrinsics.
 
+[Documentation](https://google.github.io/highway/en/master/)
+
 ## Why
 
 We are passionate about high-performance software. We see major untapped
@@ -59,25 +61,55 @@ Online demos using Compiler Explorer:
     (recommended)
 -   [single target using -m flags](https://gcc.godbolt.org/z/rGnjMevKG)
 
-Projects using Highway: (to add yours, feel free to raise an issue or contact us
-via the below email)
+We observe that Highway is referenced in the following open source projects,
+found via sourcegraph.com. Most are Github repositories. If you would like to
+add your project or link to it directly, feel free to raise an issue or contact
+us via the below email.
 
-*   [iresearch database index](https://github.com/iresearch-toolkit/iresearch/blob/e7638e7a4b99136ca41f82be6edccf01351a7223/core/utils/simd_utils.hpp)
-*   [JPEG XL image codec](https://github.com/libjxl/libjxl)
-*   [Grok JPEG 2000 image codec](https://github.com/GrokImageCompression/grok)
+*   Browsers: Chromium (+Vivaldi), Firefox (+floorp / foxhound / librewolf / Waterfox)
+*   Cryptography: google/distributed_point_functions
+*   Image codecs: eustas/2im, [Grok JPEG 2000](https://github.com/GrokImageCompression/grok), [JPEG XL](https://github.com/libjxl/libjxl), OpenHTJ2K
+*   Image processing: cloudinary/ssimulacra2, m-ab-s/media-autobuild_suite
+*   Image viewers: AlienCowEatCake/ImageViewer, mirillis/jpegxl-wic,
+    [Lux panorama/image viewer](https://bitbucket.org/kfj/pv/)
+*   Information retrieval: [iresearch database index](https://github.com/iresearch-toolkit/iresearch/blob/e7638e7a4b99136ca41f82be6edccf01351a7223/core/utils/simd_utils.hpp), michaeljclark/zvec
+
+Other
+
+*   [zimt](https://github.com/kfjahnke/zimt): C++11 template library to process n-dimensional arrays with multi-threaded SIMD code
 *   [vectorized Quicksort](https://github.com/google/highway/tree/master/hwy/contrib/sort) ([paper](https://arxiv.org/abs/2205.05982))
+
+If you'd like to get Highway, in addition to cloning from this Github repository
+or using it as a Git submodule, you can also find it in the following package
+managers or repositories: alpinelinux, conan-io, conda-forge, DragonFlyBSD,
+freebsd, ghostbsd, microsoft/vcpkg, MidnightBSD, NetBSD, openSUSE, opnsense,
+Xilinx/Vitis_Libraries.
 
 ## Current status
 
 ### Targets
 
-Supported targets: scalar, S-SSE3, SSE4, AVX2, AVX-512, AVX3_DL (~Icelake,
-requires opt-in by defining `HWY_WANT_AVX3_DL`), NEON (ARMv7 and v8), SVE, SVE2,
-WASM SIMD, RISC-V V.
+Highway supports 19 targets, listed in alphabetical order of platform:
 
-`HWY_WASM_EMU256` is a 2x unrolled version of wasm128 and is enabled if
-`HWY_WANT_WASM2` is defined. This will remain supported until it is potentially
-superseded by a future version of WASM.
+-   Any: `EMU128`, `SCALAR`;
+-   Arm: `NEON` (Armv7+), `SVE`, `SVE2`, `SVE_256`, `SVE2_128`;
+-   POWER: `PPC8` (v2.07), `PPC9` (v3.0), `PPC10` (v3.1B, not yet supported
+    due to compiler bugs, see #1207; also requires QEMU 7.2);
+-   RISC-V: `RVV` (1.0);
+-   WebAssembly: `WASM`, `WASM_EMU256` (a 2x unrolled version of wasm128,
+    enabled if `HWY_WANT_WASM2` is defined. This will remain supported until it
+    is potentially superseded by a future version of WASM.);
+-   x86:
+    -   `SSE2`
+    -   `SSSE3` (~Intel Core)
+    -   `SSE4` (~Nehalem, also includes AES + CLMUL).
+    -   `AVX2` (~Haswell, also includes BMI2 + F16 + FMA)
+    -   `AVX3` (~Skylake, AVX-512F/BW/CD/DQ/VL)
+    -   `AVX3_DL` (~Icelake, includes BitAlg + CLMUL + GFNI + VAES + VBMI +
+        VBMI2 + VNNI + VPOPCNT; requires opt-in by defining `HWY_WANT_AVX3_DL`
+        unless compiling for static dispatch),
+    -   `AVX3_ZEN4` (like AVX3_DL but optimized for AMD Zen4; requires opt-in by
+        defining `HWY_WANT_AVX3_ZEN4` if compiling for static dispatch)
 
 SVE was initially tested using farm_sve (see acknowledgments).
 
@@ -95,10 +127,10 @@ updates that have the same major version number.
 ### Testing
 
 Continuous integration tests build with a recent version of Clang (running on
-native x86, or QEMU for RVV and ARM) and MSVC 2019 (v19.28, running on native
+native x86, or QEMU for RISC-V and Arm) and MSVC 2019 (v19.28, running on native
 x86).
 
-Before releases, we also test on x86 with Clang and GCC, and ARMv7/8 via GCC
+Before releases, we also test on x86 with Clang and GCC, and Armv7/8 via GCC
 cross-compile. See the [testing process](g3doc/release_testing_process.md) for
 details.
 
@@ -152,9 +184,17 @@ Or you can run `run_tests.sh` (`run_tests.bat` on Windows).
 
 Bazel is also supported for building, but it is not as widely used/tested.
 
-When building for Arm v7, a limitation of current compilers requires you to add
+When building for Armv7, a limitation of current compilers requires you to add
 `-DHWY_CMAKE_ARM7:BOOL=ON` to the CMake command line; see #834 and #1032. We
 understand that work is underway to remove this limitation.
+
+Building on 32-bit x86 is not officially supported, and AVX2/3 are disabled by
+default there. Note that johnplatts has successfully built and run the Highway
+tests on 32-bit x86, including AVX2/3, on GCC 7/8 and Clang 8/11/12. On Ubuntu
+22.04, Clang 11 and 12, but not later versions, require extra compiler flags
+`-m32 -isystem /usr/i686-linux-gnu/include`. Clang 10 and earlier require the
+above plus `-isystem /usr/i686-linux-gnu/include/c++/12/i686-linux-gnu`. See
+#1279.
 
 ## Quick start
 
@@ -250,17 +290,23 @@ ensure proper VEX code generation for AVX2 targets.
 
 ## Strip-mining loops
 
-To vectorize a loop, "strip-mining" transforms it into an outer loop and inner
-loop with number of iterations matching the preferred vector width.
+When vectorizing a loop, an important question is whether and how to deal with
+a number of iterations ('trip count', denoted `count`) that does not evenly
+divide the vector size `N = Lanes(d)`. For example, it may be necessary to avoid
+writing past the end of an array.
 
-In this section, let `T` denote the element type, `d = ScalableTag<T>`, `count`
-the number of elements to process, and `N = Lanes(d)` the number of lanes in a
-full vector. Assume the loop body is given as a function `template<bool partial,
-class D> void LoopBody(D d, size_t index, size_t max_n)`.
+In this section, let `T` denote the element type and `d = ScalableTag<T>`.
+Assume the loop body is given as a function `template<bool partial, class D>
+void LoopBody(D d, size_t index, size_t max_n)`.
 
-Highway offers several ways to express loops where `N` need not divide `count`:
+"Strip-mining" is a technique for vectorizing a loop by transforming it into an
+outer loop and inner loop, such that the number of iterations in the inner loop
+matches the vector width. Then, the inner loop is replaced with vector
+operations.
 
-*   Ensure all inputs/outputs are padded. Then the loop is simply
+Highway offers several strategies for loop vectorization:
+
+*   Ensure all inputs/outputs are padded. Then the (outer) loop is simply
 
     ```
     for (size_t i = 0; i < count; i += N) LoopBody<false>(d, i, 0);

@@ -136,8 +136,6 @@ set(JPEGXL_ENABLE_PLUGINS false CACHE BOOL
     "Build third-party plugins to support JPEG XL in other applications.")
 set(JPEGXL_ENABLE_COVERAGE false CACHE BOOL
     "Enable code coverage tracking for libjxl. This also enables debug and disables optimizations.")
-set(JPEGXL_ENABLE_PROFILER false CACHE BOOL
-    "Builds in support for profiling (printed by tools if extra flags given)")
 set(JPEGXL_ENABLE_SIZELESS_VECTORS false CACHE BOOL
     "Builds in support for SVE/RVV vectorization")
 set(JPEGXL_ENABLE_TRANSCODE_JPEG true CACHE BOOL

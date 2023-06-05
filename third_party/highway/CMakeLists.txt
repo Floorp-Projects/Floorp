@@ -25,7 +25,9 @@ if(POLICY CMP0111)
   cmake_policy(SET CMP0111 OLD)
 endif()
 
-project(hwy VERSION 1.0.3)  # Keep in sync with highway.h version
+project(hwy VERSION 1.0.4)  # Keep in sync with highway.h version
+# `hwy` is lowercase to handle find_package() in Config mode:
+set(namespace "${PROJECT_NAME}::")
 
 # Directly define the ABI version from the cmake project() version values:
 set(LIBRARY_VERSION "${hwy_VERSION}")
@@ -52,7 +54,8 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-set(HWY_CMAKE_ARM7 OFF CACHE BOOL "Set copts for ARMv7 with NEON (requires vfpv4)?")
+# The following is only required with GCC < 6.1.0 or CLANG < 16.0
+set(HWY_CMAKE_ARM7 OFF CACHE BOOL "Set copts for Armv7 with NEON (requires vfpv4)?")
 
 # Unconditionally adding -Werror risks breaking the build when new warnings
 # arise due to compiler/platform changes. Enable this in CI/tests.
@@ -122,11 +125,13 @@ set(HWY_SOURCES
     hwy/ops/arm_sve-inl.h
     hwy/ops/emu128-inl.h
     hwy/ops/generic_ops-inl.h
+    hwy/ops/ppc_vsx-inl.h
     hwy/ops/rvv-inl.h
     hwy/ops/scalar-inl.h
     hwy/ops/set_macros-inl.h
     hwy/ops/shared-inl.h
     hwy/ops/wasm_128-inl.h
+    hwy/ops/tuple-inl.h
     hwy/ops/x86_128-inl.h
     hwy/ops/x86_256-inl.h
     hwy/ops/x86_512-inl.h
@@ -237,11 +242,11 @@ else()
   endif()  # HWY_CMAKE_ARM7
 
   if(HWY_RISCV)
+    # gcc(13) and recent clang both support V, but not yet runtime dispatch, so
+    # we add the gcv compiler flag, which then requires the CPU (now when using
+    # either compiler) to support V.
+    list(APPEND HWY_FLAGS -march=rv64gcv1p0)
     if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-      # Not yet supported by GCC. When runtime dispatch is supported and
-      # implemented, we will remove v from the required flags. Until then, using
-      # clang for RISC-V will require the CPU to support the V extension (1.0).
-      list(APPEND HWY_FLAGS -march=rv64gcv1p0)
       list(APPEND HWY_FLAGS -menable-experimental-extensions)
     endif()
   endif()
@@ -260,8 +265,9 @@ endif()  # !MSVC
 
 include(CheckIncludeFile)
 check_include_file(sys/auxv.h  HAVE_SYS_AUXV_H)
-if (NOT HAVE_SYS_AUXV_H)
-  list(APPEND HWY_FLAGS -DTOOLCHAIN_MISS_SYS_AUXV_H=1)
+check_include_file(asm/hwcap.h HAVE_ASM_HWCAP_H)
+if (NOT HAVE_ASM_HWCAP_H)
+  list(APPEND HWY_FLAGS -DTOOLCHAIN_MISS_ASM_HWCAP_H)
 endif()
 
 # By default prefer STATIC build (legacy behavior)
@@ -288,6 +294,9 @@ else()
 endif()
 
 add_library(hwy ${HWY_LIBRARY_TYPE} ${HWY_SOURCES})
+if(NOT HAVE_SYS_AUXV_H)
+  target_compile_definitions(hwy PUBLIC TOOLCHAIN_MISS_SYS_AUXV_H)
+endif()
 target_compile_definitions(hwy PUBLIC "${DLLEXPORT_TO_DEFINE}")
 target_compile_options(hwy PRIVATE ${HWY_FLAGS})
 set_property(TARGET hwy PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -366,7 +375,7 @@ endif()
 # -------------------------------------------------------- install library
 if (HWY_ENABLE_INSTALL)
 
-install(TARGETS hwy
+install(TARGETS hwy EXPORT hwy_targets
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -381,7 +390,7 @@ foreach (source ${HWY_SOURCES})
 endforeach()
 
 if (HWY_ENABLE_CONTRIB)
-install(TARGETS hwy_contrib
+install(TARGETS hwy_contrib EXPORT hwy_targets
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -396,7 +405,7 @@ foreach (source ${HWY_CONTRIB_SOURCES})
 endforeach()
 endif()  # HWY_ENABLE_CONTRIB
 
-install(TARGETS hwy_test
+install(TARGETS hwy_test EXPORT hwy_targets
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -436,7 +445,8 @@ target_sources(hwy_benchmark PRIVATE
 # Try adding one of -DHWY_COMPILE_ONLY_SCALAR, -DHWY_COMPILE_ONLY_EMU128 or
 # -DHWY_COMPILE_ONLY_STATIC to observe the difference in targets printed.
 target_compile_options(hwy_benchmark PRIVATE ${HWY_FLAGS})
-target_link_libraries(hwy_benchmark hwy)
+target_link_libraries(hwy_benchmark PRIVATE hwy)
+target_link_libraries(hwy_benchmark PRIVATE ${ATOMICS_LIBRARIES})
 set_target_properties(hwy_benchmark
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples/")
 
@@ -490,20 +500,22 @@ set(HWY_TEST_FILES
   hwy/targets_test.cc
   hwy/examples/skeleton_test.cc
   hwy/tests/arithmetic_test.cc
-  hwy/tests/blockwise_test.cc
   hwy/tests/blockwise_shift_test.cc
+  hwy/tests/blockwise_test.cc
   hwy/tests/combine_test.cc
   hwy/tests/compare_test.cc
   hwy/tests/compress_test.cc
   hwy/tests/convert_test.cc
+  hwy/tests/count_test.cc
   hwy/tests/crypto_test.cc
   hwy/tests/demote_test.cc
+  hwy/tests/expand_test.cc
   hwy/tests/float_test.cc
   hwy/tests/if_test.cc
   hwy/tests/interleaved_test.cc
   hwy/tests/logical_test.cc
-  hwy/tests/mask_test.cc
   hwy/tests/mask_mem_test.cc
+  hwy/tests/mask_test.cc
   hwy/tests/memory_test.cc
   hwy/tests/mul_test.cc
   hwy/tests/reduction_test.cc
@@ -511,6 +523,7 @@ set(HWY_TEST_FILES
   hwy/tests/shift_test.cc
   hwy/tests/swizzle_test.cc
   hwy/tests/test_util_test.cc
+  hwy/tests/tuple_test.cc
 )
 
 set(HWY_TEST_LIBS hwy hwy_test)
@@ -525,6 +538,7 @@ list(APPEND HWY_TEST_FILES
   # not reproducible locally. Still tested via bazel build.
   # hwy/contrib/math/math_test.cc
   hwy/contrib/sort/sort_test.cc
+  hwy/contrib/sort/bench_sort.cc
 )
 endif()  # HWY_ENABLE_CONTRIB
 
@@ -571,3 +585,11 @@ endforeach ()
 target_sources(skeleton_test PRIVATE hwy/examples/skeleton.cc)
 
 endif()  # BUILD_TESTING
+
+if (HWY_ENABLE_INSTALL)
+  # write hwy-config file to handle `Config` mode
+  include(CMakePackageConfigHelpers)
+  write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/hwy-config-version.cmake" COMPATIBILITY SameMajorVersion)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/hwy-config-version.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/hwy")
+  install(EXPORT hwy_targets NAMESPACE "${namespace}" FILE hwy-config.cmake DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/hwy")
+endif()

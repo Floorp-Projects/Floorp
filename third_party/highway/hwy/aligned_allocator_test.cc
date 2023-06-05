@@ -16,10 +16,12 @@
 #include "hwy/aligned_allocator.h"
 
 #include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>  // malloc
 
 #include <array>
-#include <new>
 #include <random>
+#include <set>
 #include <vector>
 
 #include "gtest/gtest.h"

@@ -16,7 +16,6 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 HWY_BEFORE_NAMESPACE();
@@ -31,8 +30,6 @@ using hwy::HWY_NAMESPACE::Rebind;
 
 double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
                         double p) {
-  PROFILER_FUNC;
-
   const double onePerPixels = 1.0 / (distmap.ysize() * distmap.xsize());
   if (std::abs(p - 3.0) < 1E-6) {
     double sum1[3] = {0.0};
@@ -129,7 +126,6 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
 // TODO(lode): take alpha into account when needed
 double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
                         const JxlCmsInterface& cms) {
-  PROFILER_FUNC;
   // Convert to sRGB - closer to perception than linear.
   const Image3F* srgb1 = &ib1.color();
   Image3F copy1;

@@ -9,7 +9,29 @@ and [paper](https://arxiv.org/abs/2205.05982).
 
 ## Instructions
 
-Here are instructions for reproducing our results on Linux and AWS (SVE, NEON).
+Here are instructions for reproducing our results with cross-platform CMake,
+Linux, or AWS (SVE, NEON).
+
+### CMake, any platform
+
+Please first ensure that Clang (tested with 13.0.1 and 15.0.6) is installed, and
+if it is not the default compiler, point the CC and CXX environment variables to
+it, e.g.
+
+```
+export CC=clang-15
+export CXX=clang++-15
+```
+
+Then run the usual CMake workflow, also documented in the Highway README, e.g.:
+
+```
+mkdir -p build && cd build && cmake .. && make -j
+taskset -c 2 tests/bench_sort
+```
+
+The optional `taskset -c 2` part reduces the variability of measurements by
+preventing the OS from migrating the benchmark between cores.
 
 ### Linux
 

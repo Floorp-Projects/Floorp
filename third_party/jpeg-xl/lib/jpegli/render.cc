@@ -307,10 +307,6 @@ void DecenterRow(float* row, size_t xsize) {
   return HWY_DYNAMIC_DISPATCH(DecenterRow)(row, xsize);
 }
 
-// Padding for horizontal chroma upsampling.
-constexpr size_t kPaddingLeft = 64;
-constexpr size_t kPaddingRight = 64;
-
 bool ShouldApplyDequantBiases(j_decompress_ptr cinfo, int ci) {
   const auto& compinfo = cinfo->comp_info[ci];
   return (compinfo.h_samp_factor == cinfo->max_h_samp_factor &&
@@ -553,47 +549,16 @@ void PredictSmooth(j_decompress_ptr cinfo, JBLOCKARRAY blocks, int component,
 
 void PrepareForOutput(j_decompress_ptr cinfo) {
   jpeg_decomp_master* m = cinfo->master;
-  size_t iMCU_width = cinfo->max_h_samp_factor * m->min_scaled_dct_size;
-  size_t output_stride = m->iMCU_cols_ * iMCU_width;
-  for (int c = 0; c < cinfo->num_components; ++c) {
-    const auto& comp = cinfo->comp_info[c];
-    size_t cheight = comp.v_samp_factor * m->scaled_dct_size[c];
-    m->raw_height_[c] = cinfo->total_iMCU_rows * cheight;
-    m->raw_output_[c].Allocate(cinfo, 3 * cheight, output_stride);
-  }
-  int num_all_components =
-      std::max(cinfo->out_color_components, cinfo->num_components);
-  for (int c = 0; c < num_all_components; ++c) {
-    m->render_output_[c].Allocate(cinfo, cinfo->max_v_samp_factor,
-                                  output_stride);
-  }
-  m->idct_scratch_ = Allocate<float>(cinfo, 5 * DCTSIZE2, JPOOL_IMAGE_ALIGNED);
-  m->upsample_scratch_ = Allocate<float>(
-      cinfo, output_stride + kPaddingLeft + kPaddingRight, JPOOL_IMAGE_ALIGNED);
-  size_t bytes_per_sample = jpegli_bytes_per_sample(m->output_data_type_);
-  size_t bytes_per_pixel = cinfo->out_color_components * bytes_per_sample;
-  size_t scratch_stride = RoundUpTo(output_stride, HWY_ALIGNMENT);
-  m->output_scratch_ = Allocate<uint8_t>(
-      cinfo, bytes_per_pixel * scratch_stride, JPOOL_IMAGE_ALIGNED);
-  m->smoothing_scratch_ =
-      Allocate<int16_t>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
   bool smoothing = do_smoothing(cinfo);
   m->apply_smoothing = smoothing && cinfo->do_block_smoothing;
   size_t coeffs_per_block = cinfo->num_components * DCTSIZE2;
-  m->nonzeros_ = Allocate<int>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
-  m->sumabs_ = Allocate<int>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
   memset(m->nonzeros_, 0, coeffs_per_block * sizeof(m->nonzeros_[0]));
   memset(m->sumabs_, 0, coeffs_per_block * sizeof(m->sumabs_[0]));
   memset(m->num_processed_blocks_, 0, sizeof(m->num_processed_blocks_));
-  m->biases_ = Allocate<float>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
   memset(m->biases_, 0, coeffs_per_block * sizeof(m->biases_[0]));
   cinfo->output_iMCU_row = 0;
   cinfo->output_scanline = 0;
   const float kDequantScale = 1.0f / (8 * 255);
-  if (m->dequant_ == nullptr) {
-    m->dequant_ = Allocate<float>(cinfo, coeffs_per_block, JPOOL_IMAGE_ALIGNED);
-    memset(m->dequant_, 0, coeffs_per_block * sizeof(float));
-  }
   for (int c = 0; c < cinfo->num_components; c++) {
     const auto& comp = cinfo->comp_info[c];
     JQUANT_TBL* table = comp.quant_table;
@@ -702,17 +667,19 @@ void ProcessOutput(j_decompress_ptr cinfo, size_t* num_output_rows,
   jpeg_decomp_master* m = cinfo->master;
   const int vfactor = cinfo->max_v_samp_factor;
   const int hfactor = cinfo->max_h_samp_factor;
+  const size_t context = m->need_context_rows_ ? 1 : 0;
   const size_t imcu_row = cinfo->output_iMCU_row;
   const size_t imcu_height = vfactor * m->min_scaled_dct_size;
   const size_t imcu_width = hfactor * m->min_scaled_dct_size;
   const size_t output_width = m->iMCU_cols_ * imcu_width;
   if (imcu_row == cinfo->total_iMCU_rows ||
-      (imcu_row > 1 && cinfo->output_scanline < (imcu_row - 1) * imcu_height)) {
+      (imcu_row > context &&
+       cinfo->output_scanline < (imcu_row - context) * imcu_height)) {
     // We are ready to output some scanlines.
     size_t ybegin = cinfo->output_scanline;
-    size_t yend =
-        (imcu_row == cinfo->total_iMCU_rows ? cinfo->output_height
-                                            : (imcu_row - 1) * imcu_height);
+    size_t yend = (imcu_row == cinfo->total_iMCU_rows
+                       ? cinfo->output_height
+                       : (imcu_row - context) * imcu_height);
     yend = std::min<size_t>(yend, ybegin + max_output_rows - *num_output_rows);
     size_t yb = (ybegin / vfactor) * vfactor;
     size_t ye = DivCeil(yend, vfactor) * vfactor;
@@ -721,11 +688,12 @@ void ProcessOutput(j_decompress_ptr cinfo, size_t* num_output_rows,
         RowBuffer<float>* raw_out = &m->raw_output_[c];
         RowBuffer<float>* render_out = &m->render_output_[c];
         int line_groups = vfactor / m->v_factor[c];
+        int downsampled_width = output_width / m->h_factor[c];
         size_t yc = y / m->v_factor[c];
         for (int dy = 0; dy < line_groups; ++dy) {
+          size_t ymid = yc + dy;
+          const float* JXL_RESTRICT row_mid = raw_out->Row(ymid);
           if (cinfo->do_fancy_upsampling && m->v_factor[c] == 2) {
-            size_t ymid = yc + dy;
-            const float* JXL_RESTRICT row_mid = raw_out->Row(ymid);
             const float* JXL_RESTRICT row_top =
                 ymid == 0 ? row_mid : raw_out->Row(ymid - 1);
             const float* JXL_RESTRICT row_bot = ymid + 1 == m->raw_height_[c]
@@ -733,12 +701,27 @@ void ProcessOutput(j_decompress_ptr cinfo, size_t* num_output_rows,
                                                     : raw_out->Row(ymid + 1);
             Upsample2Vertical(row_top, row_mid, row_bot,
                               render_out->Row(2 * dy),
-                              render_out->Row(2 * dy + 1), output_width);
+                              render_out->Row(2 * dy + 1), downsampled_width);
           } else {
             for (int yix = 0; yix < m->v_factor[c]; ++yix) {
-              size_t ymid = yc + dy;
-              memcpy(render_out->Row(m->v_factor[c] * dy + yix),
-                     raw_out->Row(ymid), raw_out->xsize() * sizeof(float));
+              memcpy(render_out->Row(m->v_factor[c] * dy + yix), row_mid,
+                     downsampled_width * sizeof(float));
+            }
+          }
+          if (m->h_factor[c] > 1) {
+            for (int yix = 0; yix < m->v_factor[c]; ++yix) {
+              int row_ix = m->v_factor[c] * dy + yix;
+              float* JXL_RESTRICT row = render_out->Row(row_ix);
+              float* JXL_RESTRICT tmp = m->upsample_scratch_;
+              if (cinfo->do_fancy_upsampling && m->h_factor[c] == 2) {
+                Upsample2Horizontal(row, tmp, output_width);
+              } else {
+                // TODO(szabadka) SIMDify this.
+                for (size_t x = 0; x < output_width; ++x) {
+                  tmp[x] = row[x / m->h_factor[c]];
+                }
+                memcpy(row, tmp, output_width * sizeof(tmp[0]));
+              }
             }
           }
         }
@@ -771,29 +754,6 @@ void ProcessOutput(j_decompress_ptr cinfo, size_t* num_output_rows,
     }
   } else {
     DecodeCurrentiMCURow(cinfo);
-    for (int c = 0; c < cinfo->num_components; ++c) {
-      if (m->h_factor[c] == 1) continue;
-      const auto& compinfo = cinfo->comp_info[c];
-      RowBuffer<float>* raw_out = &m->raw_output_[c];
-      size_t cheight = compinfo.v_samp_factor * m->scaled_dct_size[c];
-      size_t y0 = imcu_row * cheight;
-      if (cinfo->do_fancy_upsampling && m->h_factor[c] == 2) {
-        for (size_t iy = 0; iy < cheight; ++iy) {
-          float* JXL_RESTRICT row = raw_out->Row(y0 + iy);
-          Upsample2Horizontal(row, m->upsample_scratch_, output_width);
-        }
-      } else {
-        for (size_t iy = 0; iy < cheight; ++iy) {
-          float* JXL_RESTRICT row = raw_out->Row(y0 + iy);
-          float* JXL_RESTRICT tmp = m->upsample_scratch_;
-          // TODO(szabadka) SIMDify this.
-          for (size_t x = 0; x < output_width; ++x) {
-            tmp[x] = row[x / m->h_factor[c]];
-          }
-          memcpy(row, tmp, output_width * sizeof(tmp[0]));
-        }
-      }
-    }
     ++cinfo->output_iMCU_row;
   }
 }

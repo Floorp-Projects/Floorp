@@ -13,8 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stdio.h>
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/interleaved_test.cc"
@@ -32,42 +31,37 @@ struct TestLoadStoreInterleaved2 {
     const size_t N = Lanes(d);
 
     RandomState rng;
+    auto bytes = AllocateAligned<T>(2 * N);
+    // Interleave here, ensure vector results match scalar
+    auto expected = AllocateAligned<T>(3 * N);
+    // Ensure unaligned; 2 stored vectors, one zero vector.
+    auto actual_aligned = AllocateAligned<T>(3 * N + 1);
+    HWY_ASSERT(bytes && expected && actual_aligned);
 
     // Data to be interleaved
-    auto bytes = AllocateAligned<T>(2 * N);
     for (size_t i = 0; i < 2 * N; ++i) {
       bytes[i] = static_cast<T>(Random32(&rng) & 0xFF);
     }
     const auto in0 = Load(d, &bytes[0 * N]);
     const auto in1 = Load(d, &bytes[1 * N]);
 
-    // Interleave here, ensure vector results match scalar
-    auto expected = AllocateAligned<T>(3 * N);
-    auto actual_aligned = AllocateAligned<T>(3 * N + 1);
     T* actual = actual_aligned.get() + 1;
 
     for (size_t rep = 0; rep < 100; ++rep) {
       for (size_t i = 0; i < N; ++i) {
         expected[2 * i + 0] = bytes[0 * N + i];
         expected[2 * i + 1] = bytes[1 * N + i];
-        // Ensure we do not write more than 2*N bytes
+        // Ensure we do not write more than 2*N bytes.
         expected[2 * N + i] = actual[2 * N + i] = 0;
       }
       StoreInterleaved2(in0, in1, d, actual);
       size_t pos = 0;
       if (!BytesEqual(expected.get(), actual, 3 * N * sizeof(T), &pos)) {
-        Print(d, "in0", in0, pos / 4);
-        Print(d, "in1", in1, pos / 4);
-        const size_t i = pos;
-        fprintf(stderr, "interleaved i=%d %f %f %f %f  %f %f %f %f\n",
-                static_cast<int>(i), static_cast<double>(actual[i]),
-                static_cast<double>(actual[i + 1]),
-                static_cast<double>(actual[i + 2]),
-                static_cast<double>(actual[i + 3]),
-                static_cast<double>(actual[i + 4]),
-                static_cast<double>(actual[i + 5]),
-                static_cast<double>(actual[i + 6]),
-                static_cast<double>(actual[i + 7]));
+        Print(d, "in0", in0, 0, N);
+        Print(d, "in1", in1, 0, N);
+        Print(d, "stored0", LoadU(d, actual + 0), 0, N);
+        Print(d, "stored1", LoadU(d, actual + N), 0, N);
+        fprintf(stderr, "Mismatch at pos %d\n", static_cast<int>(pos));
         HWY_ASSERT(false);
       }
 
@@ -80,17 +74,12 @@ struct TestLoadStoreInterleaved2 {
 };
 
 HWY_NOINLINE void TestAllLoadStoreInterleaved2() {
-#if HWY_TARGET == HWY_RVV
-  // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestLoadStoreInterleaved2, 2> test;
-#else
-  const ForPartialVectors<TestLoadStoreInterleaved2> test;
-#endif
-  ForAllTypes(test);
+  ForAllTypes(ForMaxPow2<TestLoadStoreInterleaved2>());
 }
 
-// Workaround for build timeout on GCC 12 aarch64, see #776
-#if HWY_COMPILER_GCC_ACTUAL >= 1200 && HWY_ARCH_ARM_A64
+// Workaround for build timeout on GCC 12 aarch64, see #776.
+// TODO(janwas): fixed in 2023-02, re-enable after next GCC release.
+#if HWY_COMPILER_GCC_ACTUAL && HWY_ARCH_ARM_A64
 #define HWY_BROKEN_LOAD34 1
 #else
 #define HWY_BROKEN_LOAD34 0
@@ -104,9 +93,14 @@ struct TestLoadStoreInterleaved3 {
     const size_t N = Lanes(d);
 
     RandomState rng;
+    auto bytes = AllocateAligned<T>(3 * N);
+    // Interleave here, ensure vector results match scalar
+    auto expected = AllocateAligned<T>(4 * N);
+    // Ensure unaligned; 3 stored vectors, one zero vector.
+    auto actual_aligned = AllocateAligned<T>(4 * N + 1);
+    HWY_ASSERT(bytes && expected && actual_aligned);
 
     // Data to be interleaved
-    auto bytes = AllocateAligned<T>(3 * N);
     for (size_t i = 0; i < 3 * N; ++i) {
       bytes[i] = static_cast<T>(Random32(&rng) & 0xFF);
     }
@@ -114,9 +108,6 @@ struct TestLoadStoreInterleaved3 {
     const auto in1 = Load(d, &bytes[1 * N]);
     const auto in2 = Load(d, &bytes[2 * N]);
 
-    // Interleave here, ensure vector results match scalar
-    auto expected = AllocateAligned<T>(4 * N);
-    auto actual_aligned = AllocateAligned<T>(4 * N + 1);
     T* actual = actual_aligned.get() + 1;
 
     for (size_t rep = 0; rep < 100; ++rep) {
@@ -124,23 +115,19 @@ struct TestLoadStoreInterleaved3 {
         expected[3 * i + 0] = bytes[0 * N + i];
         expected[3 * i + 1] = bytes[1 * N + i];
         expected[3 * i + 2] = bytes[2 * N + i];
-        // Ensure we do not write more than 3*N bytes
+        // Ensure we do not write more than 3*N bytes.
         expected[3 * N + i] = actual[3 * N + i] = 0;
       }
       StoreInterleaved3(in0, in1, in2, d, actual);
       size_t pos = 0;
       if (!BytesEqual(expected.get(), actual, 4 * N * sizeof(T), &pos)) {
-        Print(d, "in0", in0, pos / 3, N);
-        Print(d, "in1", in1, pos / 3, N);
-        Print(d, "in2", in2, pos / 3, N);
-        const size_t i = pos;
-        fprintf(stderr, "interleaved i=%d %f %f %f  %f %f %f\n",
-                static_cast<int>(i), static_cast<double>(actual[i]),
-                static_cast<double>(actual[i + 1]),
-                static_cast<double>(actual[i + 2]),
-                static_cast<double>(actual[i + 3]),
-                static_cast<double>(actual[i + 4]),
-                static_cast<double>(actual[i + 5]));
+        Print(d, "in0", in0, 0, N);
+        Print(d, "in1", in1, 0, N);
+        Print(d, "in2", in2, 0, N);
+        Print(d, "stored0", LoadU(d, actual + 0 * N), 0, N);
+        Print(d, "stored1", LoadU(d, actual + 1 * N), 0, N);
+        Print(d, "stored2", LoadU(d, actual + 2 * N), 0, N);
+        fprintf(stderr, "Mismatch at pos %d\n", static_cast<int>(pos));
         HWY_ASSERT(false);
       }
 
@@ -154,13 +141,7 @@ struct TestLoadStoreInterleaved3 {
 };
 
 HWY_NOINLINE void TestAllLoadStoreInterleaved3() {
-#if HWY_TARGET == HWY_RVV
-  // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestLoadStoreInterleaved3, 2> test;
-#else
-  const ForPartialVectors<TestLoadStoreInterleaved3> test;
-#endif
-  ForAllTypes(test);
+  ForAllTypes(ForMaxPow2<TestLoadStoreInterleaved3>());
 }
 
 struct TestLoadStoreInterleaved4 {
@@ -172,6 +153,11 @@ struct TestLoadStoreInterleaved4 {
 
     // Data to be interleaved
     auto bytes = AllocateAligned<T>(4 * N);
+    // Interleave here, ensure vector results match scalar
+    auto expected = AllocateAligned<T>(5 * N);
+    // Ensure unaligned; 4 stored vectors, one zero vector.
+    auto actual_aligned = AllocateAligned<T>(5 * N + 1);
+    HWY_ASSERT(bytes && expected && actual_aligned);
 
     for (size_t i = 0; i < 4 * N; ++i) {
       bytes[i] = static_cast<T>(Random32(&rng) & 0xFF);
@@ -181,9 +167,6 @@ struct TestLoadStoreInterleaved4 {
     const auto in2 = Load(d, &bytes[2 * N]);
     const auto in3 = Load(d, &bytes[3 * N]);
 
-    // Interleave here, ensure vector results match scalar
-    auto expected = AllocateAligned<T>(5 * N);
-    auto actual_aligned = AllocateAligned<T>(5 * N + 1);
     T* actual = actual_aligned.get() + 1;
 
     for (size_t rep = 0; rep < 100; ++rep) {
@@ -192,26 +175,21 @@ struct TestLoadStoreInterleaved4 {
         expected[4 * i + 1] = bytes[1 * N + i];
         expected[4 * i + 2] = bytes[2 * N + i];
         expected[4 * i + 3] = bytes[3 * N + i];
-        // Ensure we do not write more than 4*N bytes
+        // Ensure we do not write more than 4*N bytes.
         expected[4 * N + i] = actual[4 * N + i] = 0;
       }
       StoreInterleaved4(in0, in1, in2, in3, d, actual);
       size_t pos = 0;
       if (!BytesEqual(expected.get(), actual, 5 * N * sizeof(T), &pos)) {
-        Print(d, "in0", in0, pos / 4);
-        Print(d, "in1", in1, pos / 4);
-        Print(d, "in2", in2, pos / 4);
-        Print(d, "in3", in3, pos / 4);
-        const size_t i = pos;
-        fprintf(stderr, "interleaved i=%d %f %f %f %f  %f %f %f %f\n",
-                static_cast<int>(i), static_cast<double>(actual[i]),
-                static_cast<double>(actual[i + 1]),
-                static_cast<double>(actual[i + 2]),
-                static_cast<double>(actual[i + 3]),
-                static_cast<double>(actual[i + 4]),
-                static_cast<double>(actual[i + 5]),
-                static_cast<double>(actual[i + 6]),
-                static_cast<double>(actual[i + 7]));
+        Print(d, "in0", in0, 0, N);
+        Print(d, "in1", in1, 0, N);
+        Print(d, "in2", in2, 0, N);
+        Print(d, "in3", in3, 0, N);
+        Print(d, "stored0", LoadU(d, actual + 0 * N), 0, N);
+        Print(d, "stored1", LoadU(d, actual + 1 * N), 0, N);
+        Print(d, "stored2", LoadU(d, actual + 2 * N), 0, N);
+        Print(d, "stored3", LoadU(d, actual + 3 * N), 0, N);
+        fprintf(stderr, "Mismatch at pos %d\n", static_cast<int>(pos));
         HWY_ASSERT(false);
       }
 
@@ -226,13 +204,7 @@ struct TestLoadStoreInterleaved4 {
 };
 
 HWY_NOINLINE void TestAllLoadStoreInterleaved4() {
-#if HWY_TARGET == HWY_RVV
-  // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestLoadStoreInterleaved4, 2> test;
-#else
-  const ForPartialVectors<TestLoadStoreInterleaved4> test;
-#endif
-  ForAllTypes(test);
+  ForAllTypes(ForMaxPow2<TestLoadStoreInterleaved4>());
 }
 
 #endif  // !HWY_BROKEN_LOAD34

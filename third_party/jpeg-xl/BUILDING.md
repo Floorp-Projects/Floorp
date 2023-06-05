@@ -75,18 +75,7 @@ sudo cmake --install .
 ```
 
 
-
-## Advanced guide
-
-### Building with Docker
-
-We build a common environment based on Debian/Ubuntu using Docker. Other
-systems may have different combinations of versions and dependencies that
-have not been tested and may not work. For those cases we recommend using the
-Docker container as explained in the
-[step by step guide](doc/developing_in_docker.md).
-
-### Building JPEG XL for developers
+## Building JPEG XL for developers
 
 For experienced developers, we provide build instructions for several other environments:
 
@@ -94,5 +83,3 @@ For experienced developers, we provide build instructions for several other envi
 *   Building on Windows with [vcpkg](doc/developing_in_windows_vcpkg.md) (Visual Studio 2019)
 *   Building on Windows with [MSYS2](doc/developing_in_windows_msys.md)
 *   [Cross Compiling for Windows with Crossroad](doc/developing_with_crossroad.md)
-
-If you encounter any difficulties, please use Docker instead.

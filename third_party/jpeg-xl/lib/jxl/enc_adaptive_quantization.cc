@@ -22,7 +22,6 @@
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/coeff_order_fwd.h"
@@ -464,7 +463,6 @@ struct AdaptiveQuantizationImpl {
 
   void ComputeTile(float butteraugli_target, float scale, const Image3F& xyb,
                    const Rect& rect, const int thread, ImageF* mask) {
-    PROFILER_ZONE("aq DiffPrecompute");
     const size_t xsize = xyb.xsize();
     const size_t ysize = xyb.ysize();
 
@@ -583,8 +581,6 @@ ImageF AdaptiveQuantizationMap(const float butteraugli_target,
                                const Image3F& xyb,
                                const FrameDimensions& frame_dim, float scale,
                                ThreadPool* pool, ImageF* mask) {
-  PROFILER_ZONE("aq AdaptiveQuantMap");
-
   AdaptiveQuantizationImpl impl;
   impl.Init(xyb);
   *mask = ImageF(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
@@ -663,7 +659,6 @@ void DumpHeatmaps(const AuxOut* aux_out, float ba_target,
 
 ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
                    const AcStrategyImage& ac_strategy) {
-  PROFILER_FUNC;
   const int tile_xsize = (distmap.xsize() + tile_size - 1) / tile_size;
   const int tile_ysize = (distmap.ysize() + tile_size - 1) / tile_size;
   ImageF tile_distmap(tile_xsize, tile_ysize);
@@ -729,7 +724,7 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
 
 static const float kDcQuantPow = 0.83;
 static const float kDcQuant = 1.095924047623553f;
-static const float kAcQuant = 0.80751132443618624f;
+static const float kAcQuant = 0.762;
 
 void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
                           PassesEncoderState* enc_state,
@@ -784,7 +779,7 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
       (comparator.GoodQualityScore() < comparator.BadQualityScore());
   const float initial_quant_dc = InitialQuantDC(butteraugli_target);
   AdjustQuantField(enc_state->shared.ac_strategy, Rect(quant_field),
-                   &quant_field);
+                   original_butteraugli, &quant_field);
   ImageF tile_distmap;
   ImageF initial_quant_field = CopyImage(quant_field);
 
@@ -819,7 +814,6 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
     }
     quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
     ImageBundle dec_linear = RoundtripImage(opsin, enc_state, cms, pool);
-    PROFILER_ZONE("enc Butteraugli");
     float score;
     ImageF diffmap;
     JXL_CHECK(comparator.CompareWith(dec_linear, &diffmap, &score));
@@ -942,7 +936,7 @@ void FindBestQuantizationMaxError(const Image3F& opsin,
   const float initial_quant_dc =
       16 * std::sqrt(0.1f / cparams.butteraugli_distance);
   AdjustQuantField(enc_state->shared.ac_strategy, Rect(quant_field),
-                   &quant_field);
+                   cparams.original_butteraugli_distance, &quant_field);
 
   const float inv_max_err[3] = {1.0f / enc_state->cparams.max_error[0],
                                 1.0f / enc_state->cparams.max_error[1],
@@ -1003,10 +997,26 @@ void FindBestQuantizationMaxError(const Image3F& opsin,
 }  // namespace
 
 void AdjustQuantField(const AcStrategyImage& ac_strategy, const Rect& rect,
-                      ImageF* quant_field) {
+                      float butteraugli_target, ImageF* quant_field) {
   // Replace the whole quant_field in non-8x8 blocks with the maximum of each
   // 8x8 block.
   size_t stride = quant_field->PixelsPerRow();
+
+  // At low distances it is great to use max, but mean works better
+  // at high distances. We interpolate between them for a distance
+  // range.
+  float mean_max_mixer = 1.0f;
+  {
+    static const float kLimit = 1.54138f;
+    static const float kMul = 0.56391f;
+    static const float kMin = 0.0f;
+    if (butteraugli_target > kLimit) {
+      mean_max_mixer -= (butteraugli_target - kLimit) * kMul;
+      if (mean_max_mixer < kMin) {
+        mean_max_mixer = kMin;
+      }
+    }
+  }
   for (size_t y = 0; y < rect.ysize(); ++y) {
     AcStrategyRow ac_strategy_row = ac_strategy.ConstRow(rect, y);
     float* JXL_RESTRICT quant_row = rect.Row(quant_field, y);
@@ -1016,10 +1026,17 @@ void AdjustQuantField(const AcStrategyImage& ac_strategy, const Rect& rect,
       JXL_ASSERT(x + acs.covered_blocks_x() <= quant_field->xsize());
       JXL_ASSERT(y + acs.covered_blocks_y() <= quant_field->ysize());
       float max = quant_row[x];
+      float mean = 0.0;
       for (size_t iy = 0; iy < acs.covered_blocks_y(); iy++) {
         for (size_t ix = 0; ix < acs.covered_blocks_x(); ix++) {
+          mean += quant_row[x + ix + iy * stride];
           max = std::max(quant_row[x + ix + iy * stride], max);
         }
+      }
+      mean /= acs.covered_blocks_y() * acs.covered_blocks_x();
+      if (acs.covered_blocks_y() * acs.covered_blocks_x() >= 4) {
+        max *= mean_max_mixer;
+        max += (1.0f - mean_max_mixer) * mean;
       }
       for (size_t iy = 0; iy < acs.covered_blocks_y(); iy++) {
         for (size_t ix = 0; ix < acs.covered_blocks_x(); ix++) {
@@ -1047,7 +1064,6 @@ float InitialQuantDC(float butteraugli_target) {
 ImageF InitialQuantField(const float butteraugli_target, const Image3F& opsin,
                          const FrameDimensions& frame_dim, ThreadPool* pool,
                          float rescale, ImageF* mask) {
-  PROFILER_FUNC;
   const float quant_ac = kAcQuant / butteraugli_target;
   return HWY_DYNAMIC_DISPATCH(AdaptiveQuantizationMap)(
       butteraugli_target, opsin, frame_dim, quant_ac * rescale, pool, mask);
@@ -1059,18 +1075,15 @@ void FindBestQuantizer(const ImageBundle* linear, const Image3F& opsin,
                        AuxOut* aux_out, double rescale) {
   const CompressParams& cparams = enc_state->cparams;
   if (cparams.max_error_mode) {
-    PROFILER_ZONE("enc find best maxerr");
     FindBestQuantizationMaxError(opsin, enc_state, cms, pool, aux_out);
   } else if (cparams.speed_tier <= SpeedTier::kKitten) {
     // Normal encoding to a butteraugli score.
-    PROFILER_ZONE("enc find best2");
     FindBestQuantization(*linear, opsin, enc_state, cms, pool, aux_out);
   }
 }
 
 ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
                            const JxlCmsInterface& cms, ThreadPool* pool) {
-  PROFILER_ZONE("enc roundtrip");
   std::unique_ptr<PassesDecoderState> dec_state =
       jxl::make_unique<PassesDecoderState>();
   JXL_CHECK(dec_state->output_encoding_info.SetFromMetadata(

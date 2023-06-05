@@ -114,8 +114,6 @@ void SlowSymmetric3Row(const ImageF& in, const int64_t iy, const int64_t xsize,
 void SlowSymmetric3(const ImageF& in, const Rect& rect,
                     const WeightsSymmetric3& weights, ThreadPool* pool,
                     ImageF* JXL_RESTRICT out) {
-  PROFILER_FUNC;
-
   const int64_t xsize = static_cast<int64_t>(rect.xsize());
   const int64_t ysize = static_cast<int64_t>(rect.ysize());
   const int64_t kRadius = 1;
@@ -168,7 +166,6 @@ float SlowSeparablePixel(const ImageF& in, const Rect& rect, const int64_t x,
 void SlowSeparable5(const ImageF& in, const Rect& rect,
                     const WeightsSeparable5& weights, ThreadPool* pool,
                     ImageF* out) {
-  PROFILER_FUNC;
   const float* horz_weights = &weights.horz[0];
   const float* vert_weights = &weights.vert[0];
 
@@ -190,7 +187,6 @@ void SlowSeparable5(const ImageF& in, const Rect& rect,
 void SlowSeparable7(const ImageF& in, const Rect& rect,
                     const WeightsSeparable7& weights, ThreadPool* pool,
                     ImageF* out) {
-  PROFILER_FUNC;
   const float* horz_weights = &weights.horz[0];
   const float* vert_weights = &weights.vert[0];
 

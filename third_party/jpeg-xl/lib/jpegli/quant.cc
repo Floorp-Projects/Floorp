@@ -457,7 +457,7 @@ static const float kBaseQuantMatrixStd[] = {
 
 static const float kZeroBiasMulYCbCrLQ[] = {
     // c = 0
-    0.6190f, 0.0568f, 0.3880f, 0.6190f, 0.6190f, 0.4490f, 0.4490f, 0.6187f,  //
+    0.0000f, 0.0568f, 0.3880f, 0.6190f, 0.6190f, 0.4490f, 0.4490f, 0.6187f,  //
     0.0568f, 0.5829f, 0.6189f, 0.6190f, 0.6190f, 0.7190f, 0.6190f, 0.6189f,  //
     0.3880f, 0.6189f, 0.6190f, 0.6190f, 0.6190f, 0.6190f, 0.6187f, 0.6100f,  //
     0.6190f, 0.6190f, 0.6190f, 0.6190f, 0.5890f, 0.3839f, 0.7160f, 0.6190f,  //
@@ -466,7 +466,7 @@ static const float kZeroBiasMulYCbCrLQ[] = {
     0.4490f, 0.6190f, 0.6187f, 0.7160f, 0.5860f, 0.6190f, 0.6204f, 0.6190f,  //
     0.6187f, 0.6189f, 0.6100f, 0.6190f, 0.4790f, 0.6190f, 0.6190f, 0.3480f,  //
     // c = 1
-    0.9430f, 1.1640f, 0.9373f, 1.1319f, 0.8016f, 0.9136f, 1.1530f, 0.9430f,  //
+    0.0000f, 1.1640f, 0.9373f, 1.1319f, 0.8016f, 0.9136f, 1.1530f, 0.9430f,  //
     1.1640f, 0.9188f, 0.9160f, 1.1980f, 1.1830f, 0.9758f, 0.9430f, 0.9430f,  //
     0.9373f, 0.9160f, 0.8430f, 1.1720f, 0.7083f, 0.9430f, 0.9430f, 0.9430f,  //
     1.1319f, 1.1980f, 1.1720f, 1.1490f, 0.8547f, 0.9430f, 0.9430f, 0.9430f,  //
@@ -475,7 +475,7 @@ static const float kZeroBiasMulYCbCrLQ[] = {
     1.1530f, 0.9430f, 0.9430f, 0.9430f, 0.9430f, 0.9430f, 0.9430f, 0.9480f,  //
     0.9430f, 0.9430f, 0.9430f, 0.9430f, 0.9430f, 0.9430f, 0.9480f, 0.9430f,  //
     // c = 2
-    0.3060f, 1.3190f, 0.4308f, 0.4460f, 0.0661f, 0.0660f, 0.2660f, 0.2960f,  //
+    0.0000f, 1.3190f, 0.4308f, 0.4460f, 0.0661f, 0.0660f, 0.2660f, 0.2960f,  //
     1.3190f, 0.3280f, 0.3093f, 0.0750f, 0.0505f, 0.1594f, 0.3060f, 0.2113f,  //
     0.4308f, 0.3093f, 0.3060f, 0.1182f, 0.0500f, 0.3060f, 0.3915f, 0.2426f,  //
     0.4460f, 0.0750f, 0.1182f, 0.0512f, 0.0500f, 0.2130f, 0.3930f, 0.1590f,  //
@@ -487,7 +487,7 @@ static const float kZeroBiasMulYCbCrLQ[] = {
 
 static const float kZeroBiasMulYCbCrHQ[] = {
     // c = 0
-    0.7830f, 0.0044f, 0.2521f, 0.6547f, 0.8161f, 0.6130f, 0.8841f, 0.8155f,  //
+    0.0000f, 0.0044f, 0.2521f, 0.6547f, 0.8161f, 0.6130f, 0.8841f, 0.8155f,  //
     0.0044f, 0.6831f, 0.6553f, 0.6295f, 0.7848f, 0.7843f, 0.8474f, 0.7836f,  //
     0.2521f, 0.6553f, 0.7834f, 0.7829f, 0.8161f, 0.8072f, 0.7743f, 0.9242f,  //
     0.6547f, 0.6295f, 0.7829f, 0.8654f, 0.7829f, 0.6986f, 0.7818f, 0.7726f,  //
@@ -496,7 +496,7 @@ static const float kZeroBiasMulYCbCrHQ[] = {
     0.8841f, 0.8474f, 0.7743f, 0.7818f, 0.7843f, 0.9508f, 0.7839f, 0.8437f,  //
     0.8155f, 0.7836f, 0.9242f, 0.7726f, 0.7653f, 0.7653f, 0.8437f, 0.7819f,  //
     // c = 1
-    1.0540f, 1.0816f, 1.0556f, 1.2876f, 1.1554f, 1.1567f, 1.8851f, 0.5488f,  //
+    0.0000f, 1.0816f, 1.0556f, 1.2876f, 1.1554f, 1.1567f, 1.8851f, 0.5488f,  //
     1.0816f, 1.1537f, 1.1850f, 1.0712f, 1.1671f, 2.0719f, 1.0544f, 1.4764f,  //
     1.0556f, 1.1850f, 1.2870f, 1.1981f, 1.8181f, 1.2618f, 1.0564f, 1.1191f,  //
     1.2876f, 1.0712f, 1.1981f, 1.4753f, 2.0609f, 1.0564f, 1.2645f, 1.0564f,  //
@@ -505,7 +505,7 @@ static const float kZeroBiasMulYCbCrHQ[] = {
     1.8851f, 1.0544f, 1.0564f, 1.2645f, 0.8464f, 1.0564f, 1.0564f, 1.0564f,  //
     0.5488f, 1.4764f, 1.1191f, 1.0564f, 1.0564f, 1.0564f, 1.0564f, 1.0564f,  //
     // c = 2
-    0.6620f, 0.5392f, 0.6659f, 0.8968f, 0.6829f, 0.6328f, 0.5802f, 0.4836f,  //
+    0.0000f, 0.5392f, 0.6659f, 0.8968f, 0.6829f, 0.6328f, 0.5802f, 0.4836f,  //
     0.5392f, 0.6746f, 0.6760f, 0.6102f, 0.6015f, 0.6958f, 0.7327f, 0.4897f,  //
     0.6659f, 0.6760f, 0.6957f, 0.6543f, 0.4396f, 0.6330f, 0.7081f, 0.2583f,  //
     0.8968f, 0.6102f, 0.6543f, 0.5913f, 0.6457f, 0.5828f, 0.5139f, 0.3565f,  //
@@ -515,7 +515,9 @@ static const float kZeroBiasMulYCbCrHQ[] = {
     0.4836f, 0.4897f, 0.2583f, 0.3565f, 0.5949f, 0.6629f, 0.6644f, 0.6644f,  //
 };
 
-static const float kZeroBiasOffsetYCbCr[] = {
+static const float kZeroBiasOffsetYCbCrDC[] = {0.0f, 0.0f, 0.0f};
+
+static const float kZeroBiasOffsetYCbCrAC[] = {
     0.59082f,
     0.58146f,
     0.57988f,
@@ -722,8 +724,8 @@ void InitQuantizer(j_compress_ptr cinfo) {
   if (m->use_adaptive_quantization) {
     for (int c = 0; c < cinfo->num_components; ++c) {
       for (int k = 0; k < DCTSIZE2; ++k) {
-        m->zero_bias_mul[c][k] = 0.5f;
-        m->zero_bias_offset[c][k] = 0.5f;
+        m->zero_bias_mul[c][k] = k == 0 ? 0.0f : 0.5f;
+        m->zero_bias_offset[c][k] = k == 0 ? 0.0f : 0.5f;
       }
     }
     if (cinfo->jpeg_color_space == JCS_YCbCr) {
@@ -738,7 +740,8 @@ void InitQuantizer(j_compress_ptr cinfo) {
           float mul0 = kZeroBiasMulYCbCrLQ[c * DCTSIZE2 + k];
           float mul1 = kZeroBiasMulYCbCrHQ[c * DCTSIZE2 + k];
           m->zero_bias_mul[c][k] = mix0 * mul0 + mix1 * mul1;
-          m->zero_bias_offset[c][k] = kZeroBiasOffsetYCbCr[c];
+          m->zero_bias_offset[c][k] =
+              k == 0 ? kZeroBiasOffsetYCbCrDC[c] : kZeroBiasOffsetYCbCrAC[c];
         }
       }
     }
