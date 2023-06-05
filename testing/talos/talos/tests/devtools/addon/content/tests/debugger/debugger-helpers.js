@@ -248,7 +248,9 @@ async function reloadDebuggerAndLog(label, toolbox, expected) {
     const panel = await toolbox.getPanelWhenReady("jsdebugger");
     const dbg = await createContext(panel);
     await waitForDispatch(dbg, "NAVIGATE");
+    await waitForDispatch(dbg, "REMOVE_THREAD");
     await waitForSources(dbg, expected.sources);
+    await waitForSource(dbg, expected.sourceURL);
     await waitForText(dbg, expected.text);
     await waitForSymbols(dbg);
   };
