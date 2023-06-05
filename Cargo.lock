@@ -3917,8 +3917,8 @@ version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.107",
- "synstructure 0.12.6",
+ "syn 2.0.18",
+ "synstructure 0.13.0",
  "unicode-xid",
 ]
 
