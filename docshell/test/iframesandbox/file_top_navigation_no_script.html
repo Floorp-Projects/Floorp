@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<title>Test window for top navigation with no script</title>
+</head>
+<body>
+<iframe sandbox="allow-same-origin allow-top-navigation-by-user-activation"
+  srcdoc="<a href='javascript:top.opener.ok(false, `the JS ran!`)' target=_top>click</a>"></iframe>
+<script>
+onload = () => {
+  opener.info("clicking on link");
+  synthesizeMouseAtCenter(frames[0].document.body.querySelector("a"), {});
+};
+</script>
+</body>
+</html>
