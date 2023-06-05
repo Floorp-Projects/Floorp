@@ -97,8 +97,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   // easily at any time.
   void ApplyOptions(const AudioOptions& options);
 
-  int CreateVoEChannel();
-
   webrtc::TaskQueueFactory* const task_queue_factory_;
   std::unique_ptr<rtc::TaskQueue> low_priority_worker_queue_;
 
@@ -251,8 +249,6 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   bool MuteStream(uint32_t ssrc, bool mute);
 
   WebRtcVoiceEngine* engine() { return engine_; }
-  int CreateVoEChannel();
-  bool DeleteVoEChannel(int channel);
   bool SetMaxSendBitrate(int bps);
   void SetupRecording();
 
