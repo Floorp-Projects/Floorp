@@ -580,12 +580,14 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
 
     bool vacuumNeeded = false;
 
-    mozStorageTransaction transaction(
-        connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-    QM_TRY(MOZ_TO_RESULT(transaction.Start()));
-
     if (newDatabase) {
+      mozStorageTransaction transaction(
+          connection,
+          /* aCommitOnComplete */ false,
+          mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+      QM_TRY(MOZ_TO_RESULT(transaction.Start()));
+
       QM_TRY(MOZ_TO_RESULT(CreateTables(connection)));
 
 #ifdef DEBUG
@@ -608,12 +610,21 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
       QM_TRY(MOZ_TO_RESULT(stmt->BindUTF8StringByName("origin"_ns, aOrigin)));
 
       QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+
+      QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
     } else {
       // This logic needs to change next time we change the schema!
       static_assert(kSQLiteSchemaVersion == int32_t((5 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
+        mozStorageTransaction transaction(
+            connection,
+            /* aCommitOnComplete */ false,
+            mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+        QM_TRY(MOZ_TO_RESULT(transaction.Start()));
+
         if (schemaVersion == MakeSchemaVersion(1, 0)) {
           QM_TRY(MOZ_TO_RESULT(UpgradeSchemaFrom1_0To2_0(connection)));
         } else if (schemaVersion == MakeSchemaVersion(2, 0)) {
@@ -630,14 +641,14 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
           return Err(NS_ERROR_FAILURE);
         }
 
+        QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
+
         QM_TRY_UNWRAP(schemaVersion, MOZ_TO_RESULT_INVOKE_MEMBER(
                                          connection, GetSchemaVersion));
       }
 
       MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
     }
-
-    QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
 
     if (vacuumNeeded) {
       QM_TRY(MOZ_TO_RESULT(connection->ExecuteSimpleSQL("VACUUM;"_ns)));
