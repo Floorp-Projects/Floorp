@@ -163,8 +163,6 @@ CO01:
         # browser/locales/en-US/browser/preferences/preferences.ftl
         - sync-engine-addons
         - sync-mobile-promo
-        # browser/locales/en-US/browser/protectionsPanel.ftl
-        - protections-panel-content-blocking-breakage-report-view-description
         # devtools/client/locales/en-US/aboutdebugging.ftl
         - about-debugging-setup-usb-step-enable-debug-firefox2
         - about-debugging-browser-version-too-old-fennec

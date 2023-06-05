@@ -290,6 +290,10 @@
   display: inline;
 }
 
+#protections-popup-sendReportView-description > label {
+  display: inline;
+}
+
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
 #protections-popup-sendReportView-heading,
