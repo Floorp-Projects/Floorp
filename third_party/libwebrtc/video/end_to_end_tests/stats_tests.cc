@@ -357,11 +357,6 @@ TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kVideoTimingUri, kExtensionId));
-      for (auto& receive_config : *receive_configs) {
-        receive_config.rtp.extensions.clear();
-        receive_config.rtp.extensions.push_back(
-            RtpExtension(RtpExtension::kVideoTimingUri, kExtensionId));
-      }
     }
 
     void OnVideoStreamsCreated(VideoSendStream* send_stream,

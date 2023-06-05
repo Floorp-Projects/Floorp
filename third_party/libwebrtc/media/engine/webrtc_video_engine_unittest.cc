@@ -2684,11 +2684,6 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
     EXPECT_EQ(ext_uri, send_stream->GetConfig().rtp.extensions[0].uri);
     // Verify call with same set of extensions returns true.
     EXPECT_TRUE(channel_->SetSendParameters(parameters));
-    // Verify that SetSendRtpHeaderExtensions doesn't implicitly add them for
-    // receivers.
-    EXPECT_TRUE(AddRecvStream(cricket::StreamParams::CreateLegacy(123))
-                    ->GetConfig()
-                    .rtp.extensions.empty());
 
     // Verify that existing RTP header extensions can be removed.
     EXPECT_TRUE(channel_->SetSendParameters(send_parameters_));
@@ -2712,13 +2707,10 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
     parameters.extensions.push_back(RtpExtension(ext_uri, id));
     EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
-    FakeVideoReceiveStream* recv_stream =
-        AddRecvStream(cricket::StreamParams::CreateLegacy(123));
+    AddRecvStream(cricket::StreamParams::CreateLegacy(123));
+    EXPECT_THAT(channel_->GetRtpReceiveParameters(123).header_extensions,
+                ElementsAre(RtpExtension(ext_uri, id)));
 
-    // Verify the recv extension id.
-    ASSERT_EQ(1u, recv_stream->GetConfig().rtp.extensions.size());
-    EXPECT_EQ(id, recv_stream->GetConfig().rtp.extensions[0].id);
-    EXPECT_EQ(ext_uri, recv_stream->GetConfig().rtp.extensions[0].uri);
     // Verify call with same set of extensions returns true.
     EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
@@ -2730,17 +2722,14 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
 
     // Verify that existing RTP header extensions can be removed.
     EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
-    ASSERT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
-    recv_stream = fake_call_->GetVideoReceiveStreams()[0];
-    EXPECT_TRUE(recv_stream->GetConfig().rtp.extensions.empty());
+    EXPECT_THAT(channel_->GetRtpReceiveParameters(123).header_extensions,
+                IsEmpty());
 
     // Verify that adding receive RTP header extensions adds them for existing
     // streams.
     EXPECT_TRUE(channel_->SetRecvParameters(parameters));
-    recv_stream = fake_call_->GetVideoReceiveStreams()[0];
-    ASSERT_EQ(1u, recv_stream->GetConfig().rtp.extensions.size());
-    EXPECT_EQ(id, recv_stream->GetConfig().rtp.extensions[0].id);
-    EXPECT_EQ(ext_uri, recv_stream->GetConfig().rtp.extensions[0].uri);
+    EXPECT_EQ(channel_->GetRtpReceiveParameters(123).header_extensions,
+              parameters.extensions);
   }
 
   void TestLossNotificationState(bool expect_lntf_enabled) {
@@ -2968,9 +2957,9 @@ TEST_F(WebRtcVideoChannelTest, NoHeaderExtesionsByDefault) {
       AddSendStream(cricket::StreamParams::CreateLegacy(kSsrcs1[0]));
   ASSERT_TRUE(send_stream->GetConfig().rtp.extensions.empty());
 
-  FakeVideoReceiveStream* recv_stream =
-      AddRecvStream(cricket::StreamParams::CreateLegacy(kSsrcs1[0]));
-  ASSERT_TRUE(recv_stream->GetConfig().rtp.extensions.empty());
+  AddRecvStream(cricket::StreamParams::CreateLegacy(kSsrcs1[0]));
+  ASSERT_TRUE(receive_channel_->GetRtpReceiveParameters(kSsrcs1[0])
+                  .header_extensions.empty());
 }
 
 // Test support for RTP timestamp offset header extension.
@@ -3055,38 +3044,6 @@ TEST_F(WebRtcVideoChannelTest, IdenticalSendExtensionsDoesntRecreateStream) {
   EXPECT_EQ(2, fake_call_->GetNumCreatedSendStreams());
 }
 
-TEST_F(WebRtcVideoChannelTest, IdenticalRecvExtensionsDoesntRecreateStream) {
-  const int kTOffsetId = 1;
-  const int kAbsSendTimeId = 2;
-  const int kVideoRotationId = 3;
-  recv_parameters_.extensions.push_back(
-      RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeId));
-  recv_parameters_.extensions.push_back(
-      RtpExtension(RtpExtension::kTimestampOffsetUri, kTOffsetId));
-  recv_parameters_.extensions.push_back(
-      RtpExtension(RtpExtension::kVideoRotationUri, kVideoRotationId));
-
-  EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
-  FakeVideoReceiveStream* recv_stream =
-      AddRecvStream(cricket::StreamParams::CreateLegacy(123));
-
-  EXPECT_EQ(1, fake_call_->GetNumCreatedReceiveStreams());
-  ASSERT_EQ(3u, recv_stream->GetConfig().rtp.extensions.size());
-
-  // Setting the same extensions (even if in different order) shouldn't
-  // reallocate the stream.
-  absl::c_reverse(recv_parameters_.extensions);
-  EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
-
-  EXPECT_EQ(1, fake_call_->GetNumCreatedReceiveStreams());
-
-  // Setting different extensions should not require the stream to be recreated.
-  recv_parameters_.extensions.resize(1);
-  EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
-
-  EXPECT_EQ(1, fake_call_->GetNumCreatedReceiveStreams());
-}
-
 TEST_F(WebRtcVideoChannelTest,
        SetSendRtpHeaderExtensionsExcludeUnsupportedExtensions) {
   const int kUnsupportedId = 1;
@@ -3117,14 +3074,16 @@ TEST_F(WebRtcVideoChannelTest,
   recv_parameters_.extensions.push_back(
       RtpExtension(RtpExtension::kTimestampOffsetUri, kTOffsetId));
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
-  FakeVideoReceiveStream* recv_stream =
-      AddRecvStream(cricket::StreamParams::CreateLegacy(123));
+  AddRecvStream(cricket::StreamParams::CreateLegacy(123));
 
   // Only timestamp offset extension is set to receive stream,
   // unsupported rtp extension is ignored.
-  ASSERT_EQ(1u, recv_stream->GetConfig().rtp.extensions.size());
-  EXPECT_STREQ(RtpExtension::kTimestampOffsetUri,
-               recv_stream->GetConfig().rtp.extensions[0].uri.c_str());
+  ASSERT_THAT(receive_channel_->GetRtpReceiveParameters(123).header_extensions,
+              SizeIs(1));
+  EXPECT_STREQ(receive_channel_->GetRtpReceiveParameters(123)
+                   .header_extensions[0]
+                   .uri.c_str(),
+               RtpExtension::kTimestampOffsetUri);
 }
 
 TEST_F(WebRtcVideoChannelTest, SetSendRtpHeaderExtensionsRejectsIncorrectIds) {
@@ -4505,8 +4464,6 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetRecvCodecsWithFec) {
   EXPECT_EQ(video_stream_config.rtcp_send_transport,
             flexfec_stream_config.rtcp_send_transport);
   EXPECT_EQ(video_stream_config.rtp.rtcp_mode, flexfec_stream_config.rtcp_mode);
-  EXPECT_EQ(video_stream_config.rtp.extensions,
-            flexfec_stream_config.rtp.extensions);
 }
 
 // We should not send FlexFEC, even if we advertise it, unless the right

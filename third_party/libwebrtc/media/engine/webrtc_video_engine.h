@@ -458,7 +458,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     std::vector<webrtc::RtpSource> GetSources();
 
-    // Does not return codecs, they are filled by the owning WebRtcVideoChannel.
+    // Does not return codecs, nor header extensions,  they are filled by the
+    // owning WebRtcVideoChannel.
     webrtc::RtpParameters GetRtpParameters() const;
 
     // TODO(deadbeef): Move these feedback parameters into the recv parameters.

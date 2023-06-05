@@ -176,11 +176,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   void SetDepacketizerToDecoderFrameTransformer(
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
 
-  // Updates the rtp header extensions at runtime. Must be called on the
-  // `packet_sequence_checker_` thread.
-  void SetRtpExtensions(const std::vector<RtpExtension>& extensions);
-  const RtpHeaderExtensionMap& GetRtpExtensions() const;
-
   // Called by VideoReceiveStreamInterface when stats are updated.
   void UpdateRtt(int64_t max_rtt_ms);
 
@@ -331,8 +326,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
 
   RemoteNtpTimeEstimator ntp_estimator_;
 
-  RtpHeaderExtensionMap rtp_header_extensions_
-      RTC_GUARDED_BY(packet_sequence_checker_);
   // Set by the field trial WebRTC-ForcePlayoutDelay to override any playout
   // delay that is specified in the received packets.
   FieldTrialOptional<int> forced_playout_delay_max_ms_;

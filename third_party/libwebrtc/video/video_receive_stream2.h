@@ -142,8 +142,6 @@ class VideoReceiveStream2
   void Start() override;
   void Stop() override;
 
-  void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
-  RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   void SetRtcpMode(RtcpMode mode) override;
   void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) override;
   void SetLossNotificationEnabled(bool enabled) override;

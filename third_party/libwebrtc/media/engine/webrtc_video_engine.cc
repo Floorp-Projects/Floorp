@@ -1088,6 +1088,7 @@ webrtc::RtpParameters WebRtcVideoChannel::GetRtpReceiveParameters(
     return webrtc::RtpParameters();
   }
   rtp_params = it->second->GetRtpParameters();
+  rtp_params.header_extensions = recv_rtp_extensions_;
 
   // Add codecs, which any stream is prepared to receive.
   for (const VideoCodec& codec : recv_params_.codecs) {
@@ -1507,8 +1508,6 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
   }
   sp.GetFidSsrc(ssrc, &config->rtp.rtx_ssrc);
 
-  config->rtp.extensions = recv_rtp_extensions_;
-
   // TODO(brandtr): Generalize when we add support for multistream protection.
   flexfec_config->payload_type = recv_flexfec_payload_type_;
   if (!IsDisabled(call_->trials(), "WebRTC-FlexFEC-03-Advertised") &&
@@ -1516,7 +1515,6 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
     flexfec_config->protected_media_ssrcs = {ssrc};
     flexfec_config->rtp.local_ssrc = config->rtp.local_ssrc;
     flexfec_config->rtcp_mode = config->rtp.rtcp_mode;
-    flexfec_config->rtp.extensions = config->rtp.extensions;
   }
 }
 
@@ -2961,7 +2959,6 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetRtpParameters() const {
     rtp_parameters.encodings.back().ssrc = ssrc;
   }
 
-  rtp_parameters.header_extensions = config_.rtp.extensions;
   rtp_parameters.rtcp.reduced_size =
       config_.rtp.rtcp_mode == webrtc::RtcpMode::kReducedSize;
 
@@ -3108,20 +3105,6 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
   bool video_needs_recreation = false;
   if (params.codec_settings) {
     video_needs_recreation = ReconfigureCodecs(*params.codec_settings);
-  }
-
-  if (params.rtp_header_extensions) {
-    if (config_.rtp.extensions != *params.rtp_header_extensions) {
-      config_.rtp.extensions = *params.rtp_header_extensions;
-      stream_->SetRtpExtensions(config_.rtp.extensions);
-    }
-
-    if (flexfec_config_.rtp.extensions != *params.rtp_header_extensions) {
-      flexfec_config_.rtp.extensions = *params.rtp_header_extensions;
-      if (flexfec_stream_) {
-        flexfec_stream_->SetRtpExtensions(flexfec_config_.rtp.extensions);
-      }
-    }
   }
 
   if (params.flexfec_payload_type)

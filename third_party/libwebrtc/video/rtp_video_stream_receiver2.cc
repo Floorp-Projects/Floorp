@@ -257,7 +257,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
       config_(*config),
       packet_router_(packet_router),
       ntp_estimator_(clock),
-      rtp_header_extensions_(config_.rtp.extensions),
       forced_playout_delay_max_ms_("max_ms", absl::nullopt),
       forced_playout_delay_min_ms_("min_ms", absl::nullopt),
       rtp_receive_statistics_(rtp_receive_statistics),
@@ -964,17 +963,6 @@ void RtpVideoStreamReceiver2::SetDepacketizerToDecoderFrameTransformer(
           this, std::move(frame_transformer), rtc::Thread::Current(),
           config_.rtp.remote_ssrc);
   frame_transformer_delegate_->Init();
-}
-
-void RtpVideoStreamReceiver2::SetRtpExtensions(
-    const std::vector<RtpExtension>& extensions) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  rtp_header_extensions_.Reset(extensions);
-}
-
-const RtpHeaderExtensionMap& RtpVideoStreamReceiver2::GetRtpExtensions() const {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  return rtp_header_extensions_;
 }
 
 void RtpVideoStreamReceiver2::UpdateRtt(int64_t max_rtt_ms) {

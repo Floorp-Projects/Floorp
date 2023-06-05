@@ -33,7 +33,6 @@ TEST(CallConfigUtils, MarshalUnmarshalProcessSameObject) {
   recv_config.rtp.red_payload_type = 50;
   recv_config.rtp.rtx_ssrc = 1000;
   recv_config.rtp.rtx_associated_payload_types[10] = 10;
-  recv_config.rtp.extensions.emplace_back("uri", 128, true);
 
   VideoReceiveStreamInterface::Config unmarshaled_config =
       ParseVideoReceiveStreamJsonConfig(
@@ -57,7 +56,6 @@ TEST(CallConfigUtils, MarshalUnmarshalProcessSameObject) {
   EXPECT_EQ(recv_config.rtp.rtx_ssrc, unmarshaled_config.rtp.rtx_ssrc);
   EXPECT_EQ(recv_config.rtp.rtx_associated_payload_types,
             unmarshaled_config.rtp.rtx_associated_payload_types);
-  EXPECT_EQ(recv_config.rtp.extensions, recv_config.rtp.extensions);
 }
 
 }  // namespace test

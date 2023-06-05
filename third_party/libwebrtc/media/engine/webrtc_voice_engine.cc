@@ -271,7 +271,6 @@ webrtc::AudioReceiveStreamInterface::Config BuildReceiveStreamConfig(
   if (!stream_ids.empty()) {
     config.sync_group = stream_ids[0];
   }
-  config.rtp.extensions = extensions;
   config.rtcp_send_transport = rtcp_send_transport;
   config.enable_non_sender_rtt = enable_non_sender_rtt;
   config.decoder_factory = decoder_factory;
@@ -1179,11 +1178,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     stream_->SetNonSenderRttMeasurement(enabled);
   }
 
-  void SetRtpExtensions(const std::vector<webrtc::RtpExtension>& extensions) {
-    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    stream_->SetRtpExtensions(extensions);
-  }
-
   // Set a new payload type -> decoder map.
   void SetDecoderMap(const std::map<int, webrtc::SdpAudioFormat>& decoder_map) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
@@ -1355,9 +1349,6 @@ bool WebRtcVoiceMediaChannel::SetRecvParameters(
     recv_rtp_extensions_.swap(filtered_extensions);
     recv_rtp_extension_map_ =
         webrtc::RtpHeaderExtensionMap(recv_rtp_extensions_);
-    for (auto& it : recv_streams_) {
-      it.second->SetRtpExtensions(recv_rtp_extensions_);
-    }
   }
   return true;
 }
