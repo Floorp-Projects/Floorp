@@ -25,3 +25,10 @@ class GitHubHost(BaseHost):
     def upstream_path_to_file(self, revision, filepath):
         repo = self.repo_url.path[1:]
         return "/".join(["https://raw.githubusercontent.com", repo, revision, filepath])
+
+    def upstream_release_artifact(self, revision, release_artifact):
+        repo = self.repo_url.path[1:]
+        release_artifact = release_artifact.format(tag=revision)
+        return (
+            f"https://github.com/{repo}/releases/download/{revision}/{release_artifact}"
+        )

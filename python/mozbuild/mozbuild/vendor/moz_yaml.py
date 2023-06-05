@@ -130,6 +130,15 @@ vendoring:
   # If omitted, will default to tracking commits.
   tracking: commit
 
+  # When using tag tracking (only on Github currently) use a release artifact
+  # for the source code instead of the automatically built git-archive exports.
+  # The source repository must build these artifacts with consistent filenames
+  # for every tag. This is useful when the Github repository uses submodules
+  # since they are not included in the git-archives.
+  # Substitution is performed on the filename, {tag} is replaced with the tag name.
+  # optional
+  release-artifact: "rnp-{tag}.tar.gz"
+
   # Base directory of the location where the source files will live in-tree.
   # If omitted, will default to the location the moz.yaml file is in.
   vendor-directory: third_party/directory
@@ -434,6 +443,7 @@ def _schema_1():
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
                 "tracking": Match(r"^(commit|tag)$"),
+                "release-artifact": All(str, Length(min=1)),
                 "flavor": Match(r"^(regular|rust|individual-files)$"),
                 "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
@@ -565,6 +575,16 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
         ):
             raise ValueError(
                 "Only individual-files flavor of update can use 'individual-files'"
+            )
+
+    # Ensure that release-artifact is only used with tag tracking
+    if "vendoring" in manifest and "release-artifact" in manifest["vendoring"]:
+        if (
+            manifest["vendoring"].get("source-hosting") != "github"
+            or manifest["vendoring"].get("tracking", "commit") != "tag"
+        ):
+            raise ValueError(
+                "You can only use release-artifact with tag tracking from Github."
             )
 
     # Ensure that the individual-files flavor has all the correct options
