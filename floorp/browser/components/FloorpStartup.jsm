@@ -152,7 +152,7 @@ NOTE: You can use the userContent.css file without change preferences (about:con
           } else {
               console.error("Can't find the Clock button.");
           }
-        }, 1000);
+        }, 2000);
     }
 }
 if (isMainBrowser) {
