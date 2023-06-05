@@ -847,14 +847,14 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
 
 MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION already_AddRefed<ShaderModule>
 WebGPUChild::DeviceCreateShaderModule(
-    Device& aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
+    const RefPtr<Device>& aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
     RefPtr<dom::Promise> aPromise) {
-  RawId deviceId = aDevice.mId;
+  RawId deviceId = aDevice->mId;
   RawId moduleId =
       ffi::wgpu_client_make_shader_module_id(mClient.get(), deviceId);
 
   RefPtr<ShaderModule> shaderModule =
-      new ShaderModule(&aDevice, moduleId, aPromise);
+      new ShaderModule(aDevice, moduleId, aPromise);
 
   nsString noLabel;
   nsString& label = noLabel;
@@ -865,7 +865,7 @@ WebGPUChild::DeviceCreateShaderModule(
   SendDeviceCreateShaderModule(deviceId, moduleId, label, aDesc.mCode)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aPromise,
+          [aPromise, aDevice,
            shaderModule](nsTArray<WebGPUCompilationMessage>&& messages)
               MOZ_CAN_RUN_SCRIPT {
                 if (!messages.IsEmpty()) {
@@ -873,7 +873,7 @@ WebGPUChild::DeviceCreateShaderModule(
                                                      std::cref(messages));
                 }
                 RefPtr<CompilationInfo> infoObject(
-                    new CompilationInfo(shaderModule));
+                    new CompilationInfo(aDevice));
                 infoObject->SetMessages(messages);
                 aPromise->MaybeResolve(infoObject);
               },

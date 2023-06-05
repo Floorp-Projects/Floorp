@@ -194,8 +194,7 @@ Device::CreateShaderModule(JSContext* aCx,
     return nullptr;
   }
 
-  return MOZ_KnownLive(mBridge)->DeviceCreateShaderModule(*this, aDesc,
-                                                          promise);
+  return MOZ_KnownLive(mBridge)->DeviceCreateShaderModule(this, aDesc, promise);
 }
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
