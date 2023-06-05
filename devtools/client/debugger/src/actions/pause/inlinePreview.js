@@ -40,7 +40,7 @@ export function generateInlinePreview(cx, frame) {
     const originalFrameScopes = getOriginalFrameScope(
       getState(),
       thread,
-      frame.location.source.id,
+      frame.location.sourceId,
       frame.id
     );
 

@@ -71,13 +71,13 @@ async function testInspectingFunction(hud) {
 
       if (
         isOriginalSource &&
-        !selectedLocation.source.id.includes("/originalSource-")
+        !selectedLocation.sourceId.includes("/originalSource-")
       ) {
         return false;
       }
 
       return (
-        selectedLocation.source.id.includes(sourceFilename) &&
+        selectedLocation.sourceId.includes(sourceFilename) &&
         selectedLocation.line == sourceLine
       );
     };

@@ -25,7 +25,7 @@ function getBreakpointsForSource(state, selectedSource) {
 
   return breakpoints.filter(bp => {
     const location = getLocation(bp, selectedSource);
-    return location.source.id === selectedSource.id;
+    return location.sourceId === selectedSource.id;
   });
 }
 

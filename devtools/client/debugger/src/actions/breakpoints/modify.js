@@ -243,7 +243,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
     for (const breakpoint of breakpoints) {
       const { generatedLocation } = breakpoint;
       if (
-        generatedLocation.source.id == target.source.id &&
+        generatedLocation.sourceId == target.sourceId &&
         comparePosition(generatedLocation, target)
       ) {
         dispatch({
@@ -260,7 +260,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
     for (const pendingBreakpoint of pending) {
       const { generatedLocation } = pendingBreakpoint;
       if (
-        generatedLocation.sourceUrl == target.source.url &&
+        generatedLocation.sourceUrl == target.sourceUrl &&
         comparePosition(generatedLocation, target)
       ) {
         dispatch({
