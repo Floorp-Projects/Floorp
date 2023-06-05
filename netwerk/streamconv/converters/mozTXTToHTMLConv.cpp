@@ -738,11 +738,11 @@ bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
       bArg = false;
     }
     if (bTestSmilie && (SmilyHit(aInString, aInLength, bArg, ":-)",
-                                 u"😄"_ns,  // smile, U+1F604
+                                 u"🙂"_ns,  // smile, U+1F642
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":)",
-                                 u"😄"_ns,  // smile, U+1F604
+                                 u"🙂"_ns,  // smile, U+1F642
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-D",
@@ -757,8 +757,8 @@ bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
                                  u"🙁"_ns,  // frown, U+1F641
                                  outputHTML, glyphTextLen) ||
 
-                        SmilyHit(aInString, aInLength, bArg, ":-[",
-                                 u"😅"_ns,  // embarassed, U+1F605
+                        SmilyHit(aInString, aInLength, bArg, ":$",
+                                 u"😳"_ns,  // embarassed, U+1F633
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ";-)",
