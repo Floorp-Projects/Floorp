@@ -14,23 +14,11 @@ Object {
     "generatedLocation": Object {
       "column": 2,
       "line": 5,
-      "source": Object {
-        "id": "",
-        "url": "http://localhost:8000/examples/bar.js",
-      },
-      "sourceActor": null,
-      "sourceActorId": undefined,
       "sourceUrl": "http://localhost:8000/examples/bar.js",
     },
     "location": Object {
       "column": 2,
       "line": 5,
-      "source": Object {
-        "id": "",
-        "url": "http://localhost:8000/examples/bar.js",
-      },
-      "sourceActor": null,
-      "sourceActorId": undefined,
       "sourceUrl": "http://localhost:8000/examples/bar.js",
     },
     "options": Object {

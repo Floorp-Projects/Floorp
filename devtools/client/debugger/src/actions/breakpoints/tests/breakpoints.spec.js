@@ -38,11 +38,11 @@ describe("breakpoints", () => {
   it("should add a breakpoint", async () => {
     const { dispatch, getState, cx } = createStore(mockClient({ 2: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    source.url = "http://localhost:8000/examples/a";
     const loc1 = createLocation({
       source,
       line: 2,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     await dispatch(
       actions.selectLocation(
@@ -69,11 +69,11 @@ describe("breakpoints", () => {
   it("should not show a breakpoint that does not have text", async () => {
     const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    source.url = "http://localhost:8000/examples/a";
     const loc1 = createLocation({
       source,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     await dispatch(
       actions.selectLocation(
@@ -97,11 +97,11 @@ describe("breakpoints", () => {
   it("should show a disabled breakpoint that does not have text", async () => {
     const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    source.url = "http://localhost:8000/examples/a";
     const loc1 = createLocation({
       source,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     await dispatch(
       actions.selectLocation(
@@ -131,11 +131,11 @@ describe("breakpoints", () => {
   it("should not re-add a breakpoint", async () => {
     const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    source.url = "http://localhost:8000/examples/a";
     const loc1 = createLocation({
       source,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     await dispatch(
       actions.selectLocation(
@@ -163,21 +163,21 @@ describe("breakpoints", () => {
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    aSource.url = "http://localhost:8000/examples/a";
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
+    bSource.url = "http://localhost:8000/examples/b";
 
     const loc1 = createLocation({
       source: aSource,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
 
     const loc2 = createLocation({
       source: bSource,
       line: 6,
       column: 2,
-      sourceUrl: "http://localhost:8000/examples/b",
     });
     const bSourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
@@ -220,6 +220,7 @@ describe("breakpoints", () => {
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    aSource.url = "http://localhost:8000/examples/a";
     const aSourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
       aSource.id
@@ -232,6 +233,7 @@ describe("breakpoints", () => {
     );
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
+    bSource.url = "http://localhost:8000/examples/b";
     const bSourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
       bSource.id
@@ -247,14 +249,12 @@ describe("breakpoints", () => {
       source: aSource,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
 
     const loc2 = createLocation({
       source: bSource,
       line: 6,
       column: 2,
-      sourceUrl: "http://localhost:8000/examples/b",
     });
     await dispatch(actions.addBreakpoint(cx, loc1));
     await dispatch(actions.addBreakpoint(cx, loc2));
@@ -276,11 +276,11 @@ describe("breakpoints", () => {
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    aSource.url = "http://localhost:8000/examples/a";
     const loc = createLocation({
       source: aSource,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     const aSourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
@@ -320,6 +320,7 @@ describe("breakpoints", () => {
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    aSource.url = "http://localhost:8000/examples/a";
     const aSourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
       aSource.id
@@ -332,6 +333,7 @@ describe("breakpoints", () => {
     );
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
+    bSource.url = "http://localhost:8000/examples/b";
     const bSourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
       bSource.id
@@ -347,14 +349,12 @@ describe("breakpoints", () => {
       source: aSource,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
 
     const loc2 = createLocation({
       source: bSource,
       line: 6,
       column: 2,
-      sourceUrl: "http://localhost:8000/examples/b",
     });
 
     await dispatch(actions.addBreakpoint(cx, loc1));
@@ -422,11 +422,11 @@ describe("breakpoints", () => {
     const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    source.url = "http://localhost:8000/examples/a";
     const loc = createLocation({
       source,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
@@ -454,11 +454,11 @@ describe("breakpoints", () => {
     const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
+    source.url = "http://localhost:8000/examples/a";
     const loc = createLocation({
       source,
       line: 5,
       column: 1,
-      sourceUrl: "http://localhost:8000/examples/a",
     });
     const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),
@@ -496,11 +496,11 @@ describe("breakpoints", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("a.js"))
     );
+    source.url = "http://localhost:8000/examples/a";
     const loc = createLocation({
       source,
       line: 1,
       column: 0,
-      sourceUrl: "http://localhost:8000/examples/a.js",
     });
     const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
       getState(),

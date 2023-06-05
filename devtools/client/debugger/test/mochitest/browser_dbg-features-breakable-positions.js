@@ -226,9 +226,9 @@ async function assertBreakablePositions(
         "Selector breakable column has the right source id"
       );
       is(
-        selPos.location.sourceUrl,
+        selPos.location.source.url,
         source.url,
-        "Selector breakable column has the right sourceUrl"
+        "Selector breakable column has the right source url"
       );
     }
 
