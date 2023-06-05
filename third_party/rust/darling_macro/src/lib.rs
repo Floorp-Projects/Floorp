@@ -1,6 +1,3 @@
-// This is needed for 1.31.0 to keep compiling
-extern crate proc_macro;
-
 use darling_core::{derive, Error};
 use proc_macro::TokenStream;
 use syn::parse_macro_input;

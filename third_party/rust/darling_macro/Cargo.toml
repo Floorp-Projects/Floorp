@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "darling_macro"
-version = "0.14.3"
+version = "0.20.1"
 authors = ["Ted Driggs <ted.driggs@outlook.com>"]
 description = """
 Internal support for a proc-macro library for reading attributes into structs when
@@ -25,10 +25,10 @@ repository = "https://github.com/TedDriggs/darling"
 proc-macro = true
 
 [dependencies.darling_core]
-version = "=0.14.3"
+version = "=0.20.1"
 
 [dependencies.quote]
 version = "1.0.18"
 
 [dependencies.syn]
-version = "1.0.91"
+version = "2.0.15"

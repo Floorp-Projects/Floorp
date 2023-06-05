@@ -51,7 +51,7 @@ impl MyInputReceiver {
         // we'll go ahead and make it positive.
         let amplitude = match amplitude {
             Ok(amp) => amp,
-            Err(mi) => (i64::from_meta(&mi)?).abs() as u64,
+            Err(mi) => (i64::from_meta(&mi)?).unsigned_abs(),
         };
 
         Ok(Self {

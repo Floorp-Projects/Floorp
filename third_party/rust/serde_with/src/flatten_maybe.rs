@@ -50,17 +50,19 @@
 /// ```
 #[macro_export]
 macro_rules! flattened_maybe {
-    ($fn:ident, $field:literal) => {
-        fn $fn<'de, T, D>(deserializer: D) -> ::std::result::Result<T, D::Error>
+    ($fn:ident, $field:tt) => {
+        fn $fn<'de, T, D>(deserializer: D) -> $crate::__private__::Result<T, D::Error>
         where
             T: $crate::serde::Deserialize<'de>,
             D: $crate::serde::Deserializer<'de>,
         {
-            use ::std::{
-                option::Option::{self, None, Some},
-                result::Result::{self, Err, Ok},
+            use $crate::{
+                __private__::{
+                    Option::{self, None, Some},
+                    Result::{self, Err, Ok},
+                },
+                serde,
             };
-            use $crate::serde;
 
             #[derive($crate::serde::Deserialize)]
             #[serde(crate = "serde")]

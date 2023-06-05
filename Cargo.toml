@@ -102,8 +102,8 @@ bitflags = { path = "build/rust/bitflags" }
 # Patch cfg-if 0.1 to 1.0
 cfg-if = { path = "build/rust/cfg-if" }
 
-# Patch darling 0.13 to 0.14
-darling = { path = "build/rust/darling" }
+# Patch serde_with 1.0 to 3.0
+serde_with = { path = "build/rust/serde_with" }
 
 # Patch redox_users to an empty crate
 redox_users = { path = "build/rust/redox_users" }

@@ -1,6 +1,7 @@
 use proc_macro2::Span;
 use syn::{parse_quote, spanned::Spanned};
 
+use crate::ast::NestedMeta;
 use crate::{Error, FromMeta, Result};
 
 mod core;
@@ -50,7 +51,7 @@ impl FromMeta for DefaultExpression {
         match item {
             syn::Meta::Path(_) => Ok(DefaultExpression::Trait { span: item.span() }),
             syn::Meta::List(nm) => Err(Error::unsupported_format("list").with_span(nm)),
-            syn::Meta::NameValue(nv) => Self::from_value(&nv.lit),
+            syn::Meta::NameValue(nv) => Self::from_expr(&nv.value),
         }
     }
 
@@ -66,7 +67,7 @@ pub trait ParseAttribute: Sized {
     fn parse_attributes(mut self, attrs: &[syn::Attribute]) -> Result<Self> {
         let mut errors = Error::accumulator();
         for attr in attrs {
-            if attr.path == parse_quote!(darling) {
+            if attr.meta.path() == &parse_quote!(darling) {
                 errors.handle(parse_attr(attr, &mut self));
             }
         }
@@ -80,10 +81,10 @@ pub trait ParseAttribute: Sized {
 
 fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Result<()> {
     let mut errors = Error::accumulator();
-    match attr.parse_meta().ok() {
-        Some(syn::Meta::List(data)) => {
-            for item in data.nested {
-                if let syn::NestedMeta::Meta(ref mi) = item {
+    match &attr.meta {
+        syn::Meta::List(data) => {
+            for item in NestedMeta::parse_meta_list(data.tokens.clone())? {
+                if let NestedMeta::Meta(ref mi) = item {
                     errors.handle(target.parse_nested(mi));
                 } else {
                     panic!("Wasn't able to parse: `{:?}`", item);
@@ -92,8 +93,7 @@ fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Resul
 
             errors.finish()
         }
-        Some(ref item) => panic!("Wasn't able to parse: `{:?}`", item),
-        None => panic!("Unable to parse {:?}", attr),
+        item => panic!("Wasn't able to parse: `{:?}`", item),
     }
 }
 

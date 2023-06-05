@@ -1,8 +1,6 @@
-use alloc::collections::BTreeSet;
-use core::hash::{BuildHasher, Hash};
-#[cfg(feature = "indexmap")]
-use indexmap_crate::IndexSet;
-use std::collections::HashSet;
+use crate::prelude::*;
+#[cfg(feature = "indexmap_1")]
+use indexmap_1::IndexSet;
 
 pub trait DuplicateInsertsLastWinsSet<T> {
     fn new(size_hint: Option<usize>) -> Self;
@@ -11,6 +9,7 @@ pub trait DuplicateInsertsLastWinsSet<T> {
     fn replace(&mut self, value: T);
 }
 
+#[cfg(feature = "std")]
 impl<T, S> DuplicateInsertsLastWinsSet<T> for HashSet<T, S>
 where
     T: Eq + Hash,
@@ -31,7 +30,7 @@ where
     }
 }
 
-#[cfg(feature = "indexmap")]
+#[cfg(feature = "indexmap_1")]
 impl<T, S> DuplicateInsertsLastWinsSet<T> for IndexSet<T, S>
 where
     T: Eq + Hash,

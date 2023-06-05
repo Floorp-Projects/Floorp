@@ -1,0 +1,13 @@
+[package]
+name = "serde_with"
+version = "1.999.999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.serde_with]
+version = "3"
+default-features = false
+features = ["macros"]

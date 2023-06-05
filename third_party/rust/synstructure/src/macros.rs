@@ -95,13 +95,17 @@ macro_rules! decl_derive {
             i: $crate::macros::TokenStream
         ) -> $crate::macros::TokenStream {
             match $crate::macros::parse::<$crate::macros::DeriveInput>(i) {
-                Ok(p) => {
+                ::core::result::Result::Ok(p) => {
                     match $crate::Structure::try_new(&p) {
-                        Ok(s) => $crate::MacroResult::into_stream($inner(s)),
-                        Err(e) => e.to_compile_error().into(),
+                        ::core::result::Result::Ok(s) => $crate::MacroResult::into_stream($inner(s)),
+                        ::core::result::Result::Err(e) => {
+                            ::core::convert::Into::into(e.to_compile_error())
+                        }
                     }
                 }
-                Err(e) => e.to_compile_error().into(),
+                ::core::result::Result::Err(e) => {
+                    ::core::convert::Into::into(e.to_compile_error())
+                }
             }
         }
     };
@@ -153,11 +157,19 @@ macro_rules! decl_attribute {
             i: $crate::macros::TokenStream,
         ) -> $crate::macros::TokenStream {
             match $crate::macros::parse::<$crate::macros::DeriveInput>(i) {
-                Ok(p) => match $crate::Structure::try_new(&p) {
-                    Ok(s) => $crate::MacroResult::into_stream($inner(attr.into(), s)),
-                    Err(e) => e.to_compile_error().into(),
+                ::core::result::Result::Ok(p) => match $crate::Structure::try_new(&p) {
+                    ::core::result::Result::Ok(s) => {
+                        $crate::MacroResult::into_stream(
+                            $inner(::core::convert::Into::into(attr), s)
+                        )
+                    }
+                    ::core::result::Result::Err(e) => {
+                        ::core::convert::Into::into(e.to_compile_error())
+                    }
                 },
-                Err(e) => e.to_compile_error().into(),
+                ::core::result::Result::Err(e) => {
+                    ::core::convert::Into::into(e.to_compile_error())
+                }
             }
         }
     };
@@ -209,27 +221,30 @@ macro_rules! test_derive {
 
     ($name:path { $($i:tt)* } expands to { $($o:tt)* } no_build) => {
         {
-            let i = stringify!( $($i)* );
+            let i = ::core::stringify!( $($i)* );
             let parsed = $crate::macros::parse_str::<$crate::macros::DeriveInput>(i)
-                .expect(concat!(
+                .expect(::core::concat!(
                     "Failed to parse input to `#[derive(",
-                    stringify!($name),
+                    ::core::stringify!($name),
                     ")]`",
                 ));
 
             let raw_res = $name($crate::Structure::new(&parsed));
             let res = $crate::MacroResult::into_result(raw_res)
-                .expect(concat!(
+                .expect(::core::concat!(
                     "Procedural macro failed for `#[derive(",
-                    stringify!($name),
+                    ::core::stringify!($name),
                     ")]`",
                 ));
 
-            let expected = stringify!( $($o)* )
+            let expected = ::core::stringify!( $($o)* )
                 .parse::<$crate::macros::TokenStream2>()
                 .expect("output should be a valid TokenStream");
-            let mut expected_toks = $crate::macros::TokenStream2::from(expected);
-            if res.to_string() != expected_toks.to_string() {
+            let mut expected_toks = <$crate::macros::TokenStream2
+                as ::core::convert::From<$crate::macros::TokenStream2>>::from(expected);
+            if <$crate::macros::TokenStream2 as ::std::string::ToString>::to_string(&res)
+                != <$crate::macros::TokenStream2 as ::std::string::ToString>::to_string(&expected_toks)
+            {
                 panic!("\
 test_derive failed:
 expected:

@@ -60,14 +60,14 @@ impl<'a> FieldsGen<'a> {
         quote!(
             for __item in __items {
                 match *__item {
-                    ::darling::export::syn::NestedMeta::Meta(ref __inner) => {
+                    ::darling::export::NestedMeta::Meta(ref __inner) => {
                         let __name = ::darling::util::path_to_string(__inner.path());
                         match __name.as_str() {
                             #(#arms)*
                             __other => { #handle_unknown }
                         }
                     }
-                    ::darling::export::syn::NestedMeta::Lit(ref __inner) => {
+                    ::darling::export::NestedMeta::Lit(ref __inner) => {
                         __errors.push(::darling::Error::unsupported_format("literal")
                             .with_span(__inner));
                     }

@@ -227,3 +227,53 @@ fn test_offset_datetime_rfc3339() {
         expect![[r#"the 'month' component could not be parsed at line 1 column 9"#]],
     );
 }
+
+#[test]
+fn test_offset_datetime_iso8601() {
+    /// The default configuration for [`Iso8601`].
+    const DEFAULT_CONFIG: time_0_3::format_description::well_known::iso8601::EncodedConfig =
+        time_0_3::format_description::well_known::iso8601::Config::DEFAULT.encode();
+
+    #[serde_as]
+    #[derive(Debug, PartialEq, Deserialize, Serialize)]
+    struct S(
+        #[serde_as(as = "time_0_3::format_description::well_known::Iso8601<DEFAULT_CONFIG>")]
+        OffsetDateTime,
+    );
+
+    is_equal(
+        S(OffsetDateTime::UNIX_EPOCH),
+        expect![[r#""1970-01-01T00:00:00.000000000Z""#]],
+    );
+    check_deserialization::<S>(
+        S(
+            OffsetDateTime::from_unix_timestamp_nanos(482_196_050_520_000_000)
+                .unwrap()
+                .to_offset(UtcOffset::from_hms(0, 0, 0).unwrap()),
+        ),
+        r#""1985-04-12T23:20:50.52Z""#,
+    );
+    check_deserialization::<S>(
+        S(OffsetDateTime::from_unix_timestamp(851_042_397)
+            .unwrap()
+            .to_offset(UtcOffset::from_hms(-8, 0, 0).unwrap())),
+        r#""1996-12-19T16:39:57-08:00""#,
+    );
+    check_deserialization::<S>(
+        S(
+            OffsetDateTime::from_unix_timestamp_nanos(-1_041_337_172_130_000_000)
+                .unwrap()
+                .to_offset(UtcOffset::from_hms(0, 20, 0).unwrap()),
+        ),
+        r#""1937-01-01T12:00:27.87+00:20""#,
+    );
+
+    check_error_deserialization::<S>(
+        r#""Foobar""#,
+        expect![[r#"the 'year' component could not be parsed at line 1 column 8"#]],
+    );
+    check_error_deserialization::<S>(
+        r#""2000-AA""#,
+        expect!["unexpected trailing characters at line 1 column 9"],
+    );
+}

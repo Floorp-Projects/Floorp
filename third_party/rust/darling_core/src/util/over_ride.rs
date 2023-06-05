@@ -1,7 +1,8 @@
 use std::fmt;
 
-use syn::{Lit, NestedMeta};
+use syn::Lit;
 
+use crate::ast::NestedMeta;
 use crate::{FromMeta, Result};
 
 use self::Override::*;

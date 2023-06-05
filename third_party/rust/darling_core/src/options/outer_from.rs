@@ -66,13 +66,7 @@ impl ParseAttribute for OuterFrom {
 
 impl ParseData for OuterFrom {
     fn parse_field(&mut self, field: &Field) -> Result<()> {
-        match field
-            .ident
-            .as_ref()
-            .map(|v| v.to_string())
-            .as_ref()
-            .map(|v| v.as_str())
-        {
+        match field.ident.as_ref().map(|v| v.to_string()).as_deref() {
             Some("ident") => {
                 self.ident = field.ident.clone();
                 Ok(())

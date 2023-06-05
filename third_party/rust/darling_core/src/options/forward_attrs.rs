@@ -1,5 +1,4 @@
-use syn::NestedMeta;
-
+use crate::ast::NestedMeta;
 use crate::util::PathList;
 use crate::{FromMeta, Result};
 

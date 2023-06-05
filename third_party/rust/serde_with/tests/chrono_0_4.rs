@@ -14,7 +14,7 @@ use crate::utils::{
     check_deserialization, check_error_deserialization, check_serialization, is_equal,
 };
 use alloc::collections::BTreeMap;
-use chrono_crate::{DateTime, Duration, Local, NaiveDateTime, Utc};
+use chrono_0_4::{DateTime, Duration, Local, NaiveDateTime, Utc};
 use core::{iter::FromIterator, str::FromStr};
 use expect_test::expect;
 use serde::{Deserialize, Serialize};
@@ -27,13 +27,15 @@ use serde_with::{
 };
 
 fn new_datetime(secs: i64, nsecs: u32) -> DateTime<Utc> {
-    DateTime::from_utc(NaiveDateTime::from_timestamp(secs, nsecs), Utc)
+    DateTime::from_utc(NaiveDateTime::from_timestamp_opt(secs, nsecs).unwrap(), Utc)
 }
 
 #[test]
 fn json_datetime_from_any_to_string_deserialization() {
     #[derive(Debug, PartialEq, Deserialize)]
-    struct S(#[serde(with = "serde_with::chrono::datetime_utc_ts_seconds_from_any")] DateTime<Utc>);
+    struct S(
+        #[serde(with = "serde_with::chrono_0_4::datetime_utc_ts_seconds_from_any")] DateTime<Utc>,
+    );
 
     // just integers
     check_deserialization(
@@ -358,7 +360,7 @@ fn test_chrono_duration_seconds_with_frac() {
 
 #[test]
 fn test_chrono_timestamp_seconds() {
-    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc);
+    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(0, 0).unwrap(), Utc);
     let one_second = zero + Duration::seconds(1);
     let half_second = zero + Duration::nanoseconds(500_000_000);
     let minus_one_second = zero - Duration::seconds(1);
@@ -496,7 +498,7 @@ fn test_chrono_timestamp_seconds() {
 
 #[test]
 fn test_chrono_timestamp_seconds_with_frac() {
-    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc);
+    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(0, 0).unwrap(), Utc);
     let one_second = zero + Duration::seconds(1);
     let half_second = zero + Duration::nanoseconds(500_000_000);
     let minus_one_second = zero - Duration::seconds(1);
@@ -632,7 +634,7 @@ fn test_duration_smoketest() {
 
 #[test]
 fn test_datetime_utc_smoketest() {
-    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc);
+    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(0, 0).unwrap(), Utc);
     let one_second = zero + Duration::seconds(1);
 
     smoketest! {
@@ -668,8 +670,8 @@ fn test_datetime_utc_smoketest() {
 
 #[test]
 fn test_datetime_local_smoketest() {
-    let zero =
-        DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc).with_timezone(&Local);
+    let zero = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(0, 0).unwrap(), Utc)
+        .with_timezone(&Local);
     let one_second = zero + Duration::seconds(1);
 
     smoketest! {
@@ -705,7 +707,7 @@ fn test_datetime_local_smoketest() {
 
 #[test]
 fn test_naive_datetime_smoketest() {
-    let zero = NaiveDateTime::from_timestamp(0, 0);
+    let zero = NaiveDateTime::from_timestamp_opt(0, 0).unwrap();
     let one_second = zero + Duration::seconds(1);
 
     smoketest! {

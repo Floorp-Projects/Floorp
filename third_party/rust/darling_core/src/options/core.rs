@@ -166,7 +166,7 @@ impl<'a> From<&'a Core> for codegen::TraitImpl<'a> {
                 .map_enum_variants(|variant| variant.as_codegen_variant(&v.ident)),
             default: v.as_codegen_default(),
             post_transform: v.post_transform.as_ref(),
-            bound: v.bound.as_ref().map(|i| i.as_slice()),
+            bound: v.bound.as_deref(),
             allow_unknown_fields: v.allow_unknown_fields.unwrap_or_default(),
         }
     }

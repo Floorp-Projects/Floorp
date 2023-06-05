@@ -1,8 +1,8 @@
+use core::iter::Iterator;
 use darling::FromDeriveInput;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
-use std::iter::Iterator;
 use syn::{parse_quote, Error, Generics, Path, TypeGenerics};
 
 /// Merge multiple [`syn::Error`] into one.
@@ -25,7 +25,7 @@ pub(crate) trait IteratorExt {
 impl<I> IteratorExt for I where I: Iterator<Item = Result<(), Error>> + Sized {}
 
 /// Attributes usable for derive macros
-#[derive(FromDeriveInput, Debug)]
+#[derive(FromDeriveInput)]
 #[darling(attributes(serde_with))]
 pub(crate) struct DeriveOptions {
     /// Path to the crate
@@ -49,7 +49,7 @@ impl DeriveOptions {
 }
 
 // Inspired by https://github.com/serde-rs/serde/blob/fb2fe409c8f7ad6c95e3096e5e9ede865c8cfb49/serde_derive/src/de.rs#L3120
-// Serde is also licences Apache 2 + MIT
+// Serde is also licensed Apache 2 + MIT
 pub(crate) fn split_with_de_lifetime(
     generics: &Generics,
 ) -> (

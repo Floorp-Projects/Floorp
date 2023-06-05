@@ -1,77 +1,41 @@
-error: `#[derive(EnumSetType)]` currently only supports discriminants up to 127.
- --> tests/compile-fail/variants.rs:5:5
+error: Enum discriminants must not be negative.
+ --> tests/compile-fail/variants.rs:5:15
   |
-5 |     Variant = 128,
-  |     ^^^^^^^^^^^^^
-
-error: Enum set discriminants must be `u32`s. (larger discrimiants are still unsupported with reprs that allow them.)
-  --> tests/compile-fail/variants.rs:11:15
-   |
-11 |     Variant = 0x100000000,
-   |               ^^^^^^^^^^^
-
-error: `#[derive(EnumSetType)]` currently only supports enums up to 128 variants.
-  --> tests/compile-fail/variants.rs:22:95
-   |
-22 |     _113, _114, _115, _116, _117, _118, _119, _120, _121, _122, _123, _124, _125, _126, _127, _128,
-   |                                                                                               ^^^^
-
-error: Enum set discriminants must be `u32`s.
-  --> tests/compile-fail/variants.rs:27:5
-   |
-27 |     Variant = -1,
-   |     ^^^^^^^^^^^^
+5 |     Variant = -1,
+  |               ^^
 
 error: `#[derive(EnumSetType)]` can only be used on fieldless enums.
-  --> tests/compile-fail/variants.rs:38:5
+  --> tests/compile-fail/variants.rs:10:5
    |
-38 |     Variant(u32),
+10 |     Variant(u32),
    |     ^^^^^^^^^^^^
 
-error: serialize_repr cannot be smaller than bitset.
-  --> tests/compile-fail/variants.rs:41:10
+error: `repr` is too small to contain the largest discriminant.
+  --> tests/compile-fail/variants.rs:16:5
    |
-41 | #[derive(EnumSetType)]
-   |          ^^^^^^^^^^^
-   |
-   = note: this error originates in the derive macro `EnumSetType` (in Nightly builds, run with -Z macro-backtrace for more info)
+16 |     Variant = 128,
+   |     ^^^^^^^^^^^^^
 
-error: `#[derive(EnumSetType)]` may only be used on enums
-  --> tests/compile-fail/variants.rs:48:1
+error: `serialize_repr` is too small to contain the largest discriminant.
+  --> tests/compile-fail/variants.rs:22:5
    |
-48 | / struct BadItemType {
-49 | |
-50 | | }
-   | |_^
+22 |     Variant = 8,
+   |     ^^^^^^^^^^^
 
-error: repr cannot be smaller than bitset.
-  --> tests/compile-fail/variants.rs:52:10
+error: Enum discriminants must be literal expressions.
+  --> tests/compile-fail/variants.rs:27:5
    |
-52 | #[derive(EnumSetType)]
-   |          ^^^^^^^^^^^
-   |
-   = note: this error originates in the derive macro `EnumSetType` (in Nightly builds, run with -Z macro-backtrace for more info)
+27 |     Variant = 1 + 1,
+   |     ^^^^^^^^^^^^^^^
 
-error[E0277]: the trait bound `OkayEnumButCantUseFromRepr: EnumSetTypeWithRepr` is not satisfied
-   --> tests/compile-fail/variants.rs:64:5
-    |
-64  |     EnumSet::<OkayEnumButCantUseFromRepr>::from_repr(1);
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `EnumSetTypeWithRepr` is not implemented for `OkayEnumButCantUseFromRepr`
-    |
-note: required by a bound in `enumset::EnumSet::<T>::from_repr`
-   --> src/lib.rs
-    |
-    |     where T: EnumSetTypeWithRepr {
-    |              ^^^^^^^^^^^^^^^^^^^ required by this bound in `enumset::EnumSet::<T>::from_repr`
-
-error[E0277]: the trait bound `OkayEnumButCantUseFromRepr: EnumSetTypeWithRepr` is not satisfied
-  --> tests/compile-fail/variants.rs:64:5
+error: `repr` is too small to contain the largest discriminant.
+  --> tests/compile-fail/variants.rs:33:5
    |
-64 |     EnumSet::<OkayEnumButCantUseFromRepr>::from_repr(1);
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `EnumSetTypeWithRepr` is not implemented for `OkayEnumButCantUseFromRepr`
+33 |     Variant = 16,
+   |     ^^^^^^^^^^^^
 
-error[E0277]: the trait bound `OkayEnumButCantUseFromRepr: EnumSetTypeWithRepr` is not satisfied
-  --> tests/compile-fail/variants.rs:64:54
+error: Maximum discriminant allowed is `0xFFFFFFBF`.
+  --> tests/compile-fail/variants.rs:38:5
    |
-64 |     EnumSet::<OkayEnumButCantUseFromRepr>::from_repr(1);
-   |                                                      ^ the trait `EnumSetTypeWithRepr` is not implemented for `OkayEnumButCantUseFromRepr`
+38 |     Variant = 0xFFFFFFD0,
+   |     ^^^^^^^^^^^^^^^^^^^^

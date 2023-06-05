@@ -48,8 +48,8 @@ fn expand_some() {
     .expect("Input is well-formed");
     assert!(rec.generics.where_clause.is_none());
 
-    // Make sure we've preserved the lifetime def, though we don't do anything with it.
-    assert!(rec.generics.params[0].as_lifetime_def().is_some());
+    // Make sure we've preserved the lifetime param, though we don't do anything with it.
+    assert!(rec.generics.params[0].as_lifetime_param().is_some());
 
     let mut ty_param_iter = rec.generics.type_params();
 

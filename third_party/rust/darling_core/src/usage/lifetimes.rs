@@ -112,20 +112,20 @@ impl UsesLifetimes for Lifetime {
 }
 
 uses_lifetimes!(syn::AngleBracketedGenericArguments, args);
+uses_lifetimes!(syn::AssocType, ty);
 uses_lifetimes!(syn::BareFnArg, ty);
-uses_lifetimes!(syn::Binding, ty);
 uses_lifetimes!(syn::BoundLifetimes, lifetimes);
+uses_lifetimes!(syn::ConstParam, ty);
 uses_lifetimes!(syn::Constraint, bounds);
 uses_lifetimes!(syn::DataEnum, variants);
 uses_lifetimes!(syn::DataStruct, fields);
 uses_lifetimes!(syn::DataUnion, fields);
 uses_lifetimes!(syn::Field, ty);
 uses_lifetimes!(syn::FieldsNamed, named);
-uses_lifetimes!(syn::LifetimeDef, lifetime, bounds);
+uses_lifetimes!(syn::LifetimeParam, lifetime, bounds);
 uses_lifetimes!(syn::ParenthesizedGenericArguments, inputs, output);
 uses_lifetimes!(syn::Path, segments);
 uses_lifetimes!(syn::PathSegment, arguments);
-uses_lifetimes!(syn::PredicateEq, lhs_ty, rhs_ty);
 uses_lifetimes!(syn::PredicateLifetime, lifetime, bounds);
 uses_lifetimes!(syn::PredicateType, lifetimes, bounded_ty, bounds);
 uses_lifetimes!(syn::QSelf, ty);
@@ -134,6 +134,7 @@ uses_lifetimes!(syn::TypeArray, elem);
 uses_lifetimes!(syn::TypeBareFn, inputs, output);
 uses_lifetimes!(syn::TypeGroup, elem);
 uses_lifetimes!(syn::TypeImplTrait, bounds);
+uses_lifetimes!(syn::TypeParam, bounds);
 uses_lifetimes!(syn::TypeParen, elem);
 uses_lifetimes!(syn::TypePtr, elem);
 uses_lifetimes!(syn::TypeReference, lifetime, elem);
@@ -245,7 +246,9 @@ impl UsesLifetimes for syn::WherePredicate {
         match *self {
             syn::WherePredicate::Type(ref v) => v.uses_lifetimes(options, lifetimes),
             syn::WherePredicate::Lifetime(ref v) => v.uses_lifetimes(options, lifetimes),
-            syn::WherePredicate::Eq(ref v) => v.uses_lifetimes(options, lifetimes),
+            // non-exhaustive enum
+            // TODO: replace panic with failible function
+            _ => panic!("Unknown syn::WherePredicate: {:?}", self),
         }
     }
 }
@@ -258,10 +261,29 @@ impl UsesLifetimes for syn::GenericArgument {
     ) -> LifetimeRefSet<'a> {
         match *self {
             syn::GenericArgument::Type(ref v) => v.uses_lifetimes(options, lifetimes),
-            syn::GenericArgument::Binding(ref v) => v.uses_lifetimes(options, lifetimes),
+            syn::GenericArgument::AssocType(ref v) => v.uses_lifetimes(options, lifetimes),
             syn::GenericArgument::Lifetime(ref v) => v.uses_lifetimes(options, lifetimes),
             syn::GenericArgument::Constraint(ref v) => v.uses_lifetimes(options, lifetimes),
-            syn::GenericArgument::Const(_) => Default::default(),
+            syn::GenericArgument::AssocConst(_) | syn::GenericArgument::Const(_) => {
+                Default::default()
+            }
+            // non-exhaustive enum
+            // TODO: replace panic with failible function
+            _ => panic!("Unknown syn::GenericArgument: {:?}", self),
+        }
+    }
+}
+
+impl UsesLifetimes for syn::GenericParam {
+    fn uses_lifetimes<'a>(
+        &self,
+        options: &Options,
+        lifetimes: &'a LifetimeSet,
+    ) -> LifetimeRefSet<'a> {
+        match *self {
+            syn::GenericParam::Lifetime(ref v) => v.uses_lifetimes(options, lifetimes),
+            syn::GenericParam::Type(ref v) => v.uses_lifetimes(options, lifetimes),
+            syn::GenericParam::Const(ref v) => v.uses_lifetimes(options, lifetimes),
         }
     }
 }
@@ -275,6 +297,9 @@ impl UsesLifetimes for syn::TypeParamBound {
         match *self {
             syn::TypeParamBound::Trait(ref v) => v.uses_lifetimes(options, lifetimes),
             syn::TypeParamBound::Lifetime(ref v) => v.uses_lifetimes(options, lifetimes),
+            // non-exhaustive enum
+            // TODO: replace panic with failible function
+            _ => panic!("Unknown syn::TypeParamBound: {:?}", self),
         }
     }
 }
@@ -282,8 +307,7 @@ impl UsesLifetimes for syn::TypeParamBound {
 #[cfg(test)]
 mod tests {
     use proc_macro2::Span;
-    use syn::parse_quote;
-    use syn::DeriveInput;
+    use syn::{parse_quote, DeriveInput};
 
     use super::UsesLifetimes;
     use crate::usage::GenericsExt;
