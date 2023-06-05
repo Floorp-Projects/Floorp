@@ -62,6 +62,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
   // Called when we receive an RTCP packet.
   void IncomingRtcpPacket(const uint8_t* incoming_packet,
                           size_t incoming_packet_length) override;
+  void IncomingRtcpPacket(rtc::ArrayView<const uint8_t> packet) override {
+    IncomingRtcpPacket(packet.data(), packet.size());
+  }
 
   void SetRemoteSSRC(uint32_t ssrc) override;
   void SetLocalSsrc(uint32_t ssrc) override;

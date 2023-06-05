@@ -66,8 +66,14 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   // Receiver part.
 
   // Called when we receive an RTCP packet.
-  void IncomingRtcpPacket(const uint8_t* incoming_packet,
-                          size_t incoming_packet_length) override;
+  [[deprecated("Use ArrayView version")]] void IncomingRtcpPacket(
+      const uint8_t* incoming_packet,
+      size_t incoming_packet_length) override {
+    IncomingRtcpPacket(
+        rtc::MakeArrayView(incoming_packet, incoming_packet_length));
+  }
+  void IncomingRtcpPacket(
+      rtc::ArrayView<const uint8_t> incoming_packet) override;
 
   void SetRemoteSSRC(uint32_t ssrc) override;
 

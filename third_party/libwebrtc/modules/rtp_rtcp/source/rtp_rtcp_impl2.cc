@@ -143,10 +143,10 @@ absl::optional<uint32_t> ModuleRtpRtcpImpl2::FlexfecSsrc() const {
   return absl::nullopt;
 }
 
-void ModuleRtpRtcpImpl2::IncomingRtcpPacket(const uint8_t* rtcp_packet,
-                                            const size_t length) {
+void ModuleRtpRtcpImpl2::IncomingRtcpPacket(
+    rtc::ArrayView<const uint8_t> rtcp_packet) {
   RTC_DCHECK_RUN_ON(&rtcp_thread_checker_);
-  rtcp_receiver_.IncomingPacket(rtcp_packet, length);
+  rtcp_receiver_.IncomingPacket(rtcp_packet);
 }
 
 void ModuleRtpRtcpImpl2::RegisterSendPayloadFrequency(int payload_type,
