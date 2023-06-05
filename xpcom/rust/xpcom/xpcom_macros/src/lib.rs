@@ -141,11 +141,9 @@ use lazy_static::lazy_static;
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{HashMap, HashSet};
+use syn::meta::ParseNestedMeta;
 use syn::punctuated::Punctuated;
-use syn::{
-    parse_macro_input, parse_quote, AttributeArgs, Field, Fields, Ident, ItemStruct, Meta,
-    MetaList, NestedMeta, Path, Token, Type,
-};
+use syn::{parse_macro_input, parse_quote, Field, Fields, Ident, ItemStruct, Token, Type};
 
 macro_rules! bail {
     (@($t:expr), $s:expr) => {
@@ -525,55 +523,36 @@ struct Options {
 }
 
 impl Options {
-    fn parse_path_arg(&mut self, path: &Path) -> Result<(), syn::Error> {
-        if path.is_ident("atomic") || path.is_ident("nonatomic") {
+    fn parse(&mut self, meta: ParseNestedMeta) -> Result<(), syn::Error> {
+        if meta.path.is_ident("atomic") || meta.path.is_ident("nonatomic") {
             if self.refcnt.is_some() {
-                bail!(@(path), "Duplicate refcnt atomicity specifier");
+                bail!(@(meta.path), "Duplicate refcnt atomicity specifier");
             }
-            self.refcnt = Some(if path.is_ident("atomic") {
+            self.refcnt = Some(if meta.path.is_ident("atomic") {
                 RefcntKind::Atomic
             } else {
                 RefcntKind::NonAtomic
             });
-            return Ok(());
-        }
-        bail!(@(path), "Unexpected path argument to #[xpcom]");
-    }
-
-    fn parse_list_arg(&mut self, list: &MetaList) -> Result<(), syn::Error> {
-        if list.path.is_ident("implement") {
-            for item in list.nested.iter() {
-                let iface = match *item {
-                    NestedMeta::Meta(syn::Meta::Path(ref iface)) => iface,
-                    _ => bail!(@(item), "Expected interface name to implement"),
-                };
-                let ident = match iface.get_ident() {
+            Ok(())
+        } else if meta.path.is_ident("implement") {
+            meta.parse_nested_meta(|meta| {
+                let ident = match meta.path.get_ident() {
                     Some(ref iface) => iface.to_string(),
-                    _ => bail!(@(iface), "Interface name must be unqualified"),
+                    _ => bail!(@(meta.path), "Interface name must be unqualified"),
                 };
                 if let Some(&iface) = IFACES.get(ident.as_str()) {
                     self.bases.push(iface);
                 } else {
-                    bail!(@(item), "Invalid base interface `{}`", ident);
+                    bail!(@(meta.path), "Invalid base interface `{}`", ident);
                 }
-            }
-            return Ok(());
+                Ok(())
+            })
+        } else {
+            bail!(@(meta.path), "Unexpected argument to #[xpcom]")
         }
-        bail!(@(list), "Unexpected list argument to #[xpcom]");
     }
 
-    fn parse(&mut self, args: &AttributeArgs) -> Result<(), syn::Error> {
-        for arg in args {
-            match arg {
-                NestedMeta::Meta(Meta::Path(path)) => self.parse_path_arg(path)?,
-                NestedMeta::Meta(Meta::List(list)) => self.parse_list_arg(list)?,
-                NestedMeta::Meta(Meta::NameValue(name_value)) => {
-                    bail!(@(name_value), "Unexpected name-value argument to #[xpcom]")
-                }
-                NestedMeta::Lit(lit) => bail!(@(lit), "Unexpected literal argument to #[xpcom]"),
-            }
-        }
-
+    fn validate(self) -> Result<Self, syn::Error> {
         if self.bases.is_empty() {
             bail!(
                 "Types with #[xpcom(..)] must implement at least one \
@@ -586,15 +565,12 @@ impl Options {
             bail!("Must specify refcnt kind in #[xpcom] attribute");
         }
 
-        Ok(())
+        Ok(self)
     }
 }
 
 /// The root xpcom procedural macro definition.
-fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, syn::Error> {
-    let mut options = Options::default();
-    options.parse(&args)?;
-
+fn xpcom_impl(options: Options, template: ItemStruct) -> Result<TokenStream, syn::Error> {
     check_generics(&template.generics)?;
 
     let bases = options.bases;
@@ -809,9 +785,14 @@ pub fn xpcom(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let args = parse_macro_input!(args as AttributeArgs);
+    let mut options = Options::default();
+    let xpcom_parser = syn::meta::parser(|meta| options.parse(meta));
+    parse_macro_input!(args with xpcom_parser);
     let input = parse_macro_input!(input as ItemStruct);
-    match xpcom_impl(args, input) {
+    match options
+        .validate()
+        .and_then(|options| xpcom_impl(options, input))
+    {
         Ok(ts) => ts.into(),
         Err(err) => err.to_compile_error().into(),
     }
