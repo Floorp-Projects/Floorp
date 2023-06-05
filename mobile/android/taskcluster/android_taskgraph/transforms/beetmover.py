@@ -6,6 +6,7 @@
 import os
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_dependencies
 from taskgraph.util.schema import resolve_keyed_by
 
 from ..build_config import get_version
@@ -41,7 +42,7 @@ def set_artifact_map(config, tasks):
 
     for task in tasks:
         maven_destination = task.pop("maven-destination")
-        deps = task.pop("dependent-tasks").values()
+        deps = get_dependencies(config, task)
         task["worker"]["artifact-map"] = [
             {
                 "paths": {

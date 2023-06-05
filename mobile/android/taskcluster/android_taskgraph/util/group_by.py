@@ -34,3 +34,27 @@ def component_grouping(config, tasks):
         )
 
     return groups.values()
+
+
+@group_by('build-type')
+def build_type_grouping(config, tasks):
+    groups = {}
+    only_build_types = config.get("only-for-build-types")
+    for task in tasks:
+        if task.kind not in config.get('kind-dependencies', []):
+            continue
+
+        # We just want to depend on the task that waits on all chunks. This way
+        # we have a single dependency for that kind
+        if not task.attributes.get("is_final_chunked_task", True):
+            continue
+
+        build_type = task.attributes.get('build-type')
+        # Skip only_ and build_types that don't match
+        if only_build_types:
+            if not build_type or build_type not in only_build_types:
+                continue
+
+        groups.setdefault(build_type, []).append(task)
+
+    return groups

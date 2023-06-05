@@ -11,7 +11,7 @@ from android_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
-from voluptuous import Optional, Required, Schema
+from voluptuous import ALLOW_EXTRA, Optional, Required, Schema
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ beetmover_description_schema = Schema(
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("run-on-tasks-for"): [str],
         Optional("bucket-scope"): optionally_keyed_by("level", "build-type", str),
-    }
+    },
+    extra=ALLOW_EXTRA
 )
 
 transforms = TransformSequence()
