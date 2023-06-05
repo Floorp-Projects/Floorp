@@ -341,7 +341,7 @@ pref("userChrome.tab.newtab_button_like_tab",    false); // Original
 pref("userChrome.tab.newtab_button_smaller",      true); // Photon
 pref("userChrome.tab.newtab_button_proton",      false); // Proton
 
-pref("userChrome.icon.panel_full",               false); // Original, Proton
+pref("userChrome.icon.panel_full",               true); // Original, Proton
 pref("userChrome.icon.panel_photon",              true); // Photon
 pref("userChrome.icon.panel_sparse",             false); // Just option
 
