@@ -27,7 +27,7 @@ index 7d6ec794d4..20af3f7722 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index d8e791be10..55e5d091f9 100644
+index 508bbd615a..13248a482a 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -56,6 +56,31 @@ class RtpPacketSenderProxy;

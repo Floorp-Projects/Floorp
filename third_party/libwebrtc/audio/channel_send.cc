@@ -500,7 +500,7 @@ ChannelSend::ChannelSend(
       encoder_queue_(task_queue_factory->CreateTaskQueue(
           "AudioEncoder",
           TaskQueueFactory::Priority::NORMAL)) {
-  audio_coding_.reset(AudioCodingModule::Create(AudioCodingModule::Config()));
+  audio_coding_ = AudioCodingModule::Create();
 
   RtpRtcpInterface::Configuration configuration;
   configuration.bandwidth_callback = rtcp_observer_.get();

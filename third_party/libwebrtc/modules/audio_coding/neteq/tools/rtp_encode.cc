@@ -307,8 +307,7 @@ int RunRtpEncode(int argc, char* argv[]) {
 
   // Set up ACM.
   const int timestamp_rate_hz = codec->RtpTimestampRateHz();
-  AudioCodingModule::Config config;
-  std::unique_ptr<AudioCodingModule> acm(AudioCodingModule::Create(config));
+  auto acm(AudioCodingModule::Create());
   acm->SetEncoder(std::move(codec));
 
   // Open files.
