@@ -1,11 +1,11 @@
 error[E0277]: the trait bound `Ipv4Addr: ToTokens` is not satisfied
- --> tests/ui/not-quotable.rs:6:9
+ --> tests/ui/not-quotable.rs:6:13
   |
-6 |     _ = quote! { #ip };
-  |         ^^^^^^^^^^^^^^
-  |         |
-  |         the trait `ToTokens` is not implemented for `Ipv4Addr`
-  |         required by a bound introduced by this call
+6 |     let _ = quote! { #ip };
+  |             ^^^^^^^^^^^^^^
+  |             |
+  |             the trait `ToTokens` is not implemented for `Ipv4Addr`
+  |             required by a bound introduced by this call
   |
   = help: the following other types implement trait `ToTokens`:
             &'a T

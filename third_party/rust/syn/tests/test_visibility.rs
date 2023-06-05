@@ -1,8 +1,9 @@
+#![allow(clippy::uninlined_format_args)]
+
 #[macro_use]
 mod macros;
 
 use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
-use std::iter::FromIterator;
 use syn::parse::{Parse, ParseStream};
 use syn::{DeriveInput, Result, Visibility};
 
@@ -48,11 +49,6 @@ macro_rules! assert_vis_parse {
 #[test]
 fn test_pub() {
     assert_vis_parse!("pub", Ok(Visibility::Public(_)));
-}
-
-#[test]
-fn test_crate() {
-    assert_vis_parse!("crate", Ok(Visibility::Crate(_)));
 }
 
 #[test]
@@ -128,14 +124,14 @@ fn test_empty_group_vis() {
 
     snapshot!(tokens as DeriveInput, @r###"
     DeriveInput {
-        vis: Inherited,
+        vis: Visibility::Inherited,
         ident: "S",
         generics: Generics,
         data: Data::Struct {
             fields: Fields::Named {
                 named: [
                     Field {
-                        vis: Inherited,
+                        vis: Visibility::Inherited,
                         ident: Some("f"),
                         colon_token: Some,
                         ty: Type::Tuple,

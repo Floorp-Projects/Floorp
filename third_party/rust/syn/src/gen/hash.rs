@@ -42,6 +42,30 @@ impl Hash for Arm {
 }
 #[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for AssocConst {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.ident.hash(state);
+        self.generics.hash(state);
+        self.value.hash(state);
+    }
+}
+#[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for AssocType {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.ident.hash(state);
+        self.generics.hash(state);
+        self.ty.hash(state);
+    }
+}
+#[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for AttrStyle {
     fn hash<H>(&self, state: &mut H)
     where
@@ -65,8 +89,7 @@ impl Hash for Attribute {
         H: Hasher,
     {
         self.style.hash(state);
-        self.path.hash(state);
-        TokenStreamHelper(&self.tokens).hash(state);
+        self.meta.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -79,6 +102,18 @@ impl Hash for BareFnArg {
         self.attrs.hash(state);
         self.name.hash(state);
         self.ty.hash(state);
+    }
+}
+#[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for BareVariadic {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.attrs.hash(state);
+        self.name.hash(state);
+        self.comma.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -143,48 +178,37 @@ impl Hash for BinOp {
             BinOp::Gt(_) => {
                 state.write_u8(17u8);
             }
-            BinOp::AddEq(_) => {
+            BinOp::AddAssign(_) => {
                 state.write_u8(18u8);
             }
-            BinOp::SubEq(_) => {
+            BinOp::SubAssign(_) => {
                 state.write_u8(19u8);
             }
-            BinOp::MulEq(_) => {
+            BinOp::MulAssign(_) => {
                 state.write_u8(20u8);
             }
-            BinOp::DivEq(_) => {
+            BinOp::DivAssign(_) => {
                 state.write_u8(21u8);
             }
-            BinOp::RemEq(_) => {
+            BinOp::RemAssign(_) => {
                 state.write_u8(22u8);
             }
-            BinOp::BitXorEq(_) => {
+            BinOp::BitXorAssign(_) => {
                 state.write_u8(23u8);
             }
-            BinOp::BitAndEq(_) => {
+            BinOp::BitAndAssign(_) => {
                 state.write_u8(24u8);
             }
-            BinOp::BitOrEq(_) => {
+            BinOp::BitOrAssign(_) => {
                 state.write_u8(25u8);
             }
-            BinOp::ShlEq(_) => {
+            BinOp::ShlAssign(_) => {
                 state.write_u8(26u8);
             }
-            BinOp::ShrEq(_) => {
+            BinOp::ShrAssign(_) => {
                 state.write_u8(27u8);
             }
         }
-    }
-}
-#[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for Binding {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.ident.hash(state);
-        self.ty.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -229,6 +253,7 @@ impl Hash for Constraint {
         H: Hasher,
     {
         self.ident.hash(state);
+        self.generics.hash(state);
         self.bounds.hash(state);
     }
 }
@@ -319,77 +344,76 @@ impl Hash for Expr {
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
-            Expr::AssignOp(v0) => {
+            Expr::Async(v0) => {
                 state.write_u8(2u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
-            Expr::Async(v0) => {
+            Expr::Await(v0) => {
                 state.write_u8(3u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
-            Expr::Await(v0) => {
-                state.write_u8(4u8);
-                v0.hash(state);
-            }
             Expr::Binary(v0) => {
-                state.write_u8(5u8);
+                state.write_u8(4u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::Block(v0) => {
-                state.write_u8(6u8);
-                v0.hash(state);
-            }
-            #[cfg(feature = "full")]
-            Expr::Box(v0) => {
-                state.write_u8(7u8);
+                state.write_u8(5u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::Break(v0) => {
-                state.write_u8(8u8);
+                state.write_u8(6u8);
                 v0.hash(state);
             }
             Expr::Call(v0) => {
-                state.write_u8(9u8);
+                state.write_u8(7u8);
                 v0.hash(state);
             }
             Expr::Cast(v0) => {
-                state.write_u8(10u8);
+                state.write_u8(8u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::Closure(v0) => {
-                state.write_u8(11u8);
+                state.write_u8(9u8);
+                v0.hash(state);
+            }
+            #[cfg(feature = "full")]
+            Expr::Const(v0) => {
+                state.write_u8(10u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::Continue(v0) => {
-                state.write_u8(12u8);
+                state.write_u8(11u8);
                 v0.hash(state);
             }
             Expr::Field(v0) => {
-                state.write_u8(13u8);
+                state.write_u8(12u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::ForLoop(v0) => {
+                state.write_u8(13u8);
+                v0.hash(state);
+            }
+            Expr::Group(v0) => {
                 state.write_u8(14u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
-            Expr::Group(v0) => {
+            Expr::If(v0) => {
                 state.write_u8(15u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
-            Expr::If(v0) => {
+            Expr::Index(v0) => {
                 state.write_u8(16u8);
                 v0.hash(state);
             }
-            Expr::Index(v0) => {
+            #[cfg(feature = "full")]
+            Expr::Infer(v0) => {
                 state.write_u8(17u8);
                 v0.hash(state);
             }
@@ -407,7 +431,6 @@ impl Hash for Expr {
                 state.write_u8(20u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
             Expr::Macro(v0) => {
                 state.write_u8(21u8);
                 v0.hash(state);
@@ -470,35 +493,30 @@ impl Hash for Expr {
                 state.write_u8(33u8);
                 v0.hash(state);
             }
-            #[cfg(feature = "full")]
-            Expr::Type(v0) => {
-                state.write_u8(34u8);
-                v0.hash(state);
-            }
             Expr::Unary(v0) => {
-                state.write_u8(35u8);
+                state.write_u8(34u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::Unsafe(v0) => {
-                state.write_u8(36u8);
+                state.write_u8(35u8);
                 v0.hash(state);
             }
             Expr::Verbatim(v0) => {
-                state.write_u8(37u8);
+                state.write_u8(36u8);
                 TokenStreamHelper(v0).hash(state);
             }
             #[cfg(feature = "full")]
             Expr::While(v0) => {
-                state.write_u8(38u8);
+                state.write_u8(37u8);
                 v0.hash(state);
             }
             #[cfg(feature = "full")]
             Expr::Yield(v0) => {
-                state.write_u8(39u8);
+                state.write_u8(38u8);
                 v0.hash(state);
             }
-            #[cfg(any(syn_no_non_exhaustive, not(feature = "full")))]
+            #[cfg(not(feature = "full"))]
             _ => unreachable!(),
         }
     }
@@ -523,19 +541,6 @@ impl Hash for ExprAssign {
     {
         self.attrs.hash(state);
         self.left.hash(state);
-        self.right.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for ExprAssignOp {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.left.hash(state);
-        self.op.hash(state);
         self.right.hash(state);
     }
 }
@@ -589,17 +594,6 @@ impl Hash for ExprBlock {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for ExprBox {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.expr.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprBreak {
     fn hash<H>(&self, state: &mut H)
     where
@@ -642,12 +636,25 @@ impl Hash for ExprClosure {
         H: Hasher,
     {
         self.attrs.hash(state);
+        self.lifetimes.hash(state);
+        self.constness.hash(state);
         self.movability.hash(state);
         self.asyncness.hash(state);
         self.capture.hash(state);
         self.inputs.hash(state);
         self.output.hash(state);
         self.body.hash(state);
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for ExprConst {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.attrs.hash(state);
+        self.block.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -687,7 +694,7 @@ impl Hash for ExprForLoop {
         self.body.hash(state);
     }
 }
-#[cfg(feature = "full")]
+#[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprGroup {
     fn hash<H>(&self, state: &mut H)
@@ -725,6 +732,16 @@ impl Hash for ExprIndex {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for ExprInfer {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.attrs.hash(state);
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprLet {
     fn hash<H>(&self, state: &mut H)
     where
@@ -758,7 +775,7 @@ impl Hash for ExprLoop {
         self.body.hash(state);
     }
 }
-#[cfg(feature = "full")]
+#[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprMacro {
     fn hash<H>(&self, state: &mut H)
@@ -826,9 +843,9 @@ impl Hash for ExprRange {
         H: Hasher,
     {
         self.attrs.hash(state);
-        self.from.hash(state);
+        self.start.hash(state);
         self.limits.hash(state);
-        self.to.hash(state);
+        self.end.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -874,6 +891,7 @@ impl Hash for ExprStruct {
         H: Hasher,
     {
         self.attrs.hash(state);
+        self.qself.hash(state);
         self.path.hash(state);
         self.fields.hash(state);
         self.dot2_token.hash(state);
@@ -911,18 +929,6 @@ impl Hash for ExprTuple {
     {
         self.attrs.hash(state);
         self.elems.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for ExprType {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.expr.hash(state);
-        self.ty.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -981,9 +987,24 @@ impl Hash for Field {
     {
         self.attrs.hash(state);
         self.vis.hash(state);
+        self.mutability.hash(state);
         self.ident.hash(state);
         self.colon_token.hash(state);
         self.ty.hash(state);
+    }
+}
+#[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for FieldMutability {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        match self {
+            FieldMutability::None => {
+                state.write_u8(0u8);
+            }
+        }
     }
 }
 #[cfg(feature = "full")]
@@ -1113,8 +1134,6 @@ impl Hash for ForeignItem {
                 state.write_u8(4u8);
                 TokenStreamHelper(v0).hash(state);
             }
-            #[cfg(syn_no_non_exhaustive)]
-            _ => unreachable!(),
         }
     }
 }
@@ -1166,6 +1185,7 @@ impl Hash for ForeignItemType {
         self.attrs.hash(state);
         self.vis.hash(state);
         self.ident.hash(state);
+        self.generics.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -1188,31 +1208,16 @@ impl Hash for GenericArgument {
                 state.write_u8(2u8);
                 v0.hash(state);
             }
-            GenericArgument::Binding(v0) => {
+            GenericArgument::AssocType(v0) => {
                 state.write_u8(3u8);
                 v0.hash(state);
             }
-            GenericArgument::Constraint(v0) => {
+            GenericArgument::AssocConst(v0) => {
                 state.write_u8(4u8);
                 v0.hash(state);
             }
-        }
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for GenericMethodArgument {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            GenericMethodArgument::Type(v0) => {
-                state.write_u8(0u8);
-                v0.hash(state);
-            }
-            GenericMethodArgument::Const(v0) => {
-                state.write_u8(1u8);
+            GenericArgument::Constraint(v0) => {
+                state.write_u8(5u8);
                 v0.hash(state);
             }
         }
@@ -1226,11 +1231,11 @@ impl Hash for GenericParam {
         H: Hasher,
     {
         match self {
-            GenericParam::Type(v0) => {
+            GenericParam::Lifetime(v0) => {
                 state.write_u8(0u8);
                 v0.hash(state);
             }
-            GenericParam::Lifetime(v0) => {
+            GenericParam::Type(v0) => {
                 state.write_u8(1u8);
                 v0.hash(state);
             }
@@ -1266,7 +1271,7 @@ impl Hash for ImplItem {
                 state.write_u8(0u8);
                 v0.hash(state);
             }
-            ImplItem::Method(v0) => {
+            ImplItem::Fn(v0) => {
                 state.write_u8(1u8);
                 v0.hash(state);
             }
@@ -1282,8 +1287,6 @@ impl Hash for ImplItem {
                 state.write_u8(4u8);
                 TokenStreamHelper(v0).hash(state);
             }
-            #[cfg(syn_no_non_exhaustive)]
-            _ => unreachable!(),
         }
     }
 }
@@ -1298,8 +1301,23 @@ impl Hash for ImplItemConst {
         self.vis.hash(state);
         self.defaultness.hash(state);
         self.ident.hash(state);
+        self.generics.hash(state);
         self.ty.hash(state);
         self.expr.hash(state);
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for ImplItemFn {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.attrs.hash(state);
+        self.vis.hash(state);
+        self.defaultness.hash(state);
+        self.sig.hash(state);
+        self.block.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -1316,20 +1334,6 @@ impl Hash for ImplItemMacro {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for ImplItemMethod {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.vis.hash(state);
-        self.defaultness.hash(state);
-        self.sig.hash(state);
-        self.block.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ImplItemType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1341,6 +1345,16 @@ impl Hash for ImplItemType {
         self.ident.hash(state);
         self.generics.hash(state);
         self.ty.hash(state);
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for ImplRestriction {
+    fn hash<H>(&self, _state: &mut H)
+    where
+        H: Hasher,
+    {
+        match *self {}
     }
 }
 #[cfg(feature = "full")]
@@ -1379,48 +1393,42 @@ impl Hash for Item {
                 state.write_u8(6u8);
                 v0.hash(state);
             }
-            Item::Macro2(v0) => {
+            Item::Mod(v0) => {
                 state.write_u8(7u8);
                 v0.hash(state);
             }
-            Item::Mod(v0) => {
+            Item::Static(v0) => {
                 state.write_u8(8u8);
                 v0.hash(state);
             }
-            Item::Static(v0) => {
+            Item::Struct(v0) => {
                 state.write_u8(9u8);
                 v0.hash(state);
             }
-            Item::Struct(v0) => {
+            Item::Trait(v0) => {
                 state.write_u8(10u8);
                 v0.hash(state);
             }
-            Item::Trait(v0) => {
+            Item::TraitAlias(v0) => {
                 state.write_u8(11u8);
                 v0.hash(state);
             }
-            Item::TraitAlias(v0) => {
+            Item::Type(v0) => {
                 state.write_u8(12u8);
                 v0.hash(state);
             }
-            Item::Type(v0) => {
+            Item::Union(v0) => {
                 state.write_u8(13u8);
                 v0.hash(state);
             }
-            Item::Union(v0) => {
+            Item::Use(v0) => {
                 state.write_u8(14u8);
                 v0.hash(state);
             }
-            Item::Use(v0) => {
-                state.write_u8(15u8);
-                v0.hash(state);
-            }
             Item::Verbatim(v0) => {
-                state.write_u8(16u8);
+                state.write_u8(15u8);
                 TokenStreamHelper(v0).hash(state);
             }
-            #[cfg(syn_no_non_exhaustive)]
-            _ => unreachable!(),
         }
     }
 }
@@ -1434,6 +1442,7 @@ impl Hash for ItemConst {
         self.attrs.hash(state);
         self.vis.hash(state);
         self.ident.hash(state);
+        self.generics.hash(state);
         self.ty.hash(state);
         self.expr.hash(state);
     }
@@ -1486,6 +1495,7 @@ impl Hash for ItemForeignMod {
         H: Hasher,
     {
         self.attrs.hash(state);
+        self.unsafety.hash(state);
         self.abi.hash(state);
         self.items.hash(state);
     }
@@ -1521,19 +1531,6 @@ impl Hash for ItemMacro {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for ItemMacro2 {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.vis.hash(state);
-        self.ident.hash(state);
-        TokenStreamHelper(&self.rules).hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemMod {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1541,6 +1538,7 @@ impl Hash for ItemMod {
     {
         self.attrs.hash(state);
         self.vis.hash(state);
+        self.unsafety.hash(state);
         self.ident.hash(state);
         self.content.hash(state);
         self.semi.hash(state);
@@ -1587,6 +1585,7 @@ impl Hash for ItemTrait {
         self.vis.hash(state);
         self.unsafety.hash(state);
         self.auto_token.hash(state);
+        self.restriction.hash(state);
         self.ident.hash(state);
         self.generics.hash(state);
         self.colon_token.hash(state);
@@ -1661,7 +1660,7 @@ impl Hash for Label {
 }
 #[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for LifetimeDef {
+impl Hash for LifetimeParam {
     fn hash<H>(&self, state: &mut H)
     where
         H: Hasher,
@@ -1735,6 +1734,17 @@ impl Hash for Local {
         self.init.hash(state);
     }
 }
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for LocalInit {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.expr.hash(state);
+        self.diverge.hash(state);
+    }
+}
 #[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Macro {
@@ -1798,7 +1808,8 @@ impl Hash for MetaList {
         H: Hasher,
     {
         self.path.hash(state);
-        self.nested.hash(state);
+        self.delimiter.hash(state);
+        TokenStreamHelper(&self.tokens).hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -1809,36 +1820,7 @@ impl Hash for MetaNameValue {
         H: Hasher,
     {
         self.path.hash(state);
-        self.lit.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for MethodTurbofish {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.args.hash(state);
-    }
-}
-#[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for NestedMeta {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        match self {
-            NestedMeta::Meta(v0) => {
-                state.write_u8(0u8);
-                v0.hash(state);
-            }
-            NestedMeta::Lit(v0) => {
-                state.write_u8(1u8);
-                v0.hash(state);
-            }
-        }
+        self.value.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -1860,7 +1842,7 @@ impl Hash for Pat {
         H: Hasher,
     {
         match self {
-            Pat::Box(v0) => {
+            Pat::Const(v0) => {
                 state.write_u8(0u8);
                 v0.hash(state);
             }
@@ -1880,64 +1862,55 @@ impl Hash for Pat {
                 state.write_u8(4u8);
                 v0.hash(state);
             }
-            Pat::Path(v0) => {
+            Pat::Paren(v0) => {
                 state.write_u8(5u8);
                 v0.hash(state);
             }
-            Pat::Range(v0) => {
+            Pat::Path(v0) => {
                 state.write_u8(6u8);
                 v0.hash(state);
             }
-            Pat::Reference(v0) => {
+            Pat::Range(v0) => {
                 state.write_u8(7u8);
                 v0.hash(state);
             }
-            Pat::Rest(v0) => {
+            Pat::Reference(v0) => {
                 state.write_u8(8u8);
                 v0.hash(state);
             }
-            Pat::Slice(v0) => {
+            Pat::Rest(v0) => {
                 state.write_u8(9u8);
                 v0.hash(state);
             }
-            Pat::Struct(v0) => {
+            Pat::Slice(v0) => {
                 state.write_u8(10u8);
                 v0.hash(state);
             }
-            Pat::Tuple(v0) => {
+            Pat::Struct(v0) => {
                 state.write_u8(11u8);
                 v0.hash(state);
             }
-            Pat::TupleStruct(v0) => {
+            Pat::Tuple(v0) => {
                 state.write_u8(12u8);
                 v0.hash(state);
             }
-            Pat::Type(v0) => {
+            Pat::TupleStruct(v0) => {
                 state.write_u8(13u8);
                 v0.hash(state);
             }
-            Pat::Verbatim(v0) => {
+            Pat::Type(v0) => {
                 state.write_u8(14u8);
+                v0.hash(state);
+            }
+            Pat::Verbatim(v0) => {
+                state.write_u8(15u8);
                 TokenStreamHelper(v0).hash(state);
             }
             Pat::Wild(v0) => {
-                state.write_u8(15u8);
+                state.write_u8(16u8);
                 v0.hash(state);
             }
-            #[cfg(syn_no_non_exhaustive)]
-            _ => unreachable!(),
         }
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for PatBox {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.pat.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -1956,28 +1929,6 @@ impl Hash for PatIdent {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for PatLit {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.expr.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for PatMacro {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.mac.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatOr {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1990,27 +1941,13 @@ impl Hash for PatOr {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for PatPath {
+impl Hash for PatParen {
     fn hash<H>(&self, state: &mut H)
     where
         H: Hasher,
     {
         self.attrs.hash(state);
-        self.qself.hash(state);
-        self.path.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for PatRange {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.lo.hash(state);
-        self.limits.hash(state);
-        self.hi.hash(state);
+        self.pat.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -2054,9 +1991,10 @@ impl Hash for PatStruct {
         H: Hasher,
     {
         self.attrs.hash(state);
+        self.qself.hash(state);
         self.path.hash(state);
         self.fields.hash(state);
-        self.dot2_token.hash(state);
+        self.rest.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -2078,8 +2016,9 @@ impl Hash for PatTupleStruct {
         H: Hasher,
     {
         self.attrs.hash(state);
+        self.qself.hash(state);
         self.path.hash(state);
-        self.pat.hash(state);
+        self.elems.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -2150,17 +2089,6 @@ impl Hash for PathSegment {
 }
 #[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for PredicateEq {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.lhs_ty.hash(state);
-        self.rhs_ty.hash(state);
-    }
-}
-#[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PredicateLifetime {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2221,6 +2149,8 @@ impl Hash for Receiver {
         self.attrs.hash(state);
         self.reference.hash(state);
         self.mutability.hash(state);
+        self.colon_token.hash(state);
+        self.ty.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -2261,6 +2191,23 @@ impl Hash for Signature {
 }
 #[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for StaticMutability {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        match self {
+            StaticMutability::Mut(_) => {
+                state.write_u8(0u8);
+            }
+            StaticMutability::None => {
+                state.write_u8(1u8);
+            }
+        }
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Stmt {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2275,15 +2222,28 @@ impl Hash for Stmt {
                 state.write_u8(1u8);
                 v0.hash(state);
             }
-            Stmt::Expr(v0) => {
+            Stmt::Expr(v0, v1) => {
                 state.write_u8(2u8);
                 v0.hash(state);
+                v1.hash(state);
             }
-            Stmt::Semi(v0, _) => {
+            Stmt::Macro(v0) => {
                 state.write_u8(3u8);
                 v0.hash(state);
             }
         }
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for StmtMacro {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.attrs.hash(state);
+        self.mac.hash(state);
+        self.semi_token.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -2328,7 +2288,7 @@ impl Hash for TraitItem {
                 state.write_u8(0u8);
                 v0.hash(state);
             }
-            TraitItem::Method(v0) => {
+            TraitItem::Fn(v0) => {
                 state.write_u8(1u8);
                 v0.hash(state);
             }
@@ -2344,8 +2304,6 @@ impl Hash for TraitItem {
                 state.write_u8(4u8);
                 TokenStreamHelper(v0).hash(state);
             }
-            #[cfg(syn_no_non_exhaustive)]
-            _ => unreachable!(),
         }
     }
 }
@@ -2358,8 +2316,22 @@ impl Hash for TraitItemConst {
     {
         self.attrs.hash(state);
         self.ident.hash(state);
+        self.generics.hash(state);
         self.ty.hash(state);
         self.default.hash(state);
+    }
+}
+#[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
+impl Hash for TraitItemFn {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.attrs.hash(state);
+        self.sig.hash(state);
+        self.default.hash(state);
+        self.semi_token.hash(state);
     }
 }
 #[cfg(feature = "full")]
@@ -2371,19 +2343,6 @@ impl Hash for TraitItemMacro {
     {
         self.attrs.hash(state);
         self.mac.hash(state);
-        self.semi_token.hash(state);
-    }
-}
-#[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for TraitItemMethod {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.attrs.hash(state);
-        self.sig.hash(state);
-        self.default.hash(state);
         self.semi_token.hash(state);
     }
 }
@@ -2470,8 +2429,6 @@ impl Hash for Type {
                 state.write_u8(14u8);
                 TokenStreamHelper(v0).hash(state);
             }
-            #[cfg(syn_no_non_exhaustive)]
-            _ => unreachable!(),
         }
     }
 }
@@ -2577,6 +2534,10 @@ impl Hash for TypeParamBound {
             TypeParamBound::Lifetime(v0) => {
                 state.write_u8(1u8);
                 v0.hash(state);
+            }
+            TypeParamBound::Verbatim(v0) => {
+                state.write_u8(2u8);
+                TokenStreamHelper(v0).hash(state);
             }
         }
     }
@@ -2758,7 +2719,7 @@ impl Hash for UseTree {
         }
     }
 }
-#[cfg(any(feature = "derive", feature = "full"))]
+#[cfg(feature = "full")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Variadic {
     fn hash<H>(&self, state: &mut H)
@@ -2766,6 +2727,8 @@ impl Hash for Variadic {
         H: Hasher,
     {
         self.attrs.hash(state);
+        self.pat.hash(state);
+        self.comma.hash(state);
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
@@ -2780,22 +2743,6 @@ impl Hash for Variant {
         self.fields.hash(state);
         self.discriminant.hash(state);
     }
-}
-#[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for VisCrate {
-    fn hash<H>(&self, _state: &mut H)
-    where
-        H: Hasher,
-    {}
-}
-#[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
-impl Hash for VisPublic {
-    fn hash<H>(&self, _state: &mut H)
-    where
-        H: Hasher,
-    {}
 }
 #[cfg(any(feature = "derive", feature = "full"))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
@@ -2816,20 +2763,15 @@ impl Hash for Visibility {
         H: Hasher,
     {
         match self {
-            Visibility::Public(v0) => {
+            Visibility::Public(_) => {
                 state.write_u8(0u8);
-                v0.hash(state);
             }
-            Visibility::Crate(v0) => {
+            Visibility::Restricted(v0) => {
                 state.write_u8(1u8);
                 v0.hash(state);
             }
-            Visibility::Restricted(v0) => {
-                state.write_u8(2u8);
-                v0.hash(state);
-            }
             Visibility::Inherited => {
-                state.write_u8(3u8);
+                state.write_u8(2u8);
             }
         }
     }
@@ -2852,16 +2794,12 @@ impl Hash for WherePredicate {
         H: Hasher,
     {
         match self {
-            WherePredicate::Type(v0) => {
+            WherePredicate::Lifetime(v0) => {
                 state.write_u8(0u8);
                 v0.hash(state);
             }
-            WherePredicate::Lifetime(v0) => {
+            WherePredicate::Type(v0) => {
                 state.write_u8(1u8);
-                v0.hash(state);
-            }
-            WherePredicate::Eq(v0) => {
-                state.write_u8(2u8);
                 v0.hash(state);
             }
         }

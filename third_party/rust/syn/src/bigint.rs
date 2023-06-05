@@ -1,16 +1,16 @@
 use std::ops::{AddAssign, MulAssign};
 
 // For implementing base10_digits() accessor on LitInt.
-pub struct BigInt {
+pub(crate) struct BigInt {
     digits: Vec<u8>,
 }
 
 impl BigInt {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         BigInt { digits: Vec::new() }
     }
 
-    pub fn to_string(&self) -> String {
+    pub(crate) fn to_string(&self) -> String {
         let mut repr = String::with_capacity(self.digits.len());
 
         let mut has_nonzero = false;

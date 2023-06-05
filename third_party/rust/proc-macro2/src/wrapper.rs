@@ -40,7 +40,7 @@ impl LexError {
 }
 
 fn mismatch() -> ! {
-    panic!("stable/nightly mismatch")
+    panic!("compiler/fallback mismatch")
 }
 
 impl DeferredTokenStream {
@@ -470,12 +470,6 @@ impl Span {
     #[cfg(span_locations)]
     pub fn start(&self) -> LineColumn {
         match self {
-            #[cfg(proc_macro_span)]
-            Span::Compiler(s) => {
-                let proc_macro::LineColumn { line, column } = s.start();
-                LineColumn { line, column }
-            }
-            #[cfg(not(proc_macro_span))]
             Span::Compiler(_) => LineColumn { line: 0, column: 0 },
             Span::Fallback(s) => s.start(),
         }
@@ -484,12 +478,6 @@ impl Span {
     #[cfg(span_locations)]
     pub fn end(&self) -> LineColumn {
         match self {
-            #[cfg(proc_macro_span)]
-            Span::Compiler(s) => {
-                let proc_macro::LineColumn { line, column } = s.end();
-                LineColumn { line, column }
-            }
-            #[cfg(not(proc_macro_span))]
             Span::Compiler(_) => LineColumn { line: 0, column: 0 },
             Span::Fallback(s) => s.end(),
         }
@@ -527,6 +515,16 @@ impl Span {
             (Span::Compiler(a), Span::Compiler(b)) => a.eq(b),
             (Span::Fallback(a), Span::Fallback(b)) => a.eq(b),
             _ => false,
+        }
+    }
+
+    pub fn source_text(&self) -> Option<String> {
+        match self {
+            #[cfg(not(no_source_text))]
+            Span::Compiler(s) => s.source_text(),
+            #[cfg(no_source_text)]
+            Span::Compiler(_) => None,
+            Span::Fallback(s) => s.source_text(),
         }
     }
 

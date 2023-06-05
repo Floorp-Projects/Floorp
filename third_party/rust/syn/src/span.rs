@@ -1,7 +1,14 @@
-use proc_macro2::Span;
+use proc_macro2::extra::DelimSpan;
+use proc_macro2::{Delimiter, Group, Span, TokenStream};
 
 pub trait IntoSpans<S> {
     fn into_spans(self) -> S;
+}
+
+impl IntoSpans<Span> for Span {
+    fn into_spans(self) -> Span {
+        self
+    }
 }
 
 impl IntoSpans<[Span; 1]> for Span {
@@ -40,28 +47,16 @@ impl IntoSpans<[Span; 3]> for [Span; 3] {
     }
 }
 
-#[cfg(feature = "parsing")]
-pub trait FromSpans: Sized {
-    fn from_spans(spans: &[Span]) -> Self;
-}
-
-#[cfg(feature = "parsing")]
-impl FromSpans for [Span; 1] {
-    fn from_spans(spans: &[Span]) -> Self {
-        [spans[0]]
+impl IntoSpans<DelimSpan> for Span {
+    fn into_spans(self) -> DelimSpan {
+        let mut group = Group::new(Delimiter::None, TokenStream::new());
+        group.set_span(self);
+        group.delim_span()
     }
 }
 
-#[cfg(feature = "parsing")]
-impl FromSpans for [Span; 2] {
-    fn from_spans(spans: &[Span]) -> Self {
-        [spans[0], spans[1]]
-    }
-}
-
-#[cfg(feature = "parsing")]
-impl FromSpans for [Span; 3] {
-    fn from_spans(spans: &[Span]) -> Self {
-        [spans[0], spans[1], spans[2]]
+impl IntoSpans<DelimSpan> for DelimSpan {
+    fn into_spans(self) -> DelimSpan {
+        self
     }
 }

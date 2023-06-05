@@ -3,5 +3,5 @@ use std::net::Ipv4Addr;
 
 fn main() {
     let ip = Ipv4Addr::LOCALHOST;
-    _ = quote! { #ip };
+    let _ = quote! { #ip };
 }

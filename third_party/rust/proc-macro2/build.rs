@@ -1,11 +1,5 @@
 // rustc-cfg emitted by the build script:
 //
-// "use_proc_macro"
-//     Link to extern crate proc_macro. Available on any compiler and any target
-//     except wasm32. Requires "proc-macro" Cargo cfg to be enabled (default is
-//     enabled). On wasm32 we never link to proc_macro even if "proc-macro" cfg
-//     is enabled.
-//
 // "wrap_proc_macro"
 //     Wrap types from libproc_macro rather than polyfilling the whole API.
 //     Enabled on rustc 1.29+ as long as procmacro2_semver_exempt is not set,
@@ -43,14 +37,15 @@
 use std::env;
 use std::process::{self, Command};
 use std::str;
+use std::u32;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
-    let version = match rustc_version() {
-        Some(version) => version,
-        None => return,
-    };
+    let version = rustc_version().unwrap_or(RustcVersion {
+        minor: u32::MAX,
+        nightly: false,
+    });
 
     if version.minor < 31 {
         eprintln!("Minimum supported rustc version is 1.31");
@@ -70,6 +65,10 @@ fn main() {
 
     if version.minor < 32 {
         println!("cargo:rustc-cfg=no_libprocmacro_unwind_safe");
+    }
+
+    if version.minor < 34 {
+        println!("cargo:rustc-cfg=no_try_from");
     }
 
     if version.minor < 39 {
@@ -100,12 +99,13 @@ fn main() {
         println!("cargo:rustc-cfg=no_is_available");
     }
 
-    let target = env::var("TARGET").unwrap();
-    if !enable_use_proc_macro(&target) {
-        return;
+    if version.minor < 66 {
+        println!("cargo:rustc-cfg=no_source_text");
     }
 
-    println!("cargo:rustc-cfg=use_proc_macro");
+    if !cfg!(feature = "proc-macro") {
+        return;
+    }
 
     if version.nightly || !semver_exempt {
         println!("cargo:rustc-cfg=wrap_proc_macro");
@@ -121,16 +121,6 @@ fn main() {
     if semver_exempt && version.nightly {
         println!("cargo:rustc-cfg=super_unstable");
     }
-}
-
-fn enable_use_proc_macro(target: &str) -> bool {
-    // wasm targets don't have the `proc_macro` crate, disable this feature.
-    if target.contains("wasm32") {
-        return false;
-    }
-
-    // Otherwise, only enable it if our feature is actually enabled.
-    cfg!(feature = "proc-macro")
 }
 
 struct RustcVersion {

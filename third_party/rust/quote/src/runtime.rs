@@ -1,10 +1,12 @@
+use self::get_span::{GetSpan, GetSpanBase, GetSpanInner};
 use crate::{IdentFragment, ToTokens, TokenStreamExt};
 use core::fmt;
 use core::iter;
 use core::ops::BitOr;
+use proc_macro2::{Group, Ident, Punct, Spacing, TokenTree};
 
 pub use core::option::Option;
-pub use proc_macro2::*;
+pub use proc_macro2::{Delimiter, Span, TokenStream};
 pub use std::format;
 
 pub struct HasIterator; // True
@@ -161,6 +163,62 @@ impl<T: Iterator> Iterator for RepInterp<T> {
 impl<T: ToTokens> ToTokens for RepInterp<T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.0.to_tokens(tokens);
+    }
+}
+
+#[inline]
+pub fn get_span<T>(span: T) -> GetSpan<T> {
+    GetSpan(GetSpanInner(GetSpanBase(span)))
+}
+
+mod get_span {
+    use core::ops::Deref;
+    use proc_macro2::extra::DelimSpan;
+    use proc_macro2::Span;
+
+    pub struct GetSpan<T>(pub(crate) GetSpanInner<T>);
+
+    pub struct GetSpanInner<T>(pub(crate) GetSpanBase<T>);
+
+    pub struct GetSpanBase<T>(pub(crate) T);
+
+    impl GetSpan<Span> {
+        #[inline]
+        pub fn __into_span(self) -> Span {
+            ((self.0).0).0
+        }
+    }
+
+    impl GetSpanInner<DelimSpan> {
+        #[inline]
+        pub fn __into_span(&self) -> Span {
+            (self.0).0.join()
+        }
+    }
+
+    impl<T> GetSpanBase<T> {
+        #[allow(clippy::unused_self)]
+        pub fn __into_span(&self) -> T {
+            unreachable!()
+        }
+    }
+
+    impl<T> Deref for GetSpan<T> {
+        type Target = GetSpanInner<T>;
+
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl<T> Deref for GetSpanInner<T> {
+        type Target = GetSpanBase<T>;
+
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
     }
 }
 

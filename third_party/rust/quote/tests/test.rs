@@ -1,14 +1,17 @@
 #![allow(
     clippy::disallowed_names,
+    clippy::let_underscore_untyped,
     clippy::shadow_unrelated,
     clippy::unseparated_literal_suffix,
     clippy::used_underscore_binding
 )]
 
+extern crate proc_macro;
+
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, TokenStreamExt};
 
 struct X;
@@ -516,4 +519,31 @@ fn test_star_after_repetition() {
 fn test_quote_raw_id() {
     let id = quote!(r#raw_id);
     assert_eq!(id.to_string(), "r#raw_id");
+}
+
+#[test]
+fn test_type_inference_for_span() {
+    trait CallSite {
+        fn get() -> Self;
+    }
+
+    impl CallSite for Span {
+        fn get() -> Self {
+            Span::call_site()
+        }
+    }
+
+    let span = Span::call_site();
+    let _ = quote_spanned!(span=> ...);
+
+    let delim_span = Group::new(Delimiter::Parenthesis, TokenStream::new()).delim_span();
+    let _ = quote_spanned!(delim_span=> ...);
+
+    let inferred = CallSite::get();
+    let _ = quote_spanned!(inferred=> ...);
+
+    if false {
+        let proc_macro_span = proc_macro::Span::call_site();
+        let _ = quote_spanned!(proc_macro_span.into()=> ...);
+    }
 }

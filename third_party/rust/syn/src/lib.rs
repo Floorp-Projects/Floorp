@@ -62,7 +62,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! syn = "1.0"
+//! syn = "2.0"
 //! quote = "1.0"
 //!
 //! [lib]
@@ -94,9 +94,8 @@
 //! ```
 //!
 //! The [`heapsize`] example directory shows a complete working implementation
-//! of a derive macro. It works on any Rust compiler 1.31+. The example derives
-//! a `HeapSize` trait which computes an estimate of the amount of heap memory
-//! owned by a value.
+//! of a derive macro. The example derives a `HeapSize` trait which computes an
+//! estimate of the amount of heap memory owned by a value.
 //!
 //! [`heapsize`]: https://github.com/dtolnay/syn/tree/master/examples/heapsize
 //!
@@ -250,7 +249,7 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/1.0.107")]
+#![doc(html_root_url = "https://docs.rs/syn/2.0.18")]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(non_camel_case_types)]
 #![allow(
@@ -260,6 +259,7 @@
     clippy::cast_possible_wrap,
     clippy::cast_ptr_alignment,
     clippy::default_trait_access,
+    clippy::derivable_impls,
     clippy::doc_markdown,
     clippy::expl_impl_clone_on_copy,
     clippy::explicit_auto_deref,
@@ -267,7 +267,10 @@
     clippy::inherent_to_string,
     clippy::items_after_statements,
     clippy::large_enum_variant,
+    clippy::let_underscore_untyped, // https://github.com/rust-lang/rust-clippy/issues/10410
     clippy::manual_assert,
+    clippy::manual_let_else,
+    clippy::match_like_matches_macro,
     clippy::match_on_vec_items,
     clippy::match_same_arms,
     clippy::match_wildcard_for_single_variants, // clippy bug: https://github.com/rust-lang/rust-clippy/issues/6984
@@ -278,6 +281,7 @@
     clippy::needless_doctest_main,
     clippy::needless_pass_by_value,
     clippy::never_loop,
+    clippy::range_plus_one,
     clippy::redundant_else,
     clippy::return_self_not_must_use,
     clippy::similar_names,
@@ -285,20 +289,15 @@
     clippy::too_many_arguments,
     clippy::too_many_lines,
     clippy::trivially_copy_pass_by_ref,
+    clippy::uninlined_format_args,
+    clippy::unnecessary_box_returns,
     clippy::unnecessary_unwrap,
     clippy::used_underscore_binding,
-    clippy::wildcard_imports
+    clippy::wildcard_imports,
 )]
 
-#[cfg(all(
-    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
-    feature = "proc-macro"
-))]
+#[cfg(feature = "proc-macro")]
 extern crate proc_macro;
-extern crate proc_macro2;
-
-#[cfg(feature = "printing")]
-extern crate quote;
 
 #[macro_use]
 mod macros;
@@ -310,68 +309,83 @@ mod group;
 #[macro_use]
 pub mod token;
 
-mod ident;
-pub use crate::ident::Ident;
-
 #[cfg(any(feature = "full", feature = "derive"))]
 mod attr;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use crate::attr::{
-    AttrStyle, Attribute, AttributeArgs, Meta, MetaList, MetaNameValue, NestedMeta,
-};
+pub use crate::attr::{AttrStyle, Attribute, Meta, MetaList, MetaNameValue};
 
 mod bigint;
+
+#[cfg(feature = "parsing")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
+pub mod buffer;
+
+mod custom_keyword;
+
+mod custom_punctuation;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod data;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use crate::data::{
-    Field, Fields, FieldsNamed, FieldsUnnamed, Variant, VisCrate, VisPublic, VisRestricted,
-    Visibility,
-};
+pub use crate::data::{Field, Fields, FieldsNamed, FieldsUnnamed, Variant};
+
+#[cfg(any(feature = "full", feature = "derive"))]
+mod derive;
+#[cfg(feature = "derive")]
+pub use crate::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
+
+mod drops;
+
+mod error;
+pub use crate::error::{Error, Result};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod expr;
 #[cfg(feature = "full")]
-pub use crate::expr::{
-    Arm, FieldValue, GenericMethodArgument, Label, MethodTurbofish, RangeLimits,
-};
+pub use crate::expr::{Arm, FieldValue, Label, RangeLimits};
 #[cfg(any(feature = "full", feature = "derive"))]
 pub use crate::expr::{
-    Expr, ExprArray, ExprAssign, ExprAssignOp, ExprAsync, ExprAwait, ExprBinary, ExprBlock,
-    ExprBox, ExprBreak, ExprCall, ExprCast, ExprClosure, ExprContinue, ExprField, ExprForLoop,
-    ExprGroup, ExprIf, ExprIndex, ExprLet, ExprLit, ExprLoop, ExprMacro, ExprMatch, ExprMethodCall,
+    Expr, ExprArray, ExprAssign, ExprAsync, ExprAwait, ExprBinary, ExprBlock, ExprBreak, ExprCall,
+    ExprCast, ExprClosure, ExprConst, ExprContinue, ExprField, ExprForLoop, ExprGroup, ExprIf,
+    ExprIndex, ExprInfer, ExprLet, ExprLit, ExprLoop, ExprMacro, ExprMatch, ExprMethodCall,
     ExprParen, ExprPath, ExprRange, ExprReference, ExprRepeat, ExprReturn, ExprStruct, ExprTry,
-    ExprTryBlock, ExprTuple, ExprType, ExprUnary, ExprUnsafe, ExprWhile, ExprYield, Index, Member,
+    ExprTryBlock, ExprTuple, ExprUnary, ExprUnsafe, ExprWhile, ExprYield, Index, Member,
 };
+
+#[cfg(feature = "parsing")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
+pub mod ext;
+
+#[cfg(feature = "full")]
+mod file;
+#[cfg(feature = "full")]
+pub use crate::file::File;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod generics;
 #[cfg(any(feature = "full", feature = "derive"))]
 pub use crate::generics::{
-    BoundLifetimes, ConstParam, GenericParam, Generics, LifetimeDef, PredicateEq,
-    PredicateLifetime, PredicateType, TraitBound, TraitBoundModifier, TypeParam, TypeParamBound,
-    WhereClause, WherePredicate,
+    BoundLifetimes, ConstParam, GenericParam, Generics, LifetimeParam, PredicateLifetime,
+    PredicateType, TraitBound, TraitBoundModifier, TypeParam, TypeParamBound, WhereClause,
+    WherePredicate,
 };
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
 pub use crate::generics::{ImplGenerics, Turbofish, TypeGenerics};
+
+mod ident;
+pub use crate::ident::Ident;
 
 #[cfg(feature = "full")]
 mod item;
 #[cfg(feature = "full")]
 pub use crate::item::{
     FnArg, ForeignItem, ForeignItemFn, ForeignItemMacro, ForeignItemStatic, ForeignItemType,
-    ImplItem, ImplItemConst, ImplItemMacro, ImplItemMethod, ImplItemType, Item, ItemConst,
-    ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMacro2, ItemMod,
+    ImplItem, ImplItemConst, ImplItemFn, ImplItemMacro, ImplItemType, ImplRestriction, Item,
+    ItemConst, ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMod,
     ItemStatic, ItemStruct, ItemTrait, ItemTraitAlias, ItemType, ItemUnion, ItemUse, Receiver,
-    Signature, TraitItem, TraitItemConst, TraitItemMacro, TraitItemMethod, TraitItemType, UseGlob,
-    UseGroup, UseName, UsePath, UseRename, UseTree,
+    Signature, StaticMutability, TraitItem, TraitItemConst, TraitItemFn, TraitItemMacro,
+    TraitItemType, UseGlob, UseGroup, UseName, UsePath, UseRename, UseTree, Variadic,
 };
-
-#[cfg(feature = "full")]
-mod file;
-#[cfg(feature = "full")]
-pub use crate::file::File;
 
 mod lifetime;
 pub use crate::lifetime::Lifetime;
@@ -381,84 +395,186 @@ pub use crate::lit::{
     Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr, StrStyle,
 };
 
+#[cfg(feature = "parsing")]
+mod lookahead;
+
 #[cfg(any(feature = "full", feature = "derive"))]
 mod mac;
 #[cfg(any(feature = "full", feature = "derive"))]
 pub use crate::mac::{Macro, MacroDelimiter};
 
-#[cfg(any(feature = "full", feature = "derive"))]
-mod derive;
-#[cfg(feature = "derive")]
-pub use crate::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
+#[cfg(all(feature = "parsing", any(feature = "full", feature = "derive")))]
+#[cfg_attr(
+    doc_cfg,
+    doc(cfg(all(feature = "parsing", any(feature = "full", feature = "derive"))))
+)]
+pub mod meta;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod op;
 #[cfg(any(feature = "full", feature = "derive"))]
 pub use crate::op::{BinOp, UnOp};
 
-#[cfg(feature = "full")]
-mod stmt;
-#[cfg(feature = "full")]
-pub use crate::stmt::{Block, Local, Stmt};
+#[cfg(feature = "parsing")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
+pub mod parse;
 
-#[cfg(any(feature = "full", feature = "derive"))]
-mod ty;
-#[cfg(any(feature = "full", feature = "derive"))]
-pub use crate::ty::{
-    Abi, BareFnArg, ReturnType, Type, TypeArray, TypeBareFn, TypeGroup, TypeImplTrait, TypeInfer,
-    TypeMacro, TypeNever, TypeParen, TypePath, TypePtr, TypeReference, TypeSlice, TypeTraitObject,
-    TypeTuple, Variadic,
-};
+#[cfg(all(feature = "parsing", feature = "proc-macro"))]
+mod parse_macro_input;
+
+#[cfg(all(feature = "parsing", feature = "printing"))]
+mod parse_quote;
 
 #[cfg(feature = "full")]
 mod pat;
 #[cfg(feature = "full")]
+pub use crate::expr::{
+    ExprConst as PatConst, ExprLit as PatLit, ExprMacro as PatMacro, ExprPath as PatPath,
+    ExprRange as PatRange,
+};
+#[cfg(feature = "full")]
 pub use crate::pat::{
-    FieldPat, Pat, PatBox, PatIdent, PatLit, PatMacro, PatOr, PatPath, PatRange, PatReference,
-    PatRest, PatSlice, PatStruct, PatTuple, PatTupleStruct, PatType, PatWild,
+    FieldPat, Pat, PatIdent, PatOr, PatParen, PatReference, PatRest, PatSlice, PatStruct, PatTuple,
+    PatTupleStruct, PatType, PatWild,
 };
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod path;
 #[cfg(any(feature = "full", feature = "derive"))]
 pub use crate::path::{
-    AngleBracketedGenericArguments, Binding, Constraint, GenericArgument,
+    AngleBracketedGenericArguments, AssocConst, AssocType, Constraint, GenericArgument,
     ParenthesizedGenericArguments, Path, PathArguments, PathSegment, QSelf,
 };
 
-#[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-pub mod buffer;
-mod drops;
-#[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-pub mod ext;
+#[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
+mod print;
+
 pub mod punctuated;
-#[cfg(all(any(feature = "full", feature = "derive"), feature = "extra-traits"))]
-mod tt;
 
-// Not public API except the `parse_quote!` macro.
-#[cfg(feature = "parsing")]
-#[doc(hidden)]
-pub mod parse_quote;
+#[cfg(any(feature = "full", feature = "derive"))]
+mod restriction;
+#[cfg(any(feature = "full", feature = "derive"))]
+pub use crate::restriction::{FieldMutability, VisRestricted, Visibility};
 
-// Not public API except the `parse_macro_input!` macro.
-#[cfg(all(
-    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
-    feature = "parsing",
-    feature = "proc-macro"
-))]
-#[doc(hidden)]
-pub mod parse_macro_input;
+mod sealed;
+
+mod span;
 
 #[cfg(all(feature = "parsing", feature = "printing"))]
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "printing"))))]
 pub mod spanned;
 
+#[cfg(feature = "full")]
+mod stmt;
+#[cfg(feature = "full")]
+pub use crate::stmt::{Block, Local, LocalInit, Stmt, StmtMacro};
+
+mod thread;
+
+#[cfg(all(any(feature = "full", feature = "derive"), feature = "extra-traits"))]
+mod tt;
+
+#[cfg(any(feature = "full", feature = "derive"))]
+mod ty;
+#[cfg(any(feature = "full", feature = "derive"))]
+pub use crate::ty::{
+    Abi, BareFnArg, BareVariadic, ReturnType, Type, TypeArray, TypeBareFn, TypeGroup,
+    TypeImplTrait, TypeInfer, TypeMacro, TypeNever, TypeParen, TypePath, TypePtr, TypeReference,
+    TypeSlice, TypeTraitObject, TypeTuple,
+};
+
+#[cfg(all(any(feature = "full", feature = "derive"), feature = "parsing"))]
+mod verbatim;
+
 #[cfg(all(feature = "parsing", feature = "full"))]
 mod whitespace;
 
 mod gen {
+    /// Syntax tree traversal to transform the nodes of an owned syntax tree.
+    ///
+    /// Each method of the [`Fold`] trait is a hook that can be overridden to
+    /// customize the behavior when transforming the corresponding type of node.
+    /// By default, every method recursively visits the substructure of the
+    /// input by invoking the right visitor method of each of its fields.
+    ///
+    /// [`Fold`]: fold::Fold
+    ///
+    /// ```
+    /// # use syn::{Attribute, BinOp, Expr, ExprBinary};
+    /// #
+    /// pub trait Fold {
+    ///     /* ... */
+    ///
+    ///     fn fold_expr_binary(&mut self, node: ExprBinary) -> ExprBinary {
+    ///         fold_expr_binary(self, node)
+    ///     }
+    ///
+    ///     /* ... */
+    ///     # fn fold_attribute(&mut self, node: Attribute) -> Attribute;
+    ///     # fn fold_expr(&mut self, node: Expr) -> Expr;
+    ///     # fn fold_bin_op(&mut self, node: BinOp) -> BinOp;
+    /// }
+    ///
+    /// pub fn fold_expr_binary<V>(v: &mut V, node: ExprBinary) -> ExprBinary
+    /// where
+    ///     V: Fold + ?Sized,
+    /// {
+    ///     ExprBinary {
+    ///         attrs: node
+    ///             .attrs
+    ///             .into_iter()
+    ///             .map(|attr| v.fold_attribute(attr))
+    ///             .collect(),
+    ///         left: Box::new(v.fold_expr(*node.left)),
+    ///         op: v.fold_bin_op(node.op),
+    ///         right: Box::new(v.fold_expr(*node.right)),
+    ///     }
+    /// }
+    ///
+    /// /* ... */
+    /// ```
+    ///
+    /// <br>
+    ///
+    /// # Example
+    ///
+    /// This fold inserts parentheses to fully parenthesizes any expression.
+    ///
+    /// ```
+    /// // [dependencies]
+    /// // quote = "1.0"
+    /// // syn = { version = "2.0", features = ["fold", "full"] }
+    ///
+    /// use quote::quote;
+    /// use syn::fold::{fold_expr, Fold};
+    /// use syn::{token, Expr, ExprParen};
+    ///
+    /// struct ParenthesizeEveryExpr;
+    ///
+    /// impl Fold for ParenthesizeEveryExpr {
+    ///     fn fold_expr(&mut self, expr: Expr) -> Expr {
+    ///         Expr::Paren(ExprParen {
+    ///             attrs: Vec::new(),
+    ///             expr: Box::new(fold_expr(self, expr)),
+    ///             paren_token: token::Paren::default(),
+    ///         })
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let code = quote! { a() + b(1) * c.d };
+    ///     let expr: Expr = syn::parse2(code).unwrap();
+    ///     let parenthesized = ParenthesizeEveryExpr.fold_expr(expr);
+    ///     println!("{}", quote!(#parenthesized));
+    ///
+    ///     // Output: (((a)()) + (((b)((1))) * ((c).d)))
+    /// }
+    /// ```
+    #[cfg(feature = "fold")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "fold")))]
+    #[rustfmt::skip]
+    pub mod fold;
+
     /// Syntax tree traversal to walk a shared borrow of a syntax tree.
     ///
     /// Each method of the [`Visit`] trait is a hook that can be overridden to
@@ -499,8 +615,6 @@ mod gen {
     /// /* ... */
     /// ```
     ///
-    /// *This module is available only if Syn is built with the `"visit"` feature.*
-    ///
     /// <br>
     ///
     /// # Example
@@ -511,7 +625,7 @@ mod gen {
     /// ```
     /// // [dependencies]
     /// // quote = "1.0"
-    /// // syn = { version = "1.0", features = ["full", "visit"] }
+    /// // syn = { version = "2.0", features = ["full", "visit"] }
     ///
     /// use quote::quote;
     /// use syn::visit::{self, Visit};
@@ -621,9 +735,6 @@ mod gen {
     /// /* ... */
     /// ```
     ///
-    /// *This module is available only if Syn is built with the `"visit-mut"`
-    /// feature.*
-    ///
     /// <br>
     ///
     /// # Example
@@ -634,7 +745,7 @@ mod gen {
     /// ```
     /// // [dependencies]
     /// // quote = "1.0"
-    /// // syn = { version = "1.0", features = ["full", "visit-mut"] }
+    /// // syn = { version = "2.0", features = ["full", "visit-mut"] }
     ///
     /// use quote::quote;
     /// use syn::visit_mut::{self, VisitMut};
@@ -677,96 +788,13 @@ mod gen {
     #[rustfmt::skip]
     pub mod visit_mut;
 
-    /// Syntax tree traversal to transform the nodes of an owned syntax tree.
-    ///
-    /// Each method of the [`Fold`] trait is a hook that can be overridden to
-    /// customize the behavior when transforming the corresponding type of node.
-    /// By default, every method recursively visits the substructure of the
-    /// input by invoking the right visitor method of each of its fields.
-    ///
-    /// [`Fold`]: fold::Fold
-    ///
-    /// ```
-    /// # use syn::{Attribute, BinOp, Expr, ExprBinary};
-    /// #
-    /// pub trait Fold {
-    ///     /* ... */
-    ///
-    ///     fn fold_expr_binary(&mut self, node: ExprBinary) -> ExprBinary {
-    ///         fold_expr_binary(self, node)
-    ///     }
-    ///
-    ///     /* ... */
-    ///     # fn fold_attribute(&mut self, node: Attribute) -> Attribute;
-    ///     # fn fold_expr(&mut self, node: Expr) -> Expr;
-    ///     # fn fold_bin_op(&mut self, node: BinOp) -> BinOp;
-    /// }
-    ///
-    /// pub fn fold_expr_binary<V>(v: &mut V, node: ExprBinary) -> ExprBinary
-    /// where
-    ///     V: Fold + ?Sized,
-    /// {
-    ///     ExprBinary {
-    ///         attrs: node
-    ///             .attrs
-    ///             .into_iter()
-    ///             .map(|attr| v.fold_attribute(attr))
-    ///             .collect(),
-    ///         left: Box::new(v.fold_expr(*node.left)),
-    ///         op: v.fold_bin_op(node.op),
-    ///         right: Box::new(v.fold_expr(*node.right)),
-    ///     }
-    /// }
-    ///
-    /// /* ... */
-    /// ```
-    ///
-    /// *This module is available only if Syn is built with the `"fold"` feature.*
-    ///
-    /// <br>
-    ///
-    /// # Example
-    ///
-    /// This fold inserts parentheses to fully parenthesizes any expression.
-    ///
-    /// ```
-    /// // [dependencies]
-    /// // quote = "1.0"
-    /// // syn = { version = "1.0", features = ["fold", "full"] }
-    ///
-    /// use quote::quote;
-    /// use syn::fold::{fold_expr, Fold};
-    /// use syn::{token, Expr, ExprParen};
-    ///
-    /// struct ParenthesizeEveryExpr;
-    ///
-    /// impl Fold for ParenthesizeEveryExpr {
-    ///     fn fold_expr(&mut self, expr: Expr) -> Expr {
-    ///         Expr::Paren(ExprParen {
-    ///             attrs: Vec::new(),
-    ///             expr: Box::new(fold_expr(self, expr)),
-    ///             paren_token: token::Paren::default(),
-    ///         })
-    ///     }
-    /// }
-    ///
-    /// fn main() {
-    ///     let code = quote! { a() + b(1) * c.d };
-    ///     let expr: Expr = syn::parse2(code).unwrap();
-    ///     let parenthesized = ParenthesizeEveryExpr.fold_expr(expr);
-    ///     println!("{}", quote!(#parenthesized));
-    ///
-    ///     // Output: (((a)()) + (((b)((1))) * ((c).d)))
-    /// }
-    /// ```
-    #[cfg(feature = "fold")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "fold")))]
-    #[rustfmt::skip]
-    pub mod fold;
-
     #[cfg(feature = "clone-impls")]
     #[rustfmt::skip]
     mod clone;
+
+    #[cfg(feature = "extra-traits")]
+    #[rustfmt::skip]
+    mod debug;
 
     #[cfg(feature = "extra-traits")]
     #[rustfmt::skip]
@@ -775,10 +803,6 @@ mod gen {
     #[cfg(feature = "extra-traits")]
     #[rustfmt::skip]
     mod hash;
-
-    #[cfg(feature = "extra-traits")]
-    #[rustfmt::skip]
-    mod debug;
 
     #[cfg(any(feature = "full", feature = "derive"))]
     #[path = "../gen_helper.rs"]
@@ -790,33 +814,6 @@ pub use crate::gen::*;
 #[doc(hidden)]
 #[path = "export.rs"]
 pub mod __private;
-
-mod custom_keyword;
-mod custom_punctuation;
-mod sealed;
-mod span;
-mod thread;
-
-#[cfg(feature = "parsing")]
-mod lookahead;
-
-#[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-pub mod parse;
-
-#[cfg(feature = "full")]
-mod reserved;
-
-#[cfg(all(any(feature = "full", feature = "derive"), feature = "parsing"))]
-mod verbatim;
-
-#[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
-mod print;
-
-////////////////////////////////////////////////////////////////////////////////
-
-mod error;
-pub use crate::error::{Error, Result};
 
 /// Parse tokens of source code into the chosen syntax tree node.
 ///
@@ -830,9 +827,6 @@ pub use crate::error::{Error, Result};
 /// `proc_macro2::TokenStream`, use [`syn::parse2`] instead.
 ///
 /// [`syn::parse2`]: parse2
-///
-/// *This function is available only if Syn is built with both the `"parsing"` and
-/// `"proc-macro"` features.*
 ///
 /// # Examples
 ///
@@ -859,11 +853,7 @@ pub use crate::error::{Error, Result};
 ///     expanded.into()
 /// }
 /// ```
-#[cfg(all(
-    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
-    feature = "parsing",
-    feature = "proc-macro"
-))]
+#[cfg(all(feature = "parsing", feature = "proc-macro"))]
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "proc-macro"))))]
 pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
     parse::Parser::parse(T::parse, tokens)
@@ -881,8 +871,6 @@ pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
 /// instead.
 ///
 /// [`syn::parse`]: parse()
-///
-/// *This function is available only if Syn is built with the `"parsing"` feature.*
 #[cfg(feature = "parsing")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
@@ -890,8 +878,6 @@ pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
 }
 
 /// Parse a string of Rust code into the chosen syntax tree node.
-///
-/// *This function is available only if Syn is built with the `"parsing"` feature.*
 ///
 /// # Hygiene
 ///
@@ -929,9 +915,6 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
 ///
 /// If present, either of these would be an error using `from_str`.
 ///
-/// *This function is available only if Syn is built with the `"parsing"` and
-/// `"full"` features.*
-///
 /// # Examples
 ///
 /// ```no_run
@@ -939,7 +922,7 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
 /// use std::fs::File;
 /// use std::io::Read;
 ///
-/// fn run() -> Result<(), Box<Error>> {
+/// fn run() -> Result<(), Box<dyn Error>> {
 ///     let mut file = File::open("path/to/code.rs")?;
 ///     let mut content = String::new();
 ///     file.read_to_string(&mut content)?;

@@ -302,6 +302,20 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.proc-macro2]]
+version = "1.0.59"
+when = "2023-05-25"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.quote]]
+version = "1.0.28"
+when = "2023-05-25"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.regex]]
 version = "1.7.1"
 when = "2023-01-09"
@@ -345,8 +359,8 @@ user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
 [[publisher.serde]]
-version = "1.0.152"
-when = "2022-12-26"
+version = "1.0.163"
+when = "2023-05-11"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -359,8 +373,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.serde_derive]]
-version = "1.0.152"
-when = "2022-12-26"
+version = "1.0.163"
+when = "2023-05-10"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -396,6 +410,13 @@ user-name = "Matt Brubeck"
 [[publisher.syn]]
 version = "1.0.107"
 when = "2022-12-18"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.syn]]
+version = "2.0.18"
+when = "2023-05-26"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"

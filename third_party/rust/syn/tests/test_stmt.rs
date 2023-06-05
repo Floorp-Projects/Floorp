@@ -1,11 +1,14 @@
-#![allow(clippy::assertions_on_result_states, clippy::non_ascii_literal)]
+#![allow(
+    clippy::assertions_on_result_states,
+    clippy::non_ascii_literal,
+    clippy::uninlined_format_args
+)]
 
 #[macro_use]
 mod macros;
 
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 use quote::quote;
-use std::iter::FromIterator;
 use syn::Stmt;
 
 #[test]
@@ -13,10 +16,12 @@ fn test_raw_operator() {
     let stmt = syn::parse_str::<Stmt>("let _ = &raw const x;").unwrap();
 
     snapshot!(stmt, @r###"
-    Local(Local {
+    Stmt::Local {
         pat: Pat::Wild,
-        init: Some(Verbatim(`& raw const x`)),
-    })
+        init: Some(LocalInit {
+            expr: Expr::Verbatim(`& raw const x`),
+        }),
+    }
     "###);
 }
 
@@ -25,21 +30,22 @@ fn test_raw_variable() {
     let stmt = syn::parse_str::<Stmt>("let _ = &raw;").unwrap();
 
     snapshot!(stmt, @r###"
-    Local(Local {
+    Stmt::Local {
         pat: Pat::Wild,
-        init: Some(Expr::Reference {
-            expr: Expr::Path {
-                path: Path {
-                    segments: [
-                        PathSegment {
-                            ident: "raw",
-                            arguments: None,
-                        },
-                    ],
+        init: Some(LocalInit {
+            expr: Expr::Reference {
+                expr: Expr::Path {
+                    path: Path {
+                        segments: [
+                            PathSegment {
+                                ident: "raw",
+                            },
+                        ],
+                    },
                 },
             },
         }),
-    })
+    }
     "###);
 }
 
@@ -63,13 +69,13 @@ fn test_none_group() {
     ))]);
 
     snapshot!(tokens as Stmt, @r###"
-    Item(Item::Fn {
-        vis: Inherited,
+    Stmt::Item(Item::Fn {
+        vis: Visibility::Inherited,
         sig: Signature {
             asyncness: Some,
             ident: "f",
             generics: Generics,
-            output: Default,
+            output: ReturnType::Default,
         },
         block: Block,
     })
@@ -83,11 +89,148 @@ fn test_let_dot_dot() {
     };
 
     snapshot!(tokens as Stmt, @r###"
-    Local(Local {
+    Stmt::Local {
         pat: Pat::Rest,
-        init: Some(Expr::Lit {
-            lit: 10,
+        init: Some(LocalInit {
+            expr: Expr::Lit {
+                lit: 10,
+            },
         }),
+    }
+    "###);
+}
+
+#[test]
+fn test_let_else() {
+    let tokens = quote! {
+        let Some(x) = None else { return 0; };
+    };
+
+    snapshot!(tokens as Stmt, @r###"
+    Stmt::Local {
+        pat: Pat::TupleStruct {
+            path: Path {
+                segments: [
+                    PathSegment {
+                        ident: "Some",
+                    },
+                ],
+            },
+            elems: [
+                Pat::Ident {
+                    ident: "x",
+                },
+            ],
+        },
+        init: Some(LocalInit {
+            expr: Expr::Path {
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "None",
+                        },
+                    ],
+                },
+            },
+            diverge: Some(Expr::Block {
+                block: Block {
+                    stmts: [
+                        Stmt::Expr(
+                            Expr::Return {
+                                expr: Some(Expr::Lit {
+                                    lit: 0,
+                                }),
+                            },
+                            Some,
+                        ),
+                    ],
+                },
+            }),
+        }),
+    }
+    "###);
+}
+
+#[test]
+fn test_macros() {
+    let tokens = quote! {
+        fn main() {
+            macro_rules! mac {}
+            thread_local! { static FOO }
+            println!("");
+            vec![]
+        }
+    };
+
+    snapshot!(tokens as Stmt, @r###"
+    Stmt::Item(Item::Fn {
+        vis: Visibility::Inherited,
+        sig: Signature {
+            ident: "main",
+            generics: Generics,
+            output: ReturnType::Default,
+        },
+        block: Block {
+            stmts: [
+                Stmt::Item(Item::Macro {
+                    ident: Some("mac"),
+                    mac: Macro {
+                        path: Path {
+                            segments: [
+                                PathSegment {
+                                    ident: "macro_rules",
+                                },
+                            ],
+                        },
+                        delimiter: MacroDelimiter::Brace,
+                        tokens: TokenStream(``),
+                    },
+                }),
+                Stmt::Macro {
+                    mac: Macro {
+                        path: Path {
+                            segments: [
+                                PathSegment {
+                                    ident: "thread_local",
+                                },
+                            ],
+                        },
+                        delimiter: MacroDelimiter::Brace,
+                        tokens: TokenStream(`static FOO`),
+                    },
+                },
+                Stmt::Macro {
+                    mac: Macro {
+                        path: Path {
+                            segments: [
+                                PathSegment {
+                                    ident: "println",
+                                },
+                            ],
+                        },
+                        delimiter: MacroDelimiter::Paren,
+                        tokens: TokenStream(`""`),
+                    },
+                    semi_token: Some,
+                },
+                Stmt::Expr(
+                    Expr::Macro {
+                        mac: Macro {
+                            path: Path {
+                                segments: [
+                                    PathSegment {
+                                        ident: "vec",
+                                    },
+                                ],
+                            },
+                            delimiter: MacroDelimiter::Bracket,
+                            tokens: TokenStream(``),
+                        },
+                    },
+                    None,
+                ),
+            ],
+        },
     })
     "###);
 }
