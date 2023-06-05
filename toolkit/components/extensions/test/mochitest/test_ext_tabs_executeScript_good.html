@@ -132,8 +132,9 @@ add_task(async function testGoodPermissions() {
       browser_action: { default_popup: "panel.html" },
     },
     setup: async extension => {
+      let promise = AppTestDelegate.awaitExtensionPanel(window, extension);
       await AppTestDelegate.clickBrowserAction(window, extension);
-      return AppTestDelegate.awaitExtensionPanel(window, extension);
+      await promise;
     },
     tearDown: extension => AppTestDelegate.closeBrowserAction(window, extension),
   });
@@ -151,7 +152,11 @@ add_task(async function testGoodPermissions() {
       });
       await browser.pageAction.show(tab.id);
     },
-    setup: extension => AppTestDelegate.clickPageAction(window, extension),
+    setup: async extension => {
+      let promise = AppTestDelegate.awaitExtensionPanel(window, extension);
+      await AppTestDelegate.clickPageAction(window, extension);
+      await promise;
+    },
     tearDown: extension => AppTestDelegate.closePageAction(window, extension),
   });
 
