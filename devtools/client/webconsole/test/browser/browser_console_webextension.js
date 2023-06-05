@@ -33,8 +33,8 @@ async function testWebExtensionMessages(
   // TODO: Re-enable this (See Bug 1699050).
   /*
   // Trigger the messages logged when opening the popup.
-  const { AppUiTestDelegate } = ChromeUtils.import(
-    "resource://testing-common/AppUiTestDelegate.jsm"
+  const { AppUiTestDelegate } = ChromeUtils.importESModule(
+    "resource://testing-common/AppUiTestDelegate.sys.mjs"
   );
   const onPopupReady = extension.awaitMessage(`popup-ready`);
   await AppUiTestDelegate.clickBrowserAction(window, extension.id);

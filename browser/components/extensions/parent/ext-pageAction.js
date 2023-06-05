@@ -8,16 +8,12 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.sys.mjs",
+  PanelPopup: "resource:///modules/ExtensionPopups.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   this,
   "PageActions",
   "resource:///modules/PageActions.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelPopup",
-  "resource:///modules/ExtensionPopups.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
