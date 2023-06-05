@@ -1,6 +1,6 @@
 // Even if allows private_in_public, these are errors.
 
-#![allow(private_in_public)]
+#![allow(private_in_public, dead_code)]
 
 pub enum PublicEnum {
     V(PrivateEnum), //~ ERROR E0446

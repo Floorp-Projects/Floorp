@@ -1,6 +1,5 @@
 #![deny(renamed_and_removed_lints)]
 #![deny(safe_packed_borrows)] //~ ERROR has been renamed to `unaligned_references`
-#![allow(unaligned_references)]
 
 // This lint was removed in https://github.com/rust-lang/rust/pull/82525 (nightly-2021-03-28).
 // Refs:

@@ -41,10 +41,10 @@ assert_not_unpin!(OverlappingLifetimeNames<'_, PhantomPinned, PhantomPinned>);
 #[test]
 fn trivial_bounds() {
     #[pin_project(UnsafeUnpin)]
-    pub struct NotImplementUnsafUnpin {
+    pub struct NotImplementUnsafeUnpin {
         #[pin]
         f: PhantomPinned,
     }
 
-    assert_not_unpin!(NotImplementUnsafUnpin);
+    assert_not_unpin!(NotImplementUnsafeUnpin);
 }

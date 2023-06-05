@@ -1,4 +1,4 @@
-error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Struct<_>`
+error[E0119]: conflicting implementations of trait `Unpin` for type `Struct<_>`
   --> tests/ui/unstable-features/overlapping_marker_traits-feature-gate.rs:7:1
    |
 7  | #[pin_project] //~ ERROR E0119

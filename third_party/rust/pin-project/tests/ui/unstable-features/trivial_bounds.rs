@@ -4,6 +4,7 @@
 // Tracking issue: https://github.com/rust-lang/rust/issues/48214
 #![feature(trivial_bounds)]
 #![deny(trivial_bounds)]
+#![allow(dead_code)]
 
 use std::marker::{PhantomData, PhantomPinned};
 

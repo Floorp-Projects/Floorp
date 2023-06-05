@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.37"
+rust-version = "1.56"
 name = "pin-project-internal"
-version = "1.0.12"
+version = "1.1.0"
 description = """
 Implementation detail of the `pin-project` crate.
 """
@@ -42,7 +42,7 @@ version = "1"
 version = "1"
 
 [dependencies.syn]
-version = "1.0.56"
+version = "2.0.1"
 features = [
     "full",
     "visit-mut",

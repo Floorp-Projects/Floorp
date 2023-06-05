@@ -14,8 +14,7 @@
     clippy::needless_doctest_main,
     clippy::similar_names,
     clippy::single_match_else,
-    clippy::too_many_lines,
-    clippy::unnested_or_patterns
+    clippy::too_many_lines
 )]
 
 // older compilers require explicit `extern crate`.

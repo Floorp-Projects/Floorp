@@ -1,7 +1,5 @@
 // https://github.com/taiki-e/pin-project/issues/342
 
-#![allow(unaligned_references)]
-
 use auxiliary_macro::hidden_repr2;
 use pin_project::pin_project;
 

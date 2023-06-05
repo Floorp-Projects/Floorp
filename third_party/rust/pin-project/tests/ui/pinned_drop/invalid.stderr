@@ -1,7 +1,7 @@
-error: unexpected token: `foo`
+error: unexpected argument: `foo`
  --> tests/ui/pinned_drop/invalid.rs:9:19
   |
-9 |     #[pinned_drop(foo)] //~ ERROR unexpected token
+9 |     #[pinned_drop(foo)] //~ ERROR unexpected argument
   |                   ^^^
 
 error: duplicate #[pinned_drop] attribute

@@ -1,5 +1,3 @@
-#![forbid(unaligned_references)]
-
 // Refs: https://github.com/rust-lang/rust/issues/82523
 
 #[repr(packed)]

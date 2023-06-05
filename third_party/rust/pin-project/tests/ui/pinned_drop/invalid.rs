@@ -6,7 +6,7 @@ mod argument {
     #[pin_project(PinnedDrop)]
     struct UnexpectedArg1(());
 
-    #[pinned_drop(foo)] //~ ERROR unexpected token
+    #[pinned_drop(foo)] //~ ERROR unexpected argument
     impl PinnedDrop for UnexpectedArg1 {
         fn drop(self: Pin<&mut Self>) {}
     }

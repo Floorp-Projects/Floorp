@@ -4,7 +4,8 @@ error[E0277]: `PhantomPinned` cannot be unpinned
 8 |     impl Unpin for A where PhantomPinned: Unpin {} //~ ERROR E0277
   |                            ^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
   |
-  = note: consider using `Box::pin`
+  = note: consider using the `pin!` macro
+          consider using `Box::pin` if you need to access the pinned value outside of the current scope
   = help: see issue #48214
   = help: add `#![feature(trivial_bounds)]` to the crate attributes to enable
 
@@ -14,12 +15,13 @@ error[E0277]: `PhantomPinned` cannot be unpinned
 16 |     impl Unpin for B where Wrapper<PhantomPinned>: Unpin {} //~ ERROR E0277
    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
-note: required because of the requirements on the impl of `Unpin` for `phantom_pinned::Wrapper<PhantomPinned>`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
+note: required for `phantom_pinned::Wrapper<PhantomPinned>` to implement `Unpin`
   --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:12:13
    |
 12 |     impl<T> Unpin for Wrapper<T> where T: Unpin {}
-   |             ^^^^^     ^^^^^^^^^^
+   |             ^^^^^     ^^^^^^^^^^          ----- unsatisfied trait bound introduced here
    = help: see issue #48214
    = help: add `#![feature(trivial_bounds)]` to the crate attributes to enable
 
@@ -29,7 +31,8 @@ error[E0277]: `PhantomPinned` cannot be unpinned
 34 |     impl Unpin for A where Inner: Unpin {} //~ ERROR E0277
    |                            ^^^^^^^^^^^^ within `Inner`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `Inner`
   --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:30:12
    |
@@ -44,16 +47,17 @@ error[E0277]: `PhantomPinned` cannot be unpinned
 42 |     impl Unpin for B where Wrapper<Inner>: Unpin {} //~ ERROR E0277
    |                            ^^^^^^^^^^^^^^^^^^^^^ within `Inner`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `Inner`
   --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:30:12
    |
 30 |     struct Inner(PhantomPinned);
    |            ^^^^^
-note: required because of the requirements on the impl of `Unpin` for `inner::Wrapper<Inner>`
+note: required for `inner::Wrapper<Inner>` to implement `Unpin`
   --> tests/ui/unstable-features/trivial_bounds-feature-gate.rs:38:13
    |
 38 |     impl<T> Unpin for Wrapper<T> where T: Unpin {}
-   |             ^^^^^     ^^^^^^^^^^
+   |             ^^^^^     ^^^^^^^^^^          ----- unsatisfied trait bound introduced here
    = help: see issue #48214
    = help: add `#![feature(trivial_bounds)]` to the crate attributes to enable

@@ -19,12 +19,13 @@ error: cannot find attribute `pin` in this scope
    |       ^^^
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-  --> tests/ui/pin_project/remove-attr-from-struct.rs:35:5
+  --> tests/ui/pin_project/remove-attr-from-struct.rs:35:16
    |
 35 |     is_unpin::<A>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^ within `A`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |                ^ within `A`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `A`
   --> tests/ui/pin_project/remove-attr-from-struct.rs:10:8
    |
@@ -37,12 +38,13 @@ note: required by a bound in `is_unpin`
    |                ^^^^^ required by this bound in `is_unpin`
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-  --> tests/ui/pin_project/remove-attr-from-struct.rs:36:5
+  --> tests/ui/pin_project/remove-attr-from-struct.rs:36:16
    |
 36 |     is_unpin::<B>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^ within `B`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |                ^ within `B`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `B`
   --> tests/ui/pin_project/remove-attr-from-struct.rs:17:8
    |
@@ -55,24 +57,28 @@ note: required by a bound in `is_unpin`
    |                ^^^^^ required by this bound in `is_unpin`
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-   --> tests/ui/pin_project/remove-attr-from-struct.rs:40:22
-    |
-40  |     let _ = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
-    |             -------- ^^^^^^ within `A`, the trait `Unpin` is not implemented for `PhantomPinned`
-    |             |
-    |             required by a bound introduced by this call
-    |
-    = note: consider using `Box::pin`
+  --> tests/ui/pin_project/remove-attr-from-struct.rs:40:22
+   |
+40 |     let _ = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
+   |             -------- ^^^^^^ within `A`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |             |
+   |             required by a bound introduced by this call
+   |
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `A`
-   --> tests/ui/pin_project/remove-attr-from-struct.rs:10:8
-    |
-10  | struct A {
-    |        ^
+  --> tests/ui/pin_project/remove-attr-from-struct.rs:10:8
+   |
+10 | struct A {
+   |        ^
 note: required by a bound in `Pin::<P>::new`
-   --> $RUST/core/src/pin.rs
-    |
-    | impl<P: Deref<Target: Unpin>> Pin<P> {
-    |                       ^^^^^ required by this bound in `Pin::<P>::new`
+  --> $RUST/core/src/pin.rs
+   |
+   | impl<P: Deref<Target: Unpin>> Pin<P> {
+   |                       ^^^^^ required by this bound in `Pin::<P>::new`
+...
+   |     pub const fn new(pointer: P) -> Pin<P> {
+   |                  --- required by a bound in this associated function
 
 error[E0599]: no method named `project` found for struct `Pin<&mut A>` in the current scope
   --> tests/ui/pin_project/remove-attr-from-struct.rs:40:30
@@ -81,24 +87,28 @@ error[E0599]: no method named `project` found for struct `Pin<&mut A>` in the cu
    |                              ^^^^^^^ method not found in `Pin<&mut A>`
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-   --> tests/ui/pin_project/remove-attr-from-struct.rs:43:22
-    |
-43  |     let _ = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
-    |             -------- ^^^^^^ within `B`, the trait `Unpin` is not implemented for `PhantomPinned`
-    |             |
-    |             required by a bound introduced by this call
-    |
-    = note: consider using `Box::pin`
+  --> tests/ui/pin_project/remove-attr-from-struct.rs:43:22
+   |
+43 |     let _ = Pin::new(&mut x).project(); //~ ERROR E0277,E0599
+   |             -------- ^^^^^^ within `B`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |             |
+   |             required by a bound introduced by this call
+   |
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `B`
-   --> tests/ui/pin_project/remove-attr-from-struct.rs:17:8
-    |
-17  | struct B {
-    |        ^
+  --> tests/ui/pin_project/remove-attr-from-struct.rs:17:8
+   |
+17 | struct B {
+   |        ^
 note: required by a bound in `Pin::<P>::new`
-   --> $RUST/core/src/pin.rs
-    |
-    | impl<P: Deref<Target: Unpin>> Pin<P> {
-    |                       ^^^^^ required by this bound in `Pin::<P>::new`
+  --> $RUST/core/src/pin.rs
+   |
+   | impl<P: Deref<Target: Unpin>> Pin<P> {
+   |                       ^^^^^ required by this bound in `Pin::<P>::new`
+...
+   |     pub const fn new(pointer: P) -> Pin<P> {
+   |                  --- required by a bound in this associated function
 
 error[E0599]: no method named `project` found for struct `Pin<&mut B>` in the current scope
   --> tests/ui/pin_project/remove-attr-from-struct.rs:43:30
