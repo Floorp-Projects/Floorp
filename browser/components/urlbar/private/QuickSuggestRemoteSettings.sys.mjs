@@ -81,6 +81,7 @@ class _QuickSuggestRemoteSettings {
    *         ],
    *       },
    *     },
+   *     show_less_frequently_cap,
    *   }
    */
   get config() {
@@ -303,12 +304,21 @@ export class SuggestionsMap {
 
   /**
    * Adds a list of suggestion objects to the results map. Each suggestion must
-   * have a `keywords` property.
+   * have a `keywords` property whose value is an array of keyword strings. The
+   * suggestion's keywords will be taken from this array either exactly as they
+   * are specified or by generating new keywords from them; see `mapKeyword`.
    *
    * @param {Array} suggestions
    *   Array of suggestion objects.
+   * @param {Function} mapKeyword
+   *   If null, each suggestion's keywords will be taken from its `keywords`
+   *   array exactly as they are specified. Otherwise, as each suggestion is
+   *   processed, this function will be called for each string in its `keywords`
+   *   array. The function should return an array of strings. The suggestion's
+   *   final list of keywords will be all the keywords returned by this function
+   *   as it is called for each string in `keywords`.
    */
-  async add(suggestions) {
+  async add(suggestions, mapKeyword = null) {
     // There can be many suggestions, and each suggestion can have many
     // keywords. To avoid blocking the main thread for too long, update the map
     // in chunks, and to avoid blocking the UI and other higher priority work,
@@ -329,22 +339,32 @@ export class SuggestionsMap {
           ) {
             let suggestion = suggestions[suggestionIndex];
             if (keywordIndex == suggestion.keywords.length) {
+              // We've added entries for all keywords of the current suggestion.
+              // Move on to the next suggestion.
               suggestionIndex++;
               keywordIndex = 0;
               continue;
             }
-            // If the keyword's only suggestion is `suggestion`, store it
-            // directly as the value. Otherwise store an array of suggestions.
-            // For details, see the `#suggestionsByKeyword` comment.
-            let keyword = suggestion.keywords[keywordIndex];
-            let object = this.#suggestionsByKeyword.get(keyword);
-            if (!object) {
-              this.#suggestionsByKeyword.set(keyword, suggestion);
-            } else if (!Array.isArray(object)) {
-              this.#suggestionsByKeyword.set(keyword, [object, suggestion]);
-            } else {
-              object.push(suggestion);
+
+            let originalKeyword = suggestion.keywords[keywordIndex];
+            let keywords = mapKeyword?.(originalKeyword) ?? [originalKeyword];
+            for (let keyword of keywords) {
+              // If the keyword's only suggestion is `suggestion`, store it
+              // directly as the value. Otherwise store an array of unique
+              // suggestions. See the `#suggestionsByKeyword` comment.
+              let object = this.#suggestionsByKeyword.get(keyword);
+              if (!object) {
+                this.#suggestionsByKeyword.set(keyword, suggestion);
+              } else {
+                let isArray = Array.isArray(object);
+                if (!isArray && object != suggestion) {
+                  this.#suggestionsByKeyword.set(keyword, [object, suggestion]);
+                } else if (isArray && !object.includes(suggestion)) {
+                  object.push(suggestion);
+                }
+              }
             }
+
             keywordIndex++;
             indexInChunk++;
           }

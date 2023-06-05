@@ -175,7 +175,20 @@ export class AddonSuggestions extends BaseFeature {
       }
 
       const results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
-      await suggestionsMap.add(results);
+
+      // The keywords in remote settings are full keywords. Map each one to an
+      // array containing the full keyword's first word plus every subsequent
+      // prefix of the full keyword.
+      await suggestionsMap.add(results, fullKeyword => {
+        let keywords = [fullKeyword];
+        let spaceIndex = fullKeyword.search(/\s/);
+        if (spaceIndex >= 0) {
+          for (let i = spaceIndex; i < fullKeyword.length; i++) {
+            keywords.push(fullKeyword.substring(0, i));
+          }
+        }
+        return keywords;
+      });
       if (rs != lazy.QuickSuggestRemoteSettings.rs) {
         return;
       }
@@ -185,8 +198,24 @@ export class AddonSuggestions extends BaseFeature {
   }
 
   async makeResult(queryContext, suggestion, searchString) {
-    if (!this.isEnabled || searchString.length < this.#minKeywordLength) {
+    if (!this.isEnabled) {
+      // The feature is disabled on the client, but Merino may still return
+      // addon suggestions anyway, and we filter them out here.
       return null;
+    }
+
+    // If the user hasn't clicked the "Show less frequently" command, the
+    // suggestion can be shown. Otherwise, the suggestion can be shown if the
+    // user typed more than one word with at least `showLessFrequentlyCount`
+    // characters after the first word, including spaces.
+    if (this.showLessFrequentlyCount) {
+      let spaceIndex = searchString.search(/\s/);
+      if (
+        spaceIndex < 0 ||
+        searchString.length - spaceIndex < this.showLessFrequentlyCount
+      ) {
+        return null;
+      }
     }
 
     // If is_top_pick is not specified, handle it as top pick suggestion.
@@ -294,7 +323,7 @@ export class AddonSuggestions extends BaseFeature {
   getResultCommands(result) {
     const commands = [];
 
-    if (this.#canIncrementMinKeywordLength) {
+    if (this.canShowLessFrequently) {
       commands.push({
         name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
         l10n: {
@@ -349,7 +378,7 @@ export class AddonSuggestions extends BaseFeature {
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         queryContext.view.acknowledgeFeedback(result);
-        this.#incrementMinKeywordLength();
+        this.incrementShowLessFrequentlyCount();
         break;
     }
   }
@@ -369,26 +398,26 @@ export class AddonSuggestions extends BaseFeature {
     return "full";
   }
 
-  #incrementMinKeywordLength() {
-    if (this.#canIncrementMinKeywordLength) {
+  incrementShowLessFrequentlyCount() {
+    if (this.canShowLessFrequently) {
       lazy.UrlbarPrefs.set(
-        "addons.minKeywordLength",
-        this.#minKeywordLength + 1
+        "addons.showLessFrequentlyCount",
+        this.showLessFrequentlyCount + 1
       );
     }
   }
 
-  get #minKeywordLength() {
-    const minLength =
-      lazy.UrlbarPrefs.get("addons.minKeywordLength") ||
-      lazy.UrlbarPrefs.get("addonsKeywordsMinimumLength") ||
-      0;
-    return Math.max(minLength, 0);
+  get showLessFrequentlyCount() {
+    const count = lazy.UrlbarPrefs.get("addons.showLessFrequentlyCount") || 0;
+    return Math.max(count, 0);
   }
 
-  get #canIncrementMinKeywordLength() {
-    const cap = lazy.UrlbarPrefs.get("addonsKeywordsMinimumLengthCap") || 0;
-    return !cap || this.#minKeywordLength < cap;
+  get canShowLessFrequently() {
+    const cap =
+      lazy.UrlbarPrefs.get("addonsShowLessFrequentlyCap") ||
+      lazy.QuickSuggestRemoteSettings.config.show_less_frequently_cap ||
+      0;
+    return !cap || this.showLessFrequentlyCount < cap;
   }
 
   #suggestionsMap = null;
