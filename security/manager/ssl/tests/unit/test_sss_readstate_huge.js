@@ -64,7 +64,7 @@ function run_test() {
     // The 0s will all get squashed down into one 0 when they are read.
     // This is just to make the file size large (>2MB).
     lines.push(
-      `example${i}.example.com:HSTS\t` +
+      `example${i}.example.com\t` +
         "0000000000000000000000000000000000000000000000000\t" +
         "00000000000000000000000000000000000000\t" +
         `${expiryTime},1,0000000000000000000000000000000000000000000000000000000000000000000000000`

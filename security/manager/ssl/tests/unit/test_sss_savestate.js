@@ -49,34 +49,34 @@ function checkStateWritten(aSubject, aTopic, aData) {
   // each sites[url][1] should be SecurityPropertySet (i.e. 1).
   // sites[url][2] corresponds to includeSubdomains, so every other one should
   // be set (i.e. 1);
-  if (sites["includesubdomains.preloaded.test:HSTS"][1] != 1) {
+  if (sites["includesubdomains.preloaded.test"][1] != 1) {
     return;
   }
-  if (sites["includesubdomains.preloaded.test:HSTS"][2] != 0) {
+  if (sites["includesubdomains.preloaded.test"][2] != 0) {
     return;
   }
-  if (sites["a.example.com:HSTS"][1] != 1) {
+  if (sites["a.example.com"][1] != 1) {
     return;
   }
-  if (sites["a.example.com:HSTS"][2] != 1) {
+  if (sites["a.example.com"][2] != 1) {
     return;
   }
-  if (sites["b.example.com:HSTS"][1] != 1) {
+  if (sites["b.example.com"][1] != 1) {
     return;
   }
-  if (sites["b.example.com:HSTS"][2] != 0) {
+  if (sites["b.example.com"][2] != 0) {
     return;
   }
-  if (sites["c.c.example.com:HSTS"][1] != 1) {
+  if (sites["c.c.example.com"][1] != 1) {
     return;
   }
-  if (sites["c.c.example.com:HSTS"][2] != 1) {
+  if (sites["c.c.example.com"][2] != 1) {
     return;
   }
-  if (sites["d.example.com:HSTS"][1] != 1) {
+  if (sites["d.example.com"][1] != 1) {
     return;
   }
-  if (sites["d.example.com:HSTS"][2] != 0) {
+  if (sites["d.example.com"][2] != 0) {
     return;
   }
 

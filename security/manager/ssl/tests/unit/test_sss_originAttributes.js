@@ -92,6 +92,12 @@ function run_test() {
     }
   }
 
+  doTest(
+    { partitionKey: "(http,example.com,8443)" },
+    { partitionKey: "(https,example.com)" },
+    true
+  );
+
   testInvalidOriginAttributes(undefined);
   testInvalidOriginAttributes(null);
   testInvalidOriginAttributes(1);
