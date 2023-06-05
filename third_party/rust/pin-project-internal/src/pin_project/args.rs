@@ -16,10 +16,9 @@ pub(super) fn parse_args(attrs: &[Attribute]) -> Result<Args> {
     impl Parse for Input {
         fn parse(input: ParseStream<'_>) -> Result<Self> {
             Ok(Self((|| {
-                let content = input.parenthesized().ok()?;
-                let private = content.parse::<Ident>().ok()?;
+                let private = input.parse::<Ident>().ok()?;
                 if private == "__private" {
-                    content.parenthesized().ok()?.parse::<TokenStream>().ok()
+                    input.parenthesized().ok()?.parse::<TokenStream>().ok()
                 } else {
                     None
                 }
@@ -31,10 +30,10 @@ pub(super) fn parse_args(attrs: &[Attribute]) -> Result<Args> {
         bail!(attr, "duplicate #[pin_project] attribute");
     }
 
-    let mut attrs = attrs.iter().filter(|attr| attr.path.is_ident(PIN));
+    let mut attrs = attrs.iter().filter(|attr| attr.path().is_ident(PIN));
 
     let prev = if let Some(attr) = attrs.next() {
-        (attr, syn::parse2::<Input>(attr.tokens.clone()).unwrap().0)
+        (attr, syn::parse2::<Input>(attr.meta.require_list()?.tokens.clone())?.0)
     } else {
         // This only fails if another macro removes `#[pin]`.
         bail!(TokenStream::new(), "#[pin_project] attribute has been removed");
@@ -46,7 +45,7 @@ pub(super) fn parse_args(attrs: &[Attribute]) -> Result<Args> {
         // has the same span as `#[pin_project]`, it is possible
         // that a useless error message will be generated.
         // So, use the span of `prev_attr` if it is not a valid attribute.
-        let res = syn::parse2::<Input>(attr.tokens.clone()).unwrap().0;
+        let res = syn::parse2::<Input>(attr.meta.require_list()?.tokens.clone())?.0;
         let span = match (prev_res, res) {
             (Some(_), _) => attr,
             (None, _) => prev_attr,

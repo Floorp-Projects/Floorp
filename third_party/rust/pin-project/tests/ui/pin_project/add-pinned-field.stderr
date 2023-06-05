@@ -1,20 +1,21 @@
 error[E0277]: `PhantomPinned` cannot be unpinned
-  --> tests/ui/pin_project/add-pinned-field.rs:21:5
+  --> tests/ui/pin_project/add-pinned-field.rs:21:16
    |
 21 |     is_unpin::<Foo>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^^^ within `__Foo<'_>`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |                ^^^ within `__Foo<'_>`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `__Foo<'_>`
   --> tests/ui/pin_project/add-pinned-field.rs:8:8
    |
 8  | struct Foo {
    |        ^^^
-note: required because of the requirements on the impl of `Unpin` for `Foo`
+note: required for `Foo` to implement `Unpin`
   --> tests/ui/pin_project/add-pinned-field.rs:6:1
    |
 6  | #[pin_project]
-   | ^^^^^^^^^^^^^^
+   | ^^^^^^^^^^^^^^ unsatisfied trait bound introduced in this `derive` macro
 7  | #[add_pinned_field]
 8  | struct Foo {
    |        ^^^
@@ -26,22 +27,23 @@ note: required by a bound in `is_unpin`
    = note: this error originates in the derive macro `::pin_project::__private::__PinProjectInternalDerive` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: `PhantomPinned` cannot be unpinned
-  --> tests/ui/pin_project/add-pinned-field.rs:22:5
+  --> tests/ui/pin_project/add-pinned-field.rs:22:16
    |
 22 |     is_unpin::<Bar>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^^^ within `__Bar<'_>`, the trait `Unpin` is not implemented for `PhantomPinned`
+   |                ^^^ within `__Bar<'_>`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: consider using `Box::pin`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
 note: required because it appears within the type `__Bar<'_>`
   --> tests/ui/pin_project/add-pinned-field.rs:15:8
    |
 15 | struct Bar {
    |        ^^^
-note: required because of the requirements on the impl of `Unpin` for `Bar`
+note: required for `Bar` to implement `Unpin`
   --> tests/ui/pin_project/add-pinned-field.rs:14:1
    |
 14 | #[pin_project]
-   | ^^^^^^^^^^^^^^
+   | ^^^^^^^^^^^^^^ unsatisfied trait bound introduced in this `derive` macro
 15 | struct Bar {
    |        ^^^
 note: required by a bound in `is_unpin`

@@ -1,4 +1,4 @@
-error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Foo<_, _>`
+error[E0119]: conflicting implementations of trait `Unpin` for type `Foo<_, _>`
   --> tests/ui/unsafe_unpin/conflict-unpin.rs:3:15
    |
 3  | #[pin_project(UnsafeUnpin)] //~ ERROR E0119
@@ -9,7 +9,7 @@ error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type
    |
    = note: upstream crates may add a new impl of trait `_::_pin_project::UnsafeUnpin` for type `_::_pin_project::__private::Wrapper<'_, Foo<_, _>>` in future versions
 
-error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Bar<_, _>`
+error[E0119]: conflicting implementations of trait `Unpin` for type `Bar<_, _>`
   --> tests/ui/unsafe_unpin/conflict-unpin.rs:12:15
    |
 12 | #[pin_project(UnsafeUnpin)] //~ ERROR E0119
@@ -20,7 +20,7 @@ error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type
    |
    = note: upstream crates may add a new impl of trait `_::_pin_project::UnsafeUnpin` for type `_::_pin_project::__private::Wrapper<'_, Bar<_, _>>` in future versions
 
-error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Baz<_, _>`
+error[E0119]: conflicting implementations of trait `Unpin` for type `Baz<_, _>`
   --> tests/ui/unsafe_unpin/conflict-unpin.rs:21:15
    |
 21 | #[pin_project(UnsafeUnpin)] //~ ERROR E0119

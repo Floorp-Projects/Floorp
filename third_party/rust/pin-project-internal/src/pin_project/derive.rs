@@ -1,9 +1,9 @@
 use proc_macro2::{Delimiter, Group, Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, ToTokens};
 use syn::{
-    parse_quote, token, visit_mut::VisitMut, Attribute, Data, DataEnum, DeriveInput, Error, Field,
-    Fields, FieldsNamed, FieldsUnnamed, Generics, Ident, Index, Lifetime, LifetimeDef, Meta,
-    MetaList, MetaNameValue, NestedMeta, Result, Token, Type, Variant, Visibility, WhereClause,
+    parse_quote, punctuated::Punctuated, token, visit_mut::VisitMut, Attribute, Data, DataEnum,
+    DeriveInput, Error, Field, Fields, FieldsNamed, FieldsUnnamed, Generics, Ident, Index,
+    Lifetime, LifetimeParam, Meta, Result, Token, Type, Variant, Visibility, WhereClause,
 };
 
 use super::{
@@ -235,7 +235,7 @@ impl<'a> Context<'a> {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 enum TypeKind {
     Enum,
     Struct,
@@ -305,7 +305,7 @@ fn validate_struct(ident: &Ident, fields: &Fields) -> Result<()> {
 fn validate_enum(brace_token: token::Brace, variants: &Variants) -> Result<()> {
     if variants.is_empty() {
         return Err(Error::new(
-            brace_token.span,
+            brace_token.span.join(),
             "#[pin_project] attribute may not be used on enums without variants",
         ));
     }
@@ -569,7 +569,9 @@ fn visit_fields<'a>(
     let mut proj_move = TokenStream::new();
     let mut pinned_bindings = Vec::with_capacity(fields.len());
 
-    for (i, Field { attrs, vis, ident, colon_token, ty }) in fields.iter().enumerate() {
+    for (i, Field { attrs, vis, ident, colon_token, ty, mutability: _ }) in
+        fields.iter().enumerate()
+    {
         let binding = ident.clone().unwrap_or_else(|| format_ident!("_{}", i));
         proj_pat.extend(quote!(#binding,));
         let lifetime = &cx.proj.lifetime;
@@ -768,7 +770,7 @@ fn make_unpin_impl(cx: &Context<'_>) -> TokenStream {
             // This ensures that any unused type parameters
             // don't end up with `Unpin` bounds.
             let lifetime_fields = cx.orig.generics.lifetimes().enumerate().map(
-                |(i, LifetimeDef { lifetime, .. })| {
+                |(i, LifetimeParam { lifetime, .. })| {
                     let field_ident = format_ident!("__lifetime{}", i);
                     quote!(#field_ident: &#lifetime ())
                 },
@@ -1016,33 +1018,26 @@ fn make_proj_impl(
 /// - Generates a function that borrows fields without an unsafe block and
 ///   forbidding `unaligned_references` lint.
 fn ensure_not_packed(orig: &OriginalType<'_>, fields: Option<&Fields>) -> Result<TokenStream> {
-    for meta in orig.attrs.iter().filter_map(|attr| attr.parse_meta().ok()) {
-        if let Meta::List(list) = meta {
+    for attr in orig.attrs {
+        if let Meta::List(ref list) = attr.meta {
             if list.path.is_ident("repr") {
-                for repr in list.nested.iter() {
-                    match repr {
-                        NestedMeta::Meta(Meta::Path(path))
-                        | NestedMeta::Meta(Meta::List(MetaList { path, .. }))
-                        | NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, .. })) => {
-                            if path.is_ident("packed") {
-                                let msg = if fields.is_none() {
-                                    // #[repr(packed)] cannot be apply on enums and will be rejected by rustc.
-                                    // However, we should not rely on the behavior of rustc that rejects this.
-                                    // https://github.com/taiki-e/pin-project/pull/324#discussion_r612388001
-                                    "#[repr(packed)] attribute should be applied to a struct or union"
-                                } else if let NestedMeta::Meta(Meta::NameValue(..)) = repr {
-                                    // #[repr(packed = "")] is not valid format of #[repr(packed)] and will be
-                                    // rejected by rustc.
-                                    // However, we should not rely on the behavior of rustc that rejects this.
-                                    // https://github.com/taiki-e/pin-project/pull/324#discussion_r612388001
-                                    "#[repr(packed)] attribute should not be name-value pair"
-                                } else {
-                                    "#[pin_project] attribute may not be used on #[repr(packed)] types"
-                                };
-                                bail!(repr, msg);
-                            }
-                        }
-                        NestedMeta::Lit(..) => {}
+                for repr in list.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)? {
+                    if repr.path().is_ident("packed") {
+                        let msg = if fields.is_none() {
+                            // #[repr(packed)] cannot be apply on enums and will be rejected by rustc.
+                            // However, we should not rely on the behavior of rustc that rejects this.
+                            // https://github.com/taiki-e/pin-project/pull/324#discussion_r612388001
+                            "#[repr(packed)] attribute should be applied to a struct or union"
+                        } else if repr.require_name_value().is_ok() {
+                            // #[repr(packed = "")] is not valid format of #[repr(packed)] and will be
+                            // rejected by rustc.
+                            // However, we should not rely on the behavior of rustc that rejects this.
+                            // https://github.com/taiki-e/pin-project/pull/324#discussion_r612388001
+                            "#[repr(packed)] attribute should not be name-value pair"
+                        } else {
+                            "#[pin_project] attribute may not be used on #[repr(packed)] types"
+                        };
+                        bail!(repr, msg);
                     }
                 }
             }
@@ -1063,10 +1058,10 @@ fn ensure_not_packed(orig: &OriginalType<'_>, fields: Option<&Fields>) -> Result
     // ```rust
     // #[forbid(unaligned_references)]
     // fn assert_not_repr_packed(val: &MyStruct) {
-    //     let _field1 = &val.field1;
-    //     let _field2 = &val.field2;
+    //     let _field_1 = &val.field_1;
+    //     let _field_2 = &val.field_2;
     //     ...
-    //     let _fieldn = &val.fieldn;
+    //     let _field_n = &val.field_n;
     // }
     // ```
     //

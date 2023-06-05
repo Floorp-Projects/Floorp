@@ -1,26 +1,26 @@
-error: unexpected token: `()`
+error: unexpected token in attribute
  --> tests/ui/pin_project/invalid.rs:6:14
   |
-6 |         #[pin()] //~ ERROR unexpected token
-  |              ^^
+6 |         #[pin()] //~ ERROR unexpected token in attribute
+  |              ^
 
-error: unexpected token: `(foo)`
+error: unexpected token in attribute
   --> tests/ui/pin_project/invalid.rs:11:29
    |
-11 |     struct TupleStruct(#[pin(foo)] ()); //~ ERROR unexpected token
-   |                             ^^^^^
+11 |     struct TupleStruct(#[pin(foo)] ()); //~ ERROR unexpected token in attribute
+   |                             ^
 
-error: unexpected token: `(foo)`
+error: unexpected token in attribute
   --> tests/ui/pin_project/invalid.rs:15:16
    |
-15 |         V(#[pin(foo)] ()), //~ ERROR unexpected token
-   |                ^^^^^
+15 |         V(#[pin(foo)] ()), //~ ERROR unexpected token in attribute
+   |                ^
 
-error: unexpected token: `(foo)`
+error: unexpected token in attribute
   --> tests/ui/pin_project/invalid.rs:21:18
    |
-21 |             #[pin(foo)] //~ ERROR unexpected token
-   |                  ^^^^^
+21 |             #[pin(foo)] //~ ERROR unexpected token in attribute
+   |                  ^
 
 error: duplicate #[pin] attribute
   --> tests/ui/pin_project/invalid.rs:33:9

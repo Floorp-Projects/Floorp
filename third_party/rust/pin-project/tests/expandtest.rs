@@ -1,4 +1,5 @@
 #![cfg(not(miri))]
+#![cfg(not(careful))]
 #![warn(rust_2018_idioms, single_use_lifetimes)]
 
 use std::{

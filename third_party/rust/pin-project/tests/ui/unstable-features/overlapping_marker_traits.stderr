@@ -6,7 +6,7 @@ error[E0557]: feature has been removed
    |
    = note: removed in favor of `#![feature(marker_trait_attr)]`
 
-error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Struct<_>`
+error[E0119]: conflicting implementations of trait `Unpin` for type `Struct<_>`
   --> tests/ui/unstable-features/overlapping_marker_traits.rs:17:1
    |
 17 | #[pin_project]

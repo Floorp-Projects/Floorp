@@ -1,16 +1,18 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::{
-    parse_quote, spanned::Spanned, visit_mut::VisitMut, Error, FnArg, GenericArgument, ImplItem,
-    ItemImpl, Pat, PatIdent, Path, PathArguments, Result, ReturnType, Signature, Token, Type,
-    TypePath, TypeReference,
+    parse_quote, spanned::Spanned, token::Colon, visit_mut::VisitMut, Error, FnArg,
+    GenericArgument, Ident, ImplItem, ItemImpl, Pat, PatIdent, PatType, Path, PathArguments,
+    Result, ReturnType, Signature, Token, Type, TypePath, TypeReference,
 };
 
-use crate::utils::{parse_as_empty, prepend_underscore_to_self, ReplaceReceiver, SliceExt};
+use crate::utils::{ReplaceReceiver, SliceExt};
 
 pub(crate) fn attribute(args: &TokenStream, mut input: ItemImpl) -> TokenStream {
     let res = (|| -> Result<()> {
-        parse_as_empty(args)?;
+        if !args.is_empty() {
+            bail!(args, "unexpected argument: `{}`", args)
+        }
         validate_impl(&input)?;
         expand_impl(&mut input);
         Ok(())
@@ -85,7 +87,7 @@ fn validate_impl(item: &ItemImpl) -> Result<()> {
         ImplItem::Type(item) => {
             bail!(item, "type `{}` is not a member of trait `PinnedDrop`", item.ident)
         }
-        ImplItem::Method(method) => {
+        ImplItem::Fn(method) => {
             validate_sig(&method.sig)?;
             if i == 0 {
                 Ok(())
@@ -124,14 +126,15 @@ fn validate_sig(sig: &Signature) -> Result<()> {
 
     match sig.inputs.len() {
         1 => {}
-        0 => return Err(Error::new(sig.paren_token.span, INVALID_ARGUMENT)),
+        0 => return Err(Error::new(sig.paren_token.span.join(), INVALID_ARGUMENT)),
         _ => bail!(sig.inputs, INVALID_ARGUMENT),
     }
 
-    if let Some(FnArg::Typed(arg)) = sig.receiver() {
+    if let Some(arg) = sig.receiver() {
         // (mut) self: <path>
         if let Some(path) = get_ty_path(&arg.ty) {
-            let ty = path.segments.last().unwrap();
+            let ty =
+                path.segments.last().expect("Type paths should always have at least one segment");
             if let PathArguments::AngleBracketed(args) = &ty.arguments {
                 // (mut) self: (<path>::)<ty><&mut <elem>..>
                 if let Some(GenericArgument::Type(Type::Reference(TypeReference {
@@ -175,25 +178,16 @@ fn validate_sig(sig: &Signature) -> Result<()> {
 // }
 //
 fn expand_impl(item: &mut ItemImpl) {
-    fn get_arg_pat(arg: &mut FnArg) -> Option<&mut PatIdent> {
-        if let FnArg::Typed(arg) = arg {
-            if let Pat::Ident(ident) = &mut *arg.pat {
-                return Some(ident);
-            }
-        }
-        None
-    }
-
     // `PinnedDrop` is a private trait and should not appear in docs.
     item.attrs.push(parse_quote!(#[doc(hidden)]));
 
-    let path = &mut item.trait_.as_mut().unwrap().1;
+    let path = &mut item.trait_.as_mut().expect("unexpected inherent impl").1;
     *path = parse_quote_spanned! { path.span() =>
         ::pin_project::__private::PinnedDrop
     };
 
     let method =
-        if let ImplItem::Method(method) = &mut item.items[0] { method } else { unreachable!() };
+        if let ImplItem::Fn(method) = &mut item.items[0] { method } else { unreachable!() };
 
     // `fn drop(mut self: Pin<&mut Self>)` -> `fn __drop_inner<T>(mut __self: Pin<&mut Receiver>)`
     let drop_inner = {
@@ -203,8 +197,20 @@ fn expand_impl(item: &mut ItemImpl) {
         drop_inner.block.stmts.insert(0, parse_quote!(fn #ident() {}));
         drop_inner.sig.ident = ident;
         drop_inner.sig.generics = item.generics.clone();
-        let self_pat = get_arg_pat(&mut drop_inner.sig.inputs[0]).unwrap();
-        prepend_underscore_to_self(&mut self_pat.ident);
+        let receiver = drop_inner.sig.receiver().expect("drop() should have a receiver").clone();
+        let pat = Box::new(Pat::Ident(PatIdent {
+            attrs: Vec::new(),
+            by_ref: None,
+            mutability: receiver.mutability,
+            ident: Ident::new("__self", receiver.self_token.span()),
+            subpat: None,
+        }));
+        drop_inner.sig.inputs[0] = FnArg::Typed(PatType {
+            attrs: receiver.attrs,
+            pat,
+            colon_token: Colon::default(),
+            ty: receiver.ty,
+        });
         let self_ty = if let Type::Path(ty) = &*item.self_ty { ty } else { unreachable!() };
         let mut visitor = ReplaceReceiver(self_ty);
         visitor.visit_signature_mut(&mut drop_inner.sig);
@@ -214,9 +220,12 @@ fn expand_impl(item: &mut ItemImpl) {
 
     // `fn drop(mut self: Pin<&mut Self>)` -> `unsafe fn drop(self: Pin<&mut Self>)`
     method.sig.unsafety = Some(<Token![unsafe]>::default());
-    let self_pat = get_arg_pat(&mut method.sig.inputs[0]).unwrap();
-    self_pat.mutability = None;
-    let self_token = &self_pat.ident;
+    let self_token = if let FnArg::Receiver(ref mut rec) = method.sig.inputs[0] {
+        rec.mutability = None;
+        &rec.self_token
+    } else {
+        panic!("drop() should have a receiver")
+    };
 
     method.block.stmts = parse_quote! {
         #[allow(clippy::needless_pass_by_value)] // This lint does not warn the receiver.

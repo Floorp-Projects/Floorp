@@ -1,26 +1,19 @@
-error: reference to packed field is unaligned
-  --> tests/ui/pin_project/unaligned_references.rs:17:13
+error[E0793]: reference to packed field is unaligned
+  --> tests/ui/pin_project/unaligned_references.rs:15:13
    |
-17 |     let _ = &a.f; //~ ERROR reference to packed field is unaligned
+15 |     let _ = &a.f; //~ ERROR reference to packed field is unaligned
    |             ^^^^
    |
-note: the lint level is defined here
-  --> tests/ui/pin_project/unaligned_references.rs:1:11
-   |
-1  | #![forbid(unaligned_references)]
-   |           ^^^^^^^^^^^^^^^^^^^^
-   = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
-   = note: for more information, see issue #82523 <https://github.com/rust-lang/rust/issues/82523>
-   = note: fields of packed structs are not properly aligned, and creating a misaligned reference is undefined behavior (even if that reference is never dereferenced)
+   = note: packed structs are only aligned by one byte, and many modern architectures penalize unaligned field accesses
+   = note: creating a misaligned reference is undefined behavior (even if that reference is never dereferenced)
    = help: copy the field contents to a local variable, or replace the reference with a raw pointer and use `read_unaligned`/`write_unaligned` (loads and stores via `*p` must be properly aligned even when using raw pointers)
 
-error: reference to packed field is unaligned
-  --> tests/ui/pin_project/unaligned_references.rs:20:13
+error[E0793]: reference to packed field is unaligned
+  --> tests/ui/pin_project/unaligned_references.rs:18:13
    |
-20 |     let _ = &b.f; //~ ERROR reference to packed field is unaligned
+18 |     let _ = &b.f; //~ ERROR reference to packed field is unaligned
    |             ^^^^
    |
-   = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
-   = note: for more information, see issue #82523 <https://github.com/rust-lang/rust/issues/82523>
-   = note: fields of packed structs are not properly aligned, and creating a misaligned reference is undefined behavior (even if that reference is never dereferenced)
+   = note: packed structs are only aligned by one byte, and many modern architectures penalize unaligned field accesses
+   = note: creating a misaligned reference is undefined behavior (even if that reference is never dereferenced)
    = help: copy the field contents to a local variable, or replace the reference with a raw pointer and use `read_unaligned`/`write_unaligned` (loads and stores via `*p` must be properly aligned even when using raw pointers)

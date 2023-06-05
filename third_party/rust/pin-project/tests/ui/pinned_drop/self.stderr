@@ -37,7 +37,7 @@ error[E0308]: mismatched types
   --> tests/ui/pinned_drop/self.rs:39:25
    |
 39 |             let _: () = self; //~ ERROR E0308
-   |                    --   ^^^^ expected `()`, found struct `Pin`
+   |                    --   ^^^^ expected `()`, found `Pin<&mut S>`
    |                    |
    |                    expected due to this
    |
@@ -48,15 +48,15 @@ error[E0308]: mismatched types
   --> tests/ui/pinned_drop/self.rs:52:25
    |
 52 |             let _: () = self; //~ ERROR E0308
-   |                    --   ^^^^ expected `()`, found struct `Pin`
+   |                    --   ^^^^ expected `()`, found `Pin<&mut E>`
    |                    |
    |                    expected due to this
    |
    = note: expected unit type `()`
                  found struct `Pin<&mut E>`
 
-error[E0533]: expected unit struct, unit variant or constant, found struct variant `E::V`
+error[E0533]: expected value, found struct variant `E::V`
   --> tests/ui/pinned_drop/self.rs:53:27
    |
 53 |             let _: Self = Self::V; //~ ERROR E0533
-   |                           ^^^^^^^
+   |                           ^^^^^^^ not a value

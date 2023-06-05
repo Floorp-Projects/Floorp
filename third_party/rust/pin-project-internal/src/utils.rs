@@ -8,7 +8,7 @@ use syn::{
     punctuated::Punctuated,
     token,
     visit_mut::{self, VisitMut},
-    Attribute, ExprPath, ExprStruct, Generics, Ident, Item, Lifetime, LifetimeDef, Macro, PatPath,
+    Attribute, ExprPath, ExprStruct, Generics, Ident, Item, Lifetime, LifetimeParam, Macro,
     PatStruct, PatTupleStruct, Path, PathArguments, PredicateType, QSelf, Result, Token, Type,
     TypeParamBound, TypePath, Variant, Visibility, WherePredicate,
 };
@@ -42,7 +42,7 @@ pub(crate) fn determine_lifetime_name(lifetime_name: &mut String, generics: &mut
     struct CollectLifetimes(Vec<String>);
 
     impl VisitMut for CollectLifetimes {
-        fn visit_lifetime_def_mut(&mut self, def: &mut LifetimeDef) {
+        fn visit_lifetime_param_mut(&mut self, def: &mut LifetimeParam) {
             self.0.push(def.lifetime.to_string());
         }
     }
@@ -84,7 +84,7 @@ pub(crate) fn insert_lifetime_and_bound(
 pub(crate) fn insert_lifetime(generics: &mut Generics, lifetime: Lifetime) {
     generics.lt_token.get_or_insert_with(<Token![<]>::default);
     generics.gt_token.get_or_insert_with(<Token![>]>::default);
-    generics.params.insert(0, LifetimeDef::new(lifetime).into());
+    generics.params.insert(0, LifetimeParam::new(lifetime).into());
 }
 
 /// Determines the visibility of the projected types and projection methods.
@@ -93,21 +93,9 @@ pub(crate) fn insert_lifetime(generics: &mut Generics, lifetime: Lifetime) {
 /// Otherwise, returned visibility is the same as given visibility.
 pub(crate) fn determine_visibility(vis: &Visibility) -> Visibility {
     if let Visibility::Public(token) = vis {
-        parse_quote_spanned!(token.pub_token.span => pub(crate))
+        parse_quote_spanned!(token.span => pub(crate))
     } else {
         vis.clone()
-    }
-}
-
-/// Checks if `tokens` is an empty `TokenStream`.
-///
-/// This is almost equivalent to `syn::parse2::<Nothing>()`, but produces
-/// a better error message and does not require ownership of `tokens`.
-pub(crate) fn parse_as_empty(tokens: &TokenStream) -> Result<()> {
-    if tokens.is_empty() {
-        Ok(())
-    } else {
-        bail!(tokens, "unexpected token: `{}`", tokens)
     }
 }
 
@@ -146,11 +134,11 @@ impl SliceExt for [Attribute] {
     fn position_exact(&self, ident: &str) -> Result<Option<usize>> {
         self.iter()
             .try_fold((0, None), |(i, mut prev), attr| {
-                if attr.path.is_ident(ident) {
+                if attr.path().is_ident(ident) {
                     if prev.replace(i).is_some() {
                         bail!(attr, "duplicate #[{}] attribute", ident);
                     }
-                    parse_as_empty(&attr.tokens)?;
+                    attr.meta.require_path_only()?;
                 }
                 Ok((i + 1, prev))
             })
@@ -158,7 +146,7 @@ impl SliceExt for [Attribute] {
     }
 
     fn find(&self, ident: &str) -> Option<&Attribute> {
-        self.iter().position(|attr| attr.path.is_ident(ident)).map(|i| &self[i])
+        self.iter().position(|attr| attr.path().is_ident(ident)).map(|i| &self[i])
     }
 }
 
@@ -333,13 +321,6 @@ impl VisitMut for ReplaceReceiver<'_> {
     fn visit_expr_struct_mut(&mut self, expr: &mut ExprStruct) {
         self.self_to_expr_path(&mut expr.path);
         visit_mut::visit_expr_struct_mut(self, expr);
-    }
-
-    fn visit_pat_path_mut(&mut self, pat: &mut PatPath) {
-        if pat.qself.is_none() {
-            self.self_to_qself(&mut pat.qself, &mut pat.path);
-        }
-        visit_mut::visit_pat_path_mut(self, pat);
     }
 
     fn visit_pat_struct_mut(&mut self, pat: &mut PatStruct) {

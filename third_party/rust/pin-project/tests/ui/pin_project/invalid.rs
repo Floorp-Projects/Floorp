@@ -3,22 +3,22 @@ mod pin_argument {
 
     #[pin_project]
     struct Struct {
-        #[pin()] //~ ERROR unexpected token
+        #[pin()] //~ ERROR unexpected token in attribute
         f: (),
     }
 
     #[pin_project]
-    struct TupleStruct(#[pin(foo)] ()); //~ ERROR unexpected token
+    struct TupleStruct(#[pin(foo)] ()); //~ ERROR unexpected token in attribute
 
     #[pin_project]
     enum EnumTuple {
-        V(#[pin(foo)] ()), //~ ERROR unexpected token
+        V(#[pin(foo)] ()), //~ ERROR unexpected token in attribute
     }
 
     #[pin_project]
     enum EnumStruct {
         V {
-            #[pin(foo)] //~ ERROR unexpected token
+            #[pin(foo)] //~ ERROR unexpected token in attribute
             f: (),
         },
     }

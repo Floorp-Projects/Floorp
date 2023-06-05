@@ -711,6 +711,7 @@ fn dyn_type() {
     struct TupleStruct4(#[pin] dyn core::fmt::Debug + Send);
 }
 
+#[allow(clippy::trailing_empty_array)] // TODO: how do we handle this? Should propagate #[repr(...)] to ProjectionOwned?
 #[test]
 fn parse_self() {
     macro_rules! mac {

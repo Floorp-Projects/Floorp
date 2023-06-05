@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [1.1.0] - 2023-05-13
+
+- Update `syn` dependency to 2. This increase the minimum supported Rust version from Rust 1.37 to Rust 1.56. ([#352](https://github.com/taiki-e/pin-project/pull/352), [#354](https://github.com/taiki-e/pin-project/pull/354), thanks @maurer and @daxpedda)
+
 ## [1.0.12] - 2022-08-15
 
 - Suppress `unused_tuple_struct_fields` lint in generated code.
@@ -680,7 +684,8 @@ See also [tracking issue for 0.4 release](https://github.com/taiki-e/pin-project
 
 Initial release
 
-[Unreleased]: https://github.com/taiki-e/pin-project/compare/v1.0.12...HEAD
+[Unreleased]: https://github.com/taiki-e/pin-project/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/taiki-e/pin-project/compare/v1.0.12...v1.1.0
 [1.0.12]: https://github.com/taiki-e/pin-project/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/taiki-e/pin-project/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/taiki-e/pin-project/compare/v1.0.9...v1.0.10

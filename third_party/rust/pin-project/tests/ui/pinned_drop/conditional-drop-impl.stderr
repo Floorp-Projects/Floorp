@@ -16,12 +16,15 @@ error[E0277]: `T` cannot be unpinned
 16 | #[pin_project(PinnedDrop)] //~ ERROR E0277
    |               ^^^^^^^^^^ the trait `Unpin` is not implemented for `T`
    |
-   = note: consider using `Box::pin`
-note: required because of the requirements on the impl of `PinnedDrop` for `PinnedDropImpl<T>`
+   = note: consider using the `pin!` macro
+           consider using `Box::pin` if you need to access the pinned value outside of the current scope
+note: required for `PinnedDropImpl<T>` to implement `PinnedDrop`
   --> tests/ui/pinned_drop/conditional-drop-impl.rs:23:16
    |
 23 | impl<T: Unpin> PinnedDrop for PinnedDropImpl<T> {
-   |                ^^^^^^^^^^     ^^^^^^^^^^^^^^^^^
+   |         -----  ^^^^^^^^^^     ^^^^^^^^^^^^^^^^^
+   |         |
+   |         unsatisfied trait bound introduced here
 help: consider restricting type parameter `T`
    |
 17 | struct PinnedDropImpl<T: std::marker::Unpin> {
