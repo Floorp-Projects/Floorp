@@ -183,7 +183,6 @@ describe("sources", () => {
     // set value
     dispatch(actions.setSelectedLocation(cx, location));
     expect(getSelectedLocation(getState())).toEqual({
-      sourceId: source.id,
       ...location,
     });
 

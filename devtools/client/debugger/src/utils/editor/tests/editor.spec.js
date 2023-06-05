@@ -137,7 +137,6 @@ describe("getSourceLocationFromMouseEvent", () => {
     const e = { clientX: 30, clientY: 60 };
     expect(getSourceLocationFromMouseEvent(editor, source, e)).toEqual({
       source,
-      sourceId: source.id,
       line: 7,
       column: 31,
       sourceActorId: undefined,
