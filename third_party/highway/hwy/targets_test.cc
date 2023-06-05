@@ -15,6 +15,7 @@
 
 #include "hwy/targets.h"
 
+#include "hwy/detect_targets.h"
 #include "hwy/tests/test_util-inl.h"
 
 namespace fake {
@@ -25,20 +26,30 @@ namespace fake {
     int64_t FakeFunction(int) { return HWY_##TGT; }                          \
   }
 
+DECLARE_FUNCTION(AVX3_ZEN4)
 DECLARE_FUNCTION(AVX3_DL)
 DECLARE_FUNCTION(AVX3)
 DECLARE_FUNCTION(AVX2)
 DECLARE_FUNCTION(SSE4)
 DECLARE_FUNCTION(SSSE3)
-DECLARE_FUNCTION(NEON)
-DECLARE_FUNCTION(SVE)
-DECLARE_FUNCTION(SVE2)
-DECLARE_FUNCTION(SVE_256)
+DECLARE_FUNCTION(SSE2)
+
 DECLARE_FUNCTION(SVE2_128)
+DECLARE_FUNCTION(SVE_256)
+DECLARE_FUNCTION(SVE2)
+DECLARE_FUNCTION(SVE)
+DECLARE_FUNCTION(NEON)
+DECLARE_FUNCTION(NEON_WITHOUT_AES)
+
+DECLARE_FUNCTION(PPC10)
+DECLARE_FUNCTION(PPC9)
 DECLARE_FUNCTION(PPC8)
+
 DECLARE_FUNCTION(WASM)
 DECLARE_FUNCTION(WASM_EMU256)
+
 DECLARE_FUNCTION(RVV)
+
 DECLARE_FUNCTION(SCALAR)
 DECLARE_FUNCTION(EMU128)
 
@@ -70,19 +81,28 @@ void CallFunctionForTarget(int64_t target, int line) {
 
 void CheckFakeFunction() {
   // When adding a target, also add to DECLARE_FUNCTION above.
+  CallFunctionForTarget(HWY_AVX3_ZEN4, __LINE__);
   CallFunctionForTarget(HWY_AVX3_DL, __LINE__);
   CallFunctionForTarget(HWY_AVX3, __LINE__);
   CallFunctionForTarget(HWY_AVX2, __LINE__);
   CallFunctionForTarget(HWY_SSE4, __LINE__);
   CallFunctionForTarget(HWY_SSSE3, __LINE__);
-  CallFunctionForTarget(HWY_NEON, __LINE__);
-  CallFunctionForTarget(HWY_SVE, __LINE__);
-  CallFunctionForTarget(HWY_SVE2, __LINE__);
-  CallFunctionForTarget(HWY_SVE_256, __LINE__);
+  CallFunctionForTarget(HWY_SSE2, __LINE__);
+
   CallFunctionForTarget(HWY_SVE2_128, __LINE__);
+  CallFunctionForTarget(HWY_SVE_256, __LINE__);
+  CallFunctionForTarget(HWY_SVE2, __LINE__);
+  CallFunctionForTarget(HWY_SVE, __LINE__);
+  CallFunctionForTarget(HWY_NEON, __LINE__);
+  CallFunctionForTarget(HWY_NEON_WITHOUT_AES, __LINE__);
+
+  CallFunctionForTarget(HWY_PPC10, __LINE__);
+  CallFunctionForTarget(HWY_PPC9, __LINE__);
   CallFunctionForTarget(HWY_PPC8, __LINE__);
+
   CallFunctionForTarget(HWY_WASM, __LINE__);
   CallFunctionForTarget(HWY_WASM_EMU256, __LINE__);
+
   CallFunctionForTarget(HWY_RVV, __LINE__);
   // The tables only have space for either HWY_SCALAR or HWY_EMU128; the former
   // is opt-in only.

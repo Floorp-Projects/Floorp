@@ -15,8 +15,6 @@
 
 // Print() function
 
-#include <stdint.h>
-
 #include "hwy/aligned_allocator.h"
 #include "hwy/highway.h"
 #include "hwy/print.h"
@@ -36,8 +34,8 @@ namespace HWY_NAMESPACE {
 
 // Prints lanes around `lane`, in memory order.
 template <class D, class V = VFromD<D>>
-void Print(const D d, const char* caption, VecArg<V> v, size_t lane_u = 0,
-           size_t max_lanes = 7) {
+HWY_API void Print(const D d, const char* caption, V v, size_t lane_u = 0,
+                   size_t max_lanes = 7) {
   const size_t N = Lanes(d);
   using T = TFromD<D>;
   auto lanes = AllocateAligned<T>(N);

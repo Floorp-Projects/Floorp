@@ -21,7 +21,6 @@
 #include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/convolve.h"
@@ -1111,7 +1110,6 @@ void AcStrategyHeuristics::Init(const Image3F& src,
 }
 
 void AcStrategyHeuristics::ProcessRect(const Rect& rect) {
-  PROFILER_FUNC;
   const CompressParams& cparams = enc_state->cparams;
   // In Falcon mode, use DCT8 everywhere and uniform quantization.
   if (cparams.speed_tier >= SpeedTier::kCheetah) {

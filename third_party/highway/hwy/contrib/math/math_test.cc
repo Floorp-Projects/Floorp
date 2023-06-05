@@ -13,21 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS  // before inttypes.h
-#endif
-#include <inttypes.h>
 #include <stdio.h>
 
 #include <cfloat>  // FLT_MAX
 #include <cmath>   // std::abs
-#include <type_traits>
 
 // clang-format off
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/math/math_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
+#include "hwy/highway.h"
 #include "hwy/contrib/math/math-inl.h"
 #include "hwy/tests/test_util-inl.h"
 // clang-format on
@@ -45,7 +40,7 @@ inline Out BitCast(const In& in) {
 }
 
 template <class T, class D>
-HWY_NOINLINE void TestMath(const std::string name, T (*fx1)(T),
+HWY_NOINLINE void TestMath(const char* name, T (*fx1)(T),
                            Vec<D> (*fxN)(D, VecArg<Vec<D>>), D d, T min, T max,
                            uint64_t max_error_ulp) {
   using UintT = MakeUnsigned<T>;
@@ -80,7 +75,7 @@ HWY_NOINLINE void TestMath(const std::string name, T (*fx1)(T),
       const T expected = fx1(value);
 
       // Skip small inputs and outputs on armv7, it flushes subnormals to zero.
-#if HWY_TARGET == HWY_NEON && HWY_ARCH_ARM_V7
+#if HWY_TARGET <= HWY_NEON_WITHOUT_AES && HWY_ARCH_ARM_V7
       if ((std::abs(value) < 1e-37f) || (std::abs(expected) < 1e-37f)) {
         continue;
       }
@@ -89,16 +84,15 @@ HWY_NOINLINE void TestMath(const std::string name, T (*fx1)(T),
       const auto ulp = hwy::detail::ComputeUlpDelta(actual, expected);
       max_ulp = HWY_MAX(max_ulp, ulp);
       if (ulp > max_error_ulp) {
-        fprintf(stderr,
-                "%s: %s(%f) expected %f actual %f ulp %" PRIu64 " max ulp %u\n",
-                hwy::TypeName(T(), Lanes(d)).c_str(), name.c_str(), value,
-                expected, actual, static_cast<uint64_t>(ulp),
+        fprintf(stderr, "%s: %s(%f) expected %f actual %f ulp %g max ulp %u\n",
+                hwy::TypeName(T(), Lanes(d)).c_str(), name, value, expected,
+                actual, static_cast<double>(ulp),
                 static_cast<uint32_t>(max_error_ulp));
       }
     }
   }
-  fprintf(stderr, "%s: %s max_ulp %" PRIu64 "\n",
-          hwy::TypeName(T(), Lanes(d)).c_str(), name.c_str(), max_ulp);
+  fprintf(stderr, "%s: %s max_ulp %g\n", hwy::TypeName(T(), Lanes(d)).c_str(),
+          name, static_cast<double>(max_ulp));
   HWY_ASSERT(max_ulp <= max_error_ulp);
 }
 
@@ -155,7 +149,7 @@ DEFINE_MATH_TEST(Acosh,
   std::acosh, CallAcosh, +1.0f,      +FLT_MAX,    ACosh32ULP(),
   std::acosh, CallAcosh, +1.0,       +DBL_MAX,    3)
 DEFINE_MATH_TEST(Asin,
-  std::asin,  CallAsin,  -1.0f,      +1.0f,       4,  // ARMv7 is 4 instead of 2
+  std::asin,  CallAsin,  -1.0f,      +1.0f,       4,  // 4 ulp on Armv7, not 2
   std::asin,  CallAsin,  -1.0,       +1.0,        2)
 DEFINE_MATH_TEST(Asinh,
   std::asinh, CallAsinh, -FLT_MAX,   +FLT_MAX,    3,
@@ -198,6 +192,128 @@ DEFINE_MATH_TEST(Tanh,
   std::tanh,  CallTanh,  -DBL_MAX,   +DBL_MAX,    4)
 // clang-format on
 
+template <typename T, class D>
+void Atan2TestCases(T /*unused*/, D d, size_t& padded,
+                    AlignedFreeUniquePtr<T[]>& out_y,
+                    AlignedFreeUniquePtr<T[]>& out_x,
+                    AlignedFreeUniquePtr<T[]>& out_expected) {
+  struct YX {
+    T y;
+    T x;
+    T expected;
+  };
+  const T pos = static_cast<T>(1E5);
+  const T neg = static_cast<T>(-1E7);
+  // T{-0} is not enough to get an actual negative zero.
+  const T n0 = static_cast<T>(-0.0);
+  const T inf = GetLane(Inf(d));
+  const T nan = GetLane(NaN(d));
+  const T pi = static_cast<T>(3.141592653589793238);
+  const YX test_cases[] = {// y = ±0, x < 0 or -0
+                           {T{0}, T{-1}, pi},
+                           {n0, T{-2}, -pi},
+                           // y = ±0, x > 0 or +0
+                           {T{0}, T{2}, T{0}},
+                           {n0, T{2}, n0},
+                           // y = ±∞, x finite
+                           {inf, T{3}, pi / 2},
+                           {-inf, T{3}, -pi / 2},
+                           // y = ±∞, x = -∞
+                           {inf, -inf, 3 * pi / 4},
+                           {-inf, -inf, -3 * pi / 4},
+                           // y = ±∞, x = +∞
+                           {inf, inf, pi / 4},
+                           {-inf, inf, -pi / 4},
+                           // y < 0, x = ±0
+                           {T{-2}, T{0}, -pi / 2},
+                           {T{-1}, n0, -pi / 2},
+                           // y > 0, x = ±0
+                           {pos, T{0}, pi / 2},
+                           {T{4}, n0, pi / 2},
+                           // finite y > 0, x = -∞
+                           {pos, -inf, pi},
+                           // finite y < 0, x = -∞
+                           {neg, -inf, -pi},
+                           // finite y > 0, x = +∞
+                           {pos, inf, T{0}},
+                           // finite y < 0, x = +∞
+                           {neg, inf, n0},
+                           // y NaN xor x NaN
+                           {nan, T{0}, nan},
+                           {pos, nan, nan}};
+  const size_t kNumTestCases = sizeof(test_cases) / sizeof(test_cases[0]);
+  const size_t N = Lanes(d);
+  padded = RoundUpTo(kNumTestCases, N);  // allow loading whole vectors
+  out_y = AllocateAligned<T>(padded);
+  out_x = AllocateAligned<T>(padded);
+  out_expected = AllocateAligned<T>(padded);
+  HWY_ASSERT(out_y && out_x);
+  size_t i = 0;
+  for (; i < kNumTestCases; ++i) {
+    out_y[i] = test_cases[i].y;
+    out_x[i] = test_cases[i].x;
+    out_expected[i] = test_cases[i].expected;
+  }
+  for (; i < padded; ++i) {
+    out_y[i] = T{0};
+    out_x[i] = T{0};
+    out_expected[i] = T{0};
+  }
+}
+
+struct TestAtan2 {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T t, D d) {
+    const size_t N = Lanes(d);
+
+    size_t padded;
+    AlignedFreeUniquePtr<T[]> in_y, in_x, expected;
+    Atan2TestCases(t, d, padded, in_y, in_x, expected);
+
+    const Vec<D> tolerance = Set(d, 1E-5);
+    auto lanes = AllocateAligned<T>(N);
+
+    for (size_t i = 0; i < padded; ++i) {
+      const T actual = atan2(in_y[i], in_x[i]);
+      // fprintf(stderr, "%zu exp %f act %f\n", i, expected[i], actual);
+      HWY_ASSERT_EQ(expected[i], actual);
+    }
+    for (size_t i = 0; i < padded; i += N) {
+      const Vec<D> y = Load(d, &in_y[i]);
+      const Vec<D> x = Load(d, &in_x[i]);
+#if HWY_ARCH_ARM_A64
+      // inline to work around incorrect SVE codegen (only first 128 bits used).
+      const Vec<D> actual = Atan2(d, y, x);
+#else
+      const Vec<D> actual = CallAtan2(d, y, x);
+#endif
+      const Vec<D> vexpected = Load(d, &expected[i]);
+
+      const Mask<D> exp_nan = IsNaN(vexpected);
+      const Mask<D> act_nan = IsNaN(actual);
+      HWY_ASSERT_MASK_EQ(d, exp_nan, act_nan);
+
+      // If not NaN, then compare with tolerance
+      const Mask<D> ge = Ge(actual, Sub(vexpected, tolerance));
+      const Mask<D> le = Le(actual, Add(vexpected, tolerance));
+      const Mask<D> ok = Or(act_nan, And(le, ge));
+      if (!AllTrue(d, ok)) {
+        const size_t mismatch =
+            static_cast<size_t>(FindKnownFirstTrue(d, Not(ok)));
+        Store(actual, d, &lanes[0]);
+        fprintf(stderr, "Mismatch for i=%d expected %f actual %f\n",
+                static_cast<int>(i + mismatch), expected[i + mismatch],
+                lanes[mismatch]);
+        HWY_ABORT("");
+      }
+    }
+  }
+};
+
+HWY_NOINLINE void TestAllAtan2() {
+  ForFloatTypes(ForPartialVectors<TestAtan2>());
+}
+
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace hwy
@@ -223,6 +339,7 @@ HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllLog2);
 HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllSin);
 HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllSinh);
 HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllTanh);
+HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllAtan2);
 }  // namespace hwy
 
 #endif

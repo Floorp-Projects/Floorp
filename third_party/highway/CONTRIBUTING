@@ -1,7 +1,12 @@
 # How to Contribute
 
-We'd love to accept your patches and contributions to this project. There are
-just a few small guidelines you need to follow.
+We'd love to accept your patches and contributions to this project.
+Pull requests are very welcome. Bug reports (via issue) are also appreciated.
+
+Looking for a starter project? See the [wishlist](g3doc/op_wishlist.md) for
+some ideas for extensions and codegen improvements.
+
+There are just a few small guidelines you need to follow.
 
 ## Contributor License Agreement
 
@@ -22,10 +27,11 @@ use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
-## Testing
+## API changes
 
-This repository is used by JPEG XL, so major API changes will require
-coordination. Please get in touch with us beforehand, e.g. by raising an issue.
+Highway promises to be backwards-compatible to the current documented API. If
+you would like to propose a change, please raise an issue to discuss how we can
+retain compatibility.
 
 ## Community Guidelines
 

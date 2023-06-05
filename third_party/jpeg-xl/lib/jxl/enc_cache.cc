@@ -13,7 +13,6 @@
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/common.h"
@@ -39,8 +38,6 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
                                ThreadPool* pool, PassesEncoderState* enc_state,
                                ModularFrameEncoder* modular_frame_encoder,
                                AuxOut* aux_out) {
-  PROFILER_FUNC;
-
   PassesSharedState& JXL_RESTRICT shared = enc_state->shared;
 
   enc_state->histogram_idx.resize(shared.frame_dim.num_groups);
@@ -208,8 +205,6 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
 }
 
 void EncCache::InitOnce() {
-  PROFILER_FUNC;
-
   if (num_nzeroes.xsize() == 0) {
     num_nzeroes = Image3I(kGroupDimInBlocks, kGroupDimInBlocks);
   }

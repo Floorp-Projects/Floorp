@@ -13,12 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include <algorithm>
-#include <limits>
-
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/shift_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
@@ -42,6 +36,7 @@ struct TestLeftShifts {
     using TU = MakeUnsigned<T>;
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
 
     // Values to shift
     const auto values = Iota(d, static_cast<T>(kSigned ? -TI(N) : TI(0)));
@@ -82,6 +77,7 @@ struct TestVariableLeftShifts {
     using TU = MakeUnsigned<T>;
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
 
     const auto v0 = Zero(d);
     const auto v1 = Set(d, 1);
@@ -129,6 +125,7 @@ struct TestUnsignedRightShifts {
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
 
     const auto values = Iota(d, 0);
 
@@ -160,11 +157,12 @@ struct TestRotateRight {
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
 
     constexpr size_t kBits = sizeof(T) * 8;
-    const auto mask_shift = Set(d, T{kBits});
+    const Vec<D> mask_shift = Set(d, T{kBits});
     // Cover as many bit positions as possible to test shifting out
-    const auto values = Shl(Set(d, T{1}), And(Iota(d, 0), mask_shift));
+    const Vec<D> values = Shl(Set(d, T{1}), And(Iota(d, 0), mask_shift));
 
     // Rotate by 0
     HWY_ASSERT_VEC_EQ(d, values, RotateRight<0>(values));
@@ -172,21 +170,24 @@ struct TestRotateRight {
     // Rotate by 1
     Store(values, d, expected.get());
     for (size_t i = 0; i < N; ++i) {
-      expected[i] = (expected[i] >> 1) | (expected[i] << (kBits - 1));
+      expected[i] =
+          static_cast<T>((expected[i] >> 1) | (expected[i] << (kBits - 1)));
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), RotateRight<1>(values));
 
     // Rotate by half
     Store(values, d, expected.get());
     for (size_t i = 0; i < N; ++i) {
-      expected[i] = (expected[i] >> (kBits / 2)) | (expected[i] << (kBits / 2));
+      expected[i] = static_cast<T>((expected[i] >> (kBits / 2)) |
+                                   (expected[i] << (kBits / 2)));
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), RotateRight<kBits / 2>(values));
 
     // Rotate by max
     Store(values, d, expected.get());
     for (size_t i = 0; i < N; ++i) {
-      expected[i] = (expected[i] >> (kBits - 1)) | (expected[i] << 1);
+      expected[i] =
+          static_cast<T>((expected[i] >> (kBits - 1)) | (expected[i] << 1));
     }
     HWY_ASSERT_VEC_EQ(d, expected.get(), RotateRight<kBits - 1>(values));
   }
@@ -197,6 +198,7 @@ struct TestVariableUnsignedRightShifts {
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
 
     const auto v0 = Zero(d);
     const auto v1 = Set(d, 1);
@@ -261,6 +263,7 @@ class TestSignedRightShifts {
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
     constexpr T kMin = LimitsMin<T>();
     constexpr T kMax = LimitsMax<T>();
     constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
@@ -314,6 +317,7 @@ struct TestVariableSignedRightShifts {
     using TU = MakeUnsigned<T>;
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
 
     constexpr T kMin = LimitsMin<T>();
     constexpr T kMax = LimitsMax<T>();
@@ -377,38 +381,25 @@ HWY_NOINLINE void TestAllShifts() {
 }
 
 HWY_NOINLINE void TestAllVariableShifts() {
-  const ForPartialVectors<TestLeftShifts</*kSigned=*/false>> shl_u;
+  ForUnsignedTypes(ForPartialVectors<TestLeftShifts</*kSigned=*/false>>());
+  ForUnsignedTypes(ForPartialVectors<TestUnsignedRightShifts>());
+
   const ForPartialVectors<TestLeftShifts</*kSigned=*/true>> shl_s;
-  const ForPartialVectors<TestUnsignedRightShifts> shr_u;
   const ForPartialVectors<TestSignedRightShifts> shr_s;
-
-  shl_u(uint16_t());
-  shr_u(uint16_t());
-
-  shl_u(uint32_t());
-  shr_u(uint32_t());
 
   shl_s(int16_t());
   shr_s(int16_t());
-
   shl_s(int32_t());
   shr_s(int32_t());
 
 #if HWY_HAVE_INTEGER64
-  shl_u(uint64_t());
-  shr_u(uint64_t());
-
   shl_s(int64_t());
   shr_s(int64_t());
 #endif
 }
 
 HWY_NOINLINE void TestAllRotateRight() {
-  const ForPartialVectors<TestRotateRight> test;
-  test(uint32_t());
-#if HWY_HAVE_INTEGER64
-  test(uint64_t());
-#endif
+  ForUnsignedTypes(ForPartialVectors<TestRotateRight>());
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

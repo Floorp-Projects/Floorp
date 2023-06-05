@@ -30,16 +30,14 @@ HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 
-void SortKV64Desc(uint64_t* HWY_RESTRICT keys, size_t num,
-                  uint64_t* HWY_RESTRICT buf) {
+void SortKV64Desc(uint64_t* HWY_RESTRICT keys, size_t num) {
 #if VQSORT_ENABLED
   SortTag<uint64_t> d;
   detail::SharedTraits<detail::TraitsLane<detail::OrderDescendingKV64>> st;
-  Sort(d, st, keys, num, buf);
+  Sort(d, st, keys, num);
 #else
-  (void) keys;
-  (void) num;
-  (void) buf;
+  (void)keys;
+  (void)num;
   HWY_ASSERT(0);
 #endif
 }
@@ -55,10 +53,9 @@ namespace {
 HWY_EXPORT(SortKV64Desc);
 }  // namespace
 
-void Sorter::operator()(K32V32* HWY_RESTRICT keys, size_t n,
-                        SortDescending) const {
+void VQSort(K32V32* HWY_RESTRICT keys, size_t n, SortDescending) {
   HWY_DYNAMIC_DISPATCH(SortKV64Desc)
-  (reinterpret_cast<uint64_t*>(keys), n, Get<uint64_t>());
+  (reinterpret_cast<uint64_t*>(keys), n);
 }
 
 }  // namespace hwy

@@ -50,7 +50,7 @@ ImageF InitialQuantField(float butteraugli_target, const Image3F& opsin,
 float InitialQuantDC(float butteraugli_target);
 
 void AdjustQuantField(const AcStrategyImage& ac_strategy, const Rect& rect,
-                      ImageF* quant_field);
+                      float original_butteraugli, ImageF* quant_field);
 
 // Returns a quantizer that uses an adjusted version of the provided
 // quant_field. Also computes the dequant_map corresponding to the given

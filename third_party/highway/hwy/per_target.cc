@@ -23,15 +23,7 @@
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
-// On SVE, Lanes rounds down to a power of two, but we want to know the actual
-// size here. Otherwise, hypothetical SVE with 48 bytes would round down to 32
-// and we'd enable HWY_SVE_256, and then fail reverse_test because Reverse on
-// HWY_SVE_256 requires the actual vector to be a power of two.
-#if HWY_TARGET == HWY_SVE || HWY_TARGET == HWY_SVE2 || HWY_TARGET == HWY_SVE_256
-size_t GetVectorBytes() { return detail::AllHardwareLanes(hwy::SizeTag<1>()); }
-#else
 size_t GetVectorBytes() { return Lanes(ScalableTag<uint8_t>()); }
-#endif
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 

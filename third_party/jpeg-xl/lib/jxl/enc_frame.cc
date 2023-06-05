@@ -24,7 +24,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/coeff_order.h"
@@ -594,7 +593,6 @@ class LossyFrameEncoder {
                              const JxlCmsInterface& cms, ThreadPool* pool,
                              ModularFrameEncoder* modular_frame_encoder,
                              FrameHeader* frame_header) {
-    PROFILER_ZONE("ComputeEncodingData uninstrumented");
     JXL_ASSERT((opsin->xsize() % kBlockDim) == 0 &&
                (opsin->ysize() % kBlockDim) == 0);
     PassesSharedState& shared = enc_state_->shared;
@@ -684,7 +682,6 @@ class LossyFrameEncoder {
   Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
                                     ModularFrameEncoder* modular_frame_encoder,
                                     FrameHeader* frame_header) {
-    PROFILER_ZONE("ComputeJPEGTranscodingData uninstrumented");
     PassesSharedState& shared = enc_state_->shared;
 
     frame_header->x_qm_scale = 2;
@@ -1120,7 +1117,6 @@ class LossyFrameEncoder {
 
  private:
   void ComputeAllCoeffOrders(const FrameDimensions& frame_dim) {
-    PROFILER_FUNC;
     // No coefficient reordering in Falcon or faster.
     auto used_orders_info = ComputeUsedOrders(
         enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,

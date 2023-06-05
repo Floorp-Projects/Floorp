@@ -96,7 +96,7 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
   };
 
   auto run1 = std::async(std::launch::async, test, 1.0f, 0.5f);
-  auto run2 = std::async(std::launch::async, test, 2.0f, 0.5f);
+  auto run2 = std::async(std::launch::async, test, 2.0f, 0.0f);
 }
 
 TEST(PassesTest, RoundtripLargeFastPasses) {

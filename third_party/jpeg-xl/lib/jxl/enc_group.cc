@@ -16,7 +16,6 @@
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_transforms-inl.h"
@@ -45,7 +44,6 @@ void QuantizeBlockAC(const Quantizer& quantizer, const bool error_diffusion,
                      size_t xsize, size_t ysize, float* thresholds,
                      const float* JXL_RESTRICT block_in, int32_t* quant,
                      int32_t* JXL_RESTRICT block_out) {
-  PROFILER_FUNC;
   const float* JXL_RESTRICT qm = quantizer.InvDequantMatrix(quant_kind, c);
   float qac = quantizer.Scale() * (*quant);
   // Not SIMD-fied for now.
@@ -104,6 +102,8 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
   if ((1 << quant_kind) & kPartialBlockKinds) return;
 
   const float* JXL_RESTRICT qm = quantizer.InvDequantMatrix(quant_kind, c);
+  const float kQuantNormalizer = 0.38673969088045057;
+  float orig_quant = *quant * kQuantNormalizer;
   float qac = quantizer.Scale() * (*quant);
   if (xsize > 1 || ysize > 1) {
     for (int i = 0; i < 4; ++i) {
@@ -114,6 +114,8 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
     }
   }
   float sum_of_highest_freq_row_and_column = 0;
+  float sum_of_error = 0;
+  float sum_of_vals = 0;
   float hfNonZeros[4] = {};
   float hfMaxError[4] = {};
 
@@ -127,8 +129,10 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
                            static_cast<size_t>(x >= xsize * kBlockDim / 2));
       const float val = block_in[pos] * (qm[pos] * qac * qm_multiplier);
       const float v = (std::abs(val) < thresholds[hfix]) ? 0 : rintf(val);
+      const float error = std::abs(val - v);
+      sum_of_error += error;
+      sum_of_vals += std::abs(v);
       if (c == 1 && v == 0) {
-        const float error = std::abs(val);
         if (hfMaxError[hfix] < error) {
           hfMaxError[hfix] = error;
         }
@@ -178,6 +182,29 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       *quant += 1;
       if (*quant >= Quantizer::kQuantMax) {
         *quant = Quantizer::kQuantMax - 1;
+      }
+    }
+  }
+  {
+    static const double kMul1[3] = {
+        0.059869860931354137,
+        0.04700455981886717,
+        0.058750000000000011,
+    };
+    static const double kMul2[3] = {
+        0.15721000000000002,
+        0.7585142857142857,
+        2.1087201428571429,
+    };
+    sum_of_error *= orig_quant;
+    sum_of_vals *= orig_quant;
+    if (quant_kind >= AcStrategy::Type::DCT16X16) {
+      if (sum_of_error > kMul1[c] * xsize * ysize * kBlockDim * kBlockDim &&
+          sum_of_error > kMul2[c] * sum_of_vals) {
+        *quant += 1;
+        if (*quant >= Quantizer::kQuantMax) {
+          *quant = Quantizer::kQuantMax - 1;
+        }
       }
     }
   }
@@ -235,7 +262,6 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
   QuantizeBlockAC(quantizer, error_diffusion, 1, 1.0f, quant_kind, xsize, ysize,
                   &thres_y[0], inout + size, quant, quantized + size);
 
-  PROFILER_ZONE("enc quant adjust bias");
   const float* JXL_RESTRICT dequant_matrix =
       quantizer.DequantMatrix(quant_kind, 1);
 
@@ -252,7 +278,6 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
 
 void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
                          const Image3F& opsin, Image3F* dc) {
-  PROFILER_FUNC;
   const Rect block_group_rect = enc_state->shared.BlockGroupRect(group_idx);
   const Rect group_rect = enc_state->shared.GroupRect(group_idx);
   const Rect cmap_rect(

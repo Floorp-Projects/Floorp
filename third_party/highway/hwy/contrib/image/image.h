@@ -18,15 +18,12 @@
 
 // SIMD/multicore-friendly planar image representation with row accessors.
 
-#include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <utility>  // std::move
 
 #include "hwy/aligned_allocator.h"
 #include "hwy/base.h"
-#include "hwy/highway_export.h"
 
 namespace hwy {
 
@@ -38,7 +35,7 @@ struct HWY_CONTRIB_DLLEXPORT ImageBase {
 
   // Returns distance [bytes] between the start of two consecutive rows, a
   // multiple of VectorSize but NOT kAlias (see implementation).
-  static size_t BytesPerRow(const size_t xsize, const size_t sizeof_t);
+  static size_t BytesPerRow(size_t xsize, size_t sizeof_t);
 
   // No allocation (for output params or unused images)
   ImageBase()

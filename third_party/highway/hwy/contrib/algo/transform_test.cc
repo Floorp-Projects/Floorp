@@ -15,13 +15,15 @@
 
 #include <string.h>  // memcpy
 
+#include <vector>
+
 #include "hwy/aligned_allocator.h"
 
 // clang-format off
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/algo/transform_test.cc"  //NOLINT
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
+#include "hwy/highway.h"
 #include "hwy/contrib/algo/transform-inl.h"
 #include "hwy/tests/test_util-inl.h"
 // clang-format on
@@ -140,9 +142,11 @@ struct TestGenerate {
                   RandomState& /*rng*/) {
     using T = TFromD<D>;
     AlignedFreeUniquePtr<T[]> pa = AllocateAligned<T>(misalign_a + count + 1);
+    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
+    HWY_ASSERT(pa && expected);
+
     T* actual = pa.get() + misalign_a;
 
-    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
     for (size_t i = 0; i < count; ++i) {
       expected[i] = static_cast<T>(2 * i);
     }
@@ -176,12 +180,14 @@ struct TestTransform {
     // Prevents error if size to allocate is zero.
     AlignedFreeUniquePtr<T[]> pa =
         AllocateAligned<T>(HWY_MAX(1, misalign_a + count));
+    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
+    HWY_ASSERT(pa && expected);
+
     T* a = pa.get() + misalign_a;
     for (size_t i = 0; i < count; ++i) {
       a[i] = Random<T>(rng);
     }
 
-    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
     SimpleSCAL(a, expected.get(), count);
 
     // TODO(janwas): can we update the apply_to in HWY_PUSH_ATTRIBUTES so that
@@ -212,6 +218,8 @@ struct TestTransform1 {
         AllocateAligned<T>(HWY_MAX(1, misalign_a + count));
     AlignedFreeUniquePtr<T[]> pb =
         AllocateAligned<T>(HWY_MAX(1, misalign_b + count));
+    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
+    HWY_ASSERT(pa && pb && expected);
     T* a = pa.get() + misalign_a;
     T* b = pb.get() + misalign_b;
     for (size_t i = 0; i < count; ++i) {
@@ -219,7 +227,6 @@ struct TestTransform1 {
       b[i] = Random<T>(rng);
     }
 
-    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
     SimpleAXPY(a, b, expected.get(), count);
 
 #if HWY_GENERIC_LAMBDA
@@ -251,6 +258,8 @@ struct TestTransform2 {
         AllocateAligned<T>(HWY_MAX(1, misalign_b + count));
     AlignedFreeUniquePtr<T[]> pc =
         AllocateAligned<T>(HWY_MAX(1, misalign_a + count));
+    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
+    HWY_ASSERT(pa && pb && pc && expected);
     T* a = pa.get() + misalign_a;
     T* b = pb.get() + misalign_b;
     T* c = pc.get() + misalign_a;
@@ -260,7 +269,6 @@ struct TestTransform2 {
       c[i] = Random<T>(rng);
     }
 
-    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
     SimpleFMA4(a, b, c, expected.get(), count);
 
 #if HWY_GENERIC_LAMBDA
@@ -300,13 +308,14 @@ struct TestReplace {
     if (count == 0) return;
     using T = TFromD<D>;
     AlignedFreeUniquePtr<T[]> pa = AllocateAligned<T>(misalign_a + count);
+    AlignedFreeUniquePtr<T[]> pb = AllocateAligned<T>(count);
+    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(count);
+    HWY_ASSERT(pa && pb && expected);
+
     T* a = pa.get() + misalign_a;
     for (size_t i = 0; i < count; ++i) {
       a[i] = Random<T>(rng);
     }
-    AlignedFreeUniquePtr<T[]> pb = AllocateAligned<T>(count);
-
-    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(count);
 
     std::vector<size_t> positions(AdjustedReps(count));
     for (size_t& pos : positions) {

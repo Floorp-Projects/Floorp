@@ -246,10 +246,8 @@ std::ostream& operator<<(std::ostream& os, const CompressParams& jparams) {
     os << "Psimple";
   }
   if (jparams.optimize_coding == 1) {
-    JXL_CHECK(jparams.progressive_mode <= 0 && !jparams.simple_progression);
     os << "OptimizedCode";
   } else if (jparams.optimize_coding == 0) {
-    JXL_CHECK(jparams.progressive_mode <= 0 && !jparams.simple_progression);
     os << "FixedCode";
     if (jparams.use_flat_dc_luma_code) {
       os << "FlatDCLuma";

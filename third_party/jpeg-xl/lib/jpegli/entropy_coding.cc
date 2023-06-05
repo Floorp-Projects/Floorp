@@ -5,13 +5,546 @@
 
 #include "lib/jpegli/entropy_coding.h"
 
+#include <vector>
+
 #include "lib/jpegli/encode_internal.h"
 #include "lib/jpegli/error.h"
 #include "lib/jpegli/huffman.h"
 #include "lib/jxl/base/bits.h"
 
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "lib/jpegli/entropy_coding.cc"
+#include <hwy/foreach_target.h>
+#include <hwy/highway.h>
+
+#include "lib/jpegli/entropy_coding-inl.h"
+
+HWY_BEFORE_NAMESPACE();
 namespace jpegli {
+namespace HWY_NAMESPACE {
+
+void ComputeTokensSequential(const coeff_t* block, int last_dc, int dc_ctx,
+                             int ac_ctx, Token** tokens_ptr) {
+  ComputeTokensForBlock<coeff_t, true>(block, last_dc, dc_ctx, ac_ctx,
+                                       tokens_ptr);
+}
+
+// NOLINTNEXTLINE(google-readability-namespace-comments)
+}  // namespace HWY_NAMESPACE
+}  // namespace jpegli
+HWY_AFTER_NAMESPACE();
+
+#if HWY_ONCE
+namespace jpegli {
+
+size_t MaxNumTokensPerMCURow(j_compress_ptr cinfo) {
+  int MCUs_per_row = DivCeil(cinfo->image_width, 8 * cinfo->max_h_samp_factor);
+  size_t blocks_per_mcu = 0;
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    jpeg_component_info* comp = &cinfo->comp_info[c];
+    blocks_per_mcu += comp->h_samp_factor * comp->v_samp_factor;
+  }
+  return kDCTBlockSize * blocks_per_mcu * MCUs_per_row;
+}
+
+size_t EstimateNumTokens(j_compress_ptr cinfo, size_t mcu_y, size_t ysize_mcus,
+                         size_t num_tokens, size_t max_per_row) {
+  size_t estimate;
+  if (mcu_y == 0) {
+    estimate = 16 * max_per_row;
+  } else {
+    estimate = (4 * ysize_mcus * num_tokens) / (3 * mcu_y);
+  }
+  size_t mcus_left = ysize_mcus - mcu_y;
+  return std::min(mcus_left * max_per_row,
+                  std::max(max_per_row, estimate - num_tokens));
+}
+
 namespace {
+HWY_EXPORT(ComputeTokensSequential);
+
+void TokenizeProgressiveDC(const coeff_t* coeffs, int context, int Al,
+                           coeff_t* last_dc_coeff, Token** next_token) {
+  coeff_t temp2;
+  coeff_t temp;
+  temp2 = coeffs[0] >> Al;
+  temp = temp2 - *last_dc_coeff;
+  *last_dc_coeff = temp2;
+  temp2 = temp;
+  if (temp < 0) {
+    temp = -temp;
+    temp2--;
+  }
+  int nbits = (temp == 0) ? 0 : (jxl::FloorLog2Nonzero<uint32_t>(temp) + 1);
+  int bits = temp2 & ((1 << nbits) - 1);
+  *(*next_token)++ = Token(context, nbits, bits);
+}
+
+void TokenizeACProgressiveScan(j_compress_ptr cinfo, int scan_index,
+                               int context, ScanTokenInfo* sti) {
+  jpeg_comp_master* m = cinfo->master;
+  const jpeg_scan_info* scan_info = &cinfo->scan_info[scan_index];
+  const int comp_idx = scan_info->component_index[0];
+  const jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+  const int Al = scan_info->Al;
+  const int Ss = scan_info->Ss;
+  const int Se = scan_info->Se;
+  const size_t restart_interval = sti->restart_interval;
+  int restarts_to_go = restart_interval;
+  size_t num_blocks = comp->height_in_blocks * comp->width_in_blocks;
+  size_t num_restarts =
+      restart_interval > 0 ? DivCeil(num_blocks, restart_interval) : 1;
+  size_t restart_idx = 0;
+  int eob_run = 0;
+  TokenArray* ta = &m->token_arrays[m->cur_token_array];
+  sti->token_offset = m->total_num_tokens + ta->num_tokens;
+  sti->restarts = Allocate<size_t>(cinfo, num_restarts, JPOOL_IMAGE);
+  for (JDIMENSION by = 0; by < comp->height_in_blocks; ++by) {
+    JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(
+        reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[comp_idx], by,
+        1, false);
+    int max_tokens_per_row = comp->width_in_blocks * (Se - Ss + 1);
+    if (ta->num_tokens + max_tokens_per_row > m->num_tokens) {
+      if (ta->tokens) {
+        m->total_num_tokens += ta->num_tokens;
+        ++m->cur_token_array;
+        ta = &m->token_arrays[m->cur_token_array];
+      }
+      m->num_tokens =
+          EstimateNumTokens(cinfo, by, comp->height_in_blocks,
+                            m->total_num_tokens, max_tokens_per_row);
+      ta->tokens = Allocate<Token>(cinfo, m->num_tokens, JPOOL_IMAGE);
+      m->next_token = ta->tokens;
+    }
+    for (JDIMENSION bx = 0; bx < comp->width_in_blocks; ++bx) {
+      if (restart_interval > 0 && restarts_to_go == 0) {
+        if (eob_run > 0) {
+          int nbits = jxl::FloorLog2Nonzero<uint32_t>(eob_run);
+          int symbol = nbits << 4u;
+          *m->next_token++ =
+              Token(context, symbol, eob_run & ((1 << nbits) - 1));
+          eob_run = 0;
+        }
+        ta->num_tokens = m->next_token - ta->tokens;
+        sti->restarts[restart_idx++] = m->total_num_tokens + ta->num_tokens;
+        restarts_to_go = restart_interval;
+      }
+      const coeff_t* block = &ba[0][bx][0];
+      coeff_t temp2;
+      coeff_t temp;
+      int r = 0;
+      int num_nzeros = 0;
+      int num_future_nzeros = 0;
+      for (int k = Ss; k <= Se; ++k) {
+        if ((temp = block[k]) == 0) {
+          r++;
+          continue;
+        }
+        if (temp < 0) {
+          temp = -temp;
+          temp >>= Al;
+          temp2 = ~temp;
+        } else {
+          temp >>= Al;
+          temp2 = temp;
+        }
+        if (temp == 0) {
+          r++;
+          num_future_nzeros++;
+          continue;
+        }
+        if (eob_run > 0) {
+          int nbits = jxl::FloorLog2Nonzero<uint32_t>(eob_run);
+          int symbol = nbits << 4u;
+          *m->next_token++ =
+              Token(context, symbol, eob_run & ((1 << nbits) - 1));
+          eob_run = 0;
+        }
+        while (r > 15) {
+          *m->next_token++ = Token(context, 0xf0, 0);
+          r -= 16;
+        }
+        int nbits = jxl::FloorLog2Nonzero<uint32_t>(temp) + 1;
+        int symbol = (r << 4u) + nbits;
+        *m->next_token++ = Token(context, symbol, temp2 & ((1 << nbits) - 1));
+        ++num_nzeros;
+        r = 0;
+      }
+      if (r > 0) {
+        ++eob_run;
+        if (eob_run == 0x7FFF) {
+          int nbits = jxl::FloorLog2Nonzero<uint32_t>(eob_run);
+          int symbol = nbits << 4u;
+          *m->next_token++ =
+              Token(context, symbol, eob_run & ((1 << nbits) - 1));
+          eob_run = 0;
+        }
+      }
+      sti->num_nonzeros += num_nzeros;
+      sti->num_future_nonzeros += num_future_nzeros;
+      --restarts_to_go;
+    }
+    ta->num_tokens = m->next_token - ta->tokens;
+  }
+  if (eob_run > 0) {
+    int nbits = jxl::FloorLog2Nonzero<uint32_t>(eob_run);
+    int symbol = nbits << 4u;
+    *m->next_token++ = Token(context, symbol, eob_run & ((1 << nbits) - 1));
+    ++ta->num_tokens;
+    eob_run = 0;
+  }
+  sti->num_tokens = m->total_num_tokens + ta->num_tokens - sti->token_offset;
+  sti->restarts[restart_idx++] = m->total_num_tokens + ta->num_tokens;
+}
+
+void TokenizeACRefinementScan(j_compress_ptr cinfo, int scan_index,
+                              ScanTokenInfo* sti) {
+  jpeg_comp_master* m = cinfo->master;
+  const jpeg_scan_info* scan_info = &cinfo->scan_info[scan_index];
+  const int comp_idx = scan_info->component_index[0];
+  const jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+  const int Al = scan_info->Al;
+  const int Ss = scan_info->Ss;
+  const int Se = scan_info->Se;
+  const size_t restart_interval = sti->restart_interval;
+  int restarts_to_go = restart_interval;
+  RefToken token;
+  int eob_run = 0;
+  int eob_refbits = 0;
+  size_t num_blocks = comp->height_in_blocks * comp->width_in_blocks;
+  size_t num_restarts =
+      restart_interval > 0 ? DivCeil(num_blocks, restart_interval) : 1;
+  sti->tokens = m->next_refinement_token;
+  sti->refbits = m->next_refinement_bit;
+  sti->eobruns = Allocate<uint16_t>(cinfo, num_blocks / 2, JPOOL_IMAGE);
+  sti->restarts = Allocate<size_t>(cinfo, num_restarts, JPOOL_IMAGE);
+  RefToken* next_token = sti->tokens;
+  RefToken* next_eob_token = next_token;
+  uint8_t* next_ref_bit = sti->refbits;
+  uint16_t* next_eobrun = sti->eobruns;
+  size_t restart_idx = 0;
+  for (JDIMENSION by = 0; by < comp->height_in_blocks; ++by) {
+    JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(
+        reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[comp_idx], by,
+        1, false);
+    for (JDIMENSION bx = 0; bx < comp->width_in_blocks; ++bx) {
+      if (restart_interval > 0 && restarts_to_go == 0) {
+        sti->restarts[restart_idx++] = next_token - sti->tokens;
+        restarts_to_go = restart_interval;
+        next_eob_token = next_token;
+        eob_run = eob_refbits = 0;
+      }
+      const coeff_t* block = &ba[0][bx][0];
+      int num_eob_refinement_bits = 0;
+      int num_refinement_bits = 0;
+      int num_nzeros = 0;
+      int r = 0;
+      for (int k = Ss; k <= Se; ++k) {
+        int absval = block[k];
+        if (absval == 0) {
+          r++;
+          continue;
+        }
+        const int mask = absval >> (8 * sizeof(int) - 1);
+        absval += mask;
+        absval ^= mask;
+        absval >>= Al;
+        if (absval == 0) {
+          r++;
+          continue;
+        }
+        while (r > 15) {
+          token.symbol = 0xf0;
+          token.refbits = num_refinement_bits;
+          *next_token++ = token;
+          r -= 16;
+          num_eob_refinement_bits += num_refinement_bits;
+          num_refinement_bits = 0;
+        }
+        if (absval > 1) {
+          *next_ref_bit++ = absval & 1u;
+          ++num_refinement_bits;
+          continue;
+        }
+        int symbol = (r << 4u) + 1 + ((mask + 1) << 1);
+        token.symbol = symbol;
+        token.refbits = num_refinement_bits;
+        *next_token++ = token;
+        ++num_nzeros;
+        num_refinement_bits = 0;
+        num_eob_refinement_bits = 0;
+        r = 0;
+        next_eob_token = next_token;
+        eob_run = eob_refbits = 0;
+      }
+      if (r > 0 || num_eob_refinement_bits + num_refinement_bits > 0) {
+        ++eob_run;
+        eob_refbits += num_eob_refinement_bits + num_refinement_bits;
+        if (eob_refbits > 255) {
+          ++next_eob_token;
+          eob_refbits = num_eob_refinement_bits + num_refinement_bits;
+          eob_run = 1;
+        }
+        next_token = next_eob_token;
+        next_token->refbits = eob_refbits;
+        if (eob_run == 1) {
+          next_token->symbol = 0;
+        } else if (eob_run == 2) {
+          next_token->symbol = 16;
+          *next_eobrun++ = 0;
+        } else if ((eob_run & (eob_run - 1)) == 0) {
+          next_token->symbol += 16;
+          next_eobrun[-1] = 0;
+        } else {
+          ++next_eobrun[-1];
+        }
+        ++next_token;
+        if (eob_run == 0x7fff) {
+          next_eob_token = next_token;
+          eob_run = eob_refbits = 0;
+        }
+      }
+      sti->num_nonzeros += num_nzeros;
+      --restarts_to_go;
+    }
+  }
+  sti->num_tokens = next_token - sti->tokens;
+  sti->restarts[restart_idx++] = sti->num_tokens;
+  m->next_refinement_token = next_token;
+  m->next_refinement_bit = next_ref_bit;
+}
+
+void TokenizeScan(j_compress_ptr cinfo, size_t scan_index, int ac_ctx_offset,
+                  ScanTokenInfo* sti) {
+  const jpeg_scan_info* scan_info = &cinfo->scan_info[scan_index];
+  if (scan_info->Ss > 0) {
+    if (scan_info->Ah == 0) {
+      TokenizeACProgressiveScan(cinfo, scan_index, ac_ctx_offset, sti);
+    } else {
+      TokenizeACRefinementScan(cinfo, scan_index, sti);
+    }
+    return;
+  }
+
+  jpeg_comp_master* m = cinfo->master;
+  size_t restart_interval = sti->restart_interval;
+  int restarts_to_go = restart_interval;
+  coeff_t last_dc_coeff[MAX_COMPS_IN_SCAN] = {0};
+
+  // "Non-interleaved" means color data comes in separate scans, in other words
+  // each scan can contain only one color component.
+  const bool is_interleaved = (scan_info->comps_in_scan > 1);
+  const bool is_progressive = cinfo->progressive_mode;
+  const int Ah = scan_info->Ah;
+  const int Al = scan_info->Al;
+  HWY_ALIGN constexpr coeff_t kDummyBlock[DCTSIZE2] = {0};
+
+  size_t restart_idx = 0;
+  TokenArray* ta = &m->token_arrays[m->cur_token_array];
+  sti->token_offset = Ah > 0 ? 0 : m->total_num_tokens + ta->num_tokens;
+
+  if (Ah > 0) {
+    sti->refbits = Allocate<uint8_t>(cinfo, sti->num_blocks, JPOOL_IMAGE);
+  } else if (cinfo->progressive_mode) {
+    if (ta->num_tokens + sti->num_blocks > m->num_tokens) {
+      if (ta->tokens) {
+        m->total_num_tokens += ta->num_tokens;
+        ++m->cur_token_array;
+        ta = &m->token_arrays[m->cur_token_array];
+      }
+      m->num_tokens = sti->num_blocks;
+      ta->tokens = Allocate<Token>(cinfo, m->num_tokens, JPOOL_IMAGE);
+      m->next_token = ta->tokens;
+    }
+  }
+
+  JBLOCKARRAY ba[MAX_COMPS_IN_SCAN];
+  size_t block_idx = 0;
+  for (size_t mcu_y = 0; mcu_y < sti->MCU_rows_in_scan; ++mcu_y) {
+    for (int i = 0; i < scan_info->comps_in_scan; ++i) {
+      int comp_idx = scan_info->component_index[i];
+      jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+      int n_blocks_y = is_interleaved ? comp->v_samp_factor : 1;
+      int by0 = mcu_y * n_blocks_y;
+      int block_rows_left = comp->height_in_blocks - by0;
+      int max_block_rows = std::min(n_blocks_y, block_rows_left);
+      ba[i] = (*cinfo->mem->access_virt_barray)(
+          reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[comp_idx],
+          by0, max_block_rows, false);
+    }
+    if (!cinfo->progressive_mode) {
+      int max_tokens_per_mcu_row = MaxNumTokensPerMCURow(cinfo);
+      if (ta->num_tokens + max_tokens_per_mcu_row > m->num_tokens) {
+        if (ta->tokens) {
+          m->total_num_tokens += ta->num_tokens;
+          ++m->cur_token_array;
+          ta = &m->token_arrays[m->cur_token_array];
+        }
+        m->num_tokens =
+            EstimateNumTokens(cinfo, mcu_y, sti->MCU_rows_in_scan,
+                              m->total_num_tokens, max_tokens_per_mcu_row);
+        ta->tokens = Allocate<Token>(cinfo, m->num_tokens, JPOOL_IMAGE);
+        m->next_token = ta->tokens;
+      }
+    }
+    for (size_t mcu_x = 0; mcu_x < sti->MCUs_per_row; ++mcu_x) {
+      // Possibly emit a restart marker.
+      if (restart_interval > 0 && restarts_to_go == 0) {
+        restarts_to_go = restart_interval;
+        memset(last_dc_coeff, 0, sizeof(last_dc_coeff));
+        ta->num_tokens = m->next_token - ta->tokens;
+        sti->restarts[restart_idx++] =
+            Ah > 0 ? block_idx : m->total_num_tokens + ta->num_tokens;
+      }
+      // Encode one MCU
+      for (int i = 0; i < scan_info->comps_in_scan; ++i) {
+        int comp_idx = scan_info->component_index[i];
+        jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+        int n_blocks_y = is_interleaved ? comp->v_samp_factor : 1;
+        int n_blocks_x = is_interleaved ? comp->h_samp_factor : 1;
+        for (int iy = 0; iy < n_blocks_y; ++iy) {
+          for (int ix = 0; ix < n_blocks_x; ++ix) {
+            size_t block_y = mcu_y * n_blocks_y + iy;
+            size_t block_x = mcu_x * n_blocks_x + ix;
+            const coeff_t* block;
+            if (block_x >= comp->width_in_blocks ||
+                block_y >= comp->height_in_blocks) {
+              block = kDummyBlock;
+            } else {
+              block = &ba[i][iy][block_x][0];
+            }
+            if (!is_progressive) {
+              HWY_DYNAMIC_DISPATCH(ComputeTokensSequential)
+              (block, last_dc_coeff[i], comp_idx, ac_ctx_offset + i,
+               &m->next_token);
+              last_dc_coeff[i] = block[0];
+            } else {
+              if (Ah == 0) {
+                TokenizeProgressiveDC(block, comp_idx, Al, last_dc_coeff + i,
+                                      &m->next_token);
+              } else {
+                sti->refbits[block_idx] = (block[0] >> Al) & 1;
+              }
+            }
+            ++block_idx;
+          }
+        }
+      }
+      --restarts_to_go;
+    }
+    ta->num_tokens = m->next_token - ta->tokens;
+  }
+  JXL_DASSERT(block_idx == sti->num_blocks);
+  sti->num_tokens =
+      Ah > 0 ? sti->num_blocks
+             : m->total_num_tokens + ta->num_tokens - sti->token_offset;
+  sti->restarts[restart_idx++] =
+      Ah > 0 ? sti->num_blocks : m->total_num_tokens + ta->num_tokens;
+  if (Ah == 0 && cinfo->progressive_mode) {
+    JXL_DASSERT(sti->num_blocks == sti->num_tokens);
+  }
+}
+
+}  // namespace
+
+void TokenizeJpeg(j_compress_ptr cinfo) {
+  jpeg_comp_master* m = cinfo->master;
+  std::vector<int> processed(cinfo->num_scans);
+  size_t max_refinement_tokens = 0;
+  size_t num_refinement_bits = 0;
+  int num_refinement_scans[DCTSIZE2] = {};
+  int max_num_refinement_scans = 0;
+  for (int i = 0; i < cinfo->num_scans; ++i) {
+    const jpeg_scan_info* si = &cinfo->scan_info[i];
+    ScanTokenInfo* sti = &m->scan_token_info[i];
+    if (si->Ss > 0 && si->Ah == 0 && si->Al > 0) {
+      int offset = m->ac_ctx_offset[i];
+      TokenizeScan(cinfo, i, offset, sti);
+      processed[i] = 1;
+      max_refinement_tokens += sti->num_future_nonzeros;
+      for (int k = si->Ss; k <= si->Se; ++k) {
+        num_refinement_scans[k] = si->Al;
+      }
+      max_num_refinement_scans = std::max(max_num_refinement_scans, si->Al);
+      num_refinement_bits += sti->num_nonzeros;
+    }
+    if (si->Ss > 0 && si->Ah > 0) {
+      int comp_idx = si->component_index[0];
+      const jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
+      size_t num_blocks = comp->width_in_blocks * comp->height_in_blocks;
+      max_refinement_tokens += (1 + (si->Se - si->Ss) / 16) * num_blocks;
+    }
+  }
+  if (max_refinement_tokens > 0) {
+    m->next_refinement_token =
+        Allocate<RefToken>(cinfo, max_refinement_tokens, JPOOL_IMAGE);
+  }
+  for (int j = 0; j < max_num_refinement_scans; ++j) {
+    uint8_t* refinement_bits =
+        Allocate<uint8_t>(cinfo, num_refinement_bits, JPOOL_IMAGE);
+    m->next_refinement_bit = refinement_bits;
+    size_t new_refinement_bits = 0;
+    for (int i = 0; i < cinfo->num_scans; ++i) {
+      const jpeg_scan_info* si = &cinfo->scan_info[i];
+      ScanTokenInfo* sti = &m->scan_token_info[i];
+      if (si->Ss > 0 && si->Ah > 0 &&
+          si->Ah == num_refinement_scans[si->Ss] - j) {
+        int offset = m->ac_ctx_offset[i];
+        TokenizeScan(cinfo, i, offset, sti);
+        processed[i] = 1;
+        new_refinement_bits += sti->num_nonzeros;
+      }
+    }
+    JXL_DASSERT(m->next_refinement_bit ==
+                refinement_bits + num_refinement_bits);
+    num_refinement_bits += new_refinement_bits;
+  }
+  for (int i = 0; i < cinfo->num_scans; ++i) {
+    if (processed[i]) {
+      continue;
+    }
+    int offset = m->ac_ctx_offset[i];
+    TokenizeScan(cinfo, i, offset, &m->scan_token_info[i]);
+    processed[i] = 1;
+  }
+}
+
+namespace {
+
+struct Histogram {
+  int count[kJpegHuffmanAlphabetSize];
+  Histogram() { memset(count, 0, sizeof(count)); }
+};
+
+void BuildHistograms(j_compress_ptr cinfo, Histogram* histograms) {
+  jpeg_comp_master* m = cinfo->master;
+  size_t num_token_arrays = m->cur_token_array + 1;
+  for (size_t i = 0; i < num_token_arrays; ++i) {
+    Token* tokens = m->token_arrays[i].tokens;
+    size_t num_tokens = m->token_arrays[i].num_tokens;
+    for (size_t j = 0; j < num_tokens; ++j) {
+      Token t = tokens[j];
+      ++histograms[t.context].count[t.symbol];
+    }
+  }
+  for (int i = 0; i < cinfo->num_scans; ++i) {
+    const jpeg_scan_info& si = cinfo->scan_info[i];
+    const ScanTokenInfo& sti = m->scan_token_info[i];
+    if (si.Ss > 0 && si.Ah > 0) {
+      int context = m->ac_ctx_offset[i];
+      int* ac_histo = &histograms[context].count[0];
+      for (size_t j = 0; j < sti.num_tokens; ++j) {
+        ++ac_histo[sti.tokens[j].symbol & 253];
+      }
+    }
+  }
+}
+
+struct JpegClusteredHistograms {
+  std::vector<Histogram> histograms;
+  std::vector<uint32_t> histogram_indexes;
+  std::vector<uint32_t> slot_ids;
+};
 
 float HistogramCost(const Histogram& histo) {
   std::vector<uint32_t> counts(kJpegHuffmanAlphabetSize + 1);
@@ -45,8 +578,6 @@ bool IsEmptyHistogram(const Histogram& histo) {
   }
   return true;
 }
-
-}  // namespace
 
 void ClusterJpegHistograms(const Histogram* histograms, size_t num,
                            JpegClusteredHistograms* clusters) {
@@ -100,7 +631,33 @@ void ClusterJpegHistograms(const Histogram* histograms, size_t num,
   }
 }
 
-void BuildJpegHuffmanCode(const Histogram& histo, JPEGHuffmanCode* huff) {
+void CopyHuffmanTable(j_compress_ptr cinfo, int index, bool is_dc,
+                      int* inv_slot_map, uint8_t* slot_id_map,
+                      JHUFF_TBL* huffman_tables, size_t* num_huffman_tables) {
+  const char* type = is_dc ? "DC" : "AC";
+  if (index < 0 || index >= NUM_HUFF_TBLS) {
+    JPEGLI_ERROR("Invalid %s Huffman table index %d", type, index);
+  }
+  // Check if we have alreay copied this Huffman table.
+  int slot_idx = index + (is_dc ? 0 : NUM_HUFF_TBLS);
+  if (inv_slot_map[slot_idx] != -1) {
+    return;
+  }
+  inv_slot_map[slot_idx] = *num_huffman_tables;
+  // Look up and validate Huffman table.
+  JHUFF_TBL* table =
+      is_dc ? cinfo->dc_huff_tbl_ptrs[index] : cinfo->ac_huff_tbl_ptrs[index];
+  if (table == nullptr) {
+    JPEGLI_ERROR("Missing %s Huffman table %d", type, index);
+  }
+  ValidateHuffmanTable(reinterpret_cast<j_common_ptr>(cinfo), table, is_dc);
+  // Copy Huffman table to the end of the list and save slot id.
+  slot_id_map[*num_huffman_tables] = index + (is_dc ? 0 : 0x10);
+  memcpy(&huffman_tables[*num_huffman_tables], table, sizeof(JHUFF_TBL));
+  ++(*num_huffman_tables);
+}
+
+void BuildJpegHuffmanTable(const Histogram& histo, JHUFF_TBL* table) {
   std::vector<uint32_t> counts(kJpegHuffmanAlphabetSize + 1);
   std::vector<uint8_t> depths(kJpegHuffmanAlphabetSize + 1);
   for (size_t j = 0; j < kJpegHuffmanAlphabetSize; ++j) {
@@ -109,497 +666,169 @@ void BuildJpegHuffmanCode(const Histogram& histo, JPEGHuffmanCode* huff) {
   counts[kJpegHuffmanAlphabetSize] = 1;
   CreateHuffmanTree(counts.data(), counts.size(), kJpegHuffmanMaxBitLength,
                     &depths[0]);
-  std::fill(std::begin(huff->counts), std::end(huff->counts), 0);
-  std::fill(std::begin(huff->values), std::end(huff->values), 0);
-  for (size_t i = 0; i <= kJpegHuffmanAlphabetSize; ++i) {
+  memset(table, 0, sizeof(JHUFF_TBL));
+  for (size_t i = 0; i < kJpegHuffmanAlphabetSize; ++i) {
     if (depths[i] > 0) {
-      ++huff->counts[depths[i]];
+      ++table->bits[depths[i]];
     }
   }
   int offset[kJpegHuffmanMaxBitLength + 1] = {0};
   for (size_t i = 1; i <= kJpegHuffmanMaxBitLength; ++i) {
-    offset[i] = offset[i - 1] + huff->counts[i - 1];
+    offset[i] = offset[i - 1] + table->bits[i - 1];
   }
-  for (size_t i = 0; i <= kJpegHuffmanAlphabetSize; ++i) {
-    if (depths[i] > 0) {
-      huff->values[offset[depths[i]]++] = i;
-    }
-  }
-}
-
-void AddJpegHuffmanCode(const Histogram& histogram, size_t slot_id,
-                        JPEGHuffmanCode* huff_codes, size_t* num_huff_codes) {
-  JPEGHuffmanCode huff_code = {};
-  huff_code.slot_id = slot_id;
-  BuildJpegHuffmanCode(histogram, &huff_code);
-  memcpy(&huff_codes[*num_huff_codes], &huff_code, sizeof(huff_code));
-  ++(*num_huff_codes);
-}
-
-namespace {
-void SetJpegHuffmanCode(const JpegClusteredHistograms& clusters,
-                        size_t histogram_id, size_t slot_id_offset,
-                        std::vector<uint32_t>& slot_histograms,
-                        uint32_t* slot_id, bool* is_baseline,
-                        JPEGHuffmanCode* huff_codes, size_t* num_huff_codes) {
-  JXL_ASSERT(histogram_id < clusters.histogram_indexes.size());
-  uint32_t histogram_index = clusters.histogram_indexes[histogram_id];
-  uint32_t id = clusters.slot_ids[histogram_index];
-  if (id > 1) {
-    *is_baseline = false;
-  }
-  *slot_id = id + (slot_id_offset / 4);
-  if (slot_histograms[id] != histogram_index) {
-    AddJpegHuffmanCode(clusters.histograms[histogram_index],
-                       slot_id_offset + id, huff_codes, num_huff_codes);
-    slot_histograms[id] = histogram_index;
-  }
-}
-
-struct DCTState {
-  int eob_run = 0;
-  size_t num_refinement_bits = 0;
-  Histogram* ac_histo = nullptr;
-};
-
-static JXL_INLINE void ProcessFlush(DCTState* s) {
-  if (s->eob_run > 0) {
-    int nbits = jxl::FloorLog2Nonzero<uint32_t>(s->eob_run);
-    int symbol = nbits << 4u;
-    ++s->ac_histo->count[symbol];
-    s->eob_run = 0;
-  }
-  s->num_refinement_bits = 0;
-}
-
-static JXL_INLINE void ProcessEndOfBand(DCTState* s, size_t new_refinement_bits,
-                                        Histogram* new_ac_histo) {
-  if (s->eob_run == 0) {
-    s->ac_histo = new_ac_histo;
-  }
-  ++s->eob_run;
-  s->num_refinement_bits += new_refinement_bits;
-  if (s->eob_run == 0x7FFF ||
-      s->num_refinement_bits > kJPEGMaxCorrectionBits - kDCTBlockSize + 1) {
-    ProcessFlush(s);
-  }
-}
-
-bool ProcessDCTBlockSequential(const coeff_t* coeffs, Histogram* dc_histo,
-                               Histogram* ac_histo, coeff_t* last_dc_coeff) {
-  coeff_t temp2;
-  coeff_t temp;
-  temp2 = coeffs[0];
-  temp = temp2 - *last_dc_coeff;
-  *last_dc_coeff = temp2;
-  temp2 = temp;
-  if (temp < 0) {
-    temp = -temp;
-    if (temp < 0) return false;
-    temp2--;
-  }
-  int dc_nbits = (temp == 0) ? 0 : (jxl::FloorLog2Nonzero<uint32_t>(temp) + 1);
-  ++dc_histo->count[dc_nbits];
-  if (dc_nbits >= 12) return false;
-  int r = 0;
-  for (int k = 1; k < 64; ++k) {
-    if ((temp = coeffs[kJPEGNaturalOrder[k]]) == 0) {
-      r++;
-      continue;
-    }
-    if (temp < 0) {
-      temp = -temp;
-      if (temp < 0) return false;
-      temp2 = ~temp;
-    } else {
-      temp2 = temp;
-    }
-    while (r > 15) {
-      ++ac_histo->count[0xf0];
-      r -= 16;
-    }
-    int ac_nbits = jxl::FloorLog2Nonzero<uint32_t>(temp) + 1;
-    if (ac_nbits >= 16) return false;
-    int symbol = (r << 4u) + ac_nbits;
-    ++ac_histo->count[symbol];
-    r = 0;
-  }
-  if (r > 0) {
-    ++ac_histo->count[0];
-  }
-  return true;
-}
-
-bool ProcessDCTBlockProgressive(const coeff_t* coeffs, Histogram* dc_histo,
-                                Histogram* ac_histo, int Ss, int Se, int Al,
-                                DCTState* s, coeff_t* last_dc_coeff) {
-  bool eob_run_allowed = Ss > 0;
-  coeff_t temp2;
-  coeff_t temp;
-  if (Ss == 0) {
-    temp2 = coeffs[0] >> Al;
-    temp = temp2 - *last_dc_coeff;
-    *last_dc_coeff = temp2;
-    temp2 = temp;
-    if (temp < 0) {
-      temp = -temp;
-      if (temp < 0) return false;
-      temp2--;
-    }
-    int nbits = (temp == 0) ? 0 : (jxl::FloorLog2Nonzero<uint32_t>(temp) + 1);
-    ++dc_histo->count[nbits];
-    ++Ss;
-  }
-  if (Ss > Se) {
-    return true;
-  }
-  int r = 0;
-  for (int k = Ss; k <= Se; ++k) {
-    if ((temp = coeffs[kJPEGNaturalOrder[k]]) == 0) {
-      r++;
-      continue;
-    }
-    if (temp < 0) {
-      temp = -temp;
-      if (temp < 0) return false;
-      temp >>= Al;
-      temp2 = ~temp;
-    } else {
-      temp >>= Al;
-      temp2 = temp;
-    }
-    if (temp == 0) {
-      r++;
-      continue;
-    }
-    ProcessFlush(s);
-    while (r > 15) {
-      ++ac_histo->count[0xf0];
-      r -= 16;
-    }
-    int nbits = jxl::FloorLog2Nonzero<uint32_t>(temp) + 1;
-    int symbol = (r << 4u) + nbits;
-    ++ac_histo->count[symbol];
-    r = 0;
-  }
-  if (r > 0) {
-    ProcessEndOfBand(s, 0, ac_histo);
-    if (!eob_run_allowed) {
-      ProcessFlush(s);
-    }
-  }
-  return true;
-}
-
-bool ProcessRefinementBits(const coeff_t* coeffs, Histogram* ac_histo, int Ss,
-                           int Se, int Al, DCTState* s) {
-  bool eob_run_allowed = Ss > 0;
-  if (Ss == 0) {
-    ++Ss;
-  }
-  if (Ss > Se) {
-    return true;
-  }
-  int abs_values[kDCTBlockSize];
-  int eob = 0;
-  for (int k = Ss; k <= Se; k++) {
-    const coeff_t abs_val = std::abs(coeffs[kJPEGNaturalOrder[k]]);
-    abs_values[k] = abs_val >> Al;
-    if (abs_values[k] == 1) {
-      eob = k;
-    }
-  }
-  int r = 0;
-  size_t num_refinement_bits = 0;
-  for (int k = Ss; k <= Se; k++) {
-    if (abs_values[k] == 0) {
-      r++;
-      continue;
-    }
-    while (r > 15 && k <= eob) {
-      ProcessFlush(s);
-      ++ac_histo->count[0xf0];
-      r -= 16;
-      num_refinement_bits = 0;
-    }
-    if (abs_values[k] > 1) {
-      ++num_refinement_bits;
-      continue;
-    }
-    ProcessFlush(s);
-    int symbol = (r << 4u) + 1;
-    ++ac_histo->count[symbol];
-    num_refinement_bits = 0;
-    r = 0;
-  }
-  if (r > 0 || num_refinement_bits > 0) {
-    ProcessEndOfBand(s, num_refinement_bits, ac_histo);
-    if (!eob_run_allowed) {
-      ProcessFlush(s);
-    }
-  }
-  return true;
-}
-
-void ProgressMonitorHistogramPass(j_compress_ptr cinfo, size_t scan_index,
-                                  size_t mcu_y) {
-  if (cinfo->progress == nullptr) {
-    return;
-  }
-  cinfo->progress->completed_passes = 1 + scan_index;
-  cinfo->progress->pass_counter = mcu_y;
-  cinfo->progress->pass_limit = cinfo->total_iMCU_rows;
-  (*cinfo->progress->progress_monitor)(reinterpret_cast<j_common_ptr>(cinfo));
-}
-
-bool ProcessScan(j_compress_ptr cinfo,
-                 size_t scan_index, int* histo_index, Histogram* dc_histograms,
-                 Histogram* ac_histograms) {
-  jpeg_comp_master* m = cinfo->master;
-  size_t restart_interval = RestartIntervalForScan(cinfo, scan_index);
-  int restarts_to_go = restart_interval;
-  coeff_t last_dc_coeff[MAX_COMPS_IN_SCAN] = {0};
-  DCTState s;
-
-  const jpeg_scan_info* scan_info = &cinfo->scan_info[scan_index];
-  // "Non-interleaved" means color data comes in separate scans, in other words
-  // each scan can contain only one color component.
-  const bool is_interleaved = (scan_info->comps_in_scan > 1);
-  jpeg_component_info* base_comp =
-      &cinfo->comp_info[scan_info->component_index[0]];
-  // h_group / v_group act as numerators for converting number of blocks to
-  // number of MCU. In interleaved mode it is 1, so MCU is represented with
-  // max_*_samp_factor blocks. In non-interleaved mode we choose numerator to
-  // be the samping factor, consequently MCU is always represented with single
-  // block.
-  const int h_group = is_interleaved ? 1 : base_comp->h_samp_factor;
-  const int v_group = is_interleaved ? 1 : base_comp->v_samp_factor;
-  int MCUs_per_row =
-      DivCeil(cinfo->image_width * h_group, 8 * cinfo->max_h_samp_factor);
-  int MCU_rows =
-      DivCeil(cinfo->image_height * v_group, 8 * cinfo->max_v_samp_factor);
-  const bool is_progressive = cinfo->progressive_mode;
-  const int Al = scan_info->Al;
-  const int Ah = scan_info->Ah;
-  const int Ss = scan_info->Ss;
-  const int Se = scan_info->Se;
-  constexpr coeff_t kDummyBlock[DCTSIZE2] = {0};
-
-  JBLOCKARRAY ba[MAX_COMPS_IN_SCAN];
-  for (int mcu_y = 0; mcu_y < MCU_rows; ++mcu_y) {
-    ProgressMonitorHistogramPass(cinfo, scan_index, mcu_y);
-    for (int i = 0; i < scan_info->comps_in_scan; ++i) {
-      int comp_idx = scan_info->component_index[i];
-      jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
-      int n_blocks_y = is_interleaved ? comp->v_samp_factor : 1;
-      int by0 = mcu_y * n_blocks_y;
-      int block_rows_left = comp->height_in_blocks - by0;
-      int max_block_rows = std::min(n_blocks_y, block_rows_left);
-      ba[i] = (*cinfo->mem->access_virt_barray)(
-          reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[comp_idx],
-          by0, max_block_rows, false);
-    }
-    for (int mcu_x = 0; mcu_x < MCUs_per_row; ++mcu_x) {
-      // Possibly emit a restart marker.
-      if (restart_interval > 0 && restarts_to_go == 0) {
-        ProcessFlush(&s);
-        restarts_to_go = restart_interval;
-        memset(last_dc_coeff, 0, sizeof(last_dc_coeff));
-      }
-      // Encode one MCU
-      for (int i = 0; i < scan_info->comps_in_scan; ++i) {
-        int comp_idx = scan_info->component_index[i];
-        jpeg_component_info* comp = &cinfo->comp_info[comp_idx];
-        int histo_idx = *histo_index + i;
-        Histogram* dc_histo = &dc_histograms[histo_idx];
-        Histogram* ac_histo = &ac_histograms[histo_idx];
-        int n_blocks_y = is_interleaved ? comp->v_samp_factor : 1;
-        int n_blocks_x = is_interleaved ? comp->h_samp_factor : 1;
-        for (int iy = 0; iy < n_blocks_y; ++iy) {
-          for (int ix = 0; ix < n_blocks_x; ++ix) {
-            size_t block_y = mcu_y * n_blocks_y + iy;
-            size_t block_x = mcu_x * n_blocks_x + ix;
-            const coeff_t* block;
-            if (block_x >= comp->width_in_blocks ||
-                block_y >= comp->height_in_blocks) {
-              block = kDummyBlock;
-            } else {
-              block = &ba[i][iy][block_x][0];
-            }
-            bool ok;
-            if (!is_progressive) {
-              ok = ProcessDCTBlockSequential(block, dc_histo, ac_histo,
-                                             last_dc_coeff + i);
-            } else if (Ah == 0) {
-              ok = ProcessDCTBlockProgressive(block, dc_histo, ac_histo, Ss, Se,
-                                              Al, &s, last_dc_coeff + i);
-            } else {
-              ok = ProcessRefinementBits(block, ac_histo, Ss, Se, Al, &s);
-            }
-            if (!ok) return false;
-          }
-        }
-      }
-      --restarts_to_go;
-    }
-  }
-  ProcessFlush(&s);
-  *histo_index += scan_info->comps_in_scan;
-  return true;
-}
-
-void ProcessJpeg(j_compress_ptr cinfo,
-                 std::vector<Histogram>* dc_histograms,
-                 std::vector<Histogram>* ac_histograms) {
-  int histo_index = 0;
-  for (int i = 0; i < cinfo->num_scans; ++i) {
-    if (!ProcessScan(cinfo, i, &histo_index, &(*dc_histograms)[0],
-                     &(*ac_histograms)[0])) {
-      JPEGLI_ERROR("Invalid scan.");
-    }
-  }
-}
-
-void CopyHuffmanTable(j_compress_ptr cinfo, int index, bool is_dc,
-                      JPEGHuffmanCode* huffman_codes,
-                      size_t* num_huffman_codes) {
-  const char* type = is_dc ? "DC" : "AC";
-  if (index < 0 || index >= NUM_HUFF_TBLS) {
-    JPEGLI_ERROR("Invalid %s Huffman table index %d", type, index);
-  }
-  JHUFF_TBL* table =
-      is_dc ? cinfo->dc_huff_tbl_ptrs[index] : cinfo->ac_huff_tbl_ptrs[index];
-  if (table == nullptr) {
-    JPEGLI_ERROR("Missing %s Huffman table %d", type, index);
-  }
-  ValidateHuffmanTable(reinterpret_cast<j_common_ptr>(cinfo), table, is_dc);
-  JPEGHuffmanCode huff = {};
-  size_t max_depth = 0;
-  for (size_t i = 1; i <= kJpegHuffmanMaxBitLength; ++i) {
-    if (table->bits[i] != 0) max_depth = i;
-    huff.counts[i] = table->bits[i];
-  }
-  ++huff.counts[max_depth];
   for (size_t i = 0; i < kJpegHuffmanAlphabetSize; ++i) {
-    huff.values[i] = table->huffval[i];
-  }
-  huff.slot_id = index + (is_dc ? 0 : 0x10);
-  huff.sent_table = table->sent_table;
-  bool have_slot = false;
-  for (size_t i = 0; i < *num_huffman_codes; ++i) {
-    if (huffman_codes[i].slot_id == huff.slot_id) have_slot = true;
-  }
-  if (!have_slot) {
-    memcpy(&huffman_codes[*num_huffman_codes], &huff, sizeof(huff));
-    ++(*num_huffman_codes);
+    if (depths[i] > 0) {
+      table->huffval[offset[depths[i]]++] = i;
+    }
   }
 }
 
 }  // namespace
 
-void CopyHuffmanCodes(j_compress_ptr cinfo, bool* is_baseline) {
+void CopyHuffmanTables(j_compress_ptr cinfo) {
   jpeg_comp_master* m = cinfo->master;
-  m->huffman_codes =
-      Allocate<JPEGHuffmanCode>(cinfo, 2 * cinfo->num_components, JPOOL_IMAGE);
+  size_t max_huff_tables = 2 * cinfo->num_components;
+  // Copy Huffman tables and save slot ids.
+  m->huffman_tables = Allocate<JHUFF_TBL>(cinfo, max_huff_tables, JPOOL_IMAGE);
+  m->slot_id_map = Allocate<uint8_t>(cinfo, max_huff_tables, JPOOL_IMAGE);
+  m->num_huffman_tables = 0;
+  int inv_slot_map[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
   for (int c = 0; c < cinfo->num_components; ++c) {
     jpeg_component_info* comp = &cinfo->comp_info[c];
-    if (comp->dc_tbl_no > 1 || comp->ac_tbl_no > 1) {
-      *is_baseline = false;
-    }
-    CopyHuffmanTable(cinfo, comp->dc_tbl_no, /*is_dc=*/true, m->huffman_codes,
-                     &m->num_huffman_codes);
-    CopyHuffmanTable(cinfo, comp->ac_tbl_no, /*is_dc=*/false, m->huffman_codes,
-                     &m->num_huffman_codes);
+    CopyHuffmanTable(cinfo, comp->dc_tbl_no, /*is_dc=*/true, &inv_slot_map[0],
+                     m->slot_id_map, m->huffman_tables, &m->num_huffman_tables);
+    CopyHuffmanTable(cinfo, comp->ac_tbl_no, /*is_dc=*/false, &inv_slot_map[0],
+                     m->slot_id_map, m->huffman_tables, &m->num_huffman_tables);
   }
+  // Compute context map.
+  m->context_map = Allocate<uint8_t>(cinfo, 8, JPOOL_IMAGE);
+  memset(m->context_map, 0, 8);
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    m->context_map[c] = inv_slot_map[cinfo->comp_info[c].dc_tbl_no];
+  }
+  int ac_ctx = 4;
   for (int i = 0; i < cinfo->num_scans; ++i) {
     const jpeg_scan_info* si = &cinfo->scan_info[i];
-    ScanCodingInfo sci = {};
-    for (int j = 0; j < si->comps_in_scan; ++j) {
-      int ci = si->component_index[j];
-      sci.dc_tbl_idx[j] = cinfo->comp_info[ci].dc_tbl_no;
-      sci.ac_tbl_idx[j] = cinfo->comp_info[ci].ac_tbl_no + 4;
+    if (si->Se > 0) {
+      for (int j = 0; j < si->comps_in_scan; ++j) {
+        int c = si->component_index[j];
+        jpeg_component_info* comp = &cinfo->comp_info[c];
+        m->context_map[ac_ctx++] = inv_slot_map[comp->ac_tbl_no + 4];
+      }
     }
-    if (i == 0) {
-      sci.num_huffman_codes = m->num_huffman_codes;
-    }
-    memcpy(&m->scan_coding_info[i], &sci, sizeof(sci));
   }
 }
 
-size_t RestartIntervalForScan(j_compress_ptr cinfo, size_t scan_index) {
-  if (cinfo->restart_in_rows <= 0) {
-    return cinfo->restart_interval;
-  } else {
-    const jpeg_scan_info* scan_info = &cinfo->scan_info[scan_index];
-    const bool is_interleaved = (scan_info->comps_in_scan > 1);
-    jpeg_component_info* base_comp =
-        &cinfo->comp_info[scan_info->component_index[0]];
-    const int h_group = is_interleaved ? 1 : base_comp->h_samp_factor;
-    int MCUs_per_row =
-        DivCeil(cinfo->image_width * h_group, 8 * cinfo->max_h_samp_factor);
-    return std::min<size_t>(MCUs_per_row * cinfo->restart_in_rows, 65535u);
-  }
-}
-
-void OptimizeHuffmanCodes(j_compress_ptr cinfo, bool* is_baseline) {
+void OptimizeHuffmanCodes(j_compress_ptr cinfo) {
   jpeg_comp_master* m = cinfo->master;
-  // Gather histograms.
-  size_t num_histo = 0;
-  for (int i = 0; i < cinfo->num_scans; ++i) {
-    num_histo += cinfo->scan_info[i].comps_in_scan;
-  }
-  std::vector<Histogram> dc_histograms(num_histo);
-  std::vector<Histogram> ac_histograms(num_histo);
-  ProcessJpeg(cinfo, &dc_histograms, &ac_histograms);
+  // Build DC and AC histograms.
+  std::vector<Histogram> histograms(m->num_contexts);
+  BuildHistograms(cinfo, &histograms[0]);
 
   // Cluster DC histograms.
   JpegClusteredHistograms dc_clusters;
-  ClusterJpegHistograms(dc_histograms.data(), dc_histograms.size(),
-                        &dc_clusters);
+  ClusterJpegHistograms(histograms.data(), cinfo->num_components, &dc_clusters);
 
   // Cluster AC histograms.
   JpegClusteredHistograms ac_clusters;
-  ClusterJpegHistograms(ac_histograms.data(), ac_histograms.size(),
+  ClusterJpegHistograms(histograms.data() + 4, m->num_contexts - 4,
                         &ac_clusters);
 
-  // Add the first 4 DC and AC histograms in the first DHT segment.
-  std::vector<uint32_t> dc_slot_histograms;
-  std::vector<uint32_t> ac_slot_histograms;
-  m->huffman_codes = Allocate<JPEGHuffmanCode>(cinfo, num_histo, JPOOL_IMAGE);
-  for (size_t i = 0; i < dc_clusters.histograms.size(); ++i) {
-    if (i >= 4) break;
-    JXL_ASSERT(dc_clusters.slot_ids[i] == i);
-    AddJpegHuffmanCode(dc_clusters.histograms[i], i, m->huffman_codes,
-                       &m->num_huffman_codes);
-    dc_slot_histograms.push_back(i);
-  }
-  for (size_t i = 0; i < ac_clusters.histograms.size(); ++i) {
-    if (i >= 4) break;
-    JXL_ASSERT(ac_clusters.slot_ids[i] == i);
-    AddJpegHuffmanCode(ac_clusters.histograms[i], 0x10 + i, m->huffman_codes,
-                       &m->num_huffman_codes);
-    ac_slot_histograms.push_back(i);
+  // Create Huffman tables and slot ids clusters.
+  size_t num_dc_huff = dc_clusters.histograms.size();
+  m->num_huffman_tables = num_dc_huff + ac_clusters.histograms.size();
+  m->huffman_tables =
+      Allocate<JHUFF_TBL>(cinfo, m->num_huffman_tables, JPOOL_IMAGE);
+  m->slot_id_map = Allocate<uint8_t>(cinfo, m->num_huffman_tables, JPOOL_IMAGE);
+  for (size_t i = 0; i < m->num_huffman_tables; ++i) {
+    JHUFF_TBL huff_table = {};
+    if (i < dc_clusters.histograms.size()) {
+      m->slot_id_map[i] = i;
+      BuildJpegHuffmanTable(dc_clusters.histograms[i], &huff_table);
+    } else {
+      m->slot_id_map[i] = 16 + ac_clusters.slot_ids[i - num_dc_huff];
+      BuildJpegHuffmanTable(ac_clusters.histograms[i - num_dc_huff],
+                            &huff_table);
+    }
+    memcpy(&m->huffman_tables[i], &huff_table, sizeof(huff_table));
   }
 
-  // Set the Huffman table indexes in the scan_infos and emit additional DHT
-  // segments if necessary.
-  size_t histogram_id = 0;
-  size_t num_huffman_codes_sent = 0;
-  for (int i = 0; i < cinfo->num_scans; ++i) {
-    ScanCodingInfo sci = {};
-    for (int c = 0; c < cinfo->scan_info[i].comps_in_scan; ++c) {
-      SetJpegHuffmanCode(dc_clusters, histogram_id, 0, dc_slot_histograms,
-                         &sci.dc_tbl_idx[c], is_baseline, m->huffman_codes,
-                         &m->num_huffman_codes);
-      SetJpegHuffmanCode(ac_clusters, histogram_id, 0x10, ac_slot_histograms,
-                         &sci.ac_tbl_idx[c], is_baseline, m->huffman_codes,
-                         &m->num_huffman_codes);
-      ++histogram_id;
+  // Create context map from clustered histogram indexes.
+  m->context_map = Allocate<uint8_t>(cinfo, m->num_contexts, JPOOL_IMAGE);
+  memset(m->context_map, 0, m->num_contexts);
+  for (size_t i = 0; i < m->num_contexts; ++i) {
+    if (i < (size_t)cinfo->num_components) {
+      m->context_map[i] = dc_clusters.histogram_indexes[i];
+    } else if (i >= 4) {
+      m->context_map[i] = num_dc_huff + ac_clusters.histogram_indexes[i - 4];
     }
-    sci.num_huffman_codes = m->num_huffman_codes - num_huffman_codes_sent;
-    num_huffman_codes_sent = m->num_huffman_codes;
-    memcpy(&m->scan_coding_info[i], &sci, sizeof(sci));
+  }
+}
+
+namespace {
+
+constexpr uint8_t kNumExtraBits[256] = {
+    0,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    1,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    2,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    3,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    4,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    5,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    6,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    7,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    8,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    9,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    14, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+    0,  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,  //
+};
+
+void BuildHuffmanCodeTable(const JHUFF_TBL& table, HuffmanCodeTable* code) {
+  int huff_code[kJpegHuffmanAlphabetSize];
+  // +1 for a sentinel element.
+  uint32_t huff_size[kJpegHuffmanAlphabetSize + 1];
+  int p = 0;
+  for (size_t l = 1; l <= kJpegHuffmanMaxBitLength; ++l) {
+    int i = table.bits[l];
+    while (i--) huff_size[p++] = l;
+  }
+
+  // Reuse sentinel element.
+  int last_p = p;
+  huff_size[last_p] = 0;
+
+  int next_code = 0;
+  uint32_t si = huff_size[0];
+  p = 0;
+  while (huff_size[p]) {
+    while ((huff_size[p]) == si) {
+      huff_code[p++] = next_code;
+      next_code++;
+    }
+    next_code <<= 1;
+    si++;
+  }
+  for (p = 0; p < last_p; p++) {
+    int i = table.huffval[p];
+    int nbits = kNumExtraBits[i];
+    code->depth[i] = huff_size[p] + nbits;
+    code->code[i] = huff_code[p] << nbits;
+  }
+}
+
+}  // namespace
+
+void InitEntropyCoder(j_compress_ptr cinfo) {
+  jpeg_comp_master* m = cinfo->master;
+  m->coding_tables =
+      Allocate<HuffmanCodeTable>(cinfo, m->num_huffman_tables, JPOOL_IMAGE);
+  for (size_t i = 0; i < m->num_huffman_tables; ++i) {
+    BuildHuffmanCodeTable(m->huffman_tables[i], &m->coding_tables[i]);
   }
 }
 
 }  // namespace jpegli
+#endif  // HWY_ONCE

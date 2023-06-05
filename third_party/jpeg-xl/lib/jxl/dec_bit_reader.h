@@ -19,7 +19,6 @@
 
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
@@ -264,7 +263,6 @@ class BitReader {
  private:
   // Separate function avoids inlining this relatively cold code into callers.
   JXL_NOINLINE void BoundsCheckedRefill() {
-    PROFILER_FUNC;
     const uint8_t* end = end_minus_8_ + 8;
 
     // Read whole bytes until we have [56, 64) bits (same as LoadLE64)

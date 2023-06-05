@@ -13,7 +13,6 @@
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/convolve.h"
@@ -188,8 +187,6 @@ struct PassesDecoderState {
 // for large images because we only initialize min(#threads, #groups) instances.
 struct GroupDecCache {
   void InitOnce(size_t num_passes, size_t used_acs) {
-    PROFILER_FUNC;
-
     for (size_t i = 0; i < num_passes; i++) {
       if (num_nzeroes[i].xsize() == 0) {
         // Allocate enough for a whole group - partial groups on the

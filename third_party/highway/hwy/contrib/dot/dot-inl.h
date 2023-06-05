@@ -49,7 +49,7 @@ struct Dot {
   // Returns sum{pa[i] * pb[i]} for float or double inputs. Aligning the
   // pointers to a multiple of N elements is helpful but not required.
   template <int kAssumptions, class D, typename T = TFromD<D>,
-            HWY_IF_NOT_LANE_SIZE_D(D, 2)>
+            HWY_IF_NOT_T_SIZE_D(D, 2)>
   static HWY_INLINE T Compute(const D d, const T* const HWY_RESTRICT pa,
                               const T* const HWY_RESTRICT pb,
                               const size_t num_elements) {
@@ -144,7 +144,7 @@ struct Dot {
     sum0 = Add(sum0, sum1);
     sum2 = Add(sum2, sum3);
     sum0 = Add(sum0, sum2);
-    return GetLane(SumOfLanes(d, sum0));
+    return ReduceSum(d, sum0);
   }
 
   // Returns sum{pa[i] * pb[i]} for bfloat16 inputs. Aligning the pointers to a
@@ -240,7 +240,7 @@ struct Dot {
     sum0 = Add(sum0, sum1);
     sum2 = Add(sum2, sum3);
     sum0 = Add(sum0, sum2);
-    return GetLane(SumOfLanes(df32, sum0));
+    return ReduceSum(df32, sum0);
   }
 };
 

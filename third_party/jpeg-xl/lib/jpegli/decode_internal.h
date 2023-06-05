@@ -98,6 +98,7 @@ struct jpeg_decomp_master {
   JpegliDataType output_data_type_ = JPEGLI_TYPE_UINT8;
   bool swap_endianness_ = false;
   size_t xoffset_;
+  bool need_context_rows_;
 
   int min_scaled_dct_size;
   int scaled_dct_size[jpegli::kMaxComponents];

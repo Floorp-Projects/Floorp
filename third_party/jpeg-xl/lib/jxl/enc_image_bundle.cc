@@ -14,7 +14,6 @@
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"
@@ -27,7 +26,6 @@ namespace {
 Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
                const Rect& rect, const ColorEncoding& c_desired,
                const JxlCmsInterface& cms, ThreadPool* pool, Image3F* out) {
-  PROFILER_FUNC;
   ColorSpaceTransform c_transform(cms);
   // Changing IsGray is probably a bug.
   JXL_CHECK(ib->IsGray() == c_desired.IsGray());
@@ -114,7 +112,6 @@ Status CopyToT(const ImageMetadata* metadata, const ImageBundle* ib,
 
 Status ImageBundle::TransformTo(const ColorEncoding& c_desired,
                                 const JxlCmsInterface& cms, ThreadPool* pool) {
-  PROFILER_FUNC;
   JXL_RETURN_IF_ERROR(CopyTo(Rect(color_), c_desired, cms, &color_, pool));
   c_current_ = c_desired;
   return true;

@@ -19,7 +19,7 @@
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/algo/copy_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
+#include "hwy/highway.h"
 #include "hwy/contrib/algo/copy-inl.h"
 #include "hwy/tests/test_util-inl.h"
 // clang-format on
@@ -83,12 +83,13 @@ struct TestFill {
     // HWY_MAX prevents error when misalign == count == 0.
     AlignedFreeUniquePtr<T[]> pa =
         AllocateAligned<T>(HWY_MAX(1, misalign_a + count));
+    AlignedFreeUniquePtr<T[]> pb = AllocateAligned<T>(misalign_b + count + 1);
+    HWY_ASSERT(pa && pb);
     T* expected = pa.get() + misalign_a;
     const T value = Random7Bit<T>(rng);
     for (size_t i = 0; i < count; ++i) {
       expected[i] = value;
     }
-    AlignedFreeUniquePtr<T[]> pb = AllocateAligned<T>(misalign_b + count + 1);
     T* actual = pb.get() + misalign_b;
 
     actual[count] = T{0};  // sentinel
@@ -114,12 +115,13 @@ struct TestCopy {
     // Prevents error if size to allocate is zero.
     AlignedFreeUniquePtr<T[]> pa =
         AllocateAligned<T>(HWY_MAX(1, misalign_a + count));
+    AlignedFreeUniquePtr<T[]> pb =
+        AllocateAligned<T>(HWY_MAX(1, misalign_b + count));
+    HWY_ASSERT(pa && pb);
     T* a = pa.get() + misalign_a;
     for (size_t i = 0; i < count; ++i) {
       a[i] = Random7Bit<T>(rng);
     }
-    AlignedFreeUniquePtr<T[]> pb =
-        AllocateAligned<T>(HWY_MAX(1, misalign_b + count));
     T* b = pb.get() + misalign_b;
 
     Copy(d, a, count, b);
@@ -140,19 +142,22 @@ struct TestCopyIf {
   void operator()(D d, size_t count, size_t misalign_a, size_t misalign_b,
                   RandomState& rng) {
     using T = TFromD<D>;
+    const size_t padding = Lanes(ScalableTag<T>());
+
     // Prevents error if size to allocate is zero.
     AlignedFreeUniquePtr<T[]> pa =
         AllocateAligned<T>(HWY_MAX(1, misalign_a + count));
+    AlignedFreeUniquePtr<T[]> pb =
+        AllocateAligned<T>(HWY_MAX(1, misalign_b + count + padding));
+    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
+    HWY_ASSERT(pa && pb && expected);
+
     T* a = pa.get() + misalign_a;
     for (size_t i = 0; i < count; ++i) {
       a[i] = Random7Bit<T>(rng);
     }
-    const size_t padding = Lanes(ScalableTag<T>());
-    AlignedFreeUniquePtr<T[]> pb =
-        AllocateAligned<T>(HWY_MAX(1, misalign_b + count + padding));
     T* b = pb.get() + misalign_b;
 
-    AlignedFreeUniquePtr<T[]> expected = AllocateAligned<T>(HWY_MAX(1, count));
     size_t num_odd = 0;
     for (size_t i = 0; i < count; ++i) {
       if (a[i] & 1) {

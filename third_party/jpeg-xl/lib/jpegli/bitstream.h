@@ -13,24 +13,27 @@
 
 namespace jpegli {
 
+void EncodeiMCURow(j_compress_ptr cinfo, bool streaming);
+
 void WriteOutput(j_compress_ptr cinfo, const uint8_t* buf, size_t bufsize);
 void WriteOutput(j_compress_ptr cinfo, const std::vector<uint8_t>& bytes);
 void WriteOutput(j_compress_ptr cinfo, std::initializer_list<uint8_t> bytes);
 
 void EncodeAPP0(j_compress_ptr cinfo);
 void EncodeAPP14(j_compress_ptr cinfo);
+void WriteFileHeader(j_compress_ptr cinfo);
+
+// Returns true of only baseline 8-bit tables are used.
+bool EncodeDQT(j_compress_ptr cinfo, bool write_all_tables);
 void EncodeSOF(j_compress_ptr cinfo, bool is_baseline);
+void WriteFrameHeader(j_compress_ptr cinfo);
+
+void EncodeDRI(j_compress_ptr cinfo);
+void EncodeDHT(j_compress_ptr cinfo, size_t offset, size_t num);
 void EncodeSOS(j_compress_ptr cinfo, int scan_index);
-void EncodeDHT(j_compress_ptr cinfo, const JPEGHuffmanCode* huffman_codes,
-               size_t num_huffman_codes, bool pre_shifted = false);
-void EncodeDQT(j_compress_ptr cinfo, bool write_all_tables, bool* is_baseline);
-bool EncodeDRI(j_compress_ptr cinfo);
+void WriteScanHeader(j_compress_ptr cinfo, int scan_index);
 
-bool EncodeScan(j_compress_ptr cinfo, int scan_index);
-
-void EncodeSingleScan(j_compress_ptr cinfo);
-
-void WriteiMCURow(j_compress_ptr cinfo);
+void WriteScanData(j_compress_ptr cinfo, int scan_index);
 
 }  // namespace jpegli
 

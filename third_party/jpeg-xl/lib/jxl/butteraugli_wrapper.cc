@@ -12,7 +12,6 @@
 #include <atomic>
 
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"

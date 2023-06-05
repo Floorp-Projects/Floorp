@@ -47,8 +47,6 @@ class GaborishStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("Gaborish");
-
     const HWY_FULL(float) d;
     for (size_t c = 0; c < 3; c++) {
       float* JXL_RESTRICT row_t = GetInputRow(input_rows, c, -1);

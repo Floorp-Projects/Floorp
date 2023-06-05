@@ -23,15 +23,12 @@ libjxl_base_sources = [
     "jxl/base/padded_bytes.cc",
     "jxl/base/padded_bytes.h",
     "jxl/base/printf_macros.h",
-    "jxl/base/profiler.cc",
-    "jxl/base/profiler.h",
     "jxl/base/random.cc",
     "jxl/base/random.h",
     "jxl/base/sanitizer_definitions.h",
     "jxl/base/scope_guard.h",
     "jxl/base/span.h",
     "jxl/base/status.h",
-    "jxl/base/tsc_timer.h",
 ]
 
 libjxl_codec_apng_sources = [
@@ -469,8 +466,6 @@ libjxl_jpegli_sources = [
     "jpegli/common.h",
     "jpegli/common_internal.h",
     "jpegli/dct-inl.h",
-    "jpegli/dct.cc",
-    "jpegli/dct.h",
     "jpegli/decode.cc",
     "jpegli/decode.h",
     "jpegli/decode_internal.h",
@@ -484,6 +479,7 @@ libjxl_jpegli_sources = [
     "jpegli/encode.cc",
     "jpegli/encode.h",
     "jpegli/encode_internal.h",
+    "jpegli/entropy_coding-inl.h",
     "jpegli/entropy_coding.cc",
     "jpegli/entropy_coding.h",
     "jpegli/error.cc",

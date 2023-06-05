@@ -3414,14 +3414,23 @@ void CollectSamples(const unsigned char* rgba, size_t x0, size_t y0, size_t xs,
 }
 
 void PrepareDCGlobalPalette(bool is_single_group, size_t width, size_t height,
-                            const PrefixCode code[4],
+                            size_t nb_chans, const PrefixCode code[4],
                             const std::vector<uint32_t>& palette,
                             size_t pcolors, BitWriter* output) {
   PrepareDCGlobalCommon(is_single_group, width, height, code, output);
   output->Write(2, 0b01);     // 1 transform
   output->Write(2, 0b01);     // Palette
   output->Write(5, 0b00000);  // Starting from ch 0
-  output->Write(2, 0b10);     // 4-channel palette (RGBA)
+  if (nb_chans == 1) {
+    output->Write(2, 0b00);  // 1-channel palette (Gray)
+  } else if (nb_chans == 3) {
+    output->Write(2, 0b01);  // 3-channel palette (RGB)
+  } else if (nb_chans == 4) {
+    output->Write(2, 0b10);  // 4-channel palette (RGBA)
+  } else {
+    output->Write(2, 0b11);
+    output->Write(13, nb_chans - 1);
+  }
   // pcolors <= kMaxColors + kChunkSize - 1
   static_assert(kMaxColors + kChunkSize < 1281,
                 "add code to signal larger palette sizes");
@@ -3471,6 +3480,32 @@ void PrepareDCGlobalPalette(bool is_single_group, size_t width, size_t height,
   }
 }
 
+template <size_t nb_chans>
+bool detect_palette(const unsigned char* r, size_t width,
+                    std::vector<uint32_t>& palette) {
+  size_t x = 0;
+  bool collided = false;
+  // this is just an unrolling of the next loop
+  for (; x + 7 < width; x += 8) {
+    uint32_t p[8] = {}, index[8];
+    for (int i = 0; i < 8; i++) memcpy(&p[i], r + (x + i) * nb_chans, 4);
+    for (int i = 0; i < 8; i++) p[i] &= ((1llu << (8 * nb_chans)) - 1);
+    for (int i = 0; i < 8; i++) index[i] = pixel_hash(p[i]);
+    for (int i = 0; i < 8; i++) {
+      collided |= (palette[index[i]] != 0 && p[i] != palette[index[i]]);
+    }
+    for (int i = 0; i < 8; i++) palette[index[i]] = p[i];
+  }
+  for (; x < width; x++) {
+    uint32_t p = 0;
+    memcpy(&p, r + x * nb_chans, nb_chans);
+    uint32_t index = pixel_hash(p);
+    collided |= (palette[index] != 0 && p != palette[index]);
+    palette[index] = p;
+  }
+  return collided;
+}
+
 template <typename BitDepth>
 JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
                                  size_t stride, size_t height,
@@ -3484,57 +3519,21 @@ JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
 
   // Count colors to try palette
   std::vector<uint32_t> palette(kHashSize);
-  palette[0] = 1;
   std::vector<int16_t> lookup(kHashSize);
   lookup[0] = 0;
   int pcolors = 0;
-  bool collided = effort < 2 || bitdepth.bitdepth != 8 ||
-                  nb_chans < 4;  // todo: also do rgb palette
+  bool collided = effort < 2 || bitdepth.bitdepth != 8;
   for (size_t y = 0; y < height && !collided; y++) {
     const unsigned char* r = rgba + stride * y;
-    size_t x = 0;
-    if (nb_chans == 4) {
-      // this is just an unrolling of the next loop
-      for (; x + 7 < width; x += 8) {
-        uint32_t p[8], index[8];
-        memcpy(p, r + x * 4, 32);
-        for (int i = 0; i < 8; i++) index[i] = pixel_hash(p[i]);
-        for (int i = 0; i < 8; i++) {
-          uint32_t init_entry = index[i] ? 0 : 1;
-          if (init_entry != palette[index[i]] && p[i] != palette[index[i]]) {
-            collided = true;
-          }
-        }
-        for (int i = 0; i < 8; i++) palette[index[i]] = p[i];
-      }
-      for (; x < width; x++) {
-        uint32_t p;
-        memcpy(&p, r + x * 4, 4);
-        uint32_t index = pixel_hash(p);
-        uint32_t init_entry = index ? 0 : 1;
-        if (init_entry != palette[index] && p != palette[index]) {
-          collided = true;
-        }
-        palette[index] = p;
-      }
-    } else {
-      for (; x < width; x++) {
-        uint32_t p = 0;
-        memcpy(&p, r + x * nb_chans, nb_chans);
-        uint32_t index = pixel_hash(p);
-        uint32_t init_entry = index ? 0 : 1;
-        if (init_entry != palette[index] && p != palette[index]) {
-          collided = true;
-        }
-        palette[index] = p;
-      }
-    }
+    if (nb_chans == 1) collided = detect_palette<1>(r, width, palette);
+    if (nb_chans == 2) collided = detect_palette<2>(r, width, palette);
+    if (nb_chans == 3) collided = detect_palette<3>(r, width, palette);
+    if (nb_chans == 4) collided = detect_palette<4>(r, width, palette);
   }
 
   int nb_entries = 0;
   if (!collided) {
-    if (palette[0] == 0) pcolors = 1;
-    if (palette[0] == 1) palette[0] = 0;
+    pcolors = 1;  // always have all-zero as a palette color
     bool have_color = false;
     uint8_t minG = 255, maxG = 0;
     for (uint32_t k = 0; k < kHashSize; k++) {
@@ -3561,15 +3560,20 @@ JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
   if (!collided) {
     std::sort(
         palette.begin(), palette.begin() + nb_entries,
-        [](uint32_t ap, uint32_t bp) {
+        [&nb_chans](uint32_t ap, uint32_t bp) {
           if (ap == 0) return false;
           if (bp == 0) return true;
           uint8_t a[4], b[4];
           memcpy(a, &ap, 4);
           memcpy(b, &bp, 4);
           float ay, by;
-          ay = (0.299f * a[0] + 0.587f * a[1] + 0.114f * a[2] + 0.01f) * a[3];
-          by = (0.299f * b[0] + 0.587f * b[1] + 0.114f * b[2] + 0.01f) * b[3];
+          if (nb_chans == 4) {
+            ay = (0.299f * a[0] + 0.587f * a[1] + 0.114f * a[2] + 0.01f) * a[3];
+            by = (0.299f * b[0] + 0.587f * b[1] + 0.114f * b[2] + 0.01f) * b[3];
+          } else {
+            ay = (0.299f * a[0] + 0.587f * a[1] + 0.114f * a[2] + 0.01f);
+            by = (0.299f * b[0] + 0.587f * b[1] + 0.114f * b[2] + 0.01f);
+          }
           return ay < by;  // sort on alpha*luma
         });
     for (int k = 0; k < nb_entries; k++) {
@@ -3663,8 +3667,8 @@ JxlFastLosslessFrameState* LLEnc(const unsigned char* rgba, size_t width,
     PrepareDCGlobal(onegroup, width, height, nb_chans, hcode,
                     &frame_state->group_data[0][0]);
   } else {
-    PrepareDCGlobalPalette(onegroup, width, height, hcode, palette, pcolors,
-                           &frame_state->group_data[0][0]);
+    PrepareDCGlobalPalette(onegroup, width, height, nb_chans, hcode, palette,
+                           pcolors, &frame_state->group_data[0][0]);
   }
 
   auto run_one = [&](size_t g) {

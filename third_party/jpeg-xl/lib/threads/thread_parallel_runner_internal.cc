@@ -14,8 +14,6 @@
 
 #include <jxl/thread_parallel_runner.h>
 
-#include "lib/jxl/base/profiler.h"
-
 namespace {
 
 // Important: JXL_ASSERT does not guarantee running the `condition` code,
@@ -177,8 +175,6 @@ void ThreadParallelRunner::ThreadFunc(ThreadParallelRunner* self,
 ThreadParallelRunner::ThreadParallelRunner(const int num_worker_threads)
     : num_worker_threads_(num_worker_threads),
       num_threads_(std::max(num_worker_threads, 1)) {
-  PROFILER_ZONE("ThreadParallelRunner ctor");
-
   threads_.reserve(num_worker_threads_);
 
   // Suppress "unused-private-field" warning.
@@ -195,11 +191,6 @@ ThreadParallelRunner::ThreadParallelRunner(const int num_worker_threads)
   if (num_worker_threads_ != 0) {
     WorkersReadyBarrier();
   }
-
-  // Warm up profiler on worker threads so its expensive initialization
-  // doesn't count towards other timer measurements.
-  RunOnEachThread(
-      [](const int task, const int thread) { PROFILER_ZONE("@InitWorkers"); });
 }
 
 ThreadParallelRunner::~ThreadParallelRunner() {

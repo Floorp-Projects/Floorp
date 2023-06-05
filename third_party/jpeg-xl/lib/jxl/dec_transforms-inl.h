@@ -460,7 +460,6 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
   using Type = AcStrategy::Type;
   switch (strategy) {
     case Type::IDENTITY: {
-      PROFILER_ZONE("IDCT Identity");
       float dcs[4] = {};
       float block00 = coefficients[0];
       float block01 = coefficients[1];
@@ -498,7 +497,6 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
       break;
     }
     case Type::DCT8X4: {
-      PROFILER_ZONE("IDCT 8x4");
       float dcs[2] = {};
       float block0 = coefficients[0];
       float block1 = coefficients[8];
@@ -519,7 +517,6 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
       break;
     }
     case Type::DCT4X8: {
-      PROFILER_ZONE("IDCT 4x8");
       float dcs[2] = {};
       float block0 = coefficients[0];
       float block1 = coefficients[8];
@@ -541,7 +538,6 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
       break;
     }
     case Type::DCT4X4: {
-      PROFILER_ZONE("IDCT 4");
       float dcs[4] = {};
       float block00 = coefficients[0];
       float block01 = coefficients[1];
@@ -570,7 +566,6 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
       break;
     }
     case Type::DCT2X2: {
-      PROFILER_ZONE("IDCT 2");
       HWY_ALIGN float coeffs[kDCTBlockSize];
       memcpy(coeffs, coefficients, sizeof(float) * kDCTBlockSize);
       IDCT2TopBlock<2>(coeffs, kBlockDim, coeffs);
@@ -584,129 +579,107 @@ HWY_MAYBE_UNUSED void TransformToPixels(const AcStrategy::Type strategy,
       break;
     }
     case Type::DCT16X16: {
-      PROFILER_ZONE("IDCT 16");
       ComputeScaledIDCT<16, 16>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT16X8: {
-      PROFILER_ZONE("IDCT 16x8");
       ComputeScaledIDCT<16, 8>()(coefficients, DCTTo(pixels, pixels_stride),
                                  scratch_space);
       break;
     }
     case Type::DCT8X16: {
-      PROFILER_ZONE("IDCT 8x16");
       ComputeScaledIDCT<8, 16>()(coefficients, DCTTo(pixels, pixels_stride),
                                  scratch_space);
       break;
     }
     case Type::DCT32X8: {
-      PROFILER_ZONE("IDCT 32x8");
       ComputeScaledIDCT<32, 8>()(coefficients, DCTTo(pixels, pixels_stride),
                                  scratch_space);
       break;
     }
     case Type::DCT8X32: {
-      PROFILER_ZONE("IDCT 8x32");
       ComputeScaledIDCT<8, 32>()(coefficients, DCTTo(pixels, pixels_stride),
                                  scratch_space);
       break;
     }
     case Type::DCT32X16: {
-      PROFILER_ZONE("IDCT 32x16");
       ComputeScaledIDCT<32, 16>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT16X32: {
-      PROFILER_ZONE("IDCT 16x32");
       ComputeScaledIDCT<16, 32>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT32X32: {
-      PROFILER_ZONE("IDCT 32");
       ComputeScaledIDCT<32, 32>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT: {
-      PROFILER_ZONE("IDCT 8");
       ComputeScaledIDCT<8, 8>()(coefficients, DCTTo(pixels, pixels_stride),
                                 scratch_space);
       break;
     }
     case Type::AFV0: {
-      PROFILER_ZONE("IAFV0");
       AFVTransformToPixels<0>(coefficients, pixels, pixels_stride);
       break;
     }
     case Type::AFV1: {
-      PROFILER_ZONE("IAFV1");
       AFVTransformToPixels<1>(coefficients, pixels, pixels_stride);
       break;
     }
     case Type::AFV2: {
-      PROFILER_ZONE("IAFV2");
       AFVTransformToPixels<2>(coefficients, pixels, pixels_stride);
       break;
     }
     case Type::AFV3: {
-      PROFILER_ZONE("IAFV3");
       AFVTransformToPixels<3>(coefficients, pixels, pixels_stride);
       break;
     }
     case Type::DCT64X32: {
-      PROFILER_ZONE("IDCT 64x32");
       ComputeScaledIDCT<64, 32>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT32X64: {
-      PROFILER_ZONE("IDCT 32x64");
       ComputeScaledIDCT<32, 64>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT64X64: {
-      PROFILER_ZONE("IDCT 64");
       ComputeScaledIDCT<64, 64>()(coefficients, DCTTo(pixels, pixels_stride),
                                   scratch_space);
       break;
     }
     case Type::DCT128X64: {
-      PROFILER_ZONE("IDCT 128x64");
       ComputeScaledIDCT<128, 64>()(coefficients, DCTTo(pixels, pixels_stride),
                                    scratch_space);
       break;
     }
     case Type::DCT64X128: {
-      PROFILER_ZONE("IDCT 64x128");
       ComputeScaledIDCT<64, 128>()(coefficients, DCTTo(pixels, pixels_stride),
                                    scratch_space);
       break;
     }
     case Type::DCT128X128: {
-      PROFILER_ZONE("IDCT 128");
       ComputeScaledIDCT<128, 128>()(coefficients, DCTTo(pixels, pixels_stride),
                                     scratch_space);
       break;
     }
     case Type::DCT256X128: {
-      PROFILER_ZONE("IDCT 256x128");
       ComputeScaledIDCT<256, 128>()(coefficients, DCTTo(pixels, pixels_stride),
                                     scratch_space);
       break;
     }
     case Type::DCT128X256: {
-      PROFILER_ZONE("IDCT 128x256");
       ComputeScaledIDCT<128, 256>()(coefficients, DCTTo(pixels, pixels_stride),
                                     scratch_space);
       break;
     }
     case Type::DCT256X256: {
-      PROFILER_ZONE("IDCT 256");
       ComputeScaledIDCT<256, 256>()(coefficients, DCTTo(pixels, pixels_stride),
                                     scratch_space);
       break;

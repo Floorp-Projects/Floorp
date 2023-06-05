@@ -13,7 +13,6 @@
 #include <limits>
 #include <vector>
 
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/image.h"
@@ -22,7 +21,6 @@ namespace jxl {
 
 template <typename T>
 void CopyImageTo(const Plane<T>& from, Plane<T>* JXL_RESTRICT to) {
-  PROFILER_ZONE("CopyImage1");
   JXL_ASSERT(SameSize(from, *to));
   if (from.ysize() == 0 || from.xsize() == 0) return;
   for (size_t y = 0; y < from.ysize(); ++y) {
@@ -44,7 +42,6 @@ Plane<T> CopyImage(const Plane<T>& from) {
 template <typename T>
 void CopyImageTo(const Rect& rect_from, const Plane<T>& from,
                  const Rect& rect_to, Plane<T>* JXL_RESTRICT to) {
-  PROFILER_ZONE("CopyImageR");
   JXL_DASSERT(SameSize(rect_from, rect_to));
   JXL_DASSERT(rect_from.IsInside(from));
   JXL_DASSERT(rect_to.IsInside(*to));
@@ -68,7 +65,6 @@ Plane<T> CopyImage(const Rect& rect, const Plane<T>& image) {
 template <typename T>
 void CopyImageTo(const Rect& rect_from, const Image3<T>& from,
                  const Rect& rect_to, Image3<T>* JXL_RESTRICT to) {
-  PROFILER_ZONE("CopyImageR");
   JXL_ASSERT(SameSize(rect_from, rect_to));
   for (size_t c = 0; c < 3; c++) {
     CopyImageTo(rect_from, from.Plane(c), rect_to, &to->Plane(c));
@@ -78,7 +74,6 @@ void CopyImageTo(const Rect& rect_from, const Image3<T>& from,
 template <typename T, typename U>
 void ConvertPlaneAndClamp(const Rect& rect_from, const Plane<T>& from,
                           const Rect& rect_to, Plane<U>* JXL_RESTRICT to) {
-  PROFILER_ZONE("ConvertPlane");
   JXL_ASSERT(SameSize(rect_from, rect_to));
   using M = decltype(T() + U());
   for (size_t y = 0; y < rect_to.ysize(); ++y) {

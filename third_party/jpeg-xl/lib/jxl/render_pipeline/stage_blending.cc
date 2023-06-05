@@ -117,7 +117,6 @@ class BlendingStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("Blend");
     JXL_ASSERT(initialized_);
     const FrameOrigin& frame_origin = state_.frame_header.frame_origin;
     ssize_t bg_xpos = frame_origin.x0 + static_cast<ssize_t>(xpos);

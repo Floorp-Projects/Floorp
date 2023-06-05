@@ -61,8 +61,6 @@ class ToneMappingStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("ToneMapping");
-
     if (!(tone_mapper_ || hlg_ootf_)) return;
 
     const HWY_FULL(float) d;

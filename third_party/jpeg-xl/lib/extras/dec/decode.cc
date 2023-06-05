@@ -19,6 +19,7 @@
 #if JPEGXL_ENABLE_JPEG
 #include "lib/extras/dec/jpg.h"
 #endif
+#include "lib/extras/dec/jxl.h"
 #include "lib/extras/dec/pgx.h"
 #include "lib/extras/dec/pnm.h"
 
@@ -100,6 +101,12 @@ Status DecodeBytes(const Span<const uint8_t> bytes,
     }
     if (DecodeImagePNM(bytes, color_hints, ppf, constraints)) {
       return Codec::kPNM;
+    }
+    JXLDecompressParams dparams = {};
+    size_t decoded_bytes;
+    if (DecodeImageJXL(bytes.data(), bytes.size(), dparams, &decoded_bytes,
+                       ppf)) {
+      return Codec::kJXL;
     }
 #if JPEGXL_ENABLE_GIF
     if (DecodeImageGIF(bytes, color_hints, ppf, constraints)) {

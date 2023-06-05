@@ -29,8 +29,6 @@ class XYBStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("UndoXYB");
-
     const HWY_FULL(float) d;
     JXL_ASSERT(xextra == 0);
     const size_t xsize_v = RoundUpTo(xsize, Lanes(d));

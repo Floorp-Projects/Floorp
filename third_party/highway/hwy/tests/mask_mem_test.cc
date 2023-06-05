@@ -16,9 +16,8 @@
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS  // before inttypes.h
 #endif
-#include <inttypes.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <inttypes.h>  // IWYU pragma: keep
+#include <stdio.h>
 #include <string.h>  // memcmp
 
 #undef HWY_TARGET_INCLUDE
@@ -40,9 +39,12 @@ struct TestMaskedLoad {
     const Rebind<TI, D> di;
     const size_t N = Lanes(d);
     auto bool_lanes = AllocateAligned<TI>(N);
-
     auto lanes = AllocateAligned<T>(N);
-    Store(Iota(d, T{1}), d, lanes.get());
+    HWY_ASSERT(bool_lanes && lanes);
+
+    const Vec<D> v = Iota(d, T{1});
+    const Vec<D> v2 = Iota(d, T{2});
+    Store(v, d, lanes.get());
 
     // Each lane should have a chance of having mask=true.
     for (size_t rep = 0; rep < AdjustedReps(200); ++rep) {
@@ -50,10 +52,14 @@ struct TestMaskedLoad {
         bool_lanes[i] = (Random32(&rng) & 1024) ? TI(1) : TI(0);
       }
 
-      const auto mask = RebindMask(d, Gt(Load(di, bool_lanes.get()), Zero(di)));
+      const auto mask_i = Load(di, bool_lanes.get());
+      const auto mask = RebindMask(d, Gt(mask_i, Zero(di)));
       const auto expected = IfThenElseZero(mask, Load(d, lanes.get()));
+      const auto expected2 = IfThenElse(mask, Load(d, lanes.get()), v2);
       const auto actual = MaskedLoad(mask, d, lanes.get());
+      const auto actual2 = MaskedLoadOr(v2, mask, d, lanes.get());
       HWY_ASSERT_VEC_EQ(d, expected, actual);
+      HWY_ASSERT_VEC_EQ(d, expected2, actual2);
     }
   }
 };
@@ -71,10 +77,11 @@ struct TestBlendedStore {
     const Rebind<TI, D> di;
     const size_t N = Lanes(d);
     auto bool_lanes = AllocateAligned<TI>(N);
-
-    const Vec<D> v = Iota(d, T{1});
     auto actual = AllocateAligned<T>(N);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(bool_lanes && actual && expected);
+
+    const Vec<D> v = Iota(d, T{1});
 
     // Each lane should have a chance of having mask=true.
     for (size_t rep = 0; rep < AdjustedReps(200); ++rep) {
@@ -104,12 +111,13 @@ class TestStoreMaskBits {
     using TI = MakeSigned<T>;  // For mask > 0 comparison
     const Rebind<TI, D> di;
     const size_t N = Lanes(di);
-    auto bool_lanes = AllocateAligned<TI>(N);
-
-    const ScalableTag<uint8_t, -3> d_bits;
     const size_t expected_num_bytes = (N + 7) / 8;
+    auto bool_lanes = AllocateAligned<TI>(N);
     auto expected = AllocateAligned<uint8_t>(expected_num_bytes);
     auto actual = AllocateAligned<uint8_t>(HWY_MAX(8, expected_num_bytes));
+    HWY_ASSERT(bool_lanes && actual && expected);
+
+    const ScalableTag<uint8_t, -3> d_bits;
 
     for (size_t rep = 0; rep < AdjustedReps(200); ++rep) {
       // Generate random mask pattern.

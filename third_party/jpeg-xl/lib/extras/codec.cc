@@ -121,6 +121,9 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
 #else
       return JXL_FAILURE("JPEG XL was built without OpenEXR support");
 #endif
+    case extras::Codec::kJXL:
+      return JXL_FAILURE("TODO: encode using Codec::kJXL");
+
     case extras::Codec::kUnknown:
       return JXL_FAILURE("Cannot encode using Codec::kUnknown");
   }

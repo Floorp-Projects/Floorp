@@ -110,10 +110,6 @@ target_include_directories(jxl_base-obj PUBLIC
 
 jxl_link_libraries(jxl_base-obj jxl_includes)
 
-if(JPEGXL_ENABLE_PROFILER)
-  target_compile_definitions(jxl_base-obj PUBLIC -DJXL_PROFILER_ENABLED=1)
-endif()
-
 # Decoder-only object library
 add_library(jxl_dec-obj OBJECT ${JPEGXL_INTERNAL_DEC_SOURCES})
 target_compile_options(jxl_dec-obj PRIVATE ${JPEGXL_INTERNAL_FLAGS})

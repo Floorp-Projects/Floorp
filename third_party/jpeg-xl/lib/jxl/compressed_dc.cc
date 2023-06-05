@@ -27,7 +27,6 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/common.h"
@@ -144,8 +143,6 @@ void AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
   // TODO(veluca): decide if changes to the y channel should be propagated to
   // the x and b channels through color correlation.
   JXL_ASSERT(w1 + w2 < 0.25f);
-
-  PROFILER_FUNC;
 
   Image3F smoothed(xsize, ysize);
   // Fill in borders that the loop below will not. First and last are unused.

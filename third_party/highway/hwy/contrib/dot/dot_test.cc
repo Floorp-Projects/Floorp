@@ -23,7 +23,7 @@
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/dot/dot_test.cc"
 #include "hwy/foreach_target.h"  // IWYU pragma: keep
-
+#include "hwy/highway.h"
 #include "hwy/contrib/dot/dot-inl.h"
 #include "hwy/tests/test_util-inl.h"
 // clang-format on
@@ -74,6 +74,7 @@ class TestDot {
         (kAssumptions & Dot::kPaddedToVector) ? RoundUpTo(num, N) : num;
     AlignedFreeUniquePtr<T[]> pa = AllocateAligned<T>(misalign_a + padded);
     AlignedFreeUniquePtr<T[]> pb = AllocateAligned<T>(misalign_b + padded);
+    HWY_ASSERT(pa && pb);
     T* a = pa.get() + misalign_a;
     T* b = pb.get() + misalign_b;
     size_t i = 0;

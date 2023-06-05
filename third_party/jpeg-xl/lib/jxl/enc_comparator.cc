@@ -11,7 +11,6 @@
 #include <algorithm>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/enc_gamma_correct.h"
 #include "lib/jxl/enc_image_bundle.h"
@@ -71,7 +70,6 @@ float ComputeScoreImpl(const ImageBundle& rgb0, const ImageBundle& rgb1,
 float ComputeScore(const ImageBundle& rgb0, const ImageBundle& rgb1,
                    Comparator* comparator, const JxlCmsInterface& cms,
                    ImageF* diffmap, ThreadPool* pool) {
-  PROFILER_FUNC;
   // Convert to linear sRGB (unless already in that space)
   ImageMetadata metadata0 = *rgb0.metadata();
   ImageBundle store0(&metadata0);

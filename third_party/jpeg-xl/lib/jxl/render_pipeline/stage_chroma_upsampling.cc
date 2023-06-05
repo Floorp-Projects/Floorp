@@ -30,7 +30,6 @@ class HorizontalChromaUpsamplingStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("HorizontalChromaUpsampling");
     HWY_FULL(float) df;
     xextra = RoundUpTo(xextra, Lanes(df));
     auto threefour = Set(df, 0.75f);
@@ -69,7 +68,6 @@ class VerticalChromaUpsamplingStage : public RenderPipelineStage {
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
-    PROFILER_ZONE("VerticalChromaUpsampling");
     HWY_FULL(float) df;
     xextra = RoundUpTo(xextra, Lanes(df));
     auto threefour = Set(df, 0.75f);

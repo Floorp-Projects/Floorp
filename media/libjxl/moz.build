@@ -17,7 +17,6 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/base/cache_aligned.cc",
     "/third_party/jpeg-xl/lib/jxl/base/data_parallel.cc",
     "/third_party/jpeg-xl/lib/jxl/base/padded_bytes.cc",
-    "/third_party/jpeg-xl/lib/jxl/base/profiler.cc",
     "/third_party/jpeg-xl/lib/jxl/base/random.cc",
     "/third_party/jpeg-xl/lib/jxl/blending.cc",
     "/third_party/jpeg-xl/lib/jxl/chroma_from_luma.cc",

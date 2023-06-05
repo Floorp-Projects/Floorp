@@ -15,12 +15,11 @@
 
 // Tests some ops specific to floating-point types (Div, Round etc.)
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stdio.h>
 
 #include <algorithm>  // std::copy, std::fill
+#include <cmath>      // std::abs, std::isnan, std::isinf, std::ceil, std::floor
 #include <limits>
-#include <cmath>  // std::abs, std::isnan, std::isinf, std::ceil, std::floor
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/float_test.cc"
@@ -43,6 +42,7 @@ struct TestDiv {
 
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
+    HWY_ASSERT(expected);
     for (size_t i = 0; i < N; ++i) {
       expected[i] = (T(i) - 2) / T(2);
     }
@@ -59,9 +59,10 @@ struct TestApproximateReciprocal {
     const auto nonzero = IfThenElse(Eq(v, Zero(d)), Set(d, T(1)), v);
     const size_t N = Lanes(d);
     auto input = AllocateAligned<T>(N);
-    Store(nonzero, d, input.get());
-
     auto actual = AllocateAligned<T>(N);
+    HWY_ASSERT(input && actual);
+
+    Store(nonzero, d, input.get());
     Store(ApproximateReciprocal(nonzero), d, actual.get());
 
     double max_l1 = 0.0;
@@ -108,6 +109,7 @@ struct TestReciprocalSquareRoot {
     const auto v = Set(d, 123.0f);
     const size_t N = Lanes(d);
     auto lanes = AllocateAligned<T>(N);
+    HWY_ASSERT(lanes);
     Store(ApproximateReciprocalSqrt(v), d, lanes.get());
     for (size_t i = 0; i < N; ++i) {
       float err = lanes[i] - 0.090166f;
@@ -178,6 +180,7 @@ AlignedFreeUniquePtr<T[]> RoundTestCases(T /*unused*/, D d, size_t& padded) {
   padded = RoundUpTo(kNumTestCases, N);  // allow loading whole vectors
   auto in = AllocateAligned<T>(padded);
   auto expected = AllocateAligned<T>(padded);
+  HWY_ASSERT(in && expected);
   std::copy(test_cases, test_cases + kNumTestCases, in.get());
   std::fill(in.get() + kNumTestCases, in.get() + padded, T(0));
   return in;
@@ -189,6 +192,7 @@ struct TestRound {
     size_t padded;
     auto in = RoundTestCases(t, d, padded);
     auto expected = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected);
 
     for (size_t i = 0; i < padded; ++i) {
       // Avoid [std::]round, which does not round to nearest *even*.
@@ -215,6 +219,7 @@ struct TestNearestInt {
     size_t padded;
     auto in = RoundTestCases(tf, df, padded);
     auto expected = AllocateAligned<TI>(padded);
+    HWY_ASSERT(expected);
 
     constexpr double max = static_cast<double>(LimitsMax<TI>());
     for (size_t i = 0; i < padded; ++i) {
@@ -246,6 +251,7 @@ struct TestTrunc {
     size_t padded;
     auto in = RoundTestCases(t, d, padded);
     auto expected = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected);
 
     for (size_t i = 0; i < padded; ++i) {
       // NOTE: std:: version from C++11 cmath is not defined in RVV GCC, see
@@ -268,6 +274,7 @@ struct TestCeil {
     size_t padded;
     auto in = RoundTestCases(t, d, padded);
     auto expected = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected);
 
     for (size_t i = 0; i < padded; ++i) {
       expected[i] = std::ceil(in[i]);
@@ -288,6 +295,7 @@ struct TestFloor {
     size_t padded;
     auto in = RoundTestCases(t, d, padded);
     auto expected = AllocateAligned<T>(padded);
+    HWY_ASSERT(expected);
 
     for (size_t i = 0; i < padded; ++i) {
       expected[i] = std::floor(in[i]);
@@ -309,6 +317,7 @@ struct TestAbsDiff {
     auto in_lanes_a = AllocateAligned<T>(N);
     auto in_lanes_b = AllocateAligned<T>(N);
     auto out_lanes = AllocateAligned<T>(N);
+    HWY_ASSERT(in_lanes_a && in_lanes_b && out_lanes);
     for (size_t i = 0; i < N; ++i) {
       in_lanes_a[i] = static_cast<T>((i ^ 1u) << i);
       in_lanes_b[i] = static_cast<T>(i << i);

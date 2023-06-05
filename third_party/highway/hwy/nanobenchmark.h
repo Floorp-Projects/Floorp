@@ -167,8 +167,8 @@ struct Result {
 //   uniform distribution over [0, 4) could be represented as {3,0,2,1}.
 // Returns how many Result were written to "results": one per unique input, or
 //   zero if the measurement failed (an error message goes to stderr).
-HWY_DLLEXPORT size_t Measure(const Func func, const uint8_t* arg,
-                             const FuncInput* inputs, const size_t num_inputs,
+HWY_DLLEXPORT size_t Measure(Func func, const uint8_t* arg,
+                             const FuncInput* inputs, size_t num_inputs,
                              Result* results, const Params& p = Params());
 
 // Calls operator() of the given closure (lambda function).
