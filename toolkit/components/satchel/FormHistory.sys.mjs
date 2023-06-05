@@ -1142,14 +1142,12 @@ FormHistory = {
    * @param {object} params zero or more filter properties:
    *   - fieldname
    *   - source
-   * @param {Function} [callback] if provided, it is invoked for each result.
-   *   the first argument is the result with four properties (text,
-   *   textLowerCase, frequency, totalScore), the second argument is a cancel
-   *   function that can be invoked to cancel the search.
+   * @param {Function} [isCancelled] optional function that can return true
+   *   to cancel result retrieval
    * @returns {Promise<Array>}
    *   An array of results. If the search was canceled it will be an empty array.
    */
-  async getAutoCompleteResults(searchString, params, callback) {
+  async getAutoCompleteResults(searchString, params, isCancelled) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
     let where = "";
@@ -1244,16 +1242,12 @@ FormHistory = {
       where +
       "ORDER BY ROUND(frecency * boundaryBonuses) DESC, UPPER(value) ASC";
 
-    const results = [];
-    let cancelled = false;
-    function cancelFn() {
-      cancelled = true;
-    }
-
+    let results = [];
     const conn = await this.db;
     await conn.executeCached(query, params, (row, cancel) => {
-      if (cancelled) {
+      if (isCancelled?.()) {
         cancel();
+        results = [];
         return;
       }
 
@@ -1269,10 +1263,9 @@ FormHistory = {
           frecency * row.getResultByName("boundaryBonuses")
         ),
       };
-      callback?.(entry, cancelFn);
       results.push(entry);
     });
-    return cancelled ? [] : results;
+    return results;
   },
 
   // This is used only so that the test can verify deleted table support.
