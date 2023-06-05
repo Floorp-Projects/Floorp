@@ -11,6 +11,7 @@
 #ifndef MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 #define MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>
@@ -493,6 +494,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
             frame_transformer);
 
     void SetLocalSsrc(uint32_t local_ssrc);
+    void UpdateRtxSsrc(uint32_t ssrc);
 
    private:
     // Attempts to reconfigure an already existing `flexfec_stream_`, create

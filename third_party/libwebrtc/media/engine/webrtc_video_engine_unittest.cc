@@ -281,6 +281,47 @@ std::vector<webrtc::Resolution> GetStreamResolutions(
   return res;
 }
 
+RtpPacketReceived BuildVp8KeyFrame(uint32_t ssrc, uint8_t payload_type) {
+  RtpPacketReceived packet;
+  packet.SetMarker(true);
+  packet.SetPayloadType(payload_type);
+  packet.SetSsrc(ssrc);
+
+  // VP8 Keyframe + 1 byte payload
+  uint8_t* buf_ptr = packet.AllocatePayload(11);
+  memset(buf_ptr, 0, 11);  // Pass MSAN (don't care about bytes 1-9)
+  buf_ptr[0] = 0x10;       // Partition ID 0 + beginning of partition.
+  constexpr unsigned width = 1080;
+  constexpr unsigned height = 720;
+  buf_ptr[6] = width & 255;
+  buf_ptr[7] = width >> 8;
+  buf_ptr[8] = height & 255;
+  buf_ptr[9] = height >> 8;
+  return packet;
+}
+
+RtpPacketReceived BuildRtxPacket(uint32_t rtx_ssrc,
+                                 uint8_t rtx_payload_type,
+                                 const RtpPacketReceived& original_packet) {
+  constexpr size_t kRtxHeaderSize = 2;
+  RtpPacketReceived packet(original_packet);
+  packet.SetPayloadType(rtx_payload_type);
+  packet.SetSsrc(rtx_ssrc);
+
+  uint8_t* rtx_payload =
+      packet.AllocatePayload(original_packet.payload_size() + kRtxHeaderSize);
+  // Add OSN (original sequence number).
+  rtx_payload[0] = packet.SequenceNumber() >> 8;
+  rtx_payload[1] = packet.SequenceNumber();
+
+  // Add original payload data.
+  if (!original_packet.payload().empty()) {
+    memcpy(rtx_payload + kRtxHeaderSize, original_packet.payload().data(),
+           original_packet.payload().size());
+  }
+  return packet;
+}
+
 }  // namespace
 
 #define EXPECT_FRAME_WAIT(c, w, h, t)                        \
@@ -900,6 +941,50 @@ TEST_F(WebRtcVideoEngineTest, SendsFeedbackAfterUnsignaledRtxPacket) {
 
   channel->SetInterface(nullptr);
 }
+
+TEST_F(WebRtcVideoEngineTest, UpdatesUnsignaledRtxSsrcAndRecoversPayload) {
+  // Setup a channel with VP8, RTX and transport sequence number header
+  // extension. Receive stream is not explicitly configured.
+  AddSupportedVideoCodecType("VP8");
+  std::vector<VideoCodec> supported_codecs =
+      engine_.recv_codecs(/*include_rtx=*/true);
+  ASSERT_EQ(supported_codecs[1].name, "rtx");
+  int rtx_payload_type = supported_codecs[1].id;
+
+  std::unique_ptr<VideoMediaChannel> channel(engine_.CreateMediaChannel(
+      call_.get(), GetMediaConfig(), VideoOptions(), webrtc::CryptoOptions(),
+      video_bitrate_allocator_factory_.get()));
+  cricket::VideoRecvParameters parameters;
+  parameters.codecs = supported_codecs;
+  ASSERT_TRUE(channel->SetRecvParameters(parameters));
+
+  // Receive a normal payload packet. It is not a complete frame since the
+  // marker bit is not set.
+  RtpPacketReceived packet_1 =
+      BuildVp8KeyFrame(/*ssrc*/ 123, supported_codecs[0].id);
+  packet_1.SetMarker(false);
+  channel->AsVideoReceiveChannel()->OnPacketReceived(packet_1);
+
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Millis(100));
+  // No complete frame received. No decoder created yet.
+  EXPECT_THAT(decoder_factory_->decoders(), IsEmpty());
+
+  RtpPacketReceived packet_2;
+  packet_2.SetSsrc(123);
+  packet_2.SetPayloadType(supported_codecs[0].id);
+  packet_2.SetSequenceNumber(packet_1.SequenceNumber() + 1);
+  memset(packet_2.AllocatePayload(500), 0, 1);
+  packet_2.SetMarker(true);  //  Frame is complete.
+  RtpPacketReceived rtx_packet =
+      BuildRtxPacket(345, rtx_payload_type, packet_2);
+
+  channel->AsVideoReceiveChannel()->OnPacketReceived(rtx_packet);
+
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Millis(0));
+  ASSERT_THAT(decoder_factory_->decoders(), Not(IsEmpty()));
+  EXPECT_EQ(decoder_factory_->decoders()[0]->GetNumFramesReceived(), 1);
+}
+
 TEST_F(WebRtcVideoEngineTest, UsesSimulcastAdapterForVp8Factories) {
   AddSupportedVideoCodecType("VP8");
 
@@ -1528,23 +1613,7 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
   }
 
   void DeliverKeyFrame(uint32_t ssrc) {
-    RtpPacketReceived packet;
-    packet.SetMarker(true);
-    packet.SetPayloadType(96);  // VP8
-    packet.SetSsrc(ssrc);
-
-    // VP8 Keyframe + 1 byte payload
-    uint8_t* buf_ptr = packet.AllocatePayload(11);
-    memset(buf_ptr, 0, 11);  // Pass MSAN (don't care about bytes 1-9)
-    buf_ptr[0] = 0x10;       // Partition ID 0 + beginning of partition.
-    constexpr unsigned width = 1080;
-    constexpr unsigned height = 720;
-    buf_ptr[6] = width & 255;
-    buf_ptr[7] = width >> 8;
-    buf_ptr[8] = height & 255;
-    buf_ptr[9] = height >> 8;
-
-    channel_->OnPacketReceived(packet);
+    channel_->OnPacketReceived(BuildVp8KeyFrame(ssrc, 96));
   }
 
   void DeliverKeyFrameAndWait(uint32_t ssrc) {
@@ -7227,8 +7296,7 @@ TEST_F(WebRtcVideoChannelTest, RedRtxPacketDoesntCreateUnsignalledStream) {
                                   false /* expect_created_receive_stream */);
 }
 
-TEST_F(WebRtcVideoChannelTest,
-       RtxAfterMediaPacketRecreatesUnsignalledStream) {
+TEST_F(WebRtcVideoChannelTest, RtxAfterMediaPacketUpdatesUnsignalledRtxSsrc) {
   AssignDefaultAptRtxTypes();
   const cricket::VideoCodec vp8 = GetEngineCodec("VP8");
   const int payload_type = vp8.id;
@@ -7253,13 +7321,14 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_EQ(1u, fake_call_->GetVideoReceiveStreams().size())
       << "RTX packet should not have added or removed a receive stream";
 
-  // Check receive stream has been recreated with correct ssrcs.
   auto recv_stream = fake_call_->GetVideoReceiveStreams().front();
   auto& config = recv_stream->GetConfig();
   EXPECT_EQ(config.rtp.remote_ssrc, ssrc)
       << "Receive stream should have correct media ssrc";
   EXPECT_EQ(config.rtp.rtx_ssrc, rtx_ssrc)
       << "Receive stream should have correct rtx ssrc";
+  EXPECT_EQ(fake_call_->GetDeliveredPacketsForSsrc(ssrc), 1u);
+  EXPECT_EQ(fake_call_->GetDeliveredPacketsForSsrc(rtx_ssrc), 1u);
 }
 
 TEST_F(WebRtcVideoChannelTest,

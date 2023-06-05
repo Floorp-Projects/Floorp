@@ -11,6 +11,7 @@
 #ifndef CALL_VIDEO_RECEIVE_STREAM_H_
 #define CALL_VIDEO_RECEIVE_STREAM_H_
 
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <set>
@@ -34,6 +35,7 @@
 #include "common_video/frame_counts.h"
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -325,6 +327,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
 
   virtual void SetAssociatedPayloadTypes(
       std::map<int, int> associated_payload_types) = 0;
+
+  virtual void UpdateRtxSsrc(uint32_t ssrc) = 0;
 
  protected:
   virtual ~VideoReceiveStreamInterface() {}

@@ -20,10 +20,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99267b6d193fbcb3e
  11 files changed, 32 insertions(+), 22 deletions(-)
 
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 31c9bff7b0..25c294a2a6 100644
+index 87fd54fd1c..18b8a71e3c 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -145,10 +145,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -147,10 +147,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
      RtpReceiveStats rtp_stats;
      RtcpPacketTypeCounter rtcp_packet_type_counts;
  
@@ -190,10 +190,10 @@ index 2b758dcac3..b188887c20 100644
   private:
    // Implements RtpVideoFrameReceiver.
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index ab2ae821ca..d1be46dfeb 100644
+index b1aab2773a..ea250ec321 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -580,7 +580,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+@@ -575,7 +575,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
    // seem to be any support for these stats right now. So, we hack this in.
    rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
        &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
