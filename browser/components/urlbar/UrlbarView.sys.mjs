@@ -2127,6 +2127,14 @@ export class UrlbarView {
     }
 
     if (
+      row.result.isBestMatch &&
+      row.result.providerName == lazy.UrlbarProviderQuickSuggest.name &&
+      row.result.payload.telemetryType == "amo"
+    ) {
+      return { id: "urlbar-group-addon" };
+    }
+
+    if (
       row.result.isBestMatch ||
       row.result.providerName == lazy.UrlbarProviderWeather.name
     ) {
