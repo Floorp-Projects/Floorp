@@ -1792,10 +1792,7 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
     // stream, which will be associated with unsignaled media stream.
     absl::optional<uint32_t> current_default_ssrc = GetUnsignaledSsrc();
     if (current_default_ssrc) {
-      // TODO(bug.webrtc.org/14817): Consider associating the existing default
-      // stream with this RTX stream instead of recreating.
-      ReCreateDefaulReceiveStream(/*ssrc =*/*current_default_ssrc,
-                                  packet.Ssrc());
+      FindReceiveStream(*current_default_ssrc)->UpdateRtxSsrc(packet.Ssrc());
     } else {
       // Received unsignaled RTX packet before a media packet. Create a default
       // stream with a "random" SSRC and the RTX SSRC from the packet.  The
@@ -1822,10 +1819,7 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
       }
     }
   }
-
-  // TODO(bug.webrtc.org/14817): Consider creating a default stream with a fake
-  // RTX ssrc that can be updated when the real SSRC is known if rtx has been
-  // negotiated.
+  // RTX SSRC not yet known.
   ReCreateDefaulReceiveStream(packet.Ssrc(), absl::nullopt);
   last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
   return true;
@@ -3356,6 +3350,11 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetLocalSsrc(uint32_t ssrc) {
     call_->OnLocalSsrcUpdated(*flexfec_stream_, ssrc);
 }
 
+void WebRtcVideoChannel::WebRtcVideoReceiveStream::UpdateRtxSsrc(
+    uint32_t ssrc) {
+  stream_->UpdateRtxSsrc(ssrc);
+}
+
 WebRtcVideoChannel::VideoCodecSettings::VideoCodecSettings()
     : flexfec_payload_type(-1), rtx_payload_type(-1) {}
 
@@ -3605,8 +3604,8 @@ void WebRtcVideoChannel::SetDepacketizerToDecoderFrameTransformer(
   RTC_DCHECK(frame_transformer);
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (ssrc == 0) {
-    // If the receiver is unsignaled, save the frame transformer and set it when
-    // the stream is associated with an ssrc.
+    // If the receiver is unsignaled, save the frame transformer and set it
+    // when the stream is associated with an ssrc.
     unsignaled_frame_transformer_ = std::move(frame_transformer);
     return;
   }

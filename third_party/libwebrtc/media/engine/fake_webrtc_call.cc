@@ -660,7 +660,8 @@ bool FakeCall::DeliverPacketInternal(webrtc::MediaType media_type,
 
   if (media_type == webrtc::MediaType::VIDEO) {
     for (auto receiver : video_receive_streams_) {
-      if (receiver->GetConfig().rtp.remote_ssrc == ssrc) {
+      if (receiver->GetConfig().rtp.remote_ssrc == ssrc ||
+          receiver->GetConfig().rtp.rtx_ssrc == ssrc) {
         ++delivered_packets_by_ssrc_[ssrc];
         return true;
       }

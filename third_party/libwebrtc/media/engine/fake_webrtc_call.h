@@ -259,6 +259,8 @@ class FakeVideoReceiveStream final
     config_.rtp.local_ssrc = local_ssrc;
   }
 
+  void UpdateRtxSsrc(uint32_t ssrc) { config_.rtp.rtx_ssrc = ssrc; }
+
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override {}
 
