@@ -333,7 +333,7 @@ add_task(async function rowLabel() {
   const testCases = [
     {
       bestMatch: true,
-      expected: "Top pick",
+      expected: "Firefox extension",
     },
     {
       bestMatch: false,
