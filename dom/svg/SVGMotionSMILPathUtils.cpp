@@ -102,8 +102,8 @@ bool SVGMotionSMILPathUtils::PathGenerator::ParseCoordinatePair(
     return false;
   }
 
-  float xRes = x.GetValueInUserUnits(mSVGElement, SVGContentUtils::X);
-  float yRes = y.GetValueInUserUnits(mSVGElement, SVGContentUtils::Y);
+  float xRes = x.GetValueInPixels(mSVGElement, SVGContentUtils::X);
+  float yRes = y.GetValueInPixels(mSVGElement, SVGContentUtils::Y);
 
   NS_ENSURE_FINITE2(xRes, yRes, false);
 

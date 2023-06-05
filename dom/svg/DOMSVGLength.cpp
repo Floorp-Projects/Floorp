@@ -150,17 +150,16 @@ float DOMSVGLength::GetValue(ErrorResult& aRv) {
   }
 
   if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
-    float value = InternalItem().GetValueInUserUnits(lengthList->Element(),
-                                                     lengthList->Axis());
+    float value = InternalItem().GetValueInPixels(lengthList->Element(),
+                                                  lengthList->Axis());
     if (!std::isfinite(value)) {
       aRv.Throw(NS_ERROR_FAILURE);
     }
     return value;
   }
 
-  float unitToPx;
-  if (UserSpaceMetrics::ResolveAbsoluteUnit(mUnit, unitToPx)) {
-    return mValue * unitToPx;
+  if (SVGLength::IsAbsoluteUnit(mUnit)) {
+    return SVGLength(mValue, mUnit).GetValueInPixels(nullptr, 0);
   }
 
   // else [SVGWG issue] Can't convert this length's value to user units
@@ -188,12 +187,12 @@ void DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv) {
 
   if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
     SVGLength& internalItem = InternalItem();
-    if (internalItem.GetValueInUserUnits(
-            lengthList->Element(), lengthList->Axis()) == aUserUnitValue) {
+    if (internalItem.GetValueInPixels(lengthList->Element(),
+                                      lengthList->Axis()) == aUserUnitValue) {
       return;
     }
-    float uuPerUnit = internalItem.GetUserUnitsPerUnit(lengthList->Element(),
-                                                       lengthList->Axis());
+    float uuPerUnit = internalItem.GetPixelsPerUnit(
+        SVGElementMetrics(lengthList->Element()), lengthList->Axis());
     if (uuPerUnit > 0) {
       float newValue = aUserUnitValue / uuPerUnit;
       if (std::isfinite(newValue)) {
@@ -355,6 +354,9 @@ void DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit, ErrorResult& aRv) {
     val = length.GetValueInSpecifiedUnit(aUnit, lengthList->Element(),
                                          lengthList->Axis());
   } else {
+    if (mUnit == aUnit) {
+      return;
+    }
     val = SVGLength(mValue, mUnit).GetValueInSpecifiedUnit(aUnit, nullptr, 0);
   }
   if (std::isfinite(val)) {

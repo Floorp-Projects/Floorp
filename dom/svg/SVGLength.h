@@ -10,6 +10,7 @@
 #include "nsDebug.h"
 #include "nsMathUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
 namespace mozilla {
@@ -84,12 +85,15 @@ class SVGLength {
   }
 
   /**
-   * If it's not possible to convert this length's value to user units, then
+   * If it's not possible to convert this length's value to pixels, then
    * this method will return numeric_limits<float>::quiet_NaN().
    */
-  float GetValueInUserUnits(const dom::SVGElement* aElement,
-                            uint8_t aAxis) const {
-    return mValue * GetUserUnitsPerUnit(aElement, aAxis);
+
+  float GetValueInPixels(const dom::SVGElement* aElement, uint8_t aAxis) const {
+    return mValue *
+           GetPixelsPerUnit(
+               dom::SVGElementMetrics(const_cast<dom::SVGElement*>(aElement)),
+               aAxis);
   }
 
   /**
@@ -105,24 +109,29 @@ class SVGLength {
     return mUnit == dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
+  float GetPixelsPerUnit(const dom::UserSpaceMetrics& aMetrics,
+                         uint8_t aAxis) const {
+    return GetPixelsPerUnit(aMetrics, mUnit, aAxis);
+  }
+
   static bool IsValidUnitType(uint16_t aUnitType) {
     return aUnitType > dom::SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
            aUnitType <= dom::SVGLength_Binding::SVG_LENGTHTYPE_PC;
   }
+
+  static bool IsAbsoluteUnit(uint8_t aUnit);
+
+  static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit);
 
   static void GetUnitString(nsAString& aUnit, uint16_t aUnitType);
 
   static uint16_t GetUnitTypeForString(const nsAString& aUnit);
 
   /**
-   * Returns the number of user units per current unit.
-   *
-   * This method returns numeric_limits<float>::quiet_NaN() if the conversion
-   * factor between the length's current unit and user units is undefined (see
-   * the comments for GetUserUnitsPerInch and GetUserUnitsPerPercent).
+   * Returns the number of pixels per given unit.
    */
-  float GetUserUnitsPerUnit(const dom::SVGElement* aElement,
-                            uint8_t aAxis) const;
+  static float GetPixelsPerUnit(const dom::UserSpaceMetrics& aMetrics,
+                                uint8_t aUnitType, uint8_t aAxis);
 
  private:
 #ifdef DEBUG
@@ -130,24 +139,6 @@ class SVGLength {
     return std::isfinite(mValue) && IsValidUnitType(mUnit);
   }
 #endif
-
-  /**
-   * The conversion factor between user units (CSS px) and CSS inches is
-   * constant: 96 px per inch.
-   */
-  static float GetUserUnitsPerInch() { return 96.0; }
-
-  /**
-   * The conversion factor between user units and percentage units depends on
-   * aElement being non-null, and on aElement having a viewport element
-   * ancestor with only appropriate SVG elements between aElement and that
-   * ancestor. If that's not the case, then the conversion factor is undefined.
-   *
-   * This function returns a non-negative value if the conversion factor is
-   * defined, otherwise it returns numeric_limits<float>::quiet_NaN().
-   */
-  static float GetUserUnitsPerPercent(const dom::SVGElement* aElement,
-                                      uint8_t aAxis);
 
   float mValue;
   uint8_t mUnit;
