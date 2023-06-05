@@ -16,7 +16,7 @@ error[E0308]: mismatched types
 10 |     ""
    |     ^^- help: try using a conversion method: `.to_string()`
    |     |
-   |     expected struct `String`, found `&str`
+   |     expected `String`, found `&str`
    |
 note: return type inferred to be `String` here
   --> tests/ui/async_instrument.rs:9:31
@@ -47,7 +47,7 @@ error[E0308]: mismatched types
   --> tests/ui/async_instrument.rs:23:5
    |
 23 |     ""
-   |     ^^ expected struct `Wrapper`, found `&str`
+   |     ^^ expected `Wrapper<_>`, found `&str`
    |
    = note: expected struct `Wrapper<_>`
            found reference `&'static str`
@@ -79,7 +79,7 @@ error[E0308]: mismatched types
 36 |         return "";
    |                ^^- help: try using a conversion method: `.to_string()`
    |                |
-   |                expected struct `String`, found `&str`
+   |                expected `String`, found `&str`
    |
 note: return type inferred to be `String` here
   --> tests/ui/async_instrument.rs:34:28
@@ -93,6 +93,6 @@ error[E0308]: mismatched types
 42 |   async fn extra_semicolon() -> i32 {
    |  ___________________________________^
 43 | |     1;
-   | |      - help: remove this semicolon
+   | |      - help: remove this semicolon to return this value
 44 | | }
    | |_^ expected `i32`, found `()`

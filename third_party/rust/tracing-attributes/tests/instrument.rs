@@ -17,7 +17,7 @@ fn override_everything() {
     #[instrument(target = "my_target", level = "debug")]
     fn my_fn() {}
 
-    #[instrument(level = "debug", target = "my_target")]
+    #[instrument(level = Level::DEBUG, target = "my_target")]
     fn my_other_fn() {}
 
     let span = span::mock()

@@ -1,3 +1,53 @@
+# 0.1.24 (April 24th, 2023)
+
+This release of `tracing-attributes` adds support for passing an optional
+`level` to the `err` and `ret` arguments to `#[instrument]`, allowing the level
+of the generated return-value event to be overridden. For example,
+
+```rust
+#[instrument(err(level = "info"))]
+fn my_great_function() -> Result<(), &'static str> {
+    // ...
+}
+```
+
+will emit an `INFO`-level event if the function returns an `Err`.
+
+In addition, this release updates the [`syn`] dependency to v2.x.x.
+
+### Added
+
+- `level` argument to `err` and `ret` to override the level of the generated
+  return value event ([#2335])
+- Improved compiler error message when `#[instrument]` is added to a `const fn`
+  ([#2418])
+
+### Changed
+
+- Updated `syn` dependency to 2.0 ([#2516])
+
+### Fixed
+
+- Fix `clippy::unreachable` warnings in `#[instrument]`-generated code ([#2356])
+- Removed unused "visit" feature flag from `syn` dependency ([#2530])
+
+### Documented
+
+- Documented default level for `err` ([#2433])
+- Improved documentation for levels in `#[instrument]` ([#2350])
+
+Thanks to @nitnelave, @jsgf, @Abhicodes-crypto, @LukeMathWalker, @andrewpollack,
+@quad, @klensy, @davidpdrsn, and @dbidwell94 for contributign to this release!
+
+[`syn`]: https://crates.io/crates/syn
+[#2335]: https://github.com/tokio-rs/tracing/pull/2335
+[#2418]: https://github.com/tokio-rs/tracing/pull/2418
+[#2516]: https://github.com/tokio-rs/tracing/pull/2516
+[#2356]: https://github.com/tokio-rs/tracing/pull/2356
+[#2530]: https://github.com/tokio-rs/tracing/pull/2530
+[#2433]: https://github.com/tokio-rs/tracing/pull/2433
+[#2350]: https://github.com/tokio-rs/tracing/pull/2350
+
 # 0.1.23 (October 6, 2022)
 
 This release of `tracing-attributes` fixes a bug where compiler diagnostic spans
@@ -5,6 +55,7 @@ for type errors in `#[instrument]`ed `async fn`s have the location of the
 `#[instrument]` attribute rather than the location of the actual error, and a
 bug where inner attributes in `#[instrument]`ed functions would cause a compiler
 error.
+
 ### Fixed
 
 - Fix incorrect handling of inner attributes in `#[instrument]`ed functions ([#2307])
