@@ -76,7 +76,6 @@ struct VisitData {
       : placeId(0),
         visitId(0),
         hidden(true),
-        shouldUpdateHidden(true),
         typed(false),
         transitionType(UINT32_MAX),
         visitTime(0),
@@ -104,7 +103,6 @@ struct VisitData {
       : placeId(0),
         visitId(0),
         hidden(true),
-        shouldUpdateHidden(true),
         typed(false),
         transitionType(UINT32_MAX),
         visitTime(0),
@@ -155,7 +153,6 @@ struct VisitData {
   nsCString baseDomain;
   nsString revHost;
   bool hidden;
-  bool shouldUpdateHidden;
   bool typed;
   uint32_t transitionType;
   PRTime visitTime;
@@ -925,12 +922,6 @@ class InsertVisitedURIs final : public Runnable {
         place.hidden = false;
       }
 
-      // If this is a new page, or the existing page was already visible,
-      // there's no need to try to unhide it.
-      if (!known || !lastFetchedPlace->hidden) {
-        place.shouldUpdateHidden = false;
-      }
-
       FetchReferrerInfo(place);
       UpdateVisitSource(place, mHistory);
 
@@ -1184,23 +1175,6 @@ class InsertVisitedURIs final : public Runnable {
       NS_ENSURE_SUCCESS(rv, rv);
       rv =
           stmt->BindInt32ByName("redirect"_ns, aPlace.useFrecencyRedirectBonus);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (!aPlace.hidden && aPlace.shouldUpdateHidden) {
-      // Mark the page as not hidden if the frecency is now nonzero.
-      nsCOMPtr<mozIStorageStatement> stmt;
-      stmt = mHistory->GetStatement(
-          "UPDATE moz_places "
-          "SET hidden = 0 "
-          "WHERE id = :page_id AND frecency <> 0");
-      NS_ENSURE_STATE(stmt);
-      mozStorageStatementScoper scoper(stmt);
-
-      rv = stmt->BindInt64ByName("page_id"_ns, aPlace.placeId);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = stmt->Execute();
@@ -1590,7 +1564,6 @@ nsresult History::QueueVisitedStatement(RefPtr<VisitedQuery> aQuery) {
 
 nsresult History::InsertPlace(VisitData& aPlace) {
   MOZ_ASSERT(aPlace.placeId == 0, "should not have a valid place id!");
-  MOZ_ASSERT(!aPlace.shouldUpdateHidden, "We should not need to update hidden");
   MOZ_ASSERT(!NS_IsMainThread(), "must be called off of the main thread!");
 
   nsCOMPtr<mozIStorageStatement> stmt = GetStatement(
