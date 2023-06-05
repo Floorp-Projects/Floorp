@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.49.0"
+rust-version = "1.56.0"
 name = "tracing-attributes"
-version = "0.1.23"
+version = "0.1.24"
 authors = [
     "Tokio Contributors <team@tokio.rs>",
     "Eliza Weisman <eliza@buoyant.io>",
@@ -43,18 +43,17 @@ repository = "https://github.com/tokio-rs/tracing"
 proc-macro = true
 
 [dependencies.proc-macro2]
-version = "1"
+version = "1.0.40"
 
 [dependencies.quote]
-version = "1"
+version = "1.0.20"
 
 [dependencies.syn]
-version = "1.0.98"
+version = "2.0"
 features = [
     "full",
     "parsing",
     "printing",
-    "visit",
     "visit-mut",
     "clone-impls",
     "extra-traits",
@@ -63,19 +62,16 @@ features = [
 default-features = false
 
 [dev-dependencies.async-trait]
-version = "0.1.56"
+version = "0.1.67"
 
 [dev-dependencies.rustversion]
 version = "1.0.9"
 
 [dev-dependencies.tokio-test]
-version = "0.3.0"
+version = "0.4.2"
 
 [dev-dependencies.tracing]
 version = "0.1.35"
-
-[dev-dependencies.tracing-core]
-version = "0.1.28"
 
 [dev-dependencies.tracing-subscriber]
 version = "0.3.0"
