@@ -3,32 +3,30 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "extend"
-version = "1.1.2"
+version = "1.2.0"
 authors = ["David Pedersen <david.pdrsn@gmail.com>"]
 description = "Create extensions for types you don't own with extension traits but without the boilerplate."
 homepage = "https://github.com/davidpdrsn/extend"
-documentation = "https://docs.rs/extend"
 readme = "README.md"
-keywords = ["extension", "trait"]
+keywords = [
+    "extension",
+    "trait",
+]
 categories = ["rust-patterns"]
 license = "MIT"
-repository = "https://github.com/davidpdrsn/extend.git"
+repository = "https://github.com/davidpdrsn/extend"
 
 [lib]
-path = "src/lib.rs"
 proc-macro = true
-[dependencies.proc-macro-error]
-version = "1"
 
 [dependencies.proc-macro2]
 version = "1"
@@ -37,12 +35,15 @@ version = "1"
 version = "1"
 
 [dependencies.syn]
-version = "1"
-features = ["full", "extra-traits", "visit"]
+version = "2"
+features = [
+    "full",
+    "extra-traits",
+    "visit",
+]
+
 [dev-dependencies.async-trait]
 version = "0.1.40"
 
 [dev-dependencies.trybuild]
 version = "1.0.17"
-[badges.maintenance]
-status = "passively-maintained"

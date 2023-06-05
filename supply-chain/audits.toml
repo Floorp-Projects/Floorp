@@ -1154,6 +1154,11 @@ criteria = "safe-to-deploy"
 version = "1.1.2"
 notes = "Inspected the crate and noted that the impl block comes directly from the proc-macro input.  If no new code can be added by this crate, I don't think there can be any issues."
 
+[[audits.extend]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.1.2 -> 1.2.0"
+
 [[audits.fallible_collections]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

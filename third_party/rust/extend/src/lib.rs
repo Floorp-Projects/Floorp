@@ -13,12 +13,10 @@
 //!     }
 //! }
 //!
-//! fn main() {
-//!     assert_eq!(
-//!         vec![1, 2, 3],
-//!         vec![2, 3, 1].sorted(),
-//!     );
-//! }
+//! assert_eq!(
+//!     vec![1, 2, 3],
+//!     vec![2, 3, 1].sorted(),
+//! );
 //! ```
 //!
 //! # How does it work?
@@ -150,28 +148,21 @@
 //!
 //! [extension traits]: https://dev.to/matsimitsu/extending-existing-functionality-in-rust-with-traits-in-rust-3622
 
-#![doc(html_root_url = "https://docs.rs/extend/1.1.2")]
 #![allow(clippy::let_and_return)]
-#![deny(
-    unused_variables,
-    mutable_borrow_reservation_conflict,
-    dead_code,
-    unused_must_use,
-    unused_imports
-)]
+#![deny(unused_variables, dead_code, unused_must_use, unused_imports)]
 
 use proc_macro2::TokenStream;
-use proc_macro_error::*;
 use quote::{format_ident, quote, ToTokens};
+use std::convert::{TryFrom, TryInto};
 use syn::{
     parse::{self, Parse, ParseStream},
     parse_macro_input, parse_quote,
     punctuated::Punctuated,
     spanned::Spanned,
-    token::{Add, Semi},
-    Ident, ImplItem, ItemImpl, Token, TraitItemConst, TraitItemMethod, Type, TypeArray, TypeBareFn,
-    TypeGroup, TypeNever, TypeParamBound, TypeParen, TypePath, TypePtr, TypeReference, TypeSlice,
-    TypeTraitObject, TypeTuple, Visibility,
+    token::{Plus, Semi},
+    Ident, ImplItem, ItemImpl, Result, Token, TraitItemConst, TraitItemFn, Type, TypeArray,
+    TypeBareFn, TypeGroup, TypeNever, TypeParamBound, TypeParen, TypePath, TypePtr, TypeReference,
+    TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
 
 #[derive(Debug)]
@@ -201,7 +192,6 @@ impl Parse for Input {
 
 /// See crate docs for more info.
 #[proc_macro_attribute]
-#[proc_macro_error]
 #[allow(clippy::unneeded_field_pattern)]
 pub fn ext(
     attr: proc_macro::TokenStream,
@@ -209,7 +199,10 @@ pub fn ext(
 ) -> proc_macro::TokenStream {
     let item = parse_macro_input!(item as Input);
     let config = parse_macro_input!(attr as Config);
-    go(item, config)
+    match go(item, config) {
+        Ok(tokens) => tokens,
+        Err(err) => err.into_compile_error().into(),
+    }
 }
 
 /// Like [`ext`](macro@crate::ext) but always add `Sized` as a supertrait.
@@ -228,7 +221,6 @@ pub fn ext(
 /// }
 /// ```
 #[proc_macro_attribute]
-#[proc_macro_error]
 #[allow(clippy::unneeded_field_pattern)]
 pub fn ext_sized(
     attr: proc_macro::TokenStream,
@@ -243,16 +235,19 @@ pub fn ext_sized(
         Some(parse_quote!(Sized))
     };
 
-    go(item, config)
+    match go(item, config) {
+        Ok(tokens) => tokens,
+        Err(err) => err.into_compile_error().into(),
+    }
 }
 
-fn go(item: Input, mut config: Config) -> proc_macro::TokenStream {
+fn go(item: Input, mut config: Config) -> Result<proc_macro::TokenStream> {
     if let Some(vis) = item.vis {
         if config.visibility != Visibility::Inherited {
-            abort!(
+            return Err(syn::Error::new(
                 config.visibility.span(),
-                "Cannot set visibility on `#[ext]` and `impl` block"
-            );
+                "Cannot set visibility on `#[ext]` and `impl` block",
+            ));
         }
 
         config.visibility = vis;
@@ -272,19 +267,24 @@ fn go(item: Input, mut config: Config) -> proc_macro::TokenStream {
     } = item.item_impl;
 
     if let Some((_, path, _)) = trait_ {
-        abort!(path.span(), "Trait impls cannot be used for #[ext]");
+        return Err(syn::Error::new(
+            path.span(),
+            "Trait impls cannot be used for #[ext]",
+        ));
     }
 
-    let self_ty = parse_self_ty(&self_ty);
+    let self_ty = parse_self_ty(&self_ty)?;
 
-    let ext_trait_name = config
-        .ext_trait_name
-        .unwrap_or_else(|| ext_trait_name(&self_ty));
+    let ext_trait_name = if let Some(ext_trait_name) = config.ext_trait_name {
+        ext_trait_name
+    } else {
+        ext_trait_name(&self_ty)?
+    };
 
     let MethodsAndConsts {
         trait_methods,
         trait_consts,
-    } = extract_allowed_items(&items);
+    } = extract_allowed_items(&items)?;
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
@@ -299,7 +299,7 @@ fn go(item: Input, mut config: Config) -> proc_macro::TokenStream {
     let supertraits_quoted = if all_supertraits.is_empty() {
         quote! {}
     } else {
-        let supertraits_quoted = punctuated_from_iter::<_, _, Add>(all_supertraits);
+        let supertraits_quoted = punctuated_from_iter::<_, _, Plus>(all_supertraits);
         quote! { : #supertraits_quoted }
     };
 
@@ -330,7 +330,7 @@ fn go(item: Input, mut config: Config) -> proc_macro::TokenStream {
     })
     .into();
 
-    code
+    Ok(code)
 }
 
 #[derive(Debug, Clone)]
@@ -349,8 +349,8 @@ enum ExtType<'a> {
 }
 
 #[allow(clippy::wildcard_in_or_patterns)]
-fn parse_self_ty(self_ty: &Type) -> ExtType {
-    match self_ty {
+fn parse_self_ty(self_ty: &Type) -> Result<ExtType> {
+    let ty = match self_ty {
         Type::Array(inner) => ExtType::Array(inner),
         Type::Group(inner) => ExtType::Group(inner),
         Type::Never(inner) => ExtType::Never(inner),
@@ -363,15 +363,20 @@ fn parse_self_ty(self_ty: &Type) -> ExtType {
         Type::BareFn(inner) => ExtType::BareFn(inner),
         Type::TraitObject(inner) => ExtType::TraitObject(inner),
 
-        Type::ImplTrait(_) | Type::Infer(_) | Type::Macro(_) | Type::Verbatim(_) | _ => abort!(
-            self_ty.span(),
-            "#[ext] is not supported for this kind of type"
-        ),
-    }
+        Type::ImplTrait(_) | Type::Infer(_) | Type::Macro(_) | Type::Verbatim(_) | _ => {
+            return Err(syn::Error::new(
+                self_ty.span(),
+                "#[ext] is not supported for this kind of type",
+            ))
+        }
+    };
+    Ok(ty)
 }
 
-impl<'a> From<&'a Type> for ExtType<'a> {
-    fn from(inner: &'a Type) -> ExtType<'a> {
+impl<'a> TryFrom<&'a Type> for ExtType<'a> {
+    type Error = syn::Error;
+
+    fn try_from(inner: &'a Type) -> Result<ExtType<'a>> {
         parse_self_ty(inner)
     }
 }
@@ -394,60 +399,60 @@ impl<'a> ToTokens for ExtType<'a> {
     }
 }
 
-fn ext_trait_name(self_ty: &ExtType) -> Ident {
-    fn inner_self_ty(self_ty: &ExtType) -> Ident {
+fn ext_trait_name(self_ty: &ExtType) -> Result<Ident> {
+    fn inner_self_ty(self_ty: &ExtType) -> Result<Ident> {
         match self_ty {
             ExtType::Path(inner) => find_and_combine_idents(inner),
             ExtType::Reference(inner) => {
-                let name = inner_self_ty(&(&*inner.elem).into());
+                let name = inner_self_ty(&(&*inner.elem).try_into()?)?;
                 if inner.mutability.is_some() {
-                    format_ident!("RefMut{}", name)
+                    Ok(format_ident!("RefMut{}", name))
                 } else {
-                    format_ident!("Ref{}", name)
+                    Ok(format_ident!("Ref{}", name))
                 }
             }
             ExtType::Array(inner) => {
-                let name = inner_self_ty(&(&*inner.elem).into());
-                format_ident!("ListOf{}", name)
+                let name = inner_self_ty(&(&*inner.elem).try_into()?)?;
+                Ok(format_ident!("ListOf{}", name))
             }
             ExtType::Group(inner) => {
-                let name = inner_self_ty(&(&*inner.elem).into());
-                format_ident!("Group{}", name)
+                let name = inner_self_ty(&(&*inner.elem).try_into()?)?;
+                Ok(format_ident!("Group{}", name))
             }
             ExtType::Paren(inner) => {
-                let name = inner_self_ty(&(&*inner.elem).into());
-                format_ident!("Paren{}", name)
+                let name = inner_self_ty(&(&*inner.elem).try_into()?)?;
+                Ok(format_ident!("Paren{}", name))
             }
             ExtType::Ptr(inner) => {
-                let name = inner_self_ty(&(&*inner.elem).into());
-                format_ident!("PointerTo{}", name)
+                let name = inner_self_ty(&(&*inner.elem).try_into()?)?;
+                Ok(format_ident!("PointerTo{}", name))
             }
             ExtType::Slice(inner) => {
-                let name = inner_self_ty(&(&*inner.elem).into());
-                format_ident!("SliceOf{}", name)
+                let name = inner_self_ty(&(&*inner.elem).try_into()?)?;
+                Ok(format_ident!("SliceOf{}", name))
             }
             ExtType::Tuple(inner) => {
                 let mut name = format_ident!("TupleOf");
                 for elem in &inner.elems {
-                    name = format_ident!("{}{}", name, inner_self_ty(&elem.into()));
+                    name = format_ident!("{}{}", name, inner_self_ty(&elem.try_into()?)?);
                 }
-                name
+                Ok(name)
             }
-            ExtType::Never(_) => format_ident!("Never"),
+            ExtType::Never(_) => Ok(format_ident!("Never")),
             ExtType::BareFn(inner) => {
                 let mut name = format_ident!("BareFn");
                 for input in inner.inputs.iter() {
-                    name = format_ident!("{}{}", name, inner_self_ty(&(&input.ty).into()));
+                    name = format_ident!("{}{}", name, inner_self_ty(&(&input.ty).try_into()?)?);
                 }
                 match &inner.output {
                     syn::ReturnType::Default => {
                         name = format_ident!("{}Unit", name);
                     }
                     syn::ReturnType::Type(_, ty) => {
-                        name = format_ident!("{}{}", name, inner_self_ty(&(&**ty).into()));
+                        name = format_ident!("{}{}", name, inner_self_ty(&(&**ty).try_into()?)?);
                     }
                 }
-                name
+                Ok(name)
             }
             ExtType::TraitObject(inner) => {
                 let mut name = format_ident!("TraitObject");
@@ -461,17 +466,20 @@ fn ext_trait_name(self_ty: &ExtType) -> Ident {
                         TypeParamBound::Lifetime(lifetime) => {
                             name = format_ident!("{}{}", name, lifetime.ident);
                         }
+                        other => {
+                            return Err(syn::Error::new(other.span(), "unsupported bound"));
+                        }
                     }
                 }
-                name
+                Ok(name)
             }
         }
     }
 
-    format_ident!("{}Ext", inner_self_ty(self_ty))
+    Ok(format_ident!("{}Ext", inner_self_ty(self_ty)?))
 }
 
-fn find_and_combine_idents(type_path: &TypePath) -> Ident {
+fn find_and_combine_idents(type_path: &TypePath) -> Result<Ident> {
     use syn::visit::{self, Visit};
 
     struct IdentVisitor<'a>(Vec<&'a Ident>);
@@ -487,7 +495,7 @@ fn find_and_combine_idents(type_path: &TypePath) -> Ident {
     let idents = visitor.0;
 
     if idents.is_empty() {
-        abort!(type_path.span(), "Empty type path")
+        Err(syn::Error::new(type_path.span(), "Empty type path"))
     } else {
         let start = &idents[0].span();
         let combined_span = idents
@@ -497,29 +505,49 @@ fn find_and_combine_idents(type_path: &TypePath) -> Ident {
 
         let combined_name = idents.iter().map(|i| i.to_string()).collect::<String>();
 
-        Ident::new(&combined_name, combined_span)
+        Ok(Ident::new(&combined_name, combined_span))
     }
 }
 
 #[derive(Debug, Default)]
 struct MethodsAndConsts {
-    trait_methods: Vec<TraitItemMethod>,
+    trait_methods: Vec<TraitItemFn>,
     trait_consts: Vec<TraitItemConst>,
 }
 
 #[allow(clippy::wildcard_in_or_patterns)]
-fn extract_allowed_items(items: &[ImplItem]) -> MethodsAndConsts {
+fn extract_allowed_items(items: &[ImplItem]) -> Result<MethodsAndConsts> {
     let mut acc = MethodsAndConsts::default();
     for item in items {
         match item {
-            ImplItem::Method(method) => acc.trait_methods.push(TraitItemMethod {
+            ImplItem::Fn(method) => acc.trait_methods.push(TraitItemFn {
                 attrs: method.attrs.clone(),
-                sig: method.sig.clone(),
+                sig: {
+                    let mut sig = method.sig.clone();
+                    sig.inputs = sig
+                        .inputs
+                        .into_iter()
+                        .map(|fn_arg| match fn_arg {
+                            syn::FnArg::Receiver(recv) => syn::FnArg::Receiver(recv),
+                            syn::FnArg::Typed(mut pat_type) => {
+                                pat_type.pat = Box::new(match *pat_type.pat {
+                                    syn::Pat::Ident(pat_ident) => syn::Pat::Ident(pat_ident),
+                                    _ => {
+                                        parse_quote!(_)
+                                    }
+                                });
+                                syn::FnArg::Typed(pat_type)
+                            }
+                        })
+                        .collect();
+                    sig
+                },
                 default: None,
                 semi_token: Some(Semi::default()),
             }),
             ImplItem::Const(const_) => acc.trait_consts.push(TraitItemConst {
                 attrs: const_.attrs.clone(),
+                generics: const_.generics.clone(),
                 const_token: Default::default(),
                 ident: const_.ident.clone(),
                 colon_token: Default::default(),
@@ -527,22 +555,31 @@ fn extract_allowed_items(items: &[ImplItem]) -> MethodsAndConsts {
                 default: None,
                 semi_token: Default::default(),
             }),
-            ImplItem::Type(_) => abort!(
-                item.span(),
-                "Associated types are not allowed in #[ext] impls"
-            ),
-            ImplItem::Macro(_) => abort!(item.span(), "Macros are not allowed in #[ext] impls"),
-            ImplItem::Verbatim(_) | _ => abort!(item.span(), "Not allowed in #[ext] impls"),
+            ImplItem::Type(_) => {
+                return Err(syn::Error::new(
+                    item.span(),
+                    "Associated types are not allowed in #[ext] impls",
+                ))
+            }
+            ImplItem::Macro(_) => {
+                return Err(syn::Error::new(
+                    item.span(),
+                    "Macros are not allowed in #[ext] impls",
+                ))
+            }
+            ImplItem::Verbatim(_) | _ => {
+                return Err(syn::Error::new(item.span(), "Not allowed in #[ext] impls"))
+            }
         }
     }
-    acc
+    Ok(acc)
 }
 
 #[derive(Debug)]
 struct Config {
     ext_trait_name: Option<Ident>,
     visibility: Visibility,
-    supertraits: Option<Punctuated<TypeParamBound, Add>>,
+    supertraits: Option<Punctuated<TypeParamBound, Plus>>,
 }
 
 impl Parse for Config {
@@ -565,9 +602,9 @@ impl Parse for Config {
                 }
                 "supertraits" => {
                     config.supertraits =
-                        Some(Punctuated::<TypeParamBound, Add>::parse_terminated(input)?);
+                        Some(Punctuated::<TypeParamBound, Plus>::parse_terminated(input)?);
                 }
-                _ => abort!(ident.span(), "Unknown configuration name"),
+                _ => return Err(syn::Error::new(ident.span(), "Unknown configuration name")),
             }
 
             input.parse::<Token![,]>().ok();
