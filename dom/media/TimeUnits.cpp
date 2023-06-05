@@ -154,7 +154,7 @@ bool TimeUnit::operator==(const TimeUnit& aOther) const {
   }
   // Reduce the fractions and try again
   const TimeUnit a = Reduced();
-  const TimeUnit b = Reduced();
+  const TimeUnit b = aOther.Reduced();
   lhs = a.mTicks * b.mBase;
   rhs = b.mTicks * a.mBase;
 

@@ -190,7 +190,8 @@ TEST(TimeUnit, Comparisons)
   EXPECT_GE(n, o);
   EXPECT_GT(n, o);
 
-  // Values taken from a real website somehow (this is about 53 years).
+  // Values taken from a real website (this is about 53 years, Date.now() in
+  // 2023).
   TimeUnit leftBound(74332508253360, 44100);
   TimeUnit rightBound(74332508297392, 44100);
   TimeUnit fuzz(250000, 1000000);
@@ -200,6 +201,12 @@ TEST(TimeUnit, Comparisons)
   EXPECT_GT(time, leftBound - fuzz);
   EXPECT_GE(rightBound + fuzz, time);
   EXPECT_LT(time, rightBound + fuzz);
+
+  TimeUnit zero = TimeUnit::Zero();  // default base 1e6
+  TimeUnit datenow(
+      151737439364679,
+      90000);  // Also from `Date.now()` in a common base for an mp4
+  EXPECT_NE(zero, datenow);
 }
 
 TEST(TimeUnit, InfinityMath)
