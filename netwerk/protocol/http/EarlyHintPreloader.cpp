@@ -203,7 +203,8 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     OngoingEarlyHints* aOngoingEarlyHints, const LinkHeader& aLinkHeader,
     nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
     nsICookieJarSettings* aCookieJarSettings,
-    const nsACString& aResponseReferrerPolicy, const nsACString& aCSPHeader) {
+    const nsACString& aResponseReferrerPolicy, const nsACString& aCSPHeader,
+    uint64_t aBrowsingContextID) {
   nsAttrValue as;
   ParseAsValue(aLinkHeader.mAs, as);
 
@@ -355,7 +356,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   NS_ENSURE_SUCCESS_VOID(earlyHintPreloader->OpenChannel(
       uri, aPrincipal, securityFlags, contentPolicyType, referrerInfo,
-      aCookieJarSettings));
+      aCookieJarSettings, aBrowsingContextID));
 
   earlyHintPreloader->SetLinkHeader(aLinkHeader);
 
@@ -367,7 +368,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 nsresult EarlyHintPreloader::OpenChannel(
     nsIURI* aURI, nsIPrincipal* aPrincipal, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType, nsIReferrerInfo* aReferrerInfo,
-    nsICookieJarSettings* aCookieJarSettings) {
+    nsICookieJarSettings* aCookieJarSettings, uint64_t aBrowsingContextID) {
   MOZ_ASSERT(aContentPolicyType == nsContentPolicyType::TYPE_IMAGE ||
              aContentPolicyType ==
                  nsContentPolicyType::TYPE_INTERNAL_FETCH_PRELOAD ||
@@ -409,6 +410,16 @@ nsresult EarlyHintPreloader::OpenChannel(
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetState(ePreloaderOpened);
+
+  // Setting the BrowsingContextID here to let Early Hint requests show up in
+  // devtools. Normally that would automatically happen if we would pass the
+  // nsILoadGroup in ns_NewChannel above, but the nsILoadGroup is inaccessible
+  // here in the ParentProcess. The nsILoadGroup only exists in ContentProcess
+  // as part of the document and nsDocShell. It is also not yet determined which
+  // ContentProcess this load belongs to.
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  static_cast<LoadInfo*>(loadInfo.get())
+      ->UpdateBrowsingContextID(aBrowsingContextID);
 
   return NS_OK;
 }

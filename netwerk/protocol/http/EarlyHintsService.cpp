@@ -100,7 +100,8 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
       mLinkType |= dom::LinkStyle::ePRELOAD;
       EarlyHintPreloader::MaybeCreateAndInsertPreload(
           mOngoingEarlyHints, linkHeader, aBaseURI, principal,
-          cookieJarSettings, aReferrerPolicy, aCSPHeader);
+          cookieJarSettings, aReferrerPolicy, aCSPHeader,
+          loadInfo->GetBrowsingContextID());
     }
   }
 }
