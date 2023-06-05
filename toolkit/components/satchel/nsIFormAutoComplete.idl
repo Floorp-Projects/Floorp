@@ -21,8 +21,7 @@ interface nsIFormAutoComplete: nsISupports {
                                  in HTMLInputElement aField,
                                  in nsIAutoCompleteResult aPreviousResult,
                                  in nsIAutoCompleteResult aDatalistResult,
-                                 in nsIFormAutoCompleteObserver aListener,
-                                 [optional] in nsIPropertyBag2 options);
+                                 in nsIFormAutoCompleteObserver aListener);
 
     /**
      * If a search is in progress, stop it. Otherwise, do nothing. This is used

@@ -344,8 +344,6 @@ export class FormAutoComplete {
    * aDatalistResult -- results from list=datalist for aField.
    * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
    *              that may be returned asynchronously.
-   *  options -- an optional nsIPropertyBag2 containing additional search
-   *             parameters.
    */
   autoCompleteSearchAsync(
     aInputName,
@@ -353,8 +351,7 @@ export class FormAutoComplete {
     aField,
     aPreviousResult,
     aDatalistResult,
-    aListener,
-    aOptions
+    aListener
   ) {
     // Guard against void DOM strings filtering into this code.
     if (typeof aInputName === "object") {
@@ -362,17 +359,6 @@ export class FormAutoComplete {
     }
     if (typeof aUntrimmedSearchString === "object") {
       aUntrimmedSearchString = "";
-    }
-    const params = {};
-    if (aOptions) {
-      try {
-        aOptions.QueryInterface(Ci.nsIPropertyBag2);
-        for (const { name, value } of aOptions.enumerator) {
-          params[name] = value;
-        }
-      } catch (ex) {
-        console.error("Invalid options object: " + ex);
-      }
     }
 
     const client = new FormHistoryClient({
@@ -530,7 +516,6 @@ export class FormAutoComplete {
         client,
         aInputName,
         searchString,
-        params,
         processEntry
       );
     }
@@ -599,18 +584,15 @@ export class FormAutoComplete {
    * Get the values for an autocomplete list given a search string.
    *
    *  client - a FormHistoryClient instance to perform the search with
-   *  fieldName - fieldname field within form history (the form input name)
+   *  fieldname - fieldname field within form history (the form input name)
    *  searchString - string to search for
-   *  params - object containing additional properties to query autocomplete.
    *  callback - called when the values are available. Passed an array of objects,
    *             containing properties for each result. The callback is only called
    *             when successful.
    */
-  getAutoCompleteValues(client, fieldName, searchString, params, callback) {
-    params = Object.assign({ fieldname: fieldName }, params);
-
+  getAutoCompleteValues(client, fieldname, searchString, callback) {
     this.stopAutoCompleteSearch();
-    client.requestAutoCompleteResults(searchString, params, entries => {
+    client.requestAutoCompleteResults(searchString, { fieldname }, entries => {
       this.#pendingClient = null;
       callback(entries);
     });
