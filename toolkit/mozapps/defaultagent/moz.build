@@ -71,6 +71,7 @@ OS_LIBS += [
     "userenv",
     "wininet",
     "ws2_32",
+    "ntdll",
 ]
 
 DEFINES["NS_NO_XPCOM"] = True
