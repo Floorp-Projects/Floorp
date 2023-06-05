@@ -358,7 +358,7 @@ body[lwt-sidebar-brighttext][style*="--lwt-sidebar-background-color: rgb(56, 56,
 /* firefox profile avatar in appmenu */
 #appMenu-fxa-label2::before {
   content: "";
-  display: -moz-box;
+  display: -webkit-box;
   height: 16px;
   width: 16px;
   background: var(--avatar-image-url) 0/16px;
@@ -757,7 +757,7 @@ menulist>menupopup>menuitem:is([checked="true"], [selected="true"])::before {
 }
 
 menuitem:is([type="checkbox"], [checked="true"], [type="radio"])>.menu-iconic-left>.menu-iconic-icon {
-  display: -moz-box !important;
+  display: -webkit-box !important;
 }
 
 menuitem[checked="true"]>.menu-iconic-left,
@@ -1082,7 +1082,7 @@ menuitem>.menu-iconic-text {
     @supports -moz-bool-pref("uc.tweak.vertical-context-navigation") {
       #context-navigation {
         flex-direction: column !important;
-        -moz-box-orient: vertical !important;
+        -webkit-box-orient: vertical !important;
       }
 
       #context-navigation>.menuitem-iconic {
@@ -1090,7 +1090,7 @@ menuitem>.menu-iconic-text {
       }
 
       #context-navigation .menu-iconic-text {
-        display: -moz-box !important;
+        display: -webkit-box !important;
       }
 
       #context-navigation>#context-back .menu-iconic-text::before {
@@ -1306,7 +1306,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 /*
 :root[privatebrowsingmode] #fxa-toolbar-menu-button::before {
   content: "Private" !important;
-  display: -moz-box !important;
+  display: -webkit-box !important;
   font-size: 12px !important;
 }*/
 
@@ -1434,7 +1434,6 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 /* EdgeFr-Fox 2 - tabbar */
 /* tab icons */
 .tab-icon-image[src="chrome://global/skin/icons/settings.svg"],
-.tab-icon-image[src="chrome://mozapps/skin/extensions/extension.svg"],
 .tab-icon-image[src="chrome://browser/skin/customize.svg"]{
   padding-left: 16px !important;
   box-sizing: border-box !important;
@@ -1749,7 +1748,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 
 
 .titlebar-spacer[type="post-tabs"] {
-  display: -moz-box !important;
+  display: -webkit-box !important;
 }
 
 .titlebar-spacer[type="pre-tabs"],
@@ -1760,7 +1759,7 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 /* < FF 65, >= FF 65 */
 :-moz-any(.titlebar-placeholder, .titlebar-spacer) {
   border: 0 !important;
-  display: -moz-box !important;
+  display: -webkit-box !important;
 }
 
 :-moz-any(.titlebar-placeholder, .titlebar-spacer)[type=post-tabs] {
@@ -2529,7 +2528,7 @@ spacer[part="overflow-end-indicator"] {
 #urlbar[pageproxystate=valid] #identity-box:-moz-any(.mixedActiveBlocked,
   .mixedDisplayContentLoadedActiveBlocked,
   .mixedActiveContent)>#connection-icon {
-  display: -moz-box !important;
+  display: -webkit-box !important;
 }
 
 #urlbar[pageproxystate=valid] #identity-box:-moz-any(.weakCipher, .certUserOverridden, .certErrorPage, .insecureLoginForms, .mixedActiveContent) {
@@ -3319,7 +3318,7 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 }
 
 .tab-icon-image[src="chrome://global/skin/icons/settings.svg"]~.tab-icon-overlay:not([busy="true"] *) {
-  display: -moz-box !important;
+  display: -webkit-box !important;
   margin: 0 !important;
   list-style-image: url(chrome://global/skin/icons/settings.svg) !important;
   -moz-context-properties: fill, fill-opacity !important;
