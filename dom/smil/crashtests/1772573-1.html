@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate')
+        animate.setAttribute('attributeName', 'd')
+        animate.setAttribute('from', 'm 2 9 1419128296 127 -17291 41.63920880714647 100.9114622394993 64.9992192746583 186 -25 Z H -5030 62 127 2 127 127 -94990565 S 53 73 -4 245 127.53546217576341 27 154 83 74 -32 44674 139 -81 203 -75.80766604754885 9780 71 64 1 -76 t 126 184 -46 96')
+        animate.setAttribute('by', 'M -2339 0 Z H 64 s 2 47 175 -41 170.98160669377478 -9012 119 -135 1971 74 9 64 -43 100 1192512014 95 63 32 167 20 89 32 183 65 3102047877 127 120 32 -23430 -121 19 16 Q -102 24 -29 135 -7 -113 -82.85249539745232 113 -43 -29 82 200')
+        path.appendChild(animate)
+        svg.appendChild(path)
+        document.documentElement.appendChild(svg)
+      })
+    </script>
+</head>
+</html>
