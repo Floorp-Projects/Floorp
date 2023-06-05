@@ -9,8 +9,8 @@ user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.async-trait]]
-version = "0.1.64"
-when = "2023-01-30"
+version = "0.1.68"
+when = "2023-03-24"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"

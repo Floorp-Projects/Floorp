@@ -2,6 +2,7 @@ use crate::bound::{has_bound, InferredBound, Supertraits};
 use crate::lifetime::{AddLifetimeToImplTrait, CollectLifetimes};
 use crate::parse::Item;
 use crate::receiver::{has_self_in_block, has_self_in_sig, mut_pat, ReplaceSelf};
+use crate::verbatim::VerbatimFn;
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, ToTokens};
 use std::collections::BTreeSet as Set;
@@ -10,8 +11,8 @@ use syn::punctuated::Punctuated;
 use syn::visit_mut::{self, VisitMut};
 use syn::{
     parse_quote, parse_quote_spanned, Attribute, Block, FnArg, GenericArgument, GenericParam,
-    Generics, Ident, ImplItem, Lifetime, LifetimeDef, Pat, PatIdent, PathArguments, Receiver,
-    ReturnType, Signature, Stmt, Token, TraitItem, Type, TypePath, WhereClause,
+    Generics, Ident, ImplItem, Lifetime, LifetimeParam, Pat, PatIdent, PathArguments, Receiver,
+    ReturnType, Signature, Token, TraitItem, Type, TypePath, WhereClause,
 };
 
 impl ToTokens for Item {
@@ -36,7 +37,7 @@ enum Context<'a> {
 }
 
 impl Context<'_> {
-    fn lifetimes<'a>(&'a self, used: &'a [Lifetime]) -> impl Iterator<Item = &'a LifetimeDef> {
+    fn lifetimes<'a>(&'a self, used: &'a [Lifetime]) -> impl Iterator<Item = &'a LifetimeParam> {
         let generics = match self {
             Context::Trait { generics, .. } => generics,
             Context::Impl { impl_generics, .. } => impl_generics,
@@ -60,7 +61,7 @@ pub fn expand(input: &mut Item, is_local: bool) {
                 supertraits: &input.supertraits,
             };
             for inner in &mut input.items {
-                if let TraitItem::Method(method) = inner {
+                if let TraitItem::Fn(method) = inner {
                     let sig = &mut method.sig;
                     if sig.asyncness.is_some() {
                         let block = &mut method.default;
@@ -80,13 +81,6 @@ pub fn expand(input: &mut Item, is_local: bool) {
             }
         }
         Item::Impl(input) => {
-            let mut lifetimes = CollectLifetimes::new("'impl");
-            lifetimes.visit_type_mut(&mut *input.self_ty);
-            lifetimes.visit_path_mut(&mut input.trait_.as_mut().unwrap().1);
-            let params = &input.generics.params;
-            let elided = lifetimes.elided;
-            input.generics.params = parse_quote!(#(#elided,)* #params);
-
             let mut associated_type_impl_traits = Set::new();
             for inner in &input.items {
                 if let ImplItem::Type(assoc) = inner {
@@ -101,15 +95,27 @@ pub fn expand(input: &mut Item, is_local: bool) {
                 associated_type_impl_traits: &associated_type_impl_traits,
             };
             for inner in &mut input.items {
-                if let ImplItem::Method(method) = inner {
-                    let sig = &mut method.sig;
-                    if sig.asyncness.is_some() {
+                match inner {
+                    ImplItem::Fn(method) if method.sig.asyncness.is_some() => {
+                        let sig = &mut method.sig;
                         let block = &mut method.block;
                         let has_self = has_self_in_sig(sig) || has_self_in_block(block);
                         transform_block(context, sig, block);
                         transform_sig(context, sig, has_self, false, is_local);
                         method.attrs.push(lint_suppress_with_body());
                     }
+                    ImplItem::Verbatim(tokens) => {
+                        let mut method = match syn::parse2::<VerbatimFn>(tokens.clone()) {
+                            Ok(method) if method.sig.asyncness.is_some() => method,
+                            _ => continue,
+                        };
+                        let sig = &mut method.sig;
+                        let has_self = has_self_in_sig(sig);
+                        transform_sig(context, sig, has_self, false, is_local);
+                        method.attrs.push(lint_suppress_with_body());
+                        *tokens = quote!(#method);
+                    }
+                    _ => {}
                 }
             }
         }
@@ -167,7 +173,7 @@ fn transform_sig(
         ReturnType::Type(arrow, ret) => (*arrow, quote!(#ret)),
     };
 
-    let mut lifetimes = CollectLifetimes::new("'life");
+    let mut lifetimes = CollectLifetimes::new();
     for arg in sig.inputs.iter_mut() {
         match arg {
             FnArg::Receiver(arg) => lifetimes.visit_receiver_mut(arg),
@@ -215,7 +221,7 @@ fn transform_sig(
         sig.generics.lt_token = Some(Token![<](sig.ident.span()));
     }
     if sig.generics.gt_token.is_none() {
-        sig.generics.gt_token = Some(Token![>](sig.paren_token.span));
+        sig.generics.gt_token = Some(Token![>](sig.paren_token.span.join()));
     }
 
     for elided in lifetimes.elided {
@@ -230,46 +236,35 @@ fn transform_sig(
         .push(parse_quote_spanned!(default_span=> 'async_trait));
 
     if has_self {
-        let bounds: &[InferredBound] = match sig.inputs.iter().next() {
-            Some(FnArg::Receiver(Receiver {
-                reference: Some(_),
-                mutability: None,
-                ..
-            })) => &[InferredBound::Sync],
-            Some(FnArg::Typed(arg))
-                if match arg.pat.as_ref() {
-                    Pat::Ident(pat) => pat.ident == "self",
-                    _ => false,
-                } =>
-            {
-                match arg.ty.as_ref() {
-                    // self: &Self
-                    Type::Reference(ty) if ty.mutability.is_none() => &[InferredBound::Sync],
-                    // self: Arc<Self>
-                    Type::Path(ty)
-                        if {
-                            let segment = ty.path.segments.last().unwrap();
-                            segment.ident == "Arc"
-                                && match &segment.arguments {
-                                    PathArguments::AngleBracketed(arguments) => {
-                                        arguments.args.len() == 1
-                                            && match &arguments.args[0] {
-                                                GenericArgument::Type(Type::Path(arg)) => {
-                                                    arg.path.is_ident("Self")
-                                                }
-                                                _ => false,
+        let bounds: &[InferredBound] = if let Some(receiver) = sig.receiver() {
+            match receiver.ty.as_ref() {
+                // self: &Self
+                Type::Reference(ty) if ty.mutability.is_none() => &[InferredBound::Sync],
+                // self: Arc<Self>
+                Type::Path(ty)
+                    if {
+                        let segment = ty.path.segments.last().unwrap();
+                        segment.ident == "Arc"
+                            && match &segment.arguments {
+                                PathArguments::AngleBracketed(arguments) => {
+                                    arguments.args.len() == 1
+                                        && match &arguments.args[0] {
+                                            GenericArgument::Type(Type::Path(arg)) => {
+                                                arg.path.is_ident("Self")
                                             }
-                                    }
-                                    _ => false,
+                                            _ => false,
+                                        }
                                 }
-                        } =>
-                    {
-                        &[InferredBound::Sync, InferredBound::Send]
-                    }
-                    _ => &[InferredBound::Send],
+                                _ => false,
+                            }
+                    } =>
+                {
+                    &[InferredBound::Sync, InferredBound::Send]
                 }
+                _ => &[InferredBound::Send],
             }
-            _ => &[InferredBound::Send],
+        } else {
+            &[InferredBound::Send]
         };
 
         let bounds = bounds.iter().filter_map(|bound| {
@@ -293,24 +288,24 @@ fn transform_sig(
 
     for (i, arg) in sig.inputs.iter_mut().enumerate() {
         match arg {
-            FnArg::Receiver(Receiver {
-                reference: Some(_), ..
-            }) => {}
-            FnArg::Receiver(arg) => arg.mutability = None,
+            FnArg::Receiver(receiver) => {
+                if receiver.reference.is_none() {
+                    receiver.mutability = None;
+                }
+            }
             FnArg::Typed(arg) => {
-                let type_is_reference = match *arg.ty {
-                    Type::Reference(_) => true,
-                    _ => false,
-                };
-                if let Pat::Ident(pat) = &mut *arg.pat {
-                    if pat.ident == "self" || !type_is_reference {
+                if match *arg.ty {
+                    Type::Reference(_) => false,
+                    _ => true,
+                } {
+                    if let Pat::Ident(pat) = &mut *arg.pat {
                         pat.by_ref = None;
                         pat.mutability = None;
+                    } else {
+                        let positional = positional_arg(i, &arg.pat);
+                        let m = mut_pat(&mut arg.pat);
+                        arg.pat = parse_quote!(#m #positional);
                     }
-                } else if !type_is_reference {
-                    let positional = positional_arg(i, &arg.pat);
-                    let m = mut_pat(&mut arg.pat);
-                    arg.pat = parse_quote!(#m #positional);
                 }
                 AddLifetimeToImplTrait.visit_type_mut(&mut arg.ty);
             }
@@ -347,12 +342,6 @@ fn transform_sig(
 //         ___ret
 //     })
 fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
-    if let Some(Stmt::Item(syn::Item::Verbatim(item))) = block.stmts.first() {
-        if block.stmts.len() == 1 && item.to_string() == ";" {
-            return;
-        }
-    }
-
     let mut self_span = None;
     let decls = sig
         .inputs
@@ -373,26 +362,18 @@ fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
                 // the parameter, forward it to the variable.
                 //
                 // This is currently not applied to the `self` parameter.
-                let attrs = arg.attrs.iter().filter(|attr| attr.path.is_ident("cfg"));
+                let attrs = arg.attrs.iter().filter(|attr| attr.path().is_ident("cfg"));
 
-                if let Pat::Ident(PatIdent {
+                if let Type::Reference(_) = *arg.ty {
+                    quote!()
+                } else if let Pat::Ident(PatIdent {
                     ident, mutability, ..
                 }) = &*arg.pat
                 {
-                    if ident == "self" {
-                        self_span = Some(ident.span());
-                        let prefixed = Ident::new("__self", ident.span());
-                        quote!(let #mutability #prefixed = #ident;)
-                    } else if let Type::Reference(_) = *arg.ty {
-                        quote!()
-                    } else {
-                        quote! {
-                            #(#attrs)*
-                            let #mutability #ident = #ident;
-                        }
+                    quote! {
+                        #(#attrs)*
+                        let #mutability #ident = #ident;
                     }
-                } else if let Type::Reference(_) = *arg.ty {
-                    quote!()
                 } else {
                     let pat = &arg.pat;
                     let ident = positional_arg(i, pat);

@@ -2,8 +2,7 @@ use proc_macro2::{Group, Span, TokenStream, TokenTree};
 use std::iter::FromIterator;
 use syn::visit_mut::{self, VisitMut};
 use syn::{
-    Block, ExprPath, Ident, Item, Macro, Pat, PatIdent, PatPath, Path, Receiver, Signature, Token,
-    TypePath,
+    Block, ExprPath, Ident, Item, Macro, Pat, PatIdent, Path, Receiver, Signature, Token, TypePath,
 };
 
 pub fn has_self_in_sig(sig: &mut Signature) -> bool {
@@ -58,11 +57,6 @@ impl VisitMut for HasSelf {
     fn visit_expr_path_mut(&mut self, expr: &mut ExprPath) {
         self.0 |= expr.path.segments[0].ident == "Self";
         visit_mut::visit_expr_path_mut(self, expr);
-    }
-
-    fn visit_pat_path_mut(&mut self, pat: &mut PatPath) {
-        self.0 |= pat.path.segments[0].ident == "Self";
-        visit_mut::visit_pat_path_mut(self, pat);
     }
 
     fn visit_type_path_mut(&mut self, ty: &mut TypePath) {
