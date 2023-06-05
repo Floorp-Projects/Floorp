@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/dom/PlacesEventBinding.h"
+#include "nsIWeakReference.h"
 #include "nsThreadUtils.h"
 #include "nsDocShellCID.h"
 
@@ -25,8 +27,15 @@
 #include "prinrval.h"
 #include "prtime.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/PlacesEvent.h"
+#include "mozilla/dom/PlacesObservers.h"
+#include "mozilla/places/INativePlacesEventCallback.h"
 
-#define WAITFORTOPIC_TIMEOUT_SECONDS 5
+using mozilla::dom::PlacesEventType;
+using mozilla::dom::PlacesObservers;
+using mozilla::places::INativePlacesEventCallback;
+
+#define WAIT_TIMEOUT_USEC (5 * PR_USEC_PER_SEC)
 
 #define do_check_true(aCondition) EXPECT_TRUE(aCondition)
 
@@ -34,7 +43,7 @@
 
 #define do_check_success(aResult) do_check_true(NS_SUCCEEDED(aResult))
 
-#define do_check_eq(aExpected, aActual) do_check_true(aExpected == aActual)
+#define do_check_eq(aExpected, aActual) do_check_true((aExpected) == (aActual))
 
 struct Test {
   void (*func)(void);
@@ -77,8 +86,7 @@ class WaitForTopicSpinner final : public nsIObserver {
             return true;
           }
 
-          if ((PR_IntervalNow() - mStartTime) >
-              (WAITFORTOPIC_TIMEOUT_SECONDS * PR_USEC_PER_SEC)) {
+          if ((PR_IntervalNow() - mStartTime) > (WAIT_TIMEOUT_USEC)) {
             timedOut = true;
             return true;
           }
@@ -109,6 +117,63 @@ class WaitForTopicSpinner final : public nsIObserver {
   PRIntervalTime mStartTime;
 };
 NS_IMPL_ISUPPORTS(WaitForTopicSpinner, nsIObserver)
+
+/**
+ * Spins current thread until a Places notification is received.
+ */
+class WaitForNotificationSpinner final : public INativePlacesEventCallback {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaitForNotificationSpinner, override)
+
+  explicit WaitForNotificationSpinner(const PlacesEventType aEventType)
+      : mEventType(aEventType), mStartTime(PR_IntervalNow()) {
+    AutoTArray<PlacesEventType, 1> events;
+    events.AppendElement(mEventType);
+    PlacesObservers::AddListener(events, this);
+  }
+
+  void SpinUntilCompleted() {
+    bool timedOut = false;
+    mozilla::SpinEventLoopUntil(
+        "places::WaitForNotificationSpinner::SpinUntilCompleted"_ns,
+        [&]() -> bool {
+          if (mEventReceived) {
+            return true;
+          }
+
+          if ((PR_IntervalNow() - mStartTime) > (WAIT_TIMEOUT_USEC)) {
+            timedOut = true;
+            return true;
+          }
+
+          return false;
+        });
+
+    if (timedOut) {
+      // Timed out waiting for the notification.
+      do_check_true(false);
+    }
+  }
+
+  void HandlePlacesEvent(const PlacesEventSequence& aEvents) override {
+    for (const auto& event : aEvents) {
+      if (event->Type() == mEventType) {
+        mEventReceived = true;
+        AutoTArray<PlacesEventType, 1> events;
+        events.AppendElement(mEventType);
+        PlacesObservers::RemoveListener(events, this);
+        return;
+      }
+    }
+  }
+
+ private:
+  ~WaitForNotificationSpinner() = default;
+
+  bool mEventReceived = false;
+  PlacesEventType mEventType;
+  PRIntervalTime mStartTime;
+};
 
 /**
  * Spins current thread until an async statement is executed.
@@ -159,18 +224,19 @@ void PlacesAsyncStatementSpinner::SpinUntilCompleted() {
   }
 }
 
-struct PlaceRecord {
-  int64_t id;
-  int32_t hidden;
-  int32_t typed;
-  int32_t visitCount;
+using PlaceRecord = struct PlaceRecord {
+  int64_t id = -1;
+  int32_t hidden = 0;
+  int32_t typed = 0;
+  int32_t visitCount = 0;
   nsCString guid;
+  int64_t frecency = -1;
 };
 
-struct VisitRecord {
-  int64_t id;
-  int64_t lastVisitId;
-  int32_t transitionType;
+using VisitRecord = struct VisitRecord {
+  int64_t id = -1;
+  int64_t lastVisitId = -1;
+  int32_t transitionType = 0;
 };
 
 already_AddRefed<mozilla::IHistory> do_get_IHistory() {
@@ -211,9 +277,9 @@ void do_get_place(nsIURI* aURI, PlaceRecord& result) {
   do_check_success(rv);
 
   rv = dbConn->CreateStatement(
-      nsLiteralCString(
-          "SELECT id, hidden, typed, visit_count, guid FROM moz_places "
-          "WHERE url_hash = hash(?1) AND url = ?1"),
+      nsLiteralCString("SELECT id, hidden, typed, visit_count, guid, frecency "
+                       "FROM moz_places "
+                       "WHERE url_hash = hash(?1) AND url = ?1"),
       getter_AddRefs(stmt));
   do_check_success(rv);
 
@@ -237,6 +303,8 @@ void do_get_place(nsIURI* aURI, PlaceRecord& result) {
   rv = stmt->GetInt32(3, &result.visitCount);
   do_check_success(rv);
   rv = stmt->GetUTF8String(4, result.guid);
+  do_check_success(rv);
+  rv = stmt->GetInt64(5, &result.frecency);
   do_check_success(rv);
 }
 

@@ -23,28 +23,28 @@ add_task(async function test_topSites() {
   const numVisits = 15; // To make sure we get frecency.
   let visitDate = new Date(1999, 9, 9, 9, 9).getTime();
 
-  function setVisit(visit) {
+  async function setVisit(visit) {
     for (let j = 0; j < numVisits; ++j) {
       visitDate -= 1000;
       visit.visits.push({ date: new Date(visitDate) });
     }
     visits.push(visit);
+    await PlacesUtils.history.insert(visit);
   }
   // Stick a couple sites into history.
   for (let i = 0; i < 2; ++i) {
-    setVisit({
+    await setVisit({
       url: `http://example${i}.com/`,
       title: `visit${i}`,
       visits: [],
     });
-    setVisit({
+    await setVisit({
       url: `http://www.example${i}.com/foobar`,
       title: `visit${i}-www`,
       visits: [],
     });
   }
   NewTabUtils.init();
-  await PlacesUtils.history.insertMany(visits);
 
   // Insert a favicon to show that favicons are not returned by default.
   let faviconData = new Map();

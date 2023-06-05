@@ -355,6 +355,77 @@ void test_visituri_creates_visit() {
   run_next_test();
 }
 
+void test_visituri_frecency() {
+  // Adding a visit calculates frecency immediately.
+  nsCOMPtr<IHistory> history = do_get_IHistory();
+  nsCOMPtr<nsIURI> visitedURI = new_test_uri();
+  RefPtr<WaitForNotificationSpinner> spinner =
+      new WaitForNotificationSpinner(PlacesEventType::Pages_rank_changed);
+  history->VisitURI(nullptr, visitedURI, nullptr, mozilla::IHistory::TOP_LEVEL,
+                    0);
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  finisher->WaitForNotification();
+  spinner->SpinUntilCompleted();
+  PlaceRecord place;
+  do_get_place(visitedURI, place);
+  do_check_true(place.frecency > 0);
+  run_next_test();
+}
+
+void test_visituri_hidden() {
+  nsCOMPtr<IHistory> history = do_get_IHistory();
+  {
+    // Insert a framed link visit.
+    nsCOMPtr<nsIURI> visitedURI = new_test_uri();
+    nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
+    navHistory->MarkPageAsFollowedLink(visitedURI);
+    history->VisitURI(nullptr, visitedURI, nullptr, 0, 0);
+    RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+    finisher->WaitForNotification();
+    PlaceRecord place;
+    do_get_place(visitedURI, place);
+    do_check_true(place.hidden);
+  }
+
+  // Insert a redirect.
+  nsCOMPtr<nsIURI> visitedURI = new_test_uri();
+  history->VisitURI(nullptr, visitedURI, nullptr,
+                    mozilla::IHistory::TOP_LEVEL | IHistory::REDIRECT_SOURCE,
+                    0);
+  {
+    RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+    finisher->WaitForNotification();
+    PlaceRecord place;
+    do_get_place(visitedURI, place);
+    do_check_true(place.hidden);
+  }
+
+  // Now add a non-hidden visit to the hidden page, check it gets unhidden.
+  history->VisitURI(nullptr, visitedURI, nullptr, mozilla::IHistory::TOP_LEVEL,
+                    0);
+  {
+    RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+    finisher->WaitForNotification();
+    PlaceRecord place;
+    do_get_place(visitedURI, place);
+    do_check_false(place.hidden);
+  }
+
+  // Add another hidden visit, it should stay unhidden.
+  history->VisitURI(nullptr, visitedURI, nullptr,
+                    mozilla::IHistory::TOP_LEVEL | IHistory::REDIRECT_SOURCE,
+                    0);
+  {
+    RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+    finisher->WaitForNotification();
+    PlaceRecord place;
+    do_get_place(visitedURI, place);
+    do_check_false(place.hidden);
+  }
+
+  run_next_test();
+}
+
 void test_visituri_transition_typed() {
   nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
   nsCOMPtr<IHistory> history = do_get_IHistory();
@@ -430,15 +501,18 @@ Test gTests[] = {
     PTEST(test_unvisited_does_not_notify_part2),  // Order Important!
     PTEST(test_same_uri_notifies_both),
     PTEST(test_unregistered_visited_does_not_notify),  // Order Important!
+    PTEST(test_new_visit_adds_place_guid),
     PTEST(test_new_visit_notifies_waiting_Link),
     PTEST(test_RegisterVisitedCallback_returns_before_notifying),
     PTEST(test_visituri_inserts),
     PTEST(test_visituri_updates),
     PTEST(test_visituri_preserves_shown_and_typed),
     PTEST(test_visituri_creates_visit),
+    PTEST(test_visituri_frecency),
+    PTEST(test_visituri_hidden),
     PTEST(test_visituri_transition_typed),
     PTEST(test_visituri_transition_embed),
-    PTEST(test_new_visit_adds_place_guid),
+
 };
 
 #define TEST_NAME "IHistory"

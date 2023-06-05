@@ -842,9 +842,6 @@ class InsertVisitedURIs final : public Runnable {
     // whatever we can and then notify the main thread we're done.
     nsresult rv = InnerRun();
 
-    if (mSuccessfulUpdatedCount > 0) {
-      NS_DispatchToMainThread(new NotifyRankingChanged());
-    }
     if (!!mCallback) {
       NS_DispatchToMainThread(
           new NotifyCompletion(mCallback, mSuccessfulUpdatedCount));
@@ -874,9 +871,28 @@ class InsertVisitedURIs final : public Runnable {
     if (shouldChunkNotifications) {
       notificationChunk.SetCapacity(NOTIFY_VISITS_CHUNK_SIZE);
     }
+
+    // This is an optimization for frecency updating, if all the entries point
+    // to the same URL (inserting multiple visits for the same url), then we can
+    // update frecency once at the end of the loop. Otherwise, if there's
+    // multiple pages, we'll delay frecency recalculation to a later time.
+    bool shouldUpdateFrecency = false;
+
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       VisitData& place = mPlaces.ElementAt(i);
 
+      if (i == 0) {
+        // isUnrecoverableError can only be defined when this is invoked by
+        // VisitURI, to insert a single visit. When it's defined, the page
+        // will be hidden, thus it's not worth updating.
+        shouldUpdateFrecency = !place.isUnrecoverableError;
+      } else if (shouldUpdateFrecency &&
+                 (!place.spec.Equals(mPlaces.ElementAt(i - 1).spec))) {
+        // We have multiple entries with different URLs, delay recalculation.
+        // A SQL trigger will set recalc_frecency automatically when a visit
+        // is added.
+        shouldUpdateFrecency = false;
+      }
       // Fetching from the database can overwrite this information, so save it
       // apart.
       bool typed = place.typed;
@@ -960,6 +976,18 @@ class InsertVisitedURIs final : public Runnable {
       mSuccessfulUpdatedCount++;
     }
 
+    if (shouldUpdateFrecency) {
+      VisitData& place = mPlaces.ElementAt(0);
+      if (NS_SUCCEEDED(UpdateFrecency(
+              place.placeId,
+              place.useFrecencyRedirectBonus && mPlaces.Length() == 1))) {
+        // Notifying a new visit should be sufficient to know that frecency
+        // changed, but since historically we notified a frecency change, for
+        // now we'll continue doing it, and re-evaluate in the future.
+        NS_DispatchToMainThread(new NotifyRankingChanged());
+      }
+    }
+
     {
       // Trigger insertions for all the new origins of the places we inserted.
       nsAutoCString query("DELETE FROM moz_updateoriginsinsert_temp");
@@ -1024,10 +1052,10 @@ class InsertVisitedURIs final : public Runnable {
    * Inserts or updates the entry in moz_places for this visit, adds the visit,
    * and updates the frecency of the place.
    *
-   * @param aKnown
+   * @param {boolean} aKnown
    *        True if we already have an entry for this place in moz_places, false
    *        otherwise.
-   * @param aPlace
+   * @param {VisitData} aPlace
    *        The place we are adding a visit for.
    */
   nsresult DoDatabaseInserts(bool aKnown, VisitData& aPlace) {
@@ -1050,15 +1078,6 @@ class InsertVisitedURIs final : public Runnable {
 
     rv = AddVisit(aPlace);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // TODO (bug 623969) we shouldn't update this after each visit, but
-    // rather only for each unique place to save disk I/O.
-
-    // Don't update frecency if the page should not appear in autocomplete.
-    if (!aPlace.isUnrecoverableError) {
-      rv = UpdateFrecency(aPlace);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     return NS_OK;
   }
@@ -1158,10 +1177,7 @@ class InsertVisitedURIs final : public Runnable {
    * @param aPlace
    *        The VisitData for the place we want to update.
    */
-  nsresult UpdateFrecency(const VisitData& aPlace) {
-    MOZ_ASSERT(!aPlace.isUnrecoverableError);
-    MOZ_ASSERT(aPlace.placeId > 0);
-
+  nsresult UpdateFrecency(const int64_t aPlaceId, bool aIsRedirect) {
     nsresult rv;
     {  // First, set our frecency to the proper value.
       nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(
@@ -1171,10 +1187,9 @@ class InsertVisitedURIs final : public Runnable {
       NS_ENSURE_STATE(stmt);
       mozStorageStatementScoper scoper(stmt);
 
-      rv = stmt->BindInt64ByName("page_id"_ns, aPlace.placeId);
+      rv = stmt->BindInt64ByName("page_id"_ns, aPlaceId);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv =
-          stmt->BindInt32ByName("redirect"_ns, aPlace.useFrecencyRedirectBonus);
+      rv = stmt->BindInt32ByName("redirect"_ns, aIsRedirect);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = stmt->Execute();
@@ -1190,10 +1205,9 @@ class InsertVisitedURIs final : public Runnable {
           "WHERE id = :page_id");
       NS_ENSURE_STATE(stmt);
       mozStorageStatementScoper scoper(stmt);
-      rv = stmt->BindInt64ByName("page_id"_ns, aPlace.placeId);
+      rv = stmt->BindInt64ByName("page_id"_ns, aPlaceId);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv =
-          stmt->BindInt32ByName("redirect"_ns, aPlace.useFrecencyRedirectBonus);
+      rv = stmt->BindInt32ByName("redirect"_ns, aIsRedirect);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = stmt->Execute();
       NS_ENSURE_SUCCESS(rv, rv);

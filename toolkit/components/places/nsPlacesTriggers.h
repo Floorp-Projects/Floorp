@@ -226,8 +226,8 @@
         "UPDATE moz_origins SET recalc_frecency = 1, recalc_alt_frecency = 1 " \
         "WHERE id = NEW.origin_id; "                                           \
         "END ")
-// This trigger corresponds to the previous trigger.  It runs on deletes on
-// moz_updateoriginsupdate_temp -- logically, after updates to
+// This trigger corresponds to the previous trigger.  It runs on deletes
+// on moz_updateoriginsupdate_temp -- logically, after updates to
 // moz_places.frecency.
 #  define CREATE_UPDATEORIGINSUPDATE_AFTERDELETE_TRIGGER \
     nsLiteralCString( \
@@ -256,7 +256,8 @@
         "END")
 
 /**
- * This trigger removes a row from moz_openpages_temp when open_count reaches 0.
+ * This trigger removes a row from moz_openpages_temp when open_count
+ * reaches 0.
  *
  * @note this should be kept up-to-date with the definition in
  *       nsPlacesAutoComplete.js
@@ -293,14 +294,14 @@
         "END")
 
 /**
- * Currently expiration skips anything with frecency = -1, since that is the
- * default value for new page insertions. Unfortunately adding and immediately
- * removing a bookmark will generate a page with frecency = -1 that would never
- * be expired until visited.
- * As a temporary workaround we set frecency to 1 on bookmark addition if it was
- * set to -1. This is not elegant, but it will be fixed by Bug 1475582 once
- * removing bookmarks will immediately take care of removing orphan pages.
- * Note setting frecency resets recalc_frecency, so do it first.
+ * Currently expiration skips anything with frecency = -1, since that is
+ * the default value for new page insertions. Unfortunately adding and
+ * immediately removing a bookmark will generate a page with frecency =
+ * -1 that would never be expired until visited. As a temporary
+ * workaround we set frecency to 1 on bookmark addition if it was set to
+ * -1. This is not elegant, but it will be fixed by Bug 1475582 once
+ * removing bookmarks will immediately take care of removing orphan
+ * pages. Note setting frecency resets recalc_frecency, so do it first.
  */
 #  define CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERINSERT_TRIGGER                    \
     nsLiteralCString(                                                          \
@@ -310,8 +311,9 @@
         "SELECT store_last_inserted_id('moz_bookmarks', NEW.id); "             \
         "SELECT note_sync_change() WHERE NEW.syncChangeCounter > 0; "          \
         "UPDATE moz_places "                                                   \
-        "SET frecency = 1 WHERE frecency = -1 AND NOT " IS_PLACE_QUERY         \
-        ";"                                                                    \
+        "SET frecency = (CASE WHEN " IS_PLACE_QUERY                            \
+        "                THEN 0 ELSE 1 END) "                                  \
+        "WHERE frecency = -1 AND id = NEW.fk;"                                 \
         "UPDATE moz_places "                                                   \
         "SET foreign_count = foreign_count + 1 "                               \
         ",   hidden = " IS_PLACE_QUERY                                         \
@@ -397,8 +399,8 @@
         "SELECT note_sync_change(); "                                       \
         "END")
 
-// This trigger removes orphan search terms when interactions are removed from
-// the metadata table.
+// This trigger removes orphan search terms when interactions are
+// removed from the metadata table.
 #  define CREATE_PLACES_METADATA_AFTERDELETE_TRIGGER                   \
     nsLiteralCString(                                                  \
         "CREATE TEMP TRIGGER moz_places_metadata_afterdelete_trigger " \
