@@ -606,7 +606,8 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveXULTreePseudoStyle(
     ComputedStyle* aParentStyle, const AtomArray& aInputWord) {
   MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag));
   MOZ_ASSERT(aParentStyle);
-  MOZ_ASSERT(!StylistNeedsUpdate());
+  NS_ASSERTION(!StylistNeedsUpdate(),
+               "Stylesheets modified when resolving XUL tree pseudo");
 
   return Servo_ComputedValues_ResolveXULTreePseudoStyle(
              aParentElement, aPseudoTag, aParentStyle, &aInputWord,
