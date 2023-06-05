@@ -5,9 +5,28 @@
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.dependencies import get_dependencies, get_primary_dependency
+from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def resolve_keys(config, tasks):
+    for task in tasks:
+        if not task["attributes"].get("build-type"):
+            task["attributes"]["build-type"] = task["name"]
+
+        resolve_keyed_by(
+            task,
+            "treeherder.job-symbol",
+            item_name=task["name"],
+            **{
+                "build-type": task["attributes"]["build-type"],
+                "level": config.params["level"],
+            },
+        )
+        yield task
 
 
 @transforms.add
