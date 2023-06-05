@@ -84,8 +84,10 @@ $col4-header-font-size: 14;
       @media (forced-colors: active) {
         fill: CurrentColor;
       }
+
       fill: var(--newtab-text-primary-color);
     }
+
     @media (forced-colors: active) {
       fill: CurrentColor;
     }
