@@ -25,10 +25,10 @@ index 3125993d4b..cda8b1f6af 100644
  
        // See LntfConfig for description.
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index e7f88665b6..eed9770d93 100644
+index 6b1e8ff05c..c011c078ab 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -297,9 +297,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
        frames_decryptable_(false),
        absolute_capture_time_interpolator_(clock) {
    packet_sequence_checker_.Detach();

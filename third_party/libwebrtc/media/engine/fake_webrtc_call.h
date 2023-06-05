@@ -126,8 +126,6 @@ class FakeAudioReceiveStream final
   void SetNonSenderRttMeasurement(bool enabled) override;
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override;
-  void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-  webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
   webrtc::AudioReceiveStreamInterface::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
@@ -274,9 +272,6 @@ class FakeVideoReceiveStream final
   }
   void GenerateKeyFrame() override {}
 
-  // webrtc::VideoReceiveStreamInterface implementation.
-  void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-  webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   void SetRtcpMode(webrtc::RtcpMode mode) override {
     config_.rtp.rtcp_mode = mode;
   }
@@ -340,8 +335,6 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
     config_.rtp.local_ssrc = local_ssrc;
   }
 
-  void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-  webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   void SetRtcpMode(webrtc::RtcpMode mode) override { config_.rtcp_mode = mode; }
 
   int payload_type() const override { return config_.payload_type; }

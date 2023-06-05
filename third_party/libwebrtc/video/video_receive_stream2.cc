@@ -441,29 +441,6 @@ void VideoReceiveStream2::Stop() {
   transport_adapter_.Disable();
 }
 
-void VideoReceiveStream2::SetRtpExtensions(
-    std::vector<RtpExtension> extensions) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  rtp_video_stream_receiver_.SetRtpExtensions(extensions);
-  // TODO(tommi): We don't use the `c.rtp.extensions` member in the
-  // VideoReceiveStream2 class, so this const_cast<> is a temporary hack to keep
-  // things consistent between VideoReceiveStream2 and RtpVideoStreamReceiver2
-  // for debugging purposes. The `packet_sequence_checker_` gives us assurances
-  // that from a threading perspective, this is still safe. The accessors that
-  // give read access to this state, run behind the same check.
-  // The alternative to the const_cast<> would be to make `config_` non-const
-  // and guarded by `packet_sequence_checker_`. However the scope of that state
-  // is huge (the whole Config struct), and would require all methods that touch
-  // the struct to abide the needs of the `extensions` member.
-  const_cast<std::vector<RtpExtension>&>(config_.rtp.extensions) =
-      std::move(extensions);
-}
-
-RtpHeaderExtensionMap VideoReceiveStream2::GetRtpExtensionMap() const {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  return rtp_video_stream_receiver_.GetRtpExtensions();
-}
-
 void VideoReceiveStream2::SetRtcpMode(RtcpMode mode) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   // TODO(tommi): Stop using the config struct for the internal state.
