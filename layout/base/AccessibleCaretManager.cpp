@@ -732,9 +732,10 @@ void AccessibleCaretManager::OnScrollEnd() {
     }
   }
 
-  // For mouse input we don't want to show the carets.
+  // For mouse and keyboard input, we don't want to show the carets.
   if (StaticPrefs::layout_accessiblecaret_hide_carets_for_mouse_input() &&
-      mLastInputSource == MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
+      (mLastInputSource == MouseEvent_Binding::MOZ_SOURCE_MOUSE ||
+       mLastInputSource == MouseEvent_Binding::MOZ_SOURCE_KEYBOARD)) {
     AC_LOG("%s: HideCaretsAndDispatchCaretStateChangedEvent()", __FUNCTION__);
     HideCaretsAndDispatchCaretStateChangedEvent();
     return;

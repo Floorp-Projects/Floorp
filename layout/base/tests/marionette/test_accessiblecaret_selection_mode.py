@@ -15,6 +15,7 @@ from selection import (
     SelectionManager,
 )
 from marionette_driver.by import By
+from marionette_driver.keys import Keys
 from marionette_harness.marionette_test import (
     MarionetteTestCase,
     SkipTest,
@@ -49,6 +50,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     _iframe_scroll_html = "layout/test_carets_iframe_scroll.html"
     _display_none_html = "layout/test_carets_display_none.html"
     _svg_shapes_html = "layout/test_carets_svg_shapes.html"
+    _key_scroll_html = "layout/test_carets_key_scroll.html"
 
     def setUp(self):
         # Code to execute before every test is running.
@@ -765,3 +767,31 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         ).perform()
 
         self.assertEqual("DDDDDD EEEEEE", sel.selected_content)
+
+    def test_carets_not_show_after_key_scroll_down_and_up(self):
+        self.open_test_html(self._key_scroll_html)
+        html = self.marionette.find_element(By.ID, "html")
+        sel = SelectionManager(html)
+
+        # Select "BBBBB" to get the position of the second caret. This is the
+        # position to which we are going to drag the caret in the step 3.
+        content2 = self.marionette.find_element(By.ID, self._content2_id)
+        self.long_press_on_word(content2, 0)
+        (_, _), (x2, y2) = sel.carets_location()
+
+        # Step 1: Select "AAAAA".
+        content = self.marionette.find_element(By.ID, self._content_id)
+        self.long_press_on_word(content, 0)
+        (_, _), (x1, y1) = sel.carets_location()
+
+        # Step 2: Scroll the page down and up.
+        self.actions.key_chain.send_keys(Keys.PAGE_DOWN).pause(1000).send_keys(
+            Keys.PAGE_UP
+        ).perform()
+        self.assertEqual("AAAAA", sel.selected_content)
+
+        # Step 3: The carets shouldn't show up after scrolling the page. We're
+        # attempting to drag the second caret down so that if the bug occurs, we
+        # can drag the second caret to extend the selection to "BBBBB".
+        self.actions.flick(html, x1, y1, x2, y2).perform()
+        self.assertNotEqual("AAAAA\nBBBBB", sel.selected_content)
