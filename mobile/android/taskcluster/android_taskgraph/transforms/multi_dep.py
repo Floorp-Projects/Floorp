@@ -5,16 +5,18 @@
 
 from android_taskgraph.util.scriptworker import generate_beetmover_upstream_artifacts
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_dependencies
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 transforms = TransformSequence()
+upstream_artifacts = TransformSequence()
 
 
 @transforms.add
 def build_name_and_attributes(config, tasks):
     for task in tasks:
-        task["dependencies"] = {dep.kind: dep.label for dep in _get_all_deps(task)}
+        task["dependencies"] = {dep.kind: dep.label for dep in _get_all_deps(config, task)}
         primary_dep = task["primary-dependency"]
         attributes = primary_dep.attributes.copy()
         attributes.update(task.get("attributes", {}))
@@ -30,11 +32,14 @@ def _get_dependent_job_name_without_its_kind(dependent_job):
     return dependent_job.label[len(dependent_job.kind) + 1 :]
 
 
-def _get_all_deps(task):
+def _get_all_deps(config, task):
     if task.get("dependent-tasks"):
         return task["dependent-tasks"].values()
 
-    return [task["primary-dependency"]]
+    if "primary-dependency" in task:
+        return [task["primary-dependency"]]
+
+    return get_dependencies(config, task)
 
 
 @transforms.add
@@ -56,6 +61,7 @@ def resolve_keys(config, tasks):
 
 
 @transforms.add
+@upstream_artifacts.add
 def build_upstream_artifacts(config, tasks):
     for task in tasks:
         worker_definition = {
@@ -69,7 +75,7 @@ def build_upstream_artifacts(config, tasks):
                 "upstream-artifacts"
             ] = generate_beetmover_upstream_artifacts(config, task, build_type, locale)
         else:
-            for dep in _get_all_deps(task):
+            for dep in _get_all_deps(config, task):
                 paths = list(dep.attributes.get("artifacts", {}).values())
                 paths.extend(
                     [

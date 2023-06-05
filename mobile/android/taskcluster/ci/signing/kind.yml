@@ -2,49 +2,49 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: android_taskgraph.loader.multi_dep:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
-    - android_taskgraph.transforms.multi_dep:transforms
-    - android_taskgraph.transforms.signing:transforms
-    - android_taskgraph.transforms.treeherder:transforms
-    - android_taskgraph.transforms.clean_multi_dep:transforms
-    - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.multi_dep:upstream_artifacts
+    - android_taskgraph.transforms.signing
+    - android_taskgraph.transforms.treeherder
+    - taskgraph.transforms.task
 
 kind-dependencies:
     - build-components
 
-primary-dependency: build-components
-
-group-by: component
-
-only-for-build-types:
-    - release
-    - beta
-    - nightly
-
-task-template:
-    description: Sign component
-    index:
-        by-build-type:
-            (release|beta|nightly):
-                type: signing
-            default: {}
-    run-on-tasks-for: []
-    treeherder:
-        job-symbol:
+tasks:
+    sign-build:
+        description: Sign component
+        from-deps:
+            with-attributes:
+                build-type:
+                    - release
+                    - beta
+                    - nightly
+            group-by: component
+            copy-attributes: true
+        index:
             by-build-type:
-                release: BRs
-                beta: BBs
-                nightly: BNs
-                default: Bs
-        kind: build
-    worker-type:
-        by-level:
-            '3': signing
-            default: dep-signing
-    worker:
-        signing-type:
+                (release|beta|nightly):
+                    type: signing
+                default: {}
+        run-on-tasks-for: []
+        treeherder:
+            job-symbol:
+                by-build-type:
+                    release: BRs
+                    beta: BBs
+                    nightly: BNs
+                    default: Bs
+            kind: build
+        worker-type:
             by-level:
-                '3': release-signing
+                '3': signing
                 default: dep-signing
+        worker:
+            signing-type:
+                by-level:
+                    '3': release-signing
+                    default: dep-signing

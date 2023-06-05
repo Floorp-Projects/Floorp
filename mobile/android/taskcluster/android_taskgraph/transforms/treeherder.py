@@ -4,6 +4,7 @@
 
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_dependencies, get_primary_dependency
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 transforms = TransformSequence()
@@ -12,13 +13,16 @@ transforms = TransformSequence()
 @transforms.add
 def build_treeherder_definition(config, tasks):
     for task in tasks:
-        if task.get("primary-dependency"):
-            dep = task.pop("primary-dependency")
+        primary_dep = get_primary_dependency(config, task)
+        if not primary_dep and task.get("primary-dependency"):
+            primary_dep = task.pop("primary-dependency")
         else:
-            dep = list(task["dependent-tasks"].values())[0]
+            primary_dep = list(get_dependencies(config, task))[0]
 
-        task.setdefault("treeherder", {}).update(inherit_treeherder_from_dep(task, dep))
-        task_group = dep.task["extra"]["treeherder"].get("groupSymbol", "?")
+        task.setdefault("treeherder", {}).update(
+            inherit_treeherder_from_dep(task, primary_dep)
+        )
+        task_group = primary_dep.task["extra"]["treeherder"].get("groupSymbol", "?")
         job_symbol = task["treeherder"].pop("job-symbol")
         full_symbol = join_symbol(task_group, job_symbol)
         task["treeherder"]["symbol"] = full_symbol
