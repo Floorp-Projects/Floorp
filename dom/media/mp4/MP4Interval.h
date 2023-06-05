@@ -7,6 +7,7 @@
 
 #include "nsTArray.h"
 #include <algorithm>
+#include <nsString.h>
 
 namespace mozilla {
 
@@ -45,6 +46,11 @@ struct MP4Interval {
 
   T start;
   T end;
+
+  nsCString ToString() {
+    return nsPrintfCString("[%s, %s]", start.ToString().get(),
+                           end.ToString().get());
+  }
 
   static void SemiNormalAppend(nsTArray<MP4Interval<T>>& aIntervals,
                                MP4Interval<T> aMP4Interval) {

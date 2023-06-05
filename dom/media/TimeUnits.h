@@ -284,6 +284,14 @@ class TimeIntervals : public IntervalSet<TimeUnit> {
     return output;
   }
 
+  nsCString ToString() const {
+    nsCString dump;
+    for (const auto& interval : mIntervals) {
+      dump += nsPrintfCString("[%s],", interval.ToString().get());
+    }
+    return dump;
+  }
+
   TimeIntervals() = default;
 };
 
