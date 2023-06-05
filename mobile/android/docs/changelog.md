@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 115.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v114..main)
+# 116.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 115.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v114..releases_v115)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v115/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v115/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v115/android-components/.config.yml)
 
 * **lib-crash**
   * Log exceptions that crash the `CrashReporter` to avoid silent failurs. See [bug 1826591](https://bugzilla.mozilla.org/show_bug.cgi?id=1826591).
