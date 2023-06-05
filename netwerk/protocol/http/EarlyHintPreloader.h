@@ -88,7 +88,8 @@ class EarlyHintPreloader final : public nsIStreamListener,
       OngoingEarlyHints* aOngoingEarlyHints, const LinkHeader& aHeader,
       nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
       nsICookieJarSettings* aCookieJarSettings,
-      const nsACString& aReferrerPolicy, const nsACString& aCSPHeader);
+      const nsACString& aReferrerPolicy, const nsACString& aCSPHeader,
+      uint64_t aBrowsingContextID);
 
   // register Channel to EarlyHintRegistrar. Returns true and sets connect args
   // if successful
@@ -131,7 +132,8 @@ class EarlyHintPreloader final : public nsIStreamListener,
                        nsSecurityFlags aSecurityFlags,
                        nsContentPolicyType aContentPolicyType,
                        nsIReferrerInfo* aReferrerInfo,
-                       nsICookieJarSettings* aCookieJarSettings);
+                       nsICookieJarSettings* aCookieJarSettings,
+                       uint64_t aBrowsingContextID);
   void PriorizeAsPreload();
   void SetLinkHeader(const LinkHeader& aLinkHeader);
 

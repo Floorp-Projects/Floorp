@@ -36,6 +36,7 @@ class WindowGlobalParent;
 }  // namespace dom
 
 namespace net {
+class EarlyHintPreloader;
 class LoadInfoArgs;
 class LoadInfo;
 }  // namespace net
@@ -265,9 +266,10 @@ class LoadInfo final : public nsILoadInfo {
   void SetIncludeCookiesSecFlag();
   friend class mozilla::dom::XMLHttpRequestMainThread;
 
-  // nsDocShell::OpenInitializedChannel needs to update the loadInfo with
-  // the correct browsingContext.
+  // nsDocShell::OpenInitializedChannel and EarlyHintPreloader::OpenChannel
+  // needs to update the loadInfo with the correct browsingContext.
   friend class ::nsDocShell;
+  friend class mozilla::net::EarlyHintPreloader;
   void UpdateBrowsingContextID(uint64_t aBrowsingContextID) {
     mBrowsingContextID = aBrowsingContextID;
   }
