@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Scrolling with mouse down on the scrollbar</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    .content {
+      width: 1000px;
+      height: 20000px;
+    }
+  </style>
+  <script type="text/javascript">
+
+async function test() {
+  var targetElement = elementForTarget(window);
+  var w = {},
+    h = {};
+  utilsForTarget(window).getScrollbarSizes(targetElement, w, h);
+  var verticalScrollbarWidth = w.value;
+  var mouseX = targetElement.clientWidth + verticalScrollbarWidth / 2;
+  var mouseY = targetElement.clientHeight - 100; // 100 pixels above the bottom of the scrollbar track
+
+  let scrollEndPromise = promiseScrollend();
+
+  // Click and hold the mouse. Thumb should start scrolling towards the click location.
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousemove",
+  });
+  // mouse down
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mousedown",
+  });
+
+  // Wait for scrolling to complete
+  await scrollEndPromise;
+
+  // Work around bug 1825879: we may get an extra scrollend
+  // event too early.
+  if (window.scrollY < (window.scrollMaxY / 2)) {
+    scrollEndPromise = promiseScrollend();
+    await scrollEndPromise;
+  }
+
+  // Flush everything just to be safe
+  await promiseOnlyApzControllerFlushed();
+
+  var result = hitTest({x: mouseX, y: mouseY});
+
+  // Check that the scroll thumb is under the cursor.
+  // If the bug occurs, the thumb will scroll too far and
+  // will not be under the cursor.
+  ok((result.hitInfo & APZHitResultFlags.SCROLLBAR_THUMB) != 0, "Scrollbar thumb hit");
+
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: mouseX,
+    offsetY: mouseY,
+    type: "mouseup",
+  });
+}
+
+if (getPlatform() == "linux") {
+  ok(true, "Skipping test because the issue does not apply to Linux");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
+
+  </script>
+</head>
+<body>
+  <div class="content">Some content to ensure the root scrollframe is scrollable</div>
+</body>
+</html>

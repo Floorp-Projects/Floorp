@@ -189,7 +189,7 @@ class nsSliderFrame final : public nsContainerFrame {
   static void Notify(void* aData) {
     (static_cast<nsSliderFrame*>(aData))->Notify();
   }
-  void PageScroll(nscoord aChange);
+  void PageScroll(bool aClickAndHold);
 
   nsPoint mDestinationPoint;
   RefPtr<nsSliderMediator> mMediator;
@@ -201,7 +201,7 @@ class nsSliderFrame final : public nsContainerFrame {
 
   int32_t mCurPos;
 
-  nscoord mChange;
+  nscoord mRepeatDirection;
 
   bool mDragFinished;
 

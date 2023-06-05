@@ -79,7 +79,7 @@ nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       mDragStart(0),
       mThumbStart(0),
       mCurPos(0),
-      mChange(0),
+      mRepeatDirection(0),
       mDragFinished(true),
       mUserChanged(false),
       mScrollingWithAPZ(false),
@@ -675,7 +675,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         if (!GetEventPoint(aEvent, eventPoint)) {
           break;
         }
-        if (mChange) {
+        if (mRepeatDirection) {
           // On Linux the destination point is determined by the initial click
           // on the scrollbar track and doesn't change until the mouse button
           // is released.
@@ -807,8 +807,9 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   //    HandleRelease(aPresContext, aEvent, aEventStatus);
   //  }
 
-  if (aEvent->mMessage == eMouseOut && mChange)
+  if (aEvent->mMessage == eMouseOut && mRepeatDirection) {
     HandleRelease(aPresContext, aEvent, aEventStatus);
+  }
 
   return nsIFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
@@ -1236,9 +1237,9 @@ nsresult nsSliderFrame::StopDrag() {
   }
 #endif
 
-  if (mChange) {
+  if (mRepeatDirection) {
     StopRepeat();
-    mChange = 0;
+    mRepeatDirection = 0;
   }
   return NS_OK;
 }
@@ -1400,7 +1401,7 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     change = -1;
   }
 
-  mChange = change;
+  mRepeatDirection = change;
   DragThumb(true);
   // On Linux we want to keep scrolling in the direction indicated by |change|
   // until the mouse is released. On the other platforms we want to stop
@@ -1418,7 +1419,7 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
   mDestinationPoint = eventPoint;
 #endif
   StartRepeat();
-  PageScroll(change);
+  PageScroll(false);
 
   return NS_OK;
 }
@@ -1464,13 +1465,13 @@ void nsSliderFrame::Notify() {
   // See if the thumb has moved past our destination point.
   // if it has we want to stop.
   if (isHorizontal) {
-    if (mChange < 0) {
+    if (mRepeatDirection < 0) {
       if (thumbRect.x < mDestinationPoint.x) stop = true;
     } else {
       if (thumbRect.x + thumbRect.width > mDestinationPoint.x) stop = true;
     }
   } else {
-    if (mChange < 0) {
+    if (mRepeatDirection < 0) {
       if (thumbRect.y < mDestinationPoint.y) stop = true;
     } else {
       if (thumbRect.y + thumbRect.height > mDestinationPoint.y) stop = true;
@@ -1480,24 +1481,78 @@ void nsSliderFrame::Notify() {
   if (stop) {
     StopRepeat();
   } else {
-    PageScroll(mChange);
+    PageScroll(true);
   }
 }
 
-void nsSliderFrame::PageScroll(nscoord aChange) {
+void nsSliderFrame::PageScroll(bool aClickAndHold) {
+  int32_t changeDirection = mRepeatDirection;
   if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
                                          nsGkAtoms::reverse, eCaseMatters)) {
-    aChange = -aChange;
+    changeDirection = -changeDirection;
   }
   nsScrollbarFrame* sb = Scrollbar();
-  sb->SetIncrementToPage(aChange);
-  if (nsIScrollbarMediator* m = sb->GetScrollbarMediator()) {
-    m->ScrollByPage(sb, aChange,
-                    ScrollSnapFlags::IntendedDirection |
-                        ScrollSnapFlags::IntendedEndPosition);
+
+  nsIScrollableFrame* sf = GetScrollFrame();
+  const ScrollSnapFlags scrollSnapFlags =
+      ScrollSnapFlags::IntendedDirection | ScrollSnapFlags::IntendedEndPosition;
+
+  // If our nsIScrollbarMediator implementation is an nsIScrollableFrame,
+  // use ScrollTo() to ensure we do not scroll past the intended
+  // destination. Otherwise, the combination of smooth scrolling and
+  // ScrollBy() semantics (which adds the delta to the current destination
+  // if there is a smooth scroll in progress) can lead to scrolling too far
+  // (bug 1331390).
+  // Only do this when the page scroll is triggered by the repeat timer
+  // when the mouse is being held down. For multiple clicks in
+  // succession, we want to make sure we scroll by a full page for
+  // each click, so we use ScrollByPage().
+  if (aClickAndHold && sf) {
+    nscoord distance;
+    const bool isHorizontal = sb->IsHorizontal();
+
+    nsIFrame* thumbFrame = mFrames.FirstChild();
+    if (!thumbFrame) {
+      return;
+    }
+
+    nsRect thumbRect = thumbFrame->GetRect();
+
+    if (isHorizontal) {
+      distance = mDestinationPoint.x - thumbRect.x - thumbRect.width / 2;
+    } else {
+      distance = mDestinationPoint.y - thumbRect.y - thumbRect.height / 2;
+    }
+
+    // Convert distance along scrollbar track to amount of scrolled content.
+    distance = distance / GetThumbRatio();
+
+    nsIContent* content = sb->GetContent();
+    const CSSIntCoord pageLength = GetPageIncrement(content);
+
+    nsPoint pos = sf->GetScrollPosition();
+
+    distance =
+        std::min(abs(distance), CSSPixel::ToAppUnits(CSSCoord(pageLength))) *
+        changeDirection;
+
+    if (isHorizontal) {
+      pos.x += distance;
+    } else {
+      pos.y += distance;
+    }
+
+    sf->ScrollTo(pos, ScrollMode::SmoothMsd, nullptr, scrollSnapFlags);
+
     return;
   }
-  PageUpDown(aChange);
+
+  sb->SetIncrementToPage(changeDirection);
+  if (nsIScrollbarMediator* m = sb->GetScrollbarMediator()) {
+    m->ScrollByPage(sb, changeDirection, scrollSnapFlags);
+    return;
+  }
+  PageUpDown(changeDirection);
 }
 
 float nsSliderFrame::GetThumbRatio() const {

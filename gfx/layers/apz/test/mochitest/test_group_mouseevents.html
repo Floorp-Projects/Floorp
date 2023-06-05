@@ -56,6 +56,10 @@ var subtests = [
   {"file": "helper_bug1662800.html"},
   // Scrollbar-dragging on subframe with enclosing translation transform
   {"file": "helper_drag_bug1719913.html"},
+  // Scrolling with mouse down on the scrollbar
+  {"file": "helper_scrollbartrack_click_overshoot.html",
+   "prefs": [["test.events.async.enabled", true], ["apz.test.logging_enabled", true],
+             ["ui.useOverlayScrollbars", 0]]},
 ];
 
 // Android, mac, and linux (at least in our automation) do not have scrollbar buttons.
