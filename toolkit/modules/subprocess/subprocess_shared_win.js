@@ -5,14 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-if (typeof Components !== "undefined") {
-  /* global OS */
-  Cc["@mozilla.org/net/osfileconstantsservice;1"]
-    .getService(Ci.nsIOSFileConstantsService)
-    .init();
-}
-
-/* exported LIBC, Win, createPipe, libc, win32 */
+/* exported createPipe, libc, win32 */
 
 // ctypes is either already available in the chrome worker scope, or defined
 // in scope via loadSubScript.
@@ -21,9 +14,12 @@ if (typeof Components !== "undefined") {
 // This file is loaded into the same scope as subprocess_shared.js.
 /* import-globals-from subprocess_shared.js */
 
-const LIBC = OS.Constants.libc;
-
-const Win = OS.Constants.Win;
+const Win = {
+  FILE_ATTRIBUTE_NORMAL: 0x00000080,
+  GENERIC_WRITE: 0x40000000,
+  INVALID_HANDLE_VALUE: -1,
+  OPEN_EXISTING: 0x00000003,
+};
 
 const LIBC_CHOICES = ["kernel32.dll"];
 

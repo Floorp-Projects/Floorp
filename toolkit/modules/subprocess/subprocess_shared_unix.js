@@ -5,13 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-if (typeof Components !== "undefined") {
-  /* global OS */
-  Cc["@mozilla.org/net/osfileconstantsservice;1"]
-    .getService(Ci.nsIOSFileConstantsService)
-    .init();
-}
-
 /* exported LIBC, libc */
 
 // ctypes is either already available in the chrome worker scope, or defined
@@ -21,7 +14,64 @@ if (typeof Components !== "undefined") {
 // This file is loaded into the same scope as subprocess_shared.js.
 /* import-globals-from subprocess_shared.js */
 
-var LIBC = OS.Constants.libc;
+const LIBC = {
+  get EAGAIN() {
+    const os = Services.appinfo.OS;
+
+    if (["Linux", "Android"].includes(os)) {
+      // https://github.com/torvalds/linux/blob/9a48d604672220545d209e9996c2a1edbb5637f6/include/uapi/asm-generic/errno-base.h#L15
+      return 11;
+    } else if (
+      ["Darwin", "DragonFly", "FreeBSD", "OpenBSD", "NetBSD"].includes(os)
+    ) {
+      /*
+       * Darwin: https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/errno.h.auto.html
+       * DragonFly: https://github.com/DragonFlyBSD/DragonFlyBSD/blob/5e488df32cb01056a5b714a522e51c69ab7b4612/sys/sys/errno.h#L105
+       * FreeBSD: https://github.com/freebsd/freebsd-src/blob/7232e6dcc89b978825b30a537bca2e7d3a9b71bb/sys/sys/errno.h#L94
+       * OpenBSD: https://github.com/openbsd/src/blob/025fffe4c6e0113862ce4e1927e67517a2841502/sys/sys/errno.h#L83
+       * NetBSD: https://github.com/NetBSD/src/blob/ff24f695f5f53540b23b6bb4fa5c0b9d79b369e4/sys/sys/errno.h#L81
+       */
+      return 35;
+    }
+    throw new Error("Unsupported OS");
+  },
+
+  EINTR: 4,
+
+  F_SETFD: 2,
+  F_SETFL: 4,
+
+  FD_CLOEXEC: 1,
+
+  get O_NONBLOCK() {
+    const os = Services.appinfo.OS;
+
+    if (["Linux", "Android"].includes(os)) {
+      // https://github.com/torvalds/linux/blob/9a48d604672220545d209e9996c2a1edbb5637f6/include/uapi/asm-generic/fcntl.h
+      return 0o4000;
+    } else if (
+      ["Darwin", "DragonFly", "FreeBSD", "OpenBSD", "NetBSD"].includes(os)
+    ) {
+      /*
+       * Darwin: https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/fcntl.h.auto.html
+       * DragonFly: https://github.com/DragonFlyBSD/DragonFlyBSD/blob/5e488df32cb01056a5b714a522e51c69ab7b4612/sys/sys/fcntl.h#L71
+       * FreeBSD: https://github.com/freebsd/freebsd-src/blob/7232e6dcc89b978825b30a537bca2e7d3a9b71bb/sys/sys/fcntl.h
+       * OpenBSD: https://github.com/openbsd/src/blob/025fffe4c6e0113862ce4e1927e67517a2841502/sys/sys/fcntl.h#L79
+       * NetBSD: https://github.com/NetBSD/src/blob/ff24f695f5f53540b23b6bb4fa5c0b9d79b369e4/sys/sys/fcntl.h
+       */
+      return 4;
+    }
+    throw new Error("Unsupported OS");
+  },
+
+  POLLIN: 0x01,
+  POLLOUT: 0x04,
+  POLLERR: 0x08,
+  POLLHUP: 0x10,
+  POLLNVAL: 0x20,
+
+  WNOHANG: 1,
+};
 
 const LIBC_CHOICES = ["libc.so", "libSystem.B.dylib", "a.out"];
 
