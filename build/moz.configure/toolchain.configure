@@ -2401,9 +2401,6 @@ def security_hardening_cflags(
         if compiler_is_gccish and optimize and not asan:
             flags.append("-U_FORTIFY_SOURCE")
             flags.append("-D_FORTIFY_SOURCE=2")
-            if mingw_clang:
-                # mingw-clang needs to link in ssp which is not done by default
-                ldflags.append("-lssp")
 
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
