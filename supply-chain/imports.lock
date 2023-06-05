@@ -197,6 +197,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.inherent]]
+version = "1.0.7"
+when = "2023-03-25"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.iovec]]
 version = "0.1.4"
 when = "2019-10-09"

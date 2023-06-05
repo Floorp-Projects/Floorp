@@ -1,7 +1,8 @@
 use crate::parse::TraitImpl;
-use proc_macro2::{Span, TokenStream, TokenTree};
+use crate::verbatim::VerbatimFn;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
-use syn::{FnArg, Ident, ImplItem, ImplItemMethod, Item, Pat, Path, Stmt, Visibility};
+use syn::{Attribute, FnArg, Ident, ImplItem, Pat, Path, Signature, Visibility};
 
 pub fn inherent(mut input: TraitImpl) -> TokenStream {
     let impl_token = &input.impl_token;
@@ -14,7 +15,26 @@ pub fn inherent(mut input: TraitImpl) -> TokenStream {
         .items
         .iter()
         .filter_map(|item| match item {
-            ImplItem::Method(method) => Some(fwd_method(trait_, method)),
+            ImplItem::Fn(method) => Some(fwd_method(
+                trait_,
+                &method.attrs,
+                &method.vis,
+                &method.sig,
+                method.block.brace_token.span.join(),
+            )),
+            ImplItem::Verbatim(tokens) => {
+                if let Ok(method) = syn::parse2::<VerbatimFn>(tokens.clone()) {
+                    Some(fwd_method(
+                        trait_,
+                        &method.attrs,
+                        &method.vis,
+                        &method.sig,
+                        method.semi_token.span,
+                    ))
+                } else {
+                    None
+                }
+            }
             _ => None,
         })
         .collect();
@@ -23,12 +43,15 @@ pub fn inherent(mut input: TraitImpl) -> TokenStream {
         .items
         .into_iter()
         .filter_map(|item| match item {
-            ImplItem::Method(mut method) => {
-                if inherit_default_implementation(&method) {
+            ImplItem::Fn(mut method) => {
+                method.vis = Visibility::Inherited;
+                Some(ImplItem::Fn(method))
+            }
+            ImplItem::Verbatim(tokens) => {
+                if syn::parse2::<VerbatimFn>(tokens.clone()).is_ok() {
                     None
                 } else {
-                    method.vis = Visibility::Inherited;
-                    Some(ImplItem::Method(method))
+                    Some(ImplItem::Verbatim(tokens))
                 }
             }
             item => Some(item),
@@ -44,21 +67,24 @@ pub fn inherent(mut input: TraitImpl) -> TokenStream {
     }
 }
 
-fn fwd_method(trait_: &Path, method: &ImplItemMethod) -> TokenStream {
-    let attrs = &method.attrs;
-    let vis = &method.vis;
-    let constness = &method.sig.constness;
-    let asyncness = &method.sig.asyncness;
-    let unsafety = &method.sig.unsafety;
-    let abi = &method.sig.abi;
-    let fn_token = method.sig.fn_token;
-    let ident = &method.sig.ident;
-    let generics = &method.sig.generics;
-    let output = &method.sig.output;
-    let where_clause = &method.sig.generics.where_clause;
+fn fwd_method(
+    trait_: &Path,
+    attrs: &[Attribute],
+    vis: &Visibility,
+    sig: &Signature,
+    body_span: Span,
+) -> TokenStream {
+    let constness = &sig.constness;
+    let asyncness = &sig.asyncness;
+    let unsafety = &sig.unsafety;
+    let abi = &sig.abi;
+    let fn_token = sig.fn_token;
+    let ident = &sig.ident;
+    let generics = &sig.generics;
+    let output = &sig.output;
+    let where_clause = &sig.generics.where_clause;
 
-    let (arg_pat, arg_val): (Vec<_>, Vec<_>) = method
-        .sig
+    let (arg_pat, arg_val): (Vec<_>, Vec<_>) = sig
         .inputs
         .pairs()
         .enumerate()
@@ -88,10 +114,10 @@ fn fwd_method(trait_: &Path, method: &ImplItemMethod) -> TokenStream {
 
     let types = generics.type_params().map(|param| &param.ident);
     let body = quote!(<Self as #trait_>::#ident::<#(#types,)*>(#(#arg_val,)*));
-    let block = quote_spanned!(method.block.brace_token.span=> { #body });
-    let args = quote_spanned!(method.sig.paren_token.span=> (#(#arg_pat)*));
+    let block = quote_spanned!(body_span=> { #body });
+    let args = quote_spanned!(sig.paren_token.span=> (#(#arg_pat)*));
 
-    let has_doc = attrs.iter().any(|attr| attr.path.is_ident("doc"));
+    let has_doc = attrs.iter().any(|attr| attr.path().is_ident("doc"));
     let default_doc = if has_doc {
         None
     } else {
@@ -109,20 +135,4 @@ fn fwd_method(trait_: &Path, method: &ImplItemMethod) -> TokenStream {
         #default_doc
         #vis #constness #asyncness #unsafety #abi #fn_token #ident #generics #args #output #where_clause #block
     }
-}
-
-fn inherit_default_implementation(method: &ImplItemMethod) -> bool {
-    method.block.stmts.len() == 1
-        && match &method.block.stmts[0] {
-            Stmt::Item(Item::Verbatim(verbatim)) => {
-                let mut iter = verbatim.clone().into_iter();
-                match iter.next() {
-                    Some(TokenTree::Punct(punct)) => {
-                        punct.as_char() == ';' && iter.next().is_none()
-                    }
-                    _ => false,
-                }
-            }
-            _ => false,
-        }
 }

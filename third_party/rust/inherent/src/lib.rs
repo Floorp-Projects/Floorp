@@ -72,8 +72,10 @@
 //! }
 //! ```
 
+#![doc(html_root_url = "https://docs.rs/inherent/1.0.7")]
 #![allow(
     clippy::default_trait_access,
+    clippy::module_name_repetitions,
     clippy::needless_doctest_main,
     clippy::needless_pass_by_value
 )]
@@ -82,6 +84,7 @@ extern crate proc_macro;
 
 mod expand;
 mod parse;
+mod verbatim;
 
 use proc_macro::TokenStream;
 use syn::parse::Nothing;
