@@ -1542,10 +1542,8 @@ void SVGElement::GetAnimatedLengthValues(float* aFirst, ...) {
 
   while (f && i < info.mCount) {
     uint8_t type = info.mValues[i].GetSpecifiedUnitType();
-    if (!ctx) {
-      if (type != SVGLength_Binding::SVG_LENGTHTYPE_NUMBER &&
-          type != SVGLength_Binding::SVG_LENGTHTYPE_PX)
-        ctx = GetCtx();
+    if (!ctx && !SVGLength::IsAbsoluteUnit(type)) {
+      ctx = GetCtx();
     }
     if (type == SVGLength_Binding::SVG_LENGTHTYPE_EMS ||
         type == SVGLength_Binding::SVG_LENGTHTYPE_EXS)

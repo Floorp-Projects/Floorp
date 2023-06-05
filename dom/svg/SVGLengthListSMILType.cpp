@@ -189,8 +189,8 @@ nsresult SVGLengthListSMILType::ComputeDistance(const SMILValue& aFrom,
 
   uint32_t i = 0;
   for (; i < from.Length() && i < to.Length(); ++i) {
-    double f = from[i].GetValueInUserUnits(from.Element(), from.Axis());
-    double t = to[i].GetValueInUserUnits(to.Element(), to.Axis());
+    double f = from[i].GetValueInPixels(from.Element(), from.Axis());
+    double t = to[i].GetValueInPixels(to.Element(), to.Axis());
     double delta = t - f;
     total += delta * delta;
   }
@@ -199,11 +199,11 @@ nsresult SVGLengthListSMILType::ComputeDistance(const SMILValue& aFrom,
   // will run. (OK since CanZeroPadList()==true for the other list.)
 
   for (; i < from.Length(); ++i) {
-    double f = from[i].GetValueInUserUnits(from.Element(), from.Axis());
+    double f = from[i].GetValueInPixels(from.Element(), from.Axis());
     total += f * f;
   }
   for (; i < to.Length(); ++i) {
-    double t = to[i].GetValueInUserUnits(to.Element(), to.Axis());
+    double t = to[i].GetValueInPixels(to.Element(), to.Axis());
     total += t * t;
   }
 

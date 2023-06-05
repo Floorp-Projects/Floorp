@@ -139,9 +139,7 @@ nsresult SVGAnimatedLengthList::SMILAnimatedLengthList::ValueFromString(
 
     for (uint32_t i = 0; i < llai->Length(); ++i) {
       uint8_t unit = (*llai)[i].GetUnit();
-      if (unit == SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE ||
-          unit == SVGLength_Binding::SVG_LENGTHTYPE_EMS ||
-          unit == SVGLength_Binding::SVG_LENGTHTYPE_EXS) {
+      if (!SVGLength::IsAbsoluteUnit(unit)) {
         aPreventCachingOfSandwich = true;
         break;
       }
