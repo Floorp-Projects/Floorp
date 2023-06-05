@@ -28,7 +28,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     ]
     OS_LIBS += [
         "bcrypt",
-        "ntdll",
     ]
 
 

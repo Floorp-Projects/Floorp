@@ -82,7 +82,6 @@ if CONFIG["OS_ARCH"] == "SunOS":
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
         "bcrypt",
-        "ntdll",
     ]
 
 if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
