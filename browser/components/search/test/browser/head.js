@@ -389,3 +389,7 @@ async function waitForPageWithAdImpressions() {
     Services.obs.addObserver(listener, "reported-page-with-ad-impressions");
   });
 }
+
+registerCleanupFunction(async () => {
+  await PlacesUtils.history.clear();
+});
