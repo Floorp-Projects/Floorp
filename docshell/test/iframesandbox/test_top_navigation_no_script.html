@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Iframe sandbox top navigation noscript</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+add_task(async function() {
+  let testWin;
+  let promise = new Promise((resolve) => {
+    SpecialPowers.addObserver(function obs(subject) {
+      ok(subject == testWin, "the blocked window should be our pop-up window");
+      SpecialPowers.removeObserver(obs, "javascript-uri-blocked-by-sandbox");
+      resolve();
+    }, "javascript-uri-blocked-by-sandbox");
+  });
+  testWin = window.open("file_top_navigation_no_script.html");
+  await promise;
+  testWin.close();
+});
+</script>
+</body>
+</html>
