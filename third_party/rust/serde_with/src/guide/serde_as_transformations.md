@@ -20,11 +20,16 @@ This page lists the transformations implemented in this crate and supported by `
 16. [`NaiveDateTime` like UTC timestamp](#naivedatetime-like-utc-timestamp)
 17. [`None` as empty `String`](#none-as-empty-string)
 18. [One or many elements into `Vec`](#one-or-many-elements-into-vec)
-19. [Pick first successful deserialization](#pick-first-successful-deserialization)
-20. [Timestamps as seconds since UNIX epoch](#timestamps-as-seconds-since-unix-epoch)
-21. [Value into JSON String](#value-into-json-string)
-22. [`Vec` of tuples to `Maps`](#vec-of-tuples-to-maps)
-23. [Well-known time formats for `OffsetDateTime`](#well-known-time-formats-for-offsetdatetime)
+19. [Overwrite existing set values](#overwrite-existing-set-values)
+20. [Pick first successful deserialization](#pick-first-successful-deserialization)
+21. [Prefer the first map key when duplicates exist](#prefer-the-first-map-key-when-duplicates-exist)
+22. [Prevent duplicate map keys](#prevent-duplicate-map-keys)
+23. [Prevent duplicate set values](#prevent-duplicate-set-values)
+24. [Struct fields as map keys](#struct-fields-as-map-keys)
+25. [Timestamps as seconds since UNIX epoch](#timestamps-as-seconds-since-unix-epoch)
+26. [Value into JSON String](#value-into-json-string)
+27. [`Vec` of tuples to `Maps`](#vec-of-tuples-to-maps)
+28. [Well-known time formats for `OffsetDateTime`](#well-known-time-formats-for-offsetdatetime)
 
 ## Base64 encode bytes
 
@@ -315,8 +320,8 @@ VecEnumValues(vec![
 
 ```ignore
 // Rust
-#[serde_as(as = "Vec<(_, _)>")]
-value: HashMap<String, u32>, // also works with BTreeMap
+#[serde_as(as = "Seq<(_, _)>")] // also works with Vec
+value: HashMap<String, u32>, // also works with other maps like BTreeMap or IndexMap
 
 // JSON
 "value": [
@@ -371,6 +376,13 @@ value: Vec<String>,
 "value": ["Hello", "World!"], // or lists of many
 ```
 
+## Overwrite existing set values
+
+[`SetLastValueWins`]
+
+serdes default behavior for sets is to take the first value, when multiple "equal" values are inserted into a set.
+This changes the logic, to prefer the last value.
+
 ## Pick first successful deserialization
 
 [`PickFirst`]
@@ -386,6 +398,58 @@ value: u32,
 // deserialize from either
 "value": 666,
 "value": "666",
+```
+
+## Prefer the first map key when duplicates exist
+
+[`MapFirstKeyWins`]
+
+serdes default behavior is to take the last key and value combination, if multiple "equal" keys exist.
+This changes the logic to instead prefer the first found key-value combination.
+
+## Prevent duplicate map keys
+
+[`MapPreventDuplicates`]
+
+Error during deserialization, when duplicate map keys are detected.
+
+## Prevent duplicate set values
+
+[`SetPreventDuplicates`]
+
+Error during deserialization, when duplicate set values are detected.
+
+## Struct fields as map keys
+
+[`KeyValueMap`]
+
+This conversion is possible for structs and maps, using the `$key$` field.
+Tuples, tuple structs, and sequences are supported by turning the first value into the map key.
+
+Each of the `SimpleStruct`s
+
+```ignore
+// Somewhere there is a collection:
+// #[serde_as(as = "KeyValueMap<_>")]
+// Vec<SimpleStruct>,
+
+#[derive(Serialize, Deserialize)]
+struct SimpleStruct {
+    b: bool,
+    // The field named `$key$` will become the map key
+    #[serde(rename = "$key$")]
+    id: String,
+    i: i32,
+}
+```
+
+will turn into a JSON snippet like this.
+
+```json
+"id-0000": {
+  "b": false,
+  "i": 123
+},
 ```
 
 ## Timestamps as seconds since UNIX epoch
@@ -425,7 +489,7 @@ value: SystemTime,
 
 The same conversions are also implemented for [`chrono::DateTime<Utc>`], [`chrono::DateTime<Local>`], and [`chrono::NaiveDateTime`] with the `chrono` feature.
 
-The conversions are availble for [`time::OffsetDateTime`] and [`time::PrimitiveDateTime`] with the `time_0_3` feature enabled.
+The conversions are available for [`time::OffsetDateTime`] and [`time::PrimitiveDateTime`] with the `time_0_3` feature enabled.
 
 ## Value into JSON String
 
@@ -449,11 +513,19 @@ value: OtherStruct,
 "value": "{\"value\":5}",
 ```
 
+```ignore
+#[serde_as(as = "JsonString<Vec<(JsonString, _)>>")]
+value: BTreeMap<[u8; 2], u32>,
+
+// JSON
+{"value":"[[\"[1,2]\",3],[\"[4,5]\",6]]"}
+```
+
 ## `Vec` of tuples to `Maps`
 
 ```ignore
 // Rust
-#[serde_as(as = "HashMap<_, _>")] // also works with BTreeMap
+#[serde_as(as = "Map<_, _>")] // also works with BTreeMap and HashMap
 value: Vec<(String, u32)>,
 
 // JSON
@@ -471,7 +543,7 @@ The [inverse operation](#maps-to-vec-of-tuples) is also available.
 ## Well-known time formats for `OffsetDateTime`
 
 [`time::OffsetDateTime`] can be serialized in string format in different well-known formats.
-Two formats are supported, [`time::format_description::well_known::Rfc2822`] and [`time::format_description::well_known::Rfc3339`].
+Three formats are supported, [`time::format_description::well_known::Rfc2822`], [`time::format_description::well_known::Rfc3339`], and [`time::format_description::well_known::Iso8601`].
 
 ```ignore
 // Rust
@@ -479,22 +551,25 @@ Two formats are supported, [`time::format_description::well_known::Rfc2822`] and
 rfc_2822: OffsetDateTime,
 #[serde_as(as = "time::format_description::well_known::Rfc3339")]
 rfc_3339: OffsetDateTime,
+#[serde_as(as = "time::format_description::well_known::Iso8601<Config>")]
+iso_8601: OffsetDateTime,
 
 // JSON
 "rfc_2822": "Fri, 21 Nov 1997 09:55:06 -0600",
 "rfc_3339": "1997-11-21T09:55:06-06:00",
+"iso_8061": "1997-11-21T09:55:06-06:00",
 ```
 
-These conversions are availble with the `time_0_3` feature flag.
+These conversions are available with the `time_0_3` feature flag.
 
 [`Base64`]: crate::base64::Base64
 [`BoolFromInt<Flexible>`]: crate::BoolFromInt
 [`BoolFromInt<Strict>`]: crate::BoolFromInt
 [`Bytes`]: crate::Bytes
-[`chrono::DateTime<Local>`]: chrono_crate::DateTime
-[`chrono::DateTime<Utc>`]: chrono_crate::DateTime
-[`chrono::Duration`]: https://docs.rs/chrono/latest/chrono/struct.Duration.html
-[`chrono::NaiveDateTime`]: chrono_crate::NaiveDateTime
+[`chrono::DateTime<Local>`]: chrono::DateTime
+[`chrono::DateTime<Utc>`]: chrono::DateTime
+[`chrono::Duration`]: chrono::Duration
+[`chrono::NaiveDateTime`]: chrono::NaiveDateTime
 [`DefaultOnError`]: crate::DefaultOnError
 [`DefaultOnNull`]: crate::DefaultOnNull
 [`DisplayFromStr`]: crate::DisplayFromStr
@@ -504,10 +579,16 @@ These conversions are availble with the `time_0_3` feature flag.
 [`FromInto`]: crate::FromInto
 [`Hex`]: crate::hex::Hex
 [`JsonString`]: crate::json::JsonString
+[`KeyValueMap`]: crate::KeyValueMap
+[`MapFirstKeyWins`]: crate::MapFirstKeyWins
+[`MapPreventDuplicates`]: crate::MapPreventDuplicates
 [`NoneAsEmptyString`]: crate::NoneAsEmptyString
 [`OneOrMany`]: crate::OneOrMany
 [`PickFirst`]: crate::PickFirst
+[`SetLastValueWins`]: crate::SetLastValueWins
+[`SetPreventDuplicates`]: crate::SetPreventDuplicates
 [`time::Duration`]: time_0_3::Duration
+[`time::format_description::well_known::Iso8601`]: time_0_3::format_description::well_known::Iso8601
 [`time::format_description::well_known::Rfc2822`]: time_0_3::format_description::well_known::Rfc2822
 [`time::format_description::well_known::Rfc3339`]: time_0_3::format_description::well_known::Rfc3339
 [`time::OffsetDateTime`]: time_0_3::OffsetDateTime

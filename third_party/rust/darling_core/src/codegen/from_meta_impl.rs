@@ -55,7 +55,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 let post_transform = base.post_transform_call();
 
                 quote!(
-                    fn from_list(__items: &[::darling::export::syn::NestedMeta]) -> ::darling::Result<Self> {
+                    fn from_list(__items: &[::darling::export::NestedMeta]) -> ::darling::Result<Self> {
 
                         #decls
 
@@ -91,13 +91,13 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 };
 
                 quote!(
-                    fn from_list(__outer: &[::darling::export::syn::NestedMeta]) -> ::darling::Result<Self> {
+                    fn from_list(__outer: &[::darling::export::NestedMeta]) -> ::darling::Result<Self> {
                         // An enum must have exactly one value inside the parentheses if it's not a unit
                         // match arm
                         match __outer.len() {
                             0 => ::darling::export::Err(::darling::Error::too_few_items(1)),
                             1 => {
-                                if let ::darling::export::syn::NestedMeta::Meta(ref __nested) = __outer[0] {
+                                if let ::darling::export::NestedMeta::Meta(ref __nested) = __outer[0] {
                                     match ::darling::util::path_to_string(__nested.path()).as_ref() {
                                         #(#struct_arms)*
                                         __other => ::darling::export::Err(::darling::Error::#unknown_variant_err.with_span(__nested))

@@ -1,8 +1,6 @@
-use alloc::collections::{BTreeMap, BTreeSet};
-use core::hash::{BuildHasher, Hash};
-#[cfg(feature = "indexmap")]
-use indexmap_crate::{IndexMap, IndexSet};
-use std::collections::{HashMap, HashSet};
+use crate::prelude::*;
+#[cfg(feature = "indexmap_1")]
+use indexmap_1::{IndexMap, IndexSet};
 
 pub trait PreventDuplicateInsertsSet<T> {
     fn new(size_hint: Option<usize>) -> Self;
@@ -18,6 +16,7 @@ pub trait PreventDuplicateInsertsMap<K, V> {
     fn insert(&mut self, key: K, value: V) -> bool;
 }
 
+#[cfg(feature = "std")]
 impl<T, S> PreventDuplicateInsertsSet<T> for HashSet<T, S>
 where
     T: Eq + Hash,
@@ -37,7 +36,7 @@ where
     }
 }
 
-#[cfg(feature = "indexmap")]
+#[cfg(feature = "indexmap_1")]
 impl<T, S> PreventDuplicateInsertsSet<T> for IndexSet<T, S>
 where
     T: Eq + Hash,
@@ -72,6 +71,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<K, V, S> PreventDuplicateInsertsMap<K, V> for HashMap<K, V, S>
 where
     K: Eq + Hash,
@@ -91,7 +91,7 @@ where
     }
 }
 
-#[cfg(feature = "indexmap")]
+#[cfg(feature = "indexmap_1")]
 impl<K, V, S> PreventDuplicateInsertsMap<K, V> for IndexMap<K, V, S>
 where
     K: Eq + Hash,

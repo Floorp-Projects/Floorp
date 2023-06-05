@@ -7,6 +7,145 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.0] - 2023-05-01
+
+No changes.
+
+## [2.3.3] - 2023-04-27
+
+### Changed
+
+* Update `syn` to v2 and `darling` to v0.20 (#578)
+    Update proc-macro dependencies.
+    This change should have no impact on users, but now uses the same dependency as `serde_derive`.
+
+## [2.3.2] - 2023-04-05
+
+No changes.
+
+## [2.3.1] - 2023-03-10
+
+No changes.
+
+## [2.3.0] - 2023-03-09
+
+No changes.
+
+## [2.2.0] - 2023-01-09
+
+### Fixed
+
+* `serde_with::apply` had an issue matching types when invisible token groups where in use (#538)
+    The token groups can stem from macro_rules expansion, but should be treated mostly transparent.
+    The old code required a group to match a group, while now groups are silently removed when checking for type patterns.
+
+## [2.1.0] - 2022-11-16
+
+### Added
+
+* Add new `apply` attribute to simplify repetitive attributes over many fields.
+    Multiple rules and multiple attributes can be provided each.
+
+    ```rust
+    #[serde_with::apply(
+        Option => #[serde(default)] #[serde(skip_serializing_if = "Option::is_none")],
+        Option<bool> => #[serde(rename = "bool")],
+    )]
+    #[derive(serde::Serialize)]
+    struct Data {
+        a: Option<String>,
+        b: Option<u64>,
+        c: Option<String>,
+        d: Option<bool>,
+    }
+    ```
+
+    The `apply` attribute will expand into this, applying the attributs to the matching fields:
+
+    ```rust
+    #[derive(serde::Serialize)]
+    struct Data {
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        a: Option<String>,
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        b: Option<u64>,
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        c: Option<String>,
+        #[serde(default)]
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "bool")]
+        d: Option<bool>,
+    }
+    ```
+
+    The attribute supports field matching using many rules, such as `_` to apply to all fields and partial generics like `Option` to match any `Option` be it `Option<String>`, `Option<bool>`, or `Option<T>`.
+
+### Fixed
+
+* The derive macros `SerializeDisplay` and `DeserializeFromStr` now take better care not to use conflicting names for generic values. (#526)
+    All used generics now start with `__` to make conflicts with manually written code unlikely.
+
+    Thanks to @Elrendio for submitting a PR fixing the issue.
+
+## [2.0.1] - 2022-09-09
+
+### Changed
+
+* Warn if `serde_as` is used on an enum variant.
+    Attributes on enum variants were never supported.
+    But `#[serde(with = "...")]` can be added on variants, such that some confusion can occur when migration ([#499](https://github.com/jonasbb/serde_with/issues/499)).
+
+## [2.0.0] - 2022-07-17
+
+No changes compared to v2.0.0-rc.0.
+
+### Changed
+
+* Make `#[serde_as]` behave more intuitive on `Option<T>` fields.
+
+    The `#[serde_as]` macro now detects if a `#[serde_as(as = "Option<S>")]` is used on a field of type `Option<T>` and applies `#[serde(default)]` to the field.
+    This restores the ability to deserialize with missing fields and fixes a common annoyance (#183, #185, #311, #417).
+    This is a breaking change, since now deserialization will pass where it did not before and this might be undesired.
+
+    The `Option` field and transformation are detected by directly matching on the type name.
+    These variants are detected as `Option`.
+    * `Option`
+    * `std::option::Option`, with or without leading `::`
+    * `core::option::Option`, with or without leading `::`
+
+    If an existing `default` attribute is detected, the attribute is not applied again.
+    This behavior can be supressed by using `#[serde_as(no_default)]` or `#[serde_as(as = "Option<S>", no_default)]`.
+
+### Fixed
+
+* Make the documentation clearer by stating that the `#[serde_as]` and `#[skip_serializing_none]` attributes must always be placed before `#[derive]`.
+
+## [2.0.0-rc.0] - 2022-06-29
+
+### Changed
+
+* Make `#[serde_as]` behave more intuitive on `Option<T>` fields.
+
+    The `#[serde_as]` macro now detects if a `#[serde_as(as = "Option<S>")]` is used on a field of type `Option<T>` and applies `#[serde(default)]` to the field.
+    This restores the ability to deserialize with missing fields and fixes a common annoyance (#183, #185, #311, #417).
+    This is a breaking change, since now deserialization will pass where it did not before and this might be undesired.
+
+    The `Option` field and transformation are detected by directly matching on the type name.
+    These variants are detected as `Option`.
+    * `Option`
+    * `std::option::Option`, with or without leading `::`
+    * `core::option::Option`, with or without leading `::`
+
+    If an existing `default` attribute is detected, the attribute is not applied again.
+    This behavior can be supressed by using `#[serde_as(no_default)]` or `#[serde_as(as = "Option<S>", no_default)]`.
+
+### Fixed
+
+* Make the documentation clearer by stating that the `#[serde_as]` and `#[skip_serializing_none]` attributes must always be placed before `#[derive]`.
+
 ## [1.5.2] - 2022-04-07
 
 ### Fixed

@@ -20,8 +20,8 @@ fn non_meta_attribute_gets_own_error() {
     };
 
     let errors: darling::Error = Bar::from_derive_input(&di).unwrap_err().flatten();
-    // The number of errors here is 1 for the bad attribute + 2 for the missing fields
-    assert_eq!(3, errors.len());
+    // The number of errors here is 1 for the bad value of the `st` attribute
+    assert_eq!(1, errors.len());
     // Make sure one of the errors propagates the syn error
     assert!(errors
         .into_iter()
@@ -40,8 +40,8 @@ fn non_meta_attribute_does_not_block_others() {
     };
 
     let errors: darling::Error = Bar::from_derive_input(&di).unwrap_err().flatten();
-    // The number of errors here is 1 for the bad attribute + 1 for the missing "st" field
-    assert_eq!(2, errors.len());
+    // The number of errors here is 1 for the bad value of the `st` attribute
+    assert_eq!(1, errors.len());
     // Make sure one of the errors propagates the syn error
     assert!(errors
         .into_iter()

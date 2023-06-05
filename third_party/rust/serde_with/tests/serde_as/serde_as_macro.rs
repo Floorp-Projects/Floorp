@@ -189,3 +189,119 @@ fn test_serde_as_macro_multiple_field_attributes() {
         }"#]],
     );
 }
+
+/// Ensure that `serde_as` applies `default` if both the field and the conversion are option.
+#[test]
+fn test_default_on_option() {
+    #[serde_as]
+    #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+    struct Data {
+        #[serde_as(as = "Option<DisplayFromStr>")]
+        a: Option<u32>,
+    }
+
+    is_equal(
+        Data { a: None },
+        expect![[r#"
+          {
+            "a": null
+          }"#]],
+    );
+    is_equal(
+        Data { a: Some(123) },
+        expect![[r#"
+          {
+            "a": "123"
+          }"#]],
+    );
+    check_deserialization(Data { a: None }, "{}");
+
+    #[serde_as]
+    #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+    struct DataNoDefault {
+        #[serde_as(as = "Option<DisplayFromStr>", no_default)]
+        a: Option<u32>,
+    }
+
+    is_equal(
+        DataNoDefault { a: None },
+        expect![[r#"
+          {
+            "a": null
+          }"#]],
+    );
+    is_equal(
+        DataNoDefault { a: Some(123) },
+        expect![[r#"
+          {
+            "a": "123"
+          }"#]],
+    );
+    check_error_deserialization::<DataNoDefault>(
+        "{}",
+        expect!["missing field `a` at line 1 column 2"],
+    );
+
+    fn default_555() -> Option<u32> {
+        Some(555)
+    }
+
+    #[serde_as]
+    #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+    struct DataExplicitDefault {
+        #[serde_as(as = "Option<DisplayFromStr>")]
+        #[serde(default = "default_555")]
+        a: Option<u32>,
+    }
+
+    is_equal(
+        DataExplicitDefault { a: None },
+        expect![[r#"
+          {
+            "a": null
+          }"#]],
+    );
+    is_equal(
+        DataExplicitDefault { a: Some(123) },
+        expect![[r#"
+          {
+            "a": "123"
+          }"#]],
+    );
+    check_deserialization(DataExplicitDefault { a: Some(555) }, "{}");
+
+    #[serde_as]
+    #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
+    struct DataString {
+        #[serde_as(as = "NoneAsEmptyString")]
+        a: Option<String>,
+    }
+
+    is_equal(
+        DataString { a: None },
+        expect![[r#"
+            {
+              "a": ""
+            }"#]],
+    );
+    is_equal(
+        DataString {
+            a: Some("123".to_string()),
+        },
+        expect![[r#"
+          {
+            "a": "123"
+          }"#]],
+    );
+    check_deserialization(DataString { a: None }, r#"{"a": ""}"#);
+    check_deserialization(
+        DataString {
+            a: Some("555".to_string()),
+        },
+        r#"{"a": "555"}"#,
+    );
+    check_error_deserialization::<DataString>(
+        "{}",
+        expect!["missing field `a` at line 1 column 2"],
+    );
+}

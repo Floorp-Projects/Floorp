@@ -958,6 +958,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.14.2 -> 0.14.3"
 
+[[audits.darling]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.14.3 -> 0.20.1"
+
 [[audits.darling_core]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -968,6 +973,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.14.2 -> 0.14.3"
 
+[[audits.darling_core]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.14.3 -> 0.20.1"
+
 [[audits.darling_macro]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -977,6 +987,11 @@ delta = "0.13.4 -> 0.14.2"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.14.2 -> 0.14.3"
+
+[[audits.darling_macro]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.14.3 -> 0.20.1"
 
 [[audits.data-encoding]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1103,10 +1118,20 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.11 -> 1.0.12"
 
+[[audits.enumset]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.12 -> 1.1.2"
+
 [[audits.enumset_derive]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.6.1"
+
+[[audits.enumset_derive]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.6.1 -> 0.8.1"
 
 [[audits.env_logger]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2542,6 +2567,16 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.1.9 -> 0.1.10"
 
+[[audits.serde_with]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.14.0 -> 3.0.0"
+
+[[audits.serde_with_macros]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.5.2 -> 3.0.0"
+
 [[audits.serde_yaml]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
@@ -2634,6 +2669,11 @@ I am the primary author of the `synstructure` crate, and its current
 maintainer. The one use of `unsafe` is unnecessary, but documented and
 harmless. It will be removed in the next version.
 """
+
+[[audits.synstructure]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.12.6 -> 0.13.0"
 
 [[audits.termcolor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

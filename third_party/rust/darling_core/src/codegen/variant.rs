@@ -121,7 +121,8 @@ impl<'a> ToTokens for DataMatchArm<'a> {
             tokens.append_all(quote!(
                 #name_in_attr => {
                     if let ::darling::export::syn::Meta::List(ref __data) = *__nested {
-                        let __items = &__data.nested;
+                        let __items = ::darling::export::NestedMeta::parse_meta_list(__data.tokens.clone())?;
+                        let __items = &__items;
 
                         #declare_errors
 

@@ -16,7 +16,7 @@ fn parse_map() {
         #[foo(first(name = "Hello", option), the::second(name = "Second"))]
     };
 
-    let meta = attr.parse_meta().unwrap();
+    let meta = attr.meta;
     let map: HashMap<Path, MapValue> = FromMeta::from_meta(&meta).unwrap();
 
     let comparison: HashMap<Path, MapValue> = vec![

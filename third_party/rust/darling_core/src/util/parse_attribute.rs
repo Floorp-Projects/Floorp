@@ -1,25 +1,34 @@
-use crate::{util::SpannedValue, Error, Result};
+use crate::{Error, Result};
 use std::fmt;
-use syn::{punctuated::Pair, spanned::Spanned, token, Attribute, Meta, MetaList, Path};
+use syn::punctuated::Pair;
+use syn::spanned::Spanned;
+use syn::{token, Attribute, Meta, MetaList, Path};
 
 /// Try to parse an attribute into a meta list. Path-type meta values are accepted and returned
 /// as empty lists with their passed-in path. Name-value meta values and non-meta attributes
 /// will cause errors to be returned.
 pub fn parse_attribute_to_meta_list(attr: &Attribute) -> Result<MetaList> {
-    match attr.parse_meta() {
-        Ok(Meta::List(list)) => Ok(list),
-        Ok(Meta::NameValue(nv)) => Err(Error::custom(format!(
+    match &attr.meta {
+        Meta::List(list) => Ok(list.clone()),
+        Meta::NameValue(nv) => Err(Error::custom(format!(
             "Name-value arguments are not supported. Use #[{}(...)]",
             DisplayPath(&nv.path)
         ))
         .with_span(&nv)),
-        Ok(Meta::Path(path)) => Ok(MetaList {
-            path,
-            paren_token: token::Paren(attr.span()),
-            nested: Default::default(),
+        Meta::Path(path) => Ok(MetaList {
+            path: path.clone(),
+            delimiter: syn::MacroDelimiter::Paren(token::Paren {
+                span: {
+                    let mut group = proc_macro2::Group::new(
+                        proc_macro2::Delimiter::None,
+                        proc_macro2::TokenStream::new(),
+                    );
+                    group.set_span(attr.span());
+                    group.delim_span()
+                },
+            }),
+            tokens: Default::default(),
         }),
-        Err(e) => Err(Error::custom(format!("Unable to parse attribute: {}", e))
-            .with_span(&SpannedValue::new((), e.span()))),
     }
 }
 
@@ -45,19 +54,23 @@ impl fmt::Display for DisplayPath<'_> {
 #[cfg(test)]
 mod tests {
     use super::parse_attribute_to_meta_list;
-    use syn::{parse_quote, spanned::Spanned, Ident};
+    use crate::ast::NestedMeta;
+    use syn::spanned::Spanned;
+    use syn::{parse_quote, Ident};
 
     #[test]
     fn parse_list() {
         let meta = parse_attribute_to_meta_list(&parse_quote!(#[bar(baz = 4)])).unwrap();
-        assert_eq!(meta.nested.len(), 1);
+        let nested_meta = NestedMeta::parse_meta_list(meta.tokens).unwrap();
+        assert_eq!(nested_meta.len(), 1);
     }
 
     #[test]
     fn parse_path_returns_empty_list() {
         let meta = parse_attribute_to_meta_list(&parse_quote!(#[bar])).unwrap();
+        let nested_meta = NestedMeta::parse_meta_list(meta.tokens).unwrap();
         assert!(meta.path.is_ident(&Ident::new("bar", meta.path.span())));
-        assert!(meta.nested.is_empty());
+        assert!(nested_meta.is_empty());
     }
 
     #[test]

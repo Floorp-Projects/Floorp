@@ -5,7 +5,7 @@
 use darling::{FromDeriveInput, FromField, FromVariant};
 use proc_macro2::{Span, TokenStream};
 use quote::TokenStreamExt;
-use syn::{self, AngleBracketedGenericArguments, Binding, DeriveInput, Field};
+use syn::{self, AngleBracketedGenericArguments, AssocType, DeriveInput, Field};
 use syn::{GenericArgument, GenericParam, Ident, Path};
 use syn::{PathArguments, PathSegment, QSelf, Type, TypeArray, TypeGroup};
 use syn::{TypeParam, TypeParen, TypePath, TypeSlice, TypeTuple};
@@ -252,8 +252,8 @@ where
                                     &GenericArgument::Type(ref data) => GenericArgument::Type(
                                         map_type_params(data, params, self_type, f),
                                     ),
-                                    &GenericArgument::Binding(ref data) => {
-                                        GenericArgument::Binding(Binding {
+                                    &GenericArgument::AssocType(ref data) => {
+                                        GenericArgument::AssocType(AssocType {
                                             ty: map_type_params(&data.ty, params, self_type, f),
                                             ..data.clone()
                                         })

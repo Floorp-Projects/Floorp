@@ -55,13 +55,18 @@ pub trait ExtractAttribute {
                 #(#attr_names)|* => {
                     match ::darling::util::parse_attribute_to_meta_list(__attr) {
                         ::darling::export::Ok(__data) => {
-                            if __data.nested.is_empty() {
-                                continue;
+                            match ::darling::export::NestedMeta::parse_meta_list(__data.tokens) {
+                                ::darling::export::Ok(ref __items) => {
+                                    if __items.is_empty() {
+                                        continue;
+                                    }
+
+                                    #core_loop
+                                }
+                                ::darling::export::Err(__err) => {
+                                    __errors.push(__err.into());
+                                }
                             }
-
-                            let __items = &__data.nested;
-
-                            #core_loop
                         }
                         // darling was asked to handle this attribute name, but the actual attribute
                         // isn't one that darling can work with. This either indicates a typing error
@@ -92,7 +97,7 @@ pub trait ExtractAttribute {
 
             for __attr in #attrs_accessor {
                 // Filter attributes based on name
-                match  ::darling::export::ToString::to_string(&__attr.path.clone().into_token_stream()).as_str() {
+                match ::darling::export::ToString::to_string(&__attr.path().clone().into_token_stream()).as_str() {
                     #parse_handled
                     #forward_unhandled
                 }

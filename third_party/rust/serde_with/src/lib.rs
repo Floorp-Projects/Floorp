@@ -1,10 +1,12 @@
 #![warn(
     clippy::semicolon_if_nothing_returned,
-    missing_copy_implementations,
-    // missing_crate_level_docs, not available in MSRV
-    missing_debug_implementations,
+    // New clippy lints, not yet stable
+    // clippy::std_instead_of_core,
+    // clippy::std_instead_of_alloc,
+    // clippy::alloc_instead_of_core,
     missing_docs,
     rust_2018_idioms,
+    rustdoc::missing_crate_level_docs,
     trivial_casts,
     trivial_numeric_casts,
     unused_extern_crates,
@@ -14,7 +16,6 @@
 )]
 #![doc(test(attr(forbid(unsafe_code))))]
 #![doc(test(attr(deny(
-    missing_copy_implementations,
     missing_debug_implementations,
     trivial_casts,
     trivial_numeric_casts,
@@ -25,7 +26,7 @@
 #![doc(test(attr(warn(rust_2018_idioms))))]
 // Not needed for 2018 edition and conflicts with `rust_2018_idioms`
 #![doc(test(no_crate_inject))]
-#![doc(html_root_url = "https://docs.rs/serde_with/1.14.0")]
+#![doc(html_root_url = "https://docs.rs/serde_with/3.0.0/")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(
     // clippy is broken and shows wrong warnings
@@ -35,6 +36,8 @@
     clippy::only_used_in_recursion,
     // https://github.com/rust-lang/rust-clippy/issues/8867
     clippy::derive_partial_eq_without_eq,
+    // https://github.com/rust-lang/rust-clippy/issues/9101
+    clippy::explicit_auto_deref
 )]
 #![no_std]
 
@@ -42,7 +45,7 @@
 //! [![Build Status](https://github.com/jonasbb/serde_with/workflows/Rust%20CI/badge.svg)](https://github.com/jonasbb/serde_with)
 //! [![codecov](https://codecov.io/gh/jonasbb/serde_with/branch/master/graph/badge.svg)](https://codecov.io/gh/jonasbb/serde_with)
 //! [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4322/badge)](https://bestpractices.coreinfrastructure.org/projects/4322)
-//! [![Binder](https://img.shields.io/badge/Try%20on%20-binder-579ACA.svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAABZCAMAAABi1XidAAAB8lBMVEX///9XmsrmZYH1olJXmsr1olJXmsrmZYH1olJXmsr1olJXmsrmZYH1olL1olJXmsr1olJXmsrmZYH1olL1olJXmsrmZYH1olJXmsr1olL1olJXmsrmZYH1olL1olJXmsrmZYH1olL1olL0nFf1olJXmsrmZYH1olJXmsq8dZb1olJXmsrmZYH1olJXmspXmspXmsr1olL1olJXmsrmZYH1olJXmsr1olL1olJXmsrmZYH1olL1olLeaIVXmsrmZYH1olL1olL1olJXmsrmZYH1olLna31Xmsr1olJXmsr1olJXmsrmZYH1olLqoVr1olJXmsr1olJXmsrmZYH1olL1olKkfaPobXvviGabgadXmsqThKuofKHmZ4Dobnr1olJXmsr1olJXmspXmsr1olJXmsrfZ4TuhWn1olL1olJXmsqBi7X1olJXmspZmslbmMhbmsdemsVfl8ZgmsNim8Jpk8F0m7R4m7F5nLB6jbh7jbiDirOEibOGnKaMhq+PnaCVg6qWg6qegKaff6WhnpKofKGtnomxeZy3noG6dZi+n3vCcpPDcpPGn3bLb4/Mb47UbIrVa4rYoGjdaIbeaIXhoWHmZYHobXvpcHjqdHXreHLroVrsfG/uhGnuh2bwj2Hxk17yl1vzmljzm1j0nlX1olL3AJXWAAAAbXRSTlMAEBAQHx8gICAuLjAwMDw9PUBAQEpQUFBXV1hgYGBkcHBwcXl8gICAgoiIkJCQlJicnJ2goKCmqK+wsLC4usDAwMjP0NDQ1NbW3Nzg4ODi5+3v8PDw8/T09PX29vb39/f5+fr7+/z8/Pz9/v7+zczCxgAABC5JREFUeAHN1ul3k0UUBvCb1CTVpmpaitAGSLSpSuKCLWpbTKNJFGlcSMAFF63iUmRccNG6gLbuxkXU66JAUef/9LSpmXnyLr3T5AO/rzl5zj137p136BISy44fKJXuGN/d19PUfYeO67Znqtf2KH33Id1psXoFdW30sPZ1sMvs2D060AHqws4FHeJojLZqnw53cmfvg+XR8mC0OEjuxrXEkX5ydeVJLVIlV0e10PXk5k7dYeHu7Cj1j+49uKg7uLU61tGLw1lq27ugQYlclHC4bgv7VQ+TAyj5Zc/UjsPvs1sd5cWryWObtvWT2EPa4rtnWW3JkpjggEpbOsPr7F7EyNewtpBIslA7p43HCsnwooXTEc3UmPmCNn5lrqTJxy6nRmcavGZVt/3Da2pD5NHvsOHJCrdc1G2r3DITpU7yic7w/7Rxnjc0kt5GC4djiv2Sz3Fb2iEZg41/ddsFDoyuYrIkmFehz0HR2thPgQqMyQYb2OtB0WxsZ3BeG3+wpRb1vzl2UYBog8FfGhttFKjtAclnZYrRo9ryG9uG/FZQU4AEg8ZE9LjGMzTmqKXPLnlWVnIlQQTvxJf8ip7VgjZjyVPrjw1te5otM7RmP7xm+sK2Gv9I8Gi++BRbEkR9EBw8zRUcKxwp73xkaLiqQb+kGduJTNHG72zcW9LoJgqQxpP3/Tj//c3yB0tqzaml05/+orHLksVO+95kX7/7qgJvnjlrfr2Ggsyx0eoy9uPzN5SPd86aXggOsEKW2Prz7du3VID3/tzs/sSRs2w7ovVHKtjrX2pd7ZMlTxAYfBAL9jiDwfLkq55Tm7ifhMlTGPyCAs7RFRhn47JnlcB9RM5T97ASuZXIcVNuUDIndpDbdsfrqsOppeXl5Y+XVKdjFCTh+zGaVuj0d9zy05PPK3QzBamxdwtTCrzyg/2Rvf2EstUjordGwa/kx9mSJLr8mLLtCW8HHGJc2R5hS219IiF6PnTusOqcMl57gm0Z8kanKMAQg0qSyuZfn7zItsbGyO9QlnxY0eCuD1XL2ys/MsrQhltE7Ug0uFOzufJFE2PxBo/YAx8XPPdDwWN0MrDRYIZF0mSMKCNHgaIVFoBbNoLJ7tEQDKxGF0kcLQimojCZopv0OkNOyWCCg9XMVAi7ARJzQdM2QUh0gmBozjc3Skg6dSBRqDGYSUOu66Zg+I2fNZs/M3/f/Grl/XnyF1Gw3VKCez0PN5IUfFLqvgUN4C0qNqYs5YhPL+aVZYDE4IpUk57oSFnJm4FyCqqOE0jhY2SMyLFoo56zyo6becOS5UVDdj7Vih0zp+tcMhwRpBeLyqtIjlJKAIZSbI8SGSF3k0pA3mR5tHuwPFoa7N7reoq2bqCsAk1HqCu5uvI1n6JuRXI+S1Mco54YmYTwcn6Aeic+kssXi8XpXC4V3t7/ADuTNKaQJdScAAAAAElFTkSuQmCC)](https://mybinder.org/v2/gist/jonasbb/18b9aece4c17f617b1c2b3946d29eeb0/HEAD?filepath=serde-with-demo.ipynb)
+//! [![Rustexplorer](https://img.shields.io/badge/Try%20on-rustexplorer-lightgrey?logo=rust&logoColor=orange)](https://www.rustexplorer.com/b/py7ida)
 //!
 //! ---
 //!
@@ -50,14 +53,14 @@
 //! Some common use cases are:
 //!
 //! * De/Serializing a type using the `Display` and `FromStr` traits, e.g., for `u8`, `url::Url`, or `mime::Mime`.
-//!      Check [`DisplayFromStr`][] or [`serde_with::rust::display_fromstr`][display_fromstr] for details.
+//!      Check [`DisplayFromStr`] for details.
 //! * Support for arrays larger than 32 elements or using const generics.
 //!     With `serde_as` large arrays are supported, even if they are nested in other types.
 //!     `[bool; 64]`, `Option<[u8; M]>`, and `Box<[[u8; 64]; N]>` are all supported, as [this examples shows](#large-and-const-generic-arrays).
 //! * Skip serializing all empty `Option` types with [`#[skip_serializing_none]`][skip_serializing_none].
 //! * Apply a prefix to each field name of a struct, without changing the de/serialize implementations of the struct using [`with_prefix!`][].
 //! * Deserialize a comma separated list like `#hash,#tags,#are,#great` into a `Vec<String>`.
-//!      Check the documentation for [`serde_with::rust::StringWithSeparator::<CommaSeparator>`][StringWithSeparator].
+//!      Check the documentation for [`serde_with::StringWithSeparator::<CommaSeparator, T>`][StringWithSeparator].
 //!
 //! ## Getting Help
 //!
@@ -68,12 +71,9 @@
 //!
 //! # Use `serde_with` in your Project
 //!
-//! Add this to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies.serde_with]
-//! version = "1.14.0"
-//! features = [ "..." ]
+//! ```bash
+//! # Add the current version to your Cargo.toml
+//! cargo add serde_with
 //! ```
 //!
 //! The crate contains different features for integration with other common crates.
@@ -82,10 +82,16 @@
 //! # Examples
 //!
 //! Annotate your struct or enum to enable the custom de/serializer.
-//! The `#[serde_as]` attribute must be place *before* the `#[derive]`.
+//! The `#[serde_as]` attribute must be placed *before* the `#[derive]`.
+//!
+//! The `as` is analogous to the `with` attribute of serde.
+//! You mirror the type structure of the field you want to de/serialize.
+//! You can specify converters for the inner types of a field, e.g., `Vec<DisplayFromStr>`.
+//! The default de/serialization behavior can be restored by using `_` as a placeholder, e.g., `BTreeMap<_, DisplayFromStr>`.
 //!
 //! ## `DisplayFromStr`
 //!
+//! [![Rustexplorer](https://img.shields.io/badge/Try%20on-rustexplorer-lightgrey?logo=rust&logoColor=orange)](https://www.rustexplorer.com/b/py7ida)
 //! ```rust
 //! # #[cfg(feature = "macros")]
 //! # use serde::{Deserialize, Serialize};
@@ -121,12 +127,14 @@
 //! serde does not support arrays with more than 32 elements or using const-generics.
 //! The `serde_as` attribute allows circumventing this restriction, even for nested types and nested arrays.
 //!
+//! On top of it, `[u8; N]` (aka, bytes) can use the specialized `"Bytes"` for efficiency much like the `serde_bytes` crate.
+//!
+//! [![Rustexplorer](https://img.shields.io/badge/Try%20on-rustexplorer-lightgrey?logo=rust&logoColor=orange)](https://www.rustexplorer.com/b/um0xyi)
 //! ```rust
-//! # #[cfg(FALSE)] {
 //! # #[cfg(feature = "macros")]
 //! # use serde::{Deserialize, Serialize};
 //! # #[cfg(feature = "macros")]
-//! # use serde_with::serde_as;
+//! # use serde_with::{serde_as, Bytes};
 //! # #[cfg(feature = "macros")]
 //! #[serde_as]
 //! # #[derive(Debug, Eq, PartialEq)]
@@ -140,6 +148,9 @@
 //!
 //!     #[serde_as(as = "Option<[_; M]>")]
 //!     optional: Option<[u8; M]>,
+//!
+//!     #[serde_as(as = "Bytes")]
+//!     bytes: [u8; M],
 //! }
 //!
 //! # #[cfg(all(feature = "macros", feature = "json"))] {
@@ -147,10 +158,10 @@
 //! let arrays: Arrays<100, 128> = Arrays {
 //!     constgeneric: [true; 100],
 //!     nested: Box::new([[111; 64]; 100]),
-//!     optional: Some([222; 128])
+//!     optional: Some([222; 128]),
+//!     bytes: [0x42; 128],
 //! };
 //! assert!(serde_json::to_string(&arrays).is_ok());
-//! # }
 //! # }
 //! ```
 //!
@@ -158,8 +169,9 @@
 //!
 //! This situation often occurs with JSON, but other formats also support optional fields.
 //! If many fields are optional, putting the annotations on the structs can become tedious.
-//! The `#[skip_serializing_none]` attribute must be place *before* the `#[derive]`.
+//! The `#[skip_serializing_none]` attribute must be placed *before* the `#[derive]`.
 //!
+//! [![Rustexplorer](https://img.shields.io/badge/Try%20on-rustexplorer-lightgrey?logo=rust&logoColor=orange)](https://www.rustexplorer.com/b/xr1tm0)
 //! ```rust
 //! # #[cfg(feature = "macros")]
 //! # use serde::{Deserialize, Serialize};
@@ -197,36 +209,54 @@
 //! ## Advanced `serde_as` usage
 //!
 //! This example is mainly supposed to highlight the flexibility of the `serde_as`-annotation compared to [serde's with-annotation][with-annotation].
-//! More details about `serde_as` can be found in the [user guide][].
+//! More details about `serde_as` can be found in the [user guide].
 //!
 //! ```rust
 //! # #[cfg(all(feature = "macros", feature = "hex"))]
 //! # use {
 //! #     serde::{Deserialize, Serialize},
-//! #     serde_with::{serde_as, DisplayFromStr, DurationSeconds, hex::Hex},
-//! #     std::time::Duration,
-//! #     std::collections::BTreeMap,
+//! #     serde_with::{serde_as, DisplayFromStr, DurationSeconds, hex::Hex, Map},
 //! # };
+//! use std::time::Duration;
+//!
 //! # #[cfg(all(feature = "macros", feature = "hex"))]
 //! #[serde_as]
 //! # #[derive(Debug, Eq, PartialEq)]
 //! #[derive(Deserialize, Serialize)]
-//! struct Foo {
-//!      // Serialize them into a list of number as seconds
-//!      #[serde_as(as = "Vec<DurationSeconds>")]
-//!      durations: Vec<Duration>,
-//!      // We can treat a Vec like a map with duplicates.
-//!      // JSON only allows string keys, so convert i32 to strings
-//!      // The bytes will be hex encoded
-//!      #[serde_as(as = "BTreeMap<DisplayFromStr, Hex>")]
-//!      bytes: Vec<(i32, Vec<u8>)>,
+//! enum Foo {
+//!     Durations(
+//!         // Serialize them into a list of number as seconds
+//!         #[serde_as(as = "Vec<DurationSeconds>")]
+//!         Vec<Duration>,
+//!     ),
+//!     Bytes {
+//!         // We can treat a Vec like a map with duplicates.
+//!         // JSON only allows string keys, so convert i32 to strings
+//!         // The bytes will be hex encoded
+//!         #[serde_as(as = "Map<DisplayFromStr, Hex>")]
+//!         bytes: Vec<(i32, Vec<u8>)>,
+//!     }
 //! }
 //!
 //! # #[cfg(all(feature = "macros", feature = "json", feature = "hex"))] {
 //! // This will serialize
 //! # let foo =
-//! Foo {
-//!     durations: vec![Duration::new(5, 0), Duration::new(3600, 0), Duration::new(0, 0)],
+//! Foo::Durations(
+//!     vec![Duration::new(5, 0), Duration::new(3600, 0), Duration::new(0, 0)]
+//! )
+//! # ;
+//! // into this JSON
+//! # let json = r#"
+//! {
+//!     "Durations": [5, 3600, 0]
+//! }
+//! # "#;
+//! # assert_eq!(json.replace(" ", "").replace("\n", ""), serde_json::to_string(&foo).unwrap());
+//! # assert_eq!(foo, serde_json::from_str(&json).unwrap());
+//!
+//! // and serializes
+//! # let foo =
+//! Foo::Bytes {
 //!     bytes: vec![
 //!         (1, vec![0, 1, 2]),
 //!         (-100, vec![100, 200, 255]),
@@ -234,15 +264,15 @@
 //!     ],
 //! }
 //! # ;
-//!
 //! // into this JSON
 //! # let json = r#"
 //! {
-//!     "durations": [5, 3600, 0],
-//!     "bytes": {
-//!         "1": "000102",
-//!         "-100": "64c8ff",
-//!         "1": "006fde"
+//!     "Bytes": {
+//!         "bytes": {
+//!             "1": "000102",
+//!             "-100": "64c8ff",
+//!             "1": "006fde"
+//!         }
 //!     }
 //! }
 //! # "#;
@@ -251,31 +281,44 @@
 //! # }
 //! ```
 //!
-//! [`DisplayFromStr`]: https://docs.rs/serde_with/1.14.0/serde_with/struct.DisplayFromStr.html
-//! [`with_prefix!`]: https://docs.rs/serde_with/1.14.0/serde_with/macro.with_prefix.html
-//! [display_fromstr]: https://docs.rs/serde_with/1.14.0/serde_with/rust/display_fromstr/index.html
-//! [feature flags]: https://docs.rs/serde_with/1.14.0/serde_with/guide/feature_flags/index.html
-//! [skip_serializing_none]: https://docs.rs/serde_with/1.14.0/serde_with/attr.skip_serializing_none.html
-//! [StringWithSeparator]: https://docs.rs/serde_with/1.14.0/serde_with/rust/struct.StringWithSeparator.html
-//! [user guide]: https://docs.rs/serde_with/1.14.0/serde_with/guide/index.html
+//! [`DisplayFromStr`]: https://docs.rs/serde_with/3.0.0/serde_with/struct.DisplayFromStr.html
+//! [`with_prefix!`]: https://docs.rs/serde_with/3.0.0/serde_with/macro.with_prefix.html
+//! [feature flags]: https://docs.rs/serde_with/3.0.0/serde_with/guide/feature_flags/index.html
+//! [skip_serializing_none]: https://docs.rs/serde_with/3.0.0/serde_with/attr.skip_serializing_none.html
+//! [StringWithSeparator]: https://docs.rs/serde_with/3.0.0/serde_with/struct.StringWithSeparator.html
+//! [user guide]: https://docs.rs/serde_with/3.0.0/serde_with/guide/index.html
 //! [with-annotation]: https://serde.rs/field-attrs.html#with
-//! [as-annotation]: https://docs.rs/serde_with/1.14.0/serde_with/guide/serde_as/index.html
+//! [as-annotation]: https://docs.rs/serde_with/3.0.0/serde_with/guide/serde_as/index.html
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 #[doc(hidden)]
+pub extern crate core;
+#[doc(hidden)]
 pub extern crate serde;
+#[cfg(feature = "std")]
 extern crate std;
 
 #[cfg(feature = "base64")]
 #[cfg_attr(docsrs, doc(cfg(feature = "base64")))]
 pub mod base64;
+#[cfg(feature = "chrono_0_4")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono_0_4")))]
+pub mod chrono_0_4;
+/// Legacy export of the [`chrono_0_4`] module.
 #[cfg(feature = "chrono")]
 #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
-pub mod chrono;
+pub mod chrono {
+    pub use chrono_0_4::*;
+}
+#[cfg(feature = "alloc")]
 mod content;
 pub mod de;
+#[cfg(feature = "alloc")]
 mod duplicate_key_impls;
+#[cfg(feature = "alloc")]
 mod enum_map;
+#[cfg(feature = "std")]
 mod flatten_maybe;
 pub mod formats;
 #[cfg(feature = "hex")]
@@ -284,13 +327,17 @@ pub mod hex;
 #[cfg(feature = "json")]
 #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
 pub mod json;
+#[cfg(feature = "alloc")]
+mod key_value_map;
 pub mod rust;
 pub mod ser;
+#[cfg(feature = "std")]
 mod serde_conv;
 #[cfg(feature = "time_0_3")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time_0_3")))]
 pub mod time_0_3;
 mod utils;
+#[cfg(feature = "std")]
 #[doc(hidden)]
 pub mod with_prefix;
 
@@ -334,45 +381,76 @@ generate_guide! {
     }
 }
 
+pub(crate) mod prelude {
+    #![allow(unused_imports)]
+
+    pub(crate) use crate::utils::duration::{DurationSigned, Sign};
+    pub use crate::{de::*, ser::*, *};
+    #[cfg(all(feature = "alloc", target_has_atomic = "ptr"))]
+    pub use alloc::sync::{Arc, Weak as ArcWeak};
+    #[cfg(feature = "alloc")]
+    pub use alloc::{
+        borrow::{Cow, ToOwned},
+        boxed::Box,
+        collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque},
+        rc::{Rc, Weak as RcWeak},
+        string::{String, ToString},
+        vec::Vec,
+    };
+    pub use core::{
+        cell::{Cell, RefCell},
+        convert::{TryFrom, TryInto},
+        fmt::{self, Display},
+        hash::{BuildHasher, Hash},
+        marker::PhantomData,
+        option::Option,
+        result::Result,
+        str::FromStr,
+        time::Duration,
+    };
+    pub use serde::{
+        de::{
+            Deserialize, DeserializeOwned, DeserializeSeed, Deserializer, EnumAccess,
+            Error as DeError, Expected, IgnoredAny, IntoDeserializer, MapAccess, SeqAccess,
+            Unexpected, VariantAccess, Visitor,
+        },
+        forward_to_deserialize_any,
+        ser::{
+            Error as SerError, Impossible, Serialize, SerializeMap, SerializeSeq, SerializeStruct,
+            SerializeStructVariant, SerializeTuple, SerializeTupleStruct, SerializeTupleVariant,
+            Serializer,
+        },
+    };
+    #[cfg(feature = "std")]
+    pub use std::{
+        collections::{HashMap, HashSet},
+        sync::{Mutex, RwLock},
+        time::SystemTime,
+    };
+}
+
+/// This module is not part of the public API
+///
+/// Do not rely on any exports.
+#[doc(hidden)]
+pub mod __private__ {
+    pub use crate::prelude::*;
+}
+
+#[cfg(feature = "alloc")]
 #[doc(inline)]
-pub use crate::{
-    de::DeserializeAs, enum_map::EnumMap, rust::StringWithSeparator, ser::SerializeAs,
-};
+pub use crate::enum_map::EnumMap;
+#[cfg(feature = "alloc")]
+#[doc(inline)]
+pub use crate::key_value_map::KeyValueMap;
+#[doc(inline)]
+pub use crate::{de::DeserializeAs, ser::SerializeAs};
 use core::marker::PhantomData;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 // Re-Export all proc_macros, as these should be seen as part of the serde_with crate
 #[cfg(feature = "macros")]
 #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
 #[doc(inline)]
 pub use serde_with_macros::*;
-
-/// Separator for string-based collection de/serialization
-pub trait Separator {
-    /// Return the string delimiting two elements in the string-based collection
-    fn separator() -> &'static str;
-}
-
-/// Predefined separator using a single space
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct SpaceSeparator;
-
-impl Separator for SpaceSeparator {
-    #[inline]
-    fn separator() -> &'static str {
-        " "
-    }
-}
-
-/// Predefined separator using a single comma
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct CommaSeparator;
-
-impl Separator for CommaSeparator {
-    #[inline]
-    fn separator() -> &'static str {
-        ","
-    }
-}
 
 /// Adapter to convert from `serde_as` to the serde traits.
 ///
@@ -387,6 +465,7 @@ impl Separator for CommaSeparator {
 /// If the use of the use of the proc-macro is not acceptable, then `As` can be used directly with serde.
 ///
 /// ```rust
+/// # #[cfg(feature = "alloc")] {
 /// # use serde::{Deserialize, Serialize};
 /// # use serde_with::{As, DisplayFromStr};
 /// #
@@ -396,11 +475,13 @@ impl Separator for CommaSeparator {
 /// #[serde(with = "As::<Vec<DisplayFromStr>>")]
 /// field: Vec<u8>,
 /// # }
+/// # }
 /// ```
 /// If the normal `Deserialize`/`Serialize` traits should be used, the placeholder type [`Same`] can be used.
 /// It implements [`DeserializeAs`][]/[`SerializeAs`][], when the underlying type implements `Deserialize`/`Serialize`.
 ///
 /// ```rust
+/// # #[cfg(feature = "alloc")] {
 /// # use serde::{Deserialize, Serialize};
 /// # use serde_with::{As, DisplayFromStr, Same};
 /// # use std::collections::BTreeMap;
@@ -411,47 +492,17 @@ impl Separator for CommaSeparator {
 /// #[serde(with = "As::<BTreeMap<DisplayFromStr, Same>>")]
 /// field: BTreeMap<u8, i32>,
 /// # }
+/// # }
 /// ```
 ///
-/// [serde_as]: https://docs.rs/serde_with/1.14.0/serde_with/attr.serde_as.html
-#[derive(Copy, Clone, Debug, Default)]
+/// [serde_as]: https://docs.rs/serde_with/3.0.0/serde_with/attr.serde_as.html
 pub struct As<T: ?Sized>(PhantomData<T>);
-
-impl<T: ?Sized> As<T> {
-    /// Serialize type `T` using [`SerializeAs`][]
-    ///
-    /// The function signature is compatible with [serde's with-annotation][with-annotation].
-    ///
-    /// [with-annotation]: https://serde.rs/field-attrs.html#with
-    pub fn serialize<S, I>(value: &I, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        T: SerializeAs<I>,
-        I: ?Sized,
-    {
-        T::serialize_as(value, serializer)
-    }
-
-    /// Deserialize type `T` using [`DeserializeAs`][]
-    ///
-    /// The function signature is compatible with [serde's with-annotation][with-annotation].
-    ///
-    /// [with-annotation]: https://serde.rs/field-attrs.html#with
-    pub fn deserialize<'de, D, I>(deserializer: D) -> Result<I, D::Error>
-    where
-        T: DeserializeAs<'de, I>,
-        D: Deserializer<'de>,
-    {
-        T::deserialize_as(deserializer)
-    }
-}
 
 /// Adapter to convert from `serde_as` to the serde traits.
 ///
 /// This is the counter-type to [`As`][].
 /// It can be used whenever a type implementing [`DeserializeAs`][]/[`SerializeAs`][] is required but the normal `Deserialize`/`Serialize` traits should be used.
 /// Check [`As`] for an example.
-#[derive(Copy, Clone, Debug, Default)]
 pub struct Same;
 
 /// De/Serialize using [`Display`] and [`FromStr`] implementation
@@ -464,9 +515,7 @@ pub struct Same;
 /// support, which can be found in some crates.
 ///
 /// If you control the type you want to de/serialize, you can instead use the two derive macros, [`SerializeDisplay`] and [`DeserializeFromStr`].
-/// They properly implement the traits [`Serialize`] and [`Deserialize`] such that user of the type no longer have to use the `serde_as` system.
-///
-/// The same functionality is also available as [`serde_with::rust::display_fromstr`][crate::rust::display_fromstr] compatible with serde's with-annotation.
+/// They properly implement the traits [`serde::Serialize`] and [`serde::Deserialize`] such that user of the type no longer have to use the `serde_as` system.
 ///
 /// # Examples
 ///
@@ -502,15 +551,12 @@ pub struct Same;
 ///
 /// [`Display`]: std::fmt::Display
 /// [`FromStr`]: std::str::FromStr
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DisplayFromStr;
 
 /// De/Serialize a [`Option<String>`] type while transforming the empty string to [`None`]
 ///
 /// Convert an [`Option<T>`] from/to string using [`FromStr`] and [`AsRef<str>`] implementations.
 /// An empty string is deserialized as [`None`] and a [`None`] vice versa.
-///
-/// The same functionality is also available as [`serde_with::rust::string_empty_as_none`][crate::rust::string_empty_as_none] compatible with serde's with-annotation.
 ///
 /// # Examples
 ///
@@ -546,7 +592,6 @@ pub struct DisplayFromStr;
 /// ```
 ///
 /// [`FromStr`]: std::str::FromStr
-#[derive(Copy, Clone, Debug, Default)]
 pub struct NoneAsEmptyString;
 
 /// Deserialize value and return [`Default`] on error
@@ -557,8 +602,6 @@ pub struct NoneAsEmptyString;
 /// During serialization this wrapper does nothing.
 /// The serialization behavior of the underlying type is preserved.
 /// The type must implement [`Default`] for this conversion to work.
-///
-/// The same functionality is also available as [`serde_with::rust::default_on_error`][crate::rust::default_on_error] compatible with serde's with-annotation.
 ///
 /// # Examples
 ///
@@ -637,7 +680,7 @@ pub struct NoneAsEmptyString;
 /// assert_eq!(vec![1, 2, 0, 0, 0, 6], c.value);
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
+#[cfg(feature = "alloc")]
 pub struct DefaultOnError<T = Same>(PhantomData<T>);
 
 /// Deserialize [`Default`] from `null` values
@@ -646,8 +689,6 @@ pub struct DefaultOnError<T = Same>(PhantomData<T>);
 /// During serialization this wrapper does nothing.
 /// The serialization behavior of the underlying type is preserved.
 /// The type must implement [`Default`] for this conversion to work.
-///
-/// The same functionality is also available as [`serde_with::rust::default_on_null`][crate::rust::default_on_null] compatible with serde's with-annotation.
 ///
 /// # Examples
 ///
@@ -695,7 +736,6 @@ pub struct DefaultOnError<T = Same>(PhantomData<T>);
 /// assert_eq!(vec![1, 2, 0, 0, 5], c.value);
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DefaultOnNull<T = Same>(PhantomData<T>);
 
 /// Deserialize from bytes or string
@@ -744,7 +784,7 @@ pub struct DefaultOnNull<T = Same>(PhantomData<T>);
 /// # }
 /// ```
 /// [`String`]: std::string::String
-#[derive(Copy, Clone, Debug, Default)]
+#[cfg(feature = "alloc")]
 pub struct BytesOrString;
 
 /// De/Serialize Durations as number of seconds.
@@ -758,17 +798,20 @@ pub struct BytesOrString;
 /// [`formats::Flexible`] means that deserialization will perform a best effort to extract the correct duration and allows deserialization from any type.
 /// For example, deserializing `DurationSeconds<f64, Flexible>` will discard any subsecond precision during deserialization from `f64` and will parse a `String` as an integer number.
 ///
-/// This type also supports [`chrono::Duration`] with the `chrono`-[feature flag].
+/// This type also supports [`chrono::Duration`] with the `chrono_0_4`-[feature flag].
 /// This type also supports [`time::Duration`][::time_0_3::Duration] with the `time_0_3`-[feature flag].
 ///
-/// | Duration Type         | Converter                 | Available `FORMAT`s    |
-/// | --------------------- | ------------------------- | ---------------------- |
-/// | `std::time::Duration` | `DurationSeconds`         | `u64`, `f64`, `String` |
-/// | `std::time::Duration` | `DurationSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::Duration`    | `DurationSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::Duration`    | `DurationSecondsWithFrac` | `f64`, `String`        |
-/// | `time::Duration`      | `DurationSeconds`         | `i64`, `f64`, `String` |
-/// | `time::Duration`      | `DurationSecondsWithFrac` | `f64`, `String`        |
+/// This table lists the available `FORMAT`s for the different duration types.
+/// The `FORMAT` specifier defaults to `u64`/`f64`.
+///
+/// | Duration Type         | Converter                 | Available `FORMAT`s      |
+/// | --------------------- | ------------------------- | ------------------------ |
+/// | `std::time::Duration` | `DurationSeconds`         | *`u64`*, `f64`, `String` |
+/// | `std::time::Duration` | `DurationSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::Duration`    | `DurationSeconds`         | `i64`, `f64`, `String`   |
+/// | `chrono::Duration`    | `DurationSecondsWithFrac` | *`f64`*, `String`        |
+/// | `time::Duration`      | `DurationSeconds`         | `i64`, `f64`, `String`   |
+/// | `time::Duration`      | `DurationSecondsWithFrac` | *`f64`*, `String`        |
 ///
 /// # Examples
 ///
@@ -824,15 +867,15 @@ pub struct BytesOrString;
 /// # }
 /// ```
 ///
-/// [`chrono::Duration`] is also supported when using the `chrono` feature.
+/// [`chrono::Duration`] is also supported when using the `chrono_0_4` feature.
 /// It is a signed duration, thus can be de/serialized as an `i64` instead of a `u64`.
 ///
 /// ```rust
-/// # #[cfg(all(feature = "macros", feature = "chrono"))] {
+/// # #[cfg(all(feature = "macros", feature = "chrono_0_4"))] {
 /// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use serde_with::{serde_as, DurationSeconds};
-/// # use chrono_crate::Duration;
+/// # use chrono_0_4::Duration;
 /// # /* Ugliness to make the docs look nicer since I want to hide the rename of the chrono crate
 /// use chrono::Duration;
 /// # */
@@ -882,9 +925,8 @@ pub struct BytesOrString;
 /// # }
 /// ```
 ///
-/// [`chrono::Duration`]: chrono_crate::Duration
-/// [feature flag]: https://docs.rs/serde_with/1.14.0/serde_with/guide/feature_flags/index.html
-#[derive(Copy, Clone, Debug, Default)]
+/// [`chrono::Duration`]: ::chrono_0_4::Duration
+/// [feature flag]: https://docs.rs/serde_with/3.0.0/serde_with/guide/feature_flags/index.html
 pub struct DurationSeconds<
     FORMAT: formats::Format = u64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -904,14 +946,17 @@ pub struct DurationSeconds<
 /// This type also supports [`chrono::Duration`] with the `chrono`-[feature flag].
 /// This type also supports [`time::Duration`][::time_0_3::Duration] with the `time_0_3`-[feature flag].
 ///
-/// | Duration Type         | Converter                 | Available `FORMAT`s    |
-/// | --------------------- | ------------------------- | ---------------------- |
-/// | `std::time::Duration` | `DurationSeconds`         | `u64`, `f64`, `String` |
-/// | `std::time::Duration` | `DurationSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::Duration`    | `DurationSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::Duration`    | `DurationSecondsWithFrac` | `f64`, `String`        |
-/// | `time::Duration`      | `DurationSeconds`         | `i64`, `f64`, `String` |
-/// | `time::Duration`      | `DurationSecondsWithFrac` | `f64`, `String`        |
+/// This table lists the available `FORMAT`s for the different duration types.
+/// The `FORMAT` specifier defaults to `u64`/`f64`.
+///
+/// | Duration Type         | Converter                 | Available `FORMAT`s      |
+/// | --------------------- | ------------------------- | ------------------------ |
+/// | `std::time::Duration` | `DurationSeconds`         | *`u64`*, `f64`, `String` |
+/// | `std::time::Duration` | `DurationSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::Duration`    | `DurationSeconds`         | `i64`, `f64`, `String`   |
+/// | `chrono::Duration`    | `DurationSecondsWithFrac` | *`f64`*, `String`        |
+/// | `time::Duration`      | `DurationSeconds`         | `i64`, `f64`, `String`   |
+/// | `time::Duration`      | `DurationSecondsWithFrac` | *`f64`*, `String`        |
 ///
 /// # Examples
 ///
@@ -961,15 +1006,15 @@ pub struct DurationSeconds<
 /// # }
 /// ```
 ///
-/// [`chrono::Duration`] is also supported when using the `chrono` feature.
+/// [`chrono::Duration`] is also supported when using the `chrono_0_4` feature.
 /// It is a signed duration, thus can be de/serialized as an `i64` instead of a `u64`.
 ///
 /// ```rust
-/// # #[cfg(all(feature = "macros", feature = "chrono"))] {
+/// # #[cfg(all(feature = "macros", feature = "chrono_0_4"))] {
 /// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use serde_with::{serde_as, DurationSecondsWithFrac};
-/// # use chrono_crate::Duration;
+/// # use chrono_0_4::Duration;
 /// # /* Ugliness to make the docs look nicer since I want to hide the rename of the chrono crate
 /// use chrono::Duration;
 /// # */
@@ -1011,9 +1056,8 @@ pub struct DurationSeconds<
 /// # }
 /// ```
 ///
-/// [`chrono::Duration`]: chrono_crate::Duration
-/// [feature flag]: https://docs.rs/serde_with/1.14.0/serde_with/guide/feature_flags/index.html
-#[derive(Copy, Clone, Debug, Default)]
+/// [`chrono::Duration`]: ::chrono_0_4::Duration
+/// [feature flag]: https://docs.rs/serde_with/3.0.0/serde_with/guide/feature_flags/index.html
 pub struct DurationSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1022,7 +1066,6 @@ pub struct DurationSecondsWithFrac<
 /// Equivalent to [`DurationSeconds`] with milli-seconds as base unit.
 ///
 /// This type is equivalent to [`DurationSeconds`] except that each unit represents 1 milli-second instead of 1 second for [`DurationSeconds`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DurationMilliSeconds<
     FORMAT: formats::Format = u64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1031,7 +1074,6 @@ pub struct DurationMilliSeconds<
 /// Equivalent to [`DurationSecondsWithFrac`] with milli-seconds as base unit.
 ///
 /// This type is equivalent to [`DurationSecondsWithFrac`] except that each unit represents 1 milli-second instead of 1 second for [`DurationSecondsWithFrac`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DurationMilliSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1040,7 +1082,6 @@ pub struct DurationMilliSecondsWithFrac<
 /// Equivalent to [`DurationSeconds`] with micro-seconds as base unit.
 ///
 /// This type is equivalent to [`DurationSeconds`] except that each unit represents 1 micro-second instead of 1 second for [`DurationSeconds`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DurationMicroSeconds<
     FORMAT: formats::Format = u64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1049,7 +1090,6 @@ pub struct DurationMicroSeconds<
 /// Equivalent to [`DurationSecondsWithFrac`] with micro-seconds as base unit.
 ///
 /// This type is equivalent to [`DurationSecondsWithFrac`] except that each unit represents 1 micro-second instead of 1 second for [`DurationSecondsWithFrac`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DurationMicroSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1058,7 +1098,6 @@ pub struct DurationMicroSecondsWithFrac<
 /// Equivalent to [`DurationSeconds`] with nano-seconds as base unit.
 ///
 /// This type is equivalent to [`DurationSeconds`] except that each unit represents 1 nano-second instead of 1 second for [`DurationSeconds`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DurationNanoSeconds<
     FORMAT: formats::Format = u64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1067,7 +1106,6 @@ pub struct DurationNanoSeconds<
 /// Equivalent to [`DurationSecondsWithFrac`] with nano-seconds as base unit.
 ///
 /// This type is equivalent to [`DurationSecondsWithFrac`] except that each unit represents 1 nano-second instead of 1 second for [`DurationSecondsWithFrac`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct DurationNanoSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1084,21 +1122,26 @@ pub struct DurationNanoSecondsWithFrac<
 /// [`formats::Flexible`] means that deserialization will perform a best effort to extract the correct timestamp and allows deserialization from any type.
 /// For example, deserializing `TimestampSeconds<f64, Flexible>` will discard any subsecond precision during deserialization from `f64` and will parse a `String` as an integer number.
 ///
-/// This type also supports [`chrono::DateTime`][DateTime] with the `chrono`-[feature flag].
+/// This type also supports [`chrono::DateTime`] with the `chrono_0_4`-[feature flag].
 /// This type also supports [`time::OffsetDateTime`][::time_0_3::OffsetDateTime] and [`time::PrimitiveDateTime`][::time_0_3::PrimitiveDateTime] with the `time_0_3`-[feature flag].
 ///
-/// | Timestamp Type            | Converter                  | Available `FORMAT`s    |
-/// | ------------------------- | -------------------------- | ---------------------- |
-/// | `std::time::SystemTime`   | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `std::time::SystemTime`   | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::DateTime<Utc>`   | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::DateTime<Utc>`   | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::DateTime<Local>` | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::DateTime<Local>` | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `time::OffsetDateTime`    | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `time::OffsetDateTime`    | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `time::PrimitiveDateTime` | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `time::PrimitiveDateTime` | `TimestampSecondsWithFrac` | `f64`, `String`        |
+/// This table lists the available `FORMAT`s for the different timestamp types.
+/// The `FORMAT` specifier defaults to `i64` or `f64`.
+///
+/// | Timestamp Type            | Converter                  | Available `FORMAT`s      |
+/// | ------------------------- | -------------------------- | ------------------------ |
+/// | `std::time::SystemTime`   | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `std::time::SystemTime`   | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::DateTime<Utc>`   | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `chrono::DateTime<Utc>`   | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::DateTime<Local>` | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `chrono::DateTime<Local>` | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::NaiveDateTime`   | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `chrono::NaiveDateTime`   | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `time::OffsetDateTime`    | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `time::OffsetDateTime`    | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `time::PrimitiveDateTime` | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `time::PrimitiveDateTime` | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
 ///
 /// # Examples
 ///
@@ -1154,15 +1197,15 @@ pub struct DurationNanoSecondsWithFrac<
 /// # }
 /// ```
 ///
-/// [`chrono::DateTime<Utc>`][DateTime] and [`chrono::DateTime<Local>`][DateTime] are also supported when using the `chrono` feature.
+/// [`chrono::DateTime<Utc>`] and [`chrono::DateTime<Local>`] are also supported when using the `chrono` feature.
 /// Like [`SystemTime`], it is a signed timestamp, thus can be de/serialized as an `i64`.
 ///
 /// ```rust
-/// # #[cfg(all(feature = "macros", feature = "chrono"))] {
+/// # #[cfg(all(feature = "macros", feature = "chrono_0_4"))] {
 /// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use serde_with::{serde_as, TimestampSeconds};
-/// # use chrono_crate::{DateTime, Local, TimeZone, Utc};
+/// # use chrono_0_4::{DateTime, Local, TimeZone, Utc};
 /// # /* Ugliness to make the docs look nicer since I want to hide the rename of the chrono crate
 /// use chrono::{DateTime, Local, TimeZone, Utc};
 /// # */
@@ -1213,9 +1256,9 @@ pub struct DurationNanoSecondsWithFrac<
 /// ```
 ///
 /// [`SystemTime`]: std::time::SystemTime
-/// [DateTime]: chrono_crate::DateTime
-/// [feature flag]: https://docs.rs/serde_with/1.14.0/serde_with/guide/feature_flags/index.html
-#[derive(Copy, Clone, Debug, Default)]
+/// [`chrono::DateTime<Local>`]: ::chrono_0_4::DateTime
+/// [`chrono::DateTime<Utc>`]: ::chrono_0_4::DateTime
+/// [feature flag]: https://docs.rs/serde_with/3.0.0/serde_with/guide/feature_flags/index.html
 pub struct TimestampSeconds<
     FORMAT: formats::Format = i64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1232,23 +1275,26 @@ pub struct TimestampSeconds<
 /// [`formats::Flexible`] means that deserialization will perform a best effort to extract the correct timestamp and allows deserialization from any type.
 /// For example, deserializing `TimestampSeconds<f64, Flexible>` will discard any subsecond precision during deserialization from `f64` and will parse a `String` as an integer number.
 ///
-/// This type also supports [`chrono::DateTime`][DateTime] and [`chrono::NaiveDateTime`][NaiveDateTime] with the `chrono`-[feature flag].
+/// This type also supports [`chrono::DateTime`] and [`chrono::NaiveDateTime`][NaiveDateTime] with the `chrono`-[feature flag].
 /// This type also supports [`time::OffsetDateTime`][::time_0_3::OffsetDateTime] and [`time::PrimitiveDateTime`][::time_0_3::PrimitiveDateTime] with the `time_0_3`-[feature flag].
 ///
-/// | Timestamp Type            | Converter                  | Available `FORMAT`s    |
-/// | ------------------------- | -------------------------- | ---------------------- |
-/// | `std::time::SystemTime`   | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `std::time::SystemTime`   | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::DateTime<Utc>`   | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::DateTime<Utc>`   | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::DateTime<Local>` | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::DateTime<Local>` | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `chrono::NaiveDateTime`   | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `chrono::NaiveDateTime`   | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `time::OffsetDateTime`    | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `time::OffsetDateTime`    | `TimestampSecondsWithFrac` | `f64`, `String`        |
-/// | `time::PrimitiveDateTime` | `TimestampSeconds`         | `i64`, `f64`, `String` |
-/// | `time::PrimitiveDateTime` | `TimestampSecondsWithFrac` | `f64`, `String`        |
+/// This table lists the available `FORMAT`s for the different timestamp types.
+/// The `FORMAT` specifier defaults to `i64` or `f64`.
+///
+/// | Timestamp Type            | Converter                  | Available `FORMAT`s      |
+/// | ------------------------- | -------------------------- | ------------------------ |
+/// | `std::time::SystemTime`   | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `std::time::SystemTime`   | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::DateTime<Utc>`   | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `chrono::DateTime<Utc>`   | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::DateTime<Local>` | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `chrono::DateTime<Local>` | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `chrono::NaiveDateTime`   | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `chrono::NaiveDateTime`   | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `time::OffsetDateTime`    | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `time::OffsetDateTime`    | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
+/// | `time::PrimitiveDateTime` | `TimestampSeconds`         | *`i64`*, `f64`, `String` |
+/// | `time::PrimitiveDateTime` | `TimestampSecondsWithFrac` | *`f64`*, `String`        |
 ///
 /// # Examples
 ///
@@ -1298,15 +1344,15 @@ pub struct TimestampSeconds<
 /// # }
 /// ```
 ///
-/// [`chrono::DateTime<Utc>`][DateTime] and [`chrono::DateTime<Local>`][DateTime] are also supported when using the `chrono` feature.
+/// [`chrono::DateTime<Utc>`] and [`chrono::DateTime<Local>`] are also supported when using the `chrono_0_4` feature.
 /// Like [`SystemTime`], it is a signed timestamp, thus can be de/serialized as an `i64`.
 ///
 /// ```rust
-/// # #[cfg(all(feature = "macros", feature = "chrono"))] {
+/// # #[cfg(all(feature = "macros", feature = "chrono_0_4"))] {
 /// # use serde::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use serde_with::{serde_as, TimestampSecondsWithFrac};
-/// # use chrono_crate::{DateTime, Local, TimeZone, Utc};
+/// # use chrono_0_4::{DateTime, Local, TimeZone, Utc};
 /// # /* Ugliness to make the docs look nicer since I want to hide the rename of the chrono crate
 /// use chrono::{DateTime, Local, TimeZone, Utc};
 /// # */
@@ -1349,10 +1395,11 @@ pub struct TimestampSeconds<
 /// ```
 ///
 /// [`SystemTime`]: std::time::SystemTime
-/// [DateTime]: chrono_crate::DateTime
-/// [NaiveDateTime]: chrono_crate::NaiveDateTime
-/// [feature flag]: https://docs.rs/serde_with/1.14.0/serde_with/guide/feature_flags/index.html
-#[derive(Copy, Clone, Debug, Default)]
+/// [`chrono::DateTime`]: ::chrono_0_4::DateTime
+/// [`chrono::DateTime<Local>`]: ::chrono_0_4::DateTime
+/// [`chrono::DateTime<Utc>`]: ::chrono_0_4::DateTime
+/// [NaiveDateTime]: ::chrono_0_4::NaiveDateTime
+/// [feature flag]: https://docs.rs/serde_with/3.0.0/serde_with/guide/feature_flags/index.html
 pub struct TimestampSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1361,7 +1408,6 @@ pub struct TimestampSecondsWithFrac<
 /// Equivalent to [`TimestampSeconds`] with milli-seconds as base unit.
 ///
 /// This type is equivalent to [`TimestampSeconds`] except that each unit represents 1 milli-second instead of 1 second for [`TimestampSeconds`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TimestampMilliSeconds<
     FORMAT: formats::Format = i64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1370,7 +1416,6 @@ pub struct TimestampMilliSeconds<
 /// Equivalent to [`TimestampSecondsWithFrac`] with milli-seconds as base unit.
 ///
 /// This type is equivalent to [`TimestampSecondsWithFrac`] except that each unit represents 1 milli-second instead of 1 second for [`TimestampSecondsWithFrac`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TimestampMilliSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1379,7 +1424,6 @@ pub struct TimestampMilliSecondsWithFrac<
 /// Equivalent to [`TimestampSeconds`] with micro-seconds as base unit.
 ///
 /// This type is equivalent to [`TimestampSeconds`] except that each unit represents 1 micro-second instead of 1 second for [`TimestampSeconds`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TimestampMicroSeconds<
     FORMAT: formats::Format = i64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1388,7 +1432,6 @@ pub struct TimestampMicroSeconds<
 /// Equivalent to [`TimestampSecondsWithFrac`] with micro-seconds as base unit.
 ///
 /// This type is equivalent to [`TimestampSecondsWithFrac`] except that each unit represents 1 micro-second instead of 1 second for [`TimestampSecondsWithFrac`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TimestampMicroSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1397,7 +1440,6 @@ pub struct TimestampMicroSecondsWithFrac<
 /// Equivalent to [`TimestampSeconds`] with nano-seconds as base unit.
 ///
 /// This type is equivalent to [`TimestampSeconds`] except that each unit represents 1 nano-second instead of 1 second for [`TimestampSeconds`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TimestampNanoSeconds<
     FORMAT: formats::Format = i64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1406,7 +1448,6 @@ pub struct TimestampNanoSeconds<
 /// Equivalent to [`TimestampSecondsWithFrac`] with nano-seconds as base unit.
 ///
 /// This type is equivalent to [`TimestampSecondsWithFrac`] except that each unit represents 1 nano-second instead of 1 second for [`TimestampSecondsWithFrac`].
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TimestampNanoSecondsWithFrac<
     FORMAT: formats::Format = f64,
     STRICTNESS: formats::Strictness = formats::Strict,
@@ -1579,7 +1620,6 @@ pub struct TimestampNanoSecondsWithFrac<
 /// # ), serde_json::to_value(&test).unwrap());
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
 pub struct Bytes;
 
 /// Deserialize one or many elements
@@ -1639,7 +1679,7 @@ pub struct Bytes;
 /// assert_eq!(data, serde_json::from_value(j).unwrap());
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
+#[cfg(feature = "alloc")]
 pub struct OneOrMany<T, FORMAT: formats::Format = formats::PreferOne>(PhantomData<(T, FORMAT)>);
 
 /// Try multiple deserialization options until one succeeds.
@@ -1700,7 +1740,7 @@ pub struct OneOrMany<T, FORMAT: formats::Format = formats::PreferOne>(PhantomDat
 /// assert_eq!(expected, serde_json::to_value(&data).unwrap());
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
+#[cfg(feature = "alloc")]
 pub struct PickFirst<T>(PhantomData<T>);
 
 /// Serialize value by converting to/from a proxy type with serde support.
@@ -1783,7 +1823,6 @@ pub struct PickFirst<T>(PhantomData<T>);
 /// assert_eq!(color, serde_json::from_value(j).unwrap());
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
 pub struct FromInto<T>(PhantomData<T>);
 
 /// Serialize value by converting to/from a proxy type with serde support.
@@ -1874,7 +1913,6 @@ pub struct FromInto<T>(PhantomData<T>);
 /// assert_eq!("Boolikes can only be constructed from 0 or 1 but found 2", serde_json::from_value::<Data>(j).unwrap_err().to_string());
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
 pub struct TryFromInto<T>(PhantomData<T>);
 
 /// Borrow `Cow` data during deserialization when possible.
@@ -1883,7 +1921,7 @@ pub struct TryFromInto<T>(PhantomData<T>);
 /// serde supports this, by annotating the fields with `#[serde(borrow)]`. but does not support borrowing on nested types.
 /// This gap is filled by this `BorrowCow` adapter.
 ///
-/// Using this adapter with `Cow<'a, [u8]>`/Cow<'a, [u8; N]>` will serialize the value as a sequence of `u8` values.
+/// Using this adapter with `Cow<'a, [u8]>`/`Cow<'a, [u8; N]>` will serialize the value as a sequence of `u8` values.
 /// This *might* not allow to borrow the data during deserialization.
 /// For a different format, which is also more efficient, use the [`Bytes`] adapter, which is also implemented for `Cow`.
 ///
@@ -1943,7 +1981,7 @@ pub struct TryFromInto<T>(PhantomData<T>);
 /// assert!(matches!(deserialized.slice, Cow::Owned(_)));
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
+#[cfg(feature = "alloc")]
 pub struct BorrowCow;
 
 /// Deserialize a sequence into `Vec<T>`, skipping elements which fail to deserialize.
@@ -1980,8 +2018,7 @@ pub struct BorrowCow;
 /// assert_eq!(data, serde_json::from_str(source_json).unwrap());
 /// # }
 /// ```
-
-#[derive(Copy, Clone, Debug, Default)]
+#[cfg(feature = "alloc")]
 pub struct VecSkipError<T>(PhantomData<T>);
 
 /// Deserialize a boolean from a number
@@ -2030,5 +2067,273 @@ pub struct VecSkipError<T>(PhantomData<T>);
 /// assert_eq!(data, serde_json::from_value(j).unwrap());
 /// # }
 /// ```
-#[derive(Copy, Clone, Debug, Default)]
 pub struct BoolFromInt<S: formats::Strictness = formats::Strict>(PhantomData<S>);
+
+/// De/Serialize a delimited collection using [`Display`] and [`FromStr`] implementation
+///
+/// `StringWithSeparator` takes a second type, which needs to implement [`Display`]+[`FromStr`] and constitutes the inner type of the collection.
+/// You can define an arbitrary separator, by specifying a type which implements [`Separator`].
+/// Some common ones, like space and comma are already predefined and you can find them [here][`Separator`].
+///
+/// An empty string deserializes as an empty collection.
+///
+/// # Examples
+///
+/// ```
+/// # #[cfg(feature = "macros")] {
+/// # use serde::{Deserialize, Serialize};
+/// #
+/// # use serde_with::{serde_as, StringWithSeparator};
+/// use serde_with::formats::{CommaSeparator, SpaceSeparator};
+/// use std::collections::BTreeSet;
+///
+/// #[serde_as]
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde_as(as = "StringWithSeparator::<SpaceSeparator, String>")]
+///     tags: Vec<String>,
+///     #[serde_as(as = "StringWithSeparator::<CommaSeparator, String>")]
+///     more_tags: BTreeSet<String>,
+/// }
+///
+/// let v: A = serde_json::from_str(r##"{
+///     "tags": "#hello #world",
+///     "more_tags": "foo,bar,bar"
+/// }"##).unwrap();
+/// assert_eq!(vec!["#hello", "#world"], v.tags);
+/// assert_eq!(2, v.more_tags.len());
+///
+/// let x = A {
+///     tags: vec!["1".to_string(), "2".to_string(), "3".to_string()],
+///     more_tags: BTreeSet::new(),
+/// };
+/// assert_eq!(
+///     r#"{"tags":"1 2 3","more_tags":""}"#,
+///     serde_json::to_string(&x).unwrap()
+/// );
+/// # }
+/// ```
+///
+/// [`Display`]: core::fmt::Display
+/// [`FromStr`]: core::str::FromStr
+/// [`Separator`]: crate::formats::Separator
+/// [`serde_as`]: crate::guide::serde_as
+pub struct StringWithSeparator<Sep, T>(PhantomData<(Sep, T)>);
+
+/// This serializes a list of tuples into a map
+///
+/// Normally, you want to use a [`HashMap`] or a [`BTreeMap`] when deserializing a map.
+/// However, sometimes this is not possible due to type constraints, e.g., if the type implements neither [`Hash`] nor [`Ord`].
+/// Another use case is deserializing a map with duplicate keys.
+///
+/// # Examples
+///
+/// `Wrapper` does not implement [`Hash`] nor [`Ord`], thus prohibiting the use [`HashMap`] or [`BTreeMap`].
+/// The JSON also contains a duplicate key.
+///
+/// [`BTreeMap`]: std::collections::BTreeMap
+/// [`HashMap`]: std::collections::HashMap
+/// [`Vec`]: std::vec::Vec
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde::{Deserialize, Serialize};
+/// # use serde_json::json;
+/// # use serde_with::{serde_as, Map};
+/// #
+/// #[serde_as]
+/// #[derive(Debug, Deserialize, Serialize, Default)]
+/// struct S {
+///     #[serde_as(as = "Map<_, _>")]
+///     s: Vec<(Wrapper<i32>, String)>,
+/// }
+///
+/// #[derive(Clone, Debug, Serialize, Deserialize)]
+/// #[serde(transparent)]
+/// struct Wrapper<T>(T);
+///
+/// let data = S {
+///     s: vec![
+///         (Wrapper(1), "a".to_string()),
+///         (Wrapper(2), "b".to_string()),
+///         (Wrapper(3), "c".to_string()),
+///         (Wrapper(2), "d".to_string()),
+///     ],
+/// };
+///
+/// let json = r#"{
+///   "s": {
+///     "1": "a",
+///     "2": "b",
+///     "3": "c",
+///     "2": "d"
+///   }
+/// }"#;
+/// assert_eq!(json, serde_json::to_string_pretty(&data).unwrap());
+/// # }
+/// ```
+pub struct Map<K, V>(PhantomData<(K, V)>);
+
+/// De/Serialize a Map into a list of tuples
+///
+/// Some formats, like JSON, have limitations on the types of keys for maps.
+/// In case of JSON, keys are restricted to strings.
+/// Rust features more powerful keys, for example tuples, which can not be serialized to JSON.
+///
+/// This helper serializes the Map into a list of tuples, which do not have the same type restrictions.
+///
+/// # Examples
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde::{Deserialize, Serialize};
+/// # use serde_json::json;
+/// # use serde_with::{serde_as, Seq};
+/// # use std::collections::BTreeMap;
+/// #
+/// #[serde_as]
+/// # #[derive(Debug, PartialEq)]
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde_as(as = "Seq<(_, _)>")]
+///     s: BTreeMap<(String, u32), u32>,
+/// }
+///
+/// // This converts the Rust type
+/// let data = A {
+///     s: BTreeMap::from([
+///         (("Hello".to_string(), 123), 0),
+///         (("World".to_string(), 456), 1),
+///     ]),
+/// };
+///
+/// // into this JSON
+/// let value = json!({
+///     "s": [
+///         [["Hello", 123], 0],
+///         [["World", 456], 1]
+///     ]
+/// });
+///
+/// assert_eq!(value, serde_json::to_value(&data).unwrap());
+/// assert_eq!(data, serde_json::from_value(value).unwrap());
+/// # }
+/// ```
+pub struct Seq<V>(PhantomData<V>);
+
+/// Ensure no duplicate keys exist in a map.
+///
+/// By default serde has a last-value-wins implementation, if duplicate keys for a map exist.
+/// Sometimes it is desirable to know when such an event happens, as the first value is overwritten
+/// and it can indicate an error in the serialized data.
+///
+/// This helper returns an error if two identical keys exist in a map.
+///
+/// The implementation supports both the [`HashMap`] and the [`BTreeMap`] from the standard library.
+///
+/// [`HashMap`]: std::collections::HashMap
+/// [`BTreeMap`]: std::collections::HashMap
+///
+/// # Example
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde::Deserialize;
+/// # use std::collections::HashMap;
+/// # use serde_with::{serde_as, MapPreventDuplicates};
+/// #
+/// #[serde_as]
+/// # #[derive(Debug, Eq, PartialEq)]
+/// #[derive(Deserialize)]
+/// struct Doc {
+///     #[serde_as(as = "MapPreventDuplicates<_, _>")]
+///     map: HashMap<usize, usize>,
+/// }
+///
+/// // Maps are serialized normally,
+/// let s = r#"{"map": {"1": 1, "2": 2, "3": 3}}"#;
+/// let mut v = Doc {
+///     map: HashMap::new(),
+/// };
+/// v.map.insert(1, 1);
+/// v.map.insert(2, 2);
+/// v.map.insert(3, 3);
+/// assert_eq!(v, serde_json::from_str(s).unwrap());
+///
+/// // but create an error if duplicate keys, like the `1`, exist.
+/// let s = r#"{"map": {"1": 1, "2": 2, "1": 3}}"#;
+/// let res: Result<Doc, _> = serde_json::from_str(s);
+/// assert!(res.is_err());
+/// # }
+/// ```
+#[cfg(feature = "alloc")]
+pub struct MapPreventDuplicates<K, V>(PhantomData<(K, V)>);
+
+/// Ensure that the last value is taken, if duplicate values exist
+///
+/// By default serde has a first-value-wins implementation, if duplicate keys for a set exist.
+/// Sometimes the opposite strategy is desired. This helper implements a first-value-wins strategy.
+///
+/// The implementation supports both the [`HashSet`] and the [`BTreeSet`] from the standard library.
+///
+/// [`HashSet`]: std::collections::HashSet
+/// [`BTreeSet`]: std::collections::HashSet
+#[cfg(feature = "alloc")]
+pub struct MapFirstKeyWins<K, V>(PhantomData<(K, V)>);
+
+/// Ensure no duplicate values exist in a set.
+///
+/// By default serde has a last-value-wins implementation, if duplicate values for a set exist.
+/// Sometimes it is desirable to know when such an event happens, as the first value is overwritten
+/// and it can indicate an error in the serialized data.
+///
+/// This helper returns an error if two identical values exist in a set.
+///
+/// The implementation supports both the [`HashSet`] and the [`BTreeSet`] from the standard library.
+///
+/// [`HashSet`]: std::collections::HashSet
+/// [`BTreeSet`]: std::collections::HashSet
+///
+/// # Example
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use std::collections::HashSet;
+/// # use serde::Deserialize;
+/// # use serde_with::{serde_as, SetPreventDuplicates};
+/// #
+/// #[serde_as]
+/// # #[derive(Debug, Eq, PartialEq)]
+/// #[derive(Deserialize)]
+/// struct Doc {
+///     #[serde_as(as = "SetPreventDuplicates<_>")]
+///     set: HashSet<usize>,
+/// }
+///
+/// // Sets are serialized normally,
+/// let s = r#"{"set": [1, 2, 3, 4]}"#;
+/// let v = Doc {
+///     set: HashSet::from_iter(vec![1, 2, 3, 4]),
+/// };
+/// assert_eq!(v, serde_json::from_str(s).unwrap());
+///
+/// // but create an error if duplicate values, like the `1`, exist.
+/// let s = r#"{"set": [1, 2, 3, 4, 1]}"#;
+/// let res: Result<Doc, _> = serde_json::from_str(s);
+/// assert!(res.is_err());
+/// # }
+/// ```
+#[cfg(feature = "alloc")]
+pub struct SetPreventDuplicates<T>(PhantomData<T>);
+
+/// Ensure that the last value is taken, if duplicate values exist
+///
+/// By default serde has a first-value-wins implementation, if duplicate keys for a set exist.
+/// Sometimes the opposite strategy is desired. This helper implements a first-value-wins strategy.
+///
+/// The implementation supports both the [`HashSet`] and the [`BTreeSet`] from the standard library.
+///
+/// [`HashSet`]: std::collections::HashSet
+/// [`BTreeSet`]: std::collections::HashSet
+#[cfg(feature = "alloc")]
+pub struct SetLastValueWins<T>(PhantomData<T>);

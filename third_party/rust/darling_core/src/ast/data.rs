@@ -2,7 +2,10 @@ use std::{slice, vec};
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
+use syn::ext::IdentExt;
+use syn::parse::Parser;
 use syn::spanned::Spanned;
+use syn::Token;
 
 use crate::usage::{
     self, IdentRefSet, IdentSet, LifetimeRefSet, LifetimeSet, UsesLifetimes, UsesTypeParams,
@@ -406,6 +409,43 @@ impl<'a> From<&'a syn::Fields> for Style {
             syn::Fields::Named(_) => Style::Struct,
             syn::Fields::Unnamed(_) => Style::Tuple,
             syn::Fields::Unit => Style::Unit,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum NestedMeta {
+    Meta(syn::Meta),
+    Lit(syn::Lit),
+}
+
+impl NestedMeta {
+    pub fn parse_meta_list(tokens: TokenStream) -> syn::Result<Vec<Self>> {
+        syn::punctuated::Punctuated::<NestedMeta, Token![,]>::parse_terminated
+            .parse2(tokens)
+            .map(|punctuated| punctuated.into_iter().collect())
+    }
+}
+
+impl syn::parse::Parse for NestedMeta {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        if input.peek(syn::Lit) && !(input.peek(syn::LitBool) && input.peek2(Token![=])) {
+            input.parse().map(NestedMeta::Lit)
+        } else if input.peek(syn::Ident::peek_any)
+            || input.peek(Token![::]) && input.peek3(syn::Ident::peek_any)
+        {
+            input.parse().map(NestedMeta::Meta)
+        } else {
+            Err(input.error("expected identifier or literal"))
+        }
+    }
+}
+
+impl ToTokens for NestedMeta {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            NestedMeta::Meta(meta) => meta.to_tokens(tokens),
+            NestedMeta::Lit(lit) => lit.to_tokens(tokens),
         }
     }
 }

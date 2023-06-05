@@ -12,6 +12,7 @@ mod collections;
 mod default_on;
 mod enum_map;
 mod frominto;
+mod key_value_map;
 mod map_tuple_list;
 mod pickfirst;
 mod serde_as_macro;
@@ -30,9 +31,9 @@ use core::cell::{Cell, RefCell};
 use expect_test::expect;
 use serde::{Deserialize, Serialize};
 use serde_with::{
-    formats::{Flexible, Strict},
-    serde_as, BoolFromInt, BytesOrString, CommaSeparator, DisplayFromStr, NoneAsEmptyString,
-    OneOrMany, Same, StringWithSeparator,
+    formats::{CommaSeparator, Flexible, Strict},
+    serde_as, BoolFromInt, BytesOrString, DisplayFromStr, Map, NoneAsEmptyString, OneOrMany, Same,
+    Seq, StringWithSeparator,
 };
 use std::{
     collections::HashMap,
@@ -443,7 +444,10 @@ fn test_bytes_or_string() {
 
 #[test]
 fn string_with_separator() {
-    use serde_with::{rust::StringWithSeparator, CommaSeparator, SpaceSeparator};
+    use serde_with::{
+        formats::{CommaSeparator, SpaceSeparator},
+        StringWithSeparator,
+    };
 
     #[serde_as]
     #[derive(Deserialize, Serialize)]
@@ -840,8 +844,20 @@ fn test_one_or_many_prefer_one() {
     );
     check_deserialization(S1Vec(vec![1]), r#"1"#);
     check_deserialization(S1Vec(vec![1]), r#"[1]"#);
-    check_error_deserialization::<S1Vec>(r#"{}"#, expect![[r#"a list or single element"#]]);
-    check_error_deserialization::<S1Vec>(r#""xx""#, expect![[r#"a list or single element"#]]);
+    check_error_deserialization::<S1Vec>(
+        r#"{}"#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid type: map, expected u32
+          Many: invalid type: map, expected a sequence"#]],
+    );
+    check_error_deserialization::<S1Vec>(
+        r#""xx""#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid type: string "xx", expected u32
+          Many: invalid type: string "xx", expected a sequence"#]],
+    );
 
     #[serde_as]
     #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -861,8 +877,20 @@ fn test_one_or_many_prefer_one() {
     );
     check_deserialization(S2Vec(vec![1]), r#""1""#);
     check_deserialization(S2Vec(vec![1]), r#"["1"]"#);
-    check_error_deserialization::<S2Vec>(r#"{}"#, expect![[r#"a list or single element"#]]);
-    check_error_deserialization::<S2Vec>(r#""xx""#, expect![[r#"a list or single element"#]]);
+    check_error_deserialization::<S2Vec>(
+        r#"{}"#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid type: map, expected a string
+          Many: invalid type: map, expected a sequence"#]],
+    );
+    check_error_deserialization::<S2Vec>(
+        r#""xx""#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid digit found in string
+          Many: invalid type: string "xx", expected a sequence"#]],
+    );
 }
 
 #[test]
@@ -893,8 +921,20 @@ fn test_one_or_many_prefer_many() {
     );
     check_deserialization(S1Vec(vec![1]), r#"1"#);
     check_deserialization(S1Vec(vec![1]), r#"[1]"#);
-    check_error_deserialization::<S1Vec>(r#"{}"#, expect![[r#"a list or single element"#]]);
-    check_error_deserialization::<S1Vec>(r#""xx""#, expect![[r#"a list or single element"#]]);
+    check_error_deserialization::<S1Vec>(
+        r#"{}"#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid type: map, expected u32
+          Many: invalid type: map, expected a sequence"#]],
+    );
+    check_error_deserialization::<S1Vec>(
+        r#""xx""#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid type: string "xx", expected u32
+          Many: invalid type: string "xx", expected a sequence"#]],
+    );
 
     #[serde_as]
     #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -920,8 +960,20 @@ fn test_one_or_many_prefer_many() {
     );
     check_deserialization(S2Vec(vec![1]), r#""1""#);
     check_deserialization(S2Vec(vec![1]), r#"["1"]"#);
-    check_error_deserialization::<S2Vec>(r#"{}"#, expect![[r#"a list or single element"#]]);
-    check_error_deserialization::<S2Vec>(r#""xx""#, expect![[r#"a list or single element"#]]);
+    check_error_deserialization::<S2Vec>(
+        r#"{}"#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid type: map, expected a string
+          Many: invalid type: map, expected a sequence"#]],
+    );
+    check_error_deserialization::<S2Vec>(
+        r#""xx""#,
+        expect![[r#"
+        OneOrMany could not deserialize any variant:
+          One: invalid digit found in string
+          Many: invalid type: string "xx", expected a sequence"#]],
+    );
 }
 
 /// Test that Cow borrows from the input

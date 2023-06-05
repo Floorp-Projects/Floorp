@@ -1,7 +1,8 @@
 use std::ops::Deref;
 
-use syn::{Meta, NestedMeta, Path};
+use syn::{Meta, Path};
 
+use crate::ast::NestedMeta;
 use crate::{Error, FromMeta, Result};
 
 use super::path_to_string;
@@ -72,7 +73,7 @@ mod tests {
     /// parse a string as a syn::Meta instance.
     fn pm(tokens: TokenStream) -> ::std::result::Result<Meta, String> {
         let attribute: Attribute = parse_quote!(#[#tokens]);
-        attribute.parse_meta().map_err(|_| "Unable to parse".into())
+        Ok(attribute.meta)
     }
 
     fn fm<T: FromMeta>(tokens: TokenStream) -> T {

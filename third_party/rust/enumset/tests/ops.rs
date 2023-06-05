@@ -21,6 +21,7 @@ pub enum SmallEnumExplicitDerive {
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 }
 #[derive(EnumSetType, Debug)]
+#[enumset(repr = "u128")]
 pub enum LargeEnum {
     _00,  _01,  _02,  _03,  _04,  _05,  _06,  _07,
     _10,  _11,  _12,  _13,  _14,  _15,  _16,  _17,
@@ -73,6 +74,30 @@ pub enum ReprEnum3 {
 pub enum ReprEnum4 {
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 }
+#[derive(EnumSetType, Debug)]
+pub enum GiantEnum {
+    A = 100, B = 200, C = 300, D = 400, E = 500, F = 600, G = 700, H = 800,
+}
+#[derive(EnumSetType, Debug)]
+#[enumset(repr = "array")]
+pub enum SmallArrayEnum {
+    A, B, C, D, E, F, G, H
+}
+#[derive(EnumSetType, Debug)]
+#[enumset(repr = "array")]
+pub enum MarginalArrayEnumS2 {
+    A, B, C, D, E, F, G, H, Marginal = 64,
+}
+#[derive(EnumSetType, Debug)]
+#[enumset(repr = "array")]
+pub enum MarginalArrayEnumS2H {
+    A = 64, B, C, D, E, F, G, H, Marginal = 127,
+}
+#[derive(EnumSetType, Debug)]
+#[enumset(repr = "array")]
+pub enum MarginalArrayEnumS3 {
+    A, B, C, D, E, F, G, H, Marginal = 128,
+}
 
 macro_rules! test_variants {
     ($enum_name:ident $all_empty_test:ident $($variant:ident,)*) => {
@@ -113,7 +138,7 @@ macro_rules! test_enum {
     ($e:ident, $mem_size:expr) => {
         const CONST_SET: EnumSet<$e> = enum_set!($e::A | $e::C);
         const CONST_1_SET: EnumSet<$e> = enum_set!($e::A);
-        const EMPTY_SET: EnumSet<$e> = enum_set!();
+        const EMPTY_SET: EnumSet<$e> = EnumSet::EMPTY;
         #[test]
         fn const_set() {
             assert_eq!(CONST_SET.len(), 2);
@@ -202,6 +227,13 @@ macro_rules! test_enum {
         }
 
         #[test]
+        fn empty_iter_test() {
+            for _ in EnumSet::<$e>::new() {
+                panic!("should not happen");
+            }
+        }
+
+        #[test]
         fn iter_ordering_test() {
             let set_a = $e::A | $e::B | $e::E;
             let vec_a: Vec<_> = set_a.iter().collect();
@@ -218,17 +250,34 @@ macro_rules! test_enum {
 
         fn check_iter_size_hint(set: EnumSet<$e>) {
             let count = set.len();
-            let mut itr = set.iter();
-            for idx in 0 .. count {
-                assert_eq!(itr.size_hint(), (count-idx, Some(count-idx)));
-                assert_eq!(itr.len(), count-idx);
-                assert!(itr.next().is_some());
+
+            // check for forward iteration
+            {
+                let mut itr = set.iter();
+                for idx in 0 .. count {
+                    assert_eq!(itr.size_hint(), (count-idx, Some(count-idx)));
+                    assert_eq!(itr.len(), count-idx);
+                    assert!(itr.next().is_some());
+                }
+                assert_eq!(itr.size_hint(), (0, Some(0)));
+                assert_eq!(itr.len(), 0);
             }
-            assert_eq!(itr.size_hint(), (0, Some(0)));
-            assert_eq!(itr.len(), 0);
+
+            // check for backwards iteration
+            {
+                let mut itr = set.iter().rev();
+                for idx in 0 .. count {
+                    assert_eq!(itr.size_hint(), (count-idx, Some(count-idx)));
+                    assert_eq!(itr.len(), count-idx);
+                    assert!(itr.next().is_some());
+                }
+                assert_eq!(itr.size_hint(), (0, Some(0)));
+                assert_eq!(itr.len(), 0);
+            }
         }
         #[test]
         fn test_iter_size_hint() {
+            check_iter_size_hint(EnumSet::<$e>::new());
             check_iter_size_hint(EnumSet::<$e>::all());
             let mut set = EnumSet::new();
             set.insert($e::A);
@@ -283,7 +332,21 @@ macro_rules! test_enum {
         #[test]
         fn to_from_bits() {
             let value = $e::A | $e::C | $e::D | $e::F | $e::E | $e::G;
-            assert_eq!(EnumSet::from_u128(value.as_u128()), value);
+            if EnumSet::<$e>::bit_width() < 128 {
+                assert_eq!(EnumSet::from_u128(value.as_u128()), value);
+            }
+            if EnumSet::<$e>::bit_width() < 64 {
+                assert_eq!(EnumSet::from_u64(value.as_u64()), value);
+            }
+            if EnumSet::<$e>::bit_width() < 32 {
+                assert_eq!(EnumSet::from_u32(value.as_u32()), value);
+            }
+            if EnumSet::<$e>::bit_width() < 16 {
+                assert_eq!(EnumSet::from_u16(value.as_u16()), value);
+            }
+            if EnumSet::<$e>::bit_width() < 8 {
+                assert_eq!(EnumSet::from_u8(value.as_u8()), value);
+            }
         }
 
         #[test]
@@ -385,6 +448,11 @@ tests!(repr_enum_u32, test_enum!(ReprEnum, 4));
 tests!(repr_enum_u64, test_enum!(ReprEnum2, 4));
 tests!(repr_enum_isize, test_enum!(ReprEnum3, 4));
 tests!(repr_enum_c, test_enum!(ReprEnum4, 4));
+tests!(giant_enum, test_enum!(GiantEnum, 104));
+tests!(small_array_enum, test_enum!(SmallArrayEnum, 8));
+tests!(marginal_array_enum_s2, test_enum!(MarginalArrayEnumS2, 16));
+tests!(marginal_array_enum_s2h, test_enum!(MarginalArrayEnumS2H, 16));
+tests!(marginal_array_enum_s3, test_enum!(MarginalArrayEnumS3, 24));
 
 #[derive(EnumSetType, Debug)]
 pub enum ThresholdEnum {
@@ -457,6 +525,6 @@ bits_tests!(test_u64_bits, U64, (U128), u64,
             as_u64 try_as_u64 as_u64_truncated from_u64 try_from_u64 from_u64_truncated);
 bits_tests!(test_u128_bits, U128, (), u128,
             as_u128 try_as_u128 as_u128_truncated from_u128 try_from_u128 from_u128_truncated);
-bits_tests!(test_uize_bits, U32, (U128), usize,
+bits_tests!(test_usize_bits, U32, (U128), usize,
             as_usize try_as_usize as_usize_truncated
             from_usize try_from_usize from_usize_truncated);

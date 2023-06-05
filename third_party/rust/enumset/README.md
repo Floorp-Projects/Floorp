@@ -2,11 +2,12 @@
 
 [![Build Status](https://github.com/Lymia/enumset/actions/workflows/test.yml/badge.svg)](https://github.com/Lymia/enumset/actions/workflows/test.yml)
 [![Latest Version](https://img.shields.io/crates/v/enumset.svg)](https://crates.io/crates/enumset)
-![Requires rustc 1.36+](https://img.shields.io/badge/rustc-1.36+-red.svg)
+![Requires rustc 1.56+](https://img.shields.io/badge/rustc-1.56+-red.svg)
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/enumset)
 
-A library for defining enums that can be used in compact bit sets.
-It supports enums up to 128 variants, and has a macro to use these sets in constants.
+A library for defining enums that can be used in compact bit sets. It supports
+`serde` and `#[no_std]` environments, and has basic support for using EnumSets
+in constants.
 
 See [the documentation](https://docs.rs/enumset) for more information.
 

@@ -1,5 +1,8 @@
 use super::*;
-use serde_with::{CommaSeparator, PickFirst, SpaceSeparator, StringWithSeparator};
+use serde_with::{
+    formats::{CommaSeparator, SpaceSeparator},
+    PickFirst, StringWithSeparator,
+};
 
 #[test]
 fn test_pick_first_two() {
@@ -11,7 +14,10 @@ fn test_pick_first_two() {
     check_deserialization(S(123), r#""123""#);
     check_error_deserialization::<S>(
         r#""Abc""#,
-        expect![[r#"PickFirst could not deserialize data"#]],
+        expect![[r#"
+            PickFirst could not deserialize any variant:
+              First: invalid type: string "Abc", expected u32
+              Second: invalid digit found in string"#]],
     );
 
     #[serde_as]
@@ -88,7 +94,11 @@ fn test_pick_first_three() {
     check_deserialization(S(vec![1, 2, 3]), r#""1,2,3""#);
     check_error_deserialization::<S>(
         r#""Abc""#,
-        expect![[r#"PickFirst could not deserialize data"#]],
+        expect![[r#"
+            PickFirst could not deserialize any variant:
+              First: invalid type: string "Abc", expected a sequence
+              Second: invalid type: string "Abc", expected a sequence
+              Third: invalid digit found in string"#]],
     );
 
     #[serde_as]
@@ -129,6 +139,11 @@ fn test_pick_first_four() {
     is_equal(S(123), expect![[r#"123"#]]);
     check_error_deserialization::<S>(
         r#""Abc""#,
-        expect![[r#"PickFirst could not deserialize data"#]],
+        expect![[r#"
+            PickFirst could not deserialize any variant:
+              First: invalid type: string "Abc", expected u32
+              Second: invalid type: string "Abc", expected u32
+              Third: invalid type: string "Abc", expected u32
+              Fourth: invalid type: string "Abc", expected u32"#]],
     );
 }

@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "enumset"
-version = "1.0.12"
+version = "1.1.2"
 authors = ["Alissa Rao <lymia@lymiahugs.com>"]
 description = "A library for creating compact sets of enums."
 documentation = "https://docs.rs/enumset/"
@@ -24,9 +24,17 @@ keywords = [
 categories = ["data-structures"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Lymia/enumset"
+resolver = "1"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
 
 [dependencies.enumset_derive]
-version = "0.6.1"
+version = "0.8.0"
 
 [dependencies.serde2]
 version = "1"

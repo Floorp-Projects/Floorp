@@ -11,11 +11,8 @@
 //! The types support 128-bit integers, which is supported for all targets in Rust 1.40+.
 //! The [`ContentSerializer`] can also be configured to human readable or compact representation.
 
-use alloc::{borrow::ToOwned, boxed::Box, string::String, vec::Vec};
-use core::marker::PhantomData;
-use serde::ser::{self, Serialize, Serializer};
+use crate::prelude::*;
 
-#[derive(Debug)]
 pub(crate) enum Content {
     Bool(bool),
 
@@ -61,6 +58,16 @@ pub(crate) enum Content {
     ),
 }
 
+impl Content {
+    pub(crate) fn as_str(&self) -> Option<&str> {
+        match self {
+            Self::String(ref x) => Some(x),
+            Self::Bytes(x) => core::str::from_utf8(x).ok(),
+            _ => None,
+        }
+    }
+}
+
 impl Serialize for Content {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -94,7 +101,6 @@ impl Serialize for Content {
             }
             Content::Seq(ref elements) => elements.serialize(serializer),
             Content::Tuple(ref elements) => {
-                use serde::ser::SerializeTuple;
                 let mut tuple = serializer.serialize_tuple(elements.len())?;
                 for e in elements {
                     tuple.serialize_element(e)?;
@@ -102,7 +108,6 @@ impl Serialize for Content {
                 tuple.end()
             }
             Content::TupleStruct(n, ref fields) => {
-                use serde::ser::SerializeTupleStruct;
                 let mut ts = serializer.serialize_tuple_struct(n, fields.len())?;
                 for f in fields {
                     ts.serialize_field(f)?;
@@ -110,7 +115,6 @@ impl Serialize for Content {
                 ts.end()
             }
             Content::TupleVariant(n, i, v, ref fields) => {
-                use serde::ser::SerializeTupleVariant;
                 let mut tv = serializer.serialize_tuple_variant(n, i, v, fields.len())?;
                 for f in fields {
                     tv.serialize_field(f)?;
@@ -118,25 +122,22 @@ impl Serialize for Content {
                 tv.end()
             }
             Content::Map(ref entries) => {
-                use serde::ser::SerializeMap;
                 let mut map = serializer.serialize_map(Some(entries.len()))?;
-                for &(ref k, ref v) in entries {
+                for (k, v) in entries {
                     map.serialize_entry(k, v)?;
                 }
                 map.end()
             }
             Content::Struct(n, ref fields) => {
-                use serde::ser::SerializeStruct;
                 let mut s = serializer.serialize_struct(n, fields.len())?;
-                for &(k, ref v) in fields {
+                for (k, v) in fields {
                     s.serialize_field(k, v)?;
                 }
                 s.end()
             }
             Content::StructVariant(n, i, v, ref fields) => {
-                use serde::ser::SerializeStructVariant;
                 let mut sv = serializer.serialize_struct_variant(n, i, v, fields.len())?;
-                for &(k, ref v) in fields {
+                for (k, v) in fields {
                     sv.serialize_field(k, v)?;
                 }
                 sv.end()
@@ -167,18 +168,18 @@ impl<E> Default for ContentSerializer<E> {
 
 impl<E> Serializer for ContentSerializer<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
 
-    type SerializeSeq = SerializeSeq<E>;
-    type SerializeTuple = SerializeTuple<E>;
-    type SerializeTupleStruct = SerializeTupleStruct<E>;
-    type SerializeTupleVariant = SerializeTupleVariant<E>;
-    type SerializeMap = SerializeMap<E>;
-    type SerializeStruct = SerializeStruct<E>;
-    type SerializeStructVariant = SerializeStructVariant<E>;
+    type SerializeSeq = SeqSerialize<E>;
+    type SerializeTuple = TupleSerialize<E>;
+    type SerializeTupleStruct = TupleStructSerialize<E>;
+    type SerializeTupleVariant = TupleVariantSerialize<E>;
+    type SerializeMap = MapSerialize<E>;
+    type SerializeStruct = StructSerialize<E>;
+    type SerializeStructVariant = StructVariantSerialize<E>;
 
     fn is_human_readable(&self) -> bool {
         self.is_human_readable
@@ -309,7 +310,7 @@ where
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, E> {
-        Ok(SerializeSeq {
+        Ok(SeqSerialize {
             is_human_readable: self.is_human_readable,
             elements: Vec::with_capacity(len.unwrap_or(0)),
             error: PhantomData,
@@ -317,7 +318,7 @@ where
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, E> {
-        Ok(SerializeTuple {
+        Ok(TupleSerialize {
             is_human_readable: self.is_human_readable,
             elements: Vec::with_capacity(len),
             error: PhantomData,
@@ -329,7 +330,7 @@ where
         name: &'static str,
         len: usize,
     ) -> Result<Self::SerializeTupleStruct, E> {
-        Ok(SerializeTupleStruct {
+        Ok(TupleStructSerialize {
             is_human_readable: self.is_human_readable,
             name,
             fields: Vec::with_capacity(len),
@@ -344,7 +345,7 @@ where
         variant: &'static str,
         len: usize,
     ) -> Result<Self::SerializeTupleVariant, E> {
-        Ok(SerializeTupleVariant {
+        Ok(TupleVariantSerialize {
             is_human_readable: self.is_human_readable,
             name,
             variant_index,
@@ -355,7 +356,7 @@ where
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, E> {
-        Ok(SerializeMap {
+        Ok(MapSerialize {
             is_human_readable: self.is_human_readable,
             entries: Vec::with_capacity(len.unwrap_or(0)),
             key: None,
@@ -364,7 +365,7 @@ where
     }
 
     fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, E> {
-        Ok(SerializeStruct {
+        Ok(StructSerialize {
             is_human_readable: self.is_human_readable,
             name,
             fields: Vec::with_capacity(len),
@@ -379,7 +380,7 @@ where
         variant: &'static str,
         len: usize,
     ) -> Result<Self::SerializeStructVariant, E> {
-        Ok(SerializeStructVariant {
+        Ok(StructVariantSerialize {
             is_human_readable: self.is_human_readable,
             name,
             variant_index,
@@ -390,15 +391,15 @@ where
     }
 }
 
-pub(crate) struct SerializeSeq<E> {
+pub(crate) struct SeqSerialize<E> {
     is_human_readable: bool,
     elements: Vec<Content>,
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeSeq for SerializeSeq<E>
+impl<E> SerializeSeq for SeqSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
@@ -417,15 +418,15 @@ where
     }
 }
 
-pub(crate) struct SerializeTuple<E> {
+pub(crate) struct TupleSerialize<E> {
     is_human_readable: bool,
     elements: Vec<Content>,
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeTuple for SerializeTuple<E>
+impl<E> SerializeTuple for TupleSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
@@ -444,16 +445,16 @@ where
     }
 }
 
-pub(crate) struct SerializeTupleStruct<E> {
+pub(crate) struct TupleStructSerialize<E> {
     is_human_readable: bool,
     name: &'static str,
     fields: Vec<Content>,
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeTupleStruct for SerializeTupleStruct<E>
+impl<E> SerializeTupleStruct for TupleStructSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
@@ -472,7 +473,7 @@ where
     }
 }
 
-pub(crate) struct SerializeTupleVariant<E> {
+pub(crate) struct TupleVariantSerialize<E> {
     is_human_readable: bool,
     name: &'static str,
     variant_index: u32,
@@ -481,9 +482,9 @@ pub(crate) struct SerializeTupleVariant<E> {
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeTupleVariant for SerializeTupleVariant<E>
+impl<E> SerializeTupleVariant for TupleVariantSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
@@ -507,16 +508,16 @@ where
     }
 }
 
-pub(crate) struct SerializeMap<E> {
+pub(crate) struct MapSerialize<E> {
     is_human_readable: bool,
     entries: Vec<(Content, Content)>,
     key: Option<Content>,
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeMap for SerializeMap<E>
+impl<E> SerializeMap for MapSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
@@ -559,16 +560,16 @@ where
     }
 }
 
-pub(crate) struct SerializeStruct<E> {
+pub(crate) struct StructSerialize<E> {
     is_human_readable: bool,
     name: &'static str,
     fields: Vec<(&'static str, Content)>,
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeStruct for SerializeStruct<E>
+impl<E> SerializeStruct for StructSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;
@@ -587,7 +588,7 @@ where
     }
 }
 
-pub(crate) struct SerializeStructVariant<E> {
+pub(crate) struct StructVariantSerialize<E> {
     is_human_readable: bool,
     name: &'static str,
     variant_index: u32,
@@ -596,9 +597,9 @@ pub(crate) struct SerializeStructVariant<E> {
     error: PhantomData<E>,
 }
 
-impl<E> ser::SerializeStructVariant for SerializeStructVariant<E>
+impl<E> SerializeStructVariant for StructVariantSerialize<E>
 where
-    E: ser::Error,
+    E: SerError,
 {
     type Ok = Content;
     type Error = E;

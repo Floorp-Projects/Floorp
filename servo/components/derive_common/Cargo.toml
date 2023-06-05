@@ -9,8 +9,8 @@ publish = false
 path = "lib.rs"
 
 [dependencies]
-darling = { version = "0.14", default-features = false }
+darling = { version = "0.20", default-features = false }
 proc-macro2 = "1"
 quote = "1"
-syn = { version = "1", default-features = false, features = ["clone-impls", "parsing"] }
-synstructure = "0.12"
+syn = { version = "2", default-features = false, features = ["clone-impls", "parsing"] }
+synstructure = "0.13"

@@ -102,6 +102,8 @@ pub mod export {
     pub use darling_core::syn;
     pub use std::string::ToString;
     pub use std::vec::Vec;
+
+    pub use crate::ast::NestedMeta;
 }
 
 #[macro_use]

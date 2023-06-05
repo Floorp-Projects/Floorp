@@ -7,15 +7,16 @@
 //!
 //! [user guide]: crate::guide
 
-mod const_arrays;
+#[cfg(feature = "alloc")]
+mod duplicates;
 mod impls;
 
-use super::*;
+use crate::prelude::*;
 
 /// A **data structure** that can be deserialized from any data format supported by Serde, analogue to [`Deserialize`].
 ///
 /// The trait is analogue to the [`serde::Deserialize`][`Deserialize`] trait, with the same meaning of input and output arguments.
-/// It can and should the implemented using the same code structure as the [`Deserialize`] trait.
+/// It can and should be implemented using the same code structure as the [`Deserialize`] trait.
 /// As such, the same advice for [implementing `Deserialize`][impl-deserialize] applies here.
 ///
 /// # Differences to [`Deserialize`]
@@ -74,7 +75,7 @@ use super::*;
 /// # #[cfg(all(feature = "macros"))] {
 /// # use serde::Deserialize;
 /// # use serde::de::Error;
-/// # use serde_with::DeserializeAs;
+/// # use serde_with::{serde_as, DeserializeAs};
 /// # use std::str::FromStr;
 /// # use std::fmt::Display;
 /// struct DisplayFromStr;
@@ -93,7 +94,7 @@ use super::*;
 ///     }
 /// }
 /// #
-/// # #[serde_with::serde_as]
+/// # #[serde_as]
 /// # #[derive(serde::Deserialize)]
 /// # struct S (#[serde_as(as = "DisplayFromStr")] bool);
 /// #
@@ -114,7 +115,6 @@ pub trait DeserializeAs<'de, T>: Sized {
 }
 
 /// Helper type to implement [`DeserializeAs`] for container-like types.
-#[derive(Debug)]
 pub struct DeserializeAsWrap<T, U> {
     value: T,
     marker: PhantomData<U>,
@@ -139,5 +139,20 @@ where
             value,
             marker: PhantomData,
         })
+    }
+}
+
+impl<T: ?Sized> As<T> {
+    /// Deserialize type `T` using [`DeserializeAs`][]
+    ///
+    /// The function signature is compatible with [serde's with-annotation][with-annotation].
+    ///
+    /// [with-annotation]: https://serde.rs/field-attrs.html#with
+    pub fn deserialize<'de, D, I>(deserializer: D) -> Result<I, D::Error>
+    where
+        T: DeserializeAs<'de, I>,
+        D: Deserializer<'de>,
+    {
+        T::deserialize_as(deserializer)
     }
 }

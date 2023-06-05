@@ -77,12 +77,6 @@ impl FromMeta for Flag {
     }
 }
 
-impl Spanned for Flag {
-    fn span(&self) -> Span {
-        self.0.unwrap_or_else(Span::call_site)
-    }
-}
-
 impl From<Flag> for bool {
     fn from(flag: Flag) -> Self {
         flag.is_present()

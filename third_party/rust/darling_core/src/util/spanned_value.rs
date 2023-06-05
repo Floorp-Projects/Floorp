@@ -67,12 +67,6 @@ impl<T> AsRef<T> for SpannedValue<T> {
     }
 }
 
-impl<T> Spanned for SpannedValue<T> {
-    fn span(&self) -> Span {
-        self.span
-    }
-}
-
 macro_rules! spanned {
     ($trayt:ident, $method:ident, $syn:path) => {
         impl<T: $trayt> $trayt for SpannedValue<T> {
@@ -95,10 +89,10 @@ impl<T: FromMeta> FromMeta for SpannedValue<T> {
             syn::Meta::Path(path) => path.span(),
             // Example: `#[darling(attributes(Value))]` as a SpannedValue<Vec<String>>
             // should have the span pointing to the list contents.
-            syn::Meta::List(list) => list.nested.span(),
+            syn::Meta::List(list) => list.tokens.span(),
             // Example: `#[darling(skip = true)]` as SpannedValue<bool>
             // should have the span pointing to the word `true`.
-            syn::Meta::NameValue(nv) => nv.lit.span(),
+            syn::Meta::NameValue(nv) => nv.value.span(),
         };
 
         Ok(Self::new(value, span))

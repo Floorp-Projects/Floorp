@@ -43,11 +43,11 @@ fn base64_vec() {
 
     check_error_deserialization::<BDefault>(
         r#"["0"]"#,
-        expect![[r#"Encoded text cannot have a 6-bit remainder. at line 1 column 5"#]],
+        expect!["Encoded text cannot have a 6-bit remainder. at line 1 column 4"],
     );
     check_error_deserialization::<BDefault>(
         r#"["zz"]"#,
-        expect![[r#"Invalid last symbol 122, offset 1. at line 1 column 6"#]],
+        expect!["Invalid last symbol 122, offset 1. at line 1 column 5"],
     );
 
     #[serde_as]
