@@ -942,7 +942,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.7.95',
+    apiVersion: '3.8.6',
     data,
     password,
     disableAutoFetch,
@@ -2614,9 +2614,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.7.95';
+const version = '3.8.6';
 exports.version = version;
-const build = 'cbc4b20b1';
+const build = 'a2118f52b';
 exports.build = build;
 
 /***/ }),
@@ -10252,69 +10252,108 @@ class InkEditor extends _editor.AnnotationEditor {
     }
     return path2D;
   }
-  #serializePaths(s, tx, ty, h) {
-    const NUMBER_OF_POINTS_ON_BEZIER_CURVE = 4;
+  static #toPDFCoordinates(points, rect, rotation) {
+    const [blX, blY, trX, trY] = rect;
+    switch (rotation) {
+      case 0:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          points[i] += blX;
+          points[i + 1] = trY - points[i + 1];
+        }
+        break;
+      case 90:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          const x = points[i];
+          points[i] = points[i + 1] + blX;
+          points[i + 1] = x + blY;
+        }
+        break;
+      case 180:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          points[i] = trX - points[i];
+          points[i + 1] += blY;
+        }
+        break;
+      case 270:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          const x = points[i];
+          points[i] = trX - points[i + 1];
+          points[i + 1] = trY - x;
+        }
+        break;
+      default:
+        throw new Error("Invalid rotation");
+    }
+    return points;
+  }
+  static #fromPDFCoordinates(points, rect, rotation) {
+    const [blX, blY, trX, trY] = rect;
+    switch (rotation) {
+      case 0:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          points[i] -= blX;
+          points[i + 1] = trY - points[i + 1];
+        }
+        break;
+      case 90:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          const x = points[i];
+          points[i] = points[i + 1] - blY;
+          points[i + 1] = x - blX;
+        }
+        break;
+      case 180:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          points[i] = trX - points[i];
+          points[i + 1] -= blY;
+        }
+        break;
+      case 270:
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          const x = points[i];
+          points[i] = trY - points[i + 1];
+          points[i + 1] = trX - x;
+        }
+        break;
+      default:
+        throw new Error("Invalid rotation");
+    }
+    return points;
+  }
+  #serializePaths(s, tx, ty, rect) {
     const paths = [];
     const padding = this.thickness / 2;
-    let buffer, points;
+    const shiftX = s * tx + padding;
+    const shiftY = s * ty + padding;
     for (const bezier of this.paths) {
-      buffer = [];
-      points = [];
-      for (let i = 0, ii = bezier.length; i < ii; i++) {
-        const [first, control1, control2, second] = bezier[i];
-        const p10 = s * (first[0] + tx) + padding;
-        const p11 = h - s * (first[1] + ty) - padding;
-        const p20 = s * (control1[0] + tx) + padding;
-        const p21 = h - s * (control1[1] + ty) - padding;
-        const p30 = s * (control2[0] + tx) + padding;
-        const p31 = h - s * (control2[1] + ty) - padding;
-        const p40 = s * (second[0] + tx) + padding;
-        const p41 = h - s * (second[1] + ty) - padding;
-        if (i === 0) {
+      const buffer = [];
+      const points = [];
+      for (let j = 0, jj = bezier.length; j < jj; j++) {
+        const [first, control1, control2, second] = bezier[j];
+        const p10 = s * first[0] + shiftX;
+        const p11 = s * first[1] + shiftY;
+        const p20 = s * control1[0] + shiftX;
+        const p21 = s * control1[1] + shiftY;
+        const p30 = s * control2[0] + shiftX;
+        const p31 = s * control2[1] + shiftY;
+        const p40 = s * second[0] + shiftX;
+        const p41 = s * second[1] + shiftY;
+        if (j === 0) {
           buffer.push(p10, p11);
           points.push(p10, p11);
         }
         buffer.push(p20, p21, p30, p31, p40, p41);
-        this.#extractPointsOnBezier(p10, p11, p20, p21, p30, p31, p40, p41, NUMBER_OF_POINTS_ON_BEZIER_CURVE, points);
+        points.push(p20, p21);
+        if (j === jj - 1) {
+          points.push(p40, p41);
+        }
       }
       paths.push({
-        bezier: buffer,
-        points
+        bezier: InkEditor.#toPDFCoordinates(buffer, rect, this.rotation),
+        points: InkEditor.#toPDFCoordinates(points, rect, this.rotation)
       });
     }
     return paths;
-  }
-  #extractPointsOnBezier(p10, p11, p20, p21, p30, p31, p40, p41, n, points) {
-    if (this.#isAlmostFlat(p10, p11, p20, p21, p30, p31, p40, p41)) {
-      points.push(p40, p41);
-      return;
-    }
-    for (let i = 1; i < n - 1; i++) {
-      const t = i / n;
-      const mt = 1 - t;
-      let q10 = t * p10 + mt * p20;
-      let q11 = t * p11 + mt * p21;
-      let q20 = t * p20 + mt * p30;
-      let q21 = t * p21 + mt * p31;
-      const q30 = t * p30 + mt * p40;
-      const q31 = t * p31 + mt * p41;
-      q10 = t * q10 + mt * q20;
-      q11 = t * q11 + mt * q21;
-      q20 = t * q20 + mt * q30;
-      q21 = t * q21 + mt * q31;
-      q10 = t * q10 + mt * q20;
-      q11 = t * q11 + mt * q21;
-      points.push(q10, q11);
-    }
-    points.push(p40, p41);
-  }
-  #isAlmostFlat(p10, p11, p20, p21, p30, p31, p40, p41) {
-    const tol = 10;
-    const ax = (3 * p20 - 2 * p10 - p40) ** 2;
-    const ay = (3 * p21 - 2 * p11 - p41) ** 2;
-    const bx = (3 * p30 - p10 - 2 * p40) ** 2;
-    const by = (3 * p31 - p11 - 2 * p41) ** 2;
-    return Math.max(ax, bx) + Math.max(ay, by) <= tol;
   }
   #getBbox() {
     let xMin = Infinity;
@@ -10392,20 +10431,26 @@ class InkEditor extends _editor.AnnotationEditor {
     editor.#disableEditing = true;
     editor.#realWidth = Math.round(width);
     editor.#realHeight = Math.round(height);
-    for (const {
+    const {
+      paths,
+      rect,
+      rotation
+    } = data;
+    for (let {
       bezier
-    } of data.paths) {
+    } of paths) {
+      bezier = InkEditor.#fromPDFCoordinates(bezier, rect, rotation);
       const path = [];
       editor.paths.push(path);
       let p0 = scaleFactor * (bezier[0] - padding);
-      let p1 = scaleFactor * (height - bezier[1] - padding);
+      let p1 = scaleFactor * (bezier[1] - padding);
       for (let i = 2, ii = bezier.length; i < ii; i += 6) {
         const p10 = scaleFactor * (bezier[i] - padding);
-        const p11 = scaleFactor * (height - bezier[i + 1] - padding);
+        const p11 = scaleFactor * (bezier[i + 1] - padding);
         const p20 = scaleFactor * (bezier[i + 2] - padding);
-        const p21 = scaleFactor * (height - bezier[i + 3] - padding);
+        const p21 = scaleFactor * (bezier[i + 3] - padding);
         const p30 = scaleFactor * (bezier[i + 4] - padding);
-        const p31 = scaleFactor * (height - bezier[i + 5] - padding);
+        const p31 = scaleFactor * (bezier[i + 5] - padding);
         path.push([[p0, p1], [p10, p11], [p20, p21], [p30, p31]]);
         p0 = p30;
         p1 = p31;
@@ -10424,14 +10469,13 @@ class InkEditor extends _editor.AnnotationEditor {
       return null;
     }
     const rect = this.getRect(0, 0);
-    const height = this.rotation % 180 === 0 ? rect[3] - rect[1] : rect[2] - rect[0];
     const color = _editor.AnnotationEditor._colorManager.convert(this.ctx.strokeStyle);
     return {
       annotationType: _util.AnnotationEditorType.INK,
       color,
       thickness: this.thickness,
       opacity: this.opacity,
-      paths: this.#serializePaths(this.scaleFactor / this.parentScale, this.translationX, this.translationY, height),
+      paths: this.#serializePaths(this.scaleFactor / this.parentScale, this.translationX, this.translationY, rect),
       pageIndex: this.pageIndex,
       rect,
       rotation: this.rotation
@@ -13069,8 +13113,8 @@ var _annotation_layer = __w_pdfjs_require__(24);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(27);
 var _xfa_layer = __w_pdfjs_require__(26);
-const pdfjsVersion = '3.7.95';
-const pdfjsBuild = 'cbc4b20b1';
+const pdfjsVersion = '3.8.6';
+const pdfjsBuild = 'a2118f52b';
 })();
 
 /******/ 	return __webpack_exports__;

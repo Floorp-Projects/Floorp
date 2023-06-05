@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.7.95';
+    const workerVersion = '3.8.6';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -6841,9 +6841,12 @@ class InkAnnotation extends MarkupAnnotation {
     ap
   }) {
     const {
+      color,
+      opacity,
       paths,
       rect,
-      rotation
+      rotation,
+      thickness
     } = annotation;
     const ink = new _primitives.Dict(xref);
     ink.set("Type", _primitives.Name.get("Annot"));
@@ -6852,8 +6855,12 @@ class InkAnnotation extends MarkupAnnotation {
     ink.set("Rect", rect);
     ink.set("InkList", paths.map(p => p.points));
     ink.set("F", 4);
-    ink.set("Border", [0, 0, 0]);
     ink.set("Rotate", rotation);
+    const bs = new _primitives.Dict(xref);
+    ink.set("BS", bs);
+    bs.set("W", thickness);
+    ink.set("C", Array.from(color, c => c / 255));
+    ink.set("CA", opacity);
     const n = new _primitives.Dict(xref);
     ink.set("AP", n);
     if (apRef) {
@@ -6900,12 +6907,8 @@ class InkAnnotation extends MarkupAnnotation {
     appearanceStreamDict.set("FormType", 1);
     appearanceStreamDict.set("Subtype", _primitives.Name.get("Form"));
     appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
-    appearanceStreamDict.set("BBox", [0, 0, w, h]);
+    appearanceStreamDict.set("BBox", rect);
     appearanceStreamDict.set("Length", appearance.length);
-    if (rotation) {
-      const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
-      appearanceStreamDict.set("Matrix", matrix);
-    }
     if (opacity !== 1) {
       const resources = new _primitives.Dict(xref);
       const extGState = new _primitives.Dict(xref);
@@ -23734,6 +23737,12 @@ class CFFParser {
         stackSize++;
       } else if (value === 19 || value === 20) {
         state.hints += stackSize >> 1;
+        if (state.hints === 0) {
+          data.copyWithin(j - 1, j, -1);
+          j -= 1;
+          length -= 1;
+          continue;
+        }
         j += state.hints + 7 >> 3;
         stackSize %= 2;
         validationCommand = CharstringValidationData[value];
@@ -57523,8 +57532,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.7.95';
-const pdfjsBuild = 'cbc4b20b1';
+const pdfjsVersion = '3.8.6';
+const pdfjsBuild = 'a2118f52b';
 })();
 
 /******/ 	return __webpack_exports__;
