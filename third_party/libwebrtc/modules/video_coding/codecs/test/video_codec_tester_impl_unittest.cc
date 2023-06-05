@@ -172,12 +172,11 @@ TEST_P(VideoCodecTesterImplPacingTest, PaceEncode) {
   auto fs = tester
                 .RunEncodeTest(std::move(video_source), std::move(encoder),
                                encoder_settings)
-                ->GetFrameStatistics();
+                ->Slice();
   ASSERT_EQ(fs.size(), num_frames_);
 
   for (size_t i = 0; i < fs.size(); ++i) {
-    int encode_start_ms = (fs[i].encode_start_ns - fs[0].encode_start_ns) /
-                          rtc::kNumNanosecsPerMillisec;
+    int encode_start_ms = (fs[i].encode_start - fs[0].encode_start).ms();
     EXPECT_NEAR(encode_start_ms, expected_frame_start_ms_[i], 10);
   }
 }
@@ -206,12 +205,11 @@ TEST_P(VideoCodecTesterImplPacingTest, PaceDecode) {
   auto fs = tester
                 .RunDecodeTest(std::move(video_source), std::move(decoder),
                                decoder_settings)
-                ->GetFrameStatistics();
+                ->Slice();
   ASSERT_EQ(fs.size(), num_frames_);
 
   for (size_t i = 0; i < fs.size(); ++i) {
-    int decode_start_ms = (fs[i].decode_start_ns - fs[0].decode_start_ns) /
-                          rtc::kNumNanosecsPerMillisec;
+    int decode_start_ms = (fs[i].decode_start - fs[0].decode_start).ms();
     EXPECT_NEAR(decode_start_ms, expected_frame_start_ms_[i], 10);
   }
 }

@@ -43,7 +43,6 @@ namespace test {
 namespace {
 using ::testing::Combine;
 using ::testing::Values;
-using Layer = std::pair<int, int>;
 
 struct VideoInfo {
   std::string name;
@@ -56,6 +55,23 @@ struct CodecInfo {
   std::string decoder;
 };
 
+struct LayerId {
+  int spatial_idx;
+  int temporal_idx;
+
+  bool operator==(const LayerId& o) const {
+    return spatial_idx == o.spatial_idx && temporal_idx == o.temporal_idx;
+  }
+
+  bool operator<(const LayerId& o) const {
+    if (spatial_idx < o.spatial_idx)
+      return true;
+    if (temporal_idx < o.temporal_idx)
+      return true;
+    return false;
+  }
+};
+
 struct EncodingSettings {
   ScalabilityMode scalability_mode;
   // Spatial layer resolution.
@@ -63,7 +79,7 @@ struct EncodingSettings {
   // Top temporal layer frame rate.
   Frequency framerate;
   // Bitrate of spatial and temporal layers.
-  std::map<Layer, DataRate> bitrate;
+  std::map<LayerId, DataRate> bitrate;
 };
 
 struct EncodingTestSettings {
@@ -94,7 +110,8 @@ const EncodingSettings kQvga64Kbps30Fps = {
     .scalability_mode = ScalabilityMode::kL1T1,
     .resolution = {{0, {.width = 320, .height = 180}}},
     .framerate = Frequency::Hertz(30),
-    .bitrate = {{Layer(0, 0), DataRate::KilobitsPerSec(64)}}};
+    .bitrate = {
+        {{.spatial_idx = 0, .temporal_idx = 0}, DataRate::KilobitsPerSec(64)}}};
 
 const EncodingTestSettings kConstantRateQvga64Kbps30Fps = {
     .name = "ConstantRateQvga64Kbps30Fps",
@@ -277,10 +294,10 @@ class TestEncoder : public VideoCodecTester::Encoder,
         ScalabilityModeToNumSpatialLayers(es.scalability_mode);
     for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
       for (int tidx = 0; tidx < num_temporal_layers; ++tidx) {
-        RTC_CHECK(es.bitrate.find(Layer(sidx, tidx)) != es.bitrate.end())
+        LayerId layer_id = {.spatial_idx = sidx, .temporal_idx = tidx};
+        RTC_CHECK(es.bitrate.find(layer_id) != es.bitrate.end())
             << "Bitrate for layer S=" << sidx << " T=" << tidx << " is not set";
-        rc.bitrate.SetBitrate(sidx, tidx,
-                              es.bitrate.at(Layer(sidx, tidx)).bps());
+        rc.bitrate.SetBitrate(sidx, tidx, es.bitrate.at(layer_id).bps());
       }
     }
 
@@ -405,7 +422,7 @@ class EncodeDecodeTest
 };
 
 TEST_P(EncodeDecodeTest, DISABLED_TestEncodeDecode) {
-  std::unique_ptr<VideoCodecTestStats> stats = tester_->RunEncodeDecodeTest(
+  std::unique_ptr<VideoCodecStats> stats = tester_->RunEncodeDecodeTest(
       std::move(video_source_), std::move(encoder_), std::move(decoder_),
       test_params_.encoder_settings, test_params_.decoder_settings);
 
@@ -415,13 +432,11 @@ TEST_P(EncodeDecodeTest, DISABLED_TestEncodeDecode) {
     int last_frame = std::next(fs) != frame_settings.end()
                          ? std::next(fs)->first - 1
                          : test_params_.encoding_settings.num_frames - 1;
-
-    const EncodingSettings& encoding_settings = fs->second;
-    auto metrics = stats->CalcVideoStatistic(
-        first_frame, last_frame, encoding_settings.bitrate.rbegin()->second,
-        encoding_settings.framerate);
-
-    EXPECT_GE(metrics.avg_psnr_y,
+    VideoCodecStats::Filter slicer = {.first_frame = first_frame,
+                                      .last_frame = last_frame};
+    std::vector<VideoCodecStats::Frame> frames = stats->Slice(slicer);
+    VideoCodecStats::Stream stream = stats->Aggregate(frames);
+    EXPECT_GE(stream.psnr.y.GetAverage(),
               test_params_.quality_expectations.min_apsnr_y);
   }
 }

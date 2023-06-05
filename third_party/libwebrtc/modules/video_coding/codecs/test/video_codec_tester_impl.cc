@@ -171,9 +171,11 @@ class TesterDecoder {
     task_queue_.PostDelayedTask(
         [this, frame] {
           analyzer_->StartDecode(frame);
-          decoder_->Decode(frame, [this](const VideoFrame& decoded_frame) {
-            this->analyzer_->FinishDecode(decoded_frame, /*spatial_idx=*/0);
-          });
+          decoder_->Decode(
+              frame, [this, spatial_idx = frame.SpatialIndex().value_or(0)](
+                         const VideoFrame& decoded_frame) {
+                this->analyzer_->FinishDecode(decoded_frame, spatial_idx);
+              });
         },
         pacer_.Delay(timestamp));
   }
@@ -244,7 +246,7 @@ VideoCodecTesterImpl::VideoCodecTesterImpl(TaskQueueFactory* task_queue_factory)
   }
 }
 
-std::unique_ptr<VideoCodecTestStats> VideoCodecTesterImpl::RunDecodeTest(
+std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunDecodeTest(
     std::unique_ptr<CodedVideoSource> video_source,
     std::unique_ptr<Decoder> decoder,
     const DecoderSettings& decoder_settings) {
@@ -266,7 +268,7 @@ std::unique_ptr<VideoCodecTestStats> VideoCodecTesterImpl::RunDecodeTest(
   return perf_analyzer.GetStats();
 }
 
-std::unique_ptr<VideoCodecTestStats> VideoCodecTesterImpl::RunEncodeTest(
+std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeTest(
     std::unique_ptr<RawVideoSource> video_source,
     std::unique_ptr<Encoder> encoder,
     const EncoderSettings& encoder_settings) {
@@ -290,7 +292,7 @@ std::unique_ptr<VideoCodecTestStats> VideoCodecTesterImpl::RunEncodeTest(
   return perf_analyzer.GetStats();
 }
 
-std::unique_ptr<VideoCodecTestStats> VideoCodecTesterImpl::RunEncodeDecodeTest(
+std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeDecodeTest(
     std::unique_ptr<RawVideoSource> video_source,
     std::unique_ptr<Encoder> encoder,
     std::unique_ptr<Decoder> decoder,
