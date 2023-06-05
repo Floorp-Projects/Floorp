@@ -244,8 +244,9 @@ class SVGPathSegUtils {
     return aType | 1;
   }
 
-  static uint32_t SameTypeModuloRelativeness(uint32_t aType1, uint32_t aType2) {
-    if (!IsRelativeOrAbsoluteType(aType1)) {
+  static bool SameTypeModuloRelativeness(uint32_t aType1, uint32_t aType2) {
+    if (!IsRelativeOrAbsoluteType(aType1) ||
+        !IsRelativeOrAbsoluteType(aType2)) {
       return aType1 == aType2;
     }
 
