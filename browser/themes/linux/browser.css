@@ -32,6 +32,7 @@ toolbar[brighttext]:not(:-moz-lwtheme) {
 
 #menubar-items {
   flex-direction: column; /* for flex hack */
+  justify-content: normal; /* align the menubar to the top also in customize mode */
 }
 
 #navigator-toolbox {

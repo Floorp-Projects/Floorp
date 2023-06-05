@@ -27,6 +27,7 @@
 
 #menubar-items {
   flex-direction: column; /* for flex hack */
+  justify-content: normal; /* align the menubar to the top also in customize mode */
 }
 
 #main-menubar > menu {
