@@ -10,7 +10,7 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     steps:
     - uses: actions/checkout@v3
@@ -21,6 +21,7 @@ jobs:
         sudo apt update
 
     - name: Setup Disk & Swap Space 💿
+      if: runner.name == 'ubuntu-latest' || runner.name == 'ubuntu-20.04'
       run: |
         echo Before:
         free -h
