@@ -9,6 +9,18 @@ test_newtab({
     );
   },
   test: async function test_render_customizeMenu() {
+    function getSection(sectionIdentifier) {
+      return content.document.querySelector(
+        `section[data-section-id="${sectionIdentifier}"]`
+      );
+    }
+    function promiseSectionShown(sectionIdentifier) {
+      return ContentTaskUtils.waitForMutationCondition(
+        content.document.querySelector("main"),
+        { childList: true, subtree: true },
+        () => getSection(sectionIdentifier)
+      );
+    }
     const TOPSITES_PREF = "browser.newtabpage.activity-stream.feeds.topsites";
     const HIGHLIGHTS_PREF =
       "browser.newtabpage.activity-stream.feeds.section.highlights";
@@ -36,26 +48,17 @@ test_newtab({
     let shortcutsSwitch = content.document.querySelector(
       "#shortcuts-section .switch"
     );
-    let shortcutsSection = content.document.querySelector(
-      "section[data-section-id='topsites']"
-    );
     Assert.ok(
       !Services.prefs.getBoolPref(TOPSITES_PREF),
       "Topsites are turned off"
     );
-    Assert.ok(!shortcutsSection, "Shortcuts section is not rendered");
+    Assert.ok(!getSection("topsites"), "Shortcuts section is not rendered");
 
-    let prefPromise = ContentTaskUtils.waitForCondition(
-      () => Services.prefs.getBoolPref(TOPSITES_PREF),
-      "TopSites pref is turned on"
-    );
+    let sectionShownPromise = promiseSectionShown("topsites");
     shortcutsSwitch.click();
-    await prefPromise;
+    await sectionShownPromise;
 
-    Assert.ok(
-      content.document.querySelector("section[data-section-id='topsites']"),
-      "Shortcuts section is rendered"
-    );
+    Assert.ok(getSection("topsites"), "Shortcuts section is rendered");
 
     // Test that clicking the pocket toggle will make the pocket section appear on the newtab page
     let pocketSwitch = content.document.querySelector(
@@ -65,22 +68,13 @@ test_newtab({
       !Services.prefs.getBoolPref(TOPSTORIES_PREF),
       "Pocket pref is turned off"
     );
-    Assert.ok(
-      !content.document.querySelector("section[data-section-id='topstories']"),
-      "Pocket section is not rendered"
-    );
+    Assert.ok(!getSection("topstories"), "Pocket section is not rendered");
 
-    prefPromise = ContentTaskUtils.waitForCondition(
-      () => Services.prefs.getBoolPref(TOPSTORIES_PREF),
-      "Pocket pref is turned on"
-    );
+    sectionShownPromise = promiseSectionShown("topstories");
     pocketSwitch.click();
-    await prefPromise;
+    await sectionShownPromise;
 
-    Assert.ok(
-      content.document.querySelector("section[data-section-id='topstories']"),
-      "Pocket section is rendered"
-    );
+    Assert.ok(getSection("topstories"), "Pocket section is rendered");
 
     // Test that clicking the recent activity toggle will make the recent activity section appear on the newtab page
     let highlightsSwitch = content.document.querySelector(
@@ -90,22 +84,13 @@ test_newtab({
       !Services.prefs.getBoolPref(HIGHLIGHTS_PREF),
       "Highlights pref is turned off"
     );
-    Assert.ok(
-      !content.document.querySelector("section[data-section-id='highlights']"),
-      "Highlights section is not rendered"
-    );
+    Assert.ok(!getSection("highlights"), "Highlights section is not rendered");
 
-    prefPromise = ContentTaskUtils.waitForCondition(
-      () => Services.prefs.getBoolPref(HIGHLIGHTS_PREF),
-      "Highlights pref is turned on"
-    );
+    sectionShownPromise = promiseSectionShown("highlights");
     highlightsSwitch.click();
-    await prefPromise;
+    await sectionShownPromise;
 
-    Assert.ok(
-      content.document.querySelector("section[data-section-id='highlights']"),
-      "Highlights section is rendered"
-    );
+    Assert.ok(getSection("highlights"), "Highlights section is rendered");
   },
   async after() {
     Services.prefs.clearUserPref(
