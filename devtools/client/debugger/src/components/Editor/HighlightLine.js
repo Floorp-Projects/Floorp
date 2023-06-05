@@ -22,7 +22,7 @@ function isDebugLine(selectedFrame, selectedLocation) {
   }
 
   return (
-    selectedFrame.location.source.id == selectedLocation.source.id &&
+    selectedFrame.location.sourceId == selectedLocation.sourceId &&
     selectedFrame.location.line == selectedLocation.line
   );
 }
@@ -31,7 +31,7 @@ function isDocumentReady(selectedLocation, selectedSourceTextContent) {
   return (
     selectedLocation &&
     selectedSourceTextContent &&
-    hasDocument(selectedLocation.source.id)
+    hasDocument(selectedLocation.sourceId)
   );
 }
 
@@ -71,8 +71,8 @@ export class HighlightLine extends Component {
   }
 
   shouldSetHighlightLine(selectedLocation, selectedSourceTextContent) {
-    const { line } = selectedLocation;
-    const editorLine = toEditorLine(selectedLocation.source.id, line);
+    const { sourceId, line } = selectedLocation;
+    const editorLine = toEditorLine(sourceId, line);
 
     if (!isDocumentReady(selectedLocation, selectedSourceTextContent)) {
       return false;
@@ -112,7 +112,7 @@ export class HighlightLine extends Component {
   }
 
   setHighlightLine(selectedLocation, selectedFrame, selectedSourceTextContent) {
-    const { line } = selectedLocation;
+    const { sourceId, line } = selectedLocation;
     if (
       !this.shouldSetHighlightLine(selectedLocation, selectedSourceTextContent)
     ) {
@@ -120,7 +120,6 @@ export class HighlightLine extends Component {
     }
 
     this.isStepping = false;
-    const sourceId = selectedLocation.source.id;
     const editorLine = toEditorLine(sourceId, line);
     this.previousEditorLine = editorLine;
 
@@ -158,8 +157,7 @@ export class HighlightLine extends Component {
       return;
     }
 
-    const { line } = selectedLocation;
-    const sourceId = selectedLocation.source.id;
+    const { line, sourceId } = selectedLocation;
     const editorLine = toEditorLine(sourceId, line);
     const doc = getDocument(sourceId);
     doc.removeLineClass(editorLine, "wrap", "highlight-line");

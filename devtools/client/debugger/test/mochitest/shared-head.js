@@ -441,20 +441,20 @@ function assertPausedAtSourceAndLine(
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 
   const frames = dbg.selectors.getCurrentThreadFrames();
-  const selectedSource = dbg.selectors.getSelectedSource();
+  const source = dbg.selectors.getSelectedSource();
 
   // WASM support is limited when we are on the generated binary source
-  if (isWasmBinarySource(selectedSource)) {
+  if (isWasmBinarySource(source)) {
     return;
   }
 
   ok(frames.length >= 1, "Got at least one frame");
 
   // Lets make sure we can assert both original and generated file locations when needed
-  const { source, line, column } = isGeneratedId(expectedSourceId)
+  const { sourceId, line, column } = isGeneratedId(expectedSourceId)
     ? frames[0].generatedLocation
     : frames[0].location;
-  is(source.id, expectedSourceId, "Frame has correct source");
+  is(sourceId, expectedSourceId, "Frame has correct source");
   is(
     line,
     expectedLine,
@@ -590,6 +590,7 @@ function isSelectedFrameSelected(dbg, state) {
 
   // Make sure the source text is completely loaded for the
   // source we are paused in.
+  const sourceId = frame.location.sourceId;
   const source = dbg.selectors.getSelectedSource();
   const sourceTextContent = dbg.selectors.getSelectedSourceTextContent();
 
@@ -597,7 +598,7 @@ function isSelectedFrameSelected(dbg, state) {
     return false;
   }
 
-  return source.id == frame.location.source.id;
+  return source.id == sourceId;
 }
 
 /**
@@ -1003,7 +1004,7 @@ function getFirstBreakpointColumn(dbg, source, line) {
 
 function isMatchingLocation(location1, location2) {
   return (
-    location1?.source.id == location2?.source.id &&
+    location1?.sourceId == location2?.sourceId &&
     location1?.line == location2?.line &&
     location1?.column == location2?.column
   );
@@ -1014,7 +1015,7 @@ function getBreakpointForLocation(dbg, location) {
     return undefined;
   }
 
-  const isGeneratedSource = isGeneratedId(location.source.id);
+  const isGeneratedSource = isGeneratedId(location.sourceId);
   return dbg.selectors.getBreakpointsList().find(bp => {
     const loc = isGeneratedSource ? bp.generatedLocation : bp.location;
     return isMatchingLocation(loc, location);
@@ -1064,6 +1065,7 @@ function disableBreakpoint(dbg, source, line, column) {
   column = column || getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
+    sourceUrl: source.url,
     line,
     column,
   });
@@ -1260,6 +1262,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   column = column || getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
+    sourceUrl: source.url,
     line,
     column,
   });

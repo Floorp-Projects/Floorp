@@ -367,11 +367,13 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 12,
         line: 34,
+        sourceId: "foo",
         source: {
           id: "foo",
         },
         sourceActorId: undefined,
         sourceActor: null,
+        sourceUrl: "",
       });
     });
 
@@ -394,11 +396,13 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 12,
         line: 34,
+        sourceId,
         source: {
           id: sourceId,
         },
         sourceActorId: undefined,
         sourceActor: null,
+        sourceUrl: "",
       });
     });
 
@@ -506,10 +510,12 @@ describe("QuickOpenModal", () => {
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: undefined,
+        sourceId: id,
         line: 0,
         source: { id },
         sourceActorId: undefined,
         sourceActor: null,
+        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -540,9 +546,11 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: undefined,
         line: 0,
+        sourceId: id,
         source: { id },
         sourceActorId: undefined,
         sourceActor: null,
+        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -573,9 +581,11 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 4,
         line: 3,
+        sourceId: id,
         source: { id },
         sourceActorId: undefined,
         sourceActor: null,
+        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });

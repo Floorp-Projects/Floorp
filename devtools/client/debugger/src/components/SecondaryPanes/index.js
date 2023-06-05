@@ -200,7 +200,7 @@ class SecondaryPanes extends Component {
 
     if (
       !selectedFrame ||
-      isGeneratedId(selectedFrame.location.source.id) ||
+      isGeneratedId(selectedFrame.location.sourceId) ||
       source?.isPrettyPrinted
     ) {
       return null;

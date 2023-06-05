@@ -17,7 +17,7 @@ export async function loadRangeMetadata(
   { sourceMapLoader }
 ) {
   const originalRanges = await sourceMapLoader.getOriginalRanges(
-    location.source.id
+    location.sourceId
   );
 
   const sortedOriginalAstBindings = [];
