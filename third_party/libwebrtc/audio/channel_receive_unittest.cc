@@ -12,8 +12,12 @@
 
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/mock_audio_device.h"
+#include "modules/rtp_rtcp/source/byte_io.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -22,29 +26,70 @@
 
 namespace webrtc {
 namespace voe {
+namespace {
 
-TEST(ChannelReceiveTest, CreateAndDestroy) {
-  GlobalSimulatedTimeController time_controller(Timestamp::Seconds(5555));
-  uint32_t local_ssrc = 1111;
-  uint32_t remote_ssrc = 2222;
-  webrtc::CryptoOptions crypto_options;
-  rtc::scoped_refptr<test::MockAudioDeviceModule> audio_device_module =
-      test::MockAudioDeviceModule::CreateNice();
-  MockTransport transport;
-  auto channel = CreateChannelReceive(
-      time_controller.GetClock(),
-      /* neteq_factory= */ nullptr, audio_device_module.get(), &transport,
-      /* rtc_event_log= */ nullptr, local_ssrc, remote_ssrc,
-      /* jitter_buffer_max_packets= */ 0,
-      /* jitter_buffer_fast_playout= */ false,
-      /* jitter_buffer_min_delay_ms= */ 0,
-      /* enable_non_sender_rtt= */ false,
-      /* decoder_factory= */ nullptr,
-      /* codec_pair_id= */ absl::nullopt,
-      /* frame_decryptor_interface= */ nullptr, crypto_options,
-      /* frame_transformer= */ nullptr);
-  EXPECT_TRUE(!!channel);
+using ::testing::NiceMock;
+using ::testing::NotNull;
+using ::testing::Test;
+
+constexpr uint32_t kLocalSsrc = 1111;
+constexpr uint32_t kRemoteSsrc = 2222;
+
+class ChannelReceiveTest : public Test {
+ public:
+  ChannelReceiveTest()
+      : time_controller_(Timestamp::Seconds(5555)),
+        audio_device_module_(test::MockAudioDeviceModule::CreateStrict()) {}
+
+  std::unique_ptr<ChannelReceiveInterface> CreateTestChannelReceive() {
+    CryptoOptions crypto_options;
+    return CreateChannelReceive(
+        time_controller_.GetClock(),
+        /* neteq_factory= */ nullptr, audio_device_module_.get(), &transport_,
+        &event_log_, kLocalSsrc, kRemoteSsrc,
+        /* jitter_buffer_max_packets= */ 0,
+        /* jitter_buffer_fast_playout= */ false,
+        /* jitter_buffer_min_delay_ms= */ 0,
+        /* enable_non_sender_rtt= */ false,
+        /* decoder_factory= */ nullptr,
+        /* codec_pair_id= */ absl::nullopt,
+        /* frame_decryptor_interface= */ nullptr, crypto_options,
+        /* frame_transformer= */ nullptr);
+  }
+
+  NtpTime NtpNow() { return time_controller_.GetClock()->CurrentNtpTime(); }
+
+ protected:
+  GlobalSimulatedTimeController time_controller_;
+  rtc::scoped_refptr<test::MockAudioDeviceModule> audio_device_module_;
+  MockTransport transport_;
+  NiceMock<MockRtcEventLog> event_log_;
+};
+
+TEST_F(ChannelReceiveTest, CreateAndDestroy) {
+  auto channel = CreateTestChannelReceive();
+  EXPECT_THAT(channel, NotNull());
 }
 
+TEST_F(ChannelReceiveTest, ReceiveReportGeneratedOnTime) {
+  auto channel = CreateTestChannelReceive();
+  channel->SetReceiveCodecs({{10, {"L16", 44100, 1}}});
+
+  bool receiver_report_sent = false;
+  EXPECT_CALL(transport_, SendRtcp)
+      .WillRepeatedly([&](const uint8_t* packet, size_t length) {
+        if (length >= 2 && packet[1] == rtcp::ReceiverReport::kPacketType) {
+          receiver_report_sent = true;
+        }
+        return true;
+      });
+  // RFC 3550 section 6.2 mentions 5 seconds as a reasonable expectation
+  // for the interval between RTCP packets.
+  time_controller_.AdvanceTime(TimeDelta::Seconds(5));
+
+  EXPECT_TRUE(receiver_report_sent);
+}
+
+}  // namespace
 }  // namespace voe
 }  // namespace webrtc
