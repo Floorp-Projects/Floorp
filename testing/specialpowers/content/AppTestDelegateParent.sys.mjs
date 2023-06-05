@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
-// Each app needs to implement this
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppUiTestDelegate: "resource://testing-common/AppUiTestDelegate.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  // Each app needs to implement this
+  AppUiTestDelegate: "resource://testing-common/AppUiTestDelegate.sys.mjs",
 });
 
 export class AppTestDelegateParent extends JSWindowActorParent {
