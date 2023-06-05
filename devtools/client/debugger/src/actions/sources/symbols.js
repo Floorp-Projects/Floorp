@@ -21,7 +21,7 @@ async function doSetSymbols(
     type: "SET_SYMBOLS",
     cx,
     location,
-    [PROMISE]: parserWorker.getSymbols(location.sourceId),
+    [PROMISE]: parserWorker.getSymbols(location.source.id),
   });
 }
 
@@ -38,7 +38,7 @@ export const setSymbols = memoizeableAction("setSymbols", {
 
     return fulfilled(symbols);
   },
-  createKey: ({ location }) => location.sourceId,
+  createKey: ({ location }) => location.source.id,
   action: ({ cx, location }, thunkArgs) =>
     doSetSymbols(cx, location, thunkArgs),
 });

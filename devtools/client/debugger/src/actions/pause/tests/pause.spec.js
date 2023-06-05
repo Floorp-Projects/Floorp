@@ -86,7 +86,7 @@ function createPauseInfo(
 ) {
   const frames = [
     makeFrame(
-      { id: mockFrameId, sourceId: frameLocation.sourceId },
+      { id: mockFrameId, sourceId: frameLocation.source.id },
       {
         location: frameLocation,
         generatedLocation: frameLocation,
@@ -100,6 +100,14 @@ function createPauseInfo(
     frames,
     loadedObjects: [],
     why: makeWhyNormal(),
+  };
+}
+
+function debuggerToSourceMapLocation(l) {
+  return {
+    sourceId: l.source.id,
+    line: l.line,
+    column: l.column,
   };
 }
 
@@ -209,70 +217,13 @@ describe("pause", () => {
       ).toEqual(["b", "a"]);
     });
 
-    it("maps frame locations and names to original source", async () => {
-      const sourceMapLoaderMock = {
-        getOriginalLocation: () => Promise.resolve(originalLocation),
-        getOriginalLocations: async items => items,
-        getOriginalSourceText: async () => ({
-          text: "\n\nfunction fooOriginal() {\n  return -5;\n}",
-          contentType: "text/javascript",
-        }),
-        getGeneratedLocation: async location => location,
-      };
-
-      const client = { ...mockCommandClient };
-      const store = createStore(client, {}, sourceMapLoaderMock);
-      const { dispatch, getState } = store;
-
-      const originalSource = await dispatch(
-        actions.newGeneratedSource(makeSource("foo-original"))
-      );
-
-      const originalLocation = createLocation({
-        source: originalSource,
-        line: 3,
-        column: 0,
-        sourceActor: selectors.getFirstSourceActorForGeneratedSource(
-          getState(),
-          originalSource.id
-        ),
-      });
-
-      const generatedSource = await dispatch(
-        actions.newGeneratedSource(makeSource("foo"))
-      );
-      const generatedLocation = createLocation({
-        source: generatedSource,
-        line: 1,
-        column: 0,
-        sourceActor: selectors.getFirstSourceActorForGeneratedSource(
-          getState(),
-          generatedSource.id
-        ),
-      });
-      const mockPauseInfo = createPauseInfo(generatedLocation);
-
-      const { frames } = mockPauseInfo;
-      client.getFrames = async () => frames;
-
-      await dispatch(actions.paused(mockPauseInfo));
-      expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
-        {
-          id: mockFrameId,
-          generatedLocation,
-          location: originalLocation,
-          originalDisplayName: "fooOriginal",
-          scope: { bindings: { arguments: [], variables: {} } },
-          thread: "FakeThread",
-        },
-      ]);
-    });
-
     it("maps frame to original frames", async () => {
       const sourceMapLoaderMock = {
         getOriginalStackFrames: loc => Promise.resolve(originStackFrames),
-        getOriginalLocation: () => Promise.resolve(originalLocation),
-        getOriginalLocations: async items => items,
+        getOriginalLocation: () =>
+          Promise.resolve(debuggerToSourceMapLocation(originalLocation)),
+        getOriginalLocations: async items =>
+          items.map(debuggerToSourceMapLocation),
         getOriginalSourceText: async () => ({
           text: "fn fooBar() {}\nfn barZoo() { fooBar() }",
           contentType: "text/rust",
@@ -311,10 +262,6 @@ describe("pause", () => {
         source: originalSource,
         line: 1,
         column: 1,
-        sourceActor: selectors.getFirstSourceActorForGeneratedSource(
-          getState(),
-          originalSource.id
-        ),
       });
       const originalLocation2 = createLocation({
         source: originalSource,

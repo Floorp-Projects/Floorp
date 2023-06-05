@@ -9,9 +9,9 @@ export * from "./breakpointPositions";
 
 // The ID for a Breakpoint is derived from its location in its Source.
 export function makeBreakpointId(location) {
-  const { sourceId, line, column } = location;
+  const { source, line, column } = location;
   const columnString = column || "";
-  return `${sourceId}:${line}:${columnString}`;
+  return `${source.id}:${line}:${columnString}`;
 }
 
 export function makeBreakpointServerLocationId(breakpointServerLocation) {
