@@ -74,11 +74,7 @@ export class FormHistoryStartup {
     const results = await lazy.FormHistory.getAutoCompleteResults(
       searchString,
       params,
-      (_row, cancel) => {
-        if (this._queryInstance != instance) {
-          cancel();
-        }
-      }
+      () => this._queryInstance != instance
     );
 
     if (this._queryInstance == instance) {
