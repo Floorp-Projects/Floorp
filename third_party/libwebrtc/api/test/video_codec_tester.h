@@ -14,7 +14,8 @@
 #include <memory>
 
 #include "absl/functional/any_invocable.h"
-#include "api/test/videocodec_test_stats.h"
+#include "absl/types/optional.h"
+#include "api/test/video_codec_stats.h"
 #include "api/video/encoded_image.h"
 #include "api/video/resolution.h"
 #include "api/video/video_frame.h"
@@ -104,7 +105,7 @@ class VideoCodecTester {
   // Pulls coded video frames from `video_source` and passes them to `decoder`.
   // Returns `VideoCodecTestStats` object that contains collected per-frame
   // metrics.
-  virtual std::unique_ptr<VideoCodecTestStats> RunDecodeTest(
+  virtual std::unique_ptr<VideoCodecStats> RunDecodeTest(
       std::unique_ptr<CodedVideoSource> video_source,
       std::unique_ptr<Decoder> decoder,
       const DecoderSettings& decoder_settings) = 0;
@@ -112,7 +113,7 @@ class VideoCodecTester {
   // Pulls raw video frames from `video_source` and passes them to `encoder`.
   // Returns `VideoCodecTestStats` object that contains collected per-frame
   // metrics.
-  virtual std::unique_ptr<VideoCodecTestStats> RunEncodeTest(
+  virtual std::unique_ptr<VideoCodecStats> RunEncodeTest(
       std::unique_ptr<RawVideoSource> video_source,
       std::unique_ptr<Encoder> encoder,
       const EncoderSettings& encoder_settings) = 0;
@@ -120,7 +121,7 @@ class VideoCodecTester {
   // Pulls raw video frames from `video_source`, passes them to `encoder` and
   // then passes encoded frames to `decoder`. Returns `VideoCodecTestStats`
   // object that contains collected per-frame metrics.
-  virtual std::unique_ptr<VideoCodecTestStats> RunEncodeDecodeTest(
+  virtual std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
       std::unique_ptr<RawVideoSource> video_source,
       std::unique_ptr<Encoder> encoder,
       std::unique_ptr<Decoder> decoder,

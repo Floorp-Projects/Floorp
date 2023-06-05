@@ -27,7 +27,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7
  create mode 100644 api/rtp_sender_setparameters_callback.h
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 3f313e2743..56afc5efce 100644
+index c3055be3c2..fd0701c63b 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {

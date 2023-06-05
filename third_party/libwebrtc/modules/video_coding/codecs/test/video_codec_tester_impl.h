@@ -25,17 +25,17 @@ class VideoCodecTesterImpl : public VideoCodecTester {
   VideoCodecTesterImpl();
   explicit VideoCodecTesterImpl(TaskQueueFactory* task_queue_factory);
 
-  std::unique_ptr<VideoCodecTestStats> RunDecodeTest(
+  std::unique_ptr<VideoCodecStats> RunDecodeTest(
       std::unique_ptr<CodedVideoSource> video_source,
       std::unique_ptr<Decoder> decoder,
       const DecoderSettings& decoder_settings) override;
 
-  std::unique_ptr<VideoCodecTestStats> RunEncodeTest(
+  std::unique_ptr<VideoCodecStats> RunEncodeTest(
       std::unique_ptr<RawVideoSource> video_source,
       std::unique_ptr<Encoder> encoder,
       const EncoderSettings& encoder_settings) override;
 
-  std::unique_ptr<VideoCodecTestStats> RunEncodeDecodeTest(
+  std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
       std::unique_ptr<RawVideoSource> video_source,
       std::unique_ptr<Encoder> encoder,
       std::unique_ptr<Decoder> decoder,
