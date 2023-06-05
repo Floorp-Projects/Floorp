@@ -17,10 +17,11 @@ class MOZ_STACK_CLASS SynchronousTask {
   friend class AutoCompleteTask;
 
  public:
-  explicit SynchronousTask(const char* name)
-      : mMonitor(name), mAutoEnter(mMonitor), mDone(false) {}
+  explicit SynchronousTask(const char* name) : mMonitor(name), mDone(false) {}
 
   nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT) {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+
     // For indefinite timeouts, wait in a while loop to handle spurious
     // wakeups.
     while (aInterval == PR_INTERVAL_NO_TIMEOUT && !mDone) {
@@ -46,25 +47,23 @@ class MOZ_STACK_CLASS SynchronousTask {
 
  private:
   void Complete() {
+    ReentrantMonitorAutoEnter lock(mMonitor);
     mDone = true;
     mMonitor.NotifyAll();
   }
 
  private:
   ReentrantMonitor mMonitor MOZ_UNANNOTATED;
-  ReentrantMonitorAutoEnter mAutoEnter;
   bool mDone;
 };
 
 class MOZ_STACK_CLASS AutoCompleteTask final {
  public:
-  explicit AutoCompleteTask(SynchronousTask* aTask)
-      : mTask(aTask), mAutoEnter(aTask->mMonitor) {}
+  explicit AutoCompleteTask(SynchronousTask* aTask) : mTask(aTask) {}
   ~AutoCompleteTask() { mTask->Complete(); }
 
  private:
   SynchronousTask* mTask;
-  ReentrantMonitorAutoEnter mAutoEnter;
 };
 
 }  // namespace layers
