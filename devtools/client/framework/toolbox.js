@@ -4656,6 +4656,12 @@ Toolbox.prototype = {
         // the host title a bit in order for the event listener in targetCommand to be
         // executed.
         setTimeout(() => {
+          if (resource.targetFront.isDestroyed()) {
+            // The resource's target might have been destroyed in between and
+            // would no longer have a valid actorID available.
+            return;
+          }
+
           this._updateFrames({
             frameData: {
               id: resource.targetFront.actorID,
