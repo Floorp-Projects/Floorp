@@ -186,10 +186,15 @@ async function testOpeningLargeMinifiedFile(dbg, tab) {
   const fileFirstChars = `(()=>{var e,t,n,r,o={82603`;
 
   dump("Open minified.js (large minified file)\n");
+  const fullTest = runTest(
+    "custom.jsdebugger.open-large-minified-file.full-selection.DAMP"
+  );
   const test = runTest("custom.jsdebugger.open-large-minified-file.DAMP");
-  await selectSource(dbg, file);
+  const onSelected = selectSource(dbg, file);
   await waitForText(dbg, fileFirstChars);
   test.done();
+  await onSelected;
+  fullTest.done();
 
   dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [file]);
 
