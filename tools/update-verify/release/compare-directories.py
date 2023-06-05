@@ -119,11 +119,12 @@ def walk_dir(path):
 
 
 def compare_listings(
-    source_list, target_list, label, source_dir, target_dir, ignore_missing=()
+    source_list, target_list, label, source_dir, target_dir, ignore_missing=None
 ):
     obj1 = set(source_list)
     obj2 = set(target_list)
     difference_found = False
+    ignore_missing = ignore_missing or ()
 
     left_diff = obj1 - obj2
     if left_diff:
