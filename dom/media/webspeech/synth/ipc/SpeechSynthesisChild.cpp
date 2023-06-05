@@ -52,12 +52,6 @@ mozilla::ipc::IPCResult SpeechSynthesisChild::RecvNotifyVoicesChanged() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult SpeechSynthesisChild::RecvNotifyVoicesError(
-    const nsAString& aError) {
-  nsSynthVoiceRegistry::RecvNotifyVoicesError(aError);
-  return IPC_OK();
-}
-
 PSpeechSynthesisRequestChild*
 SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(
     const nsAString& aText, const nsAString& aLang, const nsAString& aUri,

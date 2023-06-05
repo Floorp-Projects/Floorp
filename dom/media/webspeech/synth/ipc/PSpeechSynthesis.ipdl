@@ -36,8 +36,6 @@ child:
 
     async NotifyVoicesChanged();
 
-    async NotifyVoicesError(nsString aError);
-
     async InitialVoicesAndState(RemoteVoice[] aVoices, nsString[] aDefaults,
                                 bool aIsSpeaking);
 

@@ -752,20 +752,6 @@ let JSWINDOWACTORS = {
     matches: ["about:studies*"],
   },
 
-  SpeechDispatcher: {
-    parent: {
-      esModuleURI: "resource:///actors/SpeechDispatcherParent.sys.mjs",
-    },
-
-    child: {
-      esModuleURI: "resource:///actors/SpeechDispatcherChild.sys.mjs",
-      observers: ["chrome-synth-voices-error"],
-    },
-
-    messageManagerGroups: ["browsers"],
-    allFrames: true,
-  },
-
   ASRouter: {
     parent: {
       esModuleURI: "resource:///actors/ASRouterParent.sys.mjs",
