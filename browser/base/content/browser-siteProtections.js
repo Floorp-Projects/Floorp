@@ -1343,6 +1343,7 @@ var gProtectionsHandler = {
       let wrapper = document.getElementById("template-protections-popup");
       this._protectionsPopup = wrapper.content.firstElementChild;
       wrapper.replaceWith(wrapper.content);
+      window.ensureCustomElements("moz-support-link");
 
       this.maybeSetMilestoneCounterText();
 
@@ -1351,10 +1352,6 @@ var gProtectionsHandler = {
       }
 
       let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-      document.getElementById(
-        "protections-popup-sendReportView-learn-more"
-      ).href = baseURL + "blocking-breakage";
-
       let shimAllowLearnMoreURL =
         baseURL + "smartblock-enhanced-tracking-protection";
 
