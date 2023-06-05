@@ -179,11 +179,11 @@ function run_test() {
     },
     {
       input: "this is a smiley :)",
-      results: ["😄"],
+      results: ["🙂"],
     },
     {
       input: "this is a smiley :-)",
-      results: ["😄"],
+      results: ["🙂"],
     },
     {
       input: "this is a smiley :-(",
