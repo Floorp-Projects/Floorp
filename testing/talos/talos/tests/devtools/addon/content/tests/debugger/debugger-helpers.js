@@ -17,7 +17,7 @@ const {
  * have been simplified. We may want to consider unifying them in the future
  */
 
-const DEBUGGER_POLLING_INTERVAL = 50;
+const DEBUGGER_POLLING_INTERVAL = 25;
 
 function waitForState(dbg, predicate, msg) {
   return new Promise(resolve => {
@@ -66,6 +66,13 @@ function waitForDispatch(dbg, type) {
 async function waitUntil(predicate, msg) {
   if (msg) {
     dump(`Waiting until: ${msg}\n`);
+  }
+  const earlyPredicateResult = predicate();
+  if (earlyPredicateResult) {
+    if (msg) {
+      dump(`Finished Waiting until: ${msg} (was immediately true)\n`);
+    }
+    return earlyPredicateResult;
   }
   return new Promise(resolve => {
     const timer = setInterval(() => {
