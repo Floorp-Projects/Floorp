@@ -125,7 +125,7 @@ add_task(async function duplicateKeywords() {
   let suggestions = [
     {
       title: "suggestion 0",
-      keywords: ["a", "b", "c"],
+      keywords: ["a", "a", "a", "b", "b", "c"],
     },
     {
       title: "suggestion 1",
@@ -137,7 +137,7 @@ add_task(async function duplicateKeywords() {
     },
     {
       title: "suggestion 3",
-      keywords: ["f"],
+      keywords: ["f", "f"],
     },
   ];
 
@@ -152,6 +152,60 @@ add_task(async function duplicateKeywords() {
 
   let map = new SuggestionsMap();
   await map.add(suggestions);
+
+  for (let [keyword, indexes] of Object.entries(expectedIndexesByKeyword)) {
+    Assert.deepEqual(
+      map.get(keyword),
+      indexes.map(i => suggestions[i]),
+      "get() with keyword: " + keyword
+    );
+  }
+});
+
+add_task(async function mapKeywords() {
+  let suggestions = [
+    {
+      title: "suggestion 0",
+      keywords: ["a", "a", "a", "b", "b", "c"],
+    },
+    {
+      title: "suggestion 1",
+      keywords: ["b", "c", "d"],
+    },
+    {
+      title: "suggestion 2",
+      keywords: ["c", "d", "e"],
+    },
+    {
+      title: "suggestion 3",
+      keywords: ["f", "f"],
+    },
+  ];
+
+  let expectedIndexesByKeyword = {
+    a: [],
+    b: [],
+    c: [],
+    d: [],
+    e: [],
+    f: [],
+    ax: [0],
+    bx: [0, 1],
+    cx: [0, 1, 2],
+    dx: [1, 2],
+    ex: [2],
+    fx: [3],
+    fy: [3],
+    fz: [3],
+  };
+
+  let map = new SuggestionsMap();
+  await map.add(suggestions, keyword => {
+    if (keyword == "f") {
+      return [keyword + "x", keyword + "y", keyword + "z"];
+    }
+    return [keyword + "x"];
+  });
 
   for (let [keyword, indexes] of Object.entries(expectedIndexesByKeyword)) {
     Assert.deepEqual(

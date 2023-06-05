@@ -39,7 +39,7 @@ const REMOTE_SETTINGS_RESULTS = [
         icon: "https://example.com/first-addon.svg",
         title: "First Addon",
         rating: "4.7",
-        keywords: ["first", "1st"],
+        keywords: ["first", "1st", "two words", "a b c"],
         description: "Description for the First Addon",
         number_of_ratings: 1256,
         is_top_pick: true,
@@ -250,6 +250,22 @@ add_task(async function hideIfAlreadyInstalled() {
 add_task(async function remoteSettings() {
   const testCases = [
     {
+      input: "f",
+      expected: null,
+    },
+    {
+      input: "fi",
+      expected: null,
+    },
+    {
+      input: "fir",
+      expected: null,
+    },
+    {
+      input: "firs",
+      expected: null,
+    },
+    {
       input: "first",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
@@ -259,6 +275,110 @@ add_task(async function remoteSettings() {
     },
     {
       input: "1st",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "t",
+      expected: null,
+    },
+    {
+      input: "tw",
+      expected: null,
+    },
+    {
+      input: "two",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "two ",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "two w",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "two wo",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "two wor",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "two word",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "two words",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "a",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "a ",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "a b",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "a b ",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
+        source: "remote-settings",
+        isTopPick: true,
+      }),
+    },
+    {
+      input: "a b c",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
@@ -297,16 +417,10 @@ add_task(async function remoteSettings() {
         isTopPick: true,
       }),
     },
-    {
-      // Merino result.
-      input: "not rs",
-      expected: makeExpectedResult({
-        suggestion: MERINO_SUGGESTIONS[0],
-        source: "merino",
-        isTopPick: true,
-      }),
-    },
   ];
+
+  // Disable Merino so we trigger only remote settings suggestions.
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
 
   for (const { input, expected } of testCases) {
     await check_results({
@@ -314,9 +428,11 @@ add_task(async function remoteSettings() {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
-      matches: [expected],
+      matches: expected ? [expected] : [],
     });
   }
+
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
 });
 
 add_task(async function merinoIsTopPick() {
@@ -356,6 +472,226 @@ add_task(async function merinoIsTopPick() {
     ],
   });
 });
+
+// Tests "show less frequently" with the cap set in remote settings.
+add_task(async function showLessFrequently_rs() {
+  await doShowLessFrequentlyTest({
+    rs: {
+      show_less_frequently_cap: 3,
+    },
+    tests: [
+      {
+        showLessFrequentlyCount: 0,
+        canShowLessFrequently: true,
+        searches: {
+          f: false,
+          fi: false,
+          fir: false,
+          firs: false,
+          first: true,
+          t: false,
+          tw: false,
+          two: true,
+          "two ": true,
+          "two w": true,
+          "two wo": true,
+          "two wor": true,
+          "two word": true,
+          "two words": true,
+          a: true,
+          "a ": true,
+          "a b": true,
+          "a b ": true,
+          "a b c": true,
+        },
+      },
+      {
+        showLessFrequentlyCount: 1,
+        canShowLessFrequently: true,
+        searches: {
+          first: false,
+          two: false,
+          a: false,
+        },
+      },
+      {
+        showLessFrequentlyCount: 2,
+        canShowLessFrequently: true,
+        searches: {
+          "two ": false,
+          "a ": false,
+        },
+      },
+      {
+        showLessFrequentlyCount: 3,
+        canShowLessFrequently: false,
+        searches: {
+          "two w": false,
+          "a b": false,
+        },
+      },
+      {
+        showLessFrequentlyCount: 3,
+        canShowLessFrequently: false,
+        searches: {},
+      },
+    ],
+  });
+});
+
+// Tests "show less frequently" with the cap set in both Nimbus and remote
+// settings. Nimbus should override remote settings.
+add_task(async function showLessFrequently_nimbus() {
+  await doShowLessFrequentlyTest({
+    nimbus: {
+      addonsShowLessFrequentlyCap: 3,
+    },
+    rs: {
+      show_less_frequently_cap: 10,
+    },
+    tests: [
+      {
+        showLessFrequentlyCount: 0,
+        canShowLessFrequently: true,
+        searches: {
+          a: true,
+          "a ": true,
+          "a b": true,
+          "a b ": true,
+          "a b c": true,
+        },
+      },
+      {
+        showLessFrequentlyCount: 1,
+        canShowLessFrequently: true,
+        searches: {
+          a: false,
+        },
+      },
+      {
+        showLessFrequentlyCount: 2,
+        canShowLessFrequently: true,
+        searches: {
+          "a ": false,
+        },
+      },
+      {
+        showLessFrequentlyCount: 3,
+        canShowLessFrequently: false,
+        searches: {
+          "a b": false,
+        },
+      },
+      {
+        showLessFrequentlyCount: 3,
+        canShowLessFrequently: false,
+        searches: {},
+      },
+    ],
+  });
+});
+
+/**
+ * Does a group of searches, increments the `showLessFrequentlyCount`, and
+ * repeats until all groups are done. The cap can be set by remote settings
+ * config and/or Nimbus.
+ *
+ * @param {object} options
+ *   Options object.
+ * @param {object} options.tests
+ *   An array where each item describes a group of searches to perform and
+ *   expected state. Each item should look like this:
+ *   `{ showLessFrequentlyCount, canShowLessFrequently, searches }`
+ *
+ *   {number} showLessFrequentlyCount
+ *     The expected value of `showLessFrequentlyCount` before the group of
+ *     searches is performed.
+ *   {boolean} canShowLessFrequently
+ *     The expected value of `canShowLessFrequently` before the group of
+ *     searches is performed.
+ *   {object} searches
+ *     An object that maps each search string to a boolean that indicates
+ *     whether the first remote settings suggestion should be triggered by the
+ *     search string. `searches` objects are cumulative: The intended use is to
+ *     pass a large initial group of searches in the first search group, and
+ *     then each following `searches` is a diff against the previous.
+ * @param {object} options.rs
+ *   The remote settings config to set.
+ * @param {object} options.nimbus
+ *   The Nimbus variables to set.
+ */
+async function doShowLessFrequentlyTest({ tests, rs = {}, nimbus = {} }) {
+  // Disable Merino so we trigger only remote settings suggestions.
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+
+  // We'll be testing with the first remote settings suggestion.
+  let suggestion = REMOTE_SETTINGS_RESULTS[0].attachment[0];
+
+  let addonSuggestions = QuickSuggest.getFeature("AddonSuggestions");
+
+  // Set Nimbus variables and RS config.
+  let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature(nimbus);
+  await QuickSuggestTestUtils.withConfig({
+    config: rs,
+    callback: async () => {
+      let cumulativeSearches = {};
+
+      for (let {
+        showLessFrequentlyCount,
+        canShowLessFrequently,
+        searches,
+      } of tests) {
+        Assert.equal(
+          addonSuggestions.showLessFrequentlyCount,
+          showLessFrequentlyCount,
+          "showLessFrequentlyCount should be correct initially"
+        );
+        Assert.equal(
+          UrlbarPrefs.get("addons.showLessFrequentlyCount"),
+          showLessFrequentlyCount,
+          "Pref should be correct initially"
+        );
+        Assert.equal(
+          addonSuggestions.canShowLessFrequently,
+          canShowLessFrequently,
+          "canShowLessFrequently should be correct initially"
+        );
+
+        // Merge the current `searches` object into the cumulative object.
+        cumulativeSearches = {
+          ...cumulativeSearches,
+          ...searches,
+        };
+
+        for (let [searchString, isExpected] of Object.entries(
+          cumulativeSearches
+        )) {
+          await check_results({
+            context: createContext(searchString, {
+              providers: [UrlbarProviderQuickSuggest.name],
+              isPrivate: false,
+            }),
+            matches: !isExpected
+              ? []
+              : [
+                  makeExpectedResult({
+                    suggestion,
+                    source: "remote-settings",
+                    isTopPick: true,
+                  }),
+                ],
+          });
+        }
+
+        addonSuggestions.incrementShowLessFrequentlyCount();
+      }
+    },
+  });
+
+  await cleanUpNimbus();
+  UrlbarPrefs.clear("addons.showLessFrequentlyCount");
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+}
 
 function makeExpectedResult({ suggestion, source, isTopPick }) {
   let rating;
