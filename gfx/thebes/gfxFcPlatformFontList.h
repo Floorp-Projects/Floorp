@@ -352,9 +352,11 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
       MOZ_REQUIRES(mLock) override;
 
   enum class DistroID : int8_t {
-    Unknown = 0,
-    Ubuntu = 1,
-    Fedora = 2,
+    Unknown,
+    Ubuntu_any,
+    Ubuntu_20,
+    Ubuntu_22,
+    Fedora,
     // To be extended with any distros that ship a useful base set of fonts
     // that we want to explicitly support.
   };
