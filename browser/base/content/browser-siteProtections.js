@@ -1350,16 +1350,6 @@ var gProtectionsHandler = {
       for (let blocker of Object.values(this.blockers)) {
         blocker.updateCategoryItem();
       }
-
-      let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-      let shimAllowLearnMoreURL =
-        baseURL + "smartblock-enhanced-tracking-protection";
-
-      document
-        .querySelectorAll(".protections-popup-shim-allow-learn-more")
-        .forEach(label => {
-          label.href = shimAllowLearnMoreURL;
-        });
     }
   },
 
