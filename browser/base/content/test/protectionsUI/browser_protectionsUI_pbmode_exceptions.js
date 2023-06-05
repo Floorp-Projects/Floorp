@@ -53,8 +53,10 @@ function testTrackingPage() {
     "icon box shows no exception"
   );
   is(
-    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
-    gNavigatorBundle.getString("trackingProtection.icon.activeTooltip2"),
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
+      "data-l10n-id"
+    ),
+    "tracking-protection-icon-active",
     "correct tooltip"
   );
 }
@@ -70,8 +72,10 @@ function testTrackingPageUnblocked() {
     "shield shows exception"
   );
   is(
-    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
-    gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip2"),
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
+      "data-l10n-id"
+    ),
+    "tracking-protection-icon-disabled",
     "correct tooltip"
   );
 
