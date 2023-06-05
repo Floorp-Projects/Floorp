@@ -4,15 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-/* exported PanelPopup, ViewPopup */
-
-var EXPORTED_SYMBOLS = ["BasePopup", "PanelPopup", "ViewPopup"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -22,15 +14,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { ExtensionCommon } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionCommon.sys.mjs"
-);
-const { ExtensionUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
+import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 var { DefaultWeakMap, promiseEvent } = ExtensionUtils;
 
@@ -69,7 +55,7 @@ XPCOMUtils.defineLazyGetter(lazy, "standaloneStylesheets", () => {
 
 const REMOTE_PANEL_ID = "webextension-remote-preload-panel";
 
-class BasePopup {
+export class BasePopup {
   constructor(
     extension,
     viewNode,
@@ -483,7 +469,7 @@ class BasePopup {
  */
 BasePopup.instances = new DefaultWeakMap(() => new WeakMap());
 
-class PanelPopup extends BasePopup {
+export class PanelPopup extends BasePopup {
   constructor(extension, document, popupURL, browserStyle) {
     let panel = document.createXULElement("panel");
     panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
@@ -533,7 +519,7 @@ class PanelPopup extends BasePopup {
   }
 }
 
-class ViewPopup extends BasePopup {
+export class ViewPopup extends BasePopup {
   constructor(
     extension,
     window,

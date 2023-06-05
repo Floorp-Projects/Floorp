@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["AppUiTestDelegate"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -111,4 +107,4 @@ class Delegate {
   }
 }
 
-var AppUiTestDelegate = new Delegate();
+export var AppUiTestDelegate = new Delegate();

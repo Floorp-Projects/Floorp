@@ -591,7 +591,7 @@ ExtensionTestCommon = class ExtensionTestCommon {
       //   - browserAction/pageAction.
       //   - tabs.create, tabs.update, tabs.remove (uses GeckoViewTabBridge).
       //   - downloads API
-      //   - browsingData API (via ExtensionBrowsingData.jsm).
+      //   - browsingData API (via ExtensionBrowsingData.sys.mjs).
       //
       // In xpcshell tests, the AddonManager is optional, so the AddonManager
       // cannot unconditionally be enabled.
