@@ -74,12 +74,8 @@ export class UITourChild extends JSWindowActorChild {
       return false;
     }
 
-    let principal = Services.scriptSecurityManager.principalWithOA(
-      this.document.nodePrincipal,
-      {}
-    );
     let permission = Services.perms.testPermissionFromPrincipal(
-      principal,
+      this.document.nodePrincipal,
       UITOUR_PERMISSION
     );
     if (permission == Services.perms.ALLOW_ACTION) {
