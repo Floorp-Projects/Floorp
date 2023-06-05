@@ -1049,6 +1049,11 @@ Although `unsafe` is used for test code to call `libc::abort()`, it has no `unsa
 It meets the criteria for safe-to-deploy.
 """
 
+[[audits.displaydoc]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.3 -> 0.2.4"
+
 [[audits.dogear]]
 who = "Sammy Khamis <skhamis@mozilla.com>"
 criteria = "safe-to-deploy"

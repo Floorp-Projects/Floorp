@@ -42,10 +42,10 @@ impl AttrsHelper {
     pub(crate) fn new(attrs: &[Attribute]) -> Self {
         let ignore_extra_doc_attributes = attrs
             .iter()
-            .any(|attr| attr.path.is_ident("ignore_extra_doc_attributes"));
+            .any(|attr| attr.path().is_ident("ignore_extra_doc_attributes"));
         let prefix_enum_doc_attributes = attrs
             .iter()
-            .any(|attr| attr.path.is_ident("prefix_enum_doc_attributes"));
+            .any(|attr| attr.path().is_ident("prefix_enum_doc_attributes"));
 
         Self {
             ignore_extra_doc_attributes,
@@ -54,7 +54,7 @@ impl AttrsHelper {
     }
 
     pub(crate) fn display(&self, attrs: &[Attribute]) -> Result<Option<Display>> {
-        let displaydoc_attr = attrs.iter().find(|attr| attr.path.is_ident("displaydoc"));
+        let displaydoc_attr = attrs.iter().find(|attr| attr.path().is_ident("displaydoc"));
 
         if let Some(displaydoc_attr) = displaydoc_attr {
             let lit = displaydoc_attr
@@ -71,7 +71,7 @@ impl AttrsHelper {
 
         let num_doc_attrs = attrs
             .iter()
-            .filter(|attr| attr.path.is_ident("doc"))
+            .filter(|attr| attr.path().is_ident("doc"))
             .count();
 
         if !self.ignore_extra_doc_attributes && num_doc_attrs > 1 {
@@ -79,17 +79,20 @@ impl AttrsHelper {
         }
 
         for attr in attrs {
-            if attr.path.is_ident("doc") {
-                let meta = attr.parse_meta()?;
-                let lit = match meta {
+            if attr.path().is_ident("doc") {
+                let lit = match &attr.meta {
                     Meta::NameValue(syn::MetaNameValue {
-                        lit: syn::Lit::Str(lit),
+                        value:
+                            syn::Expr::Lit(syn::ExprLit {
+                                lit: syn::Lit::Str(lit),
+                                ..
+                            }),
                         ..
                     }) => lit,
                     _ => unimplemented!(),
                 };
 
-                // Make an attempt and cleaning up multiline doc comments
+                // Make an attempt at cleaning up multiline doc comments.
                 let doc_str = lit
                     .value()
                     .lines()

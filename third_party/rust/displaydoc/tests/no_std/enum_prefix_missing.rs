@@ -29,7 +29,7 @@ enum TestType {
     Variant2,
 }
 
-static_assertions::assert_impl_all!(label; TestType, core::fmt::Display);
+static_assertions::assert_impl_all!(TestType: core::fmt::Display);
 
 #[cfg(feature = "std")]
 fn main() {}

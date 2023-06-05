@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+# [0.2.4] - 2022-05-02
+
+## Added
+- Updated `syn` dependency to 2.0
+- Support for empty enums
+- Implicitly require fmt::Display on all type parameters unless overridden
+
+## Changed
+- Bumped MSRV to 1.56
+
 # [0.2.3] - 2021-07-16
 ## Added
 - Added `#[displaydoc("..")]` attribute for overriding a doc comment
@@ -32,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lines are needed.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/yaahc/displaydoc/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/yaahc/displaydoc/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/yaahc/displaydoc/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/yaahc/displaydoc/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/yaahc/displaydoc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/yaahc/displaydoc/compare/v0.2.0...v0.2.1
