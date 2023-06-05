@@ -24,19 +24,27 @@ class RingBufferWriterServices final
     : public CanvasEventRingBuffer::WriterServices {
  public:
   explicit RingBufferWriterServices(RefPtr<CanvasChild> aCanvasChild)
-      : mCanvasChild(std::move(aCanvasChild)) {}
+      : mCanvasChild(aCanvasChild) {}
 
-  ~RingBufferWriterServices() final = default;
+  ~RingBufferWriterServices() override = default;
 
-  bool ReaderClosed() final {
+  bool ReaderClosed() override {
+    if (!mCanvasChild) {
+      return false;
+    }
     return !mCanvasChild->GetIPCChannel()->CanSend() ||
            ipc::ProcessChild::ExpectingShutdown();
   }
 
-  void ResumeReader() final { mCanvasChild->ResumeTranslation(); }
+  void ResumeReader() override {
+    if (!mCanvasChild) {
+      return;
+    }
+    mCanvasChild->ResumeTranslation();
+  }
 
  private:
-  RefPtr<CanvasChild> mCanvasChild;
+  const WeakPtr<CanvasChild> mCanvasChild;
 };
 
 class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
