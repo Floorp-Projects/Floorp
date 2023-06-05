@@ -1956,20 +1956,36 @@ gfxFcPlatformFontList::DistroID gfxFcPlatformFontList::GetDistroID() const {
   // Helper called to initialize sResult the first time this is used.
   auto getDistroID = []() {
     DistroID result = DistroID::Unknown;
+    int versionMajor = 0;
     FILE* fp = fopen("/etc/os-release", "r");
     if (fp) {
       char buf[512];
       while (fgets(buf, sizeof(buf), fp)) {
+        if (strncmp(buf, "VERSION_ID=\"", 12) == 0) {
+          versionMajor = strtol(buf + 12, nullptr, 10);
+          if (result != DistroID::Unknown) {
+            break;
+          }
+        }
         if (strncmp(buf, "ID=", 3) == 0) {
           if (strncmp(buf + 3, "ubuntu", 6) == 0) {
-            result = DistroID::Ubuntu;
+            result = DistroID::Ubuntu_any;
           } else if (strncmp(buf + 3, "fedora", 6) == 0) {
             result = DistroID::Fedora;
           }
-          break;
+          if (versionMajor) {
+            break;
+          }
         }
       }
       fclose(fp);
+    }
+    if (result == DistroID::Ubuntu_any) {
+      if (versionMajor == 20) {
+        result = DistroID::Ubuntu_20;
+      } else if (versionMajor == 22) {
+        result = DistroID::Ubuntu_22;
+      }
     }
     return result;
   };
@@ -1979,8 +1995,23 @@ gfxFcPlatformFontList::DistroID gfxFcPlatformFontList::GetDistroID() const {
 
 FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
     const nsACString& aName) const {
-  switch (GetDistroID()) {
-    case DistroID::Ubuntu:
+  auto distro = GetDistroID();
+  switch (distro) {
+    case DistroID::Ubuntu_any:
+    case DistroID::Ubuntu_22:
+      if (FamilyInList(aName, kBaseFonts_Ubuntu_22_04)) {
+        return FontVisibility::Base;
+      }
+      if (FamilyInList(aName, kLangFonts_Ubuntu_22_04)) {
+        return FontVisibility::LangPack;
+      }
+      if (distro == DistroID::Ubuntu_22) {
+        return FontVisibility::User;
+      }
+      // For Ubuntu_any, we fall through to also check the 20_04 lists.
+      [[fallthrough]];
+
+    case DistroID::Ubuntu_20:
       if (FamilyInList(aName, kBaseFonts_Ubuntu_20_04)) {
         return FontVisibility::Base;
       }
@@ -1988,11 +2019,13 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
         return FontVisibility::LangPack;
       }
       return FontVisibility::User;
+
     case DistroID::Fedora:
       if (FamilyInList(aName, kBaseFonts_Fedora_32)) {
         return FontVisibility::Base;
       }
       return FontVisibility::User;
+
     default:
       // We don't know how to categorize fonts on this system
       return FontVisibility::Unknown;
