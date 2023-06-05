@@ -666,10 +666,10 @@ impl<'de: 'a, 'a> Deserialize<'de> for &'a [u8] {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", all(not(no_core_cstr), feature = "alloc")))]
 struct CStringVisitor;
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", all(not(no_core_cstr), feature = "alloc")))]
 impl<'de> Visitor<'de> for CStringVisitor {
     type Value = CString;
 
@@ -720,7 +720,7 @@ impl<'de> Visitor<'de> for CStringVisitor {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", all(not(no_core_cstr), feature = "alloc")))]
 impl<'de> Deserialize<'de> for CString {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -747,7 +747,10 @@ macro_rules! forwarded_impl {
     }
 }
 
-#[cfg(all(feature = "std", not(no_de_boxed_c_str)))]
+#[cfg(all(
+    any(feature = "std", all(not(no_core_cstr), feature = "alloc")),
+    not(no_de_boxed_c_str)
+))]
 forwarded_impl!((), Box<CStr>, CString::into_boxed_c_str);
 
 #[cfg(not(no_core_reverse))]
@@ -991,7 +994,8 @@ seq_impl!(
     HashSet::clear,
     HashSet::with_capacity_and_hasher(size_hint::cautious(seq.size_hint()), S::default()),
     HashSet::reserve,
-    HashSet::insert);
+    HashSet::insert
+);
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(
@@ -1406,16 +1410,14 @@ macro_rules! map_impl {
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-map_impl!(
-    BTreeMap<K: Ord, V>,
-    map,
-    BTreeMap::new());
+map_impl!(BTreeMap<K: Ord, V>, map, BTreeMap::new());
 
 #[cfg(feature = "std")]
 map_impl!(
     HashMap<K: Eq + Hash, V, S: BuildHasher + Default>,
     map,
-    HashMap::with_capacity_and_hasher(size_hint::cautious(map.size_hint()), S::default()));
+    HashMap::with_capacity_and_hasher(size_hint::cautious(map.size_hint()), S::default())
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,13 +1,21 @@
 use crate::ToTokens;
+use proc_macro2::extra::DelimSpan;
 use proc_macro2::{Span, TokenStream};
 
-pub trait Spanned {
+// Not public API other than via the syn crate. Use syn::spanned::Spanned.
+pub trait Spanned: private::Sealed {
     fn __span(&self) -> Span;
 }
 
 impl Spanned for Span {
     fn __span(&self) -> Span {
         *self
+    }
+}
+
+impl Spanned for DelimSpan {
+    fn __span(&self) -> Span {
+        self.join()
     }
 }
 
@@ -40,4 +48,15 @@ fn join_spans(tokens: TokenStream) -> Span {
     iter.fold(None, |_prev, next| Some(next))
         .and_then(|last| first.join(last))
         .unwrap_or(first)
+}
+
+mod private {
+    use crate::ToTokens;
+    use proc_macro2::extra::DelimSpan;
+    use proc_macro2::Span;
+
+    pub trait Sealed {}
+    impl Sealed for Span {}
+    impl Sealed for DelimSpan {}
+    impl<T: ?Sized + ToTokens> Sealed for T {}
 }

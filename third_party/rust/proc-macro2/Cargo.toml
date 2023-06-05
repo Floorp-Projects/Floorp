@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "proc-macro2"
-version = "1.0.51"
+version = "1.0.59"
 authors = [
     "David Tolnay <dtolnay@gmail.com>",
     "Alex Crichton <alex@alexcrichton.com>",
@@ -55,6 +55,9 @@ version = "1.0"
 [dev-dependencies.quote]
 version = "1.0"
 default_features = false
+
+[dev-dependencies.rustversion]
+version = "1"
 
 [features]
 default = ["proc-macro"]

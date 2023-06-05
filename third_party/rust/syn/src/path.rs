@@ -3,9 +3,6 @@ use crate::punctuated::Punctuated;
 
 ast_struct! {
     /// A path at which a named item is exported (e.g. `std::collections::HashMap`).
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct Path {
         pub leading_colon: Option<Token![::]>,
@@ -27,11 +24,67 @@ where
     }
 }
 
+impl Path {
+    /// Determines whether this is a path of length 1 equal to the given
+    /// ident.
+    ///
+    /// For them to compare equal, it must be the case that:
+    ///
+    /// - the path has no leading colon,
+    /// - the number of path segments is 1,
+    /// - the first path segment has no angle bracketed or parenthesized
+    ///   path arguments, and
+    /// - the ident of the first path segment is equal to the given one.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use proc_macro2::TokenStream;
+    /// use syn::{Attribute, Error, Meta, Result};
+    ///
+    /// fn get_serde_meta_item(attr: &Attribute) -> Result<Option<&TokenStream>> {
+    ///     if attr.path().is_ident("serde") {
+    ///         match &attr.meta {
+    ///             Meta::List(meta) => Ok(Some(&meta.tokens)),
+    ///             bad => Err(Error::new_spanned(bad, "unrecognized attribute")),
+    ///         }
+    ///     } else {
+    ///         Ok(None)
+    ///     }
+    /// }
+    /// ```
+    pub fn is_ident<I: ?Sized>(&self, ident: &I) -> bool
+    where
+        Ident: PartialEq<I>,
+    {
+        match self.get_ident() {
+            Some(id) => id == ident,
+            None => false,
+        }
+    }
+
+    /// If this path consists of a single ident, returns the ident.
+    ///
+    /// A path is considered an ident if:
+    ///
+    /// - the path has no leading colon,
+    /// - the number of path segments is 1, and
+    /// - the first path segment has no angle bracketed or parenthesized
+    ///   path arguments.
+    pub fn get_ident(&self) -> Option<&Ident> {
+        if self.leading_colon.is_none()
+            && self.segments.len() == 1
+            && self.segments[0].arguments.is_none()
+        {
+            Some(&self.segments[0].ident)
+        } else {
+            None
+        }
+    }
+}
+
 ast_struct! {
     /// A segment of a path together with any path arguments on that segment.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct PathSegment {
         pub ident: Ident,
@@ -53,9 +106,6 @@ where
 
 ast_enum! {
     /// Angle bracketed or parenthesized arguments of a path segment.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     ///
     /// ## Angle bracketed
     ///
@@ -99,10 +149,8 @@ impl PathArguments {
 
 ast_enum! {
     /// An individual generic argument, like `'a`, `T`, or `Item = T`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
+    #[non_exhaustive]
     pub enum GenericArgument {
         /// A lifetime argument.
         Lifetime(Lifetime),
@@ -115,7 +163,10 @@ ast_enum! {
         Const(Expr),
         /// A binding (equality constraint) on an associated type: the `Item =
         /// u8` in `Iterator<Item = u8>`.
-        Binding(Binding),
+        AssocType(AssocType),
+        /// An equality constraint on an associated constant: the `PANIC =
+        /// false` in `Trait<PANIC = false>`.
+        AssocConst(AssocConst),
         /// An associated type bound: `Iterator<Item: Display>`.
         Constraint(Constraint),
     }
@@ -124,9 +175,6 @@ ast_enum! {
 ast_struct! {
     /// Angle bracketed arguments of a path segment: the `<K, V>` in `HashMap<K,
     /// V>`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct AngleBracketedGenericArguments {
         pub colon2_token: Option<Token![::]>,
@@ -137,26 +185,35 @@ ast_struct! {
 }
 
 ast_struct! {
-    /// A binding (equality constraint) on an associated type: `Item = u8`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
+    /// A binding (equality constraint) on an associated type: the `Item = u8`
+    /// in `Iterator<Item = u8>`.
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
-    pub struct Binding {
+    pub struct AssocType {
         pub ident: Ident,
+        pub generics: Option<AngleBracketedGenericArguments>,
         pub eq_token: Token![=],
         pub ty: Type,
     }
 }
 
 ast_struct! {
+    /// An equality constraint on an associated constant: the `PANIC = false` in
+    /// `Trait<PANIC = false>`.
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
+    pub struct AssocConst {
+        pub ident: Ident,
+        pub generics: Option<AngleBracketedGenericArguments>,
+        pub eq_token: Token![=],
+        pub value: Expr,
+    }
+}
+
+ast_struct! {
     /// An associated type bound: `Iterator<Item: Display>`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct Constraint {
         pub ident: Ident,
+        pub generics: Option<AngleBracketedGenericArguments>,
         pub colon_token: Token![:],
         pub bounds: Punctuated<TypeParamBound, Token![+]>,
     }
@@ -165,9 +222,6 @@ ast_struct! {
 ast_struct! {
     /// Arguments of a function path segment: the `(A, B) -> C` in `Fn(A,B) ->
     /// C`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct ParenthesizedGenericArguments {
         pub paren_token: token::Paren,
@@ -195,9 +249,6 @@ ast_struct! {
     ///  ^~~~~~   ^
     ///  ty       position = 0
     /// ```
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct QSelf {
         pub lt_token: Token![<],
@@ -209,7 +260,7 @@ ast_struct! {
 }
 
 #[cfg(feature = "parsing")]
-pub mod parsing {
+pub(crate) mod parsing {
     use super::*;
 
     use crate::ext::IdentExt;
@@ -229,92 +280,87 @@ pub mod parsing {
                 return Ok(GenericArgument::Lifetime(input.parse()?));
             }
 
-            if input.peek(Ident) && input.peek2(Token![=]) {
-                let ident: Ident = input.parse()?;
-                let eq_token: Token![=] = input.parse()?;
-
-                let ty = if input.peek(Lit) {
-                    let begin = input.fork();
-                    input.parse::<Lit>()?;
-                    Type::Verbatim(verbatim::between(begin, input))
-                } else if input.peek(token::Brace) {
-                    let begin = input.fork();
-
-                    #[cfg(feature = "full")]
-                    {
-                        input.parse::<ExprBlock>()?;
-                    }
-
-                    #[cfg(not(feature = "full"))]
-                    {
-                        let content;
-                        braced!(content in input);
-                        content.parse::<Expr>()?;
-                    }
-
-                    Type::Verbatim(verbatim::between(begin, input))
-                } else {
-                    input.parse()?
-                };
-
-                return Ok(GenericArgument::Binding(Binding {
-                    ident,
-                    eq_token,
-                    ty,
-                }));
-            }
-
-            #[cfg(feature = "full")]
-            {
-                if input.peek(Ident) && input.peek2(Token![:]) && !input.peek2(Token![::]) {
-                    return Ok(GenericArgument::Constraint(input.parse()?));
-                }
-            }
-
             if input.peek(Lit) || input.peek(token::Brace) {
                 return const_argument(input).map(GenericArgument::Const);
             }
 
-            #[cfg(feature = "full")]
-            let begin = input.fork();
+            let mut argument: Type = input.parse()?;
 
-            let argument: Type = input.parse()?;
-
-            #[cfg(feature = "full")]
-            {
-                if match &argument {
-                    Type::Path(argument)
-                        if argument.qself.is_none()
-                            && argument.path.leading_colon.is_none()
-                            && argument.path.segments.len() == 1 =>
-                    {
-                        match argument.path.segments[0].arguments {
-                            PathArguments::AngleBracketed(_) => true,
-                            _ => false,
-                        }
+            match argument {
+                Type::Path(mut ty)
+                    if ty.qself.is_none()
+                        && ty.path.leading_colon.is_none()
+                        && ty.path.segments.len() == 1
+                        && match &ty.path.segments[0].arguments {
+                            PathArguments::None | PathArguments::AngleBracketed(_) => true,
+                            PathArguments::Parenthesized(_) => false,
+                        } =>
+                {
+                    if let Some(eq_token) = input.parse::<Option<Token![=]>>()? {
+                        let segment = ty.path.segments.pop().unwrap().into_value();
+                        let ident = segment.ident;
+                        let generics = match segment.arguments {
+                            PathArguments::None => None,
+                            PathArguments::AngleBracketed(arguments) => Some(arguments),
+                            PathArguments::Parenthesized(_) => unreachable!(),
+                        };
+                        return if input.peek(Lit) || input.peek(token::Brace) {
+                            Ok(GenericArgument::AssocConst(AssocConst {
+                                ident,
+                                generics,
+                                eq_token,
+                                value: const_argument(input)?,
+                            }))
+                        } else {
+                            Ok(GenericArgument::AssocType(AssocType {
+                                ident,
+                                generics,
+                                eq_token,
+                                ty: input.parse()?,
+                            }))
+                        };
                     }
-                    _ => false,
-                } && if input.peek(Token![=]) {
-                    input.parse::<Token![=]>()?;
-                    input.parse::<Type>()?;
-                    true
-                } else if input.peek(Token![:]) {
-                    input.parse::<Token![:]>()?;
-                    input.call(constraint_bounds)?;
-                    true
-                } else {
-                    false
-                } {
-                    let verbatim = verbatim::between(begin, input);
-                    return Ok(GenericArgument::Type(Type::Verbatim(verbatim)));
+
+                    #[cfg(feature = "full")]
+                    if let Some(colon_token) = input.parse::<Option<Token![:]>>()? {
+                        let segment = ty.path.segments.pop().unwrap().into_value();
+                        return Ok(GenericArgument::Constraint(Constraint {
+                            ident: segment.ident,
+                            generics: match segment.arguments {
+                                PathArguments::None => None,
+                                PathArguments::AngleBracketed(arguments) => Some(arguments),
+                                PathArguments::Parenthesized(_) => unreachable!(),
+                            },
+                            colon_token,
+                            bounds: {
+                                let mut bounds = Punctuated::new();
+                                loop {
+                                    if input.peek(Token![,]) || input.peek(Token![>]) {
+                                        break;
+                                    }
+                                    let value: TypeParamBound = input.parse()?;
+                                    bounds.push_value(value);
+                                    if !input.peek(Token![+]) {
+                                        break;
+                                    }
+                                    let punct: Token![+] = input.parse()?;
+                                    bounds.push_punct(punct);
+                                }
+                                bounds
+                            },
+                        }));
+                    }
+
+                    argument = Type::Path(ty);
                 }
+                _ => {}
             }
 
             Ok(GenericArgument::Type(argument))
         }
     }
 
-    pub fn const_argument(input: ParseStream) -> Result<Expr> {
+    pub(crate) fn const_argument(input: ParseStream) -> Result<Expr> {
         let lookahead = input.lookahead1();
 
         if input.peek(Lit) {
@@ -323,15 +369,13 @@ pub mod parsing {
         }
 
         #[cfg(feature = "full")]
-        {
-            if input.peek(Ident) {
-                let ident: Ident = input.parse()?;
-                return Ok(Expr::Path(ExprPath {
-                    attrs: Vec::new(),
-                    qself: None,
-                    path: Path::from(ident),
-                }));
-            }
+        if input.peek(Ident) {
+            let ident: Ident = input.parse()?;
+            return Ok(Expr::Path(ExprPath {
+                attrs: Vec::new(),
+                qself: None,
+                path: Path::from(ident),
+            }));
         }
 
         if input.peek(token::Brace) {
@@ -355,11 +399,21 @@ pub mod parsing {
         Err(lookahead.error())
     }
 
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-    impl Parse for AngleBracketedGenericArguments {
-        fn parse(input: ParseStream) -> Result<Self> {
+    impl AngleBracketedGenericArguments {
+        /// Parse `::<…>` with mandatory leading `::`.
+        ///
+        /// The ordinary [`Parse`] impl for `AngleBracketedGenericArguments`
+        /// parses optional leading `::`.
+        #[cfg(feature = "full")]
+        #[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "full"))))]
+        pub fn parse_turbofish(input: ParseStream) -> Result<Self> {
+            let colon2_token: Token![::] = input.parse()?;
+            Self::do_parse(Some(colon2_token), input)
+        }
+
+        fn do_parse(colon2_token: Option<Token![::]>, input: ParseStream) -> Result<Self> {
             Ok(AngleBracketedGenericArguments {
-                colon2_token: input.parse()?,
+                colon2_token,
                 lt_token: input.parse()?,
                 args: {
                     let mut args = Punctuated::new();
@@ -367,12 +421,12 @@ pub mod parsing {
                         if input.peek(Token![>]) {
                             break;
                         }
-                        let value = input.parse()?;
+                        let value: GenericArgument = input.parse()?;
                         args.push_value(value);
                         if input.peek(Token![>]) {
                             break;
                         }
-                        let punct = input.parse()?;
+                        let punct: Token![,] = input.parse()?;
                         args.push_punct(punct);
                     }
                     args
@@ -383,12 +437,20 @@ pub mod parsing {
     }
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
+    impl Parse for AngleBracketedGenericArguments {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let colon2_token: Option<Token![::]> = input.parse()?;
+            Self::do_parse(colon2_token, input)
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for ParenthesizedGenericArguments {
         fn parse(input: ParseStream) -> Result<Self> {
             let content;
             Ok(ParenthesizedGenericArguments {
                 paren_token: parenthesized!(content in input),
-                inputs: content.parse_terminated(Type::parse)?,
+                inputs: content.parse_terminated(Type::parse, Token![,])?,
                 output: input.call(ReturnType::without_plus)?,
             })
         }
@@ -403,7 +465,11 @@ pub mod parsing {
 
     impl PathSegment {
         fn parse_helper(input: ParseStream, expr_style: bool) -> Result<Self> {
-            if input.peek(Token![super]) || input.peek(Token![self]) || input.peek(Token![crate]) {
+            if input.peek(Token![super])
+                || input.peek(Token![self])
+                || input.peek(Token![crate])
+                || cfg!(feature = "full") && input.peek(Token![try])
+            {
                 let ident = input.call(Ident::parse_any)?;
                 return Ok(PathSegment::from(ident));
             }
@@ -427,52 +493,8 @@ pub mod parsing {
         }
     }
 
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-    impl Parse for Binding {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(Binding {
-                ident: input.parse()?,
-                eq_token: input.parse()?,
-                ty: input.parse()?,
-            })
-        }
-    }
-
-    #[cfg(feature = "full")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-    impl Parse for Constraint {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(Constraint {
-                ident: input.parse()?,
-                colon_token: input.parse()?,
-                bounds: constraint_bounds(input)?,
-            })
-        }
-    }
-
-    #[cfg(feature = "full")]
-    fn constraint_bounds(input: ParseStream) -> Result<Punctuated<TypeParamBound, Token![+]>> {
-        let mut bounds = Punctuated::new();
-        loop {
-            if input.peek(Token![,]) || input.peek(Token![>]) {
-                break;
-            }
-            let value = input.parse()?;
-            bounds.push_value(value);
-            if !input.peek(Token![+]) {
-                break;
-            }
-            let punct = input.parse()?;
-            bounds.push_punct(punct);
-        }
-        Ok(bounds)
-    }
-
     impl Path {
         /// Parse a `Path` containing no path arguments on any of its segments.
-        ///
-        /// *This function is available only if Syn is built with the `"parsing"`
-        /// feature.*
         ///
         /// # Example
         ///
@@ -526,78 +548,13 @@ pub mod parsing {
                         segments.push_punct(punct);
                     }
                     if segments.is_empty() {
-                        return Err(input.error("expected path"));
+                        return Err(input.parse::<Ident>().unwrap_err());
                     } else if segments.trailing_punct() {
-                        return Err(input.error("expected path segment"));
+                        return Err(input.error("expected path segment after `::`"));
                     }
                     segments
                 },
             })
-        }
-
-        /// Determines whether this is a path of length 1 equal to the given
-        /// ident.
-        ///
-        /// For them to compare equal, it must be the case that:
-        ///
-        /// - the path has no leading colon,
-        /// - the number of path segments is 1,
-        /// - the first path segment has no angle bracketed or parenthesized
-        ///   path arguments, and
-        /// - the ident of the first path segment is equal to the given one.
-        ///
-        /// *This function is available only if Syn is built with the `"parsing"`
-        /// feature.*
-        ///
-        /// # Example
-        ///
-        /// ```
-        /// use syn::{Attribute, Error, Meta, NestedMeta, Result};
-        /// # use std::iter::FromIterator;
-        ///
-        /// fn get_serde_meta_items(attr: &Attribute) -> Result<Vec<NestedMeta>> {
-        ///     if attr.path.is_ident("serde") {
-        ///         match attr.parse_meta()? {
-        ///             Meta::List(meta) => Ok(Vec::from_iter(meta.nested)),
-        ///             bad => Err(Error::new_spanned(bad, "unrecognized attribute")),
-        ///         }
-        ///     } else {
-        ///         Ok(Vec::new())
-        ///     }
-        /// }
-        /// ```
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-        pub fn is_ident<I: ?Sized>(&self, ident: &I) -> bool
-        where
-            Ident: PartialEq<I>,
-        {
-            match self.get_ident() {
-                Some(id) => id == ident,
-                None => false,
-            }
-        }
-
-        /// If this path consists of a single ident, returns the ident.
-        ///
-        /// A path is considered an ident if:
-        ///
-        /// - the path has no leading colon,
-        /// - the number of path segments is 1, and
-        /// - the first path segment has no angle bracketed or parenthesized
-        ///   path arguments.
-        ///
-        /// *This function is available only if Syn is built with the `"parsing"`
-        /// feature.*
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-        pub fn get_ident(&self) -> Option<&Ident> {
-            if self.leading_colon.is_none()
-                && self.segments.len() == 1
-                && self.segments[0].arguments.is_none()
-            {
-                Some(&self.segments[0].ident)
-            } else {
-                None
-            }
         }
 
         pub(crate) fn parse_helper(input: ParseStream, expr_style: bool) -> Result<Self> {
@@ -627,9 +584,15 @@ pub mod parsing {
             }
             Ok(())
         }
+
+        pub(crate) fn is_mod_style(&self) -> bool {
+            self.segments
+                .iter()
+                .all(|segment| segment.arguments.is_none())
+        }
     }
 
-    pub fn qpath(input: ParseStream, expr_style: bool) -> Result<(Option<QSelf>, Path)> {
+    pub(crate) fn qpath(input: ParseStream, expr_style: bool) -> Result<(Option<QSelf>, Path)> {
         if input.peek(Token![<]) {
             let lt_token: Token![<] = input.parse()?;
             let this: Type = input.parse()?;
@@ -728,23 +691,21 @@ pub(crate) mod printing {
             match self {
                 GenericArgument::Lifetime(lt) => lt.to_tokens(tokens),
                 GenericArgument::Type(ty) => ty.to_tokens(tokens),
-                GenericArgument::Const(e) => match *e {
-                    Expr::Lit(_) => e.to_tokens(tokens),
+                GenericArgument::Const(expr) => match expr {
+                    Expr::Lit(_) => expr.to_tokens(tokens),
 
-                    // NOTE: We should probably support parsing blocks with only
-                    // expressions in them without the full feature for const
-                    // generics.
                     #[cfg(feature = "full")]
-                    Expr::Block(_) => e.to_tokens(tokens),
+                    Expr::Block(_) => expr.to_tokens(tokens),
 
                     // ERROR CORRECTION: Add braces to make sure that the
                     // generated code is valid.
                     _ => token::Brace::default().surround(tokens, |tokens| {
-                        e.to_tokens(tokens);
+                        expr.to_tokens(tokens);
                     }),
                 },
-                GenericArgument::Binding(tb) => tb.to_tokens(tokens),
-                GenericArgument::Constraint(tc) => tc.to_tokens(tokens),
+                GenericArgument::AssocType(assoc) => assoc.to_tokens(tokens),
+                GenericArgument::AssocConst(assoc) => assoc.to_tokens(tokens),
+                GenericArgument::Constraint(constraint) => constraint.to_tokens(tokens),
             }
         }
     }
@@ -759,22 +720,24 @@ pub(crate) mod printing {
             // order in self.args.
             let mut trailing_or_empty = true;
             for param in self.args.pairs() {
-                match **param.value() {
+                match param.value() {
                     GenericArgument::Lifetime(_) => {
                         param.to_tokens(tokens);
                         trailing_or_empty = param.punct().is_some();
                     }
                     GenericArgument::Type(_)
                     | GenericArgument::Const(_)
-                    | GenericArgument::Binding(_)
+                    | GenericArgument::AssocType(_)
+                    | GenericArgument::AssocConst(_)
                     | GenericArgument::Constraint(_) => {}
                 }
             }
             for param in self.args.pairs() {
-                match **param.value() {
+                match param.value() {
                     GenericArgument::Type(_)
                     | GenericArgument::Const(_)
-                    | GenericArgument::Binding(_)
+                    | GenericArgument::AssocType(_)
+                    | GenericArgument::AssocConst(_)
                     | GenericArgument::Constraint(_) => {
                         if !trailing_or_empty {
                             <Token![,]>::default().to_tokens(tokens);
@@ -791,11 +754,22 @@ pub(crate) mod printing {
     }
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
-    impl ToTokens for Binding {
+    impl ToTokens for AssocType {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.ident.to_tokens(tokens);
+            self.generics.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             self.ty.to_tokens(tokens);
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
+    impl ToTokens for AssocConst {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
+            self.ident.to_tokens(tokens);
+            self.generics.to_tokens(tokens);
+            self.eq_token.to_tokens(tokens);
+            self.value.to_tokens(tokens);
         }
     }
 
@@ -803,6 +777,7 @@ pub(crate) mod printing {
     impl ToTokens for Constraint {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.ident.to_tokens(tokens);
+            self.generics.to_tokens(tokens);
             self.colon_token.to_tokens(tokens);
             self.bounds.to_tokens(tokens);
         }

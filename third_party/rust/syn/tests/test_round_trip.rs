@@ -2,10 +2,17 @@
 #![cfg(not(miri))]
 #![recursion_limit = "1024"]
 #![feature(rustc_private)]
-#![allow(clippy::manual_assert)]
+#![allow(
+    clippy::manual_assert,
+    clippy::manual_let_else,
+    clippy::match_like_matches_macro,
+    clippy::uninlined_format_args
+)]
 
 extern crate rustc_ast;
+extern crate rustc_ast_pretty;
 extern crate rustc_data_structures;
+extern crate rustc_driver;
 extern crate rustc_error_messages;
 extern crate rustc_errors;
 extern crate rustc_expand;
@@ -15,12 +22,12 @@ extern crate rustc_span;
 
 use crate::common::eq::SpanlessEq;
 use quote::quote;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rustc_ast::ast::{
     AngleBracketedArg, AngleBracketedArgs, Crate, GenericArg, GenericParamKind, Generics,
     WhereClause,
 };
 use rustc_ast::mut_visit::{self, MutVisitor};
+use rustc_ast_pretty::pprust;
 use rustc_error_messages::{DiagnosticMessage, LazyFallbackBundle};
 use rustc_errors::{translation, Diagnostic, PResult};
 use rustc_session::parse::ParseSess;
@@ -32,7 +39,6 @@ use std::path::Path;
 use std::process;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
-use walkdir::{DirEntry, WalkDir};
 
 #[macro_use]
 mod macros;
@@ -53,19 +59,7 @@ fn test_round_trip() {
 
     let failed = AtomicUsize::new(0);
 
-    WalkDir::new("tests/rust")
-        .sort_by(|a, b| a.file_name().cmp(b.file_name()))
-        .into_iter()
-        .filter_entry(repo::base_dir_filter)
-        .collect::<Result<Vec<DirEntry>, walkdir::Error>>()
-        .unwrap()
-        .into_par_iter()
-        .for_each(|entry| {
-            let path = entry.path();
-            if !path.is_dir() {
-                test(path, &failed, abort_after);
-            }
-        });
+    repo::for_each_rust_file(|path| test(path, &failed, abort_after));
 
     let failed = failed.load(Ordering::Relaxed);
     if failed > 0 {
@@ -93,7 +87,9 @@ fn test(path: &Path, failed: &AtomicUsize, abort_after: usize) {
 
     rustc_span::create_session_if_not_set_then(edition, |_| {
         let equal = match panic::catch_unwind(|| {
-            let sess = ParseSess::new(FilePathMapping::empty());
+            let locale_resources = rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec();
+            let file_path_mapping = FilePathMapping::empty();
+            let sess = ParseSess::new(locale_resources, file_path_mapping);
             let before = match librustc_parse(content, &sess) {
                 Ok(before) => before,
                 Err(diagnostic) => {
@@ -133,10 +129,10 @@ fn test(path: &Path, failed: &AtomicUsize, abort_after: usize) {
                     true
                 } else {
                     errorf!(
-                        "=== {}: FAIL\nbefore: {:#?}\nafter: {:#?}\n",
+                        "=== {}: FAIL\n{}\n!=\n{}\n",
                         path.display(),
-                        before,
-                        after,
+                        pprust::crate_to_string_for_macros(&before),
+                        pprust::crate_to_string_for_macros(&after),
                     );
                     false
                 }
@@ -161,9 +157,9 @@ fn librustc_parse(content: String, sess: &ParseSess) -> PResult<Crate> {
 fn translate_message(diagnostic: &Diagnostic) -> String {
     thread_local! {
         static FLUENT_BUNDLE: LazyFallbackBundle = {
-            let resources = rustc_error_messages::DEFAULT_LOCALE_RESOURCES;
+            let locale_resources = rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec();
             let with_directionality_markers = false;
-            rustc_error_messages::fallback_fluent_bundle(resources, with_directionality_markers)
+            rustc_error_messages::fallback_fluent_bundle(locale_resources, with_directionality_markers)
         };
     }
 

@@ -8,6 +8,8 @@ use std::borrow::Cow;
 /// stripped, if present.
 ///
 /// See [`format_ident!`] for more information.
+///
+/// [`format_ident!`]: crate::format_ident
 pub trait IdentFragment {
     /// Format this value as an identifier fragment.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result;

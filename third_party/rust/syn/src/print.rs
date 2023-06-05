@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 
-pub struct TokensOrDefault<'a, T: 'a>(pub &'a Option<T>);
+pub(crate) struct TokensOrDefault<'a, T: 'a>(pub &'a Option<T>);
 
 impl<'a, T> ToTokens for TokensOrDefault<'a, T>
 where

@@ -1,4 +1,4 @@
 #[cfg(feature = "parsing")]
-pub mod lookahead {
+pub(crate) mod lookahead {
     pub trait Sealed: Copy {}
 }

@@ -1,9 +1,6 @@
 //! A trait that can provide the `Span` of the complete contents of a syntax
 //! tree node.
 //!
-//! *This module is available only if Syn is built with both the `"parsing"` and
-//! `"printing"` features.*
-//!
 //! <br>
 //!
 //! # Example
@@ -96,10 +93,7 @@ use quote::spanned::Spanned as ToTokens;
 /// See the [module documentation] for an example.
 ///
 /// [module documentation]: self
-///
-/// *This trait is available only if Syn is built with both the `"parsing"` and
-/// `"printing"` features.*
-pub trait Spanned {
+pub trait Spanned: private::Sealed {
     /// Returns a `Span` covering the complete contents of this syntax tree
     /// node, or [`Span::call_site()`] if this node is empty.
     ///
@@ -111,4 +105,11 @@ impl<T: ?Sized + ToTokens> Spanned for T {
     fn span(&self) -> Span {
         self.__span()
     }
+}
+
+mod private {
+    use super::*;
+
+    pub trait Sealed {}
+    impl<T: ?Sized + ToTokens> Sealed for T {}
 }

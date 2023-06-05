@@ -1,18 +1,12 @@
 //! A stably addressed token buffer supporting efficient traversal based on a
 //! cheaply copyable cursor.
-//!
-//! *This module is available only if Syn is built with the `"parsing"` feature.*
 
 // This module is heavily commented as it contains most of the unsafe code in
 // Syn, and caution should be used when editing it. The public-facing interface
 // is 100% safe but the implementation is fragile internally.
 
-#[cfg(all(
-    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
-    feature = "proc-macro"
-))]
-use crate::proc_macro as pm;
 use crate::Lifetime;
+use proc_macro2::extra::DelimSpan;
 use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use std::cmp::Ordering;
 use std::marker::PhantomData;
@@ -33,8 +27,6 @@ enum Entry {
 /// A buffer that can be efficiently traversed multiple times, unlike
 /// `TokenStream` which requires a deep copy in order to traverse more than
 /// once.
-///
-/// *This type is available only if Syn is built with the `"parsing"` feature.*
 pub struct TokenBuffer {
     // NOTE: Do not implement clone on this - while the current design could be
     // cloned, other designs which could be desirable may not be cloneable.
@@ -63,14 +55,9 @@ impl TokenBuffer {
 
     /// Creates a `TokenBuffer` containing all the tokens from the input
     /// `proc_macro::TokenStream`.
-    ///
-    /// *This method is available only if Syn is built with both the `"parsing"` and
-    /// `"proc-macro"` features.*
-    #[cfg(all(
-        not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
-        feature = "proc-macro"
-    ))]
-    pub fn new(stream: pm::TokenStream) -> Self {
+    #[cfg(feature = "proc-macro")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "proc-macro")))]
+    pub fn new(stream: proc_macro::TokenStream) -> Self {
         Self::new2(stream.into())
     }
 
@@ -101,11 +88,6 @@ impl TokenBuffer {
 ///
 /// An empty `Cursor` can be created directly, or one may create a `TokenBuffer`
 /// object and get a cursor to its first token with `begin()`.
-///
-/// Two cursors are equal if they have the same location in the same input
-/// stream, and have the same scope.
-///
-/// *This type is available only if Syn is built with the `"parsing"` feature.*
 pub struct Cursor<'a> {
     // The current entry which the `Cursor` is pointing at.
     ptr: *const Entry,
@@ -199,7 +181,7 @@ impl<'a> Cursor<'a> {
 
     /// If the cursor is pointing at a `Group` with the given delimiter, returns
     /// a cursor into that group and one pointing to the next `TokenTree`.
-    pub fn group(mut self, delim: Delimiter) -> Option<(Cursor<'a>, Span, Cursor<'a>)> {
+    pub fn group(mut self, delim: Delimiter) -> Option<(Cursor<'a>, DelimSpan, Cursor<'a>)> {
         // If we're not trying to enter a none-delimited group, we want to
         // ignore them. We have to make sure to _not_ ignore them when we want
         // to enter them, of course. For obvious reasons.
@@ -209,11 +191,35 @@ impl<'a> Cursor<'a> {
 
         if let Entry::Group(group, end_offset) = self.entry() {
             if group.delimiter() == delim {
+                let span = group.delim_span();
                 let end_of_group = unsafe { self.ptr.add(*end_offset) };
                 let inside_of_group = unsafe { Cursor::create(self.ptr.add(1), end_of_group) };
                 let after_group = unsafe { Cursor::create(end_of_group, self.scope) };
-                return Some((inside_of_group, group.span(), after_group));
+                return Some((inside_of_group, span, after_group));
             }
+        }
+
+        None
+    }
+
+    pub(crate) fn any_group(self) -> Option<(Cursor<'a>, Delimiter, DelimSpan, Cursor<'a>)> {
+        if let Entry::Group(group, end_offset) = self.entry() {
+            let delimiter = group.delimiter();
+            let span = group.delim_span();
+            let end_of_group = unsafe { self.ptr.add(*end_offset) };
+            let inside_of_group = unsafe { Cursor::create(self.ptr.add(1), end_of_group) };
+            let after_group = unsafe { Cursor::create(end_of_group, self.scope) };
+            return Some((inside_of_group, delimiter, span, after_group));
+        }
+
+        None
+    }
+
+    pub(crate) fn any_group_token(self) -> Option<(Group, Cursor<'a>)> {
+        if let Entry::Group(group, end_offset) = self.entry() {
+            let end_of_group = unsafe { self.ptr.add(*end_offset) };
+            let after_group = unsafe { Cursor::create(end_of_group, self.scope) };
+            return Some((group.clone(), after_group));
         }
 
         None
@@ -313,6 +319,33 @@ impl<'a> Cursor<'a> {
         }
     }
 
+    /// Returns the `Span` of the token immediately prior to the position of
+    /// this cursor, or of the current token if there is no previous one.
+    #[cfg(any(feature = "full", feature = "derive"))]
+    pub(crate) fn prev_span(mut self) -> Span {
+        if start_of_buffer(self) < self.ptr {
+            self.ptr = unsafe { self.ptr.offset(-1) };
+            if let Entry::End(_) = self.entry() {
+                // Locate the matching Group begin token.
+                let mut depth = 1;
+                loop {
+                    self.ptr = unsafe { self.ptr.offset(-1) };
+                    match self.entry() {
+                        Entry::Group(group, _) => {
+                            depth -= 1;
+                            if depth == 0 {
+                                return group.span();
+                            }
+                        }
+                        Entry::End(_) => depth += 1,
+                        Entry::Literal(_) | Entry::Ident(_) | Entry::Punct(_) => {}
+                    }
+                }
+            }
+        }
+        self.span()
+    }
+
     /// Skip over the next token without cloning it. Returns `None` if this
     /// cursor points to eof.
     ///
@@ -368,11 +401,13 @@ pub(crate) fn same_scope(a: Cursor, b: Cursor) -> bool {
 }
 
 pub(crate) fn same_buffer(a: Cursor, b: Cursor) -> bool {
+    start_of_buffer(a) == start_of_buffer(b)
+}
+
+fn start_of_buffer(cursor: Cursor) -> *const Entry {
     unsafe {
-        match (&*a.scope, &*b.scope) {
-            (Entry::End(a_offset), Entry::End(b_offset)) => {
-                a.scope.offset(*a_offset) == b.scope.offset(*b_offset)
-            }
+        match &*cursor.scope {
+            Entry::End(offset) => cursor.scope.offset(*offset),
             _ => unreachable!(),
         }
     }

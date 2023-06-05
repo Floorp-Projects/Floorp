@@ -4,7 +4,7 @@ use std::thread::{self, ThreadId};
 /// ThreadBound is a Sync-maker and Send-maker that allows accessing a value
 /// of type T only from the original thread on which the ThreadBound was
 /// constructed.
-pub struct ThreadBound<T> {
+pub(crate) struct ThreadBound<T> {
     value: T,
     thread_id: ThreadId,
 }
@@ -15,14 +15,14 @@ unsafe impl<T> Sync for ThreadBound<T> {}
 unsafe impl<T: Copy> Send for ThreadBound<T> {}
 
 impl<T> ThreadBound<T> {
-    pub fn new(value: T) -> Self {
+    pub(crate) fn new(value: T) -> Self {
         ThreadBound {
             value,
             thread_id: thread::current().id(),
         }
     }
 
-    pub fn get(&self) -> Option<&T> {
+    pub(crate) fn get(&self) -> Option<&T> {
         if thread::current().id() == self.thread_id {
             Some(&self.value)
         } else {
@@ -36,6 +36,15 @@ impl<T: Debug> Debug for ThreadBound<T> {
         match self.get() {
             Some(value) => Debug::fmt(value, formatter),
             None => formatter.write_str("unknown"),
+        }
+    }
+}
+
+impl<T: Clone> Clone for ThreadBound<T> {
+    fn clone(&self) -> Self {
+        ThreadBound {
+            value: self.value.clone(),
+            thread_id: self.thread_id,
         }
     }
 }

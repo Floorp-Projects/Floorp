@@ -1,3 +1,5 @@
+#![allow(clippy::uninlined_format_args)]
+
 #[macro_use]
 mod macros;
 
@@ -10,11 +12,11 @@ fn test_basic() {
         shebang: Some("#!/usr/bin/env rustx"),
         items: [
             Item::Fn {
-                vis: Inherited,
+                vis: Visibility::Inherited,
                 sig: Signature {
                     ident: "main",
                     generics: Generics,
-                    output: Default,
+                    output: ReturnType::Default,
                 },
                 block: Block,
             },
@@ -31,25 +33,27 @@ fn test_comment() {
     File {
         attrs: [
             Attribute {
-                style: Inner,
-                path: Path {
-                    segments: [
-                        PathSegment {
-                            ident: "allow",
-                            arguments: None,
-                        },
-                    ],
+                style: AttrStyle::Inner,
+                meta: Meta::List {
+                    path: Path {
+                        segments: [
+                            PathSegment {
+                                ident: "allow",
+                            },
+                        ],
+                    },
+                    delimiter: MacroDelimiter::Paren,
+                    tokens: TokenStream(`dead_code`),
                 },
-                tokens: TokenStream(`(dead_code)`),
             },
         ],
         items: [
             Item::Fn {
-                vis: Inherited,
+                vis: Visibility::Inherited,
                 sig: Signature {
                     ident: "main",
                     generics: Generics,
-                    output: Default,
+                    output: ReturnType::Default,
                 },
                 block: Block,
             },

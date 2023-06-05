@@ -3,31 +3,18 @@ use crate::punctuated::Punctuated;
 
 ast_struct! {
     /// Data structure sent to a `proc_macro_derive` macro.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` feature.*
     #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DeriveInput {
-        /// Attributes tagged on the whole struct or enum.
         pub attrs: Vec<Attribute>,
-
-        /// Visibility of the struct or enum.
         pub vis: Visibility,
-
-        /// Name of the struct or enum.
         pub ident: Ident,
-
-        /// Generics required to complete the definition.
         pub generics: Generics,
-
-        /// Data within the struct or enum.
         pub data: Data,
     }
 }
 
-ast_enum_of_structs! {
+ast_enum! {
     /// The storage of a struct, enum or union data structure.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` feature.*
     ///
     /// # Syntax tree enum
     ///
@@ -36,24 +23,14 @@ ast_enum_of_structs! {
     /// [syntax tree enum]: Expr#syntax-tree-enums
     #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub enum Data {
-        /// A struct input to a `proc_macro_derive` macro.
         Struct(DataStruct),
-
-        /// An enum input to a `proc_macro_derive` macro.
         Enum(DataEnum),
-
-        /// An untagged union input to a `proc_macro_derive` macro.
         Union(DataUnion),
     }
-
-    do_not_generate_to_tokens
 }
 
 ast_struct! {
     /// A struct input to a `proc_macro_derive` macro.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DataStruct {
         pub struct_token: Token![struct],
@@ -64,9 +41,6 @@ ast_struct! {
 
 ast_struct! {
     /// An enum input to a `proc_macro_derive` macro.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DataEnum {
         pub enum_token: Token![enum],
@@ -77,9 +51,6 @@ ast_struct! {
 
 ast_struct! {
     /// An untagged union input to a `proc_macro_derive` macro.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DataUnion {
         pub union_token: Token![union],
@@ -88,7 +59,7 @@ ast_struct! {
 }
 
 #[cfg(feature = "parsing")]
-pub mod parsing {
+pub(crate) mod parsing {
     use super::*;
     use crate::parse::{Parse, ParseStream, Result};
 
@@ -161,7 +132,7 @@ pub mod parsing {
         }
     }
 
-    pub fn data_struct(
+    pub(crate) fn data_struct(
         input: ParseStream,
     ) -> Result<(Option<WhereClause>, Fields, Option<Token![;]>)> {
         let mut lookahead = input.lookahead1();
@@ -197,7 +168,7 @@ pub mod parsing {
         }
     }
 
-    pub fn data_enum(
+    pub(crate) fn data_enum(
         input: ParseStream,
     ) -> Result<(
         Option<WhereClause>,
@@ -208,12 +179,12 @@ pub mod parsing {
 
         let content;
         let brace = braced!(content in input);
-        let variants = content.parse_terminated(Variant::parse)?;
+        let variants = content.parse_terminated(Variant::parse, Token![,])?;
 
         Ok((where_clause, brace, variants))
     }
 
-    pub fn data_union(input: ParseStream) -> Result<(Option<WhereClause>, FieldsNamed)> {
+    pub(crate) fn data_union(input: ParseStream) -> Result<(Option<WhereClause>, FieldsNamed)> {
         let where_clause = input.parse()?;
         let fields = input.parse()?;
         Ok((where_clause, fields))

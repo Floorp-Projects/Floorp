@@ -4,5 +4,5 @@ struct Ipv4Addr;
 
 fn main() {
     let ip = Ipv4Addr;
-    _ = quote! { #(#ip)* };
+    let _ = quote! { #(#ip)* };
 }

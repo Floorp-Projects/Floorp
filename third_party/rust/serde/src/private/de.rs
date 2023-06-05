@@ -982,9 +982,16 @@ mod content {
         where
             E: de::Error,
         {
-            if field == self.tag {
+            self.visit_bytes(field.as_bytes())
+        }
+
+        fn visit_bytes<E>(self, field: &[u8]) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            if field == self.tag.as_bytes() {
                 Ok(TagContentOtherField::Tag)
-            } else if field == self.content {
+            } else if field == self.content.as_bytes() {
                 Ok(TagContentOtherField::Content)
             } else {
                 Ok(TagContentOtherField::Other)
@@ -2731,11 +2738,7 @@ where
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(FlatInternallyTaggedAccess {
-            iter: self.0.iter_mut(),
-            pending: None,
-            _marker: PhantomData,
-        })
+        self.deserialize_map(visitor)
     }
 
     fn deserialize_enum<V>(
@@ -2747,17 +2750,8 @@ where
     where
         V: Visitor<'de>,
     {
-        for item in self.0.iter_mut() {
-            // items in the vector are nulled out when used.  So we can only use
-            // an item if it's still filled in and if the field is one we care
-            // about.
-            let use_item = match *item {
-                None => false,
-                Some((ref c, _)) => c.as_str().map_or(false, |x| variants.contains(&x)),
-            };
-
-            if use_item {
-                let (key, value) = item.take().unwrap();
+        for entry in self.0.iter_mut() {
+            if let Some((key, value)) = flat_map_take_entry(entry, variants) {
                 return visitor.visit_enum(EnumDeserializer::new(key, Some(value)));
             }
         }
@@ -2772,7 +2766,11 @@ where
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(FlatMapAccess::new(self.0.iter()))
+        visitor.visit_map(FlatMapAccess {
+            iter: self.0.iter(),
+            pending_content: None,
+            _marker: PhantomData,
+        })
     }
 
     fn deserialize_struct<V>(
@@ -2784,7 +2782,12 @@ where
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(FlatStructAccess::new(self.0.iter_mut(), fields))
+        visitor.visit_map(FlatStructAccess {
+            iter: self.0.iter_mut(),
+            pending_content: None,
+            fields: fields,
+            _marker: PhantomData,
+        })
     }
 
     fn deserialize_newtype_struct<V>(self, _name: &str, visitor: V) -> Result<V::Value, Self::Error>
@@ -2838,23 +2841,10 @@ where
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-pub struct FlatMapAccess<'a, 'de: 'a, E> {
+struct FlatMapAccess<'a, 'de: 'a, E> {
     iter: slice::Iter<'a, Option<(Content<'de>, Content<'de>)>>,
     pending_content: Option<&'a Content<'de>>,
     _marker: PhantomData<E>,
-}
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl<'a, 'de, E> FlatMapAccess<'a, 'de, E> {
-    fn new(
-        iter: slice::Iter<'a, Option<(Content<'de>, Content<'de>)>>,
-    ) -> FlatMapAccess<'a, 'de, E> {
-        FlatMapAccess {
-            iter: iter,
-            pending_content: None,
-            _marker: PhantomData,
-        }
-    }
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -2871,6 +2861,10 @@ where
         for item in &mut self.iter {
             // Items in the vector are nulled out when used by a struct.
             if let Some((ref key, ref content)) = *item {
+                // Do not take(), instead borrow this entry. The internally tagged
+                // enum does its own buffering so we can't tell whether this entry
+                // is going to be consumed. Borrowing here leaves the entry
+                // available for later flattened fields.
                 self.pending_content = Some(content);
                 return seed.deserialize(ContentRefDeserializer::new(key)).map(Some);
             }
@@ -2890,26 +2884,11 @@ where
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-pub struct FlatStructAccess<'a, 'de: 'a, E> {
+struct FlatStructAccess<'a, 'de: 'a, E> {
     iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
     pending_content: Option<Content<'de>>,
     fields: &'static [&'static str],
     _marker: PhantomData<E>,
-}
-
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl<'a, 'de, E> FlatStructAccess<'a, 'de, E> {
-    fn new(
-        iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
-        fields: &'static [&'static str],
-    ) -> FlatStructAccess<'a, 'de, E> {
-        FlatStructAccess {
-            iter: iter,
-            pending_content: None,
-            fields: fields,
-            _marker: PhantomData,
-        }
-    }
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -2923,17 +2902,8 @@ where
     where
         T: DeserializeSeed<'de>,
     {
-        while let Some(item) = self.iter.next() {
-            // items in the vector are nulled out when used.  So we can only use
-            // an item if it's still filled in and if the field is one we care
-            // about.  In case we do not know which fields we want, we take them all.
-            let use_item = match *item {
-                None => false,
-                Some((ref c, _)) => c.as_str().map_or(false, |key| self.fields.contains(&key)),
-            };
-
-            if use_item {
-                let (key, content) = item.take().unwrap();
+        for entry in self.iter.by_ref() {
+            if let Some((key, content)) = flat_map_take_entry(entry, self.fields) {
                 self.pending_content = Some(content);
                 return seed.deserialize(ContentDeserializer::new(key)).map(Some);
             }
@@ -2952,44 +2922,24 @@ where
     }
 }
 
+/// Claims one key-value pair from a FlatMapDeserializer's field buffer if the
+/// field name matches any of the recognized ones.
 #[cfg(any(feature = "std", feature = "alloc"))]
-pub struct FlatInternallyTaggedAccess<'a, 'de: 'a, E> {
-    iter: slice::IterMut<'a, Option<(Content<'de>, Content<'de>)>>,
-    pending: Option<&'a Content<'de>>,
-    _marker: PhantomData<E>,
-}
+fn flat_map_take_entry<'de>(
+    entry: &mut Option<(Content<'de>, Content<'de>)>,
+    recognized: &[&str],
+) -> Option<(Content<'de>, Content<'de>)> {
+    // Entries in the FlatMapDeserializer buffer are nulled out as they get
+    // claimed for deserialization. We only use an entry if it is still present
+    // and if the field is one recognized by the current data structure.
+    let is_recognized = match entry {
+        None => false,
+        Some((k, _v)) => k.as_str().map_or(false, |name| recognized.contains(&name)),
+    };
 
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl<'a, 'de, E> MapAccess<'de> for FlatInternallyTaggedAccess<'a, 'de, E>
-where
-    E: Error,
-{
-    type Error = E;
-
-    fn next_key_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
-    where
-        T: DeserializeSeed<'de>,
-    {
-        for item in &mut self.iter {
-            if let Some((ref key, ref content)) = *item {
-                // Do not take(), instead borrow this entry. The internally tagged
-                // enum does its own buffering so we can't tell whether this entry
-                // is going to be consumed. Borrowing here leaves the entry
-                // available for later flattened fields.
-                self.pending = Some(content);
-                return seed.deserialize(ContentRefDeserializer::new(key)).map(Some);
-            }
-        }
-        Ok(None)
-    }
-
-    fn next_value_seed<T>(&mut self, seed: T) -> Result<T::Value, Self::Error>
-    where
-        T: DeserializeSeed<'de>,
-    {
-        match self.pending.take() {
-            Some(value) => seed.deserialize(ContentRefDeserializer::new(value)),
-            None => panic!("value is missing"),
-        }
+    if is_recognized {
+        entry.take()
+    } else {
+        None
     }
 }

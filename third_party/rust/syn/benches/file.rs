@@ -4,8 +4,11 @@
 #![recursion_limit = "1024"]
 #![allow(
     clippy::items_after_statements,
+    clippy::manual_let_else,
+    clippy::match_like_matches_macro,
     clippy::missing_panics_doc,
-    clippy::must_use_candidate
+    clippy::must_use_candidate,
+    clippy::uninlined_format_args
 )]
 
 extern crate test;
@@ -14,10 +17,9 @@ extern crate test;
 #[path = "../tests/macros/mod.rs"]
 mod macros;
 
-#[path = "../tests/common/mod.rs"]
-mod common;
+#[allow(dead_code)]
 #[path = "../tests/repo/mod.rs"]
-pub mod repo;
+mod repo;
 
 use proc_macro2::{Span, TokenStream};
 use std::fs;

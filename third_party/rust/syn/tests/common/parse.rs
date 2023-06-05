@@ -1,4 +1,5 @@
 extern crate rustc_ast;
+extern crate rustc_driver;
 extern crate rustc_expand;
 extern crate rustc_parse as parse;
 extern crate rustc_session;
@@ -13,7 +14,9 @@ use std::panic;
 
 pub fn librustc_expr(input: &str) -> Option<P<ast::Expr>> {
     match panic::catch_unwind(|| {
-        let sess = ParseSess::new(FilePathMapping::empty());
+        let locale_resources = rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec();
+        let file_path_mapping = FilePathMapping::empty();
+        let sess = ParseSess::new(locale_resources, file_path_mapping);
         let e = parse::new_parser_from_source_str(
             &sess,
             FileName::Custom("test_precedence".to_string()),

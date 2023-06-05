@@ -1,67 +1,14 @@
 #[cfg(feature = "parsing")]
-use crate::buffer::Cursor;
-#[cfg(feature = "parsing")]
 use crate::lookahead;
-#[cfg(feature = "parsing")]
-use crate::parse::{Parse, ParseStream, Result};
-#[cfg(feature = "parsing")]
-use crate::token::Token;
 
 pub use proc_macro2::Ident;
 
+#[cfg(not(doc))] // rustdoc bug: https://github.com/rust-lang/rust/issues/105735
 #[cfg(feature = "parsing")]
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub fn Ident(marker: lookahead::TokenMarker) -> Ident {
     match marker {}
-}
-
-#[cfg(feature = "parsing")]
-fn accept_as_ident(ident: &Ident) -> bool {
-    match ident.to_string().as_str() {
-        "_" |
-        // Based on https://doc.rust-lang.org/grammar.html#keywords
-        // and https://github.com/rust-lang/rfcs/blob/master/text/2421-unreservations-2018.md
-        // and https://github.com/rust-lang/rfcs/blob/master/text/2420-unreserve-proc.md
-        "abstract" | "as" | "become" | "box" | "break" | "const" | "continue" |
-        "crate" | "do" | "else" | "enum" | "extern" | "false" | "final" | "fn" |
-        "for" | "if" | "impl" | "in" | "let" | "loop" | "macro" | "match" |
-        "mod" | "move" | "mut" | "override" | "priv" | "pub" | "ref" |
-        "return" | "Self" | "self" | "static" | "struct" | "super" | "trait" |
-        "true" | "type" | "typeof" | "unsafe" | "unsized" | "use" | "virtual" |
-        "where" | "while" | "yield" => false,
-        _ => true,
-    }
-}
-
-#[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-impl Parse for Ident {
-    fn parse(input: ParseStream) -> Result<Self> {
-        input.step(|cursor| {
-            if let Some((ident, rest)) = cursor.ident() {
-                if accept_as_ident(&ident) {
-                    return Ok((ident, rest));
-                }
-            }
-            Err(cursor.error("expected identifier"))
-        })
-    }
-}
-
-#[cfg(feature = "parsing")]
-impl Token for Ident {
-    fn peek(cursor: Cursor) -> bool {
-        if let Some((ident, _rest)) = cursor.ident() {
-            accept_as_ident(&ident)
-        } else {
-            false
-        }
-    }
-
-    fn display() -> &'static str {
-        "identifier"
-    }
 }
 
 macro_rules! ident_from_token {
@@ -86,7 +33,7 @@ impl From<Token![_]> for Ident {
     }
 }
 
-pub fn xid_ok(symbol: &str) -> bool {
+pub(crate) fn xid_ok(symbol: &str) -> bool {
     let mut chars = symbol.chars();
     let first = chars.next().unwrap();
     if !(first == '_' || unicode_ident::is_xid_start(first)) {
@@ -98,4 +45,62 @@ pub fn xid_ok(symbol: &str) -> bool {
         }
     }
     true
+}
+
+#[cfg(feature = "parsing")]
+mod parsing {
+    use crate::buffer::Cursor;
+    use crate::parse::{Parse, ParseStream, Result};
+    use crate::token::Token;
+    use proc_macro2::Ident;
+
+    fn accept_as_ident(ident: &Ident) -> bool {
+        match ident.to_string().as_str() {
+            "_" |
+            // Based on https://doc.rust-lang.org/1.65.0/reference/keywords.html
+            "abstract" | "as" | "async" | "await" | "become" | "box" | "break" |
+            "const" | "continue" | "crate" | "do" | "dyn" | "else" | "enum" |
+            "extern" | "false" | "final" | "fn" | "for" | "if" | "impl" | "in" |
+            "let" | "loop" | "macro" | "match" | "mod" | "move" | "mut" |
+            "override" | "priv" | "pub" | "ref" | "return" | "Self" | "self" |
+            "static" | "struct" | "super" | "trait" | "true" | "try" | "type" |
+            "typeof" | "unsafe" | "unsized" | "use" | "virtual" | "where" |
+            "while" | "yield" => false,
+            _ => true,
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
+    impl Parse for Ident {
+        fn parse(input: ParseStream) -> Result<Self> {
+            input.step(|cursor| {
+                if let Some((ident, rest)) = cursor.ident() {
+                    if accept_as_ident(&ident) {
+                        Ok((ident, rest))
+                    } else {
+                        Err(cursor.error(format_args!(
+                            "expected identifier, found keyword `{}`",
+                            ident,
+                        )))
+                    }
+                } else {
+                    Err(cursor.error("expected identifier"))
+                }
+            })
+        }
+    }
+
+    impl Token for Ident {
+        fn peek(cursor: Cursor) -> bool {
+            if let Some((ident, _rest)) = cursor.ident() {
+                accept_as_ident(&ident)
+            } else {
+                false
+            }
+        }
+
+        fn display() -> &'static str {
+            "identifier"
+        }
+    }
 }

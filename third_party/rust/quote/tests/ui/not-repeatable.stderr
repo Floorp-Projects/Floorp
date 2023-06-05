@@ -1,5 +1,5 @@
 error[E0599]: the method `quote_into_iter` exists for struct `Ipv4Addr`, but its trait bounds were not satisfied
- --> tests/ui/not-repeatable.rs:7:9
+ --> tests/ui/not-repeatable.rs:7:13
   |
 3 | struct Ipv4Addr;
   | ---------------
@@ -10,8 +10,8 @@ error[E0599]: the method `quote_into_iter` exists for struct `Ipv4Addr`, but its
   | doesn't satisfy `Ipv4Addr: ext::RepIteratorExt`
   | doesn't satisfy `Ipv4Addr: ext::RepToTokensExt`
 ...
-7 |     _ = quote! { #(#ip)* };
-  |         ^^^^^^^^^^^^^^^^^^ method cannot be called on `Ipv4Addr` due to unsatisfied trait bounds
+7 |     let _ = quote! { #(#ip)* };
+  |             ^^^^^^^^^^^^^^^^^^ method cannot be called on `Ipv4Addr` due to unsatisfied trait bounds
   |
   = note: the following trait bounds were not satisfied:
           `Ipv4Addr: Iterator`

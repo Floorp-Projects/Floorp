@@ -1,17 +1,17 @@
 use super::*;
 use crate::token::{Brace, Bracket, Paren};
+use proc_macro2::extra::DelimSpan;
+#[cfg(any(feature = "parsing", feature = "printing"))]
+use proc_macro2::Delimiter;
 use proc_macro2::TokenStream;
 #[cfg(feature = "parsing")]
-use proc_macro2::{Delimiter, Group, Span, TokenTree};
+use proc_macro2::TokenTree;
 
 #[cfg(feature = "parsing")]
 use crate::parse::{Parse, ParseStream, Parser, Result};
 
 ast_struct! {
     /// A macro invocation: `println!("{}", mac)`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct Macro {
         pub path: Path,
@@ -23,9 +23,6 @@ ast_struct! {
 
 ast_enum! {
     /// A grouping token that surrounds a macro body: `m!(...)` or `m!{...}` or `m![...]`.
-    ///
-    /// *This type is available only if Syn is built with the `"derive"` or `"full"`
-    /// feature.*
     #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub enum MacroDelimiter {
         Paren(Paren),
@@ -34,20 +31,14 @@ ast_enum! {
     }
 }
 
-#[cfg(feature = "parsing")]
-fn delimiter_span_close(macro_delimiter: &MacroDelimiter) -> Span {
-    let delimiter = match macro_delimiter {
-        MacroDelimiter::Paren(_) => Delimiter::Parenthesis,
-        MacroDelimiter::Brace(_) => Delimiter::Brace,
-        MacroDelimiter::Bracket(_) => Delimiter::Bracket,
-    };
-    let mut group = Group::new(delimiter, TokenStream::new());
-    group.set_span(match macro_delimiter {
-        MacroDelimiter::Paren(token) => token.span,
-        MacroDelimiter::Brace(token) => token.span,
-        MacroDelimiter::Bracket(token) => token.span,
-    });
-    group.span_close()
+impl MacroDelimiter {
+    pub fn span(&self) -> &DelimSpan {
+        match self {
+            MacroDelimiter::Paren(token) => &token.span,
+            MacroDelimiter::Brace(token) => &token.span,
+            MacroDelimiter::Bracket(token) => &token.span,
+        }
+    }
 }
 
 impl Macro {
@@ -144,16 +135,16 @@ impl Macro {
     #[cfg(feature = "parsing")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     pub fn parse_body_with<F: Parser>(&self, parser: F) -> Result<F::Output> {
-        let scope = delimiter_span_close(&self.delimiter);
+        let scope = self.delimiter.span().close();
         crate::parse::parse_scoped(parser, scope, self.tokens.clone())
     }
 }
 
 #[cfg(feature = "parsing")]
-pub fn parse_delimiter(input: ParseStream) -> Result<(MacroDelimiter, TokenStream)> {
+pub(crate) fn parse_delimiter(input: ParseStream) -> Result<(MacroDelimiter, TokenStream)> {
     input.step(|cursor| {
         if let Some((TokenTree::Group(g), rest)) = cursor.token_tree() {
-            let span = g.span();
+            let span = g.delim_span();
             let delimiter = match g.delimiter() {
                 Delimiter::Parenthesis => MacroDelimiter::Paren(Paren(span)),
                 Delimiter::Brace => MacroDelimiter::Brace(Brace(span)),
@@ -170,7 +161,7 @@ pub fn parse_delimiter(input: ParseStream) -> Result<(MacroDelimiter, TokenStrea
 }
 
 #[cfg(feature = "parsing")]
-pub mod parsing {
+pub(crate) mod parsing {
     use super::*;
     use crate::parse::{Parse, ParseStream, Result};
 
@@ -198,22 +189,23 @@ mod printing {
     use proc_macro2::TokenStream;
     use quote::ToTokens;
 
+    impl MacroDelimiter {
+        pub(crate) fn surround(&self, tokens: &mut TokenStream, inner: TokenStream) {
+            let (delim, span) = match self {
+                MacroDelimiter::Paren(paren) => (Delimiter::Parenthesis, paren.span),
+                MacroDelimiter::Brace(brace) => (Delimiter::Brace, brace.span),
+                MacroDelimiter::Bracket(bracket) => (Delimiter::Bracket, bracket.span),
+            };
+            token::printing::delim(delim, span.join(), tokens, inner);
+        }
+    }
+
     #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for Macro {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.path.to_tokens(tokens);
             self.bang_token.to_tokens(tokens);
-            match &self.delimiter {
-                MacroDelimiter::Paren(paren) => {
-                    paren.surround(tokens, |tokens| self.tokens.to_tokens(tokens));
-                }
-                MacroDelimiter::Brace(brace) => {
-                    brace.surround(tokens, |tokens| self.tokens.to_tokens(tokens));
-                }
-                MacroDelimiter::Bracket(bracket) => {
-                    bracket.surround(tokens, |tokens| self.tokens.to_tokens(tokens));
-                }
-            }
+            self.delimiter.surround(tokens, self.tokens.clone());
         }
     }
 }

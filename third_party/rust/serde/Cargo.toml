@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-rust-version = "1.13"
+rust-version = "1.19"
 name = "serde"
-version = "1.0.152"
+version = "1.0.163"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -42,20 +42,21 @@ categories = [
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/serde-rs/serde"
 
+[package.metadata.docs.rs]
+features = ["derive"]
+targets = ["x86_64-unknown-linux-gnu"]
+
 [package.metadata.playground]
 features = [
     "derive",
     "rc",
 ]
 
-[package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
-
 [lib]
 doc-scrape-examples = false
 
 [dependencies.serde_derive]
-version = "=1.0.152"
+version = "=1.0.163"
 optional = true
 
 [dev-dependencies.serde_derive]
