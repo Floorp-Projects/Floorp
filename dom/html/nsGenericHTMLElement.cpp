@@ -2881,12 +2881,13 @@ void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
     return;
   }
 
-  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::popovertargetaction);
-  if (!value) {
-    return;
+  auto action = PopoverTargetAction::Toggle;
+  if (const nsAttrValue* value =
+          GetParsedAttr(nsGkAtoms::popovertargetaction)) {
+    MOZ_ASSERT(value->Type() == nsAttrValue::eEnum);
+    action = static_cast<PopoverTargetAction>(value->GetEnumValue());
   }
 
-  auto action = static_cast<PopoverTargetAction>(value->GetEnumValue());
   bool canHide = action == PopoverTargetAction::Hide ||
                  action == PopoverTargetAction::Toggle;
   bool canShow = action == PopoverTargetAction::Show ||
