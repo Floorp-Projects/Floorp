@@ -531,6 +531,7 @@ class BrowserFragment :
             ::showFindInPageBar,
             ::openSelectBrowser,
             ::openInBrowser,
+            ::showShortcutAddedSnackBar,
         )
 
         if (tab.ifCustomTab()?.config == null) {
@@ -562,6 +563,12 @@ class BrowserFragment :
             owner = this,
             view = binding.browserToolbar,
         )
+    }
+
+    private fun showShortcutAddedSnackBar() {
+        FocusSnackbar.make(requireView())
+            .setText(requireContext().getString(R.string.snackbar_added_to_shortcuts))
+            .show()
     }
 
     private fun initialiseNormalBrowserUi() {

@@ -36,6 +36,7 @@ class BrowserMenuController(
     private val showFindInPageCallback: () -> Unit,
     private val openInCallback: () -> Unit,
     private val openInBrowser: () -> Unit,
+    private val showShortcutAddedSnackBar: () -> Unit,
 ) {
     @VisibleForTesting
     private val currentTab: SessionState?
@@ -72,6 +73,7 @@ class BrowserMenuController(
                         )
                     }
                 }
+                showShortcutAddedSnackBar()
             }
             is ToolbarMenu.Item.RemoveFromShortcuts -> {
                 ioScope.launch {

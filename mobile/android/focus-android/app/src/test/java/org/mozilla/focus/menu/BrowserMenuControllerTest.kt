@@ -54,6 +54,9 @@ class BrowserMenuControllerTest {
     @Mock
     private lateinit var openInBrowser: () -> Unit
 
+    @Mock
+    private lateinit var showShortcutAddedSnackBar: () -> Unit
+
     @Before
     fun setup() {
         val store = BrowserStore(
@@ -78,6 +81,7 @@ class BrowserMenuControllerTest {
                 showFindInPageCallback,
                 openInCallback,
                 openInBrowser,
+                showShortcutAddedSnackBar,
             ),
         )
 
@@ -147,5 +151,12 @@ class BrowserMenuControllerTest {
         val menuItem = ToolbarMenu.Item.FindInPage
         browserMenuController.handleMenuInteraction(menuItem)
         Mockito.verify(showFindInPageCallback, times(1)).invoke()
+    }
+
+    @Test
+    fun `Given AddToShortCut menu item WHEN  the item is pressed THEN showShortcutAddedSnackBar is called`() {
+        val menuItem = ToolbarMenu.Item.AddToShortcuts
+        browserMenuController.handleMenuInteraction(menuItem)
+        Mockito.verify(showShortcutAddedSnackBar, times(1)).invoke()
     }
 }
