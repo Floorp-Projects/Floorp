@@ -479,7 +479,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
   margin-inline-start: 0;
 }
 
-a[is="moz-support-link"] {
+a[is="moz-support-link"]:not(.sidebar-footer-link) {
   display: inline-block;
   white-space: initial;
 }
