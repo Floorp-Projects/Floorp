@@ -753,8 +753,9 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 bool nsPresContext::UpdateFontVisibility() {
   FontVisibility oldValue = mFontVisibility;
 
-  // Chrome presContext is allowed access to all fonts.
-  if (IsChrome()) {
+  // Allow all font access for privileged contexts, including chrome and
+  // devtools contexts.
+  if (Document()->ChromeRulesEnabled()) {
     mFontVisibility = FontVisibility::User;
     return mFontVisibility != oldValue;
   }
