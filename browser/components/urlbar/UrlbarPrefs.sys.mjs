@@ -35,9 +35,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for addon suggestions in the urlbar.
   ["addons.featureGate", false],
 
-  // The minimum prefix length of addons keyword the user must type to trigger
-  // the suggestion. 0 means the min length should be taken from Nimbus.
-  ["addons.minKeywordLength", 0],
+  // The number of times the user has clicked the "Show less frequently" command
+  // for addon suggestions.
+  ["addons.showLessFrequentlyCount", 0],
 
   // "Autofill" is the name of the feature that automatically completes domains
   // and URLs that the user has visited as the user is typing them in the urlbar
@@ -453,8 +453,7 @@ const PREF_OTHER_DEFAULTS = new Map([
 // Variables with fallback prefs do not need to be defined here because their
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
-  addonsKeywordsMinimumLength: 0,
-  addonsKeywordsMinimumLengthCap: 0,
+  addonsShowLessFrequentlyCap: 0,
   addonsUITreatment: "a",
   experimentType: "",
   isBestMatchExperiment: false,

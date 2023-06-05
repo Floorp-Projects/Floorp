@@ -146,27 +146,14 @@ urlbar:
       fallbackPref: browser.urlbar.addons.featureGate
       description: >-
         Feature gate that controls whether all aspects of the addons suggestion
-        feature are exposed to the user. See also `addonsKeywordsMinimumLength`
-        and `addonsKeywordsMinimumLengthCap`.
-    addonsKeywordsMinimumLength:
+        feature are exposed to the user.
+    addonsShowLessFrequentlyCap:
       type: int
       description: >-
-        If defined and non-zero, the addons suggestion will be triggered only by
-        the query that has number of chars more than this variable.
-        However, if there is a value in browser.urlbar.addons.minKeywordLength,
-        it will take priority.
-    addonsKeywordsMinimumLengthCap:
-      type: int
-      description: >-
-        If defined and non-zero, the user will not be able to increment the
-        minimum keyword length beyond this value. e.g., if this value is 6, the
-        current minimum length is 5, and the user clicks "Show less frequently",
-        then the minimum length will be incremented to 6, the "Show less
-        frequently" command will be hidden, and the user can continue to trigger
-        the weather suggestion by typing 6 characters, but they will not be able
-        to increment the minimum length any further.
-        If not defines a cap, no cap will be used, and the user will be able to
-        increment the minimum length without any limit.
+        If defined and non-zero, this is the maximum number of times the user
+        will be able to click the "Show less frequently" command for addon
+        suggestions. If undefined or zero, the user will be able to click the
+        command without any limit.
     addonsUITreatment:
       type: string
       enum:
