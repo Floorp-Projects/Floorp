@@ -17,13 +17,9 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/function_view.h"
-#include "api/neteq/neteq.h"
-#include "api/neteq/neteq_factory.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -64,22 +60,7 @@ class AudioCodingModule {
   AudioCodingModule() {}
 
  public:
-  // Deprecated. Will be deleted when downlink clients have migrated off it.
-  struct Config {
-    Config() = default;
-    Config(const Config&) = default;
-    ~Config() = default;
-
-    NetEq::Config neteq_config;
-    Clock* clock;
-    rtc::scoped_refptr<AudioDecoderFactory> decoder_factory;
-    NetEqFactory* neteq_factory = nullptr;
-  };
-
   static std::unique_ptr<AudioCodingModule> Create();
-  // Deprecated. Will be deleted when downlink clients have migrated to the
-  // above method.
-  static AudioCodingModule* Create(const Config& config);
   virtual ~AudioCodingModule() = default;
 
   // `modifier` is called exactly once with one argument: a pointer to the

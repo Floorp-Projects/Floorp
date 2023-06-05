@@ -529,8 +529,4 @@ std::unique_ptr<AudioCodingModule> AudioCodingModule::Create() {
   return std::make_unique<AudioCodingModuleImpl>();
 }
 
-AudioCodingModule* AudioCodingModule::Create(const Config& config) {
-  return new AudioCodingModuleImpl();
-}
-
 }  // namespace webrtc
