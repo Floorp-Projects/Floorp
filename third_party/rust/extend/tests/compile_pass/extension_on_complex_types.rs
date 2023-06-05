@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use extend::ext;
 
 #[ext]
