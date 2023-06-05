@@ -102,10 +102,8 @@ jobs:
 
         echo Setup Visual Studio
         sudo apt install -y msitools python3-pip
-        ./mach python --virtualenv build build/vs/pack_vs.py -o $RUNNER_USERDIR/win-cross/vs2017.tar.zst build/vs/vs2017.yaml
-        tar --zstd -xvf $RUNNER_USERDIR/win-cross/vs2017.tar.zst -C $RUNNER_USERDIR/win-cross
-        rm $RUNNER_USERDIR/win-cross/vs2017.tar.zst
-        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2017"
+        ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
+        chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
 
         ./mach --no-interactive bootstrap --application-choice browser
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
