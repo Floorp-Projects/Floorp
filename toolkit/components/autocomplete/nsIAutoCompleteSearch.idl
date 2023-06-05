@@ -19,14 +19,11 @@ interface nsIAutoCompleteSearch : nsISupports
    * @param searchParam - An extra parameter
    * @param previousResult - A previous result to use for faster searching
    * @param listener - A listener to notify when the search is complete
-   * @param options An optional set of additional search parameters that may be
-   *        passed to the underlying implementation.
    */
   void startSearch(in AString searchString,
                    in AString searchParam,
                    in nsIAutoCompleteResult previousResult,
-                   in nsIAutoCompleteObserver listener,
-                   [optional] in nsIPropertyBag2 options);
+                   in nsIAutoCompleteObserver listener);
 
   /*
    * Stop all searches that are in progress

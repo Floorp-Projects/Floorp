@@ -972,8 +972,7 @@ nsresult nsAutoCompleteController::StartSearch(uint16_t aSearchType) {
     }
 
     rv = search->StartSearch(mSearchString, searchParam, result,
-                             static_cast<nsIAutoCompleteObserver*>(this),
-                             nullptr);
+                             static_cast<nsIAutoCompleteObserver*>(this));
     if (NS_FAILED(rv)) {
       ++mSearchesFailed;
       MOZ_ASSERT(mSearchesOngoing > 0);
