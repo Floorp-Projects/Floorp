@@ -16,7 +16,7 @@ This library provides a convenient derive macro for the standard library's
 thiserror = "1.0"
 ```
 
-*Compiler support: requires rustc 1.31+*
+*Compiler support: requires rustc 1.56+*
 
 <br>
 

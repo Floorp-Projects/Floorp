@@ -528,15 +528,14 @@ fn type_parameter_of_option(ty: &Type) -> Option<&Type> {
 
 fn spanned_error_trait(input: &DeriveInput) -> TokenStream {
     let vis_span = match &input.vis {
-        Visibility::Public(vis) => Some(vis.pub_token.span()),
-        Visibility::Crate(vis) => Some(vis.crate_token.span()),
-        Visibility::Restricted(vis) => Some(vis.pub_token.span()),
+        Visibility::Public(vis) => Some(vis.span),
+        Visibility::Restricted(vis) => Some(vis.pub_token.span),
         Visibility::Inherited => None,
     };
     let data_span = match &input.data {
-        Data::Struct(data) => data.struct_token.span(),
-        Data::Enum(data) => data.enum_token.span(),
-        Data::Union(data) => data.union_token.span(),
+        Data::Struct(data) => data.struct_token.span,
+        Data::Enum(data) => data.enum_token.span,
+        Data::Union(data) => data.union_token.span,
     };
     let first_span = vis_span.unwrap_or(data_span);
     let last_span = input.ident.span();

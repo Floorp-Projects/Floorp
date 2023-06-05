@@ -2,9 +2,9 @@ use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::BTreeSet as Set;
 use std::iter::FromIterator;
-use syn::parse::{Nothing, ParseStream};
+use syn::parse::ParseStream;
 use syn::{
-    braced, bracketed, parenthesized, token, Attribute, Error, Ident, Index, LitInt, LitStr,
+    braced, bracketed, parenthesized, token, Attribute, Error, Ident, Index, LitInt, LitStr, Meta,
     Result, Token,
 };
 
@@ -54,24 +54,27 @@ pub fn get(input: &[Attribute]) -> Result<Attrs> {
     };
 
     for attr in input {
-        if attr.path.is_ident("error") {
+        if attr.path().is_ident("error") {
             parse_error_attribute(&mut attrs, attr)?;
-        } else if attr.path.is_ident("source") {
+        } else if attr.path().is_ident("source") {
             require_empty_attribute(attr)?;
             if attrs.source.is_some() {
                 return Err(Error::new_spanned(attr, "duplicate #[source] attribute"));
             }
             attrs.source = Some(attr);
-        } else if attr.path.is_ident("backtrace") {
+        } else if attr.path().is_ident("backtrace") {
             require_empty_attribute(attr)?;
             if attrs.backtrace.is_some() {
                 return Err(Error::new_spanned(attr, "duplicate #[backtrace] attribute"));
             }
             attrs.backtrace = Some(attr);
-        } else if attr.path.is_ident("from") {
-            if !attr.tokens.is_empty() {
-                // Assume this is meant for derive_more crate or something.
-                continue;
+        } else if attr.path().is_ident("from") {
+            match attr.meta {
+                Meta::Path(_) => {}
+                Meta::List(_) | Meta::NameValue(_) => {
+                    // Assume this is meant for derive_more crate or something.
+                    continue;
+                }
             }
             if attrs.from.is_some() {
                 return Err(Error::new_spanned(attr, "duplicate #[from] attribute"));
@@ -166,21 +169,21 @@ fn parse_token_expr(input: ParseStream, mut begin_expr: bool) -> Result<TokenStr
             let delimiter = parenthesized!(content in input);
             let nested = parse_token_expr(&content, true)?;
             let mut group = Group::new(Delimiter::Parenthesis, nested);
-            group.set_span(delimiter.span);
+            group.set_span(delimiter.span.join());
             TokenTree::Group(group)
         } else if input.peek(token::Brace) {
             let content;
             let delimiter = braced!(content in input);
             let nested = parse_token_expr(&content, true)?;
             let mut group = Group::new(Delimiter::Brace, nested);
-            group.set_span(delimiter.span);
+            group.set_span(delimiter.span.join());
             TokenTree::Group(group)
         } else if input.peek(token::Bracket) {
             let content;
             let delimiter = bracketed!(content in input);
             let nested = parse_token_expr(&content, true)?;
             let mut group = Group::new(Delimiter::Bracket, nested);
-            group.set_span(delimiter.span);
+            group.set_span(delimiter.span.join());
             TokenTree::Group(group)
         } else {
             input.parse()?
@@ -191,8 +194,15 @@ fn parse_token_expr(input: ParseStream, mut begin_expr: bool) -> Result<TokenStr
 }
 
 fn require_empty_attribute(attr: &Attribute) -> Result<()> {
-    syn::parse2::<Nothing>(attr.tokens.clone())?;
-    Ok(())
+    let error_span = match &attr.meta {
+        Meta::Path(_) => return Ok(()),
+        Meta::List(meta) => meta.delimiter.span().open(),
+        Meta::NameValue(meta) => meta.eq_token.span,
+    };
+    Err(Error::new(
+        error_span,
+        "unexpected token in thiserror attribute",
+    ))
 }
 
 impl ToTokens for Display<'_> {
