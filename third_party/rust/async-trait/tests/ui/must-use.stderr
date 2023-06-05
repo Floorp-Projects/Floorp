@@ -9,3 +9,7 @@ note: the lint level is defined here
    |
 1  | #![deny(unused_must_use)]
    |         ^^^^^^^^^^^^^^^
+help: use `let _ = ...` to ignore the resulting value
+   |
+18 |     let _ = Thing.f();
+   |     +++++++
