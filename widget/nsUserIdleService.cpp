@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsError.h"
+#include "nsIAsyncShutdown.h"
 #include "nsUserIdleService.h"
 #include "nsString.h"
 #include "nsIObserverService.h"
@@ -14,6 +16,7 @@
 #include "prinrval.h"
 #include "mozilla/Logging.h"
 #include "prtime.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
@@ -63,22 +66,13 @@ NS_IMPL_ISUPPORTS(nsUserIdleServiceDaily, nsIObserver, nsISupportsWeakReference)
 NS_IMETHODIMP
 nsUserIdleServiceDaily::Observe(nsISupports*, const char* aTopic,
                                 const char16_t*) {
+  auto shutdownInProgress =
+      AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
   MOZ_LOG(sLog, LogLevel::Debug,
           ("nsUserIdleServiceDaily: Observe '%s' (%d)", aTopic,
-           mShutdownInProgress));
+           shutdownInProgress));
 
-  if (strcmp(aTopic, "profile-after-change") == 0) {
-    // We are back. Start sending notifications again.
-    mShutdownInProgress = false;
-    return NS_OK;
-  }
-
-  if (strcmp(aTopic, "xpcom-will-shutdown") == 0 ||
-      strcmp(aTopic, "profile-change-teardown") == 0) {
-    mShutdownInProgress = true;
-  }
-
-  if (mShutdownInProgress || strcmp(aTopic, OBSERVER_TOPIC_ACTIVE) == 0) {
+  if (shutdownInProgress || strcmp(aTopic, OBSERVER_TOPIC_ACTIVE) == 0) {
     return NS_OK;
   }
   MOZ_ASSERT(strcmp(aTopic, OBSERVER_TOPIC_IDLE) == 0);
@@ -144,7 +138,6 @@ nsUserIdleServiceDaily::nsUserIdleServiceDaily(nsIUserIdleService* aIdleService)
     : mIdleService(aIdleService),
       mTimer(NS_NewTimer()),
       mCategoryObservers(OBSERVER_TOPIC_IDLE_DAILY),
-      mShutdownInProgress(false),
       mExpectedTriggerTime(0),
       mIdleDailyTriggerWait(DAILY_SIGNIFICANT_IDLE_SERVICE_SEC) {}
 
@@ -214,17 +207,6 @@ void nsUserIdleServiceDaily::Init() {
     (void)mTimer->InitWithNamedFuncCallback(
         DailyCallback, this, milliSecLeftUntilDaily, nsITimer::TYPE_ONE_SHOT,
         "nsUserIdleServiceDaily::Init");
-  }
-
-  // Register for when we should terminate/pause
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    MOZ_LOG(
-        sLog, LogLevel::Debug,
-        ("nsUserIdleServiceDaily: Registering for system event observers."));
-    obs->AddObserver(this, "xpcom-will-shutdown", true);
-    obs->AddObserver(this, "profile-change-teardown", true);
-    obs->AddObserver(this, "profile-after-change", true);
   }
 }
 
@@ -368,9 +350,42 @@ nsUserIdleService* gIdleService;
 }  // namespace
 
 already_AddRefed<nsUserIdleService> nsUserIdleService::GetInstance() {
+  // Avoid late instantiation or resurrection during shutdown.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return nullptr;
+  }
   RefPtr<nsUserIdleService> instance(gIdleService);
   return instance.forget();
 }
+
+class UserIdleBlocker final : public nsIAsyncShutdownBlocker {
+  ~UserIdleBlocker() = default;
+
+ public:
+  explicit UserIdleBlocker() = default;
+
+  NS_IMETHOD
+  GetName(nsAString& aNameOut) override {
+    aNameOut = nsLiteralString(u"UserIdleBlocker");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  BlockShutdown(nsIAsyncShutdownClient* aClient) override {
+    if (gIdleService) {
+      gIdleService->SetDisabledForShutdown();
+    }
+    aClient->RemoveBlocker(this);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetState(nsIPropertyBag**) override { return NS_OK; }
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS(UserIdleBlocker, nsIAsyncShutdownBlocker)
 
 nsUserIdleService::nsUserIdleService()
     : mCurrentlySetToTimeoutAt(TimeStamp()),
@@ -383,6 +398,18 @@ nsUserIdleService::nsUserIdleService()
     mDailyIdle = new nsUserIdleServiceDaily(this);
     mDailyIdle->Init();
   }
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
+  MOZ_ASSERT(svc);
+  nsCOMPtr<nsIAsyncShutdownClient> client;
+  auto rv = svc->GetQuitApplicationGranted(getter_AddRefs(client));
+  if (NS_FAILED(rv)) {
+    // quitApplicationGranted can be undefined in some environments.
+    rv = svc->GetXpcomWillShutdown(getter_AddRefs(client));
+  }
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  client->AddBlocker(new UserIdleBlocker(),
+                     NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
+                     u""_ns);
 }
 
 nsUserIdleService::~nsUserIdleService() {
@@ -396,6 +423,14 @@ nsUserIdleService::~nsUserIdleService() {
 
 NS_IMPL_ISUPPORTS(nsUserIdleService, nsIUserIdleService,
                   nsIUserIdleServiceInternal)
+
+void nsUserIdleService::SetDisabledForShutdown() {
+  SetDisabled(true);
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+}
 
 NS_IMETHODIMP
 nsUserIdleService::AddIdleObserver(nsIObserver* aObserver,
