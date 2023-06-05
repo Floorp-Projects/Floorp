@@ -39,6 +39,11 @@ interface nsISynthVoiceRegistry : nsISupports
   void notifyVoicesChanged();
 
   /**
+   * Notify chrome code of an error when starting speech synthesis service
+   */
+  void notifyVoicesError(in AString aError);
+
+  /**
    * Set a voice as default.
    *
    * @param aUri       a unique identifier of an existing voice.
