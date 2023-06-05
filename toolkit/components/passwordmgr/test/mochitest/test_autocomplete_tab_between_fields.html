@@ -114,10 +114,9 @@ async function testResultOfTabInteractions(testData) {
   info("Placing focus in the password field");
   form.pword.focus();
   await synthesizeKey("KEY_Tab", { shiftKey: true }); // blur pw, focus un
-  await new Promise(resolve => SimpleTest.executeSoon(resolve));
 
   // moving focus shouldn't change anything
-  checkForm(1, "", "");
+  await ensureLoginFormStaysFilledWith(form.uname, "", form.pword, "");
 
   info("waiting for AC results");
   const results = await popupByArrowDown();
@@ -137,18 +136,20 @@ async function testResultOfTabInteractions(testData) {
   }, "AutoComplete popup should have closed");
 
   await synthesizeKey("KEY_Tab");
-  // Filling password is performed asynchronously.  So, let's wait the value
-  // change instead of just waiting next event loop.
+
+  // wait until username and password are automatically filled in with the
+  // expected values...
+  await TestUtils.waitForCondition(() => {
+    return form.uname.value === testData.expectedTabbedUsername & form.pword.value === testData.expectedTabbedPassword;
+  }, "Username and password field should be filled");
+
+  // ...and if the value is not different from the original value in the form,
+  // make sure that the form keeps its values
   if (testData.expectedTabbedPassword === "") {
-    await new Promise(resolve => SimpleTest.executeSoon(resolve));
-  } else {
-    await TestUtils.waitForCondition(() => {
-      return form.pword.value === testData.expectedTabbedPassword;
-    }, "Password field should be filled");
+      await ensureLoginFormStaysFilledWith(form.uname, testData.expectedTabbedUsername, form.pword, testData.expectedTabbedPassword);
   }
 
   ok(form.pword.matches("input:focus"), "pword field is focused");
-  checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
 }
 
 for (const testData of tests) {
