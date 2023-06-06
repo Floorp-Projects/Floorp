@@ -57,7 +57,7 @@ struct DevTools : public ::testing::Test {
   static void reportError(JSContext* cx, const char* message,
                           JSErrorReport* report) {
     fprintf(stderr, "%s:%u:%s\n",
-            report->filename ? report->filename : "<no filename>",
+            report->filename ? report->filename.c_str() : "<no filename>",
             (unsigned int)report->lineno, message);
   }
 

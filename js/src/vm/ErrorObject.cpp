@@ -22,7 +22,7 @@
 #include "gc/GCContext.h"
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
-#include "js/CharacterEncoding.h"
+#include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"
@@ -577,7 +577,7 @@ JSErrorReport* js::ErrorObject::getOrCreateErrorReport(JSContext* cx) {
   if (!filenameStr) {
     return nullptr;
   }
-  report.filename = filenameStr.get();
+  report.filename = JS::ConstUTF8CharsZ(filenameStr.get());
 
   // Coordinates.
   report.sourceId = sourceId();
