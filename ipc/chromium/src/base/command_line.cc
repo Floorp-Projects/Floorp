@@ -27,7 +27,7 @@ CommandLine* CommandLine::current_process_commandline_ = NULL;
 const wchar_t* const kSwitchPrefixes[] = {L"--", L"-", L"/"};
 const wchar_t kSwitchTerminator[] = L"--";
 const wchar_t kSwitchValueSeparator[] = L"=";
-#elif defined(XP_UNIX)
+#else
 // Unixes don't use slash as a switch.
 const char* const kSwitchPrefixes[] = {"--", "-"};
 const char kSwitchTerminator[] = "--";
@@ -97,7 +97,7 @@ CommandLine::CommandLine(const std::wstring& program) {
     command_line_string_ = L'"' + program + L'"';
   }
 }
-#elif defined(XP_UNIX)
+#else
 CommandLine::CommandLine(int argc, const char* const* argv) {
   for (int i = 0; i < argc; ++i) argv_.push_back(argv[i]);
   InitFromArgv();
@@ -178,7 +178,7 @@ void CommandLine::Init(int argc, const char* const* argv) {
 #if defined(XP_WIN)
   current_process_commandline_ = new CommandLine;
   current_process_commandline_->ParseFromString(::GetCommandLineW());
-#elif defined(XP_UNIX)
+#else
   current_process_commandline_ = new CommandLine(argc, argv);
 #endif
 }
@@ -342,7 +342,7 @@ void CommandLine::PrependWrapper(const std::wstring& wrapper) {
   command_line_string_ = wrapper + L" " + command_line_string_;
 }
 
-#elif defined(XP_UNIX)
+#else
 void CommandLine::AppendSwitch(const std::wstring& switch_string) {
   std::string ascii_switch = WideToASCII(switch_string);
   argv_.push_back(kSwitchPrefixes[0] + ascii_switch);

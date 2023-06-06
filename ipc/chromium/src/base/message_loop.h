@@ -22,7 +22,7 @@
 // We need this to declare base::MessagePumpWin::Dispatcher, which we should
 // really just eliminate.
 #  include "base/message_pump_win.h"
-#elif defined(XP_UNIX)
+#else
 #  include "base/message_pump_libevent.h"
 #endif
 
@@ -329,7 +329,7 @@ class MessageLoop : public base::MessagePump::Delegate {
   base::MessagePumpWin* pump_win() {
     return static_cast<base::MessagePumpWin*>(pump_.get());
   }
-#elif defined(XP_UNIX)
+#else
   base::MessagePumpLibevent* pump_libevent() {
     return static_cast<base::MessagePumpLibevent*>(pump_.get());
   }
@@ -527,7 +527,7 @@ class MessageLoopForIO : public MessageLoop {
     return static_cast<base::MessagePumpForIO*>(pump_.get());
   }
 
-#elif defined(XP_UNIX)
+#else
   typedef base::MessagePumpLibevent::Watcher Watcher;
   typedef base::MessagePumpLibevent::FileDescriptorWatcher
       FileDescriptorWatcher;
@@ -547,7 +547,7 @@ class MessageLoopForIO : public MessageLoop {
   typedef base::MessagePumpLibevent::SignalWatcher SignalWatcher;
   bool CatchSignal(int sig, SignalEvent* sigevent, SignalWatcher* delegate);
 
-#endif  // defined(XP_UNIX)
+#endif
 };
 
 // Do not add any member variables to MessageLoopForIO!  This is important b/c

@@ -18,7 +18,7 @@ namespace base {
 #if defined(XP_WIN)
 typedef HANDLE PlatformFile;
 const PlatformFile kInvalidPlatformFileValue = INVALID_HANDLE_VALUE;
-#elif defined(XP_UNIX)
+#else
 typedef int PlatformFile;
 const PlatformFile kInvalidPlatformFileValue = -1;
 #endif

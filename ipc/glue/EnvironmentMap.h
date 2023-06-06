@@ -36,7 +36,7 @@ typedef std::map<NativeEnvironmentString, NativeEnvironmentString>
 NativeEnvironmentString AlterEnvironment(const wchar_t* env,
                                          const EnvironmentMap& changes);
 
-#elif defined(XP_UNIX)
+#else
 
 typedef std::string NativeEnvironmentString;
 typedef std::map<NativeEnvironmentString, NativeEnvironmentString>

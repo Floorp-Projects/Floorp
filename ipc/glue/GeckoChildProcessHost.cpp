@@ -557,10 +557,8 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
       MOZ_CRASH("GetModuleFileNameW failed (FIXME)");
     }
     exePath = FilePath::FromWStringHack(exePathBuf);
-#elif defined(XP_UNIX)
-    exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
 #else
-#  error Sorry; target OS not supported yet.
+    exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
 #endif
     return pathType;
   }

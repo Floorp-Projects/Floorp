@@ -246,7 +246,7 @@ FilePath FilePath::AppendASCII(const std::string& component) const {
   DCHECK(IsStringASCII(component));
 #if defined(XP_WIN)
   return Append(ASCIIToWide(component));
-#elif defined(XP_UNIX)
+#else
   return Append(component);
 #endif
 }
@@ -266,7 +266,7 @@ FilePath FilePath::FromWStringHack(const std::wstring& wstring) {
 std::wstring FilePath::ToWStringHack() const {
   return base::SysNativeMBToWide(path_);
 }
-#elif defined(XP_WIN)
+#else
 // static
 FilePath FilePath::FromWStringHack(const std::wstring& wstring) {
   return FilePath(wstring);

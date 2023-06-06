@@ -40,7 +40,7 @@ const int64_t kint64max = ((int64_t)GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 #  define PRId64L "I64d"
 #  define PRIu64L "I64u"
 #  define PRIx64L "I64x"
-#elif defined(XP_WIN)
+#else
 #  define PRId64L L"I64d"
 #  define PRIu64L L"I64u"
 #  define PRIx64L L"I64x"

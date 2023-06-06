@@ -204,7 +204,7 @@ Result<Ok, LaunchError> LaunchApp(const std::wstring& cmdline,
                                   const LaunchOptions& options,
                                   ProcessHandle* process_handle);
 
-#elif defined(XP_UNIX)
+#else
 // Runs the application specified in argv[0] with the command line argv.
 //
 // The pid will be stored in process_handle if that pointer is

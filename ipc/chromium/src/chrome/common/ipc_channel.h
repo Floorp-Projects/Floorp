@@ -160,12 +160,12 @@ class Channel {
   void StartAcceptingMachPorts(Mode mode);
 #  endif
 
-#elif defined(XP_WIN)
+#else
   // Tell this pipe to accept handles. Exactly one side of the IPC connection
   // must be set as `MODE_SERVER`, and that side will be responsible for calling
   // `DuplicateHandle` to transfer the handle between processes.
   void StartAcceptingHandles(Mode mode);
-#endif  // defined(XP_UNIX)
+#endif
 
   // On Windows: Generates a channel ID that, if passed to the client
   // as a shared secret, will validate the client's authenticity.

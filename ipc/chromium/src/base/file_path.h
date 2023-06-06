@@ -90,11 +90,11 @@ class FilePath {
   // may or may not be specified.  On Mac OS X, native pathnames are encoded
   // in UTF-8.
   typedef std::string StringType;
-#elif defined(XP_WIN)
+#else
   // On Windows, for Unicode-aware applications, native pathnames are wchar_t
   // arrays encoded in UTF-16.
   typedef std::wstring StringType;
-#endif  // XP_WIN
+#endif
 
   typedef StringType::value_type CharType;
 
@@ -241,8 +241,8 @@ class FilePath {
 // Macros for string literal initialization of FilePath::CharType[].
 #if defined(XP_UNIX)
 #  define FILE_PATH_LITERAL(x) x
-#elif defined(XP_WIN)
+#else
 #  define FILE_PATH_LITERAL(x) L##x
-#endif  // XP_WIN
+#endif
 
 #endif  // BASE_FILE_PATH_H_

@@ -77,7 +77,7 @@ void AnnotateSystemError() {
   int64_t error = 0;
 #if defined(XP_WIN)
   error = ::GetLastError();
-#elif defined(XP_UNIX)
+#else
   error = errno;
 #endif
   if (error) {
