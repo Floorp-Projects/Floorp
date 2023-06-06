@@ -719,12 +719,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
             searchWidgetInstalled.set(settings.searchWidgetInstalled)
 
-            if (settings.sharedPrefsUUID.isEmpty()) {
-                settings.sharedPrefsUUID = sharedPrefsUuid.generateAndSet().toString()
-            } else {
-                sharedPrefsUuid.set(UUID.fromString(settings.sharedPrefsUUID))
-            }
-
             val openTabsCount = settings.openTabsCount
             hasOpenTabs.set(openTabsCount > 0)
             if (openTabsCount > 0) {

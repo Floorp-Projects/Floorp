@@ -28,7 +28,6 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.ServerKnobs
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -476,9 +475,6 @@ class DefaultTabsTrayController(
             TabsTray.newPrivateTabTapped.record(NoExtras())
         } else {
             TabsTray.newTabTapped.record(NoExtras())
-
-            // Temporary recording for validating the Glean Server Knobs functionality.
-            ServerKnobs.validation.record(NoExtras())
         }
     }
 
