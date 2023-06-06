@@ -217,6 +217,7 @@ const getterAllowList = [
   getter(RegExp.prototype, "source"),
   getter(RegExp.prototype, "sticky"),
   getter(RegExp.prototype, "unicode"),
+  getter(RegExp.prototype, "unicodeSets"),
   getter(RegExp, Symbol.species),
   getter(Set.prototype, "size"),
   getter(Set, Symbol.species),
