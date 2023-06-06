@@ -104,11 +104,7 @@ async function addTestTab(url) {
   const doc = win.document;
   const store = win.view.store;
 
-  const enableButton = doc.getElementById("accessibility-enable-button");
-  // If enable button is not found, asume the tool is already enabled.
-  if (enableButton) {
-    EventUtils.sendMouseEvent({ type: "click" }, enableButton, win);
-  }
+  win.focus();
 
   await waitUntilState(
     store,
