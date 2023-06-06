@@ -171,15 +171,14 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   // https://streams.spec.whatwg.org/#writablestream-set-up
  protected:
   // Sets up the WritableStream. Intended for subclasses.
-  MOZ_CAN_RUN_SCRIPT void SetUpNative(
-      JSContext* aCx, UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
-      Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
-      ErrorResult& aRv);
+  void SetUpNative(JSContext* aCx, UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
+                   Maybe<double> aHighWaterMark,
+                   QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
  public:
   // Creates and sets up a WritableStream. Use SetUpNative for this purpose in
   // subclasses.
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<WritableStream> CreateNative(
+  static already_AddRefed<WritableStream> CreateNative(
       JSContext* aCx, nsIGlobalObject& aGlobal,
       UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
       Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
