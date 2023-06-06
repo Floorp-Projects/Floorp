@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
-#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadRequest.h"
