@@ -973,58 +973,55 @@ static bool IsNonDecimalNumber(JSLinearString* str) {
                                : IsNonDecimalNumber(str->twoByteRange(nogc));
 }
 
+/**
+ * 15.5.16 ToIntlMathematicalValue ( value )
+ *
+ * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
+ */
 static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value) {
+  // Step 1.
   if (!ToPrimitive(cx, JSTYPE_NUMBER, value)) {
     return false;
   }
 
-  // Maximum exponent supported by ICU. Exponents larger than this value will
-  // cause ICU to report an error.
-  // See also "intl/icu/source/i18n/decContext.h".
-  constexpr int32_t maximumExponent = 999'999'999;
-
-  // We further limit the maximum positive exponent to avoid spending multiple
-  // seconds or even minutes in ICU when formatting large numbers.
-  constexpr int32_t maximumPositiveExponent = 9'999'999;
-
-  // Compute the maximum BigInt digit length from the maximum positive exponent.
-  //
-  // BigInts are stored with base |2 ** BigInt::DigitBits|, so we have:
-  //
-  //   |maximumPositiveExponent| * Log_DigitBase(10)
-  // = |maximumPositiveExponent| * Log2(10) / Log2(2 ** BigInt::DigitBits)
-  // = |maximumPositiveExponent| * Log2(10) / BigInt::DigitBits
-  // = 33219277.626945525... / BigInt::DigitBits
-  constexpr size_t maximumBigIntLength = 33219277.626945525 / BigInt::DigitBits;
-
-  if (!value.isString()) {
-    if (!ToNumeric(cx, value)) {
-      return false;
-    }
-
-    if (value.isBigInt() &&
-        value.toBigInt()->digitLength() > maximumBigIntLength) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_EXPONENT_TOO_LARGE);
-      return false;
-    }
-
+  // Step 2.
+  if (value.isBigInt()) {
     return true;
   }
 
+  // Step 4.
+  if (!value.isString()) {
+    // Step 4.a. (Steps 4.b-10 not applicable in our implementation.)
+    return ToNumber(cx, value);
+  }
+
+  // Step 3.
   JSLinearString* str = value.toString()->ensureLinear(cx);
   if (!str) {
     return false;
   }
 
-  // Parse the string as a number.
+  // Steps 5-6, 8, and 9.a.
   double number = LinearStringToNumber(str);
 
-  bool exponentTooLarge = false;
+  // Step 7.
   if (std::isnan(number)) {
     // Set to NaN if the input can't be parsed as a number.
     value.setNaN();
-  } else if (IsNonDecimalNumber(str)) {
+    return true;
+  }
+
+  // Step 9.
+  if (number == 0.0 || std::isinf(number)) {
+    // Step 9.a. (Reordered)
+
+    // Steps 9.b-e.
+    value.setDouble(number);
+    return true;
+  }
+
+  // Step 10.
+  if (IsNonDecimalNumber(str)) {
     // ICU doesn't accept non-decimal numbers, so we have to convert the input
     // into a base-10 string.
 
@@ -1044,41 +1041,9 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value) {
       JS_TRY_VAR_OR_RETURN_FALSE(cx, bi, StringToBigInt(cx, rooted));
       MOZ_ASSERT(bi);
 
-      if (bi->digitLength() > maximumBigIntLength) {
-        exponentTooLarge = true;
-      } else {
-        value.setBigInt(bi);
-      }
-    }
-  } else {
-    JS::AutoCheckCannotGC nogc;
-    if (auto decimal = intl::DecimalNumber::from(str, nogc)) {
-      if (decimal->isZero()) {
-        // Normalize positive/negative zero.
-        MOZ_ASSERT(number == 0);
-
-        value.setDouble(number);
-      } else if (decimal->exponentTooLarge() ||
-                 std::abs(decimal->exponent()) >= maximumExponent ||
-                 decimal->exponent() > maximumPositiveExponent) {
-        exponentTooLarge = true;
-      }
-    } else {
-      // If we can't parse the string as a decimal, it must be ±Infinity.
-      MOZ_ASSERT(std::isinf(number));
-      MOZ_ASSERT(StringFindPattern(str, cx->names().Infinity, 0) >= 0);
-
-      value.setDouble(number);
+      value.setBigInt(bi);
     }
   }
-
-  if (exponentTooLarge) {
-    // Throw an error if the exponent is too large.
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_EXPONENT_TOO_LARGE);
-    return false;
-  }
-
   return true;
 }
 
