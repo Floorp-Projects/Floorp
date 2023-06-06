@@ -55,7 +55,8 @@ export class DebugLine extends PureComponent {
     if (!location) {
       return;
     }
-    const doc = getDocument(location.source.id);
+    const { sourceId } = location;
+    const doc = getDocument(sourceId);
 
     let { line, column } = toEditorPosition(location);
     let { markTextClass, lineClass } = this.getTextClasses(why);
@@ -82,7 +83,7 @@ export class DebugLine extends PureComponent {
   clearDebugLine(why, location) {
     // Avoid clearing the line if we didn't set a debug line before,
     // or, if the document is no longer available
-    if (!location || !hasDocument(location.source.id)) {
+    if (!location || !hasDocument(location.sourceId)) {
       return;
     }
 
@@ -91,7 +92,7 @@ export class DebugLine extends PureComponent {
     }
 
     const { line } = toEditorPosition(location);
-    const doc = getDocument(location.source.id);
+    const doc = getDocument(location.sourceId);
     const { lineClass } = this.getTextClasses(why);
     doc.removeLineClass(line, "wrap", lineClass);
   }
@@ -113,7 +114,7 @@ export class DebugLine extends PureComponent {
 }
 
 function isDocumentReady(location, sourceTextContent) {
-  return location && sourceTextContent && hasDocument(location.source.id);
+  return location && sourceTextContent && hasDocument(location.sourceId);
 }
 
 const mapStateToProps = state => {

@@ -72715,7 +72715,7 @@
     let parsedScopesCache = new Map();
 
     function getScopes(location) {
-      const sourceId = location.source.id;
+      const { sourceId } = location;
       let parsedScopes = parsedScopesCache.get(sourceId);
       if (!parsedScopes) {
         parsedScopes = parseSourceScopes(sourceId);

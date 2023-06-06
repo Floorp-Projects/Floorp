@@ -29,12 +29,12 @@ export function isSelectedFrameVisible(state) {
     return false;
   }
 
-  if (isOriginalId(selectedLocation.source.id)) {
-    return selectedLocation.source.id === selectedFrame.location.source.id;
+  if (isOriginalId(selectedLocation.sourceId)) {
+    return selectedLocation.sourceId === selectedFrame.location.sourceId;
   }
 
   return (
-    selectedLocation.source.id ===
-    getGeneratedId(selectedFrame.location.source.id)
+    selectedLocation.sourceId ===
+    getGeneratedId(selectedFrame.location.sourceId)
   );
 }
