@@ -35,7 +35,7 @@
 #include "mozilla/layers/TextureHost.h"
 #include "nsThreadUtils.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "mozilla/layers/TextureD3D11.h"
 #endif
 

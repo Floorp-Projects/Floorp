@@ -226,7 +226,7 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
 
 #if defined(XP_MACOSX)
   nsAutoString binaryName = u"lib"_ns + baseName + u".dylib"_ns;
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   nsAutoString binaryName = u"lib"_ns + baseName + u".so"_ns;
 #elif defined(XP_WIN)
   nsAutoString binaryName = baseName + u".dll"_ns;

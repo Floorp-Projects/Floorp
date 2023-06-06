@@ -359,7 +359,7 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   }
 
   if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
-#ifdef OS_WIN
+#ifdef XP_WIN
     CommandLine::Init(0, nullptr);
 #else
     nsCOMPtr<nsIFile> binaryFile;

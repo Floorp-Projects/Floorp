@@ -26,7 +26,7 @@ void HostIPCAllocator::SendPendingAsyncMessages() {
   // Some type of AsyncParentMessageData message could have
   // one file descriptor (e.g. OpDeliverFence).
   // A number of file descriptors per gecko ipc message have a limitation
-  // on OS_POSIX (MACOSX or LINUX).
+  // on XP_UNIX (MACOSX or LINUX).
   static const uint32_t kMaxMessageNumber =
       IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE;
 

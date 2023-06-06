@@ -199,7 +199,7 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
 
     ScopedCloseFile temp;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     // This approach was cribbed from
     // https://searchfox.org/mozilla-central/rev/868935867c6241e1302e64cf9be8f56db0fd0d1c/xpcom/build/LateWriteChecks.cpp#158.
     HANDLE hFile;
@@ -222,7 +222,7 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
     }
 
     temp.reset(_fdopen(fd, "ab"));
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
 
     // Coverity would prefer us to set a secure umask before using `mkstemp`.
     // However, the umask is process-wide, so setting it may lead to difficult
@@ -273,13 +273,13 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
     return false;
   }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   if (!::ReplaceFileA(aFilename, tempFilename, nullptr, 0, 0, 0)) {
     NS_WARNING(
         nsPrintfCString("ReplaceFileA failed: %lu\n", GetLastError()).get());
     return false;
   }
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   if (rename(tempFilename, aFilename)) {
     NS_WARNING(
         nsPrintfCString("rename failed: %s (%d)\n", strerror(errno), errno)

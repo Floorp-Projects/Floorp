@@ -226,15 +226,15 @@ int GetDebugChildPauseTime() {
   if (pauseStr && *pauseStr) {
     int pause = atoi(pauseStr);
     if (pause != 1) {  // must be !=1 since =1 enables the default pause time
-#if defined(OS_WIN)
+#if defined(XP_WIN)
       pause *= 1000;  // convert to ms
 #endif
       return pause;
     }
   }
-#ifdef OS_POSIX
+#ifdef XP_UNIX
   return 30;  // seconds
-#elif defined(OS_WIN)
+#elif defined(XP_WIN)
   return 10000;  // milliseconds
 #else
   return 0;
@@ -432,7 +432,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   g_set_prgname(aArgv[0]);
 #endif
 
-#ifdef OS_POSIX
+#ifdef XP_UNIX
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS") ||
       PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
 #  if defined(XP_LINUX) && defined(DEBUG)
@@ -445,7 +445,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
         XRE_GetProcessTypeString(), base::GetCurrentProcId());
     sleep(GetDebugChildPauseTime());
   }
-#elif defined(OS_WIN)
+#elif defined(XP_WIN)
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS")) {
     NS_DebugBreak(NS_DEBUG_BREAK,
                   "Invoking NS_DebugBreak() to debug child process", nullptr,

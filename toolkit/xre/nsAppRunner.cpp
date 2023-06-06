@@ -5925,7 +5925,7 @@ int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 nsresult XRE_InitCommandLine(int aArgc, char* aArgv[]) {
   nsresult rv = NS_OK;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   CommandLine::Init(aArgc, aArgv);
 #else
 
