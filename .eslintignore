@@ -9,9 +9,8 @@
 # - intentionally invalid files
 # - build directories and other items that we need to ignore
 
-!.eslintrc*.js
-!.prettierrc.js
-!.babel-eslint.rc.js
+# Include all js dot files.
+!.*.js
 
 # For now, skip all json files for ESLint, these will still be run through
 # Prettier.
