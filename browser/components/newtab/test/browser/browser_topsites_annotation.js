@@ -15,7 +15,15 @@ ChromeUtils.defineESModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  );
+  module.init(this);
+  registerCleanupFunction(() => module.uninit());
+  return module;
 });
 
 const OPEN_TYPE = {

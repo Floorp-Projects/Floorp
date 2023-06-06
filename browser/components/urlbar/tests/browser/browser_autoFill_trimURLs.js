@@ -46,7 +46,7 @@ async function promiseTestResult(test) {
   await promiseSearch(test.search);
 
   Assert.equal(
-    gURLBar.inputField.value,
+    gURLBar.value,
     test.autofilledValue,
     `Autofilled value is as expected for search '${test.search}'`
   );
@@ -163,7 +163,7 @@ add_task(async function autofill_tests() {
 add_task(async function autofill_complete_domain() {
   await promiseSearch("http://www.autofilltrimurl.com");
   Assert.equal(
-    gURLBar.inputField.value,
+    gURLBar.value,
     "http://www.autofilltrimurl.com/",
     "Should have the correct autofill value"
   );
@@ -176,7 +176,7 @@ add_task(async function autofill_complete_domain() {
   );
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
-    gURLBar.inputField.value,
+    gURLBar.value,
     "www.autofilltrimurl.com/whatever",
     "Should have applied trim correctly"
   );

@@ -3592,7 +3592,7 @@ export class UrlbarInput {
       return;
     }
 
-    let oldValue = this.inputField.value;
+    let oldValue = this.value;
     let oldStart = oldValue.substring(0, this.selectionStart);
     // If there is already non-whitespace content in the URL bar
     // preceding the pasted content, it's not necessary to check
@@ -3652,7 +3652,7 @@ export class UrlbarInput {
       this.inputField.setSelectionRange(newCursorPos, newCursorPos);
 
       this.startQuery({
-        searchString: this.inputField.value,
+        searchString: this.value,
         allowAutofill: false,
         resetSearchState: false,
         event,
