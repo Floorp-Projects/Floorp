@@ -1462,15 +1462,22 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandle<SavedFrame*> frame,
     if (framePtr) {
       // In general, when we reach a frame with its hasCachedSavedFrame bit set,
       // all its parents will have the bit set as well. See the
-      // LiveSavedFrameCache comment in Activation.h for more details. Note that
-      // this invariant does not hold when we are finding the first subsumed
-      // frame. Captures using FirstSubsumedFrame ignore async parents and walk
-      // the real stack. Because we're using different rules for walking the
-      // stack, we can reach frames that weren't cached in a previous AllFrames
-      // traversal.
-      MOZ_ASSERT_IF(
-          seenCached && !capture.is<JS::FirstSubsumedFrame>(),
-          framePtr->hasCachedSavedFrame() || framePtr->isRematerializedFrame());
+      // LiveSavedFrameCache comment in Activation.h for more details. There are
+      // a few exceptions:
+      // - Rematerialized frames are always created with the bit clear.
+      // - Captures using FirstSubsumedFrame ignore async parents and walk the
+      //   real stack. Because we're using different rules for walking the
+      //   stack, we can reach frames that weren't cached in a previous
+      //   AllFrames traversal.
+      // - Similarly, if we've seen an evalInFrame frame but haven't reached
+      //   its target yet, we don't stop when we reach an async parent, so we
+      //   can reach frames that weren't cached in a previous traversal that
+      //   didn't include the evalInFrame.
+      DebugOnly<bool> hasGoodExcuse = framePtr->isRematerializedFrame() ||
+                                      capture.is<JS::FirstSubsumedFrame>() ||
+                                      !unreachedEvalTargets.empty();
+      MOZ_ASSERT_IF(seenCached,
+                    framePtr->hasCachedSavedFrame() || hasGoodExcuse);
       seenCached |= framePtr->hasCachedSavedFrame();
 
       if (capture.is<JS::AllFrames>() && framePtr->isInterpreterFrame() &&
