@@ -14,12 +14,14 @@ export class InfoGroup extends HTMLElement {
   }
 
   connectedCallback() {
-    let infoGroupTemplate = document.getElementById("info-group-template");
-    this.attachShadow({ mode: "open" }).appendChild(
-      infoGroupTemplate.content.cloneNode(true)
-    );
+    // Attach and connect before adding the template, or fluent
+    // won't translate the template copy we insert into the
+    // shadowroot.
+    this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(this.shadowRoot);
-    document.l10n.translateFragment(this.shadowRoot);
+
+    let infoGroupTemplate = document.getElementById("info-group-template");
+    this.shadowRoot.appendChild(infoGroupTemplate.content.cloneNode(true));
     this.render();
   }
 

@@ -14,13 +14,15 @@ class CertificateSection extends HTMLElement {
   }
 
   connectedCallback() {
+    // Attach and connect before adding the template, or fluent
+    // won't translate the template copy we insert into the
+    // shadowroot.
+    this.attachShadow({ mode: "open" });
+    document.l10n.connectRoot(this.shadowRoot);
+
     let template = document.getElementById("certificate-section-template");
     let templateHtml = template.content.cloneNode(true);
-
-    this.attachShadow({ mode: "open" }).appendChild(templateHtml);
-
-    document.l10n.connectRoot(this.shadowRoot);
-    document.l10n.translateFragment(this.shadowRoot);
+    this.shadowRoot.appendChild(templateHtml);
 
     this.certificateTabsSection = new CertificateTabsSection();
     this.shadowRoot.appendChild(this.certificateTabsSection.tabsElement);
