@@ -46,11 +46,7 @@ FEATURE_CHECK_NEEDED = {
     "String.prototype.isWellFormed": "!String.prototype.isWellFormed",
     "String.prototype.toWellFormed": "!String.prototype.toWellFormed",
 }
-RELEASE_OR_BETA = set(
-    [
-        "Intl.NumberFormat-v3",  # Bug 1795756
-    ]
-)
+RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
     "ShadowRealm": "--enable-shadow-realms",
