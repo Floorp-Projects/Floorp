@@ -36,7 +36,7 @@ class CommandLine {
   // Creates a parsed version of the given command-line string.
   // The program name is assumed to be the first item in the string.
   void ParseFromString(const std::wstring& command_line);
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   // Initialize from an argv vector (or directly from main()'s argv).
   CommandLine(int argc, const char* const* argv);
   explicit CommandLine(const std::vector<std::string>& argv);
@@ -87,7 +87,7 @@ class CommandLine {
   const std::wstring& command_line_string() const {
     return command_line_string_;
   }
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   // Returns the original command line string as a vector of strings.
   const std::vector<std::string>& argv() const { return argv_; }
 #endif
@@ -158,7 +158,7 @@ class CommandLine {
   // The type of native command line arguments.
   typedef std::wstring StringType;
 
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   // The argv array, with the program name in argv_[0].
   std::vector<std::string> argv_;
 

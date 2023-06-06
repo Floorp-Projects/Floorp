@@ -8,7 +8,7 @@
 #include "TestHighestPrio.h"
 
 #include "IPDLUnitTests.h"  // fail etc.
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  include <unistd.h>
 #else
 #  include <windows.h>

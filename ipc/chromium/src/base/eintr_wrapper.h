@@ -18,7 +18,7 @@
 
 #include "build/build_config.h"
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 
 #  include <errno.h>
 
@@ -58,6 +58,6 @@
 #  define IGNORE_EINTR(x) (x)
 #  define HANDLE_RV_EINTR(x) (x)
 
-#endif  // OS_POSIX
+#endif  // XP_UNIX
 
 #endif  // !BASE_EINTR_WRAPPER_H_

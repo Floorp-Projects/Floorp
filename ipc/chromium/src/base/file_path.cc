@@ -246,14 +246,14 @@ FilePath FilePath::AppendASCII(const std::string& component) const {
   DCHECK(IsStringASCII(component));
 #if defined(OS_WIN)
   return Append(ASCIIToWide(component));
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   return Append(component);
 #endif
 }
 
 bool FilePath::IsAbsolute() const { return IsPathAbsolute(path_); }
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 // See file_path.h for a discussion of the encoding of paths on POSIX
 // platforms.  These *Hack() functions are not quite correct, but they're
 // only temporary while we fix the remainder of the code.

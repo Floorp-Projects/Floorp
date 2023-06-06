@@ -282,7 +282,7 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
 typedef WindowsProcessLauncher ProcessLauncher;
 #endif  // XP_WIN
 
-#ifdef OS_POSIX
+#ifdef XP_UNIX
 class PosixProcessLauncher : public BaseProcessLauncher {
  public:
   PosixProcessLauncher(GeckoChildProcessHost* aHost,
@@ -379,7 +379,7 @@ typedef LinuxProcessLauncher ProcessLauncher;
 #  elif
 #    error "Unknown platform"
 #  endif
-#endif  // OS_POSIX
+#endif  // XP_UNIX
 
 using base::ProcessHandle;
 using mozilla::ipc::BaseProcessLauncher;
@@ -557,7 +557,7 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
       MOZ_CRASH("GetModuleFileNameW failed (FIXME)");
     }
     exePath = FilePath::FromWStringHack(exePathBuf);
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
     exePath = FilePath(CommandLine::ForCurrentProcess()->argv()[0]);
 #else
 #  error Sorry; target OS not supported yet.
@@ -1192,7 +1192,7 @@ Result<Ok, LaunchError> LinuxProcessLauncher::DoSetup() {
 }
 #endif  // MOZ_WIDGET_GTK
 
-#ifdef OS_POSIX
+#ifdef XP_UNIX
 Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   Result<Ok, LaunchError> aError = BaseProcessLauncher::DoSetup();
   if (aError.isErr()) {
@@ -1348,7 +1348,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   mChildArgv.push_back(ChildProcessType());
   return Ok();
 }
-#endif  // OS_POSIX
+#endif  // XP_UNIX
 
 #if defined(MOZ_WIDGET_ANDROID)
 RefPtr<ProcessHandlePromise> AndroidProcessLauncher::DoLaunch() {
@@ -1357,7 +1357,7 @@ RefPtr<ProcessHandlePromise> AndroidProcessLauncher::DoLaunch() {
 }
 #endif  // MOZ_WIDGET_ANDROID
 
-#ifdef OS_POSIX
+#ifdef XP_UNIX
 RefPtr<ProcessHandlePromise> PosixProcessLauncher::DoLaunch() {
   ProcessHandle handle = 0;
   Result<Ok, LaunchError> aError =
@@ -1381,7 +1381,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoFinishLaunch() {
 
   return Ok();
 }
-#endif  // OS_POSIX
+#endif  // XP_UNIX
 
 #ifdef XP_MACOSX
 Result<Ok, LaunchError> MacProcessLauncher::DoFinishLaunch() {

@@ -12,7 +12,7 @@
 
 #if defined(OS_WIN)
 #  include <windows.h>
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
 #  include <pthread.h>
 #endif
 
@@ -26,7 +26,7 @@ class LockImpl {
  public:
 #if defined(OS_WIN)
   using NativeHandle = SRWLOCK;
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   using NativeHandle = pthread_mutex_t;
 #endif
 
@@ -49,7 +49,7 @@ class LockImpl {
   // unnecessary.
   NativeHandle* native_handle() { return &native_handle_; }
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
   // Whether this lock will attempt to use priority inheritance.
   static bool PriorityInheritanceAvailable();
 #endif
