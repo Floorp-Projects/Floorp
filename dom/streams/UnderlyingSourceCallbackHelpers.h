@@ -264,6 +264,38 @@ class InputToReadableStreamAlgorithms final
   RefPtr<ReadableStream> mStream;
 };
 
+class NonAsyncInputToReadableStreamAlgorithms
+    : public UnderlyingSourceAlgorithmsWrapper {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
+      NonAsyncInputToReadableStreamAlgorithms,
+      UnderlyingSourceAlgorithmsWrapper)
+
+  explicit NonAsyncInputToReadableStreamAlgorithms(nsIInputStream& aInput)
+      : mInput(&aInput) {}
+
+  already_AddRefed<Promise> PullCallbackImpl(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) override;
+
+  void ReleaseObjects() override {
+    if (RefPtr<InputToReadableStreamAlgorithms> algorithms =
+            mAsyncAlgorithms.forget()) {
+      algorithms->ReleaseObjects();
+    }
+    if (nsCOMPtr<nsIInputStream> input = mInput.forget()) {
+      input->Close();
+    }
+  }
+
+ private:
+  ~NonAsyncInputToReadableStreamAlgorithms() = default;
+
+  nsCOMPtr<nsIInputStream> mInput;
+  RefPtr<InputToReadableStreamAlgorithms> mAsyncAlgorithms;
+};
+
 }  // namespace mozilla::dom
 
 #endif
