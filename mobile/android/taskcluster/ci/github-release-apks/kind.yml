@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
-    - android_taskgraph.transforms.multi_dep:upstream_artifacts
+    - android_taskgraph.transforms.upstream_artifacts
     - android_taskgraph.transforms.treeherder
     - android_taskgraph.transforms.github_release
     - taskgraph.transforms.task
