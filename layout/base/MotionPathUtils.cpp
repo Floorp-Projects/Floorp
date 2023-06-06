@@ -442,6 +442,7 @@ static OffsetPathData GenerateOffsetPathData(
 Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
     const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
+    const StyleOffsetPosition* aPosition,
     const Maybe<layers::MotionPathData>& aMotionPathData,
     TransformReferenceBox& aRefBox, gfx::Path* aCachedMotionPath) {
   if (!aPath) {
@@ -460,9 +461,8 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
       aDistance ? *aDistance : zeroOffsetDistance,
       aRotate ? *aRotate : autoOffsetRotate,
       aAnchor ? *aAnchor : autoOffsetAnchor,
-      // TODO: Send offset-position to the compositor, in the following patches.
-      autoOffsetPosition, aMotionPathData->origin(), aRefBox,
-      aMotionPathData->anchorAdjustment());
+      aPosition ? *aPosition : autoOffsetPosition, aMotionPathData->origin(),
+      aRefBox, aMotionPathData->anchorAdjustment());
 }
 
 /* static */

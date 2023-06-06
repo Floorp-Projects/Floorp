@@ -853,6 +853,16 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetAnchor(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetPosition(
+    value: &AnimationValue,
+) -> *const computed::motion::OffsetPosition {
+    match *value {
+        AnimationValue::OffsetPosition(ref value) => value,
+        _ => unreachable!("Expected offset-position"),
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_AnimationValue_Rotate(
     r: &computed::Rotate,
 ) -> Strong<AnimationValue> {
@@ -904,6 +914,13 @@ pub unsafe extern "C" fn Servo_AnimationValue_OffsetAnchor(
     p: &computed::position::PositionOrAuto,
 ) -> Strong<AnimationValue> {
     Arc::new(AnimationValue::OffsetAnchor(p.clone())).into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetPosition(
+    p: &computed::motion::OffsetPosition,
+) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::OffsetPosition(p.clone())).into()
 }
 
 #[no_mangle]
@@ -1022,6 +1039,12 @@ impl_basic_serde_funcs!(
     Servo_StylePositionOrAuto_Serialize,
     Servo_StylePositionOrAuto_Deserialize,
     computed::position::PositionOrAuto
+);
+
+impl_basic_serde_funcs!(
+    Servo_StyleOffsetPosition_Serialize,
+    Servo_StyleOffsetPosition_Deserialize,
+    computed::motion::OffsetPosition
 );
 
 impl_basic_serde_funcs!(

@@ -619,6 +619,7 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
   const StyleLengthPercentage* distance = nullptr;
   const StyleOffsetRotate* offsetRotate = nullptr;
   const StylePositionOrAuto* anchor = nullptr;
+  const StyleOffsetPosition* position = nullptr;
 
   for (const auto& value : aValues) {
     MOZ_ASSERT(value);
@@ -656,6 +657,10 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
         MOZ_ASSERT(!anchor);
         anchor = Servo_AnimationValue_GetOffsetAnchor(value);
         break;
+      case eCSSProperty_offset_position:
+        MOZ_ASSERT(!position);
+        position = Servo_AnimationValue_GetOffsetPosition(value);
+        break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unsupported transform-like property");
     }
@@ -663,8 +668,8 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
 
   TransformReferenceBox refBox(nullptr, aTransformData.bounds());
   Maybe<ResolvedMotionPathData> motion = MotionPathUtils::ResolveMotionPath(
-      path, distance, offsetRotate, anchor, aTransformData.motionPathData(),
-      refBox, aCachedMotionPath);
+      path, distance, offsetRotate, anchor, position,
+      aTransformData.motionPathData(), refBox, aCachedMotionPath);
 
   // We expect all our transform data to arrive in device pixels
   gfx::Point3D transformOrigin = aTransformData.transformOrigin();

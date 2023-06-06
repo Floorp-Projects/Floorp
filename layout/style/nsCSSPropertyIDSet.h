@@ -77,9 +77,9 @@ class nsCSSPropertyIDSet {
   }
 
   static constexpr size_t CompositorAnimatableDisplayItemCount() {
-    // We have 3 individual transforms and 4 motion path properties, and they
+    // We have 3 individual transforms and 5 motion path properties, and they
     // also use DisplayItemType::TYPE_TRANSFORM.
-    return COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH - 7;
+    return COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH - 8;
   }
 
   static constexpr nsCSSPropertyIDSet CSSTransformProperties() {
@@ -88,19 +88,19 @@ class nsCSSPropertyIDSet {
   }
 
   static constexpr nsCSSPropertyIDSet MotionPathProperties() {
-    // FIXME: Bug 1559232: Add offset-position.
     return nsCSSPropertyIDSet{
         eCSSProperty_offset_path, eCSSProperty_offset_distance,
-        eCSSProperty_offset_rotate, eCSSProperty_offset_anchor};
+        eCSSProperty_offset_rotate, eCSSProperty_offset_anchor,
+        eCSSProperty_offset_position};
   }
 
   static constexpr nsCSSPropertyIDSet TransformLikeProperties() {
-    // FIXME: Bug 1559232: Add offset-position.
     return nsCSSPropertyIDSet{
-        eCSSProperty_transform,     eCSSProperty_translate,
-        eCSSProperty_rotate,        eCSSProperty_scale,
-        eCSSProperty_offset_path,   eCSSProperty_offset_distance,
-        eCSSProperty_offset_rotate, eCSSProperty_offset_anchor};
+        eCSSProperty_transform,      eCSSProperty_translate,
+        eCSSProperty_rotate,         eCSSProperty_scale,
+        eCSSProperty_offset_path,    eCSSProperty_offset_distance,
+        eCSSProperty_offset_rotate,  eCSSProperty_offset_anchor,
+        eCSSProperty_offset_position};
   }
 
   static constexpr nsCSSPropertyIDSet OpacityProperties() {

@@ -206,6 +206,7 @@ static bool IsActiveLayerProperty(nsCSSPropertyID aPropID) {
     case eCSSProperty_offset_distance:
     case eCSSProperty_offset_rotate:
     case eCSSProperty_offset_anchor:
+    case eCSSProperty_offset_position:
       return true;
     default:
       return false;
@@ -228,6 +229,11 @@ static bool IsScrollLinkedEffectiveProperty(const nsCSSPropertyID aPropID) {
     case eCSSProperty_translate:
     case eCSSProperty_rotate:
     case eCSSProperty_scale:
+    case eCSSProperty_offset_path:
+    case eCSSProperty_offset_distance:
+    case eCSSProperty_offset_rotate:
+    case eCSSProperty_offset_anchor:
+    case eCSSProperty_offset_position:
     case eCSSProperty_top:
     case eCSSProperty_left:
     case eCSSProperty_bottom:
