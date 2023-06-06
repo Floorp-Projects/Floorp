@@ -75,7 +75,6 @@ describe("Outline", () => {
       },
       sourceActor: null,
       sourceActorId: undefined,
-      sourceUrl: "",
     });
   });
 
@@ -215,7 +214,6 @@ describe("Outline", () => {
         },
         sourceActor: null,
         sourceActorId: undefined,
-        sourceUrl: "",
       });
     });
 

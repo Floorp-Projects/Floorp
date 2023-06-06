@@ -57,7 +57,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "id": "1",
           "index": 0,
@@ -104,7 +103,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "scope": Object {
             "actor": "scope-actor",
@@ -192,7 +190,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "id": "1",
           "index": 0,
@@ -239,7 +236,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "scope": Object {
             "actor": "scope-actor",
@@ -330,7 +326,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "id": "3",
           "index": 0,
@@ -377,7 +372,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "scope": Object {
             "actor": "scope-actor",
@@ -465,7 +459,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "id": "1",
           "index": 0,
@@ -512,7 +505,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceUrl": "",
           },
           "scope": Object {
             "actor": "scope-actor",

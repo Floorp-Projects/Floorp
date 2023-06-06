@@ -79,7 +79,6 @@ function convertToList(results, source) {
           line: Number(line),
           column,
           source,
-          sourceUrl: source.url,
         })
       );
     }
@@ -233,8 +232,7 @@ function generatedSourceActorKey(state, sourceId) {
  *         {
  *           line: Number
  *           column: Number
- *           sourceId: String
- *           sourceUrl: String
+ *           source: Source object
  *         }
  */
 export const setBreakpointPositions = memoizeableAction(

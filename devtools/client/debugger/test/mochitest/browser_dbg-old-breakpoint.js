@@ -102,7 +102,7 @@ add_task(async function () {
     const bps = dbg.selectors.getBreakpointsList(state);
     return (
       bps.length == 1 &&
-      bps[0].location.sourceUrl.includes("entry.js") &&
+      bps[0].location.source.url.includes("entry.js") &&
       bps[0].location.line == 15
     );
   });

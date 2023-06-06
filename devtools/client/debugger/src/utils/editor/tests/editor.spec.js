@@ -141,7 +141,6 @@ describe("getSourceLocationFromMouseEvent", () => {
       column: 31,
       sourceActorId: undefined,
       sourceActor: null,
-      sourceUrl: "",
     });
     expect(editor.codeMirror.coordsChar).toHaveBeenCalledWith({
       left: 30,
