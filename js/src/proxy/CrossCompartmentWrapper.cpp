@@ -562,7 +562,7 @@ void js::RemapDeadWrapper(JSContext* cx, HandleObject wobj,
   }
 
   if (!wobj->is<WrapperObject>()) {
-    MOZ_ASSERT(js::IsDOMRemoteProxyObject(wobj));
+    MOZ_ASSERT(js::IsDOMRemoteProxyObject(wobj) || IsDeadProxyObject(wobj));
     return;
   }
 
