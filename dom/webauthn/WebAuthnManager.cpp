@@ -23,7 +23,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
-#ifdef OS_WIN
+#ifdef XP_WIN
 #  include "WinWebAuthnManager.h"
 #endif
 
@@ -451,7 +451,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       adjustedTimeout, excludeList, rpInfo, userInfo, coseAlgos, extensions,
       authSelection, attestation, context->Top()->Id());
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     ListenForVisibilityEvents();
   }
@@ -658,7 +658,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
                                 extensions, aOptions.mUserVerification,
                                 context->Top()->Id());
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     ListenForVisibilityEvents();
   }

@@ -829,11 +829,11 @@ void ContentChild::SetProcessName(const nsACString& aName,
                                   const nsACString* aCurrentProfile) {
   char* name;
   if ((name = PR_GetEnv("MOZ_DEBUG_APP_PROCESS")) && aName.EqualsASCII(name)) {
-#ifdef OS_POSIX
+#ifdef XP_UNIX
     printf_stderr("\n\nCHILDCHILDCHILDCHILD\n  [%s] debug me @%d\n\n", name,
                   getpid());
     sleep(30);
-#elif defined(OS_WIN)
+#elif defined(XP_WIN)
     // Windows has a decent JIT debugging story, so NS_DebugBreak does the
     // right thing.
     NS_DebugBreak(NS_DEBUG_BREAK,
@@ -1735,11 +1735,11 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::ContentSandboxEnabled, sandboxEnabled);
-#  if defined(XP_LINUX) && !defined(OS_ANDROID)
+#  if defined(XP_LINUX) && !defined(ANDROID)
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::ContentSandboxCapabilities,
       static_cast<int>(SandboxInfo::Get().AsInteger()));
-#  endif /* XP_LINUX && !OS_ANDROID */
+#  endif /* XP_LINUX && !ANDROID */
 #endif   /* MOZ_SANDBOX */
 
   return IPC_OK();

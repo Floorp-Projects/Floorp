@@ -15,7 +15,7 @@
 #include "common/using_std_string.h"
 #include "processor/logging.h"
 
-#if defined(OS_ANDROID) && !defined(__LP64__)
+#if defined(ANDROID) && !defined(__LP64__)
 // In 32-bit mode, Bionic's inttypes.h defines PRI/SCNxPTR as an
 // unsigned long int, which is incompatible with Bionic's stdint.h
 // defining uintptr_t as an unsigned int:

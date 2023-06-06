@@ -9,7 +9,7 @@
 #include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/GeckoArgs.h"
 
-#if defined(OS_WIN) && defined(MOZ_SANDBOX)
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
 #elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
@@ -23,7 +23,7 @@ using namespace ipc;
 GPUProcessImpl::~GPUProcessImpl() = default;
 
 bool GPUProcessImpl::Init(int aArgc, char* aArgv[]) {
-#if defined(MOZ_SANDBOX) && defined(OS_WIN)
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
   StartOpenBSDSandbox(GeckoProcessType_GPU);

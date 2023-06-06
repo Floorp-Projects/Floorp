@@ -608,7 +608,7 @@ WidgetWheelEvent PinchGestureInput::ToWidgetEvent(nsIWidget* aWidget) const {
 }
 
 double PinchGestureInput::ComputeDeltaY(nsIWidget* aWidget) const {
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   // This converts the pinch gesture value to a fake wheel event that has the
   // control key pressed so that pages can implement custom pinch gesture
   // handling. It may seem strange that this doesn't use a wheel event with

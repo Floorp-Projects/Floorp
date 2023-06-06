@@ -8,7 +8,7 @@
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/GeckoArgs.h"
 
-#if defined(OS_WIN) && defined(MOZ_SANDBOX)
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
 #elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
@@ -22,7 +22,7 @@ using namespace ipc;
 RDDProcessImpl::~RDDProcessImpl() = default;
 
 bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
-#if defined(MOZ_SANDBOX) && defined(OS_WIN)
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
   // Preload AV dlls so we can enable Binary Signature Policy
   // to restrict further dll loads.
   LoadLibraryW(L"mozavcodec.dll");

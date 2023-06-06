@@ -13,7 +13,7 @@
 
 #include "nsThreadUtils.h"
 
-#ifdef OS_WIN
+#ifdef XP_WIN
 #  include "WinWebAuthnManager.h"
 #endif
 
@@ -24,7 +24,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
     const WebAuthnMakeCredentialInfo& aTransactionInfo) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
     mgr->Register(this, aTransactionId, aTransactionInfo);
@@ -51,7 +51,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
     const WebAuthnGetAssertionInfo& aTransactionInfo) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
     mgr->Sign(this, aTransactionId, aTransactionInfo);
@@ -77,7 +77,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestCancel(
     const Tainted<uint64_t>& aTransactionId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
     mgr->Cancel(this, aTransactionId);
@@ -124,7 +124,7 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Called either by Send__delete__() in RecvDestroyMe() above, or when
   // the channel disconnects. Ensure the token manager forgets about us.
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
     if (mgr) {

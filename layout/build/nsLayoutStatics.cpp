@@ -107,7 +107,7 @@
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/WebAuthnController.h"
-#ifdef OS_WIN
+#ifdef XP_WIN
 #  include "mozilla/dom/WinWebAuthnManager.h"
 #endif
 #include "mozilla/dom/PointerEventHandler.h"
@@ -265,7 +265,7 @@ nsresult nsLayoutStatics::Initialize() {
   mozilla::dom::U2FTokenManager::Initialize();
   mozilla::dom::WebAuthnController::Initialize();
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   mozilla::dom::WinWebAuthnManager::Initialize();
 #endif
 
