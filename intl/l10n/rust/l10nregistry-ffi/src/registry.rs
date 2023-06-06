@@ -255,14 +255,14 @@ pub unsafe extern "C" fn l10nregistry_register_parent_process_sources(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn l10nregistry_addref(reg: &GeckoL10nRegistry) {
+pub unsafe extern "C" fn l10nregistry_addref(reg: *const GeckoL10nRegistry) {
     let raw = Rc::from_raw(reg);
     mem::forget(Rc::clone(&raw));
     mem::forget(raw);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn l10nregistry_release(reg: &GeckoL10nRegistry) {
+pub unsafe extern "C" fn l10nregistry_release(reg: *const GeckoL10nRegistry) {
     let _ = Rc::from_raw(reg);
 }
 
