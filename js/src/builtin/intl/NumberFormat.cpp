@@ -95,11 +95,9 @@ static const JSFunctionSpec numberFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_NumberFormat_resolvedOptions", 0,
                       0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_NumberFormat_formatToParts", 1, 0),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("formatRange", "Intl_NumberFormat_formatRange", 2, 0),
     JS_SELF_HOSTED_FN("formatRangeToParts",
                       "Intl_NumberFormat_formatRangeToParts", 2, 0),
-#endif
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
     JS_FS_END,
 };
@@ -560,22 +558,11 @@ static bool FillNumberFormatOptions(JSContext* cx, HandleObject internals,
     options.mGrouping = grouping;
   } else {
     MOZ_ASSERT(value.isBoolean());
-#ifdef NIGHTLY_BUILD
-    // The caller passes the string "always" instead of |true| when the
-    // NumberFormat V3 spec is being used.
     MOZ_ASSERT(value.toBoolean() == false);
-#endif
 
     using Grouping = mozilla::intl::NumberFormatOptions::Grouping;
 
-    Grouping grouping;
-    if (value.toBoolean()) {
-      grouping = Grouping::Auto;
-    } else {
-      grouping = Grouping::Never;
-    }
-
-    options.mGrouping = grouping;
+    options.mGrouping = Grouping::Never;
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().notation, &value)) {
@@ -1096,20 +1083,15 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject());
-#ifndef NIGHTLY_BUILD
-  MOZ_ASSERT(args[1].isNumeric());
-#endif
   MOZ_ASSERT(args[2].isBoolean());
 
   Rooted<NumberFormatObject*> numberFormat(
       cx, &args[0].toObject().as<NumberFormatObject>());
 
   RootedValue value(cx, args[1]);
-#ifdef NIGHTLY_BUILD
   if (!ToIntlMathematicalValue(cx, &value)) {
     return false;
   }
-#endif
 
   mozilla::intl::NumberFormat* nf = GetOrCreateNumberFormat(cx, numberFormat);
   if (!nf) {

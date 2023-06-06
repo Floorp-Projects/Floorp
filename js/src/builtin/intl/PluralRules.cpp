@@ -66,9 +66,7 @@ static const JSFunctionSpec pluralRules_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_PluralRules_resolvedOptions", 0,
                       0),
     JS_SELF_HOSTED_FN("select", "Intl_PluralRules_select", 1, 0),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("selectRange", "Intl_PluralRules_selectRange", 2, 0),
-#endif
     JS_FN(js_toSource_str, pluralRules_toSource, 0, 0), JS_FS_END};
 
 static const JSPropertySpec pluralRules_properties[] = {

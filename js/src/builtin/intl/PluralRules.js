@@ -379,7 +379,6 @@ function Intl_PluralRules_resolvedOptions() {
     );
   }
 
-#ifdef NIGHTLY_BUILD
   DefineDataProperty(result, "roundingMode", internals.roundingMode);
   DefineDataProperty(result, "roundingIncrement", internals.roundingIncrement);
   DefineDataProperty(
@@ -387,7 +386,6 @@ function Intl_PluralRules_resolvedOptions() {
     "trailingZeroDisplay",
     internals.trailingZeroDisplay
   );
-#endif
 
   // Step 6.
   var internalsPluralCategories = internals.pluralCategories;
@@ -404,9 +402,7 @@ function Intl_PluralRules_resolvedOptions() {
   // Step 7.
   DefineDataProperty(result, "pluralCategories", pluralCategories);
 
-#ifdef NIGHTLY_BUILD
   DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
-#endif
 
   // Step 8.
   return result;
