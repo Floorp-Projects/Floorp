@@ -2345,21 +2345,21 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
 
 void JS::OwningCompileOptions::release() {
   // OwningCompileOptions always owns these, so these casts are okay.
-  js_free(const_cast<char*>(filename_.c_str()));
+  js_free(const_cast<char*>(filename_));
   js_free(const_cast<char16_t*>(sourceMapURL_));
-  js_free(const_cast<char*>(introducerFilename_.c_str()));
+  js_free(const_cast<char*>(introducerFilename_));
 
-  filename_ = JS::ConstUTF8CharsZ();
+  filename_ = nullptr;
   sourceMapURL_ = nullptr;
-  introducerFilename_ = JS::ConstUTF8CharsZ();
+  introducerFilename_ = nullptr;
 }
 
 JS::OwningCompileOptions::~OwningCompileOptions() { release(); }
 
 size_t JS::OwningCompileOptions::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  return mallocSizeOf(filename_.c_str()) + mallocSizeOf(sourceMapURL_) +
-         mallocSizeOf(introducerFilename_.c_str());
+  return mallocSizeOf(filename_) + mallocSizeOf(sourceMapURL_) +
+         mallocSizeOf(introducerFilename_);
 }
 
 bool JS::OwningCompileOptions::copy(JSContext* cx,
@@ -2371,11 +2371,10 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   copyPODTransitiveOptions(rhs);
 
   if (rhs.filename()) {
-    const char* str = DuplicateString(cx, rhs.filename().c_str()).release();
-    if (!str) {
+    filename_ = DuplicateString(cx, rhs.filename()).release();
+    if (!filename_) {
       return false;
     }
-    filename_ = JS::ConstUTF8CharsZ(str);
   }
 
   if (rhs.sourceMapURL()) {
@@ -2386,12 +2385,11 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   }
 
   if (rhs.introducerFilename()) {
-    const char* str =
-        DuplicateString(cx, rhs.introducerFilename().c_str()).release();
-    if (!str) {
+    introducerFilename_ =
+        DuplicateString(cx, rhs.introducerFilename()).release();
+    if (!introducerFilename_) {
       return false;
     }
-    introducerFilename_ = JS::ConstUTF8CharsZ(str);
   }
 
   return true;
@@ -3884,7 +3882,7 @@ static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
   }
 
   note->errorNumber = errorNumber;
-  note->filename = JS::ConstUTF8CharsZ(filename);
+  note->filename = filename;
   note->sourceId = sourceId;
   note->lineno = lineno;
   note->column = column;

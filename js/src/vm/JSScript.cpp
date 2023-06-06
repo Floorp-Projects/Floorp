@@ -1884,7 +1884,7 @@ bool ScriptSource::initFromOptions(FrontendContext* fc,
   if (options.hasIntroductionInfo) {
     MOZ_ASSERT(options.introductionType != nullptr);
     const char* filename =
-        options.filename() ? options.filename().c_str() : "<unknown>";
+        options.filename() ? options.filename() : "<unknown>";
     UniqueChars formatted = FormatIntroducedFilename(
         filename, options.introductionLineno, options.introductionType);
     if (!formatted) {
@@ -1895,13 +1895,13 @@ bool ScriptSource::initFromOptions(FrontendContext* fc,
       return false;
     }
   } else if (options.filename()) {
-    if (!setFilename(fc, options.filename().c_str())) {
+    if (!setFilename(fc, options.filename())) {
       return false;
     }
   }
 
   if (options.introducerFilename()) {
-    if (!setIntroducerFilename(fc, options.introducerFilename().c_str())) {
+    if (!setIntroducerFilename(fc, options.introducerFilename())) {
       return false;
     }
   }

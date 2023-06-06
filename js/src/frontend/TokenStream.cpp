@@ -35,7 +35,6 @@
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
-#include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
 #include "js/RegExpFlags.h"           // JS::RegExpFlags
@@ -1035,8 +1034,8 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
 
-    if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename().c_str(), 0,
-                             line, column, GetErrorMessage, nullptr,
+    if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename(), 0, line,
+                             column, GetErrorMessage, nullptr,
                              JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
       break;
     }
@@ -1596,7 +1595,7 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
                                maybeCx->realm()->principals());
       if (!iter.done() && iter.filename()) {
-        err->filename = JS::ConstUTF8CharsZ(iter.filename());
+        err->filename = iter.filename();
         err->lineNumber = iter.computeLine(&err->columnNumber);
         return false;
       }

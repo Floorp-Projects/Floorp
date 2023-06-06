@@ -382,7 +382,7 @@ class JSAPIRuntimeTest : public JSAPITest {
     MOZ_RELEASE_ASSERT(report->isWarning());
 
     fprintf(stderr, "%s:%u:%s\n",
-            report->filename ? report->filename.c_str() : "<no filename>",
+            report->filename ? report->filename : "<no filename>",
             (unsigned int)report->lineno, report->message().c_str());
   }
 

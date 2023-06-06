@@ -11,10 +11,9 @@
 
 #include "jsfriendapi.h"  // for ScriptEnvironmentPreparer
 
-#include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ErrorReport.h"        // for JSErrorNotes, JSErrorReport
-#include "js/UniquePtr.h"          // for UniquePtr
-#include "js/Utility.h"            // for UniqueTwoByteChars
+#include "js/ErrorReport.h"  // for JSErrorNotes, JSErrorReport
+#include "js/UniquePtr.h"    // for UniquePtr
+#include "js/Utility.h"      // for UniqueTwoByteChars
 
 namespace js {
 
@@ -32,7 +31,7 @@ using JSAllocator = JSContext;
  */
 struct ErrorMetadata {
   // The file/URL where the error occurred.
-  JS::ConstUTF8CharsZ filename;
+  const char* filename;
 
   // The line and column numbers where the error occurred.  If the error
   // is with respect to the entire script and not with respect to a
