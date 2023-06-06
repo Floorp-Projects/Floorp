@@ -132,4 +132,15 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
   <script type="text/javascript" src="./static/js/main.js"></script></body>
+
+  <script>
+    // We are using eval + sourceURL in order to prevent doing any HTTP request
+    // and speed up the test runtime.
+    for(let i = 0; i < 250; i++) {
+      eval("function evalScript() {} //# sourceURL=foo/eval-script-" + i +".js");
+    }
+    for(let i = 0; i < 250; i++) {
+      eval("function evalScript() {} //# sourceURL=foo/bar/plop/eval-script-" + i +".js");
+    }
+  </script>
 </html>
