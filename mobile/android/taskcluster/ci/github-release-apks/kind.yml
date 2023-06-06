@@ -2,70 +2,73 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: android_taskgraph.loader.multi_dep:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
-    - android_taskgraph.transforms.multi_dep:transforms
-    - android_taskgraph.transforms.treeherder:transforms
-    - android_taskgraph.transforms.github_release:transforms
-    - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.multi_dep:upstream_artifacts
+    - android_taskgraph.transforms.treeherder
+    - android_taskgraph.transforms.github_release
+    - taskgraph.transforms.task
 
 kind-dependencies:
     - signing-apk
 
-primary-dependency: signing-apk
-
-group-by: build-type
-
-only-for-build-types:
-    - focus-beta
-    - focus-release
-    - klar-release
-    - fenix-beta
-    - fenix-release
-
-task-template:
-    description: Create or update a Github release in order to upload APKs
-    shipping-phase: ship
-    worker-type: github
-    worker:
-        action: release
-        git-tag: "{focus_flavor}-{head_tag}"
-        github-project:
-            by-level:
-                '3': firefox-android
-                default: staging-firefox-android
-        is-prerelease:
-            by-build-type:
-                focus-beta: true
-                focus-release: false
-                klar-release: false
-                fenix-beta: true
-                fenix-release: false
-                default: true
-        release-name:
-            by-level:
-                "3":
-                    by-build-type:
-                        focus-beta: Focus {version}
-                        focus-release: Focus {version}
-                        klar-release: Klar {version}
-                        fenix-beta: Firefox Beta {version}
-                        fenix-release: Firefox {version}
-                default:
-                    by-build-type:
-                        focus-beta: Fake Focus {version}
-                        focus-release: Fake Focus {version}
-                        klar-release: Fake Klar {version}
-                        fenix-beta: Fake Firefox Beta {version}
-                        fenix-release: Fake Firefox {version}
-    treeherder:
-        job-symbol:
-            by-build-type:
-                focus-beta: fgh-r
-                focus-release: fgh-r
-                klar-release: klgh-r
-                fenix-beta: Fgh-r
-                fenix-release: Fgh-r
-                default: gh-r
-        kind: build
+tasks:
+    release-apks:
+        description: Create or update a Github release in order to upload APKs
+        shipping-phase: ship
+        run-on-tasks-for: []
+        from-deps:
+            with-attributes:
+                build-type:
+                    - focus-beta
+                    - focus-release
+                    - klar-release
+                    - fenix-beta
+                    - fenix-release
+            group-by:
+                attribute: build-type
+            copy-attributes: true
+        worker-type: github
+        worker:
+            action: release
+            git-tag: "{focus_flavor}-{head_tag}"
+            github-project:
+                by-level:
+                    '3': firefox-android
+                    default: staging-firefox-android
+            is-prerelease:
+                by-build-type:
+                    focus-beta: true
+                    focus-release: false
+                    klar-release: false
+                    fenix-beta: true
+                    fenix-release: false
+                    default: true
+            release-name:
+                by-level:
+                    "3":
+                        by-build-type:
+                            focus-beta: Focus {version}
+                            focus-release: Focus {version}
+                            klar-release: Klar {version}
+                            fenix-beta: Firefox Beta {version}
+                            fenix-release: Firefox {version}
+                    default:
+                        by-build-type:
+                            focus-beta: Fake Focus {version}
+                            focus-release: Fake Focus {version}
+                            klar-release: Fake Klar {version}
+                            fenix-beta: Fake Firefox Beta {version}
+                            fenix-release: Fake Firefox {version}
+        treeherder:
+            job-symbol:
+                by-build-type:
+                    focus-beta: fgh-r
+                    focus-release: fgh-r
+                    klar-release: klgh-r
+                    fenix-beta: Fgh-r
+                    fenix-release: Fgh-r
+                    default: gh-r
+            kind: build
