@@ -1304,7 +1304,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   mChildArgv.push_back(mPidString);
 
   if (!CrashReporter::IsDummy()) {
-#  if defined(XP_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+#  if defined(XP_LINUX) || defined(OS_BSD) || defined(XP_SOLARIS)
     int childCrashFd, childCrashRemapFd;
     if (NS_WARN_IF(!CrashReporter::CreateNotificationPipeForChild(
             &childCrashFd, &childCrashRemapFd))) {
@@ -1321,9 +1321,9 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
       mChildArgv.push_back("false");
     }
 #  elif defined(MOZ_WIDGET_COCOA) /* defined(XP_LINUX) || defined(OS_BSD) || \
-                                     defined(OS_SOLARIS) */
+                                     defined(XP_SOLARIS) */
     mChildArgv.push_back(CrashReporter::GetChildNotificationPipe());
-#  endif  // defined(XP_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
+#  endif  // defined(XP_LINUX) || defined(OS_BSD) || defined(XP_SOLARIS)
   }
 
   int fd = PR_FileDesc2NativeHandle(mCrashAnnotationWritePipe);
