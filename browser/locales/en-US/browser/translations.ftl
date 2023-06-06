@@ -47,6 +47,8 @@ translations-panel-settings-never-translate-site =
 translations-panel-header = Translate this page?
 translations-panel-translate-button =
   .label = Translate
+translations-panel-translate-button-loading =
+  .label = Please wait…
 translations-panel-translate-cancel =
   .label = Cancel
 
