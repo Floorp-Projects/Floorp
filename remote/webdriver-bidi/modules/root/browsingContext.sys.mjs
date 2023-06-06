@@ -252,7 +252,10 @@ class BrowsingContextModule extends Module {
     }
 
     await lazy.waitForInitialNavigationCompleted(
-      browser.browsingContext.webProgress
+      browser.browsingContext.webProgress,
+      {
+        unloadTimeout: 5000,
+      }
     );
 
     return {

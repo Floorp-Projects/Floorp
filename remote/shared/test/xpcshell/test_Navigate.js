@@ -6,14 +6,25 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-const { ProgressListener, waitForInitialNavigationCompleted } =
-  ChromeUtils.importESModule("chrome://remote/content/shared/Navigate.sys.mjs");
+const {
+  DEFAULT_UNLOAD_TIMEOUT,
+  getUnloadTimeoutMultiplier,
+  ProgressListener,
+  waitForInitialNavigationCompleted,
+} = ChromeUtils.importESModule(
+  "chrome://remote/content/shared/Navigate.sys.mjs"
+);
 
 const CURRENT_URI = Services.io.newURI("http://foo.bar/");
 const INITIAL_URI = Services.io.newURI("about:blank");
 const TARGET_URI = Services.io.newURI("http://foo.cheese/");
 const TARGET_URI_IS_ERROR_PAGE = Services.io.newURI("doesnotexist://");
 const TARGET_URI_WITH_HASH = Services.io.newURI("http://foo.cheese/#foo");
+
+function wait(time) {
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  return new Promise(resolve => setTimeout(resolve, time));
+}
 
 class MockRequest {
   constructor(uri) {
@@ -296,8 +307,7 @@ add_task(
 
     await webProgress.sendStopState();
 
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await wait(100);
 
     await webProgress.sendStartState({ isInitial: false });
     await webProgress.sendStopState();
@@ -335,8 +345,7 @@ add_task(
       "waitForInitialNavigationCompleted has not resolved yet"
     );
 
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await wait(100);
 
     await webProgress.sendStartState({ isInitial: false });
     await webProgress.sendStopState();
@@ -503,6 +512,80 @@ add_task(async function test_waitForInitialNavigation_crossOrigin() {
   equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
 });
 
+add_task(async function test_waitForInitialNavigation_unloadTimeout_default() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  // Stop the navigation on an initial page which is not loading anymore.
+  // This situation happens with new tabs on Android, even though they are on
+  // the initial document, they will not start another navigation on their own.
+  await webProgress.sendStartState({ isInitial: true });
+  await webProgress.sendStopState();
+
+  ok(!webProgress.isLoadingDocument, "Document is not loading");
+
+  const navigated = waitForInitialNavigationCompleted(webProgress);
+
+  // Start a timer longer than the timeout which will be used by
+  // waitForInitialNavigationCompleted, and check that navigated resolves first.
+  const waitForMoreThanDefaultTimeout = wait(
+    DEFAULT_UNLOAD_TIMEOUT * 1.5 * getUnloadTimeoutMultiplier()
+  );
+  await Promise.race([navigated, waitForMoreThanDefaultTimeout]);
+
+  ok(
+    await hasPromiseResolved(navigated),
+    "waitForInitialNavigationCompleted has resolved"
+  );
+
+  ok(!webProgress.isLoadingDocument, "Document is not loading");
+  ok(
+    webProgress.browsingContext.currentWindowGlobal.isInitialDocument,
+    "Document is still on the initial document"
+  );
+});
+
+add_task(async function test_waitForInitialNavigation_unloadTimeout_longer() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  // Stop the navigation on an initial page which is not loading anymore.
+  // This situation happens with new tabs on Android, even though they are on
+  // the initial document, they will not start another navigation on their own.
+  await webProgress.sendStartState({ isInitial: true });
+  await webProgress.sendStopState();
+
+  ok(!webProgress.isLoadingDocument, "Document is not loading");
+
+  const navigated = waitForInitialNavigationCompleted(webProgress, {
+    unloadTimeout: DEFAULT_UNLOAD_TIMEOUT * 3,
+  });
+
+  // Start a timer longer than the default timeout of the Navigate module.
+  // However here we used a custom timeout, so we expect that the navigation
+  // will not be done yet by the time this timer is done.
+  const waitForMoreThanDefaultTimeout = wait(
+    DEFAULT_UNLOAD_TIMEOUT * 1.5 * getUnloadTimeoutMultiplier()
+  );
+  await Promise.race([navigated, waitForMoreThanDefaultTimeout]);
+
+  // The promise should not have resolved because we didn't reached the custom
+  // timeout which is 3 times the default one.
+  ok(
+    !(await hasPromiseResolved(navigated)),
+    "waitForInitialNavigationCompleted has not resolved yet"
+  );
+
+  // The navigation should eventually resolve once we reach the custom timeout.
+  await navigated;
+
+  ok(!webProgress.isLoadingDocument, "Document is not loading");
+  ok(
+    webProgress.browsingContext.currentWindowGlobal.isInitialDocument,
+    "Document is still on the initial document"
+  );
+});
+
 add_task(async function test_ProgressListener_expectNavigation() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
@@ -514,8 +597,7 @@ add_task(async function test_ProgressListener_expectNavigation() {
   const navigated = progressListener.start();
 
   // Wait for unloadTimeout to finish in case it started
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 30));
+  await wait(30);
 
   ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved yet");
 
@@ -542,8 +624,7 @@ add_task(
     await webProgress.sendStopState();
 
     // Wait for unloadTimeout to finish in case it started
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 30));
+    await wait(30);
 
     ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved yet");
 
