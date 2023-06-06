@@ -477,6 +477,11 @@ class ShowTab extends Control {
         await Promise.all(
           statReports.flatMap(report => [
             translateSection(report, "ice-stats", renderICEStats),
+            translateSection(
+              report,
+              "ice-raw-stats-fold",
+              renderRawICEStatsFold
+            ),
             translateSection(report, "rtp-stats", renderRTPStats),
             translateSection(report, "bandwidth-stats", renderBandwidthStats),
             translateSection(report, "frame-stats", renderFrameRateStats),
@@ -544,6 +549,7 @@ function renderPeerConnection(report) {
       ]),
       renderRTPStats(rndr, report),
       renderICEStats(rndr, report),
+      renderRawICEStats(rndr, report),
       renderSDPStats(rndr, report),
       renderBandwidthStats(rndr, report),
       renderFrameRateStats(rndr, report)
@@ -1301,6 +1307,11 @@ function renderICEStats(rndr, report) {
       report.iceRollbacks
     )
   );
+  return iceDiv;
+}
+
+function renderRawICEStats(rndr, report) {
+  const iceDiv = renderElement("div", {});
 
   // Render raw ICECandidate section
   {
@@ -1313,22 +1324,24 @@ function renderICEStats(rndr, report) {
     });
 
     // render raw candidates
-    foldSection.append(
-      renderElements("div", {}, [
-        renderRawIceTable(
-          "about-webrtc-raw-local-candidate",
-          report.rawLocalCandidates
-        ),
-        renderRawIceTable(
-          "about-webrtc-raw-remote-candidate",
-          report.rawRemoteCandidates
-        ),
-      ])
-    );
+    foldSection.append(renderRawICEStatsFold(rndr, report));
     section.append(foldSection);
     iceDiv.append(section);
   }
   return iceDiv;
+}
+
+function renderRawICEStatsFold(rndr, report) {
+  return renderElements("div", { id: "ice-raw-stats-fold: " + report.pcid }, [
+    renderRawIceTable(
+      "about-webrtc-raw-local-candidate",
+      report.rawLocalCandidates
+    ),
+    renderRawIceTable(
+      "about-webrtc-raw-remote-candidate",
+      report.rawRemoteCandidates
+    ),
+  ]);
 }
 
 function renderIceMetric(label, value) {
