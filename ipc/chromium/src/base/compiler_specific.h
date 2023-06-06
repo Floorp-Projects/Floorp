@@ -9,7 +9,7 @@
 
 #include "build/build_config.h"
 
-#if defined(COMPILER_MSVC)
+#if defined(_MSC_VER)
 
 // Macros for suppressing and disabling warnings on MSVC.
 //
@@ -65,14 +65,14 @@
 #  define MSVC_ENABLE_OPTIMIZE()
 #  define ALLOW_THIS_IN_INITIALIZER_LIST(code) code
 
-#endif  // COMPILER_MSVC
+#endif  // _MSC_VER
 
 // Annotate a function indicating the caller must examine the return value.
 // Use like:
 //   int foo() WARN_UNUSED_RESULT;
 // To explicitly ignore a result, see |ignore_result()| in base/macros.h.
 #undef WARN_UNUSED_RESULT
-#if defined(COMPILER_GCC) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 #  define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #else
 #  define WARN_UNUSED_RESULT

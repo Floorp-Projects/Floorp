@@ -10,7 +10,7 @@
 #include <stdarg.h>
 #include "build/build_config.h"
 
-#ifdef COMPILER_MSVC
+#ifdef _MSC_VER
 #  define GG_LONGLONG(x) x##I64
 #  define GG_ULONGLONG(x) x##UI64
 #else
@@ -45,9 +45,9 @@ namespace base {
 
 // The C standard says that va_copy is a "macro", not a function.  Trying to
 // use va_list as ref args to a function, as above, breaks some machines.
-#if defined(COMPILER_GCC)
+#if defined(__GNUC__)
 #  define base_va_copy(_a, _b) ::va_copy(_a, _b)
-#elif defined(COMPILER_MSVC)
+#elif defined(_MSC_VER)
 #  define base_va_copy(_a, _b) (_a = _b)
 #else
 #  error No va_copy for your compiler
