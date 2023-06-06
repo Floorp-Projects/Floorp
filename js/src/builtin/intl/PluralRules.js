@@ -73,6 +73,9 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
   }
 
   // Intl.NumberFormat v3 Proposal
+  internalProps.roundingIncrement = lazyPluralRulesData.roundingIncrement;
+  internalProps.roundingMode = lazyPluralRulesData.roundingMode;
+  internalProps.trailingZeroDisplay = lazyPluralRulesData.trailingZeroDisplay;
   internalProps.roundingPriority = lazyPluralRulesData.roundingPriority;
 
   // Step 13 (lazily computed on first access).
@@ -147,6 +150,16 @@ function InitializePluralRules(pluralRules, locales, options) {
   //     maximumSignificantDigits: integer ∈ [1, 21],
   //
   //     roundingPriority: "auto" / "lessPrecision" / "morePrecision",
+  //
+  //     trailingZeroDisplay: "auto" / "stripIfInteger",
+  //
+  //     roundingIncrement: integer ∈ (1, 2, 5,
+  //                                   10, 20, 25, 50,
+  //                                   100, 200, 250, 500,
+  //                                   1000, 2000, 2500, 5000),
+  //
+  //     roundingMode: "ceil" / "floor" / "expand" / "trunc" /
+  //                   "halfCeil" / "halfFloor" / "halfExpand" / "halfTrunc" / "halfEven",
   //   }
   //
   // Note that lazy data is only installed as a final step of initialization,
@@ -365,6 +378,16 @@ function Intl_PluralRules_resolvedOptions() {
       internals.maximumSignificantDigits
     );
   }
+
+#ifdef NIGHTLY_BUILD
+  DefineDataProperty(result, "roundingMode", internals.roundingMode);
+  DefineDataProperty(result, "roundingIncrement", internals.roundingIncrement);
+  DefineDataProperty(
+    result,
+    "trailingZeroDisplay",
+    internals.trailingZeroDisplay
+  );
+#endif
 
   // Step 6.
   var internalsPluralCategories = internals.pluralCategories;

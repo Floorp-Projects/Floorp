@@ -277,6 +277,70 @@ static mozilla::intl::PluralRules* NewPluralRules(
   options.mMinIntegerDigits =
       mozilla::Some(AssertedCast<uint32_t>(value.toInt32()));
 
+  if (!GetProperty(cx, internals, internals, cx->names().roundingIncrement,
+                   &value)) {
+    return nullptr;
+  }
+  options.mRoundingIncrement = AssertedCast<uint32_t>(value.toInt32());
+
+  if (!GetProperty(cx, internals, internals, cx->names().roundingMode,
+                   &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* roundingMode = value.toString()->ensureLinear(cx);
+    if (!roundingMode) {
+      return nullptr;
+    }
+
+    using RoundingMode = mozilla::intl::PluralRulesOptions::RoundingMode;
+
+    RoundingMode rounding;
+    if (StringEqualsLiteral(roundingMode, "halfExpand")) {
+      // "halfExpand" is the default mode, so we handle it first.
+      rounding = RoundingMode::HalfExpand;
+    } else if (StringEqualsLiteral(roundingMode, "ceil")) {
+      rounding = RoundingMode::Ceil;
+    } else if (StringEqualsLiteral(roundingMode, "floor")) {
+      rounding = RoundingMode::Floor;
+    } else if (StringEqualsLiteral(roundingMode, "expand")) {
+      rounding = RoundingMode::Expand;
+    } else if (StringEqualsLiteral(roundingMode, "trunc")) {
+      rounding = RoundingMode::Trunc;
+    } else if (StringEqualsLiteral(roundingMode, "halfCeil")) {
+      rounding = RoundingMode::HalfCeil;
+    } else if (StringEqualsLiteral(roundingMode, "halfFloor")) {
+      rounding = RoundingMode::HalfFloor;
+    } else if (StringEqualsLiteral(roundingMode, "halfTrunc")) {
+      rounding = RoundingMode::HalfTrunc;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(roundingMode, "halfEven"));
+      rounding = RoundingMode::HalfEven;
+    }
+
+    options.mRoundingMode = rounding;
+  }
+
+  if (!GetProperty(cx, internals, internals, cx->names().trailingZeroDisplay,
+                   &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* trailingZeroDisplay = value.toString()->ensureLinear(cx);
+    if (!trailingZeroDisplay) {
+      return nullptr;
+    }
+
+    if (StringEqualsLiteral(trailingZeroDisplay, "auto")) {
+      options.mStripTrailingZero = false;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(trailingZeroDisplay, "stripIfInteger"));
+      options.mStripTrailingZero = true;
+    }
+  }
+
   auto result = PluralRules::TryCreate(locale.get(), options);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
