@@ -183,14 +183,14 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
       return (
         location.line == 5 &&
         location.column == 2 &&
-        location.sourceId == source.id
+        location.source.id == source.id
       );
     });
 
     if (!bp) {
       throw new Error("no bp");
     }
-    expect(bp.location.sourceId).toEqual(source.id);
+    expect(bp.location.source.id).toEqual(source.id);
     expect(bp.disabled).toEqual(true);
   });
 });

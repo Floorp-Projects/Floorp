@@ -69,8 +69,9 @@ export function fromEditorLine(sourceId, line, sourceIsWasm) {
 
 export function toEditorPosition(location) {
   return {
-    line: toEditorLine(location.sourceId, location.line),
-    column: isWasm(location.sourceId) || !location.column ? 0 : location.column,
+    line: toEditorLine(location.source.id, location.line),
+    column:
+      isWasm(location.source.id) || !location.column ? 0 : location.column,
   };
 }
 

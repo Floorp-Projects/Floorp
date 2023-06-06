@@ -137,7 +137,7 @@ export class ConditionalPanel extends PureComponent {
     }
     const { location, editor } = props;
 
-    const editorLine = toEditorLine(location.sourceId, location.line || 0);
+    const editorLine = toEditorLine(location.source.id, location.line || 0);
     this.cbPanel = editor.codeMirror.addLineWidget(
       editorLine,
       this.renderConditionalPanel(props),
