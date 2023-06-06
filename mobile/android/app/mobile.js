@@ -153,12 +153,6 @@ pref("xpinstall.whitelist.add", "https://addons.mozilla.org");
 pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 
-#ifndef NIGHTLY_BUILD
-// Use blocklist v2 until blocklist v3 is enabled on Android - bug 1824863
-    pref("extensions.blocklist.useMLBF", false);
-#endif
-
-
 // Whether MV3 restrictions for actions popup urls should be extended to MV2 extensions
 // (only allowing same extension urls to be used as action popup urls).
 pref("extensions.manifestV2.actionsPopupURLRestricted", true);

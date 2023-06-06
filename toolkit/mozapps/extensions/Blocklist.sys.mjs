@@ -1460,9 +1460,8 @@ export let Blocklist = {
   recordAddonBlockChangeTelemetry(addon, reason) {
     BlocklistTelemetry.recordAddonBlockChangeTelemetry(addon, reason);
   },
-  // TODO bug 1649906 and 1824863: Remove blocklist v2 (dead code).
-  allowDeprecatedBlocklistV2:
-    AppConstants.platform === "android" && !AppConstants.NIGHTLY_BUILD,
+  // TODO bug 1649906: Remove blocklist v2 (dead code).
+  allowDeprecatedBlocklistV2: false,
 
   _chooseExtensionBlocklistImplementationFromPref() {
     if (

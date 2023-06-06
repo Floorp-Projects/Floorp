@@ -8,20 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
 
 # The addons blocklist is also in mobile/android/installer/package-manifest.in
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    if CONFIG["NIGHTLY_BUILD"]:
-        FINAL_TARGET_FILES.defaults.settings.blocklists += [
-            "addons-bloomfilters.json",
-            "gfx.json",
-        ]
-    else:
-        FINAL_TARGET_FILES.defaults.settings.blocklists += ["addons.json", "gfx.json"]
-else:
-    FINAL_TARGET_FILES.defaults.settings.blocklists += [
-        "addons-bloomfilters.json",
-        "gfx.json",
-        "plugins.json",
-    ]
+FINAL_TARGET_FILES.defaults.settings.blocklists += [
+    "addons-bloomfilters.json",
+    "gfx.json",
+]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+    FINAL_TARGET_FILES.defaults.settings.blocklists += ["plugins.json"]
+
 FINAL_TARGET_FILES.defaults.settings.blocklists["addons-bloomfilters"] += [
     "addons-bloomfilters/addons-mlbf.bin",
     "addons-bloomfilters/addons-mlbf.bin.meta.json",
