@@ -876,19 +876,6 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
     return NS_OK;
   }
 
-  nsIPrincipal* principal = NodePrincipal();
-  if (!principal) {
-    *aCancelSubmit = true;
-    return NS_OK;
-  }
-  bool formIsHTTPS = principal->SchemeIs("https");
-  if (principal->IsSystemPrincipal() || principal->GetIsExpandedPrincipal()) {
-    formIsHTTPS = OwnerDoc()->GetDocumentURI()->SchemeIs("https");
-  }
-  if (!formIsHTTPS) {
-    return NS_OK;
-  }
-
   if (nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(aActionURL)) {
     return NS_OK;
   }
@@ -905,6 +892,22 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
   if (!window) {
     return NS_ERROR_FAILURE;
   }
+
+  // Now that we know the action URI is insecure check if we're submitting from
+  // a secure URI and if so fall thru and prompt user about posting.
+  if (nsCOMPtr<nsPIDOMWindowInner> innerWindow = OwnerDoc()->GetInnerWindow()) {
+    if (!innerWindow->IsSecureContext()) {
+      return NS_OK;
+    }
+  }
+
+  // Bug 1351358: While file URIs are considered to be secure contexts we allow
+  // submitting a form to an insecure URI from a file URI without an alert in an
+  // attempt to avoid compatibility issues.
+  if (window->GetDocumentURI()->SchemeIs("file")) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   if (!docShell) {
     return NS_ERROR_FAILURE;
