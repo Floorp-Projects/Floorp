@@ -141,10 +141,11 @@ static uint32_t ErrorNumber(RegExpError err) {
       return JSMSG_BAD_CLASS_RANGE;
 
     case RegExpError::kInvalidClassSetOperation:
+      return JSMSG_INVALID_CLASS_SET_OP;
     case RegExpError::kInvalidCharacterInClass:
+      return JSMSG_INVALID_CHAR_IN_CLASS;
     case RegExpError::kNegatedCharacterClassWithStrings:
-      // TODO: implement support for /v flag (bug 1713657)
-      MOZ_CRASH("Unicode sets not supported");
+      return JSMSG_NEGATED_CLASS_WITH_STR;
 
     case RegExpError::NumErrors:
       MOZ_CRASH("Unreachable");

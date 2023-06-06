@@ -141,6 +141,7 @@ class RegExpObject : public NativeObject {
   bool multiline() const { return getFlags().multiline(); }
   bool dotAll() const { return getFlags().dotAll(); }
   bool unicode() const { return getFlags().unicode(); }
+  bool unicodeSets() const { return getFlags().unicodeSets(); }
   bool sticky() const { return getFlags().sticky(); }
 
   bool isGlobalOrSticky() const {
