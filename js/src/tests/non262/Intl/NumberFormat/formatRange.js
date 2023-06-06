@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||release_or_beta)
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
 // String representation for Number.MAX_VALUE.
 const en_Number_MAX_VALUE = "179,769,313,486,231,570" + ",000".repeat(97);
