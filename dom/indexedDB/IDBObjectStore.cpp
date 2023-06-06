@@ -366,8 +366,8 @@ JSObject* CopyingStructuredCloneReadCallback(
     }
   }
 
-  return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
-                                                             aTag);
+  return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader, aTag,
+                                                             true);
 }
 
 }  // namespace

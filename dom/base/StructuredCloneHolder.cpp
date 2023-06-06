@@ -426,9 +426,22 @@ void StructuredCloneHolder::ReadFromBuffer(
   }
 }
 
+static bool CheckExposedGlobals(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                uint16_t aExposedGlobals) {
+  if (!IsGlobalInExposureSet(aCx, aGlobal->GetGlobalJSObject(),
+                             aExposedGlobals)) {
+    ErrorResult error;
+    error.ThrowDataCloneError("Interface is not exposed.");
+    MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(aCx));
+    return false;
+  }
+  return true;
+}
+
 /* static */
 JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
-    JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag) {
+    JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+    bool aIsForIndexedDB) {
   AssertTagValues();
 
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
@@ -436,10 +449,29 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
     return nullptr;
   }
 
-  WebIDLDeserializer deserializer =
+  Maybe<std::pair<uint16_t, WebIDLDeserializer>> deserializer =
       LookupDeserializer(StructuredCloneTags(aTag));
-  if (deserializer) {
-    return deserializer(aCx, global, aReader);
+  if (deserializer.isSome()) {
+    uint16_t exposedGlobals;
+    WebIDLDeserializer deserialize;
+    std::tie(exposedGlobals, deserialize) = deserializer.ref();
+
+    // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserialize
+    //
+    // 22. Otherwise:
+    //
+    //   1. Let interfaceName be serialized.[[Type]].
+    //   2. If the interface identified by interfaceName is not exposed in
+    //      targetRealm, then throw a "DataCloneError" DOMException.
+    //
+    // The special-casing for IndexedDB is because it uses a sandbox to
+    // deserialize, which means we don't actually have access to exposure
+    // information.
+    if (!aIsForIndexedDB && !CheckExposedGlobals(aCx, global, exposedGlobals)) {
+      return nullptr;
+    }
+
+    return deserialize(aCx, global, aReader);
   }
 
   if (aTag == SCTAG_DOM_NULL_PRINCIPAL || aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
@@ -988,6 +1020,12 @@ bool WriteInputStream(JSStructuredCloneWriter* aWriter,
 
 }  // anonymous namespace
 
+static const uint16_t sWindowOrWorker =
+    GlobalNames::DedicatedWorkerGlobalScope |
+    GlobalNames::ServiceWorkerGlobalScope |
+    GlobalNames::SharedWorkerGlobalScope | GlobalNames::Window |
+    GlobalNames::WorkerDebuggerGlobalScope;
+
 JSObject* StructuredCloneHolder::CustomReadHandler(
     JSContext* aCx, JSStructuredCloneReader* aReader,
     const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag,
@@ -995,23 +1033,38 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
   MOZ_ASSERT(mSupportsCloning);
 
   if (aTag == SCTAG_DOM_BLOB) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return nullptr;
+    }
     return ReadBlob(aCx, aIndex, this);
   }
 
   if (aTag == SCTAG_DOM_DIRECTORY) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return nullptr;
+    }
     return ReadDirectory(aCx, aReader, aIndex, this);
   }
 
   if (aTag == SCTAG_DOM_FILELIST) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return nullptr;
+    }
     return ReadFileList(aCx, aReader, aIndex, this);
   }
 
   if (aTag == SCTAG_DOM_FORMDATA) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return nullptr;
+    }
     return ReadFormData(aCx, aReader, aIndex, this);
   }
 
   if (aTag == SCTAG_DOM_IMAGEBITMAP &&
       CloneScope() == StructuredCloneScope::SameProcess) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return nullptr;
+    }
     // Get the current global object.
     // This can be null.
     JS::Rooted<JSObject*> result(aCx);
@@ -1038,10 +1091,16 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
   }
 
   if (aTag == SCTAG_DOM_BROWSING_CONTEXT) {
+    if (!CheckExposedGlobals(aCx, mGlobal, GlobalNames::Window)) {
+      return nullptr;
+    }
     return BrowsingContext::ReadStructuredClone(aCx, aReader, this);
   }
 
   if (aTag == SCTAG_DOM_CLONED_ERROR_OBJECT) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return nullptr;
+    }
     return ClonedErrorHolder::ReadStructuredClone(aCx, aReader, this);
   }
 
@@ -1055,7 +1114,7 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     }
   }
 
-  return ReadFullySerializableObjects(aCx, aReader, aTag);
+  return ReadFullySerializableObjects(aCx, aReader, aTag, false);
 }
 
 bool StructuredCloneHolder::CustomWriteHandler(
@@ -1200,6 +1259,11 @@ StructuredCloneHolder::CustomReadTransferHandler(
   MOZ_ASSERT(mSupportsTransferring);
 
   if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
+    if (!CheckExposedGlobals(
+            aCx, mGlobal,
+            sWindowOrWorker | GlobalNames::AudioWorkletGlobalScope)) {
+      return false;
+    }
 #ifdef FUZZING
     if (aExtraData >= mPortIdentifiers.Length()) {
       return false;
@@ -1223,6 +1287,9 @@ StructuredCloneHolder::CustomReadTransferHandler(
 
   if (aTag == SCTAG_DOM_CANVAS &&
       CloneScope() == StructuredCloneScope::SameProcess) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return false;
+    }
     MOZ_ASSERT(aContent);
     OffscreenCanvasCloneData* data =
         static_cast<OffscreenCanvasCloneData*>(aContent);
@@ -1242,6 +1309,9 @@ StructuredCloneHolder::CustomReadTransferHandler(
 
   if (aTag == SCTAG_DOM_IMAGEBITMAP &&
       CloneScope() == StructuredCloneScope::SameProcess) {
+    if (!CheckExposedGlobals(aCx, mGlobal, sWindowOrWorker)) {
+      return false;
+    }
     MOZ_ASSERT(aContent);
     ImageBitmapCloneData* data = static_cast<ImageBitmapCloneData*>(aContent);
     RefPtr<ImageBitmap> bitmap =
