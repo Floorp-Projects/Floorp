@@ -22,39 +22,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['_SECURE_ATL'] = True
     DEFINES['CHROMIUM_BUILD'] = True
     DEFINES['U_STATIC_IMPLEMENTATION'] = True
-    DEFINES['OS_WIN'] = 1
     DEFINES['WIN32'] = True
     DEFINES['_WIN32'] = True
     DEFINES['_WINDOWS'] = True
     DEFINES['WIN32_LEAN_AND_MEAN'] = True
-
-    if CONFIG['CC_TYPE'] == 'clang-cl':
-        DEFINES['COMPILER_MSVC'] = True
-
-else:
-    DEFINES['OS_POSIX'] = 1
-
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        DEFINES['OS_MACOSX'] = 1
-
-    elif CONFIG['OS_ARCH'] == 'SunOS':
-        DEFINES['OS_SOLARIS'] = 1
-
-    elif CONFIG['OS_ARCH'] == 'DragonFly':
-        DEFINES['OS_DRAGONFLY'] = 1
-        DEFINES['OS_BSD'] = 1
-
-    elif CONFIG['OS_ARCH'] == 'FreeBSD' or CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
-        DEFINES['OS_FREEBSD'] = 1
-        DEFINES['OS_BSD'] = 1
-
-    elif CONFIG['OS_ARCH'] == 'NetBSD':
-        DEFINES['OS_NETBSD'] = 1
-        DEFINES['OS_BSD'] = 1
-
-    elif CONFIG['OS_ARCH'] == 'OpenBSD':
-        DEFINES['OS_OPENBSD'] = 1
-        DEFINES['OS_BSD'] = 1
-
-    else:
-        DEFINES['OS_LINUX'] = 1

@@ -328,14 +328,13 @@ set_config("MOZ_CLANG_PATH", bindgen_config_paths.clang_path)
 
 @depends(
     target,
-    target_is_unix,
     cxx_compiler,
     bindgen_cflags_android,
     bindgen_config_paths.clang_flags,
     all_clang_arm_flags,
 )
 def basic_bindgen_cflags(
-    target, is_unix, compiler_info, android_cflags, clang_flags, all_arm_flags
+    target, compiler_info, android_cflags, clang_flags, all_arm_flags
 ):
     args = [
         "-x",
@@ -348,23 +347,11 @@ def basic_bindgen_cflags(
         "-DRUST_BINDGEN",
     ]
 
-    if is_unix:
-        args += ["-DOS_POSIX=1"]
-
     if target.os == "Android":
         args += android_cflags
 
     args += {
-        "Android": ["-DOS_ANDROID=1"],
-        "DragonFly": ["-DOS_BSD=1", "-DOS_DRAGONFLY=1"],
-        "FreeBSD": ["-DOS_BSD=1", "-DOS_FREEBSD=1"],
-        "GNU": ["-DOS_LINUX=1"],
-        "NetBSD": ["-DOS_BSD=1", "-DOS_NETBSD=1"],
-        "OpenBSD": ["-DOS_BSD=1", "-DOS_OPENBSD=1"],
-        "OSX": ["-DOS_MACOSX=1"],
-        "SunOS": ["-DOS_SOLARIS=1"],
         "WINNT": [
-            "-DOS_WIN=1",
             "-DWIN32=1",
         ],
     }.get(target.os, [])
