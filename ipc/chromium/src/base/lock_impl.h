@@ -11,7 +11,7 @@
 
 #if defined(XP_WIN)
 #  include <windows.h>
-#elif defined(XP_UNIX)
+#else
 #  include <pthread.h>
 #endif
 
@@ -25,7 +25,7 @@ class LockImpl {
  public:
 #if defined(XP_WIN)
   using NativeHandle = SRWLOCK;
-#elif defined(XP_UNIX)
+#else
   using NativeHandle = pthread_mutex_t;
 #endif
 

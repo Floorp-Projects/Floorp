@@ -81,7 +81,7 @@ static void ReallySleep(int aSeconds) {
   struct ::timespec snooze = {aSeconds, 0};
   HANDLE_EINTR(nanosleep(&snooze, &snooze));
 }
-#  elif defined(XP_WIN)
+#  else
 static void ReallySleep(int aSeconds) { ::Sleep(aSeconds * 1000); }
 #  endif  // Unix/Win
 static void SleepIfEnv(const char* aName) {

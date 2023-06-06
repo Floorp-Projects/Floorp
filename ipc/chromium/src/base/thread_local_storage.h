@@ -58,7 +58,7 @@ class ThreadLocalStorage {
     bool initialized_;
 #if defined(XP_WIN)
     int slot_;
-#elif defined(XP_UNIX)
+#else
     pthread_key_t key_;
 #endif
 

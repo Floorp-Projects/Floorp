@@ -54,7 +54,7 @@
 
 #if defined(XP_WIN)
 #  include <windows.h>
-#elif defined(XP_UNIX)
+#else
 #  include <pthread.h>
 #endif
 
@@ -64,7 +64,7 @@ namespace base {
 struct ThreadLocalPlatform {
 #if defined(XP_WIN)
   typedef DWORD SlotType;
-#elif defined(XP_UNIX)
+#else
   typedef pthread_key_t SlotType;
 #endif
 

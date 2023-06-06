@@ -182,7 +182,7 @@ class SharedMemory {
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
   bool external_section_ = false;
-#elif defined(XP_UNIX) && !defined(ANDROID)
+#elif !defined(ANDROID)
   mozilla::UniqueFileHandle frozen_file_;
   bool is_memfd_ = false;
 #endif
