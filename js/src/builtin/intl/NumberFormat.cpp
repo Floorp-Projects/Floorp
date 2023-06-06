@@ -121,9 +121,9 @@ const ClassSpec NumberFormatObject::classSpec_ = {
     ClassSpec::DontDefineConstructor};
 
 /**
- * 11.2.1 Intl.NumberFormat([ locales [, options]])
+ * 15.1.1 Intl.NumberFormat ( [ locales [ , options ] ] )
  *
- * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
+ * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
  */
 static bool NumberFormat(JSContext* cx, const CallArgs& args, bool construct) {
   AutoJSConstructorProfilerEntry pseudoFrame(cx, "Intl.NumberFormat");
