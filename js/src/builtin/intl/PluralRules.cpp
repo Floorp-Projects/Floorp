@@ -86,8 +86,9 @@ const ClassSpec PluralRulesObject::classSpec_ = {
     ClassSpec::DontDefineConstructor};
 
 /**
- * PluralRules constructor.
- * Spec: ECMAScript 402 API, PluralRules, 13.2.1
+ * 16.1.1 Intl.PluralRules ( [ locales [ , options ] ] )
+ *
+ * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
  */
 static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -367,15 +368,24 @@ static mozilla::intl::PluralRules* GetOrCreatePluralRules(
   return pr;
 }
 
+/**
+ * 16.5.3 ResolvePlural ( pluralRules, n )
+ * 16.5.2 PluralRuleSelect ( locale, type, n, operands )
+ *
+ * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
+ */
 bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
 
+  // Steps 1-2.
   Rooted<PluralRulesObject*> pluralRules(
       cx, &args[0].toObject().as<PluralRulesObject>());
 
+  // Step 3.
   double x = args[1].toNumber();
 
+  // Steps 4-11.
   using PluralRules = mozilla::intl::PluralRules;
   PluralRules* pr = GetOrCreatePluralRules(cx, pluralRules);
   if (!pr) {
@@ -396,8 +406,10 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * ResolvePluralRange ( pluralRules, x, y )
- * PluralRuleSelectRange ( locale, type, xp, yp )
+ * 16.5.5 ResolvePluralRange ( pluralRules, x, y )
+ * 16.5.4 PluralRuleSelectRange ( locale, type, xp, yp )
+ *
+ * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
  */
 bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -431,7 +443,7 @@ bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Steps 6-10.
+  // Steps 6-11.
   auto keywordResult = pr->SelectRange(x, y);
   if (keywordResult.isErr()) {
     intl::ReportInternalError(cx, keywordResult.unwrapErr());
