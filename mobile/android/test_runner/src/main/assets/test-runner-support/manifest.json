@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "name": "Dummy",
+  "name": "Dummy test-runner-support",
   "version": "1.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "test-runner-support@tests.mozilla.org"
     }
   },
-  "description": "This extension pretends to be the sender of native messages from tests."
+  "description": "This extension pretends to be the sender of native messages from tests. See mobile/android/modules/test/AppUiTestDelegate.sys.mjs for actual usage."
 }
