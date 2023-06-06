@@ -1314,8 +1314,8 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
     source->introductionType_ = maybeOptions->introductionType;
     source->setIntroductionOffset(maybeOptions->introductionOffset);
     if (maybeOptions->introducerFilename) {
-      if (!source->setIntroducerFilename(
-              fc, maybeOptions->introducerFilename.c_str())) {
+      if (!source->setIntroducerFilename(fc,
+                                         maybeOptions->introducerFilename)) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
     }

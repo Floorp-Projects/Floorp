@@ -4338,14 +4338,6 @@ struct DumpOptionsFields {
     }
     json.nullProperty(name);
   }
-
-  void operator()(const char* name, JS::ConstUTF8CharsZ value) {
-    if (value) {
-      json.property(name, value.c_str());
-      return;
-    }
-    json.nullProperty(name);
-  }
 };
 
 static void DumpOptionsFields(js::JSONPrinter& json,

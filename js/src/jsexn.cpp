@@ -26,7 +26,7 @@
 #include "jstypes.h"
 
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
-#include "js/CharacterEncoding.h"      // JS::UTF8Chars, JS::ConstUTF8CharsZ
+#include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"             // JS::PrintError
@@ -147,8 +147,7 @@ static UniquePtr<T> CopyErrorHelper(JSContext* cx, T* report) {
   static_assert(sizeof(T) % sizeof(const char*) == 0);
   static_assert(sizeof(const char*) % sizeof(char16_t) == 0);
 
-  size_t filenameSize =
-      report->filename ? strlen(report->filename.c_str()) + 1 : 0;
+  size_t filenameSize = report->filename ? strlen(report->filename) + 1 : 0;
   size_t messageSize = 0;
   if (report->message()) {
     messageSize = strlen(report->message().c_str()) + 1;
@@ -175,8 +174,8 @@ static UniquePtr<T> CopyErrorHelper(JSContext* cx, T* report) {
   }
 
   if (report->filename) {
-    copy->filename = JS::ConstUTF8CharsZ((const char*)cursor);
-    js_memcpy(cursor, report->filename.c_str(), filenameSize);
+    copy->filename = (const char*)cursor;
+    js_memcpy(cursor, report->filename, filenameSize);
     cursor += filenameSize;
   }
 
@@ -325,7 +324,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   }
 
   Rooted<JSString*> fileName(cx);
-  if (const char* filename = reportp->filename.c_str()) {
+  if (const char* filename = reportp->filename) {
     fileName =
         JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(filename, strlen(filename)));
     if (!fileName) {
@@ -590,7 +589,7 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
 
     reportp = &ownedReport;
     new (reportp) JSErrorReport();
-    ownedReport.filename = JS::ConstUTF8CharsZ(filename.get());
+    ownedReport.filename = filename.get();
     ownedReport.lineno = lineno;
     ownedReport.exnType = JSEXN_INTERNALERR;
     ownedReport.column = column;
@@ -671,7 +670,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     }
 
     // |ownedReport.filename| inherits the lifetime of |ErrorReport::filename|.
-    ownedReport.filename = JS::ConstUTF8CharsZ(filename.get());
+    ownedReport.filename = filename.get();
     ownedReport.sourceId = frame->getSourceId();
     ownedReport.lineno = frame->getLine();
     // Follow FixupColumnForDisplay and set column to 1 for WASM.
@@ -682,7 +681,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     // related to our exception object.
     NonBuiltinFrameIter iter(cx, cx->realm()->principals());
     if (!iter.done()) {
-      ownedReport.filename = JS::ConstUTF8CharsZ(iter.filename());
+      ownedReport.filename = iter.filename();
       uint32_t column;
       ownedReport.sourceId =
           iter.hasScript() ? iter.script()->scriptSource()->id() : 0;

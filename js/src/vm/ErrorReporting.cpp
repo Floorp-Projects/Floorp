@@ -13,7 +13,6 @@
 #include "jsfriendapi.h"
 
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
-#include "js/CharacterEncoding.h"      // JS::ConstUTF8CharsZ
 #include "js/friend/ErrorMessages.h"   // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                 // JS_vsmprintf
 #include "js/Warnings.h"               // JS::WarningReporter
@@ -64,7 +63,7 @@ bool js::ReportCompileWarning(FrontendContext* fc, ErrorMetadata&& metadata,
   err.isWarning_ = true;
   err.errorNumber = errorNumber;
 
-  err.filename = JS::ConstUTF8CharsZ(metadata.filename);
+  err.filename = metadata.filename;
   err.lineno = metadata.lineNumber;
   err.column = metadata.columnNumber;
   err.isMuted = metadata.isMuted;
@@ -93,7 +92,7 @@ static void ReportCompileErrorImpl(FrontendContext* fc,
   err.isWarning_ = false;
   err.errorNumber = errorNumber;
 
-  err.filename = JS::ConstUTF8CharsZ(metadata.filename);
+  err.filename = metadata.filename;
   err.lineno = metadata.lineNumber;
   err.column = metadata.columnNumber;
   err.isMuted = metadata.isMuted;
@@ -169,7 +168,7 @@ static void PopulateReportBlame(JSContext* cx, JSErrorReport* report) {
     return;
   }
 
-  report->filename = JS::ConstUTF8CharsZ(iter.filename());
+  report->filename = iter.filename();
   if (iter.hasScript()) {
     report->sourceId = iter.script()->scriptSource()->id();
   }

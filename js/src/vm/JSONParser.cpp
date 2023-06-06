@@ -25,7 +25,6 @@
 #include "gc/Allocator.h"             // CanGC
 #include "gc/Tracer.h"                // JS::TraceRoot
 #include "js/AllocPolicy.h"           // ReportOutOfMemory
-#include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
 #include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCVector.h"              // JS::GCVector
@@ -1053,7 +1052,7 @@ void JSONSyntaxParseHandler<CharT>::reportError(const char* msg,
                                                 const char* columnString) {
   ErrorMetadata metadata;
   metadata.isMuted = false;
-  metadata.filename = JS::ConstUTF8CharsZ("");
+  metadata.filename = "";
   metadata.lineNumber = 0;
   metadata.columnNumber = 0;
 
