@@ -10,28 +10,27 @@ const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-t
 const {
   connect,
 } = require("resource://devtools/client/shared/vendor/react-redux.js");
-const { PluralForm } = require("resource://devtools/shared/plural-form.js");
 
-const {
-  L10N,
-} = require("resource://devtools/client/accessibility/utils/l10n.js");
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
+const Localized = React.createFactory(FluentReact.Localized);
 
 /**
  * Helper functional component to render an accessible text progressbar.
  * @param {Object} props
  *        - id for the progressbar element
- *        - valuetext for the progressbar element
+ *        - fluentId: localized string id
  */
-function TextProgressBar({ id, textStringKey }) {
-  const text = L10N.getStr(textStringKey);
-  return ReactDOM.span(
+function TextProgressBar({ id, fluentId }) {
+  return Localized(
     {
+      id: fluentId,
+      attrs: { "aria-valuetext": true },
+    },
+    ReactDOM.span({
       id,
       key: id,
       role: "progressbar",
-      "aria-valuetext": text,
-    },
-    text
+    })
   );
 }
 
@@ -55,28 +54,26 @@ class AuditProgressOverlay extends React.Component {
     if (total == null) {
       return TextProgressBar({
         id,
-        textStringKey: "accessibility.progress.initializing",
+        fluentId: "accessibility-progress-initializing",
       });
     }
 
     if (percentage === 100) {
       return TextProgressBar({
         id,
-        textStringKey: "accessibility.progress.finishing",
+        fluentId: "accessibility-progress-finishing",
       });
     }
-
-    const progressbarString = PluralForm.get(
-      total,
-      L10N.getStr("accessibility.progress.progressbar")
-    );
 
     return ReactDOM.span(
       {
         id,
         key: id,
       },
-      progressbarString.replace("#1", total),
+      Localized({
+        id: "accessibility-progress-progressbar",
+        $nodeCount: total,
+      }),
       ReactDOM.progress({
         max: 100,
         value: percentage,
