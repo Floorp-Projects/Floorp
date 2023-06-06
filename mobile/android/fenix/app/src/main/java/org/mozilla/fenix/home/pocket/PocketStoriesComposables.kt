@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.home.pocket
 
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.net.Uri
 import androidx.annotation.FloatRange
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -67,6 +69,7 @@ import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.EagerFlingBehavior
+import org.mozilla.fenix.compose.ITEM_WIDTH
 import org.mozilla.fenix.compose.ListItemTabLarge
 import org.mozilla.fenix.compose.ListItemTabLargePlaceholder
 import org.mozilla.fenix.compose.ListItemTabSurface
@@ -271,12 +274,20 @@ fun PocketStories(
     val listState = rememberLazyListState()
     val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
 
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    val endPadding =
+        remember { mutableStateOf(endPadding(configuration, screenWidth, contentPadding)) }
+    // Force recomposition as padding is not consistently updated when orientation has changed.
+    endPadding.value = endPadding(configuration, screenWidth, contentPadding)
+
     LazyRow(
         modifier = Modifier.semantics {
             testTagsAsResourceId = true
             testTag = "pocket.stories"
         },
-        contentPadding = PaddingValues(horizontal = contentPadding),
+        contentPadding = PaddingValues(start = contentPadding, end = endPadding.value),
         state = listState,
         flingBehavior = flingBehavior,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -329,6 +340,16 @@ fun PocketStories(
         }
     }
 }
+
+private fun endPadding(configuration: Configuration, screenWidth: Dp, contentPadding: Dp) =
+    if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        alignColumnToTitlePadding(screenWidth = screenWidth, contentPadding = contentPadding)
+    } else {
+        contentPadding
+    }
+
+private fun alignColumnToTitlePadding(screenWidth: Dp, contentPadding: Dp) =
+    screenWidth - (ITEM_WIDTH.dp + contentPadding)
 
 /**
  * Add a callback for when this Composable is "shown" on the screen.
