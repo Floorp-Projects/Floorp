@@ -265,6 +265,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   mozilla::dom::StorageManager* GetStorageManager() override;
 
+  bool IsEligibleForMessaging() override;
+
   void TraceGlobalJSObject(JSTracer* aTrc);
 
   virtual nsresult EnsureScriptEnvironment() override;

@@ -248,6 +248,10 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
 
   mozilla::dom::StorageManager* GetStorageManager() final;
 
+  void SetIsNotEligibleForMessaging() { mIsEligibleForMessaging = false; }
+
+  bool IsEligibleForMessaging() final;
+
   // WorkerGlobalScope WebIDL implementation
   WorkerGlobalScope* Self() { return this; }
 
@@ -381,6 +385,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
   RefPtr<DebuggerNotificationManager> mDebuggerNotificationManager;
   RefPtr<WebTaskSchedulerWorker> mWebTaskScheduler;
   uint32_t mWindowInteractionsAllowed = 0;
+  bool mIsEligibleForMessaging{true};
 };
 
 class DedicatedWorkerGlobalScope final

@@ -1662,6 +1662,10 @@ mozilla::dom::StorageManager* nsGlobalWindowInner::GetStorageManager() {
   return Navigator()->Storage();
 }
 
+// https://html.spec.whatwg.org/multipage/web-messaging.html#eligible-for-messaging
+// * a Window object whose associated Document is fully active
+bool nsGlobalWindowInner::IsEligibleForMessaging() { return IsFullyActive(); }
+
 nsresult nsGlobalWindowInner::EnsureScriptEnvironment() {
   // NOTE: We can't use FORWARD_TO_OUTER here because we don't want to fail if
   // we're called on an inactive inner window.

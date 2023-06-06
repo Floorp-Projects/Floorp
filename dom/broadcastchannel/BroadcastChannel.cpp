@@ -279,6 +279,10 @@ void BroadcastChannel::PostMessage(JSContext* aCx,
     agentClusterId = global->GetAgentClusterId();
   }
 
+  if (!global->IsEligibleForMessaging()) {
+    return;
+  }
+
   RefPtr<SharedMessageBody> data = new SharedMessageBody(
       StructuredCloneHolder::TransferringNotSupported, agentClusterId);
 

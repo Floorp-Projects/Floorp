@@ -67,11 +67,11 @@ already_AddRefed<Performance> Performance::CreateForMainThread(
 
 /* static */
 already_AddRefed<Performance> Performance::CreateForWorker(
-    WorkerPrivate* aWorkerPrivate) {
-  MOZ_ASSERT(aWorkerPrivate);
-  aWorkerPrivate->AssertIsOnWorkerThread();
+    WorkerGlobalScope* aGlobalScope) {
+  MOZ_ASSERT(aGlobalScope);
+  //  aWorkerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<Performance> performance = new PerformanceWorker(aWorkerPrivate);
+  RefPtr<Performance> performance = new PerformanceWorker(aGlobalScope);
   return performance.forget();
 }
 

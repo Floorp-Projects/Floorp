@@ -274,6 +274,14 @@ class nsIGlobalObject : public nsISupports,
 
   virtual mozilla::dom::StorageManager* GetStorageManager() { return nullptr; }
 
+  /**
+   * https://html.spec.whatwg.org/multipage/web-messaging.html#eligible-for-messaging
+   * * a Window object whose associated Document is fully active, or
+   * * a WorkerGlobalScope object whose closing flag is false and whose worker
+   *   is not a suspendable worker.
+   */
+  virtual bool IsEligibleForMessaging() { return false; };
+
  protected:
   virtual ~nsIGlobalObject();
 

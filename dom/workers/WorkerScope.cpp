@@ -444,13 +444,6 @@ void WorkerGlobalScope::NoteTerminating() {
   }
 
   StartDying();
-
-  if (mPerformance) {
-    RefPtr<PerformanceWorker> pw =
-        static_cast<PerformanceWorker*>(mPerformance.get());
-    MOZ_ASSERT(pw);
-    pw->NoteShuttingDown();
-  }
 }
 
 void WorkerGlobalScope::NoteShuttingDown() {
@@ -707,7 +700,7 @@ Performance* WorkerGlobalScope::GetPerformance() {
   AssertIsOnWorkerThread();
 
   if (!mPerformance) {
-    mPerformance = Performance::CreateForWorker(mWorkerPrivate);
+    mPerformance = Performance::CreateForWorker(this);
   }
 
   return mPerformance;
@@ -863,6 +856,12 @@ mozilla::dom::StorageManager* WorkerGlobalScope::GetStorageManager() {
   return RefPtr(Navigator())->Storage();
 }
 
+// https://html.spec.whatwg.org/multipage/web-messaging.html#eligible-for-messaging
+// * a WorkerGlobalScope object whose closing flag is false and whose worker
+//   is not a suspendable worker.
+bool WorkerGlobalScope::IsEligibleForMessaging() {
+  return mIsEligibleForMessaging;
+}
 void WorkerGlobalScope::StorageAccessPermissionGranted() {
   // Reset the IndexedDB factory.
   mIndexedDB = nullptr;

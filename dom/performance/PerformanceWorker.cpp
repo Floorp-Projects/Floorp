@@ -10,22 +10,27 @@
 
 namespace mozilla::dom {
 
-PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
-    : Performance(aWorkerPrivate->GlobalScope()),
-      mWorkerPrivate(aWorkerPrivate) {
-  mWorkerPrivate->AssertIsOnWorkerThread();
+PerformanceWorker::PerformanceWorker(WorkerGlobalScope* aGlobalScope)
+    : Performance(aGlobalScope) {
+  MOZ_ASSERT(aGlobalScope);
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+  workerPrivate->AssertIsOnWorkerThread();
 }
 
 PerformanceWorker::~PerformanceWorker() {
-  if (mWorkerPrivate) {
-    mWorkerPrivate->AssertIsOnWorkerThread();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (workerPrivate) {
+    workerPrivate->AssertIsOnWorkerThread();
   }
 }
 
 void PerformanceWorker::InsertUserEntry(PerformanceEntry* aEntry) {
   if (StaticPrefs::dom_performance_enable_user_timing_logging()) {
     nsAutoCString uri;
-    nsCOMPtr<nsIURI> scriptURI = mWorkerPrivate->GetResolvedScriptURI();
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+    nsCOMPtr<nsIURI> scriptURI = workerPrivate->GetResolvedScriptURI();
     if (!scriptURI || NS_FAILED(scriptURI->GetHost(uri))) {
       // If we have no URI, just put in "none".
       uri.AssignLiteral("none");
@@ -36,29 +41,21 @@ void PerformanceWorker::InsertUserEntry(PerformanceEntry* aEntry) {
 }
 
 TimeStamp PerformanceWorker::CreationTimeStamp() const {
-  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
-  if (mWorkerPrivate) {
-    return mWorkerPrivate->CreationTimeStamp();
-  }
-  return TimeStamp();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+  return workerPrivate->CreationTimeStamp();
 }
 
 DOMHighResTimeStamp PerformanceWorker::CreationTime() const {
-  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
-  if (mWorkerPrivate) {
-    return mWorkerPrivate->CreationTime();
-  }
-  return DOMHighResTimeStamp();
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+  return workerPrivate->CreationTime();
 }
 
 uint64_t PerformanceWorker::GetRandomTimelineSeed() {
-  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
-  if (mWorkerPrivate) {
-    return mWorkerPrivate->GetRandomTimelineSeed();
-  }
-  return 0;
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+  return workerPrivate->GetRandomTimelineSeed();
 }
-
-void PerformanceWorker::NoteShuttingDown() { mWorkerPrivate = nullptr; }
 
 }  // namespace mozilla::dom

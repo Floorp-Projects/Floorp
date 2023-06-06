@@ -234,7 +234,6 @@ WorkerRunnable::Run() {
                               mBehavior == WorkerThreadUnchangedBusyCount;
 
 #ifdef DEBUG
-  MOZ_ASSERT_IF(mCallingCancelWithinRun, targetIsWorkerThread);
   if (targetIsWorkerThread) {
     mWorkerPrivate->AssertIsOnWorkerThread();
   } else {
@@ -243,22 +242,14 @@ WorkerRunnable::Run() {
   }
 #endif
 
-  if (targetIsWorkerThread &&
-      mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() &&
-      !mCallingCancelWithinRun) {
-    LOG(("WorkerRunnable::Run [%p] Cancel runnable...", this));
-    // Prevent recursion.
+  if (targetIsWorkerThread && !mCallingCancelWithinRun &&
+      mWorkerPrivate->CancelBeforeWorkerScopeConstructed()) {
     mCallingCancelWithinRun = true;
-
     Cancel();
-
-    MOZ_ASSERT(mCallingCancelWithinRun);
     mCallingCancelWithinRun = false;
-
     if (mBehavior == WorkerThreadModifyBusyCount) {
       mWorkerPrivate->ModifyBusyCountFromWorker(false);
     }
-
     return NS_OK;
   }
 
