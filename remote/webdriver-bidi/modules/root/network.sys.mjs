@@ -39,7 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * @typedef {object} FetchTimingInfo
- * @property {number} originTime
+ * @property {number} timeOrigin
  * @property {number} requestTime
  * @property {number} redirectStart
  * @property {number} redirectEnd
