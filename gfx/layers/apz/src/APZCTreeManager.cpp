@@ -2169,10 +2169,13 @@ void APZCTreeManager::SetupScrollbarDrag(
   const ScrollbarData& thumbData = aScrollThumbNode->GetScrollbarData();
   MOZ_ASSERT(thumbData.mDirection.isSome());
 
-  // Record the thumb's position at the start of the drag.
-  // We snap back to this position if, during the drag, the mouse
-  // gets sufficiently far away from the scrollbar.
-  dragBlock->SetInitialThumbPos(thumbData.mThumbStart);
+  // Record the thumb's position and the scrollable rect at the start of the
+  // drag.
+  // We snap back to this thumb position if, during the drag, the mouse gets
+  // sufficiently far away from the scrollbar.
+  // We also use this scrollable rect for updating the thumb position during
+  // dragging the thumb.
+  dragBlock->SetInitialState(thumbData.mThumbStart, aApzc->GetScrollableRect());
 
   // Under some conditions, we can confirm the drag block right away.
   // Otherwise, we have to wait for a main-thread confirmation.

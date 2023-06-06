@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <div style="height: 200vh;"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  const moveDistance = 10;
+
+  // Start dragging the vertical scrollbar thumb.
+  const startPoint = await scrollbarDragStart(window, 1);
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: startPoint.x,
+    offsetY: startPoint.y,
+    type: "mousemove",
+  });
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: startPoint.x,
+    offsetY: startPoint.y,
+    type: "mousedown",
+  });
+
+  // Move the thumb and wait for a scroll event triggered by the movement.
+  let scrollEventPromise = waitForScrollEvent(window);
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: startPoint.x,
+    offsetY: startPoint.y + moveDistance,
+    type: "mousemove",
+  });
+  await scrollEventPromise;
+
+  let scrollPosition = window.scrollY;
+
+  // Append an element to the scroll container to expand the scroll range.
+  const content = document.createElement("div");
+  content.style.height = "200vh";
+  document.body.appendChild(content);
+
+  // flush the above change.
+  document.documentElement.getBoundingClientRect();
+
+  // Make sure the change has been reflected into APZ.
+  await promiseApzFlushedRepaints();
+
+  // Move the thumb again.
+  scrollEventPromise = waitForScrollEvent(window);
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: startPoint.x,
+    offsetY: startPoint.y + moveDistance * 2,
+    type: "mousemove",
+  });
+
+  await scrollEventPromise;
+  ok(window.scrollY <= scrollPosition * 2,
+     `The scroll position ${window.scrollY} should be less than ${scrollPosition*2}`);
+
+  await promiseNativeMouseEventWithAPZ({
+    target: window,
+    offsetX: startPoint.x,
+    offsetY: startPoint.y + moveDistance * 2,
+    type: "mouseup",
+  });
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

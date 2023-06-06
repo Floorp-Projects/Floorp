@@ -60,6 +60,9 @@ var subtests = [
   {"file": "helper_scrollbartrack_click_overshoot.html",
    "prefs": [["test.events.async.enabled", true], ["apz.test.logging_enabled", true],
              ["ui.useOverlayScrollbars", 0]]},
+  {"file": "helper_bug1756814.html", "prefs": [
+    ["ui.useOverlayScrollbars", 0]
+  ]},
 ];
 
 // Android, mac, and linux (at least in our automation) do not have scrollbar buttons.
