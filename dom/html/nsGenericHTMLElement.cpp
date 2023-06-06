@@ -2914,8 +2914,7 @@ void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
   if (canHide && target->IsPopoverOpen()) {
     target->HidePopover(IgnoreErrors());
   } else if (canShow && !target->IsPopoverOpen()) {
-    target->GetPopoverData()->SetInvoker(this);
-    target->ShowPopover(IgnoreErrors());
+    target->ShowPopoverInternal(this, IgnoreErrors());
   }
 }
 
@@ -3370,6 +3369,14 @@ void nsGenericHTMLElement::RunPopoverToggleEventTask(
 
 // https://html.spec.whatwg.org/#dom-showpopover
 void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
+  return ShowPopoverInternal(nullptr, aRv);
+}
+void nsGenericHTMLElement::ShowPopoverInternal(
+    nsGenericHTMLFormControlElementWithState* aInvoker, ErrorResult& aRv) {
+  if (PopoverData* data = GetPopoverData()) {
+    data->SetInvoker(aInvoker);
+  }
+
   if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, nullptr, aRv)) {
     return;
   }
