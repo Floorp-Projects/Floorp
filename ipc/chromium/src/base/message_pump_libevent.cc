@@ -8,7 +8,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#if defined(ANDROID) || defined(OS_POSIX)
+#if defined(ANDROID) || defined(XP_UNIX)
 #  include <unistd.h>
 #endif
 

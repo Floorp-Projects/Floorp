@@ -25,7 +25,7 @@ class PickleIterator;
 #  pragma warning(disable : 4800)
 #endif
 
-#if !defined(OS_POSIX)
+#if !defined(XP_UNIX)
 // This condition must be kept in sync with the one in
 // ipc_message_utils.h, but this dummy definition of
 // base::FileDescriptor acts as a static assert that we only get one
@@ -120,7 +120,7 @@ struct ParamTraits<uint8_t> {
   }
 };
 
-#if !defined(OS_POSIX)
+#if !defined(XP_UNIX)
 // See above re: keeping definitions in sync
 template <>
 struct ParamTraits<base::FileDescriptor> {
@@ -133,7 +133,7 @@ struct ParamTraits<base::FileDescriptor> {
     return false;
   }
 };
-#endif  // !defined(OS_POSIX)
+#endif  // !defined(XP_UNIX)
 
 template <>
 struct ParamTraits<mozilla::void_t> {

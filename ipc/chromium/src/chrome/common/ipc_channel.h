@@ -141,7 +141,7 @@ class Channel {
   // be out of date.
   bool IsClosed() const;
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
   // On POSIX an IPC::Channel wraps a socketpair(), this method returns the
   // FD # for the client end of the socket and the equivalent FD# to use for
   // mapping it into the Child process.
@@ -166,7 +166,7 @@ class Channel {
   // must be set as `MODE_SERVER`, and that side will be responsible for calling
   // `DuplicateHandle` to transfer the handle between processes.
   void StartAcceptingHandles(Mode mode);
-#endif  // defined(OS_POSIX)
+#endif  // defined(XP_UNIX)
 
   // On Windows: Generates a channel ID that, if passed to the client
   // as a shared secret, will validate the client's authenticity.

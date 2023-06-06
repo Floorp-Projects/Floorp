@@ -105,7 +105,7 @@ void CloseProcessHandle(ProcessHandle process);
 // Win XP SP1 as well.
 ProcessId GetProcId(ProcessHandle process);
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 // Close all file descriptors, except for std{in,out,err} and those
 // for which the given function returns true.  Only call this function
 // in a child process where you know that there aren't any other
@@ -141,7 +141,7 @@ struct LaunchOptions {
 
   std::vector<HANDLE> handles_to_inherit;
 #endif
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
   environment_map env_map;
 
   // If non-null, specifies the entire environment to use for the
@@ -204,7 +204,7 @@ Result<Ok, LaunchError> LaunchApp(const std::wstring& cmdline,
                                   const LaunchOptions& options,
                                   ProcessHandle* process_handle);
 
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
 // Runs the application specified in argv[0] with the command line argv.
 //
 // The pid will be stored in process_handle if that pointer is
@@ -280,7 +280,7 @@ Result<Ok, LaunchError> LaunchApp(const CommandLine& cl, const LaunchOptions&,
 // Returns true if this is successful, false otherwise.
 bool KillProcess(ProcessHandle process, int exit_code);
 
-#ifdef OS_POSIX
+#ifdef XP_UNIX
 // Returns whether the given process has exited.  If it returns true,
 // the process status has been consumed and `IsProcessDead` should not
 // be called again on the same process (like `waitpid`).

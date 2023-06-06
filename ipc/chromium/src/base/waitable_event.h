@@ -13,7 +13,7 @@
 #  include <windows.h>
 #endif
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  include <list>
 #  include <utility>
 #  include "base/condition_variable.h"

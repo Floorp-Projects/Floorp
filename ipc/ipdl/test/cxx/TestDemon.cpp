@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #include "IPDLUnitTests.h"  // fail etc.
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  include <sys/time.h>
 #  include <unistd.h>
 #else
@@ -27,7 +27,7 @@ static int gStackHeight = 0;
 static bool gFlushStack = false;
 
 static int Choose(int count) {
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
   return random() % count;
 #else
   return rand() % count;
@@ -48,7 +48,7 @@ void TestDemonParent::Main() {
     QuitParent();
     return;
   }
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
   srandom(time(nullptr));
 #else
   srand(time(nullptr));
@@ -72,7 +72,7 @@ void TestDemonParent::ArtificialSleep() {
   if (Choose(2) == 0) {
     // Sleep for anywhere from 0 to 100 milliseconds.
     unsigned micros = Choose(100) * 1000;
-#  ifdef OS_POSIX
+#  ifdef XP_UNIX
     usleep(micros);
 #  else
     Sleep(micros / 1000);
@@ -218,7 +218,7 @@ TestDemonChild::TestDemonChild() : mIncoming(), mOutgoing() {
 TestDemonChild::~TestDemonChild() { MOZ_COUNT_DTOR(TestDemonChild); }
 
 mozilla::ipc::IPCResult TestDemonChild::RecvStart() {
-#ifdef OS_POSIX
+#ifdef XP_UNIX
   srandom(time(nullptr));
 #else
   srand(time(nullptr));
@@ -235,7 +235,7 @@ void TestDemonChild::ArtificialSleep() {
   if (Choose(2) == 0) {
     // Sleep for anywhere from 0 to 100 milliseconds.
     unsigned micros = Choose(100) * 1000;
-#  ifdef OS_POSIX
+#  ifdef XP_UNIX
     usleep(micros);
 #  else
     Sleep(micros / 1000);

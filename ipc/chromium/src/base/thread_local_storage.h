@@ -9,7 +9,7 @@
 
 #include "base/basictypes.h"
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  include <pthread.h>
 #endif
 
@@ -58,7 +58,7 @@ class ThreadLocalStorage {
     bool initialized_;
 #if defined(OS_WIN)
     int slot_;
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
     pthread_key_t key_;
 #endif
 

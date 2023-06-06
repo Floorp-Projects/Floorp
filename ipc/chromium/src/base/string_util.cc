@@ -140,7 +140,7 @@ class StringToInt64Traits {
                                         string_type::value_type** endptr) {
 #ifdef OS_WIN
     return _strtoi64(str, endptr, kBase);
-#else  // assume OS_POSIX
+#else  // assume XP_UNIX
     return strtoll(str, endptr, kBase);
 #endif
   }
@@ -158,7 +158,7 @@ class String16ToInt64Traits {
                                         string_type::value_type** endptr) {
 #ifdef OS_WIN
     return _wcstoi64(str, endptr, kBase);
-#else  // assume OS_POSIX
+#else  // assume XP_UNIX
     std::string ascii_string = UTF16ToASCII(string16(str));
     char* ascii_end = NULL;
     value_type ret = strtoll(ascii_string.c_str(), &ascii_end, kBase);

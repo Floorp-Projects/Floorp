@@ -7,7 +7,7 @@
 #include "base/process_util.h"
 #include "base/task.h"
 
-#ifdef OS_POSIX
+#ifdef XP_UNIX
 #  include <errno.h>
 #endif
 #include <type_traits>
@@ -77,7 +77,7 @@ void AnnotateSystemError() {
   int64_t error = 0;
 #if defined(XP_WIN)
   error = ::GetLastError();
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   error = errno;
 #endif
   if (error) {

@@ -34,7 +34,7 @@ const ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
 // property, however even if that were to change, it seems safe to rely on this
 // particular value never being used.
 const ProcessId kInvalidProcessId = kuint32max;
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
 // On POSIX, our ProcessHandle will just be the PID.
 typedef pid_t ProcessHandle;
 typedef pid_t ProcessId;

@@ -21,7 +21,7 @@
 #  include <windows.h>
 typedef DWORD PlatformThreadId;
 typedef void* PlatformThreadHandle;  // HANDLE
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
 #  include <pthread.h>
 typedef pthread_t PlatformThreadHandle;
 #  if defined(OS_LINUX) || defined(OS_OPENBSD) || defined(OS_SOLARIS) || \

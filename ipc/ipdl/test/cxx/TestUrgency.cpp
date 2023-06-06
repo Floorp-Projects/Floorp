@@ -1,7 +1,7 @@
 #include "TestUrgency.h"
 
 #include "IPDLUnitTests.h"  // fail etc.
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  include <unistd.h>
 #else
 #  include <windows.h>
@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 static void Sleep(int ms) { sleep(ms / 1000); }
 #endif
 

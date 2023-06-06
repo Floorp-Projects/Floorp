@@ -71,7 +71,7 @@
 #include "base/lock.h"
 #include "build/build_config.h"
 
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  include <pthread.h>
 #endif
 
@@ -106,7 +106,7 @@ class ConditionVariable {
 #if defined(OS_WIN)
   CONDITION_VARIABLE cv_;
   SRWLOCK* const srwlock_;
-#elif defined(OS_POSIX)
+#elif defined(XP_UNIX)
   pthread_cond_t condition_;
   pthread_mutex_t* user_mutex_;
 #endif

@@ -85,7 +85,7 @@
 // pathnames on different platforms.
 class FilePath {
  public:
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
   // On most platforms, native pathnames are char arrays, and the encoding
   // may or may not be specified.  On Mac OS X, native pathnames are encoded
   // in UTF-8.
@@ -239,7 +239,7 @@ class FilePath {
 };
 
 // Macros for string literal initialization of FilePath::CharType[].
-#if defined(OS_POSIX)
+#if defined(XP_UNIX)
 #  define FILE_PATH_LITERAL(x) x
 #elif defined(OS_WIN)
 #  define FILE_PATH_LITERAL(x) L##x
