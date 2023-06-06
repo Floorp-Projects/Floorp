@@ -1650,18 +1650,7 @@ void GCRuntime::requestMajorGC(JS::GCReason reason) {
   }
 
   majorGCTriggerReason = reason;
-  rt->mainContextFromAnyThread()->requestInterrupt(InterruptReason::GC);
-}
-
-void Nursery::requestMinorGC(JS::GCReason reason) const {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
-
-  if (minorGCRequested()) {
-    return;
-  }
-
-  minorGCTriggerReason_ = reason;
-  runtime()->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
+  rt->mainContextFromAnyThread()->requestInterrupt(InterruptReason::MajorGC);
 }
 
 bool GCRuntime::triggerGC(JS::GCReason reason) {
@@ -4596,7 +4585,6 @@ void GCRuntime::collectNursery(JS::GCOptions options, JS::GCReason reason,
 
   gcstats::AutoPhase ap(stats(), phase);
 
-  nursery().clearMinorGCRequest();
   nursery().collect(options, reason);
   MOZ_ASSERT(nursery().isEmpty());
 

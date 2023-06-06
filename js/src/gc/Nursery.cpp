@@ -229,6 +229,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       reportPretenuring_(false),
       reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
+      prevPosition_(0),
       hasRecentGrowthData(false),
       smoothedTargetSize(0.0) {
   const char* env = getenv("MOZ_NURSERY_STRINGS");
@@ -539,8 +540,8 @@ inline void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
   MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_,
                 position() >= currentStartPosition_);
-  MOZ_ASSERT(position() % CellAlignBytes == 0);
   MOZ_ASSERT(size % CellAlignBytes == 0);
+  MOZ_ASSERT(position() % CellAlignBytes == 0);
 
   if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
     return moveToNextChunkAndAllocate(size);
@@ -556,6 +557,12 @@ inline void* js::Nursery::allocate(size_t size) {
 }
 
 void* Nursery::moveToNextChunkAndAllocate(size_t size) {
+  if (minorGCRequested()) {
+    // If a minor GC was requested then fail the allocation. The collection is
+    // then run in GCRuntime::tryNewNurseryCell.
+    return nullptr;
+  }
+
   MOZ_ASSERT(currentEnd() < position() + size);
 
   unsigned chunkno = currentChunk_ + 1;
@@ -1124,6 +1131,15 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   JSRuntime* rt = runtime();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
+  if (minorGCRequested()) {
+    MOZ_ASSERT(position_ == chunk(currentChunk_).end());
+    position_ = prevPosition_;
+    prevPosition_ = 0;
+    minorGCTriggerReason_ = JS::GCReason::NO_REASON;
+    rt->mainContextFromOwnThread()->clearPendingInterrupt(
+        InterruptReason::MinorGC);
+  }
+
   if (!isEnabled() || isEmpty()) {
     // Our barriers are not always exact, and there may be entries in the
     // storebuffer even when the nursery is disabled or empty. It's not safe
@@ -1582,6 +1598,25 @@ bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
   }
 
   return true;
+}
+
+void Nursery::requestMinorGC(JS::GCReason reason) {
+  MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+  MOZ_ASSERT(isEnabled());
+
+  if (minorGCRequested()) {
+    return;
+  }
+
+  // Set position to end of chunk to block further allocation.
+  MOZ_ASSERT(prevPosition_ == 0);
+  prevPosition_ = position_;
+  position_ = chunk(currentChunk_).end();
+
+  minorGCTriggerReason_ = reason;
+  runtime()->mainContextFromOwnThread()->requestInterrupt(
+      InterruptReason::MinorGC);
 }
 
 size_t Nursery::sizeOfMallocedBuffers(

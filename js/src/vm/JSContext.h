@@ -141,10 +141,11 @@ bool CurrentThreadIsParseThread();
 #endif
 
 enum class InterruptReason : uint32_t {
-  GC = 1 << 0,
-  AttachIonCompilations = 1 << 1,
-  CallbackUrgent = 1 << 2,
-  CallbackCanWait = 1 << 3,
+  MinorGC = 1 << 0,
+  MajorGC = 1 << 1,
+  AttachIonCompilations = 1 << 2,
+  CallbackUrgent = 1 << 3,
+  CallbackCanWait = 1 << 4,
 };
 
 enum class ShouldCaptureStack { Maybe, Always };
@@ -854,6 +855,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool hasPendingInterrupt(js::InterruptReason reason) const {
     return interruptBits_ & uint32_t(reason);
   }
+  void clearPendingInterrupt(js::InterruptReason reason);
 
   // For JIT use. Points to the inlined ICScript for a baseline script
   // being invoked as part of a trial inlining.  Contains nullptr at
