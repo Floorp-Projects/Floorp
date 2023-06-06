@@ -88,12 +88,12 @@ function removePendingBreakpoint(state, pendingBreakpoint) {
  * @param {Object} breakpoint
  */
 function makeIdFromBreakpoint(breakpoint) {
-  const location = isPrettyURL(breakpoint.location.sourceUrl)
+  const location = isPrettyURL(breakpoint.location.source.url)
     ? breakpoint.generatedLocation
     : breakpoint.location;
 
-  const { sourceUrl, line, column } = location;
-  const sourceUrlString = sourceUrl || "";
+  const { source, line, column } = location;
+  const sourceUrlString = source.url || "";
   const columnString = column || "";
 
   return `${sourceUrlString}:${line}:${columnString}`;
@@ -115,9 +115,9 @@ function createPendingLocation(location) {
   assert(location.hasOwnProperty("line"), "location must have a line");
   assert(location.hasOwnProperty("column"), "location must have a column");
 
-  const { sourceUrl, line, column } = location;
-  assert(sourceUrl !== undefined, "pending location must have a source url");
-  return { sourceUrl, line, column };
+  const { source, line, column } = location;
+  assert(source.url !== undefined, "pending location must have a source url");
+  return { sourceUrl: source.url, line, column };
 }
 
 /**

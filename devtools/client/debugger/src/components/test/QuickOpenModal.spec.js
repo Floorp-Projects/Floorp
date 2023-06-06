@@ -372,7 +372,6 @@ describe("QuickOpenModal", () => {
         },
         sourceActorId: undefined,
         sourceActor: null,
-        sourceUrl: "",
       });
     });
 
@@ -400,7 +399,6 @@ describe("QuickOpenModal", () => {
         },
         sourceActorId: undefined,
         sourceActor: null,
-        sourceUrl: "",
       });
     });
 
@@ -512,7 +510,6 @@ describe("QuickOpenModal", () => {
         source: { id },
         sourceActorId: undefined,
         sourceActor: null,
-        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -546,7 +543,6 @@ describe("QuickOpenModal", () => {
         source: { id },
         sourceActorId: undefined,
         sourceActor: null,
-        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -580,7 +576,6 @@ describe("QuickOpenModal", () => {
         source: { id },
         sourceActorId: undefined,
         sourceActor: null,
-        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });

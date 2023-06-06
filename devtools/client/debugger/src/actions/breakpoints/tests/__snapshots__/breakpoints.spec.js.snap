@@ -28,7 +28,6 @@ Array [
           },
           "sourceActor": null,
           "sourceActorId": undefined,
-          "sourceUrl": "http://localhost:8000/examples/a",
         },
         "id": "a:2:1",
         "location": Object {
@@ -53,7 +52,6 @@ Array [
           },
           "sourceActor": null,
           "sourceActorId": undefined,
-          "sourceUrl": "http://localhost:8000/examples/a",
         },
         "options": Object {},
         "originalText": "return a",
@@ -113,7 +111,6 @@ Array [
           },
           "sourceActor": null,
           "sourceActorId": undefined,
-          "sourceUrl": "http://localhost:8000/examples/a",
         },
         "id": "a:5:1",
         "location": Object {
@@ -138,7 +135,6 @@ Array [
           },
           "sourceActor": null,
           "sourceActorId": undefined,
-          "sourceUrl": "http://localhost:8000/examples/a",
         },
         "options": Object {},
         "originalText": "",
