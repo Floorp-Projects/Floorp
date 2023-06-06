@@ -610,7 +610,7 @@ class Raptor(
                     "help": (
                         "Alternative methods for summarizing technical and visual"
                         "pageload metrics."
-                        "Options: geomean, mean."
+                        "Options: median."
                     ),
                 },
             ],
