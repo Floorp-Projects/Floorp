@@ -57,7 +57,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "id": "1",
@@ -105,7 +104,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "scope": Object {
@@ -194,7 +192,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "id": "1",
@@ -242,7 +239,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "scope": Object {
@@ -334,7 +330,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "id": "3",
@@ -382,7 +377,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "scope": Object {
@@ -471,7 +465,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "id": "1",
@@ -519,7 +512,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
               },
             },
             "sourceActorId": "1-actor",
-            "sourceId": "1",
             "sourceUrl": "",
           },
           "scope": Object {
