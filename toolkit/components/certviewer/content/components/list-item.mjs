@@ -11,14 +11,14 @@ export class ListItem extends HTMLElement {
   }
 
   connectedCallback() {
-    let ListItemTemplate = document.getElementById("list-item-template");
-
-    this.attachShadow({ mode: "open" }).appendChild(
-      ListItemTemplate.content.cloneNode(true)
-    );
-
-    document.l10n.translateFragment(this.shadowRoot);
+    // Attach and connect before adding the template, or fluent
+    // won't translate the template copy we insert into the
+    // shadowroot.
+    this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(this.shadowRoot);
+
+    let ListItemTemplate = document.getElementById("list-item-template");
+    this.shadowRoot.appendChild(ListItemTemplate.content.cloneNode(true));
 
     this.render();
   }

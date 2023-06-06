@@ -11,14 +11,14 @@ export class InfoItem extends HTMLElement {
   }
 
   connectedCallback() {
-    let infoItemTemplate = document.getElementById("info-item-template");
-
-    this.attachShadow({ mode: "open" }).appendChild(
-      infoItemTemplate.content.cloneNode(true)
-    );
-
+    // Attach and connect before adding the template, or fluent
+    // won't translate the template copy we insert into the
+    // shadowroot.
+    this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(this.shadowRoot);
-    document.l10n.translateFragment(this.shadowRoot);
+
+    let infoItemTemplate = document.getElementById("info-item-template");
+    this.shadowRoot.appendChild(infoItemTemplate.content.cloneNode(true));
 
     this.render();
   }
