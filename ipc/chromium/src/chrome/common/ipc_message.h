@@ -337,7 +337,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 #endif
 
   uint32_t num_relayed_attachments() const {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     return num_handles();
 #elif defined(OS_MACOSX) || defined(OS_IOS)
     return num_send_rights();

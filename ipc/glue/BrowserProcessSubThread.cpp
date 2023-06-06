@@ -7,7 +7,7 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/NodeController.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <objbase.h>
 #endif
 
@@ -46,7 +46,7 @@ BrowserProcessSubThread::~BrowserProcessSubThread() {
 }
 
 void BrowserProcessSubThread::Init() {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // Initializes the COM library on the current thread.
   CoInitialize(nullptr);
 #endif
@@ -62,7 +62,7 @@ void BrowserProcessSubThread::CleanUp() {
     NodeController::CleanUp();
   }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // Closes the COM library on the current thread. CoInitialize must
   // be balanced by a corresponding call to CoUninitialize.
   CoUninitialize();

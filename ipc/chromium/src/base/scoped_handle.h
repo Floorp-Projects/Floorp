@@ -11,7 +11,7 @@
 
 #include "base/basictypes.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "base/scoped_handle_win.h"
 #endif
 

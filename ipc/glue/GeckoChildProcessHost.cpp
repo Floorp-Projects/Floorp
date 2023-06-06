@@ -551,7 +551,7 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
   BinPathType pathType = XRE_GetChildProcBinPathType(processType);
 
   if (pathType == BinPathType::Self) {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
       MOZ_CRASH("GetModuleFileNameW failed (FIXME)");
@@ -583,7 +583,7 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
 
   if (ShouldHaveDirectoryService()) {
     MOZ_ASSERT(gGREBinPath);
-#ifdef OS_WIN
+#ifdef XP_WIN
     exePath = FilePath(char16ptr_t(gGREBinPath));
 #elif MOZ_WIDGET_COCOA
     nsCOMPtr<nsIFile> childProcPath;
@@ -606,7 +606,7 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
   }
 
   if (exePath.empty()) {
-#ifdef OS_WIN
+#ifdef XP_WIN
     exePath =
         FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
 #else

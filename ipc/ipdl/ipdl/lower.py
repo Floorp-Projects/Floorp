@@ -4202,7 +4202,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
             processnative.addcode(
                 """
-                #ifdef OS_WIN
+                #ifdef XP_WIN
                 GetIPCChannel()->ProcessNativeEventsInInterruptCall();
                 #else
                 FatalError("This method is Windows-only");

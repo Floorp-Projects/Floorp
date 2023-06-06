@@ -8,7 +8,7 @@
 #define BASE_PLATFORM_FILE_H_
 
 #include "build/build_config.h"
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <windows.h>
 #endif
 
@@ -16,7 +16,7 @@
 
 namespace base {
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 typedef HANDLE PlatformFile;
 const PlatformFile kInvalidPlatformFileValue = INVALID_HANDLE_VALUE;
 #elif defined(XP_UNIX)

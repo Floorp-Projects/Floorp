@@ -32,7 +32,7 @@ class InProcessBrowserTest;
 
 class CommandLine {
  public:
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // Creates a parsed version of the given command-line string.
   // The program name is assumed to be the first item in the string.
   void ParseFromString(const std::wstring& command_line);
@@ -82,7 +82,7 @@ class CommandLine {
   // WARNING: this is incorrect on POSIX; we must do string conversions.
   std::vector<std::wstring> GetLooseValues() const;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // Returns the original command line string.
   const std::wstring& command_line_string() const {
     return command_line_string_;
@@ -116,7 +116,7 @@ class CommandLine {
   // Append a loose value to the command line.
   void AppendLooseValue(const std::wstring& value);
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   void AppendLooseValue(const wchar_t* value) {
     AppendLooseValue(std::wstring(value));
   }
@@ -148,7 +148,7 @@ class CommandLine {
   // We store a platform-native version of the command line, used when building
   // up a new command line to be executed.  This ifdef delimits that code.
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // The quoted, space-separated command-line string.
   std::wstring command_line_string_;
 

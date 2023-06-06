@@ -7,7 +7,7 @@
 #ifndef BASE_SCOPED_BSTR_WIN_H_
 #define BASE_SCOPED_BSTR_WIN_H_
 
-#include "base/basictypes.h"  // needed to pick up OS_WIN
+#include "base/basictypes.h"  // needed to pick up XP_WIN
 
 #include "base/logging.h"
 

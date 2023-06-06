@@ -26,7 +26,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerRange.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <windows.h>
 #endif
 
@@ -891,7 +891,7 @@ struct ParamTraitsStd<std::map<K, V>> {
 template <class P>
 struct ParamTraitsWindows : ParamTraitsStd<P> {};
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 template <>
 struct ParamTraitsWindows<HANDLE> {
   static_assert(sizeof(HANDLE) == sizeof(intptr_t), "Wrong size for HANDLE?");
@@ -915,7 +915,7 @@ struct ParamTraitsWindows<HWND> {
     return reader->ReadIntPtr(reinterpret_cast<intptr_t*>(r));
   }
 };
-#endif  // defined(OS_WIN)
+#endif  // defined(XP_WIN)
 
 // Various ipc/chromium types.
 

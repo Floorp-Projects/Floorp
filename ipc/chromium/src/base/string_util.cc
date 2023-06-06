@@ -138,7 +138,7 @@ class StringToInt64Traits {
   static const int kBase = 10;
   static inline value_type convert_func(const string_type::value_type* str,
                                         string_type::value_type** endptr) {
-#ifdef OS_WIN
+#ifdef XP_WIN
     return _strtoi64(str, endptr, kBase);
 #else  // assume XP_UNIX
     return strtoll(str, endptr, kBase);
@@ -156,7 +156,7 @@ class String16ToInt64Traits {
   static const int kBase = 10;
   static inline value_type convert_func(const string_type::value_type* str,
                                         string_type::value_type** endptr) {
-#ifdef OS_WIN
+#ifdef XP_WIN
     return _wcstoi64(str, endptr, kBase);
 #else  // assume XP_UNIX
     std::string ascii_string = UTF16ToASCII(string16(str));
@@ -355,7 +355,7 @@ static void StringAppendVT(StringType* dst,
   va_list backup_ap;
   base_va_copy(backup_ap, ap);
 
-#if !defined(OS_WIN)
+#if !defined(XP_WIN)
   errno = 0;
 #endif
   int result = vsnprintfT(stack_buf, arraysize(stack_buf), format, backup_ap);
@@ -371,7 +371,7 @@ static void StringAppendVT(StringType* dst,
   int mem_length = arraysize(stack_buf);
   while (true) {
     if (result < 0) {
-#if !defined(OS_WIN)
+#if !defined(XP_WIN)
       // On Windows, vsnprintfT always returns the number of characters in a
       // fully-formatted string, so if we reach this point, something else is
       // wrong and no amount of buffer-doubling is going to fix it.

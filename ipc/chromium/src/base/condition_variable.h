@@ -75,7 +75,7 @@
 #  include <pthread.h>
 #endif
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <windows.h>
 #endif
 
@@ -103,7 +103,7 @@ class ConditionVariable {
   void Signal();
 
  private:
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   CONDITION_VARIABLE cv_;
   SRWLOCK* const srwlock_;
 #elif defined(XP_UNIX)

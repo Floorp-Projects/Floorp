@@ -12,7 +12,7 @@
 
 #include "base/basictypes.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "mozilla/ipc/EnvironmentMap.h"
 #  include <windows.h>
 #  include <tlhelp32.h>
@@ -128,7 +128,7 @@ struct LaunchOptions {
   // immediately.
   bool wait = false;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   bool start_hidden = false;
 
   // Start as an independent process rather than a process that is closed by the
@@ -188,7 +188,7 @@ struct LaunchOptions {
 #endif    // OS_MACOSX
 };
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 // Runs the given application name with the given command line. Normally, the
 // first command line argument should be the path to the process, and don't
 // forget to quote it.
@@ -314,7 +314,7 @@ class EnvironmentLog {
  private:
   explicit EnvironmentLog(const char* varname, size_t len);
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   std::wstring fname_;
 #else
   std::string fname_;
@@ -330,7 +330,7 @@ typedef std::tuple<mozilla::ipc::FileDescriptor, int> FdMapping;
 
 }  // namespace mozilla
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 // Undo the windows.h damage
 #  undef GetMessage
 #  undef CreateEvent
