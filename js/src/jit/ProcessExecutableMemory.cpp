@@ -384,10 +384,9 @@ static void DeallocateProcessExecutableMemory(void* addr, size_t bytes) {
 }
 
 static DWORD ProtectionSettingToFlags(ProtectionSetting protection) {
-  if (!JitOptions.writeProtectCode) {
-    return PAGE_EXECUTE_READWRITE;
-  }
   switch (protection) {
+    case ProtectionSetting::Protected:
+      return PAGE_NOACCESS;
     case ProtectionSetting::Writable:
       return PAGE_READWRITE;
     case ProtectionSetting::Executable:
@@ -499,9 +498,6 @@ static void DeallocateProcessExecutableMemory(void* addr, size_t bytes) {
 }
 
 static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
-  if (!JitOptions.writeProtectCode) {
-    return PROT_READ | PROT_WRITE | PROT_EXEC;
-  }
 #  ifdef MOZ_VALGRIND
   // If we're configured for Valgrind and running on it, use a slacker
   // scheme that doesn't change execute permissions, since doing so causes
@@ -509,6 +505,8 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
   // regains execute permission.  See bug 1338179.
   if (RUNNING_ON_VALGRIND) {
     switch (protection) {
+      case ProtectionSetting::Protected:
+        return PROT_NONE;
       case ProtectionSetting::Writable:
         return PROT_READ | PROT_WRITE | PROT_EXEC;
       case ProtectionSetting::Executable:
@@ -520,6 +518,8 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
   // it, so use the standard scheme.
 #  endif
   switch (protection) {
+    case ProtectionSetting::Protected:
+      return PROT_NONE;
     case ProtectionSetting::Writable:
       return PROT_READ | PROT_WRITE;
     case ProtectionSetting::Executable:
@@ -895,10 +895,6 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
   MOZ_CRASH("NYI FOR WASI.");
 #else
   std::atomic_thread_fence(std::memory_order_seq_cst);
-
-  if (!JitOptions.writeProtectCode) {
-    return true;
-  }
 
 #  ifdef XP_WIN
   DWORD flags = ProtectionSettingToFlags(protection);
