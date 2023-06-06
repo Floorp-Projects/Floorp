@@ -84,7 +84,7 @@ pub struct Rgba {
     #[arbitrary(with = arbitrary_b)]
     pub b: u8,
 
-    // Generate `a` with a custom closure (shortuct to avoid a custom funciton)
+    // Generate `a` with a custom closure (shortuct to avoid a custom function)
     #[arbitrary(with = |u: &mut Unstructured| u.int_in_range(0..=64))]
     pub a: u8,
 }
