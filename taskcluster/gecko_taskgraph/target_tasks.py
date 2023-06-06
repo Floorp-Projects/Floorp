@@ -42,6 +42,9 @@ UNCOMMON_TRY_TASK_LABELS = [
     r"web-platform-tests.*backlog",  # hide wpt jobs that are not implemented yet - bug 1572820
     r"-ccov",
     r"-profiling-",  # talos/raptor profiling jobs are run too often
+    r"-32-.*-webgpu",  # webgpu gets little benefit from these tests.
+    r"-asan-.*-webgpu",
+    r"-tsan-.*-webgpu",
     # Hide shippable versions of tests we have opt versions of because the non-shippable
     # versions are faster to run. This is mostly perf tests.
     r"-shippable(?!.*(awsy|browsertime|marionette-headless|mochitest-devtools-chrome-fis|raptor|talos|web-platform-tests-wdspec-headless|mochitest-plain-headless))",  # noqa - too long
