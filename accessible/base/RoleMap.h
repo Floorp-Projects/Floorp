@@ -459,7 +459,7 @@ ROLE(INDICATOR,
 
 ROLE(GRAPHIC,
      "graphic",
-     nsGkAtoms::img,
+     nsGkAtoms::image,
      ATK_ROLE_IMAGE,
      NSAccessibilityImageRole,
      NSAccessibilityUnknownSubrole,

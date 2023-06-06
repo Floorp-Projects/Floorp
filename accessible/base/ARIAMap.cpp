@@ -37,6 +37,8 @@ static const uint32_t kGenericAccType = 0;
  *
  *  When no Role enum mapping exists for an ARIA role, the role will be exposed
  *  via the object attribute "xml-roles".
+ *
+ * Note: the list must remain alphabetically ordered to support binary search.
  */
 
 static const nsRoleMapEntry sWAIRoleMaps[] = {
@@ -739,6 +741,16 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
   { // heading
     nsGkAtoms::heading,
     roles::HEADING,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates
+  },
+  { // image
+    nsGkAtoms::image,
+    roles::GRAPHIC,
     kUseMapRole,
     eNoValue,
     eNoAction,
