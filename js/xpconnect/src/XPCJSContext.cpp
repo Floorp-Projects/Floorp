@@ -971,9 +971,11 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
 
   bool writeProtectCode = true;
   if (XRE_IsContentProcess()) {
-    writeProtectCode = StaticPrefs::javascript_options_content_process_write_protect_code();
+    writeProtectCode =
+        StaticPrefs::javascript_options_content_process_write_protect_code();
   }
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_WRITE_PROTECT_CODE, writeProtectCode);
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_WRITE_PROTECT_CODE,
+                                writeProtectCode);
 
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC,
