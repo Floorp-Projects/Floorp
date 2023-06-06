@@ -47,7 +47,8 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
                                           char* deviceUniqueIdUTF8,
                                           uint32_t deviceUniqueIdUTF8Length,
                                           char* productUniqueIdUTF8,
-                                          uint32_t productUniqueIdUTF8Length) {
+                                          uint32_t productUniqueIdUTF8Length,
+                                          pid_t* pid) {
   if (deviceNumber >= NumberOfDevices())
     return -1;
 
