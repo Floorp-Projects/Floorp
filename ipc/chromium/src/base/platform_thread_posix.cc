@@ -13,7 +13,7 @@
 #  include <mach/mach.h>
 #elif defined(OS_NETBSD)
 #  include <lwp.h>
-#elif defined(OS_LINUX)
+#elif defined(XP_LINUX)
 #  include <sys/syscall.h>
 #  include <sys/prctl.h>
 #endif
@@ -49,7 +49,7 @@ PlatformThreadId PlatformThread::CurrentId() {
   mach_port_t port = mach_thread_self();
   mach_port_deallocate(mach_task_self(), port);
   return port;
-#elif defined(OS_LINUX)
+#elif defined(XP_LINUX)
   return syscall(__NR_gettid);
 #elif defined(OS_OPENBSD) || defined(OS_SOLARIS) || defined(__GLIBC__)
   return (intptr_t)(pthread_self());
