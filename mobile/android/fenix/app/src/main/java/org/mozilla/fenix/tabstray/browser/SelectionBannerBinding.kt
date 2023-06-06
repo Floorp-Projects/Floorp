@@ -90,7 +90,9 @@ class SelectionBannerBinding(
         }
 
         tabsTrayMultiselectItemsBinding.collectMultiSelect.setOnClickListener {
-            interactor.onAddSelectedTabsToCollectionClicked()
+            if (store.state.mode.selectedTabs.isNotEmpty()) {
+                interactor.onAddSelectedTabsToCollectionClicked()
+            }
         }
 
         binding.exitMultiSelect.setOnClickListener {
