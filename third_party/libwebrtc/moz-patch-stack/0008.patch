@@ -1653,10 +1653,10 @@ index eddc31414a..187eba76a0 100644
  
    // Returns the name of the device used by this module.
 diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
-index c0e1479caf..e4a46902e0 100644
+index 563ef5abd2..e085ac2df8 100644
 --- a/modules/video_capture/video_capture_factory.cc
 +++ b/modules/video_capture/video_capture_factory.cc
-@@ -16,19 +16,11 @@ namespace webrtc {
+@@ -16,11 +16,7 @@ namespace webrtc {
  
  rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
      const char* deviceUniqueIdUTF8) {
@@ -1667,6 +1667,10 @@ index c0e1479caf..e4a46902e0 100644
 -#endif
  }
  
+ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
+@@ -37,11 +33,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
+ }
+ 
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo() {
 -#if defined(WEBRTC_ANDROID) || defined(WEBRTC_MAC)
 -  return nullptr;
@@ -1675,7 +1679,7 @@ index c0e1479caf..e4a46902e0 100644
 -#endif
  }
  
- }  // namespace webrtc
+ VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
 index d539b38264..d5ec4daae1 100644
 --- a/modules/video_capture/video_capture_impl.cc
@@ -1766,10 +1770,10 @@ index d539b38264..d5ec4daae1 100644
  
    return 0;
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index fee93396d3..f874580471 100644
+index d7f1c8f74d..1b654175b7 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -55,8 +55,10 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -61,8 +61,10 @@ class VideoCaptureImpl : public VideoCaptureModule {
        rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
    virtual void RegisterCaptureDataCallback(
        RawVideoSinkInterface* dataCallback) override;
@@ -1781,7 +1785,7 @@ index fee93396d3..f874580471 100644
    int32_t SetCaptureRotation(VideoRotation rotation) override;
    bool SetApplyRotation(bool enable) override;
    bool GetApplyRotation() override;
-@@ -98,7 +100,7 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -104,7 +106,7 @@ class VideoCaptureImpl : public VideoCaptureModule {
    // last time the frame rate callback function was called.
    int64_t _lastFrameRateCallbackTimeNanos;
  

@@ -505,10 +505,10 @@ index d0756f269b..d7768b2323 100644
  }
 +
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index cfa5184d71..95548906c4 100644
+index 2bbc701e17..a367ca06e9 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
-@@ -93,21 +93,12 @@ if (!build_with_chromium) {
+@@ -120,21 +120,12 @@ if (!build_with_chromium) {
          "strmiids.lib",
          "user32.lib",
        ]
@@ -523,7 +523,7 @@ index cfa5184d71..95548906c4 100644
 -      }
      }
      if (is_fuchsia) {
-       sources = [ "video_capture_factory_null.cc" ]
+       sources += [ "video_capture_factory_null.cc" ]
      }
  
 -    if (build_with_mozilla && is_android) {

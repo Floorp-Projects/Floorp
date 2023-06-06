@@ -29,6 +29,8 @@
 
 namespace webrtc {
 
+class VideoCaptureOptions;
+
 namespace videocapturemodule {
 // Class definitions
 class VideoCaptureImpl : public VideoCaptureModule {
@@ -42,8 +44,12 @@ class VideoCaptureImpl : public VideoCaptureModule {
    */
   static rtc::scoped_refptr<VideoCaptureModule> Create(
       const char* deviceUniqueIdUTF8);
+  static rtc::scoped_refptr<VideoCaptureModule> Create(
+      VideoCaptureOptions* options,
+      const char* deviceUniqueIdUTF8);
 
   static DeviceInfo* CreateDeviceInfo();
+  static DeviceInfo* CreateDeviceInfo(VideoCaptureOptions* options);
 
   // Helpers for converting between (integral) degrees and
   // VideoRotation values.  Return 0 on success.

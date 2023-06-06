@@ -19,7 +19,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59fb6760bb6785a6f
  4 files changed, 26 insertions(+), 21 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
-index 9c12b2183e..4821cbccd5 100644
+index 56da475bf3..cae63c7c2d 100644
 --- a/modules/video_capture/linux/device_info_linux.cc
 +++ b/modules/video_capture/linux/device_info_linux.cc
 @@ -10,6 +10,7 @@
@@ -66,7 +66,7 @@ index 77968b7eaf..f87fe53abe 100644
  
  int DeviceInfoV4l2::HandleEvents(int fd)
 diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
-index 4895a1ab71..f3324a8e68 100644
+index 23a8f4f3f3..b2c206d775 100644
 --- a/modules/video_capture/linux/video_capture_linux.cc
 +++ b/modules/video_capture/linux/video_capture_linux.cc
 @@ -10,6 +10,7 @@
