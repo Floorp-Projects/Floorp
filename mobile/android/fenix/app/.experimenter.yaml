@@ -147,6 +147,14 @@ search-term-groups:
     enabled:
       type: boolean
       description: "If true, the feature shows up on the homescreen and on the new tab screen."
+toolbar:
+  description: The searchbar/awesomebar that user uses to search.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    toolbar-position-top:
+      type: boolean
+      description: "If true, toolbar appears at top of the screen."
 unified-search:
   description: A feature allowing user to easily search for specified results directly in the search bar.
   hasExposure: true

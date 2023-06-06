@@ -879,6 +879,15 @@ class SettingsTest {
     }
 
     @Test
+    fun `GIVEN toolbarPositionTop is false, touchExplorationIsEnabled is true THEN shouldDefaultToBottomToolbar returns false`() {
+        val settings = spyk(settings)
+        every { settings.toolbarPositionTop } returns true
+        every { settings.touchExplorationIsEnabled } returns true
+
+        assertEquals(false, settings.shouldDefaultToBottomToolbar())
+    }
+
+    @Test
     fun `GIVEN Https-only mode is disabled THEN the engine mode is HttpsOnlyMode#DISABLED`() {
         settings.shouldUseHttpsOnly = false
 
