@@ -12,8 +12,25 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const TEST_SUPPORT_EXTENSION_ID = "test-runner-support@tests.mozilla.org";
 
+/**
+ * The implementation of AppUiTestDelegate. All implementations need to be kept
+ * in sync. For details, see:
+ * testing/specialpowers/content/AppTestDelegateParent.sys.mjs
+ *
+ * This implementation mostly forwards calls to TestRunnerApiEngine in
+ * mobile/android/test_runner/src/main/java/org/mozilla/geckoview/test_runner/TestRunnerApiEngine.java
+ */
 class Delegate {
   _sendMessageToApp(data) {
+    // "GeckoView:WebExtension:Message" with the "nativeApp" property set is a
+    // message usually emitted by the runtime.sendNativeMessage implementation.
+    //
+    // Although a dummy extension with ID TEST_SUPPORT_EXTENSION_ID is installed
+    // by TestRunnerActivity, the sendNativeMessage API is not used directly.
+    // Instead, we forge a message in the same (internal) format here.
+    //
+    // The message is ultimately received and handled by TestRunnerApiEngine at
+    // mobile/android/test_runner/src/main/java/org/mozilla/geckoview/test_runner/TestRunnerApiEngine.java
     const message = {
       type: "GeckoView:WebExtension:Message",
       sender: {

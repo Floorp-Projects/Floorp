@@ -11,8 +11,17 @@ import org.json.JSONObject;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.WebExtension;
 
-// Receives API calls from AppUiTestDelegate.jsm and forwards the calls to the
-// Api impl.
+// Receives API calls via mobile/android/modules/test/AppUiTestDelegate.sys.mjs
+// and forwards the calls to the Api impl.
+//
+// This interface allows JS/HTML-based mochitests to invoke test-only logic
+// that is implemented by the embedder, e.g. by TestRunnerActivity.
+//
+// There is no implementation for xpcshell tests because the underlying concepts
+// are not available to xpcshell on desktop Firefox. If there is ever a desire
+// to create an instance, do so from XpcshellTestRunnerService.java.
+//
+// The supported messages are documented in AppTestDelegateParent.sys.mjs.
 public class TestRunnerApiEngine implements WebExtension.MessageDelegate {
   private static final String LOGTAG = "TestRunnerAPI";
 
