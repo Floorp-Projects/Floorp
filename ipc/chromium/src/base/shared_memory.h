@@ -180,7 +180,7 @@ class SharedMemory {
   UniqueMapping memory_;
   size_t max_size_ = 0;
   mozilla::UniqueFileHandle mapped_file_;
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
   bool external_section_ = false;

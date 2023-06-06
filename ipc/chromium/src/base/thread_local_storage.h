@@ -56,7 +56,7 @@ class ThreadLocalStorage {
    private:
     // The internals of this struct should be considered private.
     bool initialized_;
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     int slot_;
 #elif defined(XP_UNIX)
     pthread_key_t key_;
@@ -65,7 +65,7 @@ class ThreadLocalStorage {
     DISALLOW_COPY_AND_ASSIGN(Slot);
   };
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // Function called when on thread exit to call TLS
   // destructor functions.  This function is used internally.
   static void ThreadExit();
@@ -83,7 +83,7 @@ class ThreadLocalStorage {
   static long tls_key_;
   static long tls_max_;
   static TLSDestructorFunc tls_destructors_[kThreadLocalStorageSize];
-#endif  // OS_WIN
+#endif  // XP_WIN
 
   DISALLOW_COPY_AND_ASSIGN(ThreadLocalStorage);
 };

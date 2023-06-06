@@ -102,7 +102,7 @@ bool IsWprintfFormatPortable(const wchar_t* format);
 
 }  // namespace base
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "base/string_util_win.h"
 #elif defined(XP_UNIX)
 #  include "base/string_util_posix.h"

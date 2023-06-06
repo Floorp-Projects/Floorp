@@ -18,7 +18,7 @@
 
 #include "mozilla/Mutex.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 // We need this to declare base::MessagePumpWin::Dispatcher, which we should
 // really just eliminate.
 #  include "base/message_pump_win.h"
@@ -247,11 +247,11 @@ class MessageLoop : public base::MessagePump::Delegate {
     exception_restoration_ = restore;
   }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   void set_os_modal_loop(bool os_modal_loop) { os_modal_loop_ = os_modal_loop; }
 
   bool& os_modal_loop() { return os_modal_loop_; }
-#endif  // OS_WIN
+#endif  // XP_WIN
 
   // Set the timeouts for background hang monitoring.
   // A value of 0 indicates there is no timeout.
@@ -273,7 +273,7 @@ class MessageLoop : public base::MessagePump::Delegate {
     // once it becomes idle.
     bool quit_received;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     base::MessagePumpWin::Dispatcher* dispatcher;
 #endif
   };
@@ -325,7 +325,7 @@ class MessageLoop : public base::MessagePump::Delegate {
   typedef std::queue<PendingTask> TaskQueue;
   typedef std::priority_queue<PendingTask> DelayedTaskQueue;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   base::MessagePumpWin* pump_win() {
     return static_cast<base::MessagePumpWin*>(pump_.get());
   }
@@ -428,7 +428,7 @@ class MessageLoop : public base::MessagePump::Delegate {
   int run_depth_base_;
   bool shutting_down_;
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // Should be set to true before calling Windows APIs like TrackPopupMenu, etc
   // which enter a modal message loop.
   bool os_modal_loop_;
@@ -469,7 +469,7 @@ class MessageLoopForUI : public MessageLoop {
     return static_cast<MessageLoopForUI*>(loop);
   }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   typedef base::MessagePumpWin::Dispatcher Dispatcher;
   typedef base::MessagePumpWin::Observer Observer;
 
@@ -486,7 +486,7 @@ class MessageLoopForUI : public MessageLoop {
   base::MessagePumpForUI* pump_ui() {
     return static_cast<base::MessagePumpForUI*>(pump_.get());
   }
-#endif  // defined(OS_WIN)
+#endif  // defined(XP_WIN)
 };
 
 // Do not add any member variables to MessageLoopForUI!  This is important b/c
@@ -513,7 +513,7 @@ class MessageLoopForIO : public MessageLoop {
     return static_cast<MessageLoopForIO*>(loop);
   }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   typedef base::MessagePumpForIO::IOHandler IOHandler;
   typedef base::MessagePumpForIO::IOContext IOContext;
 

@@ -10,7 +10,7 @@
 #include "base/basictypes.h"
 #include "build/build_config.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <windows.h>
 #elif defined(XP_UNIX)
 #  include <pthread.h>
@@ -24,7 +24,7 @@ namespace internal {
 // should instead use Lock.
 class LockImpl {
  public:
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   using NativeHandle = SRWLOCK;
 #elif defined(XP_UNIX)
   using NativeHandle = pthread_mutex_t;

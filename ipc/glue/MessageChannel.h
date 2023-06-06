@@ -14,9 +14,9 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Vector.h"
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "mozilla/ipc/Neutering.h"
-#endif  // defined(OS_WIN)
+#endif  // defined(XP_WIN)
 
 #include <functional>
 #include <map>
@@ -316,7 +316,7 @@ class MessageChannel : HasResultCodes {
   }
 #endif
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   struct MOZ_STACK_CLASS SyncStackFrame {
     explicit SyncStackFrame(MessageChannel* channel);
     ~SyncStackFrame();
@@ -355,7 +355,7 @@ class MessageChannel : HasResultCodes {
 
  private:
   void SpinInternalEventLoop();
-#endif  // defined(OS_WIN)
+#endif  // defined(XP_WIN)
 
  private:
   void PostErrorNotifyTask() MOZ_REQUIRES(*mMonitor);
@@ -761,7 +761,7 @@ class MessageChannel : HasResultCodes {
   // Map of async Callbacks that are still waiting replies.
   CallbackMap mPendingResponses;
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   HANDLE mEvent;
 #endif
 

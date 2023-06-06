@@ -52,7 +52,7 @@
 
 #include "base/basictypes.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <windows.h>
 #elif defined(XP_UNIX)
 #  include <pthread.h>
@@ -62,7 +62,7 @@ namespace base {
 
 // Helper functions that abstract the cross-platform APIs.  Do not use directly.
 struct ThreadLocalPlatform {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   typedef DWORD SlotType;
 #elif defined(XP_UNIX)
   typedef pthread_key_t SlotType;

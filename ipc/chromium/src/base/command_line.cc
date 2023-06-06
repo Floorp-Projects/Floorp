@@ -6,7 +6,7 @@
 
 #include "base/command_line.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include <windows.h>
 #  include <shellapi.h>
 #  include "mozilla/DynamicallyLinkedFunctionPtr.h"
@@ -23,7 +23,7 @@ CommandLine* CommandLine::current_process_commandline_ = NULL;
 
 // Since we use a lazy match, make sure that longer versions (like L"--")
 // are listed before shorter versions (like L"-") of similar prefixes.
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 const wchar_t* const kSwitchPrefixes[] = {L"--", L"-", L"/"};
 const wchar_t kSwitchTerminator[] = L"--";
 const wchar_t kSwitchValueSeparator[] = L"=";
@@ -34,7 +34,7 @@ const char kSwitchTerminator[] = "--";
 const char kSwitchValueSeparator[] = "=";
 #endif
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 // Lowercase a string.  This is used to lowercase switch names.
 // Is this what we really want?  It seems crazy to me.  I've left it in
 // for backwards compatibility on Windows.
@@ -43,7 +43,7 @@ static void Lowercase(std::wstring* parameter) {
 }
 #endif
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 void CommandLine::ParseFromString(const std::wstring& command_line) {
   TrimWhitespace(command_line, TRIM_ALL, &command_line_string_);
 
@@ -159,7 +159,7 @@ bool CommandLine::IsSwitch(const StringType& parameter_string,
           parameter_string.substr(switch_start, equals_position - switch_start);
       *switch_value = parameter_string.substr(equals_position + 1);
     }
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     Lowercase(&switch_native);
     *switch_string = WideToASCII(switch_native);
 #else
@@ -175,7 +175,7 @@ bool CommandLine::IsSwitch(const StringType& parameter_string,
 // static
 void CommandLine::Init(int argc, const char* const* argv) {
   DCHECK(current_process_commandline_ == NULL);
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   current_process_commandline_ = new CommandLine;
   current_process_commandline_->ParseFromString(::GetCommandLineW());
 #elif defined(XP_UNIX)
@@ -191,7 +191,7 @@ void CommandLine::Terminate() {
 
 bool CommandLine::HasSwitch(const std::wstring& switch_string) const {
   std::wstring lowercased_switch(switch_string);
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   Lowercase(&lowercased_switch);
 #endif
   return switches_.find(WideToASCII(lowercased_switch)) != switches_.end();
@@ -200,7 +200,7 @@ bool CommandLine::HasSwitch(const std::wstring& switch_string) const {
 std::wstring CommandLine::GetSwitchValue(
     const std::wstring& switch_string) const {
   std::wstring lowercased_switch(switch_string);
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   Lowercase(&lowercased_switch);
 #endif
 
@@ -210,7 +210,7 @@ std::wstring CommandLine::GetSwitchValue(
   if (result == switches_.end()) {
     return L"";
   } else {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
     return result->second;
 #else
     return ASCIIToWide(result->second);
@@ -218,7 +218,7 @@ std::wstring CommandLine::GetSwitchValue(
   }
 }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 std::vector<std::wstring> CommandLine::GetLooseValues() const {
   return loose_values_;
 }
@@ -254,7 +254,7 @@ std::wstring CommandLine::PrefixedSwitchStringWithValue(
                       value_string.c_str());
 }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 void CommandLine::AppendSwitch(const std::wstring& switch_string) {
   std::wstring prefixed_switch_string = PrefixedSwitchString(switch_string);
   command_line_string_.append(L" ");

@@ -682,7 +682,7 @@ components that the process expects to use:
 .. code-block:: c++
 
     bool DemoChild::Init(int aArgc, char* aArgv[]) {
-    #if defined(MOZ_SANDBOX) && defined(OS_WIN)
+    #if defined(MOZ_SANDBOX) && defined(XP_WIN)
       mozilla::SandboxTarget::Instance()->StartSandbox();
     #elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
       StartOpenBSDSandbox(GeckoProcessType_Demo);

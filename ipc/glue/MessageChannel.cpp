@@ -42,7 +42,7 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 
-#ifdef OS_WIN
+#ifdef XP_WIN
 #  include "mozilla/gfx/Logging.h"
 #endif
 
@@ -438,7 +438,7 @@ MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
     : mName(aName), mListener(aListener), mMonitor(new RefCountedMonitor()) {
   MOZ_COUNT_CTOR(ipc::MessageChannel);
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
   MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
@@ -452,7 +452,7 @@ MessageChannel::~MessageChannel() {
   MonitorAutoLock lock(*mMonitor);
   MOZ_RELEASE_ASSERT(!mOnCxxStack,
                      "MessageChannel destroyed while code on CxxStack");
-#ifdef OS_WIN
+#ifdef XP_WIN
   if (mEvent) {
     BOOL ok = CloseHandle(mEvent);
     mEvent = nullptr;
@@ -1235,7 +1235,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
 
   RefPtr<ActorLifecycleProxy> proxy = Listener()->GetLifecycleProxy();
 
-#ifdef OS_WIN
+#ifdef XP_WIN
   SyncStackFrame frame(this);
   NeuteredWindowRegion neuteredRgn(mFlags &
                                    REQUIRE_DEFERRED_MESSAGE_PROTECTION);
@@ -1838,7 +1838,7 @@ bool MessageChannel::WaitResponse(bool aWaitTimedOut) {
   return true;
 }
 
-#ifndef OS_WIN
+#ifndef XP_WIN
 bool MessageChannel::WaitForSyncNotify() {
   AssertWorkerThread();
 #  ifdef DEBUG

@@ -10,10 +10,10 @@
 #include "base/process.h"
 #include "mozilla/Mutex.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "mozilla/UniquePtrExtensions.h"
 #endif
-#if !defined(OS_WIN) && !defined(OS_NETBSD) && !defined(OS_OPENBSD)
+#if !defined(XP_WIN) && !defined(OS_NETBSD) && !defined(OS_OPENBSD)
 #  include <pthread.h>
 #  include "mozilla/ipc/SharedMemoryBasic.h"
 #  include "mozilla/Atomics.h"
@@ -36,7 +36,7 @@ struct ParamTraits;
 // preferred to making bare calls to CrossProcessMutex.Lock and Unlock.
 //
 namespace mozilla {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 typedef mozilla::UniqueFileHandle CrossProcessMutexHandle;
 #elif !defined(OS_NETBSD) && !defined(OS_OPENBSD)
 typedef mozilla::ipc::SharedMemoryBasic::Handle CrossProcessMutexHandle;
@@ -101,7 +101,7 @@ class CrossProcessMutex {
   CrossProcessMutex(const CrossProcessMutex&);
   CrossProcessMutex& operator=(const CrossProcessMutex&);
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   HANDLE mMutex;
 #elif !defined(OS_NETBSD) && !defined(OS_OPENBSD)
   RefPtr<mozilla::ipc::SharedMemoryBasic> mSharedBuffer;

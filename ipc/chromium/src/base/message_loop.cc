@@ -52,7 +52,7 @@ static base::ThreadLocalPointer<MessageLoop>& get_tls_ptr() {
 
 //------------------------------------------------------------------------------
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 
 // Upon a SEH exception in this thread, it restores the original unhandled
 // exception filter.
@@ -70,7 +70,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER GetTopSEHFilter() {
   return top_filter;
 }
 
-#endif  // defined(OS_WIN)
+#endif  // defined(XP_WIN)
 
 //------------------------------------------------------------------------------
 
@@ -220,9 +220,9 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
       state_(NULL),
       run_depth_base_(1),
       shutting_down_(false),
-#ifdef OS_WIN
+#ifdef XP_WIN
       os_modal_loop_(false),
-#endif  // OS_WIN
+#endif  // XP_WIN
       transient_hang_timeout_(0),
       permanent_hang_timeout_(0),
       next_sequence_num_(0) {
@@ -250,7 +250,7 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
     case TYPE_MOZILLA_NONMAINTHREAD:
       pump_ = new mozilla::ipc::MessagePumpForNonMainThreads(aEventTarget);
       return;
-#if defined(OS_WIN) || defined(OS_MACOSX)
+#if defined(XP_WIN) || defined(OS_MACOSX)
     case TYPE_MOZILLA_NONMAINUITHREAD:
       pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads(aEventTarget);
       return;
@@ -265,7 +265,7 @@ MessageLoop::MessageLoop(Type type, nsISerialEventTarget* aEventTarget)
       break;
   }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   // TODO(rvargas): Get rid of the OS guards.
   if (type_ == TYPE_DEFAULT) {
     pump_ = new base::MessagePumpDefault();
@@ -349,7 +349,7 @@ void MessageLoop::Run() {
 // enable_SEH_restoration_ = true : any unhandled exception goes to the filter
 // that was existed before the loop was run.
 void MessageLoop::RunHandler() {
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   if (exception_restoration_) {
     LPTOP_LEVEL_EXCEPTION_FILTER current_filter = GetTopSEHFilter();
     MOZ_SEH_TRY { RunInternal(); }
@@ -627,7 +627,7 @@ MessageLoop::AutoRunState::AutoRunState(MessageLoop* loop) : loop_(loop) {
 
   // Initialize the other fields:
   quit_received = false;
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   dispatcher = NULL;
 #endif
 }
@@ -664,7 +664,7 @@ nsISerialEventTarget* MessageLoop::SerialEventTarget() { return mEventTarget; }
 //------------------------------------------------------------------------------
 // MessageLoopForUI
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 
 void MessageLoopForUI::Run(Dispatcher* dispatcher) {
   AutoRunState save_state(this);
@@ -690,12 +690,12 @@ void MessageLoopForUI::PumpOutPendingPaintMessages() {
   pump_ui()->PumpOutPendingPaintMessages();
 }
 
-#endif  // defined(OS_WIN)
+#endif  // defined(XP_WIN)
 
 //------------------------------------------------------------------------------
 // MessageLoopForIO
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 
 void MessageLoopForIO::RegisterIOHandler(HANDLE file, IOHandler* handler) {
   pump_io()->RegisterIOHandler(file, handler);

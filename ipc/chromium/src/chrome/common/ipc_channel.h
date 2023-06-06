@@ -17,7 +17,7 @@
 #include "mozilla/WeakPtr.h"
 #include "chrome/common/ipc_message.h"
 
-#ifdef OS_WIN
+#ifdef XP_WIN
 #  include <string>
 #endif
 
@@ -38,7 +38,7 @@ class Channel {
   // but on Unix we use unnamed socketpairs and pass capabilities
   // directly using SCM_RIGHTS messages.  This type abstracts away
   // that difference.
-#ifdef OS_WIN
+#ifdef XP_WIN
   typedef std::wstring ChannelId;
 #else
   struct ChannelId {};
@@ -161,7 +161,7 @@ class Channel {
   void StartAcceptingMachPorts(Mode mode);
 #  endif
 
-#elif defined(OS_WIN)
+#elif defined(XP_WIN)
   // Tell this pipe to accept handles. Exactly one side of the IPC connection
   // must be set as `MODE_SERVER`, and that side will be responsible for calling
   // `DuplicateHandle` to transfer the handle between processes.

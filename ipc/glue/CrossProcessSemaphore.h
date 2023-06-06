@@ -11,10 +11,10 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Maybe.h"
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 #  include "mozilla/UniquePtrExtensions.h"
 #endif
-#if !defined(OS_WIN) && !defined(OS_MACOSX)
+#if !defined(XP_WIN) && !defined(OS_MACOSX)
 #  include <pthread.h>
 #  include <semaphore.h>
 #  include "mozilla/ipc/SharedMemoryBasic.h"
@@ -37,7 +37,7 @@ inline bool IsHandleValid(const T& handle) {
   return bool(handle);
 }
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 typedef mozilla::UniqueFileHandle CrossProcessSemaphoreHandle;
 #elif !defined(OS_MACOSX)
 typedef mozilla::ipc::SharedMemoryBasic::Handle CrossProcessSemaphoreHandle;
@@ -102,7 +102,7 @@ class CrossProcessSemaphore {
   CrossProcessSemaphore(const CrossProcessSemaphore&);
   CrossProcessSemaphore& operator=(const CrossProcessSemaphore&);
 
-#if defined(OS_WIN)
+#if defined(XP_WIN)
   explicit CrossProcessSemaphore(HANDLE aSemaphore);
 
   HANDLE mSemaphore;

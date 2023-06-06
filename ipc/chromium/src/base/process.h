@@ -10,7 +10,7 @@
 #include "base/basictypes.h"
 
 #include <sys/types.h>
-#ifdef OS_WIN
+#ifdef XP_WIN
 #  include <windows.h>
 #endif
 
@@ -19,7 +19,7 @@ namespace base {
 // ProcessHandle is a platform specific type which represents the underlying OS
 // handle to a process.
 // ProcessId is a number which identifies the process in the OS.
-#if defined(OS_WIN)
+#if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
 typedef DWORD ProcessId;
 // inttypes.h-like macro for ProcessId formatting.
