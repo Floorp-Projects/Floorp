@@ -59,12 +59,8 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
                                         bool aCreated);
   void NotifyToWindow(bool aCreated) const;
 
-  // this calls CreateReadableStream(), which in this case doesn't actually run
-  // script.   See also bug 1810942
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Init(const GlobalObject& aGlobal,
-                                        const nsAString& aUrl,
-                                        const WebTransportOptions& aOptions,
-                                        ErrorResult& aError);
+  void Init(const GlobalObject& aGlobal, const nsAString& aUrl,
+            const WebTransportOptions& aOptions, ErrorResult& aError);
   void ResolveWaitingConnection(WebTransportReliabilityMode aReliability);
   void RejectWaitingConnection(nsresult aRv);
   bool ParseURL(const nsAString& aURL) const;

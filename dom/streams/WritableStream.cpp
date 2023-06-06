@@ -749,11 +749,13 @@ already_AddRefed<Promise> WritableStreamAddWriteRequest(
 }  // namespace streams_abstract
 
 // https://streams.spec.whatwg.org/#writablestream-set-up
-void WritableStream::SetUpNative(JSContext* aCx,
-                                 UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
-                                 Maybe<double> aHighWaterMark,
-                                 QueuingStrategySize* aSizeAlgorithm,
-                                 ErrorResult& aRv) {
+// _BOUNDARY because `aAlgorithms->StartCallback` (called by
+// SetUpWritableStreamDefaultController below) should not be able to run script
+// in this case.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void WritableStream::SetUpNative(
+    JSContext* aCx, UnderlyingSinkAlgorithmsWrapper& aAlgorithms,
+    Maybe<double> aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+    ErrorResult& aRv) {
   // an optional number highWaterMark (default 1)
   double highWaterMark = aHighWaterMark.valueOr(1);
   // and if given, highWaterMark must be a non-negative, non-NaN number.

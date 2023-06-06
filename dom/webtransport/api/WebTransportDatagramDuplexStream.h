@@ -95,9 +95,7 @@ class WebTransportDatagramDuplexStream final : public nsISupports,
   WebTransportDatagramDuplexStream(nsIGlobalObject* aGlobal,
                                    WebTransport* aWebTransport);
 
-  // Calls CreateNative, which is current MOZ_CAN_RUN_SCRIPT but can't call any
-  // JS because it has no start algorithm (bug 1819124)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Init(ErrorResult& aError);
+  void Init(ErrorResult& aError);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransportDatagramDuplexStream)
