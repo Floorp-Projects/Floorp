@@ -9,7 +9,7 @@
 #ifndef CHROME_COMMON_CHROME_SWITCHES_H__
 #define CHROME_COMMON_CHROME_SWITCHES_H__
 
-#if defined(COMPILER_MSVC)
+#if defined(_MSC_VER)
 #  include <string.h>
 #endif
 
