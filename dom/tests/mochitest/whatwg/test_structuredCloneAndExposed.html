@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1828264
+-->
+<head>
+  <title>Basic structured clone tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1828264">Mozilla Bug 1828264</a>
+<p id="display">
+<iframe id="frame"></iframe>
+<image href="four-colors.png" height="320" width="240"/>
+</p>
+<div id="content" style="display: none"></div>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+class WebIDLGlobal {
+  globalNames;
+  resolve;
+  #otherSide;
+
+  constructor(globalNames, initSides) {
+    this.globalNames = globalNames;
+    let global = this;
+    this.#otherSide = initSides().then(([ourSide, otherSide, cleanup]) => {
+      if (cleanup) {
+        SimpleTest.registerCleanupFunction(cleanup);
+      }
+      ourSide.addEventListener("message", ({ data }) => {
+        global.resultReceived(data);
+      });
+      return otherSide;
+    });
+  }
+
+  get otherSide() {
+    return this.#otherSide;
+  }
+
+  waitForResult() {
+    ok(!this.resolve, "Still waiting on previous message?");
+    return new Promise(resolve => {
+      this.resolve = resolve;
+    });
+  }
+  resultReceived(value) {
+    this.resolve(value);
+    this.resolve = undefined;
+  }
+}
+
+// Init functions return an array containing in order the object to use for
+// sending a messages to the other global, the object to use to listen for
+// messages from the other global and optioanlly a cleanup function.
+
+function waitForInitMessage(target) {
+  return new Promise(resolve => {
+    target.addEventListener("message", resolve, { once: true });
+  });
+}
+
+function getModuleURL(additionalScript = "") {
+  return new URL(
+    `file_structuredCloneAndExposed.sjs?additionalScript=${encodeURIComponent(
+      additionalScript
+    )}`,
+    location.href
+  );
+}
+
+function initFrame() {
+  let callInstallListeners = `
+    installListeners(globalThis, parent);
+    `;
+  frame.srcdoc =
+    `<script src="${getModuleURL(callInstallListeners)}" type="module"></` +
+    `script>`;
+  return waitForInitMessage(self).then(() => [self, frame.contentWindow]);
+}
+
+function initDedicatedWorker() {
+  let callInstallListeners = `
+    installListeners(globalThis, globalThis);
+    `;
+  const worker = new Worker(getModuleURL(callInstallListeners), {
+    type: "module",
+  });
+  return waitForInitMessage(worker).then(() => [worker, worker]);
+}
+
+function initSharedWorker() {
+  let callInstallListeners = `
+    self.addEventListener("connect", (e) => {
+      const port = e.ports[0];
+      port.start();
+      installListeners(port, port);
+    });
+    `;
+  const worker = new SharedWorker(getModuleURL(callInstallListeners), {
+    type: "module",
+  });
+  worker.port.start();
+  return waitForInitMessage(worker.port).then(() => [worker.port, worker.port]);
+}
+
+function initServiceWorker() {
+  let callInstallListeners = `
+    addEventListener("message", ({ source: client }) => {
+      installListeners(globalThis, client);
+    }, { once: true });
+    `;
+
+  return navigator.serviceWorker
+    .register(getModuleURL(callInstallListeners), { type: "module" })
+    .then(registration => {
+      let worker =
+        registration.installing || registration.waiting || registration.active;
+      worker.postMessage("installListeners");
+      return waitForInitMessage(navigator.serviceWorker).then(() => [
+        navigator.serviceWorker,
+        worker,
+        () => registration.unregister(),
+      ]);
+    });
+}
+
+function initAudioWorklet() {
+  const exporter = `
+    export { installListeners };
+  `;
+
+  const workletSource = `
+    import { installListeners } from "${getModuleURL(exporter)}";
+
+    class CustomAudioWorkletProcessor extends AudioWorkletProcessor {
+      constructor() {
+        super();
+        this.port.start();
+        installListeners(this.port, this.port, "AudioWorklet");
+      }
+
+      process(inputs, outputs, params) {
+        // Do nothing, output silence
+      }
+    }
+
+    registerProcessor("custom-audio-worklet-processor", CustomAudioWorkletProcessor);
+    `;
+  let workletURL = URL.createObjectURL(
+    new Blob([workletSource], { type: "text/javascript" })
+  );
+
+  // We need to keep the context alive while we're using the message ports.
+  globalThis.context = new OfflineAudioContext(1, 64, 8000);
+  return context.audioWorklet.addModule(workletURL).then(() => {
+    let node = new AudioWorkletNode(context, "custom-audio-worklet-processor");
+    node.port.start();
+    return waitForInitMessage(node.port).then(() => [
+      node.port,
+      node.port,
+      () => {
+        node.port.close();
+        delete globalThis.context;
+      },
+    ]);
+  });
+}
+
+const globals = [
+  ["Window", ["Window"], initFrame],
+  [
+    "DedicatedWorkerGlobalScope",
+    ["Worker", "DedicatedWorker"],
+    initDedicatedWorker,
+  ],
+  ["SharedWorkerGlobalScope", ["Worker", "SharedWorker"], initSharedWorker],
+  ["ServiceWorkerGlobalScope", ["Worker", "ServiceWorker"], initServiceWorker],
+  // WorkerDebuggerGlobalScope can only receive string messages.
+  ["AudioWorkletGlobalScope", ["Worklet", "AudioWorklet"], initAudioWorklet],
+  // PaintWorkletGlobalScope doesn't have a messaging mechanism
+].map(([global, globalNames, init]) => [
+  global,
+  new WebIDLGlobal(globalNames, init),
+]);
+
+
+function generateCertificate() {
+  return RTCPeerConnection.generateCertificate({
+    name: "ECDSA",
+    namedCurve: "P-256",
+  });
+}
+
+function makeCanvas() {
+  const width = 20;
+  const height = 20;
+  let canvas = new OffscreenCanvas(width, height);
+  let ctx = canvas.getContext("2d");
+  ctx.fillStyle = "rgba(50, 100, 150, 255)";
+  ctx.fillRect(0, 0, width, height);
+  return canvas;
+}
+
+function makeVideoFrame() {
+  return new VideoFrame(makeCanvas(), { timestamp: 1, alpha: "discard" });
+}
+
+function makeImageBitmap() {
+  return makeCanvas().transferToImageBitmap();
+}
+
+const serializable = [
+  ["DOMException", ["Window", "Worker"], () => new DOMException()],
+  ["DOMMatrixReadOnly", ["Window", "Worker"], () => new DOMMatrixReadOnly()],
+  ["ImageBitmap", ["Window", "Worker"], makeImageBitmap],
+  ["RTCCertificate", ["Window"], generateCertificate],
+  [
+    "URLSearchParams",
+    ["Window", "Worker", "WorkerDebugger"],
+    () => new URLSearchParams(),
+  ],
+  ["VideoFrame", ["Window", "DedicatedWorker"], makeVideoFrame],
+];
+
+const transferable = [
+  [
+    "MessagePort",
+    ["Window", "Worker", "AudioWorklet"],
+    () => new MessageChannel().port1,
+  ],
+  ["ImageBitmap", ["Window", "Worker"], makeImageBitmap],
+  ["ReadableStream", ["*"], () => new ReadableStream()],
+  ["VideoFrame", ["Window", "DedicatedWorker"], makeVideoFrame],
+];
+
+
+function isExposed(exposure, global) {
+  if (exposure.length === 1 && exposure[0] === "*") {
+    return true;
+  }
+  return !!global.globalNames.filter(v => exposure.includes(v)).length;
+}
+
+
+async function runTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.audioworklet.enabled", true],
+      ["dom.media.webcodecs.enabled", true],
+      ["dom.worklet.enabled", true],
+    ],
+  });
+
+  async function testDOMClass(domClass, exposure, createObject, transferable) {
+    for ([globalName, webidlGlobal] of globals) {
+      info(
+        `Testing ${
+          transferable ? "transfer" : "serialization"
+        } of ${domClass} with ${globalName}`
+      );
+
+      let object = await createObject();
+      let otherSide = await webidlGlobal.otherSide;
+      let options = { targetOrigin: "*" };
+      let message;
+      if (transferable) {
+        options.transfer = [object];
+      } else {
+        message = object;
+      }
+      otherSide.postMessage(message, options);
+
+      let result = await webidlGlobal.waitForResult();
+      let expected = isExposed(exposure, webidlGlobal);
+
+      if (
+        domClass === "ImageBitmap" &&
+        globalName === "ServiceWorkerGlobalScope"
+      ) {
+        // Service workers don't support transferring shared memory objects
+        // (see ServiceWorker::PostMessage).
+        expected = false;
+      }
+
+      is(
+        result,
+        expected,
+        `Deserialization for ${domClass} in ${globalName} ${
+          expected ? "should" : "shouldn't"
+        } succeed`
+      );
+    }
+  }
+
+  for ([domClass, exposure, createObject] of serializable) {
+    await testDOMClass(domClass, exposure, createObject, false);
+  }
+  for ([domClass, exposure, createObject] of transferable) {
+    await testDOMClass(domClass, exposure, createObject, true);
+  }
+
+  SimpleTest.finish();
+}
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
