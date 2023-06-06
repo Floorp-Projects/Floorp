@@ -88,6 +88,7 @@ nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
       mHttpHandler(gHttpHandler) {}
 
 nsHttpChannelAuthProvider::~nsHttpChannelAuthProvider() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mAuthChannel, "Disconnect wasn't called");
 }
 
