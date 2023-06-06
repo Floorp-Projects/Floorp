@@ -54,7 +54,8 @@ MARKUPMAP(
     },
     0)
 
-MARKUPMAP(code, New_HyperText, roles::CODE)
+// XXX: Uncomment this once HTML-aam agrees to map to same as ARIA.
+// MARKUPMAP(code, New_HyperText, roles::CODE)
 
 MARKUPMAP(dd, New_HTMLDtOrDd<HyperTextAccessibleWrap>, roles::DEFINITION)
 
