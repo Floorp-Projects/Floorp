@@ -918,7 +918,7 @@ function do_test(testcases, testFn) {
         }
 
         handler.activeSection.fieldDetails.forEach(field => {
-          let element = field.elementWeakRef.get();
+          let element = field.element;
           if (!testcase.profileData[field.fieldName]) {
             // Avoid waiting for `change` event of a input with a blank value to
             // be filled.
