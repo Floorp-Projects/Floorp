@@ -7,6 +7,11 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 add_task(async function () {
+  if (Services.prefs.getBoolPref("telemetry.fog.artifact_build", false)) {
+    Assert.ok(true, "Test skipped in artifact builds. See bug 1836686.");
+    return;
+  }
+
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     waitForLoad: true,
