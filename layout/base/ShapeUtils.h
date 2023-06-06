@@ -31,6 +31,11 @@ struct ShapeUtils final {
                                     const nscoord aPosMin,
                                     const nscoord aPosMax);
 
+  // Compute the position based on |aRefBox|.
+  // @param aRefBox The reference box for the position.
+  // @return The point inside |aRefBox|.
+  static nsPoint ComputePosition(const StylePosition&, const nsRect&);
+
   // Compute the center of a circle or an ellipse.
   // @param aRefBox The reference box of the basic shape.
   // @return The point of the center.

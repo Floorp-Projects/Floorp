@@ -31,6 +31,15 @@ nscoord ShapeUtils::ComputeShapeRadius(const StyleShapeRadius& aType,
   return length;
 }
 
+nsPoint ShapeUtils::ComputePosition(const StylePosition& aPosition,
+                                    const nsRect& aRefBox) {
+  nsPoint topLeft, anchor;
+  nsSize size(aRefBox.Size());
+  nsImageRenderer::ComputeObjectAnchorPoint(aPosition, size, size, &topLeft,
+                                            &anchor);
+  return anchor + aRefBox.TopLeft();
+}
+
 nsPoint ShapeUtils::ComputeCircleOrEllipseCenter(
     const StyleBasicShape& aBasicShape, const nsRect& aRefBox) {
   MOZ_ASSERT(aBasicShape.IsCircle() || aBasicShape.IsEllipse(),
@@ -39,12 +48,7 @@ nsPoint ShapeUtils::ComputeCircleOrEllipseCenter(
   const auto& position = aBasicShape.IsCircle()
                              ? aBasicShape.AsCircle().position
                              : aBasicShape.AsEllipse().position;
-
-  nsPoint topLeft, anchor;
-  nsSize size(aRefBox.Size());
-  nsImageRenderer::ComputeObjectAnchorPoint(position, size, size, &topLeft,
-                                            &anchor);
-  return anchor + aRefBox.TopLeft();
+  return ComputePosition(position, aRefBox);
 }
 
 nscoord ShapeUtils::ComputeCircleRadius(const StyleBasicShape& aBasicShape,
