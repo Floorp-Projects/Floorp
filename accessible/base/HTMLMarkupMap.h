@@ -328,8 +328,6 @@ MARKUPMAP(
 
 MARKUPMAP(q, New_HyperText, 0)
 
-MARKUPMAP(s, New_HyperText, roles::CONTENT_DELETION)
-
 MARKUPMAP(
     section,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
