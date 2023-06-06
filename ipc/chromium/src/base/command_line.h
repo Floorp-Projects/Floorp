@@ -19,8 +19,6 @@
 #ifndef BASE_COMMAND_LINE_H_
 #define BASE_COMMAND_LINE_H_
 
-#include "build/build_config.h"
-
 #include <map>
 #include <string>
 #include <vector>

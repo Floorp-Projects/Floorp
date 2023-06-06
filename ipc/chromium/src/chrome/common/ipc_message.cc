@@ -7,7 +7,6 @@
 #include "chrome/common/ipc_message.h"
 
 #include "base/logging.h"
-#include "build/build_config.h"
 #include "mojo/core/ports/event.h"
 
 #include <utility>

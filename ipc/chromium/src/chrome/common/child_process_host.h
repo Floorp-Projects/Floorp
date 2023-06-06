@@ -7,8 +7,6 @@
 #ifndef CHROME_COMMON_CHILD_PROCESS_HOST_H_
 #define CHROME_COMMON_CHILD_PROCESS_HOST_H_
 
-#include "build/build_config.h"
-
 #include <list>
 
 #include "base/basictypes.h"

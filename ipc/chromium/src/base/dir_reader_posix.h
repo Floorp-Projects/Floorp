@@ -8,8 +8,6 @@
 #define BASE_DIR_READER_POSIX_H_
 #pragma once
 
-#include "build/build_config.h"
-
 // This header provides a class, DirReaderPosix, which allows one to open and
 // read from directories without allocating memory. For the interface, see
 // the generic fallback in dir_reader_fallback.h.

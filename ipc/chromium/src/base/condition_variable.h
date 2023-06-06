@@ -69,7 +69,6 @@
 
 #include "base/basictypes.h"
 #include "base/lock.h"
-#include "build/build_config.h"
 
 #if defined(XP_UNIX)
 #  include <pthread.h>

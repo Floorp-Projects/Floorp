@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
-#include "build/build_config.h"
 #include "chrome/common/ipc_message.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/IPCCore.h"
