@@ -217,6 +217,7 @@ class RegExpShared
   bool multiline() const { return flags.multiline(); }
   bool dotAll() const { return flags.dotAll(); }
   bool unicode() const { return flags.unicode(); }
+  bool unicodeSets() const { return flags.unicodeSets(); }
   bool sticky() const { return flags.sticky(); }
 
   bool isCompiled(bool latin1, CodeKind codeKind = CodeKind::Any) const {

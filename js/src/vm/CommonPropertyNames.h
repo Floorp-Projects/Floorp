@@ -526,6 +526,7 @@
   MACRO_(unescape, unescape, "unescape")                                       \
   MACRO_(uneval, uneval, "uneval")                                             \
   MACRO_(unicode, unicode, "unicode")                                          \
+  MACRO_(unicodeSets, unicodeSets, "unicodeSets")                              \
   MACRO_(uninitialized, uninitialized, "uninitialized")                        \
   MACRO_(union, union_, "union")                                               \
   MACRO_(unit, unit, "unit")                                                   \

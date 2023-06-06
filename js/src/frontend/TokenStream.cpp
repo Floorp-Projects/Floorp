@@ -2655,6 +2655,8 @@ template <typename Unit, class AnyCharsAccess>
       flag = RegExpFlag::DotAll;
     } else if (unit == 'u') {
       flag = RegExpFlag::Unicode;
+    } else if (unit == 'v') {
+      flag = RegExpFlag::UnicodeSets;
     } else if (unit == 'y') {
       flag = RegExpFlag::Sticky;
     } else if (IsAsciiAlpha(unit)) {
@@ -2664,6 +2666,15 @@ template <typename Unit, class AnyCharsAccess>
     }
 
     if ((reflags & flag) || flag == RegExpFlag::NoFlags) {
+      ungetCodeUnit(unit);
+      char buf[2] = {char(unit), '\0'};
+      error(JSMSG_BAD_REGEXP_FLAG, buf);
+      return badToken();
+    }
+
+    // /u and /v flags are mutually exclusive.
+    if (((reflags & RegExpFlag::Unicode) && (flag & RegExpFlag::UnicodeSets)) ||
+        ((reflags & RegExpFlag::UnicodeSets) && (flag & RegExpFlag::Unicode))) {
       ungetCodeUnit(unit);
       char buf[2] = {char(unit), '\0'};
       error(JSMSG_BAD_REGEXP_FLAG, buf);
