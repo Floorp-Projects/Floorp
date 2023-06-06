@@ -52,6 +52,42 @@ you're going to want to write some automated tests.
       that means your instrumentation did something wrong.
       Check your test logs for details about what went awry.
 
+### Tests and Artifact Builds
+
+Artifact build support is provided by [the JOG subsystem](../dev/jog).
+It is able to register the latest versions of all metrics and pings at runtime.
+However, the compiled code is still running against the
+version of those metrics and pings that was current at the time the artifacts were compiled.
+
+This isn't a problem unless:
+* You are changing a metric or ping that is used in instrumentation in the compiled code, or
+* You are using `testBeforeNextSubmit` in JavaScript for a ping submitted in the compiled code.
+
+When in doubt, simply test your new test in artifact mode
+(by e.g. passing `--enable-artifact-builds` to `mach try`)
+before submitting it.
+If it doesn't pass in artifact mode because of one of these two cases,
+you may need to skip your test whenever FOG's artifact build support is enabled:
+* xpcshell:
+```js
+add_task(
+  { skip_if: () => Services.prefs.getBoolPref("telemetry.fog.artifact_build", false) },
+  function () {
+    // ... your test ...
+  }
+);
+```
+* mochitest:
+```js
+add_task(function () {
+  if (Services.prefs.getBoolPref("telemetry.fog.artifact_build", false)) {
+    Assert.ok(true, "Test skipped in artifact mode.");
+    return;
+  }
+  // ... your test ...
+});
+```
+
 ## The Usual Test Format
 
 Instrumentation tests tend to follow the same three-part format:
