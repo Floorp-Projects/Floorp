@@ -43,25 +43,47 @@ using JS::ExpandoAndGeneration;
 namespace js {
 namespace jit {
 
+static uint32_t GetICStackValueOffset() {
+  uint32_t offset = ICStackValueOffset;
+  if (JitOptions.enableICFramePointers) {
+#ifdef JS_USE_LINK_REGISTER
+    // The frame pointer and return address are also on the stack.
+    offset += 2 * sizeof(uintptr_t);
+#else
+    // The frame pointer is also on the stack.
+    offset += sizeof(uintptr_t);
+#endif
+  }
+  return offset;
+}
+
+static void PushICFrameRegs(MacroAssembler& masm) {
+  MOZ_ASSERT(JitOptions.enableICFramePointers);
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
+  masm.push(FramePointer);
+}
+
+static void PopICFrameRegs(MacroAssembler& masm) {
+  MOZ_ASSERT(JitOptions.enableICFramePointers);
+  masm.pop(FramePointer);
+#ifdef JS_USE_LINK_REGISTER
+  masm.popReturnAddress();
+#endif
+}
+
 Address CacheRegisterAllocator::addressOf(MacroAssembler& masm,
                                           BaselineFrameSlot slot) const {
   uint32_t offset =
-      stackPushed_ + ICStackValueOffset + slot.slot() * sizeof(JS::Value);
-  if (JitOptions.enableICFramePointers) {
-    // The frame pointer is also on the stack.
-    offset += sizeof(uintptr_t);
-  }
+      stackPushed_ + GetICStackValueOffset() + slot.slot() * sizeof(JS::Value);
   return Address(masm.getStackPointer(), offset);
 }
 BaseValueIndex CacheRegisterAllocator::addressOf(MacroAssembler& masm,
                                                  Register argcReg,
                                                  BaselineFrameSlot slot) const {
   uint32_t offset =
-      stackPushed_ + ICStackValueOffset + slot.slot() * sizeof(JS::Value);
-  if (JitOptions.enableICFramePointers) {
-    // The frame pointer is also on the stack.
-    offset += sizeof(uintptr_t);
-  }
+      stackPushed_ + GetICStackValueOffset() + slot.slot() * sizeof(JS::Value);
   return BaseValueIndex(masm.getStackPointer(), argcReg, offset);
 }
 
@@ -90,7 +112,7 @@ void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
   if (JitOptions.enableICFramePointers) {
     // If we have already pushed the frame pointer, pop it
     // before creating the stub frame.
-    masm.pop(FramePointer);
+    PopICFrameRegs(masm);
   }
   EmitBaselineEnterStubFrame(masm, scratch);
 
@@ -116,7 +138,7 @@ void AutoStubFrame::leave(MacroAssembler& masm) {
   if (JitOptions.enableICFramePointers) {
     // We will pop the frame pointer when we return,
     // so we have to push it again now.
-    masm.push(FramePointer);
+    PushICFrameRegs(masm);
   }
 }
 
@@ -168,7 +190,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
      *  the caller's frame. To support this, we allocate a separate
      *  baselineFrame register when IC frame pointers are enabled.
      */
-    masm.push(FramePointer);
+    PushICFrameRegs(masm);
     masm.moveStackPtrTo(FramePointer);
 
     MOZ_ASSERT(baselineFrameReg() != FramePointer);
@@ -207,7 +229,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
       return nullptr;
     }
     if (JitOptions.enableICFramePointers) {
-      masm.pop(FramePointer);
+      PopICFrameRegs(masm);
     }
     EmitStubGuardFailure(masm);
   }
@@ -1854,7 +1876,7 @@ bool BaselineCacheIRCompiler::emitReturnFromIC() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   allocator.discardStack(masm);
   if (JitOptions.enableICFramePointers) {
-    masm.pop(FramePointer);
+    PopICFrameRegs(masm);
   }
   EmitReturnFromIC(masm);
   return true;
