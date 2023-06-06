@@ -9,7 +9,6 @@
 #include "File.h"
 #include "MemoryBlobImpl.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -298,6 +297,10 @@ already_AddRefed<Promise> Blob::ConsumeBody(
                               MutableBlobStorage::eOnlyInMemory, aRv);
 }
 
+// https://w3c.github.io/FileAPI/#stream-method-algo
+// "The stream() method, when invoked, must return the result of calling get
+// stream on this."
+// And that's https://w3c.github.io/FileAPI/#blob-get-stream.
 already_AddRefed<ReadableStream> Blob::Stream(JSContext* aCx,
                                               ErrorResult& aRv) const {
   nsCOMPtr<nsIInputStream> stream;
@@ -311,15 +314,25 @@ already_AddRefed<ReadableStream> Blob::Stream(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<BodyStreamHolder> holder = new BodyStreamHolder();
+  auto algorithms =
+      MakeRefPtr<NonAsyncInputToReadableStreamAlgorithms>(*stream);
 
-  BodyStream::Create(aCx, holder, mGlobal, stream, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  // Step 1: Let stream be a new ReadableStream created in blob’s relevant
+  // Realm.
+  // Step 2: Set up stream with byte reading support.
+  // Step 3: ...
+  // (The spec here does not define pullAlgorithm and instead greedily enqueues
+  // everything into the stream when .stream() is called, but here we only reads
+  // the data when actual read request happens, via
+  // InputToReadableStreamAlgorithms. See
+  // https://github.com/w3c/FileAPI/issues/194.)
+  RefPtr<ReadableStream> body = ReadableStream::CreateByteNative(
+      aCx, mGlobal, *algorithms, Nothing(), aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<ReadableStream> rStream = holder->GetReadableStreamBody();
-  return rStream.forget();
+  return body.forget();
 }
 
 }  // namespace mozilla::dom
