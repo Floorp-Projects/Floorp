@@ -12490,36 +12490,31 @@ void CodeGenerator::visitArrayPush(LArrayPush* lir) {
   auto* ool = new (alloc()) OutOfLineArrayPush(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  // Load elements and length.
+  // Load obj->elements in elementsTemp.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
-  masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), length);
 
-  // TODO(post-Warp): reuse/share the CacheIR implementation when IonBuilder and
-  // TI are gone (bug 1654180).
+  Address initLengthAddr(elementsTemp,
+                         ObjectElements::offsetOfInitializedLength());
+  Address lengthAddr(elementsTemp, ObjectElements::offsetOfLength());
+  Address capacityAddr(elementsTemp, ObjectElements::offsetOfCapacity());
 
-  // Bailout if the incremented length does not fit in int32.
-  bailoutCmp32(Assembler::AboveOrEqual, length, Imm32(INT32_MAX),
-               lir->snapshot());
+  // Bail out if length != initLength.
+  masm.load32(lengthAddr, length);
+  bailoutCmp32(Assembler::NotEqual, initLengthAddr, length, lir->snapshot());
 
-  // Guard length == initializedLength.
-  Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::NotEqual, initLength, length, ool->entry());
+  // If length < capacity, we can add a dense element inline. If not, we
+  // need to allocate more elements.
+  masm.spectreBoundsCheck32(length, capacityAddr, spectreTemp, ool->entry());
+  masm.bind(ool->rejoin());
 
-  // Guard length < capacity.
-  Address capacity(elementsTemp, ObjectElements::offsetOfCapacity());
-  masm.spectreBoundsCheck32(length, capacity, spectreTemp, ool->entry());
-
-  // Do the store.
+  // Store the value. The post-barrier is handled separately.
   masm.storeValue(value, BaseObjectElementIndex(elementsTemp, length));
 
-  masm.add32(Imm32(1), length);
-
   // Update length and initialized length.
+  masm.add32(Imm32(1), length);
   masm.store32(length, Address(elementsTemp, ObjectElements::offsetOfLength()));
   masm.store32(length, Address(elementsTemp,
                                ObjectElements::offsetOfInitializedLength()));
-
-  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitOutOfLineArrayPush(OutOfLineArrayPush* ool) {
@@ -12527,40 +12522,28 @@ void CodeGenerator::visitOutOfLineArrayPush(OutOfLineArrayPush* ool) {
 
   Register object = ToRegister(ins->object());
   Register temp = ToRegister(ins->temp0());
-  Register output = ToRegister(ins->output());
-  ValueOperand value = ToValue(ins, LArrayPush::ValueIndex);
 
-  // Save all live volatile registers, except |temp| and |output|, because both
-  // are overwritten anyway.
   LiveRegisterSet liveRegs = liveVolatileRegs(ins);
   liveRegs.takeUnchecked(temp);
-  liveRegs.takeUnchecked(output);
+  liveRegs.addUnchecked(ToRegister(ins->output()));
+  liveRegs.addUnchecked(ToValue(ins, LArrayPush::ValueIndex));
 
   masm.PushRegsInMask(liveRegs);
-
-  masm.Push(value);
-  masm.moveStackPtrTo(output);
 
   masm.setupAlignedABICall();
   masm.loadJSContext(temp);
   masm.passABIArg(temp);
   masm.passABIArg(object);
-  masm.passABIArg(output);
 
-  using Fn = bool (*)(JSContext*, ArrayObject*, Value*);
-  masm.callWithABI<Fn, jit::ArrayPushDensePure>();
+  using Fn = bool (*)(JSContext*, NativeObject* obj);
+  masm.callWithABI<Fn, NativeObject::addDenseElementPure>();
   masm.storeCallPointerResult(temp);
 
-  masm.freeStack(sizeof(Value));  // Discard pushed Value.
-
-  MOZ_ASSERT(!liveRegs.has(temp));
   masm.PopRegsInMask(liveRegs);
-
   bailoutIfFalseBool(temp, ins->snapshot());
 
-  // Load the new length into the output register.
-  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), output);
-  masm.load32(Address(output, ObjectElements::offsetOfLength()), output);
+  // Load the reallocated elements pointer.
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp);
 
   masm.jump(ool->rejoin());
 }
