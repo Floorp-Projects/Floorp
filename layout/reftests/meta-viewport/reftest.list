@@ -40,3 +40,4 @@ pref(ui.useOverlayScrollbars,1) == overflow-hidden-region-with-negative-left-pos
 == not-able-to-scrollTo.html about:blank
 == min-scale-aspect-ratio.html about:blank
 pref(layout.dynamic-toolbar-max-height,100) == device-height-with-dynamic-toolbar.html device-height-with-dynamic-toolbar-ref.html
+== desktop-mode.html desktop-mode-ref.html
