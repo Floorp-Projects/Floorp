@@ -1671,10 +1671,6 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
 }
 
 nsresult ScriptExecutorRunnable::Cancel() {
-  // We need to check first if cancel is called twice
-  nsresult rv = MainThreadWorkerSyncRunnable::Cancel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mScriptLoader->AllScriptsExecuted() &&
       mScriptLoader->AllModuleRequestsLoaded()) {
     mScriptLoader->ShutdownScriptLoader(false, false);

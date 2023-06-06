@@ -58,16 +58,14 @@ class WrappedControlRunnable final : public WorkerControlRunnable {
     // If the inner runnable is not cancellable, then just do the normal
     // WorkerControlRunnable thing.  This will end up calling Run().
     if (!cr) {
-      WorkerControlRunnable::Cancel();
-      return NS_OK;
+      return Run();
     }
 
     // Otherwise call the inner runnable's Cancel() and treat this like
     // a WorkerRunnable cancel.  We can't call WorkerControlRunnable::Cancel()
     // in this case since that would result in both Run() and the inner
     // Cancel() being called.
-    Unused << cr->Cancel();
-    return WorkerRunnable::Cancel();
+    return cr->Cancel();
   }
 };
 
@@ -115,6 +113,9 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
   }
 
   if (mBehavior == Behavior::Hybrid) {
+    LOGV(("WorkerEventTarget::Dispatch [%p] Dispatch as normal runnable(%p)",
+          this, runnable.get()));
+
     RefPtr<WorkerRunnable> r =
         mWorkerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
     if (r->Dispatch()) {

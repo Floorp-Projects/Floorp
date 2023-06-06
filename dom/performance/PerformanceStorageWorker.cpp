@@ -50,7 +50,7 @@ class PerformanceEntryAdder final : public WorkerControlRunnable {
 
   nsresult Cancel() override {
     mStorage->ShutdownOnWorker();
-    return WorkerRunnable::Cancel();
+    return NS_OK;
   }
 
   bool PreDispatch(WorkerPrivate* aWorkerPrivate) override { return true; }

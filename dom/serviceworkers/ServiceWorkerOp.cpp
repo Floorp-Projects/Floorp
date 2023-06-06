@@ -301,10 +301,6 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable : public WorkerDebuggeeRunnable {
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is permitted
-    nsresult rv = WorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     MOZ_ASSERT(mOwner);
 
     mOwner->RejectAll(NS_ERROR_DOM_ABORT_ERR);
@@ -550,7 +546,7 @@ class UpdateServiceWorkerStateOp final : public ServiceWorkerOp {
       mOwner->RejectAll(NS_ERROR_DOM_ABORT_ERR);
       mOwner = nullptr;
 
-      return MainThreadWorkerControlRunnable::Cancel();
+      return NS_OK;
     }
 
     RefPtr<UpdateServiceWorkerStateOp> mOwner;

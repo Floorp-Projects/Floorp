@@ -401,14 +401,7 @@ class LoadStartDetectionRunnable final : public Runnable,
       return true;
     }
 
-    nsresult Cancel() override {
-      // We need to check first if cancel is called twice
-      nsresult rv = MainThreadProxyRunnable::Cancel();
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // On the first cancel, this must run!
-      return Run();
-    }
+    nsresult Cancel() override { return Run(); }
   };
 
  public:

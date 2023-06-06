@@ -365,10 +365,6 @@ class ReleaseNotificationRunnable final : public NotificationWorkerRunnable {
   }
 
   nsresult Cancel() override {
-    // We need to check first if cancel is called twice
-    nsresult rv = NotificationWorkerRunnable::Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mNotification->ReleaseObject();
     return NS_OK;
   }
