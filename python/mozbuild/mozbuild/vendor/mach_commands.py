@@ -182,13 +182,9 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     default=False,
 )
 @CommandArgument(
-    "--build-peers-said-large-imports-were-ok",
+    "--force",
     action="store_true",
-    help=(
-        "Permit overly-large files to be added to the repository. "
-        "To get permission to set this, raise a question in the #build "
-        "channel at https://chat.mozilla.org."
-    ),
+    help=("Ignore any kind of error that happens during vendoring"),
     default=False,
 )
 @CommandArgument(
