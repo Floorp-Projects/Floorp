@@ -37,13 +37,29 @@ const tests = [
 
   // Large values.
   {value: "1e300", expected: "1" + ",000".repeat(100)},
-  {value: "1e3000", expected: "1" + ",000".repeat(1000)},
+  {value: "1e308", expected: "100" + ",000".repeat(102)},
+  {value: "1e309", expected: "∞"},
+  {value: "1e3000", expected: "∞"},
+  {value: "1e+9999999", expected: "∞"},
+  {value: "1e+99999999", expected: "∞"},
+  {value: ".1e+9999999", expected: "∞"},
+  {value: ".1e+99999999", expected: "∞"},
+  {value: ".1e+999999999", expected: "∞"},
+  {value: ".1e+9999999999", expected: "∞"},
   {value: "9007199254740991", expected: "9,007,199,254,740,991"},
   {value: "9007199254740992", expected: "9,007,199,254,740,992"},
   {value: "9007199254740993", expected: "9,007,199,254,740,993"},
 
   {value: "-1e300", expected: "-1" + ",000".repeat(100)},
-  {value: "-1e3000", expected: "-1" + ",000".repeat(1000)},
+  {value: "-1e308", expected: "-100" + ",000".repeat(102)},
+  {value: "-1e309", expected: "-∞"},
+  {value: "-1e3000", expected: "-∞"},
+  {value: "-1e+9999999", expected: "-∞"},
+  {value: "-1e+99999999", expected: "-∞"},
+  {value: "-.1e+9999999", expected: "-∞"},
+  {value: "-.1e+99999999", expected: "-∞"},
+  {value: "-.1e+999999999", expected: "-∞"},
+  {value: "-.1e+9999999999", expected: "-∞"},
   {value: "-9007199254740991", expected: "-9,007,199,254,740,991"},
   {value: "-9007199254740992", expected: "-9,007,199,254,740,992"},
   {value: "-9007199254740993", expected: "-9,007,199,254,740,993"},
@@ -53,11 +69,19 @@ const tests = [
   {value: "0.00000000000000000001", expected: "0.00000000000000000001"},
   {value: "1e-20", expected: "0.00000000000000000001"},
   {value: "1e-30", expected: "0"},
+  {value: ".1e-9999999", expected: "0"},
+  {value: ".1e-99999999", expected: "0"},
+  {value: ".1e-999999999", expected: "0"},
+  {value: ".1e-9999999999", expected: "0"},
 
   {value: "-0.10000000000000000001", expected: "-0.10000000000000000001"},
   {value: "-0.00000000000000000001", expected: "-0.00000000000000000001"},
   {value: "-1e-20", expected: "-0.00000000000000000001"},
   {value: "-1e-30", expected: "-0"},
+  {value: "-.1e-9999999", expected: "-0"},
+  {value: "-.1e-99999999", expected: "-0"},
+  {value: "-.1e-999999999", expected: "-0"},
+  {value: "-.1e-9999999999", expected: "-0"},
 
   // Non-standard exponent notation.
   {value: ".001e-2", expected: "0.00001"},
@@ -76,6 +100,13 @@ const tests = [
   {value: "0b" + "1".repeat(1000), expected: groupByThree((2n ** 1000n) - 1n)},
   {value: "0o1" + "7".repeat(333), expected: groupByThree((2n ** 1000n) - 1n)},
   {value: "0x" + "f".repeat(250), expected: groupByThree((2n ** 1000n) - 1n)},
+
+  {value: "0b" + "1".repeat(1023), expected: groupByThree(0b10n ** 1023n - 1n)},
+  {value: "0b" + "1".repeat(1024), expected: "∞"},
+  {value: "0o" + "7".repeat(341), expected: groupByThree(0o10n ** 341n - 1n)},
+  {value: "0o" + "7".repeat(342), expected: "∞"},
+  {value: "0x" + "f".repeat(255), expected: groupByThree(0x10n ** 255n - 1n)},
+  {value: "0x" + "f".repeat(256), expected: "∞"},
 
   // Non-decimal strings don't accept a sign.
   {value: "+0xbad", expected: "NaN"},
@@ -104,38 +135,6 @@ for (let {value, expected} of tests) {
   }
 }
 
-// The specification doesn't impose any limits for the exponent, but we throw
-// an error if the exponent is too large.
-{
-  let nf = new Intl.NumberFormat("en", {useGrouping: false});
-  for (let value of [
-    // ICU limit is 999'999'999 (exclusive).
-    ".1e-999999999",
-    ".1e+999999999",
-
-    // We limit positive exponents to 9'999'999 (inclusive).
-    "1e+9999999",
-    "1e+99999999",
-
-    // Int32 overflow when computing the exponent.
-    ".1e-2147483649",
-    ".1e-2147483648",
-    ".1e-2147483647",
-    ".1e+2147483647",
-    ".1e+2147483648",
-    ".1e+2147483649",
-  ]) {
-    assertThrowsInstanceOf(() => nf.format(value), RangeError);
-  }
-
-  // We allow up to ±9'999'999.
-  assertEq(nf.format(".1e-9999999"), "0");
-  assertEq(nf.format(".1e+9999999"), "1" + "0".repeat(9_999_999 - 1));
-
-  // Negative exponents are even valid up to -999'999'998
-  assertEq(nf.format(".1e-999999998"), "0");
-}
-
 // Combine extreme values with other rounding modes.
 {
   let nf = new Intl.NumberFormat("en", {
@@ -143,7 +142,7 @@ for (let {value, expected} of tests) {
     roundingMode: "ceil",
     roundingIncrement: 5000,
   });
-  assertEq(nf.format(".1e-999999998"), "0.00000000000000005000");
+  assertEq(nf.format(".1e-999999998"), "0.00000000000000000000");
 }
 
 if (typeof reportCompare === "function")

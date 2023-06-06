@@ -68,7 +68,7 @@ const tests = {
       {start: "10e2", end: "1e-3", result: "1,000–0.001"},
       {start: "0x100", end: "1e1", result: "256–10"},
       {start: ".1e-999999", end: ".01e-999999", result: "~0"},
-      {start: ".1e99999", end: "0", result: "100" + ",000".repeat(33332) + "–0"},
+      {start: ".1e99999", end: "0", result: "∞–0"},
       // Number.MAX_VALUE is 1.7976931348623157e+308.
       {
         start: "1.7976931348623158e+308",
@@ -141,7 +141,7 @@ const tests = {
       {start: "10e2", end: "1e-3", result: "1.000,00–0,00 €"},
       {start: "0x100", end: "1e1", result: "256,00–10,00 €"},
       {start: ".1e-999999", end: ".01e-999999", result: "≈0,00 €"},
-      {start: ".1e99999", end: "0", result: "100" + ".000".repeat(33332) + ",00–0,00 €"},
+      {start: ".1e99999", end: "0", result: "∞–0,00 €"},
       // Number.MAX_VALUE is 1.7976931348623157e+308.
       {
         start: "1.7976931348623158e+308",
@@ -214,7 +214,7 @@ const tests = {
       {start: "10e2", end: "1e-3", result: "1 000–0,001 m"},
       {start: "0x100", end: "1e1", result: "256–10 m"},
       {start: ".1e-999999", end: ".01e-999999", result: "≃0 m"},
-      {start: ".1e99999", end: "0", result: "100" + " 000".repeat(33332) + "–0 m"},
+      {start: ".1e99999", end: "0", result: "∞–0 m"},
       // Number.MAX_VALUE is 1.7976931348623157e+308.
       {
         start: "1.7976931348623158e+308",
