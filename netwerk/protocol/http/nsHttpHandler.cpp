@@ -2141,15 +2141,18 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
       mAltSvcCache->ClearAltServiceMappings();
     }
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
-    if (mConnMgr) {
-      rv = mConnMgr->PruneDeadConnections();
-      if (NS_FAILED(rv)) {
-        LOG(("    PruneDeadConnections failed (%08x)\n",
-             static_cast<uint32_t>(rv)));
-      }
-      rv = mConnMgr->VerifyTraffic();
-      if (NS_FAILED(rv)) {
-        LOG(("    VerifyTraffic failed (%08x)\n", static_cast<uint32_t>(rv)));
+    nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
+    if (!strcmp(converted.get(), NS_NETWORK_LINK_DATA_CHANGED)) {
+      if (mConnMgr) {
+        rv = mConnMgr->PruneDeadConnections();
+        if (NS_FAILED(rv)) {
+          LOG(("    PruneDeadConnections failed (%08x)\n",
+               static_cast<uint32_t>(rv)));
+        }
+        rv = mConnMgr->VerifyTraffic();
+        if (NS_FAILED(rv)) {
+          LOG(("    VerifyTraffic failed (%08x)\n", static_cast<uint32_t>(rv)));
+        }
       }
     }
   } else if (!strcmp(topic, "application-background")) {
