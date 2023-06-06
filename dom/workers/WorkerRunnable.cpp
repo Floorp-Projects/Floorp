@@ -57,7 +57,6 @@ WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate,
                                TargetAndBusyBehavior aBehavior)
     : mWorkerPrivate(aWorkerPrivate),
       mBehavior(aBehavior),
-      mCanceled(0),
       mCallingCancelWithinRun(false) {
   LOG(("WorkerRunnable::WorkerRunnable [%p]", this));
   MOZ_ASSERT(aWorkerPrivate);
@@ -220,7 +219,6 @@ NS_IMPL_RELEASE(WorkerRunnable)
 
 NS_INTERFACE_MAP_BEGIN(WorkerRunnable)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-  NS_INTERFACE_MAP_ENTRY(nsICancelableRunnable)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRunnable)
   // kWorkerRunnableIID is special in that it does not AddRef its result.
   if (aIID.Equals(kWorkerRunnableIID)) {
@@ -245,12 +243,8 @@ WorkerRunnable::Run() {
   }
 #endif
 
-  if (IsCanceled() && !mCallingCancelWithinRun) {
-    return NS_OK;
-  }
-
   if (targetIsWorkerThread &&
-      mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() && !IsCanceled() &&
+      mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() &&
       !mCallingCancelWithinRun) {
     LOG(("WorkerRunnable::Run [%p] Cancel runnable...", this));
     // Prevent recursion.
@@ -260,8 +254,6 @@ WorkerRunnable::Run() {
 
     MOZ_ASSERT(mCallingCancelWithinRun);
     mCallingCancelWithinRun = false;
-
-    MOZ_ASSERT(IsCanceled(), "Subclass Cancel() didn't set IsCanceled()!");
 
     if (mBehavior == WorkerThreadModifyBusyCount) {
       mWorkerPrivate->ModifyBusyCountFromWorker(false);
@@ -417,13 +409,8 @@ WorkerRunnable::Run() {
 }
 
 nsresult WorkerRunnable::Cancel() {
-  uint32_t canceledCount = ++mCanceled;
-
-  MOZ_ASSERT(canceledCount, "Cancel() overflow!");
-
-  // The docs say that Cancel() should not be called more than once and that we
-  // should throw NS_ERROR_UNEXPECTED if it is.
-  return (canceledCount == 1) ? NS_OK : NS_ERROR_UNEXPECTED;
+  LOG(("WorkerRunnable::Cancel [%p]", this));
+  return NS_OK;
 }
 
 void WorkerDebuggerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
@@ -471,6 +458,9 @@ MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
     nsresult aResult)
     : WorkerSyncRunnable(aWorkerPrivate, std::move(aSyncLoopTarget)),
       mResult(aResult) {
+  LOG(("MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable [%p]",
+       this));
+
   AssertIsOnMainThread();
 #ifdef DEBUG
   mWorkerPrivate->AssertValidSyncLoop(mSyncLoopTarget);
@@ -478,11 +468,8 @@ MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
 }
 
 nsresult MainThreadStopSyncLoopRunnable::Cancel() {
-  // We need to check first if cancel is called twice
-  nsresult rv = WorkerSyncRunnable::Cancel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = Run();
+  LOG(("MainThreadStopSyncLoopRunnable::Cancel [%p]", this));
+  nsresult rv = Run();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Run() failed");
 
   return rv;
@@ -523,10 +510,7 @@ WorkerControlRunnable::WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
 #endif
 
 nsresult WorkerControlRunnable::Cancel() {
-  // We need to check first if cancel is called twice
-  nsresult rv = WorkerRunnable::Cancel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  LOG(("WorkerControlRunnable::Cancel [%p]", this));
   if (NS_FAILED(Run())) {
     NS_WARNING("WorkerControlRunnable::Run() failed.");
   }
@@ -689,11 +673,9 @@ void WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread() {
       MOZ_ASSERT(aRunnable);
     }
 
-    // We must call RunBackOnWorkerThreadForCleanup() also if the runnable is
-    // canceled.
-    nsresult Cancel() override {
-      WorkerRun(nullptr, mWorkerPrivate);
-      return MainThreadWorkerControlRunnable::Cancel();
+    virtual nsresult Cancel() override {
+      Unused << WorkerRun(nullptr, mWorkerPrivate);
+      return NS_OK;
     }
 
     virtual bool WorkerRun(JSContext* aCx,
