@@ -1,0 +1,27 @@
+schema: 1
+
+bugzilla:
+  product: "Firefox Build System"
+  component: "General"
+
+origin:
+  name: webaudio-benchmark
+  description: Benchmarks for the WebAudio API
+
+  url: https://github.com/padenot/webaudio-benchmark
+
+  release: cb312773f3f8ae6972097f781c058fccdffb4570 (2022-02-28T11:13:41Z).
+  revision: cb312773f3f8ae6972097f781c058fccdffb4570
+
+  license: MPL-2.0
+
+vendoring:
+  url: https://github.com/padenot/webaudio-benchmark
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+
+  keep:
+    - LICENSE
