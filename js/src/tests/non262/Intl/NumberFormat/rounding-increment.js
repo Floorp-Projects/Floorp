@@ -77,13 +77,26 @@
   assertEq(nf.format(123.456), "120");
 }
 
-// |maximumFractionDigits| defaults to three. And because |0 !== 3|, a
-// RangeError is thrown.
+// |maximumFractionDigitsDefault| is set to |minimumFractionDigitsDefault| when
+// roundingIncrement isn't equal to 1.
 {
   let options = {
     roundingIncrement: 10,
     // minimumFractionDigits: 0, (default)
-    // maximumFractionDigits: 3, (default)
+    // maximumFractionDigits: 0, (default)
+  };
+  let nf = new Intl.NumberFormat("en", options);
+  assertEq(nf.resolvedOptions().minimumFractionDigits, 0);
+  assertEq(nf.resolvedOptions().maximumFractionDigits, 0);
+}
+
+// |maximumFractionDigits| must be equal to |minimumFractionDigits| when
+// roundingIncrement isn't equal to 1.
+{
+  let options = {
+    roundingIncrement: 10,
+    // minimumFractionDigits: 0, (default)
+    maximumFractionDigits: 1,
   };
   assertThrowsInstanceOf(() => new Intl.NumberFormat("en", options), RangeError);
 }
