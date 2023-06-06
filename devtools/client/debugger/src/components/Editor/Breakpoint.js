@@ -86,7 +86,7 @@ class Breakpoint extends PureComponent {
 
     breakpointActions.removeBreakpointsAtLine(
       cx,
-      selectedLocation.sourceId,
+      selectedLocation.source.id,
       selectedLocation.line
     );
   };

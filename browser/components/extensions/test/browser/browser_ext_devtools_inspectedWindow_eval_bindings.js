@@ -148,7 +148,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
       }
 
       return (
-        selectedLocation.sourceId.includes(sourceFilename) &&
+        selectedLocation.source.id.includes(sourceFilename) &&
         selectedLocation.line == sourceLine
       );
     };

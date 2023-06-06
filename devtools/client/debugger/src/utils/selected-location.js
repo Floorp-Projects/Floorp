@@ -9,7 +9,8 @@ export function getSelectedLocation(mappedLocation, context) {
     return mappedLocation.location;
   }
 
-  const sourceId = context.sourceId || context.id;
+  // context may be a source or a location
+  const sourceId = context.source?.id || context.id;
   return isOriginalId(sourceId)
     ? mappedLocation.location
     : mappedLocation.generatedLocation;

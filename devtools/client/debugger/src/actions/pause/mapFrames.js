@@ -55,7 +55,7 @@ function updateFrameLocations(frames, thunkArgs) {
 }
 
 function isWasmOriginalSourceFrame(frame, getState) {
-  if (isGeneratedId(frame.location.sourceId)) {
+  if (isGeneratedId(frame.location.source.id)) {
     return false;
   }
 
