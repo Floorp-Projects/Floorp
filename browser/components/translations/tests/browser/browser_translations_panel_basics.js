@@ -42,6 +42,23 @@ add_task(async function test_translations_panel_basics() {
     "The icon presents the loading indicator."
   );
 
+  await waitForTranslationsPopupEvent("popupshown", () => {
+    click(button, "Open the popup again");
+  });
+
+  const loadingButton = getByL10nId(
+    "translations-panel-translate-button-loading"
+  );
+  ok(loadingButton, "The loading button is present");
+  ok(loadingButton.disabled, "The loading button is disabled");
+
+  await waitForTranslationsPopupEvent("popuphidden", () => {
+    click(
+      getByL10nId("translations-panel-translate-cancel"),
+      "Start translating by clicking the translate button."
+    );
+  });
+
   await resolveDownloads(1);
 
   const { locale } = await assertTranslationsButton(
