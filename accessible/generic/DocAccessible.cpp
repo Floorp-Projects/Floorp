@@ -2373,19 +2373,43 @@ void DocAccessible::PutChildrenBack(
     int32_t idxInParent = -1;
     LocalAccessible* origContainer =
         AccessibleOrTrueContainer(content->GetFlattenedTreeParentNode());
-    if (origContainer) {
-      TreeWalker walker(origContainer);
-      if (walker.Seek(content)) {
-        LocalAccessible* prevChild = walker.Prev();
-        if (prevChild) {
-          idxInParent = prevChild->IndexInParent() + 1;
-          MOZ_DIAGNOSTIC_ASSERT(origContainer == prevChild->LocalParent(),
-                                "Broken tree");
-          origContainer = prevChild->LocalParent();
-        } else {
-          idxInParent = 0;
-        }
+    // This node has probably been detached or removed from the DOM, so we have
+    // nowhere to move it.
+    if (!origContainer) {
+      continue;
+    }
+
+    // If the target container or any of its ancestors aren't in the document,
+    // there's no need to determine where the child should go for relocation
+    // since the target tree is going away.
+    bool origContainerHasOutOfDocAncestor = false;
+    LocalAccessible* ancestor = origContainer;
+    while (ancestor) {
+      if (ancestor->IsDoc()) {
+        break;
       }
+      if (!ancestor->IsInDocument()) {
+        origContainerHasOutOfDocAncestor = true;
+        break;
+      }
+      ancestor = ancestor->LocalParent();
+    }
+    if (origContainerHasOutOfDocAncestor) {
+      continue;
+    }
+
+    TreeWalker walker(origContainer);
+    if (!walker.Seek(content)) {
+      continue;
+    }
+    LocalAccessible* prevChild = walker.Prev();
+    if (prevChild) {
+      idxInParent = prevChild->IndexInParent() + 1;
+      MOZ_DIAGNOSTIC_ASSERT(origContainer == prevChild->LocalParent(),
+                            "Broken tree");
+      origContainer = prevChild->LocalParent();
+    } else {
+      idxInParent = 0;
     }
 
     // The child may have already be in its ordinal place for 2 reasons:
@@ -2397,8 +2421,13 @@ void DocAccessible::PutChildrenBack(
     //    after load: $("list").setAttribute("aria-owns", "a b");
     //    later:      $("list").setAttribute("aria-owns", "");
     if (origContainer != owner || child->IndexInParent() != idxInParent) {
-      DebugOnly<bool> moved = MoveChild(child, origContainer, idxInParent);
-      MOZ_ASSERT(moved, "Failed to put child back.");
+      // Only attempt to move the child if the target container would accept it.
+      // Otherwise, just allow it to be removed from the tree, since it would
+      // not be allowed in normal tree creation.
+      if (origContainer->IsAcceptableChild(child->GetContent())) {
+        DebugOnly<bool> moved = MoveChild(child, origContainer, idxInParent);
+        MOZ_ASSERT(moved, "Failed to put child back.");
+      }
     } else {
       MOZ_ASSERT(!child->LocalPrevSibling() ||
                      !child->LocalPrevSibling()->IsRelocated(),
@@ -2564,19 +2593,24 @@ void DocAccessible::UncacheChildrenInSubtree(LocalAccessible* aRoot) {
     CachedTableAccessible::Invalidate(aRoot);
   }
 
+  // Put relocated children back in their original places instead of removing
+  // them from the tree.
   nsTArray<RefPtr<LocalAccessible>>* owned = mARIAOwnsHash.Get(aRoot);
-  uint32_t count = aRoot->ContentChildCount();
-  for (uint32_t idx = 0; idx < count; idx++) {
+  if (owned) {
+    PutChildrenBack(owned, 0);
+    MOZ_ASSERT(owned->IsEmpty(),
+               "Owned Accessibles should be cleared after PutChildrenBack.");
+    mARIAOwnsHash.Remove(aRoot);
+    owned = nullptr;
+  }
+
+  const uint32_t count = aRoot->ContentChildCount();
+  for (uint32_t idx = 0; idx < count; ++idx) {
     LocalAccessible* child = aRoot->ContentChildAt(idx);
 
-    if (child->IsRelocated()) {
-      MOZ_ASSERT(owned, "IsRelocated flag is out of sync with mARIAOwnsHash");
-      owned->RemoveElement(child);
-      if (owned->Length() == 0) {
-        mARIAOwnsHash.Remove(aRoot);
-        owned = nullptr;
-      }
-    }
+    MOZ_ASSERT(!child->IsRelocated(),
+               "No children should be relocated here. They should all have "
+               "been relocated by PutChildrenBack.");
 
     // Removing this accessible from the document doesn't mean anything about
     // accessibles for subdocuments, so skip removing those from the tree.
