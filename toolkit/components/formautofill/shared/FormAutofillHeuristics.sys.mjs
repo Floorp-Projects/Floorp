@@ -353,7 +353,7 @@ export const FormAutofillHeuristics = {
         break;
       }
       parsedFields = false;
-      const elem = detail.element;
+      const elem = detail.elementWeakRef.get();
       for (let regexp of Object.keys(addressLineRegexps)) {
         if (this._matchRegexp(elem, addressLineRegexps[regexp])) {
           fieldScanner.updateFieldName(fieldScanner.parsingIndex, regexp);
@@ -429,7 +429,7 @@ export const FormAutofillHeuristics = {
       return true;
     }
 
-    const element = detail.element;
+    const element = detail.elementWeakRef.get();
 
     // If the input type is a month picker, then assume it's cc-exp.
     if (element.type == "month") {
@@ -461,7 +461,7 @@ export const FormAutofillHeuristics = {
         const nextDetail = fieldScanner.getFieldDetailByIndex(
           fieldScanner.parsingIndex
         );
-        const nextElement = nextDetail.element;
+        const nextElement = nextDetail.elementWeakRef.get();
         if (this._isExpirationYearLikely(nextElement)) {
           fieldScanner.updateFieldName(
             fieldScanner.parsingIndex,
@@ -483,7 +483,7 @@ export const FormAutofillHeuristics = {
         const nextDetail = fieldScanner.getFieldDetailByIndex(
           fieldScanner.parsingIndex
         );
-        const nextElement = nextDetail.element;
+        const nextElement = nextDetail.elementWeakRef.get();
         if (this._findMatchedFieldName(nextElement, ["cc-exp-year"])) {
           fieldScanner.updateFieldName(
             fieldScanner.parsingIndex,
@@ -504,7 +504,7 @@ export const FormAutofillHeuristics = {
         const nextDetail = fieldScanner.getFieldDetailByIndex(
           fieldScanner.parsingIndex
         );
-        const nextElement = nextDetail.element;
+        const nextElement = nextDetail.elementWeakRef.get();
         if (this._matchRegexp(nextElement, /^(yy|yyyy)$/)) {
           fieldScanner.updateFieldName(
             fieldScanner.parsingIndex,

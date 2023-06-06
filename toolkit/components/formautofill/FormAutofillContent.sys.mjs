@@ -282,7 +282,9 @@ export var FormAutofillContent = {
     const validDetails =
       this._fieldDetailsManager.identifyAutofillFields(element);
 
-    validDetails?.forEach(detail => this._markAsAutofillField(detail.element));
+    validDetails?.forEach(detail =>
+      this._markAsAutofillField(detail.elementWeakRef.get())
+    );
   },
 
   clearForm() {
