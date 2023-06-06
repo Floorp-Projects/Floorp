@@ -151,7 +151,7 @@ class Channel {
   // Close the client side of the socketpair.
   void CloseClientFileDescriptor();
 
-#  if defined(OS_MACOSX)
+#  if defined(XP_DARWIN)
   // Configure the mach task_t for the peer task.
   void SetOtherMachTask(task_t task);
 
@@ -195,7 +195,7 @@ class Channel {
   RefPtr<ChannelImpl> channel_impl_;
 
   enum {
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
     // If the channel receives a message that contains file descriptors, then
     // it will reply back with this message, indicating that the message has
     // been received. The sending channel can then close any descriptors that

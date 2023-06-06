@@ -24,7 +24,7 @@ ConditionVariable::ConditionVariable(Lock* user_lock)
   // non-standard pthread_cond_timedwait_monotonic_np. Newer platform
   // versions have pthread_condattr_setclock.
   // Mac can use relative time deadlines.
-#if !defined(OS_MACOSX) && !defined(OS_NACL) && \
+#if !defined(XP_DARWIN) && !defined(OS_NACL) && \
     !(defined(OS_ANDROID) && defined(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC))
   pthread_condattr_t attrs;
   rv = pthread_condattr_init(&attrs);
@@ -39,7 +39,7 @@ ConditionVariable::ConditionVariable(Lock* user_lock)
 }
 
 ConditionVariable::~ConditionVariable() {
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   // This hack is necessary to avoid a fatal pthreads subsystem bug in the
   // Darwin kernel. http://crbug.com/517681.
   {
@@ -69,7 +69,7 @@ void ConditionVariable::TimedWait(const base::TimeDelta& max_time) {
   relative_time.tv_nsec = (usecs % base::Time::kMicrosecondsPerSecond) *
                           base::Time::kNanosecondsPerMicrosecond;
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   int rv = pthread_cond_timedwait_relative_np(&condition_, user_mutex_,
                                               &relative_time);
 #else
@@ -101,7 +101,7 @@ void ConditionVariable::TimedWait(const base::TimeDelta& max_time) {
 #  else
   int rv = pthread_cond_timedwait(&condition_, user_mutex_, &absolute_time);
 #  endif  // OS_ANDROID && HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC
-#endif    // OS_MACOSX
+#endif    // XP_DARWIN
 
   // On failure, we only expect the CV to timeout. Any other error value means
   // that we've unexpectedly woken up.
