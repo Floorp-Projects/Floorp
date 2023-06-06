@@ -1,9 +1,9 @@
-From 49abc88612014eb99580a2870257d2bc70b16333 Mon Sep 17 00:00:00 2001
+From 57dc16fbe3078b4f27e804a2a3a6594e46897c3c Mon Sep 17 00:00:00 2001
 From: Mike Hommey <mh@glandium.org>
-Date: Thu, 1 Jun 2023 13:26:51 +0900
-Subject: [PATCH] Strip stabs symbols in Mach-O when stripping debug info
+Date: Sat, 3 Jun 2023 09:31:42 +0200
+Subject: [PATCH] [llvm] Strip stabs symbols in Mach-O when stripping debug
+ info
 
-Differential Revision: https://reviews.llvm.org/D151864
 ---
  llvm/lib/ObjCopy/MachO/MachOObjcopy.cpp       |   3 +
  .../MachO/Inputs/strip-stabs.yaml             | 248 ++++++++++++++++++
@@ -304,5 +304,5 @@ index 000000000000..90c00f60a152
 +# SYM_STRIP-NOT: Type: SymDebugTable ({{.*}})
 +# SYM_STRIP:     ]
 -- 
-2.40.0.1.gc689dad23e
+2.41.0.6.ge371d37104
 
