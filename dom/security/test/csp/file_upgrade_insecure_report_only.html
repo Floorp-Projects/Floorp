@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1832249 - Consider report-only flag when upgrading insecure requests</title>
+</head>
+<body>
+  <img id="testimage"></img>
+
+  <script>
+    let route;
+    if (new URL(document.location).searchParams.get("reportonly")) {
+      route = "reportonly";
+    }
+    else if (new URL(document.location).searchParams.get("enforce")) {
+      route = "enforce";
+    }
+    var myImg = document.getElementById("testimage");
+    // we need to test http functionality here, so we need to load an http url
+    /* eslint-disable @microsoft/sdl/no-insecure-url */
+    myImg.src =
+      `http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_report_only_server.sjs?img-${route}`;
+    /* eslint-enable @microsoft/sdl/no-insecure-url */
+    myImg.onload = function(e) {
+      window.parent.postMessage({result: `${route}-img-ok`}, "*");
+    };
+    myImg.onerror = function(e) {
+      window.parent.postMessage({result: `${route}-img-error`}, "*");
+    };
+  </script>
+
+</body>
+</html>
