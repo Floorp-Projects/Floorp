@@ -230,7 +230,8 @@ void CompositorAnimationStorage::StoreAnimatedValue(
     case eCSSProperty_offset_path:
     case eCSSProperty_offset_distance:
     case eCSSProperty_offset_rotate:
-    case eCSSProperty_offset_anchor: {
+    case eCSSProperty_offset_anchor:
+    case eCSSProperty_offset_position: {
       MOZ_ASSERT(aAnimationStorageData->mTransformData);
 
       const TransformData& transformData =

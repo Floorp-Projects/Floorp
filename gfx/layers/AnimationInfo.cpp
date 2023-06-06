@@ -392,6 +392,9 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
     case eCSSProperty_offset_anchor:
       aAnimatable = aAnimationValue.GetOffsetAnchorProperty();
       break;
+    case eCSSProperty_offset_position:
+      aAnimatable = aAnimationValue.GetOffsetPositionProperty();
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported property");
   }
@@ -828,7 +831,6 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
   const nsStyleDisplay* display = aFrame->StyleDisplay();
   // A simple optimization. We don't need to send offset-* properties if we
   // don't have offset-path and offset-position.
-  // FIXME: Bug 1559232: Add offset-position here.
   bool hasMotion =
       !display->mOffsetPath.IsNone() ||
       !aNonAnimatingProperties.HasProperty(eCSSProperty_offset_path);
@@ -878,6 +880,11 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
       case eCSSProperty_offset_anchor:
         if (hasMotion && !display->mOffsetAnchor.IsAuto()) {
           appendFakeAnimation(id, display->mOffsetAnchor);
+        }
+        break;
+      case eCSSProperty_offset_position:
+        if (hasMotion && !display->mOffsetPosition.IsAuto()) {
+          appendFakeAnimation(id, display->mOffsetPosition);
         }
         break;
       default:

@@ -35,6 +35,7 @@ DisplayItemType LayerAnimationInfo::GetDisplayItemTypeForProperty(
     case eCSSProperty_offset_distance:
     case eCSSProperty_offset_rotate:
     case eCSSProperty_offset_anchor:
+    case eCSSProperty_offset_position:
       return DisplayItemType::TYPE_TRANSFORM;
     default:
       break;

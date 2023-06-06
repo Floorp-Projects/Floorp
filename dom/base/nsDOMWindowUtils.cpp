@@ -3975,7 +3975,8 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement, const nsAString& aProperty,
                aProperty.EqualsLiteral("offset-path") ||
                aProperty.EqualsLiteral("offset-distance") ||
                aProperty.EqualsLiteral("offset-rotate") ||
-               aProperty.EqualsLiteral("offset-anchor")) {
+               aProperty.EqualsLiteral("offset-anchor") ||
+               aProperty.EqualsLiteral("offset-position")) {
       OMTAValue value = GetOMTAValue(frame, DisplayItemType::TYPE_TRANSFORM,
                                      GetWebRenderBridge());
       if (value.type() == OMTAValue::TMatrix4x4) {

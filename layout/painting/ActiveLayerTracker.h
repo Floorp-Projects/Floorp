@@ -34,7 +34,7 @@ class ActiveLayerTracker {
    *   eCSSProperty_rotate, eCSSProperty_scale
    *   eCSSProperty_offset_path, eCSSProperty_offset_distance,
    *   eCSSProperty_offset_rotate, eCSSProperty_offset_anchor,
-   *   eCSSProperty_opacity
+   *   eCSSProperty_offset_position, eCSSProperty_opacity
    * and use that information to guess whether style changes are animated.
    */
 

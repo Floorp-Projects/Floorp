@@ -507,6 +507,7 @@ const ExpectComparisonTo = {
       "offset-distance",
       "offset-rotate",
       "offset-anchor",
+      "offset-position",
       "opacity",
       "background-color",
     ];
@@ -522,6 +523,7 @@ const ExpectComparisonTo = {
       case "offset-distance":
       case "offset-rotate":
       case "offset-anchor":
+      case "offset-position":
       case "translate":
       case "rotate":
       case "scale":

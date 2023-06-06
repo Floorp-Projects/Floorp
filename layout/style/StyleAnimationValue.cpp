@@ -110,6 +110,12 @@ const mozilla::StylePositionOrAuto& AnimationValue::GetOffsetAnchorProperty()
   return *Servo_AnimationValue_GetOffsetAnchor(mServo);
 }
 
+const mozilla::StyleOffsetPosition& AnimationValue::GetOffsetPositionProperty()
+    const {
+  MOZ_ASSERT(mServo);
+  return *Servo_AnimationValue_GetOffsetPosition(mServo);
+}
+
 MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   using namespace nsStyleTransformMatrix;
 
@@ -260,6 +266,10 @@ already_AddRefed<StyleAnimationValue> AnimationValue::FromAnimatable(
     case layers::Animatable::TStylePositionOrAuto:
       return Servo_AnimationValue_OffsetAnchor(
                  &aAnimatable.get_StylePositionOrAuto())
+          .Consume();
+    case layers::Animatable::TStyleOffsetPosition:
+      return Servo_AnimationValue_OffsetPosition(
+                 &aAnimatable.get_StyleOffsetPosition())
           .Consume();
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");

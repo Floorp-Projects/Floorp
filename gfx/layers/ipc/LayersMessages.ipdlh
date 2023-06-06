@@ -68,6 +68,7 @@ using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
 using mozilla::StyleOffsetPath from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleOffsetRotate from "mozilla/ServoStyleConsts.h";
 using mozilla::StylePositionOrAuto from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleOffsetPosition from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
@@ -107,6 +108,7 @@ struct LayerColor { DeviceColor value; };
   LengthPercentage;
   StyleOffsetRotate;
   StylePositionOrAuto;
+  StyleOffsetPosition;
 };
 
 struct AnimationSegment {

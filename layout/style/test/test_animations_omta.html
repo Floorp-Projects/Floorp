@@ -2816,6 +2816,33 @@ addAsyncAnimTest(async function() {
   done_div();
 });
 
+// Normal offset-position animation.
+addAsyncAnimTest(async function() {
+  new_div("offset-path: ray(0deg sides); " +
+          "offset-rotate: 0deg; " +
+          "offset-anchor: 0% 0%; " +
+          "offset-position: 0px 0px; " +
+          "transition: offset-position 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetPosition = "100px 100px";
+  await waitForPaintsFlushed();
+
+  omta_is("offset-position",
+          { compositorValue: { tx: 0, ty: 0 }, computed: '0px 0px' },
+          RunningOn.Compositor,
+          "offset-position transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("offset-position",
+          { compositorValue: { tx: 50, ty: 50 }, computed: '50px 50px' },
+          RunningOn.Compositor,
+          "offset-position on compositor at 5s");
+
+  done_div();
+});
+
 // Normal multiple transform-like properties animation (including motion-path).
 addAsyncAnimTest(async function() {
   new_div("translate: 0px; " +

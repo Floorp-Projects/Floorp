@@ -76,7 +76,7 @@ class LayerActivity {
       case eCSSProperty_offset_distance:
       case eCSSProperty_offset_rotate:
       case eCSSProperty_offset_anchor:
-        // TODO: Bug 1559232: Add offset-position.
+      case eCSSProperty_offset_position:
         return ACTIVITY_TRANSFORM;
       default:
         MOZ_ASSERT(false);
@@ -309,9 +309,9 @@ static bool IsMotionPathAnimated(nsDisplayListBuilder* aBuilder,
          (!aFrame->StyleDisplay()->mOffsetPath.IsNone() &&
           ActiveLayerTracker::IsStyleAnimated(
               aBuilder, aFrame,
-              nsCSSPropertyIDSet{eCSSProperty_offset_distance,
-                                 eCSSProperty_offset_rotate,
-                                 eCSSProperty_offset_anchor}));
+              nsCSSPropertyIDSet{
+                  eCSSProperty_offset_distance, eCSSProperty_offset_rotate,
+                  eCSSProperty_offset_anchor, eCSSProperty_offset_position}));
 }
 
 /* static */

@@ -200,6 +200,7 @@ class MotionPathUtils final {
   static Maybe<ResolvedMotionPathData> ResolveMotionPath(
       const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
       const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
+      const StyleOffsetPosition* aPosition,
       const Maybe<layers::MotionPathData>& aMotionPathData,
       TransformReferenceBox&, gfx::Path* aCachedMotionPath);
 
