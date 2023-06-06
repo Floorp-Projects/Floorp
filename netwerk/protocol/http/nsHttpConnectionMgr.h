@@ -191,6 +191,11 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // connection
   bool BeConservativeIfProxied(nsIProxyInfo* proxy);
 
+  bool AllowToRetryDifferentIPFamilyForHttp3(nsHttpConnectionInfo* ci,
+                                             nsresult aError);
+  void SetRetryDifferentIPFamilyForHttp3(nsHttpConnectionInfo* ci,
+                                         uint16_t aIPFamily);
+
  protected:
   friend class ConnectionEntry;
   void IncrementActiveConnCount();
