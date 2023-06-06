@@ -173,7 +173,7 @@ export const visibleColumnBreakpoints = createSelector(
 );
 
 export function getFirstBreakpointPosition(state, location) {
-  const positions = getBreakpointPositionsForSource(state, location.sourceId);
+  const positions = getBreakpointPositionsForSource(state, location.source.id);
   if (!positions) {
     return null;
   }

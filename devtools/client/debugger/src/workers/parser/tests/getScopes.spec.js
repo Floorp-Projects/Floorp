@@ -14,7 +14,7 @@ cases(
 
     locations.forEach(([line, column]) => {
       const scopes = getScopes({
-        sourceId: source.id,
+        source,
         line,
         column,
       });

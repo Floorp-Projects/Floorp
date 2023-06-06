@@ -23,7 +23,7 @@ exports[`Breakpoints Component should render breakpoints with columns 1`] = `
       }
     }
     editorActions={Object {}}
-    key="undefined:undefined:2"
+    key="server1.conn1.child1/source1:undefined:2"
     selectedSource={
       Object {
         "get": [Function],

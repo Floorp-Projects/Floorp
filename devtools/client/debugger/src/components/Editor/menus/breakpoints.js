@@ -229,7 +229,7 @@ export const removeBreakpointsOnLineItem = (
   click: () =>
     breakpointActions.removeBreakpointsAtLine(
       cx,
-      location.sourceId,
+      location.source.id,
       location.line
     ),
 });
@@ -252,7 +252,7 @@ export const enableBreakpointsOnLineItem = (
   click: () =>
     breakpointActions.enableBreakpointsAtLine(
       cx,
-      location.sourceId,
+      location.source.id,
       location.line
     ),
 });
@@ -269,7 +269,7 @@ export const disableBreakpointsOnLineItem = (
   click: () =>
     breakpointActions.disableBreakpointsAtLine(
       cx,
-      location.sourceId,
+      location.source.id,
       location.line
     ),
 });
