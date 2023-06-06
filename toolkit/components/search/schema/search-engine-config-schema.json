@@ -393,6 +393,9 @@
           "type": "boolean",
           "title": "Override",
           "description": "This section will override previous appliesTo sections, but not add new locations where this engine is deployed to."
+        },
+        "suggestExtraParams": {
+          "$ref": "#/definitions/extraParams"
         }
       }
     }
