@@ -489,10 +489,8 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-template <typename CorruptedFileHandler>
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
-    nsIFile& aDBFile, nsIFile& aUsageFile, const nsACString& aOrigin,
-    CorruptedFileHandler&& aCorruptedFileHandler) {
+    nsIFile& aDBFile, nsIFile& aUsageFile, const nsACString& aOrigin) {
   MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
 
   // XXX Common logic should be refactored out of this method and
@@ -503,48 +501,10 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
                                          MOZ_SELECT_OVERLOAD(do_GetService),
                                          MOZ_STORAGE_SERVICE_CONTRACTID));
 
-  // XXX We can't use QM_OR_ELSE_WARN_IF because base-toolchains builds fail
-  // with: error: use of 'tryResult28' before deduction of 'auto'
-  QM_TRY_UNWRAP(
-      auto connection,
-      OrElseIf(
-          // Expression.
-          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-              nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
-              &aDBFile, mozIStorageService::CONNECTION_DEFAULT),
-          // Predicate.
-          IsDatabaseCorruptionError,
-          // Fallback.
-          ([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
-            &storageService](const nsresult rv)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            // Remove the usage file first (it might not exist at all due
-            // to corrupted state, which is ignored here).
-
-            // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
-            // NS_ERROR_FILE_NOT_FOUND check, but we're already in the rare case
-            // of corruption here, so the use of QM_OR_ELSE_WARN_IF is ok here.
-            QM_TRY(QM_OR_ELSE_WARN_IF(
-                // Expression.
-                MOZ_TO_RESULT(aUsageFile.Remove(false)),
-                // Predicate.
-                ([](const nsresult rv) {
-                  return rv == NS_ERROR_FILE_NOT_FOUND;
-                }),
-                // Fallback.
-                ErrToDefaultOk<>));
-
-            // Call the corrupted file handler before trying to remove the
-            // database file, which might fail.
-            std::forward<CorruptedFileHandler>(aCorruptedFileHandler)();
-
-            // Nuke the database file.
-            QM_TRY(MOZ_TO_RESULT(aDBFile.Remove(false)));
-
-            QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-                nsCOMPtr<mozIStorageConnection>, storageService, OpenDatabase,
-                &aDBFile, mozIStorageService::CONNECTION_DEFAULT));
-          })));
+  QM_TRY_UNWRAP(auto connection, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                     nsCOMPtr<mozIStorageConnection>,
+                                     storageService, OpenDatabase, &aDBFile,
+                                     mozIStorageService::CONNECTION_DEFAULT));
 
   QM_TRY(MOZ_TO_RESULT(SetDefaultPragmas(connection)));
 
@@ -687,6 +647,45 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
   }
 
   return connection;
+}
+
+template <typename CorruptedFileHandler>
+Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+CreateStorageConnectionWithRecovery(
+    nsIFile& aDBFile, nsIFile& aUsageFile, const nsACString& aOrigin,
+    CorruptedFileHandler&& aCorruptedFileHandler) {
+  QM_TRY_RETURN(QM_OR_ELSE_WARN_IF(
+      // Expression.
+      CreateStorageConnection(aDBFile, aUsageFile, aOrigin),
+      // Predicate.
+      IsDatabaseCorruptionError,
+      // Fallback.
+      ([&aDBFile, &aUsageFile, &aOrigin,
+        &aCorruptedFileHandler](const nsresult rv)
+           -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+        // Remove the usage file first (it might not exist at all due
+        // to corrupted state, which is ignored here).
+
+        // Usually we only use QM_OR_ELSE_LOG_VERBOSE(_IF) with Remove and
+        // NS_ERROR_FILE_NOT_FOUND check, but we're already in the rare case
+        // of corruption here, so the use of QM_OR_ELSE_WARN_IF is ok here.
+        QM_TRY(QM_OR_ELSE_WARN_IF(
+            // Expression.
+            MOZ_TO_RESULT(aUsageFile.Remove(false)),
+            // Predicate.
+            ([](const nsresult rv) { return rv == NS_ERROR_FILE_NOT_FOUND; }),
+            // Fallback.
+            ErrToDefaultOk<>));
+
+        // Call the corrupted file handler before trying to remove the
+        // database file, which might fail.
+        aCorruptedFileHandler();
+
+        // Nuke the database file.
+        QM_TRY(MOZ_TO_RESULT(aDBFile.Remove(false)));
+
+        QM_TRY_RETURN(CreateStorageConnection(aDBFile, aUsageFile, aOrigin));
+      })));
 }
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> GetStorageConnection(
@@ -4090,9 +4089,9 @@ nsresult Connection::EnsureStorageConnection() {
     }
   });
 
-  QM_TRY_UNWRAP(storageConnection,
-                CreateStorageConnection(*directoryEntry, *usageFile, Origin(),
-                                        [] { MOZ_ASSERT_UNREACHABLE(); }));
+  QM_TRY_UNWRAP(storageConnection, CreateStorageConnectionWithRecovery(
+                                       *directoryEntry, *usageFile, Origin(),
+                                       [] { MOZ_ASSERT_UNREACHABLE(); }));
 
   MOZ_ASSERT(mQuotaClient);
 
@@ -7038,7 +7037,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     QM_TRY_INSPECT(
         const auto& connection,
-        (CreateStorageConnection(
+        (CreateStorageConnectionWithRecovery(
             *directoryEntry, *usageFile, Origin(), [&quotaObject, this] {
               // This is called when the usage file was removed or we notice
               // that the usage file doesn't exist anymore. Adjust the usage
@@ -8380,8 +8379,8 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
                    const nsresult) -> Result<UsageInfo, nsresult> {
                 QM_TRY_INSPECT(
                     const auto& connection,
-                    CreateStorageConnection(*file, *usageFile,
-                                            aOriginMetadata.mOrigin, [] {}));
+                    CreateStorageConnectionWithRecovery(
+                        *file, *usageFile, aOriginMetadata.mOrigin, [] {}));
 
                 QM_TRY_INSPECT(const int64_t& usage,
                                GetUsage(*connection,
