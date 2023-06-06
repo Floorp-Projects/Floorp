@@ -257,6 +257,70 @@ add_task(
   }
 );
 
+add_task(async function test_manifest_with_utf8_byte_order_mark() {
+  const manifest = { ...templateManifest, description: "had BOM at start" };
+  const manifestString = JSON.stringify(manifest);
+
+  // "123" to have a placeholder where we'll fill in the 3 BOM bytes.
+  const manifestBytes = new TextEncoder().encode("123" + manifestString);
+  manifestBytes.set([0xef, 0xbb, 0xbf]);
+
+  // Sanity check: verify that the bytes prepended above have the special
+  // meaning of being a UTF-8 BOM. That is, when parsed as UTF-8, the bytes can
+  // be removed without loss of meaning.
+  equal(
+    new TextDecoder().decode(manifestBytes),
+    manifestString,
+    "Sanity check: input bytes has UTF-8 BOM that is ordinarily stripped"
+  );
+
+  await IOUtils.write(USER_TEST_JSON, manifestBytes);
+  if (registry) {
+    registry.setValue(
+      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+      `${REGPATH}\\test`,
+      "",
+      USER_TEST_JSON
+    );
+  }
+  let result = await lookupApplication("test", context);
+  notEqual(result, null, "lookupApplication finds a good manifest despite BOM");
+  deepEqual(
+    result.manifest,
+    manifest,
+    "lookupApplication returns the manifest contents"
+  );
+});
+
+add_task(async function test_manifest_with_invalid_utf_8() {
+  const manifest = { ...templateManifest, description: "bad bytes" };
+  const manifestString = JSON.stringify(manifest);
+  const manifestBytes = Uint8Array.from(manifestString, c => c.charCodeAt(0));
+  // manifestString ends with `bad bytes"}`. Replace the `s` with a bad byte:
+  manifestBytes.set([0xff], manifestBytes.byteLength - 3);
+
+  await IOUtils.write(USER_TEST_JSON, manifestBytes);
+  if (registry) {
+    registry.setValue(
+      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+      `${REGPATH}\\test`,
+      "",
+      USER_TEST_JSON
+    );
+  }
+  // Note: most content failures (malformed JSON, etc.) do not result in a
+  // rejection, but in the manifest file being ignored (and on non-Windows:
+  // looking for manifests in the next location).
+  //
+  // It is inconsistent to reject instead of be returning null here, but that
+  // behavior seems long-standing in Firefox.
+  await Assert.rejects(
+    lookupApplication("test", context),
+    /NotReadableError: Could not read file.* because it is not UTF-8 encoded/,
+    "lookupApplication should reject file with invalid UTF8"
+  );
+});
+
 add_task(async function test_invalid_json() {
   await writeManifest(USER_TEST_JSON, "this is not valid json");
   let result = await lookupApplication("test", context);
