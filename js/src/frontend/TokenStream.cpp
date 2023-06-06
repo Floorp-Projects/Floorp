@@ -35,6 +35,7 @@
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
+#include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
 #include "js/RegExpFlags.h"           // JS::RegExpFlags
@@ -1575,7 +1576,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::seekTo(
 void TokenStreamAnyChars::computeErrorMetadataNoOffset(
     ErrorMetadata* err) const {
   err->isMuted = mutedErrors;
-  err->filename = filename_;
+  err->filename = JS::ConstUTF8CharsZ(filename_);
   err->lineNumber = 0;
   err->columnNumber = 0;
 
@@ -1595,7 +1596,7 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
                                maybeCx->realm()->principals());
       if (!iter.done() && iter.filename()) {
-        err->filename = iter.filename();
+        err->filename = JS::ConstUTF8CharsZ(iter.filename());
         err->lineNumber = iter.computeLine(&err->columnNumber);
         return false;
       }
@@ -1603,7 +1604,7 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
   }
 
   // Otherwise use this TokenStreamAnyChars's location information.
-  err->filename = filename_;
+  err->filename = JS::ConstUTF8CharsZ(filename_);
   return true;
 }
 
