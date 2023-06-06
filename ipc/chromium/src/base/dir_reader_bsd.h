@@ -49,7 +49,7 @@ class DirReaderBSD {
   bool Next() {
     if (size_) {
       struct dirent* dirent = reinterpret_cast<struct dirent*>(&buf_[offset_]);
-#ifdef OS_DRAGONFLY
+#ifdef __DragonFly__
       offset_ += _DIRENT_DIRSIZ(dirent);
 #else
       offset_ += dirent->d_reclen;

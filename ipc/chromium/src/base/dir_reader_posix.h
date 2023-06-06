@@ -22,7 +22,9 @@
 
 #if defined(XP_LINUX)
 #  include "base/dir_reader_linux.h"
-#elif defined(OS_BSD) && !defined(__GLIBC__)
+#elif (defined(__DragonFly__) || defined(XP_FREEBSD) || defined(XP_NETBSD) || \
+       defined(XP_OPENBSD)) &&                                                \
+    !defined(__GLIBC__)
 #  include "base/dir_reader_bsd.h"
 #else
 #  include "base/dir_reader_fallback.h"
@@ -32,7 +34,9 @@ namespace base {
 
 #if defined(XP_LINUX)
 typedef DirReaderLinux DirReaderPosix;
-#elif defined(OS_BSD) && !defined(__GLIBC__)
+#elif (defined(__DragonFly__) || defined(XP_FREEBSD) || defined(XP_NETBSD) || \
+       defined(XP_OPENBSD)) &&                                                \
+    !defined(__GLIBC__)
 typedef DirReaderBSD DirReaderPosix;
 #else
 typedef DirReaderFallback DirReaderPosix;

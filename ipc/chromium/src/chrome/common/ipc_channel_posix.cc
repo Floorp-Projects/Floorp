@@ -16,7 +16,7 @@
 #  include "mozilla/UniquePtrExtensions.h"
 #  include "chrome/common/mach_ipc_mac.h"
 #endif
-#if defined(XP_DARWIN) || defined(OS_NETBSD)
+#if defined(XP_DARWIN) || defined(XP_NETBSD)
 #  include <sched.h>
 #endif
 #include <stddef.h>
@@ -692,7 +692,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
           // Not an error; the sendmsg would have blocked, so return to the
           // event loop and try again later.
           break;
-#if defined(XP_DARWIN) || defined(OS_NETBSD)
+#if defined(XP_DARWIN) || defined(XP_NETBSD)
           // (Note: this comment is copied from https://crrev.com/86c3d9ef4fdf6;
           // see also bug 1142693 comment #73.)
           //

@@ -11,7 +11,7 @@
 
 #if defined(XP_DARWIN)
 #  include <mach/mach.h>
-#elif defined(OS_NETBSD)
+#elif defined(XP_NETBSD)
 #  include <lwp.h>
 #elif defined(XP_LINUX)
 #  include <sys/syscall.h>
@@ -22,7 +22,8 @@
 #  include <unistd.h>
 #endif
 
-#if defined(OS_BSD) && !defined(OS_NETBSD) && !defined(__GLIBC__)
+#if (defined(__DragonFly__) || defined(XP_FREEBSD) || defined(XP_OPENBSD)) && \
+    !defined(__GLIBC__)
 #  include <pthread_np.h>
 #endif
 
@@ -51,13 +52,13 @@ PlatformThreadId PlatformThread::CurrentId() {
   return port;
 #elif defined(XP_LINUX)
   return syscall(__NR_gettid);
-#elif defined(OS_OPENBSD) || defined(XP_SOLARIS) || defined(__GLIBC__)
+#elif defined(XP_OPENBSD) || defined(XP_SOLARIS) || defined(__GLIBC__)
   return (intptr_t)(pthread_self());
-#elif defined(OS_NETBSD)
+#elif defined(XP_NETBSD)
   return _lwp_self();
-#elif defined(OS_DRAGONFLY)
+#elif defined(__DragonFly__)
   return lwp_gettid();
-#elif defined(OS_FREEBSD)
+#elif defined(XP_FREEBSD)
   return pthread_getthreadid_np();
 #endif
 }
