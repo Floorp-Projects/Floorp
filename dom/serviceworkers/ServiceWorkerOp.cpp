@@ -293,6 +293,11 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable : public WorkerDebuggeeRunnable {
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
     MOZ_ASSERT(mOwner);
 
+    if (aWorkerPrivate->GlobalScope()->IsDying()) {
+      Unused << Cancel();
+      return true;
+    }
+
     bool rv = mOwner->Exec(aCx, aWorkerPrivate);
     Unused << NS_WARN_IF(!rv);
     mOwner = nullptr;

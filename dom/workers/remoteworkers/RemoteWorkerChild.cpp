@@ -45,6 +45,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -116,6 +117,10 @@ class MessagePortIdentifierRunnable final : public WorkerRunnable {
 
  private:
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
+    if (aWorkerPrivate->GlobalScope()->IsDying()) {
+      mPortIdentifier.ForceClose();
+      return true;
+    }
     mActor->AddPortIdentifier(aCx, aWorkerPrivate, mPortIdentifier);
     return true;
   }
@@ -800,7 +805,10 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
 #ifdef DEBUG
       mStarted = true;
 #endif
-
+      if (mOp.type() == RemoteWorkerOp::TRemoteWorkerPortIdentifierOp) {
+        MessagePort::ForceClose(
+            mOp.get_RemoteWorkerPortIdentifierOp().portIdentifier());
+      }
       return true;
     }
 
@@ -816,6 +824,13 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
 
             if (NS_WARN_IF(lock->is<Canceled>() || lock->is<Killed>())) {
               self->Cancel();
+              // Worker has already canceled, force close the MessagePort.
+              if (self->mOp.type() ==
+                  RemoteWorkerOp::TRemoteWorkerPortIdentifierOp) {
+                MessagePort::ForceClose(
+                    self->mOp.get_RemoteWorkerPortIdentifierOp()
+                        .portIdentifier());
+              }
               return;
             }
           }
@@ -867,7 +882,6 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
           new MessagePortIdentifierRunnable(
               workerPrivate, aOwner,
               mOp.get_RemoteWorkerPortIdentifierOp().portIdentifier());
-
       if (NS_WARN_IF(!r->Dispatch())) {
         aOwner->ErrorPropagationDispatch(NS_ERROR_FAILURE);
       }

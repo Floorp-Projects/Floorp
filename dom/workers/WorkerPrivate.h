@@ -526,13 +526,9 @@ class WorkerPrivate final
 
   void StopSyncLoop(nsIEventTarget* aSyncLoopTarget, nsresult aResult);
 
-  bool AllPendingRunnablesShouldBeCanceled() const {
-    return mCancelAllPendingRunnables;
-  }
-
   void ShutdownModuleLoader();
 
-  void ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
+  void ClearPreStartRunnables();
 
   void ClearDebuggerEventQueue();
 
@@ -1135,6 +1131,11 @@ class WorkerPrivate final
 
   void RunShutdownTasks();
 
+  bool CancelBeforeWorkerScopeConstructed() const {
+    auto data = mWorkerThreadAccessible.Access();
+    return data->mCancelBeforeWorkerScopeConstructed;
+  }
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1483,6 +1484,8 @@ class WorkerPrivate final
     bool mJSThreadExecutionGranted;
     bool mCCCollectedAnything;
     FlippedOnce<false> mDeletionScheduled;
+    FlippedOnce<false> mCancelBeforeWorkerScopeConstructed;
+    FlippedOnce<false> mPerformedShutdownAfterLastContentTaskExecuted;
   };
   ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
 
@@ -1503,13 +1506,11 @@ class WorkerPrivate final
 
   // List of operations to do at the end of the last sync event loop.
   enum {
-    ePendingEventQueueClearing = 0x01,
     eDispatchCancelingRunnable = 0x02,
   };
 
   bool mParentWindowPaused;
 
-  bool mCancelAllPendingRunnables;
   bool mWorkerScriptExecutedSuccessfully;
   bool mFetchHandlerWasAdded;
   bool mMainThreadObjectsForgotten;
