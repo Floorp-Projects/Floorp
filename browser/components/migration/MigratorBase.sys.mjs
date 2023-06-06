@@ -12,7 +12,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
-  FloorpProfileMigrator: "resource:///modules/FloorpProfileMigrator.sys.mjs",
+  FirefoxProfileMigrator: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
@@ -363,7 +363,7 @@ export class MigratorBase {
     let collectMigrationTelemetry = resourceType => {
       // We don't want to collect this if the migration is occurring due to a
       // profile refresh.
-      if (this.constructor.key == lazy.FloorpProfileMigrator.key) {
+      if (this.constructor.key == lazy.FirefoxProfileMigrator.key) {
         return;
       }
 

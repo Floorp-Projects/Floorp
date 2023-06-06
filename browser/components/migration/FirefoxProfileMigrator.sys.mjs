@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Migrates from a Floorp profile in a lossy manner in order to clean up a
+ * Migrates from a Firefox profile in a lossy manner in order to clean up a
  * user's profile.  Data is only migrated where the benefits outweigh the
  * potential problems caused by importing undesired/invalid configurations
  * from the source profile.
@@ -25,20 +25,20 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
- * Floorp profile migrator. Currently, this class only does "pave over"
+ * Firefox profile migrator. Currently, this class only does "pave over"
  * migrations, where various parts of an old profile overwrite a new
  * profile. This is distinct from other migrators which attempt to import
  * old profile data into the existing profile.
  *
  * This migrator is what powers the "Profile Refresh" mechanism.
  */
-export class FloorpProfileMigrator extends MigratorBase {
+export class FirefoxProfileMigrator extends MigratorBase {
   static get key() {
-    return "floorp";
+    return "firefox";
   }
 
   static get displayNameL10nID() {
-    return "migration-wizard-migrator-display-name-floorp";
+    return "migration-wizard-migrator-display-name-firefox";
   }
 
   _getAllProfiles() {
@@ -48,7 +48,6 @@ export class FloorpProfileMigrator extends MigratorBase {
     ].getService(Ci.nsIToolkitProfileService);
     for (let profile of profileService.profiles) {
       let rootDir = profile.rootDir;
-      console.log("rootDir", rootDir);
 
       if (
         rootDir.exists() &&
@@ -190,7 +189,7 @@ export class FloorpProfileMigrator extends MigratorBase {
 
     let session;
     if (Services.env.get("MOZ_RESET_PROFILE_MIGRATE_SESSION")) {
-      // We only want to restore the previous floorp session if the profile refresh was
+      // We only want to restore the previous firefox session if the profile refresh was
       // triggered by user. The MOZ_RESET_PROFILE_MIGRATE_SESSION would be set when a user-triggered
       // profile refresh happened in nsAppRunner.cpp. Hence, we detect the MOZ_RESET_PROFILE_MIGRATE_SESSION
       // to see if session data migration is required.

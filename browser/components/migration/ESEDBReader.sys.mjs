@@ -368,7 +368,7 @@ ESEDB.prototype = {
       this._instanceId = new ESE.JET_INSTANCE();
       ESE.CreateInstanceW(
         this._instanceId.address(),
-        "floorp-dbreader-" + gESEInstanceCounter++
+        "firefox-dbreader-" + gESEInstanceCounter++
       );
       this._instanceCreated = true;
 

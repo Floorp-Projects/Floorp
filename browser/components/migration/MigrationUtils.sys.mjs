@@ -38,8 +38,8 @@ const MIGRATOR_MODULES = Object.freeze({
     moduleURI: "resource:///modules/EdgeProfileMigrator.sys.mjs",
     platforms: ["win"],
   },
-  FloorpProfileMigrator: {
-    moduleURI: "resource:///modules/FloorpProfileMigrator.sys.mjs",
+  FirefoxProfileMigrator: {
+    moduleURI: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
     platforms: ["linux", "macosx", "win"],
   },
   IEProfileMigrator: {
@@ -433,8 +433,8 @@ class MigrationUtils {
       "Internet Explorer": "ie",
       "Microsoft Edge": "edge",
       Safari: "safari",
-      Firefox: "floorp",
-      Nightly: "floorp",
+      Firefox: "firefox",
+      Nightly: "firefox",
       Opera: "opera",
       Vivaldi: "vivaldi",
       "Opera GX": "opera-gx",
@@ -453,19 +453,19 @@ class MigrationUtils {
         .getService(Ci.nsIExternalProtocolService)
         .getApplicationDescription("http");
       key = APP_DESC_TO_KEY[browserDesc] || "";
-      // Handle devedition, as well as "FloorpNightly" on OS X.
-      if (!key && browserDesc.startsWith("Floorp")) {
-        key = "floorp";
+      // Handle devedition, as well as "FirefoxNightly" on OS X.
+      if (!key && browserDesc.startsWith("Firefox")) {
+        key = "firefox";
       }
     } catch (ex) {
       console.error("Could not detect default browser: ", ex);
     }
 
-    // "floorp" is the least useful entry here, and might just be because we've set
+    // "firefox" is the least useful entry here, and might just be because we've set
     // ourselves as the default (on Windows 7 and below). In that case, check if we
     // have a registry key that tells us where to go:
     if (
-      key == "floorp" &&
+      key == "firefox" &&
       AppConstants.isPlatformAndVersionAtMost("win", "6.2")
     ) {
       // Because we remove the registry key, reading the registry key only works once.
@@ -1107,7 +1107,7 @@ class MigrationUtils {
    */
   #SOURCE_NAME_TO_ID_MAPPING_ENUM = Object.freeze({
     nothing: 1,
-    floorp: 2,
+    firefox: 2,
     edge: 3,
     ie: 4,
     chrome: 5,
