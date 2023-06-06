@@ -70,11 +70,13 @@ describe("Outline", () => {
     expect(selectLocation).toHaveBeenCalledWith(mockcx, {
       line: startLine,
       column: undefined,
+      sourceId,
       source: {
         id: sourceId,
       },
       sourceActor: null,
       sourceActorId: undefined,
+      sourceUrl: "",
     });
   });
 
@@ -209,11 +211,13 @@ describe("Outline", () => {
       expect(props.selectLocation).toHaveBeenCalledWith(mockcx, {
         line: 24,
         column: undefined,
+        sourceId,
         source: {
           id: sourceId,
         },
         sourceActor: null,
         sourceActorId: undefined,
+        sourceUrl: "",
       });
     });
 

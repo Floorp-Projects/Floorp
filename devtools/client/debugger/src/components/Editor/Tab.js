@@ -89,7 +89,7 @@ class Tab extends PureComponent {
     const tabURLs = tabSources.map(t => t.url);
     const otherTabURLs = otherTabs.map(t => t.url);
 
-    if (!sourceTab || !selectedLocation || !selectedLocation.source.id) {
+    if (!sourceTab || !selectedLocation || !selectedLocation.sourceId) {
       return;
     }
 
@@ -133,21 +133,21 @@ class Tab extends PureComponent {
       {
         item: {
           ...tabMenuItems.copySource,
-          disabled: selectedLocation.source.id !== tab,
+          disabled: selectedLocation.sourceId !== tab,
           click: () => copyToClipboard(sourceTab),
         },
       },
       {
         item: {
           ...tabMenuItems.copySourceUri2,
-          disabled: !selectedLocation.source.url,
+          disabled: !selectedLocation.sourceUrl,
           click: () => copyToTheClipboard(getRawSourceURL(sourceTab.url)),
         },
       },
       {
         item: {
           ...tabMenuItems.showSource,
-          disabled: !selectedLocation.source.url,
+          disabled: !selectedLocation.sourceUrl,
           click: () => showSource(cx, tab),
         },
       },
@@ -193,7 +193,7 @@ class Tab extends PureComponent {
     const sourceId = source.id;
     const active =
       selectedLocation &&
-      sourceId == selectedLocation.source.id &&
+      sourceId == selectedLocation.sourceId &&
       !this.isSourceSearchEnabled();
     const isPrettyCode = isPretty(source);
 
