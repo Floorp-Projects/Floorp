@@ -19,12 +19,12 @@ ConditionVariable::ConditionVariable(Lock* user_lock)
     : user_mutex_(user_lock->lock_.native_handle()) {
   int rv = 0;
   // http://crbug.com/293736
-  // NaCl doesn't support monotonic clock based absolute deadlines.
-  // On older Android platform versions, it's supported through the
-  // non-standard pthread_cond_timedwait_monotonic_np. Newer platform
-  // versions have pthread_condattr_setclock.
+  // On older Android platform versions, monotonic clock based absolute
+  // deadlines are supported through the non-standard
+  // pthread_cond_timedwait_monotonic_np. Newer platform versions have
+  // pthread_condattr_setclock.
   // Mac can use relative time deadlines.
-#if !defined(XP_DARWIN) && !defined(OS_NACL) && \
+#if !defined(XP_DARWIN) && \
     !(defined(ANDROID) && defined(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC))
   pthread_condattr_t attrs;
   rv = pthread_condattr_init(&attrs);
@@ -75,18 +75,10 @@ void ConditionVariable::TimedWait(const base::TimeDelta& max_time) {
 #else
   // The timeout argument to pthread_cond_timedwait is in absolute time.
   struct timespec absolute_time;
-#  if defined(OS_NACL)
-  // See comment in constructor for why this is different in NaCl.
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  absolute_time.tv_sec = now.tv_sec;
-  absolute_time.tv_nsec = now.tv_usec * base::Time::kNanosecondsPerMicrosecond;
-#  else
   struct timespec now;
   clock_gettime(CLOCK_MONOTONIC, &now);
   absolute_time.tv_sec = now.tv_sec;
   absolute_time.tv_nsec = now.tv_nsec;
-#  endif
 
   absolute_time.tv_sec += relative_time.tv_sec;
   absolute_time.tv_nsec += relative_time.tv_nsec;
