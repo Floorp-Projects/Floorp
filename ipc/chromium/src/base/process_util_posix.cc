@@ -127,7 +127,8 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
 #elif defined(XP_DARWIN)
   static const rlim_t kSystemDefaultMaxFds = 256;
   static const char kFDDir[] = "/dev/fd";
-#elif defined(OS_BSD)
+#elif defined(__DragonFly__) || defined(XP_FREEBSD) || defined(XP_NETBSD) || \
+    defined(XP_OPENBSD)
   // the getrlimit below should never fail, so whatever ..
   static const rlim_t kSystemDefaultMaxFds = 1024;
   // at least /dev/fd will exist

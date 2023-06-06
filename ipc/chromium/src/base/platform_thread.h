@@ -24,11 +24,11 @@ typedef void* PlatformThreadHandle;  // HANDLE
 #elif defined(XP_UNIX)
 #  include <pthread.h>
 typedef pthread_t PlatformThreadHandle;
-#  if defined(XP_LINUX) || defined(OS_OPENBSD) || defined(XP_SOLARIS) || \
+#  if defined(XP_LINUX) || defined(XP_OPENBSD) || defined(XP_SOLARIS) || \
       defined(__GLIBC__)
 #    include <unistd.h>
 typedef pid_t PlatformThreadId;
-#  elif defined(OS_BSD)
+#  elif defined(__DragonFly__) || defined(XP_FREEBSD) || defined(XP_NETBSD)
 #    include <sys/types.h>
 typedef lwpid_t PlatformThreadId;
 #  elif defined(XP_DARWIN)

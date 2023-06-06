@@ -1207,7 +1207,8 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
     MOZ_ASSERT(gGREBinPath);
     nsCString path;
     NS_CopyUnicodeToNative(nsDependentString(gGREBinPath), path);
-#  if defined(XP_LINUX) || defined(OS_BSD)
+#  if defined(XP_LINUX) || defined(__DragonFly__) || defined(XP_FREEBSD) || \
+      defined(XP_NETBSD) || defined(XP_OPENBSD)
     const char* ld_library_path = PR_GetEnv("LD_LIBRARY_PATH");
     nsCString new_ld_lib_path(path.get());
 
@@ -1217,7 +1218,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
     }
     mLaunchOptions->env_map["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
 
-#  elif XP_DARWIN  // defined(XP_LINUX) || defined(OS_BSD)
+#  elif XP_DARWIN
     // With signed production Mac builds, the dynamic linker (dyld) will
     // ignore dyld environment variables preventing the use of variables
     // such as DYLD_LIBRARY_PATH and DYLD_INSERT_LIBRARIES.
@@ -1245,7 +1246,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
       mLaunchOptions->env_map["OS_ACTIVITY_MODE"] = "disable";
     }
 #    endif  // defined(MOZ_SANDBOX)
-#  endif    // defined(XP_LINUX) || defined(OS_BSD)
+#  endif
   }
 
   FilePath exePath;
@@ -1304,7 +1305,9 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   mChildArgv.push_back(mPidString);
 
   if (!CrashReporter::IsDummy()) {
-#  if defined(XP_LINUX) || defined(OS_BSD) || defined(XP_SOLARIS)
+#  if defined(MOZ_WIDGET_COCOA)
+    mChildArgv.push_back(CrashReporter::GetChildNotificationPipe());
+#  elif defined(XP_UNIX)
     int childCrashFd, childCrashRemapFd;
     if (NS_WARN_IF(!CrashReporter::CreateNotificationPipeForChild(
             &childCrashFd, &childCrashRemapFd))) {
@@ -1320,10 +1323,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
       // "false" == crash reporting disabled
       mChildArgv.push_back("false");
     }
-#  elif defined(MOZ_WIDGET_COCOA) /* defined(XP_LINUX) || defined(OS_BSD) || \
-                                     defined(XP_SOLARIS) */
-    mChildArgv.push_back(CrashReporter::GetChildNotificationPipe());
-#  endif  // defined(XP_LINUX) || defined(OS_BSD) || defined(XP_SOLARIS)
+#  endif
   }
 
   int fd = PR_FileDesc2NativeHandle(mCrashAnnotationWritePipe);
