@@ -21,8 +21,8 @@
 #include "frontend/BytecodeCompiler.h"     // frontend::IsIdentifier
 #include "frontend/CompilationStencil.h"  // for frontened::{CompilationStencil, BorrowingCompilationStencil, CompilationGCOutput}
 #include "frontend/FrontendContext.h"     // js::AutoReportFrontendContext
-#include "frontend/Parser.h"       // frontend::Parser, frontend::ParseGoal
-#include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
+#include "frontend/Parser.h"  // frontend::Parser, frontend::ParseGoal
+#include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::ConstUTF8CharsZ, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/experimental/JSStencil.h"  // JS::Stencil
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"              // JS::Rooted
@@ -62,7 +62,7 @@ static void ReportSourceTooLongImpl(JS::FrontendContext* fc, ...) {
   va_start(args, fc);
 
   js::ErrorMetadata metadata;
-  metadata.filename = "<unknown>";
+  metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
   metadata.lineNumber = 0;
   metadata.columnNumber = 0;
   metadata.lineLength = 0;
