@@ -294,7 +294,7 @@ pub extern "C" fn fluent_bundle_format_pattern(
 #[no_mangle]
 pub unsafe extern "C" fn fluent_bundle_add_resource(
     bundle: &mut FluentBundleRc,
-    r: &FluentResource,
+    r: *const FluentResource,
     allow_overrides: bool,
     ret_errors: &mut ThinVec<nsCString>,
 ) {
