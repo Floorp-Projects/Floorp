@@ -15,6 +15,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
@@ -34,6 +35,13 @@
 
 namespace mozilla::dom {
 
+static mozilla::LazyLogModule sWorkerRunnableLog("WorkerRunnable");
+
+#ifdef LOG
+#  undef LOG
+#endif
+#define LOG(args) MOZ_LOG(sWorkerRunnableLog, LogLevel::Verbose, args);
+
 namespace {
 
 const nsIID kWorkerRunnableIID = {
@@ -51,6 +59,7 @@ WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate,
       mBehavior(aBehavior),
       mCanceled(0),
       mCallingCancelWithinRun(false) {
+  LOG(("WorkerRunnable::WorkerRunnable [%p]", this));
   MOZ_ASSERT(aWorkerPrivate);
 }
 #endif
@@ -101,6 +110,7 @@ bool WorkerRunnable::Dispatch() {
 }
 
 bool WorkerRunnable::DispatchInternal() {
+  LOG(("WorkerRunnable::DispatchInternal [%p]", this));
   RefPtr<WorkerRunnable> runnable(this);
 
   if (mBehavior == WorkerThreadModifyBusyCount ||
@@ -221,6 +231,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 WorkerRunnable::Run() {
+  LOG(("WorkerRunnable::Run [%p]", this));
   bool targetIsWorkerThread = mBehavior == WorkerThreadModifyBusyCount ||
                               mBehavior == WorkerThreadUnchangedBusyCount;
 
@@ -241,6 +252,7 @@ WorkerRunnable::Run() {
   if (targetIsWorkerThread &&
       mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() && !IsCanceled() &&
       !mCallingCancelWithinRun) {
+    LOG(("WorkerRunnable::Run [%p] Cancel runnable...", this));
     // Prevent recursion.
     mCallingCancelWithinRun = true;
 
