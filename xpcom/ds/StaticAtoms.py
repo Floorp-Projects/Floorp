@@ -342,6 +342,7 @@ STATIC_ATOMS = [
     Atom("dir", "dir"),
     Atom("dirAutoSetBy", "dirAutoSetBy"),
     Atom("directory", "directory"),
+    Atom("dirname", "dirname"),
     Atom("disableOutputEscaping", "disable-output-escaping"),
     Atom("disabled", "disabled"),
     Atom("disableglobalhistory", "disableglobalhistory"),
