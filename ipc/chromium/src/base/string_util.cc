@@ -45,9 +45,9 @@ struct ToUnsigned<signed char> {
 };
 template <>
 struct ToUnsigned<wchar_t> {
-#if defined(WCHAR_T_IS_UTF16)
+#if defined(XP_WIN)
   typedef unsigned short Unsigned;
-#elif defined(WCHAR_T_IS_UTF32)
+#else
   typedef uint32_t Unsigned;
 #endif
 };
@@ -113,9 +113,9 @@ class String16ToLongTraits {
   static const int kBase = 10;
   static inline value_type convert_func(const string_type::value_type* str,
                                         string_type::value_type** endptr) {
-#if defined(WCHAR_T_IS_UTF16)
+#if defined(XP_WIN)
     return wcstol(str, endptr, kBase);
-#elif defined(WCHAR_T_IS_UTF32)
+#else
     std::string ascii_string = UTF16ToASCII(string16(str));
     char* ascii_end = NULL;
     value_type ret = strtol(ascii_string.c_str(), &ascii_end, kBase);
@@ -319,7 +319,7 @@ static bool DoIsStringASCII(const STR& str) {
 
 bool IsStringASCII(const std::wstring& str) { return DoIsStringASCII(str); }
 
-#if !defined(WCHAR_T_IS_UTF16)
+#if !defined(XP_WIN)
 bool IsStringASCII(const string16& str) { return DoIsStringASCII(str); }
 #endif
 

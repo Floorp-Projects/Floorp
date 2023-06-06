@@ -19,7 +19,7 @@
 
 // FIXME/cjones: these really only pertain to the linux sys string
 // converters.
-#ifdef WCHAR_T_IS_UTF16
+#ifdef XP_WIN
 #  define ICONV_WCHAR_T_ENCODING "UTF-16"
 #else
 #  define ICONV_WCHAR_T_ENCODING "WCHAR_T"
