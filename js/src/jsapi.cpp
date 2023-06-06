@@ -2345,21 +2345,21 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
 
 void JS::OwningCompileOptions::release() {
   // OwningCompileOptions always owns these, so these casts are okay.
-  js_free(const_cast<char*>(filename_));
+  js_free(const_cast<char*>(filename_.c_str()));
   js_free(const_cast<char16_t*>(sourceMapURL_));
-  js_free(const_cast<char*>(introducerFilename_));
+  js_free(const_cast<char*>(introducerFilename_.c_str()));
 
-  filename_ = nullptr;
+  filename_ = JS::ConstUTF8CharsZ();
   sourceMapURL_ = nullptr;
-  introducerFilename_ = nullptr;
+  introducerFilename_ = JS::ConstUTF8CharsZ();
 }
 
 JS::OwningCompileOptions::~OwningCompileOptions() { release(); }
 
 size_t JS::OwningCompileOptions::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  return mallocSizeOf(filename_) + mallocSizeOf(sourceMapURL_) +
-         mallocSizeOf(introducerFilename_);
+  return mallocSizeOf(filename_.c_str()) + mallocSizeOf(sourceMapURL_) +
+         mallocSizeOf(introducerFilename_.c_str());
 }
 
 bool JS::OwningCompileOptions::copy(JSContext* cx,
@@ -2371,10 +2371,11 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   copyPODTransitiveOptions(rhs);
 
   if (rhs.filename()) {
-    filename_ = DuplicateString(cx, rhs.filename()).release();
-    if (!filename_) {
+    const char* str = DuplicateString(cx, rhs.filename().c_str()).release();
+    if (!str) {
       return false;
     }
+    filename_ = JS::ConstUTF8CharsZ(str);
   }
 
   if (rhs.sourceMapURL()) {
@@ -2385,11 +2386,12 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   }
 
   if (rhs.introducerFilename()) {
-    introducerFilename_ =
-        DuplicateString(cx, rhs.introducerFilename()).release();
-    if (!introducerFilename_) {
+    const char* str =
+        DuplicateString(cx, rhs.introducerFilename().c_str()).release();
+    if (!str) {
       return false;
     }
+    introducerFilename_ = JS::ConstUTF8CharsZ(str);
   }
 
   return true;
