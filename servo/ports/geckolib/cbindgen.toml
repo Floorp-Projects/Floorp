@@ -115,6 +115,7 @@ include = [
   "OffsetPath",
   "OffsetPosition",
   "OffsetRotate",
+  "RayFunction",
   "UnicodeRange",
   "UserSelect",
   "Float",

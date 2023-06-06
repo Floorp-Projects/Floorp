@@ -13454,7 +13454,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       "ray(200grad farthest-corner)",
       "ray(sides 180deg)",
       "ray(contain farthest-side 180deg)",
-      "ray(calc(180deg - 45deg) farthest-side)"
+      "ray(calc(180deg - 45deg) farthest-side)",
+      "ray(0deg at center center)",
+      "ray(at 10% 10% 1rad)"
     );
 
     gCSSProperties["offset-path"]["invalid_values"].push(

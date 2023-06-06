@@ -166,7 +166,7 @@ static CSSCoord ComputeRayPathLength(const StyleRaySize aRaySizeType,
   return 0.0;
 }
 
-static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
+static CSSCoord ComputeRayUsedDistance(const StyleRayFunction& aRay,
                                        const LengthPercentage& aDistance,
                                        const CSSCoord& aPathLength,
                                        const CSSSize& aBorderBoxSize) {
@@ -317,7 +317,7 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
       return OffsetPathData::Path(pathData, gfxPath.forget());
     }
     case StyleOffsetPath::Tag::Ray:
-      return OffsetPathData::Ray(path.AsRay(), RayReferenceData(aFrame));
+      return OffsetPathData::Ray(*path.AsRay(), RayReferenceData(aFrame));
     case StyleOffsetPath::Tag::None:
       return OffsetPathData::None();
     default:
@@ -362,7 +362,7 @@ static OffsetPathData GenerateOffsetPathData(
       return OffsetPathData::Path(pathData, path.forget());
     }
     case StyleOffsetPath::Tag::Ray:
-      return OffsetPathData::Ray(aPath.AsRay(), aRayReferenceData);
+      return OffsetPathData::Ray(*aPath.AsRay(), aRayReferenceData);
     case StyleOffsetPath::Tag::None:
     default:
       return OffsetPathData::None();

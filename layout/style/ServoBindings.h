@@ -102,7 +102,6 @@ GROUP_RULE_FUNCS_UNLOCKED(Container)
   bool Servo_##type_##_Deserialize(mozilla::ipc::ByteBuf* input, type_* v); \
   bool Servo_##type_##_Serialize(const type_* v, mozilla::ipc::ByteBuf* output);
 
-using RayFunction = StyleRayFunction<StyleAngle>;
 BASIC_SERDE_FUNCS(LengthPercentage)
 BASIC_SERDE_FUNCS(StyleRotate)
 BASIC_SERDE_FUNCS(StyleScale)
