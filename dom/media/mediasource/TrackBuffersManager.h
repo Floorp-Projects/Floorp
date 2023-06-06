@@ -108,8 +108,8 @@ class TrackBuffersManager final
   // add aSize bytes.
   // Eviction is done in two steps, first remove data up to aPlaybackTime
   // and if still more space is needed remove from the end.
-  EvictDataResult EvictData(const media::TimeUnit& aPlaybackTime,
-                            int64_t aSize);
+  EvictDataResult EvictData(const media::TimeUnit& aPlaybackTime, int64_t aSize,
+                            TrackType aType);
 
   // Queue a task to run ChangeType
   void ChangeType(const MediaContainerType& aType);
@@ -131,7 +131,13 @@ class TrackBuffersManager final
   // The parent SourceBuffer is about to be destroyed.
   void Detach();
 
-  int64_t EvictionThreshold() const;
+  // Return the eviction threshold, in bytes, for a track type (audio or video).
+  // When the track type isn't passed in (kUndefinedTrack), this returns the
+  // value for video if a video track is present. Specifying the track type
+  // explicitely is useful when initialization hasn't finished, but the track
+  // type is known already.
+  int64_t EvictionThreshold(
+      TrackInfo::TrackType aType = TrackInfo::TrackType::kUndefinedTrack) const;
 
   // Interface for MediaSourceDemuxer
   MediaInfo GetMetadata() const;

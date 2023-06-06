@@ -6,6 +6,7 @@
 
 #include "TrackBuffersManager.h"
 #include "ContainerParser.h"
+#include "MediaInfo.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
@@ -344,14 +345,14 @@ TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd) {
 }
 
 TrackBuffersManager::EvictDataResult TrackBuffersManager::EvictData(
-    const TimeUnit& aPlaybackTime, int64_t aSize) {
+    const TimeUnit& aPlaybackTime, int64_t aSize, TrackType aType) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aSize > EvictionThreshold()) {
+  if (aSize > EvictionThreshold(aType)) {
     // We're adding more data than we can hold.
     return EvictDataResult::BUFFER_FULL;
   }
-  const int64_t toEvict = GetSize() + aSize - EvictionThreshold();
+  const int64_t toEvict = GetSize() + aSize - EvictionThreshold(aType);
 
   const uint32_t canEvict =
       Evictable(HasVideo() ? TrackInfo::kVideoTrack : TrackInfo::kAudioTrack);
@@ -361,7 +362,7 @@ TrackBuffersManager::EvictDataResult TrackBuffersManager::EvictData(
             "kB, "
             "evict=%" PRId64 "kB canevict=%" PRIu32 "kB",
             aPlaybackTime.ToMicroseconds(), GetSize() / 1024,
-            EvictionThreshold() / 1024, toEvict / 1024, canEvict / 1024);
+            EvictionThreshold(aType) / 1024, toEvict / 1024, canEvict / 1024);
 
   if (toEvict <= 0) {
     mEvictionState = EvictionState::NO_EVICTION_NEEDED;
@@ -503,8 +504,11 @@ void TrackBuffersManager::CompleteResetParserState() {
   }
 }
 
-int64_t TrackBuffersManager::EvictionThreshold() const {
-  if (HasVideo()) {
+int64_t TrackBuffersManager::EvictionThreshold(
+    TrackInfo::TrackType aType) const {
+  MOZ_ASSERT(aType != TrackInfo::kTextTrack);
+  if (aType == TrackInfo::kVideoTrack ||
+      (aType == TrackInfo::kUndefinedTrack && HasVideo())) {
     return mVideoEvictionThreshold;
   }
   return mAudioEvictionThreshold;
