@@ -22,24 +22,34 @@ const {
   AUDIT_PROGRESS,
 } = require("resource://devtools/client/accessibility/constants.js");
 
+const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
+const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
+
 const ConnectedAuditProgressOverlayClass = require("resource://devtools/client/accessibility/components/AuditProgressOverlay.js");
 const AuditProgressOverlayClass =
   ConnectedAuditProgressOverlayClass.WrappedComponent;
 const AuditProgressOverlay = createFactory(ConnectedAuditProgressOverlayClass);
 
-function testTextProgressBar(store, expectedText) {
-  const wrapper = mount(Provider({ store }, AuditProgressOverlay()));
+function testTextProgressBar(store, expectedLocalizedStringId) {
+  const wrapper = mount(
+    Provider(
+      { store },
+      LocalizationProvider({ bundles: [] }, AuditProgressOverlay())
+    )
+  );
   expect(wrapper.html()).toMatchSnapshot();
 
   const overlay = wrapper.find(AuditProgressOverlayClass);
   expect(overlay.children().length).toBe(1);
 
-  const overlayText = overlay.childAt(0);
+  const localized = overlay.childAt(0);
+  expect(localized.prop("id")).toBe(expectedLocalizedStringId);
+  expect(localized.prop("attrs")["aria-valuetext"]).toBe(true);
+
+  const overlayText = localized.childAt(0);
   expect(overlayText.type()).toBe("span");
   expect(overlayText.prop("id")).toBe("audit-progress-container");
   expect(overlayText.prop("role")).toBe("progressbar");
-  expect(overlayText.prop("aria-valuetext")).toBe(expectedText);
-  expect(overlayText.text()).toBe(expectedText);
 }
 
 function testProgress(wrapper, percentage) {
@@ -53,7 +63,12 @@ function testProgress(wrapper, percentage) {
 describe("AuditProgressOverlay component:", () => {
   it("render not auditing", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AuditProgressOverlay()));
+    const wrapper = mount(
+      Provider(
+        { store },
+        LocalizationProvider({ bundles: [] }, AuditProgressOverlay())
+      )
+    );
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
@@ -63,7 +78,7 @@ describe("AuditProgressOverlay component:", () => {
       preloadedState: { audit: { auditing: [AUDIT_TYPE.CONTRAST] } },
     });
 
-    testTextProgressBar(store, "Initializing…");
+    testTextProgressBar(store, "accessibility-progress-initializing");
   });
 
   it("render auditing progress", () => {
@@ -76,7 +91,12 @@ describe("AuditProgressOverlay component:", () => {
       },
     });
 
-    const wrapper = mount(Provider({ store }, AuditProgressOverlay()));
+    const wrapper = mount(
+      Provider(
+        { store },
+        LocalizationProvider({ bundles: [] }, AuditProgressOverlay())
+      )
+    );
     expect(wrapper.html()).toMatchSnapshot();
 
     const overlay = wrapper.find(AuditProgressOverlayClass);
@@ -85,10 +105,12 @@ describe("AuditProgressOverlay component:", () => {
     const overlayContainer = overlay.childAt(0);
     expect(overlayContainer.type()).toBe("span");
     expect(overlayContainer.prop("id")).toBe("audit-progress-container");
-    expect(overlayContainer.children().length).toBe(1);
+    expect(overlayContainer.children().length).toBe(2);
 
-    expect(overlayContainer.text()).toBe("Checking 5 nodes");
-    expect(overlayContainer.childAt(0).type()).toBe("progress");
+    const localized = overlayContainer.childAt(0);
+    expect(localized.prop("id")).toBe("accessibility-progress-progressbar");
+    expect(localized.prop("$nodeCount")).toBe(5);
+    expect(overlayContainer.childAt(1).type()).toBe("progress");
 
     testProgress(wrapper, 0);
 
@@ -121,6 +143,6 @@ describe("AuditProgressOverlay component:", () => {
       },
     });
 
-    testTextProgressBar(store, "Finishing up…");
+    testTextProgressBar(store, "accessibility-progress-finishing");
   });
 });
