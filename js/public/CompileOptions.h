@@ -60,7 +60,8 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/TypeDecls.h"  // JS::MutableHandle (fwd)
+#include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
+#include "js/TypeDecls.h"          // JS::MutableHandle (fwd)
 
 namespace JS {
 
@@ -123,11 +124,9 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  protected:
   // non-POD options:
 
-  // UTF-8 encoded file name.
-  const char* filename_ = nullptr;
+  JS::ConstUTF8CharsZ filename_;
 
-  // UTF-8 encoded introducer file name.
-  const char* introducerFilename_ = nullptr;
+  JS::ConstUTF8CharsZ introducerFilename_;
 
   const char16_t* sourceMapURL_ = nullptr;
 
@@ -300,8 +299,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
     return eagerDelazificationStrategy_;
   }
   bool sourcePragmas() const { return sourcePragmas_; }
-  const char* filename() const { return filename_; }
-  const char* introducerFilename() const { return introducerFilename_; }
+  JS::ConstUTF8CharsZ filename() const { return filename_; }
+  JS::ConstUTF8CharsZ introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
 
   TransitiveCompileOptions(const TransitiveCompileOptions&) = delete;
@@ -480,7 +479,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
       : ReadOnlyCompileOptions() {}
 
   CompileOptions& setFile(const char* f) {
-    filename_ = f;
+    filename_ = JS::ConstUTF8CharsZ(f);
     return *this;
   }
 
@@ -490,7 +489,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   }
 
   CompileOptions& setFileAndLine(const char* f, unsigned l) {
-    filename_ = f;
+    filename_ = JS::ConstUTF8CharsZ(f);
     lineno = l;
     return *this;
   }
@@ -563,7 +562,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   CompileOptions& setIntroductionInfo(const char* introducerFn,
                                       const char* intro, unsigned line,
                                       uint32_t offset) {
-    introducerFilename_ = introducerFn;
+    introducerFilename_ = JS::ConstUTF8CharsZ(introducerFn);
     introductionType = intro;
     introductionLineno = line;
     introductionOffset = offset;
@@ -663,7 +662,7 @@ class JS_PUBLIC_API DecodeOptions {
   bool allocateInstantiationStorage = false;
   bool forceAsync = false;
 
-  const char* introducerFilename = nullptr;
+  const JS::ConstUTF8CharsZ introducerFilename;
 
   // See `TransitiveCompileOptions::introductionType` field for details.
   const char* introductionType = nullptr;
