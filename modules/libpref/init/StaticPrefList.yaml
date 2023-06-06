@@ -12412,12 +12412,12 @@
 
 - name: network.http.http2.ping-threshold
   type: RelaxedAtomicInt32
-  value: 20
+  value: 58
   mirror: always
 
 - name: network.http.http2.ping-timeout
   type: RelaxedAtomicInt32
-  value: 5
+  value: 8
   mirror: always
 
 - name: network.http.http2.send-buffer-size
