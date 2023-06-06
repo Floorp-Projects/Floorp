@@ -502,7 +502,7 @@ urlbar:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1819766
     data_reviews:
-      - ""
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1819766#c9
     data_sensitivity:
       - interaction
     notification_emails:
