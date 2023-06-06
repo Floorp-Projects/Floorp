@@ -592,9 +592,7 @@ license file's hash.
             ret = False
         return ret
 
-    def vendor(
-        self, ignore_modified=False, build_peers_said_large_imports_were_ok=False
-    ):
+    def vendor(self, ignore_modified=False, force=False):
         from mozbuild.mach_commands import cargo_vet
 
         self.populate_logger()
@@ -834,7 +832,7 @@ license file's hash.
 
         # If we failed when checking the crates list and/or running `cargo vet`,
         # stop before invoking `cargo vendor`.
-        if failed:
+        if failed and not force:
             return False
 
         res = subprocess.run(
@@ -890,7 +888,7 @@ license file's hash.
                 )
             )
 
-        if not self._check_licenses(vendor_dir):
+        if not self._check_licenses(vendor_dir) and not force:
             self.log(
                 logging.ERROR,
                 "license_check_failed",
@@ -919,7 +917,7 @@ license file's hash.
 
         # Forcefully complain about large files being added, as history has
         # shown that large-ish files typically are not needed.
-        if large_files and not build_peers_said_large_imports_were_ok:
+        if large_files:
             self.log(
                 logging.ERROR,
                 "filesize_check",
@@ -942,7 +940,8 @@ The changes from `mach vendor rust` will NOT be added to version control.
             )
             self.repository.forget_add_remove_files(vendor_dir)
             self.repository.clean_directory(vendor_dir)
-            return False
+            if not force:
+                return False
 
         # Only warn for large imports, since we may just have large code
         # drops from time to time (e.g. importing features into m-c).

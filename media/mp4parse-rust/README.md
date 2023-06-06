@@ -10,8 +10,8 @@ additional support code for FFI.
 
 1. In /toolkit/library/rust/shared/Cargo.toml, Set the `rev` attribute of the
    `mp4parse_capi` dependency to the revision you want to use.
-2. Run `mach vendor rust` (`--build-peers-said-large-imports-were-ok` may be
-   necessary since the `mp4parse` crate's lib.rs is quite large).
+2. Run `mach vendor rust` (`--force` may be necessary since the `mp4parse`
+   crate's lib.rs is quite large).
 3. Verify the expected changes in /third_party/rust.
 4. Build, run try, etc.
 
