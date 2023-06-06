@@ -27,8 +27,6 @@ export function createLocation({
   return {
     source,
     sourceActor,
-    // Alias which should probably be migrate to query source and sourceActor?
-    sourceId: source.id,
     sourceActorId: sourceActor?.id,
 
     line,
