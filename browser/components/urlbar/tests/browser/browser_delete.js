@@ -45,7 +45,7 @@ async function testDelete() {
 
   // delete the first few chars - each delete should operate on the input field.
   await UrlbarTestUtils.promisePopupOpen(window, sendDelete);
-  Assert.equal(gURLBar.inputField.value, "ug1105244.example.com/");
+  Assert.equal(gURLBar.value, "ug1105244.example.com/");
   sendDelete();
-  Assert.equal(gURLBar.inputField.value, "g1105244.example.com/");
+  Assert.equal(gURLBar.value, "g1105244.example.com/");
 }

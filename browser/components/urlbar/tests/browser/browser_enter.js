@@ -295,11 +295,7 @@ add_task(async function typeCharWhileProcessingEnter() {
   EventUtils.synthesizeKey("x", { type: "keyup" });
   EventUtils.synthesizeKey("KEY_Enter", { type: "keyup" });
 
-  Assert.equal(
-    gURLBar.inputField.value,
-    TEST_VALUE,
-    "The value of urlbar is correct"
-  );
+  Assert.equal(gURLBar.value, TEST_VALUE, "The value of urlbar is correct");
 
   await onLoad;
   Assert.ok("Browser loaded the correct url");
