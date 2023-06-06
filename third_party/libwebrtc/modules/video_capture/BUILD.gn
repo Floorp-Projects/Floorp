@@ -99,6 +99,10 @@ if (!build_with_chromium) {
           "../../media:rtc_media_base",
           "../portal",
         ]
+        if (build_with_mozilla) {
+          configs -= [ "../portal:pipewire_base" ]
+          public_deps = [ "//third_party/pipewire" ]
+        }
       }
     }
     if (is_win) {
