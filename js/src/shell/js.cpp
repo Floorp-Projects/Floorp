@@ -11411,6 +11411,11 @@ bool InitOptionParser(OptionParser& op) {
       !op.addStringOption('\0', "spectre-mitigations", "on/off",
                           "Whether Spectre mitigations are enabled (default: "
                           "off, on to enable)") ||
+      !op.addStringOption('\0', "write-protect-code", "on/off",
+                          "Whether the W^X policy is enforced to mark JIT code "
+                          "pages as either writable or executable but never "
+                          "both at the same time (default: on, off to "
+                          "disable)") ||
       !op.addStringOption('\0', "cache-ir-stubs", "on/off/call",
                           "Use CacheIR stubs (default: on, off to disable, "
                           "call to enable work-in-progress call ICs)") ||
@@ -12127,6 +12132,16 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
       jit::JitOptions.spectreJitToCxxCalls = false;
     } else {
       return OptionFailure("spectre-mitigations", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("write-protect-code")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.writeProtectCode = true;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.writeProtectCode = false;
+    } else {
+      return OptionFailure("write-protect-code", str);
     }
   }
 

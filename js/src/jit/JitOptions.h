@@ -122,6 +122,8 @@ struct DefaultJitOptions {
   bool spectreValueMasking;
   bool spectreJitToCxxCalls;
 
+  bool writeProtectCode;
+
   bool supportsUnalignedAccesses;
   BaseRegForAddress baseRegForLocals;
 

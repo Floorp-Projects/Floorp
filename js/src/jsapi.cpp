@@ -4226,6 +4226,9 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS:
       jit::JitOptions.spectreJitToCxxCalls = !!value;
       break;
+    case JSJITCOMPILER_WRITE_PROTECT_CODE:
+      jit::JitOptions.writeProtectCode = !!value;
+      break;
     case JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC:
       jit::JitOptions.enableWatchtowerMegamorphic = !!value;
       break;
@@ -4314,6 +4317,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS:
       *valueOut = jit::JitOptions.spectreJitToCxxCalls ? 1 : 0;
+      break;
+    case JSJITCOMPILER_WRITE_PROTECT_CODE:
+      *valueOut = jit::JitOptions.writeProtectCode ? 1 : 0;
       break;
     case JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC:
       *valueOut = jit::JitOptions.enableWatchtowerMegamorphic ? 1 : 0;
