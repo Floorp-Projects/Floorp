@@ -289,7 +289,7 @@ PrecompiledScript::PrecompiledScript(nsISupports* aParent,
                                      JS::ReadOnlyCompileOptions& aOptions)
     : mParent(aParent),
       mStencil(aStencil),
-      mURL(aOptions.filename()),
+      mURL(aOptions.filename().c_str()),
       mHasReturnValue(!aOptions.noScriptRval) {
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aStencil);

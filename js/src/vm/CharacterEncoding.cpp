@@ -582,6 +582,10 @@ void JS::ConstUTF8CharsZ::validate(size_t aLength) {
   };
   InflateUTF8ToUTF16<OnUTF8Error::Crash>(/* cx = */ nullptr, chars, nop);
 }
+void JS::ConstUTF8CharsZ::validateWithoutLength() {
+  MOZ_ASSERT(data_);
+  validate(strlen(data_));
+}
 #endif
 
 bool JS::StringIsASCII(const char* s) {

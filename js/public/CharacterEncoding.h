@@ -142,6 +142,14 @@ class JS_PUBLIC_API ConstUTF8CharsZ {
 
   ConstUTF8CharsZ() : data_(nullptr) {}
 
+  explicit ConstUTF8CharsZ(const char* aBytes) : data_(aBytes) {
+#ifdef DEBUG
+    if (aBytes) {
+      validateWithoutLength();
+    }
+#endif
+  }
+
   ConstUTF8CharsZ(const char* aBytes, size_t aLength) : data_(aBytes) {
     MOZ_ASSERT(aBytes[aLength] == '\0');
 #ifdef DEBUG
@@ -158,6 +166,7 @@ class JS_PUBLIC_API ConstUTF8CharsZ {
  private:
 #ifdef DEBUG
   void validate(size_t aLength);
+  void validateWithoutLength();
 #endif
 };
 
