@@ -89,9 +89,9 @@ typedef bool (*DeleteNamedProperty)(JSContext* cx,
                                     JS::ObjectOpResult& opresult);
 
 // Returns true if the given global is of a type whose bit is set in
-// aNonExposedGlobals.
-bool IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
-                        uint32_t aNonExposedGlobals);
+// aGlobalSet.
+bool IsGlobalInExposureSet(JSContext* aCx, JSObject* aGlobal,
+                           uint32_t aGlobalSet);
 
 struct ConstantSpec {
   const char* name;
@@ -119,8 +119,8 @@ static constexpr uint32_t kCount = 8;
 struct PrefableDisablers {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
     if (nonExposedGlobals &&
-        IsNonExposedGlobal(cx, JS::GetNonCCWObjectGlobal(obj),
-                           nonExposedGlobals)) {
+        IsGlobalInExposureSet(cx, JS::GetNonCCWObjectGlobal(obj),
+                              nonExposedGlobals)) {
       return false;
     }
     if (prefIndex != WebIDLPrefIndex::NoPref &&

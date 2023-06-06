@@ -432,8 +432,8 @@ JSObject* CommonStructuredCloneReadCallback(
     return result;
   }
 
-  return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
-                                                             aTag);
+  return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader, aTag,
+                                                             true);
 }
 
 template JSObject* CommonStructuredCloneReadCallback(
