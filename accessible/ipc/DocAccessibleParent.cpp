@@ -230,7 +230,20 @@ uint32_t DocAccessibleParent::AddSubtree(
 }
 
 void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
-  uint64_t id = aAcc->ID();
+  // Children might be removed or moved. Handle them the same way. We do this
+  // before checking the moving IDs set in order to ensure that we handle moved
+  // descendants properly. Avoid descending into the children of outer documents
+  // for moves since they are added and removed differently to normal children.
+  if (!aAcc->IsOuterDoc()) {
+    // Even if some children are kept, those will be re-attached when we handle
+    // the show event. For now, clear all of them by moving them to a temporary.
+    auto children{std::move(aAcc->mChildren)};
+    for (RemoteAccessible* child : children) {
+      ShutdownOrPrepareForMove(child);
+    }
+  }
+
+  const uint64_t id = aAcc->ID();
   if (!mMovingIDs.Contains(id)) {
     // This Accessible is being removed.
     aAcc->Shutdown();
@@ -248,18 +261,6 @@ void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
   }
   aAcc->SetParent(nullptr);
   mMovingIDs.EnsureRemoved(id);
-  if (aAcc->IsOuterDoc()) {
-    // Leave child documents alone. They are added and removed differently to
-    // normal children.
-    return;
-  }
-  // Some children might be removed. Handle children the same way.
-  for (RemoteAccessible* child : aAcc->mChildren) {
-    ShutdownOrPrepareForMove(child);
-  }
-  // Even if some children are kept, those will be re-attached when we handle
-  // the show event. For now, clear all of them.
-  aAcc->mChildren.Clear();
 }
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
