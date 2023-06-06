@@ -171,7 +171,7 @@ private fun DescriptionText(
     description: String,
     linkTextState: LinkTextState?,
 ) {
-    if (linkTextState != null) {
+    if (linkTextState != null && description.contains(linkTextState.text, ignoreCase = true)) {
         LinkText(
             text = description,
             linkTextState = linkTextState,
@@ -198,7 +198,7 @@ private fun LinkText(
     linkTextState: LinkTextState,
 ) {
     val annotatedString = buildAnnotatedString {
-        val startIndex = text.indexOf(linkTextState.text)
+        val startIndex = text.indexOf(linkTextState.text, ignoreCase = true)
         val endIndex = startIndex + linkTextState.text.length
         append(text)
         addStyle(
