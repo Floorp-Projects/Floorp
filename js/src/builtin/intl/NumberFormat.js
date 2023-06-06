@@ -669,21 +669,18 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
   // Steps 14-17.
   var currency = GetOption(options, "currency", "string", undefined, undefined);
 
-  // Per the Intl.NumberFormat Unified API Proposal, this check should only
-  // happen for |style === "currency"|, which seems inconsistent, given that
-  // we normally validate all options when present, even the ones which are
-  // unused.
-  // TODO: File issue at <https://github.com/tc39/proposal-unified-intl-numberformat>.
-  if (currency !== undefined && !IsWellFormedCurrencyCode(currency)) {
-    ThrowRangeError(JSMSG_INVALID_CURRENCY_CODE, currency);
+  if (currency === undefined) {
+    if (style === "currency") {
+      ThrowTypeError(JSMSG_UNDEFINED_CURRENCY);
+    }
+  } else {
+    if (!IsWellFormedCurrencyCode(currency)) {
+      ThrowRangeError(JSMSG_INVALID_CURRENCY_CODE, currency);
+    }
   }
 
   var cDigits;
   if (style === "currency") {
-    if (currency === undefined) {
-      ThrowTypeError(JSMSG_UNDEFINED_CURRENCY);
-    }
-
     // Steps 19.a-c.
     currency = toASCIIUpperCase(currency);
     lazyNumberFormatData.currency = currency;
