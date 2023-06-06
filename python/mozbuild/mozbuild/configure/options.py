@@ -176,8 +176,9 @@ class Option(object):
       more).
     - `default` can be used to give a default value to the option. When the
       `name` of the option starts with '--enable-' or '--with-', the implied
-      default is an empty PositiveOptionValue. When it starts with '--disable-'
-      or '--without-', the implied default is a NegativeOptionValue.
+      default is a NegativeOptionValue (disabled). When it starts with
+      '--disable-' or '--without-', the implied default is an empty
+      PositiveOptionValue (enabled).
     - `choices` restricts the set of values that can be given to the option.
     - `help` is the option description for use in the --help output.
     - `possible_origins` is a tuple of strings that are origins accepted for
