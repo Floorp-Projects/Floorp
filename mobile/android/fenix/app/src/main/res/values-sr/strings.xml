@@ -1366,7 +1366,7 @@
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Брише историју (укључујући историју синхронизовану са других уређаја), колачиће и друге податке о прегледању.</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body_2">Уклања историјат (укључујући синхронизовану историју са других уређаја)</string>
+    <string name="delete_history_prompt_body_2">Уклања историју (укључујући синхронизовану историју са других уређаја)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Последњи сат</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

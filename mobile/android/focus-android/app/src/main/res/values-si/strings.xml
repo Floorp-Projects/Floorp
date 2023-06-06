@@ -686,7 +686,7 @@
     <string name="cookie_banner_reject_all_option_title">දත්තකඩ පතාක අවකරණය</string>
 
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
-    <string name="cookie_banner_reject_all_option_summary">පිළිවන් විට දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේප කිරීමෙන් පතාක අඩුවෙන් පෙන්වයි.</string>
+    <string name="cookie_banner_reject_all_option_summary">පිළිවන් විට දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ඉවතලීමෙන් පතාක අඩුවෙන් පෙන්වයි.</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">දත්තකඩ පතාක අවකරණය</string>
@@ -719,7 +719,7 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s මෙම අඩවියේ දත්තකඩ ඉවත් කර පිටුව නැවුම් කරයි. සියළුම දත්තකඩ මැකීමෙන් බඩු කරත්ත හිස් වීමට හෝ ඔබව නික්මවීමට ඉඩ ඇත.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s සඳහා දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ප්‍රතික්‍ෂේපයට තැත් කිරීමට හැකිය.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s මඟින් දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ඉවතලීමට හැකිය.</string>
 
     <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_description_site_is_not_supported">මෙම අඩවිය දැනට දත්තකඩ පතාක අවකරණයට සහාය නොදක්වයි. මෙම වියමන අඩවිය සමාලෝචනය කර අනාගතයේදී සහාය දක්වන ලෙස අපගේ කණ්ඩායමට දැන්වීමට කැමතිද?</string>
