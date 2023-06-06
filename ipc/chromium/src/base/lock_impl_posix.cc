@@ -22,7 +22,7 @@ namespace internal {
 // Lock::PriorityInheritanceAvailable still must be checked as the code may
 // compile but the underlying platform still may not correctly support priority
 // inheritance locks.
-#if defined(OS_NACL) || defined(OS_ANDROID)
+#if defined(OS_NACL) || defined(ANDROID)
 #  define PRIORITY_INHERITANCE_LOCKS_POSSIBLE() 0
 #else
 #  define PRIORITY_INHERITANCE_LOCKS_POSSIBLE() 1
