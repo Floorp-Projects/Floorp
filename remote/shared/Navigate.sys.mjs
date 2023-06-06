@@ -39,6 +39,16 @@ XPCOMUtils.defineLazyGetter(lazy, "UNLOAD_TIMEOUT_MULTIPLIER", () => {
   return 1;
 });
 
+export const DEFAULT_UNLOAD_TIMEOUT = 200;
+
+/**
+ * Returns the multiplier used for the unload timer. Useful for tests which
+ * assert the behavior of this timeout.
+ */
+export function getUnloadTimeoutMultiplier() {
+  return lazy.UNLOAD_TIMEOUT_MULTIPLIER;
+}
+
 // Used to keep weak references of webProgressListeners alive.
 const webProgressListeners = new Set();
 
@@ -52,7 +62,8 @@ const webProgressListeners = new Set();
  *     Flag to indicate that the Promise has to be resolved when the
  *     page load has been started. Otherwise wait until the page has
  *     finished loading. Defaults to `false`.
- *
+ * @param {number=} options.unloadTimeout
+ *     Time to allow before the page gets unloaded. See ProgressListener options.
  * @returns {Promise}
  *     Promise which resolves when the page load is in the expected state.
  *     Values as returned:
@@ -63,13 +74,14 @@ export async function waitForInitialNavigationCompleted(
   webProgress,
   options = {}
 ) {
-  const { resolveWhenStarted = false } = options;
+  const { resolveWhenStarted = false, unloadTimeout } = options;
 
   const browsingContext = webProgress.browsingContext;
 
   // Start the listener right away to avoid race conditions.
   const listener = new ProgressListener(webProgress, {
     resolveWhenStarted,
+    unloadTimeout,
   });
   const navigated = listener.start();
 
@@ -145,7 +157,7 @@ export class ProgressListener {
     const {
       expectNavigation = false,
       resolveWhenStarted = false,
-      unloadTimeout = 200,
+      unloadTimeout = DEFAULT_UNLOAD_TIMEOUT,
       waitForExplicitStart = false,
     } = options;
 
