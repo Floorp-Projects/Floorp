@@ -29,27 +29,6 @@ const URI_EXTENSION_BLOCKLIST_DIALOG =
 // Allow insecure updates
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-const IS_ANDROID_WITH_BLOCKLIST_V2 =
-  AppConstants.platform == "android" && !AppConstants.NIGHTLY_BUILD;
-
-// This is the initial value of Blocklist.allowDeprecatedBlocklistV2.
-if (IS_ANDROID_WITH_BLOCKLIST_V2) {
-  // test_blocklistchange_v2.js tests blocklist v2, so we should flip the pref
-  // to enable the v3 blocklist on Android.
-  Assert.ok(
-    _TEST_NAME.includes("test_blocklistchange"),
-    `Expected _TEST_NAME to be test_blocklistchange{,_v2}.js`
-  );
-  if (_TEST_NAME.includes("test_blocklistchange.js")) {
-    Assert.equal(
-      Services.prefs.getBoolPref("extensions.blocklist.useMLBF"),
-      false,
-      "Blocklist v3 disabled by default on Android"
-    );
-    Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
-  }
-}
-
 // TODO bug 1649906: strip blocklist v2-specific parts of this test.
 // All specific logic is already covered by other test files, but the tests
 // here trigger the logic via higher-level methods, so it may make sense to
