@@ -1,7 +1,7 @@
 use std::os::raw;
 use std::ptr;
-use std::sync::{ONCE_INIT, Once};
-static START: Once = ONCE_INIT;
+use std::sync::Once;
+static START: Once = Once::new();
 
 type SECStatus = raw::c_int;
 const SEC_SUCCESS: SECStatus = 0;
