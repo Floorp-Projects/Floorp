@@ -98,7 +98,17 @@ class BodyStreamUnderlyingSourceAlgorithms final
     }
   }
 
-  BodyStreamHolder* GetBodyStreamHolder() override { return mUnderlyingSource; }
+  nsIInputStream* MaybeGetInputStreamIfUnread() override {
+    MOZ_ASSERT(mUnderlyingSource);
+    if (!mUnderlyingSource) {
+      return nullptr;
+    }
+    nsCOMPtr<nsIInputStream> inputStream;
+    BodyStream::RetrieveInputStream(mUnderlyingSource,
+                                    getter_AddRefs(inputStream));
+    MOZ_ASSERT(inputStream);
+    return inputStream;
+  }
 
  protected:
   ~BodyStreamUnderlyingSourceAlgorithms() override = default;
