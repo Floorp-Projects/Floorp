@@ -4211,14 +4211,6 @@
       // We are no longer the primary content area.
       browser.removeAttribute("primary");
 
-      // Remove this tab as the owner of any other tabs, since it's going away.
-      for (let tab of this.tabs) {
-        if ("owner" in tab && tab.owner == aTab) {
-          // |tab| is a child of the tab we're removing, make it an orphan
-          tab.owner = null;
-        }
-      }
-
       return true;
     },
 
