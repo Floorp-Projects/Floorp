@@ -367,10 +367,10 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 12,
         line: 34,
-        sourceId: "foo",
         source: {
           id: "foo",
         },
+        sourceId: "foo",
         sourceActorId: undefined,
         sourceActor: null,
         sourceUrl: "",
@@ -396,10 +396,10 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 12,
         line: 34,
-        sourceId,
         source: {
           id: sourceId,
         },
+        sourceId,
         sourceActorId: undefined,
         sourceActor: null,
         sourceUrl: "",
@@ -510,9 +510,9 @@ describe("QuickOpenModal", () => {
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: undefined,
-        sourceId: id,
         line: 0,
         source: { id },
+        sourceId: id,
         sourceActorId: undefined,
         sourceActor: null,
         sourceUrl: "",
@@ -546,8 +546,8 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: undefined,
         line: 0,
-        sourceId: id,
         source: { id },
+        sourceId: id,
         sourceActorId: undefined,
         sourceActor: null,
         sourceUrl: "",
@@ -581,8 +581,8 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 4,
         line: 3,
-        sourceId: id,
         source: { id },
+        sourceId: id,
         sourceActorId: undefined,
         sourceActor: null,
         sourceUrl: "",

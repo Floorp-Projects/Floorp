@@ -7,7 +7,7 @@ import { buildScopeList, parseSourceScopes } from "./visitor";
 let parsedScopesCache = new Map();
 
 export default function getScopes(location) {
-  const { sourceId } = location;
+  const sourceId = location.source.id;
   let parsedScopes = parsedScopesCache.get(sourceId);
   if (!parsedScopes) {
     parsedScopes = parseSourceScopes(sourceId);

@@ -257,7 +257,7 @@ function selectPrettyLocation(cx, prettySource) {
     if (
       location &&
       location.line >= 1 &&
-      location.sourceId == originalToGeneratedId(prettySource.id)
+      location.source.id == originalToGeneratedId(prettySource.id)
     ) {
       location = await getOriginalLocation(location, thunkArgs);
 

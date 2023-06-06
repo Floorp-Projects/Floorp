@@ -53,9 +53,9 @@ export function getBreakpointsForSource(state, sourceId, lines) {
           ? location.line == lines
           : location.line >= lines.start.line &&
             location.line <= lines.end.line;
-      return location.sourceId === sourceId && isOnLineOrWithinRange;
+      return location.source.id === sourceId && isOnLineOrWithinRange;
     }
-    return location.sourceId === sourceId;
+    return location.source.id === sourceId;
   });
 }
 
