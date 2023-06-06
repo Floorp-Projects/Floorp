@@ -133,6 +133,13 @@ using mozilla::ipc::PrincipalInfo;
 
 namespace mozilla::dom {
 
+static mozilla::LazyLogModule sWorkerScopeLog("WorkerScope");
+
+#ifdef LOG
+#  undef LOG
+#endif
+#define LOG(args) MOZ_LOG(sWorkerScopeLog, LogLevel::Debug, args);
+
 class WorkerScriptTimeoutHandler final : public ScriptTimeoutHandler {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -239,6 +246,7 @@ WorkerGlobalScopeBase::WorkerGlobalScopeBase(
       mClientSource(std::move(aClientSource)),
       mSerialEventTarget(aWorkerPrivate->HybridEventTarget()),
       mShouldResistFingerprinting(aShouldResistFingerprinting) {
+  LOG(("WorkerGlobalScopeBase::WorkerGlobalScopeBase [%p]", this));
   MOZ_ASSERT(mWorkerPrivate);
 #ifdef DEBUG
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -430,26 +438,28 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(WorkerGlobalScope,
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
 void WorkerGlobalScope::NoteTerminating() {
+  LOG(("WorkerGlobalScope::NoteTerminating [%p]", this));
   if (IsDying()) {
     return;
   }
 
   StartDying();
-}
-
-void WorkerGlobalScope::NoteShuttingDown() {
-  MOZ_ASSERT(IsDying());
-
-  if (mNavigator) {
-    mNavigator->Invalidate();
-    mNavigator = nullptr;
-  }
 
   if (mPerformance) {
     RefPtr<PerformanceWorker> pw =
         static_cast<PerformanceWorker*>(mPerformance.get());
     MOZ_ASSERT(pw);
     pw->NoteShuttingDown();
+  }
+}
+
+void WorkerGlobalScope::NoteShuttingDown() {
+  MOZ_ASSERT(IsDying());
+  LOG(("WorkerGlobalScope::NoteShuttingDown [%p]", this));
+
+  if (mNavigator) {
+    mNavigator->Invalidate();
+    mNavigator = nullptr;
   }
 }
 
