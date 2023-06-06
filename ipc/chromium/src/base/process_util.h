@@ -16,7 +16,7 @@
 #  include "mozilla/ipc/EnvironmentMap.h"
 #  include <windows.h>
 #  include <tlhelp32.h>
-#elif defined(OS_LINUX) || defined(__GLIBC__)
+#elif defined(XP_LINUX) || defined(__GLIBC__)
 #  include <dirent.h>
 #  include <limits.h>
 #  include <sys/types.h>
@@ -163,7 +163,7 @@ struct LaunchOptions {
   bool use_forkserver = false;
 #endif
 
-#if defined(OS_LINUX)
+#if defined(XP_LINUX)
   struct ForkDelegate {
     virtual ~ForkDelegate() {}
     virtual pid_t Fork() = 0;

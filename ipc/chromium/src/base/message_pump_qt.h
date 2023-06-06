@@ -37,7 +37,7 @@ class MessagePumpQt : public QObject {
 };
 
 // This class implements a MessagePump needed for TYPE_UI MessageLoops on
-// OS_LINUX platforms using QApplication event loop
+// XP_LINUX platforms using QApplication event loop
 class MessagePumpForUI : public MessagePump {
  public:
   MessagePumpForUI();

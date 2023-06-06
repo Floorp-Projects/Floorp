@@ -21,7 +21,7 @@ typedef struct _GSource GSource;
 namespace base {
 
 // This class implements a MessagePump needed for TYPE_UI MessageLoops on
-// OS_LINUX platforms using GLib.
+// XP_LINUX platforms using GLib.
 class MessagePumpForUI : public MessagePump {
  public:
   // Observer is notified prior to a GdkEvent event being dispatched. As

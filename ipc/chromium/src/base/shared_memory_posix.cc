@@ -16,7 +16,7 @@
 #  include "mozilla/Ashmem.h"
 #endif
 
-#ifdef OS_LINUX
+#ifdef XP_LINUX
 #  include "linux_memfd_defs.h"
 #endif
 #ifdef MOZ_WIDGET_GTK
@@ -152,7 +152,7 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
 // filesystem.  It first appeared in Linux 3.17, and was adopted by
 // FreeBSD in version 13.
 
-#  if !defined(HAVE_MEMFD_CREATE) && defined(OS_LINUX) && \
+#  if !defined(HAVE_MEMFD_CREATE) && defined(XP_LINUX) && \
       defined(SYS_memfd_create)
 
 // Older libc versions (e.g., glibc before 2.27) don't have the
@@ -283,7 +283,7 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
   if (const char* snap = mozilla::widget::GetSnapInstanceName()) {
     StringAppendF(str, "snap.%s.", snap);
   }
-#  endif  // OS_LINUX
+#  endif  // XP_LINUX
   // Hopefully the "implementation defined" name length limit is long
   // enough for this.
   StringAppendF(str, "org.mozilla.ipc.%d.", static_cast<int>(pid));

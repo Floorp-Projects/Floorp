@@ -102,7 +102,7 @@ bool AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
   fflush(stdout);
   fflush(stderr);
 
-#  ifdef OS_LINUX
+#  ifdef XP_LINUX
   pid_t pid = options.fork_delegate ? options.fork_delegate->Fork() : fork();
   // WARNING: if pid == 0, only async signal safe operations are permitted from
   // here until exec or _exit.
@@ -265,7 +265,7 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   const char* gcov_child_prefix = PR_GetEnv("GCOV_CHILD_PREFIX");
 #endif
 
-#ifdef OS_LINUX
+#ifdef XP_LINUX
   pid_t pid = options.fork_delegate ? options.fork_delegate->Fork() : fork();
   // WARNING: if pid == 0, only async signal safe operations are permitted from
   // here until exec or _exit.
