@@ -231,8 +231,7 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
   // Disallow creating new wrappers if we nuked the object's realm or the
   // current compartment.
   if (!AllowNewWrapper(this, obj)) {
-    obj.set(NewDeadProxyObject(cx, IsCallableFlag(obj->isCallable()),
-                               IsConstructorFlag(obj->isConstructor())));
+    obj.set(NewDeadProxyObject(cx, obj));
     return !!obj;
   }
 
