@@ -644,4 +644,31 @@ MFBT_API MOZ_NORETURN MOZ_COLD void InvalidArrayIndex_CRASH(size_t aIndex,
 }  // namespace mozilla::detail
 #endif  // __cplusplus
 
+/*
+ * Provide a fake default value to be used when a value is required but none can
+ * sensibily be provided without adding undefined behavior or security issues.
+ *
+ * This function asserts and aborts if it ever executed.
+ *
+ * Example usage:
+ *
+ *   class Trooper {
+ *     const Droid& lookFor;
+ *     Trooper() : lookFor(MakeCompilerAssumeUnreachableFakeValue<
+                           const Droid&>()) {
+ *       // The class might be instantiated due to existing caller
+ *       // but this never happens in practice.
+ *     }
+ *   };
+ *
+ */
+#ifdef __cplusplus
+namespace mozilla {
+template <typename T>
+static inline T MakeCompilerAssumeUnreachableFakeValue() {
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE();
+}
+}  // namespace mozilla
+#endif  // __cplusplus
+
 #endif /* mozilla_Assertions_h */
