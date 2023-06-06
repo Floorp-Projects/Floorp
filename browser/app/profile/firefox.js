@@ -2198,13 +2198,9 @@ pref("browser.migrate.opera-gx.enabled", true);
 pref("browser.migrate.safari.enabled", true);
 pref("browser.migrate.vivaldi.enabled", true);
 
-#ifdef NIGHTLY_BUILD
 pref("browser.migrate.content-modal.enabled", true);
-#else
-pref("browser.migrate.content-modal.enabled", false);
-#endif
+pref("browser.migrate.content-modal.import-all.enabled", true);
 
-pref("browser.migrate.content-modal.import-all.enabled", false);
 // Values can be: "default", "autoclose", "standalone".
 pref("browser.migrate.content-modal.about-welcome-behavior", "default");
 
