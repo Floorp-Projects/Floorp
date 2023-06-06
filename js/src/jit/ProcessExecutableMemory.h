@@ -63,7 +63,6 @@ static const size_t MaxCodeBytesPerBuffer = MaxCodeBytesPerProcess;
 static const size_t ExecutableCodePageSize = 64 * 1024;
 
 enum class ProtectionSetting {
-  Protected,  // Not readable, writable, or executable.
   Writable,
   Executable,
 };
