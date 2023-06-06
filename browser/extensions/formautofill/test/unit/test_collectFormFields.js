@@ -585,8 +585,8 @@ function verifyDetails(handlerDetails, testCaseDetails) {
       "contactType"
     );
     Assert.equal(
-      detail.elementWeakRef.get(),
-      testCaseDetails[index].elementWeakRef.get(),
+      detail.element,
+      testCaseDetails[index].elementWeakRef.deref(),
       "DOM reference"
     );
   });
@@ -610,7 +610,7 @@ for (let tc of TESTCASES) {
         let elementRef = doc.getElementById(
           testcase.ids?.[idx] ?? field.fieldName
         );
-        field.elementWeakRef = Cu.getWeakReference(elementRef);
+        field.elementWeakRef = new WeakRef(elementRef);
       });
 
       let form = doc.querySelector("form");

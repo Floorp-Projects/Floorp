@@ -104,7 +104,7 @@ add_task(async function do_test() {
 
     handler.activeSection.clearPopulatedForm();
     handler.activeSection.fieldDetails.forEach(detail => {
-      let element = detail.elementWeakRef.get();
+      let element = detail.element;
       let id = element.id;
       Assert.equal(
         element.value,

@@ -260,7 +260,7 @@ for (let localeTests of TESTCASES) {
               handler.activeSection._cacheValue.matchingSelectOption.get(
                 select
               );
-            let targetOption = cache[value] && cache[value].get();
+            let targetOption = cache[value] && cache[value].deref();
             Assert.notEqual(targetOption, null);
 
             Assert.equal(targetOption, expectedOption);
