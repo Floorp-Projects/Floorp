@@ -204,6 +204,7 @@
 #include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/Token.h"
 #include "frontend/TokenKind.h"
+#include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
 #include "js/CompileOptions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/HashTable.h"             // js::HashMap
@@ -573,7 +574,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   StrictModeGetter* const strictModeGetter_;
 
   /** Input filename or null. */
-  const char* const filename_;
+  JS::ConstUTF8CharsZ filename_;
 
   // Column number computation fields.
 
@@ -1020,7 +1021,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   const JS::ReadOnlyCompileOptions& options() const { return options_; }
 
-  const char* getFilename() const { return filename_; }
+  JS::ConstUTF8CharsZ getFilename() const { return filename_; }
 };
 
 constexpr char16_t CodeUnitValue(char16_t unit) { return unit; }
