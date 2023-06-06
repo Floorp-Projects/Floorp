@@ -258,21 +258,19 @@ ScriptLoader::~ScriptLoader() {
 void ScriptLoader::SetGlobalObject(nsIGlobalObject* aGlobalObject) {
   if (!aGlobalObject) {
     // The document is being detached.
-    CancelAndClearScriptLoadRequests();
     return;
   }
 
   MOZ_ASSERT(!HasPendingRequests());
 
-  if (!mModuleLoader) {
-    // The module loader is associated with a global object, so don't create it
-    // until we have a global set.
-    mModuleLoader = new ModuleLoader(this, aGlobalObject, ModuleLoader::Normal);
+  if (mModuleLoader) {
+    MOZ_ASSERT(mModuleLoader->GetGlobalObject() == aGlobalObject);
+    return;
   }
 
-  MOZ_ASSERT(mModuleLoader->GetGlobalObject() == aGlobalObject);
-  MOZ_ASSERT(aGlobalObject->GetModuleLoader(dom::danger::GetJSContext()) ==
-             mModuleLoader);
+  // The module loader is associated with a global object, so don't create it
+  // until we have a global set.
+  mModuleLoader = new ModuleLoader(this, aGlobalObject, ModuleLoader::Normal);
 }
 
 void ScriptLoader::RegisterContentScriptModuleLoader(ModuleLoader* aLoader) {
@@ -1429,10 +1427,6 @@ void ScriptLoader::CancelAndClearScriptLoadRequests() {
   mNonAsyncExternalScriptInsertedRequests.CancelRequestsAndClear();
   mXSLTRequests.CancelRequestsAndClear();
   mOffThreadCompilingRequests.CancelRequestsAndClear();
-
-  if (mModuleLoader) {
-    mModuleLoader->CancelAndClearDynamicImports();
-  }
 
   for (ModuleLoader* loader : mWebExtModuleLoaders) {
     loader->CancelAndClearDynamicImports();
