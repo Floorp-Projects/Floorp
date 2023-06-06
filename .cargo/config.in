@@ -20,6 +20,11 @@ git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/franziskuskiefer/cose-rust?rev=43c22248d136c8b38fe42ea709d08da6355cf04b"]
+git = "https://github.com/franziskuskiefer/cose-rust"
+rev = "43c22248d136c8b38fe42ea709d08da6355cf04b"
+replace-with = "vendored-sources"
+
 [source."git+https://github.com/gfx-rs/d3d12-rs?rev=b940b1d71"]
 git = "https://github.com/gfx-rs/d3d12-rs"
 rev = "b940b1d71"

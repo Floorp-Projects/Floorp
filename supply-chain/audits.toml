@@ -725,6 +725,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.11 -> 0.2.12"
 
+[[audits.cose]]
+who = "Mathew Hodson <mathew.hodson@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.4 -> 0.1.4@git:43c22248d136c8b38fe42ea709d08da6355cf04b"
+
 [[audits.cpufeatures]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

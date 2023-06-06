@@ -33,7 +33,7 @@ macro_rules! unpack {
                 cbor_object
             }
             _ => return Err(CoseError::UnexpectedType),
-        };
+        }
     )
 }
 
