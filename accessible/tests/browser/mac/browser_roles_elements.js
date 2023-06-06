@@ -223,7 +223,7 @@ addAccessibleTask(
       accDoc,
       "meter",
       "AXLevelIndicator",
-      null,
+      "AXMeter",
       "level indicator"
     );
     testRoleAndSubRole(accDoc, "sub", "AXGroup", "AXSubscriptStyleGroup");
