@@ -22,8 +22,6 @@ class TransformReferenceBox;
 
 namespace mozilla {
 
-using RayFunction = StyleRayFunction<StyleAngle>;
-
 namespace layers {
 class MotionPathData;
 class PathCommand;
@@ -70,7 +68,7 @@ struct OffsetPathData {
   };
 
   struct RayData {
-    const RayFunction* mRay;
+    const StyleRayFunction* mRay;
     RayReferenceData mData;
   };
 
@@ -87,11 +85,12 @@ struct OffsetPathData {
     return OffsetPathData(std::move(aGfxPath),
                           !path.empty() && path.rbegin()->IsClosePath());
   }
-  static OffsetPathData Ray(const RayFunction& aRay,
+  static OffsetPathData Ray(const StyleRayFunction& aRay,
                             const RayReferenceData& aData) {
     return OffsetPathData(&aRay, aData);
   }
-  static OffsetPathData Ray(const RayFunction& aRay, RayReferenceData&& aData) {
+  static OffsetPathData Ray(const StyleRayFunction& aRay,
+                            RayReferenceData&& aData) {
     return OffsetPathData(&aRay, std::move(aData));
   }
 
@@ -152,9 +151,9 @@ struct OffsetPathData {
   OffsetPathData() : mType(Type::None) {}
   OffsetPathData(already_AddRefed<gfx::Path>&& aPath, bool aIsClosed)
       : mType(Type::Path), mPath{std::move(aPath), aIsClosed} {}
-  OffsetPathData(const RayFunction* aRay, RayReferenceData&& aRef)
+  OffsetPathData(const StyleRayFunction* aRay, RayReferenceData&& aRef)
       : mType(Type::Ray), mRay{aRay, std::move(aRef)} {}
-  OffsetPathData(const RayFunction* aRay, const RayReferenceData& aRef)
+  OffsetPathData(const StyleRayFunction* aRay, const RayReferenceData& aRef)
       : mType(Type::Ray), mRay{aRay, aRef} {}
   OffsetPathData& operator=(const OffsetPathData&) = delete;
   OffsetPathData& operator=(OffsetPathData&&) = delete;
