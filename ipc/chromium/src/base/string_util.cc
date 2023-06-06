@@ -623,7 +623,7 @@ void SplitString(const std::string& str, char s, std::vector<std::string>* r) {
 
 // XXX Sigh.
 
-#if !defined(ARCH_CPU_64_BITS)
+#if !defined(HAVE_64BIT_BUILD)
 bool StringToInt(const std::string& input, int* output) {
   COMPILE_ASSERT(sizeof(int) == sizeof(long), cannot_strtol_to_int);
   return StringToNumber<StringToLongTraits>(input,
@@ -656,7 +656,7 @@ bool StringToInt(const string16& input, int* output) {
   *output = static_cast<int>(tmp);
   return true;
 }
-#endif  //  !defined(ARCH_CPU_64_BITS)
+#endif  //  !defined(HAVE_64BIT_BUILD)
 
 bool StringToInt64(const std::string& input, int64_t* output) {
   return StringToNumber<StringToInt64Traits>(input, output);

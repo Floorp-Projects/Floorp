@@ -461,7 +461,7 @@ void Pickle::BeginWrite(uint32_t length) {
 
   DCHECK(intptr_t(header_) % sizeof(memberAlignmentType) == 0);
 
-#ifdef ARCH_CPU_64_BITS
+#ifdef HAVE_64BIT_BUILD
   DCHECK_LE(length, std::numeric_limits<uint32_t>::max());
 #endif
 
