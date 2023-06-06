@@ -498,7 +498,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(FrontendContext* fc,
     : fc(fc),
       options_(options),
       strictModeGetter_(smg),
-      filename_(options.filename().c_str()),
+      filename_(options.filename()),
       longLineColumnInfo_(fc),
       srcCoords(fc, options.lineno, options.scriptSourceOffset),
       lineno(options.lineno),
@@ -1035,8 +1035,8 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
 
-    if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename(), 0, line,
-                             column, GetErrorMessage, nullptr,
+    if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename().c_str(), 0,
+                             line, column, GetErrorMessage, nullptr,
                              JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
       break;
     }
@@ -1576,7 +1576,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::seekTo(
 void TokenStreamAnyChars::computeErrorMetadataNoOffset(
     ErrorMetadata* err) const {
   err->isMuted = mutedErrors;
-  err->filename = JS::ConstUTF8CharsZ(filename_);
+  err->filename = filename_;
   err->lineNumber = 0;
   err->columnNumber = 0;
 
@@ -1604,7 +1604,7 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
   }
 
   // Otherwise use this TokenStreamAnyChars's location information.
-  err->filename = JS::ConstUTF8CharsZ(filename_);
+  err->filename = filename_;
   return true;
 }
 
