@@ -8,6 +8,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.arbitrary]]
+version = "1.3.0"
+when = "2023-03-13"
+user-id = 696
+user-login = "fitzgen"
+user-name = "Nick Fitzgerald"
+
 [[publisher.async-trait]]
 version = "0.1.68"
 when = "2023-03-24"
@@ -98,6 +105,13 @@ when = "2021-02-14"
 user-id = 5946
 user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
+
+[[publisher.derive_arbitrary]]
+version = "1.3.0"
+when = "2023-03-13"
+user-id = 696
+user-login = "fitzgen"
+user-name = "Nick Fitzgerald"
 
 [[publisher.dogear]]
 version = "0.4.0"
@@ -547,11 +561,21 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
-[[audits.bytecode-alliance.audits.arbitrary]]
+[[audits.bytecode-alliance.wildcard-audits.arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
-version = "1.1.0"
-notes = "I am the author of this crate."
+user-id = 696 # Nick Fitzgerald (fitzgen)
+start = "2020-01-14"
+end = "2024-04-21"
+notes = "I am an author of this crate."
+
+[[audits.bytecode-alliance.wildcard-audits.derive_arbitrary]]
+who = "Nick Fitzgerald <fitzgen@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 696 # Nick Fitzgerald (fitzgen)
+start = "2020-01-14"
+end = "2024-04-27"
+notes = "I am an author of this crate"
 
 [[audits.bytecode-alliance.audits.arrayref]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
@@ -616,12 +640,6 @@ notes = "This library uses `forbid(unsafe_code)` and has no filesystem or networ
 who = "Benjamin Bouvier <public@benj.me>"
 criteria = "safe-to-deploy"
 version = "0.1.3"
-
-[[audits.bytecode-alliance.audits.derive_arbitrary]]
-who = "Nick Fitzgerald <fitzgen@gmail.com>"
-criteria = "safe-to-deploy"
-version = "1.1.0"
-notes = "I am the author of this crate."
 
 [[audits.bytecode-alliance.audits.foreign-types]]
 who = "Pat Hickey <phickey@fastly.com>"

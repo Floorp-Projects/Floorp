@@ -20,11 +20,27 @@ Released YYYY-MM-DD.
 
 ### Fixed
 
-* (Included in `arbitrary_derive`  1.2.1) Fixed bug in Derive macro around `no_std` path uses [#131](https://github.com/rust-fuzz/arbitrary/pull/131)
+* TODO (or remove section if none)
 
 ### Security
 
 * TODO (or remove section if none)
+
+--------------------------------------------------------------------------------
+
+## 1.3.0
+
+Released 2023-03-13.
+
+### Added
+
+* Added the ability to manually specify derived trait bounds for
+  `Arbitrary`. See [#138](https://github.com/rust-fuzz/arbitrary/pull/138) for
+  details.
+
+### Fixed
+
+* Fixed minimal versions correctness for `syn`.
 
 --------------------------------------------------------------------------------
 

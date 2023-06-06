@@ -1338,5 +1338,56 @@ mod test {
 ///     x: i32,
 /// }
 /// ```
+///
+/// Multiple conflicting bounds at the container-level:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// #[arbitrary(bound = "T: Default")]
+/// #[arbitrary(bound = "T: Default")]
+/// struct Point<T: Default> {
+///     #[arbitrary(default)]
+///     x: T,
+/// }
+/// ```
+///
+/// Multiple conflicting bounds in a single bound attribute:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// #[arbitrary(bound = "T: Default, T: Default")]
+/// struct Point<T: Default> {
+///     #[arbitrary(default)]
+///     x: T,
+/// }
+/// ```
+///
+/// Multiple conflicting bounds in multiple bound attributes:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// #[arbitrary(bound = "T: Default", bound = "T: Default")]
+/// struct Point<T: Default> {
+///     #[arbitrary(default)]
+///     x: T,
+/// }
+/// ```
+///
+/// Too many bounds supplied:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// #[arbitrary(bound = "T: Default")]
+/// struct Point {
+///     x: i32,
+/// }
+/// ```
+///
+/// Too many bounds supplied across multiple attributes:
+/// ```compile_fail
+/// #[derive(::arbitrary::Arbitrary)]
+/// #[arbitrary(bound = "T: Default")]
+/// #[arbitrary(bound = "U: Default")]
+/// struct Point<T: Default> {
+///     #[arbitrary(default)]
+///     x: T,
+/// }
+/// ```
 #[cfg(all(doctest, feature = "derive"))]
 pub struct CompileFailTests;

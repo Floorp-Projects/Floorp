@@ -1,9 +1,7 @@
-use proc_macro2::{Group, Span, TokenStream, TokenTree};
+use crate::ARBITRARY_ATTRIBUTE_NAME;
+use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::quote;
 use syn::{spanned::Spanned, *};
-
-/// Used to filter out necessary field attribute and within error messages.
-static ARBITRARY_ATTRIBUTE_NAME: &str = "arbitrary";
 
 /// Determines how a value for a field should be constructed.
 #[cfg_attr(test, derive(Debug))]
@@ -35,7 +33,7 @@ fn fetch_attr_from_field(field: &Field) -> Result<Option<&Attribute>> {
         .attrs
         .iter()
         .filter(|a| {
-            let path = &a.path;
+            let path = a.path();
             let name = quote!(#path).to_string();
             name == ARBITRARY_ATTRIBUTE_NAME
         })
@@ -51,38 +49,28 @@ fn fetch_attr_from_field(field: &Field) -> Result<Option<&Attribute>> {
 }
 
 fn parse_attribute(attr: &Attribute) -> Result<FieldConstructor> {
-    let group = {
-        let mut tokens_iter = attr.clone().tokens.into_iter();
-        let token = tokens_iter.next().ok_or_else(|| {
-            let msg = format!("#[{ARBITRARY_ATTRIBUTE_NAME}] cannot be empty.");
-            syn::Error::new(attr.span(), msg)
-        })?;
-        match token {
-            TokenTree::Group(g) => g,
-            t => {
-                let msg = format!("#[{ARBITRARY_ATTRIBUTE_NAME}] must contain a group, got: {t})");
-                return Err(syn::Error::new(attr.span(), msg));
-            }
-        }
-    };
-    parse_attribute_internals(group)
+    if let Meta::List(ref meta_list) = attr.meta {
+        parse_attribute_internals(meta_list)
+    } else {
+        let msg = format!("#[{ARBITRARY_ATTRIBUTE_NAME}] must contain a group");
+        Err(syn::Error::new(attr.span(), msg))
+    }
 }
 
-fn parse_attribute_internals(group: Group) -> Result<FieldConstructor> {
-    let stream = group.stream();
-    let mut tokens_iter = stream.into_iter();
+fn parse_attribute_internals(meta_list: &MetaList) -> Result<FieldConstructor> {
+    let mut tokens_iter = meta_list.tokens.clone().into_iter();
     let token = tokens_iter.next().ok_or_else(|| {
         let msg = format!("#[{ARBITRARY_ATTRIBUTE_NAME}] cannot be empty.");
-        syn::Error::new(group.span(), msg)
+        syn::Error::new(meta_list.span(), msg)
     })?;
     match token.to_string().as_ref() {
         "default" => Ok(FieldConstructor::Default),
         "with" => {
-            let func_path = parse_assigned_value("with", tokens_iter, group.span())?;
+            let func_path = parse_assigned_value("with", tokens_iter, meta_list.span())?;
             Ok(FieldConstructor::With(func_path))
         }
         "value" => {
-            let value = parse_assigned_value("value", tokens_iter, group.span())?;
+            let value = parse_assigned_value("value", tokens_iter, meta_list.span())?;
             Ok(FieldConstructor::Value(value))
         }
         _ => {
