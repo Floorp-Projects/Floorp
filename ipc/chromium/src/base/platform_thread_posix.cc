@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <sched.h>
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
 #  include <mach/mach.h>
 #elif defined(OS_NETBSD)
 #  include <lwp.h>
@@ -18,7 +18,7 @@
 #  include <sys/prctl.h>
 #endif
 
-#if !defined(OS_MACOSX)
+#if !defined(XP_DARWIN)
 #  include <unistd.h>
 #endif
 
@@ -28,7 +28,7 @@
 
 #include "nsThreadUtils.h"
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
 namespace base {
 void InitThreading();
 }  // namespace base
@@ -45,7 +45,7 @@ static void* ThreadFunc(void* closure) {
 PlatformThreadId PlatformThread::CurrentId() {
   // Pthreads doesn't have the concept of a thread ID, so we have to reach down
   // into the kernel.
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   mach_port_t port = mach_thread_self();
   mach_port_deallocate(mach_task_self(), port);
   return port;
@@ -80,7 +80,7 @@ void PlatformThread::Sleep(int duration_ms) {
     sleep_time = remaining;
 }
 
-#ifndef OS_MACOSX
+#ifndef XP_DARWIN
 // Mac is implemented in platform_thread_mac.mm.
 
 // static
@@ -96,16 +96,16 @@ void PlatformThread::SetName(const char* name) {
   // retrieve it using PR_GetThreadName.
   NS_SetCurrentThreadName(name);
 }
-#endif  // !OS_MACOSX
+#endif  // !XP_DARWIN
 
 namespace {
 
 bool CreateThread(size_t stack_size, bool joinable,
                   PlatformThread::Delegate* delegate,
                   PlatformThreadHandle* thread_handle) {
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   base::InitThreading();
-#endif  // OS_MACOSX
+#endif  // XP_DARWIN
 
   bool success = false;
   pthread_attr_t attributes;

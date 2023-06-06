@@ -61,14 +61,14 @@ namespace base {
 // converters, and implementing the one that doesn't exist for OS X
 // and Windows.
 
-#if !defined(OS_MACOSX) && !defined(XP_WIN)
+#if !defined(XP_DARWIN) && !defined(XP_WIN)
 std::string SysWideToUTF8(const std::wstring& wide) {
   // FIXME/cjones: do this with iconv
   return GhettoStringConvert<std::wstring, std::string>(wide);
 }
 #endif
 
-#if !defined(OS_MACOSX) && !defined(XP_WIN)
+#if !defined(XP_DARWIN) && !defined(XP_WIN)
 std::wstring SysUTF8ToWide(const StringPiece& utf8) {
   // FIXME/cjones: do this with iconv
   return GhettoStringConvert<StringPiece, std::wstring>(utf8);

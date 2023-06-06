@@ -69,7 +69,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     return pipe_ == -1;
   }
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   void SetOtherMachTask(task_t task) MOZ_EXCLUDES(SendMutex());
 
   void StartAcceptingMachPorts(Mode mode) MOZ_EXCLUDES(SendMutex());
@@ -101,7 +101,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   virtual void OnFileCanReadWithoutBlocking(int fd) override;
   virtual void OnFileCanWriteWithoutBlocking(int fd) override;
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   void CloseDescriptors(uint32_t pending_fd_id) MOZ_REQUIRES(IOThread())
       MOZ_EXCLUDES(SendMutex());
 
@@ -198,7 +198,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // record this when generating logs of IPC messages.
   int32_t other_pid_ MOZ_GUARDED_BY(chan_cap_) = -1;
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   struct PendingDescriptors {
     uint32_t id;
     nsTArray<mozilla::UniqueFileHandle> handles;

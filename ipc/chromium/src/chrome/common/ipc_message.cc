@@ -33,7 +33,7 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
   header()->num_handles = 0;
   header()->txid = -1;
   header()->seqno = 0;
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   header()->cookie = 0;
   header()->num_send_rights = 0;
 #endif
@@ -158,7 +158,7 @@ void Message::SetAttachedPorts(nsTArray<mozilla::ipc::ScopedPort> ports) {
   attached_ports_ = std::move(ports);
 }
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
 bool Message::WriteMachSendRight(mozilla::UniqueMachSendRight port) {
   uint32_t index = attached_send_rights_.Length();
   WriteUInt32(index);

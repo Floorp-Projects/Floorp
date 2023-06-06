@@ -6,7 +6,7 @@
 
 #include "base/time.h"
 
-#ifdef OS_MACOSX
+#ifdef XP_DARWIN
 #  include <mach/mach_time.h>
 #endif
 #include <sys/time.h>
@@ -151,7 +151,7 @@ void Time::Explode(bool is_local, Exploded* exploded) const {
 TimeTicks TimeTicks::Now() {
   uint64_t absolute_micro;
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
   static mach_timebase_info_data_t timebase_info;
   if (timebase_info.denom == 0) {
     // Zero-initialization of statics guarantees that denom will be 0 before

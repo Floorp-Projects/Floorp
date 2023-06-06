@@ -20,7 +20,7 @@
 #  include <dirent.h>
 #  include <limits.h>
 #  include <sys/types.h>
-#elif defined(OS_MACOSX)
+#elif defined(XP_DARWIN)
 #  include <mach/mach.h>
 #endif
 
@@ -49,7 +49,7 @@ class FileDescriptor;
 }  // namespace mozilla
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(XP_DARWIN)
 struct kinfo_proc;
 #endif
 
@@ -174,7 +174,7 @@ struct LaunchOptions {
   mozilla::UniquePtr<ForkDelegate> fork_delegate = nullptr;
 #endif
 
-#ifdef OS_MACOSX
+#ifdef XP_DARWIN
   // On macOS 10.14+, disclaims responsibility for the child process
   // with respect to privacy/security permission prompts and
   // decisions.  Ignored if not supported by the OS.
@@ -185,7 +185,7 @@ struct LaunchOptions {
   // processes from arm64 parent processes.
   uint32_t arch = PROCESS_ARCH_INVALID;
 #  endif  // __aarch64__
-#endif    // OS_MACOSX
+#endif    // XP_DARWIN
 };
 
 #if defined(XP_WIN)
