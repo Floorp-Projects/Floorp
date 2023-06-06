@@ -19,7 +19,7 @@ The service for managing state associated with IdentityCredentials is ``Identity
 
 The UI panel is spread around a little. The actual DOM elements are in the HTML subtree with root at ``#identity-credential-notification`` in ``browser/base/content/popup-notifications.inc``. But the CSS describing it is spread through ``browser/themes/shared/customizableui/panelUI-shared.css``, ``browser/themes/shared/identity-credential-notification.css``, and ``browser/themes/shared/notification-icons.css``. Generally speaking, search for ``identity-credential`` in those files to find the relevant ids and classes.
 
-Temporary content strings, which will be moved when included in i18n: ``browser/components/credentialmanager/identityCredentialNotification.ftl``, for now. This will eventually be moved to ``browser/locales/en-US/browser/``.
+Content strings: ``browser/locales/en-US/browser/identityCredentialNotification.ftl``.
 
 All of this is entered from the ``navigator.credentials`` object, implemented in ``dom/credentialmanagement/CredentialsContainer.{cpp,h}``.
 
