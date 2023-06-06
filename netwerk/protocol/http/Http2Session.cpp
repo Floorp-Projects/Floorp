@@ -2145,6 +2145,9 @@ nsresult Http2Session::RecvPing(Http2Session* self) {
   if (self->mInputFrameFlags & kFlag_ACK) {
     // presumably a reply to our timeout ping.. don't reply to it
     self->mPingSentEpoch = 0;
+    // We need to reset mPreviousUsed. If we don't, the next time
+    // Http2Session::SendPing is called, it will have no effect.
+    self->mPreviousUsed = false;
   } else {
     // reply with a ack'd ping
     self->GeneratePing(true);
@@ -4328,6 +4331,7 @@ nsresult Http2Session::PushBack(const char* buf, uint32_t len) {
 
 void Http2Session::SendPing() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  LOG(("Http2Session::SendPing %p mPreviousUsed=%d", this, mPreviousUsed));
 
   if (mPreviousUsed) {
     // alredy in progress, get out
