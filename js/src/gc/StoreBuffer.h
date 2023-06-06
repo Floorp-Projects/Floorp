@@ -439,7 +439,7 @@ class StoreBuffer {
   GenericBuffer bufferGeneric;
 
   JSRuntime* runtime_;
-  const Nursery& nursery_;
+  Nursery& nursery_;
 
   bool aboutToOverflow_;
   bool enabled_;
@@ -453,7 +453,7 @@ class StoreBuffer {
   bool markingNondeduplicatable;
 #endif
 
-  explicit StoreBuffer(JSRuntime* rt, const Nursery& nursery);
+  explicit StoreBuffer(JSRuntime* rt, Nursery& nursery);
   [[nodiscard]] bool enable();
 
   void disable();

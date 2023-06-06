@@ -313,15 +313,12 @@ class alignas(TypicalCacheLineSize) Nursery {
     return pretenuringNursery.addressOfAllocatedSites();
   }
 
-  void requestMinorGC(JS::GCReason reason) const;
+  void requestMinorGC(JS::GCReason reason);
 
   bool minorGCRequested() const {
     return minorGCTriggerReason_ != JS::GCReason::NO_REASON;
   }
   JS::GCReason minorGCTriggerReason() const { return minorGCTriggerReason_; }
-  void clearMinorGCRequest() {
-    minorGCTriggerReason_ = JS::GCReason::NO_REASON;
-  }
 
   bool shouldCollect() const;
   bool isNearlyFull() const;
@@ -419,10 +416,11 @@ class alignas(TypicalCacheLineSize) Nursery {
   bool reportPretenuring_;
   size_t reportPretenuringThreshold_;
 
-  // Whether and why a collection of this nursery has been requested. This is
-  // mutable as it is set by the store buffer, which otherwise cannot modify
-  // anything in the nursery.
-  mutable JS::GCReason minorGCTriggerReason_;
+  // Whether and why a collection of this nursery has been requested. When this
+  // happens |prevPosition_| is set to the current position and |position_| set
+  // to the end of the chunk to force the next allocation to fail.
+  JS::GCReason minorGCTriggerReason_;
+  uintptr_t prevPosition_;
 
   // Profiling data.
 

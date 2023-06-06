@@ -488,6 +488,11 @@ bool JSContext::handleInterrupt() {
   return true;
 }
 
+void JSContext::clearPendingInterrupt(js::InterruptReason reason) {
+  // Interrupt bit have already been cleared.
+  interruptBits_ &= ~uint32_t(reason);
+}
+
 bool JSRuntime::setDefaultLocale(const char* locale) {
   if (!locale) {
     return false;

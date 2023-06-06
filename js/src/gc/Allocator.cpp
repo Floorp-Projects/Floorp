@@ -120,14 +120,18 @@ void* GCRuntime::tryNewNurseryCell(JSContext* cx, size_t thingSize,
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   MOZ_ASSERT(cx->zone()->allocKindInNursery(kind));
 
-  void* ptr = cx->nursery().allocateCell(site, thingSize, kind);
+  Nursery& nursery = cx->nursery();
+  void* ptr = nursery.allocateCell(site, thingSize, kind);
   if (ptr) {
     return ptr;
   }
 
   if constexpr (allowGC) {
     if (!cx->suppressGC) {
-      cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
+      JS::GCReason reason = nursery.minorGCRequested()
+                                ? nursery.minorGCTriggerReason()
+                                : JS::GCReason::OUT_OF_NURSERY;
+      cx->runtime()->gc.minorGC(reason);
 
       // Exceeding gcMaxBytes while tenuring can disable the Nursery.
       if (cx->zone()->allocKindInNursery(kind)) {
@@ -164,6 +168,10 @@ template <AllowGC allowGC>
 /* static */
 void* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
                                     size_t thingSize) {
+  if constexpr (allowGC) {
+    gcIfNeededAtAllocation(cx);
+  }
+
   // Bump allocate in the arena's current free-list span.
   Zone* zone = cx->zone();
   void* ptr = zone->arenas.freeLists().allocate(kind);
@@ -219,23 +227,30 @@ void GCRuntime::attemptLastDitchGC(JSContext* cx) {
   lastLastDitchTime = mozilla::TimeStamp::Now();
 }
 
+#ifdef DEBUG
+static bool IsAtomsZoneKind(AllocKind kind) {
+  return kind == AllocKind::ATOM || kind == AllocKind::FAT_INLINE_ATOM ||
+         kind == AllocKind::SYMBOL;
+}
+#endif
+
 template <AllowGC allowGC>
 bool GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind) {
   MOZ_ASSERT_IF(cx->zone()->isAtomsZone(),
-                kind == AllocKind::ATOM || kind == AllocKind::FAT_INLINE_ATOM ||
-                    kind == AllocKind::SYMBOL || kind == AllocKind::JITCODE ||
-                    kind == AllocKind::SCOPE);
-  MOZ_ASSERT_IF(!cx->zone()->isAtomsZone(),
-                kind != AllocKind::ATOM && kind != AllocKind::FAT_INLINE_ATOM);
-  MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
+                IsAtomsZoneKind(kind) || kind == AllocKind::JITCODE);
+  MOZ_ASSERT_IF(!cx->zone()->isAtomsZone(), !IsAtomsZoneKind(kind));
 
   if constexpr (allowGC) {
     // Crash if we could perform a GC action when it is not safe.
     if (!cx->suppressGC) {
       cx->verifyIsSafeToGC();
-    }
 
-    gcIfNeededAtAllocation(cx);
+#ifdef JS_GC_ZEAL
+      if (needZealousGC()) {
+        runDebugGC();
+      }
+#endif
+    }
   }
 
   // For testing out of memory conditions.
@@ -251,17 +266,12 @@ bool GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind) {
   return true;
 }
 
+/* static */
 inline void GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
-#ifdef JS_GC_ZEAL
-  if (needZealousGC()) {
-    runDebugGC();
-  }
-#endif
-
   // Invoking the interrupt callback can fail and we can't usefully
   // handle that here. Just check in case we need to collect instead.
-  if (cx->hasAnyPendingInterrupt()) {
-    gcIfRequested();
+  if (cx->hasPendingInterrupt(InterruptReason::MajorGC)) {
+    cx->runtime()->gc.gcIfRequested();
   }
 }
 
