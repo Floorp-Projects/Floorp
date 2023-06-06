@@ -33,7 +33,7 @@ function isErrorOrException(err) {
   if (!err) {
     return false;
   }
-  if (err instanceof Ci.nsIException) {
+  if (err instanceof SpecialPowers.Ci.nsIException) {
     return true;
   }
   try {
