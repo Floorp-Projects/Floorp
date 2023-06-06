@@ -1,9 +1,9 @@
 [
   {
-    "filename": "host-utils-108.0a1.en-US.win32.tar.gz",
-    "size": 71965836,
+    "filename": "host-utils-116.0a1.en-US.win32.tar.gz",
+    "size": 76138647,
     "algorithm": "sha512",
-    "digest": "8592a8fa0416719b48744aded7739234a4fe47cceeccc6b5dbb95f8d7c63b79ca8bfccab2c7cccd8aceb57413e695b829ed6faa6c9937485eb8bb23324e0a78d",
+    "digest": "6d8d162387ac7cdd751c4ce114821479f2cb8e823cafe445d9ca6b807ed2acbb874c3313a36a281fc0158e456732dcd173dc62c34746eba80ccea52861fff5a4",
     "unpack": true,
     "visibility": "public"
   }
