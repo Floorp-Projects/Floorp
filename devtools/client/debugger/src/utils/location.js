@@ -21,8 +21,6 @@ export function createLocation({
   // Line 0 represents no specific line chosen for action
   line = 0,
   column,
-
-  sourceUrl = "",
 }) {
   return {
     source,
@@ -31,9 +29,6 @@ export function createLocation({
 
     line,
     column,
-
-    // Is this still used anywhere??
-    sourceUrl,
   };
 }
 
@@ -47,11 +42,6 @@ export function debuggerToSourceMapLocation(location) {
     sourceId: location.source.id,
     line: location.line,
     column: location.column,
-
-    // Also add sourceUrl attribute as this may be preserved in jest tests
-    // where we return the exact same object.
-    // This will be removed by bug 1822783.
-    sourceUrl: location.sourceUrl,
   };
 }
 
@@ -124,9 +114,5 @@ export function sourceMapToDebuggerLocation(state, location) {
   return createLocation({
     ...location,
     source,
-
-    // Ensure having location with sourceUrl attribute set.
-    // To be removed in bug 1822783.
-    sourceUrl: source.url,
   });
 }

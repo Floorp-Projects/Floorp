@@ -1064,7 +1064,6 @@ function disableBreakpoint(dbg, source, line, column) {
   column = column || getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
-    sourceUrl: source.url,
     line,
     column,
   });
@@ -1261,7 +1260,6 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   column = column || getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
-    sourceUrl: source.url,
     line,
     column,
   });
