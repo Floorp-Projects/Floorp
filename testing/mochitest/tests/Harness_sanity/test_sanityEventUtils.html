@@ -59,8 +59,10 @@ function starttest() {
         let events = [];
         let listener = event => events.push(event);
         let preventDefault = event => event.preventDefault();
-        $("testMouseEvent").addEventListener("mousedown", listener);
-        $("testMouseEvent").addEventListener("mouseup", listener);
+        // promiseNativeMouseEventAndWaitForEvent uses capturing listeners
+        // internally, so use capturing listeners also here.
+        $("testMouseEvent").addEventListener("mousedown", listener, true);
+        $("testMouseEvent").addEventListener("mouseup", listener, true);
         // Clicking with modifiers may open context menu so that we should prevent to open it.
         window.addEventListener("contextmenu", preventDefault, { capture: true });
         for (const test of [

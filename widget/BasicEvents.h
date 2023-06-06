@@ -64,6 +64,8 @@ struct BaseEventFlags {
   bool mInBubblingPhase : 1;
   // If mInCapturePhase is true, the event is in capture phase or target phase.
   bool mInCapturePhase : 1;
+  // If mInTargetPhase is true, the event is in target phase.
+  bool mInTargetPhase : 1;
   // If mInSystemGroup is true, the event is being dispatched in system group.
   bool mInSystemGroup : 1;
   // If mCancelable is true, the event can be consumed.  I.e., calling
@@ -181,11 +183,6 @@ struct BaseEventFlags {
   bool mPostedToRemoteProcess : 1;
   // If mCameFromAnotherProcess is true, the event came from another process.
   bool mCameFromAnotherProcess : 1;
-
-  // If the event is being handled in target phase, returns true.
-  inline bool InTargetPhase() const {
-    return (mInBubblingPhase && mInCapturePhase);
-  }
 
   /**
    * Helper methods for methods of DOM Event.

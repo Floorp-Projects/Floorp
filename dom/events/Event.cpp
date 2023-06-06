@@ -371,10 +371,8 @@ already_AddRefed<Event> Event::Constructor(EventTarget* aEventTarget,
 }
 
 uint16_t Event::EventPhase() const {
-  // Note, remember to check that this works also
-  // if or when Bug 235441 is fixed.
   if ((mEvent->mCurrentTarget && mEvent->mCurrentTarget == mEvent->mTarget) ||
-      mEvent->mFlags.InTargetPhase()) {
+      mEvent->mFlags.mInTargetPhase) {
     return Event_Binding::AT_TARGET;
   }
   if (mEvent->mFlags.mInCapturePhase) {
