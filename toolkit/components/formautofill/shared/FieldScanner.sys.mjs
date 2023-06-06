@@ -44,7 +44,7 @@ export class FieldDetail {
     fieldName,
     { autocompleteInfo = {}, confidence = null }
   ) {
-    this.elementWeakRef = new WeakRef(element);
+    this.elementWeakRef = Cu.getWeakReference(element);
     this.fieldName = fieldName;
 
     if (autocompleteInfo) {
@@ -61,7 +61,7 @@ export class FieldDetail {
   }
 
   get element() {
-    return this.elementWeakRef.deref();
+    return this.elementWeakRef.get();
   }
 
   get sectionName() {
@@ -94,12 +94,12 @@ export class FieldScanner {
    *        The callback function that is used to infer the field info of a given element
    */
   constructor(elements, inferFieldInfoFn) {
-    this.#elementsWeakRef = new WeakRef(elements);
+    this.#elementsWeakRef = Cu.getWeakReference(elements);
     this.#inferFieldInfoFn = inferFieldInfoFn;
   }
 
   get #elements() {
-    return this.#elementsWeakRef.deref();
+    return this.#elementsWeakRef.get();
   }
 
   /**
