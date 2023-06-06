@@ -125,6 +125,22 @@
       }
     }
 
+    get owner() {
+      let owner = this._owner?.deref();
+      if (owner && !owner.closing) {
+        return owner;
+      }
+      return null;
+    }
+
+    set owner(owner) {
+      if (owner) {
+        this._owner = new WeakRef(owner);
+      } else {
+        this._owner = null;
+      }
+    }
+
     get container() {
       return gBrowser.tabContainer;
     }
