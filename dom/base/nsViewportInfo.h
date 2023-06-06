@@ -59,10 +59,11 @@ class MOZ_STACK_CLASS nsViewportInfo {
   };
   nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize,
                  const mozilla::CSSToScreenScale& aDefaultZoom,
-                 ZoomFlag aZoomFlag, ZoomBehaviour aBehaviour)
+                 ZoomFlag aZoomFlag, ZoomBehaviour aBehaviour,
+                 AutoScaleFlag aAutoScaleFlag = AutoScaleFlag::FixedScale)
       : mDefaultZoom(aDefaultZoom),
         mViewportFit(mozilla::dom::ViewportFitType::Auto),
-        mDefaultZoomValid(true),
+        mDefaultZoomValid(aAutoScaleFlag != AutoScaleFlag::AutoScale),
         mAutoSize(true),
         mAllowZoom(aZoomFlag == ZoomFlag::AllowZoom) {
     mSize = mozilla::ScreenSize(aDisplaySize) / mDefaultZoom;
