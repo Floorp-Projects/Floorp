@@ -511,7 +511,7 @@ def create_parser(mach_interface=False):
         default=[],
         metavar="OPTION",
         help="Alternative methods for summarizing technical and visual pageload metrics. "
-        "Options: geomean, mean.",
+        "Options: median.",
     )
     add_arg(
         "--benchmark-repository",

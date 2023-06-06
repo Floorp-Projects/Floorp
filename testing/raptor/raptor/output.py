@@ -1695,36 +1695,23 @@ class BrowsertimeOutput(PerftestOutput):
 
             return data
 
-        def _process_alt_method(subtest, alternative_method):
-            # Don't filter with less than 10 data points
+        def _process_geomean(subtest):
             data = subtest["replicates"]
-            if len(subtest["replicates"]) > 10:
-                data = _filter_data(data, alternative_method, subtest["name"])
-            if alternative_method == "geomean":
-                subtest["value"] = round(filters.geometric_mean(data), 1)
-            elif alternative_method == "mean":
-                subtest["value"] = round(filters.mean(data), 1)
+            subtest["value"] = round(filters.geometric_mean(data), 1)
+
+        def _process_alt_method(subtest, alternative_method):
+            data = subtest["replicates"]
+            if alternative_method == "median":
+                subtest["value"] = filters.median(data)
 
         # converting suites and subtests into lists, and sorting them
-        def _process(subtest, alternative_method=""):
+        def _process(subtest, method="geomean"):
             if test["type"] == "power":
                 subtest["value"] = filters.mean(subtest["replicates"])
-            elif (
-                subtest["name"] in VISUAL_METRICS
-                or subtest["name"].startswith("perfstat")
-                or subtest["name"] == "cpuTime"
-            ):
-                if alternative_method in ("geomean", "mean"):
-                    _process_alt_method(subtest, alternative_method)
-                else:
-                    subtest["value"] = filters.median(subtest["replicates"])
+            elif method == "geomean":
+                _process_geomean(subtest)
             else:
-                if alternative_method in ("geomean", "mean"):
-                    _process_alt_method(subtest, alternative_method)
-                else:
-                    subtest["value"] = filters.median(
-                        filters.ignore_first(subtest["replicates"], 1)
-                    )
+                _process_alt_method(subtest, method)
             return subtest
 
         def _process_suite(suite):

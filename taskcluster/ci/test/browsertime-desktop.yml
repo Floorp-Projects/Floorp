@@ -96,12 +96,10 @@ browsertime-tp6:
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
                         - --extra-profiler-run
-                        - --extra-summary-methods=geomean
                     default:
                         - --chimera
                         - --conditioned-profile=settled
                         - --extra-profiler-run
-                        - --extra-summary-methods=geomean
         run-on-projects:
             by-subtest:
                 netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
@@ -204,12 +202,10 @@ browsertime-tp6-essential:
                         - --conditioned-profile=settled
                         - --collect-perfstats
                         - --extra-profiler-run
-                        - --extra-summary-methods=geomean
                     default:
                         - --chimera
                         - --conditioned-profile=settled
                         - --extra-profiler-run
-                        - --extra-summary-methods=geomean
         raptor:
             apps: [firefox, chrome, chromium, custom-car]
             test: tp6
