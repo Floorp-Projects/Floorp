@@ -777,10 +777,22 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
   var useGrouping = GetStringOrBooleanOption(
     options,
     "useGrouping",
-    ["min2", "auto", "always"],
-    "always",
-    false,
+    ["min2", "auto", "always", "true", "false"],
     defaultUseGrouping
+  );
+
+  if (useGrouping === "true" || useGrouping === "false") {
+    useGrouping = defaultUseGrouping;
+  } else if (useGrouping === true) {
+    useGrouping = "always";
+  }
+
+  assert(
+    useGrouping === "min2" ||
+    useGrouping === "auto" ||
+    useGrouping === "always" ||
+    useGrouping === false,
+    `invalid 'useGrouping' value: ${useGrouping}`
   );
 #else
   var useGrouping = GetOption(

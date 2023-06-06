@@ -68,24 +68,28 @@ for (let [useGrouping, expected] of [
 
   ["auto", "auto"],
   [undefined, "auto"],
+  ["true", "auto"],
+  ["false", "auto"],
 
   ["always", "always"],
   [true, "always"],
 
   ["min2", "min2"],
-
-  // Unsupported values fallback to "auto"
-  ["true", "auto"],
-  ["false", "auto"],
-  ["none", "auto"],
-  ["yes", "auto"],
-  ["no", "auto"],
-  [{}, "auto"],
-  [123, "auto"],
-  [123n, "auto"],
 ]) {
   let nf = new Intl.NumberFormat("en", {useGrouping});
   assertEq(nf.resolvedOptions().useGrouping , expected);
+}
+
+// Throws a RangeError for unsupported values.
+for (let useGrouping of [
+  "none",
+  "yes",
+  "no",
+  {},
+  123,
+  123n,
+]) {
+  assertThrowsInstanceOf(() => new Intl.NumberFormat("en", {useGrouping}), RangeError);
 }
 
 // Throws a TypeError if ToString fails.
