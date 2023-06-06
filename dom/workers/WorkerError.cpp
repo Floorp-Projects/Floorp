@@ -224,7 +224,7 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
 }  // namespace
 
 void WorkerErrorBase::AssignErrorBase(JSErrorBase* aReport) {
-  CopyUTF8toUTF16(MakeStringSpan(aReport->filename), mFilename);
+  CopyUTF8toUTF16(MakeStringSpan(aReport->filename.c_str()), mFilename);
   mLineNumber = aReport->lineno;
   mColumnNumber = aReport->column;
   mErrorNumber = aReport->errorNumber;

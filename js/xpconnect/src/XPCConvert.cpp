@@ -1159,7 +1159,7 @@ static nsresult JSErrorToXPCException(JSContext* cx, const char* toStringResult,
 
     data = new nsScriptError();
     data->nsIScriptError::InitWithWindowID(
-        bestMessage, NS_ConvertUTF8toUTF16(report->filename),
+        bestMessage, NS_ConvertUTF8toUTF16(report->filename.c_str()),
         linebuf ? nsDependentString(linebuf, report->linebufLength())
                 : EmptyString(),
         report->lineno, report->tokenOffset(), flags, "XPConnect JavaScript"_ns,

@@ -482,7 +482,7 @@ static void PrintSingleError(FILE* file, JS::ConstUTF8CharsZ toStringResult,
                              T* report, PrintErrorKind kind) {
   UniqueChars prefix;
   if (report->filename) {
-    prefix = JS_smprintf("%s:", report->filename);
+    prefix = JS_smprintf("%s:", report->filename.c_str());
   }
 
   if (report->lineno) {
@@ -696,7 +696,7 @@ JSObject* js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report) {
     }
 
     RootedValue filenameVal(cx);
-    if (const char* filename = note->filename) {
+    if (const char* filename = note->filename.c_str()) {
       JS::UTF8Chars utf8chars(filename, strlen(filename));
       Rooted<JSString*> filenameStr(cx, NewStringCopyUTF8N(cx, utf8chars));
       if (!filenameStr) {
