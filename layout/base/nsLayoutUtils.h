@@ -2942,6 +2942,10 @@ class nsLayoutUtils {
   static bool IsInvisibleBreak(nsINode* aNode,
                                nsIFrame** aNextLineFrame = nullptr);
 
+  static nsRect ComputeSVGViewBox(mozilla::dom::SVGViewportElement*);
+
+  static nsRect ComputeHTMLReferenceRect(const nsIFrame*, StyleGeometryBox);
+
   static nsRect ComputeGeometryBox(nsIFrame*, StyleGeometryBox);
 
   static nsRect ComputeGeometryBox(nsIFrame*,

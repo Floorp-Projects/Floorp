@@ -35,7 +35,8 @@ struct ResolvedMotionPathData {
 };
 
 struct RayReferenceData {
-  // The initial position related to the containing block.
+  // The current position of this transfromed box in the coordinate system of
+  // its containing block.
   CSSPoint mInitialPosition;
   // The rect of the containing block.
   CSSRect mContainingBlockRect;
@@ -181,8 +182,8 @@ class MotionPathUtils final {
   static Maybe<ResolvedMotionPathData> ResolveMotionPath(
       const OffsetPathData& aPath, const LengthPercentage& aDistance,
       const StyleOffsetRotate& aRotate, const StylePositionOrAuto& aAnchor,
-      const CSSPoint& aTransformOrigin, TransformReferenceBox&,
-      const CSSPoint& aAnchorPointAdjustment);
+      const StyleOffsetPosition& aPosition, const CSSPoint& aTransformOrigin,
+      TransformReferenceBox&, const CSSPoint& aAnchorPointAdjustment);
 
   /**
    * Generate the motion path transform result with |nsIFrame|. This is only
