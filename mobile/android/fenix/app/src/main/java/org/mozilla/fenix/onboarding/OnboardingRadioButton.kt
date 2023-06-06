@@ -12,6 +12,9 @@ import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.core.content.edit
 import androidx.core.content.withStyledAttributes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.setTextSize
@@ -91,8 +94,10 @@ class OnboardingRadioButton(
         illustration?.let {
             it.isSelected = isChecked
         }
-        context.settings().preferences.edit {
-            putBoolean(context.getString(key), isChecked)
+        CoroutineScope(Dispatchers.IO).launch {
+            context.settings().preferences.edit {
+                putBoolean(context.getString(key), isChecked)
+            }
         }
     }
 
