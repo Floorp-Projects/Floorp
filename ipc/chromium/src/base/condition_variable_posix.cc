@@ -13,7 +13,6 @@
 #include "base/lock.h"
 #include "base/logging.h"
 #include "base/time.h"
-#include "build/build_config.h"
 
 ConditionVariable::ConditionVariable(Lock* user_lock)
     : user_mutex_(user_lock->lock_.native_handle()) {

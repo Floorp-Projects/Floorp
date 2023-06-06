@@ -15,8 +15,6 @@
 #include "base/string_piece.h"
 #include "base/string_util.h"
 
-#include "build/build_config.h"
-
 // FIXME/cjones: these really only pertain to the linux sys string
 // converters.
 #ifdef XP_WIN

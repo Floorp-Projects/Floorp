@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <windows.h>
 
-#include "build/build_config.h"
 #include "mozilla/ipc/EnvironmentMap.h"
 #include "nsCOMPtr.h"
 #include "nsXULAppAPI.h"

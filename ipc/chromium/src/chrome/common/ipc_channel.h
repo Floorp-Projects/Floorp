@@ -11,7 +11,6 @@
 #include <queue>
 #include "base/basictypes.h"
 #include "base/process.h"
-#include "build/build_config.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WeakPtr.h"

@@ -8,7 +8,6 @@
 #define BASE_PORT_H_
 
 #include <stdarg.h>
-#include "build/build_config.h"
 
 #ifdef _MSC_VER
 #  define GG_LONGLONG(x) x##I64

@@ -6,8 +6,6 @@
 
 #include "base/string_util.h"
 
-#include "build/build_config.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>

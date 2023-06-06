@@ -21,7 +21,6 @@
 #include "base/logging.h"
 #include "base/pickle.h"
 #include "base/string_util.h"
-#include "build/build_config.h"
 #include "chrome/common/ipc_message.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerRange.h"
