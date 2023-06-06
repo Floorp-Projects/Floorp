@@ -335,25 +335,25 @@ export class NetworkEventRecord {
       domainLookupStartTime;
 
     // Bug 1805478: Per spec, the origin time should match Performance API's
-    // originTime for the global which initiated the request. This is not
+    // timeOrigin for the global which initiated the request. This is not
     // available in the parent process, so for now we will use 0.
-    const originTime = 0;
+    const timeOrigin = 0;
 
     return {
-      originTime,
-      requestTime: this.#convertTimestamp(channelCreationTime, originTime),
-      redirectStart: this.#convertTimestamp(redirectStartTime, originTime),
-      redirectEnd: this.#convertTimestamp(redirectEndTime, originTime),
-      fetchStart: this.#convertTimestamp(fetchStartTime, originTime),
-      dnsStart: this.#convertTimestamp(domainLookupStartTime, originTime),
-      dnsEnd: this.#convertTimestamp(domainLookupEndTime, originTime),
-      connectStart: this.#convertTimestamp(connectStartTime, originTime),
-      connectEnd: this.#convertTimestamp(connectEndTime, originTime),
-      tlsStart: this.#convertTimestamp(secureConnectionStartTime, originTime),
-      tlsEnd: this.#convertTimestamp(connectEndTime, originTime),
-      requestStart: this.#convertTimestamp(requestStartTime, originTime),
-      responseStart: this.#convertTimestamp(responseStartTime, originTime),
-      responseEnd: this.#convertTimestamp(responseEndTime, originTime),
+      timeOrigin,
+      requestTime: this.#convertTimestamp(channelCreationTime, timeOrigin),
+      redirectStart: this.#convertTimestamp(redirectStartTime, timeOrigin),
+      redirectEnd: this.#convertTimestamp(redirectEndTime, timeOrigin),
+      fetchStart: this.#convertTimestamp(fetchStartTime, timeOrigin),
+      dnsStart: this.#convertTimestamp(domainLookupStartTime, timeOrigin),
+      dnsEnd: this.#convertTimestamp(domainLookupEndTime, timeOrigin),
+      connectStart: this.#convertTimestamp(connectStartTime, timeOrigin),
+      connectEnd: this.#convertTimestamp(connectEndTime, timeOrigin),
+      tlsStart: this.#convertTimestamp(secureConnectionStartTime, timeOrigin),
+      tlsEnd: this.#convertTimestamp(connectEndTime, timeOrigin),
+      requestStart: this.#convertTimestamp(requestStartTime, timeOrigin),
+      responseStart: this.#convertTimestamp(responseStartTime, timeOrigin),
+      responseEnd: this.#convertTimestamp(responseEndTime, timeOrigin),
     };
   }
 
