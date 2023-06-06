@@ -14,6 +14,14 @@ transforms = TransformSequence()
 
 
 @transforms.add
+def set_name_and_clear_artifacts(config, tasks):
+    for task in tasks:
+        task["name"] = task["attributes"]["build-type"]
+        task["attributes"]["artifacts"] = {}
+        yield task
+
+
+@transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
         for key in ("worker.push", "treeherder.symbol"):

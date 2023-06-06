@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: android_taskgraph.loader.all_dep:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
-    - android_taskgraph.transforms.all_dep:transforms
-    - android_taskgraph.transforms.mark_as_shipped:transforms
-    - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.mark_as_shipped
+    - taskgraph.transforms.task
 
 kind-dependencies:
     - post-beetmover
@@ -15,33 +15,35 @@ kind-dependencies:
     # on post-beetmover because they're part of the ship graph while push-apk is in the
     # promote one
 
-primary-dependency: post-beetmover
+tasks:
+    mark-as-shipped:
+        description: Mark Firefox-Android as shipped in ship-it
+        from-deps:
+            with-attributes:
+                build-type:
+                    - beta
+                    - release
+            group-by: build-type
+            unique-kinds: false
+            copy-attributes: true
+        run-on-tasks-for: []
+        worker-type: ship-it
+        scopes:
+            by-level:
+                '3':
+                    - project:releng:ship-it:action:mark-as-shipped
+                    - project:releng:ship-it:server:production
+                default:
+                    - project:releng:ship-it:action:mark-as-shipped
+                    - project:releng:ship-it:server:staging
+        shipping-phase: ship
+        worker: {}
 
-group-by: build-type
-
-only-for-build-types:
-    - beta
-    - release
-
-task-template:
-    description: Mark Firefox-Android as shipped in ship-it
-    worker-type: ship-it
-    scopes:
-        by-level:
-            '3':
-                - project:releng:ship-it:action:mark-as-shipped
-                - project:releng:ship-it:server:production
-            default:
-                - project:releng:ship-it:action:mark-as-shipped
-                - project:releng:ship-it:server:staging
-    shipping-phase: ship
-    worker: {}
-
-    treeherder:
-        symbol:
-            by-build-type:
-                release: mark-shipped-release
-                beta: mark-shipped-beta
-        platform: release/opt
-        kind: build
-        tier: 2
+        treeherder:
+            symbol:
+                by-build-type:
+                    release: mark-shipped-release
+                    beta: mark-shipped-beta
+            platform: release/opt
+            kind: build
+            tier: 2

@@ -2,29 +2,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: android_taskgraph.loader.all_dep:loader
+loader: taskgraph.loader.transform:loader
 
 transforms:
-    - android_taskgraph.transforms.all_dep:transforms
-    - android_taskgraph.transforms.post_dummy:transforms
-    - android_taskgraph.transforms.chunk:transforms
-    - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.post_dummy
+    - android_taskgraph.transforms.chunk
+    - taskgraph.transforms.task
 
 kind-dependencies:
     - beetmover
 
-group-by: build-type
-
-task-template:
-    description: Dummy task to wait on all builds before publishing them
-    worker-type: succeed
-    treeherder:
-        kind: build
-        platform: AC-android-all/opt
-        symbol:
-            by-build-type:
-                release: post-beetmover-release
-                beta: post-beetmover-beta
-                nightly: post-beetmover-nightly
-                default: post-beetmover
-        tier: 1
+tasks:
+    post-beetmover:
+        description: Dummy task to wait on all builds before publishing them
+        from-deps:
+            group-by: build-type
+            unique-kinds: false
+            copy-attributes: true
+        run-on-tasks-for: []
+        attributes:
+            component: all
+        worker-type: succeed
+        treeherder:
+            kind: build
+            platform: AC-android-all/opt
+            symbol:
+                by-build-type:
+                    release: post-beetmover-release
+                    beta: post-beetmover-beta
+                    nightly: post-beetmover-nightly
+                    default: post-beetmover
+            tier: 1

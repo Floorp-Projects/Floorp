@@ -27,6 +27,8 @@ tasks:
             group-by: build-type
             copy-attributes: true
             unique-kinds: false
+        attributes:
+            component: all
         run-on-tasks-for: []
         shipping-phase: ship
         worker-type: tree

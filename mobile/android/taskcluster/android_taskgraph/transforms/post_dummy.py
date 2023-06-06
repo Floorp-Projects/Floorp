@@ -10,14 +10,21 @@ transforms = TransformSequence()
 
 
 @transforms.add
+def set_name_and_clear_artifacts(config, tasks):
+    for task in tasks:
+        task["name"] = task["attributes"]["build-type"]
+        task["attributes"]["artifacts"] = {}
+        yield task
+
+
+@transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        attribute_to_group_by = config.config['group-by']
         resolve_keyed_by(
             task, "treeherder.symbol",
             item_name=task["name"],
             **{
-                attribute_to_group_by: task["attributes"][attribute_to_group_by],
+                "build-type": task["attributes"]["build-type"],
             }
         )
         yield task
