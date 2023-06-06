@@ -47,6 +47,8 @@ class SpeechDispatcherService final : public nsIObserver,
  private:
   virtual ~SpeechDispatcherService();
 
+  void NotifyError(const nsString& aError);
+
   void RegisterVoices();
 
   bool mInitialized;

@@ -322,6 +322,7 @@ void SpeechDispatcherService::Setup() {
 
   if (!speechdLib) {
     NS_WARNING("Failed to load speechd library");
+    NotifyError(u"lib-missing"_ns);
     return;
   }
 
@@ -329,6 +330,7 @@ void SpeechDispatcherService::Setup() {
     // There is no version getter function, so we rely on a symbol that was
     // introduced in release 0.8.2 in order to check for ABI compatibility.
     NS_WARNING("Unsupported version of speechd detected");
+    NotifyError(u"lib-too-old"_ns);
     return;
   }
 
@@ -340,6 +342,7 @@ void SpeechDispatcherService::Setup() {
       NS_WARNING(nsPrintfCString("Failed to find speechd symbol for'%s'",
                                  kSpeechDispatcherSymbols[i].functionName)
                      .get());
+      NotifyError(u"missing-symbol"_ns);
       return;
     }
   }
@@ -348,6 +351,7 @@ void SpeechDispatcherService::Setup() {
       spd_open("firefox", "web speech api", "who", SPD_MODE_THREADED);
   if (!mSpeechdClient) {
     NS_WARNING("Failed to call spd_open");
+    NotifyError(u"open-fail"_ns);
     return;
   }
 
@@ -386,6 +390,10 @@ void SpeechDispatcherService::Setup() {
     }
   }
 
+  if (mVoices.Count() == 0) {
+    NotifyError(u"no-voices"_ns);
+  }
+
   NS_DispatchToMainThread(
       NewRunnableMethod("dom::SpeechDispatcherService::RegisterVoices", this,
                         &SpeechDispatcherService::RegisterVoices));
@@ -394,6 +402,18 @@ void SpeechDispatcherService::Setup() {
 }
 
 // private methods
+
+void SpeechDispatcherService::NotifyError(const nsString& aError) {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NewRunnableMethod<const nsString>(
+        "dom::SpeechDispatcherService::NotifyError", this,
+        &SpeechDispatcherService::NotifyError, aError));
+    return;
+  }
+
+  RefPtr<nsSynthVoiceRegistry> registry = nsSynthVoiceRegistry::GetInstance();
+  DebugOnly<nsresult> rv = registry->NotifyVoicesError(aError);
+}
 
 void SpeechDispatcherService::RegisterVoices() {
   RefPtr<nsSynthVoiceRegistry> registry = nsSynthVoiceRegistry::GetInstance();

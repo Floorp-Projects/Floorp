@@ -82,6 +82,8 @@ FINAL_TARGET_FILES.actors += [
     "ScreenshotsComponentChild.sys.mjs",
     "SearchSERPTelemetryChild.sys.mjs",
     "SearchSERPTelemetryParent.sys.mjs",
+    "SpeechDispatcherChild.sys.mjs",
+    "SpeechDispatcherParent.sys.mjs",
     "SwitchDocumentDirectionChild.sys.mjs",
     "WebRTCChild.sys.mjs",
     "WebRTCParent.sys.mjs",

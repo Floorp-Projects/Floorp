@@ -65,6 +65,8 @@ class nsSynthVoiceRegistry final : public nsISynthVoiceRegistry {
 
   static void RecvNotifyVoicesChanged();
 
+  static void RecvNotifyVoicesError(const nsAString& aError);
+
  private:
   virtual ~nsSynthVoiceRegistry();
 

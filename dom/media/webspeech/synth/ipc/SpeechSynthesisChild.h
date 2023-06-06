@@ -36,6 +36,8 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild {
 
   mozilla::ipc::IPCResult RecvNotifyVoicesChanged();
 
+  mozilla::ipc::IPCResult RecvNotifyVoicesError(const nsAString& aError);
+
  protected:
   SpeechSynthesisChild();
   virtual ~SpeechSynthesisChild();
