@@ -3884,7 +3884,7 @@ static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
   }
 
   note->errorNumber = errorNumber;
-  note->filename = filename;
+  note->filename = JS::ConstUTF8CharsZ(filename);
   note->sourceId = sourceId;
   note->lineno = lineno;
   note->column = column;

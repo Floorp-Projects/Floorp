@@ -56,7 +56,7 @@ void ClonedErrorHolder::Init(JSContext* aCx, JS::Handle<JSObject*> aError,
       mMessage = err->message().c_str();
     }
     if (err->filename) {
-      mFilename = err->filename;
+      mFilename = err->filename.c_str();
     }
     if (err->linebuf()) {
       AppendUTF16toUTF8(

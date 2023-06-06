@@ -189,7 +189,8 @@ void xpc::ErrorBase::Init(JSErrorBase* aReport) {
   if (!aReport->filename) {
     mFileName.SetIsVoid(true);
   } else {
-    CopyUTF8toUTF16(mozilla::MakeStringSpan(aReport->filename), mFileName);
+    CopyUTF8toUTF16(mozilla::MakeStringSpan(aReport->filename.c_str()),
+                    mFileName);
   }
 
   mSourceId = aReport->sourceId;
