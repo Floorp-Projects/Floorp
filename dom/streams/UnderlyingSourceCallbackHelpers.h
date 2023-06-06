@@ -58,8 +58,8 @@ class UnderlyingSourceAlgorithmsBase : public nsISupports {
   // from closed(canceled)/errored streams, without waiting for GC.
   virtual void ReleaseObjects() {}
 
-  // Fetch wants to special-case BodyStream-based streams
-  virtual BodyStreamHolder* GetBodyStreamHolder() { return nullptr; }
+  // Fetch wants to special-case nsIInputStream-based streams
+  virtual nsIInputStream* MaybeGetInputStreamIfUnread() { return nullptr; }
 
   // https://streams.spec.whatwg.org/#other-specs-rs-create
   // By "native" we mean "instances initialized via the above set up or set up
@@ -287,6 +287,11 @@ class NonAsyncInputToReadableStreamAlgorithms
     if (nsCOMPtr<nsIInputStream> input = mInput.forget()) {
       input->Close();
     }
+  }
+
+  nsIInputStream* MaybeGetInputStreamIfUnread() override {
+    MOZ_ASSERT(mInput, "Should be only called on non-disturbed streams");
+    return mInput;
   }
 
  private:
