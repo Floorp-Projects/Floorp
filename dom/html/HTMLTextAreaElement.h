@@ -169,6 +169,12 @@ class HTMLTextAreaElement final : public TextControlElement,
     uint32_t cols = aCols ? aCols : DEFAULT_COLS;
     SetUnsignedIntAttr(nsGkAtoms::cols, cols, DEFAULT_COLS, aError);
   }
+  void GetDirName(nsAString& aValue) {
+    GetHTMLAttr(nsGkAtoms::dirname, aValue);
+  }
+  void SetDirName(const nsAString& aValue, ErrorResult& aError) {
+    SetHTMLAttr(nsGkAtoms::dirname, aValue, aError);
+  }
   bool Disabled() { return GetBoolAttr(nsGkAtoms::disabled); }
   void SetDisabled(bool aDisabled, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aError);

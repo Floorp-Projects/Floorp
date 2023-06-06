@@ -28,8 +28,11 @@ reflectUnsignedInt({
   fallback: true,
 });
 
-todo("dirName" in document.createElement("textarea"),
-     "dirName isn't implemented yet");
+//.dirname
+reflectString({
+  element: document.createElement("textarea"),
+  attribute: "dirName"
+})
 
 // .disabled
 reflectBoolean({
