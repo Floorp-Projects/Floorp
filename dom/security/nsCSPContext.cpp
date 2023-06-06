@@ -380,7 +380,8 @@ nsCSPContext::GetUpgradeInsecureRequests(bool* outUpgradeRequest) {
   *outUpgradeRequest = false;
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     if (mPolicies[i]->hasDirective(
-            nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
+            nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE) &&
+        !mPolicies[i]->getReportOnlyFlag()) {
       *outUpgradeRequest = true;
       return NS_OK;
     }
