@@ -50,6 +50,8 @@
 --nursery-bigints=on
 --spectre-mitigations=off
 --spectre-mitigations=on
+--write-protect-code=off
+--write-protect-code=on
 --more-compartments
 --fast-warmup
 --no-jit-backend

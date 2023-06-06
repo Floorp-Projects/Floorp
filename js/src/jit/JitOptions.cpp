@@ -280,6 +280,10 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(spectreJitToCxxCalls, true);
 #endif
 
+  // Whether the W^X policy is enforced to mark JIT code pages as either
+  // writable or executable but never both at the same time.
+  SET_DEFAULT(writeProtectCode, true);
+
   // This is set to its actual value in InitializeJit.
   SET_DEFAULT(supportsUnalignedAccesses, false);
 
