@@ -156,26 +156,6 @@ class TableAccessibleBase {
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) {}
 
   /**
-   * Select the given column unselecting any other selected columns.
-   */
-  virtual void SelectCol(uint32_t aColIdx) {}
-
-  /**
-   * Select the given row unselecting all other previously selected rows.
-   */
-  virtual void SelectRow(uint32_t aRowIdx) {}
-
-  /**
-   * Unselect the given column leaving other selected columns selected.
-   */
-  virtual void UnselectCol(uint32_t aColIdx) {}
-
-  /**
-   * Unselect the given row leaving other selected rows selected.
-   */
-  virtual void UnselectRow(uint32_t aRowIdx) {}
-
-  /**
    * Return true if the table is probably for layout.
    */
   virtual bool IsProbablyLayoutTable() { return false; }

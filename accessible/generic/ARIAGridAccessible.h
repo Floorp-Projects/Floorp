@@ -44,25 +44,10 @@ class ARIAGridAccessible : public HyperTextAccessibleWrap,
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
-  virtual void SelectCol(uint32_t aColIdx) override;
-  virtual void SelectRow(uint32_t aRowIdx) override;
-  virtual void UnselectCol(uint32_t aColIdx) override;
-  virtual void UnselectRow(uint32_t aRowIdx) override;
   virtual LocalAccessible* AsAccessible() override { return this; }
 
  protected:
   virtual ~ARIAGridAccessible() {}
-
-  /**
-   * Set aria-selected attribute value on DOM node of the given accessible.
-   *
-   * @param  aAccessible  [in] accessible
-   * @param  aIsSelected  [in] new value of aria-selected attribute
-   * @param  aNotify      [in, optional] specifies if DOM should be notified
-   *                       about attribute change (used internally).
-   */
-  nsresult SetARIASelected(LocalAccessible* aAccessible, bool aIsSelected,
-                           bool aNotify = true);
 };
 
 /**

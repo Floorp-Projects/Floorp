@@ -33,24 +33,6 @@
 
       testTableSelection("table", cellsArray);
 
-      var rowCount = 4;
-      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++)
-        testSelectTableRow("table", rowIdx, cellsArray);
-
-      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-        testSelectTableRow("table", rowIdx, cellsArray);
-        testUnselectTableRow("table", rowIdx, cellsArray);
-      }
-
-      var columsCount = 8;
-      for (let colIdx = 0; colIdx < columsCount; colIdx++)
-        testSelectTableColumn("table", colIdx, cellsArray);
-
-      for (let colIdx = 0; colIdx < columsCount; colIdx++) {
-        testSelectTableColumn("table", colIdx, cellsArray);
-        testUnselectTableColumn("table", colIdx, cellsArray);
-      }
-
       var accTable = getAccessible("table", [nsIAccessibleTable]);
       ok(!accTable.isProbablyForLayout(), "table is not for layout");
 
@@ -86,11 +68,6 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=501635"
      title="nsHTMLTableAccessible::GetSelectedCells contains index duplicates for spanned rows or columns">
     Mozilla Bug 501635
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=417929"
-     title="nsIAccessiblTable selectRows does not unselect previously selected rows">
-    Mozilla Bug 417929
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=501659"

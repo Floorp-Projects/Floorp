@@ -256,11 +256,6 @@ class CachedTableAccessible final : public TableAccessibleBase {
     }
   }
 
-  virtual void SelectCol(uint32_t aColIdx) override;
-  virtual void SelectRow(uint32_t aRowIdx) override;
-  virtual void UnselectCol(uint32_t aColIdx) override;
-  virtual void UnselectRow(uint32_t aRowIdx) override;
-
   virtual Accessible* AsAccessible() override { return mAcc; }
 
   virtual bool IsProbablyLayoutTable() override;

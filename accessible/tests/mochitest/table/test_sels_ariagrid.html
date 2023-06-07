@@ -33,10 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
 
       testTableSelection("table", cellsArray);
-      testUnselectTableColumn("table", 3, cellsArray);
-      testUnselectTableRow("table", 3, cellsArray);
-      testSelectTableColumn("table", 0, cellsArray);
-      testSelectTableRow("table", 0, cellsArray);
 
       // ////////////////////////////////////////////////////////////////////////
       // a bit strange ARIA grid
@@ -47,10 +43,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
 
       testTableSelection("grid2", cellsArray);
-      testSelectTableColumn("grid2", 0, cellsArray);
-      testSelectTableRow("grid2", 0, cellsArray);
-      testUnselectTableColumn("grid2", 0, cellsArray);
-      testUnselectTableRow("grid2", 0, cellsArray);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA grid (column and row headers)
@@ -62,10 +54,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
 
       testTableSelection("grid3", cellsArray);
-      testSelectTableColumn("grid3", 0, cellsArray);
-      testSelectTableRow("grid3", 0, cellsArray);
-      testUnselectTableColumn("grid3", 0, cellsArray);
-      testUnselectTableRow("grid3", 0, cellsArray);
 
       SimpleTest.finish();
     }

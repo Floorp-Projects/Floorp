@@ -44,8 +44,6 @@ class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
-  virtual void SelectRow(uint32_t aRowIdx) override;
-  virtual void UnselectRow(uint32_t aRowIdx) override;
   virtual LocalAccessible* AsAccessible() override { return this; }
 
   // LocalAccessible
