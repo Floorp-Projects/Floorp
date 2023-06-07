@@ -12,8 +12,6 @@
 #include "nsThreadUtils.h"
 #include "AccAttributes.h"
 #include "AccessibilityEvent.h"
-#include "HyperTextAccessible.h"
-#include "HyperTextAccessible-inl.h"
 #include "JavaBuiltins.h"
 #include "RootAccessibleWrap.h"
 #include "nsAccessibilityService.h"
@@ -29,6 +27,7 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #include "mozilla/a11y/DocManager.h"
+#include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
 #include "mozilla/jni/NativesInlines.h"
 #include "mozilla/widget/GeckoViewSupport.h"
@@ -234,21 +233,58 @@ void SessionAccessibility::NavigateText(int32_t aID, int32_t aGranularity,
                                    aEndOffset, aForward, aSelect);
 }
 
+static void GetSelectionOrCaret(HyperTextAccessibleBase* aHyperTextAcc,
+                                int32_t* aStartOffset, int32_t* aEndOffset) {
+  if (!aHyperTextAcc->SelectionBoundsAt(0, aStartOffset, aEndOffset)) {
+    *aStartOffset = *aEndOffset = aHyperTextAcc->CaretOffset();
+  }
+}
+
 void SessionAccessibility::SetSelection(int32_t aID, int32_t aStart,
                                         int32_t aEnd) {
-  FORWARD_EXT_ACTION_TO_ACCESSIBLE(SetSelection, aStart, aEnd);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (auto* textAcc = acc->AsHyperTextBase()) {
+      if (aStart == aEnd) {
+        textAcc->SetCaretOffset(aStart);
+      } else {
+        textAcc->SetSelectionBoundsAt(0, aStart, aEnd);
+      }
+    }
+  }
 }
 
 void SessionAccessibility::Cut(int32_t aID) {
-  FORWARD_EXT_ACTION_TO_ACCESSIBLE(Cut);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (auto* textAcc = acc->AsHyperTextBase()) {
+      int32_t startSel, endSel;
+      if (textAcc->SelectionBoundsAt(0, &startSel, &endSel)) {
+        textAcc->CutText(startSel, endSel);
+      }
+    }
+  }
 }
 
 void SessionAccessibility::Copy(int32_t aID) {
-  FORWARD_EXT_ACTION_TO_ACCESSIBLE(Copy);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (auto* textAcc = acc->AsHyperTextBase()) {
+      int32_t startSel, endSel;
+      GetSelectionOrCaret(textAcc, &startSel, &endSel);
+      textAcc->CopyText(startSel, endSel);
+    }
+  }
 }
 
 void SessionAccessibility::Paste(int32_t aID) {
-  FORWARD_EXT_ACTION_TO_ACCESSIBLE(Paste);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (auto* textAcc = acc->AsHyperTextBase()) {
+      int32_t startSel, endSel;
+      GetSelectionOrCaret(textAcc, &startSel, &endSel);
+      if (startSel != endSel) {
+        textAcc->DeleteText(startSel, endSel);
+      }
+      textAcc->PasteText(startSel);
+    }
+  }
 }
 
 #undef FORWARD_ACTION_TO_ACCESSIBLE

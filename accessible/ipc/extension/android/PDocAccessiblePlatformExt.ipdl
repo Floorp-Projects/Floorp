@@ -17,14 +17,6 @@ child:
   async __delete__();
 
   async NavigateText(uint64_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset, bool aForward, bool aSelect);
-
-  async SetSelection(uint64_t aID, int32_t aStart, int32_t aEnd);
-
-  async Cut(uint64_t aID);
-
-  async Copy(uint64_t aID);
-
-  async Paste(uint64_t aID);
   };
 }
 }
