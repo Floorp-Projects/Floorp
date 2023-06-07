@@ -256,9 +256,10 @@ class PrefsFeed {
         this.fetchedImages = {}
         if (imagesPath != 0) {
           for (let elem of imagesPath) {
-            if(elem.toLowerCase().match(str))
+            if(elem.toLowerCase().match(str)) {
             let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
             this.imagesDataPath.urls.push(filePath)
+            }
           }
         }
         console.log(this.imagesDataPath)
