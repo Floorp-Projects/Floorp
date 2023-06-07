@@ -75,15 +75,15 @@ VideoBitrateAllocation EncoderBitrateAdjuster::AdjustRateAllocation(
 
   // First check that overshoot detectors exist, and store per spatial layer
   // how many active temporal layers we have.
-  size_t active_tls_[kMaxSpatialLayers] = {};
+  size_t active_tls[kMaxSpatialLayers] = {};
   for (size_t si = 0; si < kMaxSpatialLayers; ++si) {
-    active_tls_[si] = 0;
+    active_tls[si] = 0;
     for (size_t ti = 0; ti < kMaxTemporalStreams; ++ti) {
       // Layer is enabled iff it has both positive bitrate and framerate target.
       if (rates.bitrate.GetBitrate(si, ti) > 0 &&
           current_fps_allocation_[si].size() > ti &&
           current_fps_allocation_[si][ti] > 0) {
-        ++active_tls_[si];
+        ++active_tls[si];
         if (!overshoot_detectors_[si][ti]) {
           overshoot_detectors_[si][ti] =
               std::make_unique<EncoderOvershootDetector>(kWindowSizeMs);
@@ -114,14 +114,14 @@ VideoBitrateAllocation EncoderBitrateAdjuster::AdjustRateAllocation(
     if (frames_since_layout_change_ < kMinFramesSinceLayoutChange) {
       layer_info.link_utilization_factor = kDefaultUtilizationFactor;
       layer_info.media_utilization_factor = kDefaultUtilizationFactor;
-    } else if (active_tls_[si] == 0 ||
+    } else if (active_tls[si] == 0 ||
                layer_info.target_rate == DataRate::Zero()) {
       // No signaled temporal layers, or no bitrate set. Could either be unused
       // spatial layer or bitrate dynamic mode; pass bitrate through without any
       // change.
       layer_info.link_utilization_factor = 1.0;
       layer_info.media_utilization_factor = 1.0;
-    } else if (active_tls_[si] == 1) {
+    } else if (active_tls[si] == 1) {
       // A single active temporal layer, this might mean single layer or that
       // encoder does not support temporal layers. Merge target bitrates for
       // this spatial layer.
@@ -141,7 +141,7 @@ VideoBitrateAllocation EncoderBitrateAdjuster::AdjustRateAllocation(
       // If any layer is missing a utilization factor, fall back to default.
       layer_info.link_utilization_factor = 0.0;
       layer_info.media_utilization_factor = 0.0;
-      for (size_t ti = 0; ti < active_tls_[si]; ++ti) {
+      for (size_t ti = 0; ti < active_tls[si]; ++ti) {
         RTC_DCHECK(overshoot_detectors_[si][ti]);
         const absl::optional<double> ti_link_utilization_factor =
             overshoot_detectors_[si][ti]->GetNetworkRateUtilizationFactor(
@@ -233,7 +233,7 @@ VideoBitrateAllocation EncoderBitrateAdjuster::AdjustRateAllocation(
     }
 
     // Populate the adjusted allocation with determined utilization factor.
-    if (active_tls_[si] == 1 &&
+    if (active_tls[si] == 1 &&
         layer_info.target_rate >
             DataRate::BitsPerSec(rates.bitrate.GetBitrate(si, 0))) {
       // Bitrate allocation indicates temporal layer usage, but encoder
