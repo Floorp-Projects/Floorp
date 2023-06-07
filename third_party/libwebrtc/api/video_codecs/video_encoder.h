@@ -330,6 +330,9 @@ class RTC_EXPORT VideoEncoder {
     Capabilities capabilities;
     int number_of_cores;
     size_t max_payload_size;
+    // Experimental API - currently only supported by LibvpxVp8Encoder.
+    // If set, limits the number of encoder threads.
+    absl::optional<int> encoder_thread_limit;
   };
 
   static VideoCodecVP8 GetDefaultVp8Settings();
