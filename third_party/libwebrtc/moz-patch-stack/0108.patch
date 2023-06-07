@@ -1,54 +1,237 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 18:06:00 +0000
-Subject: Bug 1831824 - libwebrtc: In PacketSequencer set timestamps of rtx
- padding packets when there is no last packet. r=webrtc-reviewers,dbaker
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 3 May 2023 14:41:00 +0000
+Subject: Bug 1685245 - cherry pick upstream libwebrtc commit 6aba07e5fe. r=ng
 
-Prior to this patch timestamps are not adjusted when they are 0, and they are 0
-when the packet sequencer has not yet seen a media packet. Code and comments in
-PacketSequencer and RTPSender::GeneratePadding make it clear that rtx padding
-packets are allowed prior to seeing a media packet, and therefore the 0
-timestamp case has to be handled.
-
-For rtx the padding packets do not need to have the same timestamp as any media
-packets, like plain padding packets do -- because they can only be part of a media
-frame, so a media packet has to be known.
-
-With this patch both rtp timestamps and capture timestamps are set to current
-time when sequencing rtx padding packets without having seen a media packet.
-
-This fixes a DCHECK failure in TransmissionOffset::Write.
-
-Differential Revision: https://phabricator.services.mozilla.com/D177306
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0339fd77c82c4c54e5aacaeef66d739b1643827
+Differential Revision: https://phabricator.services.mozilla.com/D176944
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0a46882336b7e5e97b54492e361f4bd9b33f8a39
 ---
- modules/rtp_rtcp/source/packet_sequencer.cc | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ modules/rtp_rtcp/source/rtp_sender.cc         | 33 +++++++++
+ modules/rtp_rtcp/source/rtp_sender.h          |  3 +
+ modules/rtp_rtcp/source/rtp_sender_video.cc   | 26 +++----
+ .../source/rtp_sender_video_unittest.cc       | 67 +++++++++++++++++++
+ 4 files changed, 117 insertions(+), 12 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/packet_sequencer.cc b/modules/rtp_rtcp/source/packet_sequencer.cc
-index 55edd768a8..acc2e87aa3 100644
---- a/modules/rtp_rtcp/source/packet_sequencer.cc
-+++ b/modules/rtp_rtcp/source/packet_sequencer.cc
-@@ -118,8 +118,18 @@ void PacketSequencer::PopulatePaddingFields(RtpPacketToSend& packet) {
-     return;
+diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
+index 9f9293da2b..f97fb167ed 100644
+--- a/modules/rtp_rtcp/source/rtp_sender.cc
++++ b/modules/rtp_rtcp/source/rtp_sender.cc
+@@ -557,6 +557,39 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
+   return packet;
+ }
+ 
++size_t RTPSender::RtxPacketOverhead() const {
++  MutexLock lock(&send_mutex_);
++  if (rtx_ == kRtxOff) {
++    return 0;
++  }
++  size_t overhead = 0;
++
++  // Count space for the RTP header extensions that might need to be added to
++  // the RTX packet.
++  if (!always_send_mid_and_rid_ && (!rtx_ssrc_has_acked_ && ssrc_has_acked_)) {
++    // Prefer to reserve extra byte in case two byte header rtp header
++    // extensions are used.
++    static constexpr int kRtpExtensionHeaderSize = 2;
++
++    // Rtx packets hasn't been acked and would need to have mid and rrsid rtp
++    // header extensions, while media packets no longer needs to include mid and
++    // rsid extensions.
++    if (!mid_.empty()) {
++      overhead += (kRtpExtensionHeaderSize + mid_.size());
++    }
++    if (!rid_.empty()) {
++      overhead += (kRtpExtensionHeaderSize + rid_.size());
++    }
++    // RTP header extensions are rounded up to 4 bytes. Depending on already
++    // present extensions adding mid & rrsid may add up to 3 bytes of padding.
++    overhead += 3;
++  }
++
++  // Add two bytes for the original sequence number in the RTP payload.
++  overhead += kRtxHeaderSize;
++  return overhead;
++}
++
+ void RTPSender::SetSendingMediaStatus(bool enabled) {
+   MutexLock lock(&send_mutex_);
+   sending_media_ = enabled;
+diff --git a/modules/rtp_rtcp/source/rtp_sender.h b/modules/rtp_rtcp/source/rtp_sender.h
+index c45f597951..fb6c8001f0 100644
+--- a/modules/rtp_rtcp/source/rtp_sender.h
++++ b/modules/rtp_rtcp/source/rtp_sender.h
+@@ -107,6 +107,9 @@ class RTPSender {
+   absl::optional<uint32_t> RtxSsrc() const RTC_LOCKS_EXCLUDED(send_mutex_) {
+     return rtx_ssrc_;
+   }
++  // Returns expected size difference between an RTX packet and media packet
++  // that RTX packet is created from. Returns 0 if RTX is disabled.
++  size_t RtxPacketOverhead() const;
+ 
+   void SetRtxPayloadType(int payload_type, int associated_payload_type)
+       RTC_LOCKS_EXCLUDED(send_mutex_);
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
+index e1f1697047..0f0ff6d997 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
+@@ -496,6 +496,13 @@ bool RTPSenderVideo::SendVideo(
+     // Backward compatibility for older receivers without temporal layer logic.
+     retransmission_settings = kRetransmitBaseLayer | kRetransmitHigherLayers;
+   }
++  const uint8_t temporal_id = GetTemporalId(video_header);
++  // TODO(bugs.webrtc.org/10714): retransmission_settings_ should generally be
++  // replaced by expected_retransmission_time_ms.has_value().
++  const bool allow_retransmission =
++      expected_retransmission_time_ms.has_value() &&
++      AllowRetransmission(temporal_id, retransmission_settings,
++                          *expected_retransmission_time_ms);
+ 
+   MaybeUpdateCurrentPlayoutDelay(video_header);
+   if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
+@@ -517,16 +524,19 @@ bool RTPSenderVideo::SendVideo(
+         video_header.generic->frame_id, video_header.generic->chain_diffs);
    }
  
--  packet.SetTimestamp(last_rtp_timestamp_);
--  packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
-+  if (last_timestamp_time_ms_ > 0) {
-+    RTC_DCHECK_GT(last_rtp_timestamp_, 0);
-+    RTC_DCHECK_GT(last_capture_time_ms_, 0);
-+    packet.SetTimestamp(last_rtp_timestamp_);
-+    packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
-+  } else {
-+    // No media packet has been sent yet so timestamps are not known. Set them
-+    // now as they will be needed when serializing the packet later on.
-+    auto now = clock_->CurrentTime();
-+    packet.SetTimestamp(now.ms() * kTimestampTicksPerMs);
-+    packet.set_capture_time(now);
+-  const uint8_t temporal_id = GetTemporalId(video_header);
+   // No FEC protection for upper temporal layers, if used.
+   const bool use_fec = fec_type_.has_value() &&
+                        (temporal_id == 0 || temporal_id == kNoTemporalIdx);
+ 
+   // Maximum size of packet including rtp headers.
+   // Extra space left in case packet will be resent using fec or rtx.
+-  int packet_capacity = rtp_sender_->MaxRtpPacketSize() -
+-                        (use_fec ? FecPacketOverhead() : 0) -
+-                        (rtp_sender_->RtxStatus() ? kRtxHeaderSize : 0);
++  int packet_capacity = rtp_sender_->MaxRtpPacketSize();
++  if (use_fec) {
++    packet_capacity -= FecPacketOverhead();
++  }
++  if (allow_retransmission) {
++    packet_capacity -= rtp_sender_->RtxPacketOverhead();
 +  }
  
-   // Only change the timestamp of padding packets sent over RTX.
-   // Padding only packets over RTP has to be sent as part of a media
+   absl::optional<Timestamp> capture_time;
+   if (capture_time_ms > 0) {
+@@ -657,14 +667,6 @@ bool RTPSenderVideo::SendVideo(
+   std::unique_ptr<RtpPacketizer> packetizer =
+       RtpPacketizer::Create(codec_type, payload, limits, video_header);
+ 
+-  // TODO(bugs.webrtc.org/10714): retransmission_settings_ should generally be
+-  // replaced by expected_retransmission_time_ms.has_value(). For now, though,
+-  // only VP8 with an injected frame buffer controller actually controls it.
+-  const bool allow_retransmission =
+-      expected_retransmission_time_ms.has_value()
+-          ? AllowRetransmission(temporal_id, retransmission_settings,
+-                                expected_retransmission_time_ms.value())
+-          : false;
+   const size_t num_packets = packetizer->NumPackets();
+ 
+   if (num_packets == 0)
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
+index 0cfa24c834..883b98aa7e 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
+@@ -29,6 +29,9 @@
+ #include "api/video/video_timing.h"
+ #include "modules/rtp_rtcp/include/rtp_cvo.h"
+ #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
++#include "modules/rtp_rtcp/source/rtcp_packet/nack.h"
++#include "modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
++#include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
+ #include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
+ #include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
+ #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor.h"
+@@ -57,6 +60,7 @@ using ::testing::ElementsAre;
+ using ::testing::ElementsAreArray;
+ using ::testing::IsEmpty;
+ using ::testing::NiceMock;
++using ::testing::Not;
+ using ::testing::Return;
+ using ::testing::ReturnArg;
+ using ::testing::SaveArg;
+@@ -81,6 +85,7 @@ constexpr VideoCodecType kType = VideoCodecType::kVideoCodecGeneric;
+ constexpr uint32_t kTimestamp = 10;
+ constexpr uint16_t kSeqNum = 33;
+ constexpr uint32_t kSsrc = 725242;
++constexpr uint32_t kRtxSsrc = 912364;
+ constexpr int kMaxPacketLength = 1500;
+ constexpr Timestamp kStartTime = Timestamp::Millis(123456789);
+ constexpr int64_t kDefaultExpectedRetransmissionTimeMs = 125;
+@@ -182,6 +187,8 @@ class RtpSenderVideoTest : public ::testing::Test {
+           config.retransmission_rate_limiter = &retransmission_rate_limiter_;
+           config.field_trials = &field_trials_;
+           config.local_media_ssrc = kSsrc;
++          config.rtx_send_ssrc = kRtxSsrc;
++          config.rid = "rid";
+           return config;
+         }())),
+         rtp_sender_video_(
+@@ -505,6 +512,66 @@ TEST_F(RtpSenderVideoTest, ConditionalRetransmitLimit) {
+       rtp_sender_video_->AllowRetransmission(header, kSettings, kRttMs));
+ }
+ 
++TEST_F(RtpSenderVideoTest,
++       ReservesEnoughSpaceForRtxPacketWhenMidAndRsidAreRegistered) {
++  constexpr int kMediaPayloadId = 100;
++  constexpr int kRtxPayloadId = 101;
++  constexpr size_t kMaxPacketSize = 1'000;
++
++  rtp_module_->SetMaxRtpPacketSize(kMaxPacketSize);
++  rtp_module_->RegisterRtpHeaderExtension(RtpMid::Uri(), 1);
++  rtp_module_->RegisterRtpHeaderExtension(RtpStreamId::Uri(), 2);
++  rtp_module_->RegisterRtpHeaderExtension(RepairedRtpStreamId::Uri(), 3);
++  rtp_module_->RegisterRtpHeaderExtension(AbsoluteSendTime::Uri(), 4);
++  rtp_module_->SetMid("long_mid");
++  rtp_module_->SetRtxSendPayloadType(kRtxPayloadId, kMediaPayloadId);
++  rtp_module_->SetStorePacketsStatus(/*enable=*/true, 10);
++  rtp_module_->SetRtxSendStatus(kRtxRetransmitted);
++
++  RTPVideoHeader header;
++  header.codec = kVideoCodecVP8;
++  header.frame_type = VideoFrameType::kVideoFrameDelta;
++  auto& vp8_header = header.video_type_header.emplace<RTPVideoHeaderVP8>();
++  vp8_header.temporalIdx = 0;
++
++  uint8_t kPayload[kMaxPacketSize] = {};
++  EXPECT_TRUE(rtp_sender_video_->SendVideo(
++      kMediaPayloadId, /*codec_type=*/kVideoCodecVP8, /*rtp_timestamp=*/0,
++      /*capture_time_ms=*/1'000, kPayload, header,
++      /*expected_retransmission_time_ms=*/absl::nullopt, /*csrcs=*/{}));
++  ASSERT_THAT(transport_.sent_packets(), Not(IsEmpty()));
++  // Ack media ssrc, but not rtx ssrc.
++  rtcp::ReceiverReport rr;
++  rtcp::ReportBlock rb;
++  rb.SetMediaSsrc(kSsrc);
++  rb.SetExtHighestSeqNum(transport_.last_sent_packet().SequenceNumber());
++  rr.AddReportBlock(rb);
++  rtp_module_->IncomingRtcpPacket(rr.Build());
++
++  // Test for various frame size close to `kMaxPacketSize` to catch edge cases
++  // when rtx packet barely fit.
++  for (size_t frame_size = 800; frame_size < kMaxPacketSize; ++frame_size) {
++    SCOPED_TRACE(frame_size);
++    rtc::ArrayView<const uint8_t> payload(kPayload, frame_size);
++
++    EXPECT_TRUE(rtp_sender_video_->SendVideo(
++        kMediaPayloadId, /*codec_type=*/kVideoCodecVP8, /*rtp_timestamp=*/0,
++        /*capture_time_ms=*/1'000, payload, header,
++        /*expected_retransmission_time_ms=*/1'000, /*csrcs=*/{}));
++    const RtpPacketReceived& media_packet = transport_.last_sent_packet();
++    EXPECT_EQ(media_packet.Ssrc(), kSsrc);
++
++    rtcp::Nack nack;
++    nack.SetMediaSsrc(kSsrc);
++    nack.SetPacketIds({media_packet.SequenceNumber()});
++    rtp_module_->IncomingRtcpPacket(nack.Build());
++
++    const RtpPacketReceived& rtx_packet = transport_.last_sent_packet();
++    EXPECT_EQ(rtx_packet.Ssrc(), kRtxSsrc);
++    EXPECT_LE(rtx_packet.size(), kMaxPacketSize);
++  }
++}
++
+ TEST_F(RtpSenderVideoTest, SendsDependencyDescriptorWhenVideoStructureIsSet) {
+   const int64_t kFrameId = 100000;
+   uint8_t kFrame[100];
 -- 
 2.34.1
 
