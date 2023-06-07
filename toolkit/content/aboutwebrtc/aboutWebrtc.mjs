@@ -483,6 +483,7 @@ class ShowTab extends Control {
       const sections = (
         await Promise.all(
           statReports.flatMap(report => [
+            translateSection(report, "pc-tools", renderPeerConnectionTools),
             translateSection(report, "ice-stats", renderICEStats),
             translateSection(
               report,
@@ -507,39 +508,24 @@ class ShowTab extends Control {
   );
 })();
 
+function renderCopyTextToClipboardButton(rndr, id, l10n_id, getTextFn) {
+  return rndr.elem_button(
+    {
+      id: `copytextbutton-${id}`,
+      onclick() {
+        navigator.clipboard.writeText(getTextFn());
+      },
+    },
+    l10n_id
+  );
+}
+
 function renderPeerConnection(report) {
   const rndr = elemRenderer;
-  const {
-    pcid,
-    browserId,
-    closed: isClosed,
-    timestamp,
-    configuration,
-  } = report;
+  const { pcid, configuration } = report;
 
   const pcDiv = renderElement("div", { className: "peer-connection" });
-  {
-    const id = pcid.match(/id=(\S+)/)[1];
-    const url = pcid.match(/url=([^)]+)/)[1];
-    const now = new Date(timestamp);
-
-    pcDiv.append(
-      isClosed
-        ? renderElement("h3", {}, "about-webrtc-connection-closed", {
-            "browser-id": browserId,
-            id,
-            url,
-            now,
-          })
-        : renderElement("h3", {}, "about-webrtc-connection-open", {
-            "browser-id": browserId,
-            id,
-            url,
-            now,
-          })
-    );
-    pcDiv.append(new ShowTab(browserId).render()[0]);
-  }
+  pcDiv.append(renderPeerConnectionTools(rndr, report));
   {
     const section = renderFoldableSection(pcDiv);
     section.append(
@@ -564,6 +550,35 @@ function renderPeerConnection(report) {
     pcDiv.append(section);
   }
   return pcDiv;
+}
+
+function renderPeerConnectionTools(rndr, report) {
+  const { pcid, timestamp, closed: isClosed, browserId } = report;
+  const id = pcid.match(/id=(\S+)/)[1];
+  const url = pcid.match(/url=([^)]+)/)[1];
+  const now = new Date(timestamp);
+  return renderElements("div", { id: "pc-tools: " + pcid }, [
+    isClosed
+      ? renderElement("h3", {}, "about-webrtc-connection-closed", {
+          "browser-id": browserId,
+          id,
+          url,
+          now,
+        })
+      : renderElement("h3", {}, "about-webrtc-connection-open", {
+          "browser-id": browserId,
+          id,
+          url,
+          now,
+        }),
+    new ShowTab(browserId).render()[0],
+    renderCopyTextToClipboardButton(
+      rndr,
+      report.pcid,
+      "about-webrtc-copy-report-button",
+      () => JSON.stringify({ ...report }, null, 2)
+    ),
+  ]);
 }
 
 const trimNewlines = sdp => sdp.replaceAll("\r\n", "\n");
