@@ -263,5 +263,37 @@ TEST(LibaomAv1EncoderTest, RtpTimestampWrap) {
               Eq(VideoFrameType::kVideoFrameDelta));
 }
 
+TEST(LibaomAv1EncoderTest, TestCaptureTimeId) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  const Timestamp capture_time_id = Timestamp::Micros(2000);
+  VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode(ScalabilityMode::kL2T1);
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  VideoEncoder::RateControlParameters rate_parameters;
+  rate_parameters.framerate_fps = 30;
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/0, /*temporal_index=*/0,
+                                     300'000);
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/1, /*temporal_index=*/0,
+                                     300'000);
+  encoder->SetRates(rate_parameters);
+
+  std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
+      EncodedVideoFrameProducer(*encoder)
+          .SetNumInputFrames(1)
+          .SetCaptureTimeIdentifier(capture_time_id)
+          .Encode();
+  ASSERT_THAT(encoded_frames, SizeIs(2));
+  ASSERT_TRUE(
+      encoded_frames[0].encoded_image.CaptureTimeIdentifier().has_value());
+  ASSERT_TRUE(
+      encoded_frames[1].encoded_image.CaptureTimeIdentifier().has_value());
+  EXPECT_EQ(encoded_frames[0].encoded_image.CaptureTimeIdentifier()->us(),
+            capture_time_id.us());
+  EXPECT_EQ(encoded_frames[1].encoded_image.CaptureTimeIdentifier()->us(),
+            capture_time_id.us());
+}
+
 }  // namespace
 }  // namespace webrtc

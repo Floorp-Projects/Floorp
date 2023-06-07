@@ -1795,7 +1795,7 @@ index 1f7aa89883..a9fdaf6307 100644
  
    int64_t _lastProcessFrameTimeNanos;
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index c2884c0395..35b13058a2 100644
+index e05428964d..d8c9593466 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 @@ -254,6 +254,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
