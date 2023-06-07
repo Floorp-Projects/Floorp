@@ -763,15 +763,15 @@ double nsRFPService::ReduceTimePrecisionAsSecsRFPOnly(
 }
 
 /* static */
-double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(
-    double aTime, bool aShouldResistFingerprinting, JSContext* aCx) {
+double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(double aTime,
+                                                       JSContext* aCx) {
   MOZ_ASSERT(aCx);
 
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
   MOZ_ASSERT(global);
 
   RTPCallerType callerType;
-  if (aShouldResistFingerprinting) {
+  if (global->ShouldResistFingerprinting(RFPTarget::Unknown)) {
     callerType = RTPCallerType::ResistFingerprinting;
   } else if (global->CrossOriginIsolated()) {
     callerType = RTPCallerType::CrossOriginIsolated;

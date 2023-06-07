@@ -2037,11 +2037,10 @@ static nsresult CreateNativeGlobalForInner(
   creationOptions.setDefineSharedArrayBufferConstructor(
       aDefineSharedArrayBufferConstructor);
 
-  // TODO(bug 1834744) we will need some way of passing different targets to the
-  // JS engine
-  xpc::InitGlobalObjectOptions(options, principal->IsSystemPrincipal(),
-                               aDocument->ShouldResistFingerprinting(
-                                   RFPTarget::IsAlwaysEnabledForPrecompute));
+  xpc::InitGlobalObjectOptions(
+      options, principal->IsSystemPrincipal(),
+      aDocument->ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
+      aDocument->ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
 
   // Determine if we need the Components object.
   bool needComponents = principal->IsSystemPrincipal();
