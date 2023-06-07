@@ -26,7 +26,7 @@ index 0272f6a8fe..6515866c2d 100644
        deps += [ "logging:rtc_event_log_proto" ]
      }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index a361656a59..65d1b10124 100644
+index 971a323ef5..d8fcb6a61e 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
 @@ -449,6 +449,7 @@ if (is_ios || is_mac) {
@@ -69,7 +69,7 @@ index a361656a59..65d1b10124 100644
      rtc_library("videocodec_objc") {
        visibility = [ "*" ]
        configs += [ "..:no_global_constructors" ]
-@@ -1747,5 +1752,6 @@ if (is_ios || is_mac) {
+@@ -1740,5 +1745,6 @@ if (is_ios || is_mac) {
          "VideoToolbox.framework",
        ]
      }
