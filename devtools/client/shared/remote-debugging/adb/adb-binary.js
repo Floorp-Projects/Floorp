@@ -11,12 +11,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 loader.lazyGetter(this, "UNPACKED_ROOT_PATH", () => {
   return PathUtils.join(PathUtils.localProfileDir, "adb");
 });

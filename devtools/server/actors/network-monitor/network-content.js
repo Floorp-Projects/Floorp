@@ -10,13 +10,9 @@ const {
 } = require("resource://devtools/shared/specs/network-content.js");
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 });

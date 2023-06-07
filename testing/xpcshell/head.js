@@ -51,8 +51,8 @@ let { PromiseTestUtils: _PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromiseTestUtils.sys.mjs"
 );
 
-let { NetUtil: _NetUtil } = ChromeUtils.import(
-  "resource://gre/modules/NetUtil.jsm"
+let { NetUtil: _NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
 );
 
 let { XPCOMUtils: _XPCOMUtils } = ChromeUtils.importESModule(

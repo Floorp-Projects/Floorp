@@ -166,8 +166,8 @@ add_task(async function testParentProcessRequests() {
     tab.linkedBrowser,
     [requestUrl],
     async function (uri) {
-      const { NetUtil } = ChromeUtils.import(
-        "resource://gre/modules/NetUtil.jsm"
+      const { NetUtil } = ChromeUtils.importESModule(
+        "resource://gre/modules/NetUtil.sys.mjs"
       );
       const channel = NetUtil.newChannel({
         uri,
@@ -198,8 +198,8 @@ add_task(async function testParentProcessRequests() {
     secondTab.linkedBrowser,
     [requestUrl],
     async function (uri) {
-      const { NetUtil } = ChromeUtils.import(
-        "resource://gre/modules/NetUtil.jsm"
+      const { NetUtil } = ChromeUtils.importESModule(
+        "resource://gre/modules/NetUtil.sys.mjs"
       );
       const channel = NetUtil.newChannel({
         uri,

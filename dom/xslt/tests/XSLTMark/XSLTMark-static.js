@@ -12,7 +12,9 @@ const nsIFilePicker = Ci.nsIFilePicker;
 const STDURLMUT_CTRID = "@mozilla.org/network/standard-url-mutator;1";
 const nsIURIMutator = Ci.nsIURIMutator;
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 
 var gStop = false;
 

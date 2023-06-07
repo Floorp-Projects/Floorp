@@ -18,11 +18,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

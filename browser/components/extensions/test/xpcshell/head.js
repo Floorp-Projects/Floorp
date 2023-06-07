@@ -17,12 +17,12 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Schemas: "resource://gre/modules/Schemas.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 ExtensionTestUtils.init(this);

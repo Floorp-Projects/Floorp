@@ -48,12 +48,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ProductAddonChecker:
     "resource://gre/modules/addons/ProductAddonChecker.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BuiltInThemesHelpers: "resource://gre/modules/addons/XPIDatabase.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",

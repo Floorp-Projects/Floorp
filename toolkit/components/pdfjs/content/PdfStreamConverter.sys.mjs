@@ -27,17 +27,13 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NetworkManager: "resource://pdf.js/PdfJsNetwork.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
   PdfJsTelemetry: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
   PdfSandbox: "resource://pdf.js/PdfSandbox.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(

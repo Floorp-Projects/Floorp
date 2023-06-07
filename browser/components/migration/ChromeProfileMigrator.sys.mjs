@@ -10,7 +10,6 @@ const AUTH_TYPE = {
   SCHEME_DIGEST: 2,
 };
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 import { MigratorBase } from "resource:///modules/MigratorBase.sys.mjs";
@@ -20,12 +19,9 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 /**
