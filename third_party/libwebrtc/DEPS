@@ -12,6 +12,11 @@ vars = {
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
   'chromium_revision': 'e182675fbb4214865ca583000ac647bef0b8d9d6',
 
+  # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
+  # process the raw profiles produced by instrumented targets (built with
+  # the gn arg 'use_clang_coverage').
+  'checkout_clang_coverage_tools': False,
+
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
 
@@ -2446,6 +2451,14 @@ hooks = [
     'name': 'clang',
     'pattern': '.',
     'action': ['python3', 'src/tools/clang/scripts/update.py'],
+  },
+  {
+    # This is supposed to support the same set of platforms as 'clang' above.
+    'name': 'clang_coverage',
+    'pattern': '.',
+    'condition': 'checkout_clang_coverage_tools',
+    'action': ['python3', 'src/tools/clang/scripts/update.py',
+               '--package=coverage_tools'],
   },
   {
     # Update LASTCHANGE.
