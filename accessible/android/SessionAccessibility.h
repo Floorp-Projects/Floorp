@@ -62,7 +62,7 @@ class SessionAccessibility final
   void SetSelection(int32_t aID, int32_t aStart, int32_t aEnd);
   void Cut(int32_t aID);
   void Copy(int32_t aID);
-  void Paste(int32_t aID);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Paste(int32_t aID);
   void StartNativeAccessibility();
 
   // Event methods

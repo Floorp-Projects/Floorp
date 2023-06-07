@@ -12,54 +12,12 @@
 namespace mozilla {
 namespace a11y {
 
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPivotTo(
-    uint64_t aID, int32_t aGranularity, bool aForward, bool aInclusive) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->PivotTo(aGranularity, aForward, aInclusive);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNavigateText(
     uint64_t aID, int32_t aGranularity, int32_t aStartOffset,
     int32_t aEndOffset, bool aForward, bool aSelect) {
   if (auto acc = IdToAccessibleWrap(aID)) {
     acc->NavigateText(aGranularity, aStartOffset, aEndOffset, aForward,
                       aSelect);
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSetSelection(
-    uint64_t aID, int32_t aStart, int32_t aEnd) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->SetSelection(aStart, aEnd);
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCut(uint64_t aID) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Cut();
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvCopy(uint64_t aID) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Copy();
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPaste(uint64_t aID) {
-  if (auto acc = IdToAccessibleWrap(aID)) {
-    acc->Paste();
   }
 
   return IPC_OK();

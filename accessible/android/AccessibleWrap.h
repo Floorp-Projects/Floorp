@@ -33,15 +33,6 @@ class AccessibleWrap : public LocalAccessible {
   virtual void NavigateText(int32_t aGranularity, int32_t aStartOffset,
                             int32_t aEndOffset, bool aForward, bool aSelect);
 
-  virtual void SetSelection(int32_t aStart, int32_t aEnd);
-
-  virtual void Cut();
-
-  virtual void Copy();
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual void Paste();
-
   void ExploreByTouch(float aX, float aY);
 
   static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
