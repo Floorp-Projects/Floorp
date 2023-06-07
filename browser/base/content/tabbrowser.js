@@ -754,7 +754,6 @@
     _updateTabBarForPinnedTabs() {
       this.tabContainer._unlockTabSizing();
       this.tabContainer._positionPinnedTabs();
-      this.tabContainer._setPositionalAttributes();
       this.tabContainer._updateCloseButtons();
     },
 
@@ -1390,8 +1389,6 @@
       newTab.setAttribute("touchdownstartsdrag", "true");
 
       if (!gMultiProcessBrowser) {
-        this.tabContainer._setPositionalAttributes();
-
         document.commandDispatcher.unlock();
 
         let event = new CustomEvent("TabSwitchDone", {
@@ -3253,7 +3250,6 @@
 
       if (tabs.length > 1 || !tabs[0].selected) {
         this._updateTabsAfterInsert();
-        this.tabContainer._setPositionalAttributes();
         TabBarVisibility.update();
 
         for (let tab of tabs) {
@@ -3479,7 +3475,6 @@
       if (pinned) {
         this._updateTabBarForPinnedTabs();
       }
-      this.tabContainer._setPositionalAttributes();
 
       TabBarVisibility.update();
     },
@@ -4304,7 +4299,6 @@
 
       // update tab positional properties and attributes
       this.selectedTab._selected = true;
-      this.tabContainer._setPositionalAttributes();
 
       // Removing the panel requires fixing up selectedPanel immediately
       // (see below), which would be hindered by the potentially expensive
@@ -4819,8 +4813,6 @@
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
 
-      this.tabContainer._setPositionalAttributes();
-
       let event = document.createEvent("Events");
       event.initEvent("TabShow", true, false);
       aTab.dispatchEvent(event);
@@ -4843,8 +4835,6 @@
 
       this.tabContainer._updateCloseButtons();
       this.tabContainer._updateHiddenTabsStatus();
-
-      this.tabContainer._setPositionalAttributes();
 
       // Splice this tab out of any lines of succession before any events are
       // dispatched.
@@ -5049,8 +5039,6 @@
       if (aTab.pinned) {
         this.tabContainer._positionPinnedTabs();
       }
-
-      this.tabContainer._setPositionalAttributes();
 
       var evt = document.createEvent("UIEvents");
       evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -5412,9 +5400,6 @@
         this._multiSelectChangeSelected = false;
         this._multiSelectChangeAdditions.clear();
         this._multiSelectChangeRemovals.clear();
-        if (noticeable) {
-          this.tabContainer._setPositionalAttributes();
-        }
         this.dispatchEvent(
           new CustomEvent("TabMultiSelect", { bubbles: true })
         );

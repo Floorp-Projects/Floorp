@@ -104,8 +104,6 @@
 
       this._tabMinWidth = this._tabMinWidthPref;
 
-      this._setPositionalAttributes();
-
       CustomizableUI.addListener(this);
       this._updateNewTabVisibility();
       this._initializeArrowScrollbox();
@@ -1224,20 +1222,6 @@
 
           break;
       }
-    }
-
-    _setPositionalAttributes() {
-      let visibleTabs = this._getVisibleTabs();
-      if (!visibleTabs.length) {
-        return;
-      }
-
-      this._firstUnpinnedTab?.removeAttribute("first-visible-unpinned-tab");
-      this._firstUnpinnedTab = visibleTabs.find(t => !t.pinned);
-      this._firstUnpinnedTab?.setAttribute(
-        "first-visible-unpinned-tab",
-        "true"
-      );
     }
 
     _updateCloseButtons() {
