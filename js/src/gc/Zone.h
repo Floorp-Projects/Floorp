@@ -473,7 +473,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void fixupAfterMovingGC();
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
-  void updateNurseryAllocFlags(const js::Nursery& nursery);
+  void setNurseryAllocFlags(bool allocObjects, bool allocStrings,
+                            bool allocBigInts);
 
   bool allocKindInNursery(JS::TraceKind kind) const {
     switch (kind) {

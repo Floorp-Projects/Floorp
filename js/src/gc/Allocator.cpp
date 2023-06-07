@@ -44,12 +44,11 @@ static Heap MinHeapToTenure(bool allowNurseryAlloc) {
   return allowNurseryAlloc ? Heap::Tenured : Heap::Default;
 }
 
-void Zone::updateNurseryAllocFlags(const Nursery& nursery) {
-  allocNurseryObjects_ = nursery.isEnabled();
-  allocNurseryStrings_ = nursery.isEnabled() && nursery.canAllocateStrings() &&
-                         !nurseryStringsDisabled;
-  allocNurseryBigInts_ = nursery.isEnabled() && nursery.canAllocateBigInts() &&
-                         !nurseryBigIntsDisabled;
+void Zone::setNurseryAllocFlags(bool allocObjects, bool allocStrings,
+                                bool allocBigInts) {
+  allocNurseryObjects_ = allocObjects;
+  allocNurseryStrings_ = allocStrings;
+  allocNurseryBigInts_ = allocBigInts;
 
   minObjectHeapToTenure_ = MinHeapToTenure(allocNurseryObjects());
   minStringHeapToTenure_ = MinHeapToTenure(allocNurseryStrings());
