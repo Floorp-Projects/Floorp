@@ -55,6 +55,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
     namespace 'mozilla.components.support.base'

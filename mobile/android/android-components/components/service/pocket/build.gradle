@@ -30,6 +30,10 @@ android {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     namespace 'mozilla.components.service.pocket'
 }
 

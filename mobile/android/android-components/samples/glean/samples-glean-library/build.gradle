@@ -35,6 +35,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     namespace 'mozilla.samples.glean.library'
 }
 
