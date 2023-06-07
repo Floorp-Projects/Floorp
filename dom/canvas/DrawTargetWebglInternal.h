@@ -132,6 +132,45 @@ class CacheImpl {
   ListType mChains[kNumChains];
 };
 
+// BackingTexture provides information about the shared or standalone texture
+// that is backing a texture handle.
+class BackingTexture {
+ public:
+  BackingTexture(const IntSize& aSize, SurfaceFormat aFormat,
+                 const RefPtr<WebGLTextureJS>& aTexture);
+
+  SurfaceFormat GetFormat() const { return mFormat; }
+  IntSize GetSize() const { return mSize; }
+
+  static inline size_t UsedBytes(SurfaceFormat aFormat, const IntSize& aSize) {
+    return size_t(BytesPerPixel(aFormat)) * size_t(aSize.width) *
+           size_t(aSize.height);
+  }
+
+  size_t UsedBytes() const { return UsedBytes(GetFormat(), GetSize()); }
+
+  const RefPtr<WebGLTextureJS>& GetWebGLTexture() const { return mTexture; }
+
+  bool IsInitialized() const { return mFlags & INITIALIZED; }
+  void MarkInitialized() { mFlags |= INITIALIZED; }
+
+  bool IsRenderable() const { return mFlags & RENDERABLE; }
+  void MarkRenderable() { mFlags |= RENDERABLE; }
+
+ protected:
+  IntSize mSize;
+  SurfaceFormat mFormat;
+  RefPtr<WebGLTextureJS> mTexture;
+
+ private:
+  enum Flags : uint8_t {
+    INITIALIZED = 1 << 0,
+    RENDERABLE = 1 << 1,
+  };
+
+  uint8_t mFlags = 0;
+};
+
 // TextureHandle is an abstract base class for supplying textures to drawing
 // commands that may be backed by different resource types (such as a shared
 // or standalone texture). It may be further linked to use-specific metadata
@@ -144,16 +183,14 @@ class TextureHandle : public RefCounted<TextureHandle>,
   enum Type { SHARED, STANDALONE };
 
   virtual Type GetType() const = 0;
-  virtual const RefPtr<WebGLTextureJS>& GetWebGLTexture() const = 0;
   virtual IntRect GetBounds() const = 0;
   IntSize GetSize() const { return GetBounds().Size(); }
-  virtual IntSize GetBackingSize() const = 0;
   virtual SurfaceFormat GetFormat() const = 0;
-  virtual size_t UsedBytes() const = 0;
 
-  static inline size_t UsedBytes(SurfaceFormat aFormat, const IntSize& aSize) {
-    return size_t(BytesPerPixel(aFormat)) * size_t(aSize.width) *
-           size_t(aSize.height);
+  virtual BackingTexture* GetBackingTexture() = 0;
+
+  size_t UsedBytes() const {
+    return BackingTexture::UsedBytes(GetFormat(), GetSize());
   }
 
   virtual void UpdateSize(const IntSize& aSize) {}
@@ -208,7 +245,7 @@ class SharedTextureHandle;
 // SharedTexture is a large slab texture that is subdivided (by using a
 // TexturePacker) to hold many small SharedTextureHandles. This avoids needing
 // to allocate many WebGL textures for every single small Canvas 2D texture.
-class SharedTexture : public RefCounted<SharedTexture> {
+class SharedTexture : public RefCounted<SharedTexture>, public BackingTexture {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SharedTexture)
 
@@ -218,21 +255,10 @@ class SharedTexture : public RefCounted<SharedTexture> {
   already_AddRefed<SharedTextureHandle> Allocate(const IntSize& aSize);
   bool Free(const SharedTextureHandle& aHandle);
 
-  SurfaceFormat GetFormat() const { return mFormat; }
-  IntSize GetSize() const { return mPacker.GetBounds().Size(); }
-
-  size_t UsedBytes() const {
-    return TextureHandle::UsedBytes(GetFormat(), GetSize());
-  }
-
   bool HasAllocatedHandles() const { return mAllocatedHandles > 0; }
-
-  const RefPtr<WebGLTextureJS>& GetWebGLTexture() const { return mTexture; }
 
  private:
   TexturePacker mPacker;
-  SurfaceFormat mFormat;
-  RefPtr<WebGLTextureJS> mTexture;
   size_t mAllocatedHandles = 0;
 };
 
@@ -248,18 +274,11 @@ class SharedTextureHandle : public TextureHandle {
 
   Type GetType() const override { return Type::SHARED; }
 
-  const RefPtr<WebGLTextureJS>& GetWebGLTexture() const override {
-    return mTexture->GetWebGLTexture();
-  }
-
   IntRect GetBounds() const override { return mBounds; }
-  IntSize GetBackingSize() const override { return mTexture->GetSize(); }
 
   SurfaceFormat GetFormat() const override { return mTexture->GetFormat(); }
 
-  size_t UsedBytes() const override {
-    return TextureHandle::UsedBytes(GetFormat(), mBounds.Size());
-  }
+  BackingTexture* GetBackingTexture() override { return mTexture.get(); }
 
   void Cleanup(DrawTargetWebgl::SharedContext& aContext) override;
 
@@ -273,7 +292,7 @@ class SharedTextureHandle : public TextureHandle {
 // StandaloneTexture is a texture that can not be effectively shared within
 // a SharedTexture page, such that it is better to assign it its own WebGL
 // texture.
-class StandaloneTexture : public TextureHandle {
+class StandaloneTexture : public TextureHandle, public BackingTexture {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(StandaloneTexture, override)
 
@@ -282,27 +301,21 @@ class StandaloneTexture : public TextureHandle {
 
   Type GetType() const override { return Type::STANDALONE; }
 
-  SurfaceFormat GetFormat() const override { return mFormat; }
-
-  const RefPtr<WebGLTextureJS>& GetWebGLTexture() const override {
-    return mTexture;
+  IntRect GetBounds() const override {
+    return IntRect(IntPoint(0, 0), BackingTexture::GetSize());
   }
 
-  IntRect GetBounds() const override { return IntRect(IntPoint(0, 0), mSize); }
-  IntSize GetBackingSize() const override { return mSize; }
-
-  size_t UsedBytes() const override {
-    return TextureHandle::UsedBytes(mFormat, mSize);
+  SurfaceFormat GetFormat() const override {
+    return BackingTexture::GetFormat();
   }
+
+  using BackingTexture::UsedBytes;
+
+  BackingTexture* GetBackingTexture() override { return this; }
 
   void UpdateSize(const IntSize& aSize) override { mSize = aSize; }
 
   void Cleanup(DrawTargetWebgl::SharedContext& aContext) override;
-
- private:
-  IntSize mSize;
-  SurfaceFormat mFormat;
-  RefPtr<WebGLTextureJS> mTexture;
 };
 
 // GlyphCacheEntry stores rendering metadata for a rendered text run, as well
