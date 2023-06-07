@@ -27,7 +27,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7
  create mode 100644 api/rtp_sender_setparameters_callback.h
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index c3055be3c2..fd0701c63b 100644
+index 654359ed37..31213c6460 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {
@@ -243,7 +243,7 @@ index ca2a117fd1..f323503d59 100644
  using webrtc::FrameDecryptorInterface;
  using webrtc::FrameEncryptorInterface;
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 5ba1bddcee..778bb1ef4d 100644
+index 0a697f2488..adbe375076 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -255,7 +255,7 @@ index 5ba1bddcee..778bb1ef4d 100644
      "../api:scoped_refptr",
      "../api/adaptation:resource_adaptation_api",
      "../api/units:data_rate",
-@@ -408,7 +408,7 @@ rtc_library("video_stream_encoder_impl") {
+@@ -375,7 +375,7 @@ rtc_library("video_stream_encoder_impl") {
      ":video_stream_encoder_interface",
      "../api:field_trials_view",
      "../api:rtp_parameters",
