@@ -634,7 +634,7 @@ toolbar[brighttext] {
   background-position-x: right 14px;
 }
 
-#tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[first-visible-unpinned-tab] {
+#tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab:nth-child(1 of :not([pinned], [hidden])) {
   /* Add a gap between the last pinned tab and the first visible tab */
   margin-inline-start: 12px !important; /* .tabbrowser-tab sets margin: 0 !important; */
 }
