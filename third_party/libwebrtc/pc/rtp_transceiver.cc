@@ -677,6 +677,15 @@ RtpTransceiver::HeaderExtensionsNegotiated() const {
   return result;
 }
 
+// Helper function to determine mandatory-to-negotiate extensions.
+// See https://www.rfc-editor.org/rfc/rfc8834#name-header-extensions
+// and https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
+// Since BUNDLE is offered by default, MID is mandatory and can not be turned
+// off via this API.
+bool IsMandatoryHeaderExtension(const std::string& uri) {
+  return uri == RtpExtension::kMidUri;
+}
+
 RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(
     rtc::ArrayView<const RtpHeaderExtensionCapability>
         header_extensions_to_offer) {
@@ -699,17 +708,20 @@ RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(
     }
 
     // Step 2.4-2.5.
-    // - Use of the transceiver interface indicates unified plan is in effect,
-    //   hence the MID extension needs to be enabled.
-    // - Also handle the mandatory video orientation extensions.
-    if ((entry.uri == RtpExtension::kMidUri ||
-         entry.uri == RtpExtension::kVideoRotationUri) &&
+    if (IsMandatoryHeaderExtension(entry.uri) &&
         entry.direction != RtpTransceiverDirection::kSendRecv) {
       return RTCError(RTCErrorType::INVALID_MODIFICATION,
                       "Attempted to stop a mandatory extension.");
     }
   }
 
+  // Set all current extensions but the mandatory ones to stopped.
+  // This means that anything filtered from the input will not show up.
+  for (auto& entry : header_extensions_to_offer_) {
+    if (!IsMandatoryHeaderExtension(entry.uri)) {
+      entry.direction = RtpTransceiverDirection::kStopped;
+    }
+  }
   // Apply mutation after error checking.
   for (const auto& entry : header_extensions_to_offer) {
     auto it = std::find_if(
