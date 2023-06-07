@@ -1341,7 +1341,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
       field_trials_.IsDisabled(kFrameDropperFieldTrial) ||
       (num_layers > 1 && codec.mode == VideoCodecMode::kScreensharing);
 
-  VideoEncoder::EncoderInfo info = encoder_->GetEncoderInfo();
+  const VideoEncoder::EncoderInfo info = encoder_->GetEncoderInfo();
   if (rate_control_settings_.UseEncoderBitrateAdjuster()) {
     bitrate_adjuster_ = std::make_unique<EncoderBitrateAdjuster>(codec);
     bitrate_adjuster_->OnEncoderInfo(info);
@@ -1869,7 +1869,7 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
   TraceFrameDropEnd();
 
   // Encoder metadata needs to be updated before encode complete callback.
-  VideoEncoder::EncoderInfo info = encoder_->GetEncoderInfo();
+  const VideoEncoder::EncoderInfo info = encoder_->GetEncoderInfo();
   if (info.implementation_name != encoder_info_.implementation_name ||
       info.is_hardware_accelerated != encoder_info_.is_hardware_accelerated) {
     encoder_stats_observer_->OnEncoderImplementationChanged({
