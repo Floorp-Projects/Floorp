@@ -184,13 +184,14 @@ void RttBasedBackoff::UpdatePropagationRtt(Timestamp at_time,
   last_propagation_rtt_ = propagation_rtt;
 }
 
-TimeDelta RttBasedBackoff::CorrectedRtt(Timestamp at_time) const {
-  TimeDelta time_since_rtt = at_time - last_propagation_rtt_update_;
-  TimeDelta timeout_correction = time_since_rtt;
+bool RttBasedBackoff::IsRttAboveLimit() const {
+  return CorrectedRtt() > rtt_limit_;
+}
+
+TimeDelta RttBasedBackoff::CorrectedRtt() const {
   // Avoid timeout when no packets are being sent.
-  TimeDelta time_since_packet_sent = at_time - last_packet_sent_;
-  timeout_correction =
-      std::max(time_since_rtt - time_since_packet_sent, TimeDelta::Zero());
+  TimeDelta timeout_correction = std::max(
+      last_packet_sent_ - last_propagation_rtt_update_, TimeDelta::Zero());
   return timeout_correction + last_propagation_rtt_;
 }
 
@@ -326,6 +327,10 @@ DataRate SendSideBandwidthEstimation::target_rate() const {
 
 LossBasedState SendSideBandwidthEstimation::loss_based_state() const {
   return loss_based_state_;
+}
+
+bool SendSideBandwidthEstimation::IsRttAboveLimit() const {
+  return rtt_backoff_.IsRttAboveLimit();
 }
 
 DataRate SendSideBandwidthEstimation::GetEstimatedLinkCapacity() const {
@@ -464,7 +469,7 @@ void SendSideBandwidthEstimation::UpdateRtt(TimeDelta rtt, Timestamp at_time) {
 }
 
 void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
-  if (rtt_backoff_.CorrectedRtt(at_time) > rtt_backoff_.rtt_limit_) {
+  if (rtt_backoff_.IsRttAboveLimit()) {
     if (at_time - time_last_decrease_ >= rtt_backoff_.drop_interval_ &&
         current_target_ > rtt_backoff_.bandwidth_floor_) {
       time_last_decrease_ = at_time;

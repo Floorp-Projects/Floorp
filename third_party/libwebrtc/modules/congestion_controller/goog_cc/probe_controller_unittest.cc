@@ -1127,5 +1127,34 @@ TEST(ProbeControllerTest, DontProbeIfDelayIncreased) {
   probes = probe_controller->Process(fixture.CurrentTime());
   EXPECT_TRUE(probes.empty());
 }
+
+TEST(ProbeControllerTest, DontProbeIfHighRtt) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "network_state_interval:5s,not_probe_if_delay_increased:true/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  ASSERT_FALSE(probes.empty());
+
+  // Need to wait at least one second before process can trigger a new probe.
+  fixture.AdvanceTime(TimeDelta::Millis(1100));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  ASSERT_TRUE(probes.empty());
+
+  NetworkStateEstimate state_estimate;
+  state_estimate.link_capacity_upper = 3 * kStartBitrate;
+  probe_controller->SetNetworkStateEstimate(state_estimate);
+  probes = probe_controller->SetEstimatedBitrate(
+      kStartBitrate, BandwidthLimitedCause::kRttBasedBackOffHighRtt,
+      fixture.CurrentTime());
+  ASSERT_TRUE(probes.empty());
+
+  fixture.AdvanceTime(TimeDelta::Seconds(5));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+}
 }  // namespace test
 }  // namespace webrtc
