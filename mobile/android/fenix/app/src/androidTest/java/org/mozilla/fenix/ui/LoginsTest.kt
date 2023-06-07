@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import android.os.Build
+import android.view.View
 import android.view.autofill.AutofillManager
 import androidx.core.net.toUri
 import okhttp3.mockwebserver.MockWebServer
@@ -13,20 +14,23 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.isSoftKeyboardVisible
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
+import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clearTextFieldItem
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -45,7 +49,7 @@ class LoginsTest {
 
     @get:Rule
     val activityTestRule =
-        HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true, hideSoftKeyboard = true)
 
     @Before
     fun setUp() {
@@ -132,12 +136,22 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             // Click save to save the login
             clickPageObject(itemWithText("Save"))
-        }
-        browserScreen {
         }.openThreeDotMenu {
         }.openSettings {
             scrollToElementByText("Logins and passwords")
@@ -161,10 +175,28 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            waitForPageToLoad()
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), userName)
             setPageObjectText(itemWithResId("password"), password)
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                if (isSoftKeyboardVisible() && !itemWithText("Save").exists()) {
+                    mDevice.pressBack()
+                }
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), userName)
+                    setPageObjectText(itemWithResId("password"), password)
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
@@ -185,7 +217,21 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                if (isSoftKeyboardVisible() && !itemWithText("Save").exists()) {
+                    mDevice.pressBack()
+                }
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             // Don't save the login, add to exceptions
             clickPageObject(itemWithText("Never save"))
             mDevice.waitForIdle()
@@ -214,8 +260,20 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             // Click Save to save the login
             clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
@@ -223,7 +281,20 @@ class LoginsTest {
             enterPassword("test")
             mDevice.waitForIdle()
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    enterPassword("test")
+                    mDevice.waitForIdle()
+                    clickSubmitLoginButton()
+                }
+            }
             // Click Update to change the saved password
             clickPageObject(itemWithText("Update"))
         }.openThreeDotMenu {
@@ -241,7 +312,6 @@ class LoginsTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1816066")
     @SmokeTest
     @Test
     fun verifyMultipleLoginsSelectionsTest() {
@@ -253,15 +323,42 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), firstUser)
             setPageObjectText(itemWithResId("password"), firstPass)
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), firstUser)
+                    setPageObjectText(itemWithResId("password"), firstPass)
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
             setPageObjectText(itemWithResId("username"), secondUser)
             setPageObjectText(itemWithResId("password"), secondPass)
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), secondUser)
+                    setPageObjectText(itemWithResId("password"), secondPass)
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
             clearTextFieldItem(itemWithResId("username"))
             clickSuggestedLoginsButton()
@@ -285,12 +382,25 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
-            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -313,12 +423,25 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
-            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -350,12 +473,25 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
-            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -377,12 +513,25 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
-            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -406,12 +555,25 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
-            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -435,7 +597,20 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
@@ -469,8 +644,7 @@ class LoginsTest {
         }.openLoginsAndPasswordSubMenu {
         }.openSaveLoginsAndPasswordsOptions {
             clickNeverSaveOption()
-        }.goBack {
-        }
+        }.goBack {}
 
         exitMenu()
 
@@ -487,10 +661,24 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openTabDrawer {
             closeTab()
@@ -510,8 +698,7 @@ class LoginsTest {
             verifyAutofillInFirefoxToggle(true)
             clickAutofillInFirefoxOption()
             verifyAutofillInFirefoxToggle(false)
-        }.goBack {
-        }
+        }.goBack {}
 
         exitMenu()
 
@@ -541,10 +728,22 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openTabDrawer {
             closeTab()
@@ -577,15 +776,41 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "android")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openThreeDotMenu {
         }.openSettings {
@@ -623,15 +848,41 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "android")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openThreeDotMenu {
         }.openSettings {
@@ -661,7 +912,6 @@ class LoginsTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815650")
     @Test
     fun verifyLastUsedLoginSortingOptionTest() {
         val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
@@ -670,15 +920,41 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openThreeDotMenu {
         }.openSettings {
@@ -688,12 +964,26 @@ class LoginsTest {
             clickSavedLoginsChevronIcon()
             verifyLoginsSortingOptions()
             clickLastUsedSortingOption()
-            verifySortedLogin(activityTestRule, 0, originWebsite)
-            verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+            registerAndCleanupIdlingResources(
+                ViewVisibilityIdlingResource(
+                    activityTestRule.activity.findViewById(R.id.webAddressView),
+                    View.VISIBLE,
+                ),
+            ) {
+                verifySortedLogin(activityTestRule, 0, originWebsite)
+                verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+            }
         }.goBack {
         }.openSavedLogins {
-            verifySortedLogin(activityTestRule, 0, originWebsite)
-            verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+            registerAndCleanupIdlingResources(
+                ViewVisibilityIdlingResource(
+                    activityTestRule.activity.findViewById(R.id.webAddressView),
+                    View.VISIBLE,
+                ),
+            ) {
+                verifySortedLogin(activityTestRule, 0, originWebsite)
+                verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+            }
         }
 
         restartApp(activityTestRule)
@@ -703,8 +993,15 @@ class LoginsTest {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
-            verifySortedLogin(activityTestRule, 0, originWebsite)
-            verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+            registerAndCleanupIdlingResources(
+                ViewVisibilityIdlingResource(
+                    activityTestRule.activity.findViewById(R.id.webAddressView),
+                    View.VISIBLE,
+                ),
+            ) {
+                verifySortedLogin(activityTestRule, 0, originWebsite)
+                verifySortedLogin(activityTestRule, 1, firstLoginPage.url.authority.toString())
+            }
         }
     }
 
@@ -716,17 +1013,42 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            verifyPageContent("Login Form")
             clickSubmitLoginButton()
-            verifySaveLoginPromptIsDisplayed()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            verifyPageContent("Login Form")
             setPageObjectText(itemWithResId("username"), "mozilla")
             setPageObjectText(itemWithResId("password"), "firefox")
-            clickPageObject(itemWithResId("submit"))
-            verifySaveLoginPromptIsDisplayed()
+            clickSubmitLoginButton()
+            // Retry actions to be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1812426 is fixed
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1833609
+            try {
+                verifySaveLoginPromptIsDisplayed()
+            } catch (e: AssertionError) {
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    verifyPageContent("Login Form")
+                    setPageObjectText(itemWithResId("username"), "mozilla")
+                    setPageObjectText(itemWithResId("password"), "firefox")
+                    clickSubmitLoginButton()
+                }
+            }
             clickPageObject(itemWithText("Save"))
-            mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -781,7 +1103,7 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            clickPageObject(MatcherHelper.itemWithResId("username"))
+            clickPageObject(itemWithResId("username"))
             clickSuggestedLoginsButton()
             verifySuggestedUserName("mozilla")
             clickPageObject(itemWithResIdAndText("$packageName:id/username", "mozilla"))

@@ -42,7 +42,10 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 
 class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
-    fun verifySecurityPromptForLogins() = assertSavedLoginsView()
+    fun verifySecurityPromptForLogins() =
+        onView(withText("Secure your logins and passwords"))
+            .inRoot(RootMatchers.DEFAULT)
+            .check(matches(isDisplayed()))
 
     fun verifyEmptySavedLoginsListView() {
         onView(withText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text)))
@@ -63,7 +66,10 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         assertSavedLoginAppears()
     }
 
-    fun tapSetupLater() = onView(withText("Later")).perform(ViewActions.click())
+    fun tapSetupLater() =
+        onView(withText("Later"))
+            .inRoot(RootMatchers.DEFAULT)
+            .perform(ViewActions.click())
 
     fun clickAddLoginButton() =
         itemContainingText(getStringResource(R.string.preferences_logins_add_login)).click()
@@ -192,10 +198,6 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
-
-private fun assertSavedLoginsView() =
-    onView(withText("Secure your logins and passwords"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSavedLoginAppears() =
     onView(withText("https://accounts.google.com"))

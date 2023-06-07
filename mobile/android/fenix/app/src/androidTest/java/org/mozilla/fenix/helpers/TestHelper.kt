@@ -26,6 +26,7 @@ import android.os.storage.StorageVolume
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.annotation.RequiresApi
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
@@ -484,5 +485,19 @@ object TestHelper {
     fun bringAppToForeground() {
         mDevice.pressRecentApps()
         mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitForExists(waitingTime)
+    }
+
+    fun isSoftKeyboardVisible(): Boolean {
+        mDevice.waitForIdle()
+        for (window in InstrumentationRegistry.getInstrumentation().uiAutomation.windows) {
+            if (window.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun hideSoftKeyboard() {
+        mDevice.executeShellCommand("settings put secure show_ime_with_hard_keyboard 0")
     }
 }

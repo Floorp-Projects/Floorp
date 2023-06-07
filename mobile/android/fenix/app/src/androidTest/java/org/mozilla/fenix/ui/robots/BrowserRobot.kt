@@ -55,6 +55,8 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.hideSoftKeyboard
+import org.mozilla.fenix.helpers.TestHelper.isSoftKeyboardVisible
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
@@ -321,7 +323,8 @@ class BrowserRobot {
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
         itemWithResId("submit").waitUntilGone(waitingTime)
-        mDevice.waitForIdle(waitingTimeLong)
+        // Sometimes the page will start reloading, we need to wait for it to stop
+        waitForPageToLoad()
     }
 
     fun enterPassword(password: String) {
@@ -555,10 +558,15 @@ class BrowserRobot {
         }
     }
 
-    fun verifySaveLoginPromptIsDisplayed() =
+    fun verifySaveLoginPromptIsDisplayed() {
+        mDevice.waitForIdle()
+        // Sometimes the keyboard will still be displayed and covers the prompt
+        hideSoftKeyboard()
+
         assertItemWithResIdExists(
             itemWithResId("$packageName:id/feature_prompt_login_fragment"),
         )
+    }
 
     fun verifySaveLoginPromptIsNotDisplayed() =
         assertItemWithResIdExists(
@@ -871,6 +879,10 @@ class BrowserRobot {
 
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
+            // In some cases the keyboard will unexpectedly cover the toolbar
+            if (isSoftKeyboardVisible()) {
+                hideSoftKeyboard()
+            }
             mDevice.waitForIdle(waitingTime)
             threeDotButton().perform(click())
 
@@ -1127,7 +1139,7 @@ fun homeScreenButton() = onView(withContentDescription(R.string.browser_toolbar_
 private fun threeDotButton() = onView(withContentDescription("Menu"))
 
 private fun tabsCounter() =
-    mDevice.findObject(By.res("$packageName:id/counter_root"))
+    mDevice.findObject(By.res("$packageName:id/mozac_browser_toolbar_browser_actions"))
 
 private val progressBar =
     itemWithResId("$packageName:id/mozac_browser_toolbar_progress")

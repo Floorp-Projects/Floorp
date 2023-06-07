@@ -17,7 +17,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.isKeyboardVisible
+import org.mozilla.fenix.helpers.TestHelper.isSoftKeyboardVisible
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -346,7 +346,7 @@ class TabbedBrowsingTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabButtonShortcutsMenu {
         }.openNewPrivateTabFromShortcutsMenu {
-            assertTrue(isKeyboardVisible())
+            assertTrue(isSoftKeyboardVisible())
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()
@@ -357,7 +357,7 @@ class TabbedBrowsingTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabButtonShortcutsMenu {
         }.openTabFromShortcutsMenu {
-            assertTrue(isKeyboardVisible())
+            assertTrue(isSoftKeyboardVisible())
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()
