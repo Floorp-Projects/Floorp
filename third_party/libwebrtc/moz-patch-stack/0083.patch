@@ -237,7 +237,7 @@ index f5011c46ef..508c36eaaf 100644
  }
  
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index c8fdd3dbb5..e8e7dc9edb 100644
+index 9c47e2ccac..c15a7c4a28 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -44,6 +44,7 @@

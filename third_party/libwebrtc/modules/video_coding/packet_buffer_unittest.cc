@@ -17,7 +17,7 @@
 
 #include "api/array_view.h"
 #include "common_video/h264/h264_common.h"
-#include "modules/video_coding/frame_object.h"
+#include "modules/rtp_rtcp/source/frame_object.h"
 #include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/random.h"
 #include "test/field_trial.h"

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/frame_object.h"
+#include "modules/rtp_rtcp/source/frame_object.h"
 
 #include <string.h>
 
@@ -93,8 +93,7 @@ RtpFrameObject::RtpFrameObject(
   is_last_spatial_layer = markerBit;
 }
 
-RtpFrameObject::~RtpFrameObject() {
-}
+RtpFrameObject::~RtpFrameObject() {}
 
 uint16_t RtpFrameObject::first_seq_num() const {
   return first_seq_num_;
