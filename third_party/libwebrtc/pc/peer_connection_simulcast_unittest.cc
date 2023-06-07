@@ -117,7 +117,7 @@ std::vector<SimulcastLayer> CreateLayers(int num_layers, bool active) {
   rtc::UniqueStringGenerator rid_generator;
   std::vector<std::string> rids;
   for (int i = 0; i < num_layers; ++i) {
-    rids.push_back(rid_generator());
+    rids.push_back(rid_generator.GenerateString());
   }
   return CreateLayers(rids, active);
 }
