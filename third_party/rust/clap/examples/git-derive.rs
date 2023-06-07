@@ -1,65 +1,99 @@
-// Note: this requires the `derive` feature
-
+use std::ffi::OsStr;
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 /// A fictional versioning CLI
-#[derive(Debug, Parser)]
-#[clap(name = "git")]
-#[clap(about = "A fictional versioning CLI", long_about = None)]
+#[derive(Debug, Parser)] // requires `derive` feature
+#[command(name = "git")]
+#[command(about = "A fictional versioning CLI", long_about = None)]
 struct Cli {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     command: Commands,
 }
 
 #[derive(Debug, Subcommand)]
 enum Commands {
     /// Clones repos
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     Clone {
         /// The remote to clone
         remote: String,
     },
+    /// Compare two commits
+    Diff {
+        #[arg(value_name = "COMMIT")]
+        base: Option<OsString>,
+        #[arg(value_name = "COMMIT")]
+        head: Option<OsString>,
+        #[arg(last = true)]
+        path: Option<OsString>,
+        #[arg(
+            long,
+            require_equals = true,
+            value_name = "WHEN",
+            num_args = 0..=1,
+            default_value_t = ColorWhen::Auto,
+            default_missing_value = "always",
+            value_enum
+        )]
+        color: ColorWhen,
+    },
     /// pushes things
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     Push {
         /// The remote to target
         remote: String,
     },
     /// adds things
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     Add {
         /// Stuff to add
-        #[clap(required = true, parse(from_os_str))]
+        #[arg(required = true)]
         path: Vec<PathBuf>,
     },
-    Stash(Stash),
-    #[clap(external_subcommand)]
+    Stash(StashArgs),
+    #[command(external_subcommand)]
     External(Vec<OsString>),
 }
 
+#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
+enum ColorWhen {
+    Always,
+    Auto,
+    Never,
+}
+
+impl std::fmt::Display for ColorWhen {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.to_possible_value()
+            .expect("no values are skipped")
+            .get_name()
+            .fmt(f)
+    }
+}
+
 #[derive(Debug, Args)]
-#[clap(args_conflicts_with_subcommands = true)]
-struct Stash {
-    #[clap(subcommand)]
+#[command(args_conflicts_with_subcommands = true)]
+struct StashArgs {
+    #[command(subcommand)]
     command: Option<StashCommands>,
 
-    #[clap(flatten)]
-    push: StashPush,
+    #[command(flatten)]
+    push: StashPushArgs,
 }
 
 #[derive(Debug, Subcommand)]
 enum StashCommands {
-    Push(StashPush),
+    Push(StashPushArgs),
     Pop { stash: Option<String> },
     Apply { stash: Option<String> },
 }
 
 #[derive(Debug, Args)]
-struct StashPush {
-    #[clap(short, long)]
+struct StashPushArgs {
+    #[arg(short, long)]
     message: Option<String>,
 }
 
@@ -68,25 +102,56 @@ fn main() {
 
     match args.command {
         Commands::Clone { remote } => {
-            println!("Cloning {}", remote);
+            println!("Cloning {remote}");
+        }
+        Commands::Diff {
+            mut base,
+            mut head,
+            mut path,
+            color,
+        } => {
+            if path.is_none() {
+                path = head;
+                head = None;
+                if path.is_none() {
+                    path = base;
+                    base = None;
+                }
+            }
+            let base = base
+                .as_deref()
+                .map(|s| s.to_str().unwrap())
+                .unwrap_or("stage");
+            let head = head
+                .as_deref()
+                .map(|s| s.to_str().unwrap())
+                .unwrap_or("worktree");
+            let path = path.as_deref().unwrap_or_else(|| OsStr::new(""));
+            println!(
+                "Diffing {}..{} {} (color={})",
+                base,
+                head,
+                path.to_string_lossy(),
+                color
+            );
         }
         Commands::Push { remote } => {
-            println!("Pushing to {}", remote);
+            println!("Pushing to {remote}");
         }
         Commands::Add { path } => {
-            println!("Adding {:?}", path);
+            println!("Adding {path:?}");
         }
         Commands::Stash(stash) => {
             let stash_cmd = stash.command.unwrap_or(StashCommands::Push(stash.push));
             match stash_cmd {
                 StashCommands::Push(push) => {
-                    println!("Pushing {:?}", push);
+                    println!("Pushing {push:?}");
                 }
                 StashCommands::Pop { stash } => {
-                    println!("Popping {:?}", stash);
+                    println!("Popping {stash:?}");
                 }
                 StashCommands::Apply { stash } => {
-                    println!("Applying {:?}", stash);
+                    println!("Applying {stash:?}");
                 }
             }
         }

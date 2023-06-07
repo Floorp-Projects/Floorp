@@ -1,5 +1,3 @@
-*Jump to [source](pacman.rs)*
-
 [`pacman`](https://wiki.archlinux.org/index.php/pacman) defines subcommands via flags.
 
 Here, `-S` is a short flag subcommand:
@@ -37,36 +35,31 @@ Searching for name...
 In the help, this looks like:
 ```console
 $ pacman -h
-pacman 5.2.1
-Pacman Development Team
 package manager utility
 
-USAGE:
-    pacman[EXE] <SUBCOMMAND>
+Usage: pacman[EXE] <COMMAND>
 
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
+Commands:
+  query, -Q, --query  Query the package database.
+  sync, -S, --sync    Synchronize packages.
+  help                Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    help                Print this message or the help of the given subcommand(s)
-    query -Q --query    Query the package database.
-    sync -S --sync      Synchronize packages.
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 
 $ pacman -S -h
-pacman[EXE]-sync 
 Synchronize packages.
 
-USAGE:
-    pacman[EXE] {sync|--sync|-S} [OPTIONS] [--] [package]...
+Usage: pacman[EXE] {sync|--sync|-S} [OPTIONS] [package]...
 
-ARGS:
-    <package>...    packages
+Arguments:
+  [package]...  packages
 
-OPTIONS:
-    -h, --help                  Print help information
-    -i, --info                  view package information
-    -s, --search <search>...    search remote repositories for matching strings
+Options:
+  -s, --search <search>...  search remote repositories for matching strings
+  -i, --info                view package information
+  -h, --help                Print help
 
 ```
 
@@ -74,12 +67,11 @@ And errors:
 ```console
 $ pacman -S -s foo -i bar
 ? failed
-error: The argument '--search <search>...' cannot be used with '--info'
+error: the argument '--search <search>...' cannot be used with '--info'
 
-USAGE:
-    pacman[EXE] {sync|--sync|-S} --search <search>... <package>...
+Usage: pacman[EXE] {sync|--sync|-S} --search <search>... <package>...
 
-For more information try --help
+For more information, try '--help'.
 
 ```
 

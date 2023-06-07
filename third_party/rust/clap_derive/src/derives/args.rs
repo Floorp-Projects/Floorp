@@ -12,111 +12,87 @@
 // commit#ea76fa1b1b273e65e3b0b1046643715b49bec51f which is licensed under the
 // MIT/Apache 2.0 license.
 
-use crate::{
-    attrs::{Attrs, Kind, Name, ParserKind, DEFAULT_CASING, DEFAULT_ENV_CASING},
-    dummies,
-    utils::{inner_type, sub_type, Sp, Ty},
-};
-
 use proc_macro2::{Ident, Span, TokenStream};
-use proc_macro_error::{abort, abort_call_site};
 use quote::{format_ident, quote, quote_spanned};
 use syn::{
-    punctuated::Punctuated, spanned::Spanned, token::Comma, Attribute, Data, DataStruct,
-    DeriveInput, Field, Fields, Generics, Type,
+    punctuated::Punctuated, spanned::Spanned, token::Comma, Data, DataStruct, DeriveInput, Field,
+    Fields, Generics,
 };
 
-pub fn derive_args(input: &DeriveInput) -> TokenStream {
-    let ident = &input.ident;
+use crate::item::{Item, Kind, Name};
+use crate::utils::{inner_type, sub_type, Sp, Ty};
 
-    dummies::args(ident);
+pub fn derive_args(input: &DeriveInput) -> Result<TokenStream, syn::Error> {
+    let ident = &input.ident;
 
     match input.data {
         Data::Struct(DataStruct {
             fields: Fields::Named(ref fields),
             ..
-        }) => gen_for_struct(ident, &input.generics, &fields.named, &input.attrs),
+        }) => {
+            let name = Name::Derived(ident.clone());
+            let item = Item::from_args_struct(input, name)?;
+            let fields = fields
+                .named
+                .iter()
+                .map(|field| {
+                    let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
+                    Ok((field, item))
+                })
+                .collect::<Result<Vec<_>, syn::Error>>()?;
+            gen_for_struct(&item, ident, &input.generics, &fields)
+        }
         Data::Struct(DataStruct {
             fields: Fields::Unit,
             ..
-        }) => gen_for_struct(
-            ident,
-            &input.generics,
-            &Punctuated::<Field, Comma>::new(),
-            &input.attrs,
-        ),
+        }) => {
+            let name = Name::Derived(ident.clone());
+            let item = Item::from_args_struct(input, name)?;
+            let fields = Punctuated::<Field, Comma>::new();
+            let fields = fields
+                .iter()
+                .map(|field| {
+                    let item = Item::from_args_field(field, item.casing(), item.env_casing())?;
+                    Ok((field, item))
+                })
+                .collect::<Result<Vec<_>, syn::Error>>()?;
+            gen_for_struct(&item, ident, &input.generics, &fields)
+        }
         _ => abort_call_site!("`#[derive(Args)]` only supports non-tuple structs"),
     }
 }
 
 pub fn gen_for_struct(
-    struct_name: &Ident,
+    item: &Item,
+    item_name: &Ident,
     generics: &Generics,
-    fields: &Punctuated<Field, Comma>,
-    attrs: &[Attribute],
-) -> TokenStream {
-    let from_arg_matches = gen_from_arg_matches_for_struct(struct_name, generics, fields, attrs);
-
-    let attrs = Attrs::from_struct(
-        Span::call_site(),
-        attrs,
-        Name::Derived(struct_name.clone()),
-        Sp::call_site(DEFAULT_CASING),
-        Sp::call_site(DEFAULT_ENV_CASING),
-    );
-    let app_var = Ident::new("__clap_app", Span::call_site());
-    let augmentation = gen_augment(fields, &app_var, &attrs, false);
-    let augmentation_update = gen_augment(fields, &app_var, &attrs, true);
-
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-
-    quote! {
-        #from_arg_matches
-
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
-        #[allow(
-            clippy::style,
-            clippy::complexity,
-            clippy::pedantic,
-            clippy::restriction,
-            clippy::perf,
-            clippy::deprecated,
-            clippy::nursery,
-            clippy::cargo,
-            clippy::suspicious_else_formatting,
-        )]
-        #[deny(clippy::correctness)]
-        impl #impl_generics clap::Args for #struct_name #ty_generics #where_clause {
-            fn augment_args<'b>(#app_var: clap::Command<'b>) -> clap::Command<'b> {
-                #augmentation
-            }
-            fn augment_args_for_update<'b>(#app_var: clap::Command<'b>) -> clap::Command<'b> {
-                #augmentation_update
-            }
+    fields: &[(&Field, Item)],
+) -> Result<TokenStream, syn::Error> {
+    if !matches!(&*item.kind(), Kind::Command(_)) {
+        abort! { item.kind().span(),
+            "`{}` cannot be used with `command`",
+            item.kind().name(),
         }
     }
-}
-
-pub fn gen_from_arg_matches_for_struct(
-    struct_name: &Ident,
-    generics: &Generics,
-    fields: &Punctuated<Field, Comma>,
-    attrs: &[Attribute],
-) -> TokenStream {
-    let attrs = Attrs::from_struct(
-        Span::call_site(),
-        attrs,
-        Name::Derived(struct_name.clone()),
-        Sp::call_site(DEFAULT_CASING),
-        Sp::call_site(DEFAULT_ENV_CASING),
-    );
-
-    let constructor = gen_constructor(fields, &attrs);
-    let updater = gen_updater(fields, &attrs, true);
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-    quote! {
+    let constructor = gen_constructor(fields)?;
+    let updater = gen_updater(fields, true)?;
+    let raw_deprecated = raw_deprecated();
+
+    let app_var = Ident::new("__clap_app", Span::call_site());
+    let augmentation = gen_augment(fields, &app_var, item, false)?;
+    let augmentation_update = gen_augment(fields, &app_var, item, true)?;
+
+    let group_id = if item.skip_group() {
+        quote!(None)
+    } else {
+        let group_id = item.group_id();
+        quote!(Some(clap::Id::from(#group_id)))
+    };
+
+    Ok(quote! {
         #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
         #[allow(
             clippy::style,
@@ -128,264 +104,336 @@ pub fn gen_from_arg_matches_for_struct(
             clippy::nursery,
             clippy::cargo,
             clippy::suspicious_else_formatting,
+            clippy::almost_swapped,
         )]
-        #[deny(clippy::correctness)]
-        impl #impl_generics clap::FromArgMatches for #struct_name #ty_generics #where_clause {
+        impl #impl_generics clap::FromArgMatches for #item_name #ty_generics #where_clause {
             fn from_arg_matches(__clap_arg_matches: &clap::ArgMatches) -> ::std::result::Result<Self, clap::Error> {
-                let v = #struct_name #constructor;
+                Self::from_arg_matches_mut(&mut __clap_arg_matches.clone())
+            }
+
+            fn from_arg_matches_mut(__clap_arg_matches: &mut clap::ArgMatches) -> ::std::result::Result<Self, clap::Error> {
+                #raw_deprecated
+                let v = #item_name #constructor;
                 ::std::result::Result::Ok(v)
             }
 
             fn update_from_arg_matches(&mut self, __clap_arg_matches: &clap::ArgMatches) -> ::std::result::Result<(), clap::Error> {
+                self.update_from_arg_matches_mut(&mut __clap_arg_matches.clone())
+            }
+
+            fn update_from_arg_matches_mut(&mut self, __clap_arg_matches: &mut clap::ArgMatches) -> ::std::result::Result<(), clap::Error> {
+                #raw_deprecated
                 #updater
                 ::std::result::Result::Ok(())
             }
         }
-    }
+
+        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+        #[allow(
+            clippy::style,
+            clippy::complexity,
+            clippy::pedantic,
+            clippy::restriction,
+            clippy::perf,
+            clippy::deprecated,
+            clippy::nursery,
+            clippy::cargo,
+            clippy::suspicious_else_formatting,
+            clippy::almost_swapped,
+        )]
+        impl #impl_generics clap::Args for #item_name #ty_generics #where_clause {
+            fn group_id() -> Option<clap::Id> {
+                #group_id
+            }
+            fn augment_args<'b>(#app_var: clap::Command) -> clap::Command {
+                #augmentation
+            }
+            fn augment_args_for_update<'b>(#app_var: clap::Command) -> clap::Command {
+                #augmentation_update
+            }
+        }
+    })
 }
 
 /// Generate a block of code to add arguments/subcommands corresponding to
 /// the `fields` to an cmd.
 pub fn gen_augment(
-    fields: &Punctuated<Field, Comma>,
+    fields: &[(&Field, Item)],
     app_var: &Ident,
-    parent_attribute: &Attrs,
+    parent_item: &Item,
     override_required: bool,
-) -> TokenStream {
-    let mut subcmds = fields.iter().filter_map(|field| {
-        let attrs = Attrs::from_field(
-            field,
-            parent_attribute.casing(),
-            parent_attribute.env_casing(),
-        );
-        let kind = attrs.kind();
-        if let Kind::Subcommand(ty) = &*kind {
-            let subcmd_type = match (**ty, sub_type(&field.ty)) {
-                (Ty::Option, Some(sub_type)) => sub_type,
-                _ => &field.ty,
-            };
-            let required = if **ty == Ty::Option {
-                quote!()
-            } else {
-                quote_spanned! { kind.span()=>
-                    #[allow(deprecated)]
-                    let #app_var = #app_var.setting(
-                        clap::AppSettings::SubcommandRequiredElseHelp
-                    );
-                }
-            };
-
-            let span = field.span();
-            let ts = if override_required {
-                quote! {
-                    let #app_var = <#subcmd_type as clap::Subcommand>::augment_subcommands_for_update( #app_var );
-                }
-            } else{
-                quote! {
-                    let #app_var = <#subcmd_type as clap::Subcommand>::augment_subcommands( #app_var );
-                    #required
-                }
-            };
-            Some((span, ts))
-        } else {
-            None
-        }
-    });
-    let subcmd = subcmds.next().map(|(_, ts)| ts);
-    if let Some((span, _)) = subcmds.next() {
-        abort!(
-            span,
-            "multiple subcommand sets are not allowed, that's the second"
-        );
-    }
-
-    let args = fields.iter().filter_map(|field| {
-        let attrs = Attrs::from_field(
-            field,
-            parent_attribute.casing(),
-            parent_attribute.env_casing(),
-        );
-        let kind = attrs.kind();
-        match &*kind {
-            Kind::Subcommand(_)
-            | Kind::Skip(_)
+) -> Result<TokenStream, syn::Error> {
+    let mut subcommand_specified = false;
+    let mut args = Vec::new();
+    for (field, item) in fields {
+        let kind = item.kind();
+        let genned = match &*kind {
+            Kind::Command(_)
+            | Kind::Value
+            | Kind::Skip(_, _)
             | Kind::FromGlobal(_)
             | Kind::ExternalSubcommand => None,
-            Kind::Flatten => {
-                let ty = &field.ty;
-                let old_heading_var = format_ident!("__clap_old_heading");
-                let next_help_heading = attrs.next_help_heading();
-                let next_display_order = attrs.next_display_order();
-                if override_required {
-                    Some(quote_spanned! { kind.span()=>
-                        let #old_heading_var = #app_var.get_next_help_heading();
-                        let #app_var = #app_var #next_help_heading #next_display_order;
-                        let #app_var = <#ty as clap::Args>::augment_args_for_update(#app_var);
-                        let #app_var = #app_var.next_help_heading(#old_heading_var);
-                    })
-                } else {
-                    Some(quote_spanned! { kind.span()=>
-                        let #old_heading_var = #app_var.get_next_help_heading();
-                        let #app_var = #app_var #next_help_heading #next_display_order;
-                        let #app_var = <#ty as clap::Args>::augment_args(#app_var);
-                        let #app_var = #app_var.next_help_heading(#old_heading_var);
-                    })
+            Kind::Subcommand(ty) => {
+                if subcommand_specified {
+                    abort!(
+                        field.span(),
+                        "`#[command(subcommand)]` can only be used once per container"
+                    );
                 }
-            }
-            Kind::Arg(ty) => {
-                let convert_type = inner_type(**ty, &field.ty);
+                subcommand_specified = true;
 
-                let occurrences = *attrs.parser().kind == ParserKind::FromOccurrences;
-                let flag = *attrs.parser().kind == ParserKind::FromFlag;
-
-                let parser = attrs.parser();
-                let func = &parser.func;
-
-                let validator = match *parser.kind {
-                    _ if attrs.is_enum() => quote!(),
-                    ParserKind::TryFromStr => quote_spanned! { func.span()=>
-                        .validator(|s| {
-                            #func(s)
-                            .map(|_: #convert_type| ())
-                        })
-                    },
-                    ParserKind::TryFromOsStr => quote_spanned! { func.span()=>
-                        .validator_os(|s| #func(s).map(|_: #convert_type| ()))
-                    },
-                    ParserKind::FromStr
-                    | ParserKind::FromOsStr
-                    | ParserKind::FromFlag
-                    | ParserKind::FromOccurrences => quote!(),
+                let subcmd_type = match (**ty, sub_type(&field.ty)) {
+                    (Ty::Option, Some(sub_type)) => sub_type,
+                    _ => &field.ty,
                 };
-                let allow_invalid_utf8 = match *parser.kind {
-                    _ if attrs.is_enum() => quote!(),
-                    ParserKind::FromOsStr | ParserKind::TryFromOsStr => {
-                        quote_spanned! { func.span()=>
-                            .allow_invalid_utf8(true)
-                        }
+                let implicit_methods = if **ty == Ty::Option {
+                    quote!()
+                } else {
+                    quote_spanned! { kind.span()=>
+                        .subcommand_required(true)
+                        .arg_required_else_help(true)
                     }
-                    ParserKind::FromStr
-                    | ParserKind::TryFromStr
-                    | ParserKind::FromFlag
-                    | ParserKind::FromOccurrences => quote!(),
                 };
 
-                let value_name = attrs.value_name();
-                let possible_values = if attrs.is_enum() {
-                    gen_arg_enum_possible_values(convert_type)
+                let override_methods = if override_required {
+                    quote_spanned! { kind.span()=>
+                        .subcommand_required(false)
+                        .arg_required_else_help(false)
+                    }
                 } else {
                     quote!()
                 };
 
-                let modifier = match **ty {
-                    Ty::Bool => quote!(),
+                Some(quote! {
+                    let #app_var = <#subcmd_type as clap::Subcommand>::augment_subcommands( #app_var );
+                    let #app_var = #app_var
+                        #implicit_methods
+                        #override_methods;
+                })
+            }
+            Kind::Flatten(ty) => {
+                let inner_type = match (**ty, sub_type(&field.ty)) {
+                    (Ty::Option, Some(sub_type)) => sub_type,
+                    _ => &field.ty,
+                };
 
+                let next_help_heading = item.next_help_heading();
+                let next_display_order = item.next_display_order();
+                if override_required {
+                    Some(quote_spanned! { kind.span()=>
+                        let #app_var = #app_var
+                            #next_help_heading
+                            #next_display_order;
+                        let #app_var = <#inner_type as clap::Args>::augment_args_for_update(#app_var);
+                    })
+                } else {
+                    Some(quote_spanned! { kind.span()=>
+                        let #app_var = #app_var
+                            #next_help_heading
+                            #next_display_order;
+                        let #app_var = <#inner_type as clap::Args>::augment_args(#app_var);
+                    })
+                }
+            }
+            Kind::Arg(ty) => {
+                let value_parser = item.value_parser(&field.ty);
+                let action = item.action(&field.ty);
+                let value_name = item.value_name();
+
+                let implicit_methods = match **ty {
+                    Ty::Unit => {
+                        // Leaving out `value_parser` as it will always fail
+                        quote_spanned! { ty.span()=>
+                            .value_name(#value_name)
+                            #action
+                        }
+                    }
                     Ty::Option => {
                         quote_spanned! { ty.span()=>
-                            .takes_value(true)
                             .value_name(#value_name)
-                            #possible_values
-                            #validator
-                            #allow_invalid_utf8
+                            #value_parser
+                            #action
                         }
                     }
 
                     Ty::OptionOption => quote_spanned! { ty.span()=>
-                        .takes_value(true)
                         .value_name(#value_name)
-                        .min_values(0)
-                        .max_values(1)
-                        .multiple_values(false)
-                        #possible_values
-                        #validator
-                        #allow_invalid_utf8
+                        .num_args(0..=1)
+                        #value_parser
+                        #action
                     },
 
-                    Ty::OptionVec => quote_spanned! { ty.span()=>
-                        .takes_value(true)
-                        .value_name(#value_name)
-                        .multiple_occurrences(true)
-                        #possible_values
-                        #validator
-                        #allow_invalid_utf8
-                    },
-
-                    Ty::Vec => {
-                        quote_spanned! { ty.span()=>
-                            .takes_value(true)
-                            .value_name(#value_name)
-                            .multiple_occurrences(true)
-                            #possible_values
-                            #validator
-                            #allow_invalid_utf8
+                    Ty::OptionVec => {
+                        if item.is_positional() {
+                            quote_spanned! { ty.span()=>
+                                .value_name(#value_name)
+                                .num_args(1..)  // action won't be sufficient for getting multiple
+                                #value_parser
+                                #action
+                            }
+                        } else {
+                            quote_spanned! { ty.span()=>
+                                .value_name(#value_name)
+                                #value_parser
+                                #action
+                            }
                         }
                     }
 
-                    Ty::Other if occurrences => quote_spanned! { ty.span()=>
-                        .multiple_occurrences(true)
-                    },
+                    Ty::Vec => {
+                        if item.is_positional() {
+                            quote_spanned! { ty.span()=>
+                                .value_name(#value_name)
+                                .num_args(1..)  // action won't be sufficient for getting multiple
+                                #value_parser
+                                #action
+                            }
+                        } else {
+                            quote_spanned! { ty.span()=>
+                                .value_name(#value_name)
+                                #value_parser
+                                #action
+                            }
+                        }
+                    }
 
-                    Ty::Other if flag => quote_spanned! { ty.span()=>
-                        .takes_value(false)
-                    },
+                    Ty::VecVec | Ty::OptionVecVec => {
+                        quote_spanned! { ty.span() =>
+                            .value_name(#value_name)
+                            #value_parser
+                            #action
+                        }
+                    }
 
                     Ty::Other => {
-                        let required = attrs.find_default_method().is_none() && !override_required;
+                        let required = item.find_default_method().is_none();
+                        // `ArgAction::takes_values` is assuming `ArgAction::default_value` will be
+                        // set though that won't always be true but this should be good enough,
+                        // otherwise we'll report an "arg required" error when unwrapping.
+                        let action_value = action.args();
                         quote_spanned! { ty.span()=>
-                            .takes_value(true)
                             .value_name(#value_name)
-                            .required(#required)
-                            #possible_values
-                            #validator
-                            #allow_invalid_utf8
+                            .required(#required && #action_value.takes_values())
+                            #value_parser
+                            #action
                         }
                     }
                 };
 
-                let id = attrs.id();
-                let methods = attrs.field_methods(true);
+                let id = item.id();
+                let explicit_methods = item.field_methods();
+                let deprecations = if !override_required {
+                    item.deprecations()
+                } else {
+                    quote!()
+                };
+                let override_methods = if override_required {
+                    quote_spanned! { kind.span()=>
+                        .required(false)
+                    }
+                } else {
+                    quote!()
+                };
 
                 Some(quote_spanned! { field.span()=>
-                    let #app_var = #app_var.arg(
-                        clap::Arg::new(#id)
-                            #modifier
-                            #methods
-                    );
+                    let #app_var = #app_var.arg({
+                        #deprecations
+
+                        #[allow(deprecated)]
+                        let arg = clap::Arg::new(#id)
+                            #implicit_methods;
+
+                        let arg = arg
+                            #explicit_methods;
+
+                        let arg = arg
+                            #override_methods;
+
+                        arg
+                    });
                 })
             }
-        }
-    });
-
-    let initial_app_methods = parent_attribute.initial_top_level_methods();
-    let final_app_methods = parent_attribute.final_top_level_methods();
-    quote! {{
-        let #app_var = #app_var #initial_app_methods;
-        #( #args )*
-        #subcmd
-        #app_var #final_app_methods
-    }}
-}
-
-fn gen_arg_enum_possible_values(ty: &Type) -> TokenStream {
-    quote_spanned! { ty.span()=>
-        .possible_values(<#ty as clap::ArgEnum>::value_variants().iter().filter_map(clap::ArgEnum::to_possible_value))
+        };
+        args.push(genned);
     }
+
+    let deprecations = if !override_required {
+        parent_item.deprecations()
+    } else {
+        quote!()
+    };
+    let initial_app_methods = parent_item.initial_top_level_methods();
+    let final_app_methods = parent_item.final_top_level_methods();
+    let group_app_methods = if parent_item.skip_group() {
+        quote!()
+    } else {
+        let group_id = parent_item.group_id();
+        let literal_group_members = fields
+            .iter()
+            .filter_map(|(_field, item)| {
+                let kind = item.kind();
+                if matches!(*kind, Kind::Arg(_)) {
+                    Some(item.id())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        let literal_group_members_len = literal_group_members.len();
+        let mut literal_group_members = quote! {{
+            let members: [clap::Id; #literal_group_members_len] = [#( clap::Id::from(#literal_group_members) ),* ];
+            members
+        }};
+        // HACK: Validation isn't ready yet for nested arg groups, so just don't populate the group in
+        // that situation
+        let possible_group_members_len = fields
+            .iter()
+            .filter(|(_field, item)| {
+                let kind = item.kind();
+                matches!(*kind, Kind::Flatten(_))
+            })
+            .count();
+        if 0 < possible_group_members_len {
+            literal_group_members = quote! {{
+                let members: [clap::Id; 0] = [];
+                members
+            }};
+        }
+
+        let group_methods = parent_item.group_methods();
+
+        quote!(
+            .group(
+                clap::ArgGroup::new(#group_id)
+                    .multiple(true)
+                    #group_methods
+                    .args(#literal_group_members)
+            )
+        )
+    };
+    Ok(quote! {{
+        #deprecations
+        let #app_var = #app_var
+            #initial_app_methods
+            #group_app_methods
+            ;
+        #( #args )*
+        #app_var #final_app_methods
+    }})
 }
 
-pub fn gen_constructor(fields: &Punctuated<Field, Comma>, parent_attribute: &Attrs) -> TokenStream {
-    let fields = fields.iter().map(|field| {
-        let attrs = Attrs::from_field(
-            field,
-            parent_attribute.casing(),
-            parent_attribute.env_casing(),
-        );
+pub fn gen_constructor(fields: &[(&Field, Item)]) -> Result<TokenStream, syn::Error> {
+    let fields = fields.iter().map(|(field, item)| {
         let field_name = field.ident.as_ref().unwrap();
-        let kind = attrs.kind();
+        let kind = item.kind();
         let arg_matches = format_ident!("__clap_arg_matches");
-        match &*kind {
-            Kind::ExternalSubcommand => {
+        let genned = match &*kind {
+            Kind::Command(_)
+            | Kind::Value
+            | Kind::ExternalSubcommand => {
                 abort! { kind.span(),
-                    "`external_subcommand` can be used only on enum variants"
+                    "`{}` cannot be used with `arg`",
+                    kind.name(),
                 }
             }
             Kind::Subcommand(ty) => {
@@ -398,56 +446,98 @@ pub fn gen_constructor(fields: &Punctuated<Field, Comma>, parent_attribute: &Att
                         quote_spanned! { kind.span()=>
                             #field_name: {
                                 if #arg_matches.subcommand_name().map(<#subcmd_type as clap::Subcommand>::has_subcommand).unwrap_or(false) {
-                                    Some(<#subcmd_type as clap::FromArgMatches>::from_arg_matches(#arg_matches)?)
+                                    Some(<#subcmd_type as clap::FromArgMatches>::from_arg_matches_mut(#arg_matches)?)
                                 } else {
                                     None
                                 }
                             }
                         }
                     },
-                    _ => {
+                    Ty::Other => {
                         quote_spanned! { kind.span()=>
                             #field_name: {
-                                <#subcmd_type as clap::FromArgMatches>::from_arg_matches(#arg_matches)?
+                                <#subcmd_type as clap::FromArgMatches>::from_arg_matches_mut(#arg_matches)?
                             }
                         }
                     },
+                    Ty::Unit |
+                    Ty::Vec |
+                    Ty::OptionOption |
+                    Ty::OptionVec |
+                    Ty::VecVec |
+                    Ty::OptionVecVec => {
+                        abort!(
+                            ty.span(),
+                            "{} types are not supported for subcommand",
+                            ty.as_str()
+                        );
+                    }
                 }
             }
 
-            Kind::Flatten => quote_spanned! { kind.span()=>
-                #field_name: clap::FromArgMatches::from_arg_matches(#arg_matches)?
+            Kind::Flatten(ty) => {
+                let inner_type = match (**ty, sub_type(&field.ty)) {
+                    (Ty::Option, Some(sub_type)) => sub_type,
+                    _ => &field.ty,
+                };
+                match **ty {
+                    Ty::Other => {
+                        quote_spanned! { kind.span()=>
+                            #field_name: <#inner_type as clap::FromArgMatches>::from_arg_matches_mut(#arg_matches)?
+                        }
+                    },
+                    Ty::Option => {
+                        quote_spanned! { kind.span()=>
+                            #field_name: {
+                                let group_id = <#inner_type as clap::Args>::group_id()
+                                    .expect("`#[arg(flatten)]`ed field type implements `Args::group_id`");
+                                if #arg_matches.contains_id(group_id.as_str()) {
+                                    Some(
+                                        <#inner_type as clap::FromArgMatches>::from_arg_matches_mut(#arg_matches)?
+                                    )
+                                } else {
+                                    None
+                                }
+                            }
+                        }
+                    },
+                    Ty::Unit |
+                    Ty::Vec |
+                    Ty::OptionOption |
+                    Ty::OptionVec |
+                    Ty::VecVec |
+                    Ty::OptionVecVec => {
+                        abort!(
+                            ty.span(),
+                            "{} types are not supported for flatten",
+                            ty.as_str()
+                        );
+                    }
+                }
             },
 
-            Kind::Skip(val) => match val {
+            Kind::Skip(val, _) => match val {
                 None => quote_spanned!(kind.span()=> #field_name: Default::default()),
                 Some(val) => quote_spanned!(kind.span()=> #field_name: (#val).into()),
             },
 
             Kind::Arg(ty) | Kind::FromGlobal(ty) => {
-                gen_parsers(&attrs, ty, field_name, field, None)
+                gen_parsers(item, ty, field_name, field, None)?
             }
-        }
-    });
+        };
+        Ok(genned)
+    }).collect::<Result<Vec<_>, syn::Error>>()?;
 
-    quote! {{
+    Ok(quote! {{
         #( #fields ),*
-    }}
+    }})
 }
 
-pub fn gen_updater(
-    fields: &Punctuated<Field, Comma>,
-    parent_attribute: &Attrs,
-    use_self: bool,
-) -> TokenStream {
-    let fields = fields.iter().map(|field| {
-        let attrs = Attrs::from_field(
-            field,
-            parent_attribute.casing(),
-            parent_attribute.env_casing(),
-        );
+pub fn gen_updater(fields: &[(&Field, Item)], use_self: bool) -> Result<TokenStream, syn::Error> {
+    let mut genned_fields = Vec::new();
+    for (field, item) in fields {
         let field_name = field.ident.as_ref().unwrap();
-        let kind = attrs.kind();
+        let kind = item.kind();
 
         let access = if use_self {
             quote! {
@@ -459,10 +549,11 @@ pub fn gen_updater(
         };
         let arg_matches = format_ident!("__clap_arg_matches");
 
-        match &*kind {
-            Kind::ExternalSubcommand => {
+        let genned = match &*kind {
+            Kind::Command(_) | Kind::Value | Kind::ExternalSubcommand => {
                 abort! { kind.span(),
-                    "`external_subcommand` can be used only on enum variants"
+                    "`{}` cannot be used with `arg`",
+                    kind.name(),
                 }
             }
             Kind::Subcommand(ty) => {
@@ -472,7 +563,7 @@ pub fn gen_updater(
                 };
 
                 let updater = quote_spanned! { ty.span()=>
-                    <#subcmd_type as clap::FromArgMatches>::update_from_arg_matches(#field_name, #arg_matches)?;
+                    <#subcmd_type as clap::FromArgMatches>::update_from_arg_matches_mut(#field_name, #arg_matches)?;
                 };
 
                 let updater = match **ty {
@@ -480,7 +571,7 @@ pub fn gen_updater(
                         if let Some(#field_name) = #field_name.as_mut() {
                             #updater
                         } else {
-                            *#field_name = Some(<#subcmd_type as clap::FromArgMatches>::from_arg_matches(
+                            *#field_name = Some(<#subcmd_type as clap::FromArgMatches>::from_arg_matches_mut(
                                 #arg_matches
                             )?);
                         }
@@ -498,114 +589,99 @@ pub fn gen_updater(
                 }
             }
 
-            Kind::Flatten => quote_spanned! { kind.span()=> {
-                    #access
-                    clap::FromArgMatches::update_from_arg_matches(#field_name, #arg_matches)?;
+            Kind::Flatten(ty) => {
+                let inner_type = match (**ty, sub_type(&field.ty)) {
+                    (Ty::Option, Some(sub_type)) => sub_type,
+                    _ => &field.ty,
+                };
+
+                let updater = quote_spanned! { ty.span()=>
+                    <#inner_type as clap::FromArgMatches>::update_from_arg_matches_mut(#field_name, #arg_matches)?;
+                };
+
+                let updater = match **ty {
+                    Ty::Option => quote_spanned! { kind.span()=>
+                        if let Some(#field_name) = #field_name.as_mut() {
+                            #updater
+                        } else {
+                            *#field_name = Some(<#inner_type as clap::FromArgMatches>::from_arg_matches_mut(
+                                #arg_matches
+                            )?);
+                        }
+                    },
+                    _ => quote_spanned! { kind.span()=>
+                        #updater
+                    },
+                };
+
+                quote_spanned! { kind.span()=>
+                    {
+                        #access
+                        #updater
+                    }
                 }
-            },
+            }
 
-            Kind::Skip(_) => quote!(),
+            Kind::Skip(_, _) => quote!(),
 
-            Kind::Arg(ty) | Kind::FromGlobal(ty) => gen_parsers(&attrs, ty, field_name, field, Some(&access)),
-        }
-    });
-
-    quote! {
-        #( #fields )*
+            Kind::Arg(ty) | Kind::FromGlobal(ty) => {
+                gen_parsers(item, ty, field_name, field, Some(&access))?
+            }
+        };
+        genned_fields.push(genned);
     }
+
+    Ok(quote! {
+        #( #genned_fields )*
+    })
 }
 
 fn gen_parsers(
-    attrs: &Attrs,
+    item: &Item,
     ty: &Sp<Ty>,
     field_name: &Ident,
     field: &Field,
     update: Option<&TokenStream>,
-) -> TokenStream {
-    use self::ParserKind::*;
+) -> Result<TokenStream, syn::Error> {
+    let span = ty.span();
+    let convert_type = inner_type(&field.ty);
+    let id = item.id();
+    let get_one = quote_spanned!(span=> remove_one::<#convert_type>);
+    let get_many = quote_spanned!(span=> remove_many::<#convert_type>);
+    let get_occurrences = quote_spanned!(span=> remove_occurrences::<#convert_type>);
 
-    let parser = attrs.parser();
-    let func = &parser.func;
-    let span = parser.kind.span();
-    let convert_type = inner_type(**ty, &field.ty);
-    let id = attrs.id();
-    let (value_of, values_of, mut parse) = match *parser.kind {
-        FromStr => (
-            quote_spanned!(span=> value_of),
-            quote_spanned!(span=> values_of),
-            quote_spanned!(func.span()=> |s| ::std::result::Result::Ok::<_, clap::Error>(#func(s))),
-        ),
-        TryFromStr => (
-            quote_spanned!(span=> value_of),
-            quote_spanned!(span=> values_of),
-            quote_spanned!(func.span()=> |s| #func(s).map_err(|err| clap::Error::raw(clap::ErrorKind::ValueValidation, format!("Invalid value for {}: {}", #id, err)))),
-        ),
-        FromOsStr => (
-            quote_spanned!(span=> value_of_os),
-            quote_spanned!(span=> values_of_os),
-            quote_spanned!(func.span()=> |s| ::std::result::Result::Ok::<_, clap::Error>(#func(s))),
-        ),
-        TryFromOsStr => (
-            quote_spanned!(span=> value_of_os),
-            quote_spanned!(span=> values_of_os),
-            quote_spanned!(func.span()=> |s| #func(s).map_err(|err| clap::Error::raw(clap::ErrorKind::ValueValidation, format!("Invalid value for {}: {}", #id, err)))),
-        ),
-        FromOccurrences => (
-            quote_spanned!(span=> occurrences_of),
-            quote!(),
-            func.clone(),
-        ),
-        FromFlag => (quote!(), quote!(), func.clone()),
-    };
-    if attrs.is_enum() {
-        let ci = attrs.ignore_case();
-
-        parse = quote_spanned! { convert_type.span()=>
-            |s| <#convert_type as clap::ArgEnum>::from_str(s, #ci).map_err(|err| clap::Error::raw(clap::ErrorKind::ValueValidation, format!("Invalid value for {}: {}", #id, err)))
-        }
-    }
-
-    let flag = *attrs.parser().kind == ParserKind::FromFlag;
-    let occurrences = *attrs.parser().kind == ParserKind::FromOccurrences;
     // Give this identifier the same hygiene
     // as the `arg_matches` parameter definition. This
     // allows us to refer to `arg_matches` within a `quote_spanned` block
     let arg_matches = format_ident!("__clap_arg_matches");
 
     let field_value = match **ty {
-        Ty::Bool => {
-            if update.is_some() {
-                quote_spanned! { ty.span()=>
-                    *#field_name || #arg_matches.is_present(#id)
-                }
-            } else {
-                quote_spanned! { ty.span()=>
-                    #arg_matches.is_present(#id)
-                }
+        Ty::Unit => {
+            quote_spanned! { ty.span()=>
+                ()
             }
         }
 
         Ty::Option => {
             quote_spanned! { ty.span()=>
-                #arg_matches.#value_of(#id)
-                    .map(#parse)
-                    .transpose()?
+                #arg_matches.#get_one(#id)
             }
         }
 
         Ty::OptionOption => quote_spanned! { ty.span()=>
-            if #arg_matches.is_present(#id) {
-                Some(#arg_matches.#value_of(#id).map(#parse).transpose()?)
+            if #arg_matches.contains_id(#id) {
+                Some(
+                    #arg_matches.#get_one(#id)
+                )
             } else {
                 None
             }
         },
 
         Ty::OptionVec => quote_spanned! { ty.span()=>
-            if #arg_matches.is_present(#id) {
-                Some(#arg_matches.#values_of(#id)
-                    .map(|v| v.map::<::std::result::Result<#convert_type, clap::Error>, _>(#parse).collect::<::std::result::Result<Vec<_>, clap::Error>>())
-                    .transpose()?
+            if #arg_matches.contains_id(#id) {
+                Some(#arg_matches.#get_many(#id)
+                    .map(|v| v.collect::<Vec<_>>())
                     .unwrap_or_else(Vec::new))
             } else {
                 None
@@ -614,38 +690,53 @@ fn gen_parsers(
 
         Ty::Vec => {
             quote_spanned! { ty.span()=>
-                #arg_matches.#values_of(#id)
-                    .map(|v| v.map::<::std::result::Result<#convert_type, clap::Error>, _>(#parse).collect::<::std::result::Result<Vec<_>, clap::Error>>())
-                    .transpose()?
+                #arg_matches.#get_many(#id)
+                    .map(|v| v.collect::<Vec<_>>())
                     .unwrap_or_else(Vec::new)
             }
         }
 
-        Ty::Other if occurrences => quote_spanned! { ty.span()=>
-            #parse(#arg_matches.#value_of(#id))
+        Ty::VecVec => quote_spanned! { ty.span()=>
+            #arg_matches.#get_occurrences(#id)
+                .map(|g| g.map(::std::iter::Iterator::collect).collect::<Vec<Vec<_>>>())
+                .unwrap_or_else(Vec::new)
         },
 
-        Ty::Other if flag => quote_spanned! { ty.span()=>
-            #parse(#arg_matches.is_present(#id))
+        Ty::OptionVecVec => quote_spanned! { ty.span()=>
+            #arg_matches.#get_occurrences(#id)
+                .map(|g| g.map(::std::iter::Iterator::collect).collect::<Vec<Vec<_>>>())
         },
 
         Ty::Other => {
             quote_spanned! { ty.span()=>
-                #arg_matches.#value_of(#id)
-                    .ok_or_else(|| clap::Error::raw(clap::ErrorKind::MissingRequiredArgument, format!("The following required argument was not provided: {}", #id)))
-                    .and_then(#parse)?
+                #arg_matches.#get_one(#id)
+                    .ok_or_else(|| clap::Error::raw(clap::error::ErrorKind::MissingRequiredArgument, format!("The following required argument was not provided: {}", #id)))?
             }
         }
     };
 
-    if let Some(access) = update {
+    let genned = if let Some(access) = update {
         quote_spanned! { field.span()=>
-            if #arg_matches.is_present(#id) {
+            if #arg_matches.contains_id(#id) {
                 #access
                 *#field_name = #field_value
             }
         }
     } else {
         quote_spanned!(field.span()=> #field_name: #field_value )
+    };
+    Ok(genned)
+}
+
+#[cfg(feature = "raw-deprecated")]
+pub fn raw_deprecated() -> TokenStream {
+    quote! {}
+}
+
+#[cfg(not(feature = "raw-deprecated"))]
+pub fn raw_deprecated() -> TokenStream {
+    quote! {
+        #![allow(deprecated)]  // Assuming any deprecation in here will be related to a deprecation in `Args`
+
     }
 }

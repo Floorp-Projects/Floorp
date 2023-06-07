@@ -12,35 +12,21 @@
 // commit#ea76fa1b1b273e65e3b0b1046643715b49bec51f which is licensed under the
 // MIT/Apache 2.0 license.
 
-use std::env;
-
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{Attribute, Generics, Ident};
+use syn::{Generics, Ident};
 
-use crate::{
-    attrs::{Attrs, Name, DEFAULT_CASING, DEFAULT_ENV_CASING},
-    utils::Sp,
-};
+use crate::item::Item;
 
 pub fn gen_for_struct(
-    struct_name: &Ident,
+    item: &Item,
+    item_name: &Ident,
     generics: &Generics,
-    attrs: &[Attribute],
-) -> TokenStream {
-    let app_name = env::var("CARGO_PKG_NAME").ok().unwrap_or_default();
-
-    let attrs = Attrs::from_struct(
-        Span::call_site(),
-        attrs,
-        Name::Assigned(quote!(#app_name)),
-        Sp::call_site(DEFAULT_CASING),
-        Sp::call_site(DEFAULT_ENV_CASING),
-    );
-    let name = attrs.cased_name();
-    let app_var = Ident::new("__clap_app", Span::call_site());
-
+) -> Result<TokenStream, syn::Error> {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    let name = item.cased_name();
+    let app_var = Ident::new("__clap_app", Span::call_site());
 
     let tokens = quote! {
         #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
@@ -54,41 +40,35 @@ pub fn gen_for_struct(
             clippy::nursery,
             clippy::cargo,
             clippy::suspicious_else_formatting,
+            clippy::almost_swapped,
         )]
-        #[deny(clippy::correctness)]
-        #[allow(deprecated)]
-        impl #impl_generics clap::CommandFactory for #struct_name #ty_generics #where_clause {
-            fn into_app<'b>() -> clap::Command<'b> {
+        impl #impl_generics clap::CommandFactory for #item_name #ty_generics #where_clause {
+            fn command<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name);
                 <Self as clap::Args>::augment_args(#app_var)
             }
 
-            fn into_app_for_update<'b>() -> clap::Command<'b> {
+            fn command_for_update<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name);
                 <Self as clap::Args>::augment_args_for_update(#app_var)
             }
         }
     };
 
-    tokens
+    Ok(tokens)
 }
 
-pub fn gen_for_enum(enum_name: &Ident, generics: &Generics, attrs: &[Attribute]) -> TokenStream {
-    let app_name = env::var("CARGO_PKG_NAME").ok().unwrap_or_default();
-
-    let attrs = Attrs::from_struct(
-        Span::call_site(),
-        attrs,
-        Name::Assigned(quote!(#app_name)),
-        Sp::call_site(DEFAULT_CASING),
-        Sp::call_site(DEFAULT_ENV_CASING),
-    );
-    let name = attrs.cased_name();
-    let app_var = Ident::new("__clap_app", Span::call_site());
-
+pub fn gen_for_enum(
+    item: &Item,
+    item_name: &Ident,
+    generics: &Generics,
+) -> Result<TokenStream, syn::Error> {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-    quote! {
+    let name = item.cased_name();
+    let app_var = Ident::new("__clap_app", Span::call_site());
+
+    Ok(quote! {
         #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
         #[allow(
             clippy::style,
@@ -100,20 +80,22 @@ pub fn gen_for_enum(enum_name: &Ident, generics: &Generics, attrs: &[Attribute])
             clippy::nursery,
             clippy::cargo,
             clippy::suspicious_else_formatting,
+            clippy::almost_swapped,
         )]
-        #[deny(clippy::correctness)]
-        impl #impl_generics clap::CommandFactory for #enum_name #ty_generics #where_clause {
-            fn into_app<'b>() -> clap::Command<'b> {
-                #[allow(deprecated)]
+        impl #impl_generics clap::CommandFactory for #item_name #ty_generics #where_clause {
+            fn command<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name)
-                    .setting(clap::AppSettings::SubcommandRequiredElseHelp);
+                    .subcommand_required(true)
+                    .arg_required_else_help(true);
                 <Self as clap::Subcommand>::augment_subcommands(#app_var)
             }
 
-            fn into_app_for_update<'b>() -> clap::Command<'b> {
+            fn command_for_update<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name);
                 <Self as clap::Subcommand>::augment_subcommands_for_update(#app_var)
+                    .subcommand_required(false)
+                    .arg_required_else_help(false)
             }
         }
-    }
+    })
 }

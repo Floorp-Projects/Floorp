@@ -3,43 +3,60 @@
 //! #[derive(Parser)] works in terms of "paragraphs". Paragraph is a sequence of
 //! non-empty adjacent lines, delimited by sequences of blank (whitespace only) lines.
 
-use crate::attrs::Method;
-
-use quote::{format_ident, quote};
 use std::iter;
 
-pub fn process_doc_comment(lines: Vec<String>, name: &str, preprocess: bool) -> Vec<Method> {
+pub fn extract_doc_comment(attrs: &[syn::Attribute]) -> Vec<String> {
     // multiline comments (`/** ... */`) may have LFs (`\n`) in them,
     // we need to split so we could handle the lines correctly
     //
     // we also need to remove leading and trailing blank lines
-    let mut lines: Vec<&str> = lines
+    let mut lines: Vec<_> = attrs
         .iter()
+        .filter(|attr| attr.path().is_ident("doc"))
+        .filter_map(|attr| {
+            // non #[doc = "..."] attributes are not our concern
+            // we leave them for rustc to handle
+            match &attr.meta {
+                syn::Meta::NameValue(syn::MetaNameValue {
+                    value:
+                        syn::Expr::Lit(syn::ExprLit {
+                            lit: syn::Lit::Str(s),
+                            ..
+                        }),
+                    ..
+                }) => Some(s.value()),
+                _ => None,
+            }
+        })
         .skip_while(|s| is_blank(s))
-        .flat_map(|s| s.split('\n'))
+        .flat_map(|s| {
+            let lines = s
+                .split('\n')
+                .map(|s| {
+                    // remove one leading space no matter what
+                    let s = s.strip_prefix(' ').unwrap_or(s);
+                    s.to_owned()
+                })
+                .collect::<Vec<_>>();
+            lines
+        })
         .collect();
 
     while let Some(true) = lines.last().map(|s| is_blank(s)) {
         lines.pop();
     }
 
-    // remove one leading space no matter what
-    for line in lines.iter_mut() {
-        if line.starts_with(' ') {
-            *line = &line[1..];
-        }
-    }
+    lines
+}
 
-    if lines.is_empty() {
-        return vec![];
-    }
-
-    let short_name = format_ident!("{}", name);
-    let long_name = format_ident!("long_{}", name);
-
+pub fn format_doc_comment(
+    lines: &[String],
+    preprocess: bool,
+    force_long: bool,
+) -> (Option<String>, Option<String>) {
     if let Some(first_blank) = lines.iter().position(|s| is_blank(s)) {
         let (short, long) = if preprocess {
-            let paragraphs = split_paragraphs(&lines);
+            let paragraphs = split_paragraphs(lines);
             let short = paragraphs[0].clone();
             let long = paragraphs.join("\n\n");
             (remove_period(short), long)
@@ -49,26 +66,24 @@ pub fn process_doc_comment(lines: Vec<String>, name: &str, preprocess: bool) -> 
             (short, long)
         };
 
-        vec![
-            Method::new(short_name, quote!(#short)),
-            Method::new(long_name, quote!(#long)),
-        ]
+        (Some(short), Some(long))
     } else {
-        let short = if preprocess {
-            let s = merge_lines(&lines);
-            remove_period(s)
+        let (short, long) = if preprocess {
+            let short = merge_lines(lines);
+            let long = force_long.then(|| short.clone());
+            let short = remove_period(short);
+            (short, long)
         } else {
-            lines.join("\n")
+            let short = lines.join("\n");
+            let long = force_long.then(|| short.clone());
+            (short, long)
         };
 
-        vec![
-            Method::new(short_name, quote!(#short)),
-            Method::new(long_name, quote!(None)),
-        ]
+        (Some(short), long)
     }
 }
 
-fn split_paragraphs(lines: &[&str]) -> Vec<String> {
+fn split_paragraphs(lines: &[String]) -> Vec<String> {
     let mut last_line = 0;
     iter::from_fn(|| {
         let slice = &lines[last_line..];
@@ -102,6 +117,10 @@ fn is_blank(s: &str) -> bool {
     s.trim().is_empty()
 }
 
-fn merge_lines(lines: &[&str]) -> String {
-    lines.iter().map(|s| s.trim()).collect::<Vec<_>>().join(" ")
+fn merge_lines(lines: impl IntoIterator<Item = impl AsRef<str>>) -> String {
+    lines
+        .into_iter()
+        .map(|s| s.as_ref().trim().to_owned())
+        .collect::<Vec<_>>()
+        .join(" ")
 }
