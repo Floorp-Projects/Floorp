@@ -78,6 +78,23 @@ rtc_library("frame_generator_impl") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("y4m_frame_generator") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "testsupport/y4m_frame_generator.cc",
+    "testsupport/y4m_frame_generator.h",
+  ]
+  deps = [
+    ":video_test_support",
+    "../api:frame_generator_api",
+    "../api:scoped_refptr",
+    "../api/video:video_frame",
+    "../rtc_base:checks",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
 rtc_library("frame_utils") {
   visibility = [ "*" ]
   testonly = true
@@ -640,6 +657,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":test_support_test_artifacts",
       ":video_test_common",
       ":video_test_support",
+      ":y4m_frame_generator",
       "../api:array_view",
       "../api:create_frame_generator",
       "../api:create_simulcast_test_fixture_api",
@@ -695,6 +713,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "testsupport/perf_test_unittest.cc",
       "testsupport/test_artifacts_unittest.cc",
       "testsupport/video_frame_writer_unittest.cc",
+      "testsupport/y4m_frame_generator_test.cc",
       "testsupport/y4m_frame_reader_unittest.cc",
       "testsupport/y4m_frame_writer_unittest.cc",
       "testsupport/yuv_frame_reader_unittest.cc",
