@@ -488,7 +488,7 @@ nsresult ProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
                                        const nsACString& aPACScriptData,
                                        bool aIncludePath,
                                        uint32_t aExtraHeapSize,
-                                       nsIEventTarget* aEventTarget) {
+                                       nsISerialEventTarget* aEventTarget) {
   mShutdown = false;  // Shutdown needs to be called prior to destruction
 
   mPACURI = aPACURI;
@@ -904,7 +904,7 @@ nsresult RemoteProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
                                              const nsACString& aPACScriptData,
                                              bool aIncludePath,
                                              uint32_t aExtraHeapSize,
-                                             nsIEventTarget*) {
+                                             nsISerialEventTarget*) {
   Unused << mProxyAutoConfigParent->SendConfigurePAC(
       aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize);
   return NS_OK;

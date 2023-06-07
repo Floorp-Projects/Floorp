@@ -83,9 +83,9 @@ class DecodePool final : public nsIObserver {
    * who want to deliver data to workers on the DecodePool can use this event
    * target.
    *
-   * @return An nsIEventTarget interface to the thread pool's I/O thread.
+   * @return An nsISerialEventTarget interface to the thread pool's I/O thread.
    */
-  already_AddRefed<nsIEventTarget> GetIOEventTarget();
+  already_AddRefed<nsISerialEventTarget> GetIOEventTarget();
 
  private:
   friend class DecodePoolWorker;

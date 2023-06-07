@@ -271,7 +271,7 @@ class ExecutePACThreadAction final : public Runnable {
     if (mSetupPAC) {
       mSetupPAC = false;
 
-      nsCOMPtr<nsIEventTarget> target = mPACMan->GetNeckoTarget();
+      nsCOMPtr<nsISerialEventTarget> target = mPACMan->GetNeckoTarget();
       mPACMan->mPAC->ConfigurePAC(mSetupPACURI, mSetupPACData,
                                   mPACMan->mIncludePath, mExtraHeapSize,
                                   target);

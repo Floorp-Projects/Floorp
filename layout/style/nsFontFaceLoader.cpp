@@ -15,6 +15,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "FontFaceSet.h"
@@ -340,7 +341,9 @@ nsFontFaceLoader::OnStartRequest(nsIRequest* aRequest) {
   if (req) {
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    Unused << NS_WARN_IF(NS_FAILED(req->RetargetDeliveryTo(sts)));
+    RefPtr<TaskQueue> queue =
+        TaskQueue::Create(sts.forget(), "nsFontFaceLoader STS Delivery Queue");
+    Unused << NS_WARN_IF(NS_FAILED(req->RetargetDeliveryTo(queue)));
   }
   return NS_OK;
 }

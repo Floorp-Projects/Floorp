@@ -8148,7 +8148,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
+nsHttpChannel::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   MOZ_ASSERT(NS_IsMainThread(), "Should be called on main thread only");
 
   NS_ENSURE_ARG(aNewTarget);
@@ -8181,7 +8181,7 @@ nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 
     // If retarget fails for transaction pump, we must restore mCachePump.
     if (NS_FAILED(rv) && retargetableCachePump) {
-      nsCOMPtr<nsIEventTarget> main = GetMainThreadSerialEventTarget();
+      nsCOMPtr<nsISerialEventTarget> main = GetMainThreadSerialEventTarget();
       NS_ENSURE_TRUE(main, NS_ERROR_UNEXPECTED);
       rv = retargetableCachePump->RetargetDeliveryTo(main);
     }
@@ -8190,7 +8190,7 @@ nsHttpChannel::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+nsHttpChannel::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   if (mCachePump) {
     return mCachePump->GetDeliveryTarget(aEventTarget);
   }

@@ -68,7 +68,7 @@ BaseWebSocketChannel::~BaseWebSocketChannel() {
   NS_ReleaseOnMainThread("BaseWebSocketChannel::mLoadGroup",
                          mLoadGroup.forget());
   NS_ReleaseOnMainThread("BaseWebSocketChannel::mLoadInfo", mLoadInfo.forget());
-  nsCOMPtr<nsIEventTarget> target;
+  nsCOMPtr<nsISerialEventTarget> target;
   {
     auto lock = mTargetThread.Lock();
     target.swap(*lock);
@@ -310,7 +310,7 @@ BaseWebSocketChannel::AllowPort(int32_t port, const char* scheme,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-BaseWebSocketChannel::RetargetDeliveryTo(nsIEventTarget* aTargetThread) {
+BaseWebSocketChannel::RetargetDeliveryTo(nsISerialEventTarget* aTargetThread) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTargetThread);
   MOZ_ASSERT(!mWasOpened, "Should not be called after AsyncOpen!");
@@ -324,10 +324,10 @@ BaseWebSocketChannel::RetargetDeliveryTo(nsIEventTarget* aTargetThread) {
 }
 
 NS_IMETHODIMP
-BaseWebSocketChannel::GetDeliveryTarget(nsIEventTarget** aTargetThread) {
+BaseWebSocketChannel::GetDeliveryTarget(nsISerialEventTarget** aTargetThread) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIEventTarget> target = GetTargetThread();
+  nsCOMPtr<nsISerialEventTarget> target = GetTargetThread();
   if (!target) {
     target = GetCurrentSerialEventTarget();
   }
@@ -335,15 +335,15 @@ BaseWebSocketChannel::GetDeliveryTarget(nsIEventTarget** aTargetThread) {
   return NS_OK;
 }
 
-already_AddRefed<nsIEventTarget> BaseWebSocketChannel::GetTargetThread() {
-  nsCOMPtr<nsIEventTarget> target;
+already_AddRefed<nsISerialEventTarget> BaseWebSocketChannel::GetTargetThread() {
+  nsCOMPtr<nsISerialEventTarget> target;
   auto lock = mTargetThread.Lock();
   target = *lock;
   return target.forget();
 }
 
 bool BaseWebSocketChannel::IsOnTargetThread() {
-  nsCOMPtr<nsIEventTarget> target = GetTargetThread();
+  nsCOMPtr<nsISerialEventTarget> target = GetTargetThread();
   if (!target) {
     MOZ_ASSERT(false);
     return false;

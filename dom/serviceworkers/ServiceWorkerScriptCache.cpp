@@ -8,6 +8,7 @@
 
 #include "js/Array.h"               // JS::GetArrayLength
 #include "js/PropertyAndElement.h"  // JS_GetElement
+#include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
@@ -1278,7 +1279,9 @@ void CompareCache::ManageValueResult(JSContext* aCx,
   if (rr) {
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    rv = rr->RetargetDeliveryTo(sts);
+    RefPtr<TaskQueue> queue =
+        TaskQueue::Create(sts.forget(), "CompareCache STS Delivery Queue");
+    rv = rr->RetargetDeliveryTo(queue);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPump = nullptr;
       Finish(rv, false);

@@ -203,7 +203,7 @@ nsresult nsBaseChannel::BeginPumpingData() {
   // and especially when we call into the loadgroup.  Our caller takes care to
   // release mPump if we return an error.
 
-  nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+  nsCOMPtr<nsISerialEventTarget> target = GetNeckoTarget();
   rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, 0, 0, true,
                                  target);
   if (NS_FAILED(rv)) {
@@ -227,11 +227,9 @@ nsresult nsBaseChannel::BeginPumpingData() {
     mPump->Suspend();
 
     RefPtr<nsBaseChannel> self(this);
-    nsCOMPtr<nsISerialEventTarget> serialTarget(do_QueryInterface(target));
-    MOZ_ASSERT(serialTarget);
 
     promise->Then(
-        serialTarget, __func__,
+        target, __func__,
         [self, this](nsresult rv) {
           MOZ_ASSERT(mPump);
           MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -897,7 +895,7 @@ nsBaseChannel::OnRedirectVerifyCallback(nsresult result) {
 }
 
 NS_IMETHODIMP
-nsBaseChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget) {
+nsBaseChannel::RetargetDeliveryTo(nsISerialEventTarget* aEventTarget) {
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_TRUE(mRequest, NS_ERROR_NOT_INITIALIZED);
@@ -913,7 +911,7 @@ nsBaseChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget) {
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+nsBaseChannel::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_TRUE(mRequest, NS_ERROR_NOT_INITIALIZED);

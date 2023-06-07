@@ -137,7 +137,7 @@ class StreamFilterParent final : public PStreamFilterParent,
 
   inline nsIEventTarget* ActorThread();
 
-  inline nsIEventTarget* IOThread();
+  inline nsISerialEventTarget* IOThread();
 
   inline bool IsIOThread();
 
@@ -166,8 +166,8 @@ class StreamFilterParent final : public PStreamFilterParent,
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mOrigListener;
 
-  nsCOMPtr<nsIEventTarget> mMainThread;
-  nsCOMPtr<nsIEventTarget> mIOThread;
+  nsCOMPtr<nsISerialEventTarget> mMainThread;
+  nsCOMPtr<nsISerialEventTarget> mIOThread;
 
   RefPtr<net::ChannelEventQueue> mQueue;
 

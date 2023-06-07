@@ -37,7 +37,7 @@ nsInputStreamPump::nsInputStreamPump() : mOffMainThread(!NS_IsMainThread()) {}
 nsresult nsInputStreamPump::Create(nsInputStreamPump** result,
                                    nsIInputStream* stream, uint32_t segsize,
                                    uint32_t segcount, bool closeWhenDone,
-                                   nsIEventTarget* mainThreadTarget) {
+                                   nsISerialEventTarget* mainThreadTarget) {
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   RefPtr<nsInputStreamPump> pump = new nsInputStreamPump();
   if (pump) {
@@ -99,7 +99,7 @@ nsresult nsInputStreamPump::EnsureWaiting() {
     // Ensure OnStateStop is called on the main thread only when this pump is
     // created on main thread.
     if (mState == STATE_STOP && !mOffMainThread) {
-      nsCOMPtr<nsIEventTarget> mainThread =
+      nsCOMPtr<nsISerialEventTarget> mainThread =
           mLabeledMainThreadTarget
               ? mLabeledMainThreadTarget
               : do_AddRef(mozilla::GetMainThreadSerialEventTarget());
@@ -306,7 +306,7 @@ nsInputStreamPump::SetLoadGroup(nsILoadGroup* aLoadGroup) {
 NS_IMETHODIMP
 nsInputStreamPump::Init(nsIInputStream* stream, uint32_t segsize,
                         uint32_t segcount, bool closeWhenDone,
-                        nsIEventTarget* mainThreadTarget) {
+                        nsISerialEventTarget* mainThreadTarget) {
   // probably we can't be multithread-accessed yet
   RecursiveMutexAutoLock lock(mMutex);
   NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
@@ -733,7 +733,7 @@ nsresult nsInputStreamPump::CreateBufferedStreamIfNeeded() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsInputStreamPump::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
+nsInputStreamPump::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   RecursiveMutexAutoLock lock(mMutex);
 
   NS_ENSURE_ARG(aNewTarget);
@@ -777,10 +777,10 @@ nsInputStreamPump::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 }
 
 NS_IMETHODIMP
-nsInputStreamPump::GetDeliveryTarget(nsIEventTarget** aNewTarget) {
+nsInputStreamPump::GetDeliveryTarget(nsISerialEventTarget** aNewTarget) {
   RecursiveMutexAutoLock lock(mMutex);
 
-  nsCOMPtr<nsIEventTarget> target = mTargetThread;
+  nsCOMPtr<nsISerialEventTarget> target = mTargetThread;
   target.forget(aNewTarget);
   return NS_OK;
 }

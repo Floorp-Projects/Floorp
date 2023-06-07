@@ -275,7 +275,7 @@ already_AddRefed<Promise> Blob::ConsumeBody(
     return nullptr;
   }
 
-  nsCOMPtr<nsIEventTarget> mainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mainThreadEventTarget;
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);

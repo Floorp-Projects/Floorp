@@ -857,7 +857,7 @@ nsresult NS_NewInputStreamPump(
     nsIInputStreamPump** aResult, already_AddRefed<nsIInputStream> aStream,
     uint32_t aSegsize /* = 0 */, uint32_t aSegcount /* = 0 */,
     bool aCloseWhenDone /* = false */,
-    nsIEventTarget* aMainThreadTarget /* = nullptr */) {
+    nsISerialEventTarget* aMainThreadTarget /* = nullptr */) {
   nsCOMPtr<nsIInputStream> stream = std::move(aStream);
 
   nsresult rv;

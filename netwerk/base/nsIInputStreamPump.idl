@@ -4,8 +4,8 @@
 
 #include "nsIRequest.idl"
 
-interface nsIEventTarget;
 interface nsIInputStream;
+interface nsISerialEventTarget;
 interface nsIStreamListener;
 
 /**
@@ -51,7 +51,7 @@ interface nsIInputStreamPump : nsIRequest
               in unsigned long  aSegmentSize,
               in unsigned long  aSegmentCount,
               in boolean        aCloseWhenDone,
-              [optional] in nsIEventTarget aMainThreadTarget);
+              [optional] in nsISerialEventTarget aMainThreadTarget);
 
     /**
      * asyncRead causes the input stream to be read in chunks and delivered
