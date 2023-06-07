@@ -133,21 +133,26 @@ class Tab extends PureComponent {
       {
         item: {
           ...tabMenuItems.copySource,
-          disabled: selectedLocation.source.id !== tab,
-          click: () => copyToClipboard(sourceTab),
+          // Only enable when this is the selected source as this requires the source to be loaded,
+          // which may not be the case if the tab wasn't ever selected.
+          disabled: selectedLocation.source.id !== source.id,
+          click: () => {
+            copyToClipboard(selectedLocation);
+          },
         },
       },
       {
         item: {
           ...tabMenuItems.copySourceUri2,
-          disabled: !selectedLocation.source.url,
-          click: () => copyToTheClipboard(getRawSourceURL(sourceTab.url)),
+          disabled: !source.url,
+          click: () => copyToTheClipboard(getRawSourceURL(source.url)),
         },
       },
       {
         item: {
           ...tabMenuItems.showSource,
-          disabled: !selectedLocation.source.url,
+          // Source Tree only shows sources with URL
+          disabled: !source.url,
           click: () => showSource(cx, tab),
         },
       },
