@@ -186,7 +186,7 @@ var PointerlockFsWarning = {
     }
     if (newState != "hidden") {
       if (currentState != "hidden") {
-        this._element.setAttribute(newState, true);
+        this._element.setAttribute(newState, "");
       } else {
         // When the previous state is hidden, the display was none,
         // thus no box was constructed. We need to wait for the new
@@ -197,7 +197,7 @@ var PointerlockFsWarning = {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             if (this._element) {
-              this._element.setAttribute(newState, true);
+              this._element.setAttribute(newState, "");
             }
           });
         });
