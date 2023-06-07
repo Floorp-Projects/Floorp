@@ -41,8 +41,8 @@ class VideoCodecAnalyzer {
                                 Resolution resolution) = 0;
   };
 
-  VideoCodecAnalyzer(rtc::TaskQueue& task_queue,
-                     ReferenceVideoSource* reference_video_source = nullptr);
+  explicit VideoCodecAnalyzer(
+      ReferenceVideoSource* reference_video_source = nullptr);
 
   void StartEncode(const VideoFrame& frame);
 
@@ -55,7 +55,7 @@ class VideoCodecAnalyzer {
   std::unique_ptr<VideoCodecStats> GetStats();
 
  protected:
-  rtc::TaskQueue& task_queue_;
+  TaskQueueForTest task_queue_;
 
   ReferenceVideoSource* const reference_video_source_;
 

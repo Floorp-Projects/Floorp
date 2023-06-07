@@ -13,7 +13,6 @@
 
 #include <memory>
 
-#include "api/task_queue/task_queue_factory.h"
 #include "api/test/video_codec_tester.h"
 
 namespace webrtc {
@@ -22,9 +21,6 @@ namespace test {
 // A stateless implementation of `VideoCodecTester`. This class is thread safe.
 class VideoCodecTesterImpl : public VideoCodecTester {
  public:
-  VideoCodecTesterImpl();
-  explicit VideoCodecTesterImpl(TaskQueueFactory* task_queue_factory);
-
   std::unique_ptr<VideoCodecStats> RunDecodeTest(
       CodedVideoSource* video_source,
       Decoder* decoder,
@@ -41,10 +37,6 @@ class VideoCodecTesterImpl : public VideoCodecTester {
       Decoder* decoder,
       const EncoderSettings& encoder_settings,
       const DecoderSettings& decoder_settings) override;
-
- protected:
-  std::unique_ptr<TaskQueueFactory> owned_task_queue_factory_;
-  TaskQueueFactory* task_queue_factory_;
 };
 
 }  // namespace test
