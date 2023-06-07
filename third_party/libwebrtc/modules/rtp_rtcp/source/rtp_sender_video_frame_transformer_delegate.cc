@@ -41,10 +41,10 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
         codec_type_(codec_type),
         timestamp_(rtp_timestamp),
         capture_time_ms_(encoded_image.capture_time_ms_),
-        expected_retransmission_time_ms_(expected_retransmission_time_ms),
-        ssrc_(ssrc) {
+        expected_retransmission_time_ms_(expected_retransmission_time_ms) {
     RTC_DCHECK_GE(payload_type_, 0);
     RTC_DCHECK_LE(payload_type_, 127);
+    metadata_.SetSsrc(ssrc);
     metadata_.SetCsrcs(std::move(csrcs));
   }
 
@@ -60,7 +60,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   }
 
   uint32_t GetTimestamp() const override { return timestamp_; }
-  uint32_t GetSsrc() const override { return ssrc_; }
+  uint32_t GetSsrc() const override { return metadata_.GetSsrc(); }
 
   bool IsKeyFrame() const override {
     return frame_type_ == VideoFrameType::kVideoFrameKey;
@@ -73,11 +73,13 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
   void SetMetadata(const VideoFrameMetadata& metadata) override {
     header_.SetFromMetadata(metadata);
+    uint32_t ssrc = metadata.GetSsrc();
     std::vector<uint32_t> csrcs = metadata.GetCsrcs();
 
     // We have to keep a local copy because GetMetadata() has to return a
     // reference.
     metadata_ = header_.GetAsMetadata();
+    metadata_.SetSsrc(ssrc);
     metadata_.SetCsrcs(std::move(csrcs));
   }
 
@@ -106,7 +108,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   const uint32_t timestamp_;
   const int64_t capture_time_ms_;
   const absl::optional<int64_t> expected_retransmission_time_ms_;
-  const uint32_t ssrc_;
 };
 }  // namespace
 
