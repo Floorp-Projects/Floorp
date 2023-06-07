@@ -100,8 +100,8 @@ bool SVGForeignObjectElement::HasValidDimensions() const {
   float width, height;
 
   DebugOnly<bool> ok =
-      SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(
-          const_cast<SVGForeignObjectElement*>(this), &width, &height);
+      SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
+                                                                 &height);
   MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
   return width > 0 && height > 0;
 }

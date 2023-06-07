@@ -1532,7 +1532,7 @@ void SVGElement::GetAnimatedLengthValues(float* aFirst, ...) {
   NS_ASSERTION(info.mCount > 0,
                "GetAnimatedLengthValues on element with no length attribs");
 
-  SVGViewportElement* ctx = nullptr;
+  SVGElementMetrics metrics(this);
 
   float* f = aFirst;
   uint32_t i = 0;
@@ -1541,15 +1541,7 @@ void SVGElement::GetAnimatedLengthValues(float* aFirst, ...) {
   va_start(args, aFirst);
 
   while (f && i < info.mCount) {
-    uint8_t type = info.mValues[i].GetSpecifiedUnitType();
-    if (!ctx && !SVGLength::IsAbsoluteUnit(type)) {
-      ctx = GetCtx();
-    }
-    if (type == SVGLength_Binding::SVG_LENGTHTYPE_EMS ||
-        type == SVGLength_Binding::SVG_LENGTHTYPE_EXS)
-      *f = info.mValues[i++].GetAnimValue(this);
-    else
-      *f = info.mValues[i++].GetAnimValue(ctx);
+    *f = info.mValues[i++].GetAnimValue(metrics);
     f = va_arg(args, float*);
   }
 

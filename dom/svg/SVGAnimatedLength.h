@@ -50,8 +50,8 @@ class UserSpaceMetricsWithSize : public UserSpaceMetrics {
 
 class SVGElementMetrics : public UserSpaceMetrics {
  public:
-  explicit SVGElementMetrics(SVGElement* aSVGElement,
-                             SVGViewportElement* aCtx = nullptr);
+  explicit SVGElementMetrics(const SVGElement* aSVGElement,
+                             const SVGViewportElement* aCtx = nullptr);
 
   float GetEmLength() const override;
   float GetExLength() const override;
@@ -60,8 +60,8 @@ class SVGElementMetrics : public UserSpaceMetrics {
  private:
   bool EnsureCtx() const;
 
-  SVGElement* mSVGElement;
-  mutable SVGViewportElement* mCtx;
+  const SVGElement* mSVGElement;
+  mutable const SVGViewportElement* mCtx;
 };
 
 class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
@@ -113,17 +113,17 @@ class SVGAnimatedLength {
   void GetBaseValueString(nsAString& aValue) const;
   void GetAnimValueString(nsAString& aValue) const;
 
-  float GetBaseValue(SVGElement* aSVGElement) const {
+  float GetBaseValue(const SVGElement* aSVGElement) const {
     return mBaseVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
   }
 
-  float GetAnimValue(SVGElement* aSVGElement) const {
+  float GetAnimValue(const SVGElement* aSVGElement) const {
     return mAnimVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
   }
   float GetAnimValue(nsIFrame* aFrame) const {
     return mAnimVal * GetPixelsPerUnit(aFrame, mSpecifiedUnitType);
   }
-  float GetAnimValue(SVGViewportElement* aCtx) const {
+  float GetAnimValue(const SVGViewportElement* aCtx) const {
     return mAnimVal * GetPixelsPerUnit(aCtx, mSpecifiedUnitType);
   }
   float GetAnimValue(const UserSpaceMetrics& aMetrics) const {
@@ -139,7 +139,7 @@ class SVGAnimatedLength {
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
 
-  float GetBaseValue(SVGViewportElement* aCtx) const {
+  float GetBaseValue(const SVGViewportElement* aCtx) const {
     return mBaseVal * GetPixelsPerUnit(aCtx, mSpecifiedUnitType);
   }
 
@@ -172,8 +172,10 @@ class SVGAnimatedLength {
   float GetPixelsPerUnit(nsIFrame* aFrame, uint8_t aUnitType) const;
   float GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
                          uint8_t aUnitType) const;
-  float GetPixelsPerUnit(SVGElement* aSVGElement, uint8_t aUnitType) const;
-  float GetPixelsPerUnit(SVGViewportElement* aCtx, uint8_t aUnitType) const;
+  float GetPixelsPerUnit(const SVGElement* aSVGElement,
+                         uint8_t aUnitType) const;
+  float GetPixelsPerUnit(const SVGViewportElement* aCtx,
+                         uint8_t aUnitType) const;
 
   // SetBaseValue and SetAnimValue set the value in user units. This may fail
   // if unit conversion fails e.g. conversion to ex or em units where the

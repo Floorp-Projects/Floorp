@@ -304,7 +304,7 @@ class MOZ_STACK_CLASS SVGUserUnitList {
  public:
   SVGUserUnitList() : mList(nullptr), mElement(nullptr), mAxis(0) {}
 
-  void Init(const SVGLengthList* aList, dom::SVGElement* aElement,
+  void Init(const SVGLengthList* aList, const dom::SVGElement* aElement,
             uint8_t aAxis) {
     mList = aList;
     mElement = aElement;
@@ -330,7 +330,7 @@ class MOZ_STACK_CLASS SVGUserUnitList {
 
  private:
   const SVGLengthList* mList;
-  dom::SVGElement* mElement;
+  const dom::SVGElement* mElement;
   uint8_t mAxis;
 };
 

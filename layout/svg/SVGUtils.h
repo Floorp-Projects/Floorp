@@ -222,8 +222,6 @@ class SVGUtils final {
      Input: content - object to be used for determining user space
      Input: length - length to be converted
   */
-  static float UserSpace(SVGElement* aSVGElement,
-                         const SVGAnimatedLength* aLength);
   static float UserSpace(nsIFrame* aNonSVGContext,
                          const SVGAnimatedLength* aLength);
   static float UserSpace(const dom::UserSpaceMetrics& aMetrics,

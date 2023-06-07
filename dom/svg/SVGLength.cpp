@@ -119,7 +119,7 @@ float SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
   // succeed if aElement is non-null (although that's not sufficient to
   // guarantee success).
 
-  auto userSpaceMetrics = SVGElementMetrics(const_cast<SVGElement*>(aElement));
+  SVGElementMetrics userSpaceMetrics(aElement);
 
   float userUnitsPerCurrentUnit = GetPixelsPerUnit(userSpaceMetrics, aAxis);
   float userUnitsPerNewUnit =
