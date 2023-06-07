@@ -25,7 +25,7 @@ JITFLAGS = {
             "--no-sse3",
             "--no-threads",
         ],
-        ["--baseline-eager"],
+        ["--baseline-eager", "--write-protect-code=off"],
         ["--no-blinterp", "--no-baseline", "--no-ion", "--more-compartments"],
         ["--blinterp-eager"],
     ],
@@ -38,12 +38,12 @@ JITFLAGS = {
             "--ion-offthread-compile=off",  # implies --baseline-eager
             "--more-compartments",
         ],
-        ["--baseline-eager"],
+        ["--baseline-eager", "--write-protect-code=off"],
         ["--no-blinterp", "--no-baseline", "--no-ion", "--more-compartments"],
     ],
     # used by jit_test.py
     "ion": [
-        ["--baseline-eager"],
+        ["--baseline-eager", "--write-protect-code=off"],
         ["--ion-eager", "--ion-offthread-compile=off", "--more-compartments"],
     ],
     # Run reduced variants on debug builds, since they take longer time.
@@ -54,7 +54,7 @@ JITFLAGS = {
             "--ion-offthread-compile=off",  # implies --baseline-eager
             "--more-compartments",
         ],
-        ["--baseline-eager"],
+        ["--baseline-eager", "--write-protect-code=off"],
     ],
     # Cover cases useful for tsan. Note that we test --ion-eager without
     # --ion-offthread-compile=off here, because it helps catch races.

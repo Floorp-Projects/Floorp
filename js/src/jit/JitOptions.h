@@ -122,6 +122,8 @@ struct DefaultJitOptions {
   bool spectreValueMasking;
   bool spectreJitToCxxCalls;
 
+  bool writeProtectCode;
+
   bool supportsUnalignedAccesses;
   BaseRegForAddress baseRegForLocals;
 
@@ -145,6 +147,8 @@ struct DefaultJitOptions {
   void resetNormalIonWarmUpThreshold();
   void enableGvn(bool val);
   void setFastWarmUp();
+
+  void maybeSetWriteProtectCode(bool val);
 
   bool eagerIonCompilation() const { return normalIonWarmUpThreshold == 0; }
 };

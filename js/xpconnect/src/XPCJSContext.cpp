@@ -969,6 +969,14 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
           javascript_options_spectre_jit_to_cxx_calls_DoNotUseDirectly());
 #endif
 
+  bool writeProtectCode = true;
+  if (XRE_IsContentProcess()) {
+    writeProtectCode =
+        StaticPrefs::javascript_options_content_process_write_protect_code();
+  }
+  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_WRITE_PROTECT_CODE,
+                                writeProtectCode);
+
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC,
       StaticPrefs::
