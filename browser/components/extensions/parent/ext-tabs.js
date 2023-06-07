@@ -49,7 +49,6 @@ XPCOMUtils.defineLazyGetter(this, "tabHidePopup", () => {
         image
       );
     },
-    learnMoreMessageId: "tabHideControlled.learnMore",
     learnMoreLink: "extension-hiding-tabs",
   });
 });
