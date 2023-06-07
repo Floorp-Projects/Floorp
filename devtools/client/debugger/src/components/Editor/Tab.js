@@ -6,24 +6,18 @@ import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
-import { showMenu, buildMenu } from "../../context-menu/menu";
-
 import SourceIcon from "../shared/SourceIcon";
 import { CloseButton } from "../shared/Button";
-import { copyToTheClipboard } from "../../utils/clipboard";
 
 import actions from "../../actions";
 
 import {
   getDisplayPath,
   getFileURL,
-  getRawSourceURL,
   getSourceQueryString,
   getTruncatedFileName,
   isPretty,
-  shouldBlackbox,
 } from "../../utils/source";
-import { getTabMenuItems } from "../../utils/tabs";
 import { createLocation } from "../../utils/location";
 
 import {
@@ -32,8 +26,6 @@ import {
   getSourcesForTabs,
   isSourceBlackBoxed,
   getContext,
-  isSourceMapIgnoreListEnabled,
-  isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -43,140 +35,23 @@ class Tab extends PureComponent {
     return {
       activeSearch: PropTypes.string,
       closeTab: PropTypes.func.isRequired,
-      closeTabs: PropTypes.func.isRequired,
-      copyToClipboard: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
       onDragEnd: PropTypes.func.isRequired,
       onDragOver: PropTypes.func.isRequired,
       onDragStart: PropTypes.func.isRequired,
       selectSource: PropTypes.func.isRequired,
       selectedLocation: PropTypes.object,
-      showSource: PropTypes.func.isRequired,
       source: PropTypes.object.isRequired,
       sourceActor: PropTypes.object.isRequired,
       tabSources: PropTypes.array.isRequired,
-      toggleBlackBox: PropTypes.func.isRequired,
-      togglePrettyPrint: PropTypes.func.isRequired,
       isBlackBoxed: PropTypes.bool.isRequired,
-      isSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
   }
 
-  onTabContextMenu = (event, tab) => {
+  onContextMenu = event => {
     event.preventDefault();
-    this.showContextMenu(event, tab);
+    this.props.showTabContextMenu(event, this.props.source);
   };
-
-  showContextMenu(e, tab) {
-    const {
-      cx,
-      closeTab,
-      closeTabs,
-      copyToClipboard,
-      tabSources,
-      showSource,
-      toggleBlackBox,
-      togglePrettyPrint,
-      selectedLocation,
-      source,
-      isBlackBoxed,
-      isSourceOnIgnoreList,
-    } = this.props;
-
-    const tabCount = tabSources.length;
-    const otherTabs = tabSources.filter(t => t.id !== tab);
-    const sourceTab = tabSources.find(t => t.id == tab);
-    const tabURLs = tabSources.map(t => t.url);
-    const otherTabURLs = otherTabs.map(t => t.url);
-
-    if (!sourceTab || !selectedLocation || !selectedLocation.source.id) {
-      return;
-    }
-
-    const tabMenuItems = getTabMenuItems();
-    const items = [
-      {
-        item: {
-          ...tabMenuItems.closeTab,
-          click: () => closeTab(cx, sourceTab),
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.closeOtherTabs,
-          click: () => closeTabs(cx, otherTabURLs),
-          disabled: otherTabURLs.length === 0,
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.closeTabsToEnd,
-          click: () => {
-            const tabIndex = tabSources.findIndex(t => t.id == tab);
-            closeTabs(
-              cx,
-              tabURLs.filter((t, i) => i > tabIndex)
-            );
-          },
-          disabled:
-            tabCount === 1 ||
-            tabSources.some((t, i) => t === tab && tabCount - 1 === i),
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.closeAllTabs,
-          click: () => closeTabs(cx, tabURLs),
-        },
-      },
-      { item: { type: "separator" } },
-      {
-        item: {
-          ...tabMenuItems.copySource,
-          // Only enable when this is the selected source as this requires the source to be loaded,
-          // which may not be the case if the tab wasn't ever selected.
-          disabled: selectedLocation.source.id !== source.id,
-          click: () => {
-            copyToClipboard(selectedLocation);
-          },
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.copySourceUri2,
-          disabled: !source.url,
-          click: () => copyToTheClipboard(getRawSourceURL(source.url)),
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.showSource,
-          // Source Tree only shows sources with URL
-          disabled: !source.url,
-          click: () => showSource(cx, tab),
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.toggleBlackBox,
-          label: isBlackBoxed
-            ? L10N.getStr("ignoreContextItem.unignore")
-            : L10N.getStr("ignoreContextItem.ignore"),
-          disabled: isSourceOnIgnoreList || !shouldBlackbox(source),
-          click: () => toggleBlackBox(cx, source),
-        },
-      },
-      {
-        item: {
-          ...tabMenuItems.prettyPrint,
-          click: () => togglePrettyPrint(cx, tab),
-          disabled: isPretty(sourceTab),
-        },
-      },
-    ];
-
-    showMenu(e, buildMenu(items));
-  }
 
   isSourceSearchEnabled() {
     return this.props.activeSearch === "source";
@@ -235,7 +110,7 @@ class Tab extends PureComponent {
         onClick={handleTabClick}
         // Accommodate middle click to close tab
         onMouseUp={e => e.button === 1 && closeTab(cx, source)}
-        onContextMenu={e => this.onTabContextMenu(e, sourceId)}
+        onContextMenu={this.onContextMenu}
         title={getFileURL(source, false)}
       >
         <SourceIcon
@@ -264,9 +139,6 @@ const mapStateToProps = (state, { source }) => {
     tabSources: getSourcesForTabs(state),
     selectedLocation: getSelectedLocation(state),
     isBlackBoxed: isSourceBlackBoxed(state, source),
-    isSourceOnIgnoreList:
-      isSourceMapIgnoreListEnabled(state) &&
-      isSourceOnSourceMapIgnoreList(state, source),
     activeSearch: getActiveSearch(state),
   };
 };
@@ -275,12 +147,8 @@ export default connect(
   mapStateToProps,
   {
     selectSource: actions.selectSource,
-    copyToClipboard: actions.copyToClipboard,
     closeTab: actions.closeTab,
-    closeTabs: actions.closeTabs,
-    togglePrettyPrint: actions.togglePrettyPrint,
-    showSource: actions.showSource,
-    toggleBlackBox: actions.toggleBlackBox,
+    showTabContextMenu: actions.showTabContextMenu,
   },
   null,
   {

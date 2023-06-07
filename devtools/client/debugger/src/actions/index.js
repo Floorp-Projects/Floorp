@@ -21,6 +21,7 @@ import * as threads from "./threads";
 import * as toolbox from "./toolbox";
 import * as preview from "./preview";
 import * as tracing from "./tracing";
+import * as contextMenu from "./context-menus";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
@@ -45,4 +46,5 @@ export default {
   ...toolbox,
   ...preview,
   ...tracing,
+  ...contextMenu,
 };
