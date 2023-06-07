@@ -350,10 +350,6 @@ nsUserIdleService* gIdleService;
 }  // namespace
 
 already_AddRefed<nsUserIdleService> nsUserIdleService::GetInstance() {
-  // Avoid late instantiation or resurrection during shutdown.
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-    return nullptr;
-  }
   RefPtr<nsUserIdleService> instance(gIdleService);
   return instance.forget();
 }

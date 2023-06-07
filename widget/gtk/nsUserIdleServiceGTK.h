@@ -9,6 +9,7 @@
 #define nsUserIdleServiceGTK_h__
 
 #include "nsUserIdleService.h"
+#include "mozilla/AppShutdown.h"
 #ifdef MOZ_X11
 #  include <X11/Xlib.h>
 #  include <X11/Xutil.h>
@@ -36,6 +37,11 @@ class nsUserIdleServiceGTK : public nsUserIdleService {
     RefPtr<nsUserIdleServiceGTK> idleService =
         nsUserIdleService::GetInstance().downcast<nsUserIdleServiceGTK>();
     if (!idleService) {
+      // Avoid late instantiation or resurrection during shutdown.
+      if (mozilla::AppShutdown::IsInOrBeyond(
+              mozilla::ShutdownPhase::AppShutdownConfirmed)) {
+        return nullptr;
+      }
       idleService = new nsUserIdleServiceGTK();
     }
 
