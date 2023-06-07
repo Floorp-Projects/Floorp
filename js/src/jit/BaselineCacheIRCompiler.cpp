@@ -2119,6 +2119,7 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
   //   b) all of the stubs have the same stub field data, except
   //      for a single GuardShape where they differ.
   //   c) at least one stub after the first has a non-zero entry count.
+  //   d) All shapes in the GuardShape have the same realm.
   //
   // If all of these conditions hold, then we generate a single stub
   // that covers all the existing cases by replacing GuardShape with
@@ -2131,9 +2132,11 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
 
   auto addShape = [&shapeList, cx](uintptr_t rawShape) -> bool {
     Shape* shape = reinterpret_cast<Shape*>(rawShape);
-    if (cx->compartment() != shape->compartment()) {
+    // Only add same realm shapes.
+    if (shape->realm() != cx->realm()) {
       return false;
     }
+
     if (!shapeList.append(PrivateGCThingValue(shape))) {
       cx->recoverFromOutOfMemory();
       return false;
@@ -2240,6 +2243,10 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
               cx->recoverFromOutOfMemory();
               return false;
             }
+
+            MOZ_ASSERT(
+                reinterpret_cast<Shape*>(shapeList[i].toGCThing())->realm() ==
+                shapeObj->realm());
           }
 
           writer.guardMultipleShapes(objId, shapeObj);
@@ -2334,6 +2341,23 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
             stubInfo->getStubField<JSObject*>(stub, stubShapesOffset);
         foldedShapes = &shapeList->as<ListObject>();
         MOZ_ASSERT(foldedShapes->compartment() == shape->compartment());
+
+        // Don't add a shape if it's from a different realm than the first
+        // shape.
+        //
+        // Since the list was created in the realm which guarded all the shapes
+        // added to it, we can use its realm to check and ensure we're not
+        // adding a cross-realm shape.
+        //
+        // The assert verifies this property by checking the first element has
+        // the same realm (and since everything in the list has the same realm,
+        // checking the first element suffices)
+        MOZ_ASSERT(reinterpret_cast<Shape*>(foldedShapes->get(0).toGCThing())
+                       ->realm() == foldedShapes->realm());
+        if (foldedShapes->realm() != shape->realm()) {
+          return false;
+        }
+
         break;
       }
       default: {
