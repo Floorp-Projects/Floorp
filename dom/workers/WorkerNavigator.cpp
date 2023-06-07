@@ -102,7 +102,7 @@ void WorkerNavigator::GetAppName(nsString& aAppName,
   MOZ_ASSERT(workerPrivate);
 
   if (aCallerType != CallerType::System) {
-    if (workerPrivate->GlobalScope()->ShouldResistFingerprinting(
+    if (workerPrivate->ShouldResistFingerprinting(
             RFPTarget::NavigatorAppName)) {
       // See nsRFPService.h for spoofed value.
       aAppName.AssignLiteral(SPOOFED_APPNAME);
@@ -125,7 +125,7 @@ void WorkerNavigator::GetAppVersion(nsString& aAppVersion,
   MOZ_ASSERT(workerPrivate);
 
   if (aCallerType != CallerType::System) {
-    if (workerPrivate->GlobalScope()->ShouldResistFingerprinting(
+    if (workerPrivate->ShouldResistFingerprinting(
             RFPTarget::NavigatorAppVersion)) {
       // See nsRFPService.h for spoofed value.
       aAppVersion.AssignLiteral(SPOOFED_APPVERSION);
@@ -147,7 +147,7 @@ void WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
   MOZ_ASSERT(workerPrivate);
 
   if (aCallerType != CallerType::System) {
-    if (workerPrivate->GlobalScope()->ShouldResistFingerprinting(
+    if (workerPrivate->ShouldResistFingerprinting(
             RFPTarget::NavigatorPlatform)) {
       // See nsRFPService.h for spoofed value.
       aPlatform.AssignLiteral(SPOOFED_PLATFORM);
@@ -209,8 +209,7 @@ void WorkerNavigator::GetUserAgent(nsString& aUserAgent, CallerType aCallerType,
 
   RefPtr<GetUserAgentRunnable> runnable = new GetUserAgentRunnable(
       workerPrivate, aUserAgent,
-      workerPrivate->GlobalScope()->ShouldResistFingerprinting(
-          RFPTarget::NavigatorUserAgent));
+      workerPrivate->ShouldResistFingerprinting(RFPTarget::NavigatorUserAgent));
 
   runnable->Dispatch(Canceling, aRv);
 }
@@ -220,7 +219,7 @@ uint64_t WorkerNavigator::HardwareConcurrency() const {
   MOZ_ASSERT(rts);
 
   WorkerPrivate* aWorkerPrivate = GetCurrentThreadWorkerPrivate();
-  bool rfp = aWorkerPrivate->GlobalScope()->ShouldResistFingerprinting(
+  bool rfp = aWorkerPrivate->ShouldResistFingerprinting(
       RFPTarget::NavigatorHWConcurrency);
 
   return rts->ClampedHardwareConcurrency(rfp);
