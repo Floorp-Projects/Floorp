@@ -2167,7 +2167,6 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject,
 }
 
 // Newer Should RFP Functions ----------------------------------
-// Utilities ---------------------------------------------------
 
 inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
                                  nsAutoCString& url, bool isExemptDomain) {
@@ -2202,43 +2201,8 @@ inline bool CookieJarSettingsSaysShouldResistFingerprinting(
   return cookieJarSettings->GetShouldResistFingerprinting();
 }
 
-inline bool URISaysShouldNotResistFingerprinting(nsIURI* aURI) {
-  // This function is mostly intended for about: pages, but it isn't specific to
-  // them
-  bool hasFlags = false;
-  // Exempt uris that cannot be loaded by web content.
-  Unused << NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
-                                &hasFlags);
-  if (hasFlags) {
-    return true;
-  }
-
-  // UI resources are also exempted
-  hasFlags = false;
-  Unused << NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                                &hasFlags);
-  if (hasFlags) {
-    return true;
-  }
-
-  return false;
-}
-
-inline bool SchemeSaysShouldNotResistFingerprinting(nsIURI* aURI) {
-  return aURI->SchemeIs("chrome") || aURI->SchemeIs("resource") ||
-         aURI->SchemeIs("view-source") || aURI->SchemeIs("moz-extension");
-}
-
-inline bool SchemeSaysShouldNotResistFingerprinting(nsIPrincipal* aPrincipal) {
-  return aPrincipal->SchemeIs("chrome") || aPrincipal->SchemeIs("resource") ||
-         aPrincipal->SchemeIs("view-source") ||
-         aPrincipal->SchemeIs("moz-extension");
-}
-
 const char* kExemptedDomainsPrefName =
     "privacy.resistFingerprinting.exemptedDomains";
-
-// Functions ---------------------------------------------------
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(
@@ -2377,12 +2341,9 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   }
 
   // Exclude internal schemes and web extensions
-  if (SchemeSaysShouldNotResistFingerprinting(aURI)) {
-    return false;
-  }
-
-  // Allow safe URIs through
-  if (URISaysShouldNotResistFingerprinting(aURI)) {
+  if (aURI->SchemeIs("about") || aURI->SchemeIs("chrome") ||
+      aURI->SchemeIs("resource") || aURI->SchemeIs("view-source") ||
+      aURI->SchemeIs("moz-extension")) {
     return false;
   }
 
@@ -2464,15 +2425,9 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
     }
   }
 
-  // Exclude internal schemes and web extensions
-  if (SchemeSaysShouldNotResistFingerprinting(aPrincipal)) {
-    return false;
-  }
-
-  // Allow safe URIs through
-  nsCOMPtr<nsIURI> prinURI;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(prinURI));
-  if (URISaysShouldNotResistFingerprinting(prinURI)) {
+  // Exclude internal schemes
+  if (aPrincipal->SchemeIs("about") || aPrincipal->SchemeIs("chrome") ||
+      aPrincipal->SchemeIs("resource") || aPrincipal->SchemeIs("view-source")) {
     return false;
   }
 
@@ -2500,6 +2455,7 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   // So perform this last-ditch check for that scenario.
   // We arbitrarily use https as the scheme, but it doesn't matter.
   nsCOMPtr<nsIURI> uri;
+  nsresult rv;
   if (isExemptDomain && StaticPrefs::privacy_firstparty_isolate() &&
       !originAttributes.mFirstPartyDomain.IsEmpty()) {
     rv = NS_NewURI(getter_AddRefs(uri),
@@ -2519,8 +2475,6 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
 
   return !isExemptDomain;
 }
-
-// --------------------------------------------------------------------
 
 /* static */
 void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
