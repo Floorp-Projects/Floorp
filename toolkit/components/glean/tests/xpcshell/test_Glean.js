@@ -220,6 +220,22 @@ add_task(function test_fog_custom_pings() {
   Assert.ok(submitted, "Ping was submitted, callback was called.");
 });
 
+add_task(function test_recursive_testBeforeNextSubmit() {
+  Assert.ok("onePingOnly" in GleanPings);
+  let submitted = 0;
+  let rec = reason => {
+    submitted++;
+    GleanPings.onePingOnly.testBeforeNextSubmit(rec);
+  };
+  GleanPings.onePingOnly.testBeforeNextSubmit(rec);
+  GleanPings.onePingOnly.submit();
+  GleanPings.onePingOnly.submit();
+  GleanPings.onePingOnly.submit();
+  Assert.equal(3, submitted, "Ping was submitted 3 times");
+  // Be kind and remove the callback.
+  GleanPings.onePingOnly.testBeforeNextSubmit(() => {});
+});
+
 add_task(async function test_fog_timing_distribution_works() {
   let t1 = Glean.testOnly.whatTimeIsIt.start();
   let t2 = Glean.testOnly.whatTimeIsIt.start();
