@@ -23,7 +23,7 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodrive
 [dependencies]
 base64 = "0.21"
 chrono = "0.4.6"
-clap = { version = "~3.1", default-features = false, features = ["cargo", "std", "suggestions", "wrap_help"] }
+clap = { version = "4", default-features = false, features = ["cargo", "std", "suggestions", "wrap_help", "string"] }
 hyper = "0.14"
 lazy_static = "1.0"
 log = { version = "0.4", features = ["std"] }
