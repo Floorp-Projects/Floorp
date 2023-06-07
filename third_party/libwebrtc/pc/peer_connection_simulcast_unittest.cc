@@ -22,6 +22,8 @@
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/audio_codecs/opus_audio_decoder_factory.h"
+#include "api/audio_codecs/opus_audio_encoder_factory.h"
 #include "api/create_peerconnection_factory.h"
 #include "api/jsep.h"
 #include "api/media_types.h"
@@ -32,6 +34,7 @@
 #include "api/rtp_transceiver_direction.h"
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/stats/rtcstats_objects.h"
 #include "api/uma_metrics.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
@@ -42,11 +45,15 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "pc/channel_interface.h"
 #include "pc/peer_connection_wrapper.h"
+#include "pc/sdp_utils.h"
 #include "pc/session_description.h"
 #include "pc/simulcast_description.h"
 #include "pc/test/fake_audio_capture_module.h"
 #include "pc/test/mock_peer_connection_observers.h"
+#include "pc/test/peer_connection_test_wrapper.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/gunit.h"
+#include "rtc_base/physical_socket_server.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/unique_id_generator.h"
@@ -116,6 +123,9 @@ std::vector<SimulcastLayer> CreateLayers(int num_layers, bool active) {
 }  // namespace
 
 namespace webrtc {
+
+constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(5);
+constexpr TimeDelta kLongTimeoutForRampingUp = TimeDelta::Seconds(20);
 
 class PeerConnectionSimulcastTests : public ::testing::Test {
  public:
@@ -794,4 +804,189 @@ INSTANTIATE_TEST_SUITE_P(NumberOfSendEncodings,
                          PeerConnectionSimulcastMetricsTests,
                          ::testing::Range(0, kMaxLayersInMetricsTest));
 #endif
+
+// Inherits some helper methods from PeerConnectionSimulcastTests but
+// uses real threads and PeerConnectionTestWrapper to create fake media streams
+// with flowing media and establish connections.
+class PeerConnectionSimulcastWithMediaFlowTests
+    : public PeerConnectionSimulcastTests {
+ public:
+  PeerConnectionSimulcastWithMediaFlowTests()
+      : background_thread_(std::make_unique<rtc::Thread>(&pss_)) {
+    RTC_CHECK(background_thread_->Start());
+  }
+
+  rtc::scoped_refptr<PeerConnectionTestWrapper> CreatePc() {
+    auto pc_wrapper = rtc::make_ref_counted<PeerConnectionTestWrapper>(
+        "pc", &pss_, background_thread_.get(), background_thread_.get());
+    pc_wrapper->CreatePc({}, webrtc::CreateOpusAudioEncoderFactory(),
+                         webrtc::CreateOpusAudioDecoderFactory());
+    return pc_wrapper;
+  }
+
+  rtc::scoped_refptr<RtpTransceiverInterface> AddTransceiverWithSimulcastLayers(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> local,
+      rtc::scoped_refptr<PeerConnectionTestWrapper> remote,
+      std::vector<SimulcastLayer> init_layers) {
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream =
+        local->GetUserMedia(
+            /*audio=*/false, cricket::AudioOptions(), /*video=*/true,
+            {.width = 1280, .height = 720});
+    rtc::scoped_refptr<VideoTrackInterface> track = stream->GetVideoTracks()[0];
+
+    RTCErrorOr<rtc::scoped_refptr<RtpTransceiverInterface>>
+        transceiver_or_error = local->pc()->AddTransceiver(
+            track, CreateTransceiverInit(init_layers));
+    EXPECT_TRUE(transceiver_or_error.ok());
+    return transceiver_or_error.value();
+  }
+
+  void ExchangeIceCandidates(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper,
+      rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper) {
+    local_pc_wrapper->SignalOnIceCandidateReady.connect(
+        remote_pc_wrapper.get(), &PeerConnectionTestWrapper::AddIceCandidate);
+    remote_pc_wrapper->SignalOnIceCandidateReady.connect(
+        local_pc_wrapper.get(), &PeerConnectionTestWrapper::AddIceCandidate);
+  }
+
+  void NegotiateWithSimulcastTweaks(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper,
+      rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper,
+      std::vector<SimulcastLayer> init_layers) {
+    // Create and set offer for `local_pc_wrapper`.
+    std::unique_ptr<SessionDescriptionInterface> offer =
+        CreateOffer(local_pc_wrapper);
+    rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
+        SetLocalDescription(local_pc_wrapper, offer.get());
+    // Modify the offer before handoff because `remote_pc_wrapper` only supports
+    // receiving singlecast.
+    SimulcastDescription simulcast_description = RemoveSimulcast(offer.get());
+    rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
+        SetRemoteDescription(remote_pc_wrapper, offer.get());
+    EXPECT_TRUE(Await({p1, p2}));
+
+    // Create and set answer for `remote_pc_wrapper`.
+    std::unique_ptr<SessionDescriptionInterface> answer =
+        CreateAnswer(remote_pc_wrapper);
+    p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
+    // Modify the answer before handoff because `local_pc_wrapper` should still
+    // send simulcast.
+    cricket::MediaContentDescription* mcd_answer =
+        answer->description()->contents()[0].media_description();
+    mcd_answer->mutable_streams().clear();
+    std::vector<SimulcastLayer> simulcast_layers =
+        simulcast_description.send_layers().GetAllLayers();
+    cricket::SimulcastLayerList& receive_layers =
+        mcd_answer->simulcast_description().receive_layers();
+    for (const auto& layer : simulcast_layers) {
+      receive_layers.AddLayer(layer);
+    }
+    p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
+    EXPECT_TRUE(Await({p1, p2}));
+  }
+
+  bool HasOutboundRtpBytesSent(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      size_t num_layers) {
+    rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
+    std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+        report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+    if (outbound_rtps.size() != num_layers) {
+      return false;
+    }
+    for (const auto* outbound_rtp : outbound_rtps) {
+      if (!outbound_rtp->bytes_sent.is_defined() ||
+          *outbound_rtp->bytes_sent == 0u) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+ protected:
+  std::unique_ptr<SessionDescriptionInterface> CreateOffer(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper) {
+    auto observer =
+        rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
+    pc_wrapper->pc()->CreateOffer(observer.get(), {});
+    EXPECT_EQ_WAIT(true, observer->called(), kDefaultTimeout.ms());
+    return observer->MoveDescription();
+  }
+
+  std::unique_ptr<SessionDescriptionInterface> CreateAnswer(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper) {
+    auto observer =
+        rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
+    pc_wrapper->pc()->CreateAnswer(observer.get(), {});
+    EXPECT_EQ_WAIT(true, observer->called(), kDefaultTimeout.ms());
+    return observer->MoveDescription();
+  }
+
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> SetLocalDescription(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      SessionDescriptionInterface* sdp) {
+    auto observer = rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
+    pc_wrapper->pc()->SetLocalDescription(
+        observer.get(), CloneSessionDescription(sdp).release());
+    return observer;
+  }
+
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> SetRemoteDescription(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      SessionDescriptionInterface* sdp) {
+    auto observer = rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
+    pc_wrapper->pc()->SetRemoteDescription(
+        observer.get(), CloneSessionDescription(sdp).release());
+    return observer;
+  }
+
+  // To avoid ICE candidates arriving before the remote endpoint has received
+  // the offer it is important to SetLocalDescription() and
+  // SetRemoteDescription() are kicked off without awaiting in-between. This
+  // helper is used to await multiple observers.
+  bool Await(std::vector<rtc::scoped_refptr<MockSetSessionDescriptionObserver>>
+                 observers) {
+    for (auto& observer : observers) {
+      EXPECT_EQ_WAIT(true, observer->called(), kDefaultTimeout.ms());
+      if (!observer->result()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  rtc::scoped_refptr<const RTCStatsReport> GetStats(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper) {
+    auto callback = rtc::make_ref_counted<MockRTCStatsCollectorCallback>();
+    pc_wrapper->pc()->GetStats(callback.get());
+    EXPECT_TRUE_WAIT(callback->called(), kDefaultTimeout.ms());
+    return callback->report();
+  }
+
+  rtc::PhysicalSocketServer pss_;
+  std::unique_ptr<rtc::Thread> background_thread_;
+};
+
+// TODO(https://crbug.com/webrtc/14884): When VP9 simulast is supported, use
+// SetCodecPreferences() and pass a test like this with VP9.
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SimulcastSendsAllLayersWithDefaultCodec) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f", "h", "q"}, true);
+  AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                    layers);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing on all three layers.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+                   kLongTimeoutForRampingUp.ms());
+}
+
 }  // namespace webrtc
