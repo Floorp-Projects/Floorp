@@ -10796,6 +10796,12 @@
 
 # WebRTC prefs follow
 
+# Enables auto refresh of stats by default
+- name: media.aboutwebrtc.auto_refresh
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 # Enables RTCPeerConnection support. Note that, when true, this pref enables
 # navigator.mediaDevices and getUserMedia() support as well.
 # See also media.navigator.enabled
