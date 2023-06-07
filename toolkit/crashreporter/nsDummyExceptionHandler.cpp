@@ -8,7 +8,6 @@
 
 #include "nsExceptionHandler.h"
 #include "nsExceptionHandlerUtils.h"
-#include "prio.h"
 
 namespace CrashReporter {
 
@@ -115,21 +114,6 @@ nsresult SetRestartArgs(int argc, char** argv) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if !defined(XP_WIN)
-int GetAnnotationTimeCrashFd() { return 7; }
-#endif
-
-void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
-                                                PRFileDesc* aFd) {
-  // The real implementation of this function takes ownership of aFd
-  // and closes it when the process exits; if we don't close it, it
-  // causes a leak.  With no crash reporter we'll never write to the
-  // pipe, so it's safe to close the read end immediately.
-  PR_Close(aFd);
-}
-
-void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {}
-
 #ifdef XP_WIN
 nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -216,10 +200,7 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
 
 #endif  // !defined(XP_WIN) && !defined(XP_MACOSX)
 
-bool SetRemoteExceptionHandler(const char* aCrashPipe,
-                               FileHandle aCrashTimeAnnotationFile) {
-  return false;
-}
+bool SetRemoteExceptionHandler(const char* aCrashPipe) { return false; }
 
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations, uint32_t* aSequence) {
@@ -253,8 +234,6 @@ bool UnsetRemoteExceptionHandler(bool wasSet) { return false; }
 
 #if defined(MOZ_WIDGET_ANDROID)
 void SetNotificationPipeForChild(FileHandle childCrashFd) {}
-
-void SetCrashAnnotationPipeForChild(FileHandle childCrashAnnotationFd) {}
 
 void AddLibraryMapping(const char* library_name, uintptr_t start_address,
                        size_t mapping_length, size_t file_offset) {}

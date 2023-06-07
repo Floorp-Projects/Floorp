@@ -188,7 +188,6 @@ void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
   mozilla::ipc::SetPrefMapFd(fds.mPrefMapFd);
   IPC::Channel::SetClientChannelFd(fds.mIpcFd);
   CrashReporter::SetNotificationPipeForChild(fds.mCrashFd);
-  CrashReporter::SetCrashAnnotationPipeForChild(fds.mCrashAnnotationFd);
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
@@ -384,8 +383,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   bool exceptionHandlerIsSet = false;
   if (!CrashReporter::IsDummy()) {
-    CrashReporter::FileHandle crashTimeAnnotationFile =
-        CrashReporter::kInvalidFileHandle;
 #if defined(XP_WIN)
     if (aArgc < 1) {
       return NS_ERROR_FAILURE;
@@ -393,18 +390,14 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     // Pop the first argument, this is used by the WER runtime exception module
     // which reads it from the command-line so we can just discard it here.
     --aArgc;
-
-    const char* const crashTimeAnnotationArg = aArgv[--aArgc];
-    crashTimeAnnotationFile = reinterpret_cast<CrashReporter::FileHandle>(
-        std::stoul(std::string(crashTimeAnnotationArg)));
 #endif
 
     if (aArgc < 1) return NS_ERROR_FAILURE;
     const char* const crashReporterArg = aArgv[--aArgc];
 
     if (IsCrashReporterEnabled(crashReporterArg)) {
-      exceptionHandlerIsSet = CrashReporter::SetRemoteExceptionHandler(
-          crashReporterArg, crashTimeAnnotationFile);
+      exceptionHandlerIsSet =
+          CrashReporter::SetRemoteExceptionHandler(crashReporterArg);
       MOZ_ASSERT(exceptionHandlerIsSet,
                  "Should have been able to set remote exception handler");
 

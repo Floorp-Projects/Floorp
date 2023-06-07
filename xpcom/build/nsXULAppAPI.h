@@ -283,7 +283,6 @@ struct XRE_AndroidChildFds {
   int mPrefMapFd;
   int mIpcFd;
   int mCrashFd;
-  int mCrashAnnotationFd;
 };
 
 void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds);

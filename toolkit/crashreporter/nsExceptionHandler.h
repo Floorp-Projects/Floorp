@@ -241,13 +241,6 @@ typedef int FileHandle;
 const FileHandle kInvalidFileHandle = -1;
 #endif
 
-#if !defined(XP_WIN)
-FileHandle GetAnnotationTimeCrashFd();
-#endif
-void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
-                                                PRFileDesc* aFd);
-void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess);
-
 // Return the current thread's ID.
 //
 // XXX: this is a somewhat out-of-place interface to expose through
@@ -325,16 +318,13 @@ DWORD WINAPI WerNotifyProc(LPVOID aParameter);
 #endif
 
 // Child-side API
-bool SetRemoteExceptionHandler(
-    const char* aCrashPipe = nullptr,
-    FileHandle aCrashTimeAnnotationFile = kInvalidFileHandle);
+bool SetRemoteExceptionHandler(const char* aCrashPipe = nullptr);
 bool UnsetRemoteExceptionHandler(bool wasSet = true);
 
 #if defined(MOZ_WIDGET_ANDROID)
 // Android creates child process as services so we must explicitly set
 // the handle for the pipe since it can't get remapped to a default value.
 void SetNotificationPipeForChild(FileHandle childCrashFd);
-void SetCrashAnnotationPipeForChild(FileHandle childCrashAnnotationFd);
 #endif
 
 }  // namespace CrashReporter

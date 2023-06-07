@@ -6047,7 +6047,6 @@ _ZN5style7sharing17SHARING_CACHE_KEY7__getit17he592e433f2be153cE
 ?DoResolveOrReject@ThenValueBase@?$MozPromise@PAXULaunchError@ipc@mozilla@@$0A@@mozilla@@IAEXAAVResolveOrRejectValue@23@@Z
 ?IsOnCurrentThreadInfallible@AbstractThread@mozilla@@UAG_NXZ
 ?AddTargetPeer@SandboxBroker@mozilla@@SA_NPAX@Z
-?RegisterChildCrashAnnotationFileDescriptor@CrashReporter@@YAXKPAUPRFileDesc@@@Z
 ?CreateAdditionalChildMinidump@CrashReporter@@YA_NPAXKPAVnsIFile@@ABV?$nsTSubstring@D@@@Z
 ?_Tidy@?$deque@VMessage@IPC@@V?$allocator@VMessage@IPC@@@std@@@std@@IAEXXZ
 ?_Tidy@?$vector@V?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@V?$allocator@V?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@@2@@std@@AAEXXZ

@@ -362,8 +362,7 @@ static void FreeArgv(char** argv, int argc) {
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(
     JNIEnv* jenv, jclass jc, jobjectArray jargs, int prefsFd, int prefMapFd,
-    int ipcFd, int crashFd, int crashAnnotationFd, bool xpcshell,
-    jstring outFilePath) {
+    int ipcFd, int crashFd, bool xpcshell, jstring outFilePath) {
   EnsureBaseProfilerInitialized();
 
   int argc = 0;
@@ -392,8 +391,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(
     ElfLoader::Singleton.ExpectShutdown(true);
 #endif
   } else {
-    gBootstrap->XRE_SetAndroidChildFds(
-        jenv, {prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd});
+    gBootstrap->XRE_SetAndroidChildFds(jenv,
+                                       {prefsFd, prefMapFd, ipcFd, crashFd});
     gBootstrap->XRE_SetProcessType(argv[argc - 1]);
 
     XREChildData childData;
