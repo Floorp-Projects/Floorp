@@ -1,3 +1,5 @@
+// Note: this requires the `unstable-multicall` feature
+
 use clap::Command;
 
 fn main() {

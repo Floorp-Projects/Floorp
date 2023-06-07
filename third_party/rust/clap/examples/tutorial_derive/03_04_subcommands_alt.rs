@@ -1,21 +1,21 @@
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[clap(author, version, about, long_about = None)]
+#[clap(propagate_version = true)]
 struct Cli {
-    #[command(subcommand)]
+    #[clap(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
 enum Commands {
     /// Adds files to myapp
-    Add(AddArgs),
+    Add(Add),
 }
 
 #[derive(Args)]
-struct AddArgs {
+struct Add {
     name: Option<String>,
 }
 

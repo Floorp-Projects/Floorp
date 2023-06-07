@@ -1,22 +1,26 @@
-**This requires enabling the [`derive` feature flag][crate::_features].**
+*Jump to [source](escaped-positional-derive.rs)*
+
+**This requires enabling the `derive` feature flag.**
 
 You can use `--` to escape further arguments.
 
 Let's see what this looks like in the help:
 ```console
 $ escaped-positional-derive --help
+clap [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
 
-Usage: escaped-positional-derive[EXE] [OPTIONS] [-- <SLOP>...]
+USAGE:
+    escaped-positional-derive[EXE] [OPTIONS] [-- <SLOP>...]
 
-Arguments:
-  [SLOP]...  
+ARGS:
+    <SLOP>...    
 
-Options:
-  -f             
-  -p <PEAR>      
-  -h, --help     Print help
-  -V, --version  Print version
+OPTIONS:
+    -f               
+    -h, --help       Print help information
+    -p <PEAR>        
+    -V, --version    Print version information
 
 ```
 
@@ -33,11 +37,12 @@ Notice that we can't pass positional arguments before `--`:
 ```console
 $ escaped-positional-derive foo bar
 ? failed
-error: unexpected argument 'foo' found
+error: Found argument 'foo' which wasn't expected, or isn't valid in this context
 
-Usage: escaped-positional-derive[EXE] [OPTIONS] [-- <SLOP>...]
+USAGE:
+    escaped-positional-derive[EXE] [OPTIONS] [-- <SLOP>...]
 
-For more information, try '--help'.
+For more information try --help
 
 ```
 

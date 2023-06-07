@@ -2760,11 +2760,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.15.0 -> 0.15.2"
 
-[[audits.textwrap]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.15.2 -> 0.16.0"
-
 [[audits.thin-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
@@ -3692,30 +3687,6 @@ criteria = "safe-to-deploy"
 user-id = 6741 # Alice Ryhl (Darksonn)
 start = "2021-01-11"
 end = "2024-05-05"
-
-[[trusted.clap]]
-criteria = "safe-to-deploy"
-user-id = 6743 # Ed Page (epage)
-start = "2021-12-08"
-end = "2024-06-02"
-
-[[trusted.clap_builder]]
-criteria = "safe-to-deploy"
-user-id = 6743 # Ed Page (epage)
-start = "2023-03-28"
-end = "2024-06-02"
-
-[[trusted.clap_derive]]
-criteria = "safe-to-deploy"
-user-id = 6743 # Ed Page (epage)
-start = "2021-12-08"
-end = "2024-06-02"
-
-[[trusted.clap_lex]]
-criteria = "safe-to-deploy"
-user-id = 6743 # Ed Page (epage)
-start = "2022-04-15"
-end = "2024-06-02"
 
 [[trusted.dtoa]]
 criteria = "safe-to-deploy"

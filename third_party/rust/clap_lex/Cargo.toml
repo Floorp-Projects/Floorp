@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.64.0"
+rust-version = "1.56.1"
 name = "clap_lex"
-version = "0.4.1"
+version = "0.2.4"
 include = [
     "build.rs",
     "src/**/*",
@@ -24,7 +24,6 @@ include = [
     "examples/**/*",
 ]
 description = "Minimal, flexible command line parser"
-readme = "README.md"
 keywords = [
     "argument",
     "cli",
@@ -35,6 +34,7 @@ keywords = [
 categories = ["command-line-interface"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/clap-rs/clap/tree/master/clap_lex"
+resolver = "2"
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CHANGELOG.md"
@@ -80,3 +80,8 @@ prerelease = true
 
 [lib]
 bench = false
+
+[dependencies.os_str_bytes]
+version = "6.0"
+features = ["raw_os_str"]
+default-features = false

@@ -1,14 +1,14 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[clap(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(default_value_t = 2020)]
-    port: u16,
+    #[clap(default_value_t = String::from("alice"))]
+    name: String,
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    println!("port: {:?}", cli.port);
+    println!("name: {:?}", cli.name);
 }

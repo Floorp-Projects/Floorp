@@ -1,3 +1,5 @@
+// Note: this requires the `cargo` feature
+
 fn main() {
     let cmd = clap::Command::new("cargo")
         .bin_name("cargo")
@@ -5,7 +7,8 @@ fn main() {
         .subcommand(
             clap::command!("example").arg(
                 clap::arg!(--"manifest-path" <PATH>)
-                    .value_parser(clap::value_parser!(std::path::PathBuf)),
+                    .required(false)
+                    .allow_invalid_utf8(true),
             ),
         );
     let matches = cmd.get_matches();
@@ -13,6 +16,8 @@ fn main() {
         Some(("example", matches)) => matches,
         _ => unreachable!("clap should ensure we don't get here"),
     };
-    let manifest_path = matches.get_one::<std::path::PathBuf>("manifest-path");
+    let manifest_path = matches
+        .value_of_os("manifest-path")
+        .map(std::path::PathBuf::from);
     println!("{:?}", manifest_path);
 }

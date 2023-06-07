@@ -1,3 +1,5 @@
+*Jump to [source](pacman.rs)*
+
 [`pacman`](https://wiki.archlinux.org/index.php/pacman) defines subcommands via flags.
 
 Here, `-S` is a short flag subcommand:
@@ -35,31 +37,36 @@ Searching for name...
 In the help, this looks like:
 ```console
 $ pacman -h
+pacman 5.2.1
+Pacman Development Team
 package manager utility
 
-Usage: pacman[EXE] <COMMAND>
+USAGE:
+    pacman[EXE] <SUBCOMMAND>
 
-Commands:
-  query, -Q, --query  Query the package database.
-  sync, -S, --sync    Synchronize packages.
-  help                Print this message or the help of the given subcommand(s)
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
 
-Options:
-  -h, --help     Print help
-  -V, --version  Print version
+SUBCOMMANDS:
+    help                Print this message or the help of the given subcommand(s)
+    query -Q --query    Query the package database.
+    sync -S --sync      Synchronize packages.
 
 $ pacman -S -h
+pacman[EXE]-sync 
 Synchronize packages.
 
-Usage: pacman[EXE] {sync|--sync|-S} [OPTIONS] [package]...
+USAGE:
+    pacman[EXE] {sync|--sync|-S} [OPTIONS] [--] [package]...
 
-Arguments:
-  [package]...  packages
+ARGS:
+    <package>...    packages
 
-Options:
-  -s, --search <search>...  search remote repositories for matching strings
-  -i, --info                view package information
-  -h, --help                Print help
+OPTIONS:
+    -h, --help                  Print help information
+    -i, --info                  view package information
+    -s, --search <search>...    search remote repositories for matching strings
 
 ```
 
@@ -67,11 +74,12 @@ And errors:
 ```console
 $ pacman -S -s foo -i bar
 ? failed
-error: the argument '--search <search>...' cannot be used with '--info'
+error: The argument '--search <search>...' cannot be used with '--info'
 
-Usage: pacman[EXE] {sync|--sync|-S} --search <search>... <package>...
+USAGE:
+    pacman[EXE] {sync|--sync|-S} --search <search>... <package>...
 
-For more information, try '--help'.
+For more information try --help
 
 ```
 

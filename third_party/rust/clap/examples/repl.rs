@@ -1,3 +1,5 @@
+// Note: this requires the `unstable-multicall` feature
+
 use std::io::Write;
 
 use clap::Command;
@@ -17,7 +19,7 @@ fn main() -> Result<(), String> {
                 }
             }
             Err(err) => {
-                write!(std::io::stdout(), "{err}").map_err(|e| e.to_string())?;
+                write!(std::io::stdout(), "{}", err).map_err(|e| e.to_string())?;
                 std::io::stdout().flush().map_err(|e| e.to_string())?;
             }
         }
@@ -29,7 +31,7 @@ fn main() -> Result<(), String> {
 fn respond(line: &str) -> Result<bool, String> {
     let args = shlex::split(line).ok_or("error: Invalid quoting")?;
     let matches = cli()
-        .try_get_matches_from(args)
+        .try_get_matches_from(&args)
         .map_err(|e| e.to_string())?;
     match matches.subcommand() {
         Some(("ping", _matches)) => {
@@ -48,7 +50,7 @@ fn respond(line: &str) -> Result<bool, String> {
     Ok(false)
 }
 
-fn cli() -> Command {
+fn cli() -> Command<'static> {
     // strip out usage
     const PARSER_TEMPLATE: &str = "\
         {all-args}

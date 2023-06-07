@@ -1,10 +1,11 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[clap(author, version, about, long_about = None)]
 struct Cli {
     /// Network port to use
-    port: u16,
+    #[clap(parse(try_from_str))]
+    port: usize,
 }
 
 fn main() {
@@ -14,7 +15,7 @@ fn main() {
 }
 
 #[test]
-fn verify_cli() {
+fn verify_app() {
     use clap::CommandFactory;
     Cli::command().debug_assert()
 }

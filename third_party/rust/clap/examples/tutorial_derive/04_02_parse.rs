@@ -1,11 +1,11 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[clap(author, version, about, long_about = None)]
 struct Cli {
     /// Network port to use
-    #[arg(value_parser = clap::value_parser!(u16).range(1..))]
-    port: u16,
+    #[clap(parse(try_from_str))]
+    port: usize,
 }
 
 fn main() {

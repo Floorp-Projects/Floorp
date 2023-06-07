@@ -5,7 +5,7 @@ use syn::LitStr;
 use std::ops::{Deref, DerefMut};
 
 /// An entity with a span attached.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Sp<T> {
     val: T,
     span: Span,
@@ -16,8 +16,11 @@ impl<T> Sp<T> {
         Sp { val, span }
     }
 
-    pub fn get(&self) -> &T {
-        &self.val
+    pub fn call_site(val: T) -> Self {
+        Sp {
+            val,
+            span: Span::call_site(),
+        }
     }
 
     pub fn span(&self) -> Span {
