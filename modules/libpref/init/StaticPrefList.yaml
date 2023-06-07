@@ -6725,6 +6725,15 @@
   value: false
   mirror: always
 
+- name: gfx.webrender.enable-subpixel-aa
+  type: bool
+  mirror: once
+#ifdef MOZ_WIDGET_ANDROID
+  value: false
+#else
+  value: true
+#endif
+
 #ifdef XP_MACOSX
 - name: gfx.webrender.enable-client-storage
   type: bool
