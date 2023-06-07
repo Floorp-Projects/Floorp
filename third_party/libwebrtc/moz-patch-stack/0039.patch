@@ -112,7 +112,7 @@ index 5817d22227..8b2648a306 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 138d855b45..8786ba6681 100644
+index d1b2c23491..0ed8a0c3ec 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -532,10 +532,10 @@ index 2bbc701e17..a367ca06e9 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 2e1990d651..7040b51b63 100644
+index 8e35299741..166df525c5 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
-@@ -235,6 +235,12 @@ rtc_library("video_coding") {
+@@ -199,6 +199,12 @@ rtc_library("video_coding") {
      "video_receiver2.cc",
      "video_receiver2.h",
    ]

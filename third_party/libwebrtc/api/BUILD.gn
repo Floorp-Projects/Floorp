@@ -1467,7 +1467,6 @@ if (rtc_include_tests) {
       "units:units_unittests",
       "video:frame_buffer_unittest",
       "video:rtp_video_frame_assembler_unittests",
-      "video:video_unittests",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/strings",

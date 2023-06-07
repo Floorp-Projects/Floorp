@@ -173,5 +173,5 @@ performance of different video codec implementations.
 [videocodecinitializer]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/video_coding/include/video_codec_initializer.h?q=VideoCodecInitializer
 [packetbuffer]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/video_coding/packet_buffer.h?q=PacketBuffer
 [rtpframereferencefinder]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/video_coding/rtp_frame_reference_finder.h?q=RtpFrameReferenceFinder
-[framebuffer]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/modules/video_coding/frame_buffer2.h?q=FrameBuffer
+[framebuffer]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/video/frame_buffer.h
 [quantization-wiki]: https://en.wikipedia.org/wiki/Quantization_(signal_processing)
