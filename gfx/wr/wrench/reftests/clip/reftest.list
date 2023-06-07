@@ -18,3 +18,4 @@ fuzzy(160,1055) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotat
 fuzzy(128,707) == clip-filter-raster-root.yaml clip-filter-raster-root-ref.yaml
 == blend-container.yaml blend-container-ref.yaml
 == raster-roots-tiled-mask.yaml raster-roots-tiled-mask-ref.yaml
+platform(linux,mac) == inverted-ellipse.yaml inverted-ellipse.png

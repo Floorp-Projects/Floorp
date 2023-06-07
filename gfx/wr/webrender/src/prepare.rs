@@ -168,7 +168,7 @@ pub enum QuadRenderMode {
     Direct,
     Indirect,
     NinePatch {
-        radius: f32,
+        radius: LayoutVector2D,
         clip_rect: LayoutRect,
         clip_out: bool,
     },
@@ -211,10 +211,8 @@ fn get_prim_render_strategy(
                                max_corner_width <= 0.5 * rect.size().width &&
                                max_corner_height <= 0.5 * rect.size().height {
 
-                                let radius = max_corner_width.max(max_corner_height);
-
                                 render_mode = QuadRenderMode::NinePatch {
-                                    radius,
+                                    radius: LayoutVector2D::new(max_corner_width, max_corner_height),
                                     clip_rect: rect,
                                     clip_out: mode == ClipMode::ClipOut,
                                 };
@@ -847,11 +845,11 @@ fn prepare_interned_prim_for_render(
 
                         let local_corner_0 = LayoutRect::new(
                             clip_rect.min,
-                            clip_rect.min + LayoutVector2D::new(radius, radius),
+                            clip_rect.min + radius,
                         );
 
                         let local_corner_1 = LayoutRect::new(
-                            clip_rect.max - LayoutVector2D::new(radius, radius),
+                            clip_rect.max - radius,
                             clip_rect.max,
                         );
 
