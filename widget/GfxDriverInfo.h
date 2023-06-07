@@ -178,6 +178,7 @@ enum class DeviceFamily : uint8_t {
   IntelSandyBridge,
   IntelGen7Baytrail,
   IntelSkylake,
+  IntelKabyLake,
   IntelHD520,
   IntelMobileHDGraphics,
   NvidiaBlockD3D9Layers,

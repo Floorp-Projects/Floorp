@@ -333,6 +333,30 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x193b);
       APPEND_DEVICE(0x193d);
       break;
+    case DeviceFamily::IntelKabyLake:
+      APPEND_DEVICE(0x5902);
+      APPEND_DEVICE(0x5906);
+      APPEND_DEVICE(0x5908);
+      APPEND_DEVICE(0x590A);
+      APPEND_DEVICE(0x590B);
+      APPEND_DEVICE(0x590E);
+      APPEND_DEVICE(0x5913);
+      APPEND_DEVICE(0x5915);
+      APPEND_DEVICE(0x5912);
+      APPEND_DEVICE(0x5916);
+      APPEND_DEVICE(0x5917);
+      APPEND_DEVICE(0x591A);
+      APPEND_DEVICE(0x591B);
+      APPEND_DEVICE(0x591D);
+      APPEND_DEVICE(0x591E);
+      APPEND_DEVICE(0x5921);
+      APPEND_DEVICE(0x5923);
+      APPEND_DEVICE(0x5926);
+      APPEND_DEVICE(0x5927);
+      APPEND_DEVICE(0x593B);
+      APPEND_DEVICE(0x591C);
+      APPEND_DEVICE(0x87C0);
+      break;
     case DeviceFamily::IntelHD520:
       APPEND_DEVICE(0x1916);
       break;
@@ -629,6 +653,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceFamily id) {
     case DeviceFamily::IntelSandyBridge:
     case DeviceFamily::IntelGen7Baytrail:
     case DeviceFamily::IntelSkylake:
+    case DeviceFamily::IntelKabyLake:
     case DeviceFamily::IntelHD520:
     case DeviceFamily::IntelMobileHDGraphics:
     case DeviceFamily::IntelWebRenderBlocked:
