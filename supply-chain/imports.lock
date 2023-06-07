@@ -71,6 +71,34 @@ user-id = 3788
 user-login = "emilio"
 user-name = "Emilio Cobos Álvarez"
 
+[[publisher.clap]]
+version = "4.1.14"
+when = "2023-03-28"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.clap_builder]]
+version = "4.1.14"
+when = "2023-03-28"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.clap_derive]]
+version = "4.1.14"
+when = "2023-03-28"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.clap_lex]]
+version = "0.4.1"
+when = "2023-03-28"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
 [[publisher.core-foundation]]
 version = "0.9.3"
 when = "2022-02-07"
@@ -928,12 +956,6 @@ aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust
 who = "ChromeOS"
 criteria = "safe-to-run"
 version = "1.0.12"
-aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
-
-[[audits.google.audits.proc-macro-error-attr]]
-who = "George Burgess IV <gbiv@google.com>"
-criteria = "safe-to-deploy"
-version = "1.0.4"
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
 
 [[audits.google.audits.scoped-tls]]
