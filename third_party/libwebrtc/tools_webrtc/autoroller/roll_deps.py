@@ -570,13 +570,17 @@ def UpdateDepsFile(deps_filename, rev_update, changed_deps, new_cr_content):
                     (ANDROID_DEPS_START, ANDROID_DEPS_END, faulty))
   deps_content = deps_re.sub(new_deps.group(0), deps_content)
 
+  for dep in changed_deps:
+    if isinstance(dep, ChangedVersionEntry):
+      deps_content = deps_content.replace(dep.current_version, dep.new_version)
+
   with open(deps_filename, 'wb') as deps_file:
     deps_file.write(deps_content.encode('utf-8'))
 
   # Update each individual DEPS entry.
   for dep in changed_deps:
+    # ChangedVersionEntry types are already been processed.
     if isinstance(dep, ChangedVersionEntry):
-      deps_content = deps_content.replace(dep.current_version, dep.new_version)
       continue
     local_dep_dir = os.path.join(CHECKOUT_ROOT_DIR, dep.path)
     if not os.path.isdir(local_dep_dir):
