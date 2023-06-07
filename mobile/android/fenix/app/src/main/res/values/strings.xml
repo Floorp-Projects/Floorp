@@ -248,7 +248,7 @@
     <string name="search_settings_menu_item">Search settings</string>
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">This time search in:</string>
-    <!-- Content description (not visible, for screen readers etc.): Search engine icon -->
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
     <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s search engine</string>
 
     <!-- Home onboarding -->
