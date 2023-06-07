@@ -48,10 +48,7 @@ class FrameGeneratorInterface {
   // Change the capture resolution.
   virtual void ChangeResolution(size_t width, size_t height) = 0;
 
-  virtual Resolution GetResolution() const {
-    // TODO(mbonadei): Remove and make it pure virtual.
-    return {.width = 0, .height = 0};
-  }
+  virtual Resolution GetResolution() const = 0;
 };
 
 }  // namespace test
