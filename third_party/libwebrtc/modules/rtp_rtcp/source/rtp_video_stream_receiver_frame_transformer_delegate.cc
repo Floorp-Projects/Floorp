@@ -27,8 +27,8 @@ class TransformableVideoReceiverFrame
   TransformableVideoReceiverFrame(std::unique_ptr<RtpFrameObject> frame,
                                   uint32_t ssrc)
       : frame_(std::move(frame)),
-        metadata_(frame_->GetRtpVideoHeader().GetAsMetadata()),
-        ssrc_(ssrc) {
+        metadata_(frame_->GetRtpVideoHeader().GetAsMetadata()) {
+    metadata_.SetSsrc(ssrc);
     metadata_.SetCsrcs(frame_->Csrcs());
   }
   ~TransformableVideoReceiverFrame() override = default;
@@ -44,7 +44,7 @@ class TransformableVideoReceiverFrame
   }
 
   uint8_t GetPayloadType() const override { return frame_->PayloadType(); }
-  uint32_t GetSsrc() const override { return ssrc_; }
+  uint32_t GetSsrc() const override { return metadata_.GetSsrc(); }
   uint32_t GetTimestamp() const override { return frame_->Timestamp(); }
 
   bool IsKeyFrame() const override {
@@ -70,7 +70,6 @@ class TransformableVideoReceiverFrame
  private:
   std::unique_ptr<RtpFrameObject> frame_;
   VideoFrameMetadata metadata_;
-  const uint32_t ssrc_;
 };
 }  // namespace
 
