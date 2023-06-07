@@ -56,7 +56,7 @@ constexpr int kMaxQindex = 205;  // Max qindex threshold for QP scaling.
 constexpr int kBitDepth = 8;
 constexpr int kLagInFrames = 0;  // No look ahead.
 constexpr int kRtpTicksPerSecond = 90000;
-constexpr float kMinimumFrameRate = 1.0;
+constexpr double kMinimumFrameRate = 1.0;
 
 aom_superblock_size_t GetSuperblockSize(int width, int height, int threads) {
   int resolution = width * height;
