@@ -17,12 +17,13 @@
 #include "api/scoped_refptr.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_defines.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
 class VideoCaptureOptions;
 
-class VideoCaptureFactory {
+class RTC_EXPORT VideoCaptureFactory {
  public:
   // Create a video capture module object
   // id - unique identifier of this video capture module object.

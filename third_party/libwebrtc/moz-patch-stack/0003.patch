@@ -1770,10 +1770,10 @@ index d539b38264..d5ec4daae1 100644
  
    return 0;
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index d7f1c8f74d..1b654175b7 100644
+index 1f7aa89883..a9fdaf6307 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -61,8 +61,10 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -62,8 +62,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
        rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
    virtual void RegisterCaptureDataCallback(
        RawVideoSinkInterface* dataCallback) override;
@@ -1785,7 +1785,7 @@ index d7f1c8f74d..1b654175b7 100644
    int32_t SetCaptureRotation(VideoRotation rotation) override;
    bool SetApplyRotation(bool enable) override;
    bool GetApplyRotation() override;
-@@ -104,7 +106,7 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -105,7 +107,7 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
    // last time the frame rate callback function was called.
    int64_t _lastFrameRateCallbackTimeNanos;
  
