@@ -59,8 +59,7 @@ EncodedImage CreateEncodedImage(uint32_t timestamp_rtp, int spatial_idx = 0) {
 }  // namespace
 
 TEST(VideoCodecAnalyzerTest, StartEncode) {
-  TaskQueueForTest task_queue;
-  VideoCodecAnalyzer analyzer(task_queue);
+  VideoCodecAnalyzer analyzer;
   analyzer.StartEncode(CreateVideoFrame(kTimestamp));
 
   auto fs = analyzer.GetStats()->Slice();
@@ -69,8 +68,7 @@ TEST(VideoCodecAnalyzerTest, StartEncode) {
 }
 
 TEST(VideoCodecAnalyzerTest, FinishEncode) {
-  TaskQueueForTest task_queue;
-  VideoCodecAnalyzer analyzer(task_queue);
+  VideoCodecAnalyzer analyzer;
   analyzer.StartEncode(CreateVideoFrame(kTimestamp));
 
   EncodedImage encoded_frame = CreateEncodedImage(kTimestamp, kSpatialIdx);
@@ -82,8 +80,7 @@ TEST(VideoCodecAnalyzerTest, FinishEncode) {
 }
 
 TEST(VideoCodecAnalyzerTest, StartDecode) {
-  TaskQueueForTest task_queue;
-  VideoCodecAnalyzer analyzer(task_queue);
+  VideoCodecAnalyzer analyzer;
   analyzer.StartDecode(CreateEncodedImage(kTimestamp, kSpatialIdx));
 
   auto fs = analyzer.GetStats()->Slice();
@@ -92,8 +89,7 @@ TEST(VideoCodecAnalyzerTest, StartDecode) {
 }
 
 TEST(VideoCodecAnalyzerTest, FinishDecode) {
-  TaskQueueForTest task_queue;
-  VideoCodecAnalyzer analyzer(task_queue);
+  VideoCodecAnalyzer analyzer;
   analyzer.StartDecode(CreateEncodedImage(kTimestamp, kSpatialIdx));
   VideoFrame decoded_frame = CreateVideoFrame(kTimestamp);
   analyzer.FinishDecode(decoded_frame, kSpatialIdx);
@@ -105,9 +101,8 @@ TEST(VideoCodecAnalyzerTest, FinishDecode) {
 }
 
 TEST(VideoCodecAnalyzerTest, ReferenceVideoSource) {
-  TaskQueueForTest task_queue;
   MockReferenceVideoSource reference_video_source;
-  VideoCodecAnalyzer analyzer(task_queue, &reference_video_source);
+  VideoCodecAnalyzer analyzer(&reference_video_source);
   analyzer.StartDecode(CreateEncodedImage(kTimestamp, kSpatialIdx));
 
   EXPECT_CALL(reference_video_source, GetFrame)

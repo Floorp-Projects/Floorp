@@ -56,11 +56,8 @@ Psnr CalcPsnr(const I420BufferInterface& ref_buffer,
 }  // namespace
 
 VideoCodecAnalyzer::VideoCodecAnalyzer(
-    rtc::TaskQueue& task_queue,
     ReferenceVideoSource* reference_video_source)
-    : task_queue_(task_queue),
-      reference_video_source_(reference_video_source),
-      num_frames_(0) {
+    : reference_video_source_(reference_video_source), num_frames_(0) {
   sequence_checker_.Detach();
 }
 
