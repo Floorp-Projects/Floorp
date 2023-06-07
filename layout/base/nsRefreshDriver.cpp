@@ -1419,10 +1419,17 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                          FlushType aFlushType,
                                          const char* aObserverDescription) {
   ObserverArray& array = ArrayFor(aFlushType);
+  MOZ_ASSERT(!array.Contains(aObserver),
+             "We don't want to redundantly register the same observer");
   array.AppendElement(
       ObserverData{aObserver, aObserverDescription, TimeStamp::Now(),
                    MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)),
                    profiler_capture_backtrace(), aFlushType});
+#ifdef DEBUG
+  MOZ_ASSERT(aObserver->mRegistrationCount >= 0,
+             "Registration count shouldn't be able to go negative");
+  aObserver->mRegistrationCount++;
+#endif
   EnsureTimerStarted();
 }
 
@@ -1447,6 +1454,11 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
   }
 
   array.RemoveElementAt(index);
+#ifdef DEBUG
+  aObserver->mRegistrationCount--;
+  MOZ_ASSERT(aObserver->mRegistrationCount >= 0,
+             "Registration count shouldn't be able to go negative");
+#endif
   return true;
 }
 
