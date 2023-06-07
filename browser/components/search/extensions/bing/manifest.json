@@ -2,7 +2,7 @@
   "name": "Bing",
   "description": "Microsoft Bing",
   "manifest_version": 2,
-  "version": "1.5",
+  "version": "1.6",
   "browser_specific_settings": {
     "gecko": {
       "id": "bing@search.mozilla.org"
@@ -53,7 +53,7 @@
         }
       ],
       "suggest_url": "https://www.bing.com/osjson.aspx",
-      "suggest_url_get_params": "query={searchTerms}&form=OSDJAS&language={moz:locale}"
+      "suggest_url_get_params": "query={searchTerms}&form=OSDJAS"
     }
   }
 }
