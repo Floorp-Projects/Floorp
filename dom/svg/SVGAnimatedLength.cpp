@@ -104,8 +104,8 @@ static float FixAxisLength(float aLength) {
   return aLength;
 }
 
-SVGElementMetrics::SVGElementMetrics(SVGElement* aSVGElement,
-                                     SVGViewportElement* aCtx)
+SVGElementMetrics::SVGElementMetrics(const SVGElement* aSVGElement,
+                                     const SVGViewportElement* aCtx)
     : mSVGElement(aSVGElement), mCtx(aCtx) {}
 
 float SVGElementMetrics::GetEmLength() const {
@@ -128,7 +128,7 @@ bool SVGElementMetrics::EnsureCtx() const {
   if (!mCtx && mSVGElement) {
     mCtx = mSVGElement->GetCtx();
     if (!mCtx && mSVGElement->IsSVGElement(nsGkAtoms::svg)) {
-      auto* e = static_cast<SVGViewportElement*>(mSVGElement);
+      const auto* e = static_cast<const SVGViewportElement*>(mSVGElement);
 
       if (!e->IsInner()) {
         // mSVGElement must be the outer svg element
@@ -176,13 +176,13 @@ float UserSpaceMetricsWithSize::GetAxisLength(uint8_t aCtxType) const {
   return FixAxisLength(length);
 }
 
-float SVGAnimatedLength::GetPixelsPerUnit(SVGElement* aSVGElement,
+float SVGAnimatedLength::GetPixelsPerUnit(const SVGElement* aSVGElement,
                                           uint8_t aUnitType) const {
   return SVGLength::GetPixelsPerUnit(SVGElementMetrics(aSVGElement), aUnitType,
                                      mCtxType);
 }
 
-float SVGAnimatedLength::GetPixelsPerUnit(SVGViewportElement* aCtx,
+float SVGAnimatedLength::GetPixelsPerUnit(const SVGViewportElement* aCtx,
                                           uint8_t aUnitType) const {
   return SVGLength::GetPixelsPerUnit(SVGElementMetrics(aCtx, aCtx), aUnitType,
                                      mCtxType);
@@ -190,11 +190,11 @@ float SVGAnimatedLength::GetPixelsPerUnit(SVGViewportElement* aCtx,
 
 float SVGAnimatedLength::GetPixelsPerUnit(nsIFrame* aFrame,
                                           uint8_t aUnitType) const {
-  nsIContent* content = aFrame->GetContent();
+  const nsIContent* content = aFrame->GetContent();
   MOZ_ASSERT(!content->IsText(), "Not expecting text content");
   if (content->IsSVGElement()) {
     return SVGLength::GetPixelsPerUnit(
-        SVGElementMetrics(static_cast<SVGElement*>(content)), aUnitType,
+        SVGElementMetrics(static_cast<const SVGElement*>(content)), aUnitType,
         mCtxType);
   }
   return SVGLength::GetPixelsPerUnit(NonSVGFrameUserSpaceMetrics(aFrame),

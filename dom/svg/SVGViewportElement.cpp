@@ -107,7 +107,7 @@ inline float ComputeSynthesizedViewBoxDimension(
     return aViewportLength * aLength.GetAnimValInSpecifiedUnits() / 100.0f;
   }
 
-  return aLength.GetAnimValue(const_cast<SVGViewportElement*>(aSelf));
+  return aLength.GetAnimValue(aSelf);
 }
 
 //----------------------------------------------------------------------
@@ -156,9 +156,9 @@ void SVGViewportElement::ChildrenOnlyTransformChanged(uint32_t aFlags) {
 gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
   float viewportWidth, viewportHeight;
   if (IsInner()) {
-    SVGElement* self = const_cast<SVGViewportElement*>(this);
-    viewportWidth = mLengthAttributes[ATTR_WIDTH].GetAnimValue(self);
-    viewportHeight = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(self);
+    SVGElementMetrics metrics(this);
+    viewportWidth = mLengthAttributes[ATTR_WIDTH].GetAnimValue(metrics);
+    viewportHeight = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(metrics);
   } else {
     viewportWidth = mViewportWidth;
     viewportHeight = mViewportHeight;
@@ -183,7 +183,7 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
 //----------------------------------------------------------------------
 // SVGViewportElement
 
-float SVGViewportElement::GetLength(uint8_t aCtxType) {
+float SVGViewportElement::GetLength(uint8_t aCtxType) const {
   const SVGViewBox* viewbox = GetViewBoxInternal().HasRect()
                                   ? &GetViewBoxInternal().GetAnimValue()
                                   : nullptr;
@@ -201,12 +201,12 @@ float SVGViewportElement::GetLength(uint8_t aCtxType) {
     // Resolving length for inner <svg> is exactly the same as other
     // ordinary element. We shouldn't use the SVGViewportElement overload
     // of GetAnimValue().
-    SVGElement* self = this;
+    SVGElementMetrics metrics(this);
     if (shouldComputeWidth) {
-      w = mLengthAttributes[ATTR_WIDTH].GetAnimValue(self);
+      w = mLengthAttributes[ATTR_WIDTH].GetAnimValue(metrics);
     }
     if (shouldComputeHeight) {
-      h = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(self);
+      h = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(metrics);
     }
   } else if (ShouldSynthesizeViewBox()) {
     if (shouldComputeWidth) {

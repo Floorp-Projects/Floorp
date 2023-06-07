@@ -90,10 +90,7 @@ class SVGLength {
    */
 
   float GetValueInPixels(const dom::SVGElement* aElement, uint8_t aAxis) const {
-    return mValue *
-           GetPixelsPerUnit(
-               dom::SVGElementMetrics(const_cast<dom::SVGElement*>(aElement)),
-               aAxis);
+    return mValue * GetPixelsPerUnit(dom::SVGElementMetrics(aElement), aAxis);
   }
 
   /**
