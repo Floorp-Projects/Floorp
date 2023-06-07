@@ -100,8 +100,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
                                                          DOMEventTargetHelper)
 
   WorkerGlobalScopeBase(WorkerPrivate* aWorkerPrivate,
-                        UniquePtr<ClientSource> aClientSource,
-                        bool aShouldResistFingerprinting);
+                        UniquePtr<ClientSource> aClientSource);
 
   virtual bool WrapGlobalObject(JSContext* aCx,
                                 JS::MutableHandle<JSObject*> aReflector) = 0;
@@ -197,7 +196,6 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
   RefPtr<JS::loader::ModuleLoaderBase> mModuleLoader;
   const UniquePtr<ClientSource> mClientSource;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
-  bool mShouldResistFingerprinting;
 #ifdef DEBUG
   PRThread* mWorkerThreadUsedOnlyForAssert;
 #endif
@@ -398,8 +396,7 @@ class DedicatedWorkerGlobalScope final
 
   DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                              UniquePtr<ClientSource> aClientSource,
-                             const nsString& aName,
-                             bool aShouldResistFingerprinting);
+                             const nsString& aName);
 
   bool WrapGlobalObject(JSContext* aCx,
                         JS::MutableHandle<JSObject*> aReflector) override;
@@ -443,8 +440,7 @@ class SharedWorkerGlobalScope final
  public:
   SharedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                           UniquePtr<ClientSource> aClientSource,
-                          const nsString& aName,
-                          bool aShouldResistFingerprinting);
+                          const nsString& aName);
 
   bool WrapGlobalObject(JSContext* aCx,
                         JS::MutableHandle<JSObject*> aReflector) override;
@@ -465,8 +461,7 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
 
   ServiceWorkerGlobalScope(
       WorkerPrivate* aWorkerPrivate, UniquePtr<ClientSource> aClientSource,
-      const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor,
-      bool aShouldResistFingerprinting);
+      const ServiceWorkerRegistrationDescriptor& aRegistrationDescriptor);
 
   bool WrapGlobalObject(JSContext* aCx,
                         JS::MutableHandle<JSObject*> aReflector) override;

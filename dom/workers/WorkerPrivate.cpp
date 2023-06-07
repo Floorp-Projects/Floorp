@@ -2422,7 +2422,8 @@ WorkerPrivate::WorkerPrivate(
       chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime)
           .setShouldResistFingerprinting(false);
       contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime)
-          .setShouldResistFingerprinting(mLoadInfo.mShouldResistFingerprinting);
+          .setShouldResistFingerprinting(
+              ShouldResistFingerprinting(RFPTarget::Unknown));
 
       JS::RealmCreationOptions& chromeCreationOptions =
           chromeRealmOptions.creationOptions();
@@ -2810,9 +2811,8 @@ nsresult WorkerPrivate::GetLoadInfo(
         aParent->ServiceWorkersTestingInWindow();
     loadInfo.mIsThirdPartyContextToTopWindow =
         aParent->IsThirdPartyContextToTopWindow();
-    loadInfo.mShouldResistFingerprinting =
-        aParent->GlobalScope()->ShouldResistFingerprinting(
-            RFPTarget::IsAlwaysEnabledForPrecompute);
+    loadInfo.mShouldResistFingerprinting = aParent->ShouldResistFingerprinting(
+        RFPTarget::IsAlwaysEnabledForPrecompute);
     loadInfo.mParentController = aParent->GlobalScope()->GetController();
     loadInfo.mWatchedByDevTools = aParent->IsWatchedByDevTools();
   } else {
@@ -5633,18 +5633,15 @@ WorkerGlobalScope* WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx) {
     return data->mScope;
   }
 
-  bool rfp = mLoadInfo.mShouldResistFingerprinting;
-
   if (IsSharedWorker()) {
-    data->mScope = new SharedWorkerGlobalScope(this, CreateClientSource(),
-                                               WorkerName(), rfp);
+    data->mScope =
+        new SharedWorkerGlobalScope(this, CreateClientSource(), WorkerName());
   } else if (IsServiceWorker()) {
     data->mScope = new ServiceWorkerGlobalScope(
-        this, CreateClientSource(), GetServiceWorkerRegistrationDescriptor(),
-        rfp);
+        this, CreateClientSource(), GetServiceWorkerRegistrationDescriptor());
   } else {
     data->mScope = new DedicatedWorkerGlobalScope(this, CreateClientSource(),
-                                                  WorkerName(), rfp);
+                                                  WorkerName());
   }
 
   JS::Rooted<JSObject*> global(aCx);
@@ -5678,10 +5675,8 @@ WorkerDebuggerGlobalScope* WorkerPrivate::CreateDebuggerGlobalScope(
   auto clientSource = ClientManager::CreateSource(
       GetClientType(), HybridEventTarget(), NullPrincipalInfo());
 
-  bool rfp = false;  // The debugger for a worker can exempt RFP; it is not
-                     // client-exposed
   data->mDebuggerScope =
-      new WorkerDebuggerGlobalScope(this, std::move(clientSource), rfp);
+      new WorkerDebuggerGlobalScope(this, std::move(clientSource));
 
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(data->mDebuggerScope->WrapGlobalObject(aCx, &global), nullptr);
@@ -5735,6 +5730,11 @@ void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
 PerformanceStorage* WorkerPrivate::GetPerformanceStorage() {
   MOZ_ASSERT(mPerformanceStorage);
   return mPerformanceStorage;
+}
+
+bool WorkerPrivate::ShouldResistFingerprinting(RFPTarget aTarget) const {
+  return mLoadInfo.mShouldResistFingerprinting &&
+         nsRFPService::IsRFPEnabledFor(aTarget);
 }
 
 void WorkerPrivate::SetRemoteWorkerController(RemoteWorkerChild* aController) {
