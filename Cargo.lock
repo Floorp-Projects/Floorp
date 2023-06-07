@@ -1080,6 +1080,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crypto_hash"
+version = "0.1.0"
+dependencies = [
+ "base64 0.10.1",
+ "digest",
+ "libc",
+ "md-5",
+ "nserror",
+ "nsstring",
+ "sha1",
+ "sha2",
+ "xpcom",
+]
+
+[[package]]
 name = "cssparser"
 version = "0.29.6"
 dependencies = [
@@ -1327,9 +1342,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.10.3"
+version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2fb860ca6fafa5552fb6d0e816a69c8e49f0908bf524e30a90d97c85892d506"
+checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer",
  "crypto-common",
@@ -2042,6 +2057,7 @@ dependencies = [
  "cert_storage",
  "chardetng_c",
  "cose-c",
+ "crypto_hash",
  "cubeb-coreaudio",
  "cubeb-pulse",
  "cubeb-sys",
@@ -3056,6 +3072,15 @@ name = "maybe-uninit"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
+
+[[package]]
+name = "md-5"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6365506850d44bff6e2fbcb5176cf63650e48bd45ef2fe2665ae1570e0f4b9ca"
+dependencies = [
+ "digest",
+]
 
 [[package]]
 name = "mdns_service"
@@ -4730,6 +4755,17 @@ name = "sha-1"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "028f48d513f9678cda28f6e4064755b3fbb2af6acd672f2c209b62323f7aea0f"
+dependencies = [
+ "cfg-if 1.0.0",
+ "cpufeatures",
+ "digest",
+]
+
+[[package]]
+name = "sha1"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f04293dc80c3993519f2d7f6f511707ee7094fe0c6d3406feb330cdb3540eba3"
 dependencies = [
  "cfg-if 1.0.0",
  "cpufeatures",

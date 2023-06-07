@@ -27,8 +27,7 @@
 #![forbid(unsafe_code)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg",
-    html_root_url = "https://docs.rs/digest/0.10.3"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
 
@@ -60,6 +59,9 @@ mod mac;
 #[cfg(feature = "core-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "core-api")))]
 pub use block_buffer;
+#[cfg(feature = "oid")]
+#[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
+pub use const_oid;
 pub use crypto_common;
 
 pub use crate::digest::{Digest, DynDigest, HashMarker};

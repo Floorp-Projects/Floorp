@@ -71,7 +71,7 @@ pub fn feed_rand_16mib<D: crate::Update>(d: &mut D) {
     for _ in 0..n {
         rng.fill(buf);
         d.update(buf);
-        // additional byte, so size of feeded data
+        // additional byte, so size of fed data
         // will not be multiple of block size
         d.update(&[42]);
     }

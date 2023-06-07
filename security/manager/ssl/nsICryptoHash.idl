@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+
 interface nsIInputStream;
 
 /**
@@ -21,11 +22,11 @@ interface nsICryptoHash : nsISupports
      * This allows us to use NSS mapping functions like
      * HASH_GetHashOidTagByHashType with these values.
      */
-    const short MD5    = 2;  /* String value: "md5"    */
-    const short SHA1   = 3;  /* String value: "sha1"   */
-    const short SHA256 = 4;  /* String value: "sha256" */
-    const short SHA384 = 5;  /* String value: "sha384" */
-    const short SHA512 = 6;  /* String value: "sha512" */
+    const unsigned long MD5    = 2;  /* String value: "md5"    */
+    const unsigned long SHA1   = 3;  /* String value: "sha1"   */
+    const unsigned long SHA256 = 4;  /* String value: "sha256" */
+    const unsigned long SHA384 = 5;  /* String value: "sha384" */
+    const unsigned long SHA512 = 6;  /* String value: "sha512" */
 
     /**
      * Initialize the hashing object. This method may be
