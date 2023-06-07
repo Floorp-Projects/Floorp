@@ -364,7 +364,7 @@ export class AddonSuggestions extends BaseFeature {
     return commands;
   }
 
-  handlePossibleCommand(queryContext, result, selType) {
+  handleCommand(queryContext, result, selType) {
     switch (selType) {
       case RESULT_MENU_COMMAND.HELP:
         // "help" is handled by UrlbarInput, no need to do anything here.

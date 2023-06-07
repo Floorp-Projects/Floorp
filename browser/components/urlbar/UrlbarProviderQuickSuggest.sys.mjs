@@ -21,6 +21,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
+const FEATURE_NAMES_BY_TELEMETRY_TYPE = {
+  adm: "AdmWikipedia",
+  amo: "AddonSuggestions",
+  pocket: "PocketSuggestions",
+};
+
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
 const TELEMETRY_SCALARS = {
@@ -221,12 +227,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
 
     if (details.result?.providerName == this.name) {
-      if (details.result.payload.dynamicType === "addons") {
-        lazy.QuickSuggest.getFeature("AddonSuggestions").handlePossibleCommand(
-          queryContext,
-          details.result,
-          details.selType
-        );
+      let feature = this.#getFeatureByResult(details.result);
+      if (feature?.handleCommand) {
+        feature.handleCommand(queryContext, details.result, details.selType);
       } else if (details.selType == "dismiss") {
         // Handle dismissals.
         this.#dismissResult(queryContext, details.result);
@@ -245,47 +248,42 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {object} An object describing the view update.
    */
   getViewUpdate(result) {
-    // For now, we support only addons suggestion.
-    return lazy.QuickSuggest.getFeature("AddonSuggestions").getViewUpdate(
-      result
-    );
+    return this.#getFeatureByResult(result)?.getViewUpdate?.(result);
   }
 
   getResultCommands(result) {
-    if (result.payload.dynamicType === "addons") {
-      return lazy.QuickSuggest.getFeature("AddonSuggestions").getResultCommands(
-        result
-      );
-    }
+    return this.#getFeatureByResult(result)?.getResultCommands?.(result);
+  }
 
-    return null;
+  #getFeatureByResult(result) {
+    return lazy.QuickSuggest.getFeature(
+      FEATURE_NAMES_BY_TELEMETRY_TYPE[result.payload.telemetryType]
+    );
   }
 
   async #makeResult(queryContext, suggestion) {
-    let result;
-    switch (suggestion.provider) {
-      case "amo":
-      case "AddonSuggestions":
-        result = await lazy.QuickSuggest.getFeature(
-          "AddonSuggestions"
-        ).makeResult(queryContext, suggestion, this._trimmedSearchString);
-        break;
-      case "adm": // Merino
-      case "AdmWikipedia": // remote settings
-        result = await lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
-          queryContext,
-          suggestion,
-          this._trimmedSearchString
-        );
-        break;
-      default:
-        result = this.#makeDefaultResult(queryContext, suggestion);
-        break;
-    }
+    // For suggestions from remote settings, `suggestion.provider` will be the
+    // feature name. For suggestions from Merino, it will be the Merino provider
+    // name, which is also used as the `telemetryType`.
+    let feature =
+      lazy.QuickSuggest.getFeature(suggestion.provider) ||
+      lazy.QuickSuggest.getFeature(
+        FEATURE_NAMES_BY_TELEMETRY_TYPE[suggestion.provider]
+      );
 
-    if (!result) {
-      // Feature might return null, if the feature is disabled and so on.
-      return null;
+    let result;
+    if (!feature) {
+      result = this.#makeDefaultResult(queryContext, suggestion);
+    } else {
+      result = await feature.makeResult(
+        queryContext,
+        suggestion,
+        this._trimmedSearchString
+      );
+      if (!result) {
+        // Feature might return null, if the feature is disabled and so on.
+        return null;
+      }
     }
 
     if (!result.hasSuggestedIndex) {

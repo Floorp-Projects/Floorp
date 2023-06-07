@@ -528,7 +528,7 @@ async function doDismissTest(command) {
   // Get the dismissal acknowledgment's "Got it" button and click it.
   let gotItButton = UrlbarTestUtils.getButtonForResultIndex(
     window,
-    "0",
+    0,
     resultIndex
   );
   Assert.ok(gotItButton, "Row should have a 'Got it' button");

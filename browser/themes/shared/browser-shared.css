@@ -80,6 +80,8 @@
   --urlbar-icon-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 
+  --pocket-icon-fill: #ef4056;
+
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;

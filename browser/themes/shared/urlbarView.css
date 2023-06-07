@@ -20,6 +20,8 @@
   --urlbarView-favicon-width: 16px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
 
+  --urlbarView-bestmatch-favicon-width: 52px;
+
   --urlbarView-result-button-size: 24px;
   --urlbarView-result-button-background-opacity: 60%;
   --urlbarView-result-button-selected-color: var(--toolbar-field-focus-color);
@@ -174,7 +176,7 @@
     flex-basis: 100%;
   }
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url,
-  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
+  .urlbarView-results[wrap] > .urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
     margin-top: 2px;
   }
   /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
@@ -189,7 +191,7 @@
   .urlbarView[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab], [sponsored]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
+  .urlbarView-results[wrap] > .urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
     display: none;
   }
@@ -201,10 +203,10 @@
     margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + var(--urlbarView-favicon-width));
   }
 
-  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
+  .urlbarView-results[wrap] > .urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
     flex-wrap: wrap;
   }
-  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+  .urlbarView-results[wrap] > .urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
     flex-basis: 100%;
   }
 }
@@ -757,32 +759,32 @@
 
 /* Best match */
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner {
+.urlbarView-row[bestmatch] > .urlbarView-row-inner {
   align-items: center;
   justify-content: start;
 }
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner,
-.urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner {
+.urlbarView-row[bestmatch] > .urlbarView-row-inner,
+.urlbarView-results[wrap] > .urlbarView-row[bestmatch] > .urlbarView-row-inner {
   flex-wrap: nowrap;
 }
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-favicon {
-  width: 52px;
-  height: 52px;
-  flex-basis: 52px;
+.urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-favicon {
+  width: var(--urlbarView-bestmatch-favicon-width);
+  height: var(--urlbarView-bestmatch-favicon-width);
+  flex-basis: var(--urlbarView-bestmatch-favicon-width);
   flex-shrink: 0;
   flex-grow: 0;
   border-radius: 2px;
 }
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body {
+.urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body {
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 0;
 }
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
+.urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
@@ -790,7 +792,7 @@
   justify-content: start;
 }
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+.urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
@@ -800,19 +802,39 @@
   min-width: 0;
 }
 
-.urlbarView-results:not([wrap]) > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+.urlbarView-results:not([wrap]) > .urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
   /* Limit the title (which is inside .urlbarView-row-body-top-no-wrap) to 70%
      of the width so the URL is never completely hidden. */
   max-width: 70%;
 }
 
-.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
+.urlbarView-row[bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
   font-size: 0.73em;
   opacity: 0.6;
 }
 
-.urlbarView-row[type=bestmatch][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
+.urlbarView-row[bestmatch][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
   opacity: 1;
+}
+
+/* Pocket suggestions */
+
+.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-favicon,
+.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  fill: var(--pocket-icon-fill);
+  fill-opacity: 1;
+}
+
+.urlbarView-row[type$=_pocket][bestmatch] > .urlbarView-row-inner > .urlbarView-favicon {
+  width: 24px;
+  height: 24px;
+  flex-basis: 24px;
+  padding: calc((var(--urlbarView-bestmatch-favicon-width) - 24px) / 2);
+  background-color: var(--urlbar-box-focus-bgcolor);
+}
+
+.urlbarView-row[type$=_pocket][bestmatch]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {
+  background-color: var(--urlbarView-result-button-selected-background-color);
 }
 
 /* Search one-offs */
