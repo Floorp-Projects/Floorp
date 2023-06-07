@@ -48,6 +48,7 @@ module.exports = {
     `${projectRoot}/toolkit/content/widgets/`,
     `${projectRoot}/browser/themes/shared/`,
     `${projectRoot}/browser/components/firefoxview/`,
+    `${projectRoot}/browser/components/aboutlogins/content/components/`,
   ],
   addons: [
     "@storybook/addon-links",
