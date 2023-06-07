@@ -135,13 +135,13 @@ uint16_t PerformanceNavigationTiming::RedirectCount() const {
 }
 
 DOMHighResTimeStamp PerformanceNavigationTiming::RedirectStart(
-    Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    nsIPrincipal& aSubjectPrincipal) const {
   return PerformanceResourceTiming::RedirectStart(
       aSubjectPrincipal, true /* aEnsureSameOriginAndIgnoreTAO */);
 }
 
 DOMHighResTimeStamp PerformanceNavigationTiming::RedirectEnd(
-    Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    nsIPrincipal& aSubjectPrincipal) const {
   return PerformanceResourceTiming::RedirectEnd(
       aSubjectPrincipal, true /* aEnsureSameOriginAndIgnoreTAO */);
 }

@@ -51,7 +51,7 @@ using namespace mozilla::gfx;
 namespace mozilla::CanvasUtils {
 
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
-                              Maybe<nsIPrincipal*> aPrincipal) {
+                              nsIPrincipal& aPrincipal) {
   if (NS_WARN_IF(!aDocument)) {
     return false;
   }
@@ -99,19 +99,17 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
   // General Exemptions
 
   // Don't proceed if we don't have a document or JavaScript context.
-  if (!aCx || !aPrincipal) {
+  if (!aCx) {
     return false;
   }
 
-  nsIPrincipal& subjectPrincipal = *aPrincipal.ref();
-
   // The system principal can always extract canvas data.
-  if (subjectPrincipal.IsSystemPrincipal()) {
+  if (aPrincipal.IsSystemPrincipal()) {
     return true;
   }
 
   // Allow extension principals.
-  auto* principal = BasePrincipal::Cast(&subjectPrincipal);
+  auto* principal = BasePrincipal::Cast(&aPrincipal);
   if (principal->AddonPolicy() || principal->ContentScriptAddonPolicy()) {
     return true;
   }

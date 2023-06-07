@@ -8660,6 +8660,8 @@ class CGCallGenerator(CGThing):
                 "needsNonSystemSubjectPrincipal" in extendedAttributes
             )
             if needsNonSystemPrincipal:
+                principalType = "nsIPrincipal*"
+                subjectPrincipalArg = "subjectPrincipal"
                 checkPrincipal = dedent(
                     """
                     if (principal->IsSystemPrincipal()) {
@@ -8668,58 +8670,29 @@ class CGCallGenerator(CGThing):
                     """
                 )
             else:
+                principalType = "NonNull<nsIPrincipal>"
+                subjectPrincipalArg = "NonNullHelper(subjectPrincipal)"
                 checkPrincipal = ""
 
-            getPrincipal = fill(
-                """
-                JS::Realm* realm = js::GetContextRealm(cx);
-                MOZ_ASSERT(realm);
-                JSPrincipals* principals = JS::GetRealmPrincipals(realm);
-                nsIPrincipal* principal = nsJSPrincipals::get(principals);
-                ${checkPrincipal}
-                """,
-                checkPrincipal=checkPrincipal,
+            self.cgRoot.append(
+                CGGeneric(
+                    fill(
+                        """
+                        ${principalType} subjectPrincipal;
+                        {
+                          JS::Realm* realm = js::GetContextRealm(cx);
+                          MOZ_ASSERT(realm);
+                          JSPrincipals* principals = JS::GetRealmPrincipals(realm);
+                          nsIPrincipal* principal = nsJSPrincipals::get(principals);
+                          ${checkPrincipal}
+                          subjectPrincipal = principal;
+                        }
+                        """,
+                        principalType=principalType,
+                        checkPrincipal=checkPrincipal,
+                    )
+                )
             )
-
-            if descriptor.interface.isExposedInAnyWorker():
-                self.cgRoot.append(
-                    CGGeneric(
-                        fill(
-                            """
-                    Maybe<nsIPrincipal*> subjectPrincipal;
-                    if (NS_IsMainThread()) {
-                      $*{getPrincipal}
-                      subjectPrincipal.emplace(principal);
-                    }
-                    """,
-                            getPrincipal=getPrincipal,
-                        )
-                    )
-                )
-                subjectPrincipalArg = "subjectPrincipal"
-            else:
-                if needsNonSystemPrincipal:
-                    principalType = "nsIPrincipal*"
-                    subjectPrincipalArg = "subjectPrincipal"
-                else:
-                    principalType = "NonNull<nsIPrincipal>"
-                    subjectPrincipalArg = "NonNullHelper(subjectPrincipal)"
-
-                self.cgRoot.append(
-                    CGGeneric(
-                        fill(
-                            """
-                    ${principalType} subjectPrincipal;
-                    {
-                      $*{getPrincipal}
-                      subjectPrincipal = principal;
-                    }
-                    """,
-                            principalType=principalType,
-                            getPrincipal=getPrincipal,
-                        )
-                    )
-                )
 
             args.append(CGGeneric("MOZ_KnownLive(%s)" % subjectPrincipalArg))
 
@@ -19077,10 +19050,7 @@ class CGNativeMember(ClassMethod):
 
         # And the nsIPrincipal
         if "needsSubjectPrincipal" in self.extendedAttrs:
-            # Cheat and assume self.descriptorProvider is a descriptor
-            if self.descriptorProvider.interface.isExposedInAnyWorker():
-                args.append(Argument("Maybe<nsIPrincipal*>", "aSubjectPrincipal"))
-            elif "needsNonSystemSubjectPrincipal" in self.extendedAttrs:
+            if "needsNonSystemSubjectPrincipal" in self.extendedAttrs:
                 args.append(Argument("nsIPrincipal*", "aPrincipal"))
             else:
                 args.append(Argument("nsIPrincipal&", "aPrincipal"))
