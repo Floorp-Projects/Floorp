@@ -937,18 +937,7 @@ void SendStatisticsProxy::OnMinPixelLimitReached() {
 void SendStatisticsProxy::OnSendEncodedImage(
     const EncodedImage& encoded_image,
     const CodecSpecificInfo* codec_info) {
-  // Simulcast is used for VP8, H264 and Generic.
-  // Currently, SimulcastIndex() could return the SpatialIndex() if not set
-  // correctly so gate on codec type.
-  // TODO(https://crbug.com/webrtc/14884): Delete this gating logic when
-  // SimulcastIndex() is guaranteed to be the stream index.
-  int simulcast_idx =
-      (codec_info && (codec_info->codecType == kVideoCodecVP8 ||
-                      codec_info->codecType == kVideoCodecH264 ||
-                      codec_info->codecType == kVideoCodecGeneric))
-          ? encoded_image.SimulcastIndex().value_or(0)
-          : 0;
-
+  int simulcast_idx = encoded_image.SimulcastIndex().value_or(0);
   MutexLock lock(&mutex_);
   ++stats_.frames_encoded;
   // The current encode frame rate is based on previously encoded frames.

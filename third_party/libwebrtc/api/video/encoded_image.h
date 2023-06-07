@@ -91,15 +91,7 @@ class RTC_EXPORT EncodedImage {
 
   // Every simulcast layer (= encoding) has its own encoder and RTP stream.
   // There can be no dependencies between different simulcast layers.
-  absl::optional<int> SimulcastIndex() const {
-    // Historically, SpatialIndex() has been used as both simulcast and spatial
-    // index (one or the other depending on codec). As to not break old code
-    // which doesn't call SetSimulcastIndex(), SpatialLayer() is used when the
-    // simulcast index is missing.
-    // TODO(https://crbug.com/webrtc/14884): When old code has been updated,
-    // never return `spatial_index_` here.
-    return simulcast_index_.has_value() ? simulcast_index_ : spatial_index_;
-  }
+  absl::optional<int> SimulcastIndex() const { return simulcast_index_; }
   void SetSimulcastIndex(absl::optional<int> simulcast_index) {
     RTC_DCHECK_GE(simulcast_index.value_or(0), 0);
     RTC_DCHECK_LT(simulcast_index.value_or(0), kMaxSimulcastStreams);
@@ -109,15 +101,7 @@ class RTC_EXPORT EncodedImage {
   // Encoded images can have dependencies between spatial and/or temporal
   // layers, depending on the scalability mode used by the encoder. See diagrams
   // at https://w3c.github.io/webrtc-svc/#dependencydiagrams*.
-  absl::optional<int> SpatialIndex() const {
-    // Historically, SpatialIndex() has been used as both simulcast and spatial
-    // index (one or the other depending on codec). As to not break old code
-    // that still uses the SpatialIndex() getter instead of SimulcastIndex()
-    // we fall back to `simulcast_index_` if `spatial_index_` is not set.
-    // TODO(https://crbug.com/webrtc/14884): When old code has been updated,
-    // never return `simulcast_index_` here.
-    return spatial_index_.has_value() ? spatial_index_ : simulcast_index_;
-  }
+  absl::optional<int> SpatialIndex() const { return spatial_index_; }
   void SetSpatialIndex(absl::optional<int> spatial_index) {
     RTC_DCHECK_GE(spatial_index.value_or(0), 0);
     RTC_DCHECK_LT(spatial_index.value_or(0), kMaxSpatialLayers);
