@@ -1119,6 +1119,8 @@ if (is_ios || is_mac) {
 
           sources = [
             "objc/unittests/ObjCVideoTrackSource_xctest.mm",
+            "objc/unittests/RTCAudioDeviceModule_xctest.mm",
+            "objc/unittests/RTCAudioDevice_xctest.mm",
             "objc/unittests/RTCAudioSessionTest.mm",
             "objc/unittests/RTCCVPixelBuffer_xctest.mm",
             "objc/unittests/RTCCallbackLogger_xctest.m",
@@ -1150,15 +1152,6 @@ if (is_ios || is_mac) {
           # TODO(bugs.webrtc.org/12937): Remove OpenGL deprecation warning
           # workaround.
           defines = [ "GLES_SILENCE_DEPRECATION" ]
-
-          # TODO(peterhanspers): Reenable these tests on simulator.
-          # See bugs.webrtc.org/7812
-          if (target_environment != "simulator") {
-            sources += [
-              "objc/unittests/RTCAudioDeviceModule_xctest.mm",
-              "objc/unittests/RTCAudioDevice_xctest.mm",
-            ]
-          }
 
           deps = [
             ":audio_device",
