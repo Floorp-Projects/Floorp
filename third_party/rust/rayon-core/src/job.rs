@@ -30,7 +30,6 @@ pub(super) trait Job {
 /// Internally, we store the job's data in a `*const ()` pointer.  The
 /// true type is something like `*const StackJob<...>`, but we hide
 /// it. We also carry the "execute fn" from the `Job` trait.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(super) struct JobRef {
     pointer: *const (),
     execute_fn: unsafe fn(*const ()),
@@ -51,6 +50,13 @@ impl JobRef {
             pointer: data as *const (),
             execute_fn: <T as Job>::execute,
         }
+    }
+
+    /// Returns an opaque handle that can be saved and compared,
+    /// without making `JobRef` itself `Copy + Eq`.
+    #[inline]
+    pub(super) fn id(&self) -> impl Eq {
+        (self.pointer, self.execute_fn)
     }
 
     #[inline]
