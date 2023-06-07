@@ -16,7 +16,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 
@@ -213,6 +218,20 @@ public class TestCrashHandler extends Service {
 
   public TestCrashHandler() {}
 
+  private static JSONObject readExtraFile(final String filePath) throws IOException, JSONException {
+    final byte[] buffer = new byte[4096];
+    final FileInputStream inputStream = new FileInputStream(filePath);
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    int bytesRead = 0;
+
+    while ((bytesRead = inputStream.read(buffer)) != -1) {
+      outputStream.write(buffer, 0, bytesRead);
+    }
+
+    final String contents = new String(outputStream.toByteArray(), "UTF-8");
+    return new JSONObject(contents);
+  }
+
   private EvalResult evalCrashInfo(final Intent intent) {
     if (!intent.getAction().equals(GeckoRuntime.ACTION_CRASHED)) {
       return new EvalResult(false, "Action should match");
@@ -224,7 +243,18 @@ public class TestCrashHandler extends Service {
 
     final File extrasFile = new File(intent.getStringExtra(GeckoRuntime.EXTRA_EXTRAS_PATH));
     final boolean extrasFileExists = extrasFile.exists();
-    extrasFile.delete();
+    try {
+      final JSONObject annotations = readExtraFile(extrasFile.getPath());
+      final String moz_crash_reason = annotations.getString("MozCrashReason");
+
+      if (!moz_crash_reason.startsWith("MOZ_CRASH(")) {
+        return new EvalResult(false, "Missing or invalid child crash annotations");
+      }
+
+      extrasFile.delete();
+    } catch (final Exception e) {
+      return new EvalResult(false, e.toString());
+    }
 
     if (!dumpFileExists) {
       return new EvalResult(false, "Dump file should exist");
