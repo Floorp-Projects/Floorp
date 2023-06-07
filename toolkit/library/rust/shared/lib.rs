@@ -92,6 +92,8 @@ extern crate gecko_logger;
 extern crate rust_minidump_writer_linux;
 
 extern crate mozannotation_client;
+extern crate mozannotation_server;
+
 #[cfg(feature = "webmidi_midir_impl")]
 extern crate midir_impl;
 

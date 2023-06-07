@@ -57,6 +57,7 @@ fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" 
 rure = "0.2.2"
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
 mozannotation_client = { path = "../../../crashreporter/mozannotation_client" }
+mozannotation_server  = { path = "../../../crashreporter/mozannotation_server" }
 gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
 dom = { path = "../../../../dom/base/rust" }
