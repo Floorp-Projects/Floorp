@@ -34,12 +34,14 @@ namespace google_breakpad {
 
 class ClientInfo {
  public:
-  explicit ClientInfo(pid_t pid) : pid_(pid) {}
+  ClientInfo(pid_t pid, task_t task) : pid_(pid), task_(task) {}
 
   pid_t pid() const { return pid_; }
+  task_t task() const { return task_; }
 
  private:
   pid_t pid_;
+  task_t task_;
 };
 
 }  // namespace google_breakpad

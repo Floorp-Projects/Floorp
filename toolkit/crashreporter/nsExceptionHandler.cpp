@@ -36,6 +36,9 @@
 #include "base/process_util.h"
 #include "common/basictypes.h"
 
+#include "mozilla/toolkit/crashreporter/mozannotation_client_ffi_generated.h"
+#include "mozilla/toolkit/crashreporter/mozannotation_server_ffi_generated.h"
+
 #if defined(XP_WIN)
 #  ifdef WIN32_LEAN_AND_MEAN
 #    undef WIN32_LEAN_AND_MEAN
@@ -128,6 +131,13 @@ using google_breakpad::kDefaultBuildIdSize;
 using google_breakpad::PageAllocator;
 #endif
 using namespace mozilla;
+
+namespace mozilla::phc {
+
+// Global instance that is retrieved by the process generating the crash report
+mozilla::phc::AddrInfo gAddrInfo;
+
+}  // namespace mozilla::phc
 
 namespace CrashReporter {
 
@@ -731,6 +741,25 @@ class BinaryAnnotationWriter : public AnnotationWriter {
 };
 
 #ifdef MOZ_PHC
+
+// 21 is the max length of a 64-bit decimal address entry, including the
+// trailing comma or '\0'. And then we add another 32 just to be safe.
+const size_t phcStringifiedAnnotationSize =
+    (mozilla::phc::StackTrace::kMaxFrames * 21) + 32;
+
+static void PHCStackTraceToString(char* aBuffer, size_t aBufferLen,
+                                  const phc::StackTrace& aStack) {
+  char addrString[32];
+  *aBuffer = 0;
+  for (size_t i = 0; i < aStack.mLength; i++) {
+    if (i != 0) {
+      strcat(aBuffer, ",");
+    }
+    XP_STOA(uintptr_t(aStack.mPcs[i]), addrString);
+    strncat(aBuffer, addrString, aBufferLen);
+  }
+}
+
 // The stack traces are encoded as a comma-separated list of decimal
 // (not hexadecimal!) addresses, e.g. "12345678,12345679,12345680".
 static void WritePHCStackTrace(AnnotationWriter& aWriter,
@@ -742,18 +771,8 @@ static void WritePHCStackTrace(AnnotationWriter& aWriter,
 
   // 21 is the max length of a 64-bit decimal address entry, including the
   // trailing comma or '\0'. And then we add another 32 just to be safe.
-  char addrsString[mozilla::phc::StackTrace::kMaxFrames * 21 + 32];
-  char addrString[32];
-  char* p = addrsString;
-  *p = 0;
-  for (size_t i = 0; i < aStack->mLength; i++) {
-    if (i != 0) {
-      strcat(addrsString, ",");
-      p++;
-    }
-    XP_STOA(uintptr_t(aStack->mPcs[i]), addrString);
-    strcat(addrsString, addrString);
-  }
+  char addrsString[phcStringifiedAnnotationSize];
+  PHCStackTraceToString(addrsString, sizeof(addrsString), *aStack);
   aWriter.Write(aName, addrsString);
 }
 
@@ -789,6 +808,56 @@ static void WritePHCAddrInfo(AnnotationWriter& writer,
     WritePHCStackTrace(writer, Annotation::PHCAllocStack,
                        aAddrInfo->mAllocStack);
     WritePHCStackTrace(writer, Annotation::PHCFreeStack, aAddrInfo->mFreeStack);
+  }
+}
+
+static void PopulatePHCStackTraceAnnotation(
+    AnnotationTable& aAnnotations, const Annotation aName,
+    const Maybe<phc::StackTrace>& aStack) {
+  if (aStack.isNothing()) {
+    return;
+  }
+
+  char addrsString[phcStringifiedAnnotationSize];
+  PHCStackTraceToString(addrsString, sizeof(addrsString), *aStack);
+  aAnnotations[aName] = addrsString;
+}
+
+static void PopulatePHCAnnotations(AnnotationTable& aAnnotations,
+                                   const phc::AddrInfo* aAddrInfo) {
+  // Is this a PHC allocation needing special treatment?
+  if (aAddrInfo && aAddrInfo->mKind != phc::AddrInfo::Kind::Unknown) {
+    const char* kindString;
+    switch (aAddrInfo->mKind) {
+      case phc::AddrInfo::Kind::Unknown:
+        kindString = "Unknown(?!)";
+        break;
+      case phc::AddrInfo::Kind::NeverAllocatedPage:
+        kindString = "NeverAllocatedPage";
+        break;
+      case phc::AddrInfo::Kind::InUsePage:
+        kindString = "InUsePage(?!)";
+        break;
+      case phc::AddrInfo::Kind::FreedPage:
+        kindString = "FreedPage";
+        break;
+      case phc::AddrInfo::Kind::GuardPage:
+        kindString = "GuardPage";
+        break;
+      default:
+        kindString = "Unmatched(?!)";
+        break;
+    }
+
+    aAnnotations[Annotation::PHCKind] = kindString;
+    aAnnotations[Annotation::PHCBaseAddress] =
+        nsPrintfCString("%zu", uintptr_t(aAddrInfo->mBaseAddr));
+    aAnnotations[Annotation::PHCUsableSize] =
+        nsPrintfCString("%zu", aAddrInfo->mUsableSize);
+    PopulatePHCStackTraceAnnotation(aAnnotations, Annotation::PHCAllocStack,
+                                    aAddrInfo->mAllocStack);
+    PopulatePHCStackTraceAnnotation(aAnnotations, Annotation::PHCFreeStack,
+                                    aAddrInfo->mFreeStack);
   }
 }
 #endif
@@ -1669,8 +1738,6 @@ static void PrepareChildExceptionTimeAnnotations(
 #ifdef MOZ_PHC
   WritePHCAddrInfo(writer, addrInfo);
 #endif
-
-  WriteAnnotations(writer, crashReporterAPIData_Table);
 }
 
 #ifdef XP_WIN
@@ -1818,7 +1885,6 @@ static bool ChildMinidumpCallback(
 #endif  // defined(XP_WIN)
     const mozilla::phc::AddrInfo* addr_info, bool succeeded) {
 
-  PrepareChildExceptionTimeAnnotations(addr_info);
   return succeeded;
 }
 
@@ -3181,9 +3247,67 @@ static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,
   }
 }
 
-static void PopulateContentProcessAnnotations(AnnotationTable& aAnnotations) {
+// This adds annotations that were populated in the main process but are not
+// present among the ones that were passed in. Additionally common annotations
+// which are present in every crash report are added, including crash time,
+// uptime, etc...
+static void AddSharedAnnotations(AnnotationTable& aAnnotations) {
   MergeContentCrashAnnotations(aAnnotations);
   AddCommonAnnotations(aAnnotations);
+}
+
+static void AddChildProcessAnnotations(
+    AnnotationTable& aAnnotations, nsTArray<CAnnotation>* aChildAnnotations) {
+  if (!aChildAnnotations) {
+    // TODO: We should probably make a list of errors that occurred when
+    // generating a crash report as more than one can occurr.
+    aAnnotations[Annotation::DumperError] = "MissingAnnotations";
+    return;
+  }
+
+  for (const auto& annotation : *aChildAnnotations) {
+    switch (annotation.data.tag) {
+      case AnnotationData::Tag::Empty:
+        break;
+
+      case AnnotationData::Tag::UsizeData:
+        if (annotation.id ==
+            static_cast<uint32_t>(Annotation::OOMAllocationSize)) {
+          // We need to special-case OOMAllocationSize here because it should
+          // not be added if its value is 0. We'll come up with a more general
+          // method of skipping ignored values for crash annotations in the
+          // follow-ups.
+          if (annotation.data.usize_data._0 != 0) {
+            aAnnotations[static_cast<Annotation>(annotation.id)] =
+                nsPrintfCString("%zu", annotation.data.usize_data._0);
+          }
+        } else {
+          aAnnotations[static_cast<Annotation>(annotation.id)] =
+              nsPrintfCString("%zu", annotation.data.usize_data._0);
+        }
+        break;
+
+      case AnnotationData::Tag::NSCStringData: {
+        const auto& string = annotation.data.nsc_string_data._0;
+        if (!string.IsEmpty()) {
+          aAnnotations[static_cast<Annotation>(annotation.id)] =
+              annotation.data.nsc_string_data._0;
+        }
+      } break;
+
+      case AnnotationData::Tag::ByteBuffer: {
+        if (annotation.id ==
+            static_cast<uint32_t>(Annotation::PHCBaseAddress)) {
+#ifdef MOZ_PHC
+          const auto& buffer = annotation.data.byte_buffer._0;
+          mozilla::phc::AddrInfo addr_info;
+          memcpy(&addr_info, buffer.Elements(), sizeof(addr_info));
+          PopulatePHCAnnotations(aAnnotations, &addr_info);
+#endif
+        }
+      } break;
+    }
+  }
 }
 
 // It really only makes sense to call this function when
@@ -3253,19 +3377,35 @@ static void OnChildProcessDumpRequested(
     MoveToPending(minidump, nullptr, memoryReport);
   }
 
+#if XP_WIN
+  nsTArray<CAnnotation>* child_annotations = mozannotation_retrieve(
+      reinterpret_cast<uintptr_t>(aClientInfo.process_handle()));
+#elif defined(XP_MACOSX)
+  nsTArray<CAnnotation>* child_annotations =
+      mozannotation_retrieve(aClientInfo.task());
+#else
+  nsTArray<CAnnotation>* child_annotations = mozannotation_retrieve(pid);
+#endif
+
+  // TODO: Write a minimal set of annotations if we fail to read them, and
+  // add an error to the minidump to highlight this fact.
+
   {
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     bool runCallback;
 #endif
     {
-      dumpMapLock->Lock();
+      MutexAutoLock lock(*dumpMapLock);
       ChildProcessData* pd = pidToMinidump->PutEntry(pid);
       MOZ_ASSERT(!pd->minidump);
       pd->minidump = minidump;
       pd->sequence = ++crashSequence;
       pd->annotations = MakeUnique<AnnotationTable>();
-      PopulateContentProcessAnnotations(*(pd->annotations));
-      MaybeAnnotateDumperError(aClientInfo, *(pd->annotations));
+      AnnotationTable& annotations = *(pd->annotations);
+      AddSharedAnnotations(annotations);
+      AddChildProcessAnnotations(annotations, child_annotations);
+
+      MaybeAnnotateDumperError(aClientInfo, annotations);
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
       runCallback = nullptr != pd->callback;
@@ -3274,6 +3414,10 @@ static void OnChildProcessDumpRequested(
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     if (runCallback) NS_DispatchToMainThread(new ReportInjectedCrash(pid));
 #endif
+  }
+
+  if (child_annotations) {
+    mozannotation_free(child_annotations);
   }
 }
 
@@ -3284,7 +3428,7 @@ static void OnChildProcessDumpWritten(void* aContext,
   ChildProcessData* pd = pidToMinidump->GetEntry(pid);
   MOZ_ASSERT(pd);
   if (!pd->minidumpOnly) {
-    ReadExceptionTimeAnnotations(*(pd->annotations), pid);
+    // ReadExceptionTimeAnnotations(*(pd->annotations), pid);
   }
   dumpMapLock->Unlock();
 }
@@ -3327,7 +3471,7 @@ void OOPInit() {
       std::wstring(NS_ConvertASCIItoUTF16(childCrashNotifyPipe).get()),
       nullptr,           // default security attributes
       nullptr, nullptr,  // we don't care about process connect here
-      OnChildProcessDumpRequested, nullptr, OnChildProcessDumpWritten, nullptr,
+      OnChildProcessDumpRequested, nullptr, nullptr, nullptr,
       nullptr,           // we don't care about process exit here
       nullptr, nullptr,  // we don't care about upload request here
       true,              // automatically generate dumps
@@ -3344,9 +3488,9 @@ void OOPInit() {
 
   const std::string dumpPath =
       gExceptionHandler->minidump_descriptor().directory();
-  crashServer = new CrashGenerationServer(
-      serverSocketFd, OnChildProcessDumpRequested, nullptr,
-      OnChildProcessDumpWritten, nullptr, true, &dumpPath);
+  crashServer =
+      new CrashGenerationServer(serverSocketFd, OnChildProcessDumpRequested,
+                                nullptr, nullptr, nullptr, true, &dumpPath);
 
 #elif defined(XP_MACOSX)
   childCrashNotifyPipe = mozilla::Smprintf("gecko-crash-server-pipe.%i",
@@ -3354,11 +3498,11 @@ void OOPInit() {
                              .release();
   const std::string dumpPath = gExceptionHandler->dump_path();
 
-  crashServer = new CrashGenerationServer(
-      childCrashNotifyPipe, nullptr, nullptr, OnChildProcessDumpRequested,
-      nullptr, OnChildProcessDumpWritten, nullptr,
-      true,  // automatically generate dumps
-      dumpPath);
+  crashServer = new CrashGenerationServer(childCrashNotifyPipe, nullptr,
+                                          nullptr, OnChildProcessDumpRequested,
+                                          nullptr, nullptr, nullptr,
+                                          true,  // automatically generate dumps
+                                          dumpPath);
 #endif
 
   if (!crashServer->Start()) MOZ_CRASH("can't start crash reporter server()");
@@ -3503,6 +3647,47 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
   RegisterRuntimeExceptionModule();
   InitializeAnnotationFacilities();
+  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
+    switch (key) {
+      case Annotation::MozCrashReason:
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+      case Annotation::MainThreadRunnableName:
+#endif
+      case Annotation::OOMAllocationSize:
+#ifdef MOZ_PHC
+      case Annotation::PHCBaseAddress:
+#endif
+        break;
+
+      default:
+        mozannotation_register_nscstring(static_cast<uint32_t>(key),
+                                         &crashReporterAPIData_Table[key]);
+    }
+  }
+
+  mozannotation_register_cstring(
+      static_cast<uint32_t>(Annotation::MozCrashReason), &gMozCrashReason);
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  mozannotation_register_char_buffer(
+      static_cast<uint32_t>(Annotation::MainThreadRunnableName),
+      &nsThread::sMainThreadRunnableName[0]);
+#endif
+
+  mozannotation_register_usize(
+      static_cast<uint32_t>(Annotation::OOMAllocationSize),
+      &gOOMAllocationSize);
+
+#ifdef MOZ_PHC
+  // HACK: We're using the PHCBaseAddress annotation to point to the actual
+  // PHC address information object. This is because we currently have no
+  // difference between the internal representation of annotations and their
+  // external representation. Once we remove the old annotation API this will
+  // be properly addressed.
+  mozannotation_register_bytebuffer(
+      static_cast<uint32_t>(Annotation::PHCBaseAddress),
+      &mozilla::phc::gAddrInfo, sizeof(mozilla::phc::gAddrInfo));
+#endif
 
 #if defined(XP_WIN)
   gChildCrashAnnotationReportFd = aCrashTimeAnnotationFile;
@@ -3646,7 +3831,7 @@ DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
       (*pd->annotations)[Annotation::OOMAllocationSize] = buffer;
     }
 
-    PopulateContentProcessAnnotations(*(pd->annotations));
+    AddSharedAnnotations(*(pd->annotations));
   }
 
   return S_OK;
@@ -3824,11 +4009,16 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
   DllBlocklist_Shutdown();
 #endif
 
-  PopulateContentProcessAnnotations(aTargetAnnotations);
-  if (FlushContentProcessAnnotations(aTargetHandle)) {
-    ProcessId targetPid = base::GetProcId(aTargetHandle);
-    ReadExceptionTimeAnnotations(aTargetAnnotations, targetPid);
-  }
+  AddSharedAnnotations(aTargetAnnotations);
+#if XP_WIN
+  nsTArray<CAnnotation>* child_annotations =
+      mozannotation_retrieve(reinterpret_cast<uintptr_t>(aTargetHandle));
+#else
+  nsTArray<CAnnotation>* child_annotations =
+      mozannotation_retrieve(aTargetHandle);
+#endif
+  AddChildProcessAnnotations(aTargetAnnotations, child_annotations);
+  mozannotation_free(child_annotations);
 
   targetMinidump.forget(aMainDumpOut);
 

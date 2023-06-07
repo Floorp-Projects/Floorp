@@ -2108,7 +2108,6 @@ dependencies = [
  "mio 0.8.0",
  "moz_asserts",
  "mozannotation_client",
- "mozannotation_server",
  "mozglue-static",
  "mozurl",
  "mp4parse_capi",
@@ -3336,21 +3335,6 @@ name = "mozannotation_client"
 version = "0.1.0"
 dependencies = [
  "nsstring",
-]
-
-[[package]]
-name = "mozannotation_server"
-version = "0.1.0"
-dependencies = [
- "goblin",
- "libc",
- "mach2",
- "memoffset",
- "mozannotation_client",
- "nsstring",
- "thin-vec",
- "thiserror",
- "winapi",
 ]
 
 [[package]]
