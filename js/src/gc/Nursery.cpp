@@ -414,23 +414,42 @@ void js::Nursery::updateAllZoneAllocFlags() {
   }
 }
 
+void js::Nursery::getAllocFlagsForZone(JS::Zone* zone, bool* allocObjectsOut,
+                                       bool* allocStringsOut,
+                                       bool* allocBigIntsOut) {
+  *allocObjectsOut = isEnabled();
+  *allocStringsOut =
+      isEnabled() && canAllocateStrings() && !zone->nurseryStringsDisabled;
+  *allocBigIntsOut =
+      isEnabled() && canAllocateBigInts() && !zone->nurseryBigIntsDisabled;
+}
+
+void js::Nursery::setAllocFlagsForZone(JS::Zone* zone) {
+  bool allocObjects;
+  bool allocStrings;
+  bool allocBigInts;
+
+  getAllocFlagsForZone(zone, &allocObjects, &allocStrings, &allocBigInts);
+  zone->setNurseryAllocFlags(allocObjects, allocStrings, allocBigInts);
+}
+
 void js::Nursery::updateAllocFlagsForZone(JS::Zone* zone) {
-  bool prevAllocObjects = zone->allocNurseryObjects();
-  bool prevAllocStrings = zone->allocNurseryStrings();
-  bool prevAllocBigInts = zone->allocNurseryBigInts();
+  bool allocObjects;
+  bool allocStrings;
+  bool allocBigInts;
 
-  zone->updateNurseryAllocFlags(*this);
+  getAllocFlagsForZone(zone, &allocObjects, &allocStrings, &allocBigInts);
 
-  if (zone->allocNurseryObjects() != prevAllocObjects ||
-      zone->allocNurseryStrings() != prevAllocStrings ||
-      zone->allocNurseryBigInts() != prevAllocBigInts) {
-    discardJitCodeForZone(zone);
+  if (allocObjects != zone->allocNurseryObjects() ||
+      allocStrings != zone->allocNurseryStrings() ||
+      allocBigInts != zone->allocNurseryBigInts()) {
+    CancelOffThreadIonCompile(zone);
+    zone->setNurseryAllocFlags(allocObjects, allocStrings, allocBigInts);
+    discardCodeAndSetJitFlagsForZone(zone);
   }
 }
 
-void js::Nursery::discardJitCodeForZone(JS::Zone* zone) {
-  CancelOffThreadIonCompile(zone);
-
+void js::Nursery::discardCodeAndSetJitFlagsForZone(JS::Zone* zone) {
   zone->forceDiscardJitCode(runtime()->gcContext());
 
   for (RealmsInZoneIter r(zone); !r.done(); r.next()) {

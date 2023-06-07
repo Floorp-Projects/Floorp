@@ -357,6 +357,8 @@ class alignas(TypicalCacheLineSize) Nursery {
     pretenuringNursery.maybeStopPretenuring(gc);
   }
 
+  void setAllocFlagsForZone(JS::Zone* zone);
+
   // Round a size in bytes to the nearest valid nursery size.
   static size_t roundSize(size_t size);
 
@@ -556,9 +558,11 @@ class alignas(TypicalCacheLineSize) Nursery {
 
   const js::gc::GCSchedulingTunables& tunables() const;
 
+  void getAllocFlagsForZone(JS::Zone* zone, bool* allocObjectsOut,
+                            bool* allocStringsOut, bool* allocBigIntsOut);
   void updateAllZoneAllocFlags();
   void updateAllocFlagsForZone(JS::Zone* zone);
-  void discardJitCodeForZone(JS::Zone* zone);
+  void discardCodeAndSetJitFlagsForZone(JS::Zone* zone);
 
   // Common internal allocator function.
   void* allocate(size_t size);

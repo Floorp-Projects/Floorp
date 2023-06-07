@@ -185,7 +185,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
   MOZ_ASSERT_IF(isAtomsZone(), rt->gc.zones().empty());
 
   updateGCStartThresholds(rt->gc);
-  updateNurseryAllocFlags(rt->gc.nursery());
+  rt->gc.nursery().setAllocFlagsForZone(this);
 }
 
 Zone::~Zone() {
