@@ -7,8 +7,12 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+ChromeUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  );
+  module.init(this);
+  return module;
 });
 
 add_task(async function test() {
