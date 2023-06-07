@@ -4,3 +4,4 @@
 [include]
 path:gfx/wr/
 path:taskcluster/scripts/misc/
+path:xpcom/rust/
