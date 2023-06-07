@@ -251,7 +251,7 @@ class FetchBody : public FetchBodyBase, public AbortFollower {
   bool mBodyUsed;
 
   // The main-thread event target for runnable dispatching.
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 };
 
 class EmptyBody final : public FetchBody<EmptyBody> {

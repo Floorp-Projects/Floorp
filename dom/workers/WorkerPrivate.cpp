@@ -3419,7 +3419,7 @@ void WorkerPrivate::AfterProcessNextEvent() {
   MOZ_ASSERT(GetEffectiveEventLoopRecursionDepth());
 }
 
-nsIEventTarget* WorkerPrivate::MainThreadEventTargetForMessaging() {
+nsISerialEventTarget* WorkerPrivate::MainThreadEventTargetForMessaging() {
   return mMainThreadEventTargetForMessaging;
 }
 
@@ -3435,7 +3435,7 @@ nsresult WorkerPrivate::DispatchToMainThreadForMessaging(
                                                       aFlags);
 }
 
-nsIEventTarget* WorkerPrivate::MainThreadEventTarget() {
+nsISerialEventTarget* WorkerPrivate::MainThreadEventTarget() {
   return mMainThreadEventTarget;
 }
 

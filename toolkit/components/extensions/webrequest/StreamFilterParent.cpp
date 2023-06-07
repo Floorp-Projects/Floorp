@@ -590,7 +590,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   // that we get the final delivery target after any retargeting that it may do.
   if (nsCOMPtr<nsIThreadRetargetableRequest> req =
           do_QueryInterface(aRequest)) {
-    nsCOMPtr<nsIEventTarget> thread;
+    nsCOMPtr<nsISerialEventTarget> thread;
     Unused << req->GetDeliveryTarget(getter_AddRefs(thread));
     if (thread) {
       mIOThread = std::move(thread);
@@ -748,7 +748,7 @@ bool StreamFilterParent::IsActorThread() {
 
 void StreamFilterParent::AssertIsActorThread() { MOZ_ASSERT(IsActorThread()); }
 
-nsIEventTarget* StreamFilterParent::IOThread() { return mIOThread; }
+nsISerialEventTarget* StreamFilterParent::IOThread() { return mIOThread; }
 
 bool StreamFilterParent::IsIOThread() { return mIOThread->IsOnCurrentThread(); }
 

@@ -33,7 +33,7 @@ class ProxyAutoConfigBase {
   virtual nsresult ConfigurePAC(const nsACString& aPACURI,
                                 const nsACString& aPACScriptData,
                                 bool aIncludePath, uint32_t aExtraHeapSize,
-                                nsIEventTarget* aEventTarget) = 0;
+                                nsISerialEventTarget* aEventTarget) = 0;
   virtual void SetThreadLocalIndex(uint32_t index) {}
   virtual void Shutdown() = 0;
   virtual void GC() = 0;
@@ -55,7 +55,7 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
   nsresult ConfigurePAC(const nsACString& aPACURI,
                         const nsACString& aPACScriptData, bool aIncludePath,
                         uint32_t aExtraHeapSize,
-                        nsIEventTarget* aEventTarget) override;
+                        nsISerialEventTarget* aEventTarget) override;
   void SetThreadLocalIndex(uint32_t index) override;
   void Shutdown() override;
   void GC() override;
@@ -125,7 +125,7 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
   uint32_t mExtraHeapSize{0};
   nsCString mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 };
 
 class RemoteProxyAutoConfig : public ProxyAutoConfigBase {
@@ -137,7 +137,7 @@ class RemoteProxyAutoConfig : public ProxyAutoConfigBase {
   nsresult ConfigurePAC(const nsACString& aPACURI,
                         const nsACString& aPACScriptData, bool aIncludePath,
                         uint32_t aExtraHeapSize,
-                        nsIEventTarget* aEventTarget) override;
+                        nsISerialEventTarget* aEventTarget) override;
   void Shutdown() override;
   void GC() override;
   void GetProxyForURIWithCallback(
