@@ -748,17 +748,17 @@ async function selectAboutPreferencesElements() {
   );
   const frenchLabel = frenchRow.querySelector("label");
   const frenchDownload = frenchRow.querySelector(
-    `[data-l10n-id="translations-manage-download-button"]`
+    `[data-l10n-id="translations-manage-language-download-button"]`
   );
   const frenchDelete = frenchRow.querySelector(
-    `[data-l10n-id="translations-manage-delete-button"]`
+    `[data-l10n-id="translations-manage-language-delete-button"]`
   );
   const spanishLabel = spanishRow.querySelector("label");
   const spanishDownload = spanishRow.querySelector(
-    `[data-l10n-id="translations-manage-download-button"]`
+    `[data-l10n-id="translations-manage-language-download-button"]`
   );
   const spanishDelete = spanishRow.querySelector(
-    `[data-l10n-id="translations-manage-delete-button"]`
+    `[data-l10n-id="translations-manage-language-delete-button"]`
   );
 
   return {
