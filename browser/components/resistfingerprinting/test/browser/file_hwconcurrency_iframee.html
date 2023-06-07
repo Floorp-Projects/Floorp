@@ -15,11 +15,15 @@ window.onload = async () => {
 
 window.addEventListener("message", async function listener(event) {
   if (event.data[0] == "gimme") {
-    let result = {
-      hardwareConcurrency : navigator.hardwareConcurrency
-    };
+    let result = give_result();
     parent_window.postMessage(result, "*")
   }
 });
+
+function give_result() {
+  return {
+      hardwareConcurrency : navigator.hardwareConcurrency
+    };
+}
 </script>
 <output id="result"></output>
