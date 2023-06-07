@@ -91,6 +91,7 @@ extern crate gecko_logger;
 #[cfg(feature = "oxidized_breakpad")]
 extern crate rust_minidump_writer_linux;
 
+extern crate mozannotation_client;
 #[cfg(feature = "webmidi_midir_impl")]
 extern crate midir_impl;
 
