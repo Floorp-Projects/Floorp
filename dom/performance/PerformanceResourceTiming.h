@@ -16,7 +16,7 @@
 
 namespace mozilla::dom {
 #define IMPL_RESOURCE_TIMING_TAO_PROTECTED_TIMING_PROP(name)                \
-  DOMHighResTimeStamp name(Maybe<nsIPrincipal*>& aSubjectPrincipal) const { \
+  DOMHighResTimeStamp name(nsIPrincipal& aSubjectPrincipal) const {         \
     bool allowed = !mTimingData->RedirectCountReal()                        \
                        ? TimingAllowedForCaller(aSubjectPrincipal)          \
                        : ReportRedirectForCaller(aSubjectPrincipal, false); \
@@ -24,7 +24,7 @@ namespace mozilla::dom {
   }
 
 #define IMPL_RESOURCE_TIMING_TAO_PROTECTED_SIZE_PROP(name)                  \
-  uint64_t name(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {            \
+  uint64_t name(nsIPrincipal& aSubjectPrincipal) const {                    \
     bool allowed = !mTimingData->RedirectCountReal()                        \
                        ? TimingAllowedForCaller(aSubjectPrincipal)          \
                        : ReportRedirectForCaller(aSubjectPrincipal, false); \
@@ -74,7 +74,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
 
   DOMHighResTimeStamp FetchStart() const;
 
-  DOMHighResTimeStamp RedirectStart(Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  DOMHighResTimeStamp RedirectStart(nsIPrincipal& aSubjectPrincipal,
                                     bool aEnsureSameOriginAndIgnoreTAO) const {
     // We have to check if all the redirect URIs whether had the same origin or
     // different origins with TAO headers set (since there is no check in
@@ -86,12 +86,12 @@ class PerformanceResourceTiming : public PerformanceEntry {
   }
 
   virtual DOMHighResTimeStamp RedirectStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+      nsIPrincipal& aSubjectPrincipal) const {
     return RedirectStart(aSubjectPrincipal,
                          false /* aEnsureSameOriginAndIgnoreTAO */);
   }
 
-  DOMHighResTimeStamp RedirectEnd(Maybe<nsIPrincipal*>& aSubjectPrincipal,
+  DOMHighResTimeStamp RedirectEnd(nsIPrincipal& aSubjectPrincipal,
                                   bool aEnsureSameOriginAndIgnoreTAO) const {
     // We have to check if all the redirect URIs whether had the same origin or
     // different origins with TAO headers set (since there is no check in
@@ -103,7 +103,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
   }
 
   virtual DOMHighResTimeStamp RedirectEnd(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+      nsIPrincipal& aSubjectPrincipal) const {
     return RedirectEnd(aSubjectPrincipal,
                        false /* aEnsureSameOriginAndIgnoreTAO */);
   }
@@ -137,7 +137,7 @@ class PerformanceResourceTiming : public PerformanceEntry {
   IMPL_RESOURCE_TIMING_TAO_PROTECTED_SIZE_PROP(DecodedBodySize)
 
   void GetServerTiming(nsTArray<RefPtr<PerformanceServerTiming>>& aRetval,
-                       Maybe<nsIPrincipal*>& aSubjectPrincipal);
+                       nsIPrincipal& aSubjectPrincipal);
 
   size_t SizeOfIncludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override;
@@ -150,10 +150,10 @@ class PerformanceResourceTiming : public PerformanceEntry {
 
   // Check if caller has access to cross-origin timings, either by the rules
   // from the spec, or based on addon permissions.
-  bool TimingAllowedForCaller(Maybe<nsIPrincipal*>& aCaller) const;
+  bool TimingAllowedForCaller(nsIPrincipal& aCaller) const;
 
   // Check if cross-origin redirects should be reported to the caller.
-  bool ReportRedirectForCaller(Maybe<nsIPrincipal*>& aCaller,
+  bool ReportRedirectForCaller(nsIPrincipal& aCaller,
                                bool aEnsureSameOriginAndIgnoreTAO) const;
 
   nsString mInitiatorType;

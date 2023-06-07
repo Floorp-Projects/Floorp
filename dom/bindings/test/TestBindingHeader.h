@@ -1582,15 +1582,15 @@ class TestWorkerExposedInterface : public nsISupports, public nsWrapperCache {
   // We need a GetParentObject to make binding codegen happy
   nsISupports* GetParentObject();
 
-  void NeedsSubjectPrincipalMethod(Maybe<nsIPrincipal*>);
-  bool NeedsSubjectPrincipalAttr(Maybe<nsIPrincipal*>);
-  void SetNeedsSubjectPrincipalAttr(bool, Maybe<nsIPrincipal*>);
+  void NeedsSubjectPrincipalMethod(nsIPrincipal&);
+  bool NeedsSubjectPrincipalAttr(nsIPrincipal&);
+  void SetNeedsSubjectPrincipalAttr(bool, nsIPrincipal&);
   void NeedsCallerTypeMethod(CallerType);
   bool NeedsCallerTypeAttr(CallerType);
   void SetNeedsCallerTypeAttr(bool, CallerType);
-  void NeedsNonSystemSubjectPrincipalMethod(Maybe<nsIPrincipal*>);
-  bool NeedsNonSystemSubjectPrincipalAttr(Maybe<nsIPrincipal*>);
-  void SetNeedsNonSystemSubjectPrincipalAttr(bool, Maybe<nsIPrincipal*>);
+  void NeedsNonSystemSubjectPrincipalMethod(nsIPrincipal*);
+  bool NeedsNonSystemSubjectPrincipalAttr(nsIPrincipal*);
+  void SetNeedsNonSystemSubjectPrincipalAttr(bool, nsIPrincipal*);
 };
 
 class TestHTMLConstructorInterface : public nsGenericHTMLElement {

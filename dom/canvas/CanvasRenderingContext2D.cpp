@@ -4856,12 +4856,6 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
                                              double aY,
                                              const CanvasWindingRule& aWinding,
                                              nsIPrincipal& aSubjectPrincipal) {
-  return IsPointInPath(aCx, aX, aY, aWinding, Some(&aSubjectPrincipal));
-}
-
-bool CanvasRenderingContext2D::IsPointInPath(
-    JSContext* aCx, double aX, double aY, const CanvasWindingRule& aWinding,
-    Maybe<nsIPrincipal*> aSubjectPrincipal) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4895,14 +4889,6 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
                                              double aY,
                                              const CanvasWindingRule& aWinding,
                                              nsIPrincipal& aSubjectPrincipal) {
-  return IsPointInPath(aCx, aPath, aX, aY, aWinding, Some(&aSubjectPrincipal));
-}
-
-bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
-                                             const CanvasPath& aPath, double aX,
-                                             double aY,
-                                             const CanvasWindingRule& aWinding,
-                                             Maybe<nsIPrincipal*>) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4919,12 +4905,6 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
 
 bool CanvasRenderingContext2D::IsPointInStroke(
     JSContext* aCx, double aX, double aY, nsIPrincipal& aSubjectPrincipal) {
-  return IsPointInStroke(aCx, aX, aY, Some(&aSubjectPrincipal));
-}
-
-bool CanvasRenderingContext2D::IsPointInStroke(
-    JSContext* aCx, double aX, double aY,
-    Maybe<nsIPrincipal*> aSubjectPrincipal) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4963,13 +4943,6 @@ bool CanvasRenderingContext2D::IsPointInStroke(
 bool CanvasRenderingContext2D::IsPointInStroke(
     JSContext* aCx, const CanvasPath& aPath, double aX, double aY,
     nsIPrincipal& aSubjectPrincipal) {
-  return IsPointInStroke(aCx, aPath, aX, aY, Some(&aSubjectPrincipal));
-}
-
-bool CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx,
-                                               const CanvasPath& aPath,
-                                               double aX, double aY,
-                                               Maybe<nsIPrincipal*>) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -5725,13 +5698,6 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
 already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
     JSContext* aCx, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
     nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
-  return GetImageData(aCx, aSx, aSy, aSw, aSh, Some(&aSubjectPrincipal),
-                      aError);
-}
-
-already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
-    JSContext* aCx, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
-    Maybe<nsIPrincipal*> aSubjectPrincipal, ErrorResult& aError) {
   if (!mCanvasElement && !mDocShell && !mOffscreenCanvas) {
     NS_ERROR("No canvas element and no docshell in GetImageData!!!");
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -5798,7 +5764,7 @@ static IntRect ClipImageDataTransfer(IntRect& aSrc, const IntPoint& aDestOffset,
 
 nsresult CanvasRenderingContext2D::GetImageDataArray(
     JSContext* aCx, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
-    Maybe<nsIPrincipal*> aSubjectPrincipal, JSObject** aRetval) {
+    nsIPrincipal& aSubjectPrincipal, JSObject** aRetval) {
   MOZ_ASSERT(aWidth && aHeight);
 
   // Restrict the typed array length to INT32_MAX because that's all we support
