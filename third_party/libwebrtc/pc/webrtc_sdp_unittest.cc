@@ -4996,3 +4996,65 @@ TEST_F(WebRtcSdpTest, ParseIgnoreUnknownSsrcSpecificAttribute) {
   SdpParseError error;
   ASSERT_TRUE(webrtc::SdpDeserialize(sdp, &output, &error));
 }
+
+TEST_F(WebRtcSdpTest, ParseSessionLevelExtmapAttributes) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "a=extmap:3 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n";
+  JsepSessionDescription jdesc(kDummyType);
+  EXPECT_TRUE(SdpDeserialize(sdp, &jdesc));
+  ASSERT_EQ(1u, jdesc.description()->contents().size());
+  const auto content = jdesc.description()->contents()[0];
+  const auto* audio_description = content.media_description()->as_audio();
+  ASSERT_NE(audio_description, nullptr);
+  const auto& extensions = audio_description->rtp_header_extensions();
+  ASSERT_EQ(1u, extensions.size());
+  EXPECT_EQ(extensions[0].uri,
+            "http://www.ietf.org/id/"
+            "draft-holmer-rmcat-transport-wide-cc-extensions-01");
+  EXPECT_EQ(extensions[0].id, 3);
+}
+
+TEST_F(WebRtcSdpTest, RejectSessionLevelMediaLevelExtmapMixedUsage) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "a=extmap:3 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "a=extmap:2 "
+      "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n";
+  JsepSessionDescription jdesc(kDummyType);
+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
+}
