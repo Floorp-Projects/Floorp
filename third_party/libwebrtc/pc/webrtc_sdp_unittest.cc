@@ -2943,21 +2943,6 @@ TEST_F(WebRtcSdpTest, DeserializeSdpWithRtpmapAttribute) {
   EXPECT_TRUE(SdpDeserialize(sdp_with_data, &jdesc_output));
 }
 
-TEST_F(WebRtcSdpTest, DeserializeSdpWithStrangeApplicationProtocolNames) {
-  static const char* bad_strings[] = {
-      "DTLS/SCTPRTP/", "obviously-bogus",   "UDP/TL/RTSP/SAVPF",
-      "UDP/TL/RTSP/S", "DTLS/SCTP/RTP/FOO", "obviously-bogus/RTP/"};
-  for (auto proto : bad_strings) {
-    std::string sdp_with_data = kSdpString;
-    sdp_with_data.append("m=application 9 ");
-    sdp_with_data.append(proto);
-    sdp_with_data.append(" 47\r\n");
-    JsepSessionDescription jdesc_output(kDummyType);
-    EXPECT_FALSE(SdpDeserialize(sdp_with_data, &jdesc_output))
-        << "Parsing should have failed on " << proto;
-  }
-}
-
 // For crbug/344475.
 TEST_F(WebRtcSdpTest, DeserializeSdpWithCorruptedSctpDataChannels) {
   std::string sdp_with_data = kSdpString;
@@ -4834,6 +4819,39 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutCname) {
   EXPECT_TRUE(CompareSessionDescription(jdesc_, new_jdesc));
 }
 
+TEST_F(WebRtcSdpTest,
+       DeserializeSdpWithUnrecognizedApplicationProtocolRejectsSection) {
+  const char* unsupported_application_protocols[] = {
+      "bogus/RTP/",      "RTP/SAVPF",         "DTLS/SCTP/RTP/", "DTLS/SCTPRTP/",
+      "obviously-bogus", "UDP/TL/RTSP/SAVPF", "UDP/TL/RTSP/S"};
+
+  for (auto proto : unsupported_application_protocols) {
+    JsepSessionDescription jdesc_output(kDummyType);
+    std::string sdp = kSdpSessionString;
+    sdp.append("m=application 9 ");
+    sdp.append(proto);
+    sdp.append(" 101\r\n");
+
+    EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
+
+    // Make sure we actually parsed a single media section
+    ASSERT_EQ(1u, jdesc_output.description()->contents().size());
+
+    // Content is not getting parsed as sctp but instead unsupported.
+    EXPECT_EQ(nullptr, jdesc_output.description()
+                           ->contents()[0]
+                           .media_description()
+                           ->as_sctp());
+    EXPECT_NE(nullptr, jdesc_output.description()
+                           ->contents()[0]
+                           .media_description()
+                           ->as_unsupported());
+
+    // Reject the content
+    EXPECT_TRUE(jdesc_output.description()->contents()[0].rejected);
+  }
+}
+
 TEST_F(WebRtcSdpTest, DeserializeSdpWithUnsupportedMediaType) {
   std::string sdp = kSdpSessionString;
   sdp +=
@@ -4878,8 +4896,6 @@ TEST_F(WebRtcSdpTest, MediaTypeProtocolMismatch) {
                      "m=video");
   ExpectParseFailure(std::string(sdp + "m=video 9 SOMETHING 120\r\n"),
                      "m=video");
-  ExpectParseFailure(std::string(sdp + "m=application 9 SOMETHING 120\r\n"),
-                     "m=application");
 }
 
 // Regression test for:
