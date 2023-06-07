@@ -1011,10 +1011,8 @@ class PeerConnectionSimulcastWithMediaFlowTests
   std::unique_ptr<rtc::Thread> background_thread_;
 };
 
-// TODO(https://crbug.com/webrtc/14884): When VP9 simulast is supported, use
-// SetCodecPreferences() and pass a test like this with VP9.
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
-       SimulcastSendsAllLayersWithVP8) {
+       SendingThreeEncodings_VP8_Simulcast) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
   ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
@@ -1049,5 +1047,57 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StartsWith("L1T"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
 }
+
+// The legacy SVC path is triggered when VP9 us used, but `scalability_mode` has
+// not been specified.
+// TODO(https://crbug.com/webrtc/14889): When legacy VP9 SVC path has been
+// deprecated and removed, update this test to assert that simulcast is used
+// (i.e. VP9 is not treated differently than VP8).
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_VP9_LegacySVC) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f", "h", "q"}, true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing. We only expect a single RTP stream.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kLongTimeoutForRampingUp.ms());
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_EQ(outbound_rtps.size(), 1u);
+  EXPECT_TRUE(absl::EqualsIgnoreCase(
+      GetCurrentCodecMimeType(report, *outbound_rtps[0]), "video/VP9"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L3T3_KEY"));
+
+  // Despite SVC being used on a single RTP stream, GetParameters() returns the
+  // three encodings that we configured earlier (this is not spec-compliant but
+  // it is how legacy SVC behaves).
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  std::vector<RtpEncodingParameters> encodings =
+      sender->GetParameters().encodings;
+  ASSERT_EQ(encodings.size(), 3u);
+  // When legacy SVC is used, `scalability_mode` is not specified.
+  EXPECT_FALSE(encodings[0].scalability_mode.has_value());
+  EXPECT_FALSE(encodings[1].scalability_mode.has_value());
+  EXPECT_FALSE(encodings[2].scalability_mode.has_value());
+}
+
+// TODO(https://crbug.com/webrtc/14884): Add support for VP9 simulcast and test
+// this using a similar test to the above but specifying and verifying
+// `scalability_mode` (e.g. L1Tx).
 
 }  // namespace webrtc
