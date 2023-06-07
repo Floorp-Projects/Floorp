@@ -1,0 +1,15 @@
+# Ensure that nine-patch clip-mask rendering works correctly when
+# the shape forms an ellipse where the ratio of the corner size
+# is inverted from the ratio of the primitive size
+---
+root:
+  items:
+    - type: clip
+      id: 3
+      complex:
+        - rect: [50, 50, 225, 150]
+          radius: [112.5, 75]
+    - type: rect
+      bounds: 50 50 225 150
+      color: red
+      clip-chain: [3]
