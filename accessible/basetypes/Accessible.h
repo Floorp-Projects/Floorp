@@ -579,6 +579,28 @@ class Accessible {
   virtual bool HasNumericValue() const = 0;
 
   /**
+   * Returns true if this is a generic container element that has no meaning on
+   * its own.
+   */
+  bool IsGeneric() const {
+    role accRole = Role();
+    return accRole == roles::TEXT || accRole == roles::TEXT_CONTAINER ||
+           accRole == roles::SECTION;
+  }
+
+  /**
+   * Returns the nearest ancestor which is not a generic element.
+   */
+  Accessible* GetNonGenericParent() const {
+    for (Accessible* parent = Parent(); parent; parent = parent->Parent()) {
+      if (!parent->IsGeneric()) {
+        return parent;
+      }
+    }
+    return nullptr;
+  }
+
+  /**
    * Return true if the link is valid (e. g. points to a valid URL).
    */
   bool IsLinkValid();
