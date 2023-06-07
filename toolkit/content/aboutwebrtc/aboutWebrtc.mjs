@@ -368,7 +368,12 @@ class ShowTab extends Control {
     Object.assign(autorefresh, {
       type: "checkbox",
       id: "autorefresh",
-      checked: true,
+      checked: Services.prefs.getBoolPref("media.aboutwebrtc.auto_refresh"),
+      onchange: () =>
+        Services.prefs.setBoolPref(
+          "media.aboutwebrtc.auto_refresh",
+          autorefresh.checked
+        ),
     });
     const autorefreshLabel = document.createElement("label");
     document.l10n.setAttributes(
@@ -1387,10 +1392,12 @@ function renderUserPrefs() {
     "media.getusermedia",
     "media.gmp-gmpopenh264.enabled",
   ];
+  const hidden_prefs = ["media.aboutwebrtc.auto_refresh"];
   const renderPref = p => renderText("p", `${p}: ${getPref(p)}`);
   const display = prefs
     .flatMap(Services.prefs.getChildList)
     .filter(Services.prefs.prefHasUserValue)
+    .filter(p => !hidden_prefs.includes(p))
     .map(renderPref);
   return renderElements(
     "div",
