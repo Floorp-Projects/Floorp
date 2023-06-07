@@ -417,7 +417,7 @@ toolbar[brighttext] #panic-button[open] {
 #save-to-pocket-button[open="true"],
 #save-to-pocket-button[pocketed="true"] {
   list-style-image: url("chrome://global/skin/icons/pocket.svg");
-  fill: #ef4056;
+  fill: var(--pocket-icon-fill);
 }
 
 /* ----- BOOKMARK BUTTONS ----- */

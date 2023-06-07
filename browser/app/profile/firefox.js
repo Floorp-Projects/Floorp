@@ -607,6 +607,13 @@ pref("browser.urlbar.suggest.addons", true);
 // the suggestion. 0 means the min length should be taken from Nimbus.
 pref("browser.urlbar.addons.minKeywordLength", 0);
 
+// Feature gate pref for Pocket suggestions in the urlbar.
+pref("browser.urlbar.pocket.featureGate", false);
+
+// If `browser.urlbar.pocket.featureGate` is true, this controls whether Pocket
+// suggestions are turned on.
+pref("browser.urlbar.suggest.pocket", true);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.

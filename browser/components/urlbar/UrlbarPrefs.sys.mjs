@@ -190,6 +190,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // should be opened in new tabs by default.
   ["openintab", false],
 
+  // Feature gate pref for Pocket suggestions in the urlbar.
+  ["pocket.featureGate", false],
+
   // When true, URLs in the user's history that look like search result pages
   // are styled to look like search engine results instead of the usual history
   // results.
@@ -241,6 +244,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether results will include switch-to-tab results.
   ["suggest.openpage", true],
+
+  // If `pocket.featureGate` is true, this controls whether Pocket suggestions
+  // are turned on.
+  ["suggest.pocket", true],
 
   // Whether results will include synced tab results. The syncing of open tabs
   // must also be enabled, from Sync preferences.

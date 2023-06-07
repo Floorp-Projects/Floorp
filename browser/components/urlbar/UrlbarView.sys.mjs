@@ -1605,6 +1605,7 @@ export class UrlbarView {
       item.removeAttribute("tip-type");
       item.removeAttribute("dynamicType");
       item.removeAttribute("feedback-acknowledgment");
+      item.removeAttribute("bestmatch");
       if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
       } else if (item.result.isBestMatch) {
@@ -1659,12 +1660,16 @@ export class UrlbarView {
       return;
     } else if (result.providerName == "TabToSearch") {
       item.setAttribute("type", "tabtosearch");
-    } else if (result.isBestMatch) {
-      item.setAttribute("type", "bestmatch");
-      this.#updateRowForBestMatch(item, result);
-      return;
     } else {
-      item.removeAttribute("type");
+      item.setAttribute(
+        "type",
+        lazy.UrlbarUtils.searchEngagementTelemetryType(result)
+      );
+      if (result.isBestMatch) {
+        item.toggleAttribute("bestmatch", true);
+        this.#updateRowForBestMatch(item, result);
+        return;
+      }
     }
 
     let favicon = item._elements.get("favicon");

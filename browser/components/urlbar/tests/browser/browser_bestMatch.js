@@ -142,7 +142,7 @@ async function checkBestMatchRow({
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   let { row } = details.element;
 
-  Assert.equal(row.getAttribute("type"), "bestmatch", "row[type] is bestmatch");
+  Assert.ok(row.hasAttribute("bestmatch"), "row has bestmatch attribute");
 
   let favicon = row._elements.get("favicon");
   Assert.ok(favicon, "Row has a favicon");

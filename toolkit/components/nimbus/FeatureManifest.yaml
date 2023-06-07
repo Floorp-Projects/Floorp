@@ -228,6 +228,12 @@ urlbar:
       setPref: browser.urlbar.showExposureResults
       description: >-
         Boolean used to determine if the results defined in `exposureResults` should be shown in search results. Should be false for Control branch of an experiment.
+    pocketFeatureGate:
+      type: boolean
+      fallbackPref: browser.urlbar.pocket.featureGate
+      description: >-
+        Feature gate that controls whether all aspects of the Pocket suggestions
+        feature are exposed to the user.
     quickSuggestAllowPositionInSuggestions:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
