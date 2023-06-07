@@ -235,10 +235,10 @@ index 68171d1c2a..69d62ead5a 100644
  
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 938a0ca90c..c7caff12ef 100644
+index cc59884bde..cdb99e33ac 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -387,6 +387,7 @@ class RTCPReceiver final {
+@@ -382,6 +382,7 @@ class RTCPReceiver final {
    RegisteredSsrcs registered_ssrcs_;
  
    RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
@@ -247,7 +247,7 @@ index 938a0ca90c..c7caff12ef 100644
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 17822b2cff..1d06fd7bd2 100644
+index a53dcc9ef3..1eb767b927 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -73,6 +73,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

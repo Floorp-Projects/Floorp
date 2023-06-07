@@ -31,10 +31,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
  public:
   MOCK_METHOD(void,
               IncomingRtcpPacket,
-              (const uint8_t* incoming_packet, size_t packet_length),
-              (override));
-  MOCK_METHOD(void,
-              IncomingRtcpPacket,
               (rtc::ArrayView<const uint8_t> packet),
               (override));
   MOCK_METHOD(void, SetRemoteSSRC, (uint32_t ssrc), (override));

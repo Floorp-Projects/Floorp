@@ -189,9 +189,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Receiver functions
   // **************************************************************************
 
-  [[deprecated("Use ArrayView version")]] virtual void IncomingRtcpPacket(
-      const uint8_t* incoming_packet,
-      size_t incoming_packet_length) = 0;
   virtual void IncomingRtcpPacket(
       rtc::ArrayView<const uint8_t> incoming_packet) = 0;
 
