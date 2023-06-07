@@ -29,6 +29,7 @@
   height: 16px;
   width: 16px;
   border: 0;
+  color: inherit;
   -moz-context-properties: fill;
   fill: currentColor;
   margin-inline: 8px;
@@ -136,7 +137,6 @@
   /* Workaround bug 451997 and/or bug 492645 */
   display: block;
 }
-
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .labels-wrapper > .line2-label > span {
   /* The font-family is only adjusted on the inner span so that the
