@@ -26,8 +26,6 @@ class RTC_EXPORT RTCTestStats : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCTestStats(const std::string& id, Timestamp timestamp);
-  ABSL_DEPRECATED("Use constructor with Timestamp instead")
-  RTCTestStats(const std::string& id, int64_t timestamp_us);
   RTCTestStats(const RTCTestStats& other);
   ~RTCTestStats() override;
 
