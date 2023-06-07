@@ -146,7 +146,7 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PR
 fi
 
 if test "$GNU_CC$CLANG_CC"; then
-    if "${OS_TARGET}" != Darwin; then
+    if test "${OS_TARGET}" != Darwin; then
         MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -pie"
     fi
 fi
