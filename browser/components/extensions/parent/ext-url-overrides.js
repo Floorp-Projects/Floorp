@@ -35,7 +35,6 @@ XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
     settingKey: NEW_TAB_SETTING_NAME,
     descriptionId: "extension-new-tab-notification-description",
     descriptionMessageId: "newTabControlled.message2",
-    learnMoreMessageId: "newTabControlled.learnMore",
     learnMoreLink: "extension-home",
     preferencesLocation: "home-newtabOverride",
     preferencesEntrypoint: "addon-manage-newtab-override",

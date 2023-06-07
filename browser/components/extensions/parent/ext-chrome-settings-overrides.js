@@ -46,7 +46,6 @@ XPCOMUtils.defineLazyGetter(this, "homepagePopup", () => {
     settingKey: HOMEPAGE_SETTING_NAME,
     descriptionId: "extension-homepage-notification-description",
     descriptionMessageId: "homepageControlled.message",
-    learnMoreMessageId: "homepageControlled.learnMore",
     learnMoreLink: "extension-home",
     preferencesLocation: "home-homeOverride",
     preferencesEntrypoint: "addon-manage-home-override",
