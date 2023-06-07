@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { PureComponent } from "react";
-import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 
@@ -75,24 +74,6 @@ class Tabs extends PureComponent {
       tabs: PropTypes.array.isRequired,
       togglePaneCollapse: PropTypes.func.isRequired,
     };
-  }
-
-  get draggedSource() {
-    return this._draggedSource == null
-      ? { url: null, id: null }
-      : this._draggedSource;
-  }
-
-  set draggedSource(source) {
-    this._draggedSource = source;
-  }
-
-  get draggedSourceIndex() {
-    return this._draggedSourceIndex == null ? -1 : this._draggedSourceIndex;
-  }
-
-  set draggedSourceIndex(index) {
-    this._draggedSourceIndex = index;
   }
 
   componentDidUpdate(prevProps) {
@@ -174,27 +155,29 @@ class Tabs extends PureComponent {
     );
   };
 
-  onTabDragStart = (source, index) => {
-    this.draggedSource = source;
-    this.draggedSourceIndex = index;
+  // Note that these three listener will be called from Tab component
+  // so that e.target will be Tab's DOM (and not Tabs one).
+  onTabDragStart = e => {
+    this.draggedSourceId = e.target.dataset.sourceId;
+    this.draggedSourceIndex = e.target.dataset.index;
   };
 
   onTabDragEnd = () => {
-    this.draggedSource = null;
-    this.draggedSourceIndex = null;
+    this.draggedSourceId = null;
+    this.draggedSourceIndex = -1;
   };
 
-  onTabDragOver = (e, source, hoveredTabIndex) => {
+  onTabDragOver = e => {
+    e.preventDefault();
+
+    const hoveredTabIndex = e.target.dataset.index;
     const { moveTabBySourceId } = this.props;
+
     if (hoveredTabIndex === this.draggedSourceIndex) {
       return;
     }
 
-    const tabDOM = ReactDOM.findDOMNode(
-      this.refs[`tab_${source.id}`].getWrappedInstance()
-    );
-
-    const tabDOMRect = tabDOM.getBoundingClientRect();
+    const tabDOMRect = e.target.getBoundingClientRect();
     const { pageX: mouseCursorX } = e;
     if (
       /* Case: the mouse cursor moves into the left half of any target tab */
@@ -206,7 +189,7 @@ class Tabs extends PureComponent {
         hoveredTabIndex > this.draggedSourceIndex
           ? hoveredTabIndex - 1
           : hoveredTabIndex;
-      moveTabBySourceId(this.draggedSource.id, targetTab);
+      moveTabBySourceId(this.draggedSourceId, targetTab);
       this.draggedSourceIndex = targetTab;
     } else if (
       /* Case: the mouse cursor moves into the right half of any target tab */
@@ -218,7 +201,7 @@ class Tabs extends PureComponent {
         hoveredTabIndex < this.draggedSourceIndex
           ? hoveredTabIndex + 1
           : hoveredTabIndex;
-      moveTabBySourceId(this.draggedSource.id, targetTab);
+      moveTabBySourceId(this.draggedSourceId, targetTab);
       this.draggedSourceIndex = targetTab;
     }
   };
@@ -234,16 +217,13 @@ class Tabs extends PureComponent {
         {tabs.map(({ source, sourceActor }, index) => {
           return (
             <Tab
-              onDragStart={_ => this.onTabDragStart(source, index)}
-              onDragOver={e => {
-                this.onTabDragOver(e, source, index);
-                e.preventDefault();
-              }}
+              onDragStart={this.onTabDragStart}
+              onDragOver={this.onTabDragOver}
               onDragEnd={this.onTabDragEnd}
               key={index}
+              index={index}
               source={source}
               sourceActor={sourceActor}
-              ref={`tab_${source.id}`}
             />
           );
         })}

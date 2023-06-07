@@ -194,6 +194,7 @@ class Tab extends PureComponent {
       onDragOver,
       onDragStart,
       onDragEnd,
+      index,
     } = this.props;
     const sourceId = source.id;
     const active =
@@ -229,7 +230,8 @@ class Tab extends PureComponent {
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         className={className}
-        key={sourceId}
+        data-index={index}
+        data-source-id={sourceId}
         onClick={handleTabClick}
         // Accommodate middle click to close tab
         onMouseUp={e => e.button === 1 && closeTab(cx, source)}
