@@ -70,14 +70,6 @@ bool IsRelayed(const rtc::NetworkRoute& route) {
 }
 }  // namespace
 
-RtpTransportControllerSend::PacerSettings::PacerSettings(
-    const FieldTrialsView& trials)
-    : holdback_window("holdback_window", TimeDelta::Millis(5)),
-      holdback_packets("holdback_packets", 3) {
-  ParseFieldTrial({&holdback_window, &holdback_packets},
-                  trials.Lookup("WebRTC-TaskQueuePacer"));
-}
-
 RtpTransportControllerSend::RtpTransportControllerSend(
     Clock* clock,
     const RtpTransportConfig& config)
@@ -86,13 +78,12 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       task_queue_factory_(config.task_queue_factory),
       bitrate_configurator_(config.bitrate_config),
       pacer_started_(false),
-      pacer_settings_(*config.trials),
       pacer_(clock,
              &packet_router_,
              *config.trials,
              config.task_queue_factory,
-             pacer_settings_.holdback_window.Get(),
-             pacer_settings_.holdback_packets.Get(),
+             TimeDelta::Millis(5),
+             3,
              config.pacer_burst_interval),
       observer_(nullptr),
       controller_factory_override_(config.network_controller_factory),
