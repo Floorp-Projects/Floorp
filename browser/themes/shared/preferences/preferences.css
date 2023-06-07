@@ -1457,7 +1457,7 @@ richlistitem .text-link:hover {
 
 #translations-manage-install-list {
   height: 220px;
-  overflow: scroll;
+  overflow: auto;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 4px;
@@ -1472,13 +1472,13 @@ richlistitem .text-link:hover {
 }
 
 .translations-manage-language {
-	align-items: center;
+  align-items: center;
   padding: 0 8px;
 }
 
 .translations-manage-language label {
-	flex: 1;
-	margin: 0 15px;
+  flex: 1;
+  margin: 0 15px;
 }
 
 #translations-manage-error {
