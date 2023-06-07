@@ -981,14 +981,13 @@ bool WebRtcVideoChannel::ApplyChangedParams(
   for (auto& kv : send_streams_) {
     kv.second->SetSendParameters(changed_params);
   }
-  if (changed_params.send_codec || changed_params.rtcp_mode) {
-    // Update receive feedback parameters from new codec or RTCP mode.
-    RTC_LOG(LS_INFO)
-        << "SetFeedbackParameters on all the receive streams because the send "
-           "codec or RTCP mode has changed.";
-    for (auto& kv : receive_streams_) {
-      RTC_DCHECK(kv.second != nullptr);
-      kv.second->SetFeedbackParameters(
+  if (role() == MediaChannel::Role::kBoth) {
+    if (changed_params.send_codec || changed_params.rtcp_mode) {
+      // Update receive feedback parameters from new codec or RTCP mode.
+      RTC_LOG(LS_INFO) << "SetFeedbackParameters on all the receive streams "
+                          "because the send "
+                          "codec or RTCP mode has changed.";
+      SetReceiverFeedbackParameters(
           HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
           send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
                                          : webrtc::RtcpMode::kCompound,
@@ -996,6 +995,23 @@ bool WebRtcVideoChannel::ApplyChangedParams(
     }
   }
   return true;
+}
+
+void WebRtcVideoChannel::SetReceiverFeedbackParameters(
+    bool lntf_enabled,
+    bool nack_enabled,
+    webrtc::RtcpMode rtcp_mode,
+    absl::optional<int> rtx_time) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+
+  RTC_DCHECK(role() == MediaChannel::Role::kReceive ||
+             role() == MediaChannel::Role::kBoth);
+  // Update receive feedback parameters from new codec or RTCP mode.
+  for (auto& kv : receive_streams_) {
+    RTC_DCHECK(kv.second != nullptr);
+    kv.second->SetFeedbackParameters(lntf_enabled, nack_enabled, rtcp_mode,
+                                     rtx_time);
+  }
 }
 
 webrtc::RtpParameters WebRtcVideoChannel::GetRtpSendParameters(
