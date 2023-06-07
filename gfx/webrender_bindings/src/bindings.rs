@@ -1542,6 +1542,7 @@ pub extern "C" fn wr_window_new(
     reject_software_rasterizer: bool,
     low_quality_pinch_zoom: bool,
     max_shared_surface_size: i32,
+    enable_subpixel_aa: bool,
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1645,7 +1646,7 @@ pub extern "C" fn wr_window_new(
 
     let opts = WebRenderOptions {
         enable_aa: true,
-        enable_subpixel_aa: cfg!(not(target_os = "android")),
+        enable_subpixel_aa,
         support_low_priority_transactions,
         allow_texture_swizzling,
         blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(

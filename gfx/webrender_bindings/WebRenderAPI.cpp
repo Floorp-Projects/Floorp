@@ -150,7 +150,8 @@ class NewRenderer : public RendererEvent {
             panic_on_gl_error, picTileWidth, picTileHeight,
             gfx::gfxVars::WebRenderRequiresHardwareDriver(),
             StaticPrefs::gfx_webrender_low_quality_pinch_zoom_AtStartup(),
-            StaticPrefs::gfx_webrender_max_shared_surface_size_AtStartup())) {
+            StaticPrefs::gfx_webrender_max_shared_surface_size_AtStartup(),
+            StaticPrefs::gfx_webrender_enable_subpixel_aa_AtStartup())) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       MOZ_ASSERT(errorMessage);
       mError->AssignASCII(errorMessage);
