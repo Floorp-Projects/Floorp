@@ -6,7 +6,6 @@ import {
   styleMap,
   classMap,
   html,
-  css,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
@@ -22,66 +21,10 @@ export default class Timeline extends MozLitElement {
     this.history = [];
   }
 
-  static styles = css`
-    .timeline {
-      display: grid;
-      grid-template-rows: 24px auto auto;
-      font-size: smaller;
-      color: var(--text-color-deemphasized);
-      padding-inline-start: 0px;
-      text-align: center;
-    }
-
-    .timeline.empty {
-      display: none;
-    }
-
-    .timeline > svg {
-      grid-row: 1 / 1;
-      fill: var(--in-content-box-background);
-    }
-
-    .timeline > .line {
-      height: 2px;
-      justify-self: stretch;
-      align-self: center;
-      background-color: var(--in-content-border-color);
-      grid-row: 1;
-    }
-
-    .timeline > .line:nth-child(1) {
-      grid-column: 1;
-      width: 50%;
-      justify-self: flex-end;
-    }
-
-    .timeline > .line:nth-child(2) {
-      grid-column: 2/-2;
-    }
-
-    .timeline > .line:nth-child(3) {
-      grid-column: -2;
-      width: 50%;
-      justify-self: flex-start;
-    }
-
-    .timeline > .point {
-      width: 24px;
-      height: 24px;
-      stroke: var(--in-content-border-color);
-      stroke-width: 30px;
-      justify-self: center;
-    }
-
-    .timeline > .date {
-      grid-row: 2;
-      padding: 4px 8px;
-    }
-
-    .timeline > .action {
-      grid-row: 3;
-    }
-  `;
+  // Use a relative URL in storybook to get faster reloads on style changes.
+  static stylesheetUrl = window.IS_STORYBOOK
+    ? "./login-timeline.css"
+    : "chrome://browser/content/aboutlogins/components/login-timeline.css";
 
   render() {
     this.history = this.history.filter(historyPoint => historyPoint.time);
@@ -121,6 +64,7 @@ export default class Timeline extends MozLitElement {
     });
 
     return html`
+      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <div
         class="timeline ${classMap({ empty: !this.history.length })}"
         style=${styleMap({ gridTemplateColumns: columns })}
