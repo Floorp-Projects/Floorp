@@ -33,12 +33,9 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   MessageChannel: "resource://testing-common/MessageChannel.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",
   Schemas: "resource://gre/modules/Schemas.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 PromiseTestUtils.allowMatchingRejectionsGlobally(

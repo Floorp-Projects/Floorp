@@ -9,13 +9,10 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   CommonUtils: "resource://services-common/utils.sys.mjs",
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
 
   ChannelEventSinkFactory:
     "chrome://remote/content/cdp/observers/ChannelEventSink.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

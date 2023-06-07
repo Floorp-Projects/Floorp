@@ -22,12 +22,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DownloadStore: "resource://gre/modules/DownloadStore.sys.mjs",
   DownloadUIHelper: "resource://gre/modules/DownloadUIHelper.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

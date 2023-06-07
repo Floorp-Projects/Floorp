@@ -6,7 +6,9 @@ var { MigrationUtils } = ChromeUtils.importESModule(
 var { LoginHelper } = ChromeUtils.importESModule(
   "resource://gre/modules/LoginHelper.sys.mjs"
 );
-var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 var { PlacesUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesUtils.sys.mjs"
 );

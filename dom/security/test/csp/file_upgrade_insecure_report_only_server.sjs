@@ -1,6 +1,8 @@
 // Custom *.sjs specifically for the needs of Bug 1832249 - Consider report-only flag when upgrading insecure requests
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 
 // small red image
 const IMG_BYTES = atob(

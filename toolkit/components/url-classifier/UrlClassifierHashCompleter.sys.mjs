@@ -14,7 +14,7 @@ const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
 
 const lazy = {};
 

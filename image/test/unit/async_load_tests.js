@@ -8,7 +8,9 @@
 /* import-globals-from image_load_helpers.js */
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
 const ReferrerInfo = Components.Constructor(
   "@mozilla.org/referrer-info;1",
   "nsIReferrerInfo",

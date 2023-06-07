@@ -513,7 +513,8 @@ Object.defineProperty(exports, "assert", {
 });
 
 DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
-  return ChromeUtils.import("resource://gre/modules/NetUtil.jsm").NetUtil;
+  return ChromeUtils.importESModule("resource://gre/modules/NetUtil.sys.mjs")
+    .NetUtil;
 });
 
 /**

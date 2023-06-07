@@ -295,10 +295,6 @@ var whitelist = [
   { file: "chrome://browser/content/firefoxview/fxview-tab-list.css" },
   { file: "chrome://browser/content/firefoxview/fxview-tab-list.mjs" },
   { file: "chrome://browser/content/firefoxview/fxview-tab-row.css" },
-
-  // Bug 1834176 - Imports of NetUtil can't be converted until hostutils is
-  // updated.
-  { file: "resource://gre/modules/NetUtil.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

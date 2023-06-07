@@ -55,6 +55,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LightweightThemeManager:
     "resource://gre/modules/LightweightThemeManager.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
+  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   SITEPERMS_ADDON_TYPE:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
   Schemas: "resource://gre/modules/Schemas.sys.mjs",
@@ -62,10 +63,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
   permissionToL10nId:
     "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "resourceProtocol", () =>
