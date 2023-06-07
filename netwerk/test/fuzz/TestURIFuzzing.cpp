@@ -62,9 +62,7 @@ static int FuzzingRunURIParser(const uint8_t* data, size_t size) {
   nsCOMPtr<nsIURI> uri;
   nsAutoCString spec = get_string(&buf, &size);
 
-  nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-                    .SetSpec(spec)
-                    .Finalize(uri);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
 
   if (NS_FAILED(rv)) {
     return 0;
