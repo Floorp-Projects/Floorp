@@ -652,6 +652,15 @@ class VideoMediaSendChannel : public VideoMediaSendChannelInterface {
   void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override {
     return impl_->FillBitrateInfo(bwe_info);
   }
+  // Information queries to support SetReceiverFeedbackParameters
+  webrtc::RtcpMode SendCodecRtcpMode() const override {
+    return impl()->SendCodecRtcpMode();
+  }
+  bool SendCodecHasLntf() const override { return impl()->SendCodecHasLntf(); }
+  bool SendCodecHasNack() const override { return impl()->SendCodecHasNack(); }
+  absl::optional<int> SendCodecRtxTime() const override {
+    return impl()->SendCodecRtxTime();
+  }
 
   MediaChannel* ImplForTesting() override { return impl_; }
 
@@ -774,6 +783,13 @@ class VideoMediaReceiveChannel : public VideoMediaReceiveChannelInterface {
   }
   bool GetStats(VideoMediaReceiveInfo* info) override {
     return impl_->GetReceiveStats(info);
+  }
+  void SetReceiverFeedbackParameters(bool lntf_enabled,
+                                     bool nack_enabled,
+                                     webrtc::RtcpMode rtcp_mode,
+                                     absl::optional<int> rtx_time) override {
+    impl()->SetReceiverFeedbackParameters(lntf_enabled, nack_enabled, rtcp_mode,
+                                          rtx_time);
   }
   MediaChannel* ImplForTesting() override { return impl_; }
 

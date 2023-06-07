@@ -513,6 +513,18 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   void RequestRecvKeyFrame(uint32_t ssrc) override;
   void GenerateSendKeyFrame(uint32_t ssrc,
                             const std::vector<std::string>& rids) override;
+  webrtc::RtcpMode SendCodecRtcpMode() const override {
+    return webrtc::RtcpMode::kCompound;
+  }
+  bool SendCodecHasLntf() const override { return false; }
+  bool SendCodecHasNack() const override { return false; }
+  absl::optional<int> SendCodecRtxTime() const override {
+    return absl::nullopt;
+  }
+  void SetReceiverFeedbackParameters(bool lntf_enabled,
+                                     bool nack_enabled,
+                                     webrtc::RtcpMode rtcp_mode,
+                                     absl::optional<int> rtx_time) override {}
 
  private:
   bool SetRecvCodecs(const std::vector<VideoCodec>& codecs);

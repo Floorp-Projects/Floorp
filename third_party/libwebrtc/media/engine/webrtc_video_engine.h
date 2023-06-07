@@ -231,6 +231,39 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override;
 
+  // Information queries to support SetReceiverFeedbackParameters
+  webrtc::RtcpMode SendCodecRtcpMode() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    return send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
+                                          : webrtc::RtcpMode::kCompound;
+  }
+
+  bool SendCodecHasLntf() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return false;
+    }
+    return HasLntf(send_codec_->codec);
+  }
+  bool SendCodecHasNack() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return false;
+    }
+    return HasNack(send_codec_->codec);
+  }
+  absl::optional<int> SendCodecRtxTime() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return absl::nullopt;
+    }
+    return send_codec_->rtx_time;
+  }
+  void SetReceiverFeedbackParameters(bool lntf_enabled,
+                                     bool nack_enabled,
+                                     webrtc::RtcpMode rtcp_mode,
+                                     absl::optional<int> rtx_time) override;
+
  private:
   class WebRtcVideoReceiveStream;
 
