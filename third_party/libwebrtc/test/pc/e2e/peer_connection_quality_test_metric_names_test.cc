@@ -25,6 +25,7 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/pc/e2e/metric_metadata_keys.h"
+#include "test/pc/e2e/network_quality_metrics_reporter.h"
 #include "test/pc/e2e/peer_connection_quality_test.h"
 #include "test/pc/e2e/stats_based_network_quality_metrics_reporter.h"
 
@@ -32,6 +33,7 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
+using ::testing::IsSupersetOf;
 using ::testing::UnorderedElementsAre;
 
 using ::webrtc::test::DefaultMetricsLogger;
@@ -1095,6 +1097,183 @@ TEST(PeerConnectionE2EQualityTestMetricNamesTest,
                   {MetricMetadataKey::kReceiverMetadataKey, "alice"},
                   {MetricMetadataKey::kExperimentalTestNameMetadataKey,
                    "test_case"}}}));
+}
+
+TEST(PeerConnectionE2EQualityTestMetricNamesTest,
+     ExportedNetworkMetricsHaveCustomNetworkLabelIfSet) {
+  std::unique_ptr<NetworkEmulationManager> network_emulation =
+      CreateNetworkEmulationManager(TimeMode::kSimulated);
+  DefaultMetricsLogger metrics_logger(
+      network_emulation->time_controller()->GetClock());
+  PeerConnectionE2EQualityTest fixture(
+      "test_case", *network_emulation->time_controller(),
+      /*audio_quality_analyzer=*/nullptr, /*video_quality_analyzer=*/nullptr,
+      &metrics_logger);
+
+  EmulatedEndpoint* alice_endpoint =
+      network_emulation->CreateEndpoint(EmulatedEndpointConfig());
+  EmulatedEndpoint* bob_endpoint =
+      network_emulation->CreateEndpoint(EmulatedEndpointConfig());
+
+  network_emulation->CreateRoute(
+      alice_endpoint, {network_emulation->CreateUnconstrainedEmulatedNode()},
+      bob_endpoint);
+  network_emulation->CreateRoute(
+      bob_endpoint, {network_emulation->CreateUnconstrainedEmulatedNode()},
+      alice_endpoint);
+
+  EmulatedNetworkManagerInterface* alice_network =
+      network_emulation->CreateEmulatedNetworkManagerInterface(
+          {alice_endpoint});
+  EmulatedNetworkManagerInterface* bob_network =
+      network_emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint});
+
+  AddDefaultAudioVideoPeer("alice", "alice_audio", "alice_video",
+                           alice_network->network_dependencies(), fixture);
+  AddDefaultAudioVideoPeer("bob", "bob_audio", "bob_video",
+                           bob_network->network_dependencies(), fixture);
+  std::string kAliceNetworkLabel = "alice_label";
+  std::string kBobNetworkLabel = "bob_label";
+  fixture.AddQualityMetricsReporter(
+      std::make_unique<NetworkQualityMetricsReporter>(
+          kAliceNetworkLabel, alice_network, kBobNetworkLabel, bob_network,
+          &metrics_logger));
+
+  fixture.Run(RunParams(TimeDelta::Seconds(1)));
+
+  std::vector<MetricValidationInfo> metrics =
+      ToValidationInfo(metrics_logger.GetCollectedMetrics());
+
+  EXPECT_THAT(metrics,
+              IsSupersetOf(
+                  // Metrics from PeerConnectionE2EQualityTest
+                  std::vector<MetricValidationInfo>{
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "bytes_discarded_no_receiver",
+                          .unit = Unit::kBytes,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "packets_discarded_no_receiver",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "bytes_sent",
+                          .unit = Unit::kBytes,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "packets_sent",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "average_send_rate",
+                          .unit = Unit::kKilobitsPerSecond,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "bytes_received",
+                          .unit = Unit::kBytes,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "packets_received",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "average_receive_rate",
+                          .unit = Unit::kKilobitsPerSecond,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kAliceNetworkLabel,
+                          .name = "sent_packets_loss",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "bytes_discarded_no_receiver",
+                          .unit = Unit::kBytes,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "packets_discarded_no_receiver",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "bytes_sent",
+                          .unit = Unit::kBytes,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "packets_sent",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "average_send_rate",
+                          .unit = Unit::kKilobitsPerSecond,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "bytes_received",
+                          .unit = Unit::kBytes,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "packets_received",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "average_receive_rate",
+                          .unit = Unit::kKilobitsPerSecond,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      },
+                      MetricValidationInfo{
+                          .test_case = "test_case/" + kBobNetworkLabel,
+                          .name = "sent_packets_loss",
+                          .unit = Unit::kUnitless,
+                          .improvement_direction =
+                              ImprovementDirection::kNeitherIsBetter,
+                      }}));
 }
 
 }  // namespace
