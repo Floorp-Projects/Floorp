@@ -142,10 +142,7 @@ class LimitedTaskQueue {
   }
 
   void WaitForPreviouslyPostedTasks() {
-    while (queue_size_ > 0) {
-      task_executed_.Wait(rtc::Event::kForever);
-      task_executed_.Reset();
-    }
+    task_queue_.SendTask([] {});
   }
 
   TaskQueueForTest task_queue_;
@@ -174,13 +171,17 @@ class TesterDecoder {
           decoder_->Decode(
               frame, [this, spatial_idx = frame.SpatialIndex().value_or(0)](
                          const VideoFrame& decoded_frame) {
-                this->analyzer_->FinishDecode(decoded_frame, spatial_idx);
+                analyzer_->FinishDecode(decoded_frame, spatial_idx);
               });
         },
         pacer_.Schedule(timestamp));
   }
 
-  void Flush() { task_queue_.WaitForPreviouslyPostedTasks(); }
+  void Flush() {
+    Timestamp now = Timestamp::Micros(rtc::TimeMicros());
+    task_queue_.PostScheduledTask([this] { decoder_->Flush(); }, now);
+    task_queue_.WaitForPreviouslyPostedTasks();
+  }
 
  protected:
   Decoder* const decoder_;
@@ -211,16 +212,20 @@ class TesterEncoder {
         [this, frame] {
           analyzer_->StartEncode(frame);
           encoder_->Encode(frame, [this](const EncodedImage& encoded_frame) {
-            this->analyzer_->FinishEncode(encoded_frame);
+            analyzer_->FinishEncode(encoded_frame);
             if (decoder_ != nullptr) {
-              this->decoder_->Decode(encoded_frame);
+              decoder_->Decode(encoded_frame);
             }
           });
         },
         pacer_.Schedule(timestamp));
   }
 
-  void Flush() { task_queue_.WaitForPreviouslyPostedTasks(); }
+  void Flush() {
+    Timestamp now = Timestamp::Micros(rtc::TimeMicros());
+    task_queue_.PostScheduledTask([this] { encoder_->Flush(); }, now);
+    task_queue_.WaitForPreviouslyPostedTasks();
+  }
 
  protected:
   Encoder* const encoder_;

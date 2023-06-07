@@ -121,6 +121,7 @@ class MockDecoder : public Decoder {
               Decode,
               (const EncodedImage& frame, DecodeCallback callback),
               (override));
+  MOCK_METHOD(void, Flush, (), (override));
 };
 
 class MockEncoder : public Encoder {
@@ -129,6 +130,7 @@ class MockEncoder : public Encoder {
               Encode,
               (const VideoFrame& frame, EncodeCallback callback),
               (override));
+  MOCK_METHOD(void, Flush, (), (override));
 };
 
 class MockTaskQueueFactory : public TaskQueueFactory {
