@@ -7,6 +7,10 @@ function createProfDFile() {
     .get("ProfD", Ci.nsIFile);
 }
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 // Creates a parametric arity directory hierarchy as a function of depth.
 // Each directory contains one leaf file, and subdirectories of depth [1, depth).
 // e.g. for depth 3:
@@ -34,6 +38,18 @@ function createTreeFile(depth, parent) {
   if (depth == 0) {
     nextFile.append("file.txt");
     nextFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
+
+    // It's not possible to create symlinks on windows by default or on our
+    // Android platforms, so we can't create the symlink file there.  Our
+    // callers that care are aware of this and also check AppConstants.
+    if (
+      AppConstants.platform !== "win" &&
+      AppConstants.platform !== "android"
+    ) {
+      var linkFile = parent.clone();
+      linkFile.append("symlink.txt");
+      createSymLink(nextFile.path, linkFile.path);
+    }
   } else {
     nextFile.append("subdir" + depth);
     nextFile.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
@@ -62,6 +78,21 @@ function createRootFile() {
   return testFile;
 }
 
+var process;
+function createSymLink(target, linkName) {
+  if (!process) {
+    var ln = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    ln.initWithPath("/bin/ln");
+
+    process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    process.init(ln);
+  }
+
+  const args = ["-s", target, linkName];
+  process.run(true, args, args.length);
+  Assert.equal(process.exitValue, 0);
+}
+
 function createTestFile() {
   var tmpFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
@@ -80,6 +111,15 @@ function createTestFile() {
   var file2 = dir.clone();
   file2.append("bar.txt");
   file2.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
+
+  // It's not possible to create symlinks on windows by default or on our
+  // Android platforms, so we can't create the symlink file there.  Our
+  // callers that care are aware of this and also check AppConstants.
+  if (AppConstants.platform !== "win" && AppConstants.platform !== "android") {
+    var linkFile = dir.clone();
+    linkFile.append("symlink.txt");
+    createSymLink(file1.path, linkFile.path);
+  }
 
   return tmpFile;
 }
@@ -121,5 +161,16 @@ addMessageListener("file.open", function (e) {
 
   File.createFromNsIFile(testFile).then(function (file) {
     sendAsyncMessage("file.opened", { file });
+  });
+});
+
+addMessageListener("symlink.open", function (e) {
+  let testDir = createTestFile();
+  let testFile = testDir.clone();
+  testFile.append("subdir");
+  testFile.append("symlink.txt");
+
+  File.createFromNsIFile(testFile).then(function (file) {
+    sendAsyncMessage("symlink.opened", { dir: testDir.path, file });
   });
 });

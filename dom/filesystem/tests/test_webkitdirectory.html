@@ -8,12 +8,13 @@
 
 <body>
 <input id="inputFileWebkitDirectory" type="file" webkitdirectory></input>
+<input id="inputFileWebkitFile" type="file"></input>
 <input id="inputFileDirectoryChange" type="file" webkitdirectory></input>
 
 <script type="application/javascript">
 
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 let promptHandler;
@@ -28,6 +29,20 @@ function waitForPromptHandled() {
   return new Promise(resolve => promptHandler.addMessageListener("promptAccepted", resolve));
 }
 
+// Populate the given input type=file `aInputFile`'s `files` attribute by:
+// - loading `script_fileList.js` in the parent process
+// - telling it to generate the "test" template directory pattern which will
+//   create "foo.txt", "subdir/bar.txt", and if symlinks are available on the
+//   platform, "symlink.txt" which will be a symlink to "foo.txt".  (Note that
+//   we explicitly expect the symlink to be filtered out if generated, and
+//   during the enhancement of the test we verified the file was created on
+//   linux by running the test before fixing the GetFilesHelper logic to filter
+//   the symlink out and verifying the subsequent `test_fileList` check failed.)
+// - Triggering the mock file picker with the base directory of the "test"
+//   template directory.
+//
+// It's expected that `test_fileList` will be used after this step completes in
+// order to validate the results.
 function populateInputFile(aInputFile) {
   var url = SimpleTest.getTestFileURL("script_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
@@ -70,6 +85,8 @@ function checkFile(file, fileList, dirName) {
   ok(false, "File not found.");
 }
 
+// Validate the contents of the given input type=file `aInputFile`'s' `files`
+// property against the expected list of files `aWhat`.
 function test_fileList(aInputFile, aWhat) {
   var input = document.getElementById(aInputFile);
   var fileList = input.files;
@@ -85,6 +102,65 @@ function test_fileList(aInputFile, aWhat) {
     checkFile(aWhat[i], fileList, input.dataset.name);
   }
 
+  next();
+}
+
+// Verify that we can explicitly select a symlink and it will not be filtered
+// out.  This is really a verification that GetFileHelper's file-handling logic
+// https://searchfox.org/mozilla-central/rev/065102493dfc49234120c37fc6a334a5b1d86d9e/dom/filesystem/GetFilesHelper.cpp#81-86
+// does not proactively take an action to filter out a selected symlink.
+//
+// This is a glass box test that is not entirely realistic for our actual system
+// file pickers but does reflect what will happen in the drag-and-drop case
+// for `HTMLInputElement::MozSetDndFilesAndDirectories` and this helps ensure
+// that future implementation changes will behave as expected.  Specifically,
+// the presence of webkitdirectory will result in the file picker using
+// `modeGetFolder` which will only allow selection of a directory and forbid
+// file selection.
+//
+// This test explicitly does not validate HTMLInputElement's non-webkitdirectory
+// file selection mechanism because it does not involve GetFileHelper.
+async function test_individualSymlink(aInputFile) {
+  const input = document.getElementById(aInputFile);
+
+  // -- Create the symlink and get a `File` instance pointing at it.
+  const url = SimpleTest.getTestFileURL("script_fileList.js");
+  const script = SpecialPowers.loadChromeScript(url);
+
+  let opened = new Promise(resolve => script.addMessageListener("symlink.opened", resolve));
+  script.sendAsyncMessage("symlink.open", {});
+  let { dir, file: symlinkFile } = await opened;
+  info(`symlink.open provided dir: ${dir}`)
+
+  // -- Have the picker pick it
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
+
+  MockFilePicker.displayDirectory = dir;
+  let pickerShown = new Promise(resolve => {
+    MockFilePicker.showCallback = function() {
+      // This is where we are diverging from a realistic scenario in order to get
+      // the expected coverage.
+      MockFilePicker.setFiles([symlinkFile]);
+      resolve();
+    }
+  });
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  let changeEvent = waitForEvent(input, "change");
+
+  input.click();
+
+  await pickerShown;
+  await changeEvent;
+
+  MockFilePicker.cleanup();
+  script.destroy();
+
+  // -- Verify that we see the symlink.
+  let fileList = input.files;
+  is(fileList.length, 1, "There should be 1 file.");
+  is(fileList[0].name, "symlink.txt", "The file should be the symlink.");
   next();
 }
 
@@ -198,6 +274,17 @@ var tests = [
   function() { populateInputFile("inputFileWebkitDirectory"); },
 
   function() { test_fileList("inputFileWebkitDirectory", testDirData); },
+
+  function() {
+    // Symlinks are not available on Windows and so will not be created.
+    if (AppConstants.platform === "win" || AppConstants.platform === "android") {
+      info("Skipping individual symlink check on Windows and Android.");
+      next();
+      return;
+    }
+
+    test_individualSymlink("inputFileWebkitFile").catch(err => ok(false, `Problem in symlink case: ${err}`));
+  },
 
   test_webkitdirectory_attribute,
 
