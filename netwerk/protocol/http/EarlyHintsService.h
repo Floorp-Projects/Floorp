@@ -17,6 +17,7 @@
 
 class nsIChannel;
 class nsIURI;
+class nsIInterfaceRequestor;
 
 namespace mozilla::net {
 
@@ -29,7 +30,8 @@ class EarlyHintsService {
   ~EarlyHintsService();
   void EarlyHint(const nsACString& aLinkHeader, nsIURI* aBaseURI,
                  nsIChannel* aChannel, const nsACString& aReferrerPolicy,
-                 const nsACString& aCSPHeader);
+                 const nsACString& aCSPHeader,
+                 nsIInterfaceRequestor* aCallbacks);
   void FinalResponse(uint32_t aResponseStatus);
   void Cancel(const nsACString& aReason);
 

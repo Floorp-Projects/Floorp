@@ -34,7 +34,8 @@ EarlyHintsService::~EarlyHintsService() = default;
 void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
                                   nsIURI* aBaseURI, nsIChannel* aChannel,
                                   const nsACString& aReferrerPolicy,
-                                  const nsACString& aCSPHeader) {
+                                  const nsACString& aCSPHeader,
+                                  nsIInterfaceRequestor* aCallbacks) {
   mEarlyHintsCount++;
   if (mFirstEarlyHint.isNothing()) {
     mFirstEarlyHint.emplace(TimeStamp::NowLoRes());
@@ -101,7 +102,7 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
       EarlyHintPreloader::MaybeCreateAndInsertPreload(
           mOngoingEarlyHints, linkHeader, aBaseURI, principal,
           cookieJarSettings, aReferrerPolicy, aCSPHeader,
-          loadInfo->GetBrowsingContextID());
+          loadInfo->GetBrowsingContextID(), aCallbacks);
     }
   }
 }
