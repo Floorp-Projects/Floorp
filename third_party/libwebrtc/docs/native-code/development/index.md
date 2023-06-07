@@ -275,9 +275,9 @@ Target name `turnserver`. Used for unit tests.
 
 
 [ninja]: https://ninja-build.org/
-[ninja-build-rules]: https://gn.googlesource.com/gn/+/master/docs/reference.md#the-all-and-default-rules
-[gn]: https://gn.googlesource.com/gn/+/master/README.md
-[gn-doc]: https://gn.googlesource.com/gn/+/master/docs/reference.md#IDE-options
+[ninja-build-rules]: https://gn.googlesource.com/gn/+/main/docs/reference.md#the-all-and-default-rules
+[gn]: https://gn.googlesource.com/gn/+/main/README.md
+[gn-doc]: https://gn.googlesource.com/gn/+/main/docs/reference.md#IDE-options
 [webrtc-android-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/android/index.md
 [webrtc-ios-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/ios/index.md
 [chromium-work-branches]: https://www.chromium.org/developers/how-tos/get-the-code/working-with-branches
