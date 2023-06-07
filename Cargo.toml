@@ -41,6 +41,9 @@ exclude = [
   "tools/fuzzing/rust",
   "dom/base/rust",
   "dom/origin-trials/ffi",
+
+  # Excluded because we don't want to vendor their dependencies.
+  "intl/l10n/rust/l10nregistry-tests"
 ]
 
 # Use the new dependency resolver to reduce some of the platform-specific dependencies.

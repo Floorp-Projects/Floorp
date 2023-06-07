@@ -29,6 +29,7 @@ license:
         - gradle/wrapper/gradle-wrapper.properties
         # Imported code that is dual Apache2 / MIT licensed
         - intl/l10n/rust/l10nregistry-rs
+        - intl/l10n/rust/l10nregistry-tests
         # tests
         - js/src/devtools/rootAnalysis/t/
         - mobile/android/geckoview/src/main/AndroidManifest.xml

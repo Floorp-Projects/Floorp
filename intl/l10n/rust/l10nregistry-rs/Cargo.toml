@@ -9,79 +9,12 @@ edition = "2018"
 async-trait = "0.1"
 fluent-bundle = "0.15.2"
 fluent-fallback = "0.7.0"
-fluent-testing = { version = "0.0.3", optional = true, features = ["sync", "async"] }
 futures = "0.3"
 pin-project-lite = "0.2"
 replace_with = "0.1"
 rustc-hash = "1"
-tokio = { version = "1.0", optional = true, features = ["rt-multi-thread", "macros"] }
 unic-langid = "0.9"
-
-[dev-dependencies]
-unic-langid = { version = "0.9", features = ["macros"] }
-# Serial_test is only used in a test that is behind the test-fluent feature
-# and this not run on gecko CI. However it has a dependency on syn 1 that is
-# best avoided as we transition to syn 2, and while newer versions of
-# serial_test updated to syn 2, they also bring a large dashmap dependency.
-#serial_test = "0.6"
-# The mozilla-central vendoring process unfortunately always pulls in
-# dev-dependencies. The criterion package pulls in duplicated versions of
-# other crates as well as large data files that the vendoring process is
-# unhappy with. This can be uncommented to run benchmarks, but we should
-# not vendor it into the tree in its current state.
-#criterion = "0.3"
 
 [features]
 default = []
-tokio-io = ["tokio"]
 test-fluent = []
-
-[[bench]]
-name = "preferences"
-harness = false
-required-features = ["tokio", "test-fluent"]
-
-[[bench]]
-name = "localization"
-harness = false
-required-features = ["tokio", "test-fluent"]
-
-[[bench]]
-name = "source"
-harness = false
-required-features = ["tokio", "test-fluent"]
-
-[[bench]]
-name = "solver"
-harness = false
-required-features = ["tokio", "test-fluent"]
-
-[[bench]]
-name = "registry"
-harness = false
-required-features = ["tokio", "test-fluent"]
-
-[[test]]
-name = "source"
-path = "tests/source.rs"
-required-features = ["tokio", "test-fluent"]
-
-[[test]]
-name = "registry"
-path = "tests/registry.rs"
-required-features = ["tokio", "test-fluent"]
-
-[[test]]
-name = "localization"
-path = "tests/localization.rs"
-required-features = ["tokio", "test-fluent"]
-
-[[test]]
-name = "scenarios_sync"
-path = "tests/scenarios_sync.rs"
-required-features = ["test-fluent"]
-
-[[test]]
-name = "scenarios_async"
-path = "tests/scenarios_async.rs"
-required-features = ["tokio", "test-fluent"]

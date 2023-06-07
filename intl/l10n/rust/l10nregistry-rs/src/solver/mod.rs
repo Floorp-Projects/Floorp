@@ -1,6 +1,5 @@
 mod parallel;
 mod serial;
-pub mod testing;
 
 pub use parallel::{AsyncTester, ParallelProblemSolver};
 pub use serial::{SerialProblemSolver, SyncTester};
