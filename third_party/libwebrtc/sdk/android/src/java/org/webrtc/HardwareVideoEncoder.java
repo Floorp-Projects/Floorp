@@ -488,7 +488,6 @@ class HardwareVideoEncoder implements VideoEncoder {
 
   @Override
   public ScalingSettings getScalingSettings() {
-    encodeThreadChecker.checkIsOnValidThread();
     if (automaticResizeOn) {
       if (codecType == VideoCodecMimeType.VP8) {
         final int kLowVp8QpThreshold = 29;
