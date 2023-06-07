@@ -1259,6 +1259,14 @@ JS::ProfilingFrameIterator::RegisterState Simulator::registerState() {
   return state;
 }
 
+void Simulator::HandleWasmTrap() {
+  uint8_t* newPC;
+  if (wasm::HandleIllegalInstruction(registerState(), &newPC)) {
+    set_pc(int64_t(newPC));
+    return;
+  }
+}
+
 // TODO(plind): consider making icount_ printing a flag option.
 template <typename T>
 void Simulator::TraceMemRd(sreg_t addr, T value, sreg_t reg_value) {
@@ -4097,11 +4105,7 @@ void Simulator::DecodeRVIType() {
       } else if (instr_.Imm12Value() == 1) {  // EBREAK
         uint8_t code = get_ebreak_code(instr_.instr());
         if (code == kWasmTrapCode) {
-          uint8_t* newPC;
-          if (wasm::HandleIllegalInstruction(registerState(), &newPC)) {
-            set_pc(int64_t(newPC));
-            return;
-          }
+          HandleWasmTrap();
         }
         SoftwareInterrupt();
       } else {
@@ -4139,6 +4143,12 @@ void Simulator::DecodeRVIType() {
     case RO_CSRRWI: {
       if (rd_reg() != zero_reg) {
         set_rd(zext_xlen(read_csr_value(csr_reg())));
+      }
+      if (csr_reg() == csr_cycle) {
+        if (imm5CSR() == kWasmTrapCode) {
+          HandleWasmTrap();
+          return;
+        }
       }
       write_csr_value(csr_reg(), imm5CSR());
       break;
