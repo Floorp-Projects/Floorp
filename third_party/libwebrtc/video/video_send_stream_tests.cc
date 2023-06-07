@@ -2893,7 +2893,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
         encoded._frameType = (*frame_types)[i];
         encoded._encodedWidth = kEncodedResolution[i].width;
         encoded._encodedHeight = kEncodedResolution[i].height;
-        encoded.SetSpatialIndex(i);
+        encoded.SetSimulcastIndex(i);
         EncodedImageCallback* callback;
         {
           MutexLock lock(&mutex_);

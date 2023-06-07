@@ -80,7 +80,7 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
     bool is_vp8 = (codec_specific_info->codecType == kVideoCodecVP8);
     bool is_h264 = (codec_specific_info->codecType == kVideoCodecH264);
     // Only store the base layer.
-    if (encoded_image.SpatialIndex().value_or(0) == 0) {
+    if (encoded_image.SimulcastIndex().value_or(0) == 0) {
       if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
         encoded_key_frame_.SetEncodedData(EncodedImageBuffer::Create(
             encoded_image.data(), encoded_image.size()));
@@ -91,14 +91,14 @@ class SimulcastTestFixtureImpl::TestEncodedImageCallback
       }
     }
     if (is_vp8) {
-      layer_sync_[encoded_image.SpatialIndex().value_or(0)] =
+      layer_sync_[encoded_image.SimulcastIndex().value_or(0)] =
           codec_specific_info->codecSpecific.VP8.layerSync;
-      temporal_layer_[encoded_image.SpatialIndex().value_or(0)] =
+      temporal_layer_[encoded_image.SimulcastIndex().value_or(0)] =
           codec_specific_info->codecSpecific.VP8.temporalIdx;
     } else if (is_h264) {
-      layer_sync_[encoded_image.SpatialIndex().value_or(0)] =
+      layer_sync_[encoded_image.SimulcastIndex().value_or(0)] =
           codec_specific_info->codecSpecific.H264.base_layer_sync;
-      temporal_layer_[encoded_image.SpatialIndex().value_or(0)] =
+      temporal_layer_[encoded_image.SimulcastIndex().value_or(0)] =
           codec_specific_info->codecSpecific.H264.temporal_idx;
     }
     return Result(Result::OK, encoded_image.Timestamp());
@@ -916,7 +916,7 @@ void SimulcastTestFixtureImpl::TestDecodeWidthHeightSet() {
                                 const CodecSpecificInfo* codec_specific_info) {
             EXPECT_EQ(encoded_image._frameType, VideoFrameType::kVideoFrameKey);
 
-            size_t index = encoded_image.SpatialIndex().value_or(0);
+            size_t index = encoded_image.SimulcastIndex().value_or(0);
             encoded_frame[index].SetEncodedData(EncodedImageBuffer::Create(
                 encoded_image.data(), encoded_image.size()));
             encoded_frame[index]._frameType = encoded_image._frameType;

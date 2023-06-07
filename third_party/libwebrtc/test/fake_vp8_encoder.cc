@@ -94,12 +94,12 @@ CodecSpecificInfo FakeVp8Encoder::EncodeHook(
     EncodedImage& encoded_image,
     rtc::scoped_refptr<EncodedImageBuffer> buffer) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  uint8_t stream_idx = encoded_image.SpatialIndex().value_or(0);
-  frame_buffer_controller_->NextFrameConfig(stream_idx,
+  uint8_t simulcast_index = encoded_image.SimulcastIndex().value_or(0);
+  frame_buffer_controller_->NextFrameConfig(simulcast_index,
                                             encoded_image.Timestamp());
   CodecSpecificInfo codec_specific =
       PopulateCodecSpecific(encoded_image.size(), encoded_image._frameType,
-                            stream_idx, encoded_image.Timestamp());
+                            simulcast_index, encoded_image.Timestamp());
 
   // Write width and height to the payload the same way as the real encoder
   // does.

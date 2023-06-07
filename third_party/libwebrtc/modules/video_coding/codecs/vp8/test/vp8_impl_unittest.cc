@@ -95,7 +95,7 @@ class TestVp8Impl : public VideoCodecUnitTest {
     ASSERT_TRUE(WaitForEncodedFrame(encoded_frame, codec_specific_info));
     VerifyQpParser(*encoded_frame);
     EXPECT_EQ(kVideoCodecVP8, codec_specific_info->codecType);
-    EXPECT_EQ(0, encoded_frame->SpatialIndex());
+    EXPECT_EQ(0, encoded_frame->SimulcastIndex());
   }
 
   void EncodeAndExpectFrameWith(const VideoFrame& input_frame,

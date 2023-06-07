@@ -679,7 +679,7 @@ EncodedImageCallback::Result SimulcastEncoderAdapter::OnEncodedImage(
   EncodedImage stream_image(encodedImage);
   CodecSpecificInfo stream_codec_specific = *codecSpecificInfo;
 
-  stream_image.SetSpatialIndex(stream_idx);
+  stream_image.SetSimulcastIndex(stream_idx);
 
   return encoded_complete_callback_->OnEncodedImage(stream_image,
                                                     &stream_codec_specific);

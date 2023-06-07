@@ -143,7 +143,7 @@ int32_t FakeEncoder::Encode(const VideoFrame& input_image,
     encoded._encodedHeight = simulcast_streams[i].height;
     if (qp)
       encoded.qp_ = *qp;
-    encoded.SetSpatialIndex(i);
+    encoded.SetSimulcastIndex(i);
     CodecSpecificInfo codec_specific = EncodeHook(encoded, buffer);
 
     if (callback->OnEncodedImage(encoded, &codec_specific).error !=
