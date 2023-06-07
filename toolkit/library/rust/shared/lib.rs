@@ -16,6 +16,7 @@ extern crate bitsdownload;
 extern crate bookmark_sync;
 extern crate cascade_bloom_filter;
 extern crate cert_storage;
+extern crate crypto_hash;
 extern crate chardetng_c;
 extern crate cosec;
 #[cfg(feature = "cubeb_coreaudio_rust")]
