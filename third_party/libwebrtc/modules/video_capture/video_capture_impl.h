@@ -26,6 +26,7 @@
 #include "modules/video_capture/video_capture_config.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
@@ -33,7 +34,7 @@ class VideoCaptureOptions;
 
 namespace videocapturemodule {
 // Class definitions
-class VideoCaptureImpl : public VideoCaptureModule {
+class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
  public:
   /*
    *   Create a video capture module object
