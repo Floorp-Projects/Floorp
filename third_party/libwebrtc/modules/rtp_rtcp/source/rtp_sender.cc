@@ -95,8 +95,6 @@ constexpr RtpExtensionSize kAudioExtensionSizes[] = {
     CreateExtensionSize<InbandComfortNoiseExtension>(),
     CreateExtensionSize<TransmissionOffset>(),
     CreateExtensionSize<TransportSequenceNumber>(),
-    CreateMaxExtensionSize<RtpStreamId>(),
-    CreateMaxExtensionSize<RepairedRtpStreamId>(),
     CreateMaxExtensionSize<RtpMid>(),
 };
 
