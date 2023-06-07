@@ -543,7 +543,8 @@ class FakeVoiceEngine : public VoiceEngineInterface {
       const AudioOptions& options,
       const webrtc::CryptoOptions& crypto_options,
       webrtc::AudioCodecPairId codec_pair_id) override;
-  FakeVoiceMediaChannel* GetChannel(size_t index);
+  FakeVoiceMediaChannel* GetSendChannel(size_t index);
+  FakeVoiceMediaChannel* GetReceiveChannel(size_t index);
   void UnregisterChannel(VoiceMediaChannel* channel);
 
   // TODO(ossu): For proper testing, These should either individually settable
@@ -564,7 +565,8 @@ class FakeVoiceEngine : public VoiceEngineInterface {
       std::vector<webrtc::RtpHeaderExtensionCapability> header_extensions);
 
  private:
-  std::vector<FakeVoiceMediaChannel*> channels_;
+  std::vector<FakeVoiceMediaChannel*> send_channels_;
+  std::vector<FakeVoiceMediaChannel*> receive_channels_;
   std::vector<AudioCodec> recv_codecs_;
   std::vector<AudioCodec> send_codecs_;
   bool fail_create_channel_;
@@ -585,7 +587,8 @@ class FakeVideoEngine : public VideoEngineInterface {
       const webrtc::CryptoOptions& crypto_options,
       webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
       override;
-  FakeVideoMediaChannel* GetChannel(size_t index);
+  FakeVideoMediaChannel* GetSendChannel(size_t index);
+  FakeVideoMediaChannel* GetReceiveChannel(size_t index);
   void UnregisterChannel(VideoMediaChannel* channel);
   std::vector<VideoCodec> send_codecs() const override {
     return send_codecs(true);
@@ -604,7 +607,8 @@ class FakeVideoEngine : public VideoEngineInterface {
       std::vector<webrtc::RtpHeaderExtensionCapability> header_extensions);
 
  private:
-  std::vector<FakeVideoMediaChannel*> channels_;
+  std::vector<FakeVideoMediaChannel*> send_channels_;
+  std::vector<FakeVideoMediaChannel*> receive_channels_;
   std::vector<VideoCodec> send_codecs_;
   std::vector<VideoCodec> recv_codecs_;
   bool capture_;
@@ -626,8 +630,10 @@ class FakeMediaEngine : public CompositeMediaEngine {
   void SetAudioSendCodecs(const std::vector<AudioCodec>& codecs);
   void SetVideoCodecs(const std::vector<VideoCodec>& codecs);
 
-  FakeVoiceMediaChannel* GetVoiceChannel(size_t index);
-  FakeVideoMediaChannel* GetVideoChannel(size_t index);
+  FakeVoiceMediaChannel* GetVoiceSendChannel(size_t index);
+  FakeVideoMediaChannel* GetVideoSendChannel(size_t index);
+  FakeVoiceMediaChannel* GetVoiceReceiveChannel(size_t index);
+  FakeVideoMediaChannel* GetVideoReceiveChannel(size_t index);
 
   void set_fail_create_channel(bool fail);
 
