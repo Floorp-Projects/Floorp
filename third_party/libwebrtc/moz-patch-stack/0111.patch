@@ -1,81 +1,164 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 16 May 2023 06:38:00 +0000
-Subject: Bug 1832804 - cherry-pick upstream webrtc commit a09331a603.
+Date: Tue, 16 May 2023 06:59:00 +0000
+Subject: Bug 1832717 - Cherry-pick upstream libwebrtc commit 0f87b38535.
  r=webrtc-reviewers,mjf
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Upstream commit: https://webrtc.googlesource.com/src/+/a09331a6038bb6191c7662680d8928940463a099
-    Don't write TransmissionOffset when capture time is not set
+Upstream Commit: https://webrtc.googlesource.com/src/+/0f87b3853554ee5d4e92e487a5165b57771b6742
+    mac: Work around an inccorect availability annotation in the 13.3 SDK
 
-    RTX padding packets sent before media packets can legitimately have no
-    timestamps set (they are 0). Writing the TransmissionOffset extension
-    with capture time 0 will overflow once current time exceeds ~3 minutes.
+    Bug: chromium:1431897
+    Change-Id: Ib871dc22d2cf93180d7aa05016e34ffec944d73e
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/301040
+    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
+    Commit-Queue: Alexander Cooper <alcooper@chromium.org>
+    Auto-Submit: Nico Weber <thakis@chromium.org>
+    Cr-Commit-Position: refs/heads/main@{#39830}
 
-    Bug: webrtc:15172
-    Change-Id: I4dd1f341802d45016549b330f0e08cd3a00cfa19
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305020
-    Reviewed-by: Erik Språng <sprang@webrtc.org>
-    Reviewed-by: Per Kjellander <perkj@webrtc.org>
-    Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-    Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#40055}
-
-Differential Revision: https://phabricator.services.mozilla.com/D178007
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c303f3d267415184f3d023b022e4bd309d540fec
+Differential Revision: https://phabricator.services.mozilla.com/D178027
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8443a5cec0ac1273f70cee116f08b88d0c19788d
 ---
- modules/rtp_rtcp/source/rtp_sender_egress.cc  |  5 +++--
- .../source/rtp_sender_egress_unittest.cc      | 20 +++++++++++++++++++
- 2 files changed, 23 insertions(+), 2 deletions(-)
+ .../mac/screen_capturer_mac.mm                | 97 +++++++++++++++++--
+ 1 file changed, 89 insertions(+), 8 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_egress.cc b/modules/rtp_rtcp/source/rtp_sender_egress.cc
-index 3f836c5415..e4e0993d71 100644
---- a/modules/rtp_rtcp/source/rtp_sender_egress.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_egress.cc
-@@ -210,8 +210,9 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
-   // In case of VideoTimingExtension, since it's present not in every packet,
-   // data after rtp header may be corrupted if these packets are protected by
-   // the FEC.
--  TimeDelta diff = now - packet->capture_time();
--  if (packet->HasExtension<TransmissionOffset>()) {
-+  if (packet->HasExtension<TransmissionOffset>() &&
-+      packet->capture_time() > Timestamp::Zero()) {
-+    TimeDelta diff = now - packet->capture_time();
-     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
-   }
-   if (packet->HasExtension<AbsoluteSendTime>()) {
-diff --git a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
-index cc1c8feb8d..bfaffa1bdb 100644
---- a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
-@@ -268,6 +268,26 @@ TEST_F(RtpSenderEgressTest,
-   EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
- }
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index cad0c5b65b..76fec13a39 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -20,6 +20,87 @@
+ #include "rtc_base/trace_event.h"
+ #include "sdk/objc/helpers/scoped_cftyperef.h"
  
-+TEST_F(RtpSenderEgressTest,
-+       DoesntWriteTransmissionOffsetOnRtxPaddingBeforeMedia) {
-+  header_extensions_.RegisterByUri(kTransmissionOffsetExtensionId,
-+                                   TransmissionOffset::Uri());
++// All these symbols have incorrect availability annotations in the 13.3 SDK.
++// These have the correct annotation. See https://crbug.com/1431897.
++// TODO(thakis): Remove this once FB12109479 is fixed and we updated to an SDK
++// with the fix.
 +
-+  // Prior to sending media, timestamps are 0.
-+  std::unique_ptr<RtpPacketToSend> padding =
-+      BuildRtpPacket(/*marker_bit=*/true, /*capture_time_ms=*/0);
-+  padding->set_packet_type(RtpPacketMediaType::kPadding);
-+  padding->SetSsrc(kRtxSsrc);
-+  EXPECT_TRUE(padding->HasExtension<TransmissionOffset>());
-+
-+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
-+  sender->SendPacket(std::move(padding), PacedPacketInfo());
-+
-+  absl::optional<int32_t> offset =
-+      transport_.last_packet()->packet.GetExtension<TransmissionOffset>();
-+  EXPECT_EQ(offset, 0);
++static CGDisplayStreamRef __nullable
++    wrapCGDisplayStreamCreate(CGDirectDisplayID display,
++                              size_t outputWidth,
++                              size_t outputHeight,
++                              int32_t pixelFormat,
++                              CFDictionaryRef __nullable properties,
++                              CGDisplayStreamFrameAvailableHandler __nullable handler)
++        CG_AVAILABLE_BUT_DEPRECATED(
++            10.8,
++            14.0,
++            "Please use ScreenCaptureKit API's initWithFilter:configuration:delegate: instead") {
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunguarded-availability-new"
++  return CGDisplayStreamCreate(
++      display, outputWidth, outputHeight, pixelFormat, properties, handler);
++#pragma clang diagnostic pop
 +}
 +
- TEST_F(RtpSenderEgressTest, OnSendSideDelayUpdated) {
-   StrictMock<MockSendSideDelayObserver> send_side_delay_observer;
-   RtpRtcpInterface::Configuration config = DefaultConfig();
++static CFRunLoopSourceRef __nullable
++    wrapCGDisplayStreamGetRunLoopSource(CGDisplayStreamRef cg_nullable displayStream)
++        CG_AVAILABLE_BUT_DEPRECATED(10.8,
++                                    14.0,
++                                    "There is no direct replacement for this function. Please use "
++                                    "ScreenCaptureKit API's SCStream to replace CGDisplayStream") {
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunguarded-availability-new"
++  return CGDisplayStreamGetRunLoopSource(displayStream);
++#pragma clang diagnostic pop
++}
++
++static CGError wrapCGDisplayStreamStart(CGDisplayStreamRef cg_nullable displayStream)
++    CG_AVAILABLE_BUT_DEPRECATED(10.8,
++                                14.0,
++                                "Please use ScreenCaptureKit API's "
++                                "startCaptureWithCompletionHandler: to start a stream instead") {
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunguarded-availability-new"
++  return CGDisplayStreamStart(displayStream);
++#pragma clang diagnostic pop
++}
++
++static CGError wrapCGDisplayStreamStop(CGDisplayStreamRef cg_nullable displayStream)
++    CG_AVAILABLE_BUT_DEPRECATED(10.8,
++                                14.0,
++                                "Please use ScreenCaptureKit API's "
++                                "stopCaptureWithCompletionHandler: to stop a stream instead") {
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunguarded-availability-new"
++  return CGDisplayStreamStop(displayStream);
++#pragma clang diagnostic pop
++}
++
++static CFStringRef wrapkCGDisplayStreamShowCursor() CG_AVAILABLE_BUT_DEPRECATED(
++    10.8,
++    14.0,
++    "Please use ScreenCaptureKit API's SCStreamConfiguration showsCursor property instead") {
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunguarded-availability-new"
++  return kCGDisplayStreamShowCursor;
++#pragma clang diagnostic pop
++}
++
++static const CGRect* __nullable
++    wrapCGDisplayStreamUpdateGetRects(CGDisplayStreamUpdateRef __nullable updateRef,
++                                      CGDisplayStreamUpdateRectType rectType,
++                                      size_t* rectCount)
++        CG_AVAILABLE_BUT_DEPRECATED(10.8,
++                                    14.0,
++                                    "Please use ScreenCaptureKit API's SCStreamFrameInfo with "
++                                    "SCStreamFrameInfoContentRect instead") {
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunguarded-availability-new"
++  return CGDisplayStreamUpdateGetRects(updateRef, rectType, rectCount);
++#pragma clang diagnostic pop
++}
++
+ namespace webrtc {
+ 
+ namespace {
+@@ -462,7 +543,7 @@ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
+ 
+       size_t count = 0;
+       const CGRect* rects =
+-          CGDisplayStreamUpdateGetRects(updateRef, kCGDisplayStreamUpdateDirtyRects, &count);
++          wrapCGDisplayStreamUpdateGetRects(updateRef, kCGDisplayStreamUpdateDirtyRects, &count);
+       if (count != 0) {
+         // According to CGDisplayStream.h, it's safe to call
+         // CGDisplayStreamStop() from within the callback.
+@@ -472,20 +553,20 @@ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
+ 
+     rtc::ScopedCFTypeRef<CFDictionaryRef> properties_dict(
+         CFDictionaryCreate(kCFAllocatorDefault,
+-                           (const void* []){kCGDisplayStreamShowCursor},
+-                           (const void* []){kCFBooleanFalse},
++                           (const void*[]){wrapkCGDisplayStreamShowCursor()},
++                           (const void*[]){kCFBooleanFalse},
+                            1,
+                            &kCFTypeDictionaryKeyCallBacks,
+                            &kCFTypeDictionaryValueCallBacks));
+ 
+-    CGDisplayStreamRef display_stream = CGDisplayStreamCreate(
++    CGDisplayStreamRef display_stream = wrapCGDisplayStreamCreate(
+         display_id, pixel_width, pixel_height, 'BGRA', properties_dict.get(), handler);
+ 
+     if (display_stream) {
+-      CGError error = CGDisplayStreamStart(display_stream);
++      CGError error = wrapCGDisplayStreamStart(display_stream);
+       if (error != kCGErrorSuccess) return false;
+ 
+-      CFRunLoopSourceRef source = CGDisplayStreamGetRunLoopSource(display_stream);
++      CFRunLoopSourceRef source = wrapCGDisplayStreamGetRunLoopSource(display_stream);
+       CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
+       display_streams_.push_back(display_stream);
+     }
+@@ -498,9 +579,9 @@ void ScreenCapturerMac::UnregisterRefreshAndMoveHandlers() {
+   RTC_DCHECK(thread_checker_.IsCurrent());
+ 
+   for (CGDisplayStreamRef stream : display_streams_) {
+-    CFRunLoopSourceRef source = CGDisplayStreamGetRunLoopSource(stream);
++    CFRunLoopSourceRef source = wrapCGDisplayStreamGetRunLoopSource(stream);
+     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
+-    CGDisplayStreamStop(stream);
++    wrapCGDisplayStreamStop(stream);
+     CFRelease(stream);
+   }
+   display_streams_.clear();
 -- 
 2.34.1
 
