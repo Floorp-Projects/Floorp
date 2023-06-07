@@ -1,147 +1,183 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Mon, 27 Mar 2023 10:19:52 +0200
-Subject: (tmp-cherry-pick) [M112] Revert "Only serialize non-stopped RTP
- header extensions" (d75b9e9ff0)
+From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
+Date: Mon, 20 Feb 2023 12:44:53 +0000
+Subject: (tmp-cherry-pick) Revert "Make SimulcastIndex() and SpatialIndex()
+ distinct (remove (79a6f87648) fallback)."
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit be03c0971863c9e6807fcbdb4175754e8242a652.
-Causes regression in web projects that
-1/ add a stopped-by-default extension in SRD
-2/ call createAnswer
-3/ munge the stopped-by-default extension back in SLD
-4/ create a subsequent offer and expect the extension to be present
+This reverts commit 8ad4924936dea2bd97990b0a951df93f7526f0ff.
 
-BUG=chromium:1427442,chromium:1051821
+Reason for revert: Breaks downstream projects
 
-Change-Id: I2e48831e92384963a254d873398f54eaee96739a
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299143
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Reviewed-by: Henrik Boström <hbos@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5615@{#2}
-Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
+Original change's description:
+> Make SimulcastIndex() and SpatialIndex() distinct (remove fallback).
+>
+> This CL removes the fallback logic to return the other index when the
+> one requested has not been set. This means we can remove the codec gates
+> that was previously needed because SpatialIndex() had multiple meanings,
+> resolving the TODOs previously added in
+> https://webrtc-review.googlesource.com/c/src/+/293343.
+>
+> We have already migrated all known external dependencies from
+> SpatialIndex() to SimulcastIndex() where necessary, unblocking this CL.
+>
+> PSA: https://groups.google.com/g/discuss-webrtc/c/SDAVg6xJ3gY
+>
+> Bug: webrtc:14884
+> Change-Id: I82787505ab10be151e5f64965b270c45465d63a9
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293740
+> Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+> Reviewed-by: Erik Språng <sprang@webrtc.org>
+> Commit-Queue: Henrik Boström <hbos@webrtc.org>
+> Reviewed-by: Philip Eliasson <philipel@webrtc.org>
+> Reviewed-by: Evan Shrubsole <eshr@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#39343}
+
+Bug: webrtc:14884
+Change-Id: Ibcb834a1519930336fa50e8e9d8d0137972e28e6
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294282
+Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Auto-Submit: Henrik Boström <hbos@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#39347}
 ---
- pc/media_session.cc                           |  7 +--
- pc/media_session_unittest.cc                  |  5 +-
- ...er_connection_header_extension_unittest.cc | 62 -------------------
- 3 files changed, 5 insertions(+), 69 deletions(-)
+ api/video/encoded_image.h              | 20 ++++++++++++++++++--
+ call/rtp_payload_params.cc             |  9 ++++++++-
+ call/rtp_video_sender.cc               | 13 ++++++++++++-
+ video/send_statistics_proxy.cc         | 13 ++++++++++++-
+ video/video_stream_encoder_unittest.cc |  4 ++--
+ 5 files changed, 52 insertions(+), 7 deletions(-)
 
-diff --git a/pc/media_session.cc b/pc/media_session.cc
-index 92fe80f3d1..e703b44101 100644
---- a/pc/media_session.cc
-+++ b/pc/media_session.cc
-@@ -684,11 +684,8 @@ static bool CreateContentOffer(
-       if (extension_with_id.uri == extension.uri) {
-         // TODO(crbug.com/1051821): Configure the extension direction from
-         // the information in the media_description_options extension
--        // capability. For now, do not include stopped extensions.
--        // See also crbug.com/webrtc/7477 about the general lack of direction.
--        if (extension.direction != RtpTransceiverDirection::kStopped) {
--          extensions.push_back(extension_with_id);
--        }
-+        // capability.
-+        extensions.push_back(extension_with_id);
-       }
-     }
+diff --git a/api/video/encoded_image.h b/api/video/encoded_image.h
+index 9046167470..5fdd2c666c 100644
+--- a/api/video/encoded_image.h
++++ b/api/video/encoded_image.h
+@@ -91,7 +91,15 @@ class RTC_EXPORT EncodedImage {
+ 
+   // Every simulcast layer (= encoding) has its own encoder and RTP stream.
+   // There can be no dependencies between different simulcast layers.
+-  absl::optional<int> SimulcastIndex() const { return simulcast_index_; }
++  absl::optional<int> SimulcastIndex() const {
++    // Historically, SpatialIndex() has been used as both simulcast and spatial
++    // index (one or the other depending on codec). As to not break old code
++    // which doesn't call SetSimulcastIndex(), SpatialLayer() is used when the
++    // simulcast index is missing.
++    // TODO(https://crbug.com/webrtc/14884): When old code has been updated,
++    // never return `spatial_index_` here.
++    return simulcast_index_.has_value() ? simulcast_index_ : spatial_index_;
++  }
+   void SetSimulcastIndex(absl::optional<int> simulcast_index) {
+     RTC_DCHECK_GE(simulcast_index.value_or(0), 0);
+     RTC_DCHECK_LT(simulcast_index.value_or(0), kMaxSimulcastStreams);
+@@ -101,7 +109,15 @@ class RTC_EXPORT EncodedImage {
+   // Encoded images can have dependencies between spatial and/or temporal
+   // layers, depending on the scalability mode used by the encoder. See diagrams
+   // at https://w3c.github.io/webrtc-svc/#dependencydiagrams*.
+-  absl::optional<int> SpatialIndex() const { return spatial_index_; }
++  absl::optional<int> SpatialIndex() const {
++    // Historically, SpatialIndex() has been used as both simulcast and spatial
++    // index (one or the other depending on codec). As to not break old code
++    // that still uses the SpatialIndex() getter instead of SimulcastIndex()
++    // we fall back to `simulcast_index_` if `spatial_index_` is not set.
++    // TODO(https://crbug.com/webrtc/14884): When old code has been updated,
++    // never return `simulcast_index_` here.
++    return spatial_index_.has_value() ? spatial_index_ : simulcast_index_;
++  }
+   void SetSpatialIndex(absl::optional<int> spatial_index) {
+     RTC_DCHECK_GE(spatial_index.value_or(0), 0);
+     RTC_DCHECK_LT(spatial_index.value_or(0), kMaxSpatialLayers);
+diff --git a/call/rtp_payload_params.cc b/call/rtp_payload_params.cc
+index 18e6d9136b..b692abd976 100644
+--- a/call/rtp_payload_params.cc
++++ b/call/rtp_payload_params.cc
+@@ -202,8 +202,15 @@ RTPVideoHeader RtpPayloadParams::GetRtpVideoHeader(
+   if (codec_specific_info) {
+     PopulateRtpWithCodecSpecifics(*codec_specific_info, image.SpatialIndex(),
+                                   &rtp_video_header);
++    // Currently, SimulcastIndex() could return the SpatialIndex() if not set
++    // correctly so gate on codec type.
++    // TODO(https://crbug.com/webrtc/14884): Delete this gating logic when
++    // SimulcastIndex() is guaranteed to be the stream index.
++    if (codec_specific_info->codecType != kVideoCodecVP9 &&
++        codec_specific_info->codecType != kVideoCodecAV1) {
++      rtp_video_header.simulcastIdx = image.SimulcastIndex().value_or(0);
++    }
    }
-diff --git a/pc/media_session_unittest.cc b/pc/media_session_unittest.cc
-index 6dc6d76021..8f38f6a1b4 100644
---- a/pc/media_session_unittest.cc
-+++ b/pc/media_session_unittest.cc
-@@ -2018,7 +2018,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
- }
+-  rtp_video_header.simulcastIdx = image.SimulcastIndex().value_or(0);
+   rtp_video_header.frame_type = image._frameType;
+   rtp_video_header.rotation = image.rotation_;
+   rtp_video_header.content_type = image.content_type_;
+diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
+index 98739a595e..52714a55a5 100644
+--- a/call/rtp_video_sender.cc
++++ b/call/rtp_video_sender.cc
+@@ -571,7 +571,18 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
+     return Result(Result::ERROR_SEND_FAILED);
  
- TEST_F(MediaSessionDescriptionFactoryTest,
--       AllowsStoppedExtensionsToBeRemovedFromSubsequentOffer) {
-+       AppendsStoppedExtensionIfKnownAndPresentInTheOffer) {
-   MediaSessionOptions opts;
-   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
-                              RtpTransceiverDirection::kSendRecv, kActive,
-@@ -2043,7 +2043,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
-       ElementsAre(Property(
-           &ContentInfo::media_description,
-           Pointee(Property(&MediaContentDescription::rtp_header_extensions,
--                           ElementsAre(Field(&RtpExtension::uri, "uri1")))))));
-+                           ElementsAre(Field(&RtpExtension::uri, "uri1"),
-+                                       Field(&RtpExtension::uri, "uri2")))))));
- }
+   shared_frame_id_++;
+-  size_t simulcast_index = encoded_image.SimulcastIndex().value_or(0);
++  size_t simulcast_index = 0;
++  // Currently, SimulcastIndex() could return the SpatialIndex() if not set
++  // correctly so gate on codec type.
++  // TODO(https://crbug.com/webrtc/14884): Delete this gating logic when
++  // SimulcastIndex() is guaranteed to be the stream index.
++  if (codec_specific_info &&
++      (codec_specific_info->codecType == kVideoCodecVP8 ||
++       codec_specific_info->codecType == kVideoCodecH264 ||
++       codec_specific_info->codecType == kVideoCodecGeneric)) {
++    // Map spatial index to simulcast.
++    simulcast_index = encoded_image.SimulcastIndex().value_or(0);
++  }
+   RTC_DCHECK_LT(simulcast_index, rtp_streams_.size());
  
- TEST_F(MediaSessionDescriptionFactoryTest,
-diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
-index 9bbc32b7e0..1a452b0a1f 100644
---- a/pc/peer_connection_header_extension_unittest.cc
-+++ b/pc/peer_connection_header_extension_unittest.cc
-@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
-                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
- }
- 
--TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
--  cricket::MediaType media_type;
--  SdpSemantics semantics;
--  std::tie(media_type, semantics) = GetParam();
--  if (semantics != SdpSemantics::kUnifiedPlan)
--    return;
--  std::unique_ptr<PeerConnectionWrapper> pc1 =
--      CreatePeerConnection(media_type, semantics);
--  auto transceiver1 = pc1->AddTransceiver(media_type);
--  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
--  auto transceiver2 = pc1->AddTransceiver(media_type);
--
--  auto session_description = pc1->CreateOffer();
--  EXPECT_THAT(session_description->description()
--                  ->contents()[0]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3")));
--  EXPECT_THAT(session_description->description()
--                  ->contents()[1]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3"),
--                          Field(&RtpExtension::uri, "uri4")));
--}
--
--TEST_P(PeerConnectionHeaderExtensionTest, RemovalAfterRenegotiation) {
--  cricket::MediaType media_type;
--  SdpSemantics semantics;
--  std::tie(media_type, semantics) = GetParam();
--  if (semantics != SdpSemantics::kUnifiedPlan)
--    return;
--  std::unique_ptr<PeerConnectionWrapper> pc1 =
--      CreatePeerConnection(media_type, semantics);
--  std::unique_ptr<PeerConnectionWrapper> pc2 =
--      CreatePeerConnection(media_type, semantics);
--  auto transceiver1 = pc1->AddTransceiver(media_type);
--
--  auto offer = pc1->CreateOfferAndSetAsLocal(
--      PeerConnectionInterface::RTCOfferAnswerOptions());
--  pc2->SetRemoteDescription(std::move(offer));
--  auto answer = pc2->CreateAnswerAndSetAsLocal(
--      PeerConnectionInterface::RTCOfferAnswerOptions());
--  pc1->SetRemoteDescription(std::move(answer));
--
--  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
--  auto session_description = pc1->CreateOffer();
--  EXPECT_THAT(session_description->description()
--                  ->contents()[0]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3")));
--}
--
- INSTANTIATE_TEST_SUITE_P(
-     ,
-     PeerConnectionHeaderExtensionTest,
+   uint32_t rtp_timestamp =
+diff --git a/video/send_statistics_proxy.cc b/video/send_statistics_proxy.cc
+index 12e88ac16d..a64ab221db 100644
+--- a/video/send_statistics_proxy.cc
++++ b/video/send_statistics_proxy.cc
+@@ -937,7 +937,18 @@ void SendStatisticsProxy::OnMinPixelLimitReached() {
+ void SendStatisticsProxy::OnSendEncodedImage(
+     const EncodedImage& encoded_image,
+     const CodecSpecificInfo* codec_info) {
+-  int simulcast_idx = encoded_image.SimulcastIndex().value_or(0);
++  // Simulcast is used for VP8, H264 and Generic.
++  // Currently, SimulcastIndex() could return the SpatialIndex() if not set
++  // correctly so gate on codec type.
++  // TODO(https://crbug.com/webrtc/14884): Delete this gating logic when
++  // SimulcastIndex() is guaranteed to be the stream index.
++  int simulcast_idx =
++      (codec_info && (codec_info->codecType == kVideoCodecVP8 ||
++                      codec_info->codecType == kVideoCodecH264 ||
++                      codec_info->codecType == kVideoCodecGeneric))
++          ? encoded_image.SimulcastIndex().value_or(0)
++          : 0;
++
+   MutexLock lock(&mutex_);
+   ++stats_.frames_encoded;
+   // The current encode frame rate is based on previously encoded frames.
+diff --git a/video/video_stream_encoder_unittest.cc b/video/video_stream_encoder_unittest.cc
+index f2963c6778..cdd4c75ab7 100644
+--- a/video/video_stream_encoder_unittest.cc
++++ b/video/video_stream_encoder_unittest.cc
+@@ -9428,10 +9428,10 @@ TEST(VideoStreamEncoderFrameCadenceTest, UpdatesQualityConvergence) {
+   EXPECT_CALL(factory.GetMockFakeEncoder(), EncodeHook)
+       .WillRepeatedly(Invoke([](EncodedImage& encoded_image,
+                                 rtc::scoped_refptr<EncodedImageBuffer> buffer) {
+-        // This sets simulcast index 0 content to be at target quality, while
++        // This sets spatial index 0 content to be at target quality, while
+         // index 1 content is not.
+         encoded_image.qp_ = kVp8SteadyStateQpThreshold +
+-                            (encoded_image.SimulcastIndex() == 0 ? 0 : 1);
++                            (encoded_image.SpatialIndex() == 0 ? 0 : 1);
+         CodecSpecificInfo codec_specific;
+         codec_specific.codecType = kVideoCodecVP8;
+         return codec_specific;
 -- 
 2.34.1
 
