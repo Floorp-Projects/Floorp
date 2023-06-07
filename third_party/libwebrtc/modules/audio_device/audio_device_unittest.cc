@@ -1016,7 +1016,7 @@ TEST_P(MAYBE_AudioDeviceTest, StartStopRecordingWithInternalRestart) {
   MockAudioTransport mock(TransportType::kRecord);
   mock.HandleCallbacks(event(), nullptr, kNumCallbacks);
   EXPECT_CALL(mock, RecordedDataIsAvailable(NotNull(), _, _, _, _, Ge(0u), 0, _,
-                                            false, _))
+                                            false, _, _))
       .Times(AtLeast(kNumCallbacks));
   EXPECT_EQ(0, audio_device()->RegisterAudioCallback(&mock));
   StartRecording();
@@ -1042,7 +1042,7 @@ TEST_P(MAYBE_AudioDeviceTest, StartStopRecordingWithInternalRestart) {
   ASSERT_TRUE(Mock::VerifyAndClearExpectations(&mock));
   mock.ResetCallbackCounters();
   EXPECT_CALL(mock, RecordedDataIsAvailable(NotNull(), _, _, _, _, Ge(0u), 0, _,
-                                            false, _))
+                                            false, _, _))
       .Times(AtLeast(kNumCallbacks));
   event()->Wait(kTestTimeOut);
   EXPECT_TRUE(audio_device()->Recording());
@@ -1094,7 +1094,7 @@ TEST_P(MAYBE_AudioDeviceTest, MAYBE_StartRecordingVerifyCallbacks) {
   MockAudioTransport mock(TransportType::kRecord);
   mock.HandleCallbacks(event(), nullptr, kNumCallbacks);
   EXPECT_CALL(mock, RecordedDataIsAvailable(NotNull(), _, _, _, _, Ge(0u), 0, _,
-                                            false, _))
+                                            false, _, _))
       .Times(AtLeast(kNumCallbacks));
   EXPECT_EQ(0, audio_device()->RegisterAudioCallback(&mock));
   StartRecording();
@@ -1112,7 +1112,7 @@ TEST_P(MAYBE_AudioDeviceTest, MAYBE_StartPlayoutAndRecordingVerifyCallbacks) {
   EXPECT_CALL(mock, NeedMorePlayData(_, _, _, _, NotNull(), _, _, _))
       .Times(AtLeast(kNumCallbacks));
   EXPECT_CALL(mock, RecordedDataIsAvailable(NotNull(), _, _, _, _, Ge(0u), 0, _,
-                                            false, _))
+                                            false, _, _))
       .Times(AtLeast(kNumCallbacks));
   EXPECT_EQ(0, audio_device()->RegisterAudioCallback(&mock));
   StartPlayout();
