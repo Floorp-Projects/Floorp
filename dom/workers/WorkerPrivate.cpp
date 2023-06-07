@@ -2419,11 +2419,8 @@ WorkerPrivate::WorkerPrivate(
       // Make timing imprecise in unprivileged code to blunt Spectre timing
       // attacks.
       bool clampAndJitterTime = !usesSystemPrincipal;
-      chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime)
-          .setShouldResistFingerprinting(false);
-      contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime)
-          .setShouldResistFingerprinting(
-              ShouldResistFingerprinting(RFPTarget::Unknown));
+      chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
+      contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
 
       JS::RealmCreationOptions& chromeCreationOptions =
           chromeRealmOptions.creationOptions();
@@ -2439,6 +2436,16 @@ WorkerPrivate::WorkerPrivate(
         chromeCreationOptions.setSecureContext(true);
         contentCreationOptions.setSecureContext(true);
       }
+
+      chromeCreationOptions.setForceUTC(
+          ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC));
+      contentCreationOptions.setForceUTC(
+          ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC));
+
+      chromeCreationOptions.setAlwaysUseFdlibm(
+          ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
+      contentCreationOptions.setAlwaysUseFdlibm(
+          ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
 
       // Check if it's a privileged addon executing in order to allow access
       // to SharedArrayBuffer

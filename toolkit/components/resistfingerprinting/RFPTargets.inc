@@ -35,6 +35,8 @@ ITEM_VALUE(NavigatorUserAgent,          1u << 18)
 // Audio/VideoStreamTrack labels
 ITEM_VALUE(StreamTrackLabel,            1u << 19)
 ITEM_VALUE(StreamVideoFacingMode,       1u << 20)
+ITEM_VALUE(JSDateTimeUTC,               1u << 21)
+ITEM_VALUE(JSMathFdlibm,                1u << 22)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
