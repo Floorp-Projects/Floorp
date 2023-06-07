@@ -2301,7 +2301,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
 
   mutedErrors_ = rhs.mutedErrors_;
   forceStrictMode_ = rhs.forceStrictMode_;
-  shouldResistFingerprinting_ = rhs.shouldResistFingerprinting_;
+  alwaysUseFdlibm_ = rhs.alwaysUseFdlibm_;
   sourcePragmas_ = rhs.sourcePragmas_;
   skipFilenameValidation_ = rhs.skipFilenameValidation_;
   hideScriptFromDebugger_ = rhs.hideScriptFromDebugger_;
@@ -2427,8 +2427,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   // Note: If we parse outside of a specific realm, we do not inherit any realm
   // behaviours. These can still be set manually on the options though.
   if (Realm* realm = cx->realm()) {
-    shouldResistFingerprinting_ =
-        realm->behaviors().shouldResistFingerprinting();
+    alwaysUseFdlibm_ = realm->creationOptions().alwaysUseFdlibm();
     discardSource = realm->behaviors().discardSource();
   }
 }

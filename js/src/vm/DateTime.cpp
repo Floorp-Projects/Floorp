@@ -38,10 +38,9 @@
 #include "vm/Realm.h"
 
 /* static */
-js::DateTimeInfo::ShouldRFP js::DateTimeInfo::shouldRFP(JS::Realm* realm) {
-  return realm->behaviors().shouldResistFingerprinting()
-             ? DateTimeInfo::ShouldRFP::Yes
-             : DateTimeInfo::ShouldRFP::No;
+js::DateTimeInfo::ForceUTC js::DateTimeInfo::forceUTC(JS::Realm* realm) {
+  return realm->creationOptions().forceUTC() ? DateTimeInfo::ForceUTC::Yes
+                                             : DateTimeInfo::ForceUTC::No;
 }
 
 static bool ComputeLocalTime(time_t local, struct tm* ptm) {
@@ -233,8 +232,7 @@ void js::DateTimeInfo::updateTimeZone() {
   }
 }
 
-js::DateTimeInfo::DateTimeInfo(bool shouldResistFingerprinting)
-    : shouldResistFingerprinting_(shouldResistFingerprinting) {
+js::DateTimeInfo::DateTimeInfo(bool forceUTC) : forceUTC_(forceUTC) {
   // Set the time zone status into the invalid state, so we compute the actual
   // defaults on first access. We don't yet want to initialize neither <ctime>
   // nor ICU's time zone classes, because that may cause I/O operations slowing
@@ -486,7 +484,7 @@ mozilla::intl::TimeZone* js::DateTimeInfo::timeZone() {
   if (!timeZone_) {
     // For resist finger printing mode we always use the UTC time zone.
     mozilla::Maybe<mozilla::Span<const char16_t>> timeZoneOverride;
-    if (shouldResistFingerprinting_) {
+    if (forceUTC_) {
       timeZoneOverride = mozilla::Some(mozilla::MakeStringSpan(u"UTC"));
     }
 
@@ -506,17 +504,17 @@ mozilla::intl::TimeZone* js::DateTimeInfo::timeZone() {
 #endif /* JS_HAS_INTL_API */
 
 /* static */ js::ExclusiveData<js::DateTimeInfo>* js::DateTimeInfo::instance;
-/* static */ js::ExclusiveData<js::DateTimeInfo>* js::DateTimeInfo::instanceRFP;
+/* static */ js::ExclusiveData<js::DateTimeInfo>* js::DateTimeInfo::instanceUTC;
 
 bool js::InitDateTimeState() {
-  MOZ_ASSERT(!DateTimeInfo::instance && !DateTimeInfo::instanceRFP,
+  MOZ_ASSERT(!DateTimeInfo::instance && !DateTimeInfo::instanceUTC,
              "we should be initializing only once");
 
   DateTimeInfo::instance =
       js_new<ExclusiveData<DateTimeInfo>>(mutexid::DateTimeInfoMutex, false);
-  DateTimeInfo::instanceRFP =
+  DateTimeInfo::instanceUTC =
       js_new<ExclusiveData<DateTimeInfo>>(mutexid::DateTimeInfoMutex, true);
-  return DateTimeInfo::instance && DateTimeInfo::instanceRFP;
+  return DateTimeInfo::instance && DateTimeInfo::instanceUTC;
 }
 
 /* static */
@@ -755,7 +753,7 @@ void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
   // instance depending on the resist fingerprinting status. For now we return
   // early to prevent overwriting the default time zone with the UTC time zone
   // used by RFP.
-  if (shouldResistFingerprinting_) {
+  if (forceUTC_) {
     return;
   }
 
