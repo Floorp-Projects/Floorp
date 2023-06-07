@@ -1017,7 +1017,8 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
   ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
 
-  std::vector<SimulcastLayer> layers = CreateLayers({"f", "h", "q"}, true);
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
   rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
       AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
                                         layers);
@@ -1059,7 +1060,8 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
   ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
 
-  std::vector<SimulcastLayer> layers = CreateLayers({"f", "h", "q"}, true);
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
   rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
       AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
                                         layers);
@@ -1096,8 +1098,60 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_FALSE(encodings[2].scalability_mode.has_value());
 }
 
-// TODO(https://crbug.com/webrtc/14884): Add support for VP9 simulcast and test
-// this using a similar test to the above but specifying and verifying
-// `scalability_mode` (e.g. L1Tx).
+// TODO(https://crbug.com/webrtc/14884): Support VP9 simulcast and update this
+// test to EXPECT three encodings of L1T3, not the VP9 SVC legacy fallback path
+// that happens today which is wrong.
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_VP9_Simulcast) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+
+  // Opt-in to spec-compliant simulcast by explicitly setting the
+  // `scalability_mode`.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  std::vector<RtpEncodingParameters> encodings = parameters.encodings;
+  ASSERT_EQ(encodings.size(), 3u);
+  encodings[0].scalability_mode = "L1T3";
+  encodings[1].scalability_mode = "L1T3";
+  encodings[2].scalability_mode = "L1T3";
+  sender->SetParameters(parameters);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // We want to EXPECT to get 3 "outbound-rtps" using L1T3 and that
+  // GetParameters() reflects what was set, but because this is not supported
+  // yet (webrtc:14884), we expect legacy SVC fallback for now...
+
+  // Legacy SVC fallback only has a single RTP stream.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kLongTimeoutForRampingUp.ms());
+  // Legacy SVC fallback uses L3T3_KEY.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_EQ(outbound_rtps.size(), 1u);
+  EXPECT_TRUE(absl::EqualsIgnoreCase(
+      GetCurrentCodecMimeType(report, *outbound_rtps[0]), "video/VP9"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L3T3_KEY"));
+  // Legacy SVC fallback sets `scalability_mode` to absl::nullopt.
+  encodings = sender->GetParameters().encodings;
+  ASSERT_EQ(encodings.size(), 3u);
+  EXPECT_FALSE(encodings[0].scalability_mode.has_value());
+  EXPECT_FALSE(encodings[1].scalability_mode.has_value());
+  EXPECT_FALSE(encodings[2].scalability_mode.has_value());
+}
 
 }  // namespace webrtc
