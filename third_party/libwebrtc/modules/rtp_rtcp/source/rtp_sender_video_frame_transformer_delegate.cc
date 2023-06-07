@@ -16,7 +16,6 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
-#include "modules/rtp_rtcp/source/rtp_sender_video.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -117,7 +116,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
 }  // namespace
 
 RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
-    RTPSenderVideo* sender,
+    RTPVideoFrameSenderInterface* sender,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
     uint32_t ssrc,
     std::vector<uint32_t> csrcs,
