@@ -14,10 +14,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff5
  2 files changed, 19 insertions(+)
 
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index c6a8dec4d4..128e86bda8 100644
+index 5211f1acec..4baa93cab9 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -100,6 +100,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
    return capturer;
  }
  

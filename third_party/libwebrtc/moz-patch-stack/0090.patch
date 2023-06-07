@@ -46,7 +46,7 @@ index 381d1021c4..e777a45f92 100644
  // Type used to identify windows on the desktop. Values are platform-specific:
  //   - On Windows: HWND cast to intptr_t.
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 128e86bda8..3b9044f85b 100644
+index 4baa93cab9..7df6becb4e 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
 @@ -26,6 +26,10 @@
@@ -60,7 +60,7 @@ index 128e86bda8..3b9044f85b 100644
  namespace webrtc {
  
  void LogDesktopCapturerFullscreenDetectorUsage() {
-@@ -83,6 +87,30 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+@@ -84,6 +88,30 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
    return capturer;
  }
  
