@@ -466,9 +466,10 @@ static void GetPHCAddrInfo(siginfo_t* siginfo,
 // This function runs in a compromised context: see the top of the file.
 // Runs on the crashing thread.
 bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
-  mozilla::phc::AddrInfo addr_info;
+  mozilla::phc::AddrInfo* addr_info = nullptr;
 #ifdef MOZ_PHC
-  GetPHCAddrInfo(info, &addr_info);
+  addr_info = &mozilla::phc::gAddrInfo;
+  GetPHCAddrInfo(info, addr_info);
 #endif
 
   if (filter_ && !filter_(callback_context_))
@@ -512,7 +513,7 @@ bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
     }
   }
 
-  return GenerateDump(&g_crash_context_, &addr_info);
+  return GenerateDump(&g_crash_context_, addr_info);
 }
 
 // This is a public interface to HandleSignal that allows the client to

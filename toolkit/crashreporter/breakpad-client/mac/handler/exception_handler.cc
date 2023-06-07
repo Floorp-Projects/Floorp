@@ -442,9 +442,10 @@ bool ExceptionHandler::WriteMinidumpWithException(
   exit_after_write = false;
 #endif
 
-    mozilla::phc::AddrInfo addr_info;
+  mozilla::phc::AddrInfo* addr_info = nullptr;
 #ifdef MOZ_PHC
-    GetPHCAddrInfo(exception_type, exception_subcode, &addr_info);
+  addr_info = &mozilla::phc::gAddrInfo;
+  GetPHCAddrInfo(exception_type, exception_subcode, addr_info);
 #endif
 
   if (directCallback_) {
@@ -472,7 +473,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
 
       if (callback_) {
         result = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
-                           &addr_info, result);
+                           addr_info, result);
       }
 
       if (result && exit_after_write) {
@@ -506,7 +507,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
     // Call user specified callback (if any)
     if (callback_) {
       result = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
-                         &addr_info, result);
+                         addr_info, result);
       // If the user callback returned true and we're handling an exception
       // (rather than just writing out the file), then we should exit without
       // forwarding the exception to the next handler.

@@ -96,6 +96,9 @@ class AddrInfo {
         mFreeStack() {}
 };
 
+// Global instance that is retrieved by the process generating the crash report
+extern AddrInfo gAddrInfo;
+
 }  // namespace phc
 }  // namespace mozilla
 
