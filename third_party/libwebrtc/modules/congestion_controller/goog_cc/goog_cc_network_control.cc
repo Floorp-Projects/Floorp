@@ -30,6 +30,7 @@
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
+#include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/checks.h"
@@ -64,12 +65,16 @@ bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
 
 BandwidthLimitedCause GetBandwidthLimitedCause(
     LossBasedState loss_based_state,
+    bool is_rtt_above_limit,
     BandwidthUsage bandwidth_usage,
     bool not_probe_if_delay_increased) {
-  if (not_probe_if_delay_increased &&
-      (bandwidth_usage == BandwidthUsage::kBwOverusing ||
-       bandwidth_usage == BandwidthUsage::kBwUnderusing)) {
-    return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+  if (not_probe_if_delay_increased) {
+    if (bandwidth_usage == BandwidthUsage::kBwOverusing ||
+        bandwidth_usage == BandwidthUsage::kBwUnderusing) {
+      return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+    } else if (is_rtt_above_limit) {
+      return BandwidthLimitedCause::kRttBasedBackOffHighRtt;
+    }
   }
   switch (loss_based_state) {
     case LossBasedState::kDecreasing:
@@ -686,6 +691,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
         loss_based_target_rate,
         GetBandwidthLimitedCause(
             bandwidth_estimation_->loss_based_state(),
+            bandwidth_estimation_->IsRttAboveLimit(),
             delay_based_bwe_->last_state(),
             probe_controller_->DontProbeIfDelayIncreased()),
         at_time);
