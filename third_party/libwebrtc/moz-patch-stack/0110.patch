@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0a46882336b7e5e97
  4 files changed, 117 insertions(+), 12 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 231a1fa457..3ca9aee94f 100644
+index 9f9293da2b..f97fb167ed 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -559,6 +559,39 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
+@@ -557,6 +557,39 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
    return packet;
  }
  
