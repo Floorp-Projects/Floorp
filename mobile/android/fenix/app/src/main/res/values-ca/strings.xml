@@ -126,6 +126,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Pestanya privada nova</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Drecera per a les contrasenyes</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Torneu a la pestanya</string>
@@ -411,7 +414,9 @@
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Cancel·la</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Sol·licita que sigui compatible</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Sol·licita que sigui compatible</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Envia la sol·licitud</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Reducció de bàners de galetes</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -699,7 +704,7 @@
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Inicieu la sessió per tornar a connectar</string>
     <!-- Preference for removing FxA account -->
-    <string name="preferences_sync_remove_account">Suprimeix el compte</string>
+    <string name="preferences_sync_remove_account">Elimina el compte</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
@@ -1361,7 +1366,9 @@
     <string name="delete_history_prompt_title">Interval de temps per suprimir</string>
 
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Suprimeix l’historial (inclou l’historial sincronitzat d’altres dispositius), les galetes i altres dades de navegació.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Elimina l’historial (inclou l’historial sincronitzat d’altres dispositius), les galetes i altres dades de navegació.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Elimina l’historial (inclou l’historial sincronitzat d’altres dispositius)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Darrera hora</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

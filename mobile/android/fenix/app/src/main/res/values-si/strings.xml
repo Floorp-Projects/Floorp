@@ -285,7 +285,7 @@
     <string name="onboarding_home_enable_notifications_title">%s සමඟ බොහෝ දෑ කිරීමට දැනුම්දීම් උපකාරී වේ</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">උපාංග අතර පටිති සමමුහූර්තය, බාගැනීම් කළමනාකරණය, %s හි පෞද්ගලිකත්‍ව රැකවරණයෙන් උපරිම ප්‍රයෝජන ගැනීමට ඉඟි, සහ තවත් බොහෝ දෑ.</string>
+    <string name="onboarding_home_enable_notifications_description">උපාංග අතර පටිති සමමුහූර්තය, බාගැනීම් කළමනාකරණය, %s පෞද්ගලිකත්‍ව රැකවරණයෙන් උපරිම ප්‍රයෝජන ගැනීමට ඉඟි, සහ තවත් බොහෝ දෑ.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">ඉදිරියට</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -298,6 +298,13 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් ප්‍රධාන අතිරික්සුව කරන්න</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s සැමවිට ලාභයට ඉහළින් මිනිසුන්ව තබයි. හරස්-අඩවි ලුහුබැඳීම් අවහිර කර ඔබගේ පෞද්ගලිකත්‍වය රැක දෙයි.\n\nඅපගේ %2$s හරහා තව දැනගන්න.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">%1$s සැමවිට ලාභයට ඉහළින් මිනිසුන්ව තබයි. හරස්-අඩවි ලුහුබැඳීම් අවහිර කර ඔබගේ පෞද්ගලිකත්‍වය රැක දෙයි.\n\nඅපගේ පෞද්ගලිකත්‍ව දැන්වීම හරහා තව දැනගන්න.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">පෞද්ගලිකත්‍ව දැන්වීම</string>
@@ -319,6 +326,12 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් සමඟ බොහෝ දෑ කිරීමට දැනුම්දීම් උපකාරී වේ</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">උපාංග අතර පටිති යැවීමට, බාගැනීම් කළමනාකරණයට මෙන්ම %s වෙතින් බොහෝ ප්‍රතිලාභ අත්විඳීම සඳහා ඉඟි ලබා ගන්න.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">උපාංග අතර පටිති යැවීමට, බාගැනීම් කළමනාකරණයට මෙන්ම ෆයර්ෆොක්ස් වෙතින් බොහෝ ප්‍රතිලාභ අත්විඳීම සඳහා ඉඟි ලබා ගන්න.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">දැනුම්දීම් සක්‍රිය කරන්න</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -413,6 +426,8 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s සඳහා දත්තකඩ පතාක අවකරණය සක්‍රිය කරන්නද?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s සඳහා දත්තකඩ පතාක අවකරණය අක්‍රිය කරන්නද?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">මෙම අඩවිය දැනට දත්තකඩ පතාක අවකරණයට සහාය නොදක්වයි. මෙම වියමන අඩවිය සමාලෝචනය කර අනාගතයේදී සහාය දක්වන ලෙස අපගේ කණ්ඩායමට දැන්වීමට කැමතිද?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s මඟින්  මෙම අඩවියේ දත්තකඩ ඉල්ලීම් ස්වයංක්‍රීයව ඉවතලීමට නොහැක. ඉදිරියේ දී මෙම අඩවිය සඳහා සහාය දැක්වීමට ඉල්ලීමක් යැවීමට හැකිය.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -1229,6 +1244,9 @@
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">ප්‍රථම සෙවීම අරඹන්න</string>
 
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">අවට යමක් හෝ විනෝදාත්මක දෙයක් සොයා ගන්න.</string>
+
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
@@ -1412,7 +1430,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">ඔබගේ තේමාව තෝරන්න</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">අඳුරු ප්‍රකාරය සමඟ විදුලිකෝෂය හා ඔබගේ නෙත් සුරකින්න.</string>
+    <string name="onboarding_theme_picker_description_2">අඳුරු ප්‍රකාරය සමඟ විදුලිකෝෂය මෙන්ම ඔබගේ නෙත් සුරකින්න.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ස්වයංක්‍රීය</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
