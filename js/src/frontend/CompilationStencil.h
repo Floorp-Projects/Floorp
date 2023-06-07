@@ -176,7 +176,9 @@ class InputScope {
           }
           return false;
         },
-        [=](const FakeStencilGlobalScope&) { return kind == ScopeKind::Global; });
+        [=](const FakeStencilGlobalScope&) {
+          return kind == ScopeKind::Global;
+        });
   }
   uint32_t environmentChainLength() const {
     return scope_.match(

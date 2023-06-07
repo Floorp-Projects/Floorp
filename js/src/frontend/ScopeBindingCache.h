@@ -84,7 +84,7 @@ struct GenericAtom {
   GenericAtom(const CompilationStencil& context, TaggedParserAtomIndex index);
   GenericAtom(ScopeStencilRef& scope, TaggedParserAtomIndex index);
   GenericAtom(const FakeStencilGlobalScope& scope, TaggedParserAtomIndex index)
-    : ref((JSAtom*) nullptr) {
+      : ref((JSAtom*)nullptr) {
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE();
   }
 
@@ -196,7 +196,8 @@ class ScopeBindingCache {
   virtual BindingMap<JSAtom*>* createCacheFor(Scope* ptr);
   virtual BindingMap<TaggedParserAtomIndex>* createCacheFor(
       ScopeStencilRef ref);
-  virtual BindingMap<TaggedParserAtomIndex>* createCacheFor(const FakeStencilGlobalScope& ref);
+  virtual BindingMap<TaggedParserAtomIndex>* createCacheFor(
+      const FakeStencilGlobalScope& ref);
 
   // Return the BindingMap created for the associated scope, unless the
   // generation value does not match the one stored internally, in which case a
@@ -204,8 +205,8 @@ class ScopeBindingCache {
   virtual BindingMap<JSAtom*>* lookupScope(Scope* ptr, CacheGeneration gen);
   virtual BindingMap<TaggedParserAtomIndex>* lookupScope(ScopeStencilRef ref,
                                                          CacheGeneration gen);
-  virtual BindingMap<TaggedParserAtomIndex>* lookupScope(const FakeStencilGlobalScope& ref,
-                                                         CacheGeneration gen);
+  virtual BindingMap<TaggedParserAtomIndex>* lookupScope(
+      const FakeStencilGlobalScope& ref, CacheGeneration gen);
 };
 
 // NoScopeBindingCache is a no-op which does not implement a ScopeBindingCache.
@@ -259,7 +260,8 @@ class MOZ_STACK_CLASS StencilScopeBindingCache final
 
   BindingMap<TaggedParserAtomIndex>* lookupScope(ScopeStencilRef ref,
                                                  CacheGeneration gen) override;
-  BindingMap<TaggedParserAtomIndex>* lookupScope(const FakeStencilGlobalScope& ref, CacheGeneration gen) override;
+  BindingMap<TaggedParserAtomIndex>* lookupScope(
+      const FakeStencilGlobalScope& ref, CacheGeneration gen) override;
 };
 
 // RuntimeScopeBindingCache is used to hold the binding map for each scope which

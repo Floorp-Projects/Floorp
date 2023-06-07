@@ -362,7 +362,8 @@ BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::lookupScope(
   return &ptr->value();
 }
 
-static AbstractBaseScopeData<TaggedParserAtomIndex> moduleGlobalAbstractScopeData;
+static AbstractBaseScopeData<TaggedParserAtomIndex>
+    moduleGlobalAbstractScopeData;
 
 bool StencilScopeBindingCache::canCacheFor(const FakeStencilGlobalScope& ref) {
   return true;
@@ -948,7 +949,8 @@ static bool IsPrivateField(ScopeStencilRef& scope, TaggedParserAtomIndex atom) {
   return false;
 }
 
-static bool IsPrivateField(const FakeStencilGlobalScope&, TaggedParserAtomIndex) {
+static bool IsPrivateField(const FakeStencilGlobalScope&,
+                           TaggedParserAtomIndex) {
   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("No private fields on empty global.");
 }
 
