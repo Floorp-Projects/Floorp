@@ -1257,11 +1257,11 @@ var gMainPane = {
 
           document.l10n.setAttributes(
             downloadButton,
-            "translations-manage-download-button"
+            "translations-manage-language-download-button"
           );
           document.l10n.setAttributes(
             deleteButton,
-            "translations-manage-delete-button"
+            "translations-manage-language-delete-button"
           );
 
           downloadButton.hidden = true;
