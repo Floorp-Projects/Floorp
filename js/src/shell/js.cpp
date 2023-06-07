@@ -5877,10 +5877,12 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (args.length() != 1 || !args[0].isString()) {
-    JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                              JSSMSG_INVALID_ARGS,
-                              "offThreadCompileModuleToStencil");
+  if (!args.requireAtLeast(cx, "offThreadCompileModuleToStencil", 1)) {
+    return false;
+  }
+  if (!args[0].isString()) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected string to parse, got %s", typeName);
     return false;
   }
 
@@ -5888,6 +5890,23 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadCompileModuleToStencil")
       .setFileAndLine("<string>", 1);
+
+  if (args.length() >= 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(cx,
+                          "offThreadCompileModuleToStencil: The 2nd argument "
+                          "must be an object");
+      return false;
+    }
+
+    // Offthread compilation requires that the debug metadata be set when the
+    // script is collected from offthread, rather than when compiled.
+    RootedObject opts(cx, &args[1].toObject());
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+
   options.setIsRunOnce(true).setSourceIsLazy(false);
   options.forceAsync = true;
 
@@ -8977,7 +8996,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Check the syntax of a string, returning success value"),
 
     JS_FN_HELP("offThreadCompileModuleToStencil", OffThreadCompileModuleToStencil, 1, 0,
-"offThreadCompileModuleToStencil(code)",
+"offThreadCompileModuleToStencil(code[, options])",
 "  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
 "  compilation to finish and and get the module stencil object call\n"
 "  |finishOffThreadStencil| passing the job ID."),
