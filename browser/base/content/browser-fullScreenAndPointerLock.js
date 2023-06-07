@@ -62,9 +62,14 @@ var PointerlockFsWarning = {
       this._element = document.getElementById(elementId);
       // Setup event listeners
       this._element.addEventListener("transitionend", this);
+      this._element.addEventListener("transitioncancel", this);
       window.addEventListener("mousemove", this, true);
+      window.addEventListener("activate", this);
+      window.addEventListener("deactivate", this);
       // The timeout to hide the warning box after a while.
       this._timeoutHide = new this.Timeout(() => {
+        window.removeEventListener("activate", this);
+        window.removeEventListener("deactivate", this);
         this._state = "hidden";
       }, timeout);
       // The timeout to show the warning box when the pointer is at the top
@@ -116,11 +121,10 @@ var PointerlockFsWarning = {
       return;
     }
 
-    // Explicitly set the last state to hidden to avoid the warning
-    // box being hidden immediately because of mousemove.
-    this._state = "onscreen";
-    this._lastState = "hidden";
-    this._timeoutHide.start();
+    if (Services.focus.activeWindow == window) {
+      this._state = "onscreen";
+      this._timeoutHide.start();
+    }
   },
 
   /**
@@ -148,7 +152,10 @@ var PointerlockFsWarning = {
     this._element.hidden = true;
     // Remove all event listeners
     this._element.removeEventListener("transitionend", this);
+    this._element.removeEventListener("transitioncancel", this);
     window.removeEventListener("mousemove", this, true);
+    window.removeEventListener("activate", this);
+    window.removeEventListener("deactivate", this);
     // Clear fields
     this._element = null;
     this._timeoutHide = null;
@@ -217,7 +224,7 @@ var PointerlockFsWarning = {
           } else if (this._timeoutShow.delay >= 0) {
             this._timeoutShow.start();
           }
-        } else {
+        } else if (state != "onscreen") {
           let elemRect = this._element.getBoundingClientRect();
           if (state == "hiding" && this._lastState != "hidden") {
             // If we are on the hiding transition, and the pointer
@@ -239,10 +246,21 @@ var PointerlockFsWarning = {
         }
         break;
       }
-      case "transitionend": {
+      case "transitionend":
+      case "transitioncancel": {
         if (this._state == "hiding") {
           this._element.hidden = true;
         }
+        break;
+      }
+      case "activate": {
+        this._state = "onscreen";
+        this._timeoutHide.start();
+        break;
+      }
+      case "deactivate": {
+        this._state = "hidden";
+        this._timeoutHide.cancel();
         break;
       }
     }
