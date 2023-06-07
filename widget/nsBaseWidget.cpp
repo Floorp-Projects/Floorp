@@ -2229,7 +2229,10 @@ nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
       kAsyncDragDropTimeout, EventQueuePriority::Idle);
 }
 
-void nsBaseWidget::SwipeFinished() { mSwipeTracker = nullptr; }
+void nsBaseWidget::SwipeFinished() {
+  mSwipeTracker->Destroy();
+  mSwipeTracker = nullptr;
+}
 
 void nsBaseWidget::ReportSwipeStarted(uint64_t aInputBlockId,
                                       bool aStartSwipe) {
