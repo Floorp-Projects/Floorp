@@ -57,6 +57,8 @@ struct PeerConnectionFactoryComponents {
   // PeerConnectionFactory.
   std::unique_ptr<VideoEncoderFactory> video_encoder_factory;
   std::unique_ptr<VideoDecoderFactory> video_decoder_factory;
+  rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory;
+  rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory;
 
   std::unique_ptr<FieldTrialsView> trials;
 
