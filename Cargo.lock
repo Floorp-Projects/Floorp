@@ -2107,6 +2107,7 @@ dependencies = [
  "mime-guess-ffi",
  "mio 0.8.0",
  "moz_asserts",
+ "mozannotation_client",
  "mozglue-static",
  "mozurl",
  "mp4parse_capi",
@@ -3327,6 +3328,13 @@ name = "moz_task-gtest"
 version = "0.1.0"
 dependencies = [
  "moz_task",
+]
+
+[[package]]
+name = "mozannotation_client"
+version = "0.1.0"
+dependencies = [
+ "nsstring",
 ]
 
 [[package]]

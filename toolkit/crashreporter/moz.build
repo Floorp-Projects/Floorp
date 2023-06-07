@@ -63,6 +63,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
 
     DIRS += [
         "client",
+        "mozannotation_client",
     ]
 
     if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
