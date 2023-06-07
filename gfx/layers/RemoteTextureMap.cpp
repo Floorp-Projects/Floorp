@@ -212,6 +212,12 @@ void RemoteTextureMap::PushTexture(
 
     mMonitor.Notify();
 
+    // Release owner->mReleasingRenderedTextureHosts before checking
+    // NumCompositableRefs()
+    if (!owner->mReleasingRenderedTextureHosts.empty()) {
+      owner->mReleasingRenderedTextureHosts.clear();
+    }
+
     // Drop obsoleted remote textures.
     while (!owner->mUsingTextureDataHolders.empty()) {
       auto& front = owner->mUsingTextureDataHolders.front();
@@ -361,8 +367,7 @@ void RemoteTextureMap::KeepTextureDataAliveForTextureHostIfNecessary(
 void RemoteTextureMap::UnregisterTextureOwner(
     const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid) {
   UniquePtr<TextureOwner> releasingOwner;  // Release outside the monitor
-  std::vector<RefPtr<TextureHost>>
-      releasingTextures;  // Release outside the monitor
+  RefPtr<TextureHost> releasingTexture;    // Release outside the monitor
   std::vector<std::function<void(const RemoteTextureInfo&)>>
       renderingReadyCallbacks;  // Call outside the monitor
   {
@@ -377,13 +382,19 @@ void RemoteTextureMap::UnregisterTextureOwner(
 
     if (it->second->mLatestTextureHost) {
       // Release CompositableRef in mMonitor
-      releasingTextures.emplace_back(it->second->mLatestTextureHost);
+      releasingTexture = it->second->mLatestTextureHost;
       it->second->mLatestTextureHost = nullptr;
     }
 
+    // mReleasingRenderedTextureHosts and mLatestRenderedTextureHost could
+    // simply be cleared. Since NumCompositableRefs() > 0 keeps TextureHosts in
+    // mUsingTextureDataHolders alive. They need to be cleared before
+    // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
+    // NumCompositableRefs().
+    if (!it->second->mReleasingRenderedTextureHosts.empty()) {
+      it->second->mReleasingRenderedTextureHosts.clear();
+    }
     if (it->second->mLatestRenderedTextureHost) {
-      // Release CompositableRef in mMonitor
-      releasingTextures.emplace_back(it->second->mLatestRenderedTextureHost);
       it->second->mLatestRenderedTextureHost = nullptr;
     }
 
@@ -436,9 +447,15 @@ void RemoteTextureMap::UnregisterTextureOwners(
         it->second->mLatestTextureHost = nullptr;
       }
 
+      // mReleasingRenderedTextureHosts and mLatestRenderedTextureHost could
+      // simply be cleared. Since NumCompositableRefs() > 0 keeps TextureHosts
+      // in mUsingTextureDataHolders alive. They need to be cleared before
+      // KeepTextureDataAliveForTextureHostIfNecessary() call. The function uses
+      // NumCompositableRefs().
+      if (!it->second->mReleasingRenderedTextureHosts.empty()) {
+        it->second->mReleasingRenderedTextureHosts.clear();
+      }
       if (it->second->mLatestRenderedTextureHost) {
-        // Release CompositableRef in mMonitor
-        releasingTextures.emplace_back(it->second->mLatestRenderedTextureHost);
         it->second->mLatestRenderedTextureHost = nullptr;
       }
 
@@ -691,6 +708,11 @@ wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
     }
   } else {
     // Update mLatestRenderedTextureHost
+    if (owner->mLatestRenderedTextureHost) {
+      owner->mReleasingRenderedTextureHosts.push_back(
+          owner->mLatestRenderedTextureHost);
+      owner->mLatestRenderedTextureHost = nullptr;
+    }
     owner->mLatestRenderedTextureHost = remoteTexture;
   }
 
