@@ -39,10 +39,10 @@ struct CliArgs {
     #[clap(long, value_name = "FILE")]
     fixture_cpp_path: Utf8PathBuf,
 
-    #[clap(long, multiple_values = true, value_name = "FILES")]
+    #[clap(long, num_args = 1.., value_name = "FILES")]
     udl_files: Vec<Utf8PathBuf>,
 
-    #[clap(long, multiple_values = true, value_name = "FILES")]
+    #[clap(long, num_args = 1.., value_name = "FILES")]
     fixture_udl_files: Vec<Utf8PathBuf>,
 }
 
