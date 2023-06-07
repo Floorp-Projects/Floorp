@@ -41,7 +41,7 @@ Cr-Commit-Position: refs/heads/main@{#39296}
  2 files changed, 1 insertion(+), 63 deletions(-)
 
 diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
-index 7a63ae41ea..3b347466d8 100644
+index e91743f186..6d041ff0a1 100644
 --- a/pc/webrtc_sdp.cc
 +++ b/pc/webrtc_sdp.cc
 @@ -1890,7 +1890,7 @@ void AddPacketizationLine(const T& codec, std::string* message) {
@@ -105,10 +105,10 @@ index 7a63ae41ea..3b347466d8 100644
      // under the same m-line.
      int min_maxptime = INT_MAX;
 diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
-index 3e5e9a0d08..9f1cfc9c96 100644
+index 368d311009..c66f3a66da 100644
 --- a/pc/webrtc_sdp_unittest.cc
 +++ b/pc/webrtc_sdp_unittest.cc
-@@ -3296,38 +3296,6 @@ TEST_F(WebRtcSdpTest, DeserializeSerializeRtcpFbWildcard) {
+@@ -3281,38 +3281,6 @@ TEST_F(WebRtcSdpTest, DeserializeSerializeRtcpFbWildcard) {
    TestSerialize(jdesc_output);
  }
  
