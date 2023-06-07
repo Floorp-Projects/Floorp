@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_TIMING_CODEC_TIMER_H_
-#define MODULES_VIDEO_CODING_TIMING_CODEC_TIMER_H_
+#ifndef MODULES_VIDEO_CODING_TIMING_DECODE_TIME_PERCENTILE_FILTER_H_
+#define MODULES_VIDEO_CODING_TIMING_DECODE_TIME_PERCENTILE_FILTER_H_
 
 #include <queue>
 
@@ -17,10 +17,14 @@
 
 namespace webrtc {
 
-class CodecTimer {
+// The `DecodeTimePercentileFilter` filters the actual per-frame decode times
+// and provides an estimate for the 95th percentile of those decode times. This
+// estimate can be used to determine how large the "decode delay term" should be
+// when determining the render timestamp for a frame.
+class DecodeTimePercentileFilter {
  public:
-  CodecTimer();
-  ~CodecTimer();
+  DecodeTimePercentileFilter();
+  ~DecodeTimePercentileFilter();
 
   // Add a new decode time to the filter.
   void AddTiming(int64_t new_decode_time_ms, int64_t now_ms);
@@ -47,4 +51,4 @@ class CodecTimer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_TIMING_CODEC_TIMER_H_
+#endif  // MODULES_VIDEO_CODING_TIMING_DECODE_TIME_PERCENTILE_FILTER_H_
