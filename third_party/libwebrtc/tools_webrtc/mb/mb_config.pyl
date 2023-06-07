@@ -321,7 +321,6 @@
       'openh264',
       'pure_release_bot',
       'x64',
-      'win_fastlink',
     ],
     'win_clang_debug_bot_x64': [
       'clang',
@@ -468,9 +467,6 @@
     },
     'ubsan_vptr': {
       'gn_args': 'is_ubsan_vptr=true is_ubsan_no_recover=true',
-    },
-    'win_fastlink': {
-      'gn_args': 'is_win_fastlink=true',
     },
     'win_undef_unicode': {
       'gn_args': 'rtc_win_undef_unicode=true',
