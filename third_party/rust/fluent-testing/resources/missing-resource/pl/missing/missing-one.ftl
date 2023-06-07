@@ -1,1 +1,0 @@
-missing-one = zaginiony

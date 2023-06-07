@@ -1,0 +1,43 @@
+[package]
+name = "l10nregistry-tests"
+version = "0.3.0"
+authors = ["Zibi Braniecki <gandalf@mozilla.com>"]
+license = "Apache-2.0/MIT"
+edition = "2018"
+
+[dependencies]
+l10nregistry = { path = "../l10nregistry-rs", features = ["test-fluent"] }
+async-trait = "0.1"
+fluent-fallback = "0.7.0"
+fluent-testing = { version = "0.0.3", features = ["sync", "async"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+unic-langid = { version = "0.9", features = ["macros"] }
+
+[dev-dependencies]
+criterion = "0.3"
+fluent-bundle = "0.15.2"
+futures = "0.3"
+serial_test = "0.6"
+
+[features]
+default = []
+
+[[bench]]
+name = "preferences"
+harness = false
+
+[[bench]]
+name = "localization"
+harness = false
+
+[[bench]]
+name = "source"
+harness = false
+
+[[bench]]
+name = "solver"
+harness = false
+
+[[bench]]
+name = "registry"
+harness = false
