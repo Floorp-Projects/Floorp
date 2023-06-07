@@ -104,8 +104,6 @@ using mozilla::InjectCrashRunnable;
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include <map>
-#include <vector>
 
 #include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
@@ -260,8 +258,6 @@ static bool sIncludeContextHeap = false;
 
 // OOP crash reporting
 static CrashGenerationServer* crashServer;  // chrome process has this
-static StaticMutex processMapLock MOZ_UNANNOTATED;
-static std::map<ProcessId, PRFileDesc*> processToCrashFd;
 
 static std::terminate_handler oldTerminateHandler = nullptr;
 
@@ -287,14 +283,6 @@ static FileHandle gMagicChildCrashReportFd =
 #  endif  // defined(MOZ_WIDGET_ANDROID)
     ;
 #endif
-
-static FileHandle gChildCrashAnnotationReportFd =
-#if (defined(XP_LINUX) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_ANDROID)
-    7
-#else
-    kInvalidFileHandle
-#endif
-    ;
 
 // |dumpMapLock| must protect all access to |pidToMinidump|.
 static Mutex* dumpMapLock;
@@ -1719,27 +1707,6 @@ static bool BuildTempPath(PathStringT& aResult) {
   return true;
 }
 
-FileHandle GetAnnotationTimeCrashFd() { return gChildCrashAnnotationReportFd; }
-
-static void PrepareChildExceptionTimeAnnotations(
-    const phc::AddrInfo* addrInfo) {
-  MOZ_ASSERT(!XRE_IsParentProcess());
-
-  PlatformWriter apiData;
-  apiData.OpenHandle(GetAnnotationTimeCrashFd());
-  BinaryAnnotationWriter writer(apiData);
-
-  WriteMozCrashReason(writer);
-
-  WriteMainThreadRunnableName(writer);
-
-  WriteOOMAllocationSize(writer);
-
-#ifdef MOZ_PHC
-  WritePHCAddrInfo(writer, addrInfo);
-#endif
-}
-
 #ifdef XP_WIN
 
 static void ReserveBreakpadVM() {
@@ -1884,7 +1851,6 @@ static bool ChildMinidumpCallback(
     EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion,
 #endif  // defined(XP_WIN)
     const mozilla::phc::AddrInfo* addr_info, bool succeeded) {
-
   return succeeded;
 }
 
@@ -1930,57 +1896,10 @@ static nsresult LocateExecutable(nsIFile* aXREDirectory, const nsAString& aName,
 
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
-#if defined(XP_WIN)
-
-DWORD WINAPI FlushContentProcessAnnotationsThreadFunc(LPVOID aContext) {
-  PrepareChildExceptionTimeAnnotations(nullptr);
-  return 0;
-}
-
-#else
-
-static const int kAnnotationSignal = SIGUSR2;
-
-static void AnnotationSignalHandler(int aSignal, siginfo_t* aInfo,
-                                    void* aContext) {
-  PrepareChildExceptionTimeAnnotations(nullptr);
-}
-
-#endif  // defined(XP_WIN)
-
-static void InitChildAnnotationsFlusher() {
-#if !defined(XP_WIN)
-  struct sigaction oldSigAction = {};
-  struct sigaction sigAction = {};
-  sigAction.sa_sigaction = AnnotationSignalHandler;
-  sigAction.sa_flags = SA_RESTART | SA_SIGINFO;
-  sigemptyset(&sigAction.sa_mask);
-  mozilla::DebugOnly<int> rv =
-      sigaction(kAnnotationSignal, &sigAction, &oldSigAction);
-  MOZ_ASSERT(rv == 0, "Failed to install the crash reporter's SIGUSR2 handler");
-  MOZ_ASSERT(oldSigAction.sa_sigaction == nullptr,
-             "A SIGUSR2 handler was already present");
-#endif  // !defined(XP_WIN)
-}
-
-static bool FlushContentProcessAnnotations(ProcessHandle aTargetPid) {
-#if defined(XP_WIN)
-  nsAutoHandle hThread(CreateRemoteThread(
-      aTargetPid, nullptr, 0, FlushContentProcessAnnotationsThreadFunc, nullptr,
-      0, nullptr));
-  return !!hThread;
-#else  // POSIX platforms
-  return kill(aTargetPid, kAnnotationSignal) == 0;
-#endif
-}
-
 static void InitializeAnnotationFacilities() {
   crashReporterAPILock = new Mutex("crashReporterAPILock");
   notesFieldLock = new Mutex("notesFieldLock");
   notesField = new nsCString();
-  if (!XRE_IsParentProcess()) {
-    InitChildAnnotationsFlusher();
-  }
 }
 
 static void TeardownAnnotationFacilities() {
@@ -3170,40 +3089,6 @@ bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile) {
   return true;
 }
 
-static void ReadAndValidateExceptionTimeAnnotations(
-    PRFileDesc* aFd, AnnotationTable& aAnnotations) {
-  PRInt32 res;
-  do {
-    uint32_t rawAnnotation;
-    res = PR_Read(aFd, &rawAnnotation, sizeof(rawAnnotation));
-    if ((res != sizeof(rawAnnotation)) ||
-        (rawAnnotation >= static_cast<uint32_t>(Annotation::Count))) {
-      return;
-    }
-
-    uint64_t len;
-    res = PR_Read(aFd, &len, sizeof(len));
-    if (res != sizeof(len) || (len == 0)) {
-      return;
-    }
-
-    char c;
-    nsAutoCString value;
-    do {
-      res = PR_Read(aFd, &c, 1);
-      if (res != 1) {
-        return;
-      }
-
-      len--;
-      value.Append(c);
-    } while (len > 0);
-
-    // Looks good, save the (annotation, value) pair
-    aAnnotations[static_cast<Annotation>(rawAnnotation)] = value;
-  } while (res > 0);
-}
-
 static bool WriteExtraFile(PlatformWriter& pw,
                            const AnnotationTable& aAnnotations) {
   if (!pw.Valid()) {
@@ -3233,18 +3118,6 @@ bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
 
   PlatformWriter pw(path.get());
   return WriteExtraFile(pw, annotations);
-}
-
-static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,
-                                         ProcessId aPid) {
-  // Read exception-time annotations
-  StaticMutexAutoLock pidMapLock(processMapLock);
-  if (aPid && processToCrashFd.count(aPid)) {
-    PRFileDesc* prFd = processToCrashFd[aPid];
-    processToCrashFd.erase(aPid);
-    ReadAndValidateExceptionTimeAnnotations(prFd, aAnnotations);
-    PR_Close(prFd);
-  }
 }
 
 // This adds annotations that were populated in the main process but are not
@@ -3421,18 +3294,6 @@ static void OnChildProcessDumpRequested(
   }
 }
 
-static void OnChildProcessDumpWritten(void* aContext,
-                                      const ClientInfo& aClientInfo)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
-  ProcessId pid = aClientInfo.pid();
-  ChildProcessData* pd = pidToMinidump->GetEntry(pid);
-  MOZ_ASSERT(pd);
-  if (!pd->minidumpOnly) {
-    // ReadExceptionTimeAnnotations(*(pd->annotations), pid);
-  }
-  dumpMapLock->Unlock();
-}
-
 static bool OOPInitialized() { return pidToMinidump != nullptr; }
 
 void OOPInit() {
@@ -3607,21 +3468,6 @@ void UnregisterInjectorCallback(DWORD processID) {
 
 #endif  // MOZ_CRASHREPORTER_INJECTOR
 
-void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
-                                                PRFileDesc* aFd) {
-  StaticMutexAutoLock pidMapLock(processMapLock);
-  processToCrashFd[aProcess] = aFd;
-}
-
-void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {
-  StaticMutexAutoLock pidMapLock(processMapLock);
-  auto it = processToCrashFd.find(aProcess);
-  if (it != processToCrashFd.end()) {
-    PR_Close(it->second);
-    processToCrashFd.erase(it);
-  }
-}
-
 #if defined(XP_LINUX)
 
 // Parent-side API for children
@@ -3642,8 +3488,7 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
 
 #endif  // defined(XP_LINUX)
 
-bool SetRemoteExceptionHandler(const char* aCrashPipe,
-                               FileHandle aCrashTimeAnnotationFile) {
+bool SetRemoteExceptionHandler(const char* aCrashPipe) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
   RegisterRuntimeExceptionModule();
   InitializeAnnotationFacilities();
@@ -3690,7 +3535,6 @@ bool SetRemoteExceptionHandler(const char* aCrashPipe,
 #endif
 
 #if defined(XP_WIN)
-  gChildCrashAnnotationReportFd = aCrashTimeAnnotationFile;
   gExceptionHandler = new google_breakpad::ExceptionHandler(
       L"", ChildFilter, ChildMinidumpCallback,
       nullptr,  // no callback context
@@ -4044,10 +3888,6 @@ bool UnsetRemoteExceptionHandler(bool wasSet) {
 #if defined(MOZ_WIDGET_ANDROID)
 void SetNotificationPipeForChild(int childCrashFd) {
   gMagicChildCrashReportFd = childCrashFd;
-}
-
-void SetCrashAnnotationPipeForChild(int childCrashAnnotationFd) {
-  gChildCrashAnnotationReportFd = childCrashAnnotationFd;
 }
 #endif
 

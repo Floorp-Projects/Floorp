@@ -45,7 +45,6 @@
 #include "mozilla/GeckoArgs.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/RDDProcessHost.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticMutex.h"
@@ -98,19 +97,11 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsTArray.h"
 #include "nscore.h"  // for NS_FREE_PERMANENT_DATA
-#include "private/pprio.h"
 #include "nsIThread.h"
 
 using mozilla::MonitorAutoLock;
 using mozilla::Preferences;
 using mozilla::StaticMutexAutoLock;
-
-namespace mozilla {
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
-                                          PR_Close)
-}
-
-using mozilla::ScopedPRFileDesc;
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidBridge.h"
@@ -253,8 +244,6 @@ class BaseProcessLauncher {
 
   // Set during launch.
   IPC::Channel::ChannelId mChannelId;
-  ScopedPRFileDesc mCrashAnnotationReadPipe;
-  ScopedPRFileDesc mCrashAnnotationWritePipe;
   nsCOMPtr<nsIFile> mAppDir;
 };
 
@@ -470,14 +459,6 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 #endif
 
     if (mChildProcessHandle != 0) {
-#if defined(XP_WIN)
-      CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
-          base::GetProcId(mChildProcessHandle));
-#else
-      CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
-          mChildProcessHandle);
-#endif
-
       ProcessWatcher::EnsureProcessTerminated(
           mChildProcessHandle
 #ifdef NS_FREE_PERMANENT_DATA
@@ -1124,11 +1105,6 @@ Result<Ok, LaunchError> BaseProcessLauncher::DoSetup() {
 
   MapChildLogging();
 
-  PRStatus status = PR_CreatePipe(&mCrashAnnotationReadPipe.rwget(),
-                                  &mCrashAnnotationWritePipe.rwget());
-  if (status != PR_SUCCESS) {
-    return Err(LaunchError("PR_CreatePipe", PR_GetError()));
-  }
   return Ok();
 }
 
@@ -1323,10 +1299,6 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
     }
 #  endif
   }
-
-  int fd = PR_FileDesc2NativeHandle(mCrashAnnotationWritePipe);
-  mLaunchOptions->fds_to_remap.push_back(
-      std::make_pair(fd, CrashReporter::GetAnnotationTimeCrashFd()));
 
 #  ifdef MOZ_WIDGET_COCOA
   {
@@ -1602,11 +1574,6 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
       UTF8ToWide(CrashReporter::GetChildNotificationPipe()));
 
   if (!CrashReporter::IsDummy()) {
-    PROsfd h = PR_FileDesc2NativeHandle(mCrashAnnotationWritePipe);
-    mLaunchOptions->handles_to_inherit.push_back(reinterpret_cast<HANDLE>(h));
-    std::string hStr = std::to_string(h);
-    mCmdLine->AppendLooseValue(UTF8ToWide(hStr));
-
     char werDataAddress[17] = {};
     SprintfLiteral(werDataAddress, "%p", mWerDataPointer);
     mCmdLine->AppendLooseValue(UTF8ToWide(werDataAddress));
@@ -1694,9 +1661,6 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::FinishLaunch() {
 
   MOZ_DIAGNOSTIC_ASSERT(mResults.mHandle);
 
-  CrashReporter::RegisterChildCrashAnnotationFileDescriptor(
-      base::GetProcId(mResults.mHandle), mCrashAnnotationReadPipe.forget());
-
   Telemetry::AccumulateTimeDelta(Telemetry::CHILD_PROCESS_LAUNCH_MS,
                                  mStartTimeStamp);
 
@@ -1780,18 +1744,13 @@ RefPtr<ProcessHandlePromise> AndroidProcessLauncher::LaunchAndroidService(
   int32_t prefMapFd = fds_to_remap[1].first;
   int32_t ipcFd = fds_to_remap[2].first;
   int32_t crashFd = -1;
-  int32_t crashAnnotationFd = -1;
   if (fds_to_remap.size() == 4) {
-    crashAnnotationFd = fds_to_remap[3].first;
-  }
-  if (fds_to_remap.size() == 5) {
     crashFd = fds_to_remap[3].first;
-    crashAnnotationFd = fds_to_remap[4].first;
   }
 
   auto type = java::GeckoProcessType::FromInt(aType);
   auto genericResult = java::GeckoProcessManager::Start(
-      type, jargs, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd);
+      type, jargs, prefsFd, prefMapFd, ipcFd, crashFd);
   auto typedResult = java::GeckoResult::LocalRef(std::move(genericResult));
   return ProcessHandlePromise::FromGeckoResult(typedResult);
 }

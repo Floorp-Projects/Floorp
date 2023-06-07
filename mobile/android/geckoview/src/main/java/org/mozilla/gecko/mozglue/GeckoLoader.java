@@ -426,7 +426,6 @@ public final class GeckoLoader {
       int prefMapFd,
       int ipcFd,
       int crashFd,
-      int crashAnnotationFd,
       boolean xpcshell,
       String outFilePath);
 

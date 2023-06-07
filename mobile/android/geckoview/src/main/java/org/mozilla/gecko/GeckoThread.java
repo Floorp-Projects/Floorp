@@ -157,14 +157,12 @@ public class GeckoThread extends Thread {
     public final @Nullable ParcelFileDescriptor prefMap;
     public final @NonNull ParcelFileDescriptor ipc;
     public final @Nullable ParcelFileDescriptor crashReporter;
-    public final @Nullable ParcelFileDescriptor crashAnnotation;
 
     private ParcelFileDescriptors(final Builder builder) {
       prefs = builder.prefs;
       prefMap = builder.prefMap;
       ipc = builder.ipc;
       crashReporter = builder.crashReporter;
-      crashAnnotation = builder.crashAnnotation;
     }
 
     public FileDescriptors detach() {
@@ -173,7 +171,6 @@ public class GeckoThread extends Thread {
           .prefMap(detach(prefMap))
           .ipc(detach(ipc))
           .crashReporter(detach(crashReporter))
-          .crashAnnotation(detach(crashAnnotation))
           .build();
     }
 
@@ -185,7 +182,7 @@ public class GeckoThread extends Thread {
     }
 
     public void close() {
-      close(prefs, prefMap, ipc, crashReporter, crashAnnotation);
+      close(prefs, prefMap, ipc, crashReporter);
     }
 
     private static void close(final ParcelFileDescriptor... pfds) {
@@ -207,7 +204,6 @@ public class GeckoThread extends Thread {
           .prefMap(from(fds.prefMap))
           .ipc(from(fds.ipc))
           .crashReporter(from(fds.crashReporter))
-          .crashAnnotation(from(fds.crashAnnotation))
           .build();
     }
 
@@ -231,7 +227,6 @@ public class GeckoThread extends Thread {
       ParcelFileDescriptor prefMap;
       ParcelFileDescriptor ipc;
       ParcelFileDescriptor crashReporter;
-      ParcelFileDescriptor crashAnnotation;
 
       private Builder() {}
 
@@ -258,11 +253,6 @@ public class GeckoThread extends Thread {
         this.crashReporter = crashReporter;
         return this;
       }
-
-      public Builder crashAnnotation(final ParcelFileDescriptor crashAnnotation) {
-        this.crashAnnotation = crashAnnotation;
-        return this;
-      }
     }
   }
 
@@ -271,14 +261,12 @@ public class GeckoThread extends Thread {
     final int prefMap;
     final int ipc;
     final int crashReporter;
-    final int crashAnnotation;
 
     private FileDescriptors(final Builder builder) {
       prefs = builder.prefs;
       prefMap = builder.prefMap;
       ipc = builder.ipc;
       crashReporter = builder.crashReporter;
-      crashAnnotation = builder.crashAnnotation;
     }
 
     public static Builder builder() {
@@ -290,7 +278,6 @@ public class GeckoThread extends Thread {
       int prefMap = INVALID_FD;
       int ipc = INVALID_FD;
       int crashReporter = INVALID_FD;
-      int crashAnnotation = INVALID_FD;
 
       private Builder() {}
 
@@ -315,11 +302,6 @@ public class GeckoThread extends Thread {
 
       public Builder crashReporter(final int crashReporter) {
         this.crashReporter = crashReporter;
-        return this;
-      }
-
-      public Builder crashAnnotation(final int crashAnnotation) {
-        this.crashAnnotation = crashAnnotation;
         return this;
       }
     }
@@ -680,7 +662,6 @@ public class GeckoThread extends Thread {
         mInitInfo.fds.prefMap,
         mInitInfo.fds.ipc,
         mInitInfo.fds.crashReporter,
-        mInitInfo.fds.crashAnnotation,
         isChildProcess ? false : mInitInfo.xpcshell,
         isChildProcess ? null : mInitInfo.outFilePath);
 

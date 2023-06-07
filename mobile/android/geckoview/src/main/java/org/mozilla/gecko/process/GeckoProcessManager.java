@@ -753,8 +753,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       final int prefsFd,
       final int prefMapFd,
       final int ipcFd,
-      final int crashFd,
-      final int crashAnnotationFd) {
+      final int crashFd) {
     final GeckoResult<Integer> result = new GeckoResult<>();
     final StartInfo info =
         new StartInfo(
@@ -770,7 +769,6 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                         .prefMap(prefMapFd)
                         .ipc(ipcFd)
                         .crashReporter(crashFd)
-                        .crashAnnotation(crashAnnotationFd)
                         .build())
                 .build());
 
@@ -899,8 +897,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                       info.pfds.prefs,
                       info.pfds.prefMap,
                       info.pfds.ipc,
-                      info.pfds.crashReporter,
-                      info.pfds.crashAnnotation);
+                      info.pfds.crashReporter);
               if (result == IChildProcess.STARTED_OK) {
                 return connection.getPid();
               } else {

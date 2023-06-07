@@ -4242,7 +4242,6 @@ ZN5style7stylist7Stylist17append_stylesheet17he70cadcba5340a98E
 ?DoResolveOrReject@ThenValueBase@?$MozPromise@PEAXULaunchError@ipc@mozilla@@$0A@@mozilla@@IEAAXAEAVResolveOrRejectValue@23@@Z
 ?IsOnCurrentThreadInfallible@AbstractThread@mozilla@@UEAA_NXZ
 ?AddTargetPeer@SandboxBroker@mozilla@@SA_NPEAX@Z
-?RegisterChildCrashAnnotationFileDescriptor@CrashReporter@@YAXKPEAUPRFileDesc@@@Z
 ?CreateAdditionalChildMinidump@CrashReporter@@YA_NPEAXKPEAVnsIFile@@AEBV?$nsTSubstring@D@@@Z
 ?AccumulateTimeDelta@Telemetry@mozilla@@YAXW4HistogramID@12@VTimeStamp@2@1@Z
 ?ThenInternal@?$MozPromise@V?$RefPtr@VBrowserParent@dom@mozilla@@@@W4nsresult@@$0A@@mozilla@@QEAAXU?$already_AddRefed@VThenValueBase@?$MozPromise@V?$RefPtr@VBrowserParent@dom@mozilla@@@@W4nsresult@@$0A@@mozilla@@@@PEBD@Z

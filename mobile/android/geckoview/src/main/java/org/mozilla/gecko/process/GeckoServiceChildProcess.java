@@ -78,8 +78,7 @@ public class GeckoServiceChildProcess extends Service {
         final ParcelFileDescriptor prefsPfd,
         final ParcelFileDescriptor prefMapPfd,
         final ParcelFileDescriptor ipcPfd,
-        final ParcelFileDescriptor crashReporterPfd,
-        final ParcelFileDescriptor crashAnnotationPfd) {
+        final ParcelFileDescriptor crashReporterPfd) {
 
       final ParcelFileDescriptors pfds =
           ParcelFileDescriptors.builder()
@@ -87,7 +86,6 @@ public class GeckoServiceChildProcess extends Service {
               .prefMap(prefMapPfd)
               .ipc(ipcPfd)
               .crashReporter(crashReporterPfd)
-              .crashAnnotation(crashAnnotationPfd)
               .build();
 
       synchronized (GeckoServiceChildProcess.class) {
