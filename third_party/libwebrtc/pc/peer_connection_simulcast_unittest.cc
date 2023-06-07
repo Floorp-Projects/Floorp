@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
@@ -39,6 +40,7 @@
 #include "api/video/video_codec_constants.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "media/base/media_constants.h"
 #include "media/base/rid_description.h"
 #include "media/base/stream_params.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -72,6 +74,7 @@ using ::testing::Ne;
 using ::testing::Pair;
 using ::testing::Property;
 using ::testing::SizeIs;
+using ::testing::StartsWith;
 
 using cricket::MediaContentDescription;
 using cricket::RidDescription;
@@ -119,6 +122,24 @@ std::vector<SimulcastLayer> CreateLayers(int num_layers, bool active) {
   return CreateLayers(rids, active);
 }
 #endif
+
+// RTX, RED and FEC are reliability mechanisms used in combinations with other
+// codecs, but are not themselves a specific codec. Typically you don't want to
+// filter these out of the list of codec preferences.
+bool IsReliabilityMechanism(const webrtc::RtpCodecCapability& codec) {
+  return absl::EqualsIgnoreCase(codec.name, cricket::kRtxCodecName) ||
+         absl::EqualsIgnoreCase(codec.name, cricket::kRedCodecName) ||
+         absl::EqualsIgnoreCase(codec.name, cricket::kUlpfecCodecName);
+}
+
+std::string GetCurrentCodecMimeType(
+    rtc::scoped_refptr<const webrtc::RTCStatsReport> report,
+    const webrtc::RTCOutboundRTPStreamStats& outbound_rtp) {
+  return outbound_rtp.codec_id.is_defined()
+             ? *report->GetAs<webrtc::RTCCodecStats>(*outbound_rtp.codec_id)
+                    ->mime_type
+             : "";
+}
 
 }  // namespace
 
@@ -841,6 +862,28 @@ class PeerConnectionSimulcastWithMediaFlowTests
     return transceiver_or_error.value();
   }
 
+  std::vector<RtpCodecCapability> GetCapabilitiesAndRestrictToCodec(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      absl::string_view codec_name) {
+    std::vector<RtpCodecCapability> codecs =
+        pc_wrapper->pc_factory()
+            ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO)
+            .codecs;
+    codecs.erase(std::remove_if(codecs.begin(), codecs.end(),
+                                [&codec_name](const RtpCodecCapability& codec) {
+                                  return !IsReliabilityMechanism(codec) &&
+                                         !absl::EqualsIgnoreCase(codec.name,
+                                                                 codec_name);
+                                }),
+                 codecs.end());
+    RTC_DCHECK(std::find_if(codecs.begin(), codecs.end(),
+                            [&codec_name](const RtpCodecCapability& codec) {
+                              return absl::EqualsIgnoreCase(codec.name,
+                                                            codec_name);
+                            }) != codecs.end());
+    return codecs;
+  }
+
   void ExchangeIceCandidates(
       rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper,
       rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper) {
@@ -884,6 +927,14 @@ class PeerConnectionSimulcastWithMediaFlowTests
     }
     p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
     EXPECT_TRUE(Await({p1, p2}));
+  }
+
+  rtc::scoped_refptr<const RTCStatsReport> GetStats(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper) {
+    auto callback = rtc::make_ref_counted<MockRTCStatsCollectorCallback>();
+    pc_wrapper->pc()->GetStats(callback.get());
+    EXPECT_TRUE_WAIT(callback->called(), kDefaultTimeout.ms());
+    return callback->report();
   }
 
   bool HasOutboundRtpBytesSent(
@@ -956,14 +1007,6 @@ class PeerConnectionSimulcastWithMediaFlowTests
     return true;
   }
 
-  rtc::scoped_refptr<const RTCStatsReport> GetStats(
-      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper) {
-    auto callback = rtc::make_ref_counted<MockRTCStatsCollectorCallback>();
-    pc_wrapper->pc()->GetStats(callback.get());
-    EXPECT_TRUE_WAIT(callback->called(), kDefaultTimeout.ms());
-    return callback->report();
-  }
-
   rtc::PhysicalSocketServer pss_;
   std::unique_ptr<rtc::Thread> background_thread_;
 };
@@ -971,14 +1014,18 @@ class PeerConnectionSimulcastWithMediaFlowTests
 // TODO(https://crbug.com/webrtc/14884): When VP9 simulast is supported, use
 // SetCodecPreferences() and pass a test like this with VP9.
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
-       SimulcastSendsAllLayersWithDefaultCodec) {
+       SimulcastSendsAllLayersWithVP8) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
   ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
 
   std::vector<SimulcastLayer> layers = CreateLayers({"f", "h", "q"}, true);
-  AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
-                                    layers);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP8");
+  transceiver->SetCodecPreferences(codecs);
 
   NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
   local_pc_wrapper->WaitForConnection();
@@ -987,6 +1034,20 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   // Wait until media is flowing on all three layers.
   EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_EQ(outbound_rtps.size(), 3u);
+  EXPECT_TRUE(absl::EqualsIgnoreCase(
+      GetCurrentCodecMimeType(report, *outbound_rtps[0]), "video/VP8"));
+  EXPECT_TRUE(absl::EqualsIgnoreCase(
+      GetCurrentCodecMimeType(report, *outbound_rtps[1]), "video/VP8"));
+  EXPECT_TRUE(absl::EqualsIgnoreCase(
+      GetCurrentCodecMimeType(report, *outbound_rtps[2]), "video/VP8"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L1T"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StartsWith("L1T"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
 }
 
 }  // namespace webrtc
