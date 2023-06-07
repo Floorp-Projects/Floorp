@@ -420,7 +420,7 @@ class RTC_EXPORT VideoEncoder {
   // The output of this method may change during runtime. For instance if a
   // hardware encoder fails, it may fall back to doing software encoding using
   // an implementation with different characteristics.
-  virtual EncoderInfo GetEncoderInfo() const;
+  virtual EncoderInfo GetEncoderInfo() const = 0;
 };
 }  // namespace webrtc
 #endif  // API_VIDEO_CODECS_VIDEO_ENCODER_H_
