@@ -526,6 +526,13 @@ absl::optional<int> ParseVp9LowTierCoreCountThreshold(
   return max_core_count.Get();
 }
 
+absl::optional<int> ParseEncoderThreadLimit(const FieldTrialsView& trials) {
+  FieldTrialOptional<int> encoder_thread_limit("encoder_thread_limit");
+  ParseFieldTrial({&encoder_thread_limit},
+                  trials.Lookup("WebRTC-VideoEncoderSettings"));
+  return encoder_thread_limit.GetOptional();
+}
+
 absl::optional<VideoSourceRestrictions> MergeRestrictions(
     const std::vector<absl::optional<VideoSourceRestrictions>>& list) {
   absl::optional<VideoSourceRestrictions> return_value;
@@ -718,6 +725,7 @@ VideoStreamEncoder::VideoStreamEncoder(
           kSwitchEncoderOnInitializationFailuresFieldTrial)),
       vp9_low_tier_core_threshold_(
           ParseVp9LowTierCoreCountThreshold(field_trials)),
+      experimental_encoder_thread_limit_(ParseEncoderThreadLimit(field_trials)),
       encoder_queue_(std::move(encoder_queue)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
   RTC_DCHECK_RUN_ON(worker_queue_);
@@ -1274,10 +1282,10 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     const size_t max_data_payload_length = max_data_payload_length_ > 0
                                                ? max_data_payload_length_
                                                : kDefaultPayloadSize;
-    if (encoder_->InitEncode(
-            &send_codec_,
-            VideoEncoder::Settings(settings_.capabilities, number_of_cores_,
-                                   max_data_payload_length)) != 0) {
+    VideoEncoder::Settings settings = VideoEncoder::Settings(
+        settings_.capabilities, number_of_cores_, max_data_payload_length);
+    settings.encoder_thread_limit = experimental_encoder_thread_limit_;
+    if (encoder_->InitEncode(&send_codec_, settings) != 0) {
       RTC_LOG(LS_ERROR) << "Failed to initialize the encoder associated with "
                            "codec type: "
                         << CodecTypeToPayloadString(send_codec_.codecType)
