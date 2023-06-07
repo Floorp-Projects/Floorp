@@ -67,7 +67,8 @@ class LossBasedBweV2 {
       DataRate delay_based_estimate,
       BandwidthUsage delay_detector_state,
       absl::optional<DataRate> probe_bitrate,
-      DataRate upper_link_capacity);
+      DataRate upper_link_capacity,
+      bool in_alr);
 
  private:
   struct ChannelParameters {
@@ -112,6 +113,7 @@ class LossBasedBweV2 {
     double slope_of_bwe_high_loss_func = 1000.0;
     bool probe_integration_enabled = false;
     bool bound_by_upper_link_capacity_when_loss_limited = false;
+    bool not_use_acked_rate_in_alr = false;
   };
 
   struct Derivatives {
@@ -141,7 +143,7 @@ class LossBasedBweV2 {
 
   // Returns `0.0` if not enough loss statistics have been received.
   double GetAverageReportedLossRatio() const;
-  std::vector<ChannelParameters> GetCandidates() const;
+  std::vector<ChannelParameters> GetCandidates(bool in_alr) const;
   DataRate GetCandidateBandwidthUpperBound() const;
   Derivatives GetDerivatives(const ChannelParameters& channel_parameters) const;
   double GetFeasibleInherentLoss(
