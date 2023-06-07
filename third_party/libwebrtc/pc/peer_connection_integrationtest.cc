@@ -2434,7 +2434,7 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
 
   // The fake clock ensures that no time has passed so the cache must have been
   // explicitly invalidated.
-  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+  EXPECT_EQ(first_report->timestamp(), second_report->timestamp());
 }
 
 TEST_P(PeerConnectionIntegrationTestWithFakeClock,
@@ -2478,7 +2478,7 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
 
   // The fake clock ensures that no time has passed so the cache must have been
   // explicitly invalidated.
-  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+  EXPECT_EQ(first_report->timestamp(), second_report->timestamp());
 }
 
 #endif  // !defined(THREAD_SANITIZER)
