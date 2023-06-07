@@ -45,8 +45,8 @@ constexpr Frequency k90kHz = Frequency::Hertz(90000);
 // that reads reference frames from a separate thread.
 class SyncRawVideoSource : public VideoCodecAnalyzer::ReferenceVideoSource {
  public:
-  explicit SyncRawVideoSource(std::unique_ptr<RawVideoSource> video_source)
-      : video_source_(std::move(video_source)) {}
+  explicit SyncRawVideoSource(RawVideoSource* video_source)
+      : video_source_(video_source) {}
 
   absl::optional<VideoFrame> PullFrame() {
     MutexLock lock(&mutex_);
@@ -59,7 +59,7 @@ class SyncRawVideoSource : public VideoCodecAnalyzer::ReferenceVideoSource {
   }
 
  protected:
-  std::unique_ptr<RawVideoSource> video_source_ RTC_GUARDED_BY(mutex_);
+  RawVideoSource* const video_source_ RTC_GUARDED_BY(mutex_);
   Mutex mutex_;
 };
 
@@ -153,11 +153,11 @@ class LimitedTaskQueue {
 
 class TesterDecoder {
  public:
-  TesterDecoder(std::unique_ptr<Decoder> decoder,
+  TesterDecoder(Decoder* decoder,
                 VideoCodecAnalyzer* analyzer,
                 const DecoderSettings& settings,
                 rtc::TaskQueue& task_queue)
-      : decoder_(std::move(decoder)),
+      : decoder_(decoder),
         analyzer_(analyzer),
         settings_(settings),
         pacer_(settings.pacing),
@@ -183,7 +183,7 @@ class TesterDecoder {
   void Flush() { task_queue_.WaitForPreviouslyPostedTasks(); }
 
  protected:
-  std::unique_ptr<Decoder> decoder_;
+  Decoder* const decoder_;
   VideoCodecAnalyzer* const analyzer_;
   const DecoderSettings& settings_;
   Pacer pacer_;
@@ -192,12 +192,12 @@ class TesterDecoder {
 
 class TesterEncoder {
  public:
-  TesterEncoder(std::unique_ptr<Encoder> encoder,
+  TesterEncoder(Encoder* encoder,
                 TesterDecoder* decoder,
                 VideoCodecAnalyzer* analyzer,
                 const EncoderSettings& settings,
                 rtc::TaskQueue& task_queue)
-      : encoder_(std::move(encoder)),
+      : encoder_(encoder),
         decoder_(decoder),
         analyzer_(analyzer),
         settings_(settings),
@@ -225,7 +225,7 @@ class TesterEncoder {
   void Flush() { task_queue_.WaitForPreviouslyPostedTasks(); }
 
  protected:
-  std::unique_ptr<Encoder> encoder_;
+  Encoder* const encoder_;
   TesterDecoder* const decoder_;
   VideoCodecAnalyzer* const analyzer_;
   const EncoderSettings& settings_;
@@ -247,8 +247,8 @@ VideoCodecTesterImpl::VideoCodecTesterImpl(TaskQueueFactory* task_queue_factory)
 }
 
 std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunDecodeTest(
-    std::unique_ptr<CodedVideoSource> video_source,
-    std::unique_ptr<Decoder> decoder,
+    CodedVideoSource* video_source,
+    Decoder* decoder,
     const DecoderSettings& decoder_settings) {
   rtc::TaskQueue analyser_task_queue(task_queue_factory_->CreateTaskQueue(
       "Analyzer", TaskQueueFactory::Priority::NORMAL));
@@ -256,8 +256,8 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunDecodeTest(
       "Decoder", TaskQueueFactory::Priority::NORMAL));
 
   VideoCodecAnalyzer perf_analyzer(analyser_task_queue);
-  TesterDecoder tester_decoder(std::move(decoder), &perf_analyzer,
-                               decoder_settings, decoder_task_queue);
+  TesterDecoder tester_decoder(decoder, &perf_analyzer, decoder_settings,
+                               decoder_task_queue);
 
   while (auto frame = video_source->PullFrame()) {
     tester_decoder.Decode(*frame);
@@ -269,19 +269,18 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunDecodeTest(
 }
 
 std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeTest(
-    std::unique_ptr<RawVideoSource> video_source,
-    std::unique_ptr<Encoder> encoder,
+    RawVideoSource* video_source,
+    Encoder* encoder,
     const EncoderSettings& encoder_settings) {
   rtc::TaskQueue analyser_task_queue(task_queue_factory_->CreateTaskQueue(
       "Analyzer", TaskQueueFactory::Priority::NORMAL));
   rtc::TaskQueue encoder_task_queue(task_queue_factory_->CreateTaskQueue(
       "Encoder", TaskQueueFactory::Priority::NORMAL));
 
-  SyncRawVideoSource sync_source(std::move(video_source));
+  SyncRawVideoSource sync_source(video_source);
   VideoCodecAnalyzer perf_analyzer(analyser_task_queue);
-  TesterEncoder tester_encoder(std::move(encoder), /*decoder=*/nullptr,
-                               &perf_analyzer, encoder_settings,
-                               encoder_task_queue);
+  TesterEncoder tester_encoder(encoder, /*decoder=*/nullptr, &perf_analyzer,
+                               encoder_settings, encoder_task_queue);
 
   while (auto frame = sync_source.PullFrame()) {
     tester_encoder.Encode(*frame);
@@ -293,9 +292,9 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeTest(
 }
 
 std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeDecodeTest(
-    std::unique_ptr<RawVideoSource> video_source,
-    std::unique_ptr<Encoder> encoder,
-    std::unique_ptr<Decoder> decoder,
+    RawVideoSource* video_source,
+    Encoder* encoder,
+    Decoder* decoder,
     const EncoderSettings& encoder_settings,
     const DecoderSettings& decoder_settings) {
   rtc::TaskQueue analyser_task_queue(task_queue_factory_->CreateTaskQueue(
@@ -305,13 +304,12 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeDecodeTest(
   rtc::TaskQueue encoder_task_queue(task_queue_factory_->CreateTaskQueue(
       "Encoder", TaskQueueFactory::Priority::NORMAL));
 
-  SyncRawVideoSource sync_source(std::move(video_source));
+  SyncRawVideoSource sync_source(video_source);
   VideoCodecAnalyzer perf_analyzer(analyser_task_queue, &sync_source);
-  TesterDecoder tester_decoder(std::move(decoder), &perf_analyzer,
-                               decoder_settings, decoder_task_queue);
-  TesterEncoder tester_encoder(std::move(encoder), &tester_decoder,
-                               &perf_analyzer, encoder_settings,
-                               encoder_task_queue);
+  TesterDecoder tester_decoder(decoder, &perf_analyzer, decoder_settings,
+                               decoder_task_queue);
+  TesterEncoder tester_encoder(encoder, &tester_decoder, &perf_analyzer,
+                               encoder_settings, encoder_task_queue);
 
   while (auto frame = sync_source.PullFrame()) {
     tester_encoder.Encode(*frame);

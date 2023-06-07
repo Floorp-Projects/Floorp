@@ -149,10 +149,10 @@ class VideoCodecTesterImplPacingTest
 };
 
 TEST_P(VideoCodecTesterImplPacingTest, PaceEncode) {
-  auto video_source = std::make_unique<MockRawVideoSource>();
+  MockRawVideoSource video_source;
 
   size_t frame_num = 0;
-  EXPECT_CALL(*video_source, PullFrame).WillRepeatedly(Invoke([&]() mutable {
+  EXPECT_CALL(video_source, PullFrame).WillRepeatedly(Invoke([&]() mutable {
     if (frame_num >= num_frames_) {
       return absl::optional<VideoFrame>();
     }
@@ -164,15 +164,13 @@ TEST_P(VideoCodecTesterImplPacingTest, PaceEncode) {
     return absl::optional<VideoFrame>(CreateVideoFrame(timestamp_rtp));
   }));
 
-  auto encoder = std::make_unique<MockEncoder>();
+  MockEncoder encoder;
   EncoderSettings encoder_settings;
   encoder_settings.pacing = pacing_settings_;
 
   VideoCodecTesterImpl tester(&task_queue_factory_);
-  auto fs = tester
-                .RunEncodeTest(std::move(video_source), std::move(encoder),
-                               encoder_settings)
-                ->Slice();
+  auto fs =
+      tester.RunEncodeTest(&video_source, &encoder, encoder_settings)->Slice();
   ASSERT_EQ(fs.size(), num_frames_);
 
   for (size_t i = 0; i < fs.size(); ++i) {
@@ -182,10 +180,10 @@ TEST_P(VideoCodecTesterImplPacingTest, PaceEncode) {
 }
 
 TEST_P(VideoCodecTesterImplPacingTest, PaceDecode) {
-  auto video_source = std::make_unique<MockCodedVideoSource>();
+  MockCodedVideoSource video_source;
 
   size_t frame_num = 0;
-  EXPECT_CALL(*video_source, PullFrame).WillRepeatedly(Invoke([&]() mutable {
+  EXPECT_CALL(video_source, PullFrame).WillRepeatedly(Invoke([&]() mutable {
     if (frame_num >= num_frames_) {
       return absl::optional<EncodedImage>();
     }
@@ -197,15 +195,13 @@ TEST_P(VideoCodecTesterImplPacingTest, PaceDecode) {
     return absl::optional<EncodedImage>(CreateEncodedImage(timestamp_rtp));
   }));
 
-  auto decoder = std::make_unique<MockDecoder>();
+  MockDecoder decoder;
   DecoderSettings decoder_settings;
   decoder_settings.pacing = pacing_settings_;
 
   VideoCodecTesterImpl tester(&task_queue_factory_);
-  auto fs = tester
-                .RunDecodeTest(std::move(video_source), std::move(decoder),
-                               decoder_settings)
-                ->Slice();
+  auto fs =
+      tester.RunDecodeTest(&video_source, &decoder, decoder_settings)->Slice();
   ASSERT_EQ(fs.size(), num_frames_);
 
   for (size_t i = 0; i < fs.size(); ++i) {

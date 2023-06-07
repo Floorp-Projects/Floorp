@@ -423,7 +423,7 @@ class EncodeDecodeTest
 
 TEST_P(EncodeDecodeTest, DISABLED_TestEncodeDecode) {
   std::unique_ptr<VideoCodecStats> stats = tester_->RunEncodeDecodeTest(
-      std::move(video_source_), std::move(encoder_), std::move(decoder_),
+      video_source_.get(), encoder_.get(), decoder_.get(),
       test_params_.encoder_settings, test_params_.decoder_settings);
 
   const auto& frame_settings = test_params_.encoding_settings.frame_settings;
