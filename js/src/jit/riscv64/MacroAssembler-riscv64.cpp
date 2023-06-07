@@ -2125,7 +2125,8 @@ CodeOffset MacroAssembler::nopPatchableToCall() {
 CodeOffset MacroAssembler::wasmTrapInstruction() {
   CodeOffset offset(currentOffset());
   BlockTrampolinePoolScope block_trampoline_pool(this, 2);
-  break_(kWasmTrapCode);  // TODO: teq(zero, zero, WASM_TRAP)
+  illegal_trap(kWasmTrapCode);
+  ebreak();
   return offset;
 }
 size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
