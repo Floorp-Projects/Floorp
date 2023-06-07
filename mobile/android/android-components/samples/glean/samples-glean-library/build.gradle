@@ -34,6 +34,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    namespace 'mozilla.samples.glean.library'
 }
 
 dependencies {
