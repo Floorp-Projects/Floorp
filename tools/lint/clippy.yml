@@ -34,6 +34,7 @@ clippy:
         - third_party/rust/mp4parse/
         - third_party/rust/mp4parse_capi/
         - toolkit/crashreporter/mozannotation_client/
+        - toolkit/crashreporter/mozannotation_server/
         - toolkit/components/kvstore/
         - toolkit/components/glean/
         - toolkit/library/rust/
