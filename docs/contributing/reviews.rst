@@ -113,6 +113,9 @@ Review groups
    * - #remote-debugging-reviewers
      - Remote Debugging UI & tools
      - `Member list <https://phabricator.services.mozilla.com/project/members/108/>`__
+   * - #search-reviewers
+     - Search Reviewers (search parts of `Search and Address Bar </mots/index.html#search-and-address-bar>`__)
+     - `Member list <https://phabricator.services.mozilla.com/project/members/169/>`__
    * - #spidermonkey-reviewers
      - SpiderMonkey JS/Wasm Engine
      - `Member list <https://phabricator.services.mozilla.com/project/members/173/>`__
