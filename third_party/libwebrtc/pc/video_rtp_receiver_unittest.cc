@@ -40,7 +40,10 @@ class VideoRtpReceiverTest : public testing::Test {
         cricket::FakeVideoEngine* engine,
         const cricket::VideoOptions& options,
         TaskQueueBase* network_thread = rtc::Thread::Current())
-        : FakeVideoMediaChannel(engine, options, network_thread) {}
+        : FakeVideoMediaChannel(cricket::MediaChannel::Role::kBoth,
+                                engine,
+                                options,
+                                network_thread) {}
     MOCK_METHOD(void,
                 SetRecordableEncodedFrameCallback,
                 (uint32_t, std::function<void(const RecordableEncodedFrame&)>),

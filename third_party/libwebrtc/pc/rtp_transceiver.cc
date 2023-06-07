@@ -211,7 +211,8 @@ RTCError RtpTransceiver::CreateChannel(
 
       cricket::VoiceMediaChannel* media_channel =
           media_engine()->voice().CreateMediaChannel(
-              call_ptr, media_config, audio_options, crypto_options);
+              cricket::MediaChannel::Role::kBoth, call_ptr, media_config,
+              audio_options, crypto_options);
       if (!media_channel) {
         return;
       }
@@ -231,8 +232,8 @@ RTCError RtpTransceiver::CreateChannel(
       RTC_DCHECK_RUN_ON(context()->worker_thread());
       cricket::VideoMediaChannel* media_channel =
           media_engine()->video().CreateMediaChannel(
-              call_ptr, media_config, video_options, crypto_options,
-              video_bitrate_allocator_factory);
+              cricket::MediaChannel::Role::kBoth, call_ptr, media_config,
+              video_options, crypto_options, video_bitrate_allocator_factory);
       if (!media_channel) {
         return;
       }

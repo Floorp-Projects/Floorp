@@ -69,6 +69,7 @@ class VideoFrame;
 namespace cricket {
 
 class AudioSource;
+class MediaChannel;  // TODO(bugs.webrtc.org/13931): Delete when irrelevant
 class VideoCapturer;
 struct RtpHeader;
 struct VideoFormat;
@@ -208,6 +209,17 @@ class MediaBaseChannelInterface {
   // worker_thread.
   virtual void SetExtmapAllowMixed(bool extmap_allow_mixed) = 0;
   virtual bool ExtmapAllowMixed() const = 0;
+
+  // Sets the abstract interface class for sending RTP/RTCP data.
+  virtual void SetInterface(MediaChannelNetworkInterface* iface) = 0;
+
+  // Returns `true` if a non-null MediaChannelNetworkInterface pointer is held.
+  // Must be called on the network thread.
+  virtual bool HasNetworkInterface() const = 0;
+
+  // Get the underlying send/receive implementation channel for testing.
+  // TODO(bugs.webrtc.org/13931): Remove method and the fakes that depend on it.
+  virtual MediaChannel* ImplForTesting() = 0;
 };
 
 class MediaSendChannelInterface
@@ -259,14 +271,9 @@ class MediaReceiveChannelInterface
  public:
   virtual ~MediaReceiveChannelInterface() = default;
 
-  virtual VideoMediaReceiveChannelInterface* AsVideoReceiveChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-  virtual VoiceMediaReceiveChannelInterface* AsVoiceReceiveChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
+  virtual VideoMediaReceiveChannelInterface* AsVideoReceiveChannel() = 0;
+  virtual VoiceMediaReceiveChannelInterface* AsVoiceReceiveChannel() = 0;
+
   // Creates a new incoming media stream with SSRCs, CNAME as described
   // by sp. In the case of a sp without SSRCs, the unsignaled sp is cached
   // to be used later for unsignaled streams received.
@@ -280,6 +287,9 @@ class MediaReceiveChannelInterface
   virtual void ResetUnsignaledRecvStream() = 0;
   // Gets the current unsignaled receive stream's SSRC, if there is one.
   virtual absl::optional<uint32_t> GetUnsignaledSsrc() const = 0;
+  // Sets the local SSRC for listening to incoming RTCP reports.
+  virtual bool SetLocalSsrc(const StreamParams& sp) = 0;
+
   // This is currently a workaround because of the demuxer state being managed
   // across two separate threads. Once the state is consistently managed on
   // the same thread (network), this workaround can be removed.

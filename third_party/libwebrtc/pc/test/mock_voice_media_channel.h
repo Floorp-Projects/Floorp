@@ -29,7 +29,7 @@ namespace cricket {
 class MockVoiceMediaChannel : public VoiceMediaChannel {
  public:
   explicit MockVoiceMediaChannel(webrtc::TaskQueueBase* network_thread)
-      : VoiceMediaChannel(network_thread) {}
+      : VoiceMediaChannel(MediaChannel::Role::kBoth, network_thread) {}
 
   MOCK_METHOD(void,
               SetInterface,
@@ -49,6 +49,9 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               (absl::string_view transport_name,
                const rtc::NetworkRoute& network_route),
               (override));
+  MOCK_METHOD(void, SetExtmapAllowMixed, (bool extmap_allow_mixed), (override));
+  MOCK_METHOD(bool, ExtmapAllowMixed, (), (const, override));
+  MOCK_METHOD(bool, HasNetworkInterface, (), (const, override));
   MOCK_METHOD(bool, AddSendStream, (const StreamParams& sp), (override));
   MOCK_METHOD(bool, RemoveSendStream, (uint32_t ssrc), (override));
   MOCK_METHOD(bool, AddRecvStream, (const StreamParams& sp), (override));
@@ -58,6 +61,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               GetUnsignaledSsrc,
               (),
               (const, override));
+  MOCK_METHOD(bool, SetLocalSsrc, (const StreamParams& sp), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdatePending, (), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdateComplete, (), (override));
   MOCK_METHOD(int, GetRtpSendTimeExtnId, (), (const, override));

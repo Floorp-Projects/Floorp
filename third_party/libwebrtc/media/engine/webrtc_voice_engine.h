@@ -69,6 +69,7 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
 
   rtc::scoped_refptr<webrtc::AudioState> GetAudioState() const override;
   VoiceMediaChannel* CreateMediaChannel(
+      MediaChannel::Role role,
       webrtc::Call* call,
       const MediaConfig& config,
       const AudioOptions& options,
@@ -139,7 +140,8 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
 class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
                                       public webrtc::Transport {
  public:
-  WebRtcVoiceMediaChannel(WebRtcVoiceEngine* engine,
+  WebRtcVoiceMediaChannel(MediaChannel::Role role,
+                          WebRtcVoiceEngine* engine,
                           const MediaConfig& config,
                           const AudioOptions& options,
                           const webrtc::CryptoOptions& crypto_options,
@@ -175,6 +177,9 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
   absl::optional<uint32_t> GetUnsignaledSsrc() const override;
+
+  bool SetLocalSsrc(const StreamParams& sp) override;
+
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
 
