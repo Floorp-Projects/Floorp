@@ -19,15 +19,12 @@
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace {
-// Time limit in milliseconds between packet bursts.
-constexpr TimeDelta kDefaultMinPacketLimit = TimeDelta::Millis(5);
 constexpr TimeDelta kCongestedPacketInterval = TimeDelta::Millis(500);
 // TODO(sprang): Consider dropping this limit.
 // The maximum debt level, in terms of time, capped when sending packets.
@@ -70,7 +67,6 @@ PacingController::PacingController(Clock* clock,
           IsEnabled(field_trials_, "WebRTC-Pacer-IgnoreTransportOverhead")),
       fast_retransmissions_(
           IsEnabled(field_trials_, "WebRTC-Pacer-FastRetransmissions")),
-      min_packet_limit_(kDefaultMinPacketLimit),
       transport_overhead_per_packet_(DataSize::Zero()),
       send_burst_interval_(TimeDelta::Zero()),
       last_timestamp_(clock_->CurrentTime()),
@@ -95,11 +91,6 @@ PacingController::PacingController(Clock* clock,
     RTC_LOG(LS_WARNING) << "Pacer queues will not be drained,"
                            "pushback experiment must be enabled.";
   }
-  FieldTrialParameter<int> min_packet_limit_ms("", min_packet_limit_.ms());
-  ParseFieldTrial({&min_packet_limit_ms},
-                  field_trials_.Lookup("WebRTC-Pacer-MinPacketLimitMs"));
-  min_packet_limit_ = TimeDelta::Millis(min_packet_limit_ms.Get());
-  UpdateBudgetWithElapsedTime(min_packet_limit_);
 }
 
 PacingController::~PacingController() = default;

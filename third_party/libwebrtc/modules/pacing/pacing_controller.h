@@ -206,7 +206,6 @@ class PacingController {
   const bool ignore_transport_overhead_;
   const bool fast_retransmissions_;
 
-  TimeDelta min_packet_limit_;
   DataSize transport_overhead_per_packet_;
   TimeDelta send_burst_interval_;
 
