@@ -47,6 +47,7 @@
 #include "nsStringStream.h"
 #include "ParentChannelListener.h"
 #include "nsIChannel.h"
+#include "nsInterfaceRequestorAgg.h"
 
 //
 // To enable logging (see mozilla/Logging.h for full details):
@@ -204,7 +205,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
     nsICookieJarSettings* aCookieJarSettings,
     const nsACString& aResponseReferrerPolicy, const nsACString& aCSPHeader,
-    uint64_t aBrowsingContextID) {
+    uint64_t aBrowsingContextID, nsIInterfaceRequestor* aCallbacks) {
   nsAttrValue as;
   ParseAsValue(aLinkHeader.mAs, as);
 
@@ -356,7 +357,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   NS_ENSURE_SUCCESS_VOID(earlyHintPreloader->OpenChannel(
       uri, aPrincipal, securityFlags, contentPolicyType, referrerInfo,
-      aCookieJarSettings, aBrowsingContextID));
+      aCookieJarSettings, aBrowsingContextID, aCallbacks));
 
   earlyHintPreloader->SetLinkHeader(aLinkHeader);
 
@@ -368,7 +369,8 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 nsresult EarlyHintPreloader::OpenChannel(
     nsIURI* aURI, nsIPrincipal* aPrincipal, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType, nsIReferrerInfo* aReferrerInfo,
-    nsICookieJarSettings* aCookieJarSettings, uint64_t aBrowsingContextID) {
+    nsICookieJarSettings* aCookieJarSettings, uint64_t aBrowsingContextID,
+    nsIInterfaceRequestor* aCallbacks) {
   MOZ_ASSERT(aContentPolicyType == nsContentPolicyType::TYPE_IMAGE ||
              aContentPolicyType ==
                  nsContentPolicyType::TYPE_INTERNAL_FETCH_PRELOAD ||
@@ -376,12 +378,15 @@ nsresult EarlyHintPreloader::OpenChannel(
              aContentPolicyType == nsContentPolicyType::TYPE_STYLESHEET ||
              aContentPolicyType == nsContentPolicyType::TYPE_FONT);
 
+  nsCOMPtr<nsIInterfaceRequestor> wrappedCallbacks;
+  NS_NewInterfaceRequestorAggregation(this, aCallbacks,
+                                      getter_AddRefs(wrappedCallbacks));
   nsresult rv =
       NS_NewChannel(getter_AddRefs(mChannel), aURI, aPrincipal, aSecurityFlags,
                     aContentPolicyType, aCookieJarSettings,
                     /* aPerformanceStorage */ nullptr,
                     /* aLoadGroup */ nullptr,
-                    /* aCallbacks */ this, nsIRequest::LOAD_NORMAL);
+                    /* aCallbacks */ wrappedCallbacks, nsIRequest::LOAD_NORMAL);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
