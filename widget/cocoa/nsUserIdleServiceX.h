@@ -6,6 +6,7 @@
 #define nsUserIdleServiceX_h_
 
 #include "nsUserIdleService.h"
+#include "mozilla/AppShutdown.h"
 
 class nsUserIdleServiceX : public nsUserIdleService {
  public:
@@ -16,6 +17,11 @@ class nsUserIdleServiceX : public nsUserIdleService {
   static already_AddRefed<nsUserIdleServiceX> GetInstance() {
     RefPtr<nsUserIdleService> idleService = nsUserIdleService::GetInstance();
     if (!idleService) {
+      // Avoid late instantiation or resurrection during shutdown.
+      if (mozilla::AppShutdown::IsInOrBeyond(
+              mozilla::ShutdownPhase::AppShutdownConfirmed)) {
+        return nullptr;
+      }
       idleService = new nsUserIdleServiceX();
     }
 

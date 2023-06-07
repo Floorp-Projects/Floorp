@@ -9,6 +9,7 @@
 #define nsUserIdleServiceAndroid_h__
 
 #include "nsUserIdleService.h"
+#include "mozilla/AppShutdown.h"
 
 class nsUserIdleServiceAndroid : public nsUserIdleService {
  public:
@@ -20,6 +21,11 @@ class nsUserIdleServiceAndroid : public nsUserIdleService {
   static already_AddRefed<nsUserIdleServiceAndroid> GetInstance() {
     RefPtr<nsUserIdleService> idleService = nsUserIdleService::GetInstance();
     if (!idleService) {
+      // Avoid late instantiation or resurrection during shutdown.
+      if (mozilla::AppShutdown::IsInOrBeyond(
+              mozilla::ShutdownPhase::AppShutdownConfirmed)) {
+        return nullptr;
+      }
       idleService = new nsUserIdleServiceAndroid();
     }
 
