@@ -1177,7 +1177,7 @@ index 3e6aa3baae..9ac7696ce9 100644
  constexpr int RTCP_MAX_REPORT_BLOCKS = 31;  // RFC 3550 page 37
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 142039db97..d39f2e4cae 100644
+index 5cc7724fec..05f293287a 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -130,6 +130,10 @@ bool IsNonVolatile(RTPExtensionType type) {
