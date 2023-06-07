@@ -1654,6 +1654,30 @@ TEST_F(RtpSenderVideoWithFrameTransformerTest,
 }
 
 TEST_F(RtpSenderVideoWithFrameTransformerTest,
+       TransformableFrameHasCorrectCaptureIdentifier) {
+  auto mock_frame_transformer =
+      rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
+  std::unique_ptr<RTPSenderVideo> rtp_sender_video =
+      CreateSenderWithFrameTransformer(mock_frame_transformer);
+  auto encoded_image = CreateDefaultEncodedImage();
+  encoded_image->SetCaptureTimeIdentifier(Timestamp::Millis(1));
+  RTPVideoHeader video_header;
+
+  EXPECT_CALL(*mock_frame_transformer, Transform)
+      .WillOnce([&encoded_image](std::unique_ptr<TransformableFrameInterface>
+                                     transformable_frame) {
+        auto* frame = static_cast<TransformableVideoFrameInterface*>(
+            transformable_frame.get());
+        ASSERT_TRUE(frame);
+        EXPECT_EQ(frame->GetCaptureTimeIdentifier(),
+                  encoded_image->CaptureTimeIdentifier());
+      });
+  rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                     *encoded_image, video_header,
+                                     kDefaultExpectedRetransmissionTimeMs);
+}
+
+TEST_F(RtpSenderVideoWithFrameTransformerTest,
        OnTransformedFrameSendsVideoWhenCloned) {
   auto mock_frame_transformer =
       rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();

@@ -36,6 +36,11 @@ class TransformableFrameInterface {
   virtual uint8_t GetPayloadType() const = 0;
   virtual uint32_t GetSsrc() const = 0;
   virtual uint32_t GetTimestamp() const = 0;
+  // TODO(https://bugs.webrtc.org/14878): Change this to pure virtual after it
+  // is implemented everywhere.
+  virtual absl::optional<Timestamp> GetCaptureTimeIdentifier() const {
+    return absl::nullopt;
+  }
 
   enum class Direction {
     kUnknown,

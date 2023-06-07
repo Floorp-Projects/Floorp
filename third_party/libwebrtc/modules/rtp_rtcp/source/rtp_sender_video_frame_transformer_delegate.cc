@@ -41,6 +41,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
         codec_type_(codec_type),
         timestamp_(rtp_timestamp),
         capture_time_ms_(encoded_image.capture_time_ms_),
+        capture_time_identifier_(encoded_image.CaptureTimeIdentifier()),
         expected_retransmission_time_ms_(expected_retransmission_time_ms) {
     RTC_DCHECK_GE(payload_type_, 0);
     RTC_DCHECK_LE(payload_type_, 127);
@@ -87,6 +88,9 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   uint8_t GetPayloadType() const override { return payload_type_; }
   absl::optional<VideoCodecType> GetCodecType() const { return codec_type_; }
   int64_t GetCaptureTimeMs() const { return capture_time_ms_; }
+  absl::optional<Timestamp> GetCaptureTimeIdentifier() const override {
+    return capture_time_identifier_;
+  }
 
   const absl::optional<int64_t>& GetExpectedRetransmissionTimeMs() const {
     return expected_retransmission_time_ms_;
@@ -107,6 +111,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   const absl::optional<VideoCodecType> codec_type_ = absl::nullopt;
   const uint32_t timestamp_;
   const int64_t capture_time_ms_;
+  const absl::optional<Timestamp> capture_time_identifier_;
   const absl::optional<int64_t> expected_retransmission_time_ms_;
 };
 }  // namespace

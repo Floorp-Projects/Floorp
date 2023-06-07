@@ -98,6 +98,14 @@ class RTC_EXPORT EncodedImage {
     simulcast_index_ = simulcast_index;
   }
 
+  const absl::optional<webrtc::Timestamp>& CaptureTimeIdentifier() const {
+    return capture_time_identifier_;
+  }
+  void SetCaptureTimeIdentifier(
+      const absl::optional<webrtc::Timestamp>& capture_time_identifier) {
+    capture_time_identifier_ = capture_time_identifier;
+  }
+
   // Encoded images can have dependencies between spatial and/or temporal
   // layers, depending on the scalability mode used by the encoder. See diagrams
   // at https://w3c.github.io/webrtc-svc/#dependencydiagrams*.
@@ -217,6 +225,7 @@ class RTC_EXPORT EncodedImage {
   size_t size_ = 0;  // Size of encoded frame data.
   uint32_t timestamp_rtp_ = 0;
   absl::optional<int> simulcast_index_;
+  absl::optional<webrtc::Timestamp> capture_time_identifier_;
   absl::optional<int> spatial_index_;
   absl::optional<int> temporal_index_;
   std::map<int, size_t> spatial_layer_frame_size_bytes_;
