@@ -532,10 +532,10 @@ index 2bbc701e17..a367ca06e9 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index e2384bbeb2..a9950b22c0 100644
+index 2e1990d651..7040b51b63 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
-@@ -237,6 +237,12 @@ rtc_library("video_coding") {
+@@ -235,6 +235,12 @@ rtc_library("video_coding") {
      "video_receiver2.cc",
      "video_receiver2.h",
    ]

@@ -229,7 +229,7 @@ index 1a2bb77fa6..20139b45e5 100644
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 0a9d097a7f..41a912fe37 100644
+index 8ac0ff0fb3..9200cc24e7 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -244,6 +244,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
@@ -259,7 +259,7 @@ index 0a9d097a7f..41a912fe37 100644
    }
  }
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index b188887c20..6552668fb8 100644
+index dc9cea422d..90bce6d4b5 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -91,6 +91,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,

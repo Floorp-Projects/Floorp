@@ -159,7 +159,7 @@ index 1d06fd7bd2..a830e93960 100644
    // Within this list, the sender-source SSRC pair is unique and per-pair the
    // ReportBlockData represents the latest Report Block that was received for
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 6fcf1097cb..0a9d097a7f 100644
+index c6ed22671a..8ac0ff0fb3 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -1055,9 +1055,10 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
@@ -176,7 +176,7 @@ index 6fcf1097cb..0a9d097a7f 100644
  
  void RtpVideoStreamReceiver2::ManageFrame(
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 2b758dcac3..b188887c20 100644
+index 53378e9e9b..dc9cea422d 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -210,7 +210,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,

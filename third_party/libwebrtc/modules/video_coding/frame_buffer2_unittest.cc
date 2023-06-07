@@ -19,7 +19,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "modules/video_coding/frame_object.h"
+#include "modules/rtp_rtcp/source/frame_object.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "modules/video_coding/timing/timing.h"
 #include "rtc_base/numerics/sequence_number_util.h"
