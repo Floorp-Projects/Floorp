@@ -62,8 +62,8 @@ SwipeTracker::SwipeTracker(nsIWidget& aWidget,
 void SwipeTracker::Destroy() { UnregisterFromRefreshDriver(); }
 
 SwipeTracker::~SwipeTracker() {
-  MOZ_ASSERT(!mRegisteredWithRefreshDriver,
-             "Destroy needs to be called before deallocating");
+  MOZ_RELEASE_ASSERT(!mRegisteredWithRefreshDriver,
+                     "Destroy needs to be called before deallocating");
 }
 
 double SwipeTracker::SwipeSuccessTargetValue() const {
@@ -177,7 +177,8 @@ void SwipeTracker::StartAnimating(double aStartValue, double aTargetValue) {
   // Add ourselves as a refresh driver observer. The refresh driver
   // will call WillRefresh for each animation frame until we
   // unregister ourselves.
-  MOZ_ASSERT(!mRegisteredWithRefreshDriver);
+  MOZ_RELEASE_ASSERT(!mRegisteredWithRefreshDriver,
+                     "We only want a single refresh driver registration");
   if (mRefreshDriver) {
     mRefreshDriver->AddRefreshObserver(this, FlushType::Style,
                                        "Swipe animation");
