@@ -1163,7 +1163,7 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
         }
         encoded_images_[encoder_idx].SetEncodedData(buffer);
         encoded_images_[encoder_idx].set_size(encoded_pos);
-        encoded_images_[encoder_idx].SetSpatialIndex(stream_idx);
+        encoded_images_[encoder_idx].SetSimulcastIndex(stream_idx);
         PopulateCodecSpecific(&codec_specific, *pkt, stream_idx, encoder_idx,
                               input_image.timestamp());
         if (codec_specific.codecSpecific.VP8.temporalIdx != kNoTemporalIdx) {

@@ -467,7 +467,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
     last_encoded_image_width_ = encoded_image._encodedWidth;
     last_encoded_image_height_ = encoded_image._encodedHeight;
     last_encoded_image_simulcast_index_ =
-        encoded_image.SpatialIndex().value_or(-1);
+        encoded_image.SimulcastIndex().value_or(-1);
 
     return Result(Result::OK, encoded_image.Timestamp());
   }

@@ -89,7 +89,35 @@ class RTC_EXPORT EncodedImage {
 
   int64_t NtpTimeMs() const { return ntp_time_ms_; }
 
-  absl::optional<int> SpatialIndex() const { return spatial_index_; }
+  // Every simulcast layer (= encoding) has its own encoder and RTP stream.
+  // There can be no dependencies between different simulcast layers.
+  absl::optional<int> SimulcastIndex() const {
+    // Historically, SpatialIndex() has been used as both simulcast and spatial
+    // index (one or the other depending on codec). As to not break old code
+    // which doesn't call SetSimulcastIndex(), SpatialLayer() is used when the
+    // simulcast index is missing.
+    // TODO(https://crbug.com/webrtc/14884): When old code has been updated,
+    // never return `spatial_index_` here.
+    return simulcast_index_.has_value() ? simulcast_index_ : spatial_index_;
+  }
+  void SetSimulcastIndex(absl::optional<int> simulcast_index) {
+    RTC_DCHECK_GE(simulcast_index.value_or(0), 0);
+    RTC_DCHECK_LT(simulcast_index.value_or(0), kMaxSimulcastStreams);
+    simulcast_index_ = simulcast_index;
+  }
+
+  // Encoded images can have dependencies between spatial and/or temporal
+  // layers, depending on the scalability mode used by the encoder. See diagrams
+  // at https://w3c.github.io/webrtc-svc/#dependencydiagrams*.
+  absl::optional<int> SpatialIndex() const {
+    // Historically, SpatialIndex() has been used as both simulcast and spatial
+    // index (one or the other depending on codec). As to not break old code
+    // that still uses the SpatialIndex() getter instead of SimulcastIndex()
+    // we fall back to `simulcast_index_` if `spatial_index_` is not set.
+    // TODO(https://crbug.com/webrtc/14884): When old code has been updated,
+    // never return `simulcast_index_` here.
+    return spatial_index_.has_value() ? spatial_index_ : simulcast_index_;
+  }
   void SetSpatialIndex(absl::optional<int> spatial_index) {
     RTC_DCHECK_GE(spatial_index.value_or(0), 0);
     RTC_DCHECK_LT(spatial_index.value_or(0), kMaxSpatialLayers);
@@ -204,6 +232,7 @@ class RTC_EXPORT EncodedImage {
   rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
   size_t size_ = 0;  // Size of encoded frame data.
   uint32_t timestamp_rtp_ = 0;
+  absl::optional<int> simulcast_index_;
   absl::optional<int> spatial_index_;
   absl::optional<int> temporal_index_;
   std::map<int, size_t> spatial_layer_frame_size_bytes_;

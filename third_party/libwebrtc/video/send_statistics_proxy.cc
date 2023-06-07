@@ -938,11 +938,15 @@ void SendStatisticsProxy::OnSendEncodedImage(
     const EncodedImage& encoded_image,
     const CodecSpecificInfo* codec_info) {
   // Simulcast is used for VP8, H264 and Generic.
+  // Currently, SimulcastIndex() could return the SpatialIndex() if not set
+  // correctly so gate on codec type.
+  // TODO(https://crbug.com/webrtc/14884): Delete this gating logic when
+  // SimulcastIndex() is guaranteed to be the stream index.
   int simulcast_idx =
       (codec_info && (codec_info->codecType == kVideoCodecVP8 ||
                       codec_info->codecType == kVideoCodecH264 ||
                       codec_info->codecType == kVideoCodecGeneric))
-          ? encoded_image.SpatialIndex().value_or(0)
+          ? encoded_image.SimulcastIndex().value_or(0)
           : 0;
 
   MutexLock lock(&mutex_);
@@ -1010,8 +1014,13 @@ void SendStatisticsProxy::OnSendEncodedImage(
         int spatial_idx = (rtp_config_.ssrcs.size() == 1) ? -1 : simulcast_idx;
         uma_container_->qp_counters_[spatial_idx].vp8.Add(encoded_image.qp_);
       } else if (codec_info->codecType == kVideoCodecVP9) {
-        int spatial_idx = encoded_image.SpatialIndex().value_or(-1);
-        uma_container_->qp_counters_[spatial_idx].vp9.Add(encoded_image.qp_);
+        // We could either have simulcast layers or spatial layers.
+        // TODO(https://crbug.com/webrtc/14891): When its possible to mix
+        // simulcast and SVC we'll also need to consider what, if anything, to
+        // report in a "simulcast of SVC streams" setup.
+        int stream_idx = encoded_image.SpatialIndex().value_or(
+            encoded_image.SimulcastIndex().value_or(-1));
+        uma_container_->qp_counters_[stream_idx].vp9.Add(encoded_image.qp_);
       } else if (codec_info->codecType == kVideoCodecH264) {
         int spatial_idx = (rtp_config_.ssrcs.size() == 1) ? -1 : simulcast_idx;
         uma_container_->qp_counters_[spatial_idx].h264.Add(encoded_image.qp_);
