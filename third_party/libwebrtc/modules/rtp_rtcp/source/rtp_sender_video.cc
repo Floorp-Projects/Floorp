@@ -71,7 +71,6 @@ bool MinimizeDescriptor(RTPVideoHeader* video_header) {
     vp8->nonReference = non_reference;
     return true;
   }
-  // TODO(danilchap): Reduce vp9 codec specific descriptor too.
   return false;
 }
 
@@ -634,7 +633,6 @@ bool RTPSenderVideo::SendVideo(
     MinimizeDescriptor(&video_header);
   }
 
-  // TODO(benwright@webrtc.org) - Allocate enough to always encrypt inline.
   rtc::Buffer encrypted_video_payload;
   if (frame_encryptor_ != nullptr) {
     const size_t max_ciphertext_size =

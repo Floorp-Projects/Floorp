@@ -70,10 +70,10 @@ index c45f597951..fb6c8001f0 100644
    void SetRtxPayloadType(int payload_type, int associated_payload_type)
        RTC_LOCKS_EXCLUDED(send_mutex_);
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
-index e1f1697047..0f0ff6d997 100644
+index 92cebfd422..c556a3a6c0 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
-@@ -496,6 +496,13 @@ bool RTPSenderVideo::SendVideo(
+@@ -495,6 +495,13 @@ bool RTPSenderVideo::SendVideo(
      // Backward compatibility for older receivers without temporal layer logic.
      retransmission_settings = kRetransmitBaseLayer | kRetransmitHigherLayers;
    }
@@ -87,7 +87,7 @@ index e1f1697047..0f0ff6d997 100644
  
    MaybeUpdateCurrentPlayoutDelay(video_header);
    if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
-@@ -517,16 +524,19 @@ bool RTPSenderVideo::SendVideo(
+@@ -516,16 +523,19 @@ bool RTPSenderVideo::SendVideo(
          video_header.generic->frame_id, video_header.generic->chain_diffs);
    }
  
@@ -111,7 +111,7 @@ index e1f1697047..0f0ff6d997 100644
  
    absl::optional<Timestamp> capture_time;
    if (capture_time_ms > 0) {
-@@ -657,14 +667,6 @@ bool RTPSenderVideo::SendVideo(
+@@ -655,14 +665,6 @@ bool RTPSenderVideo::SendVideo(
    std::unique_ptr<RtpPacketizer> packetizer =
        RtpPacketizer::Create(codec_type, payload, limits, video_header);
  
