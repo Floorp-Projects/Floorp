@@ -605,6 +605,7 @@ if (rtc_include_tests) {
       "source/rtp_sender_audio_unittest.cc",
       "source/rtp_sender_egress_unittest.cc",
       "source/rtp_sender_unittest.cc",
+      "source/rtp_sender_video_frame_transformer_delegate_unittest.cc",
       "source/rtp_sender_video_unittest.cc",
       "source/rtp_sequence_number_map_unittest.cc",
       "source/rtp_util_unittest.cc",
