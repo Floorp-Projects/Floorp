@@ -9,7 +9,9 @@ const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
 const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
 const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
 const l10n = new Localization(["browser/floorp.ftl"], true);
-const defaultWorkspaceName = l10n.formatValueSync("workspace-default");
+const defaultWorkspaceName = Services.prefs.getStringPref(
+  WORKSPACE_ALL_PREF
+).split(",")[0];
 
 const workspaceFunctions = {
   eventListeners: {
@@ -129,9 +131,9 @@ const workspaceFunctions = {
       if (!Services.prefs.prefHasUserValue(WORKSPACE_CURRENT_PREF)) {
         Services.prefs.setStringPref(
           WORKSPACE_CURRENT_PREF,
-          defaultWorkspaceName
+          l10n.formatValueSync("workspace-default")
         );
-        Services.prefs.setStringPref(WORKSPACE_ALL_PREF, defaultWorkspaceName);
+        Services.prefs.setStringPref(WORKSPACE_ALL_PREF, l10n.formatValueSync("workspace-default"));
       }
 
       let tabs = gBrowser.tabs;
@@ -571,7 +573,10 @@ const workspaceFunctions = {
           gBrowser.selectedTab = tab;
           break;
         } else if (i == tabs.length - 1) {
-          gBrowser.addTab("about:newtab", {
+          let newtabURL = Services.prefs.getStringPref(
+            "browser.startup.homepage"
+          );
+          gBrowser.addTab(newtabURL, {
             skipAnimation: true,
             inBackground: false,
             triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -712,7 +717,7 @@ const workspaceFunctions = {
   WorkspaceContextMenu: {
     addWorkspaceElemToMenu(label, nextElem) {
       let workspaceItemElem = window.MozXULElement.parseXULToFragment(`
-    
+
       <vbox id="workspace-box-${label}" class="workspace-label-box">
        <hbox id="workspace-${label}" class="workspace-item-box">
          <toolbarbutton id="workspace-label" label="${label}"
