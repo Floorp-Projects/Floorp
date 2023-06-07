@@ -129,6 +129,13 @@
       }
     }
   },
+  'linux-focal': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Ubuntu-20.04'
+      }
+    }
+  },
   'mac-m1-cpu': {
     'swarming': {
       'dimensions': {

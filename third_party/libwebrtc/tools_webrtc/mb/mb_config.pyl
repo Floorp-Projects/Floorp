@@ -421,7 +421,7 @@
     },
     'msan': {
       'gn_args': 'is_msan=true msan_track_origins=2'
-                 ' instrumented_libraries_release = "xenial"',
+                 ' instrumented_libraries_release = "focal"',
     },
     'no_ios_code_signing': {
       'gn_args': 'ios_enable_code_signing=false',
