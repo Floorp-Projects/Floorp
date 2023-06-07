@@ -1,0 +1,8 @@
+[package]
+name = "terminal_size"
+version = "0.1.999"
+edition = "2018"
+license = "MIT OR Apache-2.0"
+
+[lib]
+path = "lib.rs"

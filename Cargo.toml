@@ -96,6 +96,9 @@ mozbuild = { path = "build/rust/mozbuild" }
 # Dummy oslog replacement. It's only used by glean in code that is not actually used.
 oslog = { path = "build/rust/oslog" }
 
+# Override terminal_size with a dummy crate that returns a fixed 80x25 terminal size.
+terminal_size = { path = "build/rust/terminal_size" }
+
 # Patch bitflags 2.0 to 1.0 while not too many crates use 2.0 features
 bitflags = { path = "build/rust/bitflags" }
 

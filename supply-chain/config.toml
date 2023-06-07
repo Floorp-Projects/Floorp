@@ -817,10 +817,6 @@ criteria = "safe-to-deploy"
 version = "3.3.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.terminal_size]]
-version = "0.1.17"
-criteria = "safe-to-deploy"
-
 [[exemptions.textwrap]]
 version = "0.15.0"
 criteria = "safe-to-deploy"
