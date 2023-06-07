@@ -181,34 +181,6 @@ interface nsIAccessibleTable : nsISupports
   Array<uint32_t> getSelectedRowIndices();
 
   /**
-   * Select a row and unselects all previously selected rows.
-   *
-   * @param  rowIndex  [in] the row index to select
-   */
-  void selectRow(in long rowIndex);
-
-  /**
-   * Select a column and unselects all previously selected columns.
-   *
-   * @param  columnIndex  [in] the column index to select
-   */
-  void selectColumn(in long columnIndex);
-
-  /**
-   * Unselect the given row, leaving other selected rows selected (if any).
-   *
-   * @param  rowIndex  [in] the row index to select
-  */
-  void unselectRow(in long rowIndex);
-
-  /**
-   * Unselect the given column, leaving other selected columns selected (if any).
-   *
-   * @param  columnIndex  [in] the column index to select
-   */
-  void unselectColumn(in long columnIndex);
-
-  /**
    * Use heuristics to determine if table is most likely used for layout.
    */
   boolean isProbablyForLayout();
