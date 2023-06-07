@@ -139,7 +139,7 @@ export class IdentityCredentialPromptService {
     // Localize all strings to be used
     // Bug 1797154 - Convert localization calls to use the async formatValues.
     let localization = new Localization(
-      ["preview/identityCredentialNotification.ftl"],
+      ["browser/identityCredentialNotification.ftl"],
       true
     );
     let headerMessage = localization.formatValueSync(
@@ -316,7 +316,7 @@ export class IdentityCredentialPromptService {
       // Localize the description
       // Bug 1797154 - Convert localization calls to use the async formatValues.
       let localization = new Localization(
-        ["preview/identityCredentialNotification.ftl"],
+        ["browser/identityCredentialNotification.ftl"],
         true
       );
       let [accept, cancel] = localization.formatMessagesSync([
@@ -460,7 +460,7 @@ export class IdentityCredentialPromptService {
     // Localize all strings to be used
     // Bug 1797154 - Convert localization calls to use the async formatValues.
     let localization = new Localization(
-      ["preview/identityCredentialNotification.ftl"],
+      ["browser/identityCredentialNotification.ftl"],
       true
     );
     let providerURL = new URL(provider.configURL);

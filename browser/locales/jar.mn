@@ -12,7 +12,6 @@
   preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
-  preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
   preview/stripOnShare.ftl                         (../components/urlbar/content/stripOnShare.ftl)
   browser                                          (%browser/**/*.ftl)
 
