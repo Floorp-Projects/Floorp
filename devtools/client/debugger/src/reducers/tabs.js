@@ -182,19 +182,22 @@ function updateTabList(state, source, sourceActor) {
 }
 
 function moveTabInList(state, { url, tabIndex: newIndex }) {
-  const { tabs } = state;
-  const currentIndex = tabs.findIndex(tab => tab.url == url);
-  return moveTab(tabs, currentIndex, newIndex);
+  const currentIndex = state.tabs.findIndex(tab => tab.url == url);
+  return moveTab(state, currentIndex, newIndex);
 }
 
 function moveTabInListBySourceId(state, { sourceId, tabIndex: newIndex }) {
-  const { tabs } = state;
-  const currentIndex = tabs.findIndex(tab => tab.source?.id == sourceId);
-  return moveTab(tabs, currentIndex, newIndex);
+  const currentIndex = state.tabs.findIndex(tab => tab.source?.id == sourceId);
+  return moveTab(state, currentIndex, newIndex);
 }
 
-function moveTab(tabs, currentIndex, newIndex) {
+function moveTab(state, currentIndex, newIndex) {
+  const { tabs } = state;
   const item = tabs[currentIndex];
+  // Avoid any state change if we are on the same position or the new is invalid
+  if (currentIndex == newIndex || isNaN(newIndex)) {
+    return state;
+  }
 
   const newTabs = Array.from(tabs);
   // Remove the item from its current location
