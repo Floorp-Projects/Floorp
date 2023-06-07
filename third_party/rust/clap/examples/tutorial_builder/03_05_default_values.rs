@@ -1,16 +1,18 @@
-// Note: this requires the `cargo` feature
-
-use clap::{arg, command};
+use clap::{arg, command, value_parser};
 
 fn main() {
-    let matches = command!()
-        .arg(arg!([NAME]).default_value("alice"))
+    let matches = command!() // requires `cargo` feature
+        .arg(
+            arg!([PORT])
+                .value_parser(value_parser!(u16))
+                .default_value("2020"),
+        )
         .get_matches();
 
     println!(
-        "NAME: {:?}",
+        "port: {:?}",
         matches
-            .value_of("NAME")
+            .get_one::<u16>("PORT")
             .expect("default ensures there is always a value")
     );
 }

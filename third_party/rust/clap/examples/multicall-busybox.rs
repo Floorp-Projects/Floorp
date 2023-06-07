@@ -1,10 +1,9 @@
-// Note: this requires the `unstable-multicall` feature
-
+use std::path::PathBuf;
 use std::process::exit;
 
-use clap::{Arg, Command};
+use clap::{value_parser, Arg, ArgAction, Command};
 
-fn applet_commands() -> [Command<'static>; 2] {
+fn applet_commands() -> [Command; 2] {
     [
         Command::new("true").about("does nothing successfully"),
         Command::new("false").about("does nothing unsuccessfully"),
@@ -24,9 +23,9 @@ fn main() {
                         .long("install")
                         .help("Install hardlinks for all subcommands in path")
                         .exclusive(true)
-                        .takes_value(true)
+                        .action(ArgAction::Set)
                         .default_missing_value("/usr/local/bin")
-                        .use_value_delimiter(false),
+                        .value_parser(value_parser!(PathBuf)),
                 )
                 .subcommands(applet_commands()),
         )
@@ -35,7 +34,7 @@ fn main() {
     let matches = cmd.get_matches();
     let mut subcommand = matches.subcommand();
     if let Some(("busybox", cmd)) = subcommand {
-        if cmd.occurrences_of("install") > 0 {
+        if cmd.contains_id("install") {
             unimplemented!("Make hardlinks to the executable here");
         }
         subcommand = cmd.subcommand();

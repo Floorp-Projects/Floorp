@@ -1,8 +1,4 @@
-*Jump to [source](multicall-busybox.rs)*
-
-Example of a busybox-style multicall program
-
-See the documentation for `clap::Command::multicall` for rationale.
+See the documentation for [`Command::multicall`][crate::Command::multicall] for rationale.
 
 This example omits every command except true and false,
 which are the most trivial to implement,
@@ -29,18 +25,15 @@ Though users must pass something:
 ```console
 $ busybox
 ? failed
-busybox 
-
-USAGE:
-    busybox [OPTIONS] [APPLET]
-
-OPTIONS:
-    -h, --help                 Print help information
-        --install <install>    Install hardlinks for all subcommands in path
+Usage: busybox [OPTIONS] [APPLET]
 
 APPLETS:
-    false    does nothing unsuccessfully
-    help     Print this message or the help of the given subcommand(s)
-    true     does nothing successfully
+  true   does nothing successfully
+  false  does nothing unsuccessfully
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+      --install <install>  Install hardlinks for all subcommands in path
+  -h, --help               Print help
 
 ```
