@@ -193,9 +193,12 @@ TEST(LibaomAv1EncoderTest, EncoderInfoProvidesFpsAllocation) {
             WEBRTC_VIDEO_CODEC_OK);
 
   const auto& encoder_info = encoder->GetEncoderInfo();
-  EXPECT_THAT(encoder_info.fps_allocation[0], ElementsAre(15, 30, 60));
-  EXPECT_THAT(encoder_info.fps_allocation[1], ElementsAre(15, 30, 60));
-  EXPECT_THAT(encoder_info.fps_allocation[2], ElementsAre(15, 30, 60));
+  EXPECT_THAT(encoder_info.fps_allocation[0],
+              ElementsAre(255 / 4, 255 / 2, 255));
+  EXPECT_THAT(encoder_info.fps_allocation[1],
+              ElementsAre(255 / 4, 255 / 2, 255));
+  EXPECT_THAT(encoder_info.fps_allocation[2],
+              ElementsAre(255 / 4, 255 / 2, 255));
   EXPECT_THAT(encoder_info.fps_allocation[3], IsEmpty());
 }
 
