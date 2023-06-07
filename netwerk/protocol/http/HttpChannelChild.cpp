@@ -2813,7 +2813,7 @@ HttpChannelChild::GetIsLastPart(bool* aIsLastPart) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
+HttpChannelChild::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   LOG(("HttpChannelChild::RetargetDeliveryTo [this=%p, aNewTarget=%p]", this,
        aNewTarget));
 
@@ -2864,10 +2864,10 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget) {
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetDeliveryTarget(nsIEventTarget** aEventTarget) {
+HttpChannelChild::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
   MutexAutoLock lock(mEventTargetMutex);
 
-  nsCOMPtr<nsIEventTarget> target = mODATarget;
+  nsCOMPtr<nsISerialEventTarget> target = mODATarget;
   if (!mODATarget) {
     target = GetCurrentSerialEventTarget();
   }

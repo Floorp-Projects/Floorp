@@ -298,7 +298,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   void CleanupBackgroundChannel();
 
   // Target thread for delivering ODA.
-  nsCOMPtr<nsIEventTarget> mODATarget MOZ_GUARDED_BY(mEventTargetMutex);
+  nsCOMPtr<nsISerialEventTarget> mODATarget MOZ_GUARDED_BY(mEventTargetMutex);
   // Used to ensure atomicity of mNeckoTarget / mODATarget;
   Mutex mEventTargetMutex{"HttpChannelChild::EventTargetMutex"};
 

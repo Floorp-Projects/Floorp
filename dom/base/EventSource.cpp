@@ -76,7 +76,7 @@ class EventSourceImpl final : public nsIObserver,
                               public nsIChannelEventSink,
                               public nsIInterfaceRequestor,
                               public nsSupportsWeakReference,
-                              public nsIEventTarget,
+                              public nsISerialEventTarget,
                               public nsITimerCallback,
                               public nsINamed,
                               public nsIThreadRetargetableStreamListener {
@@ -364,8 +364,9 @@ class EventSourceImpl final : public nsIObserver,
 NS_IMPL_ISUPPORTS(EventSourceImpl, nsIObserver, nsIStreamListener,
                   nsIRequestObserver, nsIChannelEventSink,
                   nsIInterfaceRequestor, nsISupportsWeakReference,
-                  nsIEventTarget, nsIThreadRetargetableStreamListener,
-                  nsITimerCallback, nsINamed)
+                  nsISerialEventTarget, nsIEventTarget,
+                  nsIThreadRetargetableStreamListener, nsITimerCallback,
+                  nsINamed)
 
 EventSourceImpl::EventSourceImpl(EventSource* aEventSource,
                                  nsICookieJarSettings* aCookieJarSettings)
@@ -1056,16 +1057,15 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource(
 
   MOZ_ASSERT_IF(mIsMainThread, aEventTargetAccessAllowed);
 
-  nsresult rv = aEventTargetAccessAllowed
-                    ? [this]() {
-                        // We can't call GetEventSource() because we're not
-                        // allowed to touch the refcount off the worker thread
-                        // due to an assertion, event if it would have otherwise
-                        // been safe.
-                        auto lock = mSharedData.Lock();
-                        return lock->mEventSource->CheckCurrentGlobalCorrectness();
-                      }()
-                    : NS_OK;
+  nsresult rv = aEventTargetAccessAllowed ? [this]() {
+    // We can't call GetEventSource() because we're not
+    // allowed to touch the refcount off the worker thread
+    // due to an assertion, event if it would have otherwise
+    // been safe.
+    auto lock = mSharedData.Lock();
+    return lock->mEventSource->CheckCurrentGlobalCorrectness();
+  }()
+                                          : NS_OK;
   if (NS_FAILED(rv) || !isValidScheme) {
     DispatchFailConnection();
     return NS_ERROR_DOM_SECURITY_ERR;

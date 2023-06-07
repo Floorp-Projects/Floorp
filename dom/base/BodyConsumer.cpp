@@ -23,6 +23,7 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TaskQueue.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIThreadRetargetableRequest.h"
@@ -272,7 +273,7 @@ NS_IMPL_ISUPPORTS(ConsumeBodyDoneObserver, nsIStreamLoaderObserver)
 }  // namespace
 
 /* static */ already_AddRefed<Promise> BodyConsumer::Create(
-    nsIGlobalObject* aGlobal, nsIEventTarget* aMainThreadEventTarget,
+    nsIGlobalObject* aGlobal, nsISerialEventTarget* aMainThreadEventTarget,
     nsIInputStream* aBodyStream, AbortSignalImpl* aSignalImpl,
     ConsumeType aType, const nsACString& aBodyBlobURISpec,
     const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
@@ -359,10 +360,11 @@ void BodyConsumer::ReleaseObject() {
 }
 
 BodyConsumer::BodyConsumer(
-    nsIEventTarget* aMainThreadEventTarget, nsIGlobalObject* aGlobalObject,
-    nsIInputStream* aBodyStream, Promise* aPromise, ConsumeType aType,
-    const nsACString& aBodyBlobURISpec, const nsAString& aBodyLocalPath,
-    const nsACString& aBodyMimeType, const nsACString& aMixedCaseMimeType,
+    nsISerialEventTarget* aMainThreadEventTarget,
+    nsIGlobalObject* aGlobalObject, nsIInputStream* aBodyStream,
+    Promise* aPromise, ConsumeType aType, const nsACString& aBodyBlobURISpec,
+    const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
+    const nsACString& aMixedCaseMimeType,
     MutableBlobStorage::MutableBlobStorageType aBlobStorageType)
     : mTargetThread(NS_GetCurrentThread()),
       mMainThreadEventTarget(aMainThreadEventTarget),
@@ -575,7 +577,9 @@ void BodyConsumer::BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWorkerRef) {
   if (rr) {
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    rv = rr->RetargetDeliveryTo(sts);
+    RefPtr<TaskQueue> queue =
+        TaskQueue::Create(sts.forget(), "BodyConsumer STS Delivery Queue");
+    rv = rr->RetargetDeliveryTo(queue);
     if (NS_FAILED(rv)) {
       NS_WARNING("Retargeting failed");
     }
