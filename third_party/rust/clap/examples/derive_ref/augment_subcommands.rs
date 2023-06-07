@@ -3,7 +3,7 @@ use clap::{Command, FromArgMatches as _, Parser, Subcommand as _};
 #[derive(Parser, Debug)]
 enum Subcommands {
     Derived {
-        #[clap(short, long)]
+        #[arg(short, long)]
         derived_flag: bool,
     },
 }
@@ -17,5 +17,5 @@ fn main() {
     let derived_subcommands = Subcommands::from_arg_matches(&matches)
         .map_err(|err| err.exit())
         .unwrap();
-    println!("Derived subcommands: {:#?}", derived_subcommands);
+    println!("Derived subcommands: {derived_subcommands:#?}");
 }

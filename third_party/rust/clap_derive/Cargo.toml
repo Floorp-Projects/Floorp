@@ -10,17 +10,20 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.64.0"
 name = "clap_derive"
-version = "3.1.18"
+version = "4.1.14"
 include = [
+    "build.rs",
     "src/**/*",
     "Cargo.toml",
-    "LICENSE-*",
+    "LICENSE*",
     "README.md",
+    "benches/**/*",
+    "examples/**/*",
 ]
 description = "Parse command line argument by defining a struct, derive crate."
-documentation = "https://docs.rs/clap_derive"
 readme = "README.md"
 keywords = [
     "clap",
@@ -36,20 +39,13 @@ categories = [
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/clap-rs/clap/tree/master/clap_derive"
 
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
 [package.metadata.release]
 shared-version = true
 dependent-version = "upgrade"
 tag-name = "v{{version}}"
-
-[[package.metadata.release.pre-release-replacements]]
-file = "README.md"
-search = "github.com/clap-rs/clap/blob/[^/]+/"
-replace = "github.com/clap-rs/clap/blob/{{tag_name}}/"
-exactly = 2
-prerelease = true
-
-[package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
 
 [lib]
 bench = false
@@ -58,20 +54,19 @@ proc-macro = true
 [dependencies.heck]
 version = "0.4.0"
 
-[dependencies.proc-macro-error]
-version = "1"
-
 [dependencies.proc-macro2]
-version = "1.0.28"
+version = "1.0.42"
 
 [dependencies.quote]
 version = "1.0.9"
 
 [dependencies.syn]
-version = "1.0.74"
+version = "2.0.8"
 features = ["full"]
 
 [features]
 debug = []
 default = []
-unstable-v4 = []
+deprecated = []
+raw-deprecated = ["deprecated"]
+unstable-v5 = ["deprecated"]

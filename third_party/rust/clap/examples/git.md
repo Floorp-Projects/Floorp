@@ -1,56 +1,50 @@
-*Jump to [source](git.rs)*
-
 Git is an example of several common subcommand patterns.
 
 Help:
 ```console
 $ git
 ? failed
-git 
 A fictional versioning CLI
 
-USAGE:
-    git[EXE] <SUBCOMMAND>
+Usage: git[EXE] <COMMAND>
 
-OPTIONS:
-    -h, --help    Print help information
+Commands:
+  clone  Clones repos
+  diff   Compare two commits
+  push   pushes things
+  add    adds things
+  stash  
+  help   Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    add      adds things
-    clone    Clones repos
-    help     Print this message or the help of the given subcommand(s)
-    push     pushes things
-    stash    
+Options:
+  -h, --help  Print help
 
 $ git help
-git 
 A fictional versioning CLI
 
-USAGE:
-    git[EXE] <SUBCOMMAND>
+Usage: git[EXE] <COMMAND>
 
-OPTIONS:
-    -h, --help    Print help information
+Commands:
+  clone  Clones repos
+  diff   Compare two commits
+  push   pushes things
+  add    adds things
+  stash  
+  help   Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    add      adds things
-    clone    Clones repos
-    help     Print this message or the help of the given subcommand(s)
-    push     pushes things
-    stash    
+Options:
+  -h, --help  Print help
 
 $ git help add
-git[EXE]-add 
 adds things
 
-USAGE:
-    git[EXE] add <PATH>...
+Usage: git[EXE] add <PATH>...
 
-ARGS:
-    <PATH>...    Stuff to add
+Arguments:
+  <PATH>...  Stuff to add
 
-OPTIONS:
-    -h, --help    Print help information
+Options:
+  -h, --help  Print help
 
 ```
 
@@ -58,17 +52,15 @@ A basic argument:
 ```console
 $ git add
 ? failed
-git[EXE]-add 
 adds things
 
-USAGE:
-    git[EXE] add <PATH>...
+Usage: git[EXE] add <PATH>...
 
-ARGS:
-    <PATH>...    Stuff to add
+Arguments:
+  <PATH>...  Stuff to add
 
-OPTIONS:
-    -h, --help    Print help information
+Options:
+  -h, --help  Print help
 
 $ git add Cargo.toml Cargo.lock
 Adding ["Cargo.toml", "Cargo.lock"]
@@ -78,43 +70,34 @@ Adding ["Cargo.toml", "Cargo.lock"]
 Default subcommand:
 ```console
 $ git stash -h
-git[EXE]-stash 
+Usage: git[EXE] stash [OPTIONS]
+       git[EXE] stash <COMMAND>
 
-USAGE:
-    git[EXE] stash [OPTIONS]
-    git[EXE] stash <SUBCOMMAND>
+Commands:
+  push   
+  pop    
+  apply  
+  help   Print this message or the help of the given subcommand(s)
 
-OPTIONS:
-    -h, --help                 Print help information
-    -m, --message <MESSAGE>    
-
-SUBCOMMANDS:
-    apply    
-    help     Print this message or the help of the given subcommand(s)
-    pop      
-    push     
+Options:
+  -m, --message <MESSAGE>  
+  -h, --help               Print help
 
 $ git stash push -h
-git[EXE]-stash-push 
+Usage: git[EXE] stash push [OPTIONS]
 
-USAGE:
-    git[EXE] stash push [OPTIONS]
-
-OPTIONS:
-    -h, --help                 Print help information
-    -m, --message <MESSAGE>    
+Options:
+  -m, --message <MESSAGE>  
+  -h, --help               Print help
 
 $ git stash pop -h
-git[EXE]-stash-pop 
+Usage: git[EXE] stash pop [STASH]
 
-USAGE:
-    git[EXE] stash pop [STASH]
+Arguments:
+  [STASH]  
 
-ARGS:
-    <STASH>    
-
-OPTIONS:
-    -h, --help    Print help information
+Options:
+  -h, --help  Print help
 
 $ git stash -m "Prototype"
 Pushing Some("Prototype")
@@ -134,5 +117,41 @@ External subcommands:
 ```console
 $ git custom-tool arg1 --foo bar
 Calling out to "custom-tool" with ["arg1", "--foo", "bar"]
+
+```
+
+Last argument:
+```console
+$ git diff --help
+Compare two commits
+
+Usage: git[EXE] diff [OPTIONS] [COMMIT] [COMMIT] [-- <PATH>]
+
+Arguments:
+  [COMMIT]  
+  [COMMIT]  
+  [PATH]    
+
+Options:
+      --color[=<WHEN>]  [default: auto] [possible values: always, auto, never]
+  -h, --help            Print help
+
+$ git diff
+Diffing stage..worktree  (color=auto)
+
+$ git diff ./src
+Diffing stage..worktree ./src (color=auto)
+
+$ git diff HEAD ./src
+Diffing HEAD..worktree ./src (color=auto)
+
+$ git diff HEAD~~ -- HEAD
+Diffing HEAD~~..worktree HEAD (color=auto)
+
+$ git diff --color
+Diffing stage..worktree  (color=always)
+
+$ git diff --color=never
+Diffing stage..worktree  (color=never)
 
 ```

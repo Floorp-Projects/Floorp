@@ -1,26 +1,22 @@
-*Jump to [source](escaped-positional.rs)*
-
-**This requires enabling the `cargo` feature flag.**
+**This requires enabling the [`cargo` feature flag][crate::_features].**
 
 You can use `--` to escape further arguments.
 
 Let's see what this looks like in the help:
 ```console
 $ escaped-positional --help
-clap [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
 
-USAGE:
-    escaped-positional[EXE] [OPTIONS] [-- <SLOP>...]
+Usage: escaped-positional[EXE] [OPTIONS] [-- <SLOP>...]
 
-ARGS:
-    <SLOP>...    
+Arguments:
+  [SLOP]...  
 
-OPTIONS:
-    -f               
-    -h, --help       Print help information
-    -p <PEAR>        
-    -V, --version    Print version information
+Options:
+  -f             
+  -p <PEAR>      
+  -h, --help     Print help
+  -V, --version  Print version
 
 ```
 
@@ -37,12 +33,11 @@ Notice that we can't pass positional arguments before `--`:
 ```console
 $ escaped-positional foo bar
 ? failed
-error: Found argument 'foo' which wasn't expected, or isn't valid in this context
+error: unexpected argument 'foo' found
 
-USAGE:
-    escaped-positional[EXE] [OPTIONS] [-- <SLOP>...]
+Usage: escaped-positional[EXE] [OPTIONS] [-- <SLOP>...]
 
-For more information try --help
+For more information, try '--help'.
 
 ```
 
