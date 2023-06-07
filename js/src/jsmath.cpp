@@ -58,7 +58,7 @@ bool js::math_use_fdlibm_for_sin_cos_tan() { return sUseFdlibmForSinCosTan; }
 
 static inline bool UseFdlibmForSinCosTan(const CallArgs& args) {
   return sUseFdlibmForSinCosTan ||
-         args.callee().nonCCWRealm()->behaviors().shouldResistFingerprinting();
+         args.callee().nonCCWRealm()->creationOptions().alwaysUseFdlibm();
 }
 
 template <UnaryMathFunctionType F>

@@ -1,4 +1,4 @@
-let g = newGlobal({shouldResistFingerprinting: true});
+let g = newGlobal({alwaysUseFdlibm: true});
 
 // Adapted from https://github.com/arkenfox/TZP/blob/master/tests/math.html
 // Tests all values that differed from libm for me on Linux and Windows.

@@ -6641,11 +6641,18 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       creationOptions.setDefineSharedArrayBufferConstructor(v.toBoolean());
     }
 
-    if (!JS_GetProperty(cx, opts, "shouldResistFingerprinting", &v)) {
+    if (!JS_GetProperty(cx, opts, "forceUTC", &v)) {
       return false;
     }
     if (v.isBoolean()) {
-      behaviors.setShouldResistFingerprinting(v.toBoolean());
+      creationOptions.setForceUTC(v.toBoolean());
+    }
+
+    if (!JS_GetProperty(cx, opts, "alwaysUseFdlibm", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setAlwaysUseFdlibm(v.toBoolean());
     }
   }
 

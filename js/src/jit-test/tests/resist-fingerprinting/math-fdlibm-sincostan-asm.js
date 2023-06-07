@@ -2,7 +2,7 @@
 
 load(libdir + "asm.js");
 
-var g = newGlobal({shouldResistFingerprinting: true})
+var g = newGlobal({alwaysUseFdlibm: true})
 
 var code = (fun) => {
   return `(function asm(glob) {

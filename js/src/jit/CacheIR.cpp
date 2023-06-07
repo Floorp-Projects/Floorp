@@ -7975,7 +7975,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathFunction(
   }
 
   if (math_use_fdlibm_for_sin_cos_tan() ||
-      callee_->realm()->behaviors().shouldResistFingerprinting()) {
+      callee_->realm()->creationOptions().alwaysUseFdlibm()) {
     switch (fun) {
       case UnaryMathFunction::SinNative:
         fun = UnaryMathFunction::SinFdlibm;

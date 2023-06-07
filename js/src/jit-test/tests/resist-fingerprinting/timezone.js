@@ -13,7 +13,7 @@ let originalDT = Intl.DateTimeFormat("en-US", {
 assertEq(originalDT.format(original).endsWith("Pacific Standard Time"), true);
 assertEq(originalDT.resolvedOptions().timeZone, "PST8PDT");
 
-let global = newGlobal({shouldResistFingerprinting: true});
+let global = newGlobal({forceUTC: true});
 
 let date = new global.Date();
 assertEq(tzRE.exec(date.toString())[1], "Coordinated Universal Time");

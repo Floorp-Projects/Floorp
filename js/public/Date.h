@@ -187,11 +187,9 @@ JS_PUBLIC_API double DayFromYear(double year);
 JS_PUBLIC_API double DayWithinYear(double time, double year);
 
 // The callback will be a wrapper function that accepts a double (the time
-// to clamp and jitter) as well as a bool indicating if we should be resisting
-// fingerprinting. Inside the JS Engine, other parameters that may be
+// to clamp and jitter). Inside the JS Engine, other parameters that may be
 // needed are all constant, so they are handled inside the wrapper function
-using ReduceMicrosecondTimePrecisionCallback = double (*)(double, bool,
-                                                          JSContext*);
+using ReduceMicrosecondTimePrecisionCallback = double (*)(double, JSContext*);
 
 // Set a callback into the toolkit/components/resistfingerprinting function that
 // will centralize time resolution and jitter into one place.
