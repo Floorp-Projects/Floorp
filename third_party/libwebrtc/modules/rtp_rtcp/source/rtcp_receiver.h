@@ -98,11 +98,6 @@ class RTCPReceiver final {
 
   ~RTCPReceiver();
 
-  [[deprecated("Use ArrayView verwsion")]] void IncomingPacket(
-      const uint8_t* packet,
-      size_t packet_size) {
-    IncomingPacket(rtc::MakeArrayView(packet, packet_size));
-  }
   void IncomingPacket(rtc::ArrayView<const uint8_t> packet);
 
   int64_t LastReceivedReportBlockMs() const;
