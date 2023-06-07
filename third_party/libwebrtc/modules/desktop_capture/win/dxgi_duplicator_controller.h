@@ -64,13 +64,17 @@ class RTC_EXPORT DxgiDuplicatorController {
     // version.
   };
 
+  // These values are persisted to logs. Entries should not be renumbered or
+  // reordered and numeric values should never be reused. This enum corresponds
+  // to WebRtcDirectXCapturerResult in tools/metrics/histograms/enums.xml.
   enum class Result {
-    SUCCEEDED,
-    UNSUPPORTED_SESSION,
-    FRAME_PREPARE_FAILED,
-    INITIALIZATION_FAILED,
-    DUPLICATION_FAILED,
-    INVALID_MONITOR_ID,
+    SUCCEEDED = 0,
+    UNSUPPORTED_SESSION = 1,
+    FRAME_PREPARE_FAILED = 2,
+    INITIALIZATION_FAILED = 3,
+    DUPLICATION_FAILED = 4,
+    INVALID_MONITOR_ID = 5,
+    MAX_VALUE = INVALID_MONITOR_ID
   };
 
   // Converts `result` into user-friendly string representation. The return
