@@ -1,12 +1,14 @@
-use clap::Parser;
+use clap::{AppSettings, Parser};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-#[command(next_line_help = true)]
+#[clap(author, version, about, long_about = None)]
+#[clap(args_override_self = true)]
+#[clap(allow_negative_numbers = true)]
+#[clap(global_setting(AppSettings::DeriveDisplayOrder))]
 struct Cli {
-    #[arg(long)]
+    #[clap(long)]
     two: String,
-    #[arg(long)]
+    #[clap(long)]
     one: String,
 }
 

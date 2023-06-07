@@ -1,9 +1,9 @@
-use clap::{command, Arg};
+// Note: this requires the `cargo` feature
+
+use clap::{arg, command};
 
 fn main() {
-    let matches = command!() // requires `cargo` feature
-        .arg(Arg::new("name"))
-        .get_matches();
+    let matches = command!().arg(arg!([NAME])).get_matches();
 
-    println!("name: {:?}", matches.get_one::<String>("name"));
+    println!("NAME: {:?}", matches.value_of("NAME"));
 }

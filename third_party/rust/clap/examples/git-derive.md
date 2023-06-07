@@ -1,4 +1,6 @@
-**This requires enabling the [`derive` feature flag][crate::_features].**
+*Jump to [source](git-derive.rs)*
+
+**This requires enabling the `derive` feature flag.**
 
 Git is an example of several common subcommand patterns.
 
@@ -6,47 +8,51 @@ Help:
 ```console
 $ git-derive
 ? failed
+git 
 A fictional versioning CLI
 
-Usage: git-derive[EXE] <COMMAND>
+USAGE:
+    git-derive[EXE] <SUBCOMMAND>
 
-Commands:
-  clone  Clones repos
-  diff   Compare two commits
-  push   pushes things
-  add    adds things
-  stash  
-  help   Print this message or the help of the given subcommand(s)
+OPTIONS:
+    -h, --help    Print help information
 
-Options:
-  -h, --help  Print help
+SUBCOMMANDS:
+    add      adds things
+    clone    Clones repos
+    help     Print this message or the help of the given subcommand(s)
+    push     pushes things
+    stash    
 
 $ git-derive help
+git 
 A fictional versioning CLI
 
-Usage: git-derive[EXE] <COMMAND>
+USAGE:
+    git-derive[EXE] <SUBCOMMAND>
 
-Commands:
-  clone  Clones repos
-  diff   Compare two commits
-  push   pushes things
-  add    adds things
-  stash  
-  help   Print this message or the help of the given subcommand(s)
+OPTIONS:
+    -h, --help    Print help information
 
-Options:
-  -h, --help  Print help
+SUBCOMMANDS:
+    add      adds things
+    clone    Clones repos
+    help     Print this message or the help of the given subcommand(s)
+    push     pushes things
+    stash    
 
 $ git-derive help add
+git-derive[EXE]-add 
 adds things
 
-Usage: git-derive[EXE] add <PATH>...
+USAGE:
+    git-derive[EXE] add <PATH>...
 
-Arguments:
-  <PATH>...  Stuff to add
+ARGS:
+    <PATH>...    Stuff to add
 
-Options:
-  -h, --help  Print help
+OPTIONS:
+    -h, --help    Print help information
 
 ```
 
@@ -54,15 +60,17 @@ A basic argument:
 ```console
 $ git-derive add
 ? failed
+git-derive[EXE]-add 
 adds things
 
-Usage: git-derive[EXE] add <PATH>...
+USAGE:
+    git-derive[EXE] add <PATH>...
 
-Arguments:
-  <PATH>...  Stuff to add
+ARGS:
+    <PATH>...    Stuff to add
 
-Options:
-  -h, --help  Print help
+OPTIONS:
+    -h, --help    Print help information
 
 $ git-derive add Cargo.toml Cargo.lock
 Adding ["Cargo.toml", "Cargo.lock"]
@@ -72,43 +80,52 @@ Adding ["Cargo.toml", "Cargo.lock"]
 Default subcommand:
 ```console
 $ git-derive stash -h
-Usage: git-derive[EXE] stash [OPTIONS]
-       git-derive[EXE] stash <COMMAND>
+git-derive[EXE]-stash 
 
-Commands:
-  push   
-  pop    
-  apply  
-  help   Print this message or the help of the given subcommand(s)
+USAGE:
+    git-derive[EXE] stash [OPTIONS]
+    git-derive[EXE] stash <SUBCOMMAND>
 
-Options:
-  -m, --message <MESSAGE>  
-  -h, --help               Print help
+OPTIONS:
+    -h, --help                 Print help information
+    -m, --message <MESSAGE>    
+
+SUBCOMMANDS:
+    apply    
+    help     Print this message or the help of the given subcommand(s)
+    pop      
+    push     
 
 $ git-derive stash push -h
-Usage: git-derive[EXE] stash push [OPTIONS]
+git-derive[EXE]-stash-push 
 
-Options:
-  -m, --message <MESSAGE>  
-  -h, --help               Print help
+USAGE:
+    git-derive[EXE] stash push [OPTIONS]
+
+OPTIONS:
+    -h, --help                 Print help information
+    -m, --message <MESSAGE>    
 
 $ git-derive stash pop -h
-Usage: git-derive[EXE] stash pop [STASH]
+git-derive[EXE]-stash-pop 
 
-Arguments:
-  [STASH]  
+USAGE:
+    git-derive[EXE] stash pop [STASH]
 
-Options:
-  -h, --help  Print help
+ARGS:
+    <STASH>    
+
+OPTIONS:
+    -h, --help    Print help information
 
 $ git-derive stash -m "Prototype"
-Pushing StashPushArgs { message: Some("Prototype") }
+Pushing StashPush { message: Some("Prototype") }
 
 $ git-derive stash pop
 Popping None
 
 $ git-derive stash push -m "Prototype"
-Pushing StashPushArgs { message: Some("Prototype") }
+Pushing StashPush { message: Some("Prototype") }
 
 $ git-derive stash pop
 Popping None
@@ -119,41 +136,5 @@ External subcommands:
 ```console
 $ git-derive custom-tool arg1 --foo bar
 Calling out to "custom-tool" with ["arg1", "--foo", "bar"]
-
-```
-
-Last argument:
-```console
-$ git-derive diff --help
-Compare two commits
-
-Usage: git-derive[EXE] diff [OPTIONS] [COMMIT] [COMMIT] [-- <PATH>]
-
-Arguments:
-  [COMMIT]  
-  [COMMIT]  
-  [PATH]    
-
-Options:
-      --color[=<WHEN>]  [default: auto] [possible values: always, auto, never]
-  -h, --help            Print help
-
-$ git-derive diff
-Diffing stage..worktree  (color=auto)
-
-$ git-derive diff ./src
-Diffing stage..worktree ./src (color=auto)
-
-$ git-derive diff HEAD ./src
-Diffing HEAD..worktree ./src (color=auto)
-
-$ git-derive diff HEAD~~ -- HEAD
-Diffing HEAD~~..worktree HEAD (color=auto)
-
-$ git-derive diff --color
-Diffing stage..worktree  (color=always)
-
-$ git-derive diff --color=never
-Diffing stage..worktree  (color=never)
 
 ```

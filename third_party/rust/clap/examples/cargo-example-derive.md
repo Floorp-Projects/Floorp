@@ -1,3 +1,5 @@
+*Jump to [source](cargo-example-derive.rs)*
+
 For more on creating a custom subcommand, see [the cargo
 book](https://doc.rust-lang.org/cargo/reference/external-tools.html#custom-subcommands).
 The crate [`clap-cargo`](https://github.com/crate-ci/clap-cargo) can help in
@@ -6,24 +8,29 @@ mimicking cargo's interface.
 The help looks like:
 ```console
 $ cargo-example-derive --help
-Usage: cargo <COMMAND>
+cargo 
 
-Commands:
-  example-derive  A simple to use, efficient, and full-featured Command Line Argument Parser
-  help            Print this message or the help of the given subcommand(s)
+USAGE:
+    cargo <SUBCOMMAND>
 
-Options:
-  -h, --help  Print help
+OPTIONS:
+    -h, --help    Print help information
+
+SUBCOMMANDS:
+    example-derive    A simple to use, efficient, and full-featured Command Line Argument Parser
+    help              Print this message or the help of the given subcommand(s)
 
 $ cargo-example-derive example-derive --help
+cargo-example-derive [..]
 A simple to use, efficient, and full-featured Command Line Argument Parser
 
-Usage: cargo example-derive [OPTIONS]
+USAGE:
+    cargo example-derive [OPTIONS]
 
-Options:
-      --manifest-path <MANIFEST_PATH>  
-  -h, --help                           Print help
-  -V, --version                        Print version
+OPTIONS:
+    -h, --help                             Print help information
+        --manifest-path <MANIFEST_PATH>    
+    -V, --version                          Print version information
 
 ```
 

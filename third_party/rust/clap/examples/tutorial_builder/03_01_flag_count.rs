@@ -1,14 +1,9 @@
-use clap::{command, Arg, ArgAction};
+// Note: this requires the `cargo` feature
+
+use clap::{arg, command};
 
 fn main() {
-    let matches = command!() // requires `cargo` feature
-        .arg(
-            Arg::new("verbose")
-                .short('v')
-                .long("verbose")
-                .action(ArgAction::Count),
-        )
-        .get_matches();
+    let matches = command!().arg(arg!(-v --verbose ...)).get_matches();
 
-    println!("verbose: {:?}", matches.get_count("verbose"));
+    println!("verbose: {:?}", matches.occurrences_of("verbose"));
 }

@@ -1,10 +1,10 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[clap(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    verbose: u8,
+    #[clap(short, long, parse(from_occurrences))]
+    verbose: usize,
 }
 
 fn main() {

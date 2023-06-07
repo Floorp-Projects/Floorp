@@ -19,28 +19,21 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
+use proc_macro_error::proc_macro_error;
 use syn::{parse_macro_input, DeriveInput};
-use syn::{Data, DataStruct, Fields};
 
-#[macro_use]
-mod macros;
-
-mod attr;
+mod attrs;
 mod derives;
 mod dummies;
-mod item;
+mod parse;
 mod utils;
 
-/// Generates the `ValueEnum` impl.
-#[proc_macro_derive(ValueEnum, attributes(clap, value))]
-pub fn value_enum(input: TokenStream) -> TokenStream {
+/// Generates the `ArgEnum` impl.
+#[proc_macro_derive(ArgEnum, attributes(clap))]
+#[proc_macro_error]
+pub fn arg_enum(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
-    derives::derive_value_enum(&input)
-        .unwrap_or_else(|err| {
-            let dummy = dummies::value_enum(&input.ident);
-            to_compile_error(err, dummy)
-        })
-        .into()
+    derives::derive_arg_enum(&input).into()
 }
 
 /// Generates the `Parser` implementation.
@@ -49,68 +42,25 @@ pub fn value_enum(input: TokenStream) -> TokenStream {
 /// receiving an instance of `clap::ArgMatches` from conducting parsing, and then
 /// implementing a conversion code to instantiate an instance of the user
 /// context struct.
-#[proc_macro_derive(Parser, attributes(clap, structopt, command, arg, group))]
+#[proc_macro_derive(Parser, attributes(clap, structopt))]
+#[proc_macro_error]
 pub fn parser(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
-    derives::derive_parser(&input)
-        .unwrap_or_else(|err| {
-            let specific_dummy = match input.data {
-                Data::Struct(DataStruct {
-                    fields: Fields::Named(ref _fields),
-                    ..
-                }) => Some(dummies::args(&input.ident)),
-                Data::Struct(DataStruct {
-                    fields: Fields::Unit,
-                    ..
-                }) => Some(dummies::args(&input.ident)),
-                Data::Enum(_) => Some(dummies::subcommand(&input.ident)),
-                _ => None,
-            };
-            let dummy = specific_dummy
-                .map(|specific_dummy| {
-                    let parser_dummy = dummies::parser(&input.ident);
-                    quote::quote! {
-                        #parser_dummy
-                        #specific_dummy
-                    }
-                })
-                .unwrap_or_else(|| quote::quote!());
-            to_compile_error(err, dummy)
-        })
-        .into()
+    derives::derive_parser(&input).into()
 }
 
 /// Generates the `Subcommand` impl.
-#[proc_macro_derive(Subcommand, attributes(clap, command, arg, group))]
+#[proc_macro_derive(Subcommand, attributes(clap))]
+#[proc_macro_error]
 pub fn subcommand(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
-    derives::derive_subcommand(&input)
-        .unwrap_or_else(|err| {
-            let dummy = dummies::subcommand(&input.ident);
-            to_compile_error(err, dummy)
-        })
-        .into()
+    derives::derive_subcommand(&input).into()
 }
 
 /// Generates the `Args` impl.
-#[proc_macro_derive(Args, attributes(clap, command, arg, group))]
+#[proc_macro_derive(Args, attributes(clap))]
+#[proc_macro_error]
 pub fn args(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input);
-    derives::derive_args(&input)
-        .unwrap_or_else(|err| {
-            let dummy = dummies::args(&input.ident);
-            to_compile_error(err, dummy)
-        })
-        .into()
-}
-
-fn to_compile_error(
-    error: syn::Error,
-    dummy: proc_macro2::TokenStream,
-) -> proc_macro2::TokenStream {
-    let compile_errors = error.to_compile_error();
-    quote::quote!(
-        #dummy
-        #compile_errors
-    )
+    derives::derive_args(&input).into()
 }
