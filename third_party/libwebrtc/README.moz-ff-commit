@@ -21414,3 +21414,6 @@ b0e1cb254e
 # MOZ_LIBWEBRTC_SRC=/mnt/arena/dev/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 4b0d6f908b
+# MOZ_LIBWEBRTC_SRC=/mnt/arena/dev/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+95d12adf37
