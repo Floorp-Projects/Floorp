@@ -711,7 +711,7 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
     nsresult rv = channel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
       // Retarget OnDataAvailable to the DecodePool's IO thread.
-      nsCOMPtr<nsIEventTarget> target =
+      nsCOMPtr<nsISerialEventTarget> target =
           DecodePool::Singleton()->GetIOEventTarget();
       rv = retargetable->RetargetDeliveryTo(target);
     }

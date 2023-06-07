@@ -193,9 +193,9 @@ void DecodePool::SyncRunIfPossible(IDecodingTask* aTask,
   aTask->Run();
 }
 
-already_AddRefed<nsIEventTarget> DecodePool::GetIOEventTarget() {
+already_AddRefed<nsISerialEventTarget> DecodePool::GetIOEventTarget() {
   MutexAutoLock threadPoolLock(mMutex);
-  nsCOMPtr<nsIEventTarget> target = mIOThread;
+  nsCOMPtr<nsISerialEventTarget> target = mIOThread;
   return target.forget();
 }
 
