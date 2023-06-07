@@ -17,11 +17,9 @@ function toHumanReadable(num, fpDecimals) {
 }
 
 class GraphImpl {
-  constructor(canvas, width, height) {
-    this.canvas = canvas;
+  constructor(width, height) {
     this.width = width;
     this.height = height;
-    this.drawCtx = canvas.getContext("2d");
   }
 
   // The returns the earliest time to graph
@@ -30,10 +28,6 @@ class GraphImpl {
   // Returns the latest time to graph
   stopTime = dataSet => (dataSet.latest() || { time: 0 }).time;
 
-  /** @type {HTMLCanvasElement} */
-  canvas = {};
-  /** @type {CanvasRenderingContext2D} */
-  drawCtx = {};
   // The default background color
   bgColor = () => compStyle("--in-content-page-background");
   // The color to use for value graph lines
@@ -50,16 +44,39 @@ class GraphImpl {
   // The destination x coordinate and graph width are also provided.
   datumColor = ({ time, value, x, width }) => "red";
 
+  // Returns an SVG element that needs to be inserted into the DOM for display
   drawSparseValues = (dataSet, title, config) => {
+    const { width, height } = this;
+    // Clear the canvas
+    const bgColor = this.bgColor();
+    const mkSvgElem = type =>
+      document.createElementNS("http://www.w3.org/2000/svg", type);
+    const svgText = (x, y, text, color, subclass) => {
+      const txt = mkSvgElem("text");
+      txt.setAttribute("x", x);
+      txt.setAttribute("y", y);
+      txt.setAttribute("stroke", bgColor);
+      txt.setAttribute("fill", color);
+      txt.setAttribute("paint-order", "stroke");
+      txt.textContent = text;
+      txt.classList.add(["graph-text", ...[subclass]].join("-"));
+      return txt;
+    };
+    const svg = mkSvgElem("svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("version", "1.1");
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", height);
+    svg.classList.add("svg-graph");
+    const rect = mkSvgElem("rect");
+    rect.setAttribute("fill", bgColor);
+    rect.setAttribute("width", width);
+    rect.setAttribute("height", height);
+    svg.appendChild(rect);
+
     if (config.toRate) {
       dataSet = dataSet.toRateDataSet();
     }
-    const { drawCtx: ctx, width, height } = this;
-    // Clear the canvas
-    const bgColor = this.bgColor();
-    ctx.fillStyle = bgColor;
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillRect(0, 0, width, height);
 
     const startTime = this.startTime(dataSet);
     const stopTime = this.stopTime(dataSet);
@@ -72,12 +89,12 @@ class GraphImpl {
 
     let filtered = dataSet.filter(timeFilter);
     if (filtered.dataPoints == []) {
-      return;
+      return svg;
     }
 
     let range = filtered.dataRange();
     if (range === undefined) {
-      return;
+      return svg;
     }
     let { min: rangeMin, max: rangeMax } = range;
 
@@ -91,59 +108,78 @@ class GraphImpl {
       this.height - 1 - (value - rangeMin) * yFactor - 13;
     const xFactor = width / (1 + stopTime - startTime);
     const xPos = ({ time }) => (time - startTime) * xFactor;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.strokeStyle = this.valueLineColor();
-    [...filtered.dataPoints].forEach((datum, index) => {
-      if (!index) {
-        ctx.moveTo(xPos(datum), yPos(datum));
-      } else {
-        ctx.lineTo(xPos(datum), yPos(datum));
-      }
-      // Draw data point
-      ctx.fillStyle = this.datumColor({ ...datum, width: this.width });
-      ctx.fillRect(xPos(datum), yPos(datum), 1, 1);
-    });
-    ctx.stroke();
 
-    // Rolling average
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = this.averageLineColor();
-    ctx.beginPath();
-    const rollingAverage = avgDataSet.dataPoints;
-    [...rollingAverage].forEach((datum, index) => {
-      if (!index) {
-        ctx.moveTo(xPos(datum), yPos(datum));
-      } else {
-        ctx.lineTo(xPos(datum), yPos(datum));
-      }
-    });
+    const toPathStr = dataPoints =>
+      [...dataPoints]
+        .map(
+          (datum, index) => `${index ? "L" : "M"}${xPos(datum)} ${yPos(datum)}`
+        )
+        .join(" ");
+    const valuePath = mkSvgElem("path");
+    valuePath.setAttribute("d", toPathStr(filtered.dataPoints));
+    valuePath.setAttribute("stroke", this.valueLineColor());
+    valuePath.setAttribute("fill", "none");
+    svg.appendChild(valuePath);
+
+    const avgPath = mkSvgElem("path");
+    avgPath.setAttribute("d", toPathStr(avgDataSet.dataPoints));
+    avgPath.setAttribute("stroke", this.averageLineColor());
+    avgPath.setAttribute("fill", "none");
+    svg.appendChild(avgPath);
     const fixed = num => num.toFixed(config.fixedPointDecimals);
     const formatValue = value =>
       config.toHuman
         ? toHumanReadable(value, config.fixedPointDecimals).join("")
         : fixed(value);
-    rollingAverage.slice(-1).forEach(({ value }) => {
-      ctx.stroke();
-      ctx.fillStyle = this.averageLineColor();
-      ctx.font = "12px Arial";
-      ctx.textAlign = "left";
-      ctx.fillText(formatValue(value), 5, this.height - 4);
+
+    // Draw rolling average text
+    avgDataSet.dataPoints.slice(-1).forEach(({ value }) => {
+      svg.appendChild(
+        svgText(
+          5,
+          height - 4,
+          `AVG: ${formatValue(value)}`,
+          this.averageLineColor(),
+          "avg"
+        )
+      );
     });
 
-    // Draw the title
+    // Draw title text
     if (title) {
-      ctx.fillStyle = this.titleColor(this);
-      ctx.font = "12px Arial";
-      ctx.textAlign = "left";
-      ctx.fillText(`${title}${config.toRate ? "/s" : ""}`, 5, 12);
+      svg.appendChild(
+        svgText(
+          5,
+          12,
+          `${title}${config.toRate ? "/s" : ""}`,
+          this.titleColor(this),
+          "title"
+        )
+      );
     }
-    ctx.font = "12px Arial";
-    ctx.fillStyle = this.maxColor(range.max);
-    ctx.textAlign = "right";
-    ctx.fillText(formatValue(range.max), this.width - 5, 12);
-    ctx.fillStyle = this.minColor(range.min);
-    ctx.fillText(formatValue(range.min), this.width - 5, this.height - 4);
+
+    // Draw max value text
+    const maxText = svgText(
+      width - 5,
+      12,
+      `Max: ${formatValue(range.max)}`,
+      this.maxColor(range.max),
+      "max"
+    );
+    maxText.setAttribute("text-anchor", "end");
+    svg.appendChild(maxText);
+
+    // Draw min value text
+    const minText = svgText(
+      width - 5,
+      height - 4,
+      `Min: ${formatValue(range.min)}`,
+      this.minColor(range.min),
+      "min"
+    );
+    minText.setAttribute("text-anchor", "end");
+    svg.appendChild(minText);
+    return svg;
   };
 }
 

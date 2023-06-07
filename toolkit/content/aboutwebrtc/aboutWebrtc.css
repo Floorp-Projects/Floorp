@@ -195,3 +195,8 @@ div.fold-trigger {
   margin-inline: 1px;
   padding: 1px;
 }
+
+.svg-graph {
+  border: 1px solid var(--in-content-border-color);
+  margin-inline: 1px;
+}
