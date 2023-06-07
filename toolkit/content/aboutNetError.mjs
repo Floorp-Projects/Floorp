@@ -535,7 +535,8 @@ function initPage() {
         descriptionTag = "neterror-dns-not-found-trr-offline";
       } else if (
         skipReason == "TRR_NO_ANSWERS" ||
-        skipReason == "TRR_NXDOMAIN"
+        skipReason == "TRR_NXDOMAIN" ||
+        skipReason == "TRR_RCODE_FAIL"
       ) {
         descriptionTag = "neterror-dns-not-found-trr-unknown-host2";
       } else if (
