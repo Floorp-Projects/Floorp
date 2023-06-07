@@ -28,8 +28,9 @@ using ::testing::Mock;
 namespace cricket {
 class MockVoiceMediaChannel : public VoiceMediaChannel {
  public:
-  explicit MockVoiceMediaChannel(webrtc::TaskQueueBase* network_thread)
-      : VoiceMediaChannel(MediaChannel::Role::kBoth, network_thread) {}
+  MockVoiceMediaChannel(MediaChannel::Role role,
+                        webrtc::TaskQueueBase* network_thread)
+      : VoiceMediaChannel(role, network_thread) {}
 
   MOCK_METHOD(void,
               SetInterface,
