@@ -224,8 +224,8 @@ class RTC_EXPORT VideoEncoder {
     //
     // Spatial layers are treated independently, but temporal layers are
     // cumulative. For instance, if:
-    //   fps_allocation[0][0] = kFullFramerate / 2;
-    //   fps_allocation[0][1] = kFullFramerate;
+    //   fps_allocation[0][0] = kMaxFramerateFraction / 2;
+    //   fps_allocation[0][1] = kMaxFramerateFraction;
     // Then half of the frames are in the base layer and half is in TL1, but
     // since TL1 is assumed to depend on the base layer, the frame rate is
     // indicated as the full 100% for the top layer.
