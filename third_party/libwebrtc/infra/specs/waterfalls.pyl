@@ -93,7 +93,7 @@
       },
       'Linux MSan': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
           # fails on "MemorySanitizer: use-of-uninitialized-value in
@@ -508,7 +508,7 @@
       },
       'linux_msan': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
           # fails on "MemorySanitizer: use-of-uninitialized-value in
