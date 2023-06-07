@@ -6,6 +6,7 @@
 DIRS += [
     "ast",
     "breakpoints",
+    "context-menus",
     "pause",
     "sources",
     "utils",
