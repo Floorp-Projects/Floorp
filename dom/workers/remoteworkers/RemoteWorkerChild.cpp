@@ -108,10 +108,10 @@ NS_IMPL_QUERY_INTERFACE(SharedWorkerInterfaceRequestor, nsIInterfaceRequestor)
 class MessagePortIdentifierRunnable final : public WorkerRunnable {
  public:
   MessagePortIdentifierRunnable(WorkerPrivate* aWorkerPrivate,
-                                RefPtr<RemoteWorkerChild>& aActor,
+                                RemoteWorkerChild* aActor,
                                 const MessagePortIdentifier& aPortIdentifier)
       : WorkerRunnable(aWorkerPrivate),
-        mActor(std::move(aActor)),
+        mActor(aActor),
         mPortIdentifier(aPortIdentifier) {}
 
  private:
