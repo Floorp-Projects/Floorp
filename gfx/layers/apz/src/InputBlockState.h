@@ -290,7 +290,7 @@ class DragBlockState : public CancelableBlockState {
 
   DragBlockState* AsDragBlock() override { return this; }
 
-  void SetInitialState(OuterCSSCoord aThumbPos, const CSSRect& aScrollableRect);
+  void SetInitialThumbPos(OuterCSSCoord aThumbPos);
   void SetDragMetrics(const AsyncDragMetrics& aDragMetrics);
 
   void DispatchEvent(const InputData& aEvent) const override;
@@ -298,7 +298,6 @@ class DragBlockState : public CancelableBlockState {
  private:
   AsyncDragMetrics mDragMetrics;
   OuterCSSCoord mInitialThumbPos;
-  CSSRect mInitialScrollableRect;
   bool mReceivedMouseUp;
 };
 
