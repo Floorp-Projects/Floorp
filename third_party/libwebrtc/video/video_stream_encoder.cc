@@ -1063,19 +1063,21 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     if (qp_untrusted_bitrate_limit) {
       // bandwidth_quality_scaler is only used for singlecast.
       if (streams.size() == 1 && encoder_config_.simulcast_layers.size() == 1) {
-        streams.back().min_bitrate_bps =
-            qp_untrusted_bitrate_limit->min_bitrate_bps;
-        streams.back().max_bitrate_bps =
-            qp_untrusted_bitrate_limit->max_bitrate_bps;
+        VideoStream& stream = streams.back();
+        stream.max_bitrate_bps =
+            std::min(stream.max_bitrate_bps,
+                     qp_untrusted_bitrate_limit->max_bitrate_bps);
+        stream.min_bitrate_bps =
+            std::min(stream.max_bitrate_bps,
+                     qp_untrusted_bitrate_limit->min_bitrate_bps);
         // If it is screen share mode, the minimum value of max_bitrate should
         // be greater than/equal to 1200kbps.
         if (encoder_config_.content_type ==
             VideoEncoderConfig::ContentType::kScreen) {
-          streams.back().max_bitrate_bps = std::max(
-              streams.back().max_bitrate_bps, kDefaultMinScreenSharebps);
+          stream.max_bitrate_bps =
+              std::max(stream.max_bitrate_bps, kDefaultMinScreenSharebps);
         }
-        streams.back().target_bitrate_bps =
-            qp_untrusted_bitrate_limit->max_bitrate_bps;
+        stream.target_bitrate_bps = stream.max_bitrate_bps;
       }
     }
   } else {
