@@ -1,64 +1,64 @@
-From: Alexander Cooper <alcooper@chromium.org>
-Date: Wed, 8 Feb 2023 14:16:01 -0800
-Subject: (cherry-pick-branch-heads/5563) Fix Destruction inside WGC Callback
+From: Jakob Ivarsson <jakobi@webrtc.org>
+Date: Thu, 16 Feb 2023 17:21:20 +0100
+Subject: (cherry-pick-branch-heads/5563) Disable stop CNG after a timeout.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-If we are notified of the destruction of the window before a
-CaptureFrame call can fail, then we may end up attempting to destroy the
-underlying WGC object inside it's own event handler. This can be
-problematic, as the class itself may want to run other code. Instead,
-we just unsubscribe and signal that any future CaptureFrame calls should
-reject.
+This is still a behavior that we want, but a more careful rollout is needed.
 
-This also removes setting "is_capture_started_=false" in the item closed
-handler, as all that served to do is cause the WgcCapturerWin code to
-attempt to restart the capturer, and somewhat muddies up our metrics.
+(cherry picked from commit 48d784225972b7dd0542acfad7cd2d0eed25ad1c)
 
-(cherry picked from commit 318cf28945d80a0ac6f09382e507c95e649cc4c1)
-
-Bug: chromium:1413005
 No-Try: True
-Change-Id: Ibccb7a2e7ce531ba80b4b331b9bc2cda0ff75f4e
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/292762
-Auto-Submit: Alexander Cooper <alcooper@chromium.org>
-Reviewed-by: Mark Foltz <mfoltz@chromium.org>
-Commit-Queue: Mark Foltz <mfoltz@chromium.org>
-Commit-Queue: Alexander Cooper <alcooper@chromium.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39275}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293243
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/branch-heads/5563@{#2}
+Bug: webrtc:12790, chromium:1418687
+Change-Id: Ic74c7b4945c0cdeda2b17f52301069424ad91162
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293860
+Commit-Queue: Jakob Ivarsson‎ <jakobi@webrtc.org>
+Reviewed-by: Henrik Lundin <henrik.lundin@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39333}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294760
+Reviewed-by: Alessio Bazzica <alessiob@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5563@{#3}
 Cr-Branched-From: 6c032cb8356b0d3f717c4fcf50796241f2bba6c2-refs/heads/main@{#39207}
 ---
- modules/desktop_capture/win/wgc_capture_session.cc | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ modules/audio_coding/neteq/decision_logic.h           | 2 +-
+ modules/audio_coding/neteq/decision_logic_unittest.cc | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
-index e16529167f..ea5565c89c 100644
---- a/modules/desktop_capture/win/wgc_capture_session.cc
-+++ b/modules/desktop_capture/win/wgc_capture_session.cc
-@@ -397,17 +397,14 @@ HRESULT WgcCaptureSession::OnItemClosed(WGC::IGraphicsCaptureItem* sender,
+diff --git a/modules/audio_coding/neteq/decision_logic.h b/modules/audio_coding/neteq/decision_logic.h
+index 69b13a9048..8d1ff4d622 100644
+--- a/modules/audio_coding/neteq/decision_logic.h
++++ b/modules/audio_coding/neteq/decision_logic.h
+@@ -175,7 +175,7 @@ class DecisionLogic : public NetEqController {
+     int reinit_after_expands = 100;
+     int deceleration_target_level_offset_ms = 85;
+     int packet_history_size_ms = 2000;
+-    absl::optional<int> cng_timeout_ms = 1000;
++    absl::optional<int> cng_timeout_ms;
+   };
+   Config config_;
+   std::unique_ptr<DelayManager> delay_manager_;
+diff --git a/modules/audio_coding/neteq/decision_logic_unittest.cc b/modules/audio_coding/neteq/decision_logic_unittest.cc
+index d0473d0264..6150c9a6db 100644
+--- a/modules/audio_coding/neteq/decision_logic_unittest.cc
++++ b/modules/audio_coding/neteq/decision_logic_unittest.cc
+@@ -18,6 +18,7 @@
+ #include "modules/audio_coding/neteq/delay_manager.h"
+ #include "modules/audio_coding/neteq/mock/mock_buffer_level_filter.h"
+ #include "modules/audio_coding/neteq/mock/mock_delay_manager.h"
++#include "test/field_trial.h"
+ #include "test/gtest.h"
  
-   RTC_LOG(LS_INFO) << "Capture target has been closed.";
-   item_closed_ = true;
--  is_capture_started_ = false;
- 
-   RemoveEventHandlers();
- 
--  mapped_texture_ = nullptr;
--  session_ = nullptr;
--  frame_pool_ = nullptr;
--  direct3d_device_ = nullptr;
--  item_ = nullptr;
--  d3d11_device_ = nullptr;
--
-+  // Do not attempt to free resources in the OnItemClosed handler, as this
-+  // causes a race where we try to delete the item that is calling us. Removing
-+  // the event handlers and setting `item_closed_` above is sufficient to ensure
-+  // that the resources are no longer used, and the next time the capturer tries
-+  // to get a frame, we will report a permanent failure and be destroyed.
-   return S_OK;
- }
- 
+ namespace webrtc {
+@@ -53,6 +54,8 @@ using ::testing::Return;
+ class DecisionLogicTest : public ::testing::Test {
+  protected:
+   DecisionLogicTest() {
++    test::ScopedFieldTrials trials(
++        "WebRTC-Audio-NetEqDecisionLogicConfig/cng_timeout_ms:1000/");
+     NetEqController::Config config;
+     config.tick_timer = &tick_timer_;
+     config.allow_time_stretching = true;
 -- 
 2.34.1
 
