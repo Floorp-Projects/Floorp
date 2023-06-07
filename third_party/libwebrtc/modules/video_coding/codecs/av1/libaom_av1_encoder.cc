@@ -803,8 +803,8 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
     for (int sid = 0; sid < svc_params_->number_spatial_layers; ++sid) {
       info.fps_allocation[sid].resize(svc_params_->number_temporal_layers);
       for (int tid = 0; tid < svc_params_->number_temporal_layers; ++tid) {
-        info.fps_allocation[sid][tid] =
-            encoder_settings_.maxFramerate / svc_params_->framerate_factor[tid];
+        info.fps_allocation[sid][tid] = EncoderInfo::kMaxFramerateFraction /
+                                        svc_params_->framerate_factor[tid];
       }
     }
   }
