@@ -717,7 +717,7 @@ check_prog(
 
 check_prog(
     "INSTALL_NAME_TOOL",
-    plain_llvm_or_prefixed("llvm-install-name-tool"),
+    plain_llvm_or_prefixed("install-name-tool"),
     when=compile_environment & target_is_darwin & js_standalone,
     paths=clang_search_path,
 )
