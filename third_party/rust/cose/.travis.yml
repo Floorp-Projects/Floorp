@@ -1,0 +1,28 @@
+dist: bionic
+language: rust
+cache: cargo
+os:
+  - linux
+rust:
+  - stable
+  - beta
+  - nightly
+
+addons:
+  apt:
+    packages:
+      - build-essential
+      - libnss3-dev
+
+#install:
+# Apparently cargo install returns a nonzero exit status if
+# caching succeeds, so just make this always "succeed".
+#  - (cargo install rustfmt --force || true)
+
+script:
+#- |
+#  cargo fmt -- --write-mode=diff
+- |
+  cargo build --features "$FEATURES" &&
+  cargo test &&
+  cargo run --example sign_verify

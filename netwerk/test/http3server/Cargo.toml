@@ -17,7 +17,7 @@ base64 = "0.21"
 cfg-if = "1.0"
 http = "0.2.8"
 hyper = { version = "0.14", features = ["full"] }
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
 
 [dependencies.neqo-crypto]
 tag = "v0.6.4"
