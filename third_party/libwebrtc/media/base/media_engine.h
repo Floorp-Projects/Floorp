@@ -105,7 +105,8 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
       webrtc::Call* call,
       const MediaConfig& config,
       const AudioOptions& options,
-      const webrtc::CryptoOptions& crypto_options) {
+      const webrtc::CryptoOptions& crypto_options,
+      webrtc::AudioCodecPairId codec_pair_id) {
     // TODO(bugs.webrtc.org/13931): Remove default implementation
     // when downstream has migrated to new API.
     RTC_CHECK_NOTREACHED();
@@ -118,7 +119,8 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
                      const AudioOptions& options,
                      const webrtc::CryptoOptions& crypto_options) {
     return CreateMediaChannel(MediaChannel::Role::kBoth, call, config, options,
-                              crypto_options);
+                              crypto_options,
+                              webrtc::AudioCodecPairId::Create());
   }
 
   virtual const std::vector<AudioCodec>& send_codecs() const = 0;

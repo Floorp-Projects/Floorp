@@ -209,18 +209,28 @@ RTCError RtpTransceiver::CreateChannel(
     context()->worker_thread()->BlockingCall([&] {
       RTC_DCHECK_RUN_ON(context()->worker_thread());
 
-      cricket::VoiceMediaChannel* media_channel =
-          media_engine()->voice().CreateMediaChannel(
-              cricket::MediaChannel::Role::kBoth, call_ptr, media_config,
-              audio_options, crypto_options);
-      if (!media_channel) {
+      AudioCodecPairId codec_pair_id = AudioCodecPairId::Create();
+      std::unique_ptr<cricket::VoiceMediaChannel> media_send_channel =
+          absl::WrapUnique(media_engine()->voice().CreateMediaChannel(
+              cricket::MediaChannel::Role::kSend, call_ptr, media_config,
+              audio_options, crypto_options, codec_pair_id));
+      if (!media_send_channel) {
+        // TODO(bugs.webrtc.org/14912): Consider CHECK or reporting failure
+        return;
+      }
+      std::unique_ptr<cricket::VoiceMediaChannel> media_receive_channel =
+          absl::WrapUnique(media_engine()->voice().CreateMediaChannel(
+              cricket::MediaChannel::Role::kReceive, call_ptr, media_config,
+              audio_options, crypto_options, codec_pair_id));
+      if (!media_receive_channel) {
         return;
       }
 
       new_channel = std::make_unique<cricket::VoiceChannel>(
           context()->worker_thread(), context()->network_thread(),
-          context()->signaling_thread(), absl::WrapUnique(media_channel), mid,
-          srtp_required, crypto_options, context()->ssrc_generator());
+          context()->signaling_thread(), std::move(media_send_channel),
+          std::move(media_receive_channel), mid, srtp_required, crypto_options,
+          context()->ssrc_generator());
     });
   } else {
     RTC_DCHECK_EQ(cricket::MEDIA_TYPE_VIDEO, media_type());
@@ -230,18 +240,26 @@ RTCError RtpTransceiver::CreateChannel(
     // simply be on the worker thread and use `call_` (update upstream code).
     context()->worker_thread()->BlockingCall([&] {
       RTC_DCHECK_RUN_ON(context()->worker_thread());
-      cricket::VideoMediaChannel* media_channel =
-          media_engine()->video().CreateMediaChannel(
-              cricket::MediaChannel::Role::kBoth, call_ptr, media_config,
-              video_options, crypto_options, video_bitrate_allocator_factory);
-      if (!media_channel) {
+      std::unique_ptr<cricket::VideoMediaChannel> media_send_channel =
+          absl::WrapUnique(media_engine()->video().CreateMediaChannel(
+              cricket::MediaChannel::Role::kSend, call_ptr, media_config,
+              video_options, crypto_options, video_bitrate_allocator_factory));
+      if (!media_send_channel) {
+        return;
+      }
+      std::unique_ptr<cricket::VideoMediaChannel> media_receive_channel =
+          absl::WrapUnique(media_engine()->video().CreateMediaChannel(
+              cricket::MediaChannel::Role::kReceive, call_ptr, media_config,
+              video_options, crypto_options, video_bitrate_allocator_factory));
+      if (!media_receive_channel) {
         return;
       }
 
       new_channel = std::make_unique<cricket::VideoChannel>(
           context()->worker_thread(), context()->network_thread(),
-          context()->signaling_thread(), absl::WrapUnique(media_channel), mid,
-          srtp_required, crypto_options, context()->ssrc_generator());
+          context()->signaling_thread(), std::move(media_send_channel),
+          std::move(media_receive_channel), mid, srtp_required, crypto_options,
+          context()->ssrc_generator());
     });
   }
   if (!new_channel) {
