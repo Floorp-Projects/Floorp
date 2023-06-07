@@ -600,13 +600,14 @@ WebRtcVideoEngine::~WebRtcVideoEngine() {
 }
 
 VideoMediaChannel* WebRtcVideoEngine::CreateMediaChannel(
+    MediaChannel::Role role,
     webrtc::Call* call,
     const MediaConfig& config,
     const VideoOptions& options,
     const webrtc::CryptoOptions& crypto_options,
     webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
   RTC_LOG(LS_INFO) << "CreateMediaChannel. Options: " << options.ToString();
-  return new WebRtcVideoChannel(call, config, options, crypto_options,
+  return new WebRtcVideoChannel(role, call, config, options, crypto_options,
                                 encoder_factory_.get(), decoder_factory_.get(),
                                 video_bitrate_allocator_factory);
 }
@@ -664,6 +665,7 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
 }
 
 WebRtcVideoChannel::WebRtcVideoChannel(
+    MediaChannel::Role role,
     webrtc::Call* call,
     const MediaConfig& config,
     const VideoOptions& options,
@@ -671,7 +673,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     webrtc::VideoEncoderFactory* encoder_factory,
     webrtc::VideoDecoderFactory* decoder_factory,
     webrtc::VideoBitrateAllocatorFactory* bitrate_allocator_factory)
-    : VideoMediaChannel(call->network_thread(), config.enable_dscp),
+    : VideoMediaChannel(role, call->network_thread(), config.enable_dscp),
       worker_thread_(call->worker_thread()),
       call_(call),
       default_sink_(nullptr),
@@ -1326,6 +1328,9 @@ bool WebRtcVideoChannel::ValidateReceiveSsrcAvailability(
 
 bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK(role() == MediaChannel::Role::kSend ||
+             role() == MediaChannel::Role::kBoth);
+
   RTC_LOG(LS_INFO) << "AddSendStream: " << sp.ToString();
   if (!ValidateStreamParams(sp))
     return false;
@@ -1364,8 +1369,12 @@ bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
   RTC_DCHECK(ssrc != 0);
   send_streams_[ssrc] = stream;
 
-  if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
-    SetReceiverReportSsrc(ssrc);
+  // If legacy kBoth mode, tell my receiver part about its SSRC.
+  // In kSend mode, this is the responsibility of the caller.
+  if (role() == MediaChannel::Role::kBoth) {
+    if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
+      SetReceiverReportSsrc(ssrc);
+    }
   }
 
   if (sending_) {
@@ -1554,6 +1563,15 @@ void WebRtcVideoChannel::ResetUnsignaledRecvStream() {
   }
 }
 
+bool WebRtcVideoChannel::SetLocalSsrc(const StreamParams& sp) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK(role() == MediaChannel::Role::kReceive);
+  if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
+    SetReceiverReportSsrc(sp.first_ssrc());
+  }
+  return true;
+}
+
 absl::optional<uint32_t> WebRtcVideoChannel::GetUnsignaledSsrc() const {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   absl::optional<uint32_t> ssrc;
@@ -1617,6 +1635,7 @@ bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
     log_stats = true;
   }
 
+  info->Clear();
   FillSenderStats(info, log_stats);
   FillSendCodecStats(info);
   // TODO(holmer): We should either have rtt available as a metric on

@@ -151,9 +151,11 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
 
   void CreateChannels(int flags1, int flags2) {
     CreateChannels(std::make_unique<typename T::MediaChannel>(
-                       nullptr, typename T::Options(), network_thread_),
+                       cricket::MediaChannel::Role::kBoth, nullptr,
+                       typename T::Options(), network_thread_),
                    std::make_unique<typename T::MediaChannel>(
-                       nullptr, typename T::Options(), network_thread_),
+                       cricket::MediaChannel::Role::kBoth, nullptr,
+                       typename T::Options(), network_thread_),
                    flags1, flags2);
   }
   void CreateChannels(std::unique_ptr<typename T::MediaChannel> ch1,

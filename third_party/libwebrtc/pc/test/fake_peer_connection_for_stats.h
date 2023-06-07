@@ -30,7 +30,8 @@ namespace webrtc {
 class FakeVoiceMediaChannelForStats : public cricket::FakeVoiceMediaChannel {
  public:
   explicit FakeVoiceMediaChannelForStats(TaskQueueBase* network_thread)
-      : cricket::FakeVoiceMediaChannel(nullptr,
+      : cricket::FakeVoiceMediaChannel(MediaChannel::Role::kBoth,
+                                       nullptr,
                                        cricket::AudioOptions(),
                                        network_thread) {}
 
@@ -70,7 +71,8 @@ class FakeVoiceMediaChannelForStats : public cricket::FakeVoiceMediaChannel {
 class FakeVideoMediaChannelForStats : public cricket::FakeVideoMediaChannel {
  public:
   explicit FakeVideoMediaChannelForStats(TaskQueueBase* network_thread)
-      : cricket::FakeVideoMediaChannel(nullptr,
+      : cricket::FakeVideoMediaChannel(MediaChannel::Role::kBoth,
+                                       nullptr,
                                        cricket::VideoOptions(),
                                        network_thread) {}
 
