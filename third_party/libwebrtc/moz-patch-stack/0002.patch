@@ -1,152 +1,64 @@
-From: Mikhail Pavlov <mpavlov@google.com>
-Date: Fri, 10 Feb 2023 16:46:52 +0000
-Subject: (tmp-cherry-pick) Revert "sdp: add rtcp-fb:* lines for common
- feedback" (55c5173220)
+From: Jakob Ivarsson <jakobi@webrtc.org>
+Date: Thu, 16 Feb 2023 17:21:20 +0100
+Subject: (cherry-pick-branch-heads/5563) Disable stop CNG after a timeout.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 815522782a92e168b80edc760b2e53e4d0e4ea0d.
+This is still a behavior that we want, but a more careful rollout is needed.
 
-Reason for revert: Breaks a downstream project.
+(cherry picked from commit 48d784225972b7dd0542acfad7cd2d0eed25ad1c)
 
-The internal investigation is still in-progress.
-
-Original change's description:
-> sdp: add rtcp-fb:* lines for common feedback
->
-> which potentially allows switching to that pattern in the future.
-> Video FEC mechanisms (ulpfec, flexfec-03, RED) that currently
-> do not have any feedback parameters but will still be considered "common" and feedback may be sent for them.
->
-> For audio this causes rtcp-feedback to be sent for G711 and G722 if negotiated.
->
-> BUG=webrtc:14802
->
-> Change-Id: I54852d39e176f918d4b36462526ceb40617b8fbe
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290702
-> Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-> Reviewed-by: Per Kjellander <perkj@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#39224}
-
-Bug: webrtc:14802
-Change-Id: I4dc3c0c53ad1bc06050c0d73b088303312ac58b2
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293020
-Owners-Override: Jeremy Leconte <jleconte@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Jeremy Leconte <jleconte@webrtc.org>
-Commit-Queue: Jeremy Leconte <jleconte@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#39296}
+No-Try: True
+Bug: webrtc:12790, chromium:1418687
+Change-Id: Ic74c7b4945c0cdeda2b17f52301069424ad91162
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293860
+Commit-Queue: Jakob Ivarsson‎ <jakobi@webrtc.org>
+Reviewed-by: Henrik Lundin <henrik.lundin@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39333}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/294760
+Reviewed-by: Alessio Bazzica <alessiob@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5563@{#3}
+Cr-Branched-From: 6c032cb8356b0d3f717c4fcf50796241f2bba6c2-refs/heads/main@{#39207}
 ---
- pc/webrtc_sdp.cc          | 32 +-------------------------------
- pc/webrtc_sdp_unittest.cc | 32 --------------------------------
- 2 files changed, 1 insertion(+), 63 deletions(-)
+ modules/audio_coding/neteq/decision_logic.h           | 2 +-
+ modules/audio_coding/neteq/decision_logic_unittest.cc | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
-index e91743f186..6d041ff0a1 100644
---- a/pc/webrtc_sdp.cc
-+++ b/pc/webrtc_sdp.cc
-@@ -1890,7 +1890,7 @@ void AddPacketizationLine(const T& codec, std::string* message) {
+diff --git a/modules/audio_coding/neteq/decision_logic.h b/modules/audio_coding/neteq/decision_logic.h
+index 69b13a9048..8d1ff4d622 100644
+--- a/modules/audio_coding/neteq/decision_logic.h
++++ b/modules/audio_coding/neteq/decision_logic.h
+@@ -175,7 +175,7 @@ class DecisionLogic : public NetEqController {
+     int reinit_after_expands = 100;
+     int deceleration_target_level_offset_ms = 85;
+     int packet_history_size_ms = 2000;
+-    absl::optional<int> cng_timeout_ms = 1000;
++    absl::optional<int> cng_timeout_ms;
+   };
+   Config config_;
+   std::unique_ptr<DelayManager> delay_manager_;
+diff --git a/modules/audio_coding/neteq/decision_logic_unittest.cc b/modules/audio_coding/neteq/decision_logic_unittest.cc
+index d0473d0264..6150c9a6db 100644
+--- a/modules/audio_coding/neteq/decision_logic_unittest.cc
++++ b/modules/audio_coding/neteq/decision_logic_unittest.cc
+@@ -18,6 +18,7 @@
+ #include "modules/audio_coding/neteq/delay_manager.h"
+ #include "modules/audio_coding/neteq/mock/mock_buffer_level_filter.h"
+ #include "modules/audio_coding/neteq/mock/mock_delay_manager.h"
++#include "test/field_trial.h"
+ #include "test/gtest.h"
  
- template <class T>
- void AddRtcpFbLines(const T& codec, std::string* message) {
--  for (const auto& param : codec.feedback_params.params()) {
-+  for (const cricket::FeedbackParam& param : codec.feedback_params.params()) {
-     rtc::StringBuilder os;
-     WriteRtcpFbHeader(codec.id, &os);
-     os << " " << param.id();
-@@ -1901,30 +1901,6 @@ void AddRtcpFbLines(const T& codec, std::string* message) {
-   }
- }
- 
--template <class T>
--void AddWildcardRtcpFbLines(const std::vector<T>& codecs,
--                            std::string* message) {
--  if (codecs.empty()) {
--    return;
--  }
--  for (const auto& param : codecs[0].feedback_params.params()) {
--    bool is_common_feedback = absl::c_all_of(codecs, [&param](const T& codec) {
--      // FEC mechanisms like RED, ulpfec and flexfec have empty feedback.
--      return codec.feedback_params.params().empty() ||
--             codec.feedback_params.Has(param);
--    });
--    if (is_common_feedback) {
--      rtc::StringBuilder os;
--      WriteRtcpFbHeader(kWildcardPayloadType, &os);
--      os << " " << param.id();
--      if (!param.param().empty()) {
--        os << " " << param.param();
--      }
--      AddLine(os.str(), message);
--    }
--  }
--}
--
- bool GetMinValue(const std::vector<int>& values, int* value) {
-   if (values.empty()) {
-     return false;
-@@ -1968,9 +1944,6 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
-       AddRtcpFbLines(codec, message);
-       AddFmtpLine(codec, message);
-     }
--    // rtcp-fb:* is added in addition to the per-codec feedback to allow
--    // downstream users time to upgrade their parsers.
--    AddWildcardRtcpFbLines(media_desc->as_video()->codecs(), message);
-   } else if (media_type == cricket::MEDIA_TYPE_AUDIO) {
-     std::vector<int> ptimes;
-     std::vector<int> maxptimes;
-@@ -2002,9 +1975,6 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
-         maxptimes.push_back(maxptime);
-       }
-     }
--    // rtcp-fb:* is added in addition to the per-codec feedback to allow
--    // downstream users time to upgrade their parsers.
--    AddWildcardRtcpFbLines(media_desc->as_audio()->codecs(), message);
-     // Populate the maxptime attribute with the smallest maxptime of all codecs
-     // under the same m-line.
-     int min_maxptime = INT_MAX;
-diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
-index 368d311009..c66f3a66da 100644
---- a/pc/webrtc_sdp_unittest.cc
-+++ b/pc/webrtc_sdp_unittest.cc
-@@ -3281,38 +3281,6 @@ TEST_F(WebRtcSdpTest, DeserializeSerializeRtcpFbWildcard) {
-   TestSerialize(jdesc_output);
- }
- 
--TEST_F(WebRtcSdpTest, SerializeRtcpFbWildcard) {
--  std::string sdp =
--      "v=0\r\n"
--      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
--      "s=-\r\n"
--      "t=0 0\r\n"
--      "m=video 3457 RTP/SAVPF 100 101 102 103\r\n"
--      "a=rtpmap:100 VP8/90000\r\n"
--      "a=rtcp-fb:100 nack\r\n"
--      "a=rtcp-fb:100 nack pli\r\n"
--      "a=rtpmap:101 rtx/90000\r\n"
--      "a=fmtp:101 apt=100\r\n"
--      "a=rtpmap:102 VP9/90000\r\n"
--      "a=rtcp-fb:102 nack\r\n"
--      "a=rtpmap:103 rtx/90000\r\n"
--      "a=fmtp:103 apt=102\r\n";
--  JsepSessionDescription jdesc(kDummyType);
--  SdpParseError error;
--  EXPECT_TRUE(webrtc::SdpDeserialize(sdp, &jdesc, &error));
--
--  std::string message = webrtc::SdpSerialize(jdesc);
--  // NACK is a common parameter so serialized with wildcard in addition to
--  // per-codec entries.
--  EXPECT_NE(message.find("\r\na=rtcp-fb:100 nack\r\n"), std::string::npos);
--  EXPECT_NE(message.find("\r\na=rtcp-fb:102 nack\r\n"), std::string::npos);
--  EXPECT_NE(message.find("\r\na=rtcp-fb:* nack\r\n"), std::string::npos);
--  // PLI is not a common parameter so no wildcard.
--  EXPECT_NE(message.find("\r\na=rtcp-fb:100 nack pli\r\n"), std::string::npos);
--  EXPECT_EQ(message.find("\r\na=rtcp-fb:102 nack pli\r\n"), std::string::npos);
--  EXPECT_EQ(message.find("\r\na=rtcp-fb:* nack pli\r\n"), std::string::npos);
--}
--
- TEST_F(WebRtcSdpTest, DeserializeVideoFmtp) {
-   JsepSessionDescription jdesc_output(kDummyType);
- 
+ namespace webrtc {
+@@ -53,6 +54,8 @@ using ::testing::Return;
+ class DecisionLogicTest : public ::testing::Test {
+  protected:
+   DecisionLogicTest() {
++    test::ScopedFieldTrials trials(
++        "WebRTC-Audio-NetEqDecisionLogicConfig/cng_timeout_ms:1000/");
+     NetEqController::Config config;
+     config.tick_timer = &tick_timer_;
+     config.allow_time_stretching = true;
 -- 
 2.34.1
 
