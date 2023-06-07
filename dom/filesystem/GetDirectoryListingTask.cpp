@@ -317,8 +317,14 @@ nsresult GetDirectoryListingTaskParent::IOWork() {
         !currFile) {
       break;
     }
-    bool isSpecial, isFile;
-    if (NS_WARN_IF(NS_FAILED(currFile->IsSpecial(&isSpecial))) || isSpecial) {
+    bool isLink, isSpecial, isFile;
+    if (NS_WARN_IF(NS_FAILED(currFile->IsSymlink(&isLink)) ||
+                   NS_FAILED(currFile->IsSpecial(&isSpecial))) ||
+        // Although we allow explicit individual selection of symlinks via the
+        // file picker, we do not process symlinks in directory traversal.  Our
+        // specific policy decision is documented at
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1813299#c20
+        isLink || isSpecial) {
       continue;
     }
     if (NS_WARN_IF(NS_FAILED(currFile->IsFile(&isFile)) ||
