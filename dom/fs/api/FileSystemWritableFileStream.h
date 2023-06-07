@@ -63,6 +63,10 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void ClearActor();
 
+  void NoteActiveCommand();
+
+  void NoteFinishedCommand();
+
   bool IsOpen() const;
 
   bool IsClosed() const;
@@ -109,6 +113,8 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void Truncate(uint64_t aSize, const RefPtr<Promise>& aPromise);
 
+  [[nodiscard]] RefPtr<BoolPromise> Finish();
+
   RefPtr<FileSystemManager> mManager;
 
   RefPtr<FileSystemWritableFileStreamChild> mActor;
@@ -122,6 +128,10 @@ class FileSystemWritableFileStream final : public WritableStream {
   fs::FileSystemEntryMetadata mMetadata;
 
   RefPtr<CloseHandler> mCloseHandler;
+
+  MozPromiseHolder<BoolPromise> mFinishPromiseHolder;
+
+  bool mCommandActive;
 };
 
 }  // namespace dom
