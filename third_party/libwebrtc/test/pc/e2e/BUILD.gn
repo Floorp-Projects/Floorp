@@ -80,6 +80,7 @@ if (!build_with_chromium) {
       absl_deps = [
         "//third_party/abseil-cpp/absl/memory",
         "//third_party/abseil-cpp/absl/strings",
+        "//third_party/abseil-cpp/absl/types:optional",
         "//third_party/abseil-cpp/absl/types:variant",
       ]
     }
