@@ -465,7 +465,7 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
 
     TimeDelta feedback_min_rtt = TimeDelta::PlusInfinity();
     for (const auto& packet_feedback : feedbacks) {
-      TimeDelta pending_time = packet_feedback.receive_time - max_recv_time;
+      TimeDelta pending_time = max_recv_time - packet_feedback.receive_time;
       TimeDelta rtt = report.feedback_time -
                       packet_feedback.sent_packet.send_time - pending_time;
       // Value used for predicting NACK round trip time in FEC controller.
