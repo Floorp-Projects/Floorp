@@ -2955,7 +2955,7 @@ NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& aLinkHeader,
                                               const nsACString& aCSPHeader) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
   mEarlyHintsService.EarlyHint(aLinkHeader, GetChannelCreationURI(), mChannel,
-                               aReferrerPolicy, aCSPHeader);
+                               aReferrerPolicy, aCSPHeader, this);
   return NS_OK;
 }
 
