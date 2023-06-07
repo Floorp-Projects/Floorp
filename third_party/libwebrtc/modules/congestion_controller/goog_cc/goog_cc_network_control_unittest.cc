@@ -16,6 +16,8 @@
 #include "api/transport/goog_cc_factory.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
@@ -101,7 +103,7 @@ PacketResult CreatePacketResult(Timestamp arrival_time,
 }
 
 // Simulate sending packets and receiving transport feedback during
-// `runtime_ms`.
+// `runtime_ms`, then return the final target birate.
 absl::optional<DataRate> PacketTransmissionAndFeedbackBlock(
     NetworkControllerInterface* controller,
     int64_t runtime_ms,
@@ -135,6 +137,26 @@ absl::optional<DataRate> PacketTransmissionAndFeedbackBlock(
     }
   }
   return target_bitrate;
+}
+
+// Create transport packets feedback with a built-up delay.
+TransportPacketsFeedback CreateTransportPacketsFeedback(
+    TimeDelta per_packet_network_delay,
+    TimeDelta one_way_delay,
+    Timestamp send_time) {
+  TimeDelta delay_buildup = one_way_delay;
+  constexpr int kFeedbackSize = 3;
+  constexpr size_t kPayloadSize = 1000;
+  TransportPacketsFeedback feedback;
+  for (int i = 0; i < kFeedbackSize; ++i) {
+    PacketResult packet = CreatePacketResult(
+        /*arrival_time=*/send_time + delay_buildup, send_time, kPayloadSize,
+        PacedPacketInfo());
+    delay_buildup += per_packet_network_delay;
+    feedback.feedback_time = packet.receive_time + one_way_delay;
+    feedback.packet_feedbacks.push_back(packet);
+  }
+  return feedback;
 }
 
 // Scenarios:
@@ -222,6 +244,8 @@ DataRate RunRembDipScenario(absl::string_view test_name) {
 class NetworkControllerTestFixture {
  public:
   NetworkControllerTestFixture() : factory_() {}
+  explicit NetworkControllerTestFixture(GoogCcFactoryConfig googcc_config)
+      : factory_(std::move(googcc_config)) {}
 
   std::unique_ptr<NetworkControllerInterface> CreateController() {
     NetworkControllerConfig config = InitialConfig();
@@ -929,6 +953,46 @@ TEST(GoogCcScenario, FallbackToLossBasedBweWithoutPacketFeedback) {
   // Bandwidth decreases thanks to loss based bwe v0.
   EXPECT_LE(client->target_rate().kbps(), 300);
 }
+
+class GoogCcRttTest : public ::testing::TestWithParam<bool> {
+ protected:
+  GoogCcFactoryConfig Config(bool feedback_only) {
+    GoogCcFactoryConfig config;
+    config.feedback_only = feedback_only;
+    return config;
+  }
+};
+
+TEST_P(GoogCcRttTest, CalculatesRttFromTransporFeedback) {
+  GoogCcFactoryConfig config(Config(/*feedback_only=*/GetParam()));
+  if (!GetParam()) {
+    // TODO(diepbp): understand the usage difference between
+    // UpdatePropagationRtt and UpdateRtt
+    GTEST_SKIP() << "This test should run only if "
+                    "feedback_only is enabled";
+  }
+  NetworkControllerTestFixture fixture(std::move(config));
+  std::unique_ptr<NetworkControllerInterface> controller =
+      fixture.CreateController();
+  Timestamp current_time = Timestamp::Millis(123);
+  TimeDelta one_way_delay = TimeDelta::Millis(10);
+  absl::optional<TimeDelta> rtt = absl::nullopt;
+
+  TransportPacketsFeedback feedback = CreateTransportPacketsFeedback(
+      /*per_packet_network_delay=*/TimeDelta::Millis(50), one_way_delay,
+      /*send_time=*/current_time);
+  NetworkControlUpdate update =
+      controller->OnTransportPacketsFeedback(feedback);
+  current_time += TimeDelta::Millis(50);
+  update = controller->OnProcessInterval({.at_time = current_time});
+  if (update.target_rate) {
+    rtt = update.target_rate->network_estimate.round_trip_time;
+  }
+  ASSERT_TRUE(rtt.has_value());
+  EXPECT_EQ(rtt->ms(), 2 * one_way_delay.ms());
+}
+
+INSTANTIATE_TEST_SUITE_P(GoogCcRttTests, GoogCcRttTest, ::testing::Bool());
 
 }  // namespace test
 }  // namespace webrtc
