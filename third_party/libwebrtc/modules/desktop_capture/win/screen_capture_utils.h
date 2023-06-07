@@ -54,6 +54,10 @@ bool IsMonitorValid(HMONITOR monitor);
 // primary display's top-left. On failure, returns an empty rect.
 DesktopRect GetMonitorRect(HMONITOR monitor);
 
+// Returns the DPI for the specified monitor. On failure, returns the system DPI
+// or the Windows default DPI (96x96) if the system DPI can't be retrieved.
+DesktopVector GetDpiForMonitor(HMONITOR monitor);
+
 // Returns true if `screen` is a valid screen. The screen device key is
 // returned through `device_key` if the screen is valid. The device key can be
 // used in GetScreenRect to verify the screen matches the previously obtained

@@ -945,10 +945,10 @@ index c892d59955..18ef43eeb4 100644
    if (screen_ == kFullDesktopScreenId) {
      return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 3d4aecf14d..1dc2918d08 100644
+index 3745e9cba5..5409417a88 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
 +++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -51,7 +51,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
+@@ -52,7 +52,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
        continue;
      }
  
@@ -957,7 +957,7 @@ index 3d4aecf14d..1dc2918d08 100644
      if (device_names) {
        device_names->push_back(rtc::ToUtf8(device.DeviceName));
      }
-@@ -147,6 +147,7 @@ DesktopRect GetFullscreenRect() {
+@@ -170,6 +170,7 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
  
  DesktopRect GetScreenRect(const DesktopCapturer::SourceId screen,
                            const std::wstring& device_key) {
@@ -966,7 +966,7 @@ index 3d4aecf14d..1dc2918d08 100644
      return GetFullscreenRect();
    }
 diff --git a/modules/desktop_capture/win/screen_capturer_win_gdi.cc b/modules/desktop_capture/win/screen_capturer_win_gdi.cc
-index 57b1f71b0d..c6d4a75931 100644
+index 4d07b6b92f..2a81fb5184 100644
 --- a/modules/desktop_capture/win/screen_capturer_win_gdi.cc
 +++ b/modules/desktop_capture/win/screen_capturer_win_gdi.cc
 @@ -186,6 +186,7 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
