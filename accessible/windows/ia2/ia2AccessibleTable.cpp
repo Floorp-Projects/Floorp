@@ -378,52 +378,16 @@ ia2AccessibleTable::get_isSelected(long aRowIdx, long aColIdx,
 }
 
 STDMETHODIMP
-ia2AccessibleTable::selectRow(long aRowIdx) {
-  TableAccessibleBase* table = TableAcc();
-  if (!table) return CO_E_OBJNOTCONNECTED;
-
-  if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= table->RowCount())
-    return E_INVALIDARG;
-
-  table->SelectRow(aRowIdx);
-  return S_OK;
-}
+ia2AccessibleTable::selectRow(long aRowIdx) { return E_NOTIMPL; }
 
 STDMETHODIMP
-ia2AccessibleTable::selectColumn(long aColIdx) {
-  TableAccessibleBase* table = TableAcc();
-  if (!table) return CO_E_OBJNOTCONNECTED;
-
-  if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= table->ColCount())
-    return E_INVALIDARG;
-
-  table->SelectCol(aColIdx);
-  return S_OK;
-}
+ia2AccessibleTable::selectColumn(long aColIdx) { return E_NOTIMPL; }
 
 STDMETHODIMP
-ia2AccessibleTable::unselectRow(long aRowIdx) {
-  TableAccessibleBase* table = TableAcc();
-  if (!table) return CO_E_OBJNOTCONNECTED;
-
-  if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= table->RowCount())
-    return E_INVALIDARG;
-
-  table->UnselectRow(aRowIdx);
-  return S_OK;
-}
+ia2AccessibleTable::unselectRow(long aRowIdx) { return E_NOTIMPL; }
 
 STDMETHODIMP
-ia2AccessibleTable::unselectColumn(long aColIdx) {
-  TableAccessibleBase* table = TableAcc();
-  if (!table) return CO_E_OBJNOTCONNECTED;
-
-  if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= table->ColCount())
-    return E_INVALIDARG;
-
-  table->UnselectCol(aColIdx);
-  return S_OK;
-}
+ia2AccessibleTable::unselectColumn(long aColIdx) { return E_NOTIMPL; }
 
 STDMETHODIMP
 ia2AccessibleTable::get_rowColumnExtentsAtIndex(long aCellIdx, long* aRowIdx,

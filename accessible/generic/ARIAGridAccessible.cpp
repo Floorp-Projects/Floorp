@@ -12,9 +12,6 @@
 #include "Role.h"
 #include "States.h"
 
-#include "mozilla/dom/Element.h"
-#include "nsComponentManagerUtils.h"
-
 using namespace mozilla;
 using namespace mozilla::a11y;
 
@@ -324,125 +321,6 @@ void ARIAGridAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
 
     if (isRowSelected) aRows->AppendElement(rowIdx);
   }
-}
-
-void ARIAGridAccessible::SelectRow(uint32_t aRowIdx) {
-  if (IsARIARole(nsGkAtoms::table)) return;
-
-  AccIterator rowIter(this, filters::GetRow);
-
-  LocalAccessible* row = nullptr;
-  for (uint32_t rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
-    DebugOnly<nsresult> rv = SetARIASelected(row, rowIdx == aRowIdx);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
-  }
-}
-
-void ARIAGridAccessible::SelectCol(uint32_t aColIdx) {
-  if (IsARIARole(nsGkAtoms::table)) return;
-
-  AccIterator rowIter(this, filters::GetRow);
-
-  LocalAccessible* row = nullptr;
-  while ((row = rowIter.Next())) {
-    // Unselect all cells in the row.
-    DebugOnly<nsresult> rv = SetARIASelected(row, false);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
-
-    // Select cell at the column index.
-    LocalAccessible* cell = CellInRowAt(row, aColIdx);
-    if (cell) SetARIASelected(cell, true);
-  }
-}
-
-void ARIAGridAccessible::UnselectRow(uint32_t aRowIdx) {
-  if (IsARIARole(nsGkAtoms::table)) return;
-
-  LocalAccessible* row = RowAt(aRowIdx);
-  if (row) SetARIASelected(row, false);
-}
-
-void ARIAGridAccessible::UnselectCol(uint32_t aColIdx) {
-  if (IsARIARole(nsGkAtoms::table)) return;
-
-  AccIterator rowIter(this, filters::GetRow);
-
-  LocalAccessible* row = nullptr;
-  while ((row = rowIter.Next())) {
-    LocalAccessible* cell = CellInRowAt(row, aColIdx);
-    if (cell) SetARIASelected(cell, false);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Protected
-
-nsresult ARIAGridAccessible::SetARIASelected(LocalAccessible* aAccessible,
-                                             bool aIsSelected, bool aNotify) {
-  if (IsARIARole(nsGkAtoms::table)) return NS_OK;
-
-  nsIContent* content = aAccessible->GetContent();
-  NS_ENSURE_STATE(content);
-
-  nsresult rv = NS_OK;
-  if (content->IsElement()) {
-    if (aIsSelected) {
-      rv = content->AsElement()->SetAttr(
-          kNameSpaceID_None, nsGkAtoms::aria_selected, u"true"_ns, aNotify);
-    } else {
-      rv = content->AsElement()->SetAttr(
-          kNameSpaceID_None, nsGkAtoms::aria_selected, u"false"_ns, aNotify);
-    }
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // No "smart" select/unselect for internal call.
-  if (!aNotify) return NS_OK;
-
-  // If row or cell accessible was selected then we're able to not bother about
-  // selection of its cells or its row because our algorithm is row oriented,
-  // i.e. we check selection on row firstly and then on cells.
-  if (aIsSelected) return NS_OK;
-
-  roles::Role role = aAccessible->Role();
-
-  // If the given accessible is row that was unselected then remove
-  // aria-selected from cell accessible.
-  if (role == roles::ROW) {
-    AccIterator cellIter(aAccessible, filters::GetCell);
-    LocalAccessible* cell = nullptr;
-
-    while ((cell = cellIter.Next())) {
-      rv = SetARIASelected(cell, false, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    return NS_OK;
-  }
-
-  // If the given accessible is cell that was unselected and its row is selected
-  // then remove aria-selected from row and put aria-selected on
-  // siblings cells.
-  if (role == roles::GRID_CELL || role == roles::ROWHEADER ||
-      role == roles::COLUMNHEADER) {
-    LocalAccessible* row = aAccessible->LocalParent();
-
-    if (row && row->Role() == roles::ROW && nsAccUtils::IsARIASelected(row)) {
-      rv = SetARIASelected(row, false, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      AccIterator cellIter(row, filters::GetCell);
-      LocalAccessible* cell = nullptr;
-      while ((cell = cellIter.Next())) {
-        if (cell != aAccessible) {
-          rv = SetARIASelected(cell, true, false);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-    }
-  }
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

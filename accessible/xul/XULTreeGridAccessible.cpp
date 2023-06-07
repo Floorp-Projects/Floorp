@@ -149,25 +149,6 @@ bool XULTreeGridAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
   return IsRowSelected(aRowIdx);
 }
 
-void XULTreeGridAccessible::SelectRow(uint32_t aRowIdx) {
-  if (!mTreeView) return;
-
-  nsCOMPtr<nsITreeSelection> selection;
-  mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ASSERTION(selection, "GetSelection() Shouldn't fail!");
-
-  selection->Select(aRowIdx);
-}
-
-void XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx) {
-  if (!mTreeView) return;
-
-  nsCOMPtr<nsITreeSelection> selection;
-  mTreeView->GetSelection(getter_AddRefs(selection));
-
-  if (selection) selection->ClearRange(aRowIdx, aRowIdx);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridAccessible: LocalAccessible implementation
 

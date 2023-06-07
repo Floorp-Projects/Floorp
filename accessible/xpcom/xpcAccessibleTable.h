@@ -56,10 +56,6 @@ class xpcAccessibleTable : public xpcAccessibleHyperText,
   NS_IMETHOD GetSelectedCellIndices(nsTArray<uint32_t>& aCellsArray) final;
   NS_IMETHOD GetSelectedColumnIndices(nsTArray<uint32_t>& aColsArray) final;
   NS_IMETHOD GetSelectedRowIndices(nsTArray<uint32_t>& aRowsArray) final;
-  NS_IMETHOD SelectColumn(int32_t aColIdx) final;
-  NS_IMETHOD SelectRow(int32_t aRowIdx) final;
-  NS_IMETHOD UnselectColumn(int32_t aColIdx) final;
-  NS_IMETHOD UnselectRow(int32_t aRowIdx) final;
   NS_IMETHOD IsProbablyForLayout(bool* aIsForLayout) final;
 
  protected:
