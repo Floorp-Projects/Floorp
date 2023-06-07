@@ -220,7 +220,7 @@ class Tabs extends PureComponent {
               onDragStart={this.onTabDragStart}
               onDragOver={this.onTabDragOver}
               onDragEnd={this.onTabDragEnd}
-              key={index}
+              key={source.id + sourceActor?.id}
               index={index}
               source={source}
               sourceActor={sourceActor}

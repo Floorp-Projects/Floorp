@@ -22,7 +22,6 @@ import { createLocation } from "../../utils/location";
 
 import {
   getSelectedLocation,
-  getActiveSearch,
   getSourcesForTabs,
   isSourceBlackBoxed,
   getContext,
@@ -33,14 +32,12 @@ const classnames = require("devtools/client/shared/classnames.js");
 class Tab extends PureComponent {
   static get propTypes() {
     return {
-      activeSearch: PropTypes.string,
       closeTab: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
       onDragEnd: PropTypes.func.isRequired,
       onDragOver: PropTypes.func.isRequired,
       onDragStart: PropTypes.func.isRequired,
       selectSource: PropTypes.func.isRequired,
-      selectedLocation: PropTypes.object,
       source: PropTypes.object.isRequired,
       sourceActor: PropTypes.object.isRequired,
       tabSources: PropTypes.array.isRequired,
@@ -60,7 +57,6 @@ class Tab extends PureComponent {
   render() {
     const {
       cx,
-      selectedLocation,
       selectSource,
       closeTab,
       source,
@@ -70,12 +66,9 @@ class Tab extends PureComponent {
       onDragStart,
       onDragEnd,
       index,
+      isActive,
     } = this.props;
     const sourceId = source.id;
-    const active =
-      selectedLocation &&
-      sourceId == selectedLocation.source.id &&
-      !this.isSourceSearchEnabled();
     const isPrettyCode = isPretty(source);
 
     function onClickClose(e) {
@@ -90,7 +83,7 @@ class Tab extends PureComponent {
     }
 
     const className = classnames("source-tab", {
-      active,
+      active: isActive,
       pretty: isPrettyCode,
       blackboxed: this.props.isBlackBoxed,
     });
@@ -137,9 +130,8 @@ const mapStateToProps = (state, { source }) => {
   return {
     cx: getContext(state),
     tabSources: getSourcesForTabs(state),
-    selectedLocation: getSelectedLocation(state),
     isBlackBoxed: isSourceBlackBoxed(state, source),
-    activeSearch: getActiveSearch(state),
+    isActive: source.id === getSelectedLocation(state)?.source.id,
   };
 };
 
