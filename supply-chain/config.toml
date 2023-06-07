@@ -84,6 +84,10 @@ notes = "This crate has two testing-only dependencies which are specified as reg
 audit-as-crates-io = false
 notes = "This override is an api-compatible fork with an orthogonal implementation."
 
+[policy.malloc_size_of_derive]
+audit-as-crates-io = false
+notes = "This was originally servo code which Bobby Holley put on crates.io some years ago and that was moved in-tree as first-party code later on."
+
 [policy.marionette]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."

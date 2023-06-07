@@ -1518,9 +1518,7 @@ dependencies = [
 
 [[package]]
 name = "malloc_size_of_derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e37c5d4cd9473c5f4c9c111f033f15d4df9bd378fdf615944e360a4f55a05f0b"
+version = "0.1.2"
 dependencies = [
  "proc-macro2",
  "syn 1.0.91",
