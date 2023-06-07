@@ -702,20 +702,21 @@ if (rtc_include_tests) {
       "//third_party/abseil-cpp/absl/types:optional",
     ]
   }
-}
 
-rtc_source_set("frame_transformer_factory_unittest") {
-  testonly = true
-  sources = [ "source/frame_transformer_factory_unittest.cc" ]
-  deps = [
-    "../../api:frame_transformer_factory",
-    "../../api:transport_api",
-    "../../call:video_stream_api",
-    "../../modules/rtp_rtcp",
-    "../../rtc_base:rtc_event",
-    "../../test:mock_frame_transformer",
-    "../../test:test_support",
-    "../../video",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  rtc_source_set("frame_transformer_factory_unittest") {
+    testonly = true
+    sources = [ "source/frame_transformer_factory_unittest.cc" ]
+    deps = [
+      "../../api:frame_transformer_factory",
+      "../../api:mock_transformable_video_frame",
+      "../../api:transport_api",
+      "../../call:video_stream_api",
+      "../../modules/rtp_rtcp",
+      "../../rtc_base:rtc_event",
+      "../../test:mock_frame_transformer",
+      "../../test:test_support",
+      "../../video",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  }
 }
