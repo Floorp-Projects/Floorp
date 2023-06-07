@@ -202,15 +202,8 @@ RTPVideoHeader RtpPayloadParams::GetRtpVideoHeader(
   if (codec_specific_info) {
     PopulateRtpWithCodecSpecifics(*codec_specific_info, image.SpatialIndex(),
                                   &rtp_video_header);
-    // Currently, SimulcastIndex() could return the SpatialIndex() if not set
-    // correctly so gate on codec type.
-    // TODO(https://crbug.com/webrtc/14884): Delete this gating logic when
-    // SimulcastIndex() is guaranteed to be the stream index.
-    if (codec_specific_info->codecType != kVideoCodecVP9 &&
-        codec_specific_info->codecType != kVideoCodecAV1) {
-      rtp_video_header.simulcastIdx = image.SimulcastIndex().value_or(0);
-    }
   }
+  rtp_video_header.simulcastIdx = image.SimulcastIndex().value_or(0);
   rtp_video_header.frame_type = image._frameType;
   rtp_video_header.rotation = image.rotation_;
   rtp_video_header.content_type = image.content_type_;

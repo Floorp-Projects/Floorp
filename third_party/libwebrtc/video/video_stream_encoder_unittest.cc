@@ -9473,10 +9473,10 @@ TEST(VideoStreamEncoderFrameCadenceTest, UpdatesQualityConvergence) {
   EXPECT_CALL(factory.GetMockFakeEncoder(), EncodeHook)
       .WillRepeatedly(Invoke([](EncodedImage& encoded_image,
                                 rtc::scoped_refptr<EncodedImageBuffer> buffer) {
-        // This sets spatial index 0 content to be at target quality, while
+        // This sets simulcast index 0 content to be at target quality, while
         // index 1 content is not.
         encoded_image.qp_ = kVp8SteadyStateQpThreshold +
-                            (encoded_image.SpatialIndex() == 0 ? 0 : 1);
+                            (encoded_image.SimulcastIndex() == 0 ? 0 : 1);
         CodecSpecificInfo codec_specific;
         codec_specific.codecType = kVideoCodecVP8;
         return codec_specific;
