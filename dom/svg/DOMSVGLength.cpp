@@ -132,10 +132,16 @@ uint16_t DOMSVGLength::UnitType() {
   if (mIsAnimValItem) {
     Element()->FlushAnimations();
   }
+  uint16_t unitType;
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
-    return svg->GetAnimatedLength(mAttrEnum)->GetSpecifiedUnitType();
+    unitType = svg->GetAnimatedLength(mAttrEnum)->GetSpecifiedUnitType();
+  } else {
+    unitType = HasOwner() ? InternalItem().GetUnit() : mUnit;
   }
-  return HasOwner() ? InternalItem().GetUnit() : mUnit;
+
+  return SVGLength::IsValidUnitType(unitType)
+             ? unitType
+             : SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN;
 }
 
 float DOMSVGLength::GetValue(ErrorResult& aRv) {
