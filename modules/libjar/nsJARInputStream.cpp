@@ -285,7 +285,9 @@ nsresult nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
     if ((zerr != Z_OK) && (zerr != Z_STREAM_END)) {
       return NS_ERROR_FILE_CORRUPTED;
     }
-    finished = (zerr == Z_STREAM_END);
+    // If inflating did not read anything more, then the stream is finished.
+    finished = (zerr == Z_STREAM_END) ||
+               (mZs.avail_out && mZs.total_out == oldTotalOut);
   }
 
   *aBytesRead = (mZs.total_out - oldTotalOut);
