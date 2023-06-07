@@ -68,6 +68,17 @@ add_task(async function send_dismiss_event_telemetry() {
     await SpecialPowers.popPrefEnv();
   });
 
+  // Let's collect all "messaging-system" pings submitted in this test.
+  let pingContents = [];
+  let onSubmit = () => {
+    pingContents.push({
+      messageId: Glean.messagingSystem.messageId.testGetValue(),
+      event: Glean.messagingSystem.event.testGetValue(),
+    });
+    GleanPings.messagingSystem.testBeforeNextSubmit(onSubmit);
+  };
+  GleanPings.messagingSystem.testBeforeNextSubmit(onSubmit);
+
   const messageId = "MULTISTAGE_SPOTLIGHT_MESSAGE";
   let message = (await PanelTestProvider.getMessages()).find(
     m => m.id === messageId
@@ -79,30 +90,9 @@ add_task(async function send_dismiss_event_telemetry() {
     .value({ sendStructuredIngestionPing: () => {} });
   let spy = sandbox.spy(AboutWelcomeTelemetry.prototype, "sendTelemetry");
   // send without a dispatch function so that default is used
-  let pingSubmitted = false;
   await showAndWaitForDialog({ message, browser }, async win => {
     await waitForClick("button.dismiss-button", win);
     await win.close();
-    // To catch the `DISMISS` and not any of the earlier events
-    // triggering "messaging-system" pings, we must position this synchronously
-    // _after_ the window closes but before `showAndWaitForDialog`'s callback
-    // completes.
-    // Too early and we'll catch an earlier event like `CLICK`.
-    // Too late and we'll not catch any event at all.
-    GleanPings.messagingSystem.testBeforeNextSubmit(() => {
-      pingSubmitted = true;
-
-      Assert.equal(
-        messageId,
-        Glean.messagingSystem.messageId.testGetValue(),
-        "Glean was given the correct message_id"
-      );
-      Assert.equal(
-        "DISMISS",
-        Glean.messagingSystem.event.testGetValue(),
-        "Glean was given the correct event"
-      );
-    });
   });
 
   Assert.equal(
@@ -117,8 +107,20 @@ add_task(async function send_dismiss_event_telemetry() {
     "A dismiss event is called with a top level event field with value 'DISMISS'"
   );
 
-  Assert.ok(pingSubmitted, "The Glean ping was submitted.");
+  Assert.greater(
+    pingContents.length,
+    0,
+    "Glean 'messaging-system' pings were submitted."
+  );
+  Assert.ok(
+    pingContents.some(ping => {
+      return ping.messageId === messageId && ping.event === "DISMISS";
+    }),
+    "A Glean 'messaging-system' ping was sent for the correct message+event."
+  );
 
+  // Tidy up by removing the self-referential test callback.
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {});
   sandbox.restore();
 });
 
