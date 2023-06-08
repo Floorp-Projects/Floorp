@@ -75,7 +75,7 @@ add_task(async function () {
   let longURL = "http://longurl.com/" + "foobar/".repeat(30);
   gURLBar.value = longURL;
   is(
-    gURLBar.value,
+    gURLBar.inputField.value,
     longURL.replace(/^http:\/\//, ""),
     "Urlbar value has http:// stripped"
   );
