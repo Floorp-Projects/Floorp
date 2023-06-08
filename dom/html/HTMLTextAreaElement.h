@@ -124,7 +124,6 @@ class HTMLTextAreaElement final : public TextControlElement,
                        int32_t* aTabIndex) override;
 
   void DoneAddingChildren(bool aHaveNotified) override;
-  bool IsDoneAddingChildren() override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;

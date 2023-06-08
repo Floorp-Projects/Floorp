@@ -31,42 +31,39 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLObjectElement, object)
-  virtual int32_t TabIndexDefault() override;
+  int32_t TabIndexDefault() override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent() const override;
+  bool IsInteractiveHTMLContent() const override;
 
   // EventTarget
-  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+  void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                               int32_t* aTabIndex) override;
+  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                       int32_t* aTabIndex) override;
 
   // Overriden nsIFormControl methods
   NS_IMETHOD Reset() override { return NS_OK; }
 
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override { return NS_OK; }
 
-  virtual void DoneAddingChildren(bool aHaveNotified) override;
-  virtual bool IsDoneAddingChildren() override;
+  void DoneAddingChildren(bool aHaveNotified) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual ElementState IntrinsicState() const override;
-  virtual void DestroyContent() override;
+  ElementState IntrinsicState() const override;
+  void DestroyContent() override;
 
   // nsObjectLoadingContent
-  virtual uint32_t GetCapabilities() const override;
-
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  uint32_t GetCapabilities() const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   nsresult CopyInnerTo(Element* aDest);
 
@@ -174,14 +171,12 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }
 
-  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
-  virtual void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
-                                      const nsAttrValueOrString& aValue,
-                                      bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
+                              const nsAttrValueOrString& aValue,
+                              bool aNotify) override;
 
  private:
   nsContentPolicyType GetContentPolicyType() const override {
@@ -190,8 +185,8 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
 
   virtual ~HTMLObjectElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);

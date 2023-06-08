@@ -54,7 +54,7 @@ class MOZ_STACK_CLASS SafeOptionListMutation {
   void MutationFailed() { mNeedsRebuild = true; }
 
  private:
-  static void* operator new(size_t) noexcept(true) { return 0; }
+  static void* operator new(size_t) noexcept(true) { return nullptr; }
   static void operator delete(void*, size_t) {}
   /** The select element which option list is being mutated. */
   RefPtr<HTMLSelectElement> mSelect;
@@ -277,7 +277,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
   void DoneAddingChildren(bool aHaveNotified) override;
-  bool IsDoneAddingChildren() override { return mIsDoneAddingChildren; }
+  bool IsDoneAddingChildren() const { return mIsDoneAddingChildren; }
 
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,

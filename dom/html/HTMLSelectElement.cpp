@@ -1156,7 +1156,8 @@ bool HTMLSelectElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   if (kNameSpaceID_None == aNamespaceID) {
     if (aAttribute == nsGkAtoms::size) {
       return aResult.ParsePositiveIntValue(aValue);
-    } else if (aAttribute == nsGkAtoms::autocomplete) {
+    }
+    if (aAttribute == nsGkAtoms::autocomplete) {
       aResult.ParseAtomArray(aValue);
       return true;
     }
