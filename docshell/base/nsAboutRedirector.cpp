@@ -122,8 +122,9 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"networking", "chrome://global/content/aboutNetworking.html",
      nsIAboutModule::ALLOW_SCRIPT},
-    {"performance", "chrome://global/content/aboutPerformance.html",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
+    {"performance", "about:processes",
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI |
+         nsIAboutModule::HIDE_FROM_ABOUTABOUT},
 #ifndef ANDROID
     {"plugins", "chrome://global/content/plugins.html",
      nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
