@@ -43,7 +43,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/video/receive_statistics_proxy2.cc",
     "/third_party/libwebrtc/video/report_block_stats.cc",
     "/third_party/libwebrtc/video/rtp_streams_synchronizer2.cc",
-    "/third_party/libwebrtc/video/rtp_video_stream_receiver_frame_transformer_delegate.cc",
     "/third_party/libwebrtc/video/send_delay_stats.cc",
     "/third_party/libwebrtc/video/send_statistics_proxy.cc",
     "/third_party/libwebrtc/video/stats_counter.cc",
