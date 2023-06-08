@@ -306,8 +306,6 @@ export class Database {
             request.onerror = e => reject(e);
           });
 
-          console.error("allRecords", allRecords);
-
           // Compare known records IDs to those stored along the attachments.
           const currentRecordsIDs = new Set(allRecords.map(r => r.id));
           const attachmentsToDelete = allAttachments.reduce((acc, entry) => {
