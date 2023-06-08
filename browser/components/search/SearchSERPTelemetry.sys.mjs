@@ -1292,13 +1292,13 @@ class ContentHandler {
         tagged: impressionInfo.tagged,
         partner_code: impressionInfo.partnerCode,
         source: impressionInfo.source,
-        shopping_tab_displayed: info.hasShoppingTab,
+        shopping_tab_displayed: info.shoppingTabDisplayed,
         is_shopping_page: impressionInfo.isShoppingPage,
       });
       lazy.logConsole.debug(`Reported Impression:`, {
         impressionId,
         ...impressionInfo,
-        hasShopping: info.hasShoppingTab,
+        shoppingTabDisplayed: info.shoppingTabDisplayed,
       });
     } else {
       lazy.logConsole.debug("Could not find an impression id.");
