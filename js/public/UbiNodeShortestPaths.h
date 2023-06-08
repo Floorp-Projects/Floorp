@@ -246,6 +246,12 @@ struct JS_PUBLIC_API ShortestPaths {
     MOZ_ASSERT(targets.count() > 0);
     MOZ_ASSERT(maxNumPaths > 0);
 
+    mozilla::CheckedInt<uint32_t> max = maxNumPaths;
+    max *= targets.count();
+    if (!max.isValid()) {
+      return mozilla::Nothing();
+    }
+
     ShortestPaths paths(maxNumPaths, root, std::move(targets));
 
     Handler handler(paths);
