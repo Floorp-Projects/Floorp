@@ -132,7 +132,7 @@ async function startTest() {
       <input  type="color"    name="uname">
       <input  type="password" name="pword">
       <button type="submit">Submit</button>
-    </form>`, win);
+    </form>`, win, 13);
 
   await checkLoginFormInFrameWithElementValues(win, 1, "testuser@example.com", "testpass1");
   await checkLoginFormInFrameWithElementValues(win, 2, "555-555-5555", "testpass2");
