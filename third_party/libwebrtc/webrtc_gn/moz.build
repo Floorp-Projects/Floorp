@@ -153,6 +153,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "ole32",
         "oleaut32",
         "secur32",
+        "shcore",
         "strmiids",
         "user32",
         "winmm"

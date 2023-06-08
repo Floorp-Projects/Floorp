@@ -193,6 +193,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "dxgi",
         "iphlpapi",
         "secur32",
+        "shcore",
         "winmm"
     ]
 
