@@ -170,11 +170,10 @@ customElements.define(
       // to identify the extension being manipulated by the context menu.
       this._actionButton.dataset.extensionid = this.extension.id;
 
-      const { attention } = OriginControls.getAttentionState(
-        this.extension.policy,
-        this.ownerGlobal
+      this.toggleAttribute(
+        "attention",
+        OriginControls.getAttention(this.extension.policy, this.ownerGlobal)
       );
-      this.toggleAttribute("attention", attention);
 
       this.querySelector(".unified-extensions-item-name").textContent =
         this.extension.name;

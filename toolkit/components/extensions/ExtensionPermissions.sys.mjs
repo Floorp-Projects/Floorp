@@ -566,37 +566,13 @@ export var OriginControls = {
     };
   },
 
-  /**
-   * Whether to show the attention indicator for extension on current tab. We
-   * usually show attention when:
-   *
-   * - some permissions are needed (in MV3+)
-   * - the extension is not allowed on the domain (quarantined)
-   *
-   * @param {WebExtensionPolicy} policy an extension's policy
-   * @param {Window} window The window for which we can get the attention state
-   * @returns {{attention: boolean, quarantined: boolean}}
-   */
-  getAttentionState(policy, window) {
+  // Whether to show the attention indicator for extension on current tab.
+  getAttention(policy, window) {
     if (policy?.manifestVersion >= 3) {
-      const state = this.getState(policy, window.gBrowser.selectedTab);
-      // quarantined is always false when the feature is disabled.
-      const quarantined = !!state.quarantined;
-      const attention =
-        quarantined ||
-        (!!state.whenClicked && !state.hasAccess && !state.temporaryAccess);
-
-      return { attention, quarantined };
+      let state = this.getState(policy, window.gBrowser.selectedTab);
+      return !!state.whenClicked && !state.hasAccess && !state.temporaryAccess;
     }
-
-    if (WebExtensionPolicy.quarantinedDomainsEnabled) {
-      const state = this.getState(policy, window.gBrowser.selectedTab);
-      const attention = !!state.quarantined;
-      // If it needs attention, it's because of the quarantined domains.
-      return { attention, quarantined: attention };
-    }
-
-    return { attention: false, quarantined: false };
+    return false;
   },
 
   // Grant extension host permission to always run on this host.
