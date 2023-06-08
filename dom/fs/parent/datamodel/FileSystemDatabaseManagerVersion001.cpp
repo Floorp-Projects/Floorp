@@ -800,7 +800,7 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
       "( :handle, :name ) "
       ";"_ns;
 
-  QM_TRY_UNWRAP(EntryId entryId, GetUniqueEntryId(mConnection, aHandle));
+  QM_TRY_INSPECT(const EntryId& entryId, GetEntryId(aHandle));
   MOZ_ASSERT(!entryId.IsEmpty());
 
   mozStorageTransaction transaction(
@@ -875,7 +875,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
       "( :handle, :type, :name ) "
       ";"_ns;
 
-  QM_TRY_UNWRAP(EntryId entryId, GetUniqueEntryId(mConnection, aHandle));
+  QM_TRY_INSPECT(const EntryId& entryId, GetEntryId(aHandle));
   MOZ_ASSERT(!entryId.IsEmpty());
 
   const ContentType& type =
@@ -944,6 +944,16 @@ FileSystemDatabaseManagerVersion001::GetDirectoryEntries(
                                  /* aDirectory */ false, entries.files())));
 
   return entries;
+}
+
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetEntryId(
+    const FileSystemChildMetadata& aHandle) const {
+  return GetUniqueEntryId(mConnection, aHandle);
+}
+
+nsresult FileSystemDatabaseManagerVersion001::EnsureFileId(
+    const EntryId& aEntryId) {
+  return NS_OK;
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(

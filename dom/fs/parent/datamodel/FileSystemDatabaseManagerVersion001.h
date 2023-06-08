@@ -88,6 +88,11 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual Result<Path, QMResult> Resolve(
       const FileSystemEntryPair& aEndpoints) const override;
 
+  virtual Result<EntryId, QMResult> GetEntryId(
+      const FileSystemChildMetadata& aHandle) const override;
+
+  virtual nsresult EnsureFileId(const EntryId& aEntryId) override;
+
   virtual Result<FileId, QMResult> GetFileId(
       const EntryId& aEntryId) const override;
 

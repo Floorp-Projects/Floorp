@@ -160,6 +160,18 @@ class FileSystemDatabaseManager {
       const FileSystemEntryPair& aEndpoints) const = 0;
 
   /**
+   * @brief Generates an EntryId for a given parent EntryId and filename.
+   */
+  virtual Result<EntryId, QMResult> GetEntryId(
+      const FileSystemChildMetadata& aHandle) const = 0;
+
+  /**
+   * @brief Make sure EntryId maps to a FileId. This method should be called
+   * before locking is attempted.
+   */
+  virtual nsresult EnsureFileId(const EntryId& aEntryId) = 0;
+
+  /**
    * @brief To support moves in metadata, the actual files on disk are tagged
    * with file id's which are mapped to entry id's which represent paths.
    *
