@@ -770,14 +770,14 @@ static void read_coef_tree(Dav1dTaskContext *const t,
         uint8_t cf_ctx;
         int eob;
         coef *cf;
-        struct CodedBlockInfo *cbi;
+        int16_t *cbi;
 
         if (t->frame_thread.pass) {
             const int p = t->frame_thread.pass & 1;
             assert(ts->frame_thread[p].cf);
             cf = ts->frame_thread[p].cf;
             ts->frame_thread[p].cf += imin(t_dim->w, 8) * imin(t_dim->h, 8) * 16;
-            cbi = &f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
+            cbi = f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
         } else {
             cf = bitfn(t->cf);
         }
@@ -800,16 +800,14 @@ static void read_coef_tree(Dav1dTaskContext *const t,
                 rep_macro(type, txtp_map, 0, mul * txtp); \
                 txtp_map += 32; \
             }
-            uint8_t *txtp_map = &t->txtp_map[by4 * 32 + bx4];
+            uint8_t *txtp_map = &t->scratch.txtp_map[by4 * 32 + bx4];
             case_set_upto16(txw,,,);
 #undef set_ctx
-            if (t->frame_thread.pass == 1) {
-                cbi->eob[0] = eob;
-                cbi->txtp[0] = txtp;
-            }
+            if (t->frame_thread.pass == 1)
+                cbi[0] = eob * (1 << 5) + txtp;
         } else {
-            eob = cbi->eob[0];
-            txtp = cbi->txtp[0];
+            eob  = cbi[0] >> 5;
+            txtp = cbi[0] & 0x1f;
         }
         if (!(t->frame_thread.pass & 1)) {
             assert(dst);
@@ -874,7 +872,7 @@ void bytefn(dav1d_read_coef_blocks)(Dav1dTaskContext *const t,
             for (y = init_y, t->by += init_y; y < sub_h4;
                  y += t_dim->h, t->by += t_dim->h, y_off++)
             {
-                struct CodedBlockInfo *const cbi =
+                int16_t (*const cbi)[3] =
                     &f->frame_thread.cbi[t->by * f->b4_stride];
                 int x_off = !!init_x;
                 for (x = init_x, t->bx += init_x; x < sub_w4;
@@ -886,14 +884,14 @@ void bytefn(dav1d_read_coef_blocks)(Dav1dTaskContext *const t,
                     } else {
                         uint8_t cf_ctx = 0x40;
                         enum TxfmType txtp;
-                        const int eob = cbi[t->bx].eob[0] =
+                        const int eob =
                             decode_coefs(t, &t->a->lcoef[bx4 + x],
                                          &t->l.lcoef[by4 + y], b->tx, bs, b, 1,
                                          0, ts->frame_thread[1].cf, &txtp, &cf_ctx);
                         if (DEBUG_BLOCK_INFO)
                             printf("Post-y-cf-blk[tx=%d,txtp=%d,eob=%d]: r=%d\n",
                                    b->tx, txtp, eob, ts->msac.rng);
-                        cbi[t->bx].txtp[0] = txtp;
+                        cbi[t->bx][0] = eob * (1 << 5) + txtp;
                         ts->frame_thread[1].cf += imin(t_dim->w, 8) * imin(t_dim->h, 8) * 16;
 #define set_ctx(type, dir, diridx, off, mul, rep_macro) \
                         rep_macro(type, t->dir lcoef, off, mul * cf_ctx)
@@ -919,7 +917,7 @@ void bytefn(dav1d_read_coef_blocks)(Dav1dTaskContext *const t,
                 for (y = init_y >> ss_ver, t->by += init_y; y < sub_ch4;
                      y += uv_t_dim->h, t->by += uv_t_dim->h << ss_ver)
                 {
-                    struct CodedBlockInfo *const cbi =
+                    int16_t (*const cbi)[3] =
                         &f->frame_thread.cbi[t->by * f->b4_stride];
                     for (x = init_x >> ss_hor, t->bx += init_x; x < sub_cw4;
                          x += uv_t_dim->w, t->bx += uv_t_dim->w << ss_hor)
@@ -927,9 +925,9 @@ void bytefn(dav1d_read_coef_blocks)(Dav1dTaskContext *const t,
                         uint8_t cf_ctx = 0x40;
                         enum TxfmType txtp;
                         if (!b->intra)
-                            txtp = t->txtp_map[(by4 + (y << ss_ver)) * 32 +
-                                                bx4 + (x << ss_hor)];
-                        const int eob = cbi[t->bx].eob[1 + pl] =
+                            txtp = t->scratch.txtp_map[(by4 + (y << ss_ver)) * 32 +
+                                                        bx4 + (x << ss_hor)];
+                        const int eob =
                             decode_coefs(t, &t->a->ccoef[pl][cbx4 + x],
                                          &t->l.ccoef[pl][cby4 + y], b->uvtx, bs,
                                          b, b->intra, 1 + pl, ts->frame_thread[1].cf,
@@ -938,7 +936,7 @@ void bytefn(dav1d_read_coef_blocks)(Dav1dTaskContext *const t,
                             printf("Post-uv-cf-blk[pl=%d,tx=%d,"
                                    "txtp=%d,eob=%d]: r=%d\n",
                                    pl, b->uvtx, txtp, eob, ts->msac.rng);
-                        cbi[t->bx].txtp[1 + pl] = txtp;
+                        cbi[t->bx][pl + 1] = eob * (1 << 5) + txtp;
                         ts->frame_thread[1].cf += uv_t_dim->w * uv_t_dim->h * 16;
 #define set_ctx(type, dir, diridx, off, mul, rep_macro) \
                         rep_macro(type, t->dir ccoef[pl], off, mul * cf_ctx)
@@ -1323,10 +1321,10 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTaskContext *const t, const enum BlockSize
                             const int p = t->frame_thread.pass & 1;
                             cf = ts->frame_thread[p].cf;
                             ts->frame_thread[p].cf += imin(t_dim->w, 8) * imin(t_dim->h, 8) * 16;
-                            const struct CodedBlockInfo *const cbi =
-                                &f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
-                            eob = cbi->eob[0];
-                            txtp = cbi->txtp[0];
+                            const int cbi =
+                                f->frame_thread.cbi[t->by * f->b4_stride + t->bx][0];
+                            eob  = cbi >> 5;
+                            txtp = cbi & 0x1f;
                         } else {
                             uint8_t cf_ctx;
                             cf = bitfn(t->cf);
@@ -1547,10 +1545,10 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTaskContext *const t, const enum BlockSize
                                 const int p = t->frame_thread.pass & 1;
                                 cf = ts->frame_thread[p].cf;
                                 ts->frame_thread[p].cf += uv_t_dim->w * uv_t_dim->h * 16;
-                                const struct CodedBlockInfo *const cbi =
-                                    &f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
-                                eob = cbi->eob[pl + 1];
-                                txtp = cbi->txtp[pl + 1];
+                                const int cbi =
+                                    f->frame_thread.cbi[t->by * f->b4_stride + t->bx][pl + 1];
+                                eob  = cbi >> 5;
+                                txtp = cbi & 0x1f;
                             } else {
                                 uint8_t cf_ctx;
                                 cf = bitfn(t->cf);
@@ -1997,15 +1995,15 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTaskContext *const t, const enum BlockSize 
                             const int p = t->frame_thread.pass & 1;
                             cf = ts->frame_thread[p].cf;
                             ts->frame_thread[p].cf += uvtx->w * uvtx->h * 16;
-                            const struct CodedBlockInfo *const cbi =
-                                &f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
-                            eob = cbi->eob[1 + pl];
-                            txtp = cbi->txtp[1 + pl];
+                            const int cbi =
+                                f->frame_thread.cbi[t->by * f->b4_stride + t->bx][pl + 1];
+                            eob  = cbi >> 5;
+                            txtp = cbi & 0x1f;
                         } else {
                             uint8_t cf_ctx;
                             cf = bitfn(t->cf);
-                            txtp = t->txtp_map[(by4 + (y << ss_ver)) * 32 +
-                                                bx4 + (x << ss_hor)];
+                            txtp = t->scratch.txtp_map[(by4 + (y << ss_ver)) * 32 +
+                                                        bx4 + (x << ss_hor)];
                             eob = decode_coefs(t, &t->a->ccoef[pl][cbx4 + x],
                                                &t->l.ccoef[pl][cby4 + y],
                                                b->uvtx, bs, b, 0, 1 + pl,

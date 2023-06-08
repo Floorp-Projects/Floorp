@@ -71,23 +71,6 @@ Dav1dRef *dav1d_ref_create_using_pool(Dav1dMemPool *const pool, size_t size) {
     return res;
 }
 
-Dav1dRef *dav1d_ref_wrap(const uint8_t *const ptr,
-                         void (*free_callback)(const uint8_t *data, void *user_data),
-                         void *const user_data)
-{
-    Dav1dRef *res = malloc(sizeof(Dav1dRef));
-    if (!res) return NULL;
-
-    res->data = NULL;
-    res->const_data = ptr;
-    atomic_init(&res->ref_cnt, 1);
-    res->free_ref = 1;
-    res->free_callback = free_callback;
-    res->user_data = user_data;
-
-    return res;
-}
-
 void dav1d_ref_dec(Dav1dRef **const pref) {
     assert(pref != NULL);
 
@@ -100,8 +83,4 @@ void dav1d_ref_dec(Dav1dRef **const pref) {
         ref->free_callback(ref->const_data, ref->user_data);
         if (free_ref) free(ref);
     }
-}
-
-int dav1d_ref_is_writable(Dav1dRef *const ref) {
-    return atomic_load(&ref->ref_cnt) == 1 && ref->data;
 }

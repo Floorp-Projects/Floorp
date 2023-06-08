@@ -3899,6 +3899,47 @@ ALIGN function_align
     sar                 r6d, 8+1
     jmp m(inv_txfm_add_dct_dct_32x8_8bpc).dconly3
 ALIGN function_align
+cglobal_label .main_oddhalf_fast3 ; bottom seven-eights are zero
+    vpbroadcastd         m8, [o(pw_2896x8)]
+    vpbroadcastd         m4, [o(pw_4076x8)]
+    vpbroadcastd         m3, [o(pw_401x8)]
+    pmulhrsw             m8, m0  ; t0
+    pmulhrsw             m4, m14 ; t15a
+    pmulhrsw             m3, m14 ; t8a
+    punpcklwd            m9, m3, m4
+    punpckhwd            m5, m3, m4
+    mova                 m2, m10
+    vpdpwssd             m2, m9, [o(pw_m3784_1567)] {bcstd}
+    mova                 m1, m10
+    vpdpwssd             m1, m5, [o(pw_m3784_1567)] {bcstd}
+    mova                 m6, m10
+    vpdpwssd             m6, m5, [o(pw_1567_3784)] {bcstd}
+    mova                 m5, m10
+    vpdpwssd             m5, m9, [o(pw_1567_3784)] {bcstd}
+    vpbroadcastd        m11, [o(pw_2896_2896)]
+    vpbroadcastd        m12, [o(pw_m2896_2896)]
+    psubsw              m21, m8, m4 ; out15
+    paddsw               m0, m8, m4 ; out0
+    psubsw              m14, m8, m3 ; out8
+    paddsw               m7, m8, m3 ; out7
+    REPX      {psrad x, 12}, m2, m1, m6, m5
+    packssdw             m2, m1     ; t9a
+    packssdw             m5, m6     ; t14a
+    ITX_MULSUB_2W         4, 3, 16, 17, 10, 11, 12 ; t11,  t12
+    psubsw              m20, m8, m5 ; out14
+    paddsw               m1, m8, m5 ; out1
+    psubsw              m15, m8, m2 ; out9
+    paddsw               m6, m8, m2 ; out6
+    ITX_MULSUB_2W         5, 2, 16, 17, 10, 11, 12 ; t10a, t13a
+    psubsw              m18, m8, m3 ; out12
+    paddsw               m3, m8     ; out3
+    psubsw              m17, m8, m4 ; out11
+    paddsw               m4, m8     ; out4
+    psubsw              m19, m8, m2 ; out13
+    paddsw               m2, m8     ; out2
+    psubsw              m16, m8, m5 ; out10
+    paddsw               m5, m8     ; out5
+    ret
 cglobal_label .main_oddhalf_fast2 ; bottom three-quarters are zero
     vpbroadcastd         m9, [o(pw_2896x8)]
     vpbroadcastd         m2, [o(pw_4017x8)]
@@ -4675,6 +4716,55 @@ cglobal inv_txfm_add_dct_dct_32x32_8bpc, 4, 6, 0, dst, stride, c, eob
     or                  r3d, 32
     jmp m(inv_txfm_add_dct_dct_32x8_8bpc).dconly2
 ALIGN function_align
+cglobal_label .main_oddhalf_fast3 ; bottom seven-eights are zero
+    vpbroadcastd        m21, [o(pw_4091x8)]
+    vpbroadcastd         m8, [o(pw_201x8)]
+    vpbroadcastd        m24, [o(pw_m601x8)]
+    vpbroadcastd        m12, [o(pw_4052x8)]
+    pmulhrsw            m21, m22 ; t31a
+    pmulhrsw            m22, m8  ; t16a
+    pmulhrsw            m24, m23 ; t23a
+    pmulhrsw            m23, m12 ; t24a
+
+    punpcklwd            m9, m22, m21
+    punpckhwd            m8, m22, m21
+    mova                m15, m10
+    vpdpwssd            m15, m9, [o(pw_m4017_799)] {bcstd}
+    mova                m17, m10
+    vpdpwssd            m17, m8, [o(pw_m4017_799)] {bcstd}
+    REPX      {psrad x, 12}, m15, m17
+    packssdw            m15, m17
+    mova                m17, m10
+    vpdpwssd            m17, m8, [o(pw_799_4017)] {bcstd}
+    mova                 m8, m10
+    vpdpwssd             m8, m9, [o(pw_799_4017)] {bcstd}
+    REPX      {psrad x, 12}, m17, m8
+    packssdw             m8, m17
+
+    punpcklwd            m9, m24, m23
+    punpckhwd           m16, m24, m23
+    mova                m20, m10
+    vpdpwssd            m20, m9, [o(pw_m3406_m2276)] {bcstd}
+    mova                m17, m10
+    vpdpwssd            m17, m16, [o(pw_m3406_m2276)] {bcstd}
+    REPX      {psrad x, 12}, m20, m17
+    packssdw            m20, m17
+    mova                m17, m10
+    vpdpwssd            m17, m16, [o(pw_m2276_3406)] {bcstd}
+    mova                m16, m10
+    vpdpwssd            m16, m9, [o(pw_m2276_3406)] {bcstd}
+    REPX      {psrad x, 12}, m17, m16
+    packssdw            m16, m17
+
+    mova                m17, m21
+    mova                m27, m15
+    mova                m25, m20
+    mova                m29, m8
+    mova                m18, m22
+    mova                m14, m24
+    mova                m28, m16
+    mova                m26, m23
+    jmp .main4
 cglobal_label .main_oddhalf_fast2 ; bottom three-quarters are zero
     vpbroadcastd        m21, [o(pw_4091x8)]
     vpbroadcastd         m8, [o(pw_201x8)]
@@ -4768,8 +4858,6 @@ cglobal_label .main_oddhalf
     ITX_MULSUB_2W        25, 18,  9, 17, 10, m4017,  799 ; t18a, t29a
     ITX_MULSUB_2W        29, 26,  9, 17, 10,  3406, 2276 ; t21a, t26a
     ITX_MULSUB_2W        20, 16,  9, 17, 10, m2276, 3406 ; t22a, t25a
-    vpbroadcastd        m12, [o(pw_m3784_1567)]
-    vpbroadcastd        m11, [o(pw_1567_3784)]
     psubsw              m17, m21, m27 ; t28a
     paddsw              m21, m27      ; t31a
     psubsw              m27, m15, m25 ; t18
@@ -4786,6 +4874,9 @@ cglobal_label .main_oddhalf
     psubsw              m16, m26      ; t26
     psubsw              m26, m23, m19 ; t27a
     paddsw              m23, m19      ; t24a
+.main4:
+    vpbroadcastd        m12, [o(pw_m3784_1567)]
+    vpbroadcastd        m11, [o(pw_1567_3784)]
     ITX_MULSUB_2W        29, 27,  9, 19, 10, 11, 12 ; t18a, t29a
     ITX_MULSUB_2W        17, 18,  9, 19, 10, 11, 12 ; t19,  t28
     vpbroadcastd        m11, [o(pw_m1567_m3784)]
@@ -6090,7 +6181,33 @@ cglobal inv_txfm_add_dct_dct_32x64_8bpc, 4, 7, 0, dst, stride, c, eob
     sar                 r6d, 8+1
     jmp m(inv_txfm_add_dct_dct_32x8_8bpc).dconly3
 ALIGN function_align ; bottom three-quarters are zero
-.main_part1_fast:
+cglobal_label .main_part1_fast2
+    vpbroadcastd         m7, [o(idct64_mul+4*0)]
+    vpbroadcastd         m8, [o(idct64_mul+4*1)]
+    pmulhrsw             m7, m0     ; t63a
+    pmulhrsw             m0, m8     ; t32a
+
+    punpcklwd            m4, m0, m7
+    punpckhwd            m6, m0, m7
+    mova                 m1, m10
+    vpdpwssd             m1, m4, [o(idct64_mul+4*9)] {bcstd}
+    mova                 m9, m10
+    vpdpwssd             m9, m6, [o(idct64_mul+4*9)] {bcstd}
+    REPX      {psrad x, 12}, m1, m9
+    packssdw             m1, m9
+    mova                 m9, m10
+    vpdpwssd             m9, m6, [o(idct64_mul+4*8)] {bcstd}
+    mova                 m6, m10
+    vpdpwssd             m6, m4, [o(idct64_mul+4*8)] {bcstd}
+    REPX      {psrad x, 12}, m9, m6
+    packssdw             m6, m9
+
+    mova                 m4, m0
+    mova                 m3, m7
+    mova                 m5, m1
+    mova                 m2, m6
+    jmp .main_part1c
+cglobal_label .main_part1_fast
     vpbroadcastd         m1, [o(idct64_mul+4*0)]
     vpbroadcastd         m8, [o(idct64_mul+4*1)]
     vpbroadcastd         m2, [o(idct64_mul+4*6)]
@@ -6104,7 +6221,7 @@ ALIGN function_align ; bottom three-quarters are zero
     mova                 m6, m3
     mova                 m5, m2
     jmp .main_part1b
-.main_part1:
+cglobal_label .main_part1
     ; idct64 steps 1-5:
     ; in1/31/17/15 -> t32a/33/34a/35/60/61a/62/63a
     ; in7/25/23/ 9 -> t56a/57/58a/59/36/37a/38/39a
@@ -6140,8 +6257,6 @@ ALIGN function_align ; bottom three-quarters are zero
     ITX_MULSUB_2W         1, 8, 4, 9, 10, 11, 12 ; t33a, t62a
     vpbroadcastd        m11, [o(idct64_mul+4*10)]
     ITX_MULSUB_2W         2, 6, 4, 9, 10, 12, 11 ; t34a, t61a
-    vpbroadcastd        m11, [o(idct64_mul+4*11)]
-    vpbroadcastd        m12, [o(idct64_mul+4*12)]
     psubsw               m4, m0, m3 ; t35a
     paddsw               m0, m3     ; t32a
     psubsw               m3, m7, m5 ; t60a
@@ -6150,6 +6265,9 @@ ALIGN function_align ; bottom three-quarters are zero
     paddsw               m1, m2     ; t33
     psubsw               m2, m8, m6 ; t61
     paddsw               m6, m8     ; t62
+.main_part1c:
+    vpbroadcastd        m11, [o(idct64_mul+4*11)]
+    vpbroadcastd        m12, [o(idct64_mul+4*12)]
     add                  r5, 4*13
     ITX_MULSUB_2W         3, 4, 8, 9, 10, 11, 12 ; t35,  t60
     ITX_MULSUB_2W         2, 5, 8, 9, 10, 11, 12 ; t34a, t61a
@@ -6163,7 +6281,7 @@ ALIGN function_align ; bottom three-quarters are zero
     mova          [r4+64*5], m5
     add                  r4, 64*8
     ret
-.main_part2:
+cglobal_label .main_part2
     vpbroadcastd        m11, [o(pw_1567_3784  -16*13)]
     vpbroadcastd        m12, [o(pw_m3784_1567 -16*13)]
     lea                  r6, [r4+64*7]

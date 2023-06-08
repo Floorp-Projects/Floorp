@@ -53,6 +53,7 @@
 static COLD void init_internal(void) {
     dav1d_init_cpu();
     dav1d_init_interintra_masks();
+    dav1d_init_intra_edge_tree();
     dav1d_init_qm_tables();
     dav1d_init_thread();
     dav1d_init_wedge_masks();
@@ -175,6 +176,7 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
         dav1d_mem_pool_init(&c->frame_hdr_pool) ||
         dav1d_mem_pool_init(&c->segmap_pool) ||
         dav1d_mem_pool_init(&c->refmvs_pool) ||
+        dav1d_mem_pool_init(&c->pic_ctx_pool) ||
         dav1d_mem_pool_init(&c->cdf_pool))
     {
         goto error;
@@ -279,12 +281,6 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     }
     dav1d_refmvs_dsp_init(&c->refmvs_dsp);
 
-    // intra edge tree
-    c->intra_edge.root[BL_128X128] = &c->intra_edge.branch_sb128[0].node;
-    dav1d_init_mode_tree(c->intra_edge.root[BL_128X128], c->intra_edge.tip_sb128, 1);
-    c->intra_edge.root[BL_64X64] = &c->intra_edge.branch_sb64[0].node;
-    dav1d_init_mode_tree(c->intra_edge.root[BL_64X64], c->intra_edge.tip_sb64, 0);
-
     pthread_attr_destroy(&thread_attr);
 
     return 0;
@@ -293,56 +289,6 @@ error:
     if (c) close_internal(c_out, 0);
     pthread_attr_destroy(&thread_attr);
     return DAV1D_ERR(ENOMEM);
-}
-
-static void dummy_free(const uint8_t *const data, void *const user_data) {
-    assert(data && !user_data);
-}
-
-int dav1d_parse_sequence_header(Dav1dSequenceHeader *const out,
-                                const uint8_t *const ptr, const size_t sz)
-{
-    Dav1dData buf = { 0 };
-    int res;
-
-    validate_input_or_ret(out != NULL, DAV1D_ERR(EINVAL));
-
-    Dav1dSettings s;
-    dav1d_default_settings(&s);
-    s.n_threads = 1;
-    s.logger.callback = NULL;
-
-    Dav1dContext *c;
-    res = dav1d_open(&c, &s);
-    if (res < 0) return res;
-
-    if (ptr) {
-        res = dav1d_data_wrap_internal(&buf, ptr, sz, dummy_free, NULL);
-        if (res < 0) goto error;
-    }
-
-    while (buf.sz > 0) {
-        res = dav1d_parse_obus(c, &buf, 1);
-        if (res < 0) goto error;
-
-        assert((size_t)res <= buf.sz);
-        buf.sz -= res;
-        buf.data += res;
-    }
-
-    if (!c->seq_hdr) {
-        res = DAV1D_ERR(ENOENT);
-        goto error;
-    }
-
-    memcpy(out, c->seq_hdr, sizeof(*out));
-
-    res = 0;
-error:
-    dav1d_data_unref_internal(&buf);
-    dav1d_close(&c);
-
-    return res;
 }
 
 static int has_grain(const Dav1dPicture *const pic)
@@ -456,14 +402,13 @@ static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
 
 static int gen_picture(Dav1dContext *const c)
 {
-    int res;
     Dav1dData *const in = &c->in;
 
     if (output_picture_ready(c, 0))
         return 0;
 
     while (in->sz > 0) {
-        res = dav1d_parse_obus(c, in, 0);
+        const ptrdiff_t res = dav1d_parse_obus(c, in);
         if (res < 0) {
             dav1d_data_unref_internal(in);
         } else {
@@ -475,7 +420,7 @@ static int gen_picture(Dav1dContext *const c)
         if (output_picture_ready(c, 0))
             break;
         if (res < 0)
-            return res;
+            return (int)res;
     }
 
     return 0;
@@ -485,10 +430,11 @@ int dav1d_send_data(Dav1dContext *const c, Dav1dData *const in)
 {
     validate_input_or_ret(c != NULL, DAV1D_ERR(EINVAL));
     validate_input_or_ret(in != NULL, DAV1D_ERR(EINVAL));
-    validate_input_or_ret(in->data == NULL || in->sz, DAV1D_ERR(EINVAL));
 
-    if (in->data)
+    if (in->data) {
+        validate_input_or_ret(in->sz > 0 && in->sz <= SIZE_MAX / 2, DAV1D_ERR(EINVAL));
         c->drain = 0;
+    }
     if (c->in.data)
         return DAV1D_ERR(EAGAIN);
     dav1d_data_ref(&c->in, in);
@@ -592,6 +538,7 @@ void dav1d_flush(Dav1dContext *const c) {
     c->mastering_display = NULL;
     c->content_light = NULL;
     c->itut_t35 = NULL;
+    c->n_itut_t35 = 0;
     dav1d_ref_dec(&c->mastering_display_ref);
     dav1d_ref_dec(&c->content_light_ref);
     dav1d_ref_dec(&c->itut_t35_ref);
@@ -740,6 +687,7 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
     dav1d_mem_pool_end(c->refmvs_pool);
     dav1d_mem_pool_end(c->cdf_pool);
     dav1d_mem_pool_end(c->picture_pool);
+    dav1d_mem_pool_end(c->pic_ctx_pool);
 
     dav1d_freep_aligned(c_out);
 }
