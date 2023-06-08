@@ -53,7 +53,9 @@ TASKS = [
 # to redo all the category counts. The platforms, and apps are
 # not forced because they change infrequently.
 TEST_VARIANTS = {
-    Variants.NO_FISSION.value: {
+    # Bug 1837058 - Switch this back to Variants.NO_FISSION when
+    # the default flips to fission on android
+    Variants.FISSION.value: {
         "query": "'nofis",
         "negation": "!nofis",
         "platforms": [Platforms.ANDROID.value],
@@ -99,7 +101,7 @@ TEST_CATEGORIES = {
         "query": {
             Suites.RAPTOR.value: ["'browsertime 'tp6 'essential"],
         },
-        "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
+        "variant-restrictions": {Suites.RAPTOR.value: [Variants.FISSION.value]},
         "suites": [Suites.RAPTOR.value],
         "tasks": [],
     },
@@ -158,7 +160,7 @@ TEST_CATEGORIES = {
             Suites.RAPTOR.value: ["'browsertime 'youtube-playback"],
         },
         "suites": [Suites.TALOS.value, Suites.RAPTOR.value],
-        "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
+        "variant-restrictions": {Suites.RAPTOR.value: [Variants.FISSION.value]},
         "tasks": [],
     },
 }
@@ -541,7 +543,7 @@ TEST_CATEGORIES = {
         # base here for fenix
         (
             {
-                "requested_variants": ["no-fission"],
+                "requested_variants": ["fission"],
                 "requested_apps": ["fenix"],
                 "android": True,
             },
@@ -556,7 +558,7 @@ TEST_CATEGORIES = {
                         "!profil",
                     ],
                 },
-                "Pageload android-a51 fenix no-fission": {
+                "Pageload android-a51 fenix fission": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
@@ -566,7 +568,7 @@ TEST_CATEGORIES = {
                         "!profil",
                     ],
                 },
-                "Pageload (essential) android fenix no-fission": {
+                "Pageload (essential) android fenix fission": {
                     "raptor": [
                         "'browsertime 'tp6 'essential",
                         "'android 'a51 'shippable 'aarch64",
@@ -587,7 +589,7 @@ TEST_CATEGORIES = {
         # for each of them
         (
             {
-                "requested_variants": ["no-fission", "live-sites"],
+                "requested_variants": ["fission", "live-sites"],
                 "requested_apps": ["fenix"],
                 "android": True,
             },
@@ -601,7 +603,7 @@ TEST_CATEGORIES = {
                         "!profil",
                     ],
                 },
-                "Pageload android-a51 fenix no-fission": {
+                "Pageload android-a51 fenix fission": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
@@ -621,7 +623,7 @@ TEST_CATEGORIES = {
                         "!profil",
                     ],
                 },
-                "Pageload (essential) android fenix no-fission": {
+                "Pageload (essential) android fenix fission": {
                     "raptor": [
                         "'browsertime 'tp6 'essential",
                         "'android 'a51 'shippable 'aarch64",
@@ -631,7 +633,7 @@ TEST_CATEGORIES = {
                         "!profil",
                     ],
                 },
-                "Pageload android fenix no-fission+live-sites": {
+                "Pageload android fenix fission+live-sites": {
                     "raptor": [
                         "'browsertime 'tp6",
                         "'android 'a51 'shippable 'aarch64",
