@@ -23,9 +23,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* global jsesc */
-/* exported jsesc */
-var EXPORTED_SYMBOLS = ["jsesc"];
+var global = {};
+
 /*! https://mths.be/jsesc v1.0.0 by @mathias */
 ;(function(root) {
 
@@ -298,4 +297,6 @@ var EXPORTED_SYMBOLS = ["jsesc"];
 		root.jsesc = jsesc;
 	}
 
-}(this));
+}(global));
+
+export var jsesc = global.jsesc;
