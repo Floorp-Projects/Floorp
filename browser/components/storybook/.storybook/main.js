@@ -39,6 +39,8 @@ module.exports = {
     "../**/README.*.stories.md",
     // UI Widgets section
     `${projectRoot}/toolkit/content/widgets/**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
+    // about:logins components stories
+    `${projectRoot}/browser/components/aboutlogins/content/components/**/*.stories.mjs`,
     // Everything else
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
   ],
