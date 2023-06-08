@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "FileSystemParentTypes.h"
 #include "FileSystemQuotaClient.h"
 #include "TestHelpers.h"
 #include "datamodel/FileSystemDataManager.h"
@@ -329,7 +330,7 @@ TEST_F(TestFileSystemQuotaClient, WritesToFilesShouldIncreaseUsage) {
 
       // When data manager unlocks the file, it should call update
       // but in this test we call it directly
-      ASSERT_NSEQ(NS_OK, dbm->UpdateUsage(testFileId));
+      ASSERT_NSEQ(NS_OK, dbm->UpdateUsage(FileId(testFileId)));
 
       // Disk usage should have increased after writing
       TEST_TRY_UNWRAP(usageNow,
@@ -465,7 +466,7 @@ TEST_F(TestFileSystemQuotaClient, RemovingFileShouldDecreaseUsage) {
 
       // Currently, usage is expected to be updated on unlock by data manager
       // but here UpdateUsage() is called directly
-      ASSERT_NSEQ(NS_OK, dbm->UpdateUsage(testFileId));
+      ASSERT_NSEQ(NS_OK, dbm->UpdateUsage(FileId(testFileId)));
 
       // At least some file disk usage should have appeared after unlocking
       TEST_TRY_UNWRAP(usageNow, quotaClient->GetUsageForOrigin(

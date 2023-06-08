@@ -26,7 +26,11 @@ struct OriginMetadata;
 
 }  // namespace quota
 
-namespace fs::data {
+namespace fs {
+
+struct FileId;
+
+namespace data {
 
 /**
  * @brief Get the directory for file system items of specified origin.
@@ -119,24 +123,24 @@ class FileSystemFileManager {
    * @param aEntryId Specified id of a file system entry
    * @return Result<nsCOMPtr<nsIFile>, QMResult> File or error.
    */
-  Result<nsCOMPtr<nsIFile>, QMResult> GetFile(const EntryId& aEntryId) const;
+  Result<nsCOMPtr<nsIFile>, QMResult> GetFile(const FileId& aFileId) const;
 
   /**
    * @brief Get or create a disk-backed file object for a specified entry id.
    *
-   * @param aEntryId Specified id of a file system entry
+   * @param aFileId Specified id of a file system entry
    * @return Result<nsCOMPtr<nsIFile>, QMResult> File abstraction or IO error
    */
-  Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(const EntryId& aEntryId);
+  Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(const FileId& aFileId);
 
   /**
    * @brief Remove the disk-backed file object for a specified entry id.
    * Note: The returned value is 0 in release builds.
    *
-   * @param aEntryId  Specified id of a file system entry
+   * @param aFileId  Specified id of a file system entry
    * @return Result<Usage, QMResult> Error or file size
    */
-  Result<Usage, QMResult> RemoveFile(const EntryId& aEntryId);
+  Result<Usage, QMResult> RemoveFile(const FileId& aFileId);
 
   /**
    * @brief This method can be used to try to delete a group of files from the
@@ -145,7 +149,7 @@ class FileSystemFileManager {
    * The method attempts to remove all the files requested.
    */
   Result<DebugOnly<Usage>, QMResult> RemoveFiles(
-      const nsTArray<EntryId>& aEntryIds, nsTArray<EntryId>& aRemoveFails);
+      const nsTArray<FileId>& aFileIds, nsTArray<FileId>& aRemoveFails);
 
  private:
   explicit FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory);
@@ -153,7 +157,8 @@ class FileSystemFileManager {
   nsCOMPtr<nsIFile> mTopDirectory;
 };
 
-}  // namespace fs::data
+}  // namespace data
+}  // namespace fs
 }  // namespace mozilla::dom
 
 #endif  // DOM_FS_PARENT_DATAMODEL_FILESYSTEMFILEMANAGER_H_

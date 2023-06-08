@@ -50,7 +50,15 @@ class MockFileSystemDataManager final : public data::FileSystemDataManager {
       : FileSystemDataManager(aOriginMetadata, nullptr, std::move(aIOTarget),
                               std::move(aIOTaskQueue)) {}
 
+  void SetDatabaseManager(data::FileSystemDatabaseManager* aDatabaseManager) {
+    mDatabaseManager =
+        UniquePtr<data::FileSystemDatabaseManager>(aDatabaseManager);
+  }
+
   virtual ~MockFileSystemDataManager() {
+    mDatabaseManager->Close();
+    mDatabaseManager = nullptr;
+
     // Need to avoid assertions
     mState = State::Closed;
   }
@@ -105,6 +113,8 @@ static void MakeDatabaseManagerVersion001(
   aDatabaseManager = new FileSystemDatabaseManagerVersion001(
       aDataManager, std::move(connection),
       MakeUnique<FileSystemFileManager>(fmRes.unwrap()), rootId);
+
+  aDataManager->SetDatabaseManager(aDatabaseManager);
 }
 
 class TestFileSystemDatabaseManagerVersion001
@@ -128,11 +138,11 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
     nsresult rv = NS_OK;
     // Ensure that FileSystemDataManager lives for the lifetime of the test
     RefPtr<MockFileSystemDataManager> dataManager;
-    FileSystemDatabaseManagerVersion001* rdm = nullptr;
-    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(dataManager, rdm));
-    UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
+    FileSystemDatabaseManagerVersion001* dm = nullptr;
+    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(dataManager, dm));
+    ASSERT_TRUE(dm);
     // if any of these exit early, we have to close
-    auto autoClose = MakeScopeExit([rdm] { rdm->Close(); });
+    auto autoClose = MakeScopeExit([dm] { dm->Close(); });
 
     TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
 
@@ -215,9 +225,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
     nsresult rv = NS_OK;
     // Ensure that FileSystemDataManager lives for the lifetime of the test
     RefPtr<MockFileSystemDataManager> datamanager;
-    FileSystemDatabaseManagerVersion001* rdm = nullptr;
-    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(datamanager, rdm));
-    UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
+    FileSystemDatabaseManagerVersion001* dm = nullptr;
+    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(datamanager, dm));
 
     TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
 
@@ -356,9 +365,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
   auto ioTask = []() {
     // Ensure that FileSystemDataManager lives for the lifetime of the test
     RefPtr<MockFileSystemDataManager> datamanager;
-    FileSystemDatabaseManagerVersion001* rdm = nullptr;
-    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(datamanager, rdm));
-    UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
+    FileSystemDatabaseManagerVersion001* dm = nullptr;
+    ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(datamanager, dm));
     auto closeAtExit = MakeScopeExit([&dm]() { dm->Close(); });
 
     TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));

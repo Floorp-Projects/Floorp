@@ -12,15 +12,20 @@
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 
-namespace mozilla::dom::fs::data {
+namespace mozilla::dom::fs {
+
+struct FileId;
+
+namespace data {
 
 struct FileSystemHashSource {
   static Result<EntryId, QMResult> GenerateHash(const EntryId& aParent,
                                                 const Name& aName);
 
-  static Result<Name, QMResult> EncodeHash(const EntryId& aEntryId);
+  static Result<Name, QMResult> EncodeHash(const FileId& aFileId);
 };
 
-}  // namespace mozilla::dom::fs::data
+}  // namespace data
+}  // namespace mozilla::dom::fs
 
 #endif  // DOM_FS_PARENT_FILESYSTEMHASHSOURCE_H_

@@ -32,6 +32,7 @@ class FileSystemAccessHandle;
 class FileSystemManagerParent;
 
 namespace fs {
+struct FileId;
 class FileSystemChildMetadata;
 }  // namespace fs
 
@@ -119,7 +120,9 @@ class FileSystemDataManager
 
   RefPtr<BoolPromise> OnClose();
 
-  bool IsLocked(const EntryId& aEntryId) const;
+  Result<bool, QMResult> IsLocked(const FileId& aFileId) const;
+
+  Result<bool, QMResult> IsLocked(const EntryId& aEntryId) const;
 
   nsresult LockExclusive(const EntryId& aEntryId);
 
