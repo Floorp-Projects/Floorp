@@ -79,6 +79,12 @@ assertEq(e, "TypeError: 100 is not an array object");
 try { paths = shortestPaths([f], {start: 200}); } catch (exc) { e = ""+exc; };
 assertEq(e, "TypeError: 200 is not a GC thing");
 
+try { paths = shortestPaths([f, {}, {}, {}], { maxNumPaths: 0x40000000 }); } catch (exc) { e = "" + exc; };
+assertEq(e, "out of memory");
+
+try { paths = shortestPaths([f], { maxNumPaths: -1 }); } catch (exc) { e = "" + exc; };
+assertEq(e, "TypeError: -1 is not greater than 0");
+
 // Bug 1799824.
 let arr = [{}];
 let objWithGetter = {get start() { arr.length = 0; return {}; }};
