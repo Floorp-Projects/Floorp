@@ -328,8 +328,10 @@ static inline bool BytecodeIsJumpTarget(JSOp op) {
   }
 }
 
-MOZ_ALWAYS_INLINE unsigned StackUses(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+// The JSOp argument is superflous, but we are using it to avoid a
+// store forwarding Bug on some Android phones; see Bug 1833315
+MOZ_ALWAYS_INLINE unsigned StackUses(JSOp op, jsbytecode* pc) {
+  MOZ_ASSERT(op == JSOp(*pc));
   int nuses = CodeSpec(op).nuses;
   if (nuses >= 0) {
     return nuses;
@@ -353,8 +355,8 @@ MOZ_ALWAYS_INLINE unsigned StackUses(jsbytecode* pc) {
   }
 }
 
-MOZ_ALWAYS_INLINE unsigned StackDefs(jsbytecode* pc) {
-  int ndefs = CodeSpec(JSOp(*pc)).ndefs;
+MOZ_ALWAYS_INLINE unsigned StackDefs(JSOp op) {
+  int ndefs = CodeSpec(op).ndefs;
   MOZ_ASSERT(ndefs >= 0);
   return ndefs;
 }
