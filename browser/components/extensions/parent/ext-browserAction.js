@@ -337,11 +337,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         actionButton.onblur = event => this.handleEvent(event);
         actionButton.onfocus = event => this.handleEvent(event);
 
-        this.updateButton(
-          node,
-          this.action.getContextData(null),
-          /* sync */ true
-        );
+        this.updateButton(node, this.action.getContextData(null), true, false);
       },
 
       onBeforeCommand: (event, node) => {
@@ -795,13 +791,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
   // Update the toolbar button |node| with the tab context data
   // in |tabData|.
-  updateButton(
-    node,
-    tabData,
-    sync = false,
-    attention = false,
-    quarantined = false
-  ) {
+  updateButton(node, tabData, sync = false, attention = false) {
     // This is the primary/action button in the custom widget.
     let button = node.querySelector(".unified-extensions-item-action-button");
     let extensionTitle = tabData.title || this.extension.name;
@@ -818,13 +808,13 @@ this.browserAction = class extends ExtensionAPIPersistent {
       // This is set on the node so that it looks good in the toolbar.
       node.toggleAttribute("attention", attention);
 
-      let msgId = "origin-controls-toolbar-button";
-      if (attention) {
-        msgId = quarantined
-          ? "origin-controls-toolbar-button-quarantined"
-          : "origin-controls-toolbar-button-permission-needed";
-      }
-      node.ownerDocument.l10n.setAttributes(button, msgId, { extensionTitle });
+      node.ownerDocument.l10n.setAttributes(
+        button,
+        attention
+          ? "origin-controls-toolbar-button-permission-needed"
+          : "origin-controls-toolbar-button",
+        { extensionTitle }
+      );
 
       button.querySelector(".unified-extensions-item-name").textContent =
         this.extension?.name;
@@ -917,17 +907,11 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let node = this.widget.forWindow(window).node;
     if (node) {
       let tab = window.gBrowser.selectedTab;
-      let { attention, quarantined } = OriginControls.getAttentionState(
-        this.extension.policy,
-        window
-      );
-
       this.updateButton(
         node,
         this.action.getContextData(tab),
-        /* sync */ false,
-        attention,
-        quarantined
+        false,
+        OriginControls.getAttention(this.extension.policy, window)
       );
     }
   }
