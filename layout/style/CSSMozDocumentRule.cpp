@@ -7,6 +7,7 @@
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
 
+#include "js/RegExpFlags.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ServoBindings.h"
 #include "nsContentUtils.h"
@@ -64,9 +65,12 @@ bool CSSMozDocumentRule::Match(const Document* aDoc, nsIURI* aDocURI,
       return StringEndsWith(host, aPattern) && host.CharAt(lenDiff - 1) == '.';
     }
     case DocumentMatchingFunction::RegExp: {
-      NS_ConvertUTF8toUTF16 spec(aDocURISpec);
-      NS_ConvertUTF8toUTF16 regex(aPattern);
-      return nsContentUtils::IsPatternMatching(spec, regex, aDoc)
+      // Using JS::RegExpFlag::Unicode to allow patterns containing for example
+      // [^/].
+      return nsContentUtils::IsPatternMatching(
+                 NS_ConvertUTF8toUTF16(aDocURISpec),
+                 NS_ConvertUTF8toUTF16(aPattern), aDoc,
+                 /* aHasMultiple = */ false, JS::RegExpFlag::Unicode)
           .valueOr(false);
     }
     case DocumentMatchingFunction::PlainTextDocument:

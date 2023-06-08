@@ -213,7 +213,7 @@ class AccessibleCaretManager {
   MOZ_CAN_RUN_SCRIPT void SetSelectionDragState(bool aState) const;
 
   // Return true if the candidate string is a phone number.
-  bool IsPhoneNumber(nsAString& aCandidate) const;
+  bool IsPhoneNumber(const nsAString& aCandidate) const;
 
   // Extend the current selection forwards and backwards if it's already a
   // phone number.
