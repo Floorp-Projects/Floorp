@@ -670,8 +670,6 @@ dom/svg/test/test_style_sheet.html
 dom/svg/test/test_text_update.html
 dom/tests/browser/dummy.html
 dom/tests/browser/image.html
-dom/tests/browser/perfmetrics/dummy.html
-dom/tests/browser/perfmetrics/sound.html
 dom/tests/browser/test_new_window_from_content_child.html
 dom/tests/mochitest/beacon/test_beaconOriginHeader.html
 dom/tests/mochitest/beacon/test_beaconRedirect.html

@@ -16,7 +16,6 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/PerformanceCounter.h"
-#include "mozilla/PerformanceTypes.h"
 
 namespace mozilla {
 class AbstractThread;
@@ -62,8 +61,6 @@ class DocGroup final {
 
   JSExecutionManager* GetExecutionManager() const { return mExecutionManager; }
   void SetExecutionManager(JSExecutionManager*);
-
-  RefPtr<PerformanceInfoPromise> ReportPerformanceInfo();
 
   BrowsingContextGroup* GetBrowsingContextGroup() const {
     return mBrowsingContextGroup;

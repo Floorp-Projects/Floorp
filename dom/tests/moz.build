@@ -189,7 +189,6 @@ MOCHITEST_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += [
     "browser/browser.ini",
-    "browser/perfmetrics/browser.ini",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.tests.mochitest.ajax.lib += [

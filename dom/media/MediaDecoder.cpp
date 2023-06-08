@@ -114,50 +114,9 @@ class MediaMemoryTracker : public nsIMemoryReporter {
       sUniqueInstance = nullptr;
     }
   }
-
-  static RefPtr<MediaMemoryPromise> GetSizes(dom::Document* aDoc) {
-    MOZ_ASSERT(NS_IsMainThread());
-    DecodersArray& decoders = Decoders();
-
-    // if we don't have any decoder, we can bail
-    if (decoders.IsEmpty()) {
-      // and release the instance that was created by calling Decoders()
-      sUniqueInstance = nullptr;
-      return MediaMemoryPromise::CreateAndResolve(MediaMemoryInfo(), __func__);
-    }
-
-    RefPtr<MediaDecoder::ResourceSizes> resourceSizes =
-        new MediaDecoder::ResourceSizes(MediaMemoryTracker::MallocSizeOf);
-
-    size_t videoSize = 0;
-    size_t audioSize = 0;
-
-    for (auto&& decoder : decoders) {
-      if (decoder->GetOwner() && decoder->GetOwner()->GetDocument() == aDoc) {
-        videoSize += decoder->SizeOfVideoQueue();
-        audioSize += decoder->SizeOfAudioQueue();
-        decoder->AddSizeOfResources(resourceSizes);
-      }
-    }
-
-    return resourceSizes->Promise()->Then(
-        AbstractThread::MainThread(), __func__,
-        [videoSize, audioSize](size_t resourceSize) {
-          return MediaMemoryPromise::CreateAndResolve(
-              MediaMemoryInfo(videoSize, audioSize, resourceSize), __func__);
-        },
-        [](size_t) {
-          return MediaMemoryPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                     __func__);
-        });
-  }
 };
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
-
-RefPtr<MediaMemoryPromise> GetMediaMemorySizes(dom::Document* aDoc) {
-  return MediaMemoryTracker::GetSizes(aDoc);
-}
 
 LazyLogModule gMediaTimerLog("MediaTimer");
 

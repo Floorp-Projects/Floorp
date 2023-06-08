@@ -189,9 +189,6 @@ class ChromeUtils {
 
   static void ClearStyleSheetCache(GlobalObject& aGlobal);
 
-  static already_AddRefed<Promise> RequestPerformanceMetrics(
-      GlobalObject& aGlobal, ErrorResult& aRv);
-
   static void SetPerfStatsCollectionMask(GlobalObject& aGlobal, uint64_t aMask);
 
   static already_AddRefed<Promise> CollectPerfStats(GlobalObject& aGlobal,

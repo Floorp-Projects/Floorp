@@ -36,10 +36,6 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-namespace dom {
-class MediaMemoryInfo;
-}
-
 class AbstractThread;
 class DOMMediaStream;
 class DecoderBenchmark;
@@ -825,11 +821,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   bool mPendingStatusUpdateForNewlyCreatedStateMachine = false;
 #  endif
 };
-
-typedef MozPromise<mozilla::dom::MediaMemoryInfo, nsresult, true>
-    MediaMemoryPromise;
-
-RefPtr<MediaMemoryPromise> GetMediaMemorySizes(dom::Document* aDoc);
 
 }  // namespace mozilla
 

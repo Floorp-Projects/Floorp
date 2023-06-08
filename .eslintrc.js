@@ -1619,8 +1619,6 @@ module.exports = {
         "dom/tests/browser/browser_localStorage_snapshotting.js",
         "dom/tests/browser/browser_test_toolbars_visibility.js",
         "dom/tests/browser/browser_windowProxy_transplant.js",
-        "dom/tests/browser/perfmetrics/browser_test_performance_metrics.js",
-        "dom/tests/browser/perfmetrics/browser_test_unresponsive.js",
         "dom/tests/mochitest/beacon/file_beaconSafelist.html",
         "dom/tests/mochitest/beacon/test_beaconOriginHeader.html",
         "dom/tests/mochitest/beacon/test_beaconPreflightWithCustomContentType.html",
