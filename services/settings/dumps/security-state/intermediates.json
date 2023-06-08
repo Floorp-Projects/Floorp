@@ -2827,24 +2827,6 @@
       "last_modified": 1666727875111
     },
     {
-      "schema": 1666727382349,
-      "derHash": "OLJs9FyTLqKAGdk+RArHK66D+cv1LWrZE2mLGPzIcX0=",
-      "subject": "CN=EINS/PKI Public Certification Authority V4,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
-      "subjectDN": "MGkxCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMTMwMQYDVQQDEypFSU5TL1BLSSBQdWJsaWMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgVjQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3b9ae4a74d5261ecc85f6b9d358b4c4079b49f0f3a8e227d829b9ac02d03ca98",
-        "size": 1674,
-        "filename": "hMBp2m4PvojCldfsrzoX4dPk_9MctmHJZLUZTqPmBYk=.pem",
-        "location": "security-state-staging/intermediates/dc89c814-2876-4b30-b10a-bc5d94abe445.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "hMBp2m4PvojCldfsrzoX4dPk/9MctmHJZLUZTqPmBYk=",
-      "crlite_enrolled": false,
-      "id": "179db5f9-cfdb-44f1-a333-5ce2db577865",
-      "last_modified": 1666727875097
-    },
-    {
       "schema": 1666727370608,
       "derHash": "rB7FVjGOPqcPjwTgOg8mM7/nOZI1moEBRf/fGkJzlu4=",
       "subject": "CN=TeleSec ServerPass Class 2 CA,OU=T-Systems Trust Center,O=T-Systems International GmbH,POSTALCODE=57250,STREET=Untere Industriestr. 20,L=Netphen,ST=Nordrhein Westfalen,C=DE",
@@ -2915,24 +2897,6 @@
       "crlite_enrolled": false,
       "id": "4f5ba09a-4228-4ae3-b9fb-e261273f7b68",
       "last_modified": 1666727875018
-    },
-    {
-      "schema": 1666727332982,
-      "derHash": "TmKiUlkvnXH/4gN3V/hV1KAjXWY4vRBenvFwhs4rvCU=",
-      "subject": "CN=SECOM Passport for Web MH CA,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
-      "subjectDN": "MFsxCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMSUwIwYDVQQDExxTRUNPTSBQYXNzcG9ydCBmb3IgV2ViIE1IIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4325c7065bb83e9d92f3718a9948fddc4a55dc191e11a5d9b3164c843c5def37",
-        "size": 1670,
-        "filename": "q9I-r-WPX4f6FsDftbkgFglISBQJtf5Dqt8hXHPa7-U=.pem",
-        "location": "security-state-staging/intermediates/4c0cdeb1-6b0a-4cc1-8425-c5d64b1a5c3a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "q9I+r+WPX4f6FsDftbkgFglISBQJtf5Dqt8hXHPa7+U=",
-      "crlite_enrolled": false,
-      "id": "a48f8f7b-e4c4-4695-b74a-c002a3d4d4c9",
-      "last_modified": 1666727875003
     },
     {
       "schema": 1666727404592,
@@ -8855,24 +8819,6 @@
       "crlite_enrolled": false,
       "id": "aab7988d-97f1-489f-bb5a-2fcf4db1d18f",
       "last_modified": 1666727869912
-    },
-    {
-      "schema": 1666727361356,
-      "derHash": "9nwj73v3QSgJ22sd09RKCNN1TZnKumoT96BcckkInIk=",
-      "subject": "CN=QuoVadis Global SSL ICA G2,O=QuoVadis Limited,C=BM",
-      "subjectDN": "ME0xCzAJBgNVBAYTAkJNMRkwFwYDVQQKExBRdW9WYWRpcyBMaW1pdGVkMSMwIQYDVQQDExpRdW9WYWRpcyBHbG9iYWwgU1NMIElDQSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f3d6221594115cd098f20f66a013d90aae3becd3c578a737a8e58a35230c208d",
-        "size": 2016,
-        "filename": "tYkfFN27P1GUjH5ME128BCg302dL2iwOYhz5wwFJb50=.pem",
-        "location": "security-state-staging/intermediates/453adbd2-22ff-42b4-92ed-171fb792efa3.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tYkfFN27P1GUjH5ME128BCg302dL2iwOYhz5wwFJb50=",
-      "crlite_enrolled": false,
-      "id": "600b2b43-1467-43ac-8086-3e9c9d9900e9",
-      "last_modified": 1666727869898
     },
     {
       "schema": 1666727369431,
@@ -27775,5 +27721,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1685548623845
+  "timestamp": 1686131823424
 }
