@@ -9,6 +9,7 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsString.h"
 
 namespace mozilla::dom::fs {
@@ -142,6 +143,33 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
 
   int32_t mFilesOfUnknownUsage;
 };
+
+inline auto toNSResult = [](const auto& aRv) { return ToNSResult(aRv); };
+
+Result<bool, QMResult> ApplyEntryExistsQuery(
+    const FileSystemConnection& aConnection, const nsACString& aQuery,
+    const FileSystemChildMetadata& aHandle);
+
+Result<bool, QMResult> ApplyEntryExistsQuery(
+    const FileSystemConnection& aConnection, const nsACString& aQuery,
+    const EntryId& aEntry);
+
+Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
+                              const EntryId& aEntryId);
+
+Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
+                                      const FileSystemChildMetadata& aHandle,
+                                      bool aIsFile);
+
+Result<EntryId, QMResult> FindParent(const FileSystemConnection& aConnection,
+                                     const EntryId& aEntryId);
+
+Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
+                              const FileSystemEntryMetadata& aHandle,
+                              const FileSystemChildMetadata& aNewHandle,
+                              bool aIsFile);
+
+void TryRemoveDuringIdleMaintenance(const nsTArray<FileId>& aItemToRemove);
 
 }  // namespace data
 }  // namespace mozilla::dom::fs
