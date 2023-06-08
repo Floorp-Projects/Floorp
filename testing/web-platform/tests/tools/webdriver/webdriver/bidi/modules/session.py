@@ -6,13 +6,11 @@ from ._module import BidiModule, command
 class Session(BidiModule):
     @command
     def new(self, capabilities: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
-        params: MutableMapping[str, Any] = {}
-        params["capabilities"] = capabilities
-        return params
+        return {"capabilities": capabilities}
 
     @new.result
     def _new(self, result: Mapping[str, Any]) -> Any:
-        return result.get("sessionId"), result.get("capabilities", {})
+        return result.get("session_id"), result.get("capabilities", {})
 
     @command
     def subscribe(self,
