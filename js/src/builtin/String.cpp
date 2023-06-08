@@ -1676,6 +1676,11 @@ static bool str_toWellFormed(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setString(result);
   return true;
 }
+
+static const JSFunctionSpec wellFormed_functions[] = {
+    JS_FN("isWellFormed", str_isWellFormed, 0, 0),
+    JS_FN("toWellFormed", str_toWellFormed, 0, 0), JS_FS_END};
+
 #endif  // NIGHTLY_BUILD
 
 static bool str_charAt(JSContext* cx, unsigned argc, Value* vp) {
@@ -3667,10 +3672,6 @@ static const JSFunctionSpec string_methods[] = {
 #if JS_HAS_INTL_API
     JS_FN("normalize", str_normalize, 0, 0),
 #endif
-#ifdef NIGHTLY_BUILD
-    JS_FN("isWellFormed", str_isWellFormed, 0, 0),
-    JS_FN("toWellFormed", str_toWellFormed, 0, 0),
-#endif
 
     /* Perl-ish methods (search is actually Python-esque). */
     JS_SELF_HOSTED_FN("match", "String_match", 1, 0),
@@ -4015,6 +4016,14 @@ static bool StringClassFinish(JSContext* cx, HandleObject ctor,
   if (!JS_DefineFunctions(cx, cx->global(), string_functions)) {
     return false;
   }
+
+#ifdef NIGHTLY_BUILD
+  // Define isWellFormed/toWellFormed functions.
+  if (cx->realm()->creationOptions().getWellFormedUnicodeStringsEnabled() &&
+      !JS_DefineFunctions(cx, nativeProto, wellFormed_functions)) {
+    return false;
+  }
+#endif
 
   return true;
 }
