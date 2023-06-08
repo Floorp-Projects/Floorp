@@ -101,9 +101,6 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
 #undef CASE_RULE_LOCKED
 #undef CASE_RULE_UNLOCKED
 #undef CASE_RULE_WITH_PREFIX
-      case StyleCssRuleType::Viewport:
-        MOZ_ASSERT_UNREACHABLE("viewport is not implemented in Gecko");
-        return nullptr;
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
         return nullptr;
@@ -277,9 +274,6 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
       RULE_CASE_UNLOCKED(Container, Container)
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
-        break;
-      case StyleCssRuleType::Viewport:
-        MOZ_ASSERT_UNREACHABLE("Gecko doesn't implemente @viewport?");
         break;
     }
 #undef RULE_CASE_WITH_PREFIX
