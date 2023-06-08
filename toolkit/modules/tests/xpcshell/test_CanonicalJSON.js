@@ -1,5 +1,5 @@
-const { CanonicalJSON } = ChromeUtils.import(
-  "resource://gre/modules/CanonicalJSON.jsm"
+const { CanonicalJSON } = ChromeUtils.importESModule(
+  "resource://gre/modules/CanonicalJSON.sys.mjs"
 );
 
 add_task(async function test_canonicalJSON_should_preserve_array_order() {

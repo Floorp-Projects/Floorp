@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["CanonicalJSON"];
-
-var CanonicalJSON = {
+export var CanonicalJSON = {
   /**
    * Return the canonical JSON form of the passed source, sorting all the object
    * keys recursively. Note that this method will cause an infinite loop if
