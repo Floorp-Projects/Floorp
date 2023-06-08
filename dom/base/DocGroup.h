@@ -15,7 +15,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/HTMLSlotElement.h"
-#include "mozilla/PerformanceCounter.h"
 
 namespace mozilla {
 class AbstractThread;
@@ -56,8 +55,6 @@ class DocGroup final {
   bool MatchesKey(const nsACString& aKey) { return aKey == mKey; }
 
   const nsACString& GetKey() const { return mKey; }
-
-  PerformanceCounter* GetPerformanceCounter() { return mPerformanceCounter; }
 
   JSExecutionManager* GetExecutionManager() const { return mExecutionManager; }
   void SetExecutionManager(JSExecutionManager*);
@@ -135,7 +132,6 @@ class DocGroup final {
   nsTArray<Document*> mDocuments;
   RefPtr<mozilla::dom::CustomElementReactionsStack> mReactionsStack;
   nsTArray<RefPtr<HTMLSlotElement>> mSignalSlotList;
-  RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
   RefPtr<BrowsingContextGroup> mBrowsingContextGroup;
   RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
   nsTHashSet<uint64_t> mIframesUsedPostMessageQueue;

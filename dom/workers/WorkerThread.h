@@ -10,7 +10,6 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/PerformanceCounter.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "nsISupports.h"
@@ -85,8 +84,6 @@ class WorkerThread final : public nsThread {
 
   uint32_t RecursionDepth(const WorkerThreadFriendKey& aKey) const;
 
-  PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent) const override;
-
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThread, nsThread)
 
  private:
@@ -102,8 +99,6 @@ class WorkerThread final : public nsThread {
 
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
-
-  void IncrementDispatchCounter();
 };
 
 }  // namespace dom
