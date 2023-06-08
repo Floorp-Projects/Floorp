@@ -28,11 +28,7 @@ async def test_call_function_without_to_string_interface(
             target=ContextTarget(top_context["context"]),
         )
 
-    assert "exceptionDetails" in exception.value.result
-    exceptionDetails = exception.value.result["exceptionDetails"]
-
-    assert "text" in exceptionDetails
-    assert isinstance(exceptionDetails["text"], str)
+    assert isinstance(exception.value.text, str)
 
 
 @pytest.mark.asyncio
@@ -62,8 +58,4 @@ async def test_evaluate_without_to_string_interface(
             target=ContextTarget(top_context["context"]),
         )
 
-    assert "exceptionDetails" in exception.value.result
-    exceptionDetails = exception.value.result["exceptionDetails"]
-
-    assert "text" in exceptionDetails
-    assert isinstance(exceptionDetails["text"], str)
+    assert isinstance(exception.value.text, str)
