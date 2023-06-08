@@ -1,6 +1,6 @@
 "use strict";
 
-const TEST_URL = "http://www.example.com/";
+const TEST_URL = "https://www.example.com/";
 const testTag = "foo";
 const testTagUpper = "Foo";
 const testURI = Services.io.newURI(TEST_URL);
