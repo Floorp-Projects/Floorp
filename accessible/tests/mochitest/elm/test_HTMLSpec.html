@@ -1311,13 +1311,9 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        textAttrs: {
-          0: { },
-          6: { "text-line-through-style": "solid" },
-        },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF }, // HTML:i text
+          { role: ROLE_CONTENT_DELETION },
         ],
       };
       testElm("s_container", obj);
@@ -1995,7 +1991,7 @@
     字 <rp>(</rp><rt>ji</rt><rp>)</rp>
   </ruby>
 
-  <p id="s_container">normal<s>striked</s></p>
+  <p id="s_container">normal<s>Removed</s></p>
   <p id="samp_container">normal<samp>sample</samp></p>
   <section id="section">section</section>
   <section id="named_section" aria-label="foo">named section</section>
