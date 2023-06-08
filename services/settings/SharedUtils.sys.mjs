@@ -6,9 +6,7 @@
  * Common logic shared by RemoteSettingsWorker.js (Worker) and the main thread.
  */
 
-var EXPORTED_SYMBOLS = ["SharedUtils"];
-
-var SharedUtils = {
+export var SharedUtils = {
   /**
    * Check that the specified content matches the expected size and SHA-256 hash.
    * @param {ArrayBuffer} buffer binary content

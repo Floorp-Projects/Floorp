@@ -155,7 +155,7 @@ EXTRA_JS_MODULES += [
     "BinarySearch.sys.mjs",
     "BrowserTelemetryUtils.sys.mjs",
     "BrowserUtils.sys.mjs",
-    "CanonicalJSON.jsm",
+    "CanonicalJSON.sys.mjs",
     "CertUtils.sys.mjs",
     "Color.sys.mjs",
     "Console.sys.mjs",

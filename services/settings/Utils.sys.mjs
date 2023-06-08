@@ -8,8 +8,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SharedUtils: "resource://services-settings/SharedUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  SharedUtils: "resource://services-settings/SharedUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

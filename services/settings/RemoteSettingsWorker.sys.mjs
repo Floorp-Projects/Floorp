@@ -20,13 +20,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  SharedUtils: "resource://services-settings/SharedUtils.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SharedUtils",
-  "resource://services-settings/SharedUtils.jsm"
-);
 
 // Note: we currently only ever construct one instance of Worker.
 // If it stops being a singleton, the AsyncShutdown code at the bottom

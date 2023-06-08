@@ -4,11 +4,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CanonicalJSON",
-  "resource://gre/modules/CanonicalJSON.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CanonicalJSON: "resource://gre/modules/CanonicalJSON.sys.mjs",
+});
 
 const prefs = Services.prefs.getBranch("app.normandy.");
 
