@@ -44,16 +44,12 @@ add_task(async function () {
   gBrowser.removeTab(tab);
 });
 
-const hasPromiseResolved = async function (promise) {
-  let resolved = false;
-  promise.finally(() => (resolved = true));
-  // Make sure microtasks have time to run.
-  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
-  return resolved;
-};
-
 const assertToolboxCloses = async function (tab, { shortcut, shouldClose }) {
-  info(`Use F12 to close the toolbox (close expected: ${shouldClose})`);
+  info(
+    `Use ${
+      shortcut ? "shortcut" : "F12"
+    } to close the toolbox (close expected: ${shouldClose})`
+  );
   const onToolboxDestroy = gDevTools.once("toolbox-destroyed");
 
   if (shortcut) {
@@ -65,11 +61,9 @@ const assertToolboxCloses = async function (tab, { shortcut, shouldClose }) {
   if (shouldClose) {
     await onToolboxDestroy;
   } else {
-    await wait(1000);
-    ok(
-      !(await hasPromiseResolved(onToolboxDestroy)),
-      "No toolbox-destroyed event received"
-    );
+    const onTimeout = wait(1000).then(() => "TIMEOUT");
+    const res = await Promise.race([onTimeout, onToolboxDestroy]);
+    is(res, "TIMEOUT", "No toolbox-destroyed event received");
   }
   is(
     !(await gDevTools.getToolboxForTab(tab)),
@@ -79,7 +73,11 @@ const assertToolboxCloses = async function (tab, { shortcut, shouldClose }) {
 };
 
 const assertToolboxOpens = async function (tab, { shortcut, shouldOpen }) {
-  info(`Use F12 to open the toolbox (open expected: ${shouldOpen})`);
+  info(
+    `Use ${
+      shortcut ? "shortcut" : "F12"
+    } to open the toolbox (open expected: ${shouldOpen})`
+  );
   const onToolboxReady = gDevTools.once("toolbox-ready");
 
   if (shortcut) {
@@ -92,11 +90,9 @@ const assertToolboxOpens = async function (tab, { shortcut, shouldOpen }) {
     await onToolboxReady;
     info(`Received toolbox-ready`);
   } else {
-    await wait(1000);
-    ok(
-      !(await hasPromiseResolved(onToolboxReady)),
-      "No toolbox-ready event received"
-    );
+    const onTimeout = wait(1000).then(() => "TIMEOUT");
+    const res = await Promise.race([onTimeout, onToolboxReady]);
+    is(res, "TIMEOUT", "No toolbox-ready event received");
   }
   is(
     !!(await gDevTools.getToolboxForTab(tab)),

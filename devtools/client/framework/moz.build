@@ -28,7 +28,6 @@ DevToolsModules(
     "commands-from-url.js",
     "devtools-browser.js",
     "devtools.js",
-    "enable-devtools-popup.js",
     "local-tab-commands-factory.js",
     "menu-item.js",
     "menu.js",

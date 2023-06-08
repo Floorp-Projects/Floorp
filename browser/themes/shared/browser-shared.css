@@ -701,13 +701,6 @@ menupopup::part(drop-indicator) {
   overflow: hidden;
 }
 
-/* ENABLE DEVTOOLS POPUP */
-@media (-moz-platform: macos), (-moz-platform: windows) {
-  #enable-devtools-popup {
-    font-size: 1.18em;
-  }
-}
-
 #sharing-tabs-warning-panel > hbox[type="window"] > vbox > label > #sharing-warning-screen-panel-header,
 #sharing-tabs-warning-panel > hbox[type="screen"] > vbox > label > #sharing-warning-window-panel-header {
   display: none;
