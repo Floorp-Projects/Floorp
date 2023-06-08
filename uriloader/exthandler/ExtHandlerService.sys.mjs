@@ -23,13 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
 });
-import { Integration } from "resource://gre/modules/Integration.sys.mjs";
-
-Integration.downloads.defineESModuleGetter(
-  lazy,
-  "DownloadIntegration",
-  "resource://gre/modules/DownloadIntegration.sys.mjs"
-);
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -84,12 +77,6 @@ HandlerService.prototype = {
       this._migrateProtocolHandlersIfNeeded();
 
       Services.obs.notifyObservers(null, "handlersvc-store-initialized");
-
-      // Bug 1736924: run migration for browser.download.improvements_to_download_panel if applicable.
-      // Since we need DownloadsViewInternally to verify mimetypes, we run this after
-      // DownloadsViewInternally is registered via the 'handlersvc-store-initialized' notification.
-      this._migrateDownloadsImprovementsIfNeeded();
-      this._migrateSVGXMLIfNeeded();
     }
   },
 
@@ -351,82 +338,6 @@ HandlerService.prototype = {
     }
   },
 
-  /**
-   * Update already existing handlers for non-internal mimetypes to have prefs set from alwaysAsk
-   * to saveToDisk. However, if reading an internal mimetype and set to alwaysAsk, update to use handleInternally.
-   * This migration is needed since browser.download.improvements_to_download_panel does not
-   * override user preferences if preferredAction = alwaysAsk. By doing so, we can ensure that file prompt
-   * behaviours remain consistent for most files.
-   *
-   * See Bug 1736924 for more information.
-   */
-  _noInternalHandlingDefault: new Set([
-    "text/xml",
-    "application/xml",
-    "image/svg+xml",
-  ]),
-  _migrateDownloadsImprovementsIfNeeded() {
-    // Migrate if the migration has never been run before.
-    // Otherwise, we risk overwriting preferences for existing profiles!
-    if (
-      Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel",
-        true
-      ) &&
-      !Services.policies?.getActivePolicies()?.Handlers &&
-      !this._store.data.isDownloadsImprovementsAlreadyMigrated &&
-      AppConstants.MOZ_APP_NAME != "thunderbird"
-    ) {
-      for (let [type, mimeInfo] of Object.entries(this._store.data.mimeTypes)) {
-        let isViewableInternally =
-          lazy.DownloadIntegration.shouldViewDownloadInternally(type) &&
-          !this._noInternalHandlingDefault.has(type);
-        let isAskOnly = mimeInfo && mimeInfo.ask;
-
-        if (isAskOnly) {
-          if (isViewableInternally) {
-            mimeInfo.action = handleInternally;
-          } else {
-            mimeInfo.action = saveToDisk;
-          }
-
-          // Sets alwaysAskBeforeHandling to false. Needed to ensure that:
-          // preferredAction appears as expected in preferences table; and
-          // downloads behaviour is updated to never show UCT window.
-          mimeInfo.ask = false;
-        }
-      }
-
-      this._store.data.isDownloadsImprovementsAlreadyMigrated = true;
-      this._store.saveSoon();
-    }
-  },
-
-  _migrateSVGXMLIfNeeded() {
-    // Migrate if the migration has never been run before.
-    // We need to make sure we only run this once.
-    if (
-      Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel",
-        true
-      ) &&
-      !Services.policies?.getActivePolicies()?.Handlers &&
-      !this._store.data.isSVGXMLAlreadyMigrated
-    ) {
-      for (let type of this._noInternalHandlingDefault) {
-        if (Object.hasOwn(this._store.data.mimeTypes, type)) {
-          let mimeInfo = this._store.data.mimeTypes[type];
-          if (!mimeInfo.ask && mimeInfo.action == handleInternally) {
-            mimeInfo.action = saveToDisk;
-          }
-        }
-      }
-
-      this._store.data.isSVGXMLAlreadyMigrated = true;
-      this._store.saveSoon();
-    }
-  },
-
   // nsIHandlerService
   enumerate() {
     let handlers = Cc["@mozilla.org/array;1"].createInstance(
@@ -493,11 +404,7 @@ HandlerService.prototype = {
       // For files (ie mimetype rather than protocol handling info), ensure
       // we can store the "always ask" state, too:
       (handlerInfo.preferredAction == alwaysAsk &&
-        this._isMIMEInfo(handlerInfo) &&
-        Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel",
-          true
-        ))
+        this._isMIMEInfo(handlerInfo))
     ) {
       storedHandlerInfo.action = handlerInfo.preferredAction;
     } else {
