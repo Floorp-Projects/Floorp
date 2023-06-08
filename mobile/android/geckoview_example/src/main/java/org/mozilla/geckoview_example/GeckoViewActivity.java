@@ -1381,7 +1381,7 @@ public class GeckoViewActivity extends AppCompatActivity
   }
 
   private void printPage(GeckoSession session) {
-    session.printPageContent();
+    session.didPrintPageContent();
   }
 
   @Override

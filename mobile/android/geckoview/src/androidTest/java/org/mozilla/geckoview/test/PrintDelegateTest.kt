@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import android.accessibilityservice.AccessibilityService
 import android.app.UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
 import android.content.Context
 import android.graphics.Bitmap
@@ -26,7 +27,9 @@ import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autofill
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoResult.fromException
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.GeckoPrintException
 import org.mozilla.geckoview.GeckoSession.PrintDelegate
 import org.mozilla.geckoview.GeckoView.ActivityContextDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
@@ -137,6 +140,53 @@ class PrintDelegateTest : BaseSessionTest() {
                 "Android print opened and rendered.",
                 sessionRule.waitForResult(centerPixel) == orange,
             )
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun printSuccessWithStatus() {
+        activityRule.scenario.onActivity { activity ->
+            // CSS rules render this blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            val result = mainSession.didPrintPageContent()
+            val orange = rgb(255, 113, 57)
+            val centerPixel = printCenterPixelColor()
+            assertTrue(
+                "Android print opened and rendered.",
+                sessionRule.waitForResult(centerPixel) == orange,
+            )
+            uiAutomation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+            assertTrue(
+                "Printing should conclude when back is pressed.",
+                sessionRule.waitForResult(result),
+            )
+        }
+    }
+
+    @Test
+    fun printFailWithStatus() {
+        activityRule.scenario.onActivity {
+            // CSS rules render this blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
+            mainSession.waitForPageStop()
+            mainSession.printDelegate = null
+            val result = mainSession.didPrintPageContent().accept {
+                assertTrue("Should not be able to print.", false)
+            }.exceptionally(
+                GeckoResult.OnExceptionListener<Throwable> { error: Throwable ->
+                    assertTrue("Should receive a missing print delegate exception.", (error as GeckoPrintException).code == GeckoPrintException.ERROR_NO_PRINT_DELEGATE)
+                    fromException(error)
+                },
+            )
+            try {
+                sessionRule.waitForResult(result)
+            } catch (e: Exception) {
+                assertTrue("Should have an exception", true)
+            }
         }
     }
 

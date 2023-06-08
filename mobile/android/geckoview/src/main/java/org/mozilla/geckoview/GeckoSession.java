@@ -6,6 +6,8 @@
 
 package org.mozilla.geckoview;
 
+import static org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_PRINT_DELEGATE;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
@@ -7004,6 +7006,24 @@ public class GeckoSession {
     }
   }
 
+  /**
+   * Prints the currently displayed page and provides dialog finished status or if an exception
+   * occured.
+   *
+   * @return if the printing dialog finished or an exception.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<Boolean> didPrintPageContent() {
+    final PrintDelegate delegate = getPrintDelegate();
+    final GeckoResult<Boolean> result = new GeckoResult<>();
+    if (delegate == null) {
+      result.completeExceptionally(new GeckoPrintException(ERROR_NO_PRINT_DELEGATE));
+      return result;
+    }
+    return saveAsPdfByBrowsingContext(null)
+        .then(pdfStream -> delegate.onPrintWithStatus(pdfStream));
+  }
+
   private static String rgbaToArgb(final String color) {
     // We expect #rrggbbaa
     if (color.length() != 9 || !color.startsWith("#")) {
@@ -7115,6 +7135,9 @@ public class GeckoSession {
     /** An error happened while trying to find the activity context */
     public static final int ERROR_NO_ACTIVITY_CONTEXT = -5;
 
+    /** An error happened while trying to find the print delegate */
+    public static final int ERROR_NO_PRINT_DELEGATE = -6;
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(
         value = {
@@ -7122,7 +7145,8 @@ public class GeckoSession {
           ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS,
           ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT,
           ERROR_NO_ACTIVITY_CONTEXT_DELEGATE,
-          ERROR_NO_ACTIVITY_CONTEXT
+          ERROR_NO_ACTIVITY_CONTEXT,
+          ERROR_NO_PRINT_DELEGATE
         })
     public @interface Codes {}
 
