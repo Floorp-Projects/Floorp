@@ -7,7 +7,9 @@ package org.mozilla.fenix.ui.robots
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.uiautomator.UiSelector
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -21,6 +23,26 @@ class SystemSettingsRobot {
     fun verifyMakeDefaultBrowser() {
         Intents.intended(hasAction(SettingsRobot.DEFAULT_APPS_SETTINGS_ACTION))
     }
+
+    fun verifyAllSystemNotificationsToggleState(enabled: Boolean) {
+        if (enabled) {
+            assertTrue(allSystemSettingsNotificationsToggle.isChecked)
+        } else {
+            assertFalse(allSystemSettingsNotificationsToggle.isChecked)
+        }
+    }
+
+    fun verifyPrivateBrowsingSystemNotificationsToggleState(enabled: Boolean) {
+        if (enabled) {
+            assertTrue(privateBrowsingSystemSettingsNotificationsToggle.isChecked)
+        } else {
+            assertFalse(privateBrowsingSystemSettingsNotificationsToggle.isChecked)
+        }
+    }
+
+    fun clickPrivateBrowsingSystemNotificationsToggle() = privateBrowsingSystemSettingsNotificationsToggle.click()
+
+    fun clickAllSystemNotificationsToggle() = allSystemSettingsNotificationsToggle.click()
 
     class Transition {
         // Difficult to know where this will go
@@ -46,3 +68,15 @@ private fun assertSystemNotificationsView() {
             .waitForExists(waitingTime),
     )
 }
+
+private val allSystemSettingsNotificationsToggle =
+    mDevice.findObject(
+        UiSelector().resourceId("com.android.settings:id/switch_bar")
+            .childSelector(
+                UiSelector()
+                    .resourceId("com.android.settings:id/switch_widget")
+                    .index(1),
+            ),
+    )
+private val privateBrowsingSystemSettingsNotificationsToggle =
+    itemWithResIdAndDescription("com.android.settings:id/switchWidget", "Private browsing session")

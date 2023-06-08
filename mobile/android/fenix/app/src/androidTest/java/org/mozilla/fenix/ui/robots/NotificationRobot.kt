@@ -51,7 +51,7 @@ class NotificationRobot {
         cancelAll()
     }
 
-    fun verifySystemNotificationGone(notificationMessage: String) {
+    fun verifySystemNotificationDoesNotExist(notificationMessage: String) {
         mDevice.waitNotNull(
             Until.gone(text(notificationMessage)),
             waitingTime,
@@ -127,6 +127,13 @@ class NotificationRobot {
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
+        }
+
+        fun closeNotificationTray(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.pressBack()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
     }
 }

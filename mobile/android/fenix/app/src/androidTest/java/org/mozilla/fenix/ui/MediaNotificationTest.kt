@@ -91,7 +91,7 @@ class MediaNotificationTest {
         mDevice.openNotification()
 
         notificationShade {
-            verifySystemNotificationGone(videoTestPage.title)
+            verifySystemNotificationDoesNotExist(videoTestPage.title)
         }
 
         // close notification shade before the next test
@@ -125,7 +125,7 @@ class MediaNotificationTest {
         mDevice.openNotification()
 
         notificationShade {
-            verifySystemNotificationGone(audioTestPage.title)
+            verifySystemNotificationDoesNotExist(audioTestPage.title)
         }
 
         // close notification shade before the next test
@@ -162,7 +162,7 @@ class MediaNotificationTest {
         mDevice.openNotification()
 
         notificationShade {
-            verifySystemNotificationGone("A site is playing media")
+            verifySystemNotificationDoesNotExist("A site is playing media")
         }
 
         // close notification shade before and go back to regular mode before the next test
