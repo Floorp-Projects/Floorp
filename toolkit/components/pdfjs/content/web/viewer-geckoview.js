@@ -5540,9 +5540,6 @@ class PDFRenderingQueue {
   isHighestPriority(view) {
     return this.highestPriorityPage === view.renderingId;
   }
-  hasViewer() {
-    return !!this.pdfViewer;
-  }
   renderHighestPriority(currentlyVisiblePages) {
     if (this.idleTimeout) {
       clearTimeout(this.idleTimeout);
@@ -6087,7 +6084,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.8.6';
+    const viewerVersion = '3.8.49';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6114,12 +6111,7 @@ class PDFViewer {
     this.#enablePermissions = options.enablePermissions || false;
     this.pageColors = options.pageColors || null;
     this.defaultRenderingQueue = !options.renderingQueue;
-    if (this.defaultRenderingQueue) {
-      this.renderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
-      this.renderingQueue.setViewer(this);
-    } else {
-      this.renderingQueue = options.renderingQueue;
-    }
+    this.renderingQueue = options.renderingQueue;
     this.scroll = (0, _ui_utils.watchScroll)(this.container, this._scrollUpdate.bind(this));
     this.presentationModeState = _ui_utils.PresentationModeState.UNKNOWN;
     this._onBeforeDraw = this._onAfterDraw = null;
@@ -7641,6 +7633,7 @@ class PDFPageView {
   #renderingState = _ui_utils.RenderingStates.INITIAL;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   #useThumbnailCanvas = {
+    directDrawing: true,
     initialOptionalContent: true,
     regularAnnotations: true
   };
@@ -7946,6 +7939,7 @@ class PDFPageView {
         this.#useThumbnailCanvas.initialOptionalContent = optionalContentConfig.hasInitialVisibility;
       });
     }
+    this.#useThumbnailCanvas.directDrawing = true;
     const totalRotation = (this.rotation + this.pdfPageRotate) % 360;
     this.viewport = this.viewport.clone({
       scale: this.scale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS,
@@ -7980,6 +7974,7 @@ class PDFPageView {
             cancelExtraDelay: drawingDelay
           });
           this.renderingState = _ui_utils.RenderingStates.FINISHED;
+          this.#useThumbnailCanvas.directDrawing = false;
         }
         this.cssTransform({
           target: this.canvas,
@@ -7989,6 +7984,9 @@ class PDFPageView {
           redrawTextLayer: !postponeDrawing,
           hideTextLayer: postponeDrawing
         });
+        if (postponeDrawing) {
+          return;
+        }
         this.eventBus.dispatch("pagerendered", {
           source: this,
           pageNumber: this.id,
@@ -8278,7 +8276,8 @@ class PDFPageView {
           pageDiv: div,
           pdfPage,
           l10n,
-          accessibilityManager: this._accessibilityManager
+          accessibilityManager: this._accessibilityManager,
+          annotationLayer: this.annotationLayer?.annotationLayer
         });
       }
       this.#renderAnnotationEditorLayer();
@@ -8322,10 +8321,11 @@ class PDFPageView {
   }
   get thumbnailCanvas() {
     const {
+      directDrawing,
       initialOptionalContent,
       regularAnnotations
     } = this.#useThumbnailCanvas;
-    return initialOptionalContent && regularAnnotations ? this.canvas : null;
+    return directDrawing && initialOptionalContent && regularAnnotations ? this.canvas : null;
   }
 }
 exports.PDFPageView = PDFPageView;
@@ -8343,6 +8343,7 @@ exports.AnnotationEditorLayerBuilder = void 0;
 var _pdfjsLib = __webpack_require__(5);
 var _l10n_utils = __webpack_require__(18);
 class AnnotationEditorLayerBuilder {
+  #annotationLayer = null;
   #uiManager;
   constructor(options) {
     this.pageDiv = options.pageDiv;
@@ -8353,6 +8354,7 @@ class AnnotationEditorLayerBuilder {
     this.div = null;
     this._cancelled = false;
     this.#uiManager = options.uiManager;
+    this.#annotationLayer = options.annotationLayer || null;
   }
   async render(viewport, intent = "display") {
     if (intent !== "display") {
@@ -8382,7 +8384,8 @@ class AnnotationEditorLayerBuilder {
       accessibilityManager: this.accessibilityManager,
       pageIndex: this.pdfPage.pageNumber - 1,
       l10n: this.l10n,
-      viewport: clonedViewport
+      viewport: clonedViewport,
+      annotationLayer: this.#annotationLayer
     });
     const parameters = {
       viewport: clonedViewport,
@@ -8431,7 +8434,6 @@ var _pdfjsLib = __webpack_require__(5);
 var _l10n_utils = __webpack_require__(18);
 var _ui_utils = __webpack_require__(4);
 class AnnotationLayerBuilder {
-  #numAnnotations = 0;
   #onPresentationModeChanged = null;
   constructor({
     pageDiv,
@@ -8461,21 +8463,20 @@ class AnnotationLayerBuilder {
     this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve(null);
     this._annotationCanvasMap = annotationCanvasMap;
     this._accessibilityManager = accessibilityManager;
+    this.annotationLayer = null;
     this.div = null;
     this._cancelled = false;
     this._eventBus = linkService.eventBus;
   }
   async render(viewport, intent = "display") {
     if (this.div) {
-      if (this._cancelled || this.#numAnnotations === 0) {
+      if (this._cancelled || !this.annotationLayer) {
         return;
       }
-      _pdfjsLib.AnnotationLayer.update({
+      this.annotationLayer.update({
         viewport: viewport.clone({
           dontFlip: true
-        }),
-        div: this.div,
-        annotationCanvasMap: this._annotationCanvasMap
+        })
       });
       return;
     }
@@ -8485,19 +8486,22 @@ class AnnotationLayerBuilder {
     if (this._cancelled) {
       return;
     }
-    this.#numAnnotations = annotations.length;
-    this.div = document.createElement("div");
-    this.div.className = "annotationLayer";
-    this.pageDiv.append(this.div);
-    if (this.#numAnnotations === 0) {
+    const div = this.div = document.createElement("div");
+    div.className = "annotationLayer";
+    this.pageDiv.append(div);
+    if (annotations.length === 0) {
       this.hide();
       return;
     }
-    _pdfjsLib.AnnotationLayer.render({
+    this.annotationLayer = new _pdfjsLib.AnnotationLayer({
+      div,
+      accessibilityManager: this._accessibilityManager,
+      annotationCanvasMap: this._annotationCanvasMap
+    });
+    this.annotationLayer.render({
       viewport: viewport.clone({
         dontFlip: true
       }),
-      div: this.div,
       annotations,
       page: this.pdfPage,
       imageResourcesPath: this.imageResourcesPath,
@@ -8507,11 +8511,9 @@ class AnnotationLayerBuilder {
       annotationStorage: this.annotationStorage,
       enableScripting: this.enableScripting,
       hasJSActions,
-      fieldObjects,
-      annotationCanvasMap: this._annotationCanvasMap,
-      accessibilityManager: this._accessibilityManager
+      fieldObjects
     });
-    this.l10n.translate(this.div);
+    this.l10n.translate(div);
     if (this.linkService.isInPresentationMode) {
       this.#updatePresentationModeState(_ui_utils.PresentationModeState.FULLSCREEN);
     }
@@ -9625,8 +9627,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.8.6';
-const pdfjsBuild = 'a2118f52b';
+const pdfjsVersion = '3.8.49';
+const pdfjsBuild = 'f2a29e858';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
