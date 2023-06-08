@@ -980,11 +980,19 @@ class ContentHandler {
         (channel.loadInfo.isTopLevelLoad ||
           info.nonAdsLinkRegexps.some(r => r.test(URL)))
       ) {
-        let start = Cu.now();
+        let browser = wrappedChannel.browserElement;
+        // If the load is from history, don't record an event.
+        if (
+          browser?.browsingContext.webProgress?.loadType &
+          Ci.nsIDocShell.LOAD_CMD_HISTORY
+        ) {
+          lazy.logConsole.debug("Ignoring load from history");
+          return;
+        }
 
         // Step 1: Check if the browser associated with the request was a
         // tracked SERP.
-        let browser = wrappedChannel.browserElement;
+        let start = Cu.now();
         let telemetryState;
         let isFromNewtab = false;
         if (item.browserTelemetryStateMap.has(browser)) {
