@@ -7,4 +7,6 @@ In order to regenerate this file, you need to do the following:
   $ git clone git@github.com:mathiasbynens/jsesc.git && cd jsesc
   $ grunt template
   $ export MOZ_JSESC="../mozilla-central/toolkit/modules/third_party/jsesc"
-  $ cat $MOZ_JSESC/fx-header jsesc.js > $MOZ_JSESC/jsesc.js
+  $ cat $MOZ_JSESC/fx-header jsesc.js $MOZ_JSESC/fx-footer > $MOZ_JSESC/jsesc.mjs
+
+You will then need to change the penulitmate line from `}(this));` to `}(global));`
