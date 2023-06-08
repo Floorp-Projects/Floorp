@@ -38,7 +38,7 @@
           // This is the initial page load.
           let loginAddedPromise = promiseStorageChanged(["addLogin"]);
           let origin = window.location.origin;
-          addLoginsInParent([origin, "", null, "autofilled", "pass1", "", ""]);
+          await addLoginsInParent([origin, "", null, "autofilled", "pass1", "", ""]);
           await loginAddedPromise;
         } else {
           await promiseFormsProcessedInSameProcess();

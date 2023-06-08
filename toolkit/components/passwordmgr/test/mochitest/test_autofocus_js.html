@@ -10,18 +10,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<script>
-
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-                                    true]]});
-
-const chromeScript = runChecksAfterCommonInit(false);
-
-let origin = window.location.origin;
-addLoginsInParent(
-  [origin, origin, null, "name", "pass"],
-  [origin, origin, null, "name1", "pass1"]);
-</script>
 <p id="display"></p>
 
 <div id="content">
@@ -30,12 +18,17 @@ addLoginsInParent(
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-let iframe = document.getElementsByTagName("iframe")[0];
+const iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 add_setup(async () => {
-  let processedPromise = promiseFormsProcessed();
+  const origin = window.location.origin;
+  await setStoredLoginsAsync(
+    [origin, origin, null, "name", "pass"],
+    [origin, origin, null, "name1", "pass1"]
+  );
+
+  const processedPromise = promiseFormsProcessed();
   iframe.src = "/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
