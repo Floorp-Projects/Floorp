@@ -10,11 +10,10 @@ const { ExtensionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
 );
 
+const DistinctDevToolsServer = getDistinctDevToolsServer();
 ExtensionTestUtils.init(this);
 
-// The `AddonsManager` test helper can only be called once per test script.
-// This `setup` task will run first.
-add_task(async function setup() {
+add_setup(async () => {
   Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
   await startupAddonsManager();
 });
@@ -44,10 +43,10 @@ async function sendRequest(transport, request) {
 // If this test case fails, please reach out to webext peers because
 // https://github.com/mozilla/web-ext relies on the APIs tested here.
 add_task(async function test_webext_run_apis() {
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
+  DistinctDevToolsServer.init();
+  DistinctDevToolsServer.registerAllActors();
 
-  const transport = DevToolsServer.connectPipe();
+  const transport = DistinctDevToolsServer.connectPipe();
 
   // After calling connectPipe, the root actor will be created on the server
   // and a packet will be emitted after a tick. Wait for the initial packet.

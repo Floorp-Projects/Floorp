@@ -49,8 +49,11 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+loader.lazyGetter(lazy, "AddonManager", () => {
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/AddonManager.sys.mjs",
+    { loadInDevToolsLoader: false }
+  ).AddonManager;
 });
 
 /**

@@ -77,6 +77,31 @@ const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
 var { loadSubScript, loadSubScriptWithOptions } = Services.scriptloader;
 
 /**
+ * The logic here must resemble the logic of --start-debugger-server as closely
+ * as possible. DevToolsStartup.sys.mjs uses a distinct loader that results in
+ * the existence of two isolated module namespaces. In practice, this can cause
+ * bugs such as bug 1837185.
+ */
+function getDistinctDevToolsServer() {
+  const {
+    useDistinctSystemPrincipalLoader,
+    releaseDistinctSystemPrincipalLoader,
+  } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
+  const requester = {};
+  const distinctLoader = useDistinctSystemPrincipalLoader(requester);
+  registerCleanupFunction(() => {
+    releaseDistinctSystemPrincipalLoader(requester);
+  });
+
+  const { DevToolsServer: DistinctDevToolsServer } = distinctLoader.require(
+    "resource://devtools/server/devtools-server.js"
+  );
+  return DistinctDevToolsServer;
+}
+
+/**
  * Initializes any test that needs to work with add-ons.
  *
  * Should be called once per test script that needs to use AddonTestUtils (and
