@@ -52,22 +52,10 @@ bc.onmessage = (msgEvent) => {
     case "case3data": {
       is(loadCount, 2, "Case 3");
       is(msg.devicePixelRatio, originalDPR * 2, "Should preserve zoom when restored");
-      SpecialPowers.spawnChrome([], () => {
-        // We use FullZoom in file_zoom_restore_bfcache.html to set the zoom level in the
-        // parent, but if FullZoom is not available then that will fail. So check it here
-        // and mark the test as todo if it's not available.
-        return "FullZoom" in this.browsingContext.top.embedderElement.ownerGlobal;
-      }).then((hasFullZoom) => {
-        if (SpecialPowers.Services.appinfo.sessionHistoryInParent && hasFullZoom) {
-          // When bfcache lives in the parent process, we get a proper zoom level
-          // update on the browsing context.
-          is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
-        } else {
-          todo_is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
-        }
-        bc.postMessage({command: "close"});
-        // Now we wait for "closed"
-      });
+      let is_if_ship = SpecialPowers.Services.appinfo.sessionHistoryInParent ? is : todo_is;
+      is_if_ship(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      bc.postMessage({command: "close"});
+      // Now we wait for "closed"
       break;
     }
     case "closed": {

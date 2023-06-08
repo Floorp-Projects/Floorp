@@ -330,6 +330,8 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetDisplayMode(GetDisplayMode());
   txn.SetForceDesktopViewport(GetForceDesktopViewport());
   txn.SetIsUnderHiddenEmbedderElement(GetIsUnderHiddenEmbedderElement());
+  txn.SetFullZoom(GetFullZoom());
+  txn.SetTextZoom(GetTextZoom());
 
   // Propagate the default load flags so that the TRR mode flags are forwarded
   // to the new browsing context. See bug 1828643.
