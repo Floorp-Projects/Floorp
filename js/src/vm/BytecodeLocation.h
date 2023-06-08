@@ -216,7 +216,7 @@ class BytecodeLocation {
   }
 
   bool resultIsPopped() const {
-    MOZ_ASSERT(StackDefs(rawBytecode_) == 1);
+    MOZ_ASSERT(StackDefs(getOp()) == 1);
     return BytecodeIsPopped(rawBytecode_);
   }
 
