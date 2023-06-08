@@ -25,6 +25,7 @@
 #include "ErrorList.h"
 #include "Units.h"
 #include "js/Id.h"
+#include "js/RegExpFlags.h"
 #include "js/RootingAPI.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
@@ -2557,19 +2558,20 @@ class nsContentUtils {
    * This is following the HTML5 specification:
    * http://dev.w3.org/html5/spec/forms.html#attr-input-pattern
    *
-   * WARNING: This method mutates aPattern and aValue!
+   * WARNING: This method mutates aPattern!
    *
    * @param aValue       the string to check.
    * @param aPattern     the string defining the pattern.
    * @param aDocument    the owner document of the element.
    * @param aHasMultiple whether or not there are multiple values.
+   * @param aFlags       the flags to use for creating the regexp object.
    * @result             whether the given string is matches the pattern, or
    *                     Nothing() if the pattern couldn't be evaluated.
    */
-  static mozilla::Maybe<bool> IsPatternMatching(nsAString& aValue,
-                                                nsAString& aPattern,
-                                                const Document* aDocument,
-                                                bool aHasMultiple = false);
+  static mozilla::Maybe<bool> IsPatternMatching(
+      const nsAString& aValue, nsString&& aPattern, const Document* aDocument,
+      bool aHasMultiple = false,
+      JS::RegExpFlags aFlags = JS::RegExpFlag::UnicodeSets);
 
   /**
    * Calling this adds support for

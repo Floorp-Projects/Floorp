@@ -82,7 +82,7 @@ Maybe<bool> SingleLineTextInputTypeBase::HasPatternMismatch() const {
 
   Document* doc = mInputElement->OwnerDoc();
   Maybe<bool> result = nsContentUtils::IsPatternMatching(
-      value, pattern, doc,
+      value, std::move(pattern), doc,
       mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple));
   return result ? Some(!*result) : Nothing();
 }

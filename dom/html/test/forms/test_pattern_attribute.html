@@ -217,7 +217,7 @@ function checkPatternValidity(element)
   element.value = "01/01/2010"
   checkInvalidPattern(element);
 
-  element.pattern = "[0-9a-zA-Z]([-.\\w]*[0-9a-zA-Z_+])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9}";
+  element.pattern = "[0-9a-zA-Z]([\\-.\\w]*[0-9a-zA-Z_+])*@([0-9a-zA-Z][\\-\\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9}";
   element.value = "foo@bar.com";
   checkValidPattern(element);
 
