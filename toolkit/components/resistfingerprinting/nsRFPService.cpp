@@ -1250,7 +1250,12 @@ nsresult nsRFPService::EnsureSessionKey(bool aIsPrivate) {
           ("Ensure the session key for %s browsing session\n",
            aIsPrivate ? "private" : "normal"));
 
-  if (!StaticPrefs::privacy_resistFingerprinting_randomization_enabled()) {
+  // If any fingerprinting randomization protection is enabled, we generate the
+  // session key.
+  // Note that there is only canvas randomization protection currently.
+  if (!nsContentUtils::ShouldResistFingerprinting(
+          "Checking the target activation globally without local context",
+          RFPTarget::CanvasRandomization)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1285,44 +1290,53 @@ void nsRFPService::ClearSessionKey(bool aIsPrivate) {
 }
 
 // static
-Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
-                                                   bool aIsPrivate) {
+Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(aTopLevelURI);
+  MOZ_ASSERT(aChannel);
+
+#ifdef DEBUG
+  // Ensure we only compute random key for top-level loads.
+  {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    MOZ_ASSERT(loadInfo->GetExternalContentPolicyType() ==
+               ExtContentPolicy::TYPE_DOCUMENT);
+  }
+#endif
+
+  nsCOMPtr<nsIURI> topLevelURI;
+  Unused << aChannel->GetURI(getter_AddRefs(topLevelURI));
+  bool isPrivate = NS_UsePrivateBrowsing(aChannel);
 
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Debug,
           ("Generating %s randomization key for top-level URI: %s\n",
-           aIsPrivate ? "private" : "normal",
-           aTopLevelURI->GetSpecOrDefault().get()));
+           isPrivate ? "private" : "normal",
+           topLevelURI->GetSpecOrDefault().get()));
 
   RefPtr<nsRFPService> service = GetOrCreate();
 
-  if (NS_FAILED(service->EnsureSessionKey(aIsPrivate))) {
+  if (NS_FAILED(service->EnsureSessionKey(isPrivate))) {
     return Nothing();
   }
 
-  // Return nothing if fingerprinting resistance is disabled or fingerprinting
-  // resistance is exempted from the normal windows. Note that we still need to
-  // generate the key for exempted domains because there could be unexempted
-  // sub-documents that need the key.
+  // Return nothing if fingerprinting randomization is disabled for the given
+  // channel.
+  //
+  // Note that canvas randomization is the only fingerprinting randomization
+  // protection currently.
   if (!nsContentUtils::ShouldResistFingerprinting(
-          "Coarse Efficiency Check", RFPTarget::CanvasRandomization) ||
-      (!aIsPrivate &&
-       StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-           0x02 /* NonPBMExemptMask */)) {
+          aChannel, RFPTarget::CanvasRandomization)) {
     return Nothing();
   }
 
-  const nsID& sessionKey = aIsPrivate
-                               ? service->mPrivateBrowsingSessionKey.ref()
-                               : service->mBrowsingSessionKey.ref();
+  const nsID& sessionKey = isPrivate ? service->mPrivateBrowsingSessionKey.ref()
+                                     : service->mBrowsingSessionKey.ref();
 
   auto sessionKeyStr = sessionKey.ToString();
 
   // Using the OriginAttributes to get the site from the top-level URI. The site
   // is composed of scheme, host, and port.
   OriginAttributes attrs;
-  attrs.SetPartitionKey(aTopLevelURI);
+  attrs.SetPartitionKey(topLevelURI);
 
   // Generate the key by using the hMAC. The key is based on the session key and
   // the partitionKey, i.e. top-level site.

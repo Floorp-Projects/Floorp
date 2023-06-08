@@ -13294,22 +13294,6 @@
   value: false
   mirror: always
 
-# Bitfield for selectively disabling RFP
-#   0 for no new behavior
-#   1 for disabling RFP if it's a WebExtension
-#   2 for disabling RFP if we are not in PBM
-#   4 for disabling RFP on specific domains (see privacy.resistFingerprinting.exemptedDomains)
-- name: privacy.resistFingerprinting.testGranularityMask
-  type: RelaxedAtomicUint32
-  value: 0
-  mirror: always
-
-# Enable the fingerprinting randomization.
-- name: privacy.resistFingerprinting.randomization.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Enable resetting the fingerprinting randomization key daily for normal windwos.
 - name: privacy.resistFingerprinting.randomization.daily_reset.enabled
   type: RelaxedAtomicBool

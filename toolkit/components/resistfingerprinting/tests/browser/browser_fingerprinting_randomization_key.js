@@ -159,53 +159,14 @@ async function getRandomKeyHexFromBrowser(
 }
 
 // Test accessing the fingerprinting randomization key will throw if
-// fingerprinting randomization is disabled.
-add_task(async function test_randomization_disabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["privacy.resistFingerprinting.randomization.enabled", false]],
-  });
-
-  // Ensure accessing the fingerprinting randomization key of the browser
-  // element will throw if fingerprinting randomization is disabled.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
-
-  try {
-    let key =
-      tab.linkedBrowser.cookieJarSettings.fingerprintingRandomizationKey;
-    ok(
-      false,
-      `Accessing the fingerprinting randomization key should throw when randomization is disabled. ${key}`
-    );
-  } catch (e) {
-    ok(
-      true,
-      "It should throw when getting the key when randomization is disabled."
-    );
-  }
-
-  // Ensure accessing the fingerprinting randomization key of the top-level
-  // document will throw if fingerprinting randomization is disabled.
-  try {
-    await SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
-      return content.document.cookieJarSettings.fingerprintingRandomizationKey;
-    });
-  } catch (e) {
-    ok(
-      true,
-      "It should throw when getting the key when randomization is disabled."
-    );
-  }
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-// Test accessing the fingerprinting randomization key will throw if
 // fingerprinting resistance is disabled.
 add_task(async function test_randomization_disabled_with_rfp_disabled() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.randomization.enabled", true],
       ["privacy.resistFingerprinting", false],
+      ["privacy.resistFingerprinting.pbmode", false],
+      ["privacy.fingerprintingProtection", false],
+      ["privacy.fingerprintingProtection.pbmode", false],
     ],
   });
 
@@ -246,10 +207,7 @@ add_task(async function test_randomization_disabled_with_rfp_disabled() {
 // Test the fingerprinting randomization key generation.
 add_task(async function test_generate_randomization_key() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.resistFingerprinting.randomization.enabled", true],
-      ["privacy.resistFingerprinting", true],
-    ],
+    set: [["privacy.resistFingerprinting", true]],
   });
 
   for (let testPrivateWin of [true, false]) {
@@ -340,10 +298,7 @@ add_task(async function test_generate_randomization_key() {
 // ends.
 add_task(async function test_reset_key_after_pbm_session_ends() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.resistFingerprinting.randomization.enabled", true],
-      ["privacy.resistFingerprinting", true],
-    ],
+    set: [["privacy.resistFingerprinting", true]],
   });
 
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
@@ -394,9 +349,10 @@ add_task(async function test_reset_key_after_pbm_session_ends() {
 add_task(async function test_randomization_with_exempted_normal_window() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.randomization.enabled", true],
-      ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 2],
+      ["privacy.resistFingerprinting", false],
+      ["privacy.resistFingerprinting.pbmode", true],
+      ["privacy.fingerprintingProtection", false],
+      ["privacy.fingerprintingProtection.pbmode", false],
     ],
   });
 
