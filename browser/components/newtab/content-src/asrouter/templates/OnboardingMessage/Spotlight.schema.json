@@ -51,10 +51,6 @@
         "startScreen": {
           "type": "integer",
           "description": "Index of first screen to show from message, defaulting to 0"
-        },
-        "dismiss_timer": {
-          "type": "integer",
-          "description": "Time in milliseconds to wait before automatically dismissing a feature callout after render."
         }
       },
       "additionalProperties": true
