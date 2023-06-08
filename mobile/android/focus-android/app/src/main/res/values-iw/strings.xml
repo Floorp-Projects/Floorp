@@ -478,7 +478,10 @@
 
 
 
-  <string name="error_hostLookup_title">שרת לא נמצא</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">נוסף לקיצורי הדרך!</string>
+
+    <string name="error_hostLookup_title">שרת לא נמצא</string>
 
 
 
@@ -956,13 +959,7 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">האתר שביקשת אינו תומך ב־HTTPS</string>
-
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">אתר זה אינו תומך ב־HTTPS</string>
-
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">כברירת מחדל, %1$s מנסה להתחבר באמצעות HTTPS להגברת האבטחה. כדי לשנות הגדרה זו או למידע נוסף, יש לעבור אל הגדרות &gt; פרטיות ואבטחה &gt; אבטחה.</string>
 
      <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
         Contains a button that will redirect the user to Privacy & Security Screen-->

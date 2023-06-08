@@ -1956,7 +1956,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">¿Estás seguro de que querés eliminar este marcador?</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
-    <string name="browser_menu_add_to_shortcuts">Agregado a atajos</string>
+    <string name="browser_menu_add_to_shortcuts">Agregar a atajos</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
     <string name="browser_menu_remove_from_shortcuts">Eliminar de atajos</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of

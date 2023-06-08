@@ -492,7 +492,7 @@
 
 
   <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
-    <string name="snackbar_added_to_shortcuts">¡Agregado a atajos!</string>
+    <string name="snackbar_added_to_shortcuts">¡Agregado a accesos directos!</string>
 
     <string name="error_hostLookup_title">Servidor no encontrado</string>
 

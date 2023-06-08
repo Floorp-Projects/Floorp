@@ -492,7 +492,10 @@
 
 
 
-  <string name="error_hostLookup_title">Heb ganfod gweinydd</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ychwanegwyd at y llwybrau byr!</string>
+
+    <string name="error_hostLookup_title">Heb ganfod gweinydd</string>
 
 
 
