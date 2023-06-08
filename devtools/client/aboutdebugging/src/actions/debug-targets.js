@@ -5,7 +5,9 @@
 "use strict";
 
 const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs"
+  "resource://gre/modules/AddonManager.sys.mjs",
+  // AddonManager is a singleton, never create two instances of it.
+  { loadInDevToolsLoader: false }
 );
 const {
   remoteClientManager,

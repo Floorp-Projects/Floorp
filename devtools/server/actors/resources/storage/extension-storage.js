@@ -13,19 +13,25 @@ const {
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
+// Use loadInDevToolsLoader: false for these extension modules, because these
+// are singletons with shared state, and we must not create a new instance if a
+// dedicated loader was used to load this module.
 loader.lazyGetter(this, "ExtensionParent", () => {
   return ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionParent.sys.mjs"
+    "resource://gre/modules/ExtensionParent.sys.mjs",
+    { loadInDevToolsLoader: false }
   ).ExtensionParent;
 });
 loader.lazyGetter(this, "ExtensionProcessScript", () => {
   return ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionProcessScript.sys.mjs"
+    "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+    { loadInDevToolsLoader: false }
   ).ExtensionProcessScript;
 });
 loader.lazyGetter(this, "ExtensionStorageIDB", () => {
   return ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
+    "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
+    { loadInDevToolsLoader: false }
   ).ExtensionStorageIDB;
 });
 

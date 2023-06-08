@@ -76,8 +76,14 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  ExtensionContent: EXTENSION_CONTENT_SYS_MJS,
+loader.lazyGetter(lazy, "ExtensionContent", () => {
+  return ChromeUtils.importESModule(EXTENSION_CONTENT_SYS_MJS, {
+    // ExtensionContent.sys.mjs is a singleton and must be loaded through the
+    // main loader. Note that the user of lazy.ExtensionContent elsewhere in
+    // this file (at webextensionsContentScriptGlobals) looks up the module
+    // via Cu.isESModuleLoaded, which also uses the main loader as desired.
+    loadInDevToolsLoader: false,
+  }).ExtensionContent;
 });
 
 loader.lazyRequireGetter(
