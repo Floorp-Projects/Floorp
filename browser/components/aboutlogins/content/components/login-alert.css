@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host(login-alert) {
+  display: grid;
+  column-gap: 16px;
+  grid-template-areas: "icon title action" "icon content content";
+  grid-template-columns: min-content 1fr auto;
+  padding: 16px 32px;
+  color: var(--in-content-text-color);
+  background-color: var(--in-content-box-background);
+  border-radius: 4px;
+  border: 1px solid var(--in-content-border-color);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, .1);
+}
+
+:host([variant="info"]) {
+  background-color: var(--in-content-box-background);
+}
+
+:host([variant="error"]) {
+  background-color: var(--red-70);
+  color: white;
+}
+
+:host(login-alert) img {
+  grid-area: icon;
+  width: 24px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+:host(login-alert) h3 {
+  grid-area: title;
+  font-size: 1.5em;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
+:host(login-alert) slot[name="action"] {
+  grid-area: action;
+}
+
+:host(login-alert) slot[name="content"] {
+  grid-area: content;
+}
+
+:host(login-breach-alert) div[slot="content"] {
+  margin-block-start: 8px;
+}
+
+:host(login-breach-alert) h4 {
+  margin: 0;
+  padding: 0;
+}
+
+:host(login-breach-alert) a {
+  font-weight: 600;
+  color: inherit;
+}
