@@ -1564,3 +1564,24 @@ opaqueResponseBlocking:
       description: Whether filtering of internal responses in the parent ORB is enabled
       type: int
       setPref: "browser.opaqueResponseBlocking.filterFetchResponse"
+
+updatePrompt:
+  description: Prefs to control content and behavior of update notifications
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    Exposure is sent at most once per browsing session when an update
+    notification prompt is displayed.
+  isEarlyStartup: true
+  variables:
+    showReleaseNotesLink:
+      type: boolean
+      description: >-
+        If true, the "Learn More" link will be shown in the update prompt. If
+        false or omitted, the link will only be shown for supported locales.
+    releaseNotesURL:
+      type: string
+      fallbackPref: app.releaseNotesURL.prompt
+      description: >-
+        Template for the URL opened when the user clicks the "Learn More" link
+        in the update prompt. If an empty string, the link will not be shown.
