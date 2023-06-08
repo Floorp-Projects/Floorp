@@ -403,8 +403,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       FileSystemEntryMetadata src{firstChildDir, firstChildMeta.childName(),
                                   /* is directory */ true};
       FileSystemChildMetadata dest{rootId, src.entryName()};
-      TEST_TRY_UNWRAP(bool moved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(moved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -454,8 +454,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   firstChildDescendantMeta.childName(),
                                   /* is directory */ true};
       FileSystemChildMetadata dest{firstChildDir, src.entryName()};
-      TEST_TRY_UNWRAP(bool moved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(moved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -523,8 +523,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
                                   /* is directory */ false};
       FileSystemChildMetadata dest{firstChildDir, src.entryName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -543,8 +543,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
                                   /* is directory */ false};
       const FileSystemChildMetadata& dest = firstChildDescendantMeta;
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -553,8 +553,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   firstChildDescendantMeta.childName(),
                                   /* is directory */ false};
 
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, testFileMeta));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, testFileMeta));
+      ASSERT_FALSE(moved.IsEmpty());
 
       TEST_TRY_UNWRAP(EntryId firstChildDescendantCheck,
                       dm->GetOrCreateDirectory(firstChildDescendantMeta,
@@ -568,8 +568,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   firstChildDescendantMeta.childName(),
                                   /* is directory */ true};
       const FileSystemChildMetadata& dest = testFileMeta;
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -581,8 +581,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       FileSystemChildMetadata dest{firstChildDir,
                                    firstChildDescendantMeta.childName()};
 
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
 
       TEST_TRY_UNWRAP(
           EntryId testFileCheck,
@@ -595,8 +595,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       FileSystemEntryMetadata src{testFile, testFileMeta.childName(),
                                   /* is directory */ false};
       FileSystemChildMetadata dest{rootId, src.entryName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -639,8 +639,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   /* is directory */ false};
       FileSystemChildMetadata dest{firstChildDir,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -650,8 +650,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   firstChildDescendantMeta.childName(),
                                   /* is directory */ false};
       FileSystemChildMetadata dest{rootId, testFileMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
 
       FileSystemChildMetadata oldLocation{firstChildDir,
                                           firstChildDescendantMeta.childName()};
@@ -675,8 +675,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   /* is directory */ false};
       FileSystemChildMetadata dest{rootId,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -686,8 +686,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   /* is directory */ false};
       FileSystemChildMetadata dest{firstChildDir,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -697,8 +697,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   /* is directory */ false};
       FileSystemChildMetadata dest{rootId,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
 
       FileSystemChildMetadata oldLocation{firstChildDir,
                                           firstChildDescendantMeta.childName()};
@@ -721,8 +721,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   /* is directory */ true};
       FileSystemChildMetadata dest{rootId,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -732,8 +732,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   /* is directory */ true};
       FileSystemChildMetadata dest{firstChildDir,
                                    firstChildDescendantMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
 
       FileSystemChildMetadata oldLocation{rootId,
                                           firstChildDescendantMeta.childName()};
@@ -771,8 +771,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                   firstChildDescendantMeta.childName(),
                                   /* is directory */ true};
       FileSystemChildMetadata dest{rootId, testFileMeta.childName()};
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -811,8 +811,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                    firstChildDescendantMeta.childName()};
 
       // Flag is ignored
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     {
@@ -823,8 +823,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       FileSystemChildMetadata dest{firstChildDir, testFileMeta.childName()};
 
       // Flag is ignored
-      TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
-      ASSERT_TRUE(isMoved);
+      TEST_TRY_UNWRAP(EntryId moved, dm->MoveEntry(src, dest));
+      ASSERT_FALSE(moved.IsEmpty());
     }
 
     // Check that listings are as expected

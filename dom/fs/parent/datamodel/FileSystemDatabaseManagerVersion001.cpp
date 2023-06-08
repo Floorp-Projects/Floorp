@@ -1403,7 +1403,7 @@ nsresult FileSystemDatabaseManagerVersion001::PrepareRenameEntry(
   return NS_OK;
 }
 
-Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
     const FileSystemEntryMetadata& aHandle, const Name& aNewName) {
   const auto& entryId = aHandle.entryId();
 
@@ -1418,7 +1418,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
 
   // Are we actually renaming?
   if (aHandle.entryName() == aNewName) {
-    return true;
+    return entryId;
   }
 
   QM_TRY(QM_TO_RESULT(PrepareRenameEntry(mConnection, mDataManager, aHandle,
@@ -1438,10 +1438,10 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
-  return true;
+  return entryId;
 }
 
-Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
     const FileSystemEntryMetadata& aHandle,
     const FileSystemChildMetadata& aNewDesignation) {
   const auto& entryId = aHandle.entryId();
@@ -1460,7 +1460,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   QM_WARNONLY_TRY_UNWRAP(Maybe<bool> maybeSame,
                          IsSame(mConnection, aHandle, aNewDesignation, isFile));
   if (maybeSame && maybeSame.value()) {
-    return true;
+    return entryId;
   }
 
   QM_TRY(QM_TO_RESULT(PrepareMoveEntry(mConnection, mDataManager, aHandle,
@@ -1492,7 +1492,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   if (aHandle.entryName() == newName) {
     QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
-    return true;
+    return entryId;
   }
 
   if (isFile) {
@@ -1505,7 +1505,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
-  return true;
+  return entryId;
 }
 
 Result<Path, QMResult> FileSystemDatabaseManagerVersion001::Resolve(
