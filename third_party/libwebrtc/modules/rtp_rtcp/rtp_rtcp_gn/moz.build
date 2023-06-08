@@ -55,6 +55,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction_internal.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/frame_object.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/packet_loss_stats.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/packet_sequencer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/receive_statistics_impl.cc",
@@ -73,6 +74,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_audio.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sequence_number_map.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/source_tracker.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/time_util.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/tmmbr_help.cc",
@@ -111,6 +113,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
+        "GLESv2",
         "log"
     ]
 
