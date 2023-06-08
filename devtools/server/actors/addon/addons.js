@@ -10,7 +10,8 @@ const {
 } = require("resource://devtools/shared/specs/addon/addons.js");
 
 const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs"
+  "resource://gre/modules/AddonManager.sys.mjs",
+  { loadInDevToolsLoader: false }
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
