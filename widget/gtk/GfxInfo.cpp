@@ -1155,9 +1155,16 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 
   // Probe VA-API on supported devices only
-  if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
-      *aStatus == nsIGfxInfo::FEATURE_STATUS_OK) {
-    if (mIsAccelerated) {
+  if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING) {
+    if (!StaticPrefs::media_hardware_video_decoding_enabled_AtStartup()) {
+      return ret;
+    }
+    bool probeHWDecode =
+        mIsAccelerated &&
+        (*aStatus == nsIGfxInfo::FEATURE_STATUS_OK ||
+         StaticPrefs::media_hardware_video_decoding_force_enabled_AtStartup() ||
+         StaticPrefs::media_ffmpeg_vaapi_enabled_AtStartup());
+    if (probeHWDecode) {
       GetDataVAAPI();
     } else {
       mIsVAAPISupported = Some(false);
