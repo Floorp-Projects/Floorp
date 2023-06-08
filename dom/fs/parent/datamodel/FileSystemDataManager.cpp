@@ -373,6 +373,8 @@ Result<bool, QMResult> FileSystemDataManager::IsLocked(
 }
 
 nsresult FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->EnsureFileId(aEntryId)));
+
   QM_TRY_UNWRAP(const bool isLocked,
                 IsLocked(aEntryId).mapErr(
                     [](const auto& aRv) { return ToNSResult(aRv); }));
