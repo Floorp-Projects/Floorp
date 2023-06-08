@@ -190,10 +190,10 @@ class TestQuitRestart(MarionetteTestCase):
 
     def test_restart_preserves_requested_capabilities(self):
         self.marionette.delete_session()
-        self.marionette.start_session(capabilities={"moz:fooBar": True})
+        self.marionette.start_session(capabilities={"test:fooBar": True})
 
         self.marionette.restart(in_app=False)
-        self.assertEqual(self.marionette.session.get("moz:fooBar"), True)
+        self.assertEqual(self.marionette.session.get("test:fooBar"), True)
 
     def test_restart_safe_mode(self):
         try:
@@ -304,11 +304,11 @@ class TestQuitRestart(MarionetteTestCase):
 
     def test_in_app_restart_preserves_requested_capabilities(self):
         self.marionette.delete_session()
-        self.marionette.start_session(capabilities={"moz:fooBar": True})
+        self.marionette.start_session(capabilities={"test:fooBar": True})
 
         details = self.marionette.restart()
         self.assertTrue(details["in_app"], "Expected in_app restart")
-        self.assertEqual(self.marionette.session.get("moz:fooBar"), True)
+        self.assertEqual(self.marionette.session.get("test:fooBar"), True)
 
     @unittest.skipUnless(sys.platform.startswith("darwin"), "Only supported on MacOS")
     def test_in_app_silent_restart_fails_without_windowless_flag_on_mac_os(self):
