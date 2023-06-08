@@ -427,15 +427,11 @@ addAccessibleTask(
 </div>
   `,
   async function (browser, docAcc) {
-    // XXX We don't create a TableAccessible in this case (bug 1494196). For
-    // now, just ensure we don't crash (bug 1793073).
-    const table = findAccessibleChildByID(docAcc, "table");
-    let queryOk = false;
-    try {
-      table.QueryInterface(nsIAccessibleTable);
-      queryOk = true;
-    } catch (e) {}
-    todo(queryOk, "Got nsIAccessibleTable");
+    const table = findAccessibleChildByID(docAcc, "table", [
+      nsIAccessibleTable,
+    ]);
+    is(table.rowCount, 1, "table rowCount correct");
+    is(table.columnCount, 1, "table columnCount correct");
   },
   {
     chrome: true,
