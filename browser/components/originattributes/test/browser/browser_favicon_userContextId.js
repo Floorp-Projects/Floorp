@@ -29,8 +29,9 @@ const FAVICON_URI =
   "/browser/browser/components/originattributes/" +
   "test/browser/file_favicon.png";
 const TEST_THIRD_PARTY_PAGE =
-  "http://example.net/browser/browser/components/" +
-  "originattributes/test/browser/file_favicon_thirdParty.html";
+  TEST_THIRD_PARTY_SITE +
+  "/browser/browser/components/originattributes/" +
+  "test/browser/file_favicon_thirdParty.html";
 const THIRD_PARTY_FAVICON_URI =
   TEST_THIRD_PARTY_SITE +
   "/browser/browser/components/" +
