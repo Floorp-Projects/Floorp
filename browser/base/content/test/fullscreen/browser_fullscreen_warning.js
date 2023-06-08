@@ -3,14 +3,35 @@
 
 "use strict";
 
-add_task(async function test_fullscreen_display_none() {
+function checkWarningState(aWarningElement, aExpectedState, aMsg) {
+  ["hidden", "ontop", "onscreen"].forEach(state => {
+    is(
+      aWarningElement.hasAttribute(state),
+      state == aExpectedState,
+      `${aMsg} - check ${state} attribute.`
+    );
+  });
+}
+
+async function waitForWarningState(aWarningElement, aExpectedState) {
+  await BrowserTestUtils.waitForAttribute(aExpectedState, aWarningElement, "");
+  checkWarningState(
+    aWarningElement,
+    aExpectedState,
+    `Wait for ${aExpectedState} state`
+  );
+}
+
+add_setup(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["full-screen-api.enabled", true],
       ["full-screen-api.allow-trusted-requests-only", false],
     ],
   });
+});
 
+add_task(async function test_fullscreen_display_none() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -30,11 +51,13 @@ add_task(async function test_fullscreen_display_none() {
     },
     async function (browser) {
       let warning = document.getElementById("fullscreen-warning");
-      let warningShownPromise = BrowserTestUtils.waitForAttribute(
-        "onscreen",
+      checkWarningState(
         warning,
-        "true"
+        "hidden",
+        "Should not show full screen warning initially"
       );
+
+      let warningShownPromise = waitForWarningState(warning, "onscreen");
       // Enter fullscreen
       await SpecialPowers.spawn(browser, [], async () => {
         let frame = content.document.querySelector("iframe");
@@ -54,39 +77,33 @@ add_task(async function test_fullscreen_display_none() {
       );
       document.getElementById("fullscreen-exit-button").click();
       await exitFullscreenPromise;
+
+      checkWarningState(
+        warning,
+        "hidden",
+        "Should hide fullscreen warning after exiting fullscreen"
+      );
     }
   );
 });
 
 add_task(async function test_fullscreen_pointerlock_conflict() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["full-screen-api.enabled", true],
-      ["full-screen-api.allow-trusted-requests-only", false],
-    ],
-  });
-
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     let fsWarning = document.getElementById("fullscreen-warning");
     let plWarning = document.getElementById("pointerlock-warning");
 
-    is(
-      fsWarning.getAttribute("onscreen"),
-      null,
-      "Should not show full screen warning initially."
-    );
-    is(
-      plWarning.getAttribute("onscreen"),
-      null,
-      "Should not show pointer lock warning initially."
-    );
-
-    let fsWarningShownPromise = BrowserTestUtils.waitForAttribute(
-      "onscreen",
+    checkWarningState(
       fsWarning,
-      "true"
+      "hidden",
+      "Should not show full screen warning initially"
+    );
+    checkWarningState(
+      plWarning,
+      "hidden",
+      "Should not show pointer lock warning initially"
     );
 
+    let fsWarningShownPromise = waitForWarningState(fsWarning, "onscreen");
     info("Entering full screen and pointer lock.");
     await SpecialPowers.spawn(browser, [], async () => {
       await content.document.body.requestFullscreen();
@@ -94,15 +111,10 @@ add_task(async function test_fullscreen_pointerlock_conflict() {
     });
 
     await fsWarningShownPromise;
-    is(
-      fsWarning.getAttribute("onscreen"),
-      "true",
-      "Should show full screen warning."
-    );
-    is(
-      plWarning.getAttribute("onscreen"),
-      null,
-      "Should not show pointer lock warning."
+    checkWarningState(
+      plWarning,
+      "hidden",
+      "Should not show pointer lock warning"
     );
 
     info("Exiting pointerlock");
@@ -110,18 +122,19 @@ add_task(async function test_fullscreen_pointerlock_conflict() {
       await content.document.exitPointerLock();
     });
 
-    is(
-      fsWarning.getAttribute("onscreen"),
-      "true",
-      "Should still show full screen warning."
+    checkWarningState(
+      fsWarning,
+      "onscreen",
+      "Should still show full screen warning"
     );
-    is(
-      plWarning.getAttribute("onscreen"),
-      null,
-      "Should not show pointer lock warning."
+    checkWarningState(
+      plWarning,
+      "hidden",
+      "Should not show pointer lock warning"
     );
 
     // Cleanup
+    info("Exiting fullscreen");
     await document.exitFullscreen();
   });
 });
