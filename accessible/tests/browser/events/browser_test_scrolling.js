@@ -111,3 +111,20 @@ c</textarea>
     await onScrolling;
   }
 );
+
+// Verify that the scrolling start event is fired for an anchor change.
+addAccessibleTask(
+  `
+    <p>a</p>
+    <p>b</p>
+    <p id="c">c</p>
+  `,
+  async function (browser, accDoc) {
+    let onScrollingStart = waitForEvent(EVENT_SCROLLING_START, "c");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.location.hash = "#c";
+    });
+    await onScrollingStart;
+  },
+  { chrome: true, topLevel: true }
+);
