@@ -22,6 +22,16 @@ const verifyMessageBar = message => {
     "quarantined-domains",
     "expected the correct support page ID"
   );
+  Assert.equal(
+    supportLink.getAttribute("aria-labelledby"),
+    "unified-extensions-mb-quarantined-domain-title",
+    "expected the correct aria-labelledby value"
+  );
+  Assert.equal(
+    supportLink.getAttribute("aria-describedby"),
+    "unified-extensions-mb-quarantined-domain-message",
+    "expected the correct aria-describedby value"
+  );
 };
 
 add_task(async function test_quarantined_domain_message_disabled() {
