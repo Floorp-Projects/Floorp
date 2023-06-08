@@ -2107,29 +2107,33 @@ class GoodbyeMessage : public IPC::Message {
   }
 };
 
-void MessageChannel::CloseWithError() {
-  AssertWorkerThread();
+void MessageChannel::InduceConnectionError() {
+  MonitorAutoLock lock(*mMonitor);
 
-  // This lock guard may be reset by `NotifyMaybeChannelError` before invoking
-  // listener callbacks which may destroy this `MessageChannel`.
-  ReleasableMonitorAutoLock lock(*mMonitor);
-
+  // Either connected or closing, immediately convert to an error and notify.
   switch (mChannelState) {
-    case ChannelError:
-      // Already errored, ensure we notify if we haven't yet.
-      NotifyMaybeChannelError(lock);
-      return;
-    case ChannelClosed:
-      // Already closed, we can't do anything.
-      return;
-    default:
-      // Either connected or closing, immediately convert to an error, and
-      // notify.
-      MOZ_ASSERT(mChannelState == ChannelConnected ||
-                 mChannelState == ChannelClosing);
+    case ChannelConnected:
+      // The channel is still actively connected. Immediately shut down the
+      // connection with our peer and simulate it invoking
+      // OnChannelErrorFromLink on us.
+      //
+      // This will update the state to ChannelError, preventing new messages
+      // from being processed, leading to an error being reported asynchronously
+      // to our listener.
       mLink->Close();
+      OnChannelErrorFromLink();
+      return;
+
+    case ChannelClosing:
+      // An notify task has already been posted. Update mChannelState to stop
+      // processing new messages and treat the notification as an error.
       mChannelState = ChannelError;
-      NotifyMaybeChannelError(lock);
+      return;
+
+    default:
+      // Either already closed or errored. Nothing to do.
+      MOZ_ASSERT(mChannelState == ChannelClosed ||
+                 mChannelState == ChannelError);
       return;
   }
 }

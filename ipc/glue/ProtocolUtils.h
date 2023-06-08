@@ -433,7 +433,6 @@ class IToplevelProtocol : public IProtocol {
   void NotifyImpendingShutdown();
 
   void Close();
-  void CloseWithError();
 
   void SetReplyTimeoutMs(int32_t aTimeoutMs);
 

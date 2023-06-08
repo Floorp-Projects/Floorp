@@ -197,9 +197,19 @@ class MessageChannel : HasResultCodes {
   // Close the underlying transport channel.
   void Close() MOZ_EXCLUDES(*mMonitor);
 
-  // Close the underlying transport channel, treating the closure as a
-  // connection error.
-  void CloseWithError() MOZ_EXCLUDES(*mMonitor);
+  // Induce an error in this MessageChannel's connection.
+  //
+  // After this method is called, no more message notifications will be
+  // delivered to the listener, and the channel will be unable to send or
+  // receive future messages, as if the peer dropped the connection
+  // unexpectedly.
+  //
+  // The OnChannelError notification will be delivered either asynchronously or
+  // during an explicit call to Close(), whichever happens first.
+  //
+  // NOTE: If SetAbortOnError(true) has been called on this MessageChannel,
+  // calling this function will immediately exit the current process.
+  void InduceConnectionError() MOZ_EXCLUDES(*mMonitor);
 
   void SetAbortOnError(bool abort) MOZ_EXCLUDES(*mMonitor) {
     MonitorAutoLock lock(*mMonitor);

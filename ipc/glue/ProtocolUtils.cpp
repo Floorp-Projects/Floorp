@@ -401,7 +401,7 @@ void IProtocol::HandleFatalError(const char* aErrorMsg) {
 
   mozilla::ipc::FatalError(aErrorMsg, mSide == ParentSide);
   if (CanSend()) {
-    GetIPCChannel()->CloseWithError();
+    GetIPCChannel()->InduceConnectionError();
   }
 }
 
@@ -632,8 +632,6 @@ void IToplevelProtocol::NotifyImpendingShutdown() {
 }
 
 void IToplevelProtocol::Close() { GetIPCChannel()->Close(); }
-
-void IToplevelProtocol::CloseWithError() { GetIPCChannel()->CloseWithError(); }
 
 void IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs) {
   GetIPCChannel()->SetReplyTimeoutMs(aTimeoutMs);

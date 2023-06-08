@@ -175,7 +175,7 @@ ipc::IPCResult IPDLUnitTestChild::RecvStart(const nsCString& aName,
   RefPtr<ipc::NodeController> controller = aPort.Controller();
   mojo::core::ports::PortRef port = aPort.Port();
 
-  auto* child = allocChildActor();
+  RefPtr<IToplevelProtocol> child = allocChildActor();
   if (!child->Open(std::move(aPort), aMessageChannelId, OtherPid())) {
     ADD_FAILURE() << "Unable to open child actor";
     return IPC_FAIL(this, "Unable to open child actor");

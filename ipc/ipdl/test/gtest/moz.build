@@ -17,12 +17,14 @@ EXPORTS.mozilla._ipdltest += [
 SOURCES += [
     "IPDLUnitTest.cpp",
     "TestBasic.cpp",
+    "TestInduceConnectionError.cpp",
     "TestManyHandles.cpp",
 ]
 
 IPDL_SOURCES += [
     "PIPDLUnitTest.ipdl",
     "PTestBasic.ipdl",
+    "PTestInduceConnectionError.ipdl",
     "PTestManyHandles.ipdl",
 ]
 

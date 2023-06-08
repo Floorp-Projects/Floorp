@@ -40,7 +40,7 @@ class IPDLTestHelper {
     const char* GetName() override { return sName; };                     \
     actorname##Parent* GetActor() override { return mActor; };            \
                                                                           \
-    actorname##Parent* mActor;                                            \
+    RefPtr<actorname##Parent> mActor;                                     \
     static const char* sName;                                             \
   };                                                                      \
   const char* IPDL_TEST_CLASS_NAME_(actorname)::sName =                   \
