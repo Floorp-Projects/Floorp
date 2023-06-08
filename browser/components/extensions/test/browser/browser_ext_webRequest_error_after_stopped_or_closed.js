@@ -5,12 +5,12 @@
 const SLOW_PAGE =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
-    "http://www.example.com"
+    "https://www.example.com"
   ) + "file_slowed_document.sjs";
 
 async function runTest(stopLoadFunc) {
   async function background() {
-    let urls = ["http://www.example.com/*"];
+    let urls = ["https://www.example.com/*"];
     browser.webRequest.onCompleted.addListener(
       details => {
         browser.test.sendMessage("done", {
@@ -47,7 +47,7 @@ async function runTest(stopLoadFunc) {
       permissions: [
         "webRequest",
         "webRequestBlocking",
-        "http://www.example.com/*",
+        "https://www.example.com/*",
       ],
     },
     background,
