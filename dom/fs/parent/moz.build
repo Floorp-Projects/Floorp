@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     "FileSystemAccessHandleParent.cpp",
     "FileSystemContentTypeGuess.cpp",
     "FileSystemHashSource.cpp",
+    "FileSystemHashStorageFunction.cpp",
     "FileSystemManagerParent.cpp",
     "FileSystemManagerParentFactory.cpp",
     "FileSystemQuotaClient.cpp",
