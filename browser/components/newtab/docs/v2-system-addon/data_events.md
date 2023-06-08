@@ -1331,7 +1331,7 @@ Feature Callout messages can include properties to listen for specific events on
 
 ### Feature Callout dismissal
 
-A Feature Callout can be dismissed by clicking its dismiss button directly, pressing the Escape key, or automatically after a set number of seconds. With a page event listener, it can also be configured to dismiss the callout when an event in the page happens, such as clicking the target of the callout (see the page event ping above).
+A Feature Callout can be dismissed by clicking its dismiss button directly or pressing the Escape key. With a page event listener, it can also be configured to dismiss the callout when an event in the page happens, such as clicking the target of the callout (see the page event ping above).
 
 ```js
 {
@@ -1344,8 +1344,7 @@ A Feature Callout can be dismissed by clicking its dismiss button directly, pres
     "source": [
       "dismiss_button",
       "KEY_Escape",
-      "PAGE_EVENT:button.primary#some-button",
-      "DISMISS_FEATURE_CALLOUT_AFTER_TIMER"
+      "PAGE_EVENT:button.primary#some-button"
     ],
     "page": ["about:firefoxview", "chrome://browser/content/browser.xhtml"]
   },
