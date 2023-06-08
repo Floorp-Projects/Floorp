@@ -1,13 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewStartup"];
-
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
 
@@ -17,10 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
 
@@ -124,7 +115,7 @@ const JSWINDOWACTORS = {
   },
 };
 
-class GeckoViewStartup {
+export class GeckoViewStartup {
   /* ----------  nsIObserver  ---------- */
   observe(aSubject, aTopic, aData) {
     debug`observe: ${aTopic}`;

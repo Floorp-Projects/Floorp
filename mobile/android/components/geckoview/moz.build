@@ -34,16 +34,16 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "ColorPickerDelegate.jsm",
-    "FilePickerDelegate.jsm",
-    "GeckoViewPermission.jsm",
-    "GeckoViewPrompt.jsm",
+    "ColorPickerDelegate.sys.mjs",
+    "FilePickerDelegate.sys.mjs",
+    "GeckoViewPermission.sys.mjs",
+    "GeckoViewPrompt.sys.mjs",
     "GeckoViewPrompter.sys.mjs",
-    "GeckoViewPush.jsm",
-    "GeckoViewStartup.jsm",
-    "LoginStorageDelegate.jsm",
-    "PromptCollection.jsm",
-    "ShareDelegate.jsm",
+    "GeckoViewPush.sys.mjs",
+    "GeckoViewStartup.sys.mjs",
+    "LoginStorageDelegate.sys.mjs",
+    "PromptCollection.sys.mjs",
+    "ShareDelegate.sys.mjs",
 ]
 
 FINAL_LIBRARY = "xul"

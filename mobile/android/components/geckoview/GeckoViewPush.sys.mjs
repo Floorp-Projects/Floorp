@@ -1,13 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["PushService"];
-
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPush");
 
@@ -52,7 +47,7 @@ function scopeWithAttrs(scope, attrs) {
   return scope + ChromeUtils.originAttributesToSuffix(attrs);
 }
 
-class PushService {
+export class PushService {
   constructor() {
     this.wrappedJSObject = this;
   }
