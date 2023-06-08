@@ -8965,19 +8965,29 @@
 # measurements in bug 1385982 comments 11, 12, 13 that investigate some
 # slightly different values for the work unit size.
 #
-# If the size is significantly increased, make sure to adjust the condition for
-# kicking off a new work unit (stylo-parallelism-threshold), because otherwise
-# we're likely to end up doing too much work serially.
+# If the size is significantly increased, make sure to also review
+# stylo-local-work-queue prefs, since we might end up doing too much work
+# sequentially.
+#
+# A value of 0 disables parallelism altogether.
 - name: layout.css.stylo-work-unit-size
   type: RelaxedAtomicUint32
   value: 16
   mirror: always
   rust: true
 
-# The amount of nodes that kick off the initial parallel traversal. See above
-# for tweaking. A value of 0 causes the traversal to effectively always be
-# serial.
-- name: layout.css.stylo-parallelism-threshold
+# The minimum amount of work that a thread doing styling will try to keep
+# locally before sending work to other threads, in a worker.
+- name: layout.css.stylo-local-work-queue.in-worker
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+  rust: true
+
+# As above but for the main thread. The main thread can't really steal from
+# other threads so it might want a bigger min queue size before giving work to
+# other threads.
+- name: layout.css.stylo-local-work-queue.in-main-thread
   type: RelaxedAtomicUint32
   value: 32
   mirror: always
