@@ -108,8 +108,11 @@ var SidebarUI = {
     this._switcherTarget = document.getElementById("sidebar-switcher-target");
     this._switcherArrow = document.getElementById("sidebar-switcher-arrow");
 
-    this._switcherTarget.addEventListener("command", () => {
-      this.toggleSwitcherPanel();
+    this._switcherTarget.addEventListener("command", event => {
+      this.toggleSwitcherPanel(event);
+    });
+    this._switcherTarget.addEventListener("keydown", event => {
+      this.handleKeydown(event);
     });
 
     this._inited = true;
@@ -200,14 +203,36 @@ var SidebarUI = {
   /**
    * Opens the switcher panel if it's closed, or closes it if it's open.
    */
-  toggleSwitcherPanel() {
+  toggleSwitcherPanel(event) {
     if (
       this._switcherPanel.state == "open" ||
       this._switcherPanel.state == "showing"
     ) {
       this.hideSwitcherPanel();
     } else if (this._switcherPanel.state == "closed") {
-      this.showSwitcherPanel();
+      this.showSwitcherPanel(event);
+    }
+  },
+
+  /**
+   * Handles keydown on the the switcherTarget button
+   * @param  {Event} event
+   */
+  handleKeydown(event) {
+    switch (event.key) {
+      case "Enter":
+      case " ": {
+        this.toggleSwitcherPanel(event);
+        event.stopPropagation();
+        event.preventDefault();
+        break;
+      }
+      case "Escape": {
+        this.hideSwitcherPanel();
+        event.stopPropagation();
+        event.preventDefault();
+        break;
+      }
     }
   },
 
@@ -215,12 +240,13 @@ var SidebarUI = {
     this._switcherPanel.hidePopup();
   },
 
-  showSwitcherPanel() {
+  showSwitcherPanel(event) {
     this._ensureShortcutsShown();
     this._switcherPanel.addEventListener(
       "popuphiding",
       () => {
         this._switcherTarget.classList.remove("active");
+        this._switcherTarget.setAttribute("aria-expanded", false);
       },
       { once: true }
     );
@@ -233,8 +259,15 @@ var SidebarUI = {
     this._reversePositionButton.setAttribute("label", label);
 
     this._switcherPanel.hidden = false;
-    this._switcherPanel.openPopup(this._switcherTarget);
+
+    // Open the sidebar switcher popup, anchored off the switcher toggle
+    PanelMultiView.openPopup(this._switcherPanel, this._switcherTarget, {
+      position: "bottomleft topleft",
+      triggerEvent: event,
+    }).catch(console.error);
+
     this._switcherTarget.classList.add("active");
+    this._switcherTarget.setAttribute("aria-expanded", true);
   },
 
   updateShortcut({ button, key }) {
