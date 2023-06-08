@@ -8,22 +8,21 @@
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<script>
-addLoginsInParent(
-  [window.location.origin, "https://autofill", null,
-              "user1", "pass1", "", ""]);
-
-let DEFAULT_ORIGIN = window.location.origin;
-</script>
 <body>
 <p id="display"></p>
 <div id="content">
 <pre id="test">
 <script>
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    [window.location.origin, "https://autofill", null, "user1", "pass1", "", ""]
+  );
+});
+
 add_task(async function test_field_highlight_on_autofill() {
   let win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
-  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+  await loadFormIntoWindow(window.location.origin, `
     <form id="form1" action="https://autofill" onsubmit="return false;">
       <input  type="text"       id="uname">
       <input  type="password"   id="pword">

@@ -83,7 +83,7 @@ const loadPromise = loadFormIntoWindow(location.origin, `
     <input  type="text" autocomplete="cc-number" name="acfield">
     <input  type="password" name="pword">
     <button type="submit">Submit</button>
-  </form>`, win);
+  </form>`, win, 8);
 
 add_setup(async () => {
   await setStoredLoginsAsync(

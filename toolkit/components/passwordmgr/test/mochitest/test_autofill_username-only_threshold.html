@@ -11,23 +11,19 @@
 Test not autofill on username-form when the number of form exceeds the lookup threshold
 
 <script>
-let readyPromise = registerRunTests();
-let DEFAULT_ORIGIN = window.location.origin;
-
-addLoginsInParent(
-  [DEFAULT_ORIGIN, "https://autofill", null, "user1", "pass1"]);
-
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({"set": [["signon.usernameOnlyForm.lookupThreshold", 5]]});
 
-  ok(readyPromise, "check promise is available");
-  await readyPromise;
+  await setStoredLoginsAsync(
+    [window.location.origin, "https://autofill", null, "user1", "pass1"]
+  );
 });
 
 add_task(async function test_autofill_username_only_form() {
-  let win = window.open("about:blank");
+  const win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
-  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+
+  await loadFormIntoWindow(window.location.origin, `
     <!-- no password field, 1 username field -->
     <form id='form1' action='https://autofill'> 1
         <input type='text' name='uname' autocomplete='username' value=''>
@@ -69,7 +65,7 @@ add_task(async function test_autofill_username_only_form() {
 
         <button type='submit'>Submit</button>
         <button type='reset'> Reset </button>
-    </form>`, win);
+    </form>`, win, 5);
 
   await checkLoginFormInFrameWithElementValues(win, 1, "user1");
   await checkLoginFormInFrameWithElementValues(win, 2, "user1");
@@ -83,6 +79,5 @@ add_task(async function test_autofill_username_only_form() {
 <p id="display"></p>
 <div id="content"></div>
 <pre id="test"></pre>
-</pre>
 </body>
 </html>
