@@ -106,12 +106,6 @@ ID02:
         - find
         - new-tab
         - share
-        # toolkit/locales/en-US/toolkit/about/aboutPerformance.ftl
-        - type-tab
-        - size-KB
-        - size-MB
-        - size-GB
-        - item
         # toolkit/locales/en-US/toolkit/about/aboutPlugins.ftl
         - file-dd
         - path-dd
