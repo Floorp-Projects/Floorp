@@ -309,7 +309,7 @@ bool BytecodeEmitter::emit1(JSOp op) {
 
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
-  bytecodeSection().updateDepth(offset);
+  bytecodeSection().updateDepth(op, offset);
   return true;
 }
 
@@ -324,7 +324,7 @@ bool BytecodeEmitter::emit2(JSOp op, uint8_t op1) {
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
   code[1] = jsbytecode(op1);
-  bytecodeSection().updateDepth(offset);
+  bytecodeSection().updateDepth(op, offset);
   return true;
 }
 
@@ -344,7 +344,7 @@ bool BytecodeEmitter::emit3(JSOp op, jsbytecode op1, jsbytecode op2) {
   code[0] = jsbytecode(op);
   code[1] = op1;
   code[2] = op2;
-  bytecodeSection().updateDepth(offset);
+  bytecodeSection().updateDepth(op, offset);
   return true;
 }
 
@@ -366,7 +366,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, BytecodeOffset* offset) {
    * operand yet to be stored in the extra bytes after op.
    */
   if (CodeSpec(op).nuses >= 0) {
-    bytecodeSection().updateDepth(off);
+    bytecodeSection().updateDepth(op, off);
   }
 
   if (offset) {
@@ -421,7 +421,7 @@ bool BytecodeEmitter::emitJumpNoFallthrough(JSOp op, JumpList* jump) {
   MOZ_ASSERT(!jump->offset.valid() ||
              (0 <= jump->offset.value() && jump->offset < offset));
   jump->push(bytecodeSection().code(BytecodeOffset(0)), offset);
-  bytecodeSection().updateDepth(offset);
+  bytecodeSection().updateDepth(op, offset);
   return true;
 }
 
@@ -695,7 +695,7 @@ bool BytecodeEmitter::emitGCIndexOp(JSOp op, GCThingIndex index) {
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
   SET_GCTHING_INDEX(code, index);
-  bytecodeSection().updateDepth(offset);
+  bytecodeSection().updateDepth(op, offset);
   return true;
 }
 
@@ -1897,7 +1897,7 @@ bool BytecodeEmitter::emitDouble(double d) {
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(JSOp::Double);
   SET_INLINE_VALUE(code, DoubleValue(d));
-  bytecodeSection().updateDepth(offset);
+  bytecodeSection().updateDepth(JSOp::Double, offset);
   return true;
 }
 
