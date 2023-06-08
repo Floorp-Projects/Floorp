@@ -32,29 +32,6 @@ namespace fs::data {
 
 namespace {
 
-auto toNSResult = [](const auto& aRv) { return ToNSResult(aRv); };
-
-Result<bool, QMResult> ApplyEntryExistsQuery(
-    const FileSystemConnection& aConnection, const nsACString& aQuery,
-    const FileSystemChildMetadata& aHandle) {
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, aQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("parent"_ns, aHandle.parentId())));
-  QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, aHandle.childName())));
-
-  return stmt.YesOrNoQuery();
-}
-
-Result<bool, QMResult> ApplyEntryExistsQuery(
-    const FileSystemConnection& aConnection, const nsACString& aQuery,
-    const EntryId& aEntry) {
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, aQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntry)));
-
-  return stmt.YesOrNoQuery();
-}
-
 Result<bool, QMResult> IsDirectoryEmpty(const FileSystemConnection& mConnection,
                                         const EntryId& aEntryId) {
   const nsLiteralCString isDirEmptyQuery =
@@ -186,28 +163,6 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
   QM_TRY_RETURN(ApplyEntryExistsQuery(aConnection, existsQuery, aEntry));
 }
 
-Result<EntryId, QMResult> FindParent(const FileSystemConnection& aConnection,
-                                     const EntryId& aEntryId) {
-  const nsCString aParentQuery =
-      "SELECT handle FROM Entries "
-      "WHERE handle IN ( "
-      "SELECT parent FROM Entries WHERE "
-      "handle = :entryId ) "
-      ";"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, aParentQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
-  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
-
-  if (!moreResults) {
-    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
-  }
-
-  QM_TRY_UNWRAP(EntryId parentId, stmt.GetEntryIdByColumn(/* Column */ 0u));
-  return parentId;
-}
-
 nsresult GetFileAttributes(const FileSystemConnection& aConnection,
                            const EntryId& aEntryId, ContentType& aType) {
   const nsLiteralCString getFileLocation =
@@ -298,70 +253,6 @@ Result<EntryId, QMResult> GetUniqueEntryId(
   }
 
   return Err(QMResult(NS_ERROR_UNEXPECTED));
-}
-
-Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
-                                      const FileSystemChildMetadata& aHandle,
-                                      bool aIsFile) {
-  const nsCString aDirectoryQuery =
-      "SELECT Entries.handle FROM Directories JOIN Entries USING (handle) "
-      "WHERE Directories.name = :name AND Entries.parent = :parent "
-      ";"_ns;
-
-  const nsCString aFileQuery =
-      "SELECT Entries.handle FROM Files JOIN Entries USING (handle) "
-      "WHERE Files.name = :name AND Entries.parent = :parent "
-      ";"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(
-                    aConnection, aIsFile ? aFileQuery : aDirectoryQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("parent"_ns, aHandle.parentId())));
-  QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, aHandle.childName())));
-  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
-
-  if (!moreResults) {
-    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
-  }
-
-  QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
-
-  return entryId;
-}
-
-Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
-                              const FileSystemEntryMetadata& aHandle,
-                              const FileSystemChildMetadata& aNewHandle,
-                              bool aIsFile) {
-  MOZ_ASSERT(!aNewHandle.parentId().IsEmpty());
-
-  // Typically aNewHandle does not exist which is not an error
-  QM_TRY_RETURN(QM_OR_ELSE_LOG_VERBOSE_IF(
-      // Expression.
-      FindEntryId(aConnection, aNewHandle, aIsFile)
-          .map([&aHandle](const EntryId& entryId) {
-            return entryId == aHandle.entryId();
-          }),
-      // Predicate.
-      IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
-      // Fallback.
-      ErrToOkFromQMResult<false>));
-}
-
-Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
-                              const EntryId& aEntryId) {
-  QM_TRY_UNWRAP(bool exists, DoesFileExist(aConnection, aEntryId));
-  if (exists) {
-    return true;
-  }
-
-  QM_TRY_UNWRAP(exists, DoesDirectoryExist(aConnection, aEntryId));
-  if (exists) {
-    return false;
-  }
-
-  // Doesn't exist
-  return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
 }
 
 nsresult PerformRename(const FileSystemConnection& aConnection,
@@ -705,13 +596,120 @@ void LogWithFilename(const FileSystemFileManager& aFileManager,
   LOG((aFormat, NS_ConvertUTF16toUTF8(localPath).get()));
 }
 
+}  // namespace
+
+Result<bool, QMResult> ApplyEntryExistsQuery(
+    const FileSystemConnection& aConnection, const nsACString& aQuery,
+    const FileSystemChildMetadata& aHandle) {
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, aQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("parent"_ns, aHandle.parentId())));
+  QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, aHandle.childName())));
+
+  return stmt.YesOrNoQuery();
+}
+
+Result<bool, QMResult> ApplyEntryExistsQuery(
+    const FileSystemConnection& aConnection, const nsACString& aQuery,
+    const EntryId& aEntry) {
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, aQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntry)));
+
+  return stmt.YesOrNoQuery();
+}
+
+Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
+                              const EntryId& aEntryId) {
+  QM_TRY_UNWRAP(bool exists, DoesFileExist(aConnection, aEntryId));
+  if (exists) {
+    return true;
+  }
+
+  QM_TRY_UNWRAP(exists, DoesDirectoryExist(aConnection, aEntryId));
+  if (exists) {
+    return false;
+  }
+
+  // Doesn't exist
+  return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+}
+
+Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
+                                      const FileSystemChildMetadata& aHandle,
+                                      bool aIsFile) {
+  const nsCString aDirectoryQuery =
+      "SELECT Entries.handle FROM Directories JOIN Entries USING (handle) "
+      "WHERE Directories.name = :name AND Entries.parent = :parent "
+      ";"_ns;
+
+  const nsCString aFileQuery =
+      "SELECT Entries.handle FROM Files JOIN Entries USING (handle) "
+      "WHERE Files.name = :name AND Entries.parent = :parent "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(
+                    aConnection, aIsFile ? aFileQuery : aDirectoryQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("parent"_ns, aHandle.parentId())));
+  QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, aHandle.childName())));
+  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+
+  if (!moreResults) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
+
+  return entryId;
+}
+
+Result<EntryId, QMResult> FindParent(const FileSystemConnection& aConnection,
+                                     const EntryId& aEntryId) {
+  const nsCString aParentQuery =
+      "SELECT handle FROM Entries "
+      "WHERE handle IN ( "
+      "SELECT parent FROM Entries WHERE "
+      "handle = :entryId ) "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, aParentQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
+  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+
+  if (!moreResults) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  QM_TRY_UNWRAP(EntryId parentId, stmt.GetEntryIdByColumn(/* Column */ 0u));
+  return parentId;
+}
+
+Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
+                              const FileSystemEntryMetadata& aHandle,
+                              const FileSystemChildMetadata& aNewHandle,
+                              bool aIsFile) {
+  MOZ_ASSERT(!aNewHandle.parentId().IsEmpty());
+
+  // Typically aNewHandle does not exist which is not an error
+  QM_TRY_RETURN(QM_OR_ELSE_LOG_VERBOSE_IF(
+      // Expression.
+      FindEntryId(aConnection, aNewHandle, aIsFile)
+          .map([&aHandle](const EntryId& entryId) {
+            return entryId == aHandle.entryId();
+          }),
+      // Predicate.
+      IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
+      // Fallback.
+      ErrToOkFromQMResult<false>));
+}
+
 // TODO: Implement idle maintenance
 void TryRemoveDuringIdleMaintenance(
     const nsTArray<FileId>& /* aItemToRemove */) {
   // Not implemented
 }
-
-}  // namespace
 
 FileSystemDatabaseManagerVersion001::FileSystemDatabaseManagerVersion001(
     FileSystemDataManager* aDataManager, FileSystemConnection&& aConnection,
