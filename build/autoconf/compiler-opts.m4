@@ -146,9 +146,15 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS" -a -z "$MOZ_PR
 fi
 
 if test "$GNU_CC$CLANG_CC"; then
-    if "${OS_TARGET}" != Darwin; then
+    case "${OS_TARGET}" in
+    Darwin|WASI)
+        # It's the default on those targets, and clang complains about -pie
+        # being unused if passed.
+        ;;
+    *)
         MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -pie"
-    fi
+        ;;
+    esac
 fi
 
 AC_SUBST(MOZ_PROGRAM_LDFLAGS)
