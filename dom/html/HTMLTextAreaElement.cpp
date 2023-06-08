@@ -543,8 +543,6 @@ void HTMLTextAreaElement::DoneAddingChildren(bool aHaveNotified) {
   mDoneAddingChildren = true;
 }
 
-bool HTMLTextAreaElement::IsDoneAddingChildren() { return mDoneAddingChildren; }
-
 // Controllers Methods
 
 nsIControllers* HTMLTextAreaElement::GetControllers(ErrorResult& aError) {

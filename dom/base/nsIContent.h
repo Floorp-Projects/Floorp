@@ -446,19 +446,6 @@ class nsIContent : public nsINode {
   virtual void DoneAddingChildren(bool aHaveNotified) {}
 
   /**
-   * For HTML textarea, select, and object elements, returns true if all
-   * children have been added OR if the element was not created by the parser.
-   * Returns true for all other elements.
-   *
-   * @returns false if the element was created by the parser and
-   *                   it is an HTML textarea, select, or object
-   *                   element and not all children have been added.
-   *
-   * @returns true otherwise.
-   */
-  virtual bool IsDoneAddingChildren() { return true; }
-
-  /**
    * Returns true if an element needs its DoneCreatingElement method to be
    * called after it has been created.
    * @see nsIContent::DoneCreatingElement

@@ -46,15 +46,13 @@ HTMLObjectElement::~HTMLObjectElement() {
 }
 
 bool HTMLObjectElement::IsInteractiveHTMLContent() const {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
+  return HasAttr(nsGkAtoms::usemap) ||
          nsGenericHTMLFormControlElement::IsInteractiveHTMLContent();
 }
 
 void HTMLObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
   nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
-
-bool HTMLObjectElement::IsDoneAddingChildren() { return mIsDoneAddingChildren; }
 
 void HTMLObjectElement::DoneAddingChildren(bool aHaveNotified) {
   mIsDoneAddingChildren = true;
