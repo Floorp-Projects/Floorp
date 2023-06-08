@@ -555,8 +555,7 @@ static uint32_t CollectTextAreaElement(Document* aDocument,
   for (uint32_t i = 0; i < length; ++i) {
     MOZ_ASSERT(textlist->Item(i), "null item in node list!");
 
-    HTMLTextAreaElement* textArea =
-        HTMLTextAreaElement::FromNodeOrNull(textlist->Item(i));
+    auto* textArea = HTMLTextAreaElement::FromNodeOrNull(textlist->Item(i));
     if (!textArea) {
       continue;
     }
@@ -972,7 +971,8 @@ MOZ_CAN_RUN_SCRIPT
 static void SetElementAsString(Element* aElement, const nsAString& aValue) {
   IgnoredErrorResult rv;
   if (auto* textArea = HTMLTextAreaElement::FromNode(aElement)) {
-    textArea->SetValue(aValue, rv);
+    // Known live because `aElement` is known live.
+    MOZ_KnownLive(textArea)->SetValue(aValue, rv);
     if (!rv.Failed()) {
       nsContentUtils::DispatchInputEvent(aElement);
     }
