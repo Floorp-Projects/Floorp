@@ -186,13 +186,6 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
   QM_TRY_RETURN(ApplyEntryExistsQuery(aConnection, existsQuery, aEntry));
 }
 
-Result<bool, QMResult> DoesFileIdExist(const FileSystemConnection& aConnection,
-                                       const FileId& aFileId) {
-  MOZ_ASSERT(!aFileId.IsEmpty());
-
-  QM_TRY_RETURN(DoesFileExist(aConnection, aFileId.Value()));
-}
-
 Result<EntryId, QMResult> FindParent(const FileSystemConnection& aConnection,
                                      const EntryId& aEntryId) {
   const nsCString aParentQuery =
@@ -463,8 +456,10 @@ Result<nsTArray<FileId>, QMResult> FindDescendants(
   return descendants;
 }
 
-nsresult SetUsageTracking(const FileSystemConnection& aConnection,
-                          const FileId& aFileId, bool aTracked) {
+template <class HandlerType>
+nsresult SetUsageTrackingImpl(const FileSystemConnection& aConnection,
+                              const FileId& aFileId, bool aTracked,
+                              HandlerType&& aOnMissingFile) {
   const nsLiteralCString setTrackedQuery =
       "INSERT INTO Usages "
       "( handle, tracked ) "
@@ -474,22 +469,15 @@ nsresult SetUsageTracking(const FileSystemConnection& aConnection,
       "UPDATE SET tracked = excluded.tracked "
       ";"_ns;
 
-  const nsresult onMissingFile = aTracked ? NS_ERROR_DOM_NOT_FOUND_ERR : NS_OK;
+  const nsresult customReturnValue =
+      aTracked ? NS_ERROR_DOM_NOT_FOUND_ERR : NS_OK;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, setTrackedQuery));
   QM_TRY(MOZ_TO_RESULT(stmt.BindFileIdByName("handle"_ns, aFileId)));
   QM_TRY(MOZ_TO_RESULT(stmt.BindBooleanByName("tracked"_ns, aTracked)));
-  QM_TRY(MOZ_TO_RESULT(stmt.Execute()), onMissingFile,
-         ([&aConnection, &aFileId](const auto& aRv) {
-           // Usages constrains entryId to be present in Files
-           MOZ_ASSERT(NS_ERROR_STORAGE_CONSTRAINT == ToNSResult(aRv));
-
-           // The query *should* fail if and only if file does not exist
-           QM_TRY_UNWRAP(DebugOnly<bool> fileExists,
-                         DoesFileIdExist(aConnection, aFileId), QM_VOID);
-           MOZ_ASSERT(!fileExists);
-         }));
+  QM_TRY(MOZ_TO_RESULT(stmt.Execute()), customReturnValue,
+         std::forward<HandlerType>(aOnMissingFile));
 
   return NS_OK;
 }
@@ -1022,8 +1010,7 @@ nsresult FileSystemDatabaseManagerVersion001::GetFile(
 nsresult FileSystemDatabaseManagerVersion001::UpdateUsage(
     const FileId& aFileId) {
   // We don't track directories or non-existent files.
-  QM_TRY_UNWRAP(bool fileExists,
-                DoesFileIdExist(mConnection, aFileId).mapErr(toNSResult));
+  QM_TRY_UNWRAP(bool fileExists, DoesFileIdExist(aFileId).mapErr(toNSResult));
   if (!fileExists) {
     return NS_OK;  // May be deleted before update, no assert
   }
@@ -1103,6 +1090,28 @@ Result<Ok, QMResult> FileSystemDatabaseManagerVersion001::EnsureUsageIsKnown(
   return Ok{};
 }
 
+Result<bool, QMResult> FileSystemDatabaseManagerVersion001::DoesFileIdExist(
+    const FileId& aFileId) const {
+  MOZ_ASSERT(!aFileId.IsEmpty());
+
+  QM_TRY_RETURN(DoesFileExist(mConnection, aFileId.Value()));
+}
+
+nsresult FileSystemDatabaseManagerVersion001::SetUsageTracking(
+    const FileId& aFileId, bool aTracked) {
+  auto onMissingFile = [this, &aFileId](const auto& aRv) {
+    // Usages constrains entryId to be present in Files
+    MOZ_ASSERT(NS_ERROR_STORAGE_CONSTRAINT == ToNSResult(aRv));
+
+    // The query *should* fail if and only if file does not exist
+    QM_TRY_UNWRAP(DebugOnly<bool> fileExists, DoesFileIdExist(aFileId),
+                  QM_VOID);
+    MOZ_ASSERT(!fileExists);
+  };
+
+  return SetUsageTrackingImpl(mConnection, aFileId, aTracked, onMissingFile);
+}
+
 nsresult FileSystemDatabaseManagerVersion001::BeginUsageTracking(
     const FileId& aFileId) {
   MOZ_ASSERT(!aFileId.IsEmpty());
@@ -1113,13 +1122,17 @@ nsresult FileSystemDatabaseManagerVersion001::BeginUsageTracking(
 
   // If file does not exist, set usage tracking to true fails with
   // file not found error.
-  return SetUsageTracking(mConnection, aFileId, true);
+  QM_TRY(MOZ_TO_RESULT(SetUsageTracking(aFileId, true)));
+
+  return NS_OK;
 }
 
 nsresult FileSystemDatabaseManagerVersion001::EndUsageTracking(
     const FileId& aFileId) {
   // This is expected to fail only if database is unreachable.
-  return SetUsageTracking(mConnection, aFileId, false);
+  QM_TRY(MOZ_TO_RESULT(SetUsageTracking(aFileId, false)));
+
+  return NS_OK;
 }
 
 Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
