@@ -6071,16 +6071,6 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
-- name: gfx.draw-color-bars
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: gfx.e10s.hide-plugins-for-scroll
-  type: bool
-  value: true
-  mirror: once
-
 - name: gfx.e10s.font-list.shared
   type: bool
   value: true
