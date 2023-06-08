@@ -1033,46 +1033,6 @@ void canary_alarm_handler(int signum) {
     }                                                                      \
   } while (0)
 
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-// static
-bool nsThread::GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
-                                      EventQueuePriority aPriority) {
-  bool labeled = false;
-  if (RefPtr<SchedulerGroup::Runnable> groupRunnable = do_QueryObject(aEvent)) {
-    labeled = true;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(groupRunnable->GetName(aName)));
-  } else if (nsCOMPtr<nsINamed> named = do_QueryInterface(aEvent)) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(named->GetName(aName)));
-  } else {
-    aName.AssignLiteral("non-nsINamed runnable");
-  }
-  if (aName.IsEmpty()) {
-    aName.AssignLiteral("anonymous runnable");
-  }
-
-  if (!labeled && aPriority > EventQueuePriority::InputHigh) {
-    aName.AppendLiteral("(unlabeled)");
-  }
-
-  return labeled;
-}
-#endif
-
-mozilla::PerformanceCounter* nsThread::GetPerformanceCounter(
-    nsIRunnable* aEvent) const {
-  return GetPerformanceCounterBase(aEvent);
-}
-
-// static
-mozilla::PerformanceCounter* nsThread::GetPerformanceCounterBase(
-    nsIRunnable* aEvent) {
-  RefPtr<SchedulerGroup::Runnable> docRunnable = do_QueryObject(aEvent);
-  if (docRunnable) {
-    return docRunnable->GetPerformanceCounter();
-  }
-  return nullptr;
-}
-
 size_t nsThread::ShallowSizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t n = 0;
@@ -1223,8 +1183,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       Maybe<PerformanceCounterState::Snapshot> snapshot;
       if (!usingTaskController) {
-        snapshot.emplace(mPerformanceCounterState.RunnableWillRun(
-            GetPerformanceCounter(event), now, false));
+        snapshot.emplace(mPerformanceCounterState.RunnableWillRun(now, false));
       }
 
       mLastEventStart = now;
@@ -1499,18 +1458,16 @@ void nsThreadShutdownContext::MarkCompleted() {
 
 namespace mozilla {
 PerformanceCounterState::Snapshot PerformanceCounterState::RunnableWillRun(
-    PerformanceCounter* aCounter, TimeStamp aNow, bool aIsIdleRunnable) {
+    TimeStamp aNow, bool aIsIdleRunnable) {
   if (IsNestedRunnable()) {
     // Flush out any accumulated time that should be accounted to the
     // current runnable before we start running a nested runnable.
     MaybeReportAccumulatedTime("nested runnable"_ns, aNow);
   }
 
-  Snapshot snapshot(mCurrentEventLoopDepth, mCurrentPerformanceCounter,
-                    mCurrentRunnableIsIdleRunnable);
+  Snapshot snapshot(mCurrentEventLoopDepth, mCurrentRunnableIsIdleRunnable);
 
   mCurrentEventLoopDepth = mNestedEventLoopDepth;
-  mCurrentPerformanceCounter = aCounter;
   mCurrentRunnableIsIdleRunnable = aIsIdleRunnable;
   mCurrentTimeSliceStart = aNow;
 
@@ -1526,15 +1483,14 @@ void PerformanceCounterState::RunnableDidRun(const nsCString& aName,
   // We may not need the current timestamp; don't bother computing it if we
   // don't.
   TimeStamp now;
-  if (mCurrentPerformanceCounter || mIsMainThread || IsNestedRunnable()) {
+  if (mIsMainThread || IsNestedRunnable()) {
     now = TimeStamp::Now();
   }
-  if (mCurrentPerformanceCounter || mIsMainThread) {
+  if (mIsMainThread) {
     MaybeReportAccumulatedTime(aName, now);
   }
 
   // And now restore the rest of our state.
-  mCurrentPerformanceCounter = std::move(aSnapshot.mOldPerformanceCounter);
   mCurrentRunnableIsIdleRunnable = aSnapshot.mOldIsIdleRunnable;
   if (IsNestedRunnable()) {
     // Reset mCurrentTimeSliceStart to right now, so our parent runnable's
@@ -1551,17 +1507,12 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(const nsCString& aName,
   MOZ_ASSERT(mCurrentTimeSliceStart,
              "How did we get here if we're not in a timeslice?");
 
-  if (!mCurrentPerformanceCounter && !mIsMainThread) {
+  if (!mIsMainThread) {
     // No one cares about this timeslice.
     return;
   }
 
   TimeDuration duration = aNow - mCurrentTimeSliceStart;
-  if (mCurrentPerformanceCounter) {
-    mCurrentPerformanceCounter->IncrementExecutionDuration(
-        duration.ToMicroseconds());
-  }
-
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   if (mIsMainThread && duration.ToMilliseconds() > LONGTASK_TELEMETRY_MS) {
     Telemetry::Accumulate(Telemetry::EVENT_LONGTASK, aName,

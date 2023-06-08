@@ -564,14 +564,16 @@ class RunnableTask : public Task {
     }
   }
 
-  PerformanceCounter* GetPerformanceCounter() const override {
-    return nsThread::GetPerformanceCounterBase(mRunnable);
-  }
-
   virtual bool GetName(nsACString& aName) override {
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-    nsThread::GetLabeledRunnableName(mRunnable, aName,
-                                     EventQueuePriority(GetPriority()));
+    if (nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable)) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(named->GetName(aName)));
+    } else {
+      aName.AssignLiteral("non-nsINamed runnable");
+    }
+    if (aName.IsEmpty()) {
+      aName.AssignLiteral("anonymous runnable");
+    }
     return true;
 #else
     return false;
@@ -867,8 +869,7 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
 
         PerformanceCounterState::Snapshot snapshot =
             mPerformanceCounterState->RunnableWillRun(
-                task->GetPerformanceCounter(), now,
-                manager == mIdleTaskManager);
+                now, manager == mIdleTaskManager);
 
         {
           LogTask::Run log(task);

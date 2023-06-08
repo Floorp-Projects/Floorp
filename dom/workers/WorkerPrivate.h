@@ -19,7 +19,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/OriginTrials.h"
-#include "mozilla/PerformanceCounter.h"
 #include "mozilla/RelativeTimeline.h"
 #include "mozilla/Result.h"
 #include "mozilla/StorageAccess.h"
@@ -610,14 +609,6 @@ class WorkerPrivate final
   void ExecutionReady();
 
   PerformanceStorage* GetPerformanceStorage();
-
-  PerformanceCounter& MutablePerformanceCounterRef() const {
-    return *mPerformanceCounter;
-  }
-
-  const PerformanceCounter& PerformanceCounterRef() const {
-    return MutablePerformanceCounterRef();
-  }
 
   bool IsAcceptingEvents() {
     AssertIsOnParentThread();
@@ -1547,10 +1538,6 @@ class WorkerPrivate final
   // mIsInAutomation is true when we're running in test automation.
   // We expose some extra testing functions in that case.
   bool mIsInAutomation;
-
-  const RefPtr<PerformanceCounter> mPerformanceCounter =
-      MakeRefPtr<PerformanceCounter>(nsPrintfCString(
-          "Worker:%s", NS_ConvertUTF16toUTF8(mWorkerName).get()));
 
   nsString mId;
 

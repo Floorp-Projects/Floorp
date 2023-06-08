@@ -27,107 +27,6 @@
 #  include <unistd.h>  // for getpid()
 #endif                 // defined(XP_WIN)
 
-namespace {
-
-#define NS_LABELLINGEVENTTARGET_IID                  \
-  {                                                  \
-    0x6087fa50, 0xe387, 0x45c8, {                    \
-      0xab, 0x72, 0xd2, 0x1f, 0x69, 0xee, 0xd3, 0x15 \
-    }                                                \
-  }
-
-// LabellingEventTarget labels all dispatches with the DocGroup that
-// created it.
-class LabellingEventTarget final : public nsISerialEventTarget,
-                                   public nsIDirectTaskDispatcher {
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_LABELLINGEVENTTARGET_IID)
-
-  explicit LabellingEventTarget(
-      mozilla::PerformanceCounter* aPerformanceCounter)
-      : mPerformanceCounter(aPerformanceCounter),
-        mMainThread(
-            static_cast<nsThread*>(mozilla::GetMainThreadSerialEventTarget())) {
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEVENTTARGET_FULL
-  NS_DECL_NSIDIRECTTASKDISPATCHER
-
- private:
-  ~LabellingEventTarget() = default;
-  const RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
-  const RefPtr<nsThread> mMainThread;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(LabellingEventTarget, NS_LABELLINGEVENTTARGET_IID)
-
-}  // namespace
-
-NS_IMETHODIMP
-LabellingEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
-                                         uint32_t aFlags) {
-  return Dispatch(do_AddRef(aRunnable), aFlags);
-}
-
-NS_IMETHODIMP
-LabellingEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                               uint32_t aFlags) {
-  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return mozilla::SchedulerGroup::LabeledDispatch(
-      mozilla::TaskCategory::Other, std::move(aRunnable), mPerformanceCounter);
-}
-
-NS_IMETHODIMP
-LabellingEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-LabellingEventTarget::RegisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-LabellingEventTarget::UnregisterShutdownTask(nsITargetShutdownTask*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-LabellingEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
-  *aIsOnCurrentThread = NS_IsMainThread();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(bool)
-LabellingEventTarget::IsOnCurrentThreadInfallible() {
-  return NS_IsMainThread();
-}
-
-//-----------------------------------------------------------------------------
-// nsIDirectTaskDispatcher
-//-----------------------------------------------------------------------------
-// We are always running on the main thread, forward to the nsThread's
-// MainThread
-NS_IMETHODIMP
-LabellingEventTarget::DispatchDirectTask(already_AddRefed<nsIRunnable> aEvent) {
-  return mMainThread->DispatchDirectTask(std::move(aEvent));
-}
-
-NS_IMETHODIMP LabellingEventTarget::DrainDirectTasks() {
-  return mMainThread->DrainDirectTasks();
-}
-
-NS_IMETHODIMP LabellingEventTarget::HaveDirectTasks(bool* aValue) {
-  return mMainThread->HaveDirectTasks(aValue);
-}
-
-NS_IMPL_ISUPPORTS(LabellingEventTarget, nsIEventTarget, nsISerialEventTarget,
-                  nsIDirectTaskDispatcher)
-
 namespace mozilla::dom {
 
 AutoTArray<RefPtr<DocGroup>, 2>* DocGroup::sPendingDocGroups = nullptr;
@@ -152,8 +51,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 already_AddRefed<DocGroup> DocGroup::Create(
     BrowsingContextGroup* aBrowsingContextGroup, const nsACString& aKey) {
   RefPtr<DocGroup> docGroup = new DocGroup(aBrowsingContextGroup, aKey);
-  docGroup->mEventTarget =
-      new LabellingEventTarget(docGroup->GetPerformanceCounter());
+  docGroup->mEventTarget = mozilla::GetMainThreadSerialEventTarget();
   return docGroup.forget();
 }
 
@@ -221,8 +119,6 @@ DocGroup::DocGroup(BrowsingContextGroup* aBrowsingContextGroup,
   if (StaticPrefs::dom_arena_allocator_enabled_AtStartup()) {
     mArena = new mozilla::dom::DOMArena();
   }
-
-  mPerformanceCounter = new mozilla::PerformanceCounter("DocGroup:"_ns + aKey);
 }
 
 DocGroup::~DocGroup() {
@@ -238,11 +134,7 @@ nsresult DocGroup::Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (mPerformanceCounter) {
-    mPerformanceCounter->IncrementDispatchCounter(DispatchCategory(aCategory));
-  }
-  return SchedulerGroup::LabeledDispatch(aCategory, std::move(aRunnable),
-                                         mPerformanceCounter);
+  return SchedulerGroup::Dispatch(aCategory, std::move(aRunnable));
 }
 
 nsISerialEventTarget* DocGroup::EventTargetFor(TaskCategory aCategory) const {

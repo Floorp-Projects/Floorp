@@ -2860,6 +2860,5 @@ nsresult nsHtml5StreamParser::DispatchToMain(
   if (mNetworkEventTarget) {
     return mNetworkEventTarget->Dispatch(std::move(aRunnable));
   }
-  return SchedulerGroup::UnlabeledDispatch(TaskCategory::Network,
-                                           std::move(aRunnable));
+  return SchedulerGroup::Dispatch(TaskCategory::Network, std::move(aRunnable));
 }

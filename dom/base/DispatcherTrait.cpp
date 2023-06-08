@@ -14,7 +14,7 @@ using namespace mozilla::dom;
 
 nsresult DispatcherTrait::Dispatch(TaskCategory aCategory,
                                    already_AddRefed<nsIRunnable>&& aRunnable) {
-  return SchedulerGroup::UnlabeledDispatch(aCategory, std::move(aRunnable));
+  return SchedulerGroup::Dispatch(aCategory, std::move(aRunnable));
 }
 
 nsISerialEventTarget* DispatcherTrait::EventTargetFor(

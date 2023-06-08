@@ -17,7 +17,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/PerformanceCounter.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/TimeStamp.h"
@@ -68,10 +67,8 @@ class PerformanceCounterState {
 
   class Snapshot {
    public:
-    Snapshot(uint32_t aOldEventLoopDepth, PerformanceCounter* aCounter,
-             bool aOldIsIdleRunnable)
+    Snapshot(uint32_t aOldEventLoopDepth, bool aOldIsIdleRunnable)
         : mOldEventLoopDepth(aOldEventLoopDepth),
-          mOldPerformanceCounter(aCounter),
           mOldIsIdleRunnable(aOldIsIdleRunnable) {}
 
     Snapshot(const Snapshot&) = default;
@@ -81,8 +78,6 @@ class PerformanceCounterState {
     friend class PerformanceCounterState;
 
     const uint32_t mOldEventLoopDepth;
-    // Non-const so we can move out of it and avoid the extra refcounting.
-    RefPtr<PerformanceCounter> mOldPerformanceCounter;
     const bool mOldIsIdleRunnable;
   };
 
@@ -92,8 +87,7 @@ class PerformanceCounterState {
   // runnable execution.  The performance counter passed in should be the one
   // for the relevant runnable and may be null.  aIsIdleRunnable should be true
   // if and only if the runnable has idle priority.
-  Snapshot RunnableWillRun(PerformanceCounter* Counter, TimeStamp aNow,
-                           bool aIsIdleRunnable);
+  Snapshot RunnableWillRun(TimeStamp aNow, bool aIsIdleRunnable);
 
   // Notification that a runnable finished executing.  This must be passed the
   // snapshot that RunnableWillRun returned for the same runnable.  This must be
@@ -145,12 +139,6 @@ class PerformanceCounterState {
   // Information about when long tasks last ended.
   TimeStamp mLastLongTaskEnd;
   TimeStamp mLastLongNonIdleTaskEnd;
-
-  // The performance counter to use for accumulating the runtime of
-  // the currently running event.  May be null, in which case the
-  // event's running time should not be accounted to any performance
-  // counters.
-  RefPtr<PerformanceCounter> mCurrentPerformanceCounter;
 };
 }  // namespace mozilla
 
@@ -231,15 +219,6 @@ class nsThread : public nsIThreadInternal,
   mozilla::SynchronizedEventQueue* EventQueue() { return mEvents.get(); }
 
   bool ShuttingDown() const { return mShutdownContext != nullptr; }
-
-  static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
-                                     mozilla::EventQueuePriority aPriority);
-
-  virtual mozilla::PerformanceCounter* GetPerformanceCounter(
-      nsIRunnable* aEvent) const;
-
-  static mozilla::PerformanceCounter* GetPerformanceCounterBase(
-      nsIRunnable* aEvent);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

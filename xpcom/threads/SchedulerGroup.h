@@ -9,7 +9,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskCategory.h"
-#include "mozilla/PerformanceCounter.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsIRunnable.h"
@@ -23,64 +22,12 @@ class nsIRunnable;
 class nsISerialEventTarget;
 
 namespace mozilla {
-class AbstractThread;
-namespace dom {
-class DocGroup;
-}  // namespace dom
-
-#define NS_SCHEDULERGROUPRUNNABLE_IID                \
-  {                                                  \
-    0xd31b7420, 0x872b, 0x4cfb, {                    \
-      0xa9, 0xc6, 0xae, 0x4c, 0x0f, 0x06, 0x36, 0x74 \
-    }                                                \
-  }
 
 class SchedulerGroup {
  public:
-  class Runnable final : public mozilla::Runnable, public nsIRunnablePriority {
-   public:
-    Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-             mozilla::PerformanceCounter* aPerformanceCounter);
-
-    mozilla::PerformanceCounter* GetPerformanceCounter() const;
-
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-    NS_IMETHOD GetName(nsACString& aName) override;
-#endif
-
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIRUNNABLE
-    NS_DECL_NSIRUNNABLEPRIORITY
-
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_SCHEDULERGROUPRUNNABLE_IID);
-
-   private:
-    friend class SchedulerGroup;
-
-    ~Runnable() = default;
-
-    nsCOMPtr<nsIRunnable> mRunnable;
-    RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
-  };
-  friend class Runnable;
-
   static nsresult Dispatch(TaskCategory aCategory,
                            already_AddRefed<nsIRunnable>&& aRunnable);
-
-  static nsresult UnlabeledDispatch(TaskCategory aCategory,
-                                    already_AddRefed<nsIRunnable>&& aRunnable);
-
-  static nsresult LabeledDispatch(
-      TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
-      mozilla::PerformanceCounter* aPerformanceCounter);
-
- protected:
-  static nsresult InternalUnlabeledDispatch(
-      TaskCategory aCategory, already_AddRefed<Runnable>&& aRunnable);
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerGroup::Runnable,
-                              NS_SCHEDULERGROUPRUNNABLE_IID);
 
 }  // namespace mozilla
 
