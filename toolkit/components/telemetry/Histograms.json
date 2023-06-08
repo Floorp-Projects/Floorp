@@ -10707,13 +10707,6 @@
     "kind": "boolean",
     "description": "New tab page is enabled."
   },
-  "NEWTAB_PAGE_ENHANCED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "New tab page is enhanced (showing suggestions)."
-  },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
