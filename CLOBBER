@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1833237 - (fix-f0be3bee1f) remove portal:pipewire_base ref, remove pid, adapt new api;r?pehrsons
+Modified build files in third_party/libwebrtc - Bug 1833237 - (MOZ) fix webrtc.json for pipewire portal;r?mjf
