@@ -113,6 +113,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual Result<nsTArray<FileId>, QMResult> FindDescendants(
       const EntryId& aEntryId) const;
 
+  virtual nsresult RemoveFileId(const FileId& aFileId);
+
   nsresult SetUsageTracking(const FileId& aFileId, bool aTracked);
 
   nsresult UpdateUsageInDatabase(const FileId& aFileId, Usage aNewDiskUsage);
