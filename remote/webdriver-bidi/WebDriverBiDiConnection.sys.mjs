@@ -12,11 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-  processCapabilities:
-    "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
-  WEBDRIVER_CLASSIC_CAPABILTIES:
-    "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -160,24 +156,10 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
 
       // Handle static commands first
       if (module === "session" && command === "new") {
-        const processedCapabilities = lazy.processCapabilities(params);
-
+        // TODO: Needs capability matching code
         result = await lazy.RemoteAgent.webDriverBiDi.createSession(
-          processedCapabilities,
+          params,
           this
-        );
-
-        // Since in Capabilities class we setup default values also for capabilities which are
-        // not relevant for bidi, we want to remove them from the payload before returning to a client.
-        result.capabilities = Array.from(result.capabilities.entries()).reduce(
-          (object, [key, value]) => {
-            if (!lazy.WEBDRIVER_CLASSIC_CAPABILTIES.includes(key)) {
-              object[key] = value;
-            }
-
-            return object;
-          },
-          {}
         );
       } else if (module === "session" && command === "status") {
         result = lazy.RemoteAgent.webDriverBiDi.getSessionReadinessStatus();
