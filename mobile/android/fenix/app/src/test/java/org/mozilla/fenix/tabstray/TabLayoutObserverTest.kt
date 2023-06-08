@@ -8,24 +8,15 @@ import com.google.android.material.tabs.TabLayout
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class TabLayoutObserverTest {
     private val interactor = mockk<TabsTrayInteractor>(relaxed = true)
     private lateinit var store: TabsTrayStore
     private val middleware = CaptureActionsMiddleware<TabsTrayState, TabsTrayAction>()
-
-    @get:Rule
-    val gleanTestRule = GleanTestRule(testContext)
 
     @Before
     fun setup() {
