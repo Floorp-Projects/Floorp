@@ -61,6 +61,7 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
+#include "mozilla/a11y/AccTypes.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/EventTarget.h"
@@ -1595,56 +1596,14 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLSpinnerAccessible(aContent, document);
       break;
     case eHTMLTableType:
-      if (aContent->IsHTMLElement(nsGkAtoms::table)) {
-        newAcc = new HTMLTableAccessible(aContent, document);
-      } else {
-        newAcc = new HyperTextAccessibleWrap(aContent, document);
-      }
-      break;
     case eHTMLTableCellType:
-      // LocalAccessible HTML table cell should be a child of accessible HTML
-      // table or its row (CSS HTML tables are polite to the used markup at
-      // certain degree).
-      // Otherwise create a generic text accessible to avoid text jamming
-      // when reading by AT.
-      if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable()) {
-        newAcc = new HTMLTableCellAccessible(aContent, document);
-      } else {
-        newAcc = new HyperTextAccessibleWrap(aContent, document);
-      }
+      // We handle markup and ARIA tables elsewhere. If we reach here, this is
+      // a CSS table part. Just create a generic text container.
+      newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
-
-    case eHTMLTableRowType: {
-      // LocalAccessible HTML table row may be a child of tbody/tfoot/thead of
-      // accessible HTML table or a direct child of accessible of HTML table.
-      LocalAccessible* table = aContext->IsTable() ? aContext : nullptr;
-      if (!table && aContext->LocalParent() &&
-          aContext->LocalParent()->IsTable()) {
-        table = aContext->LocalParent();
-      }
-
-      if (table) {
-        nsIContent* parentContent =
-            aContent->GetParentOrShadowHostNode()->AsContent();
-        nsIFrame* parentFrame = nullptr;
-        if (parentContent) {
-          parentFrame = parentContent->GetPrimaryFrame();
-          if (!parentFrame || !parentFrame->IsTableWrapperFrame()) {
-            parentContent =
-                parentContent->GetParentOrShadowHostNode()->AsContent();
-            if (parentContent) {
-              parentFrame = parentContent->GetPrimaryFrame();
-            }
-          }
-        }
-
-        if (parentFrame && parentFrame->IsTableWrapperFrame() &&
-            table->GetContent() == parentContent) {
-          newAcc = new HTMLTableRowAccessible(aContent, document);
-        }
-      }
+    case eHTMLTableRowType:
+      // This is a CSS table row. Don't expose it at all.
       break;
-    }
     case eHTMLTextFieldType:
       newAcc = new HTMLTextFieldAccessible(aContent, document);
       break;

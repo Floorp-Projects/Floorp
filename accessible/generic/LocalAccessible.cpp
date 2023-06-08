@@ -38,6 +38,7 @@
 #include "TreeWalker.h"
 #include "HTMLElementAccessibles.h"
 #include "HTMLSelectAccessible.h"
+#include "HTMLTableAccessible.h"
 #include "ImageAccessible.h"
 
 #include "nsComputedDOMStyle.h"
@@ -3633,13 +3634,13 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::Table) {
-    if (TableAccessible* table = AsTable()) {
+    if (auto* table = HTMLTableAccessible::GetFrom(this)) {
       if (table->IsProbablyLayoutTable()) {
         fields->SetAttribute(nsGkAtoms::layout_guess, true);
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::layout_guess, DeleteEntry());
       }
-    } else if (TableCellAccessible* cell = AsTableCell()) {
+    } else if (auto* cell = HTMLTableCellAccessible::GetFrom(this)) {
       // For HTML table cells, we must use the HTMLTableCellAccessible
       // GetRow/ColExtent methods rather than using the DOM attributes directly.
       // This is because of things like rowspan="0" which depend on knowing

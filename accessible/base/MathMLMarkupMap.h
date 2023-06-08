@@ -59,12 +59,6 @@ MARKUPMAP(mmultiscripts_, New_HyperText, roles::MATHML_MULTISCRIPTS)
 MARKUPMAP(
     mtable_,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
-      // If we're not a table according to layout, use a generic accessible.
-      if (!aElement->GetPrimaryFrame() ||
-          aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
-        return new ARIAGridAccessible(aElement, aContext->Document());
-      }
-
       return new HTMLTableAccessible(aElement, aContext->Document());
     },
     roles::MATHML_TABLE, AttrFromDOM(align, align),
@@ -80,40 +74,16 @@ MARKUPMAP(
 MARKUPMAP(
     mtr_,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
-      if (aContext->IsHTMLTable() && aElement->GetPrimaryFrame() &&
-          aElement->GetPrimaryFrame()->AccessibleType() == eHTMLTableRowType) {
-        return new HTMLTableRowAccessible(aElement, aContext->Document());
-      }
-
-      // If the mtr element in a MathML table has a display style other than
-      // 'table', create a generic table row accessible, since there's no
-      // underlying table layout.
-      if (aContext->IsTable()) {
-        return new ARIARowAccessible(aElement, aContext->Document());
-      }
-
-      return nullptr;
+      return new HTMLTableRowAccessible(aElement, aContext->Document());
     },
     roles::MATHML_TABLE_ROW)
 
 MARKUPMAP(
     mtd_,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
-      if (aContext->IsHTMLTableRow() && aElement->GetPrimaryFrame() &&
-          aElement->GetPrimaryFrame()->AccessibleType() == eHTMLTableCellType) {
-        return new HTMLTableCellAccessible(aElement, aContext->Document());
-      }
-
-      // If the mtd element in a MathML table has a display style other than
-      // 'table', create a generic table cell accessible, since there's no
-      // underlying table layout.
-      if (aContext->IsTableRow()) {
-        return new ARIAGridCellAccessible(aElement, aContext->Document());
-      }
-
-      return nullptr;
+      return new HTMLTableCellAccessible(aElement, aContext->Document());
     },
-    roles::MATHML_CELL)
+    0)
 
 MARKUPMAP(maction_, New_HyperText, roles::MATHML_ACTION,
           AttrFromDOM(actiontype_, actiontype_),

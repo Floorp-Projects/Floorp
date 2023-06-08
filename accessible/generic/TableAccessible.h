@@ -35,7 +35,6 @@ class TableAccessible : public TableAccessibleBase {
   virtual int32_t RowIndexAt(uint32_t aCellIdx) override;
   virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
                                   int32_t* aColIdx) override;
-  virtual bool IsProbablyLayoutTable() override;
   virtual LocalAccessible* AsAccessible() override = 0;
 
   using HeaderCache =

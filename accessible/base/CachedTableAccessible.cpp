@@ -8,6 +8,7 @@
 
 #include "AccIterator.h"
 #include "DocAccessibleParent.h"
+#include "HTMLTableAccessible.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -15,8 +16,6 @@
 #include "nsIAccessiblePivot.h"
 #include "Pivot.h"
 #include "RemoteAccessible.h"
-#include "TableAccessible.h"
-#include "TableCellAccessible.h"
 
 namespace mozilla::a11y {
 
@@ -220,8 +219,10 @@ bool CachedTableAccessible::IsProbablyLayoutTable() {
   if (RemoteAccessible* remoteAcc = mAcc->AsRemote()) {
     return remoteAcc->TableIsProbablyForLayout();
   }
-  TableAccessible* localTable = mAcc->AsLocal()->AsTable();
-  return localTable->IsProbablyLayoutTable();
+  if (auto* localTable = HTMLTableAccessible::GetFrom(mAcc->AsLocal())) {
+    return localTable->IsProbablyLayoutTable();
+  }
+  return false;
 }
 
 /* static */
@@ -267,13 +268,11 @@ uint32_t CachedTableCellAccessible::ColExtent() const {
         return *colSpan;
       }
     }
-  } else if (LocalAccessible* localAcc = mAcc->AsLocal()) {
+  } else if (auto* cell = HTMLTableCellAccessible::GetFrom(mAcc->AsLocal())) {
     // For HTML table cells, we must use the HTMLTableCellAccessible
     // GetColExtent method rather than using the DOM attributes directly.
     // This is because of things like rowspan="0" which depend on knowing
     // about thead, tbody, etc., which is info we don't have in the a11y tree.
-    TableCellAccessible* cell = localAcc->AsTableCell();
-    MOZ_ASSERT(cell);
     uint32_t colExtent = cell->ColExtent();
     MOZ_ASSERT(colExtent > 0);
     if (colExtent > 0) {
@@ -292,13 +291,11 @@ uint32_t CachedTableCellAccessible::RowExtent() const {
         return *rowSpan;
       }
     }
-  } else if (LocalAccessible* localAcc = mAcc->AsLocal()) {
+  } else if (auto* cell = HTMLTableCellAccessible::GetFrom(mAcc->AsLocal())) {
     // For HTML table cells, we must use the HTMLTableCellAccessible
     // GetRowExtent method rather than using the DOM attributes directly.
     // This is because of things like rowspan="0" which depend on knowing
     // about thead, tbody, etc., which is info we don't have in the a11y tree.
-    TableCellAccessible* cell = localAcc->AsTableCell();
-    MOZ_ASSERT(cell);
     uint32_t rowExtent = cell->RowExtent();
     MOZ_ASSERT(rowExtent > 0);
     if (rowExtent > 0) {
