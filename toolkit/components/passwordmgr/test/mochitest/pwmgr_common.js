@@ -716,13 +716,16 @@ function promiseFormsProcessedInSameProcess(expectedCount = 1) {
  * This works across processes.
  */
 async function promiseFormsProcessed(expectedCount = 1) {
+  info(`waiting for ${expectedCount} forms to be processed`);
   var processedCount = 0;
   return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
       "formProcessed",
       function formProcessed() {
         processedCount++;
+        info(`processed form ${processedCount} of ${expectedCount}`);
         if (processedCount == expectedCount) {
+          info(`processing of ${expectedCount} forms complete`);
           PWMGR_COMMON_PARENT.removeMessageListener(
             "formProcessed",
             formProcessed
@@ -734,7 +737,7 @@ async function promiseFormsProcessed(expectedCount = 1) {
   });
 }
 
-async function loadFormIntoWindow(origin, html, win, task) {
+async function loadFormIntoWindow(origin, html, win, expectedCount = 1, task) {
   let loadedPromise = new Promise(resolve => {
     win.addEventListener(
       "load",
@@ -747,7 +750,7 @@ async function loadFormIntoWindow(origin, html, win, task) {
     );
   });
 
-  let processedPromise = promiseFormsProcessed();
+  let processedPromise = promiseFormsProcessed(expectedCount);
   win.location =
     origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
   info(`Waiting for window to load for origin: ${origin}`);
