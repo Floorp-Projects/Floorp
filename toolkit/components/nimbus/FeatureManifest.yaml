@@ -1531,6 +1531,20 @@ deviceMigration:
       type: boolean
       fallbackPref: browser.device-migration.help-menu.hidden
 
+shopping2023:
+  description: Prefs to control the 2023 shopping experiment.
+  owner: jhirsch@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    The timing of the exposure event depends on the experiment, but generally
+    the event is recorded when the user first encounters onboarding UI for
+    the shopping feature.
+  variables:
+    enabled:
+      description: True if the experience is enabled
+      type: boolean
+      fallbackPref: browser.shopping.experience2023.enabled
+
 opaqueResponseBlocking:
   description: Prefs to enable Opaque Response Blocking
   owner: farre@mozilla.com

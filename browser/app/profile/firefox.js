@@ -699,6 +699,11 @@ pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 // Enables search SERP telemetry (impressions, engagements and abandonment)
 pref("browser.search.serpEventTelemetry.enabled", false);
 
+// Enable new experimental shopping features. This is solely intended as a
+// rollout/"emergency stop" button - it will go away once the feature has
+// rolled out. There will be separate controls for user opt-in/opt-out.
+pref("browser.shopping.experience2023.enabled", false);
+
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
 
