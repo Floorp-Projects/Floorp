@@ -30,17 +30,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionProcessScript:
     "resource://gre/modules/ExtensionProcessScript.sys.mjs",
   NativeApp: "resource://gre/modules/NativeMessaging.sys.mjs",
-  PerformanceCounters: "resource://gre/modules/PerformanceCounters.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
-// We're using the pref to avoid loading PerformanceCounters.jsm for nothing.
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "gTimingEnabled",
-  "extensions.webextensions.enablePerformanceCounters",
-  false
-);
 import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
@@ -695,7 +687,7 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
 
   /**
    * Call the given function and also log the call as appropriate
-   * (i.e., with PerformanceCounters and/or activity logging)
+   * (i.e., with activity logging and/or profiler markers)
    *
    * @param {Function} callable The actual implementation to invoke.
    * @param {Array} args Arguments to the function call.
@@ -712,15 +704,6 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
         { startTime: start },
         `${this.context.extension.id}, api_call: ${this.fullname}`
       );
-      if (lazy.gTimingEnabled) {
-        let end = Cu.now() * 1000;
-        lazy.PerformanceCounters.storeExecutionTime(
-          this.context.extension.id,
-          this.name,
-          end - start * 1000,
-          this.childApiManagerId
-        );
-      }
     }
   }
 
