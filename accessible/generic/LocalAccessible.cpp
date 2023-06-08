@@ -34,8 +34,6 @@
 #include "StyleInfo.h"
 #include "TextLeafRange.h"
 #include "TextRange.h"
-#include "TableAccessible.h"
-#include "TableCellAccessible.h"
 #include "TreeWalker.h"
 #include "HTMLElementAccessibles.h"
 #include "HTMLSelectAccessible.h"
@@ -4010,14 +4008,14 @@ TableAccessibleBase* LocalAccessible::AsTableBase() {
   if (IsTable() && !mContent->IsXULElement()) {
     return CachedTableAccessible::GetFrom(this);
   }
-  return AsTable();
+  return nullptr;
 }
 
 TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
   if (IsTableCell() && !mContent->IsXULElement()) {
     return CachedTableCellAccessible::GetFrom(this);
   }
-  return AsTableCell();
+  return nullptr;
 }
 
 Maybe<int32_t> LocalAccessible::GetIntARIAAttr(nsAtom* aAttrName) const {
