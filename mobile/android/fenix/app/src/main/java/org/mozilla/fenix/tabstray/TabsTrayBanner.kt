@@ -45,7 +45,6 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -428,10 +427,8 @@ private fun MultiSelectBanner(
 
         Text(
             text = stringResource(R.string.tab_tray_multi_select_title, selectedTabCount),
-            style = FirefoxTheme.typography.body1,
+            style = FirefoxTheme.typography.headline6,
             color = FirefoxTheme.colors.textOnColorPrimary,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.W500,
         )
 
         Spacer(modifier = Modifier.weight(1.0f))
