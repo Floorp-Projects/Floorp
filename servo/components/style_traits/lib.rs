@@ -13,7 +13,6 @@
 extern crate app_units;
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
 extern crate cssparser;
 extern crate euclid;
 #[macro_use]
@@ -90,8 +89,6 @@ pub mod dom;
 pub mod specified_value_info;
 #[macro_use]
 pub mod values;
-#[macro_use]
-pub mod viewport;
 pub mod owned_slice;
 pub mod owned_str;
 

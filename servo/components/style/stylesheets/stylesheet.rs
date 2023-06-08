@@ -198,25 +198,6 @@ pub struct Stylesheet {
     pub disabled: AtomicBool,
 }
 
-macro_rules! rule_filter {
-    ($( $method: ident($variant:ident => $rule_type: ident), )+) => {
-        $(
-            #[allow(missing_docs)]
-            fn $method<F>(&self, device: &Device, guard: &SharedRwLockReadGuard, mut f: F)
-                where F: FnMut(&crate::stylesheets::$rule_type),
-            {
-                use crate::stylesheets::CssRule;
-
-                for rule in self.effective_rules(device, guard) {
-                    if let CssRule::$variant(ref rule) = *rule {
-                        f(&rule)
-                    }
-                }
-            }
-        )+
-    }
-}
-
 /// A trait to represent a given stylesheet in a document.
 pub trait StylesheetInDocument: ::std::fmt::Debug {
     /// Get whether this stylesheet is enabled.
@@ -269,10 +250,6 @@ pub trait StylesheetInDocument: ::std::fmt::Debug {
         guard: &'a SharedRwLockReadGuard<'b>,
     ) -> EffectiveRulesIterator<'a, 'b> {
         self.iter_rules::<EffectiveRules>(device, guard)
-    }
-
-    rule_filter! {
-        effective_viewport_rules(Viewport => ViewportRule),
     }
 }
 
@@ -367,7 +344,6 @@ impl SanitizationKind {
             CssRule::Property(..) |
             CssRule::FontFeatureValues(..) |
             CssRule::FontPaletteValues(..) |
-            CssRule::Viewport(..) |
             CssRule::CounterStyle(..) => !is_standard,
         }
     }

@@ -1026,9 +1026,6 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     // @namespace and @import rules, and can't be mutated.
     case StyleCssRuleType::Namespace:
       break;
-    case StyleCssRuleType::Viewport:
-      MOZ_ASSERT_UNREACHABLE("Gecko doesn't implement @viewport");
-      break;
     case StyleCssRuleType::Keyframe:
       // FIXME: We should probably just forward to the parent @keyframes rule? I
       // think that'd do the right thing, but meanwhile...
