@@ -1610,6 +1610,7 @@
             "_contentPartitionedPrincipal",
             "_isSyntheticDocument",
             "_originalURI",
+            "_userTypedValue",
           ]
         );
       }
