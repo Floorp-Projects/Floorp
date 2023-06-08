@@ -342,11 +342,19 @@ add_task(async function test_datepicker_reopened_prev_next_month_btn() {
     );
   });
 
-  // Use Backspace key to clear the value of the AM/PM section of the input:
-  EventUtils.synthesizeKey("KEY_Backspace", {});
-
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  // Use Backspace key to clear the value of the AM/PM section of the input
+  // and wait for input.value to change to null (bug 1833988):
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     const input = content.document.querySelector("input");
+
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    EventUtils.synthesizeKey("KEY_Backspace", {}, content);
+
+    await ContentTaskUtils.waitForMutationCondition(
+      input,
+      { attributeFilter: ["value"] },
+      () => input.value == ""
+    );
 
     Assert.ok(
       !input.value,
