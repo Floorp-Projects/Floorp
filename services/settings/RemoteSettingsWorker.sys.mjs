@@ -62,7 +62,7 @@ class Worker {
     const { mustComplete = false } = options;
     // (Re)instantiate the worker if it was terminated.
     if (!this.worker) {
-      this.worker = new ChromeWorker(this.source);
+      this.worker = new ChromeWorker(this.source, { type: "module" });
       this.worker.onmessage = this._onWorkerMessage.bind(this);
       this.worker.onerror = error => {
         // Worker crashed. Reject each pending callback.
@@ -229,5 +229,5 @@ try {
 }
 
 export var RemoteSettingsWorker = new Worker(
-  "resource://services-settings/RemoteSettingsWorker.js"
+  "resource://services-settings/RemoteSettings.worker.mjs"
 );

@@ -125,7 +125,8 @@ add_task(async function () {
     );
     // Check that accessing descriptor#name getter doesn't throw (See Bug 1714974).
     ok(
-      workerDescriptorFront.name.includes(".js"),
+      workerDescriptorFront.name.includes(".js") ||
+        workerDescriptorFront.name.includes(".mjs"),
       `worker descriptor front holds the worker file name (${workerDescriptorFront.name})`
     );
     is(

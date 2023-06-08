@@ -4,24 +4,18 @@
 
 /* eslint-env mozilla/chrome-worker */
 
-"use strict";
-
 /**
  * A worker dedicated to Remote Settings.
  */
 
-/* import-globals-from /toolkit/components/workerloader/require.js */
-/* import-globals-from /toolkit/modules/CanonicalJSON.jsm */
-/* import-globals-from IDBHelpers.jsm */
-/* import-globals-from SharedUtils.jsm */
-/* import-globals-from /toolkit/modules/third_party/jsesc/jsesc.js */
-importScripts(
-  "resource://gre/modules/workers/require.js",
-  "resource://gre/modules/CanonicalJSON.jsm",
-  "resource://services-settings/IDBHelpers.jsm",
-  "resource://services-settings/SharedUtils.jsm",
-  "resource://gre/modules/third_party/jsesc/jsesc.js"
-);
+// These files are imported into the worker scope, and are not shared singletons
+// with the main thread.
+/* eslint-disable mozilla/reject-import-system-module-from-non-system */
+import { CanonicalJSON } from "resource://gre/modules/CanonicalJSON.sys.mjs";
+import { IDBHelpers } from "resource://services-settings/IDBHelpers.sys.mjs";
+import { SharedUtils } from "resource://services-settings/SharedUtils.sys.mjs";
+import { jsesc } from "resource://gre/modules/third_party/jsesc/jsesc.mjs";
+/* eslint-enable mozilla/reject-import-system-module-from-non-system */
 
 const IDB_RECORDS_STORE = "records";
 const IDB_TIMESTAMPS_STORE = "timestamps";
