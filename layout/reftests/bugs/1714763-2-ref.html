@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<style>
+html {
+  /* Suppress scrollbars to avoid periodical unthrottling for transform */
+  /* animations on the compositor. */
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+#target {
+  position: absolute;
+  left:100px;
+  top:100px;
+  scale:2.1;
+}
+#rotate {
+  transform: rotate(180deg);
+  transform-origin: 50% 50%;
+}
+#theimg {
+  width: 100px;
+  height: 100px;
+  clip-path: polygon(0 0,100% 0,50% 100%);
+}
+</style>
+<body>
+<div id="target">
+  <div id="rotate">
+    <img id="theimg" src="repeatable-diagonal-gradient.png">
+  </div>
+</div>
+
+</body>
+</html>
