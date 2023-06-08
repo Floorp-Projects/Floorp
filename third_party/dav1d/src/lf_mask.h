@@ -40,10 +40,10 @@ typedef struct Av1FilterLUT {
 } Av1FilterLUT;
 
 typedef struct Av1RestorationUnit {
+    /* SGR: type = DAV1D_RESTORATION_SGRPROJ + sgr_idx */
     uint8_t /* enum Dav1dRestorationType */ type;
     int8_t filter_h[3];
     int8_t filter_v[3];
-    uint8_t sgr_idx;
     int8_t sgr_weights[2];
 } Av1RestorationUnit;
 

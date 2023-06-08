@@ -87,31 +87,28 @@ void dav1d_default_picture_release(Dav1dPicture *const p, void *const cookie) {
 }
 
 struct pic_ctx_context {
-    struct Dav1dRef *plane_ref[3]; /* MUST BE FIRST */
-    enum Dav1dPixelLayout layout;
-    void *extra_ptr; /* MUST BE AT THE END */
-};
-
-struct plane_ctx_context {
     Dav1dPicAllocator allocator;
     Dav1dPicture pic;
+    Dav1dRef ref;
+    void *extra_data[];
 };
 
 static void free_buffer(const uint8_t *const data, void *const user_data) {
-    struct pic_ctx_context *pic_ctx = user_data;
-    const int planes = pic_ctx->layout != DAV1D_PIXEL_LAYOUT_I400 ? 3 : 1;
+    Dav1dMemPoolBuffer *buf = (Dav1dMemPoolBuffer *)data;
+    struct pic_ctx_context *pic_ctx = buf->data;
 
-    for (int i = 0; i < planes; i++)
-        dav1d_ref_dec(&pic_ctx->plane_ref[i]);
-    free(pic_ctx);
+    pic_ctx->allocator.release_picture_callback(&pic_ctx->pic,
+                                                pic_ctx->allocator.cookie);
+    dav1d_mem_pool_push(user_data, buf);
 }
 
-static void free_plane_buffer(const uint8_t *const data, void *const user_data) {
-    struct plane_ctx_context *plane_ctx = user_data;
+void dav1d_picture_free_itut_t35(const uint8_t *const data, void *const user_data) {
+    struct itut_t35_ctx_context *itut_t35_ctx = user_data;
 
-    plane_ctx->allocator.release_picture_callback(&plane_ctx->pic,
-                                                  plane_ctx->allocator.cookie);
-    free(plane_ctx);
+    for (size_t i = 0; i < itut_t35_ctx->n_itut_t35; i++)
+        free(itut_t35_ctx->itut_t35[i].payload);
+    free(itut_t35_ctx->itut_t35);
+    free(itut_t35_ctx);
 }
 
 static int picture_alloc_with_edges(Dav1dContext *const c,
@@ -119,13 +116,10 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
                                     const int w, const int h,
                                     Dav1dSequenceHeader *const seq_hdr, Dav1dRef *const seq_hdr_ref,
                                     Dav1dFrameHeader *const frame_hdr, Dav1dRef *const frame_hdr_ref,
-                                    Dav1dContentLightLevel *const content_light, Dav1dRef *const content_light_ref,
-                                    Dav1dMasteringDisplay *const mastering_display, Dav1dRef *const mastering_display_ref,
-                                    Dav1dITUTT35 *const itut_t35, Dav1dRef *const itut_t35_ref,
                                     const int bpc,
                                     const Dav1dDataProps *const props,
                                     Dav1dPicAllocator *const p_allocator,
-                                    const size_t extra, void **const extra_ptr)
+                                    void **const extra_ptr)
 {
     if (p->data[0]) {
         dav1d_log(c, "Picture already allocated!\n");
@@ -133,10 +127,13 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
     }
     assert(bpc > 0 && bpc <= 16);
 
-    struct pic_ctx_context *pic_ctx = malloc(extra + sizeof(struct pic_ctx_context));
-    if (pic_ctx == NULL)
+    size_t extra = c->n_fc > 1 ? sizeof(atomic_int) * 2 : 0;
+    Dav1dMemPoolBuffer *buf = dav1d_mem_pool_pop(c->pic_ctx_pool,
+                                                 extra + sizeof(struct pic_ctx_context));
+    if (buf == NULL)
         return DAV1D_ERR(ENOMEM);
-    memset(pic_ctx, 0, sizeof(struct pic_ctx_context));
+
+    struct pic_ctx_context *pic_ctx = buf->data;
 
     p->p.w = w;
     p->p.h = h;
@@ -147,43 +144,13 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
     dav1d_data_props_set_defaults(&p->m);
     const int res = p_allocator->alloc_picture_callback(p, p_allocator->cookie);
     if (res < 0) {
-        free(pic_ctx);
+        dav1d_mem_pool_push(c->pic_ctx_pool, buf);
         return res;
     }
 
-    pic_ctx->layout = p->p.layout;
-
-    if (!(p->ref = dav1d_ref_wrap(p->data[0], free_buffer, pic_ctx))) {
-        p_allocator->release_picture_callback(p, p_allocator->cookie);
-        free(pic_ctx);
-        dav1d_log(c, "Failed to wrap picture: %s\n", strerror(errno));
-        return DAV1D_ERR(ENOMEM);
-    }
-
-    struct plane_ctx_context *plane_ctx = malloc(sizeof(struct plane_ctx_context));
-    if (plane_ctx == NULL){
-        dav1d_ref_dec(&p->ref);
-        p_allocator->release_picture_callback(p, p_allocator->cookie);
-        return DAV1D_ERR(ENOMEM);
-    }
-
-    plane_ctx->allocator = *p_allocator;
-    plane_ctx->pic = *p;
-
-    pic_ctx->plane_ref[0] = dav1d_ref_wrap(p->data[0], free_plane_buffer, plane_ctx);
-    if (!pic_ctx->plane_ref[0]) {
-        dav1d_ref_dec(&p->ref);
-        p_allocator->release_picture_callback(p, p_allocator->cookie);
-        free(plane_ctx);
-        dav1d_log(c, "Failed to wrap picture plane: %s\n", strerror(errno));
-        return DAV1D_ERR(ENOMEM);
-    }
-
-    const int planes = p->p.layout != DAV1D_PIXEL_LAYOUT_I400 ? 3 : 1;
-    for (int i = 1; i < planes; i++) {
-        pic_ctx->plane_ref[i] = pic_ctx->plane_ref[0];
-        dav1d_ref_inc(pic_ctx->plane_ref[i]);
-    }
+    pic_ctx->allocator = *p_allocator;
+    pic_ctx->pic = *p;
+    p->ref = dav1d_ref_init(&pic_ctx->ref, buf, free_buffer, c->pic_ctx_pool, 0);
 
     p->seq_hdr_ref = seq_hdr_ref;
     if (seq_hdr_ref) dav1d_ref_inc(seq_hdr_ref);
@@ -191,12 +158,8 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
     p->frame_hdr_ref = frame_hdr_ref;
     if (frame_hdr_ref) dav1d_ref_inc(frame_hdr_ref);
 
-    dav1d_picture_copy_props(p, content_light, content_light_ref,
-                             mastering_display, mastering_display_ref,
-                             itut_t35, itut_t35_ref, props);
-
     if (extra && extra_ptr)
-        *extra_ptr = &pic_ctx->extra_ptr;
+        *extra_ptr = &pic_ctx->extra_data;
 
     return 0;
 }
@@ -204,7 +167,7 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
 void dav1d_picture_copy_props(Dav1dPicture *const p,
                               Dav1dContentLightLevel *const content_light, Dav1dRef *const content_light_ref,
                               Dav1dMasteringDisplay *const mastering_display, Dav1dRef *const mastering_display_ref,
-                              Dav1dITUTT35 *const itut_t35, Dav1dRef *const itut_t35_ref,
+                              Dav1dITUTT35 *const itut_t35, Dav1dRef *itut_t35_ref, size_t n_itut_t35,
                               const Dav1dDataProps *const props)
 {
     dav1d_data_props_copy(&p->m, props);
@@ -222,6 +185,7 @@ void dav1d_picture_copy_props(Dav1dPicture *const p,
     dav1d_ref_dec(&p->itut_t35_ref);
     p->itut_t35_ref = itut_t35_ref;
     p->itut_t35 = itut_t35;
+    p->n_itut_t35 = n_itut_t35;
     if (itut_t35_ref) dav1d_ref_inc(itut_t35_ref);
 }
 
@@ -229,23 +193,24 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
                                const int bpc)
 {
     Dav1dThreadPicture *const p = &f->sr_cur;
-    const int have_frame_mt = c->n_fc > 1;
 
     const int res =
         picture_alloc_with_edges(c, &p->p, f->frame_hdr->width[1], f->frame_hdr->height,
                                  f->seq_hdr, f->seq_hdr_ref,
                                  f->frame_hdr, f->frame_hdr_ref,
-                                 c->content_light, c->content_light_ref,
-                                 c->mastering_display, c->mastering_display_ref,
-                                 c->itut_t35, c->itut_t35_ref,
                                  bpc, &f->tile[0].data.m, &c->allocator,
-                                 have_frame_mt ? sizeof(atomic_int) * 2 : 0,
                                  (void **) &p->progress);
     if (res) return res;
+
+    dav1d_picture_copy_props(&p->p, c->content_light, c->content_light_ref,
+                             c->mastering_display, c->mastering_display_ref,
+                             c->itut_t35, c->itut_t35_ref, c->n_itut_t35,
+                             &f->tile[0].data.m);
 
     // Must be removed from the context after being attached to the frame
     dav1d_ref_dec(&c->itut_t35_ref);
     c->itut_t35 = NULL;
+    c->n_itut_t35 = 0;
 
     // Don't clear these flags from c->frame_flags if the frame is not visible.
     // This way they will be added to the next visible frame too.
@@ -256,7 +221,7 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
 
     p->visible = f->frame_hdr->show_frame;
     p->showable = f->frame_hdr->showable_frame;
-    if (have_frame_mt) {
+    if (c->n_fc > 1) {
         atomic_init(&p->progress[0], 0);
         atomic_init(&p->progress[1], 0);
     }
@@ -266,17 +231,21 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
 int dav1d_picture_alloc_copy(Dav1dContext *const c, Dav1dPicture *const dst, const int w,
                              const Dav1dPicture *const src)
 {
-    struct pic_ctx_context *const pic_ctx = src->ref->user_data;
-    struct plane_ctx_context *const plane_ctx = pic_ctx->plane_ref[0]->user_data;
+    Dav1dMemPoolBuffer *const buf = (Dav1dMemPoolBuffer *)src->ref->const_data;
+    struct pic_ctx_context *const pic_ctx = buf->data;
     const int res = picture_alloc_with_edges(c, dst, w, src->p.h,
                                              src->seq_hdr, src->seq_hdr_ref,
                                              src->frame_hdr, src->frame_hdr_ref,
-                                             src->content_light, src->content_light_ref,
-                                             src->mastering_display, src->mastering_display_ref,
-                                             src->itut_t35, src->itut_t35_ref,
-                                             src->p.bpc, &src->m, &plane_ctx->allocator,
-                                             0, NULL);
-    return res;
+                                             src->p.bpc, &src->m, &pic_ctx->allocator,
+                                             NULL);
+    if (res) return res;
+
+    dav1d_picture_copy_props(dst, src->content_light, src->content_light_ref,
+                             src->mastering_display, src->mastering_display_ref,
+                             src->itut_t35, src->itut_t35_ref, src->n_itut_t35,
+                             &src->m);
+
+    return 0;
 }
 
 void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {

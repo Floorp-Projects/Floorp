@@ -1426,6 +1426,45 @@ function ipred_z1_upsample_edge_8bpc_neon, export=1
         ret
 endfunc
 
+// void ipred_z2_upsample_edge_8bpc_neon(pixel *out, const int sz,
+//                                       const pixel *const in);
+function ipred_z2_upsample_edge_8bpc_neon, export=1
+        // Here, sz is 4 or 8, and we produce 2*sz+1 output elements.
+        movrel          x4,  padding_mask
+        ld1             {v0.16b},  [x2]           // in[]
+        add             x5,  x2,  w1,  uxtw       // in[sz]
+        sub             x4,  x4,  w1,  uxtw
+
+        ld1r            {v2.16b},  [x2]           // in[0] for padding
+        ld1r            {v1.16b},  [x5]           // padding
+        ld1             {v3.16b},  [x4]           // padding_mask
+
+        movi            v31.8h,  #9
+
+        bit             v0.16b,  v1.16b,  v3.16b  // padded in[]
+
+        ext             v4.16b,  v2.16b,  v0.16b,  #15
+        ext             v5.16b,  v0.16b,  v1.16b,  #1
+        ext             v6.16b,  v0.16b,  v1.16b,  #2
+
+        uaddl           v16.8h,  v0.8b,   v5.8b   // in[i+0] + in[i+1]
+        uaddl           v18.8h,  v4.8b,   v6.8b   // in[i-1] + in[i+2]
+        mul             v16.8h,  v16.8h,  v31.8h  // 9*(in[i+1] + in[i+2])
+        sub             v16.8h,  v16.8h,  v18.8h
+
+        sqrshrun        v16.8b,  v16.8h,  #4
+
+        add             x5,  x0,  #16
+
+        zip1            v2.16b,  v0.16b,  v16.16b
+
+        st1             {v1.b}[0], [x5]
+        // In case sz=8, output one single pixel in out[16].
+        st1             {v2.16b}, [x0]
+
+        ret
+endfunc
+
 const edge_filter
         .byte 0, 4, 8, 0
         .byte 0, 5, 6, 0
@@ -1891,7 +1930,1228 @@ endfunc
 
 const increments
         .short          0,  1,  2,  3,  4,  5,  6,  7
+        .short          8,  9,  10, 11, 12, 13, 14, 15
 endconst
+
+// void ipred_z2_fill1_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                               const pixel *const top,
+//                               const pixel *const left,
+//                               const int width, const int height,
+//                               const int dx, const int dy);
+function ipred_z2_fill1_8bpc_neon, export=1
+        clz             w10, w4
+        adr             x9,  L(ipred_z2_fill1_tbl)
+        sub             w10, w10, #25
+        ldrh            w10, [x9, w10, uxtw #1]
+        mov             w8,  #(1 << 6)            // xpos = 1 << 6
+        sub             x9,  x9,  w10, uxtw
+        sub             w8,  w8,  w6              // xpos -= dx
+
+        movrel          x11, increments
+        ld1             {v31.8h},  [x11]          // increments
+        neg             w7,  w7                   // -dy
+
+        br              x9
+40:
+        AARCH64_VALID_JUMP_TARGET
+
+        dup             v30.4h,  w7               // -dy
+        movi            v17.8b,  #1
+
+        mul             v16.4h,  v31.4h,  v30.4h  // {0,1,2,3}* -dy
+        movi            v25.16b, #0x3e
+        add             v30.4h,  v16.4h,  v30.4h  // -= dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3}
+
+        // Worst case height for w=4 is 16, but we need at least h+1 elements
+        ld1             {v0.16b, v1.16b}, [x3]    // left[]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v30.8h           // (uint8_t)ypos
+        shrn            v29.8b,  v30.8h,  #6      // ypos >> 6
+        and             v27.8b,  v27.8b,  v25.8b  // frac_y
+
+        add             v29.8b,  v29.8b,  v17.8b  // base_y = (ypos >> 6) + 1
+
+        add             v30.8b,  v29.8b,  v17.8b  // base_y + 1
+        add             v28.8b,  v29.8b,  v19.8b  // base_y + 2
+
+        tbl             v16.8b, {v0.16b}, v29.8b  // left[base_y]
+
+        trn1            v30.2s,  v30.2s,  v28.2s  // base_y + 1, base_y + 2
+
+        sub             v28.8b,  v26.8b,  v27.8b  // 64 - frac_y
+
+        trn1            v31.2s,  v31.2s,  v31.2s  // {0,1,2,3,0,1,2,3}
+
+        trn1            v27.2s,  v27.2s,  v27.2s  // frac_y
+        trn1            v28.2s,  v28.2s,  v28.2s  // 64 - frac_y
+
+        movi            v29.8b,  #2
+4:
+        asr             w9,  w8,  #6              // base_x
+        dup             v6.4h,   w8               // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-4                  // base_x <= -4
+        asr             w11, w8,  #6              // base_x
+        b.le            49f
+
+        dup             v7.4h,   w8               // xpos
+
+        ldr             d2,  [x2, w9, sxtw]       // top[base_x]
+        ldr             d4,  [x2, w11, sxtw]
+
+        trn1            v6.2d,   v6.2d,   v7.2d   // xpos
+
+        // Cut corners here; only doing tbl over v0 here; we only
+        // seem to need the last pixel, from v1, after skipping to the
+        // left-only codepath below.
+        tbl             v17.8b, {v0.16b}, v30.8b  // left[base_y+1], left[base_y+2]
+
+        shrn            v20.8b,  v6.8h,   #6      // first base_x for each row
+        xtn             v6.8b,   v6.8h            // (uint8_t)xpos
+
+        ext             v3.8b,   v2.8b,   v2.8b,   #1 // top[base_x+1]
+        ext             v5.8b,   v4.8b,   v4.8b,   #1
+
+        and             v6.8b,   v6.8b,   v25.8b  // frac_x
+
+        trn1            v16.2s,  v16.2s,  v17.2s  // left[base_y], left[base_y+1]
+
+        trn1            v2.2s,   v2.2s,   v4.2s   // top[base_x]
+        trn1            v3.2s,   v3.2s,   v5.2s   // top[base_x+1]
+
+        sub             v7.8b,   v26.8b,  v6.8b   // 64 - frac_x
+
+        add             v20.8b,  v20.8b,  v31.8b  // actual base_x
+
+        umull           v16.8h,  v16.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v16.8h,  v17.8b,  v27.8b  // + left[base_y+1]*frac_y
+
+        umull           v22.8h,  v2.8b,   v7.8b   // top[base_x]-*(64-frac_x)
+        umlal           v22.8h,  v3.8b,   v6.8b   // + top[base_x+1]*frac_x
+
+        cmge            v20.8b,  v20.8b,  #0
+
+        rshrn           v16.8b,  v16.8h,  #6
+        rshrn           v22.8b,  v22.8h,  #6
+
+        bit             v16.8b,  v22.8b,  v20.8b
+
+        st1             {v16.s}[0], [x0], x1
+        sub             w8,  w8,  w6              // xpos -= dx
+        subs            w5,  w5,  #2
+        st1             {v16.s}[1], [x0], x1
+        b.le            9f
+
+        ext             v16.8b,  v17.8b,  v17.8b, #4
+        add             v30.8b,  v30.8b,  v29.8b  // base_y += 2
+        b               4b
+
+49:
+        tbl             v17.8b, {v0.16b, v1.16b}, v30.8b // left[base_y+1], left[base_y+2]
+
+        trn1            v16.2s,  v16.2s,  v17.2s  // left[base_y], left[base_y+1]
+
+        umull           v18.8h,  v16.8b,  v28.8b  // left[base_y]*(64-frac_t)
+        umlal           v18.8h,  v17.8b,  v27.8b  // + left[base_y+1]*frac_y
+        rshrn           v18.8b,  v18.8h,  #6
+
+        st1             {v18.s}[0], [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v18.s}[1], [x0], x1
+        b.le            9f
+
+        ext             v16.8b,  v17.8b,  v17.8b, #4
+        add             v30.8b,  v30.8b,  v29.8b  // base_y += 2
+        b               49b
+
+9:
+        ret
+
+80:
+        AARCH64_VALID_JUMP_TARGET
+
+        dup             v30.8h,  w7               // -dy
+        movi            v17.8b,  #1
+
+        mul             v16.8h,  v31.8h,  v30.8h  // {0,1,2,3,4,5,6,7}* -dy
+        movi            v25.16b, #0x3e
+        add             v30.8h,  v16.8h,  v30.8h  // -= dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3,4,5,6,7}
+
+        // Worst case height for w=8 is 32, but we need at least h+1 elements
+        ld1             {v0.16b, v1.16b, v2.16b}, [x3]    // left[]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v30.8h           // (uint8_t)ypos
+        shrn            v29.8b,  v30.8h,  #6      // ypos >> 6
+        and             v27.8b,  v27.8b,  v25.8b  // frac_y
+
+        add             v29.8b,  v29.8b,  v17.8b  // base_y = (ypos >> 6) + 1
+
+        // Cut corners here; for the first row we don't expect to need to
+        // read outside of v0.
+        tbl             v18.8b, {v0.16b}, v29.8b  // left[base_y]
+
+        add             v30.8b,  v29.8b,  v19.8b  // base_y + 2
+        add             v29.8b,  v29.8b,  v17.8b  // base_y + 1
+
+        sub             v28.8b,  v26.8b,  v27.8b  // 64 - frac_y
+
+        trn1            v31.2d,  v31.2d,  v31.2d  // {0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7}
+
+        movi            v24.8b,  #2               // 2
+8:
+        asr             w9,  w8,  #6              // base_x
+        dup             v16.8h,   w8              // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-8                  // base_x <= -8
+        asr             w11, w8,  #6              // base_x
+        b.le            89f
+
+        dup             v17.8h,   w8              // xpos
+
+        ldr             q4,  [x2, w9, sxtw]       // top[base_x]
+        ldr             q6,  [x2, w11, sxtw]
+
+        // Cut corners here; only doing tbl over v0-v1 here; we only
+        // seem to need the last pixel, from v2, after skipping to the
+        // left-only codepath below.
+        tbl             v19.8b, {v0.16b, v1.16b}, v29.8b // left[base_y+1]
+
+        shrn            v21.8b,  v16.8h,  #6      // first base_x
+        shrn2           v21.16b, v17.8h,  #6
+        xtn             v16.8b,  v16.8h           // (uint8_t)xpos
+        xtn2            v16.16b, v17.8h
+
+        tbl             v20.8b, {v0.16b, v1.16b}, v30.8b // left[base_y+2]
+
+        ext             v5.16b,  v4.16b,  v4.16b,  #1 // top[base_x+1]
+        ext             v7.16b,  v6.16b,  v6.16b,  #1
+
+        and             v16.16b, v16.16b, v25.16b // frac_x
+
+        trn1            v4.2d,   v4.2d,   v6.2d   // top[base_x]
+        trn1            v5.2d,   v5.2d,   v7.2d   // top[base_x+1]
+
+        sub             v7.16b,  v26.16b, v16.16b // 64 - frac_x
+
+        add             v21.16b, v21.16b, v31.16b // actual base_x
+
+        umull           v6.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v6.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull           v17.8h,  v19.8b,  v28.8b
+        umlal           v17.8h,  v20.8b,  v27.8b
+
+        umull           v22.8h,  v4.8b,   v7.8b   // top[base_x]-*(64-frac_x)
+        umlal           v22.8h,  v5.8b,   v16.8b  // + top[base_x+1]*frac_x
+        umull2          v23.8h,  v4.16b,  v7.16b
+        umlal2          v23.8h,  v5.16b,  v16.16b
+
+        cmge            v21.16b, v21.16b, #0
+
+        rshrn           v6.8b,   v6.8h,   #6
+        rshrn2          v6.16b,  v17.8h,  #6
+        rshrn           v22.8b,  v22.8h,  #6
+        rshrn2          v22.16b, v23.8h,  #6
+
+        bit             v6.16b,  v22.16b, v21.16b
+
+        st1             {v6.d}[0], [x0], x1
+        sub             w8,  w8,  w6              // xpos -= dx
+        subs            w5,  w5,  #2
+        st1             {v6.d}[1], [x0], x1
+        b.le            9f
+
+        mov             v18.8b,  v20.8b
+        add             v29.8b,  v29.8b,  v24.8b  // base_y += 2
+        add             v30.8b,  v30.8b,  v24.8b  // base_y += 2
+        b               8b
+
+89:
+        tbl             v19.8b, {v0.16b, v1.16b, v2.16b}, v29.8b // left[base_y+1]
+        tbl             v20.8b, {v0.16b, v1.16b, v2.16b}, v30.8b // left[base_y+2]
+
+        umull           v6.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v6.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull           v17.8h,  v19.8b,  v28.8b
+        umlal           v17.8h,  v20.8b,  v27.8b
+
+        rshrn           v6.8b,   v6.8h,   #6
+        rshrn2          v6.16b,  v17.8h,  #6
+
+        st1             {v6.d}[0], [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v6.d}[1], [x0], x1
+        b.le            9f
+
+        mov             v18.8b,  v20.8b
+        add             v29.8b,  v29.8b,  v24.8b  // base_y += 2
+        add             v30.8b,  v30.8b,  v24.8b  // base_y += 2
+        b               89b
+
+9:
+        ret
+
+160:
+        AARCH64_VALID_JUMP_TARGET
+
+        stp             d8,  d9,  [sp, #-0x40]!
+        stp             d10, d11, [sp, #0x10]
+        stp             d12, d13, [sp, #0x20]
+        stp             d14, d15, [sp, #0x30]
+
+        add             x11, x11, #16             // increments
+
+        dup             v18.8h,  w7               // -dy
+        movi            v17.16b, #1
+        add             x3,  x3,  #1              // Skip past left[0]
+
+        ld1             {v14.8h}, [x11]           // {8,9,10,11,12,13,14,15}
+
+        mul             v16.8h,  v31.8h,  v18.8h  // {0,1,2,3,4,5,6,7}* -dy
+        mul             v19.8h,  v14.8h,  v18.8h  // {8,9,10,11,12,13,14,15}* -dy
+        movi            v25.16b, #0x3e
+        add             v16.8h,  v16.8h,  v18.8h  // -= dy
+        add             v18.8h,  v19.8h,  v18.8h
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3,4,5,6,7}
+        xtn2            v31.16b, v14.8h           // {8,9,10,11,12,13,14,15}
+
+        // Worst case height is 64.
+        ld1             {v0.16b, v1.16b, v2.16b, v3.16b}, [x3] // left[]
+        ld1r            {v15.16b}, [x2]           // left[0] == top[0]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v16.8h           // (uint8_t)ypos
+        xtn2            v27.16b, v18.8h
+        shrn            v29.8b,  v16.8h,  #6      // ypos >> 6
+        shrn2           v29.16b, v18.8h,  #6
+        mov             v18.16b, v15.16b          // left[0]
+        and             v27.16b, v27.16b, v25.16b // frac_y
+
+        // Cut corners here; for the first row we don't expect to need to
+        // read outside of v0.
+        tbx             v18.16b, {v0.16b}, v29.16b // left[base_y]
+
+        add             v30.16b, v29.16b, v19.16b // base_y + 2
+        add             v29.16b, v29.16b, v17.16b // base_y + 1
+
+        sub             v28.16b, v26.16b, v27.16b // 64 - frac_y
+
+        movi            v24.16b, #2               // 2
+16:
+        asr             w9,  w8,  #6              // base_x
+        dup             v16.8h,   w8              // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-16                 // base_x <= -16
+        asr             w11, w8,  #6              // base_x
+        b.le            169f
+
+        dup             v17.8h,   w8              // xpos
+
+        add             x9,  x2,  w9,  sxtw
+        add             x11, x2,  w11, sxtw
+
+        ld1             {v4.16b, v5.16b}, [x9]    // top[base_x]
+        mov             v19.16b, v15.16b          // left[0]
+        ld1             {v6.16b, v7.16b}, [x11]
+
+        tbx             v19.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y+1]
+
+        mov             v20.16b, v15.16b          // left[0]
+
+        shrn            v21.8b,  v16.8h,  #6      // first base_x
+        shrn            v22.8b,  v17.8h,  #6
+        xtn             v16.8b,  v16.8h           // (uint8_t)xpos
+        xtn             v17.8b,  v17.8h
+
+        tbx             v20.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v30.16b // left[base_y+2]
+
+        trn1            v21.2d,  v21.2d,  v21.2d  // first base_x
+        trn1            v22.2d,  v22.2d,  v22.2d
+        trn1            v16.2d,  v16.2d,  v16.2d  // (uint8_t)xpos
+        trn1            v17.2d,  v17.2d,  v17.2d
+
+        ext             v5.16b,  v4.16b,  v5.16b,  #1 // top[base_x+1]
+        ext             v7.16b,  v6.16b,  v7.16b,  #1
+
+        and             v16.16b, v16.16b, v25.16b // frac_x
+        and             v17.16b, v17.16b, v25.16b
+
+        umull           v10.8h,  v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v10.8h,  v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+
+        sub             v8.16b,  v26.16b, v16.16b // 64 - frac_x
+        sub             v9.16b,  v26.16b, v17.16b
+
+        umull2          v11.8h,  v18.16b, v28.16b
+        umlal2          v11.8h,  v19.16b, v27.16b
+
+        add             v21.16b, v21.16b, v31.16b // actual base_x
+        add             v22.16b, v22.16b, v31.16b
+
+        umull           v12.8h,  v19.8b,  v28.8b
+        umlal           v12.8h,  v20.8b,  v27.8b
+        umull2          v13.8h,  v19.16b, v28.16b
+        umlal2          v13.8h,  v20.16b, v27.16b
+
+        rshrn           v10.8b,  v10.8h,  #6
+        rshrn2          v10.16b, v11.8h,  #6
+        rshrn           v11.8b,  v12.8h,  #6
+        rshrn2          v11.16b, v13.8h,  #6
+
+        umull           v12.8h,  v4.8b,   v8.8b   // top[base_x]-*(64-frac_x)
+        umlal           v12.8h,  v5.8b,   v16.8b  // + top[base_x+1]*frac_x
+        umull2          v13.8h,  v4.16b,  v8.16b
+        umlal2          v13.8h,  v5.16b,  v16.16b
+        umull           v14.8h,  v6.8b,   v9.8b
+        umlal           v14.8h,  v7.8b,   v17.8b
+        umull2          v18.8h,  v6.16b,  v9.16b
+        umlal2          v18.8h,  v7.16b,  v17.16b
+
+        cmge            v21.16b, v21.16b, #0
+        cmge            v22.16b, v22.16b, #0
+
+        rshrn           v12.8b,  v12.8h,  #6
+        rshrn2          v12.16b, v13.8h,  #6
+        rshrn           v13.8b,  v14.8h,  #6
+        rshrn2          v13.16b, v18.8h,  #6
+
+        bit             v10.16b, v12.16b, v21.16b
+        bit             v11.16b, v13.16b, v22.16b
+
+        st1             {v10.16b}, [x0], x1
+        subs            w5,  w5,  #2
+        sub             w8,  w8,  w6              // xpos -= dx
+        st1             {v11.16b}, [x0], x1
+        b.le            9f
+
+        mov             v18.16b, v20.16b
+        add             v29.16b, v29.16b, v24.16b // base_y += 2
+        add             v30.16b, v30.16b, v24.16b // base_y += 2
+        b               16b
+
+169:
+        mov             v19.16b, v15.16b
+        mov             v20.16b, v15.16b
+        tbx             v19.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y+1]
+        tbx             v20.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v30.16b // left[base_y+2]
+
+        umull           v4.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v4.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull2          v5.8h,   v18.16b, v28.16b
+        umlal2          v5.8h,   v19.16b, v27.16b
+        umull           v6.8h,   v19.8b,  v28.8b
+        umlal           v6.8h,   v20.8b,  v27.8b
+        umull2          v7.8h,   v19.16b, v28.16b
+        umlal2          v7.8h,   v20.16b, v27.16b
+
+        rshrn           v4.8b,   v4.8h,   #6
+        rshrn2          v4.16b,  v5.8h,   #6
+        rshrn           v5.8b,   v6.8h,   #6
+        rshrn2          v5.16b,  v7.8h,   #6
+
+        st1             {v4.16b}, [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v5.16b}, [x0], x1
+        b.le            9f
+
+        mov             v18.16b, v20.16b
+        add             v29.16b, v29.16b, v24.16b // base_y += 2
+        add             v30.16b, v30.16b, v24.16b // base_y += 2
+        b               169b
+
+9:
+        ldp             d14, d15, [sp, #0x30]
+        ldp             d12, d13, [sp, #0x20]
+        ldp             d10, d11, [sp, #0x10]
+        ldp             d8,  d9,  [sp], 0x40
+        ret
+
+320:
+640:
+        AARCH64_VALID_JUMP_TARGET
+
+        stp             d8,  d9,  [sp, #-0x40]!
+        stp             d10, d11, [sp, #0x10]
+        stp             d12, d13, [sp, #0x20]
+        stp             d14, d15, [sp, #0x30]
+
+        add             x11, x11, #16             // increments
+
+        dup             v25.8h,  w7               // -dy
+        add             x3,  x3,  #1              // Skip past left[0]
+
+        ld1             {v14.8h}, [x11]           // {8,9,10,11,12,13,14,15}
+
+        add             x13, x0,  x1              // alternating row
+        lsl             x1,  x1,  #1              // stride *= 2
+        sub             x1,  x1,  w4,  uxtw       // stride -= width
+
+        movi            v11.8h,  #8
+        mul             v26.8h,  v31.8h,  v25.8h  // {0,1,2,3,4,5,6,7}* -dy
+        add             v26.8h,  v26.8h,  v25.8h  // -= dy
+        mul             v25.8h,  v25.8h,  v11.8h  // -8*dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3,4,5,6,7}
+        xtn2            v31.16b, v14.8h           // {8,9,10,11,12,13,14,15}
+
+        // Worst case height is 64.
+        ld1             {v0.16b, v1.16b, v2.16b, v3.16b}, [x3] // left[]
+        ld1r            {v15.16b}, [x2]           // left[0] == top[0]
+
+        mov             w12, w4                   // orig w
+        neg             w14, w4                   // -w
+
+1:
+        mov             v23.16b, v26.16b          // reset ypos
+
+        asr             w9,  w8,  #6              // base_x
+        dup             v16.8h,   w8              // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  w14                  // base_x <= -w
+        asr             w11, w8,  #6              // base_x
+        b.le            329f
+
+        dup             v17.8h,   w8              // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+
+        add             x9,  x2,  w9,  sxtw
+        add             x11, x2,  w11, sxtw
+
+        sqshrn          v21.8b,  v16.8h,  #6      // first base_x
+        sqshrn          v22.8b,  v17.8h,  #6
+        xtn             v16.8b,  v16.8h           // (uint8_t)xpos
+        xtn             v17.8b,  v17.8h
+
+        ld1             {v4.16b}, [x9], #16       // top[base_x]
+        ld1             {v6.16b}, [x11], #16
+
+        trn1            v21.2d,  v21.2d,  v21.2d  // first base_x
+        trn1            v22.2d,  v22.2d,  v22.2d
+        trn1            v16.2d,  v16.2d,  v16.2d  // (uint8_t)xpos
+        trn1            v17.2d,  v17.2d,  v17.2d
+
+        movi            v10.16b, #0x3e
+        movi            v11.16b, #64
+
+        and             v16.16b, v16.16b, v10.16b // frac_x
+        and             v17.16b, v17.16b, v10.16b
+
+        sub             v8.16b,  v11.16b, v16.16b // 64 - frac_x
+        sub             v9.16b,  v11.16b, v17.16b
+
+        add             v21.16b, v21.16b, v31.16b // actual base_x
+        add             v22.16b, v22.16b, v31.16b
+
+2:
+        add             v13.8h,  v23.8h,  v25.8h  // ypos -= 8*dy
+        movi            v12.16b, #64
+        movi            v20.16b, #2
+        movi            v10.16b, #0x3e
+
+        smov            w10,     v22.b[0]
+
+        xtn             v27.8b,  v23.8h           // (uint8_t)ypos
+        xtn2            v27.16b, v13.8h
+        shrn            v29.8b,  v23.8h,  #6      // ypos >> 6
+        shrn2           v29.16b, v13.8h,  #6
+        cmp             w10, #0                   // base_x (bottom left) >= 0
+        and             v27.16b, v27.16b, v10.16b // frac_y
+
+        mov             v18.16b, v15.16b          // left[0]
+
+        b.ge            4f
+
+        add             v23.8h,  v13.8h,  v25.8h  // ypos -= 8*dy
+        movi            v13.16b, #1
+
+        tbx             v18.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y]
+        add             v29.16b, v29.16b, v13.16b // base_y + 1
+        mov             v19.16b, v15.16b          // left[0]
+
+        sub             v28.16b, v12.16b, v27.16b // 64 - frac_y
+
+        ld1             {v5.16b}, [x9], #16       // top[base_x]
+        ld1             {v7.16b}, [x11], #16
+
+        tbx             v19.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y+1]
+        add             v29.16b, v29.16b, v13.16b // base_y + 2
+
+        mov             v20.16b, v15.16b          // left[0]
+        tbx             v20.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y+2]
+
+        umull           v10.8h,  v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v10.8h,  v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull2          v11.8h,  v18.16b, v28.16b
+        umlal2          v11.8h,  v19.16b, v27.16b
+        umull           v12.8h,  v19.8b,  v28.8b
+        umlal           v12.8h,  v20.8b,  v27.8b
+        umull2          v13.8h,  v19.16b, v28.16b
+        umlal2          v13.8h,  v20.16b, v27.16b
+
+        ext             v18.16b, v4.16b,  v5.16b,  #1 // top[base_x+1]
+        ext             v19.16b, v6.16b,  v7.16b,  #1
+
+        rshrn           v10.8b,  v10.8h,  #6
+        rshrn2          v10.16b, v11.8h,  #6
+        rshrn           v11.8b,  v12.8h,  #6
+        rshrn2          v11.16b, v13.8h,  #6
+
+        umull           v12.8h,  v4.8b,   v8.8b   // top[base_x]-*(64-frac_x)
+        umlal           v12.8h,  v18.8b,  v16.8b  // + top[base_x+1]*frac_x
+        umull2          v13.8h,  v4.16b,  v8.16b
+        umlal2          v13.8h,  v18.16b, v16.16b
+        umull           v14.8h,  v6.8b,   v9.8b
+        umlal           v14.8h,  v19.8b,  v17.8b
+        umull2          v20.8h,  v6.16b,  v9.16b
+        umlal2          v20.8h,  v19.16b, v17.16b
+
+        cmge            v18.16b, v21.16b, #0
+        cmge            v19.16b, v22.16b, #0
+
+        rshrn           v12.8b,  v12.8h,  #6
+        rshrn2          v12.16b, v13.8h,  #6
+        rshrn           v13.8b,  v14.8h,  #6
+        rshrn2          v13.16b, v20.8h,  #6
+
+        bit             v10.16b, v12.16b, v18.16b
+        bit             v11.16b, v13.16b, v19.16b
+
+        st1             {v10.16b}, [x0], #16
+        subs            w4,  w4,  #16
+        st1             {v11.16b}, [x13], #16
+        b.le            3f
+
+        movi            v10.16b, #16
+        mov             v4.16b,  v5.16b
+        mov             v6.16b,  v7.16b
+        add             v21.16b, v21.16b, v10.16b // base_x += 16
+        add             v22.16b, v22.16b, v10.16b
+        b               2b
+
+3:
+        subs            w5,  w5,  #2
+        b.le            9f
+        movi            v10.8h, #128
+        add             x0,  x0,  x1
+        add             x13, x13, x1
+        mov             w4,  w12                  // reset w
+        add             v26.8h,  v26.8h,  v10.8h  // ypos += 2*(1<<6)
+        b               1b
+
+4:      // The rest of the row only predicted from top[]
+        ld1             {v5.16b}, [x9], #16       // top[base_x]
+        ld1             {v7.16b}, [x11], #16
+
+        ext             v18.16b, v4.16b,  v5.16b,  #1 // top[base_x+1]
+        ext             v19.16b, v6.16b,  v7.16b,  #1
+
+        umull           v12.8h,  v4.8b,   v8.8b   // top[base_x]-*(64-frac_x)
+        umlal           v12.8h,  v18.8b,  v16.8b  // + top[base_x+1]*frac_x
+        umull2          v13.8h,  v4.16b,  v8.16b
+        umlal2          v13.8h,  v18.16b, v16.16b
+        umull           v14.8h,  v6.8b,   v9.8b
+        umlal           v14.8h,  v19.8b,  v17.8b
+        umull2          v20.8h,  v6.16b,  v9.16b
+        umlal2          v20.8h,  v19.16b, v17.16b
+
+        rshrn           v12.8b,  v12.8h,  #6
+        rshrn2          v12.16b, v13.8h,  #6
+        rshrn           v13.8b,  v14.8h,  #6
+        rshrn2          v13.16b, v20.8h,  #6
+
+        st1             {v12.16b}, [x0], #16
+        subs            w4,  w4,  #16
+        st1             {v13.16b}, [x13], #16
+        b.le            3b
+
+        mov             v4.16b,  v5.16b
+        mov             v6.16b,  v7.16b
+        b               4b
+
+329:    // The rest of the block only predicted from left[]
+        add             x1,  x1,  w4,  uxtw       // restore stride
+        mov             w12, w5                   // orig remaining h
+1:
+        add             v13.8h,  v23.8h,  v25.8h  // ypos -= 8*dy
+        movi            v12.16b, #64
+        movi            v10.16b, #0x3e
+
+        xtn             v27.8b,  v23.8h           // (uint8_t)ypos
+        xtn2            v27.16b, v13.8h
+        shrn            v29.8b,  v23.8h,  #6      // ypos >> 6
+        shrn2           v29.16b, v13.8h,  #6
+        and             v27.16b, v27.16b, v10.16b // frac_y
+
+        mov             v18.16b, v15.16b          // left[0]
+        add             v23.8h,  v13.8h,  v25.8h  // ypos -= 8*dy
+        movi            v21.16b, #1
+
+        tbx             v18.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y]
+        add             v29.16b, v29.16b, v21.16b // base_y + 1
+
+        sub             v28.16b, v12.16b, v27.16b // 64 - frac_y
+2:
+        mov             v19.16b, v15.16b          // left[0]
+        tbx             v19.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y+1]
+        add             v29.16b, v29.16b, v21.16b // base_y + 2
+        mov             v20.16b, v15.16b          // left[0]
+        tbx             v20.16b, {v0.16b, v1.16b, v2.16b, v3.16b}, v29.16b // left[base_y+2]
+        add             v29.16b, v29.16b, v21.16b // next base_y
+
+        umull           v10.8h,  v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v10.8h,  v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull2          v11.8h,  v18.16b, v28.16b
+        umlal2          v11.8h,  v19.16b, v27.16b
+        umull           v12.8h,  v19.8b,  v28.8b
+        umlal           v12.8h,  v20.8b,  v27.8b
+        umull2          v13.8h,  v19.16b, v28.16b
+        umlal2          v13.8h,  v20.16b, v27.16b
+
+        rshrn           v10.8b,  v10.8h,  #6
+        rshrn2          v10.16b, v11.8h,  #6
+        rshrn           v11.8b,  v12.8h,  #6
+        rshrn2          v11.16b, v13.8h,  #6
+
+        st1             {v10.16b}, [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v11.16b}, [x13], x1
+        b.le            3f
+        mov             v18.16b, v20.16b
+        b               2b
+
+3:
+        subs            w4,  w4,  #16
+        b.le            9f
+
+        lsr             x1,  x1,  #1
+        msub            x0,  x1,  x12, x0         // ptr -= h * stride
+        msub            x13, x1,  x12, x13
+        lsl             x1,  x1,  #1
+        add             x0,  x0,  #16
+        add             x13, x13, #16
+        mov             w5,  w12                  // reset h
+        b               1b
+
+9:
+        ldp             d14, d15, [sp, #0x30]
+        ldp             d12, d13, [sp, #0x20]
+        ldp             d10, d11, [sp, #0x10]
+        ldp             d8,  d9,  [sp], 0x40
+        ret
+
+L(ipred_z2_fill1_tbl):
+        .hword L(ipred_z2_fill1_tbl) - 640b
+        .hword L(ipred_z2_fill1_tbl) - 320b
+        .hword L(ipred_z2_fill1_tbl) - 160b
+        .hword L(ipred_z2_fill1_tbl) -  80b
+        .hword L(ipred_z2_fill1_tbl) -  40b
+endfunc
+
+function ipred_z2_fill2_8bpc_neon, export=1
+        cmp             w4,  #8
+        mov             w8,  #(2 << 6)            // xpos = 2 << 6
+        sub             w8,  w8,  w6              // xpos -= dx
+
+        movrel          x11, increments
+        ld1             {v31.8h},  [x11]          // increments
+        neg             w7,  w7                   // -dy
+        b.eq            80f
+
+40:
+        dup             v30.4h,  w7               // -dy
+        movi            v17.8b,  #1
+
+        mul             v16.4h,  v31.4h,  v30.4h  // {0,1,2,3}* -dy
+        movi            v25.16b, #0x3e
+        add             v30.4h,  v16.4h,  v30.4h  // -= dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3}
+
+        // For upsample_top, w <= 8 and h <= 8; we may need up to h+1 elements
+        // from left.
+        ld1             {v0.16b}, [x3]            // left[]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v30.8h           // (uint8_t)ypos
+        shrn            v29.8b,  v30.8h,  #6      // ypos >> 6
+        and             v27.8b,  v27.8b,  v25.8b  // frac_y
+
+        add             v29.8b,  v29.8b,  v17.8b  // base_y = (ypos >> 6) + 1
+
+        add             v30.8b,  v29.8b,  v17.8b  // base_y + 1
+        add             v28.8b,  v29.8b,  v19.8b  // base_y + 2
+
+        tbl             v16.8b, {v0.16b}, v29.8b  // left[base_y]
+
+        trn1            v30.2s,  v30.2s,  v28.2s  // base_y + 1, base_y + 2
+
+        sub             v28.8b,  v26.8b,  v27.8b  // 64 - frac_y
+
+        trn1            v31.2s,  v31.2s,  v31.2s  // {0,1,2,3,0,1,2,3}
+
+        trn1            v27.2s,  v27.2s,  v27.2s  // frac_y
+        trn1            v28.2s,  v28.2s,  v28.2s  // 64 - frac_y
+
+        movi            v29.8b,  #2
+        add             v31.8b,  v31.8b,  v31.8b  // {0,2,4,6,0,2,4,6}
+4:
+        asr             w9,  w8,  #6              // base_x
+        dup             v6.4h,   w8               // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-8                  // base_x <= -8
+        asr             w11, w8,  #6              // base_x
+        b.le            49f
+
+        dup             v7.4h,   w8               // xpos
+
+        ldr             d2,  [x2, w9, sxtw]       // top[base_x]
+        ldr             d4,  [x2, w11, sxtw]
+
+        trn1            v6.2d,   v6.2d,   v7.2d   // xpos
+
+        tbl             v17.8b, {v0.16b}, v30.8b  // left[base_y+1], left[base_y+2]
+
+        shrn            v20.8b,  v6.8h,   #6      // first base_x for each row
+        xtn             v6.8b,   v6.8h            // (uint8_t)xpos
+
+        uzp2            v3.8b,   v2.8b,   v4.8b   // top[base_x+1]
+        uzp1            v2.8b,   v2.8b,   v4.8b   // top[base_x]
+
+        and             v6.8b,   v6.8b,   v25.8b  // frac_x
+
+        trn1            v16.2s,  v16.2s,  v17.2s  // left[base_y], left[base_y+1]
+
+        sub             v7.8b,   v26.8b,  v6.8b   // 64 - frac_x
+
+        add             v20.8b,  v20.8b,  v31.8b  // actual base_x
+
+        umull           v16.8h,  v16.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v16.8h,  v17.8b,  v27.8b  // + left[base_y+1]*frac_y
+
+        umull           v22.8h,  v2.8b,   v7.8b   // top[base_x]-*(64-frac_x)
+        umlal           v22.8h,  v3.8b,   v6.8b   // + top[base_x+1]*frac_x
+
+        cmge            v20.8b,  v20.8b,  #0
+
+        rshrn           v16.8b,  v16.8h,  #6
+        rshrn           v22.8b,  v22.8h,  #6
+
+        bit             v16.8b,  v22.8b,  v20.8b
+
+        st1             {v16.s}[0], [x0], x1
+        sub             w8,  w8,  w6              // xpos -= dx
+        subs            w5,  w5,  #2
+        st1             {v16.s}[1], [x0], x1
+        b.le            9f
+
+        ext             v16.8b,  v17.8b,  v17.8b, #4
+        add             v30.8b,  v30.8b,  v29.8b  // base_y += 2
+        b               4b
+
+49:
+        tbl             v17.8b, {v0.16b}, v30.8b  // left[base_y+1], left[base_y+2]
+
+        trn1            v16.2s,  v16.2s,  v17.2s  // left[base_y], left[base_y+1]
+
+        umull           v18.8h,  v16.8b,  v28.8b  // left[base_y]*(64-frac_t)
+        umlal           v18.8h,  v17.8b,  v27.8b  // + left[base_y+1]*frac_y
+        rshrn           v18.8b,  v18.8h,  #6
+
+        st1             {v18.s}[0], [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v18.s}[1], [x0], x1
+        b.le            9f
+
+        ext             v16.8b,  v17.8b,  v17.8b, #4
+        add             v30.8b,  v30.8b,  v29.8b  // base_y += 2
+        b               49b
+
+9:
+        ret
+
+80:
+        dup             v30.8h,  w7               // -dy
+        movi            v17.8b,  #1
+
+        mul             v16.8h,  v31.8h,  v30.8h  // {0,1,2,3,4,5,6,7}* -dy
+        movi            v25.16b, #0x3e
+        add             v30.8h,  v16.8h,  v30.8h  // -= dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3,4,5,6,7}
+
+        // For upsample_top, w <= 8 and h <= 8; we may need up to h+1 elements
+        // from left.
+        ld1             {v0.16b}, [x3]    // left[]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v30.8h           // (uint8_t)ypos
+        shrn            v29.8b,  v30.8h,  #6      // ypos >> 6
+        and             v27.8b,  v27.8b,  v25.8b  // frac_y
+
+        add             v29.8b,  v29.8b,  v17.8b  // base_y = (ypos >> 6) + 1
+
+        tbl             v18.8b, {v0.16b}, v29.8b  // left[base_y]
+
+        add             v30.8b,  v29.8b,  v19.8b  // base_y + 2
+        add             v29.8b,  v29.8b,  v17.8b  // base_y + 1
+
+        sub             v28.8b,  v26.8b,  v27.8b  // 64 - frac_y
+
+        trn1            v31.2d,  v31.2d,  v31.2d  // {0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7}
+
+        movi            v24.8b,  #2               // 2
+        add             v31.16b, v31.16b, v31.16b // {0,2,4,6,8,10,12,14,0,2,4,6,8,10,12,14}
+8:
+        asr             w9,  w8,  #6              // base_x
+        dup             v16.8h,   w8              // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-16                 // base_x <= -16
+        asr             w11, w8,  #6              // base_x
+        b.le            89f
+
+        dup             v17.8h,   w8              // xpos
+
+        ldr             q4,  [x2, w9, sxtw]       // top[base_x]
+        ldr             q6,  [x2, w11, sxtw]
+
+        tbl             v19.8b, {v0.16b}, v29.8b  // left[base_y+1]
+
+        shrn            v21.8b,  v16.8h,  #6      // first base_x
+        shrn2           v21.16b, v17.8h,  #6
+        xtn             v16.8b,  v16.8h           // (uint8_t)xpos
+        xtn2            v16.16b, v17.8h
+
+        tbl             v20.8b, {v0.16b}, v30.8b  // left[base_y+2]
+
+        uzp2            v5.16b,  v4.16b,  v6.16b  // top[base_x+1]
+        uzp1            v4.16b,  v4.16b,  v6.16b  // top[base_x]
+
+        and             v16.16b, v16.16b, v25.16b // frac_x
+
+        sub             v7.16b,  v26.16b, v16.16b // 64 - frac_x
+
+        add             v21.16b, v21.16b, v31.16b // actual base_x
+
+        umull           v6.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v6.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull           v17.8h,  v19.8b,  v28.8b
+        umlal           v17.8h,  v20.8b,  v27.8b
+
+        umull           v22.8h,  v4.8b,   v7.8b   // top[base_x]-*(64-frac_x)
+        umlal           v22.8h,  v5.8b,   v16.8b  // + top[base_x+1]*frac_x
+        umull2          v23.8h,  v4.16b,  v7.16b
+        umlal2          v23.8h,  v5.16b,  v16.16b
+
+        cmge            v21.16b, v21.16b, #0
+
+        rshrn           v6.8b,   v6.8h,   #6
+        rshrn2          v6.16b,  v17.8h,  #6
+        rshrn           v22.8b,  v22.8h,  #6
+        rshrn2          v22.16b, v23.8h,  #6
+
+        bit             v6.16b,  v22.16b, v21.16b
+
+        st1             {v6.d}[0], [x0], x1
+        sub             w8,  w8,  w6              // xpos -= dx
+        subs            w5,  w5,  #2
+        st1             {v6.d}[1], [x0], x1
+        b.le            9f
+
+        mov             v18.8b,  v20.8b
+        add             v29.8b,  v29.8b,  v24.8b  // base_y += 2
+        add             v30.8b,  v30.8b,  v24.8b  // base_y += 2
+        b               8b
+
+89:
+        tbl             v19.8b, {v0.16b}, v29.8b  // left[base_y+1]
+        tbl             v20.8b, {v0.16b}, v30.8b  // left[base_y+2]
+
+        umull           v6.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v6.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull           v17.8h,  v19.8b,  v28.8b
+        umlal           v17.8h,  v20.8b,  v27.8b
+
+        rshrn           v6.8b,   v6.8h,   #6
+        rshrn2          v6.16b,  v17.8h,  #6
+
+        st1             {v6.d}[0], [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v6.d}[1], [x0], x1
+        b.le            9f
+
+        mov             v18.8b,  v20.8b
+        add             v29.8b,  v29.8b,  v24.8b  // base_y += 2
+        add             v30.8b,  v30.8b,  v24.8b  // base_y += 2
+        b               89b
+
+9:
+        ret
+endfunc
+
+function ipred_z2_fill3_8bpc_neon, export=1
+        cmp             w4,  #8
+        mov             w8,  #(1 << 6)            // xpos = 1 << 6
+        sub             w8,  w8,  w6              // xpos -= dx
+
+        movrel          x11, increments
+        ld1             {v31.8h},  [x11]          // increments
+        neg             w7,  w7                   // -dy
+        b.eq            80f
+
+40:
+        dup             v30.4h,  w7               // -dy
+        movi            v17.8b,  #1
+
+        mul             v16.4h,  v31.4h,  v30.4h  // {0,1,2,3}* -dy
+        movi            v25.16b, #0x3e
+        add             v30.4h,  v16.4h,  v30.4h  // -= dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3}
+
+        // For upsample_left, w <= 8 and h <= 8; we may need up to 2*h+1 elements.
+        ld1             {v0.16b, v1.16b}, [x3]    // left[]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v30.8h           // (uint8_t)ypos
+        shrn            v29.8b,  v30.8h,  #6      // ypos >> 6
+        and             v27.8b,  v27.8b,  v25.8b  // frac_y
+
+        add             v29.8b,  v29.8b,  v19.8b  // base_y = (ypos >> 6) + 2
+
+        add             v30.8b,  v29.8b,  v17.8b  // base_y + 1
+        add             v28.8b,  v29.8b,  v19.8b  // base_y + 2
+
+        trn1            v31.2s,  v31.2s,  v31.2s  // {0,1,2,3,0,1,2,3}
+
+        add             v24.8b,  v30.8b,  v19.8b  // base_y + 3
+
+        trn1            v29.2s,  v29.2s,  v28.2s  // base_y + 0, base_y + 2
+        trn1            v30.2s,  v30.2s,  v24.2s  // base_y + 1, base_y + 3
+
+        sub             v28.8b,  v26.8b,  v27.8b  // 64 - frac_y
+
+        trn1            v27.2s,  v27.2s,  v27.2s  // frac_y
+        trn1            v28.2s,  v28.2s,  v28.2s  // 64 - frac_y
+
+        movi            v24.8b,  #4
+4:
+        asr             w9,  w8,  #6              // base_x
+        dup             v6.4h,   w8               // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-4                  // base_x <= -4
+        asr             w11, w8,  #6              // base_x
+        b.le            49f
+
+        dup             v7.4h,   w8               // xpos
+
+        ldr             d2,  [x2, w9, sxtw]       // top[base_x]
+        ldr             d4,  [x2, w11, sxtw]
+
+        trn1            v6.2d,   v6.2d,   v7.2d   // xpos
+
+        tbl             v16.8b, {v0.16b, v1.16b}, v29.8b // left[base_y+0], left[base_y+2]
+        tbl             v17.8b, {v0.16b, v1.16b}, v30.8b // left[base_y+1], left[base_y+3]
+
+        shrn            v20.8b,  v6.8h,   #6      // first base_x for each row
+        xtn             v6.8b,   v6.8h            // (uint8_t)xpos
+
+        ext             v3.8b,   v2.8b,   v2.8b,   #1 // top[base_x+1]
+        ext             v5.8b,   v4.8b,   v4.8b,   #1
+
+        and             v6.8b,   v6.8b,   v25.8b  // frac_x
+
+        trn1            v2.2s,   v2.2s,   v4.2s   // top[base_x]
+        trn1            v3.2s,   v3.2s,   v5.2s   // top[base_x+1]
+
+        sub             v7.8b,   v26.8b,  v6.8b   // 64 - frac_x
+
+        add             v20.8b,  v20.8b,  v31.8b  // actual base_x
+
+        umull           v16.8h,  v16.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v16.8h,  v17.8b,  v27.8b  // + left[base_y+1]*frac_y
+
+        umull           v22.8h,  v2.8b,   v7.8b   // top[base_x]-*(64-frac_x)
+        umlal           v22.8h,  v3.8b,   v6.8b   // + top[base_x+1]*frac_x
+
+        cmge            v20.8b,  v20.8b,  #0
+
+        rshrn           v16.8b,  v16.8h,  #6
+        rshrn           v22.8b,  v22.8h,  #6
+
+        bit             v16.8b,  v22.8b,  v20.8b
+
+        st1             {v16.s}[0], [x0], x1
+        sub             w8,  w8,  w6              // xpos -= dx
+        subs            w5,  w5,  #2
+        st1             {v16.s}[1], [x0], x1
+        b.le            9f
+
+        add             v29.8b,  v29.8b,  v24.8b  // base_y += 4
+        add             v30.8b,  v30.8b,  v24.8b  // base_y += 4
+        b               4b
+
+49:
+        tbl             v16.8b, {v0.16b, v1.16b}, v29.8b // left[base_y+0], left[base_y+2]
+        tbl             v17.8b, {v0.16b, v1.16b}, v30.8b // left[base_y+1], left[base_y+3]
+
+        umull           v18.8h,  v16.8b,  v28.8b  // left[base_y]*(64-frac_t)
+        umlal           v18.8h,  v17.8b,  v27.8b  // + left[base_y+1]*frac_y
+        rshrn           v18.8b,  v18.8h,  #6
+
+        st1             {v18.s}[0], [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v18.s}[1], [x0], x1
+        b.le            9f
+
+        add             v29.8b,  v29.8b,  v24.8b  // base_y += 4
+        add             v30.8b,  v30.8b,  v24.8b  // base_y += 4
+        b               49b
+
+9:
+        ret
+
+80:
+        dup             v30.8h,  w7               // -dy
+        movi            v17.8b,  #1
+
+        mul             v16.8h,  v31.8h,  v30.8h  // {0,1,2,3,4,5,6,7}* -dy
+        movi            v25.16b, #0x3e
+        add             v30.8h,  v16.8h,  v30.8h  // -= dy
+
+        xtn             v31.8b,  v31.8h           // {0,1,2,3,4,5,6,7}
+
+        // For upsample_left, w <= 8 and h <= 8; we may need up to 2*h+1 elements.
+        ld1             {v0.16b, v1.16b, v2.16b}, [x3]    // left[]
+
+        movi            v26.16b, #64
+        movi            v19.16b, #2
+
+        xtn             v27.8b,  v30.8h           // (uint8_t)ypos
+        shrn            v29.8b,  v30.8h,  #6      // ypos >> 6
+        and             v27.8b,  v27.8b,  v25.8b  // frac_y
+
+        add             v29.8b,  v29.8b,  v19.8b  // base_y = (ypos >> 6) + 2
+
+        add             v28.8b,  v29.8b,  v17.8b  // base_y + 1
+        add             v30.8b,  v29.8b,  v19.8b  // base_y + 2
+
+        trn1            v31.2d,  v31.2d,  v31.2d  // {0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7}
+        add             v24.8b,  v28.8b,  v19.8b  // base_y + 3
+
+        trn1            v29.2d,  v29.2d,  v30.2d  // base_y + 0, base_y + 2
+        trn1            v30.2d,  v28.2d,  v24.2d  // base_y + 1, base_y + 3
+
+        sub             v28.8b,  v26.8b,  v27.8b  // 64 - frac_y
+
+        movi            v24.16b, #4
+
+        trn1            v27.2d,  v27.2d,  v27.2d  // frac_y
+        trn1            v28.2d,  v28.2d,  v28.2d  // 64 - frac_y
+8:
+        asr             w9,  w8,  #6              // base_x
+        dup             v16.8h,   w8              // xpos
+        sub             w8,  w8,  w6              // xpos -= dx
+        cmp             w9,  #-8                  // base_x <= -8
+        asr             w11, w8,  #6              // base_x
+        b.le            89f
+
+        dup             v17.8h,   w8              // xpos
+
+        ldr             q4,  [x2, w9, sxtw]       // top[base_x]
+        ldr             q6,  [x2, w11, sxtw]
+
+        tbl             v18.16b, {v0.16b, v1.16b, v2.16b}, v29.16b // left[base_y+0], left[base_y+2]
+        tbl             v19.16b, {v0.16b, v1.16b, v2.16b}, v30.16b // left[base_y+1], left[base_y+3]
+
+        shrn            v21.8b,  v16.8h,  #6      // first base_x
+        shrn2           v21.16b, v17.8h,  #6
+        xtn             v16.8b,  v16.8h           // (uint8_t)xpos
+        xtn2            v16.16b, v17.8h
+
+        ext             v5.16b,  v4.16b,  v4.16b,  #1 // top[base_x+1]
+        ext             v7.16b,  v6.16b,  v6.16b,  #1
+
+        and             v16.16b, v16.16b, v25.16b // frac_x
+
+        trn1            v4.2d,   v4.2d,   v6.2d   // top[base_x]
+        trn1            v5.2d,   v5.2d,   v7.2d   // top[base_x+1]
+
+        sub             v7.16b,  v26.16b, v16.16b // 64 - frac_x
+
+        add             v21.16b, v21.16b, v31.16b // actual base_x
+
+        umull           v6.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v6.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull2          v17.8h,  v18.16b, v28.16b
+        umlal2          v17.8h,  v19.16b, v27.16b
+
+        umull           v22.8h,  v4.8b,   v7.8b   // top[base_x]-*(64-frac_x)
+        umlal           v22.8h,  v5.8b,   v16.8b  // + top[base_x+1]*frac_x
+        umull2          v23.8h,  v4.16b,  v7.16b
+        umlal2          v23.8h,  v5.16b,  v16.16b
+
+        cmge            v21.16b, v21.16b, #0
+
+        rshrn           v6.8b,   v6.8h,   #6
+        rshrn2          v6.16b,  v17.8h,  #6
+        rshrn           v22.8b,  v22.8h,  #6
+        rshrn2          v22.16b, v23.8h,  #6
+
+        bit             v6.16b,  v22.16b, v21.16b
+
+        st1             {v6.d}[0], [x0], x1
+        sub             w8,  w8,  w6              // xpos -= dx
+        subs            w5,  w5,  #2
+        st1             {v6.d}[1], [x0], x1
+        b.le            9f
+
+        add             v29.16b, v29.16b, v24.16b // base_y += 4
+        add             v30.16b, v30.16b, v24.16b // base_y += 4
+        b               8b
+
+89:
+        tbl             v18.16b, {v0.16b, v1.16b, v2.16b}, v29.16b // left[base_y+0], left[base_y+2]
+        tbl             v19.16b, {v0.16b, v1.16b, v2.16b}, v30.16b // left[base_y+1], left[base_y+3]
+
+        umull           v6.8h,   v18.8b,  v28.8b  // left[base_y]*(64-frac_y)
+        umlal           v6.8h,   v19.8b,  v27.8b  // + left[base_y+1]*frac_y
+        umull2          v17.8h,  v18.16b, v28.16b
+        umlal2          v17.8h,  v19.16b, v27.16b
+
+        rshrn           v6.8b,   v6.8h,   #6
+        rshrn2          v6.16b,  v17.8h,  #6
+
+        st1             {v6.d}[0], [x0], x1
+        subs            w5,  w5,  #2
+        st1             {v6.d}[1], [x0], x1
+        b.le            9f
+
+        add             v29.16b, v29.16b, v24.16b // base_y += 4
+        add             v30.16b, v30.16b, v24.16b // base_y += 4
+        b               89b
+
+9:
+        ret
+endfunc
+
 
 // void ipred_z3_fill1_8bpc_neon(pixel *dst, const ptrdiff_t stride,
 //                               const pixel *const left,

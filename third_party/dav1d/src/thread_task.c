@@ -327,6 +327,7 @@ int dav1d_task_create_tile_sbrow(Dav1dFrameContext *const f, const int pass,
         f->task_thread.pending_tasks.tail->next = &tasks[0];
     f->task_thread.pending_tasks.tail = prev_t;
     atomic_store(&f->task_thread.pending_tasks.merge, 1);
+    atomic_store(&f->task_thread.init_done, 1);
     pthread_mutex_unlock(&f->task_thread.pending_tasks.lock);
 
     return 0;
@@ -730,14 +731,11 @@ void *dav1d_worker_task(void *data) {
                             dav1d_decode_frame_exit(f, DAV1D_ERR(ENOMEM));
                             f->n_tile_data = 0;
                             pthread_cond_signal(&f->task_thread.cond);
-                            atomic_store(&f->task_thread.init_done, 1);
-                            continue;
                         } else {
                             pthread_mutex_unlock(&ttd->lock);
                         }
                     }
                 }
-                atomic_store(&f->task_thread.init_done, 1);
                 pthread_mutex_lock(&ttd->lock);
             } else {
                 pthread_mutex_lock(&ttd->lock);

@@ -1579,10 +1579,10 @@ cglobal ipred_z1_8bpc, 3, 7, 8, -16*13, dst, _, tl, w, h, angle, dx
     pshufb               m0, m1
     pshufb               m2, m1
     movq                 m3, [base+z_filter_t_w16+angleq*4]
-    pcmpeqb              m1, m0, [base+z_filter_wh16]
-    pand                 m1, m2
-    pcmpgtb              m1, m3
-    pmovmskb            r5d, m1
+    pcmpeqb              m0, [base+z_filter_wh16]
+    pand                 m0, m2
+    pcmpgtb              m0, m3
+    pmovmskb            r5d, m0
     test                r5d, r5d
     jz .w16_main ; filter_strength == 0
     movd                 m4, [tlq-1]
@@ -2007,7 +2007,6 @@ cglobal ipred_z2_8bpc, 4, 7, 8, -16*20, dst, _, tl, w, h, angle, dx
     %define             m10  [base+pw_512]
     %define             m11  [rsp+16*16]
     %define             m12  [rsp+16*17]
-    %define              r8  [rsp+16*6+4*1]
     %define             r9b  byte [rsp+16*18+4*0]
     %define             r9d  dword [rsp+16*18+4*0]
     %define            r10d  dword [rsp+16*18+4*1]
@@ -2203,19 +2202,14 @@ cglobal ipred_z2_8bpc, 4, 7, 8, -16*20, dst, _, tl, w, h, angle, dx
     pmullw               m4, m5
     pshuflw              m3, m3, q1111
     paddw                m6, m0
+    mov                 r2d, r10d
     pshuflw              m0, m4, q3333
     psubw                m4, [rsp+16*15]
     movq     [rsp+16*6+8*1], m3
     movq          [rsp+8*1], m0 ; dy*4
-%if ARCH_X86_64
-    mov                  r8, dstq
-%endif
+    mov                  r5, dstq
 .w4_loop0:
-%if ARCH_X86_32
-    mov                  r8, dstq
-%endif
     mova        [rsp+16*12], m6
-    mov                 r2d, r10d
     movq          [rsp+8*0], m4
     pand                 m0, m4, m8
     psraw                m4, 6
@@ -2302,14 +2296,14 @@ cglobal ipred_z2_8bpc, 4, 7, 8, -16*20, dst, _, tl, w, h, angle, dx
     jge .w4_loop
     movddup              m5, [rsp+8*3]
 .w4_leftonly_loop:
-    movzx               r3d, byte [rsp+8*2+0] ; base_y0
-    movq                 m1, [rsp+r3]
-    movzx               r3d, byte [rsp+8*2+2] ; base_y1
-    movhps               m1, [rsp+r3]
-    movzx               r3d, byte [rsp+8*2+4] ; base_y2
-    movq                 m2, [rsp+r3]
-    movzx               r3d, byte [rsp+8*2+6] ; base_y3
-    movhps               m2, [rsp+r3]
+    movzx               r2d, byte [rsp+8*2+0] ; base_y0
+    movq                 m1, [rsp+r2]
+    movzx               r2d, byte [rsp+8*2+2] ; base_y1
+    movhps               m1, [rsp+r2]
+    movzx               r2d, byte [rsp+8*2+4] ; base_y2
+    movq                 m2, [rsp+r2]
+    movzx               r2d, byte [rsp+8*2+6] ; base_y3
+    movhps               m2, [rsp+r2]
     psubw                m4, m3
     pshufb               m1, m12
     pshufb               m2, m12
@@ -2318,7 +2312,6 @@ cglobal ipred_z2_8bpc, 4, 7, 8, -16*20, dst, _, tl, w, h, angle, dx
     punpckhdq            m1, m2
     pmaddubsw            m0, m5
     pmaddubsw            m1, m5
-    movifnidn       strideq, stridemp
     pmulhrsw             m0, m10
     pmulhrsw             m1, m10
     packuswb             m0, m1
@@ -2337,18 +2330,14 @@ cglobal ipred_z2_8bpc, 4, 7, 8, -16*20, dst, _, tl, w, h, angle, dx
     sub                 r9d, 1<<8
     jl .w4_ret
     movq                 m4, [rsp+8*1]
-%if ARCH_X86_64
-    add                  r8, 4
-    mov                dstq, r8
-%else
-    mov                dstq, r8
-    add                dstq, 4
-%endif
+    add                  r5, 4
+    mov                dstq, r5
     paddw                m4, [rsp+8*0] ; base_y += 4*dy
-    movzx               r3d, word [rsp+16*15+8*1]
-    add                r10d, r3d
+    movzx               r2d, word [rsp+16*15+8*1]
     movddup              m6, [rsp+16*15+8*1]
     paddw                m6, [rsp+16*12] ; base_x += (4 << upsample_above)
+    add                 r2d, r10d
+    mov                r10d, r2d
     jmp .w4_loop0
 .w4_ret:
     RET

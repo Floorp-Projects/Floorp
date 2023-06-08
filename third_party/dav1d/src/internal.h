@@ -115,6 +115,7 @@ struct Dav1dContext {
     Dav1dMasteringDisplay *mastering_display;
     Dav1dRef *itut_t35_ref;
     Dav1dITUTT35 *itut_t35;
+    int n_itut_t35;
 
     // decoded output picture queue
     Dav1dData in;
@@ -175,15 +176,6 @@ struct Dav1dContext {
     Dav1dDSPContext dsp[3 /* 8, 10, 12 bits/component */];
     Dav1dRefmvsDSPContext refmvs_dsp;
 
-    // tree to keep track of which edges are available
-    struct {
-        EdgeNode *root[2 /* BL_128X128 vs. BL_64X64 */];
-        EdgeBranch branch_sb128[1 + 4 + 16 + 64];
-        EdgeBranch branch_sb64[1 + 4 + 16];
-        EdgeTip tip_sb128[256];
-        EdgeTip tip_sb64[64];
-    } intra_edge;
-
     Dav1dPicAllocator allocator;
     int apply_grain;
     int operating_point;
@@ -204,6 +196,7 @@ struct Dav1dContext {
     Dav1dLogger logger;
 
     Dav1dMemPool *picture_pool;
+    Dav1dMemPool *pic_ctx_pool;
 };
 
 struct Dav1dTask {
@@ -281,10 +274,7 @@ struct Dav1dFrameContext {
         atomic_uint *frame_progress, *copy_lpf_progress;
         // indexed using t->by * f->b4_stride + t->bx
         Av1Block *b;
-        struct CodedBlockInfo {
-            int16_t eob[3 /* plane */];
-            uint8_t txtp[3 /* plane */];
-        } *cbi;
+        int16_t (*cbi)[3 /* plane */]; /* bits 0-4: txtp, bits 5-15: eob */
         // indexed using (t->by >> 1) * (f->b4_stride >> 1) + (t->bx >> 1)
         uint16_t (*pal)[3 /* plane */][8 /* idx */];
         // iterated over inside tile state
@@ -320,7 +310,6 @@ struct Dav1dFrameContext {
         int start_of_tile_row_sz;
         int need_cdef_lpf_copy;
         pixel *p[3], *sr_p[3];
-        Av1Filter *mask_ptr, *prev_mask_ptr;
         int restore_planes; // enum LrRestorePlanes
     } lf;
 
@@ -402,7 +391,6 @@ struct Dav1dTaskContext {
     // which would make copy/assign operations slightly faster?
     uint16_t al_pal[2 /* a/l */][32 /* bx/y4 */][3 /* plane */][8 /* palette_idx */];
     uint8_t pal_sz_uv[2 /* a/l */][32 /* bx4/by4 */];
-    uint8_t txtp_map[32 * 32]; // inter-only
     ALIGN(union, 64) {
         struct {
             union {
@@ -427,7 +415,10 @@ struct Dav1dTaskContext {
                     uint8_t pal_ctx[64];
                 };
             };
-            int16_t ac[32 * 32];
+            union {
+                int16_t ac[32 * 32]; // intra-only
+                uint8_t txtp_map[32 * 32]; // inter-only
+            };
             uint8_t pal_idx[2 * 64 * 64];
             uint16_t pal[3 /* plane */][8 /* palette_idx */];
             ALIGN(union, 64) {
