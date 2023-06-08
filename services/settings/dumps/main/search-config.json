@@ -4,91 +4,365 @@
       "params": {
         "searchUrlGetParams": [
           {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ],
-        "suggestUrlGetParams": [
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "action",
-            "value": "opensearch"
-          },
-          {
-            "name": "wd",
+            "name": "q",
             "value": "{searchTerms}"
           }
         ]
       },
-      "schema": 1685384563001,
+      "schema": 1685563823313,
       "appliesTo": [
+        {
+          "included": {
+            "everywhere": true
+          }
+        },
+        {
+          "included": {
+            "everywhere": true
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "t",
+              "value": "ftsa",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ],
+          "telemetryId": "ddg-esr"
+        },
+        {
+          "override": true,
+          "application": {
+            "distributions": [
+              "mint-001"
+            ]
+          },
+          "extraParams": [
+            {
+              "name": "t",
+              "value": "lm",
+              "purpose": "searchbar",
+              "condition": "purpose"
+            }
+          ]
+        }
+      ],
+      "extraParams": [
+        {
+          "name": "t",
+          "value": "ffab",
+          "purpose": "searchbar",
+          "condition": "purpose"
+        }
+      ],
+      "telemetryId": "ddg",
+      "webExtension": {
+        "id": "ddg@search.mozilla.org"
+      },
+      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
+      "last_modified": 1685625615515
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "pc",
+            "value": "MOZI"
+          },
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1685563819946,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "an",
+                "ar",
+                "ast",
+                "az",
+                "ca",
+                "ca-valencia",
+                "cak",
+                "da",
+                "de",
+                "dsb",
+                "el",
+                "eo",
+                "es-CL",
+                "es-ES",
+                "es-MX",
+                "eu",
+                "fa",
+                "ff",
+                "fi",
+                "fr",
+                "fur",
+                "fy-NL",
+                "gn",
+                "gu-IN",
+                "hi-IN",
+                "hr",
+                "hsb",
+                "ia",
+                "is",
+                "it",
+                "ja-JP-macos",
+                "ja",
+                "ka",
+                "kab",
+                "km",
+                "kn",
+                "lij",
+                "lo",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "nb-NO",
+                "ne-NP",
+                "nl",
+                "nn-NO",
+                "oc",
+                "pa-IN",
+                "pt-BR",
+                "rm",
+                "ro",
+                "sc",
+                "sco",
+                "son",
+                "sq",
+                "sr",
+                "sv-SE",
+                "th",
+                "tl",
+                "trs",
+                "uk",
+                "ur",
+                "uz",
+                "wo",
+                "xh",
+                "zh-CN"
+              ],
+              "startsWith": [
+                "bn",
+                "en"
+              ]
+            }
+          }
+        },
         {
           "params": {
             "searchUrlGetParams": [
               {
-                "name": "ie",
-                "value": "utf-8"
+                "name": "pc",
+                "value": "MOZR"
               },
               {
-                "name": "wd",
+                "name": "q",
                 "value": "{searchTerms}"
               }
-            ],
-            "suggestUrlGetParams": [
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "an",
+                "ar",
+                "ast",
+                "az",
+                "ca",
+                "ca-valencia",
+                "cak",
+                "da",
+                "de",
+                "dsb",
+                "el",
+                "eo",
+                "es-CL",
+                "es-ES",
+                "es-MX",
+                "eu",
+                "fa",
+                "ff",
+                "fi",
+                "fr",
+                "fur",
+                "fy-NL",
+                "gn",
+                "gu-IN",
+                "hi-IN",
+                "hr",
+                "hsb",
+                "ia",
+                "is",
+                "it",
+                "ja-JP-macos",
+                "ja",
+                "ka",
+                "kab",
+                "km",
+                "kn",
+                "lij",
+                "lo",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "nb-NO",
+                "ne-NP",
+                "nl",
+                "nn-NO",
+                "oc",
+                "pa-IN",
+                "pt-BR",
+                "rm",
+                "ro",
+                "sc",
+                "sco",
+                "son",
+                "sq",
+                "sr",
+                "sv-SE",
+                "th",
+                "tl",
+                "trs",
+                "uk",
+                "ur",
+                "uz",
+                "wo",
+                "xh",
+                "zh-CN"
+              ],
+              "startsWith": [
+                "bn",
+                "en"
+              ]
+            }
+          },
+          "application": {
+            "channel": [
+              "esr"
+            ]
+          },
+          "telemetryId": "bing-esr"
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
               {
-                "name": "ie",
-                "value": "utf-8"
+                "name": "ptag",
+                "value": "MOZZ0000000020"
               },
               {
-                "name": "action",
-                "value": "opensearch"
+                "name": "pc",
+                "value": "MZSL01"
               },
               {
-                "name": "wd",
+                "name": "q",
                 "value": "{searchTerms}"
               }
             ]
           },
           "default": "yes",
           "override": true,
-          "orderHint": 3000,
           "application": {
             "distributions": [
-              "MozillaOnline"
+              "sweetlabs-b-oem1",
+              "sweetlabs-b-r-oem1"
             ]
           }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            }
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
+                "name": "pc",
+                "value": "MZSL02"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "sweetlabs-b-oem2",
+              "sweetlabs-b-r-oem2"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ptag",
+                "value": "MOZZ0000000020"
+              },
+              {
+                "name": "pc",
+                "value": "MZSL03"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "application": {
+            "distributions": [
+              "sweetlabs-b-oem3",
+              "sweetlabs-b-r-oem3"
+            ]
           }
         },
         {
           "default": "yes",
           "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
+            "everywhere": true
+          },
+          "application": {
+            "distributions": [
+              "acer-003",
+              "acer-004"
             ]
           }
         },
         {
-          "default": "no",
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "pc",
+                "value": "MOZX"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
           "override": true,
           "application": {
             "distributions": [
@@ -96,14 +370,22 @@
               "acer-004"
             ]
           }
+        },
+        {
+          "override": true,
+          "orderHint": 2500,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
         }
       ],
-      "telemetryId": "baidu",
       "webExtension": {
-        "id": "baidu@search.mozilla.org"
+        "id": "bing@search.mozilla.org"
       },
-      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
-      "last_modified": 1685453218069
+      "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
+      "last_modified": 1685625615513
     },
     {
       "urls": {
@@ -124,7 +406,7 @@
           }
         ]
       },
-      "schema": 1678791413625,
+      "schema": 1685453218191,
       "appliesTo": [
         {
           "default": "yes-if-no-other",
@@ -260,7 +542,14 @@
               "condition": "pref"
             }
           ],
-          "telemetryId": "google-b-1-d"
+          "telemetryId": "google-b-1-d",
+          "suggestExtraParams": [
+            {
+              "name": "tpsf",
+              "pref": "search_rich_suggestions",
+              "condition": "pref"
+            }
+          ]
         },
         {
           "params": {
@@ -408,8 +697,120 @@
       "webExtension": {
         "id": "google@search.mozilla.org"
       },
+      "suggestExtraParams": [
+        {
+          "name": "tpsf",
+          "pref": "search_rich_suggestions",
+          "condition": "pref"
+        }
+      ],
       "id": "cb8e7210-9f0b-48fa-8708-b9a03df79eea",
-      "last_modified": 1678922485545
+      "last_modified": 1685625615510
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ],
+        "suggestUrlGetParams": [
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "action",
+            "value": "opensearch"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1685384563001,
+      "appliesTo": [
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ],
+            "suggestUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 3000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            }
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          }
+        },
+        {
+          "default": "no",
+          "override": true,
+          "application": {
+            "distributions": [
+              "acer-003",
+              "acer-004"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "baidu",
+      "webExtension": {
+        "id": "baidu@search.mozilla.org"
+      },
+      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
+      "last_modified": 1685453218069
     },
     {
       "schema": 1674842123977,
@@ -1173,393 +1574,6 @@
       },
       "id": "cbe309e0-f638-4996-9dfc-ea5c19ef16e9",
       "last_modified": 1675353179507
-    },
-    {
-      "params": {
-        "searchUrlGetParams": [
-          {
-            "name": "pc",
-            "value": "MOZI"
-          },
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
-        ]
-      },
-      "schema": 1674751976781,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "an",
-                "ar",
-                "ast",
-                "az",
-                "ca",
-                "ca-valencia",
-                "cak",
-                "da",
-                "de",
-                "dsb",
-                "el",
-                "eo",
-                "es-CL",
-                "es-ES",
-                "es-MX",
-                "eu",
-                "fa",
-                "ff",
-                "fi",
-                "fr",
-                "fur",
-                "fy-NL",
-                "gn",
-                "gu-IN",
-                "hi-IN",
-                "hr",
-                "hsb",
-                "ia",
-                "is",
-                "it",
-                "ja-JP-macos",
-                "ja",
-                "ka",
-                "kab",
-                "km",
-                "kn",
-                "lij",
-                "lo",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "nb-NO",
-                "ne-NP",
-                "nl",
-                "nn-NO",
-                "oc",
-                "pa-IN",
-                "pt-BR",
-                "rm",
-                "ro",
-                "sc",
-                "sco",
-                "son",
-                "sq",
-                "sr",
-                "sv-SE",
-                "th",
-                "tl",
-                "trs",
-                "uk",
-                "ur",
-                "uz",
-                "wo",
-                "xh",
-                "zh-CN"
-              ],
-              "startsWith": [
-                "bn",
-                "en"
-              ]
-            }
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZR"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "an",
-                "ar",
-                "ast",
-                "az",
-                "ca",
-                "ca-valencia",
-                "cak",
-                "da",
-                "de",
-                "dsb",
-                "el",
-                "eo",
-                "es-CL",
-                "es-ES",
-                "es-MX",
-                "eu",
-                "fa",
-                "ff",
-                "fi",
-                "fr",
-                "fur",
-                "fy-NL",
-                "gn",
-                "gu-IN",
-                "hi-IN",
-                "hr",
-                "hsb",
-                "ia",
-                "is",
-                "it",
-                "ja-JP-macos",
-                "ja",
-                "ka",
-                "kab",
-                "km",
-                "kn",
-                "lij",
-                "lo",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "nb-NO",
-                "ne-NP",
-                "nl",
-                "nn-NO",
-                "oc",
-                "pa-IN",
-                "pt-BR",
-                "rm",
-                "ro",
-                "sc",
-                "sco",
-                "son",
-                "sq",
-                "sr",
-                "sv-SE",
-                "th",
-                "tl",
-                "trs",
-                "uk",
-                "ur",
-                "uz",
-                "wo",
-                "xh",
-                "zh-CN"
-              ],
-              "startsWith": [
-                "bn",
-                "en"
-              ]
-            }
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
-          "telemetryId": "bing-esr"
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL01"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-b-oem1",
-              "sweetlabs-b-r-oem1"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL02"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-b-oem2",
-              "sweetlabs-b-r-oem2"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL03"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-b-oem3",
-              "sweetlabs-b-r-oem3"
-            ]
-          }
-        },
-        {
-          "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZX"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
-        },
-        {
-          "override": "true",
-          "orderHint": 2500,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "bing@search.mozilla.org"
-      },
-      "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
-      "last_modified": 1675353179505
-    },
-    {
-      "params": {
-        "searchUrlGetParams": [
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
-        ]
-      },
-      "schema": 1674147734571,
-      "appliesTo": [
-        {
-          "included": {
-            "everywhere": true
-          }
-        },
-        {
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "t",
-              "value": "ftsa",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ],
-          "telemetryId": "ddg-esr"
-        },
-        {
-          "override": "true",
-          "application": {
-            "distributions": [
-              "mint-001"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "t",
-              "value": "lm",
-              "purpose": "searchbar",
-              "condition": "purpose"
-            }
-          ]
-        }
-      ],
-      "extraParams": [
-        {
-          "name": "t",
-          "value": "ffab",
-          "purpose": "searchbar",
-          "condition": "purpose"
-        }
-      ],
-      "telemetryId": "ddg",
-      "webExtension": {
-        "id": "ddg@search.mozilla.org"
-      },
-      "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
-      "last_modified": 1674751976728
     },
     {
       "schema": 1673982699337,
@@ -2787,5 +2801,5 @@
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1685453218069
+  "timestamp": 1685625615515
 }
