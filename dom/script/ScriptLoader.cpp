@@ -1623,17 +1623,6 @@ nsresult ScriptLoader::StartOffThreadCompilation(
   nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aRequest->IsModuleRequest()) {
-    auto compile = [&](auto& source) {
-      return JS::CompileModuleToStencilOffThread(aCx, aOptions, source,
-                                                 callback, aRunnable);
-    };
-
-    MOZ_ASSERT(!maybeSource.empty());
-    *aTokenOut = maybeSource.mapNonEmpty(compile);
-    return CompileResultForToken(*aTokenOut);
-  }
-
   if (ShouldApplyDelazifyStrategy(aRequest)) {
     ApplyDelazifyStrategy(&aOptions);
     mTotalFullParseSize +=
@@ -1646,6 +1635,17 @@ nsresult ScriptLoader::StartOffThreadCompilation(
          "url=%s mTotalFullParseSize=%u",
          aRequest, aRequest->mURI->GetSpecOrDefault().get(),
          mTotalFullParseSize));
+  }
+
+  if (aRequest->IsModuleRequest()) {
+    auto compile = [&](auto& source) {
+      return JS::CompileModuleToStencilOffThread(aCx, aOptions, source,
+                                                 callback, aRunnable);
+    };
+
+    MOZ_ASSERT(!maybeSource.empty());
+    *aTokenOut = maybeSource.mapNonEmpty(compile);
+    return CompileResultForToken(*aTokenOut);
   }
 
   if (StaticPrefs::dom_expose_test_interfaces()) {
