@@ -1,0 +1,41 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Printing: Setup"
+
+origin:
+  name: cups
+  description: standards-based, open source printing system
+
+  url: https://github.com/apple/cups
+
+  release: 82e3ee0e3230287b76a76fb8f16b92ca6e50b444 (2020-04-27T18:04:29Z).
+  revision: 82e3ee0e3230287b76a76fb8f16b92ca6e50b444
+
+  license: Apache-2.0
+
+vendoring:
+  url: https://github.com/apple/cups
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - "**"
+
+  include:
+    - LICENSE
+    - cups/array.h
+    - cups/cups.h
+    - cups/file.h
+    - cups/http.h
+    - cups/ipp.h
+    - cups/language.h
+    - cups/pwg.h
+    - cups/versioning.h
+
+  update-actions:
+    - action: move-dir
+      from: "{yaml_dir}/cups"
+      to: "{yaml_dir}/include/cups"
