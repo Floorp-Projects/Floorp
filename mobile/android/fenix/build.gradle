@@ -83,7 +83,7 @@ buildscript {
     }
 
     // Variables in plugins {} aren't directly supported. Hack around it by setting an
-    // intermediate variable which can pull from FenixDependencies.kt and be used later.
+    // intermediate variable which can pull from FenixDependenciesPlugin.kt and be used later.
     ext {
         detekt_plugin = FenixVersions.detekt
         protobuf_plugin = FenixVersions.protobuf_plugin
