@@ -962,7 +962,9 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
     if (providerInfo.components?.length) {
       searchAdImpression.providerInfo = providerInfo;
       let start = Cu.now();
-      let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
+      let shoppingTabDisplayed = searchAdImpression.hasShoppingTab(
+        this.document
+      );
       ChromeUtils.addProfilerMarker(
         "SearchSERPTelemetryChild.#recordImpression",
         start,
@@ -970,7 +972,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       );
       this.sendAsyncMessage("SearchTelemetry:PageImpression", {
         url,
-        hasShoppingTab,
+        shoppingTabDisplayed,
       });
     }
   }
