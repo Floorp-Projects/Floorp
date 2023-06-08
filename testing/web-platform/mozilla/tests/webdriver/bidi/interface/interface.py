@@ -12,7 +12,7 @@ async def test_navigator_webdriver_enabled(inline, browser):
     server_port = current_browser.remote_agent_port
 
     async with BidiSession.bidi_only(
-        f"ws://{server_host}:{server_port}"
+        f"ws://{server_host}:{server_port}", requested_capabilities={"alwaysMatch": {}}
     ) as bidi_session:
         contexts = await bidi_session.browsing_context.get_tree(max_depth=0)
         assert len(contexts) > 0
