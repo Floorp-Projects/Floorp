@@ -3317,14 +3317,6 @@ pref("extensions.webextensions.userScripts.enabled", true);
 // Whether or not the installed extensions should be migrated to the storage.local IndexedDB backend.
 pref("extensions.webextensions.ExtensionStorageIDB.enabled", true);
 
-// if enabled, store execution times for API calls
-pref("extensions.webextensions.enablePerformanceCounters", true);
-
-// Maximum age in milliseconds of performance counters in children
-// When reached, the counters are sent to the main process and
-// reset, so we reduce memory footprint.
-pref("extensions.webextensions.performanceCountersMaxAge", 5000);
-
 // Whether to allow the inline options browser in HTML about:addons page.
 pref("extensions.htmlaboutaddons.inline-options.enabled", true);
 // Show recommendations on the extension and theme list views.

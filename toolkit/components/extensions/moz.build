@@ -43,7 +43,6 @@ EXTRA_JS_MODULES += [
     "MessageManagerProxy.sys.mjs",
     "NativeManifests.sys.mjs",
     "NativeMessaging.sys.mjs",
-    "PerformanceCounters.sys.mjs",
     "ProxyChannelFilter.sys.mjs",
     "Schemas.sys.mjs",
     "WebNavigation.sys.mjs",
