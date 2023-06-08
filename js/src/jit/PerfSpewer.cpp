@@ -563,7 +563,7 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
 #ifdef JS_JITSPEW
   if (PerfIROpsEnabled()) {
     JSScript* script = frame.script;
-    unsigned numOperands = js::StackUses(pc);
+    unsigned numOperands = js::StackUses(op, pc);
 
     Sprinter buf(cx);
     CHECK_RETURN(buf.init());
