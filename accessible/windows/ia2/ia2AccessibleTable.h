@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace a11y {
 
-class TableAccessibleBase;
+class TableAccessible;
 
 class ia2AccessibleTable : public IAccessibleTable,
                            public IAccessibleTable2,
@@ -169,7 +169,7 @@ class ia2AccessibleTable : public IAccessibleTable,
   using ia2AccessibleHypertext::ia2AccessibleHypertext;
 
  private:
-  TableAccessibleBase* TableAcc();
+  TableAccessible* TableAcc();
 };
 
 }  // namespace a11y

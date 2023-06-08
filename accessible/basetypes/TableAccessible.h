@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TABLE_ACCESSIBLE_BASE_H
-#define TABLE_ACCESSIBLE_BASE_H
+#ifndef TABLE_ACCESSIBLE_H
+#define TABLE_ACCESSIBLE_H
 
 #include "nsString.h"
 #include "nsTArray.h"
@@ -18,7 +18,7 @@ class Accessible;
 /**
  * Accessible table interface.
  */
-class TableAccessibleBase {
+class TableAccessible {
  public:
   /**
    * Return the caption accessible if any for this table.

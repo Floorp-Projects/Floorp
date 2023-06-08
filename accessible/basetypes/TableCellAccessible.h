@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_TableCellAccessibleBase_h__
-#define mozilla_a11y_TableCellAccessibleBase_h__
+#ifndef mozilla_a11y_TableCellAccessible_h__
+#define mozilla_a11y_TableCellAccessible_h__
 
 #include "nsTArray.h"
 #include <stdint.h>
@@ -14,17 +14,17 @@ namespace mozilla {
 namespace a11y {
 
 class Accessible;
-class TableAccessibleBase;
+class TableAccessible;
 
 /**
  * Abstract interface implemented by table cell accessibles.
  */
-class TableCellAccessibleBase {
+class TableCellAccessible {
  public:
   /**
    * Return the table this cell is in.
    */
-  virtual TableAccessibleBase* Table() const = 0;
+  virtual TableAccessible* Table() const = 0;
 
   /**
    * Return the column of the table this cell is in.
@@ -65,4 +65,4 @@ class TableCellAccessibleBase {
 }  // namespace a11y
 }  // namespace mozilla
 
-#endif  // mozilla_a11y_TableCellAccessibleBase_h__
+#endif  // mozilla_a11y_TableCellAccessible_h__
