@@ -65,7 +65,7 @@ tasks:
                 - githubLintDetektDetails
             resources:
                 # TODO: Make focus lint tasks use their own gradle deps tasks
-                - focus-android/buildSrc/src/main/java/FocusDependencies.kt
+                - focus-android/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt
 
     lint-fenix:
         treeherder:

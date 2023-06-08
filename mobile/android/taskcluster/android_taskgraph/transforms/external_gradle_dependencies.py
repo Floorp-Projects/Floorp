@@ -69,8 +69,10 @@ def _get_build_gradle_paths(gradle_project):
     ]
 
     # Make sure we rebuild the cache when Fenix or Focus dependencies are changed
-    if gradle_project in ("focus", "fenix"):
+    if gradle_project == "fenix":
         file_list.append(f"{project_dir}/buildSrc/src/main/java/*Dependencies.kt")
+    elif gradle_project == "focus":
+        file_list.append(f"{project_dir}/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt")
 
     return file_list
 

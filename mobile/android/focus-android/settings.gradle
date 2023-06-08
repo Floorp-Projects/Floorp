@@ -6,11 +6,13 @@ pluginManagement {
     includeBuild("../android-components/plugins/publicsuffixlist")
     includeBuild("../android-components/plugins/dependencies")
     includeBuild("../android-components/plugins/config")
+    includeBuild("./plugins/focusdependencies")
 }
 
 plugins {
     id "mozac.ConfigPlugin"
     id 'mozac.DependenciesPlugin'
+    id 'FocusDependenciesPlugin'
 }
 
 apply from: file('../shared-settings.gradle')
