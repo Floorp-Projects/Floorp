@@ -936,6 +936,12 @@ const PanelUI = {
       popupnotification.setAttribute("icon", notification.options.popupIconURL);
       popupnotification.setAttribute("hasicon", true);
     }
+    if (notification.options.learnMoreURL) {
+      popupnotification.setAttribute(
+        "learnmoreurl",
+        notification.options.learnMoreURL
+      );
+    }
 
     popupnotification.notification = notification;
     popupnotification.show();

@@ -263,7 +263,7 @@ async function setAppUpdateAutoEnabledHelper(enabled) {
  * @param  notificationId
  *         The ID of the notification to get the button for.
  * @param  button
- *         The anonid of the button to get.
+ *         The anonid of the button to get, or a function to find it.
  * @return The button element.
  */
 function getNotificationButton(win, notificationId, button) {
@@ -271,6 +271,9 @@ function getNotificationButton(win, notificationId, button) {
     `appMenu-${notificationId}-notification`
   );
   ok(!notification.hidden, `${notificationId} notification is showing`);
+  if (typeof button === "function") {
+    return button(notification);
+  }
   return notification[button];
 }
 
