@@ -1886,11 +1886,13 @@ var gUnifiedExtensions = {
 
     if (titleFluentId) {
       const titleEl = document.createElement("strong");
+      titleEl.setAttribute("id", titleFluentId);
       document.l10n.setAttributes(titleEl, titleFluentId);
       messageBar.append(titleEl);
     }
 
     const messageEl = document.createElement("span");
+    messageEl.setAttribute("id", messageFluentId);
     document.l10n.setAttributes(messageEl, messageFluentId);
     messageBar.append(messageEl);
 
@@ -1901,6 +1903,13 @@ var gUnifiedExtensions = {
         is: "moz-support-link",
       });
       supportUrl.setAttribute("support-page", supportPage);
+      if (titleFluentId) {
+        supportUrl.setAttribute("aria-labelledby", titleFluentId);
+        supportUrl.setAttribute("aria-describedby", messageFluentId);
+      } else {
+        supportUrl.setAttribute("aria-labelledby", messageFluentId);
+      }
+
       messageBar.append(supportUrl);
     }
 
