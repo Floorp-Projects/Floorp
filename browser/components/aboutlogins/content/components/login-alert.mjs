@@ -78,4 +78,62 @@ export class LoginAlert extends MozLitElement {
   }
 }
 
+export class LoginBreachAlert extends MozLitElement {
+  static get properties() {
+    return {
+      date: { type: Number, reflect: true },
+      hostname: { type: String, reflect: true },
+    };
+  }
+
+  static styles = css`
+    div[slot="content"] {
+      margin-block-start: 8px;
+    }
+
+    h4 {
+      margin: 0;
+    }
+
+    a {
+      font-weight: 600;
+      color: inherit;
+    }
+  `;
+
+  constructor() {
+    super();
+    this.date = 0;
+    this.hostname = "";
+  }
+
+  render() {
+    return html`
+      <login-alert
+        variant="error"
+        icon="chrome://browser/content/aboutlogins/icons/breached-website.svg"
+        titleId="about-logins-breach-alert-title"
+      >
+        <div slot="content">
+          <h4
+            data-l10n-id="about-logins-breach-alert-date"
+            data-l10n-args=${JSON.stringify({ date: this.date })}
+          ></h4>
+          <span data-l10n-id="breach-alert-text"></span>
+          <a
+            data-l10n-id="about-logins-breach-alert-link"
+            data-l10n-args=${JSON.stringify({
+              hostname: this.hostname,
+            })}
+            href=${this.hostname}
+            rel="noreferrer"
+            target="_blank"
+          ></a>
+        </div>
+      </login-alert>
+    `;
+  }
+}
+
+customElements.define("login-breach-alert", LoginBreachAlert);
 customElements.define("login-alert", LoginAlert);
