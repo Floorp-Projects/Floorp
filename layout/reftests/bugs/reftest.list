@@ -2091,6 +2091,9 @@ fuzzy(0-2,0-96600) == 1648282-1b.html 1648282-1-ref.html
 == 1673677-3.html 1673677-3-ref.html
 == 1686729-1.html 1686729-1-ref.html
 != chrome://reftest/content/bugs/1688004.xhtml about:blank
+pref(image.downscale-during-decode.enabled,true) fuzzy-if(OSX||winWidget,0-167,0-44310) fuzzy-if(gtkWidget,0-2,0-37220) == 1714763-1.html 1714763-1-ref.html
+pref(image.downscale-during-decode.enabled,true) fuzzy-if(OSX||winWidget,0-166,0-22530) fuzzy-if(gtkWidget,0-18,0-19006) fuzzy-if(Android,0-21,0-22254) == 1714763-2.html 1714763-2-ref.html
+pref(image.downscale-during-decode.enabled,true) fuzzy-if(OSX||winWidget,0-235,0-289) fuzzy-if(gtkWidget,0-186,0-240) fuzzy-if(Android,0-185,0-232) == 1714763-3.html 1714763-3-ref.html
 skip-if(!appleSilicon) != 1721223-1.html 1721223-1-notref.html # Big Sur required for updated system font; OSX value is clamped to 10.15
 skip-if(Android) == 1727172-1.xhtml 1727172-1-ref.html
 == 1726663-1.html 1726663-1-ref.html

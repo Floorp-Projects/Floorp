@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+html {
+  /* Suppress scrollbars to avoid periodical unthrottling for transform */
+  /* animations on the compositor. */
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+@keyframes anim {
+  0% { scale: 1.9; }
+  100% { scale: 1.9; }
+}
+#target {
+  position: absolute;
+  left:100px;
+  top:100px;
+  scale:0.05;
+}
+#rotate {
+  transform: rotate(180deg);
+  transform-origin: 50% 50%;
+}
+</style>
+<body>
+<div id="target">
+  <div id="rotate">
+    <svg width="100" height="100">
+      <g id="g">
+        <circle cx="100" cy="100" r="40" style="fill: rgb(200, 20, 20);"></circle>
+      </g>
+    </svg>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('MozReftestInvalidate', () => {
+  // Set a bit longer animation delay to avoid painting the initial animation
+  // style on the main thread.
+  target.style.animation = "anim 100s 1s";
+  target.addEventListener("animationstart", () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove("reftest-wait");
+      });
+    });
+  });
+}, { once: true });
+</script>
+</body>
+</html>

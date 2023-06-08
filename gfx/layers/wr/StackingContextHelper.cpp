@@ -76,7 +76,8 @@ MatrixScales ChooseScale(nsIFrame* aContainerFrame,
     } else {
       // Scale factors are normalized to a power of 2 to reduce the number of
       // resolution changes
-      scale = aTransform2d.ScaleFactors();
+      scale = (aTransform2d * gfx::Matrix::Scaling(aXScale, aYScale))
+                  .ScaleFactors();
       // For frames with a changing scale transform round scale factors up to
       // nearest power-of-2 boundary so that we don't keep having to redraw
       // the content as it scales up and down. Rounding up to nearest
@@ -152,7 +153,7 @@ StackingContextHelper::StackingContextHelper(
       nsRect r = LayoutDevicePixel::ToAppUnits(aBounds, apd);
       mScale = ChooseScale(aContainerFrame, aContainerItem, r,
                            aParentSC.mScale.xScale, aParentSC.mScale.yScale,
-                           mInheritedTransform,
+                           transform2d,
                            /* aCanDraw2D = */ true);
     } else {
       mScale = gfx::MatrixScales(1.0f, 1.0f);
