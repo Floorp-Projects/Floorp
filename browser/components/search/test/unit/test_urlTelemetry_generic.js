@@ -280,7 +280,7 @@ add_task(async function test_parsing_search_urls() {
     SearchSERPTelemetry.reportPageImpression(
       {
         url: test.trackingUrl,
-        hasShoppingTab: false,
+        shoppingTabDisplayed: false,
       },
       browser
     );
