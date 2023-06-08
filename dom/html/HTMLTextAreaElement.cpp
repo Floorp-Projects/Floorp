@@ -113,19 +113,6 @@ nsresult HTMLTextAreaElement::Clone(dom::NodeInfo* aNodeInfo,
   nsresult rv = const_cast<HTMLTextAreaElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mValueChanged) {
-    // Set our value on the clone.
-    nsAutoString value;
-    GetValueInternal(value, true);
-
-    // SetValueInternal handles setting mValueChanged for us
-    if (NS_WARN_IF(
-            NS_FAILED(rv = it->SetValueInternal(
-                          value, {ValueSetterOption::SetValueChanged})))) {
-      return rv;
-    }
-  }
-
   it->SetLastValueChangeWasInteractive(mLastValueChangeWasInteractive);
   it.forget(aResult);
   return NS_OK;
@@ -956,18 +943,27 @@ nsresult HTMLTextAreaElement::CopyInnerTo(Element* aDest) {
   nsresult rv = nsGenericHTMLFormControlElementWithState::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDest->OwnerDoc()->IsStaticDocument()) {
+  if (mValueChanged || aDest->OwnerDoc()->IsStaticDocument()) {
+    // Set our value on the clone.
+    auto* dest = static_cast<HTMLTextAreaElement*>(aDest);
+
     nsAutoString value;
     GetValueInternal(value, true);
-    ErrorResult ret;
-    static_cast<HTMLTextAreaElement*>(aDest)->SetValue(value, ret);
-    return ret.StealNSResult();
+
+    // SetValueInternal handles setting mValueChanged for us. dest is a fresh
+    // element so setting its value can't really run script.
+    if (NS_WARN_IF(
+            NS_FAILED(rv = MOZ_KnownLive(dest)->SetValueInternal(
+                          value, {ValueSetterOption::SetValueChanged})))) {
+      return rv;
+    }
   }
+
   return NS_OK;
 }
 
 bool HTMLTextAreaElement::IsMutable() const {
-  return (!HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) && !IsDisabled());
+  return !HasAttr(nsGkAtoms::readonly) && !IsDisabled();
 }
 
 void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
