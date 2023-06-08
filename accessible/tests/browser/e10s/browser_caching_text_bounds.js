@@ -460,7 +460,7 @@ addAccessibleTask(
       font: 20px/20px Ahem;
     }
   </style>
-  <pre id="t"><code>XX
+  <pre id="t"><code role="none">XX
 XXX
 XX
 X</pre>`,
