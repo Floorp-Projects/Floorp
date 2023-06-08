@@ -7,9 +7,9 @@
 #ifndef mozilla_a11y_XULTreeGridAccessible_h__
 #define mozilla_a11y_XULTreeGridAccessible_h__
 
+#include "mozilla/a11y/TableAccessibleBase.h"
+#include "mozilla/a11y/TableCellAccessibleBase.h"
 #include "XULTreeAccessible.h"
-#include "TableAccessible.h"
-#include "TableCellAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -19,7 +19,8 @@ class XULTreeGridCellAccessible;
 /**
  * Represents accessible for XUL tree in the case when it has multiple columns.
  */
-class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
+class XULTreeGridAccessible : public XULTreeAccessible,
+                              public TableAccessibleBase {
  public:
   XULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc,
                         nsTreeBodyFrame* aTreeFrame)
@@ -27,7 +28,7 @@ class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
     mGenericTypes |= eTable;
   }
 
-  // TableAccessible
+  // TableAccessibleBase
   virtual uint32_t ColCount() const override;
   virtual uint32_t RowCount() override;
   virtual LocalAccessible* CellAt(uint32_t aRowIndex,
@@ -46,8 +47,17 @@ class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
   virtual LocalAccessible* AsAccessible() override { return this; }
 
+  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) override {
+    return static_cast<int32_t>(ColCount() * aRowIdx + aColIdx);
+  }
+
+  virtual int32_t ColIndexAt(uint32_t aCellIdx) override;
+  virtual int32_t RowIndexAt(uint32_t aCellIdx) override;
+  virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
+                                  int32_t* aColIdx) override;
+
   // LocalAccessible
-  virtual TableAccessible* AsTable() override { return this; }
+  virtual TableAccessibleBase* AsTableBase() override { return this; }
   virtual a11y::role NativeRole() const override;
 
  protected:
@@ -105,7 +115,7 @@ class XULTreeGridRowAccessible final : public XULTreeItemAccessibleBase {
  */
 
 class XULTreeGridCellAccessible : public LeafAccessible,
-                                  public TableCellAccessible {
+                                  public TableCellAccessibleBase {
  public:
   XULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
                             XULTreeGridRowAccessible* aRowAcc,
@@ -119,7 +129,7 @@ class XULTreeGridCellAccessible : public LeafAccessible,
 
   // LocalAccessible
   virtual void Shutdown() override;
-  virtual TableCellAccessible* AsTableCell() override { return this; }
+  virtual TableCellAccessibleBase* AsTableCellBase() override { return this; }
   virtual nsRect BoundsInAppUnits() const override;
   virtual nsIntRect BoundsInCSSPixels() const override;
   virtual ENameValueFlag Name(nsString& aName) const override;
@@ -135,8 +145,8 @@ class XULTreeGridCellAccessible : public LeafAccessible,
   virtual bool HasPrimaryAction() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
 
-  // TableCellAccessible
-  virtual TableAccessible* Table() const override;
+  // TableCellAccessibleBase
+  virtual TableAccessibleBase* Table() const override;
   virtual uint32_t ColIdx() const override;
   virtual uint32_t RowIdx() const override;
   virtual void ColHeaderCells(nsTArray<Accessible*>* aHeaderCells) override;
