@@ -19,6 +19,7 @@ Specific documentation on a few topics is available at:
 
    build
    test
+   hacking_tips
    Debugger/index
    SavedFrame/index
    feature_checklist
