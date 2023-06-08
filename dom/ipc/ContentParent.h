@@ -846,8 +846,6 @@ class ContentParent final : public PContentParent,
     SEND_SHUTDOWN_MESSAGE,
     // Close the channel ourselves and let the subprocess clean up itself.
     CLOSE_CHANNEL,
-    // Close the channel with error and let the subprocess clean up itself.
-    CLOSE_CHANNEL_WITH_ERROR,
   };
 
   void MaybeAsyncSendShutDownMessage();
@@ -857,11 +855,6 @@ class ContentParent final : public PContentParent,
    * will return false and this ContentParent will not be returned
    * by the Get*() funtions.  However, the shutdown sequence itself
    * may be asynchronous.
-   *
-   * If aMethod is CLOSE_CHANNEL_WITH_ERROR and this is the first call
-   * to ShutDownProcess, then we'll close our channel using CloseWithError()
-   * rather than vanilla Close().  CloseWithError() indicates to IPC that this
-   * is an abnormal shutdown (e.g. a crash).
    */
   bool ShutDownProcess(ShutDownMethod aMethod);
 

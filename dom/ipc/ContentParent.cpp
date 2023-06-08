@@ -1878,18 +1878,13 @@ bool ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
     qms->AbortOperationsForProcess(mChildID);
   }
 
-  if (aMethod == CLOSE_CHANNEL || aMethod == CLOSE_CHANNEL_WITH_ERROR) {
+  if (aMethod == CLOSE_CHANNEL) {
     if (!mCalledClose) {
       MaybeLogBlockShutdownDiagnostics(
           this, "ShutDownProcess: Closing channel.", __FILE__, __LINE__);
-      // Close()/CloseWithError() can only be called once: They kick off the
-      // destruction sequence.
+      // Close() can only be called once: It kicks off the destruction sequence.
       mCalledClose = true;
-      if (aMethod == CLOSE_CHANNEL_WITH_ERROR) {
-        CloseWithError();
-      } else {
-        Close();
-      }
+      Close();
     }
     result = true;
   }
@@ -2078,7 +2073,9 @@ void ContentParent::ProcessingError(Result aCode, const char* aReason) {
 #ifndef FUZZING
   KillHard(aReason);
 #endif
-  ShutDownProcess(CLOSE_CHANNEL_WITH_ERROR);
+  if (CanSend()) {
+    GetIPCChannel()->InduceConnectionError();
+  }
 }
 
 void ContentParent::ActorDestroy(ActorDestroyReason why) {
@@ -2109,8 +2106,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   }
 
   // Make sure we always clean up.
-  ShutDownProcess(why == NormalShutdown ? CLOSE_CHANNEL
-                                        : CLOSE_CHANNEL_WITH_ERROR);
+  ShutDownProcess(CLOSE_CHANNEL);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -4516,7 +4512,9 @@ void ContentParent::KillHard(const char* aReason) {
   ProcessHandle otherProcessHandle;
   if (!base::OpenProcessHandle(OtherPid(), &otherProcessHandle)) {
     NS_ERROR("Failed to open child process when attempting kill.");
-    ShutDownProcess(CLOSE_CHANNEL_WITH_ERROR);
+    if (CanSend()) {
+      GetIPCChannel()->InduceConnectionError();
+    }
     return;
   }
 
@@ -4537,9 +4535,12 @@ void ContentParent::KillHard(const char* aReason) {
     mSubprocess->SetAlreadyDead();
   }
 
-  // After we've killed the remote process, also ensure we close the IPC channel
-  // with an error to immediately stop all IPC communication on this channel.
-  ShutDownProcess(CLOSE_CHANNEL_WITH_ERROR);
+  // After we've killed the remote process, also ensure we induce a connection
+  // error in the IPC channel to immediately stop all IPC communication on this
+  // channel.
+  if (CanSend()) {
+    GetIPCChannel()->InduceConnectionError();
+  }
 
   // EnsureProcessTerminated has responsibilty for closing otherProcessHandle.
   XRE_GetIOMessageLoop()->PostTask(
