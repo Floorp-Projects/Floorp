@@ -532,6 +532,7 @@ class Accessible {
   bool IsHTMLRadioButton() const { return mType == eHTMLRadioButtonType; }
 
   bool IsHTMLTable() const { return mType == eHTMLTableType; }
+  bool IsHTMLTableCell() const { return mType == eHTMLTableCellType; }
   bool IsHTMLTableRow() const { return mType == eHTMLTableRowType; }
 
   bool IsImageMap() const { return mType == eImageMapType; }
