@@ -46,7 +46,7 @@ fun ListItemTabLargePlaceholder(
 ) {
     Card(
         modifier = Modifier
-            .size(ITEM_WIDTH.dp, ITEM_HEIGHT.dp)
+            .size(328.dp, 116.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.layer2,
