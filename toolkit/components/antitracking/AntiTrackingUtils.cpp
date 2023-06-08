@@ -890,8 +890,7 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
 
   // Generate the fingerprinting randomization key for top-level loads. The key
   // will automatically be propagated to sub loads.
-  auto RFPRandomKey =
-      nsRFPService::GenerateKey(uri, NS_UsePrivateBrowsing(aChannel));
+  auto RFPRandomKey = nsRFPService::GenerateKey(aChannel);
   if (RFPRandomKey) {
     net::CookieJarSettings::Cast(cookieJarSettings)
         ->SetFingerprintingRandomizationKey(RFPRandomKey.ref());

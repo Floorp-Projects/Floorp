@@ -906,8 +906,7 @@ pref("dom.cycle_collector.incremental", true);
 //   3 = openAbused
 pref("privacy.popups.disable_from_plugins", 3);
 
-// If enabled by privacy.resistFingerprinting.testGranularityMask, list of
-// domains exempted from RFP.
+// List of domains exempted from RFP. The list is comma separated domain list.
 pref("privacy.resistFingerprinting.exemptedDomains", "*.example.invalid");
 
 // If privacy.fingerprintingProtection is enabled, this pref can be used to add

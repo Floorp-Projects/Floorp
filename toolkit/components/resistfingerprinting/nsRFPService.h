@@ -63,6 +63,8 @@
 
 struct JSContext;
 
+class nsIChannel;
+
 namespace mozilla {
 class WidgetKeyboardEvent;
 namespace dom {
@@ -263,8 +265,7 @@ class nsRFPService final : public nsIObserver {
 
   // The method to generate the key for randomization. It can return nothing if
   // the session key is not available due to the randomization is disabled.
-  static Maybe<nsTArray<uint8_t>> GenerateKey(nsIURI* aTopLevelURI,
-                                              bool aIsPrivate);
+  static Maybe<nsTArray<uint8_t>> GenerateKey(nsIChannel* aChannel);
 
   // The method to add random noises to the image data based on the random key
   // of the given cookieJarSettings.

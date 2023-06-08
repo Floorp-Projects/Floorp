@@ -213,7 +213,6 @@ async function runTest(enabled) {
   let RFPOverrides = enabled ? "+CanvasRandomization" : "-CanvasRandomization";
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.randomization.enabled", true],
       ["privacy.fingerprintingProtection", true],
       ["privacy.fingerprintingProtection.pbmode", true],
       ["privacy.fingerprintingProtection.overrides", RFPOverrides],
@@ -292,7 +291,6 @@ add_setup(async function () {
   // Disable the fingerprinting randomization.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.randomization.enabled", false],
       ["privacy.fingerprintingProtection", false],
       ["privacy.fingerprintingProtection.pbmode", false],
       ["privacy.resistFingerprinting", false],
