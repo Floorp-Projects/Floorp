@@ -20,7 +20,6 @@ namespace data {
 
 class FileSystemDataManager;
 class FileSystemFileManager;
-using FileSystemConnection = fs::ResultConnection;
 
 /**
  * @brief Versioned implementation of database interface enables backwards

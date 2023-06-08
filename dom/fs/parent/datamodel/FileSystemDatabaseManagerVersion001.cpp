@@ -89,7 +89,7 @@ Result<bool, QMResult> DoesDirectoryExist(
 Result<Path, QMResult> ResolveReversedPath(
     const FileSystemConnection& aConnection,
     const FileSystemEntryPair& aEndpoints) {
-  const nsCString pathQuery =
+  const nsLiteralCString pathQuery =
       "WITH RECURSIVE followPath(handle, parent) AS ( "
       "SELECT handle, parent "
       "FROM Entries "
@@ -353,9 +353,10 @@ nsresult SetUsageTrackingImpl(const FileSystemConnection& aConnection,
 
 Result<nsTArray<FileId>, QMResult> GetTrackedFiles(
     const FileSystemConnection& aConnection) {
+  // The same query works for both 001 and 002 schemas because handle is
+  // an entry id and later on a file id, respectively.
   static const nsLiteralCString getTrackedFilesQuery =
       "SELECT handle FROM Usages WHERE tracked = TRUE;"_ns;
-
   nsTArray<FileId> trackedFiles;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
@@ -365,7 +366,7 @@ Result<nsTArray<FileId>, QMResult> GetTrackedFiles(
   while (moreResults) {
     QM_TRY_UNWRAP(FileId fileId, stmt.GetFileIdByColumn(/* Column */ 0u));
 
-    trackedFiles.AppendElement(fileId);
+    trackedFiles.AppendElement(fileId);  // TODO: fallible?
 
     QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
   }
@@ -481,9 +482,7 @@ Result<bool, nsresult> ScanTrackedFiles(
     const FileSystemConnection& aConnection,
     const FileSystemFileManager& aFileManager) {
   QM_TRY_INSPECT(const nsTArray<FileId>& trackedFiles,
-                 GetTrackedFiles(aConnection).mapErr([](const auto& aRv) {
-                   return ToNSResult(aRv);
-                 }));
+                 GetTrackedFiles(aConnection).mapErr(toNSResult));
 
   bool ok = true;
   for (const auto& fileId : trackedFiles) {
@@ -764,7 +763,7 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
   if (!IsValidName(name)) {
     return Err(QMResult(NS_ERROR_DOM_TYPE_MISMATCH_ERR));
   }
-  MOZ_ASSERT(!name.IsVoid() && !name.IsEmpty());
+  MOZ_ASSERT(!(name.IsVoid() || name.IsEmpty()));
 
   bool exists = true;
   QM_TRY_UNWRAP(exists, DoesFileExist(mConnection, aHandle));
@@ -841,7 +840,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   if (!IsValidName(name)) {
     return Err(QMResult(NS_ERROR_DOM_TYPE_MISMATCH_ERR));
   }
-  MOZ_ASSERT(!name.IsVoid() && !name.IsEmpty());
+  MOZ_ASSERT(!(name.IsVoid() || name.IsEmpty()));
 
   QM_TRY_UNWRAP(bool exists, DoesDirectoryExist(mConnection, aHandle));
 
@@ -889,7 +888,13 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
     QM_TRY(
         QM_TO_RESULT(stmt.BindEntryIdByName("parent"_ns, aHandle.parentId())));
-    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()), QM_PROPAGATE,
+           ([this, &aHandle](const auto& aRv) {
+             QM_TRY_UNWRAP(bool parentExists,
+                           DoesDirectoryExist(mConnection, aHandle.parentId()),
+                           QM_VOID);
+             QM_TRY(OkIf(parentExists), QM_VOID);
+           }));
   }
 
   {
