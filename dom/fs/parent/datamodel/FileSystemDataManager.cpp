@@ -10,6 +10,7 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
+#include "FileSystemParentTypes.h"
 #include "ResultStatement.h"
 #include "SchemaVersion001.h"
 #include "fs/FileSystemConstants.h"
@@ -359,20 +360,33 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
   return mClosePromiseHolder.Ensure(__func__);
 }
 
-bool FileSystemDataManager::IsLocked(const EntryId& aEntryId) const {
+Result<bool, QMResult> FileSystemDataManager::IsLocked(
+    const FileId& aFileId) const {
+  // TODO: For schema 002, entryId of fileId needs to be queried after
+  // temporary files are implemented.
+  return IsLocked(aFileId.Value());
+}
+
+Result<bool, QMResult> FileSystemDataManager::IsLocked(
+    const EntryId& aEntryId) const {
   return mExclusiveLocks.Contains(aEntryId) || mSharedLocks.Contains(aEntryId);
 }
 
 nsresult FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
-  if (IsLocked(aEntryId)) {
+  QM_TRY_UNWRAP(const bool isLocked,
+                IsLocked(aEntryId).mapErr(
+                    [](const auto& aRv) { return ToNSResult(aRv); }));
+  if (isLocked) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
+
+  QM_TRY_INSPECT(const FileId& fileId, mDatabaseManager->GetFileId(aEntryId));
 
   // If the file has been removed, we should get a file not found error.
   // Otherwise, if usage tracking cannot be started because file size is not
   // known and attempts to read it are failing, lock is denied to freeze the
   // quota usage until the (external) blocker is gone or the file is removed.
-  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->BeginUsageTracking(aEntryId)));
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->BeginUsageTracking(fileId)));
 
   LOG_VERBOSE(("ExclusiveLock"));
   mExclusiveLocks.Insert(aEntryId);
@@ -386,10 +400,13 @@ void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
   LOG_VERBOSE(("ExclusiveUnlock"));
   mExclusiveLocks.Remove(aEntryId);
 
+  QM_TRY_INSPECT(const FileId& fileId, mDatabaseManager->GetFileId(aEntryId),
+                 QM_VOID);
+
   // On error, usage tracking remains on to prevent writes until usage is
   // updated successfully.
-  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->UpdateUsage(aEntryId)), QM_VOID);
-  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->EndUsageTracking(aEntryId)), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->UpdateUsage(fileId)), QM_VOID);
+  QM_TRY(MOZ_TO_RESULT(mDatabaseManager->EndUsageTracking(fileId)), QM_VOID);
 }
 
 nsresult FileSystemDataManager::LockShared(const EntryId& aEntryId) {

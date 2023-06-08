@@ -11,7 +11,11 @@
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "nsString.h"
 
-namespace mozilla::dom::fs::data {
+namespace mozilla::dom::fs {
+
+struct FileId;
+
+namespace data {
 
 class FileSystemDataManager;
 class FileSystemFileManager;
@@ -51,7 +55,7 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   static Result<Usage, QMResult> GetFileUsage(
       const FileSystemConnection& aConnection);
 
-  virtual nsresult UpdateUsage(const EntryId& aEntry) override;
+  virtual nsresult UpdateUsage(const FileId& aFileId) override;
 
   virtual Result<EntryId, QMResult> GetOrCreateDirectory(
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
@@ -83,22 +87,25 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual Result<Path, QMResult> Resolve(
       const FileSystemEntryPair& aEndpoints) const override;
 
+  virtual Result<FileId, QMResult> GetFileId(
+      const EntryId& aEntryId) const override;
+
   virtual void Close() override;
 
-  virtual nsresult BeginUsageTracking(const EntryId& aEntryId) override;
+  virtual nsresult BeginUsageTracking(const FileId& aFileId) override;
 
-  virtual nsresult EndUsageTracking(const EntryId& aEntryId) override;
+  virtual nsresult EndUsageTracking(const FileId& aFileId) override;
 
   virtual ~FileSystemDatabaseManagerVersion001() = default;
 
  private:
-  nsresult UpdateUsageInDatabase(const EntryId& aEntry, Usage aNewDiskUsage);
+  nsresult UpdateUsageInDatabase(const FileId& aFileId, Usage aNewDiskUsage);
 
-  Result<Ok, QMResult> EnsureUsageIsKnown(const EntryId& aEntryId);
+  Result<Ok, QMResult> EnsureUsageIsKnown(const FileId& aFileId);
 
   void DecreaseCachedQuotaUsage(int64_t aDelta);
 
-  nsresult UpdateCachedQuotaUsage(const EntryId& aEntryId, Usage aOldUsage,
+  nsresult UpdateCachedQuotaUsage(const FileId& aFileId, Usage aOldUsage,
                                   Usage aNewUsage);
 
   nsresult ClearDestinationIfNotLocked(
@@ -132,6 +139,7 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   int32_t mFilesOfUnknownUsage;
 };
 
-}  // namespace mozilla::dom::fs::data
+}  // namespace data
+}  // namespace mozilla::dom::fs
 
 #endif  // DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGERVERSION001_H_

@@ -7,6 +7,7 @@
 #ifndef DOM_FS_PARENT_RESULTSTATEMENT_H_
 #define DOM_FS_PARENT_RESULTSTATEMENT_H_
 
+#include "FileSystemParentTypes.h"
 #include "mozIStorageStatement.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -68,6 +69,11 @@ class ResultStatement {
     return mStmt->BindUTF8StringAsBlobByName(aField, aValue);
   }
 
+  inline nsresult BindFileIdByName(const nsACString& aField,
+                                   const FileId& aValue) {
+    return mStmt->BindUTF8StringAsBlobByName(aField, aValue.Value());
+  }
+
   inline nsresult BindContentTypeByName(const nsACString& aField,
                                         const ContentType& aValue) {
     if (0u == aValue.Length()) {  // Otherwise empty string becomes null
@@ -113,6 +119,13 @@ class ResultStatement {
     QM_TRY(QM_TO_RESULT(mStmt->GetBlobAsUTF8String(aColumn, value)));
 
     return value;
+  }
+
+  inline Result<FileId, QMResult> GetFileIdByColumn(Column aColumn) {
+    nsCString value;
+    QM_TRY(QM_TO_RESULT(mStmt->GetBlobAsUTF8String(aColumn, value)));
+
+    return FileId(std::move(value));
   }
 
   inline Result<Name, QMResult> GetNameByColumn(Column aColumn) {

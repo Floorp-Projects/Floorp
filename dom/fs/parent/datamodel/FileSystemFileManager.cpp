@@ -8,6 +8,7 @@
 
 #include "FileSystemDataManager.h"
 #include "FileSystemHashSource.h"
+#include "FileSystemParentTypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Result.h"
@@ -31,15 +32,15 @@ namespace {
 constexpr nsLiteralString kDatabaseFileName = u"metadata.sqlite"_ns;
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetFileDestination(
-    const nsCOMPtr<nsIFile>& aTopDirectory, const EntryId& aEntryId) {
-  MOZ_ASSERT(32u == aEntryId.Length());
+    const nsCOMPtr<nsIFile>& aTopDirectory, const FileId& aFileId) {
+  MOZ_ASSERT(32u == aFileId.Value().Length());
 
   nsCOMPtr<nsIFile> destination;
 
   // nsIFile Clone is not a constant method
   QM_TRY(QM_TO_RESULT(aTopDirectory->Clone(getter_AddRefs(destination))));
 
-  QM_TRY_UNWRAP(Name encoded, FileSystemHashSource::EncodeHash(aEntryId));
+  QM_TRY_UNWRAP(Name encoded, FileSystemHashSource::EncodeHash(aFileId));
 
   MOZ_ALWAYS_TRUE(IsAscii(encoded));
 
@@ -79,11 +80,11 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFileImpl(
 }
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetFile(
-    const nsCOMPtr<nsIFile>& aTopDirectory, const EntryId& aEntryId) {
-  MOZ_ASSERT(!aEntryId.IsEmpty());
+    const nsCOMPtr<nsIFile>& aTopDirectory, const FileId& aFileId) {
+  MOZ_ASSERT(!aFileId.IsEmpty());
 
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
-                GetFileDestination(aTopDirectory, aEntryId));
+                GetFileDestination(aTopDirectory, aFileId));
 
   nsString desiredPath;
   QM_TRY(QM_TO_RESULT(pathObject->GetPath(desiredPath)));
@@ -97,11 +98,11 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFile(
 }
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(
-    const nsCOMPtr<nsIFile>& aTopDirectory, const EntryId& aEntryId) {
-  MOZ_ASSERT(!aEntryId.IsEmpty());
+    const nsCOMPtr<nsIFile>& aTopDirectory, const FileId& aFileId) {
+  MOZ_ASSERT(!aFileId.IsEmpty());
 
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
-                GetFileDestination(aTopDirectory, aEntryId));
+                GetFileDestination(aTopDirectory, aFileId));
 
   nsString desiredPath;
   QM_TRY(QM_TO_RESULT(pathObject->GetPath(desiredPath)));
@@ -114,7 +115,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(
 nsresult RemoveFileObject(const nsCOMPtr<nsIFile>& aFilePtr) {
   // If we cannot tell whether the object is file or directory, or it is a
   // directory, it is abandoned as an unknown object. If an attempt is made to
-  // create a new object with the same path on disk, we regenerate the entryId
+  // create a new object with the same path on disk, we regenerate the FileId
   // until the collision is resolved.
 
   bool isFile = false;
@@ -276,20 +277,20 @@ FileSystemFileManager::FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory)
     : mTopDirectory(std::move(aTopDirectory)) {}
 
 Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetFile(
-    const EntryId& aEntryId) const {
-  return data::GetFile(mTopDirectory, aEntryId);
+    const FileId& aFileId) const {
+  return data::GetFile(mTopDirectory, aFileId);
 }
 
 Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetOrCreateFile(
-    const EntryId& aEntryId) {
-  return data::GetOrCreateFile(mTopDirectory, aEntryId);
+    const FileId& aFileId) {
+  return data::GetOrCreateFile(mTopDirectory, aFileId);
 }
 
 Result<Usage, QMResult> FileSystemFileManager::RemoveFile(
-    const EntryId& aEntryId) {
-  MOZ_ASSERT(!aEntryId.IsEmpty());
+    const FileId& aFileId) {
+  MOZ_ASSERT(!aFileId.IsEmpty());
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
-                GetFileDestination(mTopDirectory, aEntryId));
+                GetFileDestination(mTopDirectory, aFileId));
 
   bool exists = false;
   QM_TRY(QM_TO_RESULT(pathObject->Exists(&exists)));
@@ -318,17 +319,17 @@ Result<Usage, QMResult> FileSystemFileManager::RemoveFile(
 }
 
 Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
-    const nsTArray<EntryId>& aEntryIds, nsTArray<EntryId>& aRemoveFails) {
-  if (aEntryIds.IsEmpty()) {
+    const nsTArray<FileId>& aFileIds, nsTArray<FileId>& aRemoveFails) {
+  if (aFileIds.IsEmpty()) {
     return DebugOnly<Usage>(0);
   }
 
   CheckedInt64 totalUsage = 0;
-  for (const auto& entryId : aEntryIds) {
+  for (const auto& someId : aFileIds) {
     QM_WARNONLY_TRY_UNWRAP(Maybe<nsCOMPtr<nsIFile>> maybeFile,
-                           GetFileDestination(mTopDirectory, entryId));
+                           GetFileDestination(mTopDirectory, someId));
     if (!maybeFile) {
-      aRemoveFails.AppendElement(entryId);
+      aRemoveFails.AppendElement(someId);
       continue;
     }
     nsCOMPtr<nsIFile> fileObject = maybeFile.value();
@@ -337,7 +338,7 @@ Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
 #ifdef DEBUG
     QM_WARNONLY_TRY_UNWRAP(Maybe<Usage> fileSize, GetFileSize(fileObject));
     if (!fileSize) {
-      aRemoveFails.AppendElement(entryId);
+      aRemoveFails.AppendElement(someId);
       continue;
     }
     totalUsage += fileSize.value();
@@ -346,7 +347,7 @@ Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
     QM_WARNONLY_TRY_UNWRAP(Maybe<Ok> ok,
                            MOZ_TO_RESULT(RemoveFileObject(fileObject)));
     if (!ok) {
-      aRemoveFails.AppendElement(entryId);
+      aRemoveFails.AppendElement(someId);
     }
   }
 
