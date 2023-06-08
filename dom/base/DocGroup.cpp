@@ -7,7 +7,6 @@
 #include "mozilla/dom/DocGroup.h"
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/PerformanceUtils.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
@@ -233,96 +232,6 @@ DocGroup::~DocGroup() {
   if (mIframePostMessageQueue) {
     FlushIframePostMessageQueue();
   }
-}
-
-RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
-  AssertIsOnMainThread();
-  MOZ_ASSERT(mPerformanceCounter);
-#if defined(XP_WIN)
-  uint32_t pid = GetCurrentProcessId();
-#else
-  uint32_t pid = getpid();
-#endif
-  uint64_t windowID = 0;
-  uint16_t count = 0;
-  uint64_t duration = 0;
-  nsCString host;
-  bool isTopLevel = false;
-  RefPtr<BrowsingContext> top;
-  RefPtr<AbstractThread> mainThread =
-      AbstractMainThreadFor(TaskCategory::Performance);
-
-  for (const auto& document : *this) {
-    if (host.IsEmpty()) {
-      nsCOMPtr<nsIURI> docURI = document->GetDocumentURI();
-      if (!docURI) {
-        continue;
-      }
-
-      docURI->GetHost(host);
-      if (host.IsEmpty()) {
-        host = docURI->GetSpecOrDefault();
-      }
-    }
-
-    BrowsingContext* context = document->GetBrowsingContext();
-    if (!context) {
-      continue;
-    }
-
-    top = context->Top();
-
-    if (!top || !top->GetCurrentWindowContext()) {
-      continue;
-    }
-
-    isTopLevel = context->IsTop();
-    windowID = top->GetCurrentWindowContext()->OuterWindowId();
-    break;
-  };
-
-  MOZ_ASSERT(!host.IsEmpty());
-  duration = mPerformanceCounter->GetExecutionDuration();
-  FallibleTArray<CategoryDispatch> items;
-
-  // now that we have the host and window ids, let's look at the perf counters
-  for (uint32_t index = 0; index < (uint32_t)TaskCategory::Count; index++) {
-    TaskCategory category = static_cast<TaskCategory>(index);
-    count = mPerformanceCounter->GetDispatchCount(DispatchCategory(category));
-    CategoryDispatch item = CategoryDispatch(index, count);
-    if (!items.AppendElement(item, fallible)) {
-      NS_ERROR("Could not complete the operation");
-      break;
-    }
-  }
-
-  if (!isTopLevel && top && top->IsInProcess()) {
-    return PerformanceInfoPromise::CreateAndResolve(
-        PerformanceInfo(host, pid, windowID, duration,
-                        mPerformanceCounter->GetID(), false, isTopLevel,
-                        PerformanceMemoryInfo(),  // Empty memory info
-                        items),
-        __func__);
-  }
-
-  MOZ_ASSERT(mainThread);
-  RefPtr<DocGroup> self = this;
-  return CollectMemoryInfo(self, mainThread)
-      ->Then(
-          mainThread, __func__,
-          [self, host, pid, windowID, duration, isTopLevel,
-           items = std::move(items)](const PerformanceMemoryInfo& aMemoryInfo) {
-            PerformanceInfo info =
-                PerformanceInfo(host, pid, windowID, duration,
-                                self->mPerformanceCounter->GetID(), false,
-                                isTopLevel, aMemoryInfo, items);
-
-            return PerformanceInfoPromise::CreateAndResolve(std::move(info),
-                                                            __func__);
-          },
-          [self](const nsresult rv) {
-            return PerformanceInfoPromise::CreateAndReject(rv, __func__);
-          });
 }
 
 nsresult DocGroup::Dispatch(TaskCategory aCategory,

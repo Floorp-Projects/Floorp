@@ -67,7 +67,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
@@ -4616,13 +4615,6 @@ mozilla::ipc::IPCResult ContentParent::RecvAddMemoryReport(
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvAddPerformanceMetrics(
-    const nsID& aID, nsTArray<PerformanceInfo>&& aMetrics) {
-  nsresult rv = PerformanceMetricsCollector::DataReceived(aID, aMetrics);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
   return IPC_OK();
 }
 

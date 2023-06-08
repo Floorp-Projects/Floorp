@@ -12,7 +12,6 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Encoding.h"
-#include "mozilla/PerformanceUtils.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsThreadUtils.h"
@@ -496,109 +495,6 @@ void WorkerDebugger::ReportErrorToDebuggerOnMainThread(
   report.mMessage = aMessage;
   report.mFilename = aFilename;
   WorkerErrorReport::LogErrorToConsole(jsapi.cx(), report, 0);
-}
-
-RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
-  AssertIsOnMainThread();
-  RefPtr<WorkerDebugger> self = this;
-
-#if defined(XP_WIN)
-  uint32_t pid = GetCurrentProcessId();
-#else
-  uint32_t pid = getpid();
-#endif
-  bool isTopLevel = false;
-  uint64_t windowID = mWorkerPrivate->WindowID();
-
-  // Walk up to our containing page and its window
-  WorkerPrivate* wp = mWorkerPrivate;
-  while (wp->GetParent()) {
-    wp = wp->GetParent();
-  }
-  nsPIDOMWindowInner* win = wp->GetWindow();
-  if (win) {
-    BrowsingContext* context = win->GetBrowsingContext();
-    if (context) {
-      RefPtr<BrowsingContext> top = context->Top();
-      if (top && top->GetCurrentWindowContext()) {
-        windowID = top->GetCurrentWindowContext()->OuterWindowId();
-        isTopLevel = context->IsTop();
-      }
-    }
-  }
-
-  // getting the worker URL
-  RefPtr<nsIURI> scriptURI = mWorkerPrivate->GetResolvedScriptURI();
-  if (NS_WARN_IF(!scriptURI)) {
-    // This can happen at shutdown, let's stop here.
-    return PerformanceInfoPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-  }
-  nsCString url = scriptURI->GetSpecOrDefault();
-
-  const auto& perf = mWorkerPrivate->PerformanceCounterRef();
-  uint64_t perfId = perf.GetID();
-  uint16_t count = perf.GetTotalDispatchCount();
-  uint64_t duration = perf.GetExecutionDuration();
-
-  // Workers only produce metrics for a single category -
-  // DispatchCategory::Worker. We still return an array of CategoryDispatch so
-  // the PerformanceInfo struct is common to all performance counters throughout
-  // Firefox.
-  FallibleTArray<CategoryDispatch> items;
-
-  if (mWorkerPrivate->GetParent()) {
-    // We cannot properly measure the memory usage of nested workers
-    // (https://phabricator.services.mozilla.com/D146673#4948924)
-    return PerformanceInfoPromise::CreateAndResolve(
-        PerformanceInfo(url, pid, windowID, duration, perfId, true, isTopLevel,
-                        PerformanceMemoryInfo(), items),
-        __func__);
-  }
-
-  CategoryDispatch item =
-      CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
-  if (!items.AppendElement(item, fallible)) {
-    NS_ERROR("Could not complete the operation");
-  }
-
-  // Switch to the worker thread to gather the JS Runtime's memory usage.
-  RefPtr<WorkerPrivate::JSMemoryUsagePromise> memoryUsagePromise =
-      mWorkerPrivate->GetJSMemoryUsage();
-  if (!memoryUsagePromise) {
-    // The worker is shutting down, so we don't count the JavaScript memory.
-    return PerformanceInfoPromise::CreateAndResolve(
-        PerformanceInfo(url, pid, windowID, duration, perfId, true, isTopLevel,
-                        PerformanceMemoryInfo(), items),
-        __func__);
-  }
-
-  // We need to keep a ref on workerPrivate, passed to the promise,
-  // to make sure it's still alive when collecting the info, and we can't do
-  // this in WorkerPrivate::GetJSMemoryUsage() since that could cause it to be
-  // freed on the worker thread.
-  // Because CheckedUnsafePtr does not convert directly to RefPtr, we have an
-  // extra step here.
-  WorkerPrivate* workerPtr = mWorkerPrivate;
-  RefPtr<WorkerPrivate> workerRef = workerPtr;
-
-  // This captures an unused reference to memoryUsagePromise because the worker
-  // can be released while this promise is still alive.
-  return memoryUsagePromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [url, pid, perfId, windowID, duration, isTopLevel,
-       items = std::move(items), _w = std::move(workerRef),
-       memoryUsagePromise](uint64_t jsMem) {
-        PerformanceMemoryInfo memInfo;
-        memInfo.jsMemUsage() = jsMem;
-        return PerformanceInfoPromise::CreateAndResolve(
-            PerformanceInfo(url, pid, windowID, duration, perfId, true,
-                            isTopLevel, memInfo, items),
-            __func__);
-      },
-      []() {
-        return PerformanceInfoPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                       __func__);
-      });
 }
 
 }  // namespace mozilla::dom

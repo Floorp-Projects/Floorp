@@ -609,8 +609,6 @@ child:
                               FileDescriptor? DMDFile)
         returns (uint32_t aGeneration);
 
-    async RequestPerformanceMetrics(nsID aID);
-
 #if defined(XP_WIN)
     /**
      * Used by third-party modules telemetry (aka "untrusted modules" telemetry)
@@ -1638,8 +1636,6 @@ parent:
     async AddMemoryReport(MemoryReport aReport);
 
     async BHRThreadHang(HangDetails aHangDetails);
-
-    async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
 
     /*
      * Adds a certificate exception for the given hostname and port.
