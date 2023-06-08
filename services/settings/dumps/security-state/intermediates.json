@@ -8821,24 +8821,6 @@
       "last_modified": 1666727869912
     },
     {
-      "schema": 1666727361356,
-      "derHash": "9nwj73v3QSgJ22sd09RKCNN1TZnKumoT96BcckkInIk=",
-      "subject": "CN=QuoVadis Global SSL ICA G2,O=QuoVadis Limited,C=BM",
-      "subjectDN": "ME0xCzAJBgNVBAYTAkJNMRkwFwYDVQQKExBRdW9WYWRpcyBMaW1pdGVkMSMwIQYDVQQDExpRdW9WYWRpcyBHbG9iYWwgU1NMIElDQSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f3d6221594115cd098f20f66a013d90aae3becd3c578a737a8e58a35230c208d",
-        "size": 2016,
-        "filename": "tYkfFN27P1GUjH5ME128BCg302dL2iwOYhz5wwFJb50=.pem",
-        "location": "security-state-staging/intermediates/453adbd2-22ff-42b4-92ed-171fb792efa3.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tYkfFN27P1GUjH5ME128BCg302dL2iwOYhz5wwFJb50=",
-      "crlite_enrolled": false,
-      "id": "600b2b43-1467-43ac-8086-3e9c9d9900e9",
-      "last_modified": 1666727869898
-    },
-    {
       "schema": 1666727369431,
       "derHash": "sarhvNVV6KPR492o7ITnV8VSZVNEzj/uu6+Y6JXb7aw=",
       "subject": "CN=QuoVadis Europe SSL CA G2,O=QuoVadis Trustlink B.V.,C=NL",
@@ -27739,5 +27721,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1685609823422
+  "timestamp": 1686131823424
 }

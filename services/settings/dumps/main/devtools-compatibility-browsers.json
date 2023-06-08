@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Deno",
+      "schema": 1686057850164,
+      "status": "current",
+      "version": "1.34",
+      "browserid": "deno",
+      "id": "c15a182f-7790-4bf2-a71a-e5b64dc22b5f",
+      "last_modified": 1686058086863
+    },
+    {
       "name": "Edge",
       "schema": 1685539443254,
       "status": "nightly",
@@ -134,15 +143,6 @@
       "browserid": "chrome",
       "id": "d15957b5-767f-479d-bf0f-e923850284de",
       "last_modified": 1684755687973
-    },
-    {
-      "name": "Deno",
-      "schema": 1683120251024,
-      "status": "current",
-      "version": "1.33",
-      "browserid": "deno",
-      "id": "a02f3b8e-2ba0-4dc3-b6fe-8973daae4e7b",
-      "last_modified": 1684333263768
     },
     {
       "name": "Firefox",
@@ -397,5 +397,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1685598590165
+  "timestamp": 1686058086863
 }
