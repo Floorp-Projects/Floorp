@@ -420,12 +420,12 @@ IPCResult FileSystemManagerParent::RecvMoveEntry(
     aResolver(response);
   };
 
-  QM_TRY_UNWRAP(bool moved,
-                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
-                    aRequest.handle(), aRequest.destHandle()),
-                IPC_OK(), reportError);
+  QM_TRY_INSPECT(const EntryId& newId,
+                 mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
+                     aRequest.handle(), aRequest.destHandle()),
+                 IPC_OK(), reportError);
 
-  fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
+  fs::FileSystemMoveEntryResponse response(newId);
   aResolver(response);
   return IPC_OK();
 }
@@ -445,12 +445,12 @@ IPCResult FileSystemManagerParent::RecvRenameEntry(
     aResolver(response);
   };
 
-  QM_TRY_UNWRAP(bool moved,
-                mDataManager->MutableDatabaseManagerPtr()->RenameEntry(
-                    aRequest.handle(), aRequest.name()),
-                IPC_OK(), reportError);
+  QM_TRY_INSPECT(const EntryId& newId,
+                 mDataManager->MutableDatabaseManagerPtr()->RenameEntry(
+                     aRequest.handle(), aRequest.name()),
+                 IPC_OK(), reportError);
 
-  fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
+  fs::FileSystemMoveEntryResponse response(newId);
   aResolver(response);
   return IPC_OK();
 }

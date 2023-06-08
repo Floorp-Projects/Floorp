@@ -131,10 +131,9 @@ class FileSystemDatabaseManager {
    *
    * @param aHandle Source directory or file
    * @param aNewName New entry name
-   * @return Result<bool, QMResult> False if entry didn't exist, otherwise true
-   * or error
+   * @return Result<EntryId, QMResult> The relevant entry id or error
    */
-  virtual Result<bool, QMResult> RenameEntry(
+  virtual Result<EntryId, QMResult> RenameEntry(
       const FileSystemEntryMetadata& aHandle, const Name& aNewName) = 0;
 
   /**
@@ -142,10 +141,9 @@ class FileSystemDatabaseManager {
    *
    * @param aHandle Source directory or file
    * @param aNewDesignation Destination directory and entry name
-   * @return Result<bool, QMResult> False if entry didn't exist, otherwise true
-   * or error
+   * @return Result<EntryId, QMResult> The relevant entry id or error
    */
-  virtual Result<bool, QMResult> MoveEntry(
+  virtual Result<EntryId, QMResult> MoveEntry(
       const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) = 0;
 
