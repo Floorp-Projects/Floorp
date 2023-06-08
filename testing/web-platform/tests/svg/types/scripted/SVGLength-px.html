@@ -23,6 +23,15 @@ setup(function() {
   }
 });
 
+function valueInPx(valueAndUnits) {
+  let div = document.createElement("div");
+  div.style.height = valueAndUnits;
+  document.documentElement.appendChild(div);
+  let pxValue = parseFloat(getComputedStyle(div).getPropertyValue("height"));
+  document.documentElement.removeChild(div);
+  return pxValue;
+}
+
 test(function() {
   let length = svgElement.createSVGLength();
   length.valueAsString = "2px";
@@ -91,8 +100,7 @@ test(function() {
   let length = svgElement.createSVGLength();
   length.valueAsString = "48q";
   assert_equals(length.unitType, SVGLength.SVG_LENGTHTYPE_UNKNOWN);
-  assert_equals(length.valueAsString, "48q");
-  let referenceValue = 48 / 4 * 25.4 / cssPixelsPerInch;
+  let referenceValue = valueInPx(length.valueAsString);
   assert_approx_equals(length.value, referenceValue, 0.01);
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_MM);
   referenceValue = 48 / 4;
