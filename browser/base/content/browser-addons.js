@@ -1222,25 +1222,27 @@ var gUnifiedExtensions = {
 
       // Only show for extensions which are not already visible in the toolbar.
       if (!widget || widget.areaType !== CustomizableUI.TYPE_TOOLBAR) {
-        const { attention: att, quarantined } =
-          lazy.OriginControls.getAttentionState(policy, window);
-        // Do not take the attention for quarantined domains into account yet.
-        //
-        // TODO: Bug 1836448 - show attention dot with a new localized string
-        // when the message-bar notification is shown in the panel.
-        if (att && !quarantined) {
+        if (lazy.OriginControls.getAttentionState(policy, window).attention) {
           attention = true;
           break;
         }
       }
     }
-    this.button.toggleAttribute("attention", attention);
-    this.button.ownerDocument.l10n.setAttributes(
-      this.button,
-      attention
-        ? "unified-extensions-button-permissions-needed"
-        : "unified-extensions-button"
-    );
+
+    // If the domain is quarantined and we have extensions not allowed, we'll
+    // show a notification in the panel so we want to let the user know about
+    // it.
+    const quarantined = this._shouldShowQuarantinedNotification();
+
+    this.button.toggleAttribute("attention", quarantined || attention);
+    let msgId = attention
+      ? "unified-extensions-button-permissions-needed"
+      : "unified-extensions-button";
+    // Quarantined state takes precedence over anything else.
+    if (quarantined) {
+      msgId = "unified-extensions-button-quarantined";
+    }
+    this.button.ownerDocument.l10n.setAttributes(this.button, msgId);
   },
 
   getPopupAnchorID(aBrowser, aWindow) {
@@ -1350,16 +1352,13 @@ var gUnifiedExtensions = {
       list.appendChild(item);
     }
 
-    const isQuarantinedDomain = this.getActivePolicies().some(
-      policy =>
-        lazy.OriginControls.getState(policy, window.gBrowser.selectedTab)
-          .quarantined
-    );
     const container = panelview.querySelector(
       "#unified-extensions-messages-container"
     );
+    const shouldShowQuarantinedNotification =
+      this._shouldShowQuarantinedNotification();
 
-    if (isQuarantinedDomain) {
+    if (shouldShowQuarantinedNotification) {
       if (!this._messageBarQuarantinedDomain) {
         this._messageBarQuarantinedDomain = this._makeMessageBar({
           titleFluentId: "unified-extensions-mb-quarantined-domain-title",
@@ -1376,7 +1375,7 @@ var gUnifiedExtensions = {
 
       container.appendChild(this._messageBarQuarantinedDomain);
     } else if (
-      !isQuarantinedDomain &&
+      !shouldShowQuarantinedNotification &&
       this._messageBarQuarantinedDomain &&
       container.contains(this._messageBarQuarantinedDomain)
     ) {
@@ -1911,5 +1910,20 @@ var gUnifiedExtensions = {
     }
 
     return messageBar;
+  },
+
+  _shouldShowQuarantinedNotification() {
+    const { currentURI, selectedTab } = window.gBrowser;
+    // We should show the quarantined notification when the domain is in the
+    // list of quarantined domains and we have at least one extension
+    // quarantined. In addition, we check that we have extensions in the panel
+    // until Bug 1778684 is resolved.
+    return (
+      WebExtensionPolicy.isQuarantinedURI(currentURI) &&
+      this.hasExtensionsInPanel() &&
+      this.getActivePolicies().some(
+        policy => lazy.OriginControls.getState(policy, selectedTab).quarantined
+      )
+    );
   },
 };
