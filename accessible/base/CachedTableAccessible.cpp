@@ -230,8 +230,7 @@ CachedTableCellAccessible* CachedTableCellAccessible::GetFrom(
     Accessible* aAcc) {
   MOZ_ASSERT(aAcc->IsTableCell());
   for (Accessible* parent = aAcc; parent; parent = parent->Parent()) {
-    if (auto* table =
-            static_cast<CachedTableAccessible*>(parent->AsTableBase())) {
+    if (auto* table = static_cast<CachedTableAccessible*>(parent->AsTable())) {
       if (auto cellIdx = table->mAccToCellIdx.Lookup(aAcc)) {
         return &table->mCells[*cellIdx];
       }
@@ -247,12 +246,11 @@ Accessible* CachedTableCellAccessible::Acc(Accessible* aTableAcc) const {
   return acc;
 }
 
-TableAccessibleBase* CachedTableCellAccessible::Table() const {
+TableAccessible* CachedTableCellAccessible::Table() const {
   for (const Accessible* acc = mAcc; acc; acc = acc->Parent()) {
     // Since the caller has this cell, the table is already created, so it's
     // okay to ignore the const restriction here.
-    if (TableAccessibleBase* table =
-            const_cast<Accessible*>(acc)->AsTableBase()) {
+    if (TableAccessible* table = const_cast<Accessible*>(acc)->AsTable()) {
       return table;
     }
   }

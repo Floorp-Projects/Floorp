@@ -9,8 +9,8 @@
 #include "LocalAccessible-inl.h"
 #include "AccAttributes.h"
 #include "AccIterator.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsGkAtoms.h"
@@ -64,8 +64,8 @@ already_AddRefed<AccAttributes> ARIAGridCellAccessible::NativeAttributes() {
   // wasteful. This will be exposed by RemoteAccessible in the parent process
   // instead.
   if (!IPCAccessibilityActive()) {
-    if (const TableCellAccessibleBase* cell = AsTableCellBase()) {
-      TableAccessibleBase* table = cell->Table();
+    if (const TableCellAccessible* cell = AsTableCell()) {
+      TableAccessible* table = cell->Table();
       const uint32_t row = cell->RowIdx();
       const uint32_t col = cell->ColIdx();
       const int32_t cellIdx = table->CellIndexAt(row, col);
