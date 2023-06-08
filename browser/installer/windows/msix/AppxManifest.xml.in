@@ -28,7 +28,7 @@
 @APPX_RESOURCE_LANGUAGE_LIST@
   </Resources>
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.1" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.1555" />
   </Dependencies>
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
