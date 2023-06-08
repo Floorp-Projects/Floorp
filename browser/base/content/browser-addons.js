@@ -1222,7 +1222,13 @@ var gUnifiedExtensions = {
 
       // Only show for extensions which are not already visible in the toolbar.
       if (!widget || widget.areaType !== CustomizableUI.TYPE_TOOLBAR) {
-        if (lazy.OriginControls.getAttention(policy, window)) {
+        const { attention: att, quarantined } =
+          lazy.OriginControls.getAttentionState(policy, window);
+        // Do not take the attention for quarantined domains into account yet.
+        //
+        // TODO: Bug 1836448 - show attention dot with a new localized string
+        // when the message-bar notification is shown in the panel.
+        if (att && !quarantined) {
           attention = true;
           break;
         }
