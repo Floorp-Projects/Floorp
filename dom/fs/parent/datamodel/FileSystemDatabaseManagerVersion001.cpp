@@ -32,6 +32,19 @@ namespace fs::data {
 
 namespace {
 
+constexpr const nsLiteralCString gDescendantsQuery =
+    "WITH RECURSIVE traceChildren(handle, parent) AS ( "
+    "SELECT handle, parent "
+    "FROM Entries "
+    "WHERE handle=:handle "
+    "UNION "
+    "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
+    "WHERE traceChildren.handle=Entries.parent ) "
+    "SELECT handle "
+    "FROM traceChildren INNER JOIN Files "
+    "USING(handle) "
+    ";"_ns;
+
 Result<bool, QMResult> IsDirectoryEmpty(const FileSystemConnection& mConnection,
                                         const EntryId& aEntryId) {
   const nsLiteralCString isDirEmptyQuery =
@@ -312,41 +325,6 @@ nsresult PerformRenameFile(const FileSystemConnection& aConnection,
                        updateFileNameQuery);
 }
 
-Result<nsTArray<FileId>, QMResult> FindDescendants(
-    const FileSystemConnection& aConnection, const EntryId& aEntryId) {
-  const nsLiteralCString descendantsQuery =
-      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
-      "SELECT handle, parent "
-      "FROM Entries "
-      "WHERE handle=:handle "
-      "UNION "
-      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
-      "WHERE traceChildren.handle=Entries.parent ) "
-      "SELECT handle "
-      "FROM traceChildren INNER JOIN Files "
-      "USING(handle) "
-      ";"_ns;
-
-  nsTArray<FileId> descendants;
-  {
-    QM_TRY_UNWRAP(ResultStatement stmt,
-                  ResultStatement::Create(aConnection, descendantsQuery));
-    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
-    QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
-
-    while (moreResults) {
-      QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
-
-      // TODO: We should use GetFileId here, see a follow-up patch
-      descendants.AppendElement(FileId(std::move(entryId)));
-
-      QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
-    }
-  }
-
-  return descendants;
-}
-
 template <class HandlerType>
 nsresult SetUsageTrackingImpl(const FileSystemConnection& aConnection,
                               const FileId& aFileId, bool aTracked,
@@ -445,41 +423,6 @@ nsresult UpdateUsageUnsetTracked(const FileSystemConnection& aConnection,
   return UpdateUsageForFileEntry(aConnection, aFileManager, aFileId,
                                  updateUsagesUnsetTrackedQuery,
                                  std::move(noCacheUpdateNeeded));
-}
-
-/**
- * @brief Get the sum of usages for all file descendants of a directory entry.
- * We obtain the value with one query, which is presumably better than having a
- * separate query for each individual descendant.
- * TODO: Check if this is true
- *
- * Please see GetFileUsage documentation for why we use the latest recorded
- * value from the database instead of the file size property from the disk.
- */
-Result<Usage, QMResult> GetUsagesOfDescendants(
-    const FileSystemConnection& aConnection, const EntryId& aEntryId) {
-  const nsLiteralCString descendantUsagesQuery =
-      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
-      "SELECT handle, parent "
-      "FROM Entries "
-      "WHERE handle=:handle "
-      "UNION "
-      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
-      "WHERE traceChildren.handle=Entries.parent ) "
-      "SELECT sum(Usages.usage) "
-      "FROM traceChildren INNER JOIN Usages "
-      "USING(handle) "
-      ";"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, descendantUsagesQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
-  QM_TRY_UNWRAP(const bool moreResults, stmt.ExecuteStep());
-  if (!moreResults) {
-    return 0;
-  }
-
-  QM_TRY_RETURN(stmt.GetUsageByColumn(/* Column */ 0u));
 }
 
 /**
@@ -594,6 +537,30 @@ void LogWithFilename(const FileSystemFileManager& aFileManager,
   nsAutoString localPath;
   QM_TRY(MOZ_TO_RESULT(localFile->GetPath(localPath)), QM_VOID);
   LOG((aFormat, NS_ConvertUTF16toUTF8(localPath).get()));
+}
+
+Result<bool, QMResult> IsAnyDescendantLocked(
+    const FileSystemConnection& aConnection,
+    const FileSystemDataManager& aDataManager, const EntryId& aEntryId) {
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, gDescendantsQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
+  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+
+  while (moreResults) {
+    // Works only for version 001
+    QM_TRY_INSPECT(const EntryId& entryId,
+                   stmt.GetEntryIdByColumn(/* Column */ 0u));
+
+    QM_TRY_UNWRAP(const bool isLocked, aDataManager.IsLocked(entryId), true);
+    if (isLocked) {
+      return true;
+    }
+
+    QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
+  }
+
+  return false;
 }
 
 }  // namespace
@@ -1110,6 +1077,66 @@ nsresult FileSystemDatabaseManagerVersion001::SetUsageTracking(
   return SetUsageTrackingImpl(mConnection, aFileId, aTracked, onMissingFile);
 }
 
+Result<nsTArray<FileId>, QMResult>
+FileSystemDatabaseManagerVersion001::FindDescendants(
+    const EntryId& aEntryId) const {
+  nsTArray<FileId> descendants;
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(mConnection, gDescendantsQuery));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
+    QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+
+    while (moreResults) {
+      // Works only for version 001
+      QM_TRY_INSPECT(const FileId& fileId,
+                     stmt.GetFileIdByColumn(/* Column */ 0u));
+
+      descendants.AppendElement(fileId);
+
+      QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
+    }
+  }
+
+  return descendants;
+}
+
+/**
+ * @brief Get the sum of usages for all file descendants of a directory entry.
+ * We obtain the value with one query, which is presumably better than having a
+ * separate query for each individual descendant.
+ * TODO: Check if this is true
+ *
+ * Please see GetFileUsage documentation for why we use the latest recorded
+ * value from the database instead of the file size property from the disk.
+ */
+Result<Usage, QMResult>
+FileSystemDatabaseManagerVersion001::GetUsagesOfDescendants(
+    const EntryId& aEntryId) const {
+  const nsLiteralCString descendantUsagesQuery =
+      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
+      "SELECT handle, parent "
+      "FROM Entries "
+      "WHERE handle=:handle "
+      "UNION "
+      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
+      "WHERE traceChildren.handle=Entries.parent ) "
+      "SELECT sum(Usages.usage) "
+      "FROM traceChildren INNER JOIN Usages "
+      "USING(handle) "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, descendantUsagesQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
+  QM_TRY_UNWRAP(const bool moreResults, stmt.ExecuteStep());
+  if (!moreResults) {
+    return 0;
+  }
+
+  QM_TRY_RETURN(stmt.GetUsageByColumn(/* Column */ 0u));
+}
+
 nsresult FileSystemDatabaseManagerVersion001::BeginUsageTracking(
     const FileId& aFileId) {
   MOZ_ASSERT(!aFileId.IsEmpty());
@@ -1137,14 +1164,6 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
     const FileSystemChildMetadata& aHandle, bool aRecursive) {
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
 
-  auto isAnyDescendantLocked = [this](const nsTArray<FileId>& aDescendants) {
-    return std::any_of(aDescendants.cbegin(), aDescendants.cend(),
-                       [this](const auto& descendant) -> bool {
-                         QM_TRY_RETURN(mDataManager->IsLocked(descendant),
-                                       true);
-                       });
-  };
-
   if (aHandle.childName().IsEmpty()) {
     return false;
   }
@@ -1164,17 +1183,20 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
 
   QM_TRY_UNWRAP(bool isEmpty, IsDirectoryEmpty(mConnection, entryId));
 
-  QM_TRY_INSPECT(const nsTArray<FileId>& descendants,
-                 FindDescendants(mConnection, entryId));
+  MOZ_ASSERT(mDataManager);
+  QM_TRY_UNWRAP(const bool isLocked,
+                IsAnyDescendantLocked(mConnection, *mDataManager, entryId));
 
-  QM_TRY(OkIf(!isAnyDescendantLocked(descendants)),
+  QM_TRY(OkIf(!isLocked),
          Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)));
 
   if (!aRecursive && !isEmpty) {
     return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
   }
 
-  QM_TRY_UNWRAP(Usage usage, GetUsagesOfDescendants(mConnection, entryId));
+  QM_TRY_UNWRAP(Usage usage, GetUsagesOfDescendants(entryId));
+
+  QM_TRY_INSPECT(const nsTArray<FileId>& descendants, FindDescendants(entryId));
 
   nsTArray<FileId> removeFails;
   QM_TRY_UNWRAP(DebugOnly<Usage> removedUsage,
