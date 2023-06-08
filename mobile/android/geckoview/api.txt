@@ -883,6 +883,7 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public GeckoDisplay acquireDisplay();
     method @UiThread public void close();
     method @AnyThread @NonNull public GeckoResult<Boolean> containsFormData();
+    method @AnyThread @NonNull public GeckoResult<Boolean> didPrintPageContent();
     method @AnyThread public void exitFullScreen();
     method @NonNull @UiThread public SessionAccessibility getAccessibility();
     method @Nullable @UiThread public Autofill.Delegate getAutofillDelegate();
@@ -1041,6 +1042,7 @@ package org.mozilla.geckoview {
     ctor protected GeckoPrintException();
     field public static final int ERROR_NO_ACTIVITY_CONTEXT = -5;
     field public static final int ERROR_NO_ACTIVITY_CONTEXT_DELEGATE = -4;
+    field public static final int ERROR_NO_PRINT_DELEGATE = -6;
     field public static final int ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE = -1;
     field public static final int ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS = -2;
     field public static final int ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT = -3;
