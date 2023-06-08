@@ -315,7 +315,7 @@ mozilla::ipc::ResolveCallback<TResponse> SelectResolveCallback(
     RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
     Args&&... args) {
   using TOverload = void (*)(TResponse&&, RefPtr<Promise>, Args...);
-  return static_cast<std::function<void(TResponse &&)>>(
+  return static_cast<std::function<void(TResponse&&)>>(
       // NOLINTNEXTLINE(modernize-avoid-bind)
       std::bind(static_cast<TOverload>(ResolveCallback), std::placeholders::_1,
                 aPromise, std::forward<Args>(args)...));
@@ -328,7 +328,7 @@ mozilla::ipc::ResolveCallback<TResponse> SelectResolveCallback(
     Args&&... args) {
   using TOverload =
       void (*)(TResponse&&, RefPtr<Promise>, const TReturns&, Args...);
-  return static_cast<std::function<void(TResponse &&)>>(
+  return static_cast<std::function<void(TResponse&&)>>(
       // NOLINTNEXTLINE(modernize-avoid-bind)
       std::bind(static_cast<TOverload>(ResolveCallback), std::placeholders::_1,
                 aPromise, TReturns(), std::forward<Args>(args)...));
