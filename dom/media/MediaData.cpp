@@ -106,13 +106,8 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
   size_t frameOffset = trimBefore.ToTicksAtRate(mRate);
   mTrimWindow = Some(aTrim);
   mDataOffset = frameOffset * mChannels;
-  if (frameOffset * mChannels > mAudioData.Length()) {
-    auto interval = media::TimeInterval{mOriginalTime, GetEndTime()}.ToString();
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "Data offset outside original buffer: %zu > %zu (%s, %s)",
-        frameOffset * mChannels, mAudioData.Length(), aTrim.ToString().get(),
-        interval.get());
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
+                        "Data offset outside original buffer");
   mFrames = (trimAfter - trimBefore).ToTicksAtRate(mRate);
   MOZ_DIAGNOSTIC_ASSERT(mFrames <= mAudioData.Length() / mChannels,
                         "More frames than found in container");
