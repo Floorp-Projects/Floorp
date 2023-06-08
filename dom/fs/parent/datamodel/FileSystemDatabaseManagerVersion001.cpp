@@ -1170,6 +1170,11 @@ nsresult FileSystemDatabaseManagerVersion001::EndUsageTracking(
   return NS_OK;
 }
 
+nsresult FileSystemDatabaseManagerVersion001::RemoveFileId(
+    const FileId& /* aFileId */) {
+  return NS_OK;
+}
+
 Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
     const FileSystemChildMetadata& aHandle, bool aRecursive) {
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
@@ -1218,6 +1223,22 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
                 usage == removedUsage);
 
   TryRemoveDuringIdleMaintenance(removeFails);
+
+  auto isInRemoveFails = [&removeFails](const auto& aFileId) {
+    for (const auto& removeFail : removeFails) {
+      if (aFileId == removeFail) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  for (const auto& fileId : descendants) {
+    if (isInRemoveFails(fileId)) {
+      continue;
+    }
+    QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(fileId)));
+  }
 
   if (usage > 0) {  // Performance!
     DecreaseCachedQuotaUsage(usage);
@@ -1273,6 +1294,8 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
                 usage == removedUsage.value());
   if (!removedUsage) {
     TryRemoveDuringIdleMaintenance({fileId});
+  } else {
+    QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(fileId)));
   }
 
   if (usage > 0) {  // Performance!
