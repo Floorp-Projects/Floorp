@@ -11,8 +11,8 @@
 
 #include "AccIterator.h"
 #include "LocalAccessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "nsAccessibilityService.h"
 #include "XULTreeAccessible.h"
 #include "Pivot.h"
@@ -48,7 +48,7 @@ using namespace mozilla::a11y;
 
   mChildren = [[NSMutableArray alloc] init];
 
-  TableAccessibleBase* table = [mParent geckoAccessible]->AsTableBase();
+  TableAccessible* table = [mParent geckoAccessible]->AsTable();
   MOZ_ASSERT(table, "Got null table when fetching column children!");
   uint32_t numRows = table->RowCount();
 
@@ -137,7 +137,7 @@ using namespace mozilla::a11y;
   }
 
   // For LocalAccessible and cached RemoteAccessible, we could use
-  // AsTableBase()->IsProbablyLayoutTable(). However, if the cache is enabled,
+  // AsTable()->IsProbablyLayoutTable(). However, if the cache is enabled,
   // that would build the table cache, which is pointless for layout tables on
   // Mac because layout tables are AXGroups and do not expose table properties
   // like AXRows, AXColumns, etc.
@@ -174,13 +174,13 @@ using namespace mozilla::a11y;
 - (NSNumber*)moxRowCount {
   MOZ_ASSERT(mGeckoAccessible);
 
-  return @(mGeckoAccessible->AsTableBase()->RowCount());
+  return @(mGeckoAccessible->AsTable()->RowCount());
 }
 
 - (NSNumber*)moxColumnCount {
   MOZ_ASSERT(mGeckoAccessible);
 
-  return @(mGeckoAccessible->AsTableBase()->ColCount());
+  return @(mGeckoAccessible->AsTable()->ColCount());
 }
 
 - (NSArray*)moxRows {
@@ -221,7 +221,7 @@ using namespace mozilla::a11y;
   mColContainers = [[NSMutableArray alloc] init];
   uint32_t numCols = 0;
 
-  numCols = mGeckoAccessible->AsTableBase()->ColCount();
+  numCols = mGeckoAccessible->AsTable()->ColCount();
   for (uint32_t i = 0; i < numCols; i++) {
     mozColumnContainer* container =
         [[mozColumnContainer alloc] initWithIndex:i andParent:self];
@@ -244,9 +244,9 @@ using namespace mozilla::a11y;
   MOZ_ASSERT(mGeckoAccessible);
 
   uint32_t numCols = 0;
-  TableAccessibleBase* table = nullptr;
+  TableAccessible* table = nullptr;
 
-  table = mGeckoAccessible->AsTableBase();
+  table = mGeckoAccessible->AsTable();
   numCols = table->ColCount();
   NSMutableArray* colHeaders =
       [[[NSMutableArray alloc] initWithCapacity:numCols] autorelease];
@@ -272,7 +272,7 @@ using namespace mozilla::a11y;
 
   MOZ_ASSERT(mGeckoAccessible);
 
-  Accessible* cell = mGeckoAccessible->AsTableBase()->CellAt(row, col);
+  Accessible* cell = mGeckoAccessible->AsTable()->CellAt(row, col);
   if (!cell) {
     return nil;
   }
@@ -338,7 +338,7 @@ using namespace mozilla::a11y;
 - (NSValue*)moxRowIndexRange {
   MOZ_ASSERT(mGeckoAccessible);
 
-  TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
+  TableCellAccessible* cell = mGeckoAccessible->AsTableCell();
   return
       [NSValue valueWithRange:NSMakeRange(cell->RowIdx(), cell->RowExtent())];
 }
@@ -346,7 +346,7 @@ using namespace mozilla::a11y;
 - (NSValue*)moxColumnIndexRange {
   MOZ_ASSERT(mGeckoAccessible);
 
-  TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
+  TableCellAccessible* cell = mGeckoAccessible->AsTableCell();
   return
       [NSValue valueWithRange:NSMakeRange(cell->ColIdx(), cell->ColExtent())];
 }
@@ -354,7 +354,7 @@ using namespace mozilla::a11y;
 - (NSArray*)moxRowHeaderUIElements {
   MOZ_ASSERT(mGeckoAccessible);
 
-  TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
+  TableCellAccessible* cell = mGeckoAccessible->AsTableCell();
   AutoTArray<Accessible*, 10> headerCells;
   if (cell) {
     cell->RowHeaderCells(&headerCells);
@@ -365,7 +365,7 @@ using namespace mozilla::a11y;
 - (NSArray*)moxColumnHeaderUIElements {
   MOZ_ASSERT(mGeckoAccessible);
 
-  TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
+  TableCellAccessible* cell = mGeckoAccessible->AsTableCell();
   AutoTArray<Accessible*, 10> headerCells;
   if (cell) {
     cell->ColHeaderCells(&headerCells);

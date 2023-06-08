@@ -22,7 +22,7 @@
 #include "nsITreeSelection.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/dom/XULTreeElementBinding.h"
@@ -483,9 +483,9 @@ void XULTreeGridCellAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible: TableCell
 
-TableAccessibleBase* XULTreeGridCellAccessible::Table() const {
+TableAccessible* XULTreeGridCellAccessible::Table() const {
   LocalAccessible* grandParent = mParent->LocalParent();
-  if (grandParent) return grandParent->AsTableBase();
+  if (grandParent) return grandParent->AsTable();
 
   return nullptr;
 }
@@ -525,7 +525,7 @@ already_AddRefed<AccAttributes> XULTreeGridCellAccessible::NativeAttributes() {
   RefPtr<AccAttributes> attributes = new AccAttributes();
 
   // "table-cell-index" attribute
-  TableAccessibleBase* table = Table();
+  TableAccessible* table = Table();
   if (!table) return attributes.forget();
 
   attributes->SetAttribute(nsGkAtoms::tableCellIndex,

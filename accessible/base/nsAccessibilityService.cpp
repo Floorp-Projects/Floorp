@@ -183,10 +183,10 @@ static bool AttributesMustBeAccessible(nsIContent* aContent,
  * marked presentational with role="presentation", etc. MustBeAccessible causes
  * an Accessible to be created as if it weren't marked presentational at all;
  * e.g. <table role="presentation" tabindex="0"> will expose roles::TABLE and
- * support TableAccessibleBase. In contrast, this function causes a generic
+ * support TableAccessible. In contrast, this function causes a generic
  * Accessible to be created; e.g. <table role="presentation" style="position:
  * fixed;"> will expose roles::TEXT_CONTAINER and will not support
- * TableAccessibleBase. This is necessary in certain cases for the
+ * TableAccessible. This is necessary in certain cases for the
  * RemoteAccessible cache.
  */
 static bool MustBeGenericAccessible(nsIContent* aContent,

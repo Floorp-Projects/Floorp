@@ -29,8 +29,8 @@ class LocalAccessible;
 class Relation;
 enum class RelationType;
 class RemoteAccessible;
-class TableAccessibleBase;
-class TableCellAccessibleBase;
+class TableAccessible;
+class TableCellAccessible;
 
 /**
  * Name type flags.
@@ -630,8 +630,8 @@ class Accessible {
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
 
-  virtual TableAccessibleBase* AsTableBase() { return nullptr; }
-  virtual TableCellAccessibleBase* AsTableCellBase() { return nullptr; }
+  virtual TableAccessible* AsTable() { return nullptr; }
+  virtual TableCellAccessible* AsTableCell() { return nullptr; }
 
 #ifdef A11Y_LOG
   /**

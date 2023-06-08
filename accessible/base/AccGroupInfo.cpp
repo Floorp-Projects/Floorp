@@ -4,7 +4,7 @@
 
 #include "AccGroupInfo.h"
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
 
 #include "nsAccUtils.h"
 #include "nsIAccessiblePivot.h"
@@ -269,7 +269,7 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
           return *val;
         }
       }
-      if (TableAccessibleBase* tableAcc = aContainer->AsTableBase()) {
+      if (TableAccessible* tableAcc = aContainer->AsTable()) {
         return tableAcc->RowCount();
       }
       break;
@@ -280,7 +280,7 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
             return *val;
           }
         }
-        if (TableAccessibleBase* tableAcc = table->AsTableBase()) {
+        if (TableAccessible* tableAcc = table->AsTable()) {
           return tableAcc->ColCount();
         }
       }

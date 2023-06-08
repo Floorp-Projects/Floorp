@@ -12,7 +12,7 @@
 
 namespace mozilla {
 namespace a11y {
-class TableAccessibleBase;
+class TableAccessible;
 
 /**
  * XPCOM wrapper around TableAccessible class.
@@ -62,7 +62,7 @@ class xpcAccessibleTable : public xpcAccessibleHyperText,
   virtual ~xpcAccessibleTable() {}
 
  private:
-  TableAccessibleBase* Intl() { return mIntl->AsTableBase(); }
+  TableAccessible* Intl() { return mIntl->AsTable(); }
 
   xpcAccessibleTable(const xpcAccessibleTable&) = delete;
   xpcAccessibleTable& operator=(const xpcAccessibleTable&) = delete;

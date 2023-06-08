@@ -15,6 +15,8 @@
 #include "CachedTableAccessible.h"
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/AccAttributes.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "nsAccUtils.h"
 #include "nsAccessibilityService.h"
 #include "ApplicationAccessible.h"
@@ -4004,14 +4006,14 @@ void LocalAccessible::StaticAsserts() const {
       "LocalAccessible::mContextFlags was oversized by eLastContextFlag!");
 }
 
-TableAccessibleBase* LocalAccessible::AsTableBase() {
+TableAccessible* LocalAccessible::AsTable() {
   if (IsTable() && !mContent->IsXULElement()) {
     return CachedTableAccessible::GetFrom(this);
   }
   return nullptr;
 }
 
-TableCellAccessibleBase* LocalAccessible::AsTableCellBase() {
+TableCellAccessible* LocalAccessible::AsTableCell() {
   if (IsTableCell() && !mContent->IsXULElement()) {
     return CachedTableCellAccessible::GetFrom(this);
   }

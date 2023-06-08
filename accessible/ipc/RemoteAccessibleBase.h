@@ -393,8 +393,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                          : nullptr;
   }
 
-  virtual TableAccessibleBase* AsTableBase() override;
-  virtual TableCellAccessibleBase* AsTableCellBase() override;
+  virtual TableAccessible* AsTable() override;
+  virtual TableCellAccessible* AsTableCell() override;
 
   virtual void DOMNodeID(nsString& aID) const override;
 

@@ -13,6 +13,8 @@
 #include "mozilla/a11y/RemoteAccessibleBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/Role.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -1386,8 +1388,8 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
       attributes->SetAttribute(nsGkAtoms::display, display);
     }
 
-    if (TableCellAccessibleBase* cell = AsTableCellBase()) {
-      TableAccessibleBase* table = cell->Table();
+    if (TableCellAccessible* cell = AsTableCell()) {
+      TableAccessible* table = cell->Table();
       uint32_t row = cell->RowIdx();
       uint32_t col = cell->ColIdx();
       int32_t cellIdx = table->CellIndexAt(row, col);
@@ -1899,7 +1901,7 @@ void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
 }
 
 template <class Derived>
-TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
+TableAccessible* RemoteAccessibleBase<Derived>::AsTable() {
   if (IsTable()) {
     return CachedTableAccessible::GetFrom(this);
   }
@@ -1907,7 +1909,7 @@ TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
 }
 
 template <class Derived>
-TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
+TableCellAccessible* RemoteAccessibleBase<Derived>::AsTableCell() {
   if (IsTableCell()) {
     return CachedTableCellAccessible::GetFrom(this);
   }

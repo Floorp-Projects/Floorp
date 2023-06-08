@@ -7,8 +7,8 @@
 EXPORTS.mozilla.a11y += [
     "Accessible.h",
     "HyperTextAccessibleBase.h",
-    "TableAccessibleBase.h",
-    "TableCellAccessibleBase.h",
+    "TableAccessible.h",
+    "TableCellAccessible.h",
 ]
 
 UNIFIED_SOURCES += [
