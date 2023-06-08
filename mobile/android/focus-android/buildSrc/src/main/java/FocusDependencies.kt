@@ -21,7 +21,7 @@ object FocusVersions {
         const val constraint_layout = "2.1.4"
         const val constraint_layout_compose = "1.0.1"
         const val core = "1.10.1"
-        const val fragment = "1.5.7"
+        const val fragment = "1.6.0"
         const val lifecycle = "2.6.1"
         const val palette = "1.0.0"
         const val preference = "1.2.0"
