@@ -170,11 +170,11 @@ BytecodeSection::BytecodeSection(FrontendContext* fc, uint32_t lineNum,
       currentLine_(lineNum),
       lastColumn_(column) {}
 
-void BytecodeSection::updateDepth(BytecodeOffset target) {
+void BytecodeSection::updateDepth(JSOp op, BytecodeOffset target) {
   jsbytecode* pc = code(target);
 
-  int nuses = StackUses(pc);
-  int ndefs = StackDefs(pc);
+  int nuses = StackUses(op, pc);
+  int ndefs = StackDefs(op);
 
   stackDepth_ -= nuses;
   MOZ_ASSERT(stackDepth_ >= 0);
