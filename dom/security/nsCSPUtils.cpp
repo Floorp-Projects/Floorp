@@ -21,11 +21,16 @@
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
+#include "nsWhitespaceTokenizer.h"
 
 #include "mozilla/Components.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/StaticPrefs_security.h"
+
+using namespace mozilla;
+using mozilla::dom::SRIMetadata;
 
 #define DEFAULT_PORT -1
 
@@ -1076,12 +1081,156 @@ nsCSPDirective::~nsCSPDirective() {
   }
 }
 
-bool nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce,
+// This check only considers types "script-like"
+// (https://fetch.spec.whatwg.org/#request-destination-script-like) that can
+// also have integrity metadata.
+static bool IsScriptLikeWithIntegrity(nsContentPolicyType aType) {
+  switch (aType) {
+    case nsIContentPolicy::TYPE_SCRIPT:
+    case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
+    case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
+    case nsIContentPolicy::TYPE_INTERNAL_MODULE:
+    case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
+      return true;
+    default:
+      return false;
+  }
+}
+
+// https://www.w3.org/TR/SRI/#parse-metadata
+// This function is similar to SRICheck::IntegrityMetadata, but also keeps
+// SRI metadata with weaker hashes.
+// CSP treats "no metadata" and empty results the same way.
+static nsTArray<SRIMetadata> ParseSRIMetadata(const nsAString& aMetadata) {
+  // Step 1. Let result be the empty set.
+  // Step 2. Let empty be equal to true.
+  nsTArray<SRIMetadata> result;
+
+  NS_ConvertUTF16toUTF8 metadataList(aMetadata);
+  nsAutoCString token;
+
+  // Step 3. For each token returned by splitting metadata on spaces:
+  nsCWhitespaceTokenizer tokenizer(metadataList);
+  while (tokenizer.hasMoreTokens()) {
+    token = tokenizer.nextToken();
+    // Step 3.1. Set empty to false.
+    // Step 3.3. Parse token per the grammar in integrity metadata.
+    SRIMetadata metadata(token);
+    // Step 3.2. If token is not a valid metadata, skip the remaining steps, and
+    // proceed to the next token.
+    if (metadata.IsMalformed()) {
+      continue;
+    }
+
+    // Step 3.4. Let algorithm be the alg component of token.
+    // Step 3.5. If algorithm is a hash function recognized by the user agent,
+    // add the
+    //  parsed token to result.
+    if (metadata.IsAlgorithmSupported()) {
+      result.AppendElement(metadata);
+    }
+  }
+
+  // Step 4. Return no metadata if empty is true, otherwise return result.
+  return result;
+}
+
+bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
+                             nsIURI* aUri, const nsAString& aNonce,
                              bool aWasRedirected, bool aReportOnly,
                              bool aUpgradeInsecure, bool aParserCreated) const {
+  MOZ_ASSERT(equals(aDirective) || isDefaultDirective());
+
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(
         ("nsCSPDirective::permits, aUri: %s", aUri->GetSpecOrDefault().get()));
+  }
+
+  // https://w3c.github.io/webappsec-csp/#script-pre-request
+  if (aLoadInfo) {
+    // Step 1. If request’s destination is script-like:
+    if (IsScriptLikeWithIntegrity(aLoadInfo->InternalContentPolicyType()) &&
+        StaticPrefs::security_csp_external_hashes_enabled()) {
+      MOZ_ASSERT(aDirective == CSPDirective::SCRIPT_SRC_ELEM_DIRECTIVE);
+
+      // Step 1.2. Let integrity expressions be the set of source expressions in
+      // directive’s value that match the hash-source grammar.
+      nsTArray<nsCSPHashSrc*> integrityExpressions;
+      for (uint32_t i = 0; i < mSrcs.Length(); i++) {
+        if (mSrcs[i]->isHash()) {
+          integrityExpressions.AppendElement(
+              static_cast<nsCSPHashSrc*>(mSrcs[i]));
+        }
+      }
+
+      // Step 1.3. If integrity expressions is not empty:
+      if (!integrityExpressions.IsEmpty()) {
+        // Step 1.3.1. Let integrity sources be the result of executing the
+        // algorithm defined in [SRI 3.3.3 Parse metadata] on request’s
+        // integrity metadata.
+        nsAutoString integrityMetadata;
+        aLoadInfo->GetIntegrityMetadata(integrityMetadata);
+
+        nsTArray<SRIMetadata> integritySources =
+            ParseSRIMetadata(integrityMetadata);
+        MOZ_ASSERT(
+            integritySources.IsEmpty() == integrityMetadata.IsEmpty(),
+            "The integrity metadata should be only be empty, "
+            "when the parsed string was completely empty, otherwise it should "
+            "include at least one valid hash");
+
+        // Step 1.3.2. If integrity sources is "no metadata" or an empty set,
+        // skip the remaining substeps.
+        if (!integritySources.IsEmpty()) {
+          // Step 1.3.3. Let bypass due to integrity match be true.
+          bool bypass = true;
+
+          nsAutoCString sourceAlgorithmUTF8;
+          nsAutoCString sourceHashUTF8;
+          nsAutoString sourceAlgorithm;
+          nsAutoString sourceHash;
+          nsAutoString algorithm;
+          nsAutoString hash;
+
+          // Step 1.3.4. For each source of integrity sources:
+          for (const SRIMetadata& source : integritySources) {
+            source.GetAlgorithm(&sourceAlgorithmUTF8);
+            sourceAlgorithm = NS_ConvertUTF8toUTF16(sourceAlgorithmUTF8);
+            source.GetHash(0, &sourceHashUTF8);
+            sourceHash = NS_ConvertUTF8toUTF16(sourceHashUTF8);
+
+            // Step 1.3.4.1 If directive’s value does not contain a source
+            // expression whose hash-algorithm is an ASCII case-insensitive
+            // match for source’s hash-algorithm, and whose base64-value is
+            // identical to source’s base64-value, then set bypass due to
+            // integrity match to false.
+            bool found = false;
+            for (const nsCSPHashSrc* hashSrc : integrityExpressions) {
+              hashSrc->getAlgorithm(algorithm);
+              hashSrc->getHash(hash);
+
+              // The nsCSPHashSrc constructor lowercases algorithm, so this
+              // is case-insensitive.
+              if (sourceAlgorithm == algorithm && sourceHash == hash) {
+                found = true;
+                break;
+              }
+            }
+
+            if (!found) {
+              bypass = false;
+              break;
+            }
+          }
+
+          // Step 1.3.5. If bypass due to integrity match is true, return
+          // "Allowed".
+          if (bypass) {
+            return true;
+          }
+        }
+      }
+    }
   }
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
@@ -1399,9 +1548,8 @@ nsCSPPolicy::~nsCSPPolicy() {
   }
 }
 
-bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
-                          const nsAString& aNonce, bool aWasRedirected,
-                          bool aSpecific, bool aParserCreated,
+bool nsCSPPolicy::permits(CSPDirective aDir, nsILoadInfo* aLoadInfo,
+                          nsIURI* aUri, bool aWasRedirected, bool aSpecific,
                           nsAString& outViolatedDirective) const {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPPolicy::permits, aUri: %s, aDir: %d, aSpecific: %s",
@@ -1412,6 +1560,13 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
   NS_ASSERTION(aUri, "permits needs an uri to perform the check!");
   outViolatedDirective.Truncate();
 
+  bool parserCreated = false;
+  nsAutoString nonce;
+  if (aLoadInfo) {
+    parserCreated = aLoadInfo->GetParserCreatedScript();
+    MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetCspNonce(nonce));
+  }
+
   nsCSPDirective* defaultDir = nullptr;
 
   // Try to find a relevant directive
@@ -1419,8 +1574,9 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
   // hashtable.
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(aDir)) {
-      if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected, mReportOnly,
-                                   mUpgradeInsecDir, aParserCreated)) {
+      if (!mDirectives[i]->permits(aDir, aLoadInfo, aUri, nonce, aWasRedirected,
+                                   mReportOnly, mUpgradeInsecDir,
+                                   parserCreated)) {
         mDirectives[i]->getDirName(outViolatedDirective);
         return false;
       }
@@ -1434,8 +1590,8 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsIURI* aUri,
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (!aSpecific && defaultDir) {
-    if (!defaultDir->permits(aUri, aNonce, aWasRedirected, mReportOnly,
-                             mUpgradeInsecDir, aParserCreated)) {
+    if (!defaultDir->permits(aDir, aLoadInfo, aUri, nonce, aWasRedirected,
+                             mReportOnly, mUpgradeInsecDir, parserCreated)) {
       defaultDir->getDirName(outViolatedDirective);
       return false;
     }
@@ -1522,8 +1678,9 @@ bool nsCSPPolicy::allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
         return true;
       }
       // Otherwise, check against the allowlist.
-      if (!mDirectives[i]->permits(aURI, u""_ns, aWasRedirected, false, false,
-                                   false)) {
+      if (!mDirectives[i]->permits(
+              nsIContentSecurityPolicy::NAVIGATE_TO_DIRECTIVE, nullptr, aURI,
+              u""_ns, aWasRedirected, false, false, false)) {
         allowsNavigateTo = false;
       }
     }

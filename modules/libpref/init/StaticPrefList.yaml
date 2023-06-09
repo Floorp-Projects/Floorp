@@ -13792,6 +13792,11 @@
   value: true
   mirror: always
 
+- name: security.csp.external-hashes.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # WebAuthn CTAP2 support
 - name: security.webauthn.ctap2
   type: RelaxedAtomicBool
