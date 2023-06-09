@@ -1819,7 +1819,7 @@
 
 # Is support for CanvasRenderingContext2D.filter enabled?
 - name: canvas.filters.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 

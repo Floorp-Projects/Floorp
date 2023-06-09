@@ -2497,9 +2497,28 @@ bool CanvasRenderingContext2D::ParseFilter(
     const nsACString& aString, StyleOwnedSlice<StyleFilter>& aFilterChain,
     ErrorResult& aError) {
   RefPtr<PresShell> presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return false;
+  if (!presShell) {
+    nsIGlobalObject* global = GetParentObject();
+    FontFaceSet* fontFaceSet = global ? global->GetFonts() : nullptr;
+    FontFaceSetImpl* fontFaceSetImpl =
+        fontFaceSet ? fontFaceSet->GetImpl() : nullptr;
+    RefPtr<URLExtraData> urlExtraData =
+        fontFaceSetImpl ? fontFaceSetImpl->GetURLExtraData() : nullptr;
+
+    if (NS_WARN_IF(!urlExtraData)) {
+      // Provided we have a FontFaceSetImpl object, this should only happen on
+      // worker threads, where we failed to initialize the worker before it was
+      // shutdown.
+      aError.ThrowInvalidStateError("Missing URLExtraData");
+      return false;
+    }
+
+    if (NS_WARN_IF(!Servo_ParseFilters(&aString, /* aIgnoreUrls */ true,
+                                       urlExtraData, &aFilterChain))) {
+      return false;
+    }
+
+    return true;
   }
 
   nsAutoCString usedFont;  // unused
@@ -2530,8 +2549,8 @@ void CanvasRenderingContext2D::SetFilter(const nsACString& aFilter,
       CurrentState().autoSVGFiltersObserver =
           SVGObserverUtils::ObserveFiltersForCanvasContext(
               this, mCanvasElement, CurrentState().filterChain.AsSpan());
-      UpdateFilter();
     }
+    UpdateFilter();
   }
 }
 
@@ -2677,36 +2696,43 @@ static bool FiltersNeedFrameFlush(Span<const StyleFilter> aFilters) {
 }
 
 void CanvasRenderingContext2D::UpdateFilter() {
+  const bool writeOnly = IsWriteOnly() ||
+                         (mCanvasElement && mCanvasElement->IsWriteOnly()) ||
+                         (mOffscreenCanvas && mOffscreenCanvas->IsWriteOnly());
+
   RefPtr<PresShell> presShell = GetPresShell();
-  if (!presShell || presShell->IsDestroying()) {
+  if (!mOffscreenCanvas && (!presShell || presShell->IsDestroying())) {
     // Ensure we set an empty filter and update the state to
     // reflect the current "taint" status of the canvas
     CurrentState().filter = FilterDescription();
-    CurrentState().filterSourceGraphicTainted =
-        mCanvasElement && mCanvasElement->IsWriteOnly();
+    CurrentState().filterSourceGraphicTainted = writeOnly;
     return;
   }
 
-  if (FiltersNeedFrameFlush(CurrentState().filterChain.AsSpan())) {
-    presShell->FlushPendingNotifications(FlushType::Frames);
+  // The PresContext is only used with URL filters and we don't allow those to
+  // be used on worker threads.
+  nsPresContext* presContext = nullptr;
+  if (presShell) {
+    if (FiltersNeedFrameFlush(CurrentState().filterChain.AsSpan())) {
+      presShell->FlushPendingNotifications(FlushType::Frames);
+    }
+
+    if (MOZ_UNLIKELY(presShell->IsDestroying())) {
+      return;
+    }
+
+    presContext = presShell->GetPresContext();
   }
 
   MOZ_RELEASE_ASSERT(!mStyleStack.IsEmpty());
-  if (MOZ_UNLIKELY(presShell->IsDestroying())) {
-    return;
-  }
-
-  const bool sourceGraphicIsTainted =
-      mCanvasElement && mCanvasElement->IsWriteOnly();
 
   CurrentState().filter = FilterInstance::GetFilterDescription(
-      mCanvasElement, CurrentState().filterChain.AsSpan(),
-      sourceGraphicIsTainted,
-      CanvasUserSpaceMetrics(
-          GetSize(), CurrentState().fontFont, CurrentState().fontLanguage,
-          CurrentState().fontExplicitLanguage, presShell->GetPresContext()),
+      mCanvasElement, CurrentState().filterChain.AsSpan(), writeOnly,
+      CanvasUserSpaceMetrics(GetSize(), CurrentState().fontFont,
+                             CurrentState().fontLanguage,
+                             CurrentState().fontExplicitLanguage, presContext),
       gfxRect(0, 0, mWidth, mHeight), CurrentState().filterAdditionalImages);
-  CurrentState().filterSourceGraphicTainted = sourceGraphicIsTainted;
+  CurrentState().filterSourceGraphicTainted = writeOnly;
 }
 
 //
