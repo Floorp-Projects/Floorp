@@ -301,25 +301,6 @@ static const char* gCallbackPrefs[] = {
     nullptr,
 };
 
-static void GetFirefoxVersionForUserAgent(nsACString& aVersion) {
-  // If the "network.http.useragent.forceVersion" pref has a non-zero value,
-  // then override the User-Agent string's Firefox version. The value 0 means
-  // use the default Firefox version. If enterprise users rely on sites that
-  // aren't compatible with Firefox version 100's three-digit version number,
-  // enterprise admins can set this pref to a known-good version (like 99) in an
-  // enterprise policy file.
-  uint32_t forceVersion =
-      mozilla::StaticPrefs::network_http_useragent_forceVersion();
-  if (forceVersion == 0) {
-    // Use the default Firefox version.
-    aVersion.AssignLiteral(MOZILLA_UAVERSION);
-  } else {
-    // Use the pref's version.
-    aVersion.AppendInt(forceVersion);
-    aVersion.AppendLiteral(".0");
-  }
-}
-
 nsresult nsHttpHandler::Init() {
   nsresult rv;
 
@@ -391,11 +372,7 @@ nsresult nsHttpHandler::Init() {
   Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
                        StaticPrefs::network_http_http3_enable());
 
-  nsAutoCString uaVersion;
-  GetFirefoxVersionForUserAgent(uaVersion);
-
-  mCompatFirefox.AssignLiteral("Firefox/");
-  mCompatFirefox.Append(uaVersion);
+  mCompatFirefox.AssignLiteral("Firefox/" MOZILLA_UAVERSION);
 
   nsCOMPtr<nsIXULAppInfo> appInfo =
       do_GetService("@mozilla.org/xre/app-info;1");
@@ -420,7 +397,7 @@ nsresult nsHttpHandler::Init() {
   if (forceVersion && (isFirefox || mCompatFirefoxEnabled)) {
     mMisc.Append(nsPrintfCString("%u.0", forceVersion));
   } else {
-    mMisc.Append(uaVersion);
+    mMisc.AppendLiteral(MOZILLA_UAVERSION);
   }
 
   // Generate the spoofed User Agent for fingerprinting resistance.
@@ -437,7 +414,7 @@ nsresult nsHttpHandler::Init() {
   mRequestContextService = RequestContextService::GetOrCreate();
 
 #if defined(ANDROID)
-  mProductSub.Assign(uaVersion);
+  mProductSub.AssignLiteral(MOZILLA_UAVERSION);
 #else
   mProductSub.AssignLiteral(LEGACY_UA_GECKO_TRAIL);
 #endif
