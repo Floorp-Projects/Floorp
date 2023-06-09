@@ -147,6 +147,11 @@ DesktopRect GetFullscreenRect() {
 }
 
 DesktopVector GetDpiForMonitor(HMONITOR monitor) {
+// See Bug 1837647 - upstream commit 60795e8c7a added this method using
+// ::GetDpiForMonitor which is not available on Win7 machines.  For now,
+// we'll return the default case of {96, 96} until we can properly
+// restore the functionality for newer machines (See Bug 1837667).
+#if 0
   UINT dpi_x, dpi_y;
   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
   HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
@@ -163,6 +168,7 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
     ReleaseDC(nullptr, hdc);
     return dpi;
   }
+#endif
 
   // If everything fails, then return the default DPI for Windows.
   return {96, 96};
