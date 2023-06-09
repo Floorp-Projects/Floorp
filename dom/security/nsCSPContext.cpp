@@ -130,10 +130,9 @@ static void BlockedContentSourceToString(
 NS_IMETHODIMP
 nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsICSPEventListener* aCSPEventListener,
-                         nsIURI* aContentLocation,
+                         nsILoadInfo* aLoadInfo, nsIURI* aContentLocation,
                          nsIURI* aOriginalURIIfRedirect,
-                         bool aSendViolationReports, const nsAString& aNonce,
-                         bool aParserCreated, int16_t* outDecision) {
+                         bool aSendViolationReports, int16_t* outDecision) {
   if (CSPCONTEXTLOGENABLED()) {
     CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s",
                    aContentLocation->GetSpecOrDefault().get()));
@@ -159,14 +158,19 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     return NS_OK;
   }
 
+  nsAutoString cspNonce;
+  if (aLoadInfo) {
+    MOZ_ALWAYS_SUCCEEDS(aLoadInfo->GetCspNonce(cspNonce));
+  }
+
   bool permitted = permitsInternal(
       dir,
       nullptr,  // aTriggeringElement
-      aCSPEventListener, aContentLocation, aOriginalURIIfRedirect, aNonce,
+      aCSPEventListener, aContentLocation, aOriginalURIIfRedirect, cspNonce,
       false,  // allow fallback to default-src
       aSendViolationReports,
       true,  // send blocked URI in violation reports
-      aParserCreated);
+      aLoadInfo ? aLoadInfo->GetParserCreatedScript() : false);
 
   *outDecision =
       permitted ? nsIContentPolicy::ACCEPT : nsIContentPolicy::REJECT_SERVER;
