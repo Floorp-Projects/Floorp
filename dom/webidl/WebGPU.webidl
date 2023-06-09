@@ -23,8 +23,6 @@ interface GPUSupportedLimits {
     readonly attribute unsigned long maxTextureDimension3D;
     readonly attribute unsigned long maxTextureArrayLayers;
     readonly attribute unsigned long maxBindGroups;
-    readonly attribute unsigned long maxBindGroupsPlusVertexBuffers;
-    readonly attribute unsigned long maxBindingsPerBindGroup;
     readonly attribute unsigned long maxDynamicUniformBuffersPerPipelineLayout;
     readonly attribute unsigned long maxDynamicStorageBuffersPerPipelineLayout;
     readonly attribute unsigned long maxSampledTexturesPerShaderStage;
@@ -32,18 +30,14 @@ interface GPUSupportedLimits {
     readonly attribute unsigned long maxStorageBuffersPerShaderStage;
     readonly attribute unsigned long maxStorageTexturesPerShaderStage;
     readonly attribute unsigned long maxUniformBuffersPerShaderStage;
-    readonly attribute unsigned long long maxUniformBufferBindingSize;
-    readonly attribute unsigned long long maxStorageBufferBindingSize;
+    readonly attribute unsigned long maxUniformBufferBindingSize;
+    readonly attribute unsigned long maxStorageBufferBindingSize;
     readonly attribute unsigned long minUniformBufferOffsetAlignment;
     readonly attribute unsigned long minStorageBufferOffsetAlignment;
     readonly attribute unsigned long maxVertexBuffers;
-    readonly attribute unsigned long long maxBufferSize;
     readonly attribute unsigned long maxVertexAttributes;
     readonly attribute unsigned long maxVertexBufferArrayStride;
     readonly attribute unsigned long maxInterStageShaderComponents;
-    readonly attribute unsigned long maxInterStageShaderVariables;
-    readonly attribute unsigned long maxColorAttachments;
-    readonly attribute unsigned long maxColorAttachmentBytesPerSample;
     readonly attribute unsigned long maxComputeWorkgroupStorageSize;
     readonly attribute unsigned long maxComputeInvocationsPerWorkgroup;
     readonly attribute unsigned long maxComputeWorkgroupSizeX;
@@ -126,16 +120,14 @@ dictionary GPUDeviceDescriptor {
 
 enum GPUFeatureName {
     "depth-clip-control",
+    "depth24unorm-stencil8",
     "depth32float-stencil8",
+    "pipeline-statistics-query",
     "texture-compression-bc",
     "texture-compression-etc2",
     "texture-compression-astc",
     "timestamp-query",
     "indirect-first-instance",
-    "shader-f16",
-    "rg11b10ufloat-renderable",
-    "bgra8unorm-storage",
-    "float32-filterable",
 };
 
 // Device
