@@ -57,8 +57,8 @@ fluent-langneg = { version = "0.13", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 rure = "0.2.2"
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
-mozannotation_client = { path = "../../../crashreporter/mozannotation_client" }
-mozannotation_server  = { path = "../../../crashreporter/mozannotation_server" }
+mozannotation_client = { path = "../../../crashreporter/mozannotation_client", optional = true }
+mozannotation_server  = { path = "../../../crashreporter/mozannotation_server", optional = true }
 gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
 dom = { path = "../../../../dom/base/rust" }
@@ -134,6 +134,7 @@ glean_disable_upload = ["fog_control/disable_upload"]
 glean_million_queue = ["fog_control/million_queue"]
 glean_with_gecko = ["fog_control/with_gecko", "jog/with_gecko"]
 oxidized_breakpad = ["rust_minidump_writer_linux"]
+crashreporter = ["mozannotation_client", "mozannotation_server"]
 with_dbus = ["audio_thread_priority/with_dbus"]
 thread_sanitizer = ["xpcom/thread_sanitizer"]
 uniffi_fixtures = [
