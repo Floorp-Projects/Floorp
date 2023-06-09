@@ -21,13 +21,24 @@ add_task(async function doorhanger_bc_downloadOptIn() {
     queryString: "&invalidCompleteSize=1&promptWaitTime=0",
     version,
   };
+
+  let versionString = version;
+  switch (UpdateUtils.getUpdateChannel(false)) {
+    case "beta":
+    case "aurora":
+      versionString += "beta";
+      break;
+  }
+
   await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-available",
       button: n => n.querySelector(".popup-notification-learnmore-link"),
       checkActiveUpdate: null,
       pageURLs: {
-        manual: `${URL_HOST}/${Services.locale.appLocaleAsBCP47}/firefox/${version}/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=updateprompt`,
+        manual: Services.urlFormatter.formatURL(
+          `${URL_HOST}/%LOCALE%/firefox/${versionString}/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=updateprompt`
+        ),
       },
     },
     {
