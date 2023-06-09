@@ -7,7 +7,7 @@
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["media.wmf.media-engine.enabled", true],
+      ["media.wmf.media-engine.enabled", 1],
       ["media.wmf.media-engine.channel-decoder.enabled", true],
     ],
   });

@@ -260,8 +260,8 @@ var listener = {
   onWindowLoaded() {
     // Disable media engine pref if it's enabled because it doesn't support
     // capturing image to canvas.
-    if (Services.prefs.getBoolPref(MEDIA_ENGINE_PREF, false)) {
-      Services.prefs.setBoolPref(MEDIA_ENGINE_PREF, false);
+    if (Services.prefs.getIntPref(MEDIA_ENGINE_PREF, 0)) {
+      Services.prefs.setIntPref(MEDIA_ENGINE_PREF, 0);
       this.disabledPrefs.push(MEDIA_ENGINE_PREF);
     }
 
