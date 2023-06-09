@@ -9,12 +9,14 @@
 
 #if defined(XP_WIN)
 #  include <windows.h>
-#elif defined(XP_DARWIN)
-#  include "mozilla/Assertions.h"
-#  include <os/lock.h>
 #else
 #  include <pthread.h>
 #endif
+#if defined(XP_DARWIN)
+#  include <os/lock.h>
+#endif
+
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ThreadSafety.h"
 
@@ -177,6 +179,97 @@ typedef Mutex StaticMutex;
 
 #endif
 
+#ifdef XP_WIN
+typedef DWORD ThreadId;
+inline ThreadId GetThreadId() { return GetCurrentThreadId(); }
+#else
+typedef pthread_t ThreadId;
+inline ThreadId GetThreadId() { return pthread_self(); }
+#endif
+
+class MOZ_CAPABILITY("mutex") MaybeMutex : public Mutex {
+ public:
+  enum DoLock {
+    MUST_LOCK,
+    AVOID_LOCK_UNSAFE,
+  };
+
+  bool Init(DoLock aDoLock) {
+    mDoLock = aDoLock;
+#ifdef MOZ_DEBUG
+    mThreadId = GetThreadId();
+#endif
+    return Mutex::Init();
+  }
+
+#ifndef XP_WIN
+  // Re initialise after fork(), assumes that mDoLock is already initialised.
+  void Reinit(pthread_t aForkingThread) {
+    if (mDoLock == MUST_LOCK) {
+      Mutex::Init();
+      return;
+    }
+#  ifdef MOZ_DEBUG
+    // If this is an eluded lock we can only safely re-initialise it if the
+    // thread that called fork is the one that owns the lock.
+    if (pthread_equal(mThreadId, aForkingThread)) {
+      mThreadId = GetThreadId();
+      Mutex::Init();
+    } else {
+      // We can't guantee that whatever resource this lock protects (probably a
+      // jemalloc arena) is in a consistent state.
+      mDeniedAfterFork = true;
+    }
+#  endif
+  }
+#endif
+
+  inline void Lock() MOZ_CAPABILITY_ACQUIRE() {
+    if (ShouldLock()) {
+      Mutex::Lock();
+    }
+  }
+
+  inline void Unlock() MOZ_CAPABILITY_RELEASE() {
+    if (ShouldLock()) {
+      Mutex::Unlock();
+    }
+  }
+
+  // Return true if we can use this resource from this thread, either because
+  // we'll use the lock or because this is the only thread that will access the
+  // protected resource.
+#ifdef MOZ_DEBUG
+  bool SafeOnThisThread() const {
+    return mDoLock == MUST_LOCK || GetThreadId() == mThreadId;
+  }
+#endif
+
+  bool LockIsEnabled() const { return mDoLock == MUST_LOCK; }
+
+ private:
+  bool ShouldLock() {
+#ifndef XP_WIN
+    MOZ_ASSERT(!mDeniedAfterFork);
+#endif
+
+    if (mDoLock == MUST_LOCK) {
+      return true;
+    }
+
+    MOZ_ASSERT(GetThreadId() == mThreadId);
+    return false;
+  }
+
+  DoLock mDoLock;
+#ifdef MOZ_DEBUG
+  ThreadId mThreadId;
+#  ifndef XP_WIN
+  bool mDeniedAfterFork = false;
+#  endif
+#endif
+};
+
 template <typename T>
 struct MOZ_SCOPED_CAPABILITY MOZ_RAII AutoLock {
   explicit AutoLock(T& aMutex) MOZ_CAPABILITY_ACQUIRE(aMutex) : mMutex(aMutex) {
@@ -193,5 +286,7 @@ struct MOZ_SCOPED_CAPABILITY MOZ_RAII AutoLock {
 };
 
 using MutexAutoLock = AutoLock<Mutex>;
+
+using MaybeMutexAutoLock = AutoLock<MaybeMutex>;
 
 #endif

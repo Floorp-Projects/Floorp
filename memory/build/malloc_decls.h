@@ -65,6 +65,7 @@ MALLOC_DECL(malloc_good_size, size_t, size_t)
 #  if MALLOC_FUNCS & MALLOC_FUNCS_JEMALLOC
 // The 2nd argument points to an optional array exactly
 // jemalloc_stats_num_bins() long to be filled in (if non-null).
+// This must only be called on the main thread.
 MALLOC_DECL(jemalloc_stats_internal, void, jemalloc_stats_t*,
             jemalloc_bin_stats_t*)
 
@@ -94,12 +95,15 @@ MALLOC_DECL(jemalloc_stats_num_bins, size_t)
 // less work to do.
 //
 // If MALLOC_DOUBLE_PURGE is not defined, this function does nothing.
+//
+// It may only be used from the main thread.
 MALLOC_DECL(jemalloc_purge_freed_pages, void)
 
 // Free all unused dirty pages in all arenas. Calling this function will slow
 // down subsequent allocations so it is recommended to use it only when
 // memory needs to be reclaimed at all costs (see bug 805855). This function
 // provides functionality similar to mallctl("arenas.purge") in jemalloc 3.
+// It may only be used from the main thread.
 MALLOC_DECL(jemalloc_free_dirty_pages, void)
 
 // Opt in or out of a thread local arena (bool argument is whether to opt-in
