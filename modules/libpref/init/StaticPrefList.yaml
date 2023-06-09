@@ -2903,23 +2903,6 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: once
 
-# Allow Flash async drawing mode in 64-bit release builds.
-- name: dom.ipc.plugins.asyncdrawing.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# How long we wait before unloading an idle plugin process.
-- name: dom.ipc.plugins.unloadTimeoutSecs
-  type: RelaxedAtomicUint32
-  value: 30
-  mirror: always
-
-- name: dom.ipc.plugins.allow_dxgi_surface
-  type: bool
-  value: true
-  mirror: always
-
 # Enable e10s hang monitoring (slow script checking and plugin hang detection).
 - name: dom.ipc.processHangMonitor
   type: bool

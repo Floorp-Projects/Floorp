@@ -286,7 +286,6 @@ pref("browser.ui.selection.distance", 250);
 
 // plugins
 pref("plugin.disable", true);
-pref("dom.ipc.plugins.enabled", false);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
