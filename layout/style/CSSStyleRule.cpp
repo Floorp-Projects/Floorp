@@ -109,7 +109,7 @@ CSSStyleRuleDeclaration::GetParsingEnvironment(
 CSSStyleRule::CSSStyleRule(already_AddRefed<StyleLockedStyleRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
                            uint32_t aLine, uint32_t aColumn)
-    : BindingStyleRule(aSheet, aParentRule, aLine, aColumn),
+    : css::Rule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(aRawRule),
       mDecls(Servo_StyleRule_GetStyle(mRawRule).Consume()) {}
 
@@ -203,10 +203,8 @@ void CSSStyleRule::SetSelectorText(const nsACString& aSelectorText) {
   }
 }
 
-uint32_t CSSStyleRule::GetSelectorCount() {
-  uint32_t aCount;
-  Servo_StyleRule_GetSelectorCount(mRawRule, &aCount);
-  return aCount;
+uint32_t CSSStyleRule::GetSelectorCount() const {
+  return Servo_StyleRule_GetSelectorCount(mRawRule);
 }
 
 nsresult CSSStyleRule::GetSelectorText(uint32_t aSelectorIndex,
@@ -217,7 +215,8 @@ nsresult CSSStyleRule::GetSelectorText(uint32_t aSelectorIndex,
 
 nsresult CSSStyleRule::GetSpecificity(uint32_t aSelectorIndex,
                                       uint64_t* aSpecificity) {
-  Servo_StyleRule_GetSpecificityAtIndex(mRawRule, aSelectorIndex, aSpecificity);
+  *aSpecificity =
+      Servo_StyleRule_GetSpecificityAtIndex(mRawRule, aSelectorIndex);
   return NS_OK;
 }
 
@@ -240,6 +239,12 @@ nsresult CSSStyleRule::SelectorMatchesElement(Element* aElement,
 
 NotNull<DeclarationBlock*> CSSStyleRule::GetDeclarationBlock() const {
   return WrapNotNull(mDecls.mDecls);
+}
+
+/* virtual */
+JSObject* CSSStyleRule::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
+  return CSSStyleRule_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 }  // namespace mozilla::dom

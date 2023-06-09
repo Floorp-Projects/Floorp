@@ -7,15 +7,16 @@
 #include "inDeepTreeWalker.h"
 #include "inLayoutUtils.h"
 
-#include "BindingStyleRule.h"
-#include "nsString.h"
+#include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/Document.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIContent.h"
-#include "ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/InspectorUtils.h"
 #include "mozilla/dom/NodeFilterBinding.h"
+
+#include "nsString.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIContent.h"
+#include "ChildIterator.h"
 
 using mozilla::dom::InspectorUtils;
 

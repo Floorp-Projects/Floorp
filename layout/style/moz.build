@@ -68,7 +68,6 @@ EXPORTS += [
 EXPORTS.mozilla += [
     "!ServoCSSPropList.h",
     "AnimationCollection.h",
-    "BindingStyleRule.h",
     "CachedInheritingStyles.h",
     "ComputedStyle.h",
     "ComputedStyleInlines.h",
@@ -167,7 +166,6 @@ EXPORTS.mozilla.css += [
 
 UNIFIED_SOURCES += [
     "AnimationCollection.cpp",
-    "BindingStyleRule.cpp",
     "CachedInheritingStyles.cpp",
     "ComputedStyle.cpp",
     "CounterStyleManager.cpp",

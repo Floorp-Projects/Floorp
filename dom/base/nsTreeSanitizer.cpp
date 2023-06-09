@@ -8,13 +8,10 @@
 
 #include "mozilla/Algorithm.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/css/Rule.h"
-#include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
