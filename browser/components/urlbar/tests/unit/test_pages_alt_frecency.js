@@ -14,6 +14,7 @@ testEngine_setup();
 add_task(async function test_autofill() {
   const searchString = "match";
   const singleVisitUrl = "https://singlevisit-match.org/";
+  const singleVisitBookmarkedUrl = "https://singlevisitbookmarked-match.org/";
   const adaptiveVisitUrl = "https://adaptivevisit-match.org/";
   const adaptiveManyVisitsUrl = "https://adaptivemanyvisit-match.org/";
   const manyVisitsUrl = "https://manyvisits-match.org/";
@@ -25,8 +26,14 @@ add_task(async function test_autofill() {
     title: "bookmark",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
+  await PlacesUtils.bookmarks.insert({
+    url: singleVisitBookmarkedUrl,
+    title: "visited bookmark",
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+  });
   await PlacesTestUtils.addVisits([
     singleVisitUrl,
+    singleVisitBookmarkedUrl,
     adaptiveVisitUrl,
     ...new Array(10).fill(adaptiveManyVisitsUrl),
     ...new Array(100).fill(manyVisitsUrl),
@@ -58,6 +65,10 @@ add_task(async function test_autofill() {
       makeVisitResult(context, {
         uri: sampledVisitsUrl,
         title: `test visit for ${sampledVisitsUrl}`,
+      }),
+      makeBookmarkResult(context, {
+        uri: singleVisitBookmarkedUrl,
+        title: "visited bookmark",
       }),
       makeBookmarkResult(context, {
         uri: bookmarkedUrl,
