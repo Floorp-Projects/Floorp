@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "nsCSSValue.h"
 #include "nsTextFormatter.h"
 #include "SVGContentUtils.h"
 #include <limits>
@@ -166,6 +167,46 @@ float SVGLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
     default:
       MOZ_ASSERT(IsAbsoluteUnit(aUnitType));
       return GetAbsUnitsPerAbsUnit(SVG_LENGTHTYPE_PX, aUnitType);
+  }
+}
+
+/* static */
+nsCSSUnit SVGLength::SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit) {
+  switch (aSpecifiedUnit) {
+    case SVG_LENGTHTYPE_NUMBER:
+    case SVG_LENGTHTYPE_PX:
+      return nsCSSUnit::eCSSUnit_Pixel;
+
+    case SVG_LENGTHTYPE_MM:
+      return nsCSSUnit::eCSSUnit_Millimeter;
+
+    case SVG_LENGTHTYPE_CM:
+      return nsCSSUnit::eCSSUnit_Centimeter;
+
+    case SVG_LENGTHTYPE_IN:
+      return nsCSSUnit::eCSSUnit_Inch;
+
+    case SVG_LENGTHTYPE_PT:
+      return nsCSSUnit::eCSSUnit_Point;
+
+    case SVG_LENGTHTYPE_PC:
+      return nsCSSUnit::eCSSUnit_Pica;
+
+    case SVG_LENGTHTYPE_PERCENTAGE:
+      return nsCSSUnit::eCSSUnit_Percent;
+
+    case SVG_LENGTHTYPE_EMS:
+      return nsCSSUnit::eCSSUnit_EM;
+
+    case SVG_LENGTHTYPE_EXS:
+      return nsCSSUnit::eCSSUnit_XHeight;
+
+    case SVG_LENGTHTYPE_Q:
+      return nsCSSUnit::eCSSUnit_Quarter;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit type");
+      return nsCSSUnit::eCSSUnit_Pixel;
   }
 }
 

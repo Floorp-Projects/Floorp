@@ -11,45 +11,8 @@
 #include "SVGImageElement.h"
 #include "SVGRectElement.h"
 #include "SVGUseElement.h"
-#include "nsCSSValue.h"
 
 namespace mozilla::dom::SVGGeometryProperty {
-
-nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit) {
-  switch (aSpecifiedUnit) {
-    case SVGLength_Binding::SVG_LENGTHTYPE_NUMBER:
-    case SVGLength_Binding::SVG_LENGTHTYPE_PX:
-      return nsCSSUnit::eCSSUnit_Pixel;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_MM:
-      return nsCSSUnit::eCSSUnit_Millimeter;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_CM:
-      return nsCSSUnit::eCSSUnit_Centimeter;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_IN:
-      return nsCSSUnit::eCSSUnit_Inch;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_PT:
-      return nsCSSUnit::eCSSUnit_Point;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_PC:
-      return nsCSSUnit::eCSSUnit_Pica;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE:
-      return nsCSSUnit::eCSSUnit_Percent;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_EMS:
-      return nsCSSUnit::eCSSUnit_EM;
-
-    case SVGLength_Binding::SVG_LENGTHTYPE_EXS:
-      return nsCSSUnit::eCSSUnit_XHeight;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown unit type");
-      return nsCSSUnit::eCSSUnit_Pixel;
-  }
-}
 
 nsCSSPropertyID AttrEnumToCSSPropId(const SVGElement* aElement,
                                     uint8_t aAttrEnum) {
