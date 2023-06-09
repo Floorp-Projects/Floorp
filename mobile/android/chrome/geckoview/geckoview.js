@@ -603,7 +603,7 @@ function startup() {
                 "MozDOMFullscreen:Request": {},
                 MozFirstContentfulPaint: {},
                 MozPaintStatusReset: {},
-                contextmenu: { capture: true },
+                contextmenu: {},
               },
             },
             allFrames: true,
