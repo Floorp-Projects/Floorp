@@ -5,6 +5,7 @@
     <title>Basic tests for the Migration Wizard component</title>
     <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script src="head-common.js"></script>
     <script
       src="chrome://browser/content/migration/migration-wizard.mjs"
       type="module"
@@ -14,11 +15,9 @@
       href="chrome://mochikit/content/tests/SimpleTest/test.css"
     />
     <script>
-      "use strict";
+      /* import-globals-from ../head-common.js */
 
-      const { MigrationWizardConstants } = ChromeUtils.importESModule(
-        "chrome://browser/content/migration/migration-wizard-constants.mjs"
-      );
+      "use strict";
 
       const { BrowserTestUtils } = ChromeUtils.importESModule(
         "resource://testing-common/BrowserTestUtils.sys.mjs"
@@ -179,7 +178,7 @@
             is(profileName.textContent, "");
           }
 
-          for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+          for (let resourceType of getChoosableResourceTypes()) {
             let node = resourceTypeList.querySelector(
               `label[data-resource-type="${resourceType}"]`
             );
@@ -267,7 +266,7 @@
           let migratorInstance = MIGRATOR_PROFILE_INSTANCES[i];
           let panelItem = panelItems[i];
           panelItem.click();
-          for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+          for (let resourceType of getChoosableResourceTypes()) {
             let node = gShadowRoot.querySelector(
               `#resource-type-list label[data-resource-type="${resourceType}"]`
             );

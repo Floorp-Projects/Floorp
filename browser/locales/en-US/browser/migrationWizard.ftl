@@ -64,6 +64,9 @@ migration-logins-and-passwords-option-label = Saved logins and passwords
 migration-history-option-label = Browsing history
 migration-form-autofill-option-label = Form autofill data
 migration-payment-methods-option-label = Payment methods
+migration-cookies-option-label = Cookies
+migration-session-option-label = Windows and tabs
+migration-otherdata-option-label = Other data
 
 migration-passwords-from-file-progress-header = Import Passwords File
 migration-passwords-from-file-success-header = Passwords Imported Successfully

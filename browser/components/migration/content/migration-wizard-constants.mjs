@@ -48,7 +48,9 @@ export const MigrationWizardConstants = Object.freeze({
     BOOKMARKS: "BOOKMARKS",
     PAYMENT_METHODS: "PAYMENT_METHODS",
 
-    // We don't yet show OTHERDATA or SESSION resources.
+    COOKIES: "COOKIES",
+    SESSION: "SESSION",
+    OTHERDATA: "OTHERDATA",
   }),
 
   DISPLAYED_FILE_RESOURCE_TYPES: Object.freeze({
@@ -61,6 +63,20 @@ export const MigrationWizardConstants = Object.freeze({
     PASSWORDS_NEW: "PASSWORDS_NEW",
     PASSWORDS_UPDATED: "PASSWORDS_UPDATED",
     BOOKMARKS_FROM_FILE: "BOOKMARKS_FROM_FILE",
+  }),
+
+  /**
+   * Returns a mapping of a resource type to a string used to identify
+   * the associated resource group in the wizard via a data-resource-type
+   * attribute. The keys are for resource types that are only ever shown
+   * for profile resets.
+   *
+   * @type {Object<string, string>}
+   */
+  PROFILE_RESET_ONLY_RESOURCE_TYPES: Object.freeze({
+    COOKIES: "COOKIES",
+    SESSION: "SESSION",
+    OTHERDATA: "OTHERDATA",
   }),
 
   /**

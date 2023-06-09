@@ -130,6 +130,31 @@ class MigrationUtils {
       "browser.migrate.history.maxAgeInDays",
       180
     );
+
+    ChromeUtils.registerWindowActor("MigrationWizard", {
+      parent: {
+        esModuleURI: "resource:///actors/MigrationWizardParent.sys.mjs",
+      },
+
+      child: {
+        esModuleURI: "resource:///actors/MigrationWizardChild.sys.mjs",
+        events: {
+          "MigrationWizard:RequestState": { wantUntrusted: true },
+          "MigrationWizard:BeginMigration": { wantUntrusted: true },
+          "MigrationWizard:RequestSafariPermissions": { wantUntrusted: true },
+          "MigrationWizard:SelectSafariPasswordFile": { wantUntrusted: true },
+        },
+      },
+
+      includeChrome: true,
+      allFrames: true,
+      matches: [
+        "about:welcome",
+        "about:welcome?*",
+        "about:preferences",
+        "chrome://browser/content/migration/migration-dialog-window.html",
+      ],
+    });
   }
 
   resourceTypes = Object.freeze({
@@ -565,11 +590,7 @@ class MigrationUtils {
    */
   showMigrationWizard(aOpener, aOptions) {
     if (
-      Services.prefs.getBoolPref(
-        "browser.migrate.content-modal.enabled",
-        false
-      ) &&
-      !aOptions?.isStartupMigration
+      Services.prefs.getBoolPref("browser.migrate.content-modal.enabled", false)
     ) {
       let entrypoint =
         aOptions.entrypoint || this.MIGRATION_ENTRYPOINTS.UNKNOWN;
@@ -577,17 +598,19 @@ class MigrationUtils {
         .getHistogramById("FX_MIGRATION_ENTRY_POINT_CATEGORICAL")
         .add(entrypoint);
 
-      let openStandaloneWindow = () => {
-        const FEATURES = "dialog,centerscreen,resizable=no";
-        const win = Services.ww.openWindow(
+      let openStandaloneWindow = blocking => {
+        let features = "dialog,centerscreen,resizable=no";
+
+        if (blocking) {
+          features += ",modal";
+        }
+
+        Services.ww.openWindow(
           aOpener,
           "chrome://browser/content/migration/migration-dialog-window.html",
           "_blank",
-          FEATURES,
+          features,
           {
-            onResize: () => {
-              win.sizeToContent();
-            },
             options: aOptions,
           }
         );
@@ -595,7 +618,7 @@ class MigrationUtils {
       };
 
       if (aOptions.isStartupMigration) {
-        openStandaloneWindow();
+        openStandaloneWindow(true /* blocking */);
         return Promise.resolve();
       }
 
@@ -627,7 +650,7 @@ class MigrationUtils {
           if (aboutWelcomeBehavior == "autoclose") {
             return aOpener.openPreferences("general-migrate-autoclose");
           } else if (aboutWelcomeBehavior == "standalone") {
-            openStandaloneWindow();
+            openStandaloneWindow(false /* blocking */);
             return Promise.resolve();
           }
         }
@@ -636,7 +659,7 @@ class MigrationUtils {
 
       // If somehow we failed to open about:preferences, fall back to opening
       // the top-level window.
-      openStandaloneWindow();
+      openStandaloneWindow(false /* blocking */);
       return Promise.resolve();
     }
     // Legacy migration dialog

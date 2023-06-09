@@ -30,11 +30,12 @@ export class MigrationWizardChild extends JSWindowActorChild {
    * @returns {Promise}
    */
   async handleEvent(event) {
+    this.#wizardEl ??= event.target;
+
     switch (event.type) {
       case "MigrationWizard:RequestState": {
         this.#sendTelemetryEvent("opened");
 
-        this.#wizardEl = event.target;
         this.setComponentState({
           page: MigrationWizardConstants.PAGES.LOADING,
         });

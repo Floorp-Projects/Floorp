@@ -107,7 +107,12 @@ add_task(async function test_successful_migrations() {
   // Scenario 3: Several resource types are available, all are checked.
   let allResourceTypeStrs = Object.values(
     MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES
-  );
+  ).filter(resourceStr => {
+    return !MigrationWizardConstants.PROFILE_RESET_ONLY_RESOURCE_TYPES[
+      resourceStr
+    ];
+  });
+
   let allResourceTypes = allResourceTypeStrs.map(resourceTypeStr => {
     return MigrationUtils.resourceTypes[resourceTypeStr];
   });
