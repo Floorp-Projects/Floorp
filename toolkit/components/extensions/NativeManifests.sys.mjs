@@ -93,11 +93,6 @@ export var NativeManifests = {
     return Promise.resolve()
       .then(() => IOUtils.readUTF8(path))
       .then(data => {
-        // The JSON files are provided externally and may contain a UTF-8 BOM.
-        // IOUtils.readUTF8 does not strip them (bug 1836973), so do that here:
-        if (data.charCodeAt(0) == 0xfeff) {
-          data = data.slice(1);
-        }
         let manifest;
         try {
           manifest = JSON.parse(data);
