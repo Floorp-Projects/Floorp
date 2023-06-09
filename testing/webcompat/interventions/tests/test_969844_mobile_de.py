@@ -3,8 +3,8 @@ import pytest
 # The site serves a different mobile page to Firefox than Chrome
 
 URL = "https://www.mobile.de/"
-MOBILE_CSS = "header [data-testid='header-burger-menu']"
-DESKTOP_CSS = "header [data-testid='header-mobile-small-screen']"
+COOKIES_CSS = "button.mde-consent-accept-btn"
+MOBILE_MENU_CSS = "header [data-testid='mobile-navigation-menu']"
 
 
 @pytest.mark.only_platforms("android")
@@ -12,8 +12,9 @@ DESKTOP_CSS = "header [data-testid='header-mobile-small-screen']"
 @pytest.mark.with_interventions
 async def test_enabled(client):
     await client.navigate(URL)
-    assert client.await_css(MOBILE_CSS)
-    assert not client.find_css(DESKTOP_CSS)
+    client.soft_click(client.await_css(COOKIES_CSS))
+    mobile_menu = client.await_css(MOBILE_MENU_CSS)
+    assert client.is_displayed(mobile_menu)
 
 
 @pytest.mark.only_platforms("android")
@@ -21,5 +22,6 @@ async def test_enabled(client):
 @pytest.mark.without_interventions
 async def test_disabled(client):
     await client.navigate(URL)
-    assert client.await_css(DESKTOP_CSS)
-    assert not client.find_css(MOBILE_CSS)
+    client.soft_click(client.await_css(COOKIES_CSS))
+    mobile_menu = client.await_css(MOBILE_MENU_CSS)
+    assert not client.is_displayed(mobile_menu)

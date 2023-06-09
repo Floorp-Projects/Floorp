@@ -1,7 +1,7 @@
 import pytest
 
-URL = "https://gofreeconcepts.de/collections/shamma-sandals/products/shamma-sandals-warriors-maximus-mit-lederfussbett"
-SELECT_CSS = "#productSelect"
+URL = "https://www.discountcoffee.co.uk/collections/wholesale-coffee-beans"
+SELECT_CSS = "#collection-filter-type select"
 
 
 async def is_fastclick_active(client):

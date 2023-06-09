@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from webdriver.error import NoSuchElementException
 
@@ -14,6 +16,7 @@ async def check_choose_dealer_works(client):
     cookies = client.css(COOKIES_CSS)
     client.await_element(cookies).click()
     client.await_element_hidden(cookies)
+    time.sleep(0.5)
 
     down, dealer = client.await_first_element_of(
         [
