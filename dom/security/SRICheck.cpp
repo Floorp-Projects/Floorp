@@ -94,11 +94,7 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
   NS_ENSURE_ARG_POINTER(aReporter);
   MOZ_ASSERT(outMetadata->IsEmpty());  // caller must pass empty metadata
 
-  // put a reasonable bound on the length of the metadata
   NS_ConvertUTF16toUTF8 metadataList(aMetadataList);
-  if (metadataList.Length() > SRICheck::MAX_METADATA_LENGTH) {
-    metadataList.Truncate(SRICheck::MAX_METADATA_LENGTH);
-  }
   SRILOG(("SRICheck::IntegrityMetadata, metadataList=%s", metadataList.get()));
 
   // the integrity attribute is a list of whitespace-separated hashes
@@ -106,8 +102,7 @@ nsresult SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
   // strongest (valid) one
   nsCWhitespaceTokenizer tokenizer(metadataList);
   nsAutoCString token;
-  for (uint32_t i = 0;
-       tokenizer.hasMoreTokens() && i < SRICheck::MAX_METADATA_TOKENS; ++i) {
+  while (tokenizer.hasMoreTokens()) {
     token = tokenizer.nextToken();
 
     SRIMetadata metadata(token);
