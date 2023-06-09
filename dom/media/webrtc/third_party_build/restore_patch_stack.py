@@ -71,6 +71,9 @@ def restore_patch_stack(
     for file in no_op_files:
         shutil.copy(os.path.join(patch_directory, file), state_directory)
 
+    print("Please run the following command to verify the state of the patch-stack:")
+    print("  bash dom/media/webrtc/third_party_build/verify_vendoring.sh")
+
 
 if __name__ == "__main__":
     default_patch_dir = "third_party/libwebrtc/moz-patch-stack"
