@@ -175,6 +175,9 @@ with Files("tabbrowser*"):
 with Files("browser-allTabsMenu.js"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
+with Files("browser-ctrlTab.js"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("webext-panels*"):
     BUG_COMPONENT = ("WebExtensions", "Frontend")
 
