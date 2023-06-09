@@ -36,6 +36,13 @@ JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
 JS_PUBLIC_API void SetNativeStackQuota(JS::FrontendContext* fc,
                                        JS::NativeStackSize stackSize);
 
+// Returns true if there was any error reported to given FrontendContext.
+JS_PUBLIC_API bool HadFrontendErrors(JS::FrontendContext* fc);
+
+// Clear errors reported to given FrontendContext.
+// No-op when there's no errors.
+JS_PUBLIC_API void ClearFrontendErrors(JS::FrontendContext* fc);
+
 /*
  * Set supported import assertions on a FrontendContext to be used with
  * CompileModuleScriptToStencil. May only be set once for each FrontendContext.

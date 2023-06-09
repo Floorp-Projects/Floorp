@@ -45,6 +45,8 @@ struct FrontendErrors {
   bool hadErrors() const {
     return outOfMemory || overRecursed || allocationOverflow || error;
   }
+
+  void clearErrors();
 };
 
 class FrontendAllocator : public MallocProvider<FrontendAllocator> {
@@ -167,6 +169,7 @@ class FrontendContext {
   bool hadOverRecursed() const { return errors_.overRecursed; }
   bool hadAllocationOverflow() const { return errors_.allocationOverflow; }
   bool hadErrors() const;
+  void clearErrors();
 
 #ifdef __wasi__
   void incWasiRecursionDepth();

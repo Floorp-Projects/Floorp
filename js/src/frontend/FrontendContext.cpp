@@ -16,6 +16,14 @@
 
 using namespace js;
 
+void FrontendErrors::clearErrors() {
+  error.reset();
+  warnings.clear();
+  overRecursed = false;
+  outOfMemory = false;
+  allocationOverflow = false;
+}
+
 void FrontendAllocator::reportAllocationOverflow() {
   fc_->onAllocationOverflow();
 }
@@ -74,6 +82,11 @@ bool FrontendContext::hadErrors() const {
   }
 
   return errors_.hadErrors();
+}
+
+void FrontendContext::clearErrors() {
+  MOZ_ASSERT(!maybeCx_);
+  return errors_.clearErrors();
 }
 
 void* FrontendContext::onOutOfMemory(AllocFunction allocFunc, arena_id_t arena,
