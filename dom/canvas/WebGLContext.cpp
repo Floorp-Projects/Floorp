@@ -1498,6 +1498,9 @@ void WebGLContext::LoseContext(const webgl::ContextLossReason reason) {
   StaticMutexAutoLock lock(sLruMutex);
   LoseContextLruLocked(reason);
   HandlePendingContextLoss();
+  if (mRemoteTextureOwner) {
+    mRemoteTextureOwner->NotifyContextLost();
+  }
 }
 
 void WebGLContext::DidRefresh() {
