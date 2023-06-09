@@ -153,7 +153,7 @@ add_task(async function test_download_writes_file_in_profile() {
 
   Assert.equal(
     fileURL,
-    PROFILE_URL + "settings/main/some-collection/test_file.pem"
+    PROFILE_URL + "/settings/main/some-collection/test_file.pem"
   );
   Assert.ok(await IOUtils.exists(localFilePath));
   const stat = await IOUtils.stat(localFilePath);
