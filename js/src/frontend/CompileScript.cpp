@@ -32,6 +32,14 @@ JS_PUBLIC_API void JS::SetNativeStackQuota(JS::FrontendContext* fc,
   fc->setStackQuota(stackSize);
 }
 
+JS_PUBLIC_API bool JS::HadFrontendErrors(JS::FrontendContext* fc) {
+  return fc->hadErrors();
+}
+
+JS_PUBLIC_API void JS::ClearFrontendErrors(JS::FrontendContext* fc) {
+  fc->clearErrors();
+}
+
 JS_PUBLIC_API bool JS::SetSupportedImportAssertions(
     FrontendContext* fc,
     const JS::ImportAssertionVector& supportedImportAssertions) {
