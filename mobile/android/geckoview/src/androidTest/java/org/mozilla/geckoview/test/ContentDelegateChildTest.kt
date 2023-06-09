@@ -275,4 +275,39 @@ class ContentDelegateChildTest : BaseSessionTest() {
             }
         })
     }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun notRequestContextMenuWithPreventDefault() {
+        mainSession.loadTestPath(CONTEXT_MENU_LINK_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val contextmenuEventPromise = mainSession.evaluatePromiseJS(
+            """
+            new Promise(resolve => {
+                document.documentElement.addEventListener('contextmenu', event => {
+                    event.preventDefault();
+                    resolve(true);
+                }, { once: true });
+            });
+            """.trimIndent(),
+        )
+
+        mainSession.delegateUntilTestEnd(object : ContentDelegate {
+            @AssertCalled(false)
+            override fun onContextMenu(
+                session: GeckoSession,
+                screenX: Int,
+                screenY: Int,
+                element: ContextElement,
+            ) {
+            }
+        })
+
+        sendLongPress(50f, 50f)
+
+        assertThat("contextmenu", contextmenuEventPromise.value as Boolean, equalTo(true))
+
+        mainSession.waitForRoundTrip()
+    }
 }

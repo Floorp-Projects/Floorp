@@ -37,6 +37,10 @@ export class ContentDelegateChild extends GeckoViewActorChild {
 
     switch (aEvent.type) {
       case "contextmenu": {
+        if (aEvent.defaultPrevented) {
+          return;
+        }
+
         function nearestParentAttribute(aNode, aAttribute) {
           while (
             aNode &&
