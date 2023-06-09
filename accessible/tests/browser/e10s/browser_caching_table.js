@@ -492,3 +492,87 @@ addAccessibleTask(
   },
   { topLevel: true }
 );
+
+/**
+ * Verify that table row and column information is correct when there are
+ * intervening generics between the table and a rowgroup.
+ */
+addAccessibleTask(
+  `
+<div id="table" role="grid">
+  <div role="rowgroup">
+    <div role="row">
+      <div role="columnheader">a</div>
+    </div>
+  </div>
+  <div tabindex="-1" style="height: 1px; overflow: auto;">
+    <div role="rowgroup">
+      <div role="row">
+        <div id="cell" role="gridcell">b</div>
+      </div>
+    </div>
+  </div>
+</div>
+  `,
+  async function (browser, docAcc) {
+    const table = findAccessibleChildByID(docAcc, "table", [
+      nsIAccessibleTable,
+    ]);
+
+    info("Verifying that the table row and column counts are correct.");
+    is(table.rowCount, 2, "table rowCount correct");
+    is(table.columnCount, 1, "table columnCount correct");
+
+    info("Verifying that the cell row and column extents are correct.");
+    const cell = findAccessibleChildByID(docAcc, "cell", [
+      nsIAccessibleTableCell,
+    ]);
+    is(cell.rowExtent, 1, "cell rowExtent correct");
+    is(cell.columnExtent, 1, "cell colExtent correct");
+    is(cell.rowIndex, 1, "cell rowIndex correct");
+    is(cell.columnIndex, 0, "cell columnIndex correct");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Verify that table row and column information is correct when there are
+ * intervening generics between rows and cells.
+ */
+addAccessibleTask(
+  `
+<div id="table" role="grid">
+  <div role="rowgroup">
+    <div role="row">
+      <div role="columnheader">a</div>
+    </div>
+  </div>
+  <div role="rowgroup">
+    <div role="row">
+      <div tabindex="-1" style="height: 1px; overflow: auto;">
+        <div id="cell" role="gridcell">b</div>
+      </div>
+    </div>
+  </div>
+</div>
+  `,
+  async function (browser, docAcc) {
+    const table = findAccessibleChildByID(docAcc, "table", [
+      nsIAccessibleTable,
+    ]);
+
+    info("Verifying that the table row and column counts are correct.");
+    is(table.rowCount, 2, "table rowCount correct");
+    is(table.columnCount, 1, "table columnCount correct");
+
+    info("Verifying that the cell row and column extents are correct.");
+    const cell = findAccessibleChildByID(docAcc, "cell", [
+      nsIAccessibleTableCell,
+    ]);
+    is(cell.rowExtent, 1, "cell rowExtent correct");
+    is(cell.columnExtent, 1, "cell colExtent correct");
+    is(cell.rowIndex, 1, "cell rowIndex correct");
+    is(cell.columnIndex, 0, "cell columnIndex correct");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
