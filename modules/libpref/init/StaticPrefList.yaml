@@ -5636,11 +5636,6 @@
 # Prefs starting with "gfx."
 #---------------------------------------------------------------------------
 
-- name: gfx.allow-texture-direct-mapping
-  type: bool
-  value: true
-  mirror: once
-
 # Allow 24-bit colour when the hardware supports it.
 - name: gfx.android.rgb16.force
   type: bool
