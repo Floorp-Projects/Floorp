@@ -12,7 +12,9 @@ var gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 
 function createMockedHandlerApp() {
   // Mock the executable
-  let mockedExecutable = FileUtils.getFile("TmpD", ["mockedExecutable"]);
+  let mockedExecutable = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, "mockedExecutable")
+  );
   if (!mockedExecutable.exists()) {
     mockedExecutable.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o755);
   }
