@@ -48,7 +48,7 @@ class TestEnforcePreferences(MarionetteTestCase):
 
     def test_restart_preserves_requested_capabilities(self):
         self.marionette.delete_session()
-        self.marionette.start_session(capabilities={"moz:fooBar": True})
+        self.marionette.start_session(capabilities={"test:fooBar": True})
 
         self.enforce_prefs()
-        self.assertEqual(self.marionette.session.get("moz:fooBar"), True)
+        self.assertEqual(self.marionette.session.get("test:fooBar"), True)
