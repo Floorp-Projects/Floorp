@@ -7,7 +7,6 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryStorage::";
@@ -2101,7 +2100,7 @@ var TelemetryStorageImpl = {
 
     // FHR could have used either the default DB file name or a custom one
     // through this preference.
-    const FHR_DB_CUSTOM_FILENAME = Preferences.get(
+    const FHR_DB_CUSTOM_FILENAME = Services.prefs.getStringPref(
       "datareporting.healthreport.dbName",
       undefined
     );

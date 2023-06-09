@@ -26,9 +26,6 @@ const { TelemetryArchive } = ChromeUtils.importESModule(
 const { TelemetryUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryUtils.sys.mjs"
 );
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const { ContentTaskUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ContentTaskUtils.sys.mjs"
 );
@@ -165,7 +162,7 @@ add_task(async function test_simplePing() {
   // Update the Telemetry Server preference with the address of the local server.
   // Otherwise we might end up sending stuff to a non-existing server after
   // |TelemetryController.testReset| is called.
-  Preferences.set(
+  Services.prefs.setStringPref(
     TelemetryUtils.Preferences.Server,
     "http://localhost:" + PingServer.port
   );
@@ -179,7 +176,10 @@ add_task(async function test_simplePing() {
 
 add_task(async function test_disableDataUpload() {
   const OPTIN_PROBE = "telemetry.data_upload_optin";
-  const isUnified = Preferences.get(TelemetryUtils.Preferences.Unified, false);
+  const isUnified = Services.prefs.getBoolPref(
+    TelemetryUtils.Preferences.Unified,
+    false
+  );
   if (!isUnified) {
     // Skipping the test if unified telemetry is off, as no deletion-request ping will be generated.
     return;
@@ -212,7 +212,10 @@ add_task(async function test_disableDataUpload() {
   );
 
   // Disable FHR upload: this should trigger a deletion-request ping.
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FhrUploadEnabled,
+    false
+  );
 
   // Wait for the disable event
   await disableObserved;
@@ -229,7 +232,7 @@ add_task(async function test_disableDataUpload() {
   );
 
   // Restore FHR Upload.
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   // We need to wait until the scalar is set
   await ContentTaskUtils.waitForCondition(() => {
@@ -260,7 +263,10 @@ add_task(async function test_disableDataUpload() {
   TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
 
   // Disable FHR upload to send a deletion-request ping again.
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FhrUploadEnabled,
+    false
+  );
   // Wait for the deletion-request ping to be submitted.
   await TelemetryController.testPromiseDeletionRequestPingSubmitted();
 
@@ -284,7 +290,7 @@ add_task(async function test_disableDataUpload() {
   PingServer.start();
   // We set the new server using the pref, otherwise it would get reset with
   // |TelemetryController.testReset|.
-  Preferences.set(
+  Services.prefs.setStringPref(
     TelemetryUtils.Preferences.Server,
     "http://localhost:" + PingServer.port
   );
@@ -295,7 +301,7 @@ add_task(async function test_disableDataUpload() {
   await TelemetryController.testReset();
 
   // Re-enable Telemetry
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   // Send a test ping
   await sendPing(true, false);
@@ -336,7 +342,7 @@ add_task(async function test_disableDataUpload() {
 add_task(async function test_pingHasClientId() {
   // Make sure we have no cached client ID for this test: we'll try to send
   // a ping with it while Telemetry is being initialized.
-  Preferences.reset(TelemetryUtils.Preferences.CachedClientId);
+  Services.prefs.clearUserPref(TelemetryUtils.Preferences.CachedClientId);
   await TelemetryController.testShutdown();
   await ClientID._reset();
   await TelemetryStorage.testClearPendingPings();
@@ -394,7 +400,7 @@ add_task(async function test_pingHasClientId() {
 
   // Check that sending a ping without relying on the cache, after the
   // initialization, still works.
-  Preferences.reset(TelemetryUtils.Preferences.CachedClientId);
+  Services.prefs.clearUserPref(TelemetryUtils.Preferences.CachedClientId);
   await TelemetryController.testShutdown();
   await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
@@ -446,11 +452,14 @@ add_task(async function test_archivePings() {
   // Disable ping upload so that pings don't get sent.
   // With unified telemetry the FHR upload pref controls this,
   // with non-unified telemetry the Telemetry enabled pref.
-  const isUnified = Preferences.get(TelemetryUtils.Preferences.Unified, false);
+  const isUnified = Services.prefs.getBoolPref(
+    TelemetryUtils.Preferences.Unified,
+    false
+  );
   const uploadPref = isUnified
     ? TelemetryUtils.Preferences.FhrUploadEnabled
     : TelemetryUtils.Preferences.TelemetryEnabled;
-  Preferences.set(uploadPref, false);
+  Services.prefs.setBoolPref(uploadPref, false);
 
   // If we're using unified telemetry, disabling ping upload will generate a "deletion-request" ping. Catch it.
   if (isUnified) {
@@ -475,7 +484,7 @@ add_task(async function test_archivePings() {
   // Check that pings don't get archived if not allowed to.
   now = new Date(2010, 10, 18, 12, 0, 0);
   fakeNow(now);
-  Preferences.set(TelemetryUtils.Preferences.ArchiveEnabled, false);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ArchiveEnabled, false);
   pingId = await sendPing(true, true);
   let promise = TelemetryArchive.promiseArchivedPingById(pingId);
   Assert.ok(
@@ -484,8 +493,8 @@ add_task(async function test_archivePings() {
   );
 
   // Enable archiving and the upload so that pings get sent and archived again.
-  Preferences.set(uploadPref, true);
-  Preferences.set(TelemetryUtils.Preferences.ArchiveEnabled, true);
+  Services.prefs.setBoolPref(uploadPref, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ArchiveEnabled, true);
 
   now = new Date(2014, 6, 18, 22, 0, 0);
   fakeNow(now);
@@ -618,7 +627,7 @@ add_task(async function test_telemetryCleanFHRDatabase() {
     PathUtils.join(profileDir, CUSTOM_DB_NAME + "-wal"),
     PathUtils.join(profileDir, CUSTOM_DB_NAME + "-shm"),
   ];
-  Preferences.set(FHR_DBNAME_PREF, CUSTOM_DB_NAME);
+  Services.prefs.setStringPref(FHR_DBNAME_PREF, CUSTOM_DB_NAME);
 
   // Write fake DB files to the profile directory.
   for (let dbFilePath of CUSTOM_DB_PATHS) {
@@ -644,7 +653,7 @@ add_task(async function test_telemetryCleanFHRDatabase() {
   await TelemetryStorage.removeFHRDatabase();
 
   // Check that we're able to remove a FHR DB with the default name.
-  Preferences.reset(FHR_DBNAME_PREF);
+  Services.prefs.clearUserPref(FHR_DBNAME_PREF);
 
   const DEFAULT_DB_PATHS = [
     PathUtils.join(profileDir, DEFAULT_DB_NAME),
@@ -704,8 +713,8 @@ add_task(async function test_sendNewProfile() {
     "session-state.json"
   );
   await IOUtils.remove(stateFilePath);
-  Preferences.set(PREF_NEWPROFILE_DELAY, 1);
-  Preferences.set(PREF_NEWPROFILE_ENABLED, true);
+  Services.prefs.setIntPref(PREF_NEWPROFILE_DELAY, 1);
+  Services.prefs.setBoolPref(PREF_NEWPROFILE_ENABLED, true);
 
   // Check that a new-profile ping is sent on the first session.
   let nextReq = PingServer.promiseNextRequest();
@@ -733,7 +742,7 @@ add_task(async function test_sendNewProfile() {
   // Make sure that the new-profile ping is sent at shutdown if it wasn't sent before.
   await resetTest();
   await IOUtils.remove(stateFilePath);
-  Preferences.reset(PREF_NEWPROFILE_DELAY);
+  Services.prefs.clearUserPref(PREF_NEWPROFILE_DELAY);
 
   nextReq = PingServer.promiseNextRequest();
   await TelemetryController.testReset();
@@ -786,7 +795,7 @@ add_task(async function test_sendNewProfile() {
   await TelemetryController.testShutdown();
 
   // Reset the pref and restart Telemetry.
-  Preferences.reset(PREF_NEWPROFILE_ENABLED);
+  Services.prefs.clearUserPref(PREF_NEWPROFILE_ENABLED);
   PingServer.resetPingHandler();
 });
 

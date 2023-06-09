@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const { ctypes } = ChromeUtils.importESModule(
   "resource://gre/modules/ctypes.sys.mjs"
 );
@@ -168,12 +165,12 @@ add_task(async function setup() {
   Cc["@mozilla.org/updates/timer-manager;1"]
     .getService(Ci.nsIObserver)
     .observe(null, "utm-test-init", "");
-  Preferences.set("toolkit.telemetry.modulesPing.interval", 0);
-  Preferences.set("app.update.url", "http://localhost");
+  Services.prefs.setIntPref("toolkit.telemetry.modulesPing.interval", 0);
+  Services.prefs.setStringPref("app.update.url", "http://localhost");
 
   // Start the local ping server and setup Telemetry to use it during the tests.
   PingServer.start();
-  Preferences.set(
+  Services.prefs.setStringPref(
     TelemetryUtils.Preferences.Server,
     "http://localhost:" + PingServer.port
   );

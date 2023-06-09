@@ -2,9 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const { TelemetryArchive } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryArchive.sys.mjs"
 );
@@ -156,7 +153,7 @@ add_task(async function test_subsessionsChaining() {
   const PREFS_TO_WATCH = new Map([
     [PREF_TEST, { what: TelemetryEnvironment.RECORD_PREF_VALUE }],
   ]);
-  Preferences.reset(PREF_TEST);
+  Services.prefs.clearUserPref(PREF_TEST);
 
   // Fake the clock data to manually trigger an aborted-session ping and a daily ping.
   // This is also helpful to make sure we get the archived pings in an expected order.
@@ -210,7 +207,7 @@ add_task(async function test_subsessionsChaining() {
   await TelemetryController.testReset();
   await TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   moveClockForward(30);
-  Preferences.set(PREF_TEST, 1);
+  Services.prefs.setIntPref(PREF_TEST, 1);
   expectedReasons.push(REASON_ENVIRONMENT_CHANGE);
 
   // Shut down Telemetry. We expect a shutdown ping with profileSubsessionCounter: 5,
@@ -235,7 +232,7 @@ add_task(async function test_subsessionsChaining() {
   // profileSubsessionCounter: 7, subsessionCounter: 2, subsessionId: G and
   // previousSubsessionId: F to be archived.
   moveClockForward(30);
-  Preferences.set(PREF_TEST, 0);
+  Services.prefs.setIntPref(PREF_TEST, 0);
   expectedReasons.push(REASON_ENVIRONMENT_CHANGE);
 
   // Shut down Telemetry and trigger a shutdown ping.
@@ -247,7 +244,7 @@ add_task(async function test_subsessionsChaining() {
   await TelemetryController.testReset();
   await TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   moveClockForward(30);
-  Preferences.set(PREF_TEST, 1);
+  Services.prefs.setIntPref(PREF_TEST, 1);
   expectedReasons.push(REASON_ENVIRONMENT_CHANGE);
 
   // Don't shut down, instead trigger an aborted-session ping.
@@ -268,7 +265,7 @@ add_task(async function test_subsessionsChaining() {
 
   // Trigger an environment change.
   moveClockForward(30);
-  Preferences.set(PREF_TEST, 0);
+  Services.prefs.setIntPref(PREF_TEST, 0);
   expectedReasons.push(REASON_ENVIRONMENT_CHANGE);
 
   // And an aborted-session ping again.
