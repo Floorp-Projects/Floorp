@@ -407,9 +407,6 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
       requestingNode, nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
       contentPolicyType);
 
-  secCheckLoadInfo->SetIntegrityMetadata(
-      aRequest->mIntegrity.GetIntegrityString());
-
   // snapshot the nonce at load start time for performing CSP checks
   if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT ||
       contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_MODULE) {
@@ -626,9 +623,6 @@ nsresult ScriptLoader::StartLoadInternal(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  loadInfo->SetIntegrityMetadata(aRequest->mIntegrity.GetIntegrityString());
-
   // snapshot the nonce at load start time for performing CSP checks
   if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT ||
       contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_MODULE) {
@@ -636,6 +630,7 @@ nsresult ScriptLoader::StartLoadInternal(
       nsString* cspNonce =
           static_cast<nsString*>(context->GetProperty(nsGkAtoms::nonce));
       if (cspNonce) {
+        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
         loadInfo->SetCspNonce(*cspNonce);
       }
     }
