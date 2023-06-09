@@ -141,3 +141,52 @@ add_task(function test_event_context() {
   });
   Assert.ok(pingSubmitted, "Ping with string event_context submitted");
 });
+
+// For event_context to be more useful, we want to make sure we don't error
+// in cases where it doesn't make much sense, such as a plain string that
+// doesnt attempt to represent a valid object.
+add_task(function test_context_errors() {
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(TELEMETRY_PREF);
+  });
+  Services.prefs.setBoolPref(TELEMETRY_PREF, true);
+
+  const AWTelemetry = new AboutWelcomeTelemetry();
+
+  let weird_context_ping = {
+    event_context: "oops, this string isn't a valid JS object!",
+  };
+
+  let pingSubmitted = false;
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {
+    pingSubmitted = true;
+    Assert.equal(
+      Glean.messagingSystem.eventContextParseError.testGetValue(),
+      undefined,
+      "this poorly formed context shouldn't register because it was not an object!"
+    );
+  });
+
+  AWTelemetry.submitGleanPingForPing(weird_context_ping);
+
+  Assert.ok(pingSubmitted, "Ping with unknown keys was submitted");
+
+  weird_context_ping = {
+    event_context:
+      "{oops : {'this string isn't a valid JS object, but it sure looks like one!}}'",
+  };
+
+  pingSubmitted = false;
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {
+    pingSubmitted = true;
+    Assert.equal(
+      Glean.messagingSystem.eventContextParseError.testGetValue(),
+      1,
+      "this poorly formed context should register because it was not an object!"
+    );
+  });
+
+  AWTelemetry.submitGleanPingForPing(weird_context_ping);
+
+  Assert.ok(pingSubmitted, "Ping with unknown keys was submitted");
+});

@@ -165,7 +165,14 @@ class AboutWelcomeTelemetry {
       try {
         event_context = JSON.parse(event_context);
       } catch (e) {
-        Glean.messagingSystem.eventContextParseError.add(1);
+        // The Empty JSON strings and non-objects often provided by the
+        // existing telemetry we need to send failing to parse do not fit in
+        // the spirit of what this error is meant to capture. Instead, we want
+        // to capture when what we got should have been an object,
+        // but failed to parse.
+        if (event_context.length && event_context.includes("{")) {
+          Glean.messagingSystem.eventContextParseError.add(1);
+        }
       }
     }
 
