@@ -9,7 +9,9 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
+import mozilla.components.browser.state.selector.privateTabs
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.ext.components
 
 /**
  * This ActivityLifecycleCallbacks implementations tracks if there is at least one activity in the
@@ -50,6 +52,9 @@ class VisibilityLifecycleCallback(private val activityManager: ActivityManager?)
 
     override fun onActivityStopped(activity: Activity) {
         activitiesInStartedState--
+        if (activitiesInStartedState == 0) {
+            removeTCPException(activity)
+        }
     }
 
     override fun onActivityResumed(activity: Activity) {}
@@ -61,6 +66,18 @@ class VisibilityLifecycleCallback(private val activityManager: ActivityManager?)
     override fun onActivitySaveInstanceState(activity: Activity, bundle: Bundle) {}
 
     override fun onActivityDestroyed(activity: Activity) {}
+
+    /**
+     * For private tabs, set the tracking protection exception
+     * to the default state if the app is closed.
+     */
+    private fun removeTCPException(activity: Activity) {
+        activity.components.core.store.state.privateTabs.filter {
+            it.trackingProtection.ignoredOnTrackingProtection
+        }.forEach { privateTab ->
+            activity.components.useCases.trackingProtectionUseCases.removeException(privateTab.id)
+        }
+    }
 
     companion object {
         /**
