@@ -34,6 +34,15 @@ const QUERYINDEX_PLACEID = 8;
 const QUERYINDEX_SWITCHTAB = 9;
 const QUERYINDEX_FRECENCY = 10;
 
+// Constants to support an alternative frecency algorithm.
+const PAGES_USE_ALT_FRECENCY = Services.prefs.getBoolPref(
+  "places.frecency.pages.alternative.featureGate",
+  false
+);
+const PAGES_FRECENCY_FIELD = PAGES_USE_ALT_FRECENCY
+  ? "alt_frecency"
+  : "frecency";
+
 // This SQL query fragment provides the following:
 //   - whether the entry is bookmarked (QUERYINDEX_BOOKMARKED)
 //   - the bookmark title, if it is a bookmark (QUERYINDEX_BOOKMARKTITLE)
@@ -54,12 +63,12 @@ const SQL_BOOKMARK_TAGS_FRAGMENT = `EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk 
 // condition once, and avoid evaluating "btitle" and "tags" when it is false.
 function defaultQuery(conditions = "") {
   let query = `SELECT :query_type, h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT},
-            h.visit_count, h.typed, h.id, t.open_count, h.frecency
+            h.visit_count, h.typed, h.id, t.open_count, ${PAGES_FRECENCY_FIELD}
      FROM moz_places h
      LEFT JOIN moz_openpages_temp t
             ON t.url = h.url
            AND t.userContextId = :userContextId
-     WHERE h.frecency <> 0
+     WHERE ${PAGES_FRECENCY_FIELD} <> 0
        AND CASE WHEN bookmarked
          THEN
            AUTOCOMPLETE_MATCH(:searchString, h.url,
@@ -75,7 +84,7 @@ function defaultQuery(conditions = "") {
                               :matchBehavior, :searchBehavior, NULL)
          END
        ${conditions ? "AND" : ""} ${conditions}
-     ORDER BY h.frecency DESC, h.id DESC
+     ORDER BY ${PAGES_FRECENCY_FIELD} DESC, h.id DESC
      LIMIT :maxResults`;
   return query;
 }
