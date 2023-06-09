@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fbbc1bf963fda30bc
  1 file changed, 2 insertions(+)
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index ab5d6c91ce..3f313e2743 100644
+index 0ed8a0c3ec..654359ed37 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -702,6 +702,7 @@ rtc_library("create_frame_generator") {

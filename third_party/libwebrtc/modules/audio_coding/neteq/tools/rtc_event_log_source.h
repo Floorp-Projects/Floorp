@@ -18,6 +18,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "logging/rtc_event_log/rtc_event_log_parser.h"
+#include "modules/audio_coding/neteq/tools/neteq_input.h"
 #include "modules/audio_coding/neteq/tools/packet_source.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
@@ -53,6 +54,9 @@ class RtcEventLogSource : public PacketSource {
   // events available.
   int64_t NextAudioOutputEventMs();
 
+  // Returns the next NetEq set minimum delay event if available.
+  absl::optional<NetEqInput::SetMinimumDelayInfo> NextSetMinimumDelayEvent();
+
  private:
   RtcEventLogSource();
 
@@ -63,6 +67,8 @@ class RtcEventLogSource : public PacketSource {
   size_t rtp_packet_index_ = 0;
   std::vector<int64_t> audio_outputs_;
   size_t audio_output_index_ = 0;
+  std::vector<NetEqInput::SetMinimumDelayInfo> minimum_delay_;
+  size_t minimum_delay_index_ = 0;
 };
 
 }  // namespace test

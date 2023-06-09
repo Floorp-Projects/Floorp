@@ -123,13 +123,6 @@ class RtpTransportControllerSend final
   void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
 
  private:
-  struct PacerSettings {
-    explicit PacerSettings(const FieldTrialsView& trials);
-
-    FieldTrialParameter<TimeDelta> holdback_window;
-    FieldTrialParameter<int> holdback_packets;
-  };
-
   void MaybeCreateControllers() RTC_RUN_ON(task_queue_);
   void UpdateInitialConstraints(TargetRateConstraints new_contraints)
       RTC_RUN_ON(task_queue_);
@@ -159,7 +152,6 @@ class RtpTransportControllerSend final
   RtpBitrateConfigurator bitrate_configurator_;
   std::map<std::string, rtc::NetworkRoute> network_routes_;
   bool pacer_started_;
-  const PacerSettings pacer_settings_;
   TaskQueuePacedSender pacer_;
 
   TargetTransferRateObserver* observer_ RTC_GUARDED_BY(task_queue_);

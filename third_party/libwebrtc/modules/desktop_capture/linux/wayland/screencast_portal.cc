@@ -370,7 +370,7 @@ void ScreenCastPortal::OnStartRequestResponseSignal(GDBusConnection* connection,
   }
 
   // Array of PipeWire streams. See
-  // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
+  // https://github.com/flatpak/xdg-desktop-portal/blob/main/data/org.freedesktop.portal.ScreenCast.xml
   // documentation for <method name="Start">.
   if (g_variant_lookup(response_data.get(), "streams", "a(ua{sv})",
                        iter.receive())) {

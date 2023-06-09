@@ -195,9 +195,6 @@ class ConnectionEntry {
 
   void MaybeUpdateEchConfig(nsHttpConnectionInfo* aConnInfo);
 
-  bool AllowToRetryDifferentIPFamilyForHttp3(nsresult aError);
-  void SetRetryDifferentIPFamilyForHttp3(uint16_t aIPFamily);
-
  private:
   void InsertIntoIdleConnections_internal(nsHttpConnection* conn);
   void RemoveFromIdleConnectionsIndex(size_t inx);
@@ -214,8 +211,6 @@ class ConnectionEntry {
 
   PendingTransactionQueue mPendingQ;
   ~ConnectionEntry();
-
-  bool mRetriedDifferentIPFamilyForHttp3 = false;
 };
 
 }  // namespace net

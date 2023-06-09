@@ -54,7 +54,11 @@ class NetEqRtpDumpInput final : public NetEqPacketSourceInput {
                     absl::optional<uint32_t> ssrc_filter);
 
   absl::optional<int64_t> NextOutputEventTime() const override;
+  absl::optional<SetMinimumDelayInfo> NextSetMinimumDelayInfo() const override {
+    return absl::nullopt;
+  }
   void AdvanceOutputEvent() override;
+  void AdvanceSetMinimumDelay() override {}
 
  protected:
   PacketSource* source() override;

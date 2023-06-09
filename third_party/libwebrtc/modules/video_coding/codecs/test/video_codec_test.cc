@@ -32,6 +32,9 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
+#if defined(WEBRTC_ANDROID)
+#include "modules/video_coding/codecs/test/android_codec_factory_helper.h"
+#endif
 #include "rtc_base/strings/string_builder.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
@@ -43,7 +46,7 @@ namespace test {
 namespace {
 using ::testing::Combine;
 using ::testing::Values;
-using Layer = std::pair<int, int>;
+using PacingMode = VideoCodecTester::PacingSettings::PacingMode;
 
 struct VideoInfo {
   std::string name;
@@ -56,6 +59,23 @@ struct CodecInfo {
   std::string decoder;
 };
 
+struct LayerId {
+  int spatial_idx;
+  int temporal_idx;
+
+  bool operator==(const LayerId& o) const {
+    return spatial_idx == o.spatial_idx && temporal_idx == o.temporal_idx;
+  }
+
+  bool operator<(const LayerId& o) const {
+    if (spatial_idx < o.spatial_idx)
+      return true;
+    if (temporal_idx < o.temporal_idx)
+      return true;
+    return false;
+  }
+};
+
 struct EncodingSettings {
   ScalabilityMode scalability_mode;
   // Spatial layer resolution.
@@ -63,7 +83,7 @@ struct EncodingSettings {
   // Top temporal layer frame rate.
   Frequency framerate;
   // Bitrate of spatial and temporal layers.
-  std::map<Layer, DataRate> bitrate;
+  std::map<LayerId, DataRate> bitrate;
 };
 
 struct EncodingTestSettings {
@@ -76,10 +96,6 @@ struct DecodingTestSettings {
   std::string name;
 };
 
-struct QualityExpectations {
-  double min_apsnr_y;
-};
-
 struct EncodeDecodeTestParams {
   CodecInfo codec;
   VideoInfo video;
@@ -87,37 +103,26 @@ struct EncodeDecodeTestParams {
   VideoCodecTester::DecoderSettings decoder_settings;
   EncodingTestSettings encoding_settings;
   DecodingTestSettings decoding_settings;
-  QualityExpectations quality_expectations;
+  struct Expectations {
+    double min_apsnr_y;
+  } test_expectations;
 };
 
 const EncodingSettings kQvga64Kbps30Fps = {
     .scalability_mode = ScalabilityMode::kL1T1,
     .resolution = {{0, {.width = 320, .height = 180}}},
     .framerate = Frequency::Hertz(30),
-    .bitrate = {{Layer(0, 0), DataRate::KilobitsPerSec(64)}}};
+    .bitrate = {
+        {{.spatial_idx = 0, .temporal_idx = 0}, DataRate::KilobitsPerSec(64)}}};
 
 const EncodingTestSettings kConstantRateQvga64Kbps30Fps = {
     .name = "ConstantRateQvga64Kbps30Fps",
     .num_frames = 300,
     .frame_settings = {{/*frame_num=*/0, kQvga64Kbps30Fps}}};
 
-const QualityExpectations kLowQuality = {.min_apsnr_y = 30};
-
 const VideoInfo kFourPeople_1280x720_30 = {
     .name = "FourPeople_1280x720_30",
     .resolution = {.width = 1280, .height = 720}};
-
-const CodecInfo kLibvpxVp8 = {.type = "VP8",
-                              .encoder = "libvpx",
-                              .decoder = "libvpx"};
-
-const CodecInfo kLibvpxVp9 = {.type = "VP9",
-                              .encoder = "libvpx",
-                              .decoder = "libvpx"};
-
-const CodecInfo kOpenH264 = {.type = "H264",
-                             .encoder = "openh264",
-                             .decoder = "ffmpeg"};
 
 class TestRawVideoSource : public VideoCodecTester::RawVideoSource {
  public:
@@ -219,9 +224,15 @@ class TestEncoder : public VideoCodecTester::Encoder,
       }
     }
 
-    int result = encoder_->Encode(frame, nullptr);
-    RTC_CHECK_EQ(result, WEBRTC_VIDEO_CODEC_OK);
+    encoder_->Encode(frame, nullptr);
     ++frame_num_;
+  }
+
+  void Flush() override {
+    // TODO(webrtc:14852): For codecs which buffer frames we need a to
+    // flush them to get last frames. Add such functionality to VideoEncoder
+    // API. On Android it will map directly to `MediaCodec.flush()`.
+    encoder_->Release();
   }
 
  protected:
@@ -277,10 +288,10 @@ class TestEncoder : public VideoCodecTester::Encoder,
         ScalabilityModeToNumSpatialLayers(es.scalability_mode);
     for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
       for (int tidx = 0; tidx < num_temporal_layers; ++tidx) {
-        RTC_CHECK(es.bitrate.find(Layer(sidx, tidx)) != es.bitrate.end())
+        LayerId layer_id = {.spatial_idx = sidx, .temporal_idx = tidx};
+        RTC_CHECK(es.bitrate.find(layer_id) != es.bitrate.end())
             << "Bitrate for layer S=" << sidx << " T=" << tidx << " is not set";
-        rc.bitrate.SetBitrate(sidx, tidx,
-                              es.bitrate.at(Layer(sidx, tidx)).bps());
+        rc.bitrate.SetBitrate(sidx, tidx, es.bitrate.at(layer_id).bps());
       }
     }
 
@@ -314,6 +325,7 @@ class TestDecoder : public VideoCodecTester::Decoder,
       : decoder_(std::move(decoder)), codec_info_(codec_info), frame_num_(0) {
     decoder_->RegisterDecodeCompleteCallback(this);
   }
+
   void Decode(const EncodedImage& frame, DecodeCallback callback) override {
     callbacks_[frame.Timestamp()] = std::move(callback);
 
@@ -326,16 +338,24 @@ class TestDecoder : public VideoCodecTester::Decoder,
     ++frame_num_;
   }
 
+  void Flush() override {
+    // TODO(webrtc:14852): For codecs which buffer frames we need a to
+    // flush them to get last frames. Add such functionality to VideoDecoder
+    // API. On Android it will map directly to `MediaCodec.flush()`.
+    decoder_->Release();
+  }
+
+ protected:
   void Configure() {
     VideoDecoder::Settings ds;
     ds.set_codec_type(PayloadStringToCodecType(codec_info_.type));
     ds.set_number_of_cores(1);
+    ds.set_max_render_resolution({1280, 720});
 
     bool result = decoder_->Configure(ds);
     RTC_CHECK(result);
   }
 
- protected:
   int Decoded(VideoFrame& decoded_frame) override {
     auto cb = callbacks_.find(decoded_frame.timestamp());
     RTC_CHECK(cb != callbacks_.end());
@@ -354,7 +374,18 @@ class TestDecoder : public VideoCodecTester::Decoder,
 std::unique_ptr<VideoCodecTester::Encoder> CreateEncoder(
     const CodecInfo& codec_info,
     const std::map<int, EncodingSettings>& frame_settings) {
-  auto factory = CreateBuiltinVideoEncoderFactory();
+  std::unique_ptr<VideoEncoderFactory> factory;
+  if (codec_info.encoder == "libvpx" || codec_info.encoder == "libaom" ||
+      codec_info.encoder == "openh264") {
+    factory = CreateBuiltinVideoEncoderFactory();
+  } else if (codec_info.encoder == "mediacodec") {
+#if defined(WEBRTC_ANDROID)
+    InitializeAndroidObjects();
+    factory = CreateAndroidEncoderFactory();
+#endif
+  }
+
+  RTC_CHECK(factory);
   auto encoder = factory->CreateVideoEncoder(SdpVideoFormat(codec_info.type));
   return std::make_unique<TestEncoder>(std::move(encoder), codec_info,
                                        frame_settings);
@@ -362,7 +393,18 @@ std::unique_ptr<VideoCodecTester::Encoder> CreateEncoder(
 
 std::unique_ptr<VideoCodecTester::Decoder> CreateDecoder(
     const CodecInfo& codec_info) {
-  auto factory = CreateBuiltinVideoDecoderFactory();
+  std::unique_ptr<VideoDecoderFactory> factory;
+  if (codec_info.decoder == "libvpx" || codec_info.decoder == "dav1d" ||
+      codec_info.decoder == "ffmpeg") {
+    factory = CreateBuiltinVideoDecoderFactory();
+  } else if (codec_info.decoder == "mediacodec") {
+#if defined(WEBRTC_ANDROID)
+    InitializeAndroidObjects();
+    factory = CreateAndroidDecoderFactory();
+#endif
+  }
+
+  RTC_CHECK(factory);
   auto decoder = factory->CreateVideoDecoder(SdpVideoFormat(codec_info.type));
   return std::make_unique<TestDecoder>(std::move(decoder), codec_info);
 }
@@ -393,7 +435,7 @@ class EncodeDecodeTest
       const ::testing::TestParamInfo<EncodeDecodeTest::ParamType>& info) {
     return std::string(info.param.encoding_settings.name +
                        info.param.codec.type + info.param.codec.encoder +
-                       info.param.codec.decoder);
+                       info.param.codec.decoder + info.param.video.name);
   }
 
  protected:
@@ -405,8 +447,8 @@ class EncodeDecodeTest
 };
 
 TEST_P(EncodeDecodeTest, DISABLED_TestEncodeDecode) {
-  std::unique_ptr<VideoCodecTestStats> stats = tester_->RunEncodeDecodeTest(
-      std::move(video_source_), std::move(encoder_), std::move(decoder_),
+  std::unique_ptr<VideoCodecStats> stats = tester_->RunEncodeDecodeTest(
+      video_source_.get(), encoder_.get(), decoder_.get(),
       test_params_.encoder_settings, test_params_.decoder_settings);
 
   const auto& frame_settings = test_params_.encoding_settings.frame_settings;
@@ -415,42 +457,42 @@ TEST_P(EncodeDecodeTest, DISABLED_TestEncodeDecode) {
     int last_frame = std::next(fs) != frame_settings.end()
                          ? std::next(fs)->first - 1
                          : test_params_.encoding_settings.num_frames - 1;
-
-    const EncodingSettings& encoding_settings = fs->second;
-    auto metrics = stats->CalcVideoStatistic(
-        first_frame, last_frame, encoding_settings.bitrate.rbegin()->second,
-        encoding_settings.framerate);
-
-    EXPECT_GE(metrics.avg_psnr_y,
-              test_params_.quality_expectations.min_apsnr_y);
+    VideoCodecStats::Filter slicer = {.first_frame = first_frame,
+                                      .last_frame = last_frame};
+    std::vector<VideoCodecStats::Frame> frames = stats->Slice(slicer);
+    VideoCodecStats::Stream stream = stats->Aggregate(frames);
+    EXPECT_GE(stream.psnr.y.GetAverage(),
+              test_params_.test_expectations.min_apsnr_y);
   }
 }
 
-std::list<EncodeDecodeTestParams> ConstantRateTestParameters() {
-  std::list<EncodeDecodeTestParams> test_params;
-  std::vector<CodecInfo> codecs = {kLibvpxVp8};
-  std::vector<VideoInfo> videos = {kFourPeople_1280x720_30};
-  std::vector<std::pair<EncodingTestSettings, QualityExpectations>>
-      encoding_settings = {{kConstantRateQvga64Kbps30Fps, kLowQuality}};
-  for (const CodecInfo& codec : codecs) {
-    for (const VideoInfo& video : videos) {
-      for (const auto& es : encoding_settings) {
-        EncodeDecodeTestParams p;
-        p.codec = codec;
-        p.video = video;
-        p.encoding_settings = es.first;
-        p.quality_expectations = es.second;
-        test_params.push_back(p);
-      }
-    }
-  }
-  return test_params;
-}
-
-INSTANTIATE_TEST_SUITE_P(ConstantRate,
-                         EncodeDecodeTest,
-                         ::testing::ValuesIn(ConstantRateTestParameters()),
-                         EncodeDecodeTest::TestParametersToStr);
+INSTANTIATE_TEST_SUITE_P(
+    ConstantRate,
+    EncodeDecodeTest,
+    ::testing::ValuesIn({
+      EncodeDecodeTestParams({
+          .codec = {.type = "VP8", .encoder = "libvpx", .decoder = "libvpx"},
+          .video = kFourPeople_1280x720_30,
+          .encoder_settings = {.pacing = {.mode = PacingMode::kNoPacing}},
+          .decoder_settings = {.pacing = {.mode = PacingMode::kNoPacing}},
+          .encoding_settings = kConstantRateQvga64Kbps30Fps,
+          .test_expectations = {.min_apsnr_y = 30.0},
+      })
+#if defined(WEBRTC_ANDROID)
+          ,
+          EncodeDecodeTestParams({
+              .codec = {.type = "VP8",
+                        .encoder = "mediacodec",
+                        .decoder = "mediacodec"},
+              .video = kFourPeople_1280x720_30,
+              .encoder_settings = {.pacing = {.mode = PacingMode::kRealTime}},
+              .decoder_settings = {.pacing = {.mode = PacingMode::kRealTime}},
+              .encoding_settings = kConstantRateQvga64Kbps30Fps,
+              .test_expectations = {.min_apsnr_y = 30.0},
+          })
+#endif
+    }),
+    EncodeDecodeTest::TestParametersToStr);
 }  // namespace test
 
 }  // namespace webrtc

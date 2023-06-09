@@ -12,6 +12,7 @@
 #define MODULES_RTP_RTCP_SOURCE_RTP_SENDER_VIDEO_FRAME_TRANSFORMER_DELEGATE_H_
 
 #include <memory>
+#include <vector>
 
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
@@ -23,7 +24,28 @@
 
 namespace webrtc {
 
-class RTPSenderVideo;
+// Interface for sending videoframes on an RTP connection, after a transform
+// have been applied.
+class RTPVideoFrameSenderInterface {
+ public:
+  virtual bool SendVideo(
+      int payload_type,
+      absl::optional<VideoCodecType> codec_type,
+      uint32_t rtp_timestamp,
+      int64_t capture_time_ms,
+      rtc::ArrayView<const uint8_t> payload,
+      RTPVideoHeader video_header,
+      absl::optional<int64_t> expected_retransmission_time_ms,
+      std::vector<uint32_t> csrcs) = 0;
+
+  virtual void SetVideoStructureAfterTransformation(
+      const FrameDependencyStructure* video_structure) = 0;
+  virtual void SetVideoLayersAllocationAfterTransformation(
+      VideoLayersAllocation allocation) = 0;
+
+ protected:
+  virtual ~RTPVideoFrameSenderInterface() = default;
+};
 
 // Delegates calls to FrameTransformerInterface to transform frames, and to
 // RTPSenderVideo to send the transformed frames. Ensures thread-safe access to
@@ -31,9 +53,10 @@ class RTPSenderVideo;
 class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
  public:
   RTPSenderVideoFrameTransformerDelegate(
-      RTPSenderVideo* sender,
+      RTPVideoFrameSenderInterface* sender,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
       uint32_t ssrc,
+      std::vector<uint32_t> csrcs,
       TaskQueueFactory* send_transport_queue);
 
   void Init();
@@ -77,9 +100,10 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
   void EnsureEncoderQueueCreated();
 
   mutable Mutex sender_lock_;
-  RTPSenderVideo* sender_ RTC_GUARDED_BY(sender_lock_);
+  RTPVideoFrameSenderInterface* sender_ RTC_GUARDED_BY(sender_lock_);
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
   const uint32_t ssrc_;
+  std::vector<uint32_t> csrcs_;
   // Used when the encoded frames arrives without a current task queue. This can
   // happen if a hardware encoder was used.
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;

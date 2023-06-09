@@ -2434,7 +2434,7 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
 
   // The fake clock ensures that no time has passed so the cache must have been
   // explicitly invalidated.
-  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+  EXPECT_EQ(first_report->timestamp(), second_report->timestamp());
 }
 
 TEST_P(PeerConnectionIntegrationTestWithFakeClock,
@@ -2478,7 +2478,7 @@ TEST_P(PeerConnectionIntegrationTestWithFakeClock,
 
   // The fake clock ensures that no time has passed so the cache must have been
   // explicitly invalidated.
-  EXPECT_EQ(first_report->timestamp_us(), second_report->timestamp_us());
+  EXPECT_EQ(first_report->timestamp(), second_report->timestamp());
 }
 
 #endif  // !defined(THREAD_SANITIZER)
@@ -2790,6 +2790,31 @@ TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetSourcesVideo) {
                      return !sources.empty();
                    })(),
                    kDefaultTimeout);
+  ASSERT_GT(sources.size(), 0u);
+  EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
+}
+
+// Similar to the above test, except instead of waiting until GetSources() is
+// non-empty we wait until media is flowing and then assert that GetSources()
+// is not empty. This provides test coverage for https://crbug.com/webrtc/14817
+// where a race due to the re-creationg of the unsignaled ssrc stream would
+// clear the GetSources() history. This test not flaking confirms the bug fix.
+TEST_P(PeerConnectionIntegrationTest,
+       UnsignaledSsrcGetSourcesNonEmptyIfMediaFlowing) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddVideoTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  // Wait for one video frame to be received by the callee.
+  MediaExpectations media_expectations;
+  media_expectations.CalleeExpectsSomeVideo(1);
+  ASSERT_TRUE(ExpectNewFrames(media_expectations));
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  std::vector<RtpSource> sources = receiver->GetSources();
+  // SSRC history must not be cleared since the reception of the first frame.
   ASSERT_GT(sources.size(), 0u);
   EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
 }

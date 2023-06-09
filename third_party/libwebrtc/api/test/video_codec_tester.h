@@ -14,7 +14,8 @@
 #include <memory>
 
 #include "absl/functional/any_invocable.h"
-#include "api/test/videocodec_test_stats.h"
+#include "absl/types/optional.h"
+#include "api/test/video_codec_stats.h"
 #include "api/video/encoded_image.h"
 #include "api/video/resolution.h"
 #include "api/video/video_frame.h"
@@ -88,6 +89,8 @@ class VideoCodecTester {
     virtual ~Encoder() = default;
 
     virtual void Encode(const VideoFrame& frame, EncodeCallback callback) = 0;
+
+    virtual void Flush() = 0;
   };
 
   // Interface for a video decoder.
@@ -99,31 +102,33 @@ class VideoCodecTester {
     virtual ~Decoder() = default;
 
     virtual void Decode(const EncodedImage& frame, DecodeCallback callback) = 0;
+
+    virtual void Flush() = 0;
   };
 
   // Pulls coded video frames from `video_source` and passes them to `decoder`.
   // Returns `VideoCodecTestStats` object that contains collected per-frame
   // metrics.
-  virtual std::unique_ptr<VideoCodecTestStats> RunDecodeTest(
-      std::unique_ptr<CodedVideoSource> video_source,
-      std::unique_ptr<Decoder> decoder,
+  virtual std::unique_ptr<VideoCodecStats> RunDecodeTest(
+      CodedVideoSource* video_source,
+      Decoder* decoder,
       const DecoderSettings& decoder_settings) = 0;
 
   // Pulls raw video frames from `video_source` and passes them to `encoder`.
   // Returns `VideoCodecTestStats` object that contains collected per-frame
   // metrics.
-  virtual std::unique_ptr<VideoCodecTestStats> RunEncodeTest(
-      std::unique_ptr<RawVideoSource> video_source,
-      std::unique_ptr<Encoder> encoder,
+  virtual std::unique_ptr<VideoCodecStats> RunEncodeTest(
+      RawVideoSource* video_source,
+      Encoder* encoder,
       const EncoderSettings& encoder_settings) = 0;
 
   // Pulls raw video frames from `video_source`, passes them to `encoder` and
   // then passes encoded frames to `decoder`. Returns `VideoCodecTestStats`
   // object that contains collected per-frame metrics.
-  virtual std::unique_ptr<VideoCodecTestStats> RunEncodeDecodeTest(
-      std::unique_ptr<RawVideoSource> video_source,
-      std::unique_ptr<Encoder> encoder,
-      std::unique_ptr<Decoder> decoder,
+  virtual std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
+      RawVideoSource* video_source,
+      Encoder* encoder,
+      Decoder* decoder,
       const EncoderSettings& encoder_settings,
       const DecoderSettings& decoder_settings) = 0;
 };

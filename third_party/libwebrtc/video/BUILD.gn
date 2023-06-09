@@ -53,8 +53,6 @@ rtc_library("video") {
     "rtp_streams_synchronizer2.h",
     "rtp_video_stream_receiver2.cc",
     "rtp_video_stream_receiver2.h",
-    "rtp_video_stream_receiver_frame_transformer_delegate.cc",
-    "rtp_video_stream_receiver_frame_transformer_delegate.h",
     "send_delay_stats.cc",
     "send_delay_stats.h",
     "send_statistics_proxy.cc",
@@ -178,39 +176,6 @@ rtc_library("video") {
   if (!build_with_mozilla) {
     deps += [ "../media:rtc_media_base" ]
   }
-}
-
-rtc_library("video_stream_decoder_impl") {
-  visibility = [ "*" ]
-
-  sources = [
-    "video_stream_decoder_impl.cc",
-    "video_stream_decoder_impl.h",
-  ]
-
-  deps = [
-    "../api:field_trials_view",
-    "../api:sequence_checker",
-    "../api/task_queue",
-    "../api/transport:field_trial_based_config",
-    "../api/video:encoded_frame",
-    "../api/video:video_frame",
-    "../api/video:video_rtp_headers",
-    "../api/video:video_stream_decoder",
-    "../api/video_codecs:video_codecs_api",
-    "../modules/video_coding",
-    "../modules/video_coding:frame_buffer2",
-    "../modules/video_coding/timing:timing_module",
-    "../rtc_base:logging",
-    "../rtc_base:mod_ops",
-    "../rtc_base:platform_thread",
-    "../rtc_base:rtc_task_queue",
-    "../rtc_base:timeutils",
-    "../rtc_base/memory:always_valid_pointer",
-    "../rtc_base/synchronization:mutex",
-    "../system_wrappers",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("frame_dumping_decoder") {
@@ -791,7 +756,6 @@ if (rtc_include_tests) {
       "receive_statistics_proxy2_unittest.cc",
       "report_block_stats_unittest.cc",
       "rtp_video_stream_receiver2_unittest.cc",
-      "rtp_video_stream_receiver_frame_transformer_delegate_unittest.cc",
       "send_delay_stats_unittest.cc",
       "send_statistics_proxy_unittest.cc",
       "stats_counter_unittest.cc",
@@ -804,7 +768,6 @@ if (rtc_include_tests) {
       "video_send_stream_tests.cc",
       "video_source_sink_controller_unittest.cc",
       "video_stream_buffer_controller_unittest.cc",
-      "video_stream_decoder_impl_unittest.cc",
       "video_stream_encoder_unittest.cc",
     ]
     deps = [
@@ -818,7 +781,6 @@ if (rtc_include_tests) {
       ":video_mocks",
       ":video_receive_stream_timeout_tracker",
       ":video_stream_buffer_controller",
-      ":video_stream_decoder_impl",
       ":video_stream_encoder_impl",
       ":video_stream_encoder_interface",
       "../api:create_frame_generator",

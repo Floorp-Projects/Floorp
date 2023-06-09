@@ -571,25 +571,18 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     return Result(Result::ERROR_SEND_FAILED);
 
   shared_frame_id_++;
-  size_t stream_index = 0;
-  if (codec_specific_info &&
-      (codec_specific_info->codecType == kVideoCodecVP8 ||
-       codec_specific_info->codecType == kVideoCodecH264 ||
-       codec_specific_info->codecType == kVideoCodecGeneric)) {
-    // Map spatial index to simulcast.
-    stream_index = encoded_image.SpatialIndex().value_or(0);
-  }
-  RTC_DCHECK_LT(stream_index, rtp_streams_.size());
+  size_t simulcast_index = encoded_image.SimulcastIndex().value_or(0);
+  RTC_DCHECK_LT(simulcast_index, rtp_streams_.size());
 
   uint32_t rtp_timestamp =
       encoded_image.Timestamp() +
-      rtp_streams_[stream_index].rtp_rtcp->StartTimestamp();
+      rtp_streams_[simulcast_index].rtp_rtcp->StartTimestamp();
 
   // RTCPSender has it's own copy of the timestamp offset, added in
   // RTCPSender::BuildSR, hence we must not add the in the offset for this call.
   // TODO(nisse): Delete RTCPSender:timestamp_offset_, and see if we can confine
   // knowledge of the offset to a single place.
-  if (!rtp_streams_[stream_index].rtp_rtcp->OnSendingRtpFrame(
+  if (!rtp_streams_[simulcast_index].rtp_rtcp->OnSendingRtpFrame(
           encoded_image.Timestamp(), encoded_image.capture_time_ms_,
           rtp_config_.payload_type,
           encoded_image._frameType == VideoFrameType::kVideoFrameKey)) {
@@ -600,7 +593,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   absl::optional<int64_t> expected_retransmission_time_ms;
   if (encoded_image.RetransmissionAllowed()) {
     expected_retransmission_time_ms =
-        rtp_streams_[stream_index].rtp_rtcp->ExpectedRetransmissionTimeMs();
+        rtp_streams_[simulcast_index].rtp_rtcp->ExpectedRetransmissionTimeMs();
   }
 
   if (IsFirstFrameOfACodedVideoSequence(encoded_image, codec_specific_info)) {
@@ -612,11 +605,11 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     //    minimal set of templates.
     //  - Otherwise, don't pass along any templates at all which will disable
     //    the generation of a dependency descriptor.
-    RTPSenderVideo& sender_video = *rtp_streams_[stream_index].sender_video;
+    RTPSenderVideo& sender_video = *rtp_streams_[simulcast_index].sender_video;
     if (codec_specific_info && codec_specific_info->template_structure) {
       sender_video.SetVideoStructure(&*codec_specific_info->template_structure);
     } else if (absl::optional<FrameDependencyStructure> structure =
-                   params_[stream_index].GenericStructure(
+                   params_[simulcast_index].GenericStructure(
                        codec_specific_info)) {
       sender_video.SetVideoStructure(&*structure);
     } else {
@@ -624,13 +617,14 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     }
   }
 
-  bool send_result = rtp_streams_[stream_index].sender_video->SendEncodedImage(
-      rtp_config_.payload_type, codec_type_, rtp_timestamp, encoded_image,
-      params_[stream_index].GetRtpVideoHeader(
-          encoded_image, codec_specific_info, shared_frame_id_),
-      expected_retransmission_time_ms);
+  bool send_result =
+      rtp_streams_[simulcast_index].sender_video->SendEncodedImage(
+          rtp_config_.payload_type, codec_type_, rtp_timestamp, encoded_image,
+          params_[simulcast_index].GetRtpVideoHeader(
+              encoded_image, codec_specific_info, shared_frame_id_),
+          expected_retransmission_time_ms);
   if (frame_count_observer_) {
-    FrameCounts& counts = frame_counts_[stream_index];
+    FrameCounts& counts = frame_counts_[simulcast_index];
     if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
       ++counts.key_frames;
     } else if (encoded_image._frameType == VideoFrameType::kVideoFrameDelta) {
@@ -638,8 +632,8 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     } else {
       RTC_DCHECK(encoded_image._frameType == VideoFrameType::kEmptyFrame);
     }
-    frame_count_observer_->FrameCountUpdated(counts,
-                                             rtp_config_.ssrcs[stream_index]);
+    frame_count_observer_->FrameCountUpdated(
+        counts, rtp_config_.ssrcs[simulcast_index]);
   }
   if (!send_result)
     return Result(Result::ERROR_SEND_FAILED);
@@ -715,7 +709,7 @@ uint32_t RtpVideoSender::GetPacketizationOverheadRate() const {
 void RtpVideoSender::DeliverRtcp(const uint8_t* packet, size_t length) {
   // Runs on a network thread.
   for (const RtpStreamSender& stream : rtp_streams_)
-    stream.rtp_rtcp->IncomingRtcpPacket(packet, length);
+    stream.rtp_rtcp->IncomingRtcpPacket(rtc::MakeArrayView(packet, length));
 }
 
 void RtpVideoSender::ConfigureSsrcs(

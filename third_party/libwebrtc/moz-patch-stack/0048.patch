@@ -20,19 +20,19 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 56 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 0bb1168384..7063f40186 100644
+index 7430681f45..85fe185d90 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
-@@ -47,6 +47,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
-     }
-   }
-   ss << ']';
+@@ -39,6 +39,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
+   ss << "{remote_ssrc: " << remote_ssrc;
+   ss << ", local_ssrc: " << local_ssrc;
+   ss << ", nack: " << nack.ToString();
 +  ss << ", rtcp_event_observer: "
 +     << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
    ss << '}';
    return ss.str();
  }
-@@ -81,7 +83,8 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
+@@ -73,7 +75,8 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
        config.jitter_buffer_fast_accelerate, config.jitter_buffer_min_delay_ms,
        config.enable_non_sender_rtt, config.decoder_factory,
        config.codec_pair_id, std::move(config.frame_decryptor),
@@ -43,7 +43,7 @@ index 0bb1168384..7063f40186 100644
  }  // namespace
  
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index b95d98c20c..50bc94fe1f 100644
+index 5b7ff7bb30..e9d80aae42 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
 @@ -102,7 +102,8 @@ class ChannelReceive : public ChannelReceiveInterface,
@@ -128,23 +128,23 @@ index 1228861c42..6fc93b2d9a 100644
  
      // Receive-side RTT.
 diff --git a/call/video_receive_stream.cc b/call/video_receive_stream.cc
-index 87df97cbdd..838dfcf135 100644
+index 3125c391cc..fd9908d40d 100644
 --- a/call/video_receive_stream.cc
 +++ b/call/video_receive_stream.cc
-@@ -153,6 +153,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
-       ss << ", ";
+@@ -146,6 +146,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
+     ss << pt << ", ";
    }
-   ss << ']';
+   ss << '}';
 +  ss << ", rtcp_event_observer: "
 +     << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
    ss << '}';
    return ss.str();
  }
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index cda8b1f6af..eeb7d14cc3 100644
+index ebbca12b25..5d49efc6ce 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -19,6 +19,7 @@
+@@ -20,6 +20,7 @@
  #include <vector>
  
  #include "api/call/transport.h"
@@ -152,7 +152,7 @@ index cda8b1f6af..eeb7d14cc3 100644
  #include "api/crypto/crypto_options.h"
  #include "api/rtp_headers.h"
  #include "api/rtp_parameters.h"
-@@ -234,6 +235,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -236,6 +237,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
        // meta data is expected to be present in generic frame descriptor
        // RTP header extension).
        std::set<int> raw_payload_types;
@@ -235,10 +235,10 @@ index 68171d1c2a..69d62ead5a 100644
  
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 6912912cfc..a05a69059a 100644
+index cc59884bde..cdb99e33ac 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -385,6 +385,7 @@ class RTCPReceiver final {
+@@ -382,6 +382,7 @@ class RTCPReceiver final {
    RegisteredSsrcs registered_ssrcs_;
  
    RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
@@ -247,7 +247,7 @@ index 6912912cfc..a05a69059a 100644
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index c6854937cb..b988c7805d 100644
+index a53dcc9ef3..1eb767b927 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -73,6 +73,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
@@ -261,7 +261,7 @@ index c6854937cb..b988c7805d 100644
      TransportFeedbackObserver* transport_feedback_callback = nullptr;
      VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index eed9770d93..c7b5e7bc7c 100644
+index 41d6627a65..6df104dcd6 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -83,7 +83,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
@@ -282,7 +282,7 @@ index eed9770d93..c7b5e7bc7c 100644
    configuration.non_sender_rtt_measurement = non_sender_rtt_measurement;
    configuration.event_log = rtc_event_log;
  
-@@ -276,7 +278,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+@@ -275,7 +277,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
            rtcp_cname_callback,
            config_.rtp.rtcp_xr.receiver_reference_time_report,
            config_.rtp.local_ssrc,

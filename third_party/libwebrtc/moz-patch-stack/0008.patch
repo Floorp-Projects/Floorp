@@ -21,10 +21,10 @@ Bug 1654112 - Replace custom upstream code for remote received audio stats with 
  8 files changed, 21 insertions(+), 10 deletions(-)
 
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index a7e82665c3..3125993d4b 100644
+index b23350e6d1..767c3c64fd 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -146,6 +146,7 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -148,6 +148,7 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
  
      uint32_t rtcp_sender_packets_sent;
      uint32_t rtcp_sender_octets_sent;
@@ -51,10 +51,10 @@ index 7dfe4f0b5d..68171d1c2a 100644
  
  std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index f68e57479b..6912912cfc 100644
+index a79b387b0b..cc59884bde 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -134,7 +134,8 @@ class RTCPReceiver final {
+@@ -131,7 +131,8 @@ class RTCPReceiver final {
  
    // Get received sender packet and octet counts
    void RemoteRTCPSenderInfo(uint32_t* packet_count,
@@ -65,7 +65,7 @@ index f68e57479b..6912912cfc 100644
    // Get rtt.
    int32_t RTT(uint32_t remote_ssrc,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 54fb82c2a1..bf9e2b3bf9 100644
+index caee8755ed..87ae43276c 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -528,8 +528,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
@@ -82,10 +82,10 @@ index 54fb82c2a1..bf9e2b3bf9 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index dd916fbe40..5cf558717e 100644
+index 7319170917..fbf444a629 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -193,7 +193,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
+@@ -192,7 +192,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
        StreamDataCounters* rtx_counters) const override;
  
    void RemoteRTCPSenderInfo(uint32_t* packet_count,
@@ -96,7 +96,7 @@ index dd916fbe40..5cf558717e 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index d0f9c8ed1a..8378a76133 100644
+index ec011cad19..f45b926fab 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -509,8 +509,10 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
@@ -113,7 +113,7 @@ index d0f9c8ed1a..8378a76133 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index 3ef76ab66a..4ef67d4647 100644
+index b9043e6a78..d487678d5c 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -205,7 +205,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
@@ -127,7 +127,7 @@ index 3ef76ab66a..4ef67d4647 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index f23d4d0758..c6854937cb 100644
+index a529e99847..a53dcc9ef3 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -400,9 +400,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

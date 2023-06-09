@@ -54,8 +54,6 @@ AudioDecodingCallStats MakeAudioDecodeStatsForTest() {
 
 const uint32_t kRemoteSsrc = 1234;
 const uint32_t kLocalSsrc = 5678;
-const int kAudioLevelId = 3;
-const int kTransportSequenceNumberId = 4;
 const int kJitterBufferDelay = -7;
 const int kPlayoutBufferDelay = 302;
 const unsigned int kSpeechOutputLevel = 99;
@@ -138,10 +136,6 @@ struct ConfigHelper {
     stream_config_.rtp.local_ssrc = kLocalSsrc;
     stream_config_.rtp.remote_ssrc = kRemoteSsrc;
     stream_config_.rtp.nack.rtp_history_ms = 300;
-    stream_config_.rtp.extensions.push_back(
-        RtpExtension(RtpExtension::kAudioLevelUri, kAudioLevelId));
-    stream_config_.rtp.extensions.push_back(RtpExtension(
-        RtpExtension::kTransportSequenceNumberUri, kTransportSequenceNumberId));
     stream_config_.rtcp_send_transport = &rtcp_send_transport_;
     stream_config_.decoder_factory =
         rtc::make_ref_counted<MockAudioDecoderFactory>();
@@ -213,12 +207,9 @@ TEST(AudioReceiveStreamTest, ConfigToString) {
   AudioReceiveStreamInterface::Config config;
   config.rtp.remote_ssrc = kRemoteSsrc;
   config.rtp.local_ssrc = kLocalSsrc;
-  config.rtp.extensions.push_back(
-      RtpExtension(RtpExtension::kAudioLevelUri, kAudioLevelId));
   EXPECT_EQ(
       "{rtp: {remote_ssrc: 1234, local_ssrc: 5678, nack: "
-      "{rtp_history_ms: 0}, extensions: [{uri: "
-      "urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 3}]}, "
+      "{rtp_history_ms: 0}}, "
       "rtcp_send_transport: null}",
       config.ToString());
 }
@@ -380,13 +371,6 @@ TEST(AudioReceiveStreamTest, ReconfigureWithUpdatedConfig) {
     auto recv_stream = helper.CreateAudioReceiveStream();
 
     auto new_config = helper.config();
-
-    new_config.rtp.extensions.clear();
-    new_config.rtp.extensions.push_back(
-        RtpExtension(RtpExtension::kAudioLevelUri, kAudioLevelId + 1));
-    new_config.rtp.extensions.push_back(
-        RtpExtension(RtpExtension::kTransportSequenceNumberUri,
-                     kTransportSequenceNumberId + 1));
 
     MockChannelReceive& channel_receive = *helper.channel_receive();
 

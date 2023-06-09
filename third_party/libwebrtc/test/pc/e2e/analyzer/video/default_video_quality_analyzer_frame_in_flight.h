@@ -88,7 +88,7 @@ class FrameInFlight {
                       VideoFrameType frame_type,
                       DataSize encoded_image_size,
                       uint32_t target_encode_bitrate,
-                      int spatial_layer,
+                      int stream_index,
                       int qp,
                       StreamCodecInfo used_encoder);
 
@@ -155,9 +155,9 @@ class FrameInFlight {
   VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
   DataSize encoded_image_size_ = DataSize::Bytes(0);
   uint32_t target_encode_bitrate_ = 0;
-  // Sender side qp values per spatial layer. In case when spatial layer is not
-  // set for `webrtc::EncodedImage`, 0 is used as default.
-  std::map<int, SamplesStatsCounter> spatial_layers_qp_;
+  // Sender side qp values per spatial or simulcast layer. If neither the
+  // spatial or simulcast index is set in `webrtc::EncodedImage`, 0 is used.
+  std::map<int, SamplesStatsCounter> stream_layers_qp_;
   // Can be not set if frame was dropped by encoder.
   absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
   // Map from the receiver peer's index to frame stats for that peer.

@@ -20,6 +20,7 @@
 
 #include "absl/strings/string_view.h"
 #include "logging/rtc_event_log/rtc_event_processor.h"
+#include "modules/audio_coding/neteq/tools/neteq_input.h"
 #include "modules/audio_coding/neteq/tools/packet.h"
 #include "rtc_base/checks.h"
 
@@ -94,6 +95,14 @@ int64_t RtcEventLogSource::NextAudioOutputEventMs() {
   return output_time_ms;
 }
 
+absl::optional<NetEqInput::SetMinimumDelayInfo>
+RtcEventLogSource::NextSetMinimumDelayEvent() {
+  if (minimum_delay_index_ >= minimum_delay_.size()) {
+    return absl::nullopt;
+  }
+  return minimum_delay_[minimum_delay_index_++];
+}
+
 RtcEventLogSource::RtcEventLogSource() : PacketSource() {}
 
 bool RtcEventLogSource::Initialize(const ParsedRtcEventLog& parsed_log,
@@ -130,6 +139,17 @@ bool RtcEventLogSource::Initialize(const ParsedRtcEventLog& parsed_log,
         }
       };
 
+  auto handle_neteq_set_minimum_delay =
+      [this, first_log_end_time_us, &packet_ssrcs](
+          const webrtc::LoggedNetEqSetMinimumDelayEvent minimum_delay_event) {
+        if (minimum_delay_event.log_time_us() < first_log_end_time_us) {
+          if (packet_ssrcs.count(minimum_delay_event.remote_ssrc) > 0) {
+            minimum_delay_.emplace_back(minimum_delay_event.log_time_ms(),
+                                        minimum_delay_event.minimum_delay_ms);
+          }
+        }
+      };
+
   // This wouldn't be needed if we knew that there was at most one audio stream.
   webrtc::RtcEventProcessor event_processor;
   for (const auto& rtp_packets : parsed_log.incoming_rtp_packets_by_ssrc()) {
@@ -150,6 +170,16 @@ bool RtcEventLogSource::Initialize(const ParsedRtcEventLog& parsed_log,
     if (ssrc_filter.has_value() && audio_playouts.first != *ssrc_filter)
       continue;
     event_processor.AddEvents(audio_playouts.second, handle_audio_playout);
+  }
+
+  for (const auto& neteq_set_minimum_delay_event :
+       parsed_log.neteq_set_minimum_delay_events()) {
+    if (ssrc_filter.has_value() &&
+        neteq_set_minimum_delay_event.first != *ssrc_filter) {
+      continue;
+    }
+    event_processor.AddEvents(neteq_set_minimum_delay_event.second,
+                              handle_neteq_set_minimum_delay);
   }
 
   // Fills in rtp_packets_ and audio_outputs_.

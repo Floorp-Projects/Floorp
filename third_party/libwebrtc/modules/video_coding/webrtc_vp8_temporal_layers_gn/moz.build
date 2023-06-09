@@ -64,6 +64,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
+        "GLESv2",
         "log"
     ]
 

@@ -75,7 +75,8 @@ void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
   if (result != RequestResponse::kSuccess ||
       !options_.screencast_stream()->StartScreenCastStream(
           stream_node_id, fd, options_.get_width(), options_.get_height(),
-          options_.prefer_cursor_embedded())) {
+          options_.prefer_cursor_embedded(),
+          send_frames_immediately_ ? callback_ : nullptr)) {
     capturer_failed_ = true;
     RTC_LOG(LS_ERROR) << "ScreenCastPortal failed: "
                       << static_cast<uint>(result);
@@ -115,6 +116,13 @@ void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {
   if (!capturer_failed_) {
     options_.screencast_stream()->UpdateScreenCastStreamResolution(width,
                                                                    height);
+  }
+}
+
+void BaseCapturerPipeWire::SetMaxFrameRate(uint32_t max_frame_rate) {
+  if (!capturer_failed_) {
+    options_.screencast_stream()->UpdateScreenCastStreamFrameRate(
+        max_frame_rate);
   }
 }
 
@@ -225,6 +233,10 @@ SessionDetails BaseCapturerPipeWire::GetSessionDetails() {
 ScreenCastPortal* BaseCapturerPipeWire::GetScreenCastPortal() {
   return is_screencast_portal_ ? static_cast<ScreenCastPortal*>(portal_.get())
                                : nullptr;
+}
+
+void BaseCapturerPipeWire::SendFramesImmediately(bool send_frames_immediately) {
+  send_frames_immediately_ = send_frames_immediately;
 }
 
 }  // namespace webrtc

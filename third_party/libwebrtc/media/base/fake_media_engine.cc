@@ -50,10 +50,11 @@ AudioSource* FakeVoiceMediaChannel::VoiceChannelAudioSink::source() const {
   return source_;
 }
 
-FakeVoiceMediaChannel::FakeVoiceMediaChannel(FakeVoiceEngine* engine,
+FakeVoiceMediaChannel::FakeVoiceMediaChannel(MediaChannel::Role role,
+                                             FakeVoiceEngine* engine,
                                              const AudioOptions& options,
                                              TaskQueueBase* network_thread)
-    : RtpHelper<VoiceMediaChannel>(network_thread),
+    : RtpHelper<VoiceMediaChannel>(role, network_thread),
       engine_(engine),
       max_bps_(-1) {
   output_scalings_[0] = 1.0;  // For default channel.
@@ -260,10 +261,11 @@ bool CompareDtmfInfo(const FakeVoiceMediaChannel::DtmfInfo& info,
           info.ssrc == ssrc);
 }
 
-FakeVideoMediaChannel::FakeVideoMediaChannel(FakeVideoEngine* engine,
+FakeVideoMediaChannel::FakeVideoMediaChannel(MediaChannel::Role role,
+                                             FakeVideoEngine* engine,
                                              const VideoOptions& options,
                                              TaskQueueBase* network_thread)
-    : RtpHelper<VideoMediaChannel>(network_thread),
+    : RtpHelper<VideoMediaChannel>(role, network_thread),
       engine_(engine),
       max_bps_(-1) {
   SetOptions(options);
@@ -449,24 +451,48 @@ rtc::scoped_refptr<webrtc::AudioState> FakeVoiceEngine::GetAudioState() const {
   return rtc::scoped_refptr<webrtc::AudioState>();
 }
 VoiceMediaChannel* FakeVoiceEngine::CreateMediaChannel(
+    MediaChannel::Role role,
     webrtc::Call* call,
     const MediaConfig& config,
     const AudioOptions& options,
-    const webrtc::CryptoOptions& crypto_options) {
+    const webrtc::CryptoOptions& crypto_options,
+    webrtc::AudioCodecPairId codec_pair_id) {
   if (fail_create_channel_) {
     return nullptr;
   }
 
   FakeVoiceMediaChannel* ch =
-      new FakeVoiceMediaChannel(this, options, call->network_thread());
-  channels_.push_back(ch);
+      new FakeVoiceMediaChannel(role, this, options, call->network_thread());
+  switch (role) {
+    case MediaChannel::Role::kSend:
+      send_channels_.push_back(ch);
+      break;
+    case MediaChannel::Role::kReceive:
+      receive_channels_.push_back(ch);
+      break;
+    default:
+      // kBoth isn't supported any more.
+      RTC_CHECK_NOTREACHED();
+  }
   return ch;
 }
-FakeVoiceMediaChannel* FakeVoiceEngine::GetChannel(size_t index) {
-  return (channels_.size() > index) ? channels_[index] : NULL;
+FakeVoiceMediaChannel* FakeVoiceEngine::GetSendChannel(size_t index) {
+  return (send_channels_.size() > index) ? send_channels_[index] : NULL;
+}
+FakeVoiceMediaChannel* FakeVoiceEngine::GetReceiveChannel(size_t index) {
+  return (receive_channels_.size() > index) ? receive_channels_[index] : NULL;
 }
 void FakeVoiceEngine::UnregisterChannel(VoiceMediaChannel* channel) {
-  channels_.erase(absl::c_find(channels_, channel));
+  switch (channel->role()) {
+    case MediaChannel::Role::kSend:
+      send_channels_.erase(absl::c_find(send_channels_, channel));
+      break;
+    case MediaChannel::Role::kReceive:
+      receive_channels_.erase(absl::c_find(receive_channels_, channel));
+      break;
+    default:
+      RTC_CHECK_NOTREACHED();
+  }
 }
 const std::vector<AudioCodec>& FakeVoiceEngine::send_codecs() const {
   return send_codecs_;
@@ -519,6 +545,7 @@ bool FakeVideoEngine::SetOptions(const VideoOptions& options) {
   return true;
 }
 VideoMediaChannel* FakeVideoEngine::CreateMediaChannel(
+    MediaChannel::Role role,
     webrtc::Call* call,
     const MediaConfig& config,
     const VideoOptions& options,
@@ -529,17 +556,42 @@ VideoMediaChannel* FakeVideoEngine::CreateMediaChannel(
   }
 
   FakeVideoMediaChannel* ch =
-      new FakeVideoMediaChannel(this, options, call->network_thread());
-  channels_.emplace_back(ch);
+      new FakeVideoMediaChannel(role, this, options, call->network_thread());
+  switch (role) {
+    case MediaChannel::Role::kSend:
+      send_channels_.emplace_back(ch);
+      break;
+    case MediaChannel::Role::kReceive:
+      receive_channels_.emplace_back(ch);
+      break;
+    default:
+      // kBoth isn't supported
+      RTC_CHECK_NOTREACHED();
+  }
   return ch;
 }
-FakeVideoMediaChannel* FakeVideoEngine::GetChannel(size_t index) {
-  return (channels_.size() > index) ? channels_[index] : nullptr;
+FakeVideoMediaChannel* FakeVideoEngine::GetSendChannel(size_t index) {
+  return (send_channels_.size() > index) ? send_channels_[index] : nullptr;
+}
+FakeVideoMediaChannel* FakeVideoEngine::GetReceiveChannel(size_t index) {
+  return (receive_channels_.size() > index) ? receive_channels_[index]
+                                            : nullptr;
 }
 void FakeVideoEngine::UnregisterChannel(VideoMediaChannel* channel) {
-  auto it = absl::c_find(channels_, channel);
-  RTC_DCHECK(it != channels_.end());
-  channels_.erase(it);
+  switch (channel->role()) {
+    case MediaChannel::Role::kSend: {
+      auto it = absl::c_find(send_channels_, channel);
+      RTC_DCHECK(it != send_channels_.end());
+      send_channels_.erase(it);
+    } break;
+    case MediaChannel::Role::kReceive: {
+      auto it = absl::c_find(receive_channels_, channel);
+      RTC_DCHECK(it != receive_channels_.end());
+      receive_channels_.erase(it);
+    } break;
+    default:
+      RTC_CHECK_NOTREACHED();
+  }
 }
 std::vector<VideoCodec> FakeVideoEngine::send_codecs(bool use_rtx) const {
   return send_codecs_;
@@ -592,11 +644,17 @@ void FakeMediaEngine::SetVideoCodecs(const std::vector<VideoCodec>& codecs) {
   video_->SetRecvCodecs(codecs);
 }
 
-FakeVoiceMediaChannel* FakeMediaEngine::GetVoiceChannel(size_t index) {
-  return voice_->GetChannel(index);
+FakeVoiceMediaChannel* FakeMediaEngine::GetVoiceSendChannel(size_t index) {
+  return voice_->GetSendChannel(index);
 }
-FakeVideoMediaChannel* FakeMediaEngine::GetVideoChannel(size_t index) {
-  return video_->GetChannel(index);
+FakeVideoMediaChannel* FakeMediaEngine::GetVideoSendChannel(size_t index) {
+  return video_->GetSendChannel(index);
+}
+FakeVoiceMediaChannel* FakeMediaEngine::GetVoiceReceiveChannel(size_t index) {
+  return voice_->GetReceiveChannel(index);
+}
+FakeVideoMediaChannel* FakeMediaEngine::GetVideoReceiveChannel(size_t index) {
+  return video_->GetReceiveChannel(index);
 }
 
 void FakeMediaEngine::set_fail_create_channel(bool fail) {

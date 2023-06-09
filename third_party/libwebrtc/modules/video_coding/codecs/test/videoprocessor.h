@@ -50,6 +50,7 @@ namespace test {
 // measure times properly.
 // The class processes a frame at the time for the configured input file.
 // It maintains state of where in the source input file the processing is at.
+// TODO(webrtc:14852): Deprecated in favor VideoCodecTester.
 class VideoProcessor {
  public:
   using VideoDecoderList = std::vector<std::unique_ptr<VideoDecoder>>;

@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d
  1 file changed, 50 insertions(+)
 
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index 35b13058a2..5877373b76 100644
+index d8c9593466..1e18cc960f 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 @@ -1159,6 +1159,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,

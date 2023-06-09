@@ -633,7 +633,6 @@ class UlpfecObserver : public test::EndToEndTest {
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
     }
-    (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
     encoder_config->codec_type = PayloadStringToCodecType(payload_name_);
     (*receive_configs)[0].rtp.red_payload_type =
         send_config->rtp.ulpfec.red_payload_type;
@@ -832,7 +831,6 @@ class FlexfecObserver : public test::EndToEndTest {
     } else {
       send_config->rtp.extensions.clear();
     }
-    (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
     encoder_config->codec_type = PayloadStringToCodecType(payload_name_);
   }
 
@@ -1590,7 +1588,6 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(RtpExtension(
           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
-      (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
     }
 
     void ModifyAudioConfigs(AudioSendStream::Config* send_config,
@@ -1600,8 +1597,6 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(RtpExtension(
           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
-      (*receive_configs)[0].rtp.extensions.clear();
-      (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
     }
 
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
@@ -2285,6 +2280,8 @@ TEST_F(VideoSendStreamTest, EncoderIsProperlyInitializedAndDestroyed) {
       EXPECT_TRUE(IsReadyForEncode());
     }
 
+    EncoderInfo GetEncoderInfo() const override { return EncoderInfo(); }
+
     void OnVideoStreamsCreated(VideoSendStream* send_stream,
                                const std::vector<VideoReceiveStreamInterface*>&
                                    receive_streams) override {
@@ -2898,7 +2895,7 @@ TEST_F(VideoSendStreamTest, ReportsSentResolution) {
         encoded._frameType = (*frame_types)[i];
         encoded._encodedWidth = kEncodedResolution[i].width;
         encoded._encodedHeight = kEncodedResolution[i].height;
-        encoded.SetSpatialIndex(i);
+        encoded.SetSimulcastIndex(i);
         EncodedImageCallback* callback;
         {
           MutexLock lock(&mutex_);
@@ -3791,7 +3788,8 @@ class PacingFactorObserver : public test::SendTest {
       }
       // Want send side, not present by default, so add it.
       send_config->rtp.extensions.emplace_back(
-          RtpExtension::kTransportSequenceNumberUri, unique_id_generator());
+          RtpExtension::kTransportSequenceNumberUri,
+          unique_id_generator.GenerateNumber());
     }
 
     // ALR only enabled for screenshare.

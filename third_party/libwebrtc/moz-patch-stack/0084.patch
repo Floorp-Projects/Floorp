@@ -92,10 +92,10 @@ index 4baa93cab9..7df6becb4e 100644
  std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
      const DesktopCaptureOptions& options) {
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index cf75004af5..951c4a9b10 100644
+index 9b667739a8..f4e2861025 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -170,6 +170,12 @@ class RTC_EXPORT DesktopCapturer {
+@@ -179,6 +179,12 @@ class RTC_EXPORT DesktopCapturer {
    // The return value if `pos` is out of the scope of the source is undefined.
    virtual bool IsOccluded(const DesktopVector& pos);
  
@@ -108,7 +108,7 @@ index cf75004af5..951c4a9b10 100644
    // Creates a DesktopCapturer instance which targets to capture windows.
    static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
        const DesktopCaptureOptions& options);
-@@ -198,6 +204,13 @@ class RTC_EXPORT DesktopCapturer {
+@@ -207,6 +213,13 @@ class RTC_EXPORT DesktopCapturer {
    // CroppingWindowCapturer needs to create raw capturers without wrappers, so
    // the following two functions are protected.
  
@@ -123,10 +123,10 @@ index cf75004af5..951c4a9b10 100644
    // capture windows.
    static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
 diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-index dae2b70510..cf4f7dc9aa 100644
+index 1ae0a4c794..4ef00e68ab 100644
 --- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
 +++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-@@ -165,15 +165,6 @@ void BaseCapturerPipeWire::CaptureFrame() {
+@@ -173,15 +173,6 @@ void BaseCapturerPipeWire::CaptureFrame() {
    callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
  }
  
@@ -142,7 +142,7 @@ index dae2b70510..cf4f7dc9aa 100644
  bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
    RTC_DCHECK(sources->size() == 0);
    // List of available screens is already presented by the xdg-desktop-portal,
-@@ -190,7 +181,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
+@@ -198,7 +189,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
  bool BaseCapturerPipeWire::SelectSource(SourceId id) {
    // Screen selection is handled by the xdg-desktop-portal.
    selected_source_id_ = id;
@@ -152,7 +152,7 @@ index dae2b70510..cf4f7dc9aa 100644
  
  DelegatedSourceListController*
 diff --git a/modules/desktop_capture/linux/wayland/screencast_portal.cc b/modules/desktop_capture/linux/wayland/screencast_portal.cc
-index abfade56e7..e7aaee001b 100644
+index 52788524c8..8d9e956779 100644
 --- a/modules/desktop_capture/linux/wayland/screencast_portal.cc
 +++ b/modules/desktop_capture/linux/wayland/screencast_portal.cc
 @@ -41,6 +41,8 @@ ScreenCastPortal::CaptureSourceType ScreenCastPortal::ToCaptureSourceType(

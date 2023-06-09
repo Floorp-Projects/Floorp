@@ -240,8 +240,7 @@ bool operator!=(
          aThis.protected_by_flexfec != aOther.protected_by_flexfec ||
          aThis.rtx_associated_payload_types !=
              aOther.rtx_associated_payload_types ||
-         aThis.raw_payload_types != aOther.raw_payload_types ||
-         aThis.extensions != aOther.extensions;
+         aThis.raw_payload_types != aOther.raw_payload_types;
 }
 
 #ifdef DEBUG
@@ -426,11 +425,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
 
   if (mControl.mSyncGroup.Ref() != mRecvStreamConfig.sync_group) {
     mRecvStreamConfig.sync_group = mControl.mSyncGroup;
-  }
-
-  if (mControl.mLocalRecvRtpExtensions.Ref() !=
-      mRecvStreamConfig.rtp.extensions) {
-    mRecvStreamConfig.rtp.extensions = mControl.mLocalRecvRtpExtensions;
   }
 
   if (const auto [codecConfigList, rtpRtcpConfig] = std::make_pair(

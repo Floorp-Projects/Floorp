@@ -53,8 +53,6 @@ class ChannelInterface {
   virtual VideoChannel* AsVideoChannel() = 0;
   virtual VoiceChannel* AsVoiceChannel() = 0;
 
-  // Temporary fix while MediaChannel is being reconstructed
-  virtual MediaChannel* media_channel() = 0;
   virtual MediaSendChannelInterface* media_send_channel() = 0;
   // Typecasts of media_channel(). Will cause an exception if the
   // channel is of the wrong type.

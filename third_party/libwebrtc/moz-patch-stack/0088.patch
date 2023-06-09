@@ -246,10 +246,10 @@ index f1d96b2f80..22a8f5ab52 100644
  
    absl::optional<std::string> GetRenderNode();
 diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 71bde9b212..bcd7e3a33c 100644
+index d31f86772e..bcad5ab803 100644
 --- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 +++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -38,7 +38,6 @@ constexpr int CursorMetaSize(int w, int h) {
+@@ -39,7 +39,6 @@ constexpr int CursorMetaSize(int w, int h) {
            w * h * kCursorBpp);
  }
  
@@ -257,7 +257,7 @@ index 71bde9b212..bcd7e3a33c 100644
  constexpr PipeWireVersion kDmaBufModifierMinVersion = {0, 3, 33};
  constexpr PipeWireVersion kDropSingleModifierMinVersion = {0, 3, 40};
  
-@@ -155,6 +154,12 @@ class SharedScreenCastStreamPrivate {
+@@ -157,6 +156,12 @@ class SharedScreenCastStreamPrivate {
    struct spa_video_info_raw spa_video_format_;
  
    void ProcessBuffer(pw_buffer* buffer);
@@ -268,9 +268,9 @@ index 71bde9b212..bcd7e3a33c 100644
 +                        DesktopFrame& frame,
 +                        const DesktopVector& offset);
    void ConvertRGBxToBGRx(uint8_t* frame, uint32_t size);
- 
-   // PipeWire callbacks
-@@ -277,10 +282,9 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+   void UpdateFrameUpdatedRegions(const spa_buffer* spa_buffer,
+                                  DesktopFrame& frame);
+@@ -290,10 +295,9 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
        has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
    std::vector<const spa_pod*> params;
    const int buffer_types =
@@ -284,9 +284,9 @@ index 71bde9b212..bcd7e3a33c 100644
  
    params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
        &builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
-@@ -613,9 +617,6 @@ DesktopVector SharedScreenCastStreamPrivate::CaptureCursorPosition() {
- RTC_NO_SANITIZE("cfi-icall")
- void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+@@ -697,9 +701,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+   }
+ 
    spa_buffer* spa_buffer = buffer->buffer;
 -  ScopedBuf map;
 -  std::unique_ptr<uint8_t[]> src_unique_ptr;
@@ -294,7 +294,7 @@ index 71bde9b212..bcd7e3a33c 100644
  
    // Try to update the mouse cursor first, because it can be the only
    // information carried by the buffer
-@@ -657,79 +658,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+@@ -741,79 +742,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
      return;
    }
  
@@ -374,7 +374,7 @@ index 71bde9b212..bcd7e3a33c 100644
    // Use SPA_META_VideoCrop metadata to get the frame size. KDE and GNOME do
    // handle screen/window sharing differently. KDE/KWin doesn't use
    // SPA_META_VideoCrop metadata and when sharing a window, it always sets
-@@ -787,8 +715,8 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+@@ -871,8 +799,8 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
    }
  
    // Get the position of the video crop within the stream. Just double-check
@@ -385,7 +385,7 @@ index 71bde9b212..bcd7e3a33c 100644
    uint32_t y_offset =
        videocrop_metadata_use &&
                (videocrop_metadata->region.position.y + frame_size_.height() <=
-@@ -801,22 +729,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+@@ -885,22 +813,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
                 stream_size_.width())
            ? videocrop_metadata->region.position.x
            : 0;
@@ -409,7 +409,7 @@ index 71bde9b212..bcd7e3a33c 100644
  
    webrtc::MutexLock lock(&queue_lock_);
  
-@@ -836,9 +749,20 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+@@ -920,9 +833,20 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
      queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(std::move(frame)));
    }
  
@@ -433,8 +433,8 @@ index 71bde9b212..bcd7e3a33c 100644
  
    if (spa_video_format_.format == SPA_VIDEO_FORMAT_RGBx ||
        spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
-@@ -885,6 +809,87 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
-   queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
+@@ -951,6 +875,87 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
+   }
  }
  
 +RTC_NO_SANITIZE("cfi-icall")

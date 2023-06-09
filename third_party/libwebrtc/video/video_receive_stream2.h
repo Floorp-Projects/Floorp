@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
@@ -127,7 +128,11 @@ class VideoReceiveStream2
   // Getters for const remote SSRC values that won't change throughout the
   // object's lifetime.
   uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
-  uint32_t rtx_ssrc() const { return config_.rtp.rtx_ssrc; }
+  // RTX ssrc can be updated.
+  uint32_t rtx_ssrc() const {
+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+    return updated_rtx_ssrc_.value_or(config_.rtp.rtx_ssrc);
+  }
 
   void SignalNetworkState(NetworkState state);
   bool DeliverRtcp(const uint8_t* packet, size_t length);
@@ -142,8 +147,6 @@ class VideoReceiveStream2
   void Start() override;
   void Stop() override;
 
-  void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
-  RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   void SetRtcpMode(RtcpMode mode) override;
   void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) override;
   void SetLossNotificationEnabled(bool enabled) override;
@@ -192,6 +195,8 @@ class VideoReceiveStream2
   RecordingState SetAndGetRecordingState(RecordingState state,
                                          bool generate_key_frame) override;
   void GenerateKeyFrame() override;
+
+  void UpdateRtxSsrc(uint32_t ssrc) override;
 
  private:
   // FrameSchedulingReceiver implementation.
@@ -276,9 +281,16 @@ class VideoReceiveStream2
 
   std::unique_ptr<VideoStreamBufferController> buffer_;
 
+  // `receiver_controller_` is valid from when RegisterWithTransport is invoked
+  //  until UnregisterFromTransport.
+  RtpStreamReceiverControllerInterface* receiver_controller_
+      RTC_GUARDED_BY(packet_sequence_checker_) = nullptr;
+
   std::unique_ptr<RtpStreamReceiverInterface> media_receiver_
       RTC_GUARDED_BY(packet_sequence_checker_);
   std::unique_ptr<RtxReceiveStream> rtx_receive_stream_
+      RTC_GUARDED_BY(packet_sequence_checker_);
+  absl::optional<uint32_t> updated_rtx_ssrc_
       RTC_GUARDED_BY(packet_sequence_checker_);
   std::unique_ptr<RtpStreamReceiverInterface> rtx_receiver_
       RTC_GUARDED_BY(packet_sequence_checker_);

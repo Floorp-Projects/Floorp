@@ -136,4 +136,20 @@ void VideoFrameMetadata::SetRTPVideoHeaderCodecSpecifics(
   codec_specifics_ = std::move(codec_specifics);
 }
 
+uint32_t VideoFrameMetadata::GetSsrc() const {
+  return ssrc_;
+}
+
+void VideoFrameMetadata::SetSsrc(uint32_t ssrc) {
+  ssrc_ = ssrc;
+}
+
+std::vector<uint32_t> VideoFrameMetadata::GetCsrcs() const {
+  return csrcs_;
+}
+
+void VideoFrameMetadata::SetCsrcs(std::vector<uint32_t> csrcs) {
+  csrcs_ = std::move(csrcs);
+}
+
 }  // namespace webrtc

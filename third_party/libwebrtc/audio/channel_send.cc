@@ -225,6 +225,8 @@ class ChannelSend : public ChannelSendInterface,
 
   // This is just an offset, RTP module will add its own random offset.
   uint32_t timestamp_ RTC_GUARDED_BY(audio_thread_race_checker_) = 0;
+  absl::optional<int64_t> last_capture_timestamp_ms_
+      RTC_GUARDED_BY(audio_thread_race_checker_);
 
   RmsLevel rms_level_ RTC_GUARDED_BY(encoder_queue_);
   bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
@@ -245,6 +247,7 @@ class ChannelSend : public ChannelSendInterface,
 
   std::atomic<bool> include_audio_level_indication_ = false;
   std::atomic<bool> encoder_queue_is_active_ = false;
+  std::atomic<bool> first_frame_ = true;
 
   // E2EE Audio Frame Encryption
   rtc::scoped_refptr<FrameEncryptorInterface> frame_encryptor_
@@ -497,7 +500,7 @@ ChannelSend::ChannelSend(
       encoder_queue_(task_queue_factory->CreateTaskQueue(
           "AudioEncoder",
           TaskQueueFactory::Priority::NORMAL)) {
-  audio_coding_.reset(AudioCodingModule::Create(AudioCodingModule::Config()));
+  audio_coding_ = AudioCodingModule::Create();
 
   RtpRtcpInterface::Configuration configuration;
   configuration.bandwidth_callback = rtcp_observer_.get();
@@ -559,6 +562,7 @@ void ChannelSend::StartSend() {
   RTC_DCHECK_EQ(0, ret);
 
   // It is now OK to start processing on the encoder task queue.
+  first_frame_.store(true);
   encoder_queue_is_active_.store(true);
 }
 
@@ -654,7 +658,7 @@ void ChannelSend::ReceivedRTCPPacket(const uint8_t* data, size_t length) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
 
   // Deliver RTCP packet to RTP/RTCP module for parsing
-  rtp_rtcp_->IncomingRtcpPacket(data, length);
+  rtp_rtcp_->IncomingRtcpPacket(rtc::MakeArrayView(data, length));
 
   int64_t rtt = GetRTT();
   if (rtt == 0) {
@@ -835,11 +839,31 @@ void ChannelSend::ProcessAndEncodeAudio(
   RTC_DCHECK_GT(audio_frame->samples_per_channel_, 0);
   RTC_DCHECK_LE(audio_frame->num_channels_, 8);
 
-  audio_frame->timestamp_ = timestamp_;
-  timestamp_ += audio_frame->samples_per_channel_;
   if (!encoder_queue_is_active_.load()) {
     return;
   }
+
+  // Update `timestamp_` based on the capture timestamp for the first frame
+  // after sending is resumed.
+  if (first_frame_.load()) {
+    first_frame_.store(false);
+    if (last_capture_timestamp_ms_ &&
+        audio_frame->absolute_capture_timestamp_ms()) {
+      int64_t diff_ms = *audio_frame->absolute_capture_timestamp_ms() -
+                        *last_capture_timestamp_ms_;
+      // Truncate to whole frames and subtract one since `timestamp_` was
+      // incremented after the last frame.
+      int64_t diff_frames = diff_ms * audio_frame->sample_rate_hz() / 1000 /
+                                audio_frame->samples_per_channel() -
+                            1;
+      timestamp_ += std::max<int64_t>(
+          diff_frames * audio_frame->samples_per_channel(), 0);
+    }
+  }
+
+  audio_frame->timestamp_ = timestamp_;
+  timestamp_ += audio_frame->samples_per_channel_;
+  last_capture_timestamp_ms_ = audio_frame->absolute_capture_timestamp_ms();
 
   // Profile time between when the audio frame is added to the task queue and
   // when the task is actually executed.

@@ -169,6 +169,8 @@ std::unique_ptr<cricket::MediaEngineInterface> CreateMediaEngine(
       std::move(pcf_dependencies->video_encoder_factory);
   media_deps.video_decoder_factory =
       std::move(pcf_dependencies->video_decoder_factory);
+  media_deps.audio_encoder_factory = pcf_dependencies->audio_encoder_factory;
+  media_deps.audio_decoder_factory = pcf_dependencies->audio_decoder_factory;
   webrtc::SetMediaEngineDefaults(&media_deps);
   RTC_DCHECK(pcf_dependencies->trials);
   media_deps.trials = pcf_dependencies->trials.get();

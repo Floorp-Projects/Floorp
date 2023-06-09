@@ -46,11 +46,20 @@ absl::optional<int64_t> NetEqEventLogInput::NextOutputEventTime() const {
   return next_output_event_ms_;
 }
 
+absl::optional<NetEqInput::SetMinimumDelayInfo>
+NetEqEventLogInput::NextSetMinimumDelayInfo() const {
+  return next_minimum_delay_event_info_;
+}
+
 void NetEqEventLogInput::AdvanceOutputEvent() {
   next_output_event_ms_ = source_->NextAudioOutputEventMs();
   if (*next_output_event_ms_ == std::numeric_limits<int64_t>::max()) {
     next_output_event_ms_ = absl::nullopt;
   }
+}
+
+void NetEqEventLogInput::AdvanceSetMinimumDelay() {
+  next_minimum_delay_event_info_ = source_->NextSetMinimumDelayEvent();
 }
 
 PacketSource* NetEqEventLogInput::source() {
@@ -62,6 +71,7 @@ NetEqEventLogInput::NetEqEventLogInput(
     : source_(std::move(source)) {
   LoadNextPacket();
   AdvanceOutputEvent();
+  AdvanceSetMinimumDelay();
 }
 
 }  // namespace test

@@ -1,0 +1,40 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Tue, 16 May 2023 06:38:00 +0000
+Subject: Bug 1832804 - Revert changeset b0339fd77c82. r=webrtc-reviewers,mjf
+
+This bit is now restored to original libwebrtc M111 code.
+
+Differential Revision: https://phabricator.services.mozilla.com/D178006
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47b1b27c8f75293c0861ca6197d438076ca9e693
+---
+ modules/rtp_rtcp/source/packet_sequencer.cc | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/modules/rtp_rtcp/source/packet_sequencer.cc b/modules/rtp_rtcp/source/packet_sequencer.cc
+index acc2e87aa3..55edd768a8 100644
+--- a/modules/rtp_rtcp/source/packet_sequencer.cc
++++ b/modules/rtp_rtcp/source/packet_sequencer.cc
+@@ -118,18 +118,8 @@ void PacketSequencer::PopulatePaddingFields(RtpPacketToSend& packet) {
+     return;
+   }
+ 
+-  if (last_timestamp_time_ms_ > 0) {
+-    RTC_DCHECK_GT(last_rtp_timestamp_, 0);
+-    RTC_DCHECK_GT(last_capture_time_ms_, 0);
+-    packet.SetTimestamp(last_rtp_timestamp_);
+-    packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
+-  } else {
+-    // No media packet has been sent yet so timestamps are not known. Set them
+-    // now as they will be needed when serializing the packet later on.
+-    auto now = clock_->CurrentTime();
+-    packet.SetTimestamp(now.ms() * kTimestampTicksPerMs);
+-    packet.set_capture_time(now);
+-  }
++  packet.SetTimestamp(last_rtp_timestamp_);
++  packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
+ 
+   // Only change the timestamp of padding packets sent over RTX.
+   // Padding only packets over RTP has to be sent as part of a media
+-- 
+2.34.1
+

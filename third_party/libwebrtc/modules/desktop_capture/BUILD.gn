@@ -140,7 +140,6 @@ if (rtc_include_tests) {
       "desktop_region_unittest.cc",
       "differ_block_unittest.cc",
       "fallback_desktop_capturer_wrapper_unittest.cc",
-      "mouse_cursor_monitor_unittest.cc",
       "rgba_color_unittest.cc",
       "test_utils.cc",
       "test_utils.h",
@@ -492,9 +491,11 @@ rtc_library("desktop_capture") {
     libs = [
       "d3d11.lib",
       "dxgi.lib",
+      "shcore.lib",
     ]
     deps += [
       "../../rtc_base:win32",
+      "../../rtc_base/containers:flat_map",
       "../../rtc_base/win:create_direct3d_device",
       "../../rtc_base/win:get_activation_factory",
       "../../rtc_base/win:windows_version",

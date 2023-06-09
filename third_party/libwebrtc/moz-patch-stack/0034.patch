@@ -24,10 +24,10 @@ index 8b8bdb1af5..9010f1ce82 100644
  #include "rtc_base/checks.h"
  #include "common_audio/signal_processing/include/signal_processing_library.h"
 diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-index cf4f7dc9aa..dae2b70510 100644
+index 4ef00e68ab..1ae0a4c794 100644
 --- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
 +++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-@@ -165,6 +165,15 @@ void BaseCapturerPipeWire::CaptureFrame() {
+@@ -173,6 +173,15 @@ void BaseCapturerPipeWire::CaptureFrame() {
    callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
  }
  
@@ -43,7 +43,7 @@ index cf4f7dc9aa..dae2b70510 100644
  bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
    RTC_DCHECK(sources->size() == 0);
    // List of available screens is already presented by the xdg-desktop-portal,
-@@ -181,7 +190,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
+@@ -189,7 +198,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
  bool BaseCapturerPipeWire::SelectSource(SourceId id) {
    // Screen selection is handled by the xdg-desktop-portal.
    selected_source_id_ = id;

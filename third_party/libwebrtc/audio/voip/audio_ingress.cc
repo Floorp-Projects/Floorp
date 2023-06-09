@@ -29,9 +29,9 @@ namespace webrtc {
 
 namespace {
 
-AudioCodingModule::Config CreateAcmConfig(
+acm2::AcmReceiver::Config CreateAcmConfig(
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory) {
-  AudioCodingModule::Config acm_config;
+  acm2::AcmReceiver::Config acm_config;
   acm_config.neteq_config.enable_muted_state = true;
   acm_config.decoder_factory = decoder_factory;
   return acm_config;
@@ -210,7 +210,7 @@ void AudioIngress::ReceivedRTCPPacket(
   }
 
   // Deliver RTCP packet to RTP/RTCP module for parsing and processing.
-  rtp_rtcp_->IncomingRtcpPacket(rtcp_packet.data(), rtcp_packet.size());
+  rtp_rtcp_->IncomingRtcpPacket(rtcp_packet);
 
   int64_t rtt = 0;
   if (rtp_rtcp_->RTT(remote_ssrc_, &rtt, nullptr, nullptr, nullptr) != 0) {

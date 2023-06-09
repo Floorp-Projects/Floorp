@@ -139,5 +139,6 @@ if (rtc_include_tests) {
       "../pacing",
       "../rtp_rtcp:rtp_rtcp_format",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }

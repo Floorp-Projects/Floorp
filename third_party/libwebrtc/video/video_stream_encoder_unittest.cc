@@ -8384,7 +8384,7 @@ TEST_F(VideoStreamEncoderTest, EncoderProvideLimitsWhenQPIsNotTrusted) {
 }
 
 TEST_F(VideoStreamEncoderTest, EncoderDoesnotProvideLimitsWhenQPIsNotTrusted) {
-  // Set QP trusted in encoder info.
+  // Set QP not trusted in encoder info.
   fake_encoder_.SetIsQpTrusted(false);
 
   absl::optional<VideoEncoder::ResolutionBitrateLimits> suitable_bitrate_limit =
@@ -8395,28 +8395,73 @@ TEST_F(VideoStreamEncoderTest, EncoderDoesnotProvideLimitsWhenQPIsNotTrusted) {
                   GetDefaultSinglecastBitrateLimitsWhenQpIsUntrusted());
   EXPECT_TRUE(suitable_bitrate_limit.has_value());
 
-  const int MaxEncBitrate = suitable_bitrate_limit->max_bitrate_bps;
-  const int MinEncBitrate = suitable_bitrate_limit->min_bitrate_bps;
-  const int TargetEncBitrate = MaxEncBitrate;
+  const int max_encoder_bitrate = suitable_bitrate_limit->max_bitrate_bps;
+  const int min_encoder_bitrate = suitable_bitrate_limit->min_bitrate_bps;
+  const int target_encoder_bitrate = max_encoder_bitrate;
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
-      DataRate::BitsPerSec(TargetEncBitrate),
-      DataRate::BitsPerSec(TargetEncBitrate),
-      DataRate::BitsPerSec(TargetEncBitrate), 0, 0, 0);
+      DataRate::BitsPerSec(target_encoder_bitrate),
+      DataRate::BitsPerSec(target_encoder_bitrate),
+      DataRate::BitsPerSec(target_encoder_bitrate), 0, 0, 0);
 
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(kVideoCodecH264, 1, &video_encoder_config);
-  video_encoder_config.max_bitrate_bps = MaxEncBitrate;
-  video_encoder_config.simulcast_layers[0].min_bitrate_bps = MinEncBitrate;
+  video_encoder_config.max_bitrate_bps = max_encoder_bitrate;
+  video_encoder_config.simulcast_layers[0].min_bitrate_bps =
+      min_encoder_bitrate;
   video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
                                           kMaxPayloadLength);
 
   video_source_.IncomingCapturedFrame(CreateFrame(1, nullptr));
   WaitForEncodedFrame(1);
   EXPECT_EQ(
-      MaxEncBitrate / 1000,
+      max_encoder_bitrate / 1000,
       static_cast<int>(bitrate_allocator_factory_.codec_config().maxBitrate));
   EXPECT_EQ(
-      MinEncBitrate / 1000,
+      min_encoder_bitrate / 1000,
+      static_cast<int>(bitrate_allocator_factory_.codec_config().minBitrate));
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       RespectsLowerThanDefaultMinBitrateWhenQPIsNotTrusted) {
+  // Set QP not trusted in encoder info.
+  fake_encoder_.SetIsQpTrusted(false);
+
+  absl::optional<VideoEncoder::ResolutionBitrateLimits> suitable_bitrate_limit =
+      EncoderInfoSettings::
+          GetSinglecastBitrateLimitForResolutionWhenQpIsUntrusted(
+              codec_width_ * codec_height_,
+              EncoderInfoSettings::
+                  GetDefaultSinglecastBitrateLimitsWhenQpIsUntrusted());
+  EXPECT_TRUE(suitable_bitrate_limit.has_value());
+
+  const int max_encoder_bitrate = suitable_bitrate_limit->max_bitrate_bps;
+  const int min_encoder_bitrate = suitable_bitrate_limit->min_bitrate_bps;
+  const int target_encoder_bitrate = max_encoder_bitrate;
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(target_encoder_bitrate),
+      DataRate::BitsPerSec(target_encoder_bitrate),
+      DataRate::BitsPerSec(target_encoder_bitrate), 0, 0, 0);
+
+  VideoEncoderConfig video_encoder_config;
+  test::FillEncoderConfiguration(kVideoCodecH264, 1, &video_encoder_config);
+  // Set the max bitrate config to be lower than what the resolution bitrate
+  // limits would suggest for the current resolution.
+  video_encoder_config.max_bitrate_bps =
+      (max_encoder_bitrate + min_encoder_bitrate) / 2;
+  video_encoder_config.simulcast_layers[0].min_bitrate_bps =
+      min_encoder_bitrate;
+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
+                                          kMaxPayloadLength);
+
+  video_source_.IncomingCapturedFrame(CreateFrame(1, nullptr));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(
+      video_encoder_config.max_bitrate_bps / 1000,
+      static_cast<int>(bitrate_allocator_factory_.codec_config().maxBitrate));
+  EXPECT_EQ(
+      min_encoder_bitrate / 1000,
       static_cast<int>(bitrate_allocator_factory_.codec_config().minBitrate));
 
   video_stream_encoder_->Stop();
@@ -9428,10 +9473,10 @@ TEST(VideoStreamEncoderFrameCadenceTest, UpdatesQualityConvergence) {
   EXPECT_CALL(factory.GetMockFakeEncoder(), EncodeHook)
       .WillRepeatedly(Invoke([](EncodedImage& encoded_image,
                                 rtc::scoped_refptr<EncodedImageBuffer> buffer) {
-        // This sets spatial index 0 content to be at target quality, while
+        // This sets simulcast index 0 content to be at target quality, while
         // index 1 content is not.
         encoded_image.qp_ = kVp8SteadyStateQpThreshold +
-                            (encoded_image.SpatialIndex() == 0 ? 0 : 1);
+                            (encoded_image.SimulcastIndex() == 0 ? 0 : 1);
         CodecSpecificInfo codec_specific;
         codec_specific.codecType = kVideoCodecVP8;
         return codec_specific;

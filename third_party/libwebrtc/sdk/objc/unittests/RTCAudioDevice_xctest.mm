@@ -10,6 +10,8 @@
 
 #import <XCTest/XCTest.h>
 
+#include <stdlib.h>
+
 #include "api/task_queue/default_task_queue_factory.h"
 
 #import "sdk/objc/components/audio/RTCAudioSession+Private.h"
@@ -17,6 +19,7 @@
 #import "sdk/objc/native/src/audio/audio_device_ios.h"
 
 @interface RTCAudioDeviceTests : XCTestCase {
+  bool _testEnabled;
   rtc::scoped_refptr<webrtc::AudioDeviceModule> _audioDeviceModule;
   std::unique_ptr<webrtc::ios_adm::AudioDeviceIOS> _audio_device;
 }
@@ -31,6 +34,16 @@
 
 - (void)setUp {
   [super setUp];
+#if defined(WEBRTC_IOS) && TARGET_OS_SIMULATOR
+  // TODO(peterhanspers): Reenable these tests on simulator.
+  // See bugs.webrtc.org/7812
+  _testEnabled = false;
+  if (::getenv("WEBRTC_IOS_RUN_AUDIO_TESTS") != nullptr) {
+    _testEnabled = true;
+  }
+#else
+  _testEnabled = true;
+#endif
 
   _audioDeviceModule = webrtc::CreateAudioDeviceModule();
   _audio_device.reset(new webrtc::ios_adm::AudioDeviceIOS(/*bypass_voice_processing=*/false));
@@ -78,6 +91,7 @@
 // AudioDeviceIOS's is_interrupted_ flag to RTC_OBJC_TYPE(RTCAudioSession)'s isInterrupted
 // flag in AudioDeviceIOS.InitPlayOrRecord.
 - (void)testInterruptedAudioSession {
+  XCTSkipIf(!_testEnabled);
   XCTAssertTrue(self.audioSession.isActive);
   XCTAssertTrue([self.audioSession.category isEqual:AVAudioSessionCategoryPlayAndRecord] ||
                 [self.audioSession.category isEqual:AVAudioSessionCategoryPlayback]);

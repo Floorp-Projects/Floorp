@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video/rtp_video_stream_receiver_frame_transformer_delegate.h"
+#include "modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h"
 
 #include <utility>
 #include <vector>
@@ -27,8 +27,10 @@ class TransformableVideoReceiverFrame
   TransformableVideoReceiverFrame(std::unique_ptr<RtpFrameObject> frame,
                                   uint32_t ssrc)
       : frame_(std::move(frame)),
-        metadata_(frame_->GetRtpVideoHeader().GetAsMetadata()),
-        ssrc_(ssrc) {}
+        metadata_(frame_->GetRtpVideoHeader().GetAsMetadata()) {
+    metadata_.SetSsrc(ssrc);
+    metadata_.SetCsrcs(frame_->Csrcs());
+  }
   ~TransformableVideoReceiverFrame() override = default;
 
   // Implements TransformableVideoFrameInterface.
@@ -42,7 +44,7 @@ class TransformableVideoReceiverFrame
   }
 
   uint8_t GetPayloadType() const override { return frame_->PayloadType(); }
-  uint32_t GetSsrc() const override { return ssrc_; }
+  uint32_t GetSsrc() const override { return metadata_.GetSsrc(); }
   uint32_t GetTimestamp() const override { return frame_->Timestamp(); }
 
   bool IsKeyFrame() const override {
@@ -67,8 +69,7 @@ class TransformableVideoReceiverFrame
 
  private:
   std::unique_ptr<RtpFrameObject> frame_;
-  const VideoFrameMetadata metadata_;
-  const uint32_t ssrc_;
+  VideoFrameMetadata metadata_;
 };
 }  // namespace
 

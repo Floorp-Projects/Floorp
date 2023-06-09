@@ -48,10 +48,10 @@ index a57d9e7f62..de29fd2075 100644
  // Video Content Type.
  //
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 89c73955a2..4b4984bf6d 100644
+index e085f89c03..2b2f75c840 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -88,6 +88,7 @@ class AudioLevel {
+@@ -94,6 +94,7 @@ class AudioLevel {
                      uint8_t audio_level);
  };
  
@@ -59,7 +59,7 @@ index 89c73955a2..4b4984bf6d 100644
  class CsrcAudioLevel {
   public:
    static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-@@ -102,6 +103,7 @@ class CsrcAudioLevel {
+@@ -108,6 +109,7 @@ class CsrcAudioLevel {
    static bool Write(rtc::ArrayView<uint8_t> data,
                      rtc::ArrayView<const uint8_t> csrc_audio_levels);
  };
@@ -67,7 +67,7 @@ index 89c73955a2..4b4984bf6d 100644
  
  class TransmissionOffset {
   public:
-@@ -292,6 +294,7 @@ class ColorSpaceExtension {
+@@ -298,6 +300,7 @@ class ColorSpaceExtension {
    static size_t WriteLuminance(uint8_t* data, float f, int denominator);
  };
  
@@ -75,7 +75,7 @@ index 89c73955a2..4b4984bf6d 100644
  class CsrcAudioLevel {
   public:
    static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-@@ -306,6 +309,7 @@ class CsrcAudioLevel {
+@@ -312,6 +315,7 @@ class CsrcAudioLevel {
    static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
    static bool Write(rtc::ArrayView<uint8_t> data, const CsrcAudioLevelList& csrcAudioLevels);
  };
@@ -111,10 +111,10 @@ index 9495841984..fd2f5c5ae8 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 0ed7243d0a..336a117f4e 100644
+index 05f293287a..f97fb167ed 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -108,7 +108,9 @@ bool IsNonVolatile(RTPExtensionType type) {
+@@ -106,7 +106,9 @@ bool IsNonVolatile(RTPExtensionType type) {
    switch (type) {
      case kRtpExtensionTransmissionTimeOffset:
      case kRtpExtensionAudioLevel:
@@ -124,7 +124,7 @@ index 0ed7243d0a..336a117f4e 100644
      case kRtpExtensionAbsoluteSendTime:
      case kRtpExtensionTransportSequenceNumber:
      case kRtpExtensionTransportSequenceNumber02:
-@@ -132,10 +134,12 @@ bool IsNonVolatile(RTPExtensionType type) {
+@@ -130,10 +132,12 @@ bool IsNonVolatile(RTPExtensionType type) {
      case kRtpExtensionNumberOfExtensions:
        RTC_DCHECK_NOTREACHED();
        return false;

@@ -13,13 +13,11 @@
 #include <algorithm>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/network_types.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/field_trial_units.h"
-#include "rtc_base/system/unused.h"
 #include "rtc_base/trace_event.h"
 
 namespace webrtc {
@@ -27,9 +25,6 @@ namespace webrtc {
 namespace {
 
 constexpr const char* kBurstyPacerFieldTrial = "WebRTC-BurstyPacer";
-
-constexpr const char* kSlackedTaskQueuePacedSenderFieldTrial =
-    "WebRTC-SlackedTaskQueuePacedSender";
 
 }  // namespace
 
@@ -39,16 +34,6 @@ TaskQueuePacedSender::BurstyPacerFlags::BurstyPacerFlags(
     const FieldTrialsView& field_trials)
     : burst("burst") {
   ParseFieldTrial({&burst}, field_trials.Lookup(kBurstyPacerFieldTrial));
-}
-
-TaskQueuePacedSender::SlackedPacerFlags::SlackedPacerFlags(
-    const FieldTrialsView& field_trials)
-    : allow_low_precision("Enabled"),
-      max_low_precision_expected_queue_time("max_queue_time"),
-      send_burst_interval("send_burst_interval") {
-  ParseFieldTrial({&allow_low_precision, &max_low_precision_expected_queue_time,
-                   &send_burst_interval},
-                  field_trials.Lookup(kSlackedTaskQueuePacedSenderFieldTrial));
 }
 
 TaskQueuePacedSender::TaskQueuePacedSender(
@@ -61,13 +46,8 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     absl::optional<TimeDelta> burst_interval)
     : clock_(clock),
       bursty_pacer_flags_(field_trials),
-      slacked_pacer_flags_(field_trials),
-      max_hold_back_window_(slacked_pacer_flags_.allow_low_precision
-                                ? PacingController::kMinSleepTime
-                                : max_hold_back_window),
-      max_hold_back_window_in_packets_(slacked_pacer_flags_.allow_low_precision
-                                           ? 0
-                                           : max_hold_back_window_in_packets),
+      max_hold_back_window_(max_hold_back_window),
+      max_hold_back_window_in_packets_(max_hold_back_window_in_packets),
       pacing_controller_(clock, packet_sender, field_trials),
       next_process_time_(Timestamp::MinusInfinity()),
       is_started_(false),
@@ -79,13 +59,6 @@ TaskQueuePacedSender::TaskQueuePacedSender(
   // There are multiple field trials that can affect burst. If multiple bursts
   // are specified we pick the largest of the values.
   absl::optional<TimeDelta> burst = bursty_pacer_flags_.burst.GetOptional();
-  if (slacked_pacer_flags_.allow_low_precision &&
-      slacked_pacer_flags_.send_burst_interval) {
-    TimeDelta slacked_burst = slacked_pacer_flags_.send_burst_interval.Value();
-    if (!burst.has_value() || burst.value() < slacked_burst) {
-      burst = slacked_burst;
-    }
-  }
   // If not overriden by an experiment, the burst is specified by the
   // `burst_interval` argument.
   if (!burst.has_value()) {
@@ -320,32 +293,7 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   if (next_process_time_.IsMinusInfinity() ||
       next_process_time_ > next_send_time) {
     // Prefer low precision if allowed and not probing.
-    TaskQueueBase::DelayPrecision precision =
-        slacked_pacer_flags_.allow_low_precision &&
-                !pacing_controller_.IsProbing()
-            ? TaskQueueBase::DelayPrecision::kLow
-            : TaskQueueBase::DelayPrecision::kHigh;
-    // Check for cases where we need high precision.
-    if (precision == TaskQueueBase::DelayPrecision::kLow) {
-      auto& packets_per_type =
-          pacing_controller_.SizeInPacketsPerRtpPacketMediaType();
-      bool audio_or_retransmission_packets_in_queue =
-          packets_per_type[static_cast<size_t>(RtpPacketMediaType::kAudio)] >
-              0 ||
-          packets_per_type[static_cast<size_t>(
-              RtpPacketMediaType::kRetransmission)] > 0;
-      bool queue_time_too_large =
-          slacked_pacer_flags_.max_low_precision_expected_queue_time &&
-          pacing_controller_.ExpectedQueueTime() >=
-              slacked_pacer_flags_.max_low_precision_expected_queue_time
-                  .Value();
-      if (audio_or_retransmission_packets_in_queue || queue_time_too_large) {
-        precision = TaskQueueBase::DelayPrecision::kHigh;
-      }
-    }
-
-    task_queue_.TaskQueueForDelayedTasks()->PostDelayedTaskWithPrecision(
-        precision,
+    task_queue_.TaskQueueForDelayedTasks()->PostDelayedHighPrecisionTask(
         task_queue_.MaybeSafeTask(
             safety_.flag(),
             [this, next_send_time]() { MaybeProcessPackets(next_send_time); }),

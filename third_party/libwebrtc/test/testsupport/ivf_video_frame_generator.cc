@@ -105,6 +105,11 @@ void IvfVideoFrameGenerator::ChangeResolution(size_t width, size_t height) {
   height_ = height;
 }
 
+FrameGeneratorInterface::Resolution IvfVideoFrameGenerator::GetResolution()
+    const {
+  return {.width = width_, .height = height_};
+}
+
 int32_t IvfVideoFrameGenerator::DecodedCallback::Decoded(
     VideoFrame& decoded_image) {
   Decoded(decoded_image, 0, 0);

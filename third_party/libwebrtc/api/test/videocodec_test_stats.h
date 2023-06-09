@@ -27,6 +27,7 @@ namespace webrtc {
 namespace test {
 
 // Statistics for a sequence of processed frames. This class is not thread safe.
+// TODO(webrtc:14852): Deprecated in favor VideoCodecStats.
 class VideoCodecTestStats {
  public:
   // Statistics for one processed frame.

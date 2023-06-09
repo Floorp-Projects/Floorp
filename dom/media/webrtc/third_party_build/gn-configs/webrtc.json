@@ -11,7 +11,8 @@
   "write_mozbuild_variables": {
     "INCLUDE_TK_CFLAGS_DIRS": [
       "third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
-      "third_party/libwebrtc/modules/portal/portal_gn"
+      "third_party/libwebrtc/modules/portal/portal_gn",
+      "third_party/libwebrtc/modules/video_capture/video_capture_internal_impl_gn"
     ]
   },
   "non_unified_sources": [

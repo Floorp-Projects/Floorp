@@ -70,6 +70,10 @@ class PeerConfigurer {
       std::unique_ptr<VideoEncoderFactory> video_encoder_factory);
   PeerConfigurer* SetVideoDecoderFactory(
       std::unique_ptr<VideoDecoderFactory> video_decoder_factory);
+  PeerConfigurer* SetAudioEncoderFactory(
+      rtc::scoped_refptr<webrtc::AudioEncoderFactory> audio_encoder_factory);
+  PeerConfigurer* SetAudioDecoderFactory(
+      rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory);
   // Set a custom NetEqFactory to be used in the call.
   PeerConfigurer* SetNetEqFactory(std::unique_ptr<NetEqFactory> neteq_factory);
   PeerConfigurer* SetAudioProcessing(

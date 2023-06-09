@@ -186,9 +186,6 @@ CMSampleBufferRef createTestSampleBufferRef() {
   [self.delegateMock verify];
 }
 
-#if 0
-// See crbug.com/1404878 - XCTExpectFailure and XCTSkip are considered failures
-
 - (void)testDelegateCallbackWithValidBufferAndOrientationUpdate {
 #if TARGET_OS_IPHONE
   XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
@@ -295,17 +292,12 @@ CMSampleBufferRef createTestSampleBufferRef() {
            withOrientation:UIDeviceOrientationLandscapeRight];
 }
 
-#endif
-
 - (void)setExif:(CMSampleBufferRef)sampleBuffer {
   rtc::ScopedCFTypeRef<CFMutableDictionaryRef> exif(CFDictionaryCreateMutable(
       kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
   CFDictionarySetValue(exif.get(), CFSTR("LensModel"), CFSTR("iPhone SE back camera 4.15mm f/2.2"));
   CMSetAttachment(sampleBuffer, CFSTR("{Exif}"), exif.get(), kCMAttachmentMode_ShouldPropagate);
 }
-
-#if 0
-// See crbug.com/1404878 - XCTExpectFailure and XCTSkip are considered failures
 
 - (void)testRotationFrame {
 #if TARGET_OS_IPHONE
@@ -351,8 +343,6 @@ CMSampleBufferRef createTestSampleBufferRef() {
   CFRelease(sampleBuffer);
 #endif
 }
-
-#endif
 
 - (void)testImageExif {
 #if TARGET_OS_IPHONE

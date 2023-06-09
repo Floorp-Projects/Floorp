@@ -45,6 +45,12 @@ void SquareGenerator::ChangeResolution(size_t width, size_t height) {
   RTC_CHECK(height_ > 0);
 }
 
+FrameGeneratorInterface::Resolution SquareGenerator::GetResolution() const {
+  MutexLock lock(&mutex_);
+  return {.width = static_cast<size_t>(width_),
+          .height = static_cast<size_t>(height_)};
+}
+
 rtc::scoped_refptr<I420Buffer> SquareGenerator::CreateI420Buffer(int width,
                                                                  int height) {
   rtc::scoped_refptr<I420Buffer> buffer(I420Buffer::Create(width, height));
@@ -205,6 +211,10 @@ bool YuvFileGenerator::ReadNextFrame() {
   return frame_index_ != prev_frame_index || file_index_ != prev_file_index;
 }
 
+FrameGeneratorInterface::Resolution YuvFileGenerator::GetResolution() const {
+  return {.width = width_, .height = height_};
+}
+
 NV12FileGenerator::NV12FileGenerator(std::vector<FILE*> files,
                                      size_t width,
                                      size_t height,
@@ -247,6 +257,10 @@ FrameGeneratorInterface::VideoFrameData NV12FileGenerator::NextFrame() {
   return VideoFrameData(last_read_buffer_, update_rect);
 }
 
+FrameGeneratorInterface::Resolution NV12FileGenerator::GetResolution() const {
+  return {.width = width_, .height = height_};
+}
+
 bool NV12FileGenerator::ReadNextFrame() {
   size_t prev_frame_index = frame_index_;
   size_t prev_file_index = file_index_;
@@ -285,6 +299,11 @@ FrameGeneratorInterface::VideoFrameData SlideGenerator::NextFrame() {
     current_display_count_ = 0;
 
   return VideoFrameData(buffer_, absl::nullopt);
+}
+
+FrameGeneratorInterface::Resolution SlideGenerator::GetResolution() const {
+  return {.width = static_cast<size_t>(width_),
+          .height = static_cast<size_t>(height_)};
 }
 
 void SlideGenerator::GenerateNewFrame() {
@@ -388,6 +407,12 @@ ScrollingImageFrameGenerator::NextFrame() {
   prev_frame_not_scrolled_ = cur_frame_not_scrolled;
 
   return current_frame_;
+}
+
+FrameGeneratorInterface::Resolution
+ScrollingImageFrameGenerator::GetResolution() const {
+  return {.width = static_cast<size_t>(target_width_),
+          .height = static_cast<size_t>(target_height_)};
 }
 
 void ScrollingImageFrameGenerator::UpdateSourceFrame(size_t frame_num) {
