@@ -632,7 +632,7 @@ nsGlobalWindowInner* WindowGlobalOrNull(JSObject* aObj) {
   return WindowOrNull(glob);
 }
 
-nsGlobalWindowInner* SandboxWindowOrNull(JSObject* aObj, JSContext* aCx) {
+JSObject* SandboxPrototypeOrNull(JSContext* aCx, JSObject* aObj) {
   MOZ_ASSERT(aObj);
 
   if (!IsSandbox(aObj)) {
@@ -645,11 +645,7 @@ nsGlobalWindowInner* SandboxWindowOrNull(JSObject* aObj, JSContext* aCx) {
     return nullptr;
   }
 
-  proto = js::CheckedUnwrapDynamic(proto, aCx, /* stopAtWindowProxy = */ false);
-  if (!proto) {
-    return nullptr;
-  }
-  return WindowOrNull(proto);
+  return js::CheckedUnwrapDynamic(proto, aCx, /* stopAtWindowProxy = */ false);
 }
 
 nsGlobalWindowInner* CurrentWindowOrNull(JSContext* cx) {
