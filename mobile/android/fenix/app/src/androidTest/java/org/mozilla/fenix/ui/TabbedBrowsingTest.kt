@@ -9,7 +9,6 @@ import androidx.test.uiautomator.UiDevice
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -17,7 +16,6 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.isKeyboardVisible
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -346,7 +344,7 @@ class TabbedBrowsingTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabButtonShortcutsMenu {
         }.openNewPrivateTabFromShortcutsMenu {
-            assertTrue(isKeyboardVisible())
+            verifyKeyboardVisible()
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()
@@ -357,7 +355,7 @@ class TabbedBrowsingTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabButtonShortcutsMenu {
         }.openTabFromShortcutsMenu {
-            assertTrue(isKeyboardVisible())
+            verifyKeyboardVisible()
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()

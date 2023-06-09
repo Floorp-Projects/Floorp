@@ -50,6 +50,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.Matchers
+import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -208,6 +209,7 @@ class HomeScreenRobot {
     fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
     fun verifyTabCounter(numberOfOpenTabs: String) =
         assertItemWithResIdAndTextExists(tabCounter(numberOfOpenTabs))
+    fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
 
     fun verifyWallpaperImageApplied(isEnabled: Boolean) {
         if (isEnabled) {
@@ -579,8 +581,7 @@ class HomeScreenRobot {
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             navigationToolbar.waitForExists(waitingTime)
             navigationToolbar.click()
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
-                .waitForExists(waitingTime)
+            mDevice.waitForIdle()
 
             SearchRobot().interact()
             return SearchRobot.Transition()
@@ -876,6 +877,14 @@ private fun homeScreenList() =
             .resourceId("$packageName:id/sessionControlRecyclerView")
             .scrollable(true),
     ).setAsVerticalList()
+
+private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
+    Assert.assertEquals(
+        isExpectedToBeVisible,
+        mDevice
+            .executeShellCommand("dumpsys input_method | grep mInputShown")
+            .contains("mInputShown=true"),
+    )
 
 private fun assertFocusedNavigationToolbar() =
     onView(allOf(withHint("Search or enter address")))

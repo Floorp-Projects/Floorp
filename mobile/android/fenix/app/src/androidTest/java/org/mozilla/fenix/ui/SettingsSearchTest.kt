@@ -3,7 +3,6 @@ package org.mozilla.fenix.ui
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -19,7 +18,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.isKeyboardVisible
 import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.helpers.TestHelper.setTextToClipBoard
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -198,7 +196,7 @@ class SettingsSearchTest {
         }.goBack {
         }.goBack {
         }.openSearch {
-            assertTrue(isKeyboardVisible())
+            verifyKeyboardVisibility()
             clickSearchEngineShortcutButton()
             verifyEnginesListShortcutContains(activityTestRule, searchEngine)
             changeDefaultSearchEngine(activityTestRule, searchEngine)
