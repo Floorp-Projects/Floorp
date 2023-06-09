@@ -14,7 +14,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp:
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -184,6 +184,32 @@ add_task(async function test_click_ad() {
     gBrowser.selectedBrowser
   );
   await browserLoadedPromise;
+
+  Assert.equal(
+    !!Glean.serp.abandonment.testGetValue(),
+    false,
+    "Should not have any abandonment events."
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_click_non_ad() {
+  resetTelemetry();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl("searchTelemetryAd_components_text.html")
+  );
+  await waitForPageWithAdImpressions();
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#non_ads_link",
+    {},
+    tab.linkedBrowser
+  );
+  await pageLoadPromise;
 
   Assert.equal(
     !!Glean.serp.abandonment.testGetValue(),
