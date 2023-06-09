@@ -73,7 +73,6 @@
 #include "nsIWidget.h"
 #include "nsLiteralString.h"
 #include "nsPresContext.h"
-#include "nsTArray.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
 #include "nsComboboxControlFrame.h"
@@ -168,52 +167,6 @@ static bool IsSelectingLink(nsIFrame* aTargetFrame) {
 static UniquePtr<WidgetMouseEvent> CreateMouseOrPointerWidgetEvent(
     WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
     EventTarget* aRelatedTarget);
-
-/**
- * Returns the common ancestor for mouseup purpose, given the
- * current mouseup target and the previous mousedown target.
- */
-static nsINode* GetCommonAncestorForMouseUp(nsINode* aCurrentMouseUpTarget,
-                                            nsINode* aLastMouseDownTarget) {
-  if (!aCurrentMouseUpTarget || !aLastMouseDownTarget) {
-    return nullptr;
-  }
-
-  if (aCurrentMouseUpTarget == aLastMouseDownTarget) {
-    return aCurrentMouseUpTarget;
-  }
-
-  // Build the chain of parents
-  AutoTArray<nsINode*, 30> parents1;
-  do {
-    parents1.AppendElement(aCurrentMouseUpTarget);
-    aCurrentMouseUpTarget = aCurrentMouseUpTarget->GetFlattenedTreeParentNode();
-  } while (aCurrentMouseUpTarget);
-
-  AutoTArray<nsINode*, 30> parents2;
-  do {
-    parents2.AppendElement(aLastMouseDownTarget);
-    if (aLastMouseDownTarget == parents1.LastElement()) {
-      break;
-    }
-    aLastMouseDownTarget = aLastMouseDownTarget->GetFlattenedTreeParentNode();
-  } while (aLastMouseDownTarget);
-
-  // Find where the parent chain differs
-  uint32_t pos1 = parents1.Length();
-  uint32_t pos2 = parents2.Length();
-  nsINode* parent = nullptr;
-  for (uint32_t len = std::min(pos1, pos2); len > 0; --len) {
-    nsINode* child1 = parents1.ElementAt(--pos1);
-    nsINode* child2 = parents2.ElementAt(--pos2);
-    if (child1 != child2) {
-      break;
-    }
-    parent = child1;
-  }
-
-  return parent;
-}
 
 /******************************************************************/
 /* mozilla::UITimerCallback                                       */
@@ -5223,8 +5176,8 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
       } else if (aEvent->mMessage == eMouseUp) {
         aEvent->mClickTarget =
             !aEvent->mClickEventPrevented
-                ? GetCommonAncestorForMouseUp(mouseContent,
-                                              mLastLeftMouseDownContent)
+                ? nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+                      mouseContent, mLastLeftMouseDownContent)
                 : nullptr;
         if (aEvent->mClickTarget) {
           aEvent->mClickCount = mLClickCount;
@@ -5243,8 +5196,8 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
       } else if (aEvent->mMessage == eMouseUp) {
         aEvent->mClickTarget =
             !aEvent->mClickEventPrevented
-                ? GetCommonAncestorForMouseUp(mouseContent,
-                                              mLastMiddleMouseDownContent)
+                ? nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+                      mouseContent, mLastMiddleMouseDownContent)
                 : nullptr;
         if (aEvent->mClickTarget) {
           aEvent->mClickCount = mMClickCount;
@@ -5263,8 +5216,8 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
       } else if (aEvent->mMessage == eMouseUp) {
         aEvent->mClickTarget =
             !aEvent->mClickEventPrevented
-                ? GetCommonAncestorForMouseUp(mouseContent,
-                                              mLastRightMouseDownContent)
+                ? nsContentUtils::GetCommonAncestorUnderInteractiveContent(
+                      mouseContent, mLastRightMouseDownContent)
                 : nullptr;
         if (aEvent->mClickTarget) {
           aEvent->mClickCount = mRClickCount;
