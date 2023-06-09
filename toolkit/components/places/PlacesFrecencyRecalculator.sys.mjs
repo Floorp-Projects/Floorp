@@ -339,7 +339,7 @@ class AlternativeFrecencyHelper {
       variables: {
         // Current version of origins alternative frecency.
         //  ! IMPORTANT: Always bump up when making changes to the algorithm.
-        version: 1,
+        version: 2,
         highWeight: Services.prefs.getIntPref(
           "places.frecency.pages.alternative.highWeight",
           100
