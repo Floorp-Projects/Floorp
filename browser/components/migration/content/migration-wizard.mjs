@@ -872,9 +872,8 @@ export class MigrationWizard extends HTMLElement {
   /**
    * Pulls information from the DOM state of the MigrationWizard and constructs
    * and returns an object that can be used to begin migration via and event
-   * sent to the MigrationWizardChild. This method should only be called when
-   * the user has made selections within the wizard, but not if an
-   * automatic migration is occurring.
+   * sent to the MigrationWizardChild. If autoMigrationDetails is provided,
+   * this information is used to construct the object instead of the DOM state.
    *
    * @param {object} [autoMigrationDetails=null]
    *   Provided iff an automatic migration is being invoked. In that case, the

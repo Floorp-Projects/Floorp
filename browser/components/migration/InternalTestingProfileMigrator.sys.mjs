@@ -22,6 +22,10 @@ export class InternalTestingProfileMigrator extends MigratorBase {
     return "Internal Testing Migrator";
   }
 
+  static get sourceID() {
+    return 1;
+  }
+
   getSourceProfiles() {
     return Promise.resolve([InternalTestingProfileMigrator.testProfile]);
   }
