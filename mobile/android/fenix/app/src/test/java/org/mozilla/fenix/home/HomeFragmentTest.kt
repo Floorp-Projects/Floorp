@@ -7,11 +7,12 @@ package org.mozilla.fenix.home
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
-import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.top.sites.TopSite
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -72,15 +73,18 @@ class HomeFragmentTest {
 
     @Test
     fun `GIVEN the selected search engine is set to eBay WHEN getTopSitesConfig is called THEN providerFilter filters the eBay provided top sites`() {
-        mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
-        every { core.store } returns mockk() {
-            every { state } returns mockk() {
-                every { search } returns mockk()
-            }
-        }
-        every { any<SearchState>().selectedOrDefaultSearchEngine } returns mockk {
-            every { name } returns EBAY_SPONSORED_TITLE
-        }
+        val searchEngine: SearchEngine = mockk()
+        val browserStore = BrowserStore(
+            initialState = BrowserState(
+                search = SearchState(
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
+        )
+
+        every { core.store } returns browserStore
+        every { searchEngine.name } returns EBAY_SPONSORED_TITLE
+
         val eBayTopSite = TopSite.Provided(1L, EBAY_SPONSORED_TITLE, "eBay.com", "", "", "", 0L)
         val amazonTopSite = TopSite.Provided(2L, AMAZON_SPONSORED_TITLE, "Amazon.com", "", "", "", 0L)
         val firefoxTopSite = TopSite.Provided(3L, "Firefox", "mozilla.org", "", "", "", 0L)
