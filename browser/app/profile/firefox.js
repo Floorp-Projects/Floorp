@@ -2067,11 +2067,8 @@ pref("browser.contentblocking.cfr-milestone.milestone-achieved", 0);
 // Milestones should always be in increasing order
 pref("browser.contentblocking.cfr-milestone.milestones", "[1000, 5000, 10000, 25000, 50000, 100000, 250000, 314159, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 2250000, 2500000, 8675309]");
 
-// Enables the new Protections Panel.
-#ifdef NIGHTLY_BUILD
-  pref("browser.protections_panel.enabled", true);
-  pref("browser.protections_panel.infoMessage.seen", false);
-#endif
+// Controls the initial state of the protections panel collapsible info message.
+pref("browser.protections_panel.infoMessage.seen", false);
 
 // Always enable newtab segregation using containers
 pref("privacy.usercontext.about_newtab_segregation.enabled", true);
