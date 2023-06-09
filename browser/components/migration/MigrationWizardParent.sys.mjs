@@ -98,13 +98,6 @@ export class MigrationWizardParent extends JSWindowActorParent {
             return b.lastModifiedDate - a.lastModifiedDate;
           });
 
-        for (let result of filteredResults) {
-          Services.telemetry.keyedScalarAdd(
-            "migration.discovered_migrators",
-            result.key,
-            1
-          );
-        }
         return filteredResults;
       }
 
@@ -117,6 +110,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
             message.data.key,
             message.data.resourceTypes,
             message.data.profile,
+            message.data.autoMigration,
             message.data.safariPasswordFilePath
           );
         } else if (
@@ -310,6 +304,9 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *   A unique ID for the user profile.
    * @param {string} profileObj.name
    *   The display name for the user profile.
+   * @param {boolean} autoMigration
+   *   True if the migration is occurring automatically, without the user
+   *   having selected any items explicitly from the wizard.
    * @param {string} [safariPasswordFilePath=null]
    *   An optional string argument that points to the path of a passwords
    *   export file from Safari. This file will have password imported from if
@@ -322,12 +319,19 @@ export class MigrationWizardParent extends JSWindowActorParent {
     migratorKey,
     resourceTypeNames,
     profileObj,
+    autoMigration,
     safariPasswordFilePath = null
   ) {
+    Services.telemetry
+      .getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
+      .add(MigrationUtils.getSourceIdForTelemetry(migratorKey));
+
     let migrator = await MigrationUtils.getMigrator(migratorKey);
     let availableResourceTypes = await migrator.getMigrateData(profileObj);
     let resourceTypesToMigrate = 0;
     let progress = {};
+    let migrationUsageHist =
+      Services.telemetry.getKeyedHistogramById("FX_MIGRATION_USAGE");
 
     for (let resourceTypeName of resourceTypeNames) {
       let resourceType = MigrationUtils.resourceTypes[resourceTypeName];
@@ -337,6 +341,10 @@ export class MigrationWizardParent extends JSWindowActorParent {
           inProgress: true,
           message: "",
         };
+
+        if (!autoMigration) {
+          migrationUsageHist.add(migratorKey, Math.log2(resourceType));
+        }
       }
     }
 
@@ -387,7 +395,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
         resourceTypesToMigrate,
         false,
         profileObj,
-        async resourceTypeNum => {
+        async (resourceTypeNum, success) => {
           // Unfortunately, MigratorBase hands us the the numeric value of the
           // MigrationUtils.resourceType for this callback. For now, we'll just
           // do a look-up to map it to the right constant.
@@ -407,6 +415,11 @@ export class MigrationWizardParent extends JSWindowActorParent {
               resourceTypeNum
             );
           } else {
+            if (!success) {
+              Services.telemetry
+                .getKeyedHistogramById("FX_MIGRATION_ERRORS")
+                .add(migratorKey, Math.log2(resourceTypeNum));
+            }
             // For now, we ignore errors in migration, and simply display
             // the success state.
             progress[foundResourceTypeName] = {
@@ -475,6 +488,12 @@ export class MigrationWizardParent extends JSWindowActorParent {
           return null;
         }
 
+        Services.telemetry.keyedScalarAdd(
+          "migration.discovered_migrators",
+          key,
+          sourceProfiles.length
+        );
+
         let result = [];
         for (let profile of sourceProfiles) {
           result.push(
@@ -483,6 +502,12 @@ export class MigrationWizardParent extends JSWindowActorParent {
         }
         return result;
       }
+
+      Services.telemetry.keyedScalarAdd(
+        "migration.discovered_migrators",
+        key,
+        1
+      );
       return this.#serializeMigratorAndProfile(migrator, sourceProfiles);
     } catch (e) {
       console.error(`Could not get migrator with key ${key}`, e);

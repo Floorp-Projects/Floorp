@@ -618,6 +618,15 @@ class MigrationUtils {
       };
 
       if (aOptions.isStartupMigration) {
+        // Record that the uninstaller requested a profile refresh
+        if (Services.env.get("MOZ_UNINSTALLER_PROFILE_REFRESH")) {
+          Services.env.set("MOZ_UNINSTALLER_PROFILE_REFRESH", "");
+          Services.telemetry.scalarSet(
+            "migration.uninstaller_profile_refresh",
+            true
+          );
+        }
+
         openStandaloneWindow(true /* blocking */);
         return Promise.resolve();
       }

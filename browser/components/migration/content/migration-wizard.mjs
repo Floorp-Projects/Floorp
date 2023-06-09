@@ -872,7 +872,9 @@ export class MigrationWizard extends HTMLElement {
   /**
    * Pulls information from the DOM state of the MigrationWizard and constructs
    * and returns an object that can be used to begin migration via and event
-   * sent to the MigrationWizardChild.
+   * sent to the MigrationWizardChild. This method should only be called when
+   * the user has made selections within the wizard, but not if an
+   * automatic migration is occurring.
    *
    * @param {object} [autoMigrationDetails=null]
    *   Provided iff an automatic migration is being invoked. In that case, the
@@ -898,6 +900,7 @@ export class MigrationWizard extends HTMLElement {
         resourceTypes,
         hasPermissions: true,
         expandedDetails: this.#expandedDetails,
+        autoMigration: true,
       };
     }
 
@@ -924,6 +927,7 @@ export class MigrationWizard extends HTMLElement {
       resourceTypes,
       hasPermissions,
       expandedDetails: this.#expandedDetails,
+      autoMigration: false,
     };
   }
 
