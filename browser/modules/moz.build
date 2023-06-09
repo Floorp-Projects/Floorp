@@ -97,6 +97,9 @@ with Files("SitePermissions.sys.mjs"):
 with Files("TabsList.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
+with Files("TabUnloader.jsm"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("TransientPrefs.jsm"):
     BUG_COMPONENT = ("Firefox", "Settings UI")
 
