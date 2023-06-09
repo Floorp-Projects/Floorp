@@ -259,6 +259,7 @@ static int PaletteSortModifiedZeng(
     return 0;
   }
   if (!CoOccurrenceBuild(pic, palette_sorted, num_colors, cooccurrence)) {
+    WebPSafeFree(cooccurrence);
     return 0;
   }
 
