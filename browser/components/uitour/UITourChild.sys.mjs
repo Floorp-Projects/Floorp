@@ -88,7 +88,13 @@ export class UITourChild extends JSWindowActorChild {
 
     // Bug 1557153: To allow Skyline messaging, workaround for UNKNOWN_ACTION
     // overriding browser/app/permissions default
-    return uri.host == "www.mozilla.org" || this.isTestingOrigin(uri);
+    // Bug 1837407: Do a similar thing for support.mozilla.org for the same
+    // underlying issue (bug 1579517).
+    return (
+      uri.host == "www.mozilla.org" ||
+      uri.host == "support.mozilla.org" ||
+      this.isTestingOrigin(uri)
+    );
   }
 
   receiveMessage(aMessage) {
