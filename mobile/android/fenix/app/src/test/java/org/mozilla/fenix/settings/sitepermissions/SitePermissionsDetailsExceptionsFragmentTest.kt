@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.sitepermissions
 
+import android.content.Context
 import androidx.preference.Preference
 import io.mockk.MockKAnnotations
 import io.mockk.every
@@ -16,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.utils.Settings
@@ -29,16 +31,18 @@ class SitePermissionsDetailsExceptionsFragmentTest {
     private lateinit var permissions: SitePermissions
 
     private lateinit var fragment: SitePermissionsDetailsExceptionsFragment
+    private lateinit var context: Context
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
+        context = spyk(testContext)
         fragment = spyk(SitePermissionsDetailsExceptionsFragment())
 
         fragment.sitePermissions = permissions
 
         every { permissions.origin } returns "mozilla.org"
-        every { fragment.provideContext() } returns testContext
+        every { fragment.provideContext() } returns context
         every { fragment.provideSettings() } returns settings
     }
 
@@ -64,11 +68,11 @@ class SitePermissionsDetailsExceptionsFragmentTest {
 
     @Test
     fun `WHEN initPhoneFeature is called THEN the feature label must be bind and a click listener must be attached`() {
-        val feature = spyk(PhoneFeature.CAMERA)
+        val feature = PhoneFeature.CAMERA
         val label = "label"
-        val preference = spyk(Preference(testContext))
+        val preference = Preference(context)
 
-        every { feature.getActionLabel(any(), any()) } returns label
+        every { context.getString(R.string.phone_feature_blocked_by_android) } returns label
         every { fragment.getPreference((any())) } returns preference
         every { fragment.navigateToPhoneFeature((any())) } returns Unit
 
@@ -86,7 +90,7 @@ class SitePermissionsDetailsExceptionsFragmentTest {
     @Test
     fun `WHEN initAutoplayFeature THEN the autoplay label must be bind and a click listener must be attached`() {
         val label = "label"
-        val preference = spyk(Preference(testContext))
+        val preference = Preference(context)
 
         every { fragment.getAutoplayLabel() } returns label
         every { fragment.getPreference((any())) } returns preference
