@@ -264,7 +264,7 @@ wmf-media-engine:
         mozharness:
             extra-options:
                 - "--tag=media-engine-compatible"
-                - "--setpref=media.wmf.media-engine.enabled=true"
+                - "--setpref=media.wmf.media-engine.enabled=1"
                 - "--setpref=media.wmf.media-engine.channel-decoder.enabled=true"
 
 msix:
