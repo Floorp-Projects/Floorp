@@ -3315,6 +3315,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
         mWebgl->RawBufferSubData(LOCAL_GL_ARRAY_BUFFER, mPathVertexOffset,
                                  vbData, vertexBytes,
                                  /* unsynchronized */ true);
+        mPathVertexOffset += vertexBytes;
         if (wgrVB) {
           WGR::wgr_vertex_buffer_release(wgrVB.ref());
         } else {
@@ -3343,7 +3344,6 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
           if (entry) {
             entry->SetVertexRange(vertexRange);
           }
-          mPathVertexOffset += vertexBytes;
 
           // Finally, draw the uploaded vertex data.
           mCurrentTarget->mProfile.OnCacheMiss();
