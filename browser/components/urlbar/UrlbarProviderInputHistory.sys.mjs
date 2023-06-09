@@ -33,6 +33,15 @@ const QUERYINDEX = {
   SWITCHTAB: 8,
 };
 
+// Constants to support an alternative frecency algorithm.
+const PAGES_USE_ALT_FRECENCY = Services.prefs.getBoolPref(
+  "places.frecency.pages.alternative.featureGate",
+  false
+);
+const PAGES_FRECENCY_FIELD = PAGES_USE_ALT_FRECENCY
+  ? "alt_frecency"
+  : "frecency";
+
 // This SQL query fragment provides the following:
 //   - whether the entry is bookmarked (QUERYINDEX_BOOKMARKED)
 //   - the bookmark title, if it is a bookmark (QUERYINDEX_BOOKMARKTITLE)
@@ -49,7 +58,7 @@ const SQL_BOOKMARK_TAGS_FRAGMENT = `EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk 
 
 const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
    SELECT h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT}, h.visit_count,
-          h.typed, h.id, t.open_count, h.frecency
+          h.typed, h.id, t.open_count, ${PAGES_FRECENCY_FIELD}
    FROM (
      SELECT ROUND(MAX(use_count) * (1 + (input = :search_string)), 1) AS rank,
             place_id
@@ -67,7 +76,7 @@ const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
                             t.open_count,
                             :matchBehavior, :searchBehavior,
                             NULL)
-   ORDER BY rank DESC, h.frecency DESC
+   ORDER BY rank DESC, ${PAGES_FRECENCY_FIELD} DESC
    LIMIT :maxResults`;
 
 /**
