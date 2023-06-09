@@ -19,7 +19,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.isSoftKeyboardVisible
+import org.mozilla.fenix.helpers.TestHelper.isKeyboardVisible
 import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.helpers.TestHelper.setTextToClipBoard
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -198,7 +198,7 @@ class SettingsSearchTest {
         }.goBack {
         }.goBack {
         }.openSearch {
-            assertTrue(isSoftKeyboardVisible())
+            assertTrue(isKeyboardVisible())
             clickSearchEngineShortcutButton()
             verifyEnginesListShortcutContains(activityTestRule, searchEngine)
             changeDefaultSearchEngine(activityTestRule, searchEngine)

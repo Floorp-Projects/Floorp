@@ -15,7 +15,6 @@ import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.FeatureSettingsHelper.Companion.settings
 import org.mozilla.fenix.helpers.TestHelper.appContext
-import org.mozilla.fenix.helpers.TestHelper.hideSoftKeyboard
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
@@ -32,7 +31,6 @@ class HomeActivityTestRule(
     initialTouchMode: Boolean = false,
     launchActivity: Boolean = true,
     private val skipOnboarding: Boolean = false,
-    private val hideSoftKeyboard: Boolean = false,
 ) : ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity),
     FeatureSettingsHelper by FeatureSettingsHelperDelegate() {
 
@@ -42,7 +40,6 @@ class HomeActivityTestRule(
     constructor(
         initialTouchMode: Boolean = false,
         launchActivity: Boolean = true,
-        hideSoftKeyboard: Boolean = false,
         skipOnboarding: Boolean = false,
         isHomeOnboardingDialogEnabled: Boolean = settings.showHomeOnboardingDialog &&
             FenixOnboarding(appContext).userHasBeenOnboarded(),
@@ -58,7 +55,7 @@ class HomeActivityTestRule(
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled: Boolean = false,
-    ) : this(initialTouchMode, launchActivity, hideSoftKeyboard, skipOnboarding) {
+    ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
         this.isJumpBackInCFREnabled = isJumpBackInCFREnabled
@@ -90,7 +87,6 @@ class HomeActivityTestRule(
         super.beforeActivityLaunched()
         setLongTapTimeout(3000)
         applyFlagUpdates()
-        if (hideSoftKeyboard) { hideSoftKeyboard() }
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 
@@ -115,13 +111,11 @@ class HomeActivityTestRule(
         fun withDefaultSettingsOverrides(
             initialTouchMode: Boolean = false,
             launchActivity: Boolean = true,
-            hideSoftKeyboard: Boolean = false,
             skipOnboarding: Boolean = false,
             tabsTrayRewriteEnabled: Boolean = false,
         ) = HomeActivityTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,
-            hideSoftKeyboard = hideSoftKeyboard,
             skipOnboarding = skipOnboarding,
             tabsTrayRewriteEnabled = tabsTrayRewriteEnabled,
             isJumpBackInCFREnabled = false,
@@ -145,7 +139,6 @@ class HomeActivityTestRule(
 class HomeActivityIntentTestRule internal constructor(
     initialTouchMode: Boolean = false,
     launchActivity: Boolean = true,
-    private val hideSoftKeyboard: Boolean = false,
     private val skipOnboarding: Boolean = false,
 ) : IntentsTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity),
     FeatureSettingsHelper by FeatureSettingsHelperDelegate() {
@@ -155,7 +148,6 @@ class HomeActivityIntentTestRule internal constructor(
     constructor(
         initialTouchMode: Boolean = false,
         launchActivity: Boolean = true,
-        hideSoftKeyboard: Boolean = false,
         skipOnboarding: Boolean = false,
         isHomeOnboardingDialogEnabled: Boolean = settings.showHomeOnboardingDialog &&
             FenixOnboarding(appContext).userHasBeenOnboarded(),
@@ -171,7 +163,7 @@ class HomeActivityIntentTestRule internal constructor(
         isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled: Boolean = false,
-    ) : this(initialTouchMode, launchActivity, hideSoftKeyboard, skipOnboarding) {
+    ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
         this.isPocketEnabled = isPocketEnabled
         this.isJumpBackInCFREnabled = isJumpBackInCFREnabled
@@ -218,7 +210,6 @@ class HomeActivityIntentTestRule internal constructor(
         super.beforeActivityLaunched()
         setLongTapTimeout(3000)
         applyFlagUpdates()
-        if (hideSoftKeyboard) { hideSoftKeyboard() }
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 
@@ -265,13 +256,11 @@ class HomeActivityIntentTestRule internal constructor(
         fun withDefaultSettingsOverrides(
             initialTouchMode: Boolean = false,
             launchActivity: Boolean = true,
-            hideSoftKeyboard: Boolean = false,
             skipOnboarding: Boolean = false,
             tabsTrayRewriteEnabled: Boolean = false,
         ) = HomeActivityIntentTestRule(
             initialTouchMode = initialTouchMode,
             launchActivity = launchActivity,
-            hideSoftKeyboard = hideSoftKeyboard,
             skipOnboarding = skipOnboarding,
             tabsTrayRewriteEnabled = tabsTrayRewriteEnabled,
             isJumpBackInCFREnabled = false,

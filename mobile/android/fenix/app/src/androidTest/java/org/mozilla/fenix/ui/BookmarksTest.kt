@@ -28,7 +28,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.isSoftKeyboardVisible
+import org.mozilla.fenix.helpers.TestHelper.isKeyboardVisible
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.ui.robots.bookmarksMenu
@@ -153,11 +153,11 @@ class BookmarksTest {
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1),
             ) {
                 clickAddFolderButton()
-                assertTrue(isSoftKeyboardVisible())
+                assertTrue(isKeyboardVisible())
                 addNewFolderName(bookmarksFolderName)
                 saveNewFolder()
                 verifyFolderTitle(bookmarksFolderName)
-                assertFalse(isSoftKeyboardVisible())
+                assertFalse(isKeyboardVisible())
             }
         }
     }
@@ -170,7 +170,7 @@ class BookmarksTest {
             clickAddFolderButton()
             addNewFolderName(bookmarksFolderName)
             navigateUp()
-            assertFalse(isSoftKeyboardVisible())
+            assertFalse(isKeyboardVisible())
             verifyBookmarkFolderIsNotCreated(bookmarksFolderName)
         }
     }
