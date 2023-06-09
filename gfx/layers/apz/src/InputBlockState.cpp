@@ -266,8 +266,10 @@ void DragBlockState::SetInitialThumbPos(OuterCSSCoord aThumbPos) {
   mInitialThumbPos = aThumbPos;
 }
 
-void DragBlockState::SetDragMetrics(const AsyncDragMetrics& aDragMetrics) {
+void DragBlockState::SetDragMetrics(const AsyncDragMetrics& aDragMetrics,
+                                    const CSSRect& aScrollableRect) {
   mDragMetrics = aDragMetrics;
+  mInitialScrollableRect = aScrollableRect;
 }
 
 void DragBlockState::DispatchEvent(const InputData& aEvent) const {
@@ -276,7 +278,8 @@ void DragBlockState::DispatchEvent(const InputData& aEvent) const {
     return;
   }
 
-  GetTargetApzc()->HandleDragEvent(mouseInput, mDragMetrics, mInitialThumbPos);
+  GetTargetApzc()->HandleDragEvent(mouseInput, mDragMetrics, mInitialThumbPos,
+                                   mInitialScrollableRect);
 }
 
 bool DragBlockState::MustStayActive() { return !mReceivedMouseUp; }
