@@ -6609,7 +6609,8 @@ static JitCode* GetOrCreateRegExpStub(JSContext* cx, InlinableNative native) {
       MOZ_CRASH("Unexpected native");
   }
   if (!code) {
-    cx->recoverFromOutOfMemory();
+    MOZ_ASSERT(cx->isThrowingOutOfMemory() || cx->isThrowingOverRecursed());
+    cx->clearPendingException();
     return nullptr;
   }
   return code;
