@@ -2682,14 +2682,22 @@ JSString* IOUtils::JsBuffer::IntoString(JSContext* aCx, JsBuffer aBuffer) {
     return JS_NewLatin1String(aCx, std::move(asLatin1), aBuffer.mLength);
   }
 
+  const char* ptr = aBuffer.mBuffer.get();
+  size_t length = aBuffer.mLength;
+
+  // Strip off a leading UTF-8 byte order marker (BOM) if found.
+  if (length >= 3 && Substring(ptr, 3) == "\xEF\xBB\xBF"_ns) {
+    ptr += 3;
+    length -= 3;
+  }
+
   // If the string is encodable as Latin1, we need to deflate the string to a
-  // Latin1 string to accoutn for UTF-8 characters that are encoded as more than
+  // Latin1 string to account for UTF-8 characters that are encoded as more than
   // a single byte.
   //
   // Otherwise, the string contains characters outside Latin1 so we have to
   // inflate to UTF-16.
-  return JS_NewStringCopyUTF8N(
-      aCx, JS::UTF8Chars(aBuffer.mBuffer.get(), aBuffer.mLength));
+  return JS_NewStringCopyUTF8N(aCx, JS::UTF8Chars(ptr, length));
 }
 
 /* static */
