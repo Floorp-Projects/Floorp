@@ -4,6 +4,14 @@
 
 "use strict";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+  MigrationWizardConstants:
+    "chrome://browser/content/migration/migration-wizard-constants.mjs",
+});
+
 /**
  * This file manages a MigrationWizard embedded in a dialog that runs
  * in a top-level dialog window. It's main responsibility is to listen
@@ -14,9 +22,6 @@
  * this dialog.
  *
  * @param {object} window.arguments.0
- * @param {Function} window.arguments.0.onResize
- *   A callback to resize the container of this document when the
- *   MigrationWizard resizes.
  * @param {object} window.arguments.0.options
  *   A series of options for configuring the dialog. See
  *   MigrationUtils.showMigrationWizard for a description of this
@@ -44,11 +49,8 @@ const MigrationDialog = {
       args = args.wrappedJSObject;
     }
 
-    // We have to inform the container of this document that the
-    // MigrationWizard has changed size in order for it to update
-    // its dimensions too.
     let observer = new ResizeObserver(() => {
-      args.onResize();
+      window.sizeToContent();
     });
     observer.observe(this._wiz);
 
@@ -56,7 +58,20 @@ const MigrationDialog = {
     let panel = document.createXULElement("panel");
     panel.appendChild(panelList);
     this._wiz.appendChild(panel);
-    this._wiz.requestState();
+
+    customElements.whenDefined("migration-wizard").then(() => {
+      if (args.options?.skipSourceSelection) {
+        // This is an automigration for a profile refresh, so begin migration
+        // automatically once ready.
+        this.doProfileRefresh(
+          args.options.migratorKey,
+          args.options.migrator,
+          args.options.profileId
+        );
+      } else {
+        this._wiz.requestState();
+      }
+    });
   },
 
   handleEvent(event) {
@@ -76,6 +91,30 @@ const MigrationDialog = {
         break;
       }
     }
+  },
+
+  async doProfileRefresh(migratorKey, migrator, profileId) {
+    let profile = { id: profileId };
+    let resourceTypeData = await migrator.getMigrateData(profile);
+    let resourceTypeStrs = [];
+    for (let type in lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+      if (resourceTypeData & lazy.MigrationUtils.resourceTypes[type]) {
+        resourceTypeStrs.push(
+          lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES[type]
+        );
+      }
+    }
+
+    this._wiz.doAutoImport(migratorKey, profile, resourceTypeStrs);
+    this._wiz.addEventListener(
+      "MigrationWizard:DoneMigration",
+      () => {
+        setTimeout(() => {
+          window.close();
+        }, 5000);
+      },
+      { once: true }
+    );
   },
 };
 

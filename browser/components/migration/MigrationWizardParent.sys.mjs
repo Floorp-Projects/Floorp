@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FirefoxProfileMigrator: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
   InternalTestingProfileMigrator:
     "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
   MigrationWizardConstants:
@@ -570,6 +571,10 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *   The success string for the resource type after migration has completed.
    */
   #getStringForImportQuantity(migratorKey, resourceTypeStr) {
+    if (migratorKey == lazy.FirefoxProfileMigrator.key) {
+      return "";
+    }
+
     switch (resourceTypeStr) {
       case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS: {
         let quantity = MigrationUtils.getImportedCount("bookmarks");

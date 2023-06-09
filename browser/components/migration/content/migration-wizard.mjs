@@ -130,6 +130,24 @@ export class MigrationWizard extends HTMLElement {
                 <span data-l10n-id="migration-payment-methods-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
+
+              <div data-resource-type="COOKIES" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-cookies-option-label"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
+
+              <div data-resource-type="SESSION" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-session-option-label"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
+
+              <div data-resource-type="OTHERDATA" class="resource-progress-group">
+                <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
+                <span data-l10n-id="migration-otherdata-option-label"></span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
+              </div>
             </div>
             <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
@@ -389,6 +407,7 @@ export class MigrationWizard extends HTMLElement {
     // closely lines up with the edges of the selector button.
     this.#browserProfileSelectorList.style.boxSizing = "border-box";
     this.#browserProfileSelectorList.style.overflowY = "auto";
+    this.#browserProfileSelectorList.style.maxHeight = "100%";
   }
 
   /**
@@ -787,6 +806,35 @@ export class MigrationWizard extends HTMLElement {
   }
 
   /**
+   * A public method for starting a migration without the user needing
+   * to choose a browser, profile or resource types. This is typically
+   * done only for doing a profile reset.
+   *
+   * @param {string} migratorKey
+   *   The key associated with the migrator to use.
+   * @param {object|null} profile
+   *   A representation of a browser profile. When not null, this is an
+   *   object with a string "id" property, and a string "name" property.
+   * @param {string[]} resourceTypes
+   *   An array of resource types that import should occur for. These
+   *   strings should be from MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
+   */
+  doAutoImport(migratorKey, profile, resourceTypes) {
+    let migrationEventDetail = this.#gatherMigrationEventDetails({
+      migratorKey,
+      profile,
+      resourceTypes,
+    });
+
+    this.dispatchEvent(
+      new CustomEvent("MigrationWizard:BeginMigration", {
+        bubbles: true,
+        detail: migrationEventDetail,
+      })
+    );
+  }
+
+  /**
    * Takes the current state of the selections page and bundles them
    * up into a MigrationWizard:BeginMigration event that can be handled
    * externally to perform the actual migration.
@@ -826,9 +874,33 @@ export class MigrationWizard extends HTMLElement {
    * and returns an object that can be used to begin migration via and event
    * sent to the MigrationWizardChild.
    *
+   * @param {object} [autoMigrationDetails=null]
+   *   Provided iff an automatic migration is being invoked. In that case, the
+   *   details are constructed from this object rather than the wizard DOM state.
+   * @param {string} autoMigrationDetails.migratorKey
+   *   The key of the migrator to do automatic migration from.
+   * @param {object|null} autoMigrationDetails.profile
+   *   A representation of a browser profile. When not null, this is an
+   *   object with a string "id" property, and a string "name" property.
+   * @param {string[]} autoMigrationDetails.resourceTypes
+   *   An array of resource types that import should occur for. These
+   *   strings should be from MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
    * @returns {MigrationDetails} details
    */
-  #gatherMigrationEventDetails() {
+  #gatherMigrationEventDetails(autoMigrationDetails) {
+    if (autoMigrationDetails?.migratorKey) {
+      let { migratorKey, profile, resourceTypes } = autoMigrationDetails;
+
+      return {
+        key: migratorKey,
+        type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
+        profile,
+        resourceTypes,
+        hasPermissions: true,
+        expandedDetails: this.#expandedDetails,
+      };
+    }
+
     let panelItem = this.#browserProfileSelector.selectedPanelItem;
     let key = panelItem.getAttribute("key");
     let type = panelItem.getAttribute("type");

@@ -37,7 +37,7 @@ add_task(async function test_cancel_close() {
     DIALOG_URL,
     "_blank",
     "dialog,centerscreen",
-    { onResize: () => {} }
+    {}
   );
   await promiseWinLoaded;
 

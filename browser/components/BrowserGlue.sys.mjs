@@ -600,31 +600,6 @@ let JSWINDOWACTORS = {
     messageManagerGroups: ["browsers"],
   },
 
-  MigrationWizard: {
-    parent: {
-      esModuleURI: "resource:///actors/MigrationWizardParent.sys.mjs",
-    },
-
-    child: {
-      esModuleURI: "resource:///actors/MigrationWizardChild.sys.mjs",
-      events: {
-        "MigrationWizard:RequestState": { wantUntrusted: true },
-        "MigrationWizard:BeginMigration": { wantUntrusted: true },
-        "MigrationWizard:RequestSafariPermissions": { wantUntrusted: true },
-        "MigrationWizard:SelectSafariPasswordFile": { wantUntrusted: true },
-      },
-    },
-
-    includeChrome: true,
-    allFrames: true,
-    matches: [
-      "about:welcome",
-      "about:welcome?*",
-      "about:preferences",
-      "chrome://browser/content/migration/migration-dialog-window.html",
-    ],
-  },
-
   PageInfo: {
     child: {
       esModuleURI: "resource:///actors/PageInfoChild.sys.mjs",

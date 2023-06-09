@@ -3,11 +3,15 @@
 
 "use strict";
 
+/* import-globals-from ../head-common.js */
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/migration/tests/browser/head-common.js",
+  this
+);
+
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
-);
-const { MigrationWizardConstants } = ChromeUtils.importESModule(
-  "chrome://browser/content/migration/migration-wizard-constants.mjs"
 );
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
@@ -242,7 +246,7 @@ async function selectResourceTypesAndStartMigration(
 
   // And then check the right checkboxes for the resource types.
   let resourceTypeList = shadow.querySelector("#resource-type-list");
-  for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+  for (let resourceType of getChoosableResourceTypes()) {
     let node = resourceTypeList.querySelector(
       `label[data-resource-type="${resourceType}"]`
     );
