@@ -120,7 +120,7 @@ has failed.  Please fix the state of the git hub repo at: $MOZ_LIBWEBRTC_SRC.
 When fixed, please resume this script with the following command:
     SKIP_NEXT_REVERT_CHK=1 bash $SCRIPT_DIR/loop-ff.sh
 "
-if [ "x$SKIP_NEXT_REVERT_CHK" == "x0" ]; then
+if [ "x$SKIP_NEXT_REVERT_CHK" == "x0" ] && [ "x$RESUME" == "x" ]; then
   echo_log "Check for upcoming revert commit"
   AUTO_FIX_REVERT_AS_NOOP=1 bash $SCRIPT_DIR/detect_upstream_revert.sh \
       2>&1| tee -a $LOOP_OUTPUT_LOG
