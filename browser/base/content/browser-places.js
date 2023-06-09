@@ -1109,11 +1109,12 @@ var PlacesToolbarHelper = {
       viewElt
     );
 
-    if (
-      toolbar.id == "PersonalToolbar" &&
-      !toolbar.hasAttribute("initialized")
-    ) {
-      toolbar.setAttribute("initialized", "true");
+    if (toolbar.id == "PersonalToolbar") {
+      if (!toolbar.hasAttribute("initialized")) {
+        toolbar.setAttribute("initialized", "true");
+      }
+      // We just created a new view, thus we must check again the empty toolbar
+      // message, regardless of "initialized".
       BookmarkingUI.updateEmptyToolbarMessage().catch(console.error);
     }
   },
