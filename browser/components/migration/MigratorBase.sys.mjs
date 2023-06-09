@@ -266,7 +266,8 @@ export class MigratorBase {
    * @param {Function|null} aProgressCallback
    *   An optional callback that will be fired once a resourceType has finished
    *   migrating. The callback will be passed the numeric representation of the
-   *   resource type.
+   *   resource type followed by a boolean indicating whether or not the resource
+   *   was migrated successfully.
    */
   async migrate(aItems, aStartup, aProfile, aProgressCallback = () => {}) {
     let resources = await this.#getMaybeCachedResources(aProfile);
@@ -438,7 +439,7 @@ export class MigratorBase {
               );
               collectMigrationTelemetry(migrationType);
 
-              aProgressCallback(migrationType);
+              aProgressCallback(migrationType, itemSuccess);
 
               resourcesGroupedByItems.delete(migrationType);
 
