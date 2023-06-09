@@ -37,6 +37,7 @@ class DOMArena {
   DOMArena() {
     arena_params_t params;
     params.mMaxDirtyIncreaseOverride = 7;
+    params.mFlags = ARENA_FLAG_THREAD_MAIN_THREAD_ONLY;
     mArenaId = moz_create_arena_with_params(&params);
   }
 

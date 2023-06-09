@@ -63,6 +63,13 @@ typedef size_t arena_id_t;
 #define ARENA_FLAG_RANDOMIZE_SMALL_ENABLED 1
 #define ARENA_FLAG_RANDOMIZE_SMALL_DISABLED 2
 
+// Arenas are usually protected by a lock (ARENA_FLAG_THREAD_SAFE) however some
+// arenas are accessed by only the main thread
+// (ARENA_FLAG_THREAD_MAIN_THREAD_ONLY) and their locking can be skipped.
+#define ARENA_FLAG_THREAD_MASK 0x4
+#define ARENA_FLAG_THREAD_MAIN_THREAD_ONLY 0x4
+#define ARENA_FLAG_THREAD_SAFE 0x0
+
 typedef struct arena_params_s {
   size_t mMaxDirty;
   // Arena specific modifiers which override the value passed to
