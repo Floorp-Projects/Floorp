@@ -428,19 +428,8 @@ void StructuredCloneHolder::ReadFromBuffer(
 
 static bool CheckExposedGlobals(JSContext* aCx, nsIGlobalObject* aGlobal,
                                 uint16_t aExposedGlobals) {
-  JSObject* global = aGlobal->GetGlobalJSObject();
-
-  // Sandboxes aren't really DOM globals (though they do set the
-  // JSCLASS_DOM_GLOBAL flag), and so we can't simply do the exposure check.
-  // Some sandboxes do have a DOM global as their prototype, so using the
-  // prototype to check for exposure will at least make it work for those
-  // specific cases.
-  JSObject* proto = xpc::SandboxPrototypeOrNull(aCx, global);
-  if (proto) {
-    global = proto;
-  }
-
-  if (!IsGlobalInExposureSet(aCx, global, aExposedGlobals)) {
+  if (!IsGlobalInExposureSet(aCx, aGlobal->GetGlobalJSObject(),
+                             aExposedGlobals)) {
     ErrorResult error;
     error.ThrowDataCloneError("Interface is not exposed.");
     MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(aCx));
