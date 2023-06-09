@@ -132,6 +132,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr102
+          - mozilla-esr115
           - elm
       # For all non m-c jobs we just run once daily matching the 10 UTC
       # nightly which is designed to align with searchfox's AWS cron
@@ -205,6 +206,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr102
+          - mozilla-esr115
       when:
           by-project:
               # No default branch
@@ -220,6 +222,7 @@ jobs:
               mozilla-esr102:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
+              mozilla-esr115: []
 
     - name: periodic-update
       job:
@@ -231,6 +234,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr102
+          - mozilla-esr115
       when:
           - {weekday: 'Monday', hour: 8, minute: 0}
           - {weekday: 'Thursday', hour: 8, minute: 0}

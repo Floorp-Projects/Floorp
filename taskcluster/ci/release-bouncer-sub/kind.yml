@@ -43,7 +43,7 @@ jobs:
         bouncer-products:
             by-release-type:
                 default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi', 'msix', 'pkg', 'langpack']
-                esr102: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi', 'msix', 'pkg', 'langpack']
+                esr.*: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi', 'msix', 'pkg', 'langpack']
         shipping-product: firefox
         treeherder:
             platform: firefox-release/opt
