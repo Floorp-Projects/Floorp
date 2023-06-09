@@ -194,10 +194,11 @@ function run_test() {
       csp.shouldLoad(
         Ci.nsIContentPolicy.TYPE_SCRIPT,
         null, // nsICSPEventListener
-        null, // aLoadInfo
         NetUtil.newURI("http://blocked.test/foo.js"),
         null,
-        true
+        true,
+        null,
+        false
       );
     }
   );
@@ -260,10 +261,11 @@ function run_test() {
     csp.shouldLoad(
       Ci.nsIContentPolicy.TYPE_IMAGE,
       null, // nsICSPEventListener
-      null, // nsILoadInfo
       NetUtil.newURI("data:image/png;base64," + base64data),
       null,
-      true
+      true,
+      null,
+      false
     );
   });
 
@@ -273,10 +275,11 @@ function run_test() {
     csp.shouldLoad(
       Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
       null, // nsICSPEventListener
-      null, // nsILoadInfo
       NetUtil.newURI("intent://mymaps.com/maps?um=1&ie=UTF-8&fb=1&sll"),
       null,
-      true
+      true,
+      null,
+      false
     );
   });
 
@@ -288,10 +291,11 @@ function run_test() {
     csp.shouldLoad(
       Ci.nsIContentPolicy.TYPE_SCRIPT,
       null, // nsICSPEventListener
-      null, // nsILoadInfo
       NetUtil.newURI(selfSpec + "#bar"),
       null,
-      true
+      true,
+      null,
+      false
     );
   });
 }

@@ -154,10 +154,11 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   bool permitsInternal(CSPDirective aDir,
                        mozilla::dom::Element* aTriggeringElement,
                        nsICSPEventListener* aCSPEventListener,
-                       nsILoadInfo* aLoadInfo, nsIURI* aContentLocation,
-                       nsIURI* aOriginalURIIfRedirect, bool aSpecific,
+                       nsIURI* aContentLocation, nsIURI* aOriginalURIIfRedirect,
+                       const nsAString& aNonce, bool aSpecific,
                        bool aSendViolationReports,
-                       bool aSendContentLocationInViolationReports);
+                       bool aSendContentLocationInViolationReports,
+                       bool aParserCreated);
 
   // helper to report inline script/style violations
   void reportInlineViolation(CSPDirective aDirective,

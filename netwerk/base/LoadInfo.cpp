@@ -611,7 +611,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mNeedForCheckingAntiTrackingHeuristic(
           rhs.mNeedForCheckingAntiTrackingHeuristic),
       mCspNonce(rhs.mCspNonce),
-      mIntegrityMetadata(rhs.mIntegrityMetadata),
       mSkipContentSniffing(rhs.mSkipContentSniffing),
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
       mHstsStatus(rhs.mHstsStatus),
@@ -665,8 +664,7 @@ LoadInfo::LoadInfo(
     bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     bool aNeedForCheckingAntiTrackingHeuristic, const nsAString& aCspNonce,
-    const nsAString& aIntegrityMetadata, bool aSkipContentSniffing,
-    uint32_t aHttpsOnlyStatus, bool aHstsStatus,
+    bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus, bool aHstsStatus,
     bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
     bool aIsInDevToolsContext, bool aParserCreatedScript,
     nsILoadInfo::StoragePermissionState aStoragePermission, bool aIsMetaRefresh,
@@ -732,7 +730,6 @@ LoadInfo::LoadInfo(
       mNeedForCheckingAntiTrackingHeuristic(
           aNeedForCheckingAntiTrackingHeuristic),
       mCspNonce(aCspNonce),
-      mIntegrityMetadata(aIntegrityMetadata),
       mSkipContentSniffing(aSkipContentSniffing),
       mHttpsOnlyStatus(aHttpsOnlyStatus),
       mHstsStatus(aHstsStatus),
@@ -1803,20 +1800,6 @@ LoadInfo::SetCspNonce(const nsAString& aCspNonce) {
   MOZ_ASSERT(!mInitialSecurityCheckDone,
              "setting the nonce is only allowed before any sec checks");
   mCspNonce = aCspNonce;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIntegrityMetadata(nsAString& aIntegrityMetadata) {
-  aIntegrityMetadata = mIntegrityMetadata;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIntegrityMetadata(const nsAString& aIntegrityMetadata) {
-  MOZ_ASSERT(!mInitialSecurityCheckDone,
-             "setting the nonce is only allowed before any sec checks");
-  mIntegrityMetadata = aIntegrityMetadata;
   return NS_OK;
 }
 

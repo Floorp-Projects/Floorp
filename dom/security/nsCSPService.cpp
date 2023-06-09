@@ -111,6 +111,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   }
 
   nsContentPolicyType contentType = aLoadInfo->InternalContentPolicyType();
+  bool parserCreatedScript = aLoadInfo->GetParserCreatedScript();
 
   nsCOMPtr<nsICSPEventListener> cspEventListener;
   nsresult rv =
@@ -135,6 +136,10 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     return NS_OK;
   }
 
+  nsAutoString cspNonce;
+  rv = aLoadInfo->GetCspNonce(cspNonce);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // 1) Apply speculate CSP for preloads
   bool isPreload = nsContentUtils::IsPreloadType(contentType);
 
@@ -143,9 +148,9 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     if (preloadCsp) {
       // obtain the enforcement decision
       rv = preloadCsp->ShouldLoad(
-          contentType, cspEventListener, aLoadInfo, aContentLocation,
+          contentType, cspEventListener, aContentLocation,
           nullptr,  // no redirect, aOriginal URL is null.
-          false, aDecision);
+          false, cspNonce, parserCreatedScript, aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // if the preload policy already denied the load, then there
@@ -187,9 +192,10 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 
     // obtain the enforcement decision
     rv = csp->ShouldLoad(
-        contentType, cspEventListener, aLoadInfo, aContentLocation,
+        contentType, cspEventListener, aContentLocation,
         originalURI,  // no redirect, unless it's a frame navigation.
-        !isPreload && aLoadInfo->GetSendCSPViolationEvents(), aDecision);
+        !isPreload && aLoadInfo->GetSendCSPViolationEvents(), cspNonce,
+        parserCreatedScript, aDecision);
 
     if (NS_CP_REJECTED(*aDecision)) {
       NS_SetRequestBlockingReason(
@@ -344,6 +350,10 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
       aLoadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
   MOZ_ALWAYS_SUCCEEDS(rv);
 
+  nsAutoString cspNonce;
+  rv = aLoadInfo->GetCspNonce(cspNonce);
+  MOZ_ALWAYS_SUCCEEDS(rv);
+
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
 
   /* On redirect, if the content policy is a preload type, rejecting the
@@ -352,6 +362,7 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
    */
 
   int16_t decision = nsIContentPolicy::ACCEPT;
+  bool parserCreatedScript = aLoadInfo->GetParserCreatedScript();
 
   // 1) Apply speculative CSP for preloads
   if (isPreload) {
@@ -360,11 +371,12 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
       // Pass  originalURI to indicate the redirect
       preloadCsp->ShouldLoad(
           policyType,  // load type per nsIContentPolicy (uint32_t)
-          cspEventListener, aLoadInfo,
+          cspEventListener,
           aNewURI,       // nsIURI
           aOriginalURI,  // Original nsIURI
           true,          // aSendViolationReports
-          &decision);
+          cspNonce,      // nonce
+          parserCreatedScript, &decision);
 
       // if the preload policy already denied the load, then there
       // is no point in checking the real policy
@@ -380,11 +392,12 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
   if (csp) {
     // Pass  originalURI to indicate the redirect
     csp->ShouldLoad(policyType,  // load type per nsIContentPolicy (uint32_t)
-                    cspEventListener, aLoadInfo,
+                    cspEventListener,
                     aNewURI,       // nsIURI
                     aOriginalURI,  // Original nsIURI
                     true,          // aSendViolationReports
-                    &decision);
+                    cspNonce,      // nonce
+                    parserCreatedScript, &decision);
     if (NS_CP_REJECTED(decision)) {
       aCancelCode = Some(NS_ERROR_DOM_BAD_URI);
       return NS_BINDING_FAILED;
