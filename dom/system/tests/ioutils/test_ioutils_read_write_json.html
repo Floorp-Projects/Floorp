@@ -153,6 +153,32 @@
 
       await cleanup(filename);
     });
+
+    add_task(async function test_read_json_bom() {
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_read_json_bom.tmp");
+      const raw = `\uFEFF${JSON.stringify({hello: "world"})}`;
+      await IOUtils.writeUTF8(tmpFileName, raw);
+
+      ok(
+        ObjectUtils.deepEqual(
+          await IOUtils.readJSON(tmpFileName),
+          { hello: "world" },
+        ),
+        "IOUtils.readJSON should skip BOM"
+      );
+
+      await IOUtils.writeUTF8(tmpFileName, raw, { compress: true });
+
+      ok(
+        ObjectUtils.deepEqual(
+          await IOUtils.readJSON(tmpFileName, { decompress: true }),
+          { hello: "world" },
+        ),
+        "IOUtils.readJSON should skip BOM for compressed files"
+      );
+
+      await cleanup(tmpFileName);
+    });
   </script>
 </head>
 
