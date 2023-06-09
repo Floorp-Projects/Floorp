@@ -1595,7 +1595,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var showUnifiedSearchFeature by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_show_unified_search_2),
         default = { FxNimbus.features.unifiedSearch.value().enabled },
-        featureFlag = FeatureFlags.unifiedSearchFeature,
+        featureFlag = true,
     )
 
     /**
@@ -1612,7 +1612,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var notificationPrePermissionPromptEnabled by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_notification_pre_permission_prompt_enabled),
         default = { FxNimbus.features.prePermissionNotificationPrompt.value().enabled },
-        featureFlag = FeatureFlags.notificationPrePermissionPromptEnabled,
+        featureFlag = true,
     )
 
     /**

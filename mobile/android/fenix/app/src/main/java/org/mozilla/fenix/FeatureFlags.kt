@@ -48,11 +48,6 @@ object FeatureFlags {
     }
 
     /**
-     * Enables the Unified Search feature.
-     */
-    const val unifiedSearchFeature = true
-
-    /**
      * Enables compose on the tabs tray items.
      */
     const val composeTabsTray = false
@@ -61,9 +56,4 @@ object FeatureFlags {
      * Enables compose on the top sites.
      */
     const val composeTopSites = false
-
-    /**
-     * Enables the notification pre permission prompt.
-     */
-    const val notificationPrePermissionPromptEnabled = true
 }
