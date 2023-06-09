@@ -55,9 +55,9 @@ user_pref("dom.disable_beforeunload", true);
 // function assumes this is available.
 user_pref("dom.animations-api.implicit-keyframes.enabled", true);
 // Disable high DPI
-user_pref("layout.css.devPixelsPerPx", "1.0")
+user_pref("layout.css.devPixelsPerPx", "1.0");
 // Enable the parallel styling code.
-user_pref("layout.css.stylo-threads", 4)
+user_pref("layout.css.stylo-threads", 4);
 // sometime wpt runs test even before the document becomes visible, which would
 // delay video.play() and cause play() running in wrong order.
 user_pref("media.block-autoplay-until-in-foreground", false);
