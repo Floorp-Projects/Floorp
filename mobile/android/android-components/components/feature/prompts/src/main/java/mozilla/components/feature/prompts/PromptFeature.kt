@@ -41,6 +41,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+import mozilla.components.concept.identitycredential.Provider
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.LoginEntry
@@ -71,6 +72,7 @@ import mozilla.components.feature.prompts.facts.emitCreditCardSaveShownFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.identitycredential.SelectProviderDialogFragment
 import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginExceptions
 import mozilla.components.feature.prompts.login.LoginPicker
@@ -577,6 +579,7 @@ class PromptFeature private constructor(
                 }
 
                 is Repost -> it.onConfirm()
+                is PromptRequest.IdentityCredential.SelectProvider -> it.onConfirm(value as Provider)
                 else -> {
                     // no-op
                 }
@@ -869,6 +872,15 @@ class PromptFeature private constructor(
                 )
             }
 
+            is PromptRequest.IdentityCredential.SelectProvider -> {
+                SelectProviderDialogFragment.newInstance(
+                    sessionId = session.id,
+                    promptRequestUID = promptRequest.uid,
+                    shouldDismissOnLoad = true,
+                    providers = promptRequest.providers,
+                )
+            }
+
             else -> throw InvalidParameterException("Not valid prompt request type $promptRequest")
         }
 
@@ -929,6 +941,7 @@ class PromptFeature private constructor(
             is SaveCreditCard,
             is SelectAddress,
             is Share,
+            is PromptRequest.IdentityCredential.SelectProvider,
             -> true
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }

@@ -14,6 +14,7 @@ import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.prompt.PromptRequest.IdentityCredential
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.storage.Address
@@ -1184,6 +1185,59 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
+    fun `WHEN onSelectIdentityCredentialProvider is called THEN SelectProvider prompt request must be provided with the correct callbacks`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var selectProviderRequest: IdentityCredential.SelectProvider = mock()
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    selectProviderRequest = promptRequest as IdentityCredential.SelectProvider
+                }
+            },
+        )
+
+        val geckoProvider = GECKO_PROMPT_PROVIDER_SELECTOR(0, "name", "icon")
+        val acProvider = geckoProvider.toProvider()
+        val geckoPrompt = geckoProviderSelectorPrompt(listOf(geckoProvider))
+        var geckoResult = promptDelegate.onSelectIdentityCredentialProvider(mock(), geckoPrompt)
+
+        geckoResult.accept {
+            onConfirmWasCalled = true
+        }
+
+        with(selectProviderRequest) {
+            // Verifying we are parsing the providers correctly.
+            assertEquals(acProvider, this.providers.first())
+
+            onConfirm(acProvider)
+
+            shadowOf(getMainLooper()).idle()
+            assertTrue(onConfirmWasCalled)
+            whenever(geckoPrompt.isComplete).thenReturn(true)
+
+            // Just making sure we are not completing the geckoResult twice.
+            onConfirmWasCalled = false
+            onConfirm(acProvider)
+            shadowOf(getMainLooper()).idle()
+            assertFalse(onConfirmWasCalled)
+        }
+
+        // Verifying we are handling the dismiss correctly.
+        geckoResult = promptDelegate.onSelectIdentityCredentialProvider(mock(), geckoProviderSelectorPrompt(listOf(geckoProvider)))
+        geckoResult.accept {
+            onDismissWasCalled = true
+        }
+
+        selectProviderRequest.onDismiss()
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onDismissWasCalled)
+    }
+
+    @Test
     fun `Calling onColorPrompt must provide a Color PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var colorRequest: PromptRequest.Color = mock()
@@ -1837,6 +1891,14 @@ class GeckoPromptDelegateTest {
         val prompt: GeckoSession.PromptDelegate.ColorPrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
         ReflectionUtils.setField(prompt, "defaultValue", defaultValue)
+        return prompt
+    }
+
+    private fun geckoProviderSelectorPrompt(
+        providers: List<GECKO_PROMPT_PROVIDER_SELECTOR> = emptyList(),
+    ): GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt {
+        val prompt: GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt = mock()
+        ReflectionUtils.setField(prompt, "providers", providers.toTypedArray())
         return prompt
     }
 
