@@ -129,7 +129,7 @@ def test_output_to_file(tmpdir):
     """Test that mozinfo.output_to_file works."""
     path = os.path.join(tmpdir, "mozinfo.json")
     mozinfo.output_to_file(path)
-    assert open(path).read() == json.dumps(mozinfo.info, cls=mozinfo.UnknownEncoder)
+    assert open(path).read() == json.dumps(mozinfo.info)
 
 
 def test_os_version_is_a_StringVersion():

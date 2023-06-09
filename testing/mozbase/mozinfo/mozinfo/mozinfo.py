@@ -8,7 +8,6 @@
 # linux) to the information; I certainly wouldn't want anyone parsing this
 # information and having behaviour depend on it
 
-import json
 import os
 import platform
 import re
@@ -77,7 +76,7 @@ info = {
     "os_version": unknown,
     "bits": unknown,
     "has_sandbox": unknown,
-    "display": unknown,
+    "display": None,
     "automation": bool(os.environ.get("MOZ_AUTOMATION", False)),
 }
 (system, node, release, version, machine, processor) = platform.uname()
@@ -325,16 +324,11 @@ def find_and_update_from_json(*dirs, **kwargs):
     return None
 
 
-class UnknownEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if obj == unknown:
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
-
-
 def output_to_file(path):
+    import json
+
     with open(path, "w") as f:
-        f.write(json.dumps(info, cls=UnknownEncoder))
+        f.write(json.dumps(info))
 
 
 update({})
@@ -351,7 +345,6 @@ __all__ += [
     "find_and_update_from_json",
     "output_to_file",
     "StringVersion",
-    "UnknownEncoder",
 ]
 
 
