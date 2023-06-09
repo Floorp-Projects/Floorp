@@ -486,6 +486,10 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
   nsAutoString cspNonce;
   Unused << NS_WARN_IF(NS_FAILED(aLoadInfo->GetCspNonce(cspNonce)));
 
+  nsAutoString integrityMetadata;
+  Unused << NS_WARN_IF(
+      NS_FAILED(aLoadInfo->GetIntegrityMetadata(integrityMetadata)));
+
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   rv = aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -568,8 +572,9 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       aLoadInfo->GetNeedForCheckingAntiTrackingHeuristic(), cspNonce,
-      aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
-      aLoadInfo->GetHstsStatus(), aLoadInfo->GetHasValidUserGestureActivation(),
+      integrityMetadata, aLoadInfo->GetSkipContentSniffing(),
+      aLoadInfo->GetHttpsOnlyStatus(), aLoadInfo->GetHstsStatus(),
+      aLoadInfo->GetHasValidUserGestureActivation(),
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(),
@@ -857,9 +862,9 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.documentHasUserInteracted(),
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.needForCheckingAntiTrackingHeuristic(),
-      loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.httpsOnlyStatus(), loadInfoArgs.hstsStatus(),
-      loadInfoArgs.hasValidUserGestureActivation(),
+      loadInfoArgs.cspNonce(), loadInfoArgs.integrityMetadata(),
+      loadInfoArgs.skipContentSniffing(), loadInfoArgs.httpsOnlyStatus(),
+      loadInfoArgs.hstsStatus(), loadInfoArgs.hasValidUserGestureActivation(),
       loadInfoArgs.allowDeprecatedSystemRequests(),
       loadInfoArgs.isInDevToolsContext(), loadInfoArgs.parserCreatedScript(),
       loadInfoArgs.storagePermission(), loadInfoArgs.isMetaRefresh(),

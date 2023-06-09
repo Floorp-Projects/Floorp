@@ -164,6 +164,7 @@ struct LoadInfoArgs
   bool allowListFutureDocumentsCreatedFromThisRedirectChain;
   bool needForCheckingAntiTrackingHeuristic;
   nsString                    cspNonce;
+  nsString                    integrityMetadata;
   bool                        skipContentSniffing;
   uint32_t                    httpsOnlyStatus;
   bool                        hstsStatus;
