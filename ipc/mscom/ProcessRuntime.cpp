@@ -378,22 +378,39 @@ ProcessRuntime::InitializeSecurity(const ProcessCategory aProcessCategory) {
     return HRESULT_FROM_WIN32(::GetLastError());
   }
 
-  const bool allowAppContainers =
+  const bool appContainersSupported = IsWin8OrLater();
+  const bool allowAllNonRestrictedAppContainers =
       aProcessCategory == ProcessCategory::GeckoBrowserParent &&
-      IsWin8OrLater();
+      appContainersSupported;
 
   BYTE appContainersSid[SECURITY_MAX_SID_SIZE];
   DWORD appContainersSidSize = sizeof(appContainersSid);
-  if (allowAppContainers) {
+  if (allowAllNonRestrictedAppContainers) {
     if (!::CreateWellKnownSid(WinBuiltinAnyPackageSid, nullptr,
                               appContainersSid, &appContainersSidSize)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
   }
 
-  // Grant access to SYSTEM, Administrators, the user, and when running as the
-  // browser process on Windows 8+, all app containers.
-  const size_t kMaxInlineEntries = 4;
+  UniquePtr<BYTE[]> tokenAppContainerInfBuf;
+  if (appContainersSupported) {
+    len = 0;
+    ::GetTokenInformation(token, TokenAppContainerSid, nullptr, len, &len);
+    if (len) {
+      tokenAppContainerInfBuf = MakeUnique<BYTE[]>(len);
+      ok = ::GetTokenInformation(token, TokenAppContainerSid,
+                                 tokenAppContainerInfBuf.get(), len, &len);
+      if (!ok) {
+        // Don't fail if we get an error retrieving an app container SID.
+        tokenAppContainerInfBuf = nullptr;
+      }
+    }
+  }
+
+  // Grant access to SYSTEM, Administrators, the user, our app container (if in
+  // one) and when running as the browser process on Windows 8+, all non
+  // restricted app containers.
+  const size_t kMaxInlineEntries = 5;
   mozilla::Vector<EXPLICIT_ACCESS_W, kMaxInlineEntries> entries;
 
   Unused << entries.append(EXPLICIT_ACCESS_W{
@@ -417,7 +434,7 @@ ProcessRuntime::InitializeSecurity(const ProcessCategory aProcessCategory) {
       {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
        reinterpret_cast<LPWSTR>(tokenUser.User.Sid)}});
 
-  if (allowAppContainers) {
+  if (allowAllNonRestrictedAppContainers) {
     Unused << entries.append(
         EXPLICIT_ACCESS_W{COM_RIGHTS_EXECUTE,
                           GRANT_ACCESS,
@@ -425,6 +442,22 @@ ProcessRuntime::InitializeSecurity(const ProcessCategory aProcessCategory) {
                           {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID,
                            TRUSTEE_IS_WELL_KNOWN_GROUP,
                            reinterpret_cast<LPWSTR>(appContainersSid)}});
+  }
+
+  if (tokenAppContainerInfBuf) {
+    TOKEN_APPCONTAINER_INFORMATION& tokenAppContainerInf =
+        *reinterpret_cast<TOKEN_APPCONTAINER_INFORMATION*>(
+            tokenAppContainerInfBuf.get());
+
+    // TokenAppContainer will be null if we are not in an app container.
+    if (tokenAppContainerInf.TokenAppContainer) {
+      Unused << entries.append(EXPLICIT_ACCESS_W{
+          COM_RIGHTS_EXECUTE,
+          GRANT_ACCESS,
+          NO_INHERITANCE,
+          {nullptr, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID, TRUSTEE_IS_USER,
+           reinterpret_cast<LPWSTR>(tokenAppContainerInf.TokenAppContainer)}});
+    }
   }
 
   PACL rawDacl = nullptr;
