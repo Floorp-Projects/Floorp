@@ -239,7 +239,7 @@ void HTMLOptionElement::GetText(nsAString& aText) {
 }
 
 void HTMLOptionElement::SetText(const nsAString& aText, ErrorResult& aRv) {
-  aRv = nsContentUtils::SetNodeTextContent(this, aText, true);
+  aRv = nsContentUtils::SetNodeTextContent(this, aText, false);
 }
 
 nsresult HTMLOptionElement::BindToTree(BindContext& aContext,
