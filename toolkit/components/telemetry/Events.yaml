@@ -1630,6 +1630,16 @@ messaging_experiments:
       - omc@mozilla.com
     expiry_version: never
 
+telemetry:
+  early_event:
+    objects: ["startup"]
+    bug_numbers: [1837230]
+    notification_emails: ["chutten@mozilla.com"]
+    products: ["firefox"]
+    record_in_processes: ["main"]
+    description: This is a mirrored-to verification event.
+    expiry_version: "120"
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:

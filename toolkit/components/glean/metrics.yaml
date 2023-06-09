@@ -135,3 +135,15 @@ fog.ipc:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+fog.validation:
+  validate_early_event:
+    type: event
+    description: |
+      An event sent very early to validate that FOG is able to process it.
+    bugs: ["https://bugzilla.mozilla.org/show_bug.cgi?id=1837230"]
+    data_reviews: ["https://bugzilla.mozilla.org/show_bug.cgi?id=1837230"]
+    data_sensitivity: ["interaction"]
+    notification_emails: ["chutten@mozilla.com"]
+    expires: 120
+    telemetry_mirror: Telemetry_EarlyEvent_Startup
