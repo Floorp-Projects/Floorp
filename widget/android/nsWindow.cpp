@@ -58,6 +58,8 @@
 #include "nsIWidgetListener.h"
 #include "nsIWindowWatcher.h"
 #include "nsIAppWindow.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintSettingsService.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
