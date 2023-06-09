@@ -18,7 +18,6 @@ class nsINodeList;
 class nsRange;
 
 namespace mozilla {
-class BindingStyleRule;
 class StyleSheet;
 namespace css {
 class Rule;
@@ -31,8 +30,8 @@ class InspectorFontFace;
 }  // namespace dom
 }  // namespace mozilla
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
+class CSSStyleRule;
 
 /**
  * A collection of utility methods for use by devtools.
@@ -45,7 +44,7 @@ class InspectorUtils {
   static void GetCSSStyleRules(GlobalObject& aGlobal, Element& aElement,
                                const nsAString& aPseudo,
                                bool aIncludeVisitedStyle,
-                               nsTArray<RefPtr<BindingStyleRule>>& aResult);
+                               nsTArray<RefPtr<CSSStyleRule>>& aResult);
 
   /**
    * Get the line number of a rule.
@@ -82,19 +81,18 @@ class InspectorUtils {
   //
   // These methods would probably make more sense being [ChromeOnly] APIs on
   // CSSStyleRule itself (bug 1428245).
-  static uint32_t GetSelectorCount(GlobalObject& aGlobal,
-                                   BindingStyleRule& aRule);
+  static uint32_t GetSelectorCount(GlobalObject& aGlobal, CSSStyleRule& aRule);
 
   // For all three functions below, aSelectorIndex is 0-based
-  static void GetSelectorText(GlobalObject& aGlobal, BindingStyleRule& aRule,
+  static void GetSelectorText(GlobalObject& aGlobal, CSSStyleRule& aRule,
                               uint32_t aSelectorIndex, nsACString& aText,
                               ErrorResult& aRv);
-  static uint64_t GetSpecificity(GlobalObject& aGlobal, BindingStyleRule& aRule,
+  static uint64_t GetSpecificity(GlobalObject& aGlobal, CSSStyleRule& aRule,
                                  uint32_t aSelectorIndex, ErrorResult& aRv);
   // Note: This does not handle scoped selectors correctly, because it has no
   // idea what the right scope is.
   static bool SelectorMatchesElement(GlobalObject& aGlobal, Element& aElement,
-                                     BindingStyleRule& aRule,
+                                     CSSStyleRule& aRule,
                                      uint32_t aSelectorIndex,
                                      const nsAString& aPseudo,
                                      bool aRelevantLinkVisited,
@@ -267,7 +265,6 @@ class InspectorUtils {
                                   const nsAString& aNamespaceURI);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_InspectorUtils_h

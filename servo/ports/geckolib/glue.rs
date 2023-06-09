@@ -2425,26 +2425,21 @@ pub extern "C" fn Servo_StyleRule_GetSelectorTextAtIndex(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &LockedStyleRule, count: *mut u32) {
-    read_locked_arc(rule, |rule: &StyleRule| {
-        *unsafe { count.as_mut().unwrap() } = rule.selectors.0.len() as u32;
-    })
+pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &LockedStyleRule) -> u32 {
+    read_locked_arc(rule, |rule: &StyleRule| rule.selectors.0.len() as u32)
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetSpecificityAtIndex(
     rule: &LockedStyleRule,
     index: u32,
-    specificity: *mut u64,
-) {
+) -> u64 {
     read_locked_arc(rule, |rule: &StyleRule| {
-        let specificity = unsafe { specificity.as_mut().unwrap() };
         let index = index as usize;
         if index >= rule.selectors.0.len() {
-            *specificity = 0;
-            return;
+            return 0;
         }
-        *specificity = rule.selectors.0[index].specificity() as u64;
+        rule.selectors.0[index].specificity() as u64
     })
 }
 

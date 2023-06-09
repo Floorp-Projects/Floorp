@@ -7,8 +7,9 @@
 #ifndef mozilla_CSSStyleRule_h
 #define mozilla_CSSStyleRule_h
 
-#include "mozilla/BindingStyleRule.h"
+#include "mozilla/css/Rule.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/WeakPtr.h"
 
 #include "nsDOMCSSDeclaration.h"
@@ -54,7 +55,7 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
+class CSSStyleRule final : public css::Rule, public SupportsWeakPtr {
  public:
   CSSStyleRule(already_AddRefed<StyleLockedStyleRule> aRawRule,
                StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
@@ -65,23 +66,21 @@ class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
-  uint32_t GetSelectorCount() override;
-  nsresult GetSelectorText(uint32_t aSelectorIndex, nsACString& aText) override;
-  nsresult GetSpecificity(uint32_t aSelectorIndex,
-                          uint64_t* aSpecificity) override;
+  uint32_t GetSelectorCount() const;
+  nsresult GetSelectorText(uint32_t aSelectorIndex, nsACString& aText);
+  nsresult GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity);
   nsresult SelectorMatchesElement(dom::Element* aElement,
                                   uint32_t aSelectorIndex,
                                   const nsAString& aPseudo,
-                                  bool aRelevantLinkVisited,
-                                  bool* aMatches) override;
-  NotNull<DeclarationBlock*> GetDeclarationBlock() const override;
+                                  bool aRelevantLinkVisited, bool* aMatches);
+  NotNull<DeclarationBlock*> GetDeclarationBlock() const;
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
-  void GetSelectorText(nsACString& aSelectorText) final;
-  void SetSelectorText(const nsACString& aSelectorText) final;
-  nsICSSDeclaration* Style() final;
+  void GetSelectorText(nsACString& aSelectorText);
+  void SetSelectorText(const nsACString& aSelectorText);
+  nsICSSDeclaration* Style();
 
   StyleLockedStyleRule* Raw() const { return mRawRule; }
   void SetRawAfterClone(RefPtr<StyleLockedStyleRule>);
@@ -91,6 +90,8 @@ class CSSStyleRule final : public BindingStyleRule, public SupportsWeakPtr {
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
+
+  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
  private:
   ~CSSStyleRule() = default;
