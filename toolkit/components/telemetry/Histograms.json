@@ -10985,27 +10985,6 @@
     "n_buckets": 202,
     "description": "Size (in bytes) of the compressed crash store JSON file."
   },
-  "PLUGINS_NOTIFICATION_SHOWN": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "The number of times the click-to-activate notification was shown: false: shown by in-content activation true: shown by location bar activation",
-    "bug_numbers": [902075, 1345894],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
-  "PLUGINS_NOTIFICATION_USER_ACTION_2": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 8,
-    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block 3: blockalways; Note: 1 and 3 are unused from Firefox 69 onwards.",
-    "bug_numbers": [902075, 1345894, 1398972],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
   "POPUP_NOTIFICATION_STATS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
