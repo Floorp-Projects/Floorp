@@ -115,11 +115,15 @@ static LocalAccessible* MaybeCreateSpecificARIAAccessible(
       return nullptr;
     }
     // A cell must be in a row.
-    if (aContext->Role() != roles::ROW) {
+    const Accessible* parent = aContext;
+    if (parent->IsGeneric()) {
+      parent = parent->GetNonGenericParent();
+    }
+    if (!parent || parent->Role() != roles::ROW) {
       return nullptr;
     }
     // That row must be in a table, though there may be an intervening rowgroup.
-    Accessible* parent = aContext->GetNonGenericParent();
+    parent = parent->GetNonGenericParent();
     if (!parent) {
       return nullptr;
     }
