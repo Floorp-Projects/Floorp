@@ -215,12 +215,11 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS(
   MOZ_ASSERT(!aSpan.IsEmpty());
 
   // Parse to JSON
-  JS::Rooted<JS::Value> json(cx);
   if (IsAscii(aSpan)) {
     // Ascii is a subset of Latin1, and JS_ParseJSON can take Latin1 directly
-    if (JS_ParseJSON(cx,
-                     reinterpret_cast<const JS::Latin1Char*>(aSpan.Elements()),
-                     aSpan.Length(), &json)) {
+    if (JS::IsValidJSON(
+            reinterpret_cast<const JS::Latin1Char*>(aSpan.Elements()),
+            aSpan.Length())) {
       return ValidatorResult::JSON;
     }
   } else {
@@ -233,15 +232,12 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS(
       return ValidatorResult::Failure;
     }
 
-    if (JS_ParseJSON(cx, decoded.BeginReading(), decoded.Length(), &json)) {
+    if (JS::IsValidJSON(decoded.BeginReading(), decoded.Length())) {
       return ValidatorResult::JSON;
     }
   }
 
   // Since the JSON parsing failed, we confirmed the file is Javascript and not
   // JSON.
-  if (JS_IsExceptionPending(cx)) {
-    JS_ClearPendingException(cx);
-  }
   return ValidatorResult::JavaScript;
 }
