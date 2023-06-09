@@ -324,7 +324,7 @@ class IOUtils final {
                                             const bool aDecompress,
                                             BufferKind aBufferKind);
 
-  /*
+  /**
    * Attempts to read the entire file at |aPath| as a UTF-8 string.
    *
    * @param aFile       The location of the file.
