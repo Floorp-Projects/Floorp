@@ -98,6 +98,7 @@ static int kLinearToGammaTab[GAMMA_TAB_SIZE + 1];
 static uint16_t kGammaToLinearTab[256];
 static volatile int kGammaTablesOk = 0;
 static void InitGammaTables(void);
+extern VP8CPUInfo VP8GetCPUInfo;
 
 WEBP_DSP_INIT_FUNC(InitGammaTables) {
   if (!kGammaTablesOk) {
