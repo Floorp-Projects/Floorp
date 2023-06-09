@@ -1061,8 +1061,8 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
     return false;
   }
 
-  nsCSSUnit cssUnit = SVGGeometryProperty::SpecifiedUnitTypeToCSSUnit(
-      aLength.GetSpecifiedUnitType());
+  nsCSSUnit cssUnit =
+      SVGLength::SpecifiedUnitTypeToCSSUnit(aLength.GetSpecifiedUnitType());
 
   if (cssUnit == eCSSUnit_Percent) {
     Servo_DeclarationBlock_SetPercentValue(aBlock.Raw(), aPropId,

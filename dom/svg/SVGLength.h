@@ -13,6 +13,8 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 
+enum nsCSSUnit : uint32_t;
+
 namespace mozilla {
 
 namespace dom {
@@ -108,6 +110,8 @@ class SVGLength {
   static bool IsAbsoluteUnit(uint8_t aUnit);
 
   static float GetAbsUnitsPerAbsUnit(uint8_t aUnits, uint8_t aPerUnit);
+
+  static nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit);
 
   static void GetUnitString(nsAString& aUnit, uint16_t aUnitType);
 
