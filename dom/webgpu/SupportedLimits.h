@@ -9,47 +9,99 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
+#include <memory>
+
 namespace mozilla::webgpu {
 namespace ffi {
 struct WGPULimits;
 }
 class Adapter;
 
-class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {
-  const UniquePtr<ffi::WGPULimits> mLimits;
+enum class Limit : uint8_t {
+  MaxTextureDimension1D,
+  MaxTextureDimension2D,
+  MaxTextureDimension3D,
+  MaxTextureArrayLayers,
+  MaxBindGroups,
+  MaxBindGroupsPlusVertexBuffers,
+  MaxBindingsPerBindGroup,
+  MaxDynamicUniformBuffersPerPipelineLayout,
+  MaxDynamicStorageBuffersPerPipelineLayout,
+  MaxSampledTexturesPerShaderStage,
+  MaxSamplersPerShaderStage,
+  MaxStorageBuffersPerShaderStage,
+  MaxStorageTexturesPerShaderStage,
+  MaxUniformBuffersPerShaderStage,
+  MaxUniformBufferBindingSize,
+  MaxStorageBufferBindingSize,
+  MinUniformBufferOffsetAlignment,
+  MinStorageBufferOffsetAlignment,
+  MaxVertexBuffers,
+  MaxBufferSize,
+  MaxVertexAttributes,
+  MaxVertexBufferArrayStride,
+  MaxInterStageShaderComponents,
+  MaxInterStageShaderVariables,
+  MaxColorAttachments,
+  MaxColorAttachmentBytesPerSample,
+  MaxComputeWorkgroupStorageSize,
+  MaxComputeInvocationsPerWorkgroup,
+  MaxComputeWorkgroupSizeX,
+  MaxComputeWorkgroupSizeY,
+  MaxComputeWorkgroupSizeZ,
+  MaxComputeWorkgroupsPerDimension,
+  _LAST = MaxComputeWorkgroupsPerDimension,
+};
 
+double GetLimit(const ffi::WGPULimits&, Limit);
+void SetLimit(ffi::WGPULimits*, Limit, double);
+
+class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {
  public:
+  const std::unique_ptr<ffi::WGPULimits> mFfi;
+
   GPU_DECL_CYCLE_COLLECTION(SupportedLimits)
   GPU_DECL_JS_WRAP(SupportedLimits)
 
-  uint32_t MaxTextureDimension1D() const;
-  uint32_t MaxTextureDimension2D() const;
-  uint32_t MaxTextureDimension3D() const;
-  uint32_t MaxTextureArrayLayers() const;
-  uint32_t MaxBindGroups() const;
-  uint32_t MaxDynamicUniformBuffersPerPipelineLayout() const;
-  uint32_t MaxDynamicStorageBuffersPerPipelineLayout() const;
-  uint32_t MaxSampledTexturesPerShaderStage() const;
-  uint32_t MaxSamplersPerShaderStage() const;
-  uint32_t MaxStorageBuffersPerShaderStage() const;
-  uint32_t MaxStorageTexturesPerShaderStage() const;
-  uint32_t MaxUniformBuffersPerShaderStage() const;
-  uint32_t MaxUniformBufferBindingSize() const;
-  uint32_t MaxStorageBufferBindingSize() const;
-  uint32_t MinUniformBufferOffsetAlignment() const;
-  uint32_t MinStorageBufferOffsetAlignment() const;
-  uint32_t MaxVertexBuffers() const;
-  uint32_t MaxVertexAttributes() const;
-  uint32_t MaxVertexBufferArrayStride() const;
-  uint32_t MaxInterStageShaderComponents() const;
-  uint32_t MaxComputeWorkgroupStorageSize() const;
-  uint32_t MaxComputeInvocationsPerWorkgroup() const;
-  uint32_t MaxComputeWorkgroupSizeX() const;
-  uint32_t MaxComputeWorkgroupSizeY() const;
-  uint32_t MaxComputeWorkgroupSizeZ() const;
-  uint32_t MaxComputeWorkgroupsPerDimension() const;
+#define _(X) \
+  auto X() const { return GetLimit(*mFfi, Limit::X); }
 
-  SupportedLimits(Adapter* const aParent, UniquePtr<ffi::WGPULimits>&& aLimits);
+  _(MaxTextureDimension1D)
+  _(MaxTextureDimension2D)
+  _(MaxTextureDimension3D)
+  _(MaxTextureArrayLayers)
+  _(MaxBindGroups)
+  _(MaxBindGroupsPlusVertexBuffers)
+  _(MaxBindingsPerBindGroup)
+  _(MaxDynamicUniformBuffersPerPipelineLayout)
+  _(MaxDynamicStorageBuffersPerPipelineLayout)
+  _(MaxSampledTexturesPerShaderStage)
+  _(MaxSamplersPerShaderStage)
+  _(MaxStorageBuffersPerShaderStage)
+  _(MaxStorageTexturesPerShaderStage)
+  _(MaxUniformBuffersPerShaderStage)
+  _(MaxUniformBufferBindingSize)
+  _(MaxStorageBufferBindingSize)
+  _(MinUniformBufferOffsetAlignment)
+  _(MinStorageBufferOffsetAlignment)
+  _(MaxVertexBuffers)
+  _(MaxBufferSize)
+  _(MaxVertexAttributes)
+  _(MaxVertexBufferArrayStride)
+  _(MaxInterStageShaderComponents)
+  _(MaxInterStageShaderVariables)
+  _(MaxColorAttachments)
+  _(MaxColorAttachmentBytesPerSample)
+  _(MaxComputeWorkgroupStorageSize)
+  _(MaxComputeInvocationsPerWorkgroup)
+  _(MaxComputeWorkgroupSizeX)
+  _(MaxComputeWorkgroupSizeY)
+  _(MaxComputeWorkgroupSizeZ)
+  _(MaxComputeWorkgroupsPerDimension)
+
+#undef _
+
+  SupportedLimits(Adapter* const aParent, const ffi::WGPULimits&);
 
  private:
   ~SupportedLimits();

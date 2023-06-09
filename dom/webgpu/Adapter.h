@@ -11,6 +11,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "ObjectModel.h"
 
@@ -65,15 +66,16 @@ class AdapterInfo final : public dom::NonRefcountedDOMObject {
                   JS::MutableHandle<JSObject*>);
 };
 
+inline auto ToHexCString(const uint64_t v) {
+  return nsPrintfCString("0x%" PRIx64, v);
+}
+
 class Adapter final : public ObjectBase, public ChildOf<Instance> {
  public:
   GPU_DECL_CYCLE_COLLECTION(Adapter)
   GPU_DECL_JS_WRAP(Adapter)
 
   RefPtr<WebGPUChild> mBridge;
-
-  static Maybe<uint32_t> MakeFeatureBits(
-      const dom::Sequence<dom::GPUFeatureName>& aFeatures);
 
  private:
   ~Adapter();
@@ -93,6 +95,14 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   const RefPtr<SupportedFeatures>& Features() const;
   const RefPtr<SupportedLimits>& Limits() const;
   bool IsFallbackAdapter() const;
+
+  nsCString LabelOrId() const {
+    nsCString ret = this->CLabel();
+    if (ret.IsEmpty()) {
+      ret = ToHexCString(mId);
+    }
+    return ret;
+  }
 
   already_AddRefed<dom::Promise> RequestDevice(
       const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);
