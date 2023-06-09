@@ -92,6 +92,7 @@ def taskcluster_url(logger, commits):
         "mozilla-central": "mozilla-central",
         "integration/autoland": "autoland",
         "releases/mozilla-esr102": "mozilla-esr102",
+        "releases/mozilla-esr115": "mozilla-esr115",
     }
     cset_url = (
         "https://hg.mozilla.org/{repo}/json-pushes?"
