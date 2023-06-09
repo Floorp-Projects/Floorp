@@ -171,7 +171,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
         self.delete_session()
 
-        for value in ["", "EAGER", True, 42, {}, [], None]:
+        for value in ["", "EAGER", True, 42, {}, []]:
             print("invalid strategy {}".format(value))
             with self.assertRaisesRegexp(
                 SessionNotCreatedException, "InvalidArgumentError"
@@ -179,20 +179,10 @@ class TestCapabilityMatching(MarionetteTestCase):
                 self.marionette.start_session({"pageLoadStrategy": value})
 
     def test_set_window_rect(self):
-        if self.browser_name == "firefox":
-            self.marionette.start_session({"setWindowRect": True})
-            self.delete_session()
-            with self.assertRaisesRegexp(
-                SessionNotCreatedException, "InvalidArgumentError"
-            ):
-                self.marionette.start_session({"setWindowRect": False})
-        else:
+        with self.assertRaisesRegexp(
+            SessionNotCreatedException, "InvalidArgumentError"
+        ):
             self.marionette.start_session({"setWindowRect": False})
-            self.delete_session()
-            with self.assertRaisesRegexp(
-                SessionNotCreatedException, "InvalidArgumentError"
-            ):
-                self.marionette.start_session({"setWindowRect": True})
 
     def test_timeouts(self):
         for value in ["", 2.5, {}, []]:
@@ -260,7 +250,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
         # Invalid values
         self.delete_session()
-        for behavior in [None, "", "ACCEPT", True, 42, {}, []]:
+        for behavior in ["", "ACCEPT", True, 42, {}, []]:
             print("invalid unhandled prompt behavior {}".format(behavior))
             with self.assertRaisesRegexp(
                 SessionNotCreatedException, "InvalidArgumentError"
