@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.sys.mjs",

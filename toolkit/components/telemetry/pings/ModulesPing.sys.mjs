@@ -9,7 +9,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
 });
 
@@ -43,7 +42,7 @@ export var TelemetryModules = Object.freeze({
     }
 
     // Use nsIUpdateTimerManager for a long-duration timer that survives across sessions.
-    let interval = lazy.Preferences.get(
+    let interval = Services.prefs.getIntPref(
       MODULES_PING_INTERVAL_PREFERENCE,
       MODULES_PING_INTERVAL_SECONDS
     );

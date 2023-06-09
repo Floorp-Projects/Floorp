@@ -20,9 +20,6 @@ const { TelemetryEnvironment } = ChromeUtils.importESModule(
 const { TelemetryReportingPolicy } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryReportingPolicy.sys.mjs"
 );
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 
 const PING_FORMAT_VERSION = 4;
 const PING_TYPE_MAIN = "main";
@@ -545,7 +542,10 @@ add_task(async function sessionTimeExcludingAndIncludingSuspend() {
     // We don't support this new probe on android at the moment.
     return;
   }
-  Preferences.set("toolkit.telemetry.testing.overrideProductsCheck", true);
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
   await TelemetryController.testReset();
   let subsession = TelemetrySession.getPayload("environment-change", true);
   let parentScalars = subsession.processes.parent.scalars;
@@ -595,7 +595,10 @@ add_task(async function sessionTimeExcludingAndIncludingSuspend() {
     );
   }
 
-  Preferences.set("toolkit.telemetry.testing.overrideProductsCheck", false);
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    false
+  );
 });
 
 // Sends a ping to a non existing server. If we remove this test, we won't get
@@ -614,7 +617,7 @@ add_task(async function test_noServerPing() {
 add_task(async function test_simplePing() {
   await TelemetryStorage.testClearPendingPings();
   PingServer.start();
-  Preferences.set(
+  Services.prefs.setStringPref(
     TelemetryUtils.Preferences.Server,
     "http://localhost:" + PingServer.port
   );
@@ -1018,7 +1021,7 @@ add_task(async function test_environmentChange() {
   );
 
   const PREF_TEST = "toolkit.telemetry.test.pref1";
-  Preferences.reset(PREF_TEST);
+  Services.prefs.clearUserPref(PREF_TEST);
 
   const PREFS_TO_WATCH = new Map([
     [PREF_TEST, { what: TelemetryEnvironment.RECORD_PREF_VALUE }],
@@ -1048,7 +1051,7 @@ add_task(async function test_environmentChange() {
   let startHour = TelemetryUtils.truncateToHours(now);
   now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
 
-  Preferences.set(PREF_TEST, 1);
+  Services.prefs.setIntPref(PREF_TEST, 1);
   let ping = await PingServer.promiseNextPing();
   Assert.ok(!!ping);
 
@@ -1068,7 +1071,7 @@ add_task(async function test_environmentChange() {
   );
   now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
 
-  Preferences.set(PREF_TEST, 2);
+  Services.prefs.setIntPref(PREF_TEST, 2);
   ping = await PingServer.promiseNextPing();
   Assert.ok(!!ping);
 
@@ -1245,8 +1248,11 @@ add_task(async function test_sendShutdownPing() {
     );
   };
 
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.ShutdownPingSender,
+    true
+  );
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, false);
   // Make sure the reporting policy picks up the updated pref.
   TelemetryReportingPolicy.testUpdateFirstRun();
   PingServer.clearRequests();
@@ -1266,7 +1272,10 @@ add_task(async function test_sendShutdownPing() {
   PingServer.registerPingHandler(() =>
     Assert.ok(false, "Telemetry must not send pings if not allowed to.")
   );
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FhrUploadEnabled,
+    false
+  );
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
 
@@ -1275,7 +1284,7 @@ add_task(async function test_sendShutdownPing() {
 
   // Enable ping upload and signal an OS shutdown. The pingsender
   // will not be spawned and no ping will be sent.
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
   await TelemetryController.testReset();
   Services.obs.notifyObservers(null, "quit-application-forced");
   await TelemetryController.testShutdown();
@@ -1302,7 +1311,10 @@ add_task(async function test_sendShutdownPing() {
   await TelemetryStorage.testClearPendingPings();
 
   // Disable the "submission policy". The shutdown ping must not be sent.
-  Preferences.set(TelemetryUtils.Preferences.BypassNotification, false);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    false
+  );
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
 
@@ -1311,12 +1323,15 @@ add_task(async function test_sendShutdownPing() {
 
   // We cannot reset the BypassNotification pref, as we need it to be
   // |true| in tests.
-  Preferences.set(TelemetryUtils.Preferences.BypassNotification, true);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.BypassNotification,
+    true
+  );
 
   // With both upload enabled and the policy shown, make sure we don't
   // send the shutdown ping using the pingsender on the first
   // subsession.
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, true);
   // Make sure the reporting policy picks up the updated pref.
   TelemetryReportingPolicy.testUpdateFirstRun();
 
@@ -1330,11 +1345,11 @@ add_task(async function test_sendShutdownPing() {
 
   // Check that we're able to send the shutdown ping using the pingsender
   // from the first session if the related pref is on.
-  Preferences.set(
+  Services.prefs.setBoolPref(
     TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
     true
   );
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, true);
   TelemetryReportingPolicy.testUpdateFirstRun();
 
   // Restart/shutdown telemetry and wait for an incoming ping.
@@ -1348,12 +1363,15 @@ add_task(async function test_sendShutdownPing() {
   Assert.equal(ping.clientId, gClientID);
 
   // Reset the pref and restart Telemetry.
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
-  Preferences.set(
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.ShutdownPingSender,
+    false
+  );
+  Services.prefs.setBoolPref(
     TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
     false
   );
-  Preferences.reset(TelemetryUtils.Preferences.FirstRun);
+  Services.prefs.clearUserPref(TelemetryUtils.Preferences.FirstRun);
   PingServer.resetPingHandler();
 });
 
@@ -1395,7 +1413,7 @@ add_task(async function test_sendFirstShutdownPing() {
 
     // Assert that pings are sent on first run, forcing a forced application
     // quit. This should be equivalent to the first test in this suite.
-    Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+    Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, true);
     TelemetryReportingPolicy.testUpdateFirstRun();
 
     await TelemetryController.testReset();
@@ -1409,7 +1427,7 @@ add_task(async function test_sendFirstShutdownPing() {
     await TelemetryStorage.testClearPendingPings();
 
     // Assert that it's not sent during subsequent runs
-    Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
+    Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, false);
     TelemetryReportingPolicy.testUpdateFirstRun();
 
     await TelemetryController.testReset();
@@ -1423,8 +1441,11 @@ add_task(async function test_sendFirstShutdownPing() {
     await TelemetryStorage.testClearPendingPings();
 
     // Assert that the the ping is only sent if the flag is enabled.
-    Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
-    Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
+    Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, true);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.FirstShutdownPingEnabled,
+      false
+    );
     TelemetryReportingPolicy.testUpdateFirstRun();
 
     await TelemetryController.testReset();
@@ -1438,8 +1459,14 @@ add_task(async function test_sendFirstShutdownPing() {
 
     // Assert that the the ping is not collected when the ping-sender is disabled.
     // The information would be made irrelevant by the main-ping in the second session.
-    Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);
-    Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.FirstShutdownPingEnabled,
+      true
+    );
+    Services.prefs.setBoolPref(
+      TelemetryUtils.Preferences.ShutdownPingSender,
+      false
+    );
     TelemetryReportingPolicy.testUpdateFirstRun();
 
     await TelemetryController.testReset();
@@ -1461,15 +1488,21 @@ add_task(async function test_sendFirstShutdownPing() {
   Telemetry.clearScalars();
 
   // Set testing invariants for FirstShutdownPingEnabled
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
-  Preferences.set(
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.ShutdownPingSender,
+    true
+  );
+  Services.prefs.setBoolPref(
     TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
     false
   );
 
   // Set primary conditions of the 'first-shutdown' ping
-  Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FirstShutdownPingEnabled,
+    true
+  );
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FirstRun, true);
   TelemetryReportingPolicy.testUpdateFirstRun();
 
   // Assert general 'first-shutdown' use-case.
@@ -1486,13 +1519,19 @@ add_task(async function test_sendFirstShutdownPing() {
   await checkShutdownNotSent();
 
   // Reset the pref and restart Telemetry.
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
-  Preferences.set(
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.ShutdownPingSender,
+    false
+  );
+  Services.prefs.setBoolPref(
     TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
     false
   );
-  Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
-  Preferences.reset(TelemetryUtils.Preferences.FirstRun);
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.FirstShutdownPingEnabled,
+    false
+  );
+  Services.prefs.clearUserPref(TelemetryUtils.Preferences.FirstRun);
   PingServer.resetPingHandler();
 });
 
@@ -1514,7 +1553,7 @@ add_task(async function test_savedSessionData() {
   await IOUtils.writeJSON(dataFilePath, sessionState);
 
   const PREF_TEST = "toolkit.telemetry.test.pref1";
-  Preferences.reset(PREF_TEST);
+  Services.prefs.clearUserPref(PREF_TEST);
   const PREFS_TO_WATCH = new Map([
     [PREF_TEST, { what: TelemetryEnvironment.RECORD_PREF_VALUE }],
   ]);
@@ -1550,7 +1589,7 @@ add_task(async function test_savedSessionData() {
   let changePromise = new Promise(resolve =>
     TelemetryEnvironment.registerChangeListener("test_fake_change", resolve)
   );
-  Preferences.set(PREF_TEST, 1);
+  Services.prefs.setIntPref(PREF_TEST, 1);
   await changePromise;
   TelemetryEnvironment.unregisterChangeListener("test_fake_change");
 
@@ -1962,7 +2001,7 @@ add_task(async function test_schedulerEnvironmentReschedules() {
 
   // Reset the test preference.
   const PREF_TEST = "toolkit.telemetry.test.pref1";
-  Preferences.reset(PREF_TEST);
+  Services.prefs.clearUserPref(PREF_TEST);
   const PREFS_TO_WATCH = new Map([
     [PREF_TEST, { what: TelemetryEnvironment.RECORD_PREF_VALUE }],
   ]);
@@ -1994,7 +2033,7 @@ add_task(async function test_schedulerEnvironmentReschedules() {
   );
 
   // Trigger the environment change.
-  Preferences.set(PREF_TEST, 1);
+  Services.prefs.setIntPref(PREF_TEST, 1);
 
   // Wait for the environment-changed ping.
   let ping = await PingServer.promiseNextPing();

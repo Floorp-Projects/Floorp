@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
@@ -59,7 +58,10 @@ export var TelemetryArchive = {
  * @return {Boolean} True if pings should be archived, false otherwise.
  */
 function shouldArchivePings() {
-  return Preferences.get(TelemetryUtils.Preferences.ArchiveEnabled, false);
+  return Services.prefs.getBoolPref(
+    TelemetryUtils.Preferences.ArchiveEnabled,
+    false
+  );
 }
 
 var TelemetryArchiveImpl = {
