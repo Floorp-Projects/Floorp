@@ -833,6 +833,12 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
       return Err("SendPWebGLConstructor failed");
     }
 
+    // Clear RemoteTextureOwnerId. HostWebGLContext is going to be replaced in
+    // WebGLParent.
+    if (mRemoteTextureOwnerId.isSome()) {
+      mRemoteTextureOwnerId = Nothing();
+    }
+
     if (!outOfProcess->SendInitialize(initDesc, &notLost.info)) {
       return Err("WebGL actor Initialize failed");
     }
