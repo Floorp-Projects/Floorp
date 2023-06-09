@@ -431,26 +431,40 @@ xul|tab:focus-visible > .tab-middle > .tab-text {
 }
 
 html|select:not([size], [multiple]) {
+  /* The following padding matches how a menulist is internally spaced.
+   * 15px is the menulist's standard padding-inline, 3px is for
+   * the internal label margin, 12px is the dropmarker's width
+   * and 4px is the dropmarker's margin-inline-end.
+   *
+   * [------|---|---label---|dropmarker|----|------]
+   *   15px  3px                12px    4px   15px
+   * start-padding          background- end-padding
+   *                        image-width
+   *
+   * Users of this element can change the variable --logical-padding. Other
+   * variables should adjust automatically.
+   */
+  --logical-padding: 15px;
+  --start-padding: calc(var(--logical-padding) + 3px);
+  --end-padding: calc(var(--logical-padding) + 4px);
+  --background-image-width: 12px;
   background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  background-position: right 19px center;
+  background-position: right var(--end-padding) center;
   background-repeat: no-repeat;
-  background-size: auto 12px;
+  background-size: auto var(--background-image-width);
   -moz-context-properties: fill;
   fill: currentColor;
   font: inherit;
   font-weight: 600;
 
-  /* The following padding matches how a menulist is internally spaced.
-   * 15px is the menulist's standard padding-inline, 3px is for
-   * the internal label margin, 12px is the dropmarker's width
-   * and 4px is the dropmarker's margin-inline-end. */
-  padding-inline-start: calc(15px + 3px);
-  padding-inline-end: calc(15px + 12px + 4px);
+  /* See above for some explanation about these values. */
+  padding-inline-start: var(--start-padding);
+  padding-inline-end: calc(var(--background-image-width) + var(--end-padding));
   text-overflow: ellipsis;
 }
 
 html|select:not([size], [multiple]):dir(rtl) {
-  background-position-x: left 19px;
+  background-position-x: left var(--end-padding);
 }
 
 html|select:not([size], [multiple]) > html|option {
