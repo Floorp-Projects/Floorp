@@ -328,16 +328,6 @@ var gIdentityHandler = {
     );
     return this._insecureConnectionTextPBModeEnabled;
   },
-  get _protectionsPanelEnabled() {
-    delete this._protectionsPanelEnabled;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_protectionsPanelEnabled",
-      "browser.protections_panel.enabled",
-      false
-    );
-    return this._protectionsPanelEnabled;
-  },
   get _httpsOnlyModeEnabled() {
     delete this._httpsOnlyModeEnabled;
     XPCOMUtils.defineLazyPreferenceGetter(
