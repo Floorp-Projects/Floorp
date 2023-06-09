@@ -1336,6 +1336,9 @@ interface nsILoadInfo : nsISupports
    */
   attribute AString cspNonce;
 
+  // Subresource Integrity (SRI) metadata.
+  attribute AString integrityMetadata;
+
   /**
    * List of possible reasons the request associated with this load info
    * may have been blocked, set by various content blocking checkers.

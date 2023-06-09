@@ -540,6 +540,16 @@ TRRLoadInfo::SetCspNonce(const nsAString& aCspNonce) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetIntegrityMetadata(nsAString& aIntegrityMetadata) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetIntegrityMetadata(const nsAString& aIntegrityMetadata) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetSkipContentSniffing(bool* aSkipContentSniffing) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
