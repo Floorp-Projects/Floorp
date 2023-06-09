@@ -12526,12 +12526,6 @@
   value: false
   mirror: always
 
-# When a Http/3 connection failed, whether to retry with a different IP address.
-- name: network.http.http3.retry_different_ip_family
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
