@@ -374,6 +374,40 @@ frecency:
         last N days, where N is controlled by this variable.
       type: int
       setPref: "places.frecency.origins.alternative.daysCutOff"
+    pagesAlternativeEnable:
+      description: >-
+        Use an alternative ranking algorithm for sorting history and bookmarks
+        among the urlbar results.
+      type: boolean
+      setPref: "places.frecency.pages.alternative.featureGate"
+    pagesNumSampledVisits:
+      description: >-
+        The number of recent visits to sample when calculating the ranking of
+        a page. Examining all the visits would be expensive, so we only sample
+        recent visits.
+      type: int
+      setPref: "places.frecency.pages.alternative.numSampledVisits"
+    pagesHalfLifeDays:
+      description: >-
+        The number of days after which the ranking halves. This implements the
+        "recency" part of the algorithm.
+      type: int
+      setPref: "places.frecency.pages.alternative.halfLifeDays"
+    pagesHighWeight:
+      description: >-
+        The weight to use for the high importance bucket.
+      type: int
+      setPref: "places.frecency.pages.alternative.highWeight"
+    pagesMediumWeight:
+      description: >-
+        The weight to use for the medium importance bucket.
+      type: int
+      setPref: "places.frecency.pages.alternative.mediumWeight"
+    pagesLowWeight:
+      description: >-
+        The weight to use for the low importance bucket.
+      type: int
+      setPref: "places.frecency.pages.alternative.lowWeight"
 
 aboutwelcome:
   description: "The about:welcome page"
