@@ -78,7 +78,7 @@ struct ProbeControllerConfig {
   // Dont send a probe if min(estimate, network state estimate) is larger than
   // this fraction of the set max bitrate.
   FieldTrialParameter<double> skip_if_estimate_larger_than_fraction_of_max;
-  // Do not send probes if network is either overusing or underusing.
+  // Do not send probes if either overusing/underusing network or high rtt.
   FieldTrialParameter<bool> not_probe_if_delay_increased;
 };
 
@@ -90,6 +90,7 @@ enum class BandwidthLimitedCause {
   kLossLimitedBweDecreasing = 1,
   kDelayBasedLimited = 2,
   kDelayBasedLimitedDelayIncreased = 3,
+  kRttBasedBackOffHighRtt = 4
 };
 
 // This class controls initiation of probing to estimate initial channel

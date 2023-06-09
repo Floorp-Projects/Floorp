@@ -36,7 +36,9 @@ class NetEqEventLogInput final : public NetEqPacketSourceInput {
       absl::optional<uint32_t> ssrc_filter);
 
   absl::optional<int64_t> NextOutputEventTime() const override;
+  absl::optional<SetMinimumDelayInfo> NextSetMinimumDelayInfo() const override;
   void AdvanceOutputEvent() override;
+  void AdvanceSetMinimumDelay() override;
 
  protected:
   PacketSource* source() override;
@@ -44,6 +46,7 @@ class NetEqEventLogInput final : public NetEqPacketSourceInput {
  private:
   NetEqEventLogInput(std::unique_ptr<RtcEventLogSource> source);
   std::unique_ptr<RtcEventLogSource> source_;
+  absl::optional<SetMinimumDelayInfo> next_minimum_delay_event_info_;
 };
 
 }  // namespace test

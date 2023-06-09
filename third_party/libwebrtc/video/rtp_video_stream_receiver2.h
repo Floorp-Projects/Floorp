@@ -36,6 +36,7 @@
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
+#include "modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer.h"
 #include "modules/video_coding/h264_sps_pps_tracker.h"
 #include "modules/video_coding/loss_notification_controller.h"
@@ -47,7 +48,6 @@
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "video/buffered_frame_decryptor.h"
-#include "video/rtp_video_stream_receiver_frame_transformer_delegate.h"
 #include "video/unique_timestamp_counter.h"
 
 namespace webrtc {
@@ -175,11 +175,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // has previously been set. Does not reset the decoder state.
   void SetDepacketizerToDecoderFrameTransformer(
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
-
-  // Updates the rtp header extensions at runtime. Must be called on the
-  // `packet_sequence_checker_` thread.
-  void SetRtpExtensions(const std::vector<RtpExtension>& extensions);
-  const RtpHeaderExtensionMap& GetRtpExtensions() const;
 
   // Called by VideoReceiveStreamInterface when stats are updated.
   void UpdateRtt(int64_t max_rtt_ms);
@@ -331,8 +326,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
 
   RemoteNtpTimeEstimator ntp_estimator_;
 
-  RtpHeaderExtensionMap rtp_header_extensions_
-      RTC_GUARDED_BY(packet_sequence_checker_);
   // Set by the field trial WebRTC-ForcePlayoutDelay to override any playout
   // delay that is specified in the received packets.
   FieldTrialOptional<int> forced_playout_delay_max_ms_;

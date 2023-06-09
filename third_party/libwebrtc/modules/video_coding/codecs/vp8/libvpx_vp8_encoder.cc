@@ -609,6 +609,12 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
   // TODO(fbarchard): Consider number of Simulcast layers.
   vpx_configs_[0].g_threads = NumberOfThreads(
       vpx_configs_[0].g_w, vpx_configs_[0].g_h, settings.number_of_cores);
+  if (settings.encoder_thread_limit.has_value()) {
+    RTC_DCHECK_GE(settings.encoder_thread_limit.value(), 1);
+    vpx_configs_[0].g_threads = std::min(
+        vpx_configs_[0].g_threads,
+        static_cast<unsigned int>(settings.encoder_thread_limit.value()));
+  }
 
   // Creating a wrapper to the image - setting image data to NULL.
   // Actual pointer will be set in encode. Setting align to 1, as it
@@ -1163,7 +1169,7 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
         }
         encoded_images_[encoder_idx].SetEncodedData(buffer);
         encoded_images_[encoder_idx].set_size(encoded_pos);
-        encoded_images_[encoder_idx].SetSpatialIndex(stream_idx);
+        encoded_images_[encoder_idx].SetSimulcastIndex(stream_idx);
         PopulateCodecSpecific(&codec_specific, *pkt, stream_idx, encoder_idx,
                               input_image.timestamp());
         if (codec_specific.codecSpecific.VP8.temporalIdx != kNoTemporalIdx) {
@@ -1174,6 +1180,8 @@ int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
       }
     }
     encoded_images_[encoder_idx].SetTimestamp(input_image.timestamp());
+    encoded_images_[encoder_idx].SetCaptureTimeIdentifier(
+        input_image.capture_time_identifier());
     encoded_images_[encoder_idx].SetColorSpace(input_image.color_space());
     encoded_images_[encoder_idx].SetRetransmissionAllowed(
         retransmission_allowed);

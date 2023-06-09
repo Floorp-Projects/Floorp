@@ -151,6 +151,10 @@ void ScreenCapturerWinDirectx::CaptureFrame() {
                          "error code "
                       << DxgiDuplicatorController::ResultName(result);
   }
+  RTC_HISTOGRAM_ENUMERATION(
+      "WebRTC.DesktopCapture.Win.DirectXCapturerResult",
+      static_cast<int>(result),
+      static_cast<int>(DxgiDuplicatorController::Result::MAX_VALUE));
   switch (result) {
     case DuplicateResult::UNSUPPORTED_SESSION: {
       RTC_LOG(LS_ERROR)

@@ -56,7 +56,7 @@ constexpr int kMaxQindex = 205;  // Max qindex threshold for QP scaling.
 constexpr int kBitDepth = 8;
 constexpr int kLagInFrames = 0;  // No look ahead.
 constexpr int kRtpTicksPerSecond = 90000;
-constexpr float kMinimumFrameRate = 1.0;
+constexpr double kMinimumFrameRate = 1.0;
 
 aom_superblock_size_t GetSuperblockSize(int width, int height, int threads) {
   int resolution = width * height;
@@ -678,6 +678,7 @@ int32_t LibaomAv1Encoder::Encode(
                                        ? VideoFrameType::kVideoFrameKey
                                        : VideoFrameType::kVideoFrameDelta;
         encoded_image.SetTimestamp(frame.timestamp());
+        encoded_image.SetCaptureTimeIdentifier(frame.capture_time_identifier());
         encoded_image.capture_time_ms_ = frame.render_time_ms();
         encoded_image.rotation_ = frame.rotation();
         encoded_image.content_type_ = VideoContentType::UNSPECIFIED;
@@ -803,8 +804,8 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
     for (int sid = 0; sid < svc_params_->number_spatial_layers; ++sid) {
       info.fps_allocation[sid].resize(svc_params_->number_temporal_layers);
       for (int tid = 0; tid < svc_params_->number_temporal_layers; ++tid) {
-        info.fps_allocation[sid][tid] =
-            encoder_settings_.maxFramerate / svc_params_->framerate_factor[tid];
+        info.fps_allocation[sid][tid] = EncoderInfo::kMaxFramerateFraction /
+                                        svc_params_->framerate_factor[tid];
       }
     }
   }

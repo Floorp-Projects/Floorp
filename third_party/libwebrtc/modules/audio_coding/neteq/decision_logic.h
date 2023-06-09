@@ -80,8 +80,6 @@ class DecisionLogic : public NetEqController {
 
   void RegisterEmptyPacket() override {}
 
-  void NotifyMutedState() override;
-
   bool SetMaximumDelay(int delay_ms) override {
     return delay_manager_->SetMaximumDelay(delay_ms);
   }
@@ -145,19 +143,15 @@ class DecisionLogic : public NetEqController {
   // Checks if the current (filtered) buffer level is under the target level.
   bool UnderTargetLevel() const;
 
-  // Checks if `timestamp_leap` is so long into the future that a reset due
-  // to exceeding kReinitAfterExpands will be done.
-  bool ReinitAfterExpands(uint32_t timestamp_leap) const;
+  // Checks if the timestamp leap is so long into the future that a reset due
+  // to exceeding `reinit_after_expand_ms` will be done.
+  bool ReinitAfterExpands(NetEqController::NetEqStatus status) const;
 
   // Checks if we still have not done enough expands to cover the distance from
-  // the last decoded packet to the next available packet, the distance beeing
-  // conveyed in `timestamp_leap`.
-  bool PacketTooEarly(uint32_t timestamp_leap) const;
-
-  bool MaxWaitForPacket() const;
-
+  // the last decoded packet to the next available packet.
+  bool PacketTooEarly(NetEqController::NetEqStatus status) const;
+  bool MaxWaitForPacket(NetEqController::NetEqStatus status) const;
   bool ShouldContinueExpand(NetEqController::NetEqStatus status) const;
-
   int GetNextPacketDelayMs(NetEqController::NetEqStatus status) const;
   int GetPlayoutDelayMs(NetEqController::NetEqStatus status) const;
 
@@ -172,7 +166,7 @@ class DecisionLogic : public NetEqController {
     Config();
 
     bool enable_stable_playout_delay = false;
-    int reinit_after_expands = 100;
+    int reinit_after_expand_ms = 1000;
     int deceleration_target_level_offset_ms = 85;
     int packet_history_size_ms = 2000;
     absl::optional<int> cng_timeout_ms;
@@ -192,7 +186,6 @@ class DecisionLogic : public NetEqController {
   bool prev_time_scale_ = false;
   bool disallow_time_stretching_;
   std::unique_ptr<TickTimer::Countdown> timescale_countdown_;
-  int num_consecutive_expands_ = 0;
   int time_stretched_cn_samples_ = 0;
   bool buffer_flush_ = false;
   int last_playout_delay_ms_ = 0;

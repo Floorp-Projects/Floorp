@@ -27,7 +27,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7
  create mode 100644 api/rtp_sender_setparameters_callback.h
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 3f313e2743..56afc5efce 100644
+index 654359ed37..31213c6460 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {
@@ -204,7 +204,7 @@ index daca67e033..80662563b0 100644
      "../api:sequence_checker",
      "../api:transport_api",
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 43e09290bd..138d28ae4c 100644
+index 571d661d45..014b3d4079 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -64,10 +64,6 @@ class Timing;
@@ -219,7 +219,7 @@ index 43e09290bd..138d28ae4c 100644
  
  namespace cricket {
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index a72b97413d..0e72f47d6d 100644
+index ca2a117fd1..f323503d59 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
 @@ -31,19 +31,6 @@
@@ -243,7 +243,7 @@ index a72b97413d..0e72f47d6d 100644
  using webrtc::FrameDecryptorInterface;
  using webrtc::FrameEncryptorInterface;
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index e21e1c7ea8..2c0a411e35 100644
+index 0a697f2488..adbe375076 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -255,7 +255,7 @@ index e21e1c7ea8..2c0a411e35 100644
      "../api:scoped_refptr",
      "../api/adaptation:resource_adaptation_api",
      "../api/units:data_rate",
-@@ -410,7 +410,7 @@ rtc_library("video_stream_encoder_impl") {
+@@ -375,7 +375,7 @@ rtc_library("video_stream_encoder_impl") {
      ":video_stream_encoder_interface",
      "../api:field_trials_view",
      "../api:rtp_parameters",

@@ -241,12 +241,7 @@ class QualityTestVideoEncoder : public VideoEncoder,
   Result OnEncodedImage(const EncodedImage& encoded_image,
                         const CodecSpecificInfo* codec_specific_info) override {
     if (codec_specific_info) {
-      int simulcast_index;
-      if (codec_specific_info->codecType == kVideoCodecVP9) {
-        simulcast_index = 0;
-      } else {
-        simulcast_index = encoded_image.SpatialIndex().value_or(0);
-      }
+      int simulcast_index = encoded_image.SimulcastIndex().value_or(0);
       RTC_DCHECK_GE(simulcast_index, 0);
       if (analyzer_) {
         analyzer_->PostEncodeOnFrame(simulcast_index,
@@ -934,14 +929,6 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
     }
 
     CreateMatchingFecConfig(recv_transport, *GetVideoSendConfig());
-    if (params_.call.send_side_bwe) {
-      GetFlexFecConfig()->rtp.extensions.push_back(
-          RtpExtension(RtpExtension::kTransportSequenceNumberUri,
-                       kTransportSequenceNumberExtensionId));
-    } else {
-      GetFlexFecConfig()->rtp.extensions.push_back(
-          RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
-    }
   }
 
   if (params_.video[0].ulpfec) {

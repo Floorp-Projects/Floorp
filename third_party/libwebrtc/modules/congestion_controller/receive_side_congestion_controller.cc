@@ -10,6 +10,7 @@
 
 #include "modules/congestion_controller/include/receive_side_congestion_controller.h"
 
+#include "api/media_types.h"
 #include "api/units/data_rate.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
@@ -90,6 +91,31 @@ ReceiveSideCongestionController::ReceiveSideCongestionController(
       packets_since_absolute_send_time_(0) {}
 
 void ReceiveSideCongestionController::OnReceivedPacket(
+    const RtpPacketReceived& packet,
+    MediaType media_type) {
+  bool has_transport_sequence_number =
+      packet.HasExtension<TransportSequenceNumber>() ||
+      packet.HasExtension<TransportSequenceNumberV2>();
+  if (media_type == MediaType::AUDIO && !has_transport_sequence_number) {
+    // For audio, we only support send side BWE.
+    return;
+  }
+
+  if (has_transport_sequence_number) {
+    // Send-side BWE.
+    remote_estimator_proxy_.IncomingPacket(packet);
+  } else {
+    // Receive-side BWE.
+    MutexLock lock(&mutex_);
+    RTPHeader header;
+    packet.GetHeader(&header);
+    PickEstimatorFromHeader(header);
+    rbe_->IncomingPacket(packet.arrival_time().ms(),
+                         packet.payload_size() + packet.padding_size(), header);
+  }
+}
+
+void ReceiveSideCongestionController::OnReceivedPacket(
     int64_t arrival_time_ms,
     size_t payload_size,
     const RTPHeader& header) {
@@ -100,11 +126,6 @@ void ReceiveSideCongestionController::OnReceivedPacket(
     PickEstimatorFromHeader(header);
     rbe_->IncomingPacket(arrival_time_ms, payload_size, header);
   }
-}
-
-void ReceiveSideCongestionController::SetSendPeriodicFeedback(
-    bool send_periodic_feedback) {
-  remote_estimator_proxy_.SetSendPeriodicFeedback(send_periodic_feedback);
 }
 
 void ReceiveSideCongestionController::OnBitrateChanged(int bitrate_bps) {

@@ -431,11 +431,7 @@ static const int kTestTemporalLayerProfile[3] = {3, 2, 1};
 class TestSimulcastEncoderAdapterFake : public ::testing::Test,
                                         public EncodedImageCallback {
  public:
-  TestSimulcastEncoderAdapterFake()
-      : last_encoded_image_width_(-1),
-        last_encoded_image_height_(-1),
-        last_encoded_image_simulcast_index_(-1),
-        use_fallback_factory_(false) {}
+  TestSimulcastEncoderAdapterFake() : use_fallback_factory_(false) {}
 
   virtual ~TestSimulcastEncoderAdapterFake() {
     if (adapter_) {
@@ -447,9 +443,9 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
     helper_.reset(new TestSimulcastEncoderAdapterFakeHelper(
         use_fallback_factory_, SdpVideoFormat("VP8", sdp_video_parameters_)));
     adapter_.reset(helper_->CreateMockEncoderAdapter());
-    last_encoded_image_width_ = -1;
-    last_encoded_image_height_ = -1;
-    last_encoded_image_simulcast_index_ = -1;
+    last_encoded_image_width_ = absl::nullopt;
+    last_encoded_image_height_ = absl::nullopt;
+    last_encoded_image_simulcast_index_ = absl::nullopt;
   }
 
   void ReSetUp() {
@@ -466,16 +462,15 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
                         const CodecSpecificInfo* codec_specific_info) override {
     last_encoded_image_width_ = encoded_image._encodedWidth;
     last_encoded_image_height_ = encoded_image._encodedHeight;
-    last_encoded_image_simulcast_index_ =
-        encoded_image.SpatialIndex().value_or(-1);
+    last_encoded_image_simulcast_index_ = encoded_image.SimulcastIndex();
 
     return Result(Result::OK, encoded_image.Timestamp());
   }
 
-  bool GetLastEncodedImageInfo(int* out_width,
-                               int* out_height,
-                               int* out_simulcast_index) {
-    if (last_encoded_image_width_ == -1) {
+  bool GetLastEncodedImageInfo(absl::optional<int>* out_width,
+                               absl::optional<int>* out_height,
+                               absl::optional<int>* out_simulcast_index) {
+    if (!last_encoded_image_width_.has_value()) {
       return false;
     }
     *out_width = last_encoded_image_width_;
@@ -580,9 +575,9 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
   std::unique_ptr<TestSimulcastEncoderAdapterFakeHelper> helper_;
   std::unique_ptr<VideoEncoder> adapter_;
   VideoCodec codec_;
-  int last_encoded_image_width_;
-  int last_encoded_image_height_;
-  int last_encoded_image_simulcast_index_;
+  absl::optional<int> last_encoded_image_width_;
+  absl::optional<int> last_encoded_image_height_;
+  absl::optional<int> last_encoded_image_simulcast_index_;
   std::unique_ptr<SimulcastRateAllocator> rate_allocator_;
   bool use_fallback_factory_;
   SdpVideoFormat::Parameters sdp_video_parameters_;
@@ -620,26 +615,34 @@ TEST_F(TestSimulcastEncoderAdapterFake, EncodedCallbackForDifferentEncoders) {
   std::vector<MockVideoEncoder*> encoders = helper_->factory()->encoders();
   ASSERT_EQ(3u, encoders.size());
   encoders[0]->SendEncodedImage(1152, 704);
-  int width;
-  int height;
-  int simulcast_index;
+  absl::optional<int> width;
+  absl::optional<int> height;
+  absl::optional<int> simulcast_index;
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(1152, width);
-  EXPECT_EQ(704, height);
+  ASSERT_TRUE(width.has_value());
+  EXPECT_EQ(1152, width.value());
+  ASSERT_TRUE(height.has_value());
+  EXPECT_EQ(704, height.value());
   // SEA doesn't intercept frame encode complete callback for the lowest stream.
-  EXPECT_EQ(-1, simulcast_index);
+  EXPECT_FALSE(simulcast_index.has_value());
 
   encoders[1]->SendEncodedImage(300, 620);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(300, width);
-  EXPECT_EQ(620, height);
-  EXPECT_EQ(1, simulcast_index);
+  ASSERT_TRUE(width.has_value());
+  EXPECT_EQ(300, width.value());
+  ASSERT_TRUE(height.has_value());
+  EXPECT_EQ(620, height.value());
+  ASSERT_TRUE(simulcast_index.has_value());
+  EXPECT_EQ(1, simulcast_index.value());
 
   encoders[2]->SendEncodedImage(120, 240);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(120, width);
-  EXPECT_EQ(240, height);
-  EXPECT_EQ(2, simulcast_index);
+  ASSERT_TRUE(width.has_value());
+  EXPECT_EQ(120, width.value());
+  ASSERT_TRUE(height.has_value());
+  EXPECT_EQ(240, height.value());
+  ASSERT_TRUE(simulcast_index.has_value());
+  EXPECT_EQ(2, simulcast_index.value());
 }
 
 // This test verifies that the underlying encoders are reused, when the adapter
@@ -839,20 +842,22 @@ TEST_F(TestSimulcastEncoderAdapterFake, ReinitDoesNotReorderFrameSimulcastIdx) {
   std::vector<MockVideoEncoder*> encoders = helper_->factory()->encoders();
   ASSERT_EQ(3u, encoders.size());
   encoders[0]->SendEncodedImage(1152, 704);
-  int width;
-  int height;
-  int simulcast_index;
+  absl::optional<int> width;
+  absl::optional<int> height;
+  absl::optional<int> simulcast_index;
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
   // SEA doesn't intercept frame encode complete callback for the lowest stream.
-  EXPECT_EQ(-1, simulcast_index);
+  EXPECT_FALSE(simulcast_index.has_value());
 
   encoders[1]->SendEncodedImage(300, 620);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(1, simulcast_index);
+  ASSERT_TRUE(simulcast_index.has_value());
+  EXPECT_EQ(1, simulcast_index.value());
 
   encoders[2]->SendEncodedImage(120, 240);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(2, simulcast_index);
+  ASSERT_TRUE(simulcast_index.has_value());
+  EXPECT_EQ(2, simulcast_index.value());
 
   // Reinitialize.
   EXPECT_EQ(0, adapter_->Release());
@@ -864,15 +869,17 @@ TEST_F(TestSimulcastEncoderAdapterFake, ReinitDoesNotReorderFrameSimulcastIdx) {
   // Verify that the same encoder sends out frames on the same simulcast index.
   encoders[0]->SendEncodedImage(1152, 704);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(-1, simulcast_index);
+  EXPECT_FALSE(simulcast_index.has_value());
 
   encoders[1]->SendEncodedImage(300, 620);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(1, simulcast_index);
+  ASSERT_TRUE(simulcast_index.has_value());
+  EXPECT_EQ(1, simulcast_index.value());
 
   encoders[2]->SendEncodedImage(120, 240);
   EXPECT_TRUE(GetLastEncodedImageInfo(&width, &height, &simulcast_index));
-  EXPECT_EQ(2, simulcast_index);
+  ASSERT_TRUE(simulcast_index.has_value());
+  EXPECT_EQ(2, simulcast_index.value());
 }
 
 TEST_F(TestSimulcastEncoderAdapterFake, SupportsNativeHandleForSingleStreams) {

@@ -11,6 +11,7 @@
 #ifndef MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 #define MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>
@@ -73,6 +74,7 @@ class WebRtcVideoEngine : public VideoEngineInterface {
   ~WebRtcVideoEngine() override;
 
   VideoMediaChannel* CreateMediaChannel(
+      MediaChannel::Role role,
       webrtc::Call* call,
       const MediaConfig& config,
       const VideoOptions& options,
@@ -104,6 +106,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
                            public webrtc::EncoderSwitchRequestCallback {
  public:
   WebRtcVideoChannel(
+      MediaChannel::Role role,
       webrtc::Call* call,
       const MediaConfig& config,
       const VideoOptions& options,
@@ -136,6 +139,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
   absl::optional<uint32_t> GetUnsignaledSsrc() const override;
+  bool SetLocalSsrc(const StreamParams& sp) override;
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
   bool SetSink(uint32_t ssrc,
@@ -226,6 +230,39 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override;
+
+  // Information queries to support SetReceiverFeedbackParameters
+  webrtc::RtcpMode SendCodecRtcpMode() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    return send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
+                                          : webrtc::RtcpMode::kCompound;
+  }
+
+  bool SendCodecHasLntf() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return false;
+    }
+    return HasLntf(send_codec_->codec);
+  }
+  bool SendCodecHasNack() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return false;
+    }
+    return HasNack(send_codec_->codec);
+  }
+  absl::optional<int> SendCodecRtxTime() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return absl::nullopt;
+    }
+    return send_codec_->rtx_time;
+  }
+  void SetReceiverFeedbackParameters(bool lntf_enabled,
+                                     bool nack_enabled,
+                                     webrtc::RtcpMode rtcp_mode,
+                                     absl::optional<int> rtx_time) override;
 
  private:
   class WebRtcVideoReceiveStream;
@@ -458,7 +495,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     std::vector<webrtc::RtpSource> GetSources();
 
-    // Does not return codecs, they are filled by the owning WebRtcVideoChannel.
+    // Does not return codecs, nor header extensions,  they are filled by the
+    // owning WebRtcVideoChannel.
     webrtc::RtpParameters GetRtpParameters() const;
 
     // TODO(deadbeef): Move these feedback parameters into the recv parameters.
@@ -492,6 +530,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
             frame_transformer);
 
     void SetLocalSsrc(uint32_t local_ssrc);
+    void UpdateRtxSsrc(uint32_t ssrc);
 
    private:
     // Attempts to reconfigure an already existing `flexfec_stream_`, create

@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "absl/types/variant.h"
-#include "modules/video_coding/frame_object.h"
+#include "modules/rtp_rtcp/source/frame_object.h"
 #include "modules/video_coding/rtp_frame_id_only_ref_finder.h"
 #include "modules/video_coding/rtp_generic_ref_finder.h"
 #include "modules/video_coding/rtp_seq_num_only_ref_finder.h"

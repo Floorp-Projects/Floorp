@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4a969f6709183d4f5
  2 files changed, 20 insertions(+), 10 deletions(-)
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 56afc5efce..7c16b45e05 100644
+index 31213c6460..0ddeead669 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -175,6 +175,10 @@ rtc_source_set("ice_transport_interface") {

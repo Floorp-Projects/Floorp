@@ -736,13 +736,10 @@ void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
     return;
   }
 
-  AssertBlockingIsAllowedOnCurrentThread();
-
-  Thread* current_thread = Thread::Current();
-
 #if RTC_DCHECK_IS_ON
-  if (current_thread) {
+  if (Thread* current_thread = Thread::Current()) {
     RTC_DCHECK_RUN_ON(current_thread);
+    RTC_DCHECK(current_thread->blocking_calls_allowed_);
     current_thread->blocking_call_count_++;
     RTC_DCHECK(current_thread->IsInvokeToThreadAllowed(this));
     ThreadManager::Instance()->RegisterSendAndCheckForCycles(current_thread,
@@ -750,54 +747,10 @@ void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
   }
 #endif
 
-  // Perhaps down the line we can get rid of this workaround and always require
-  // current_thread to be valid when BlockingCall() is called.
-  std::unique_ptr<rtc::Event> done_event;
-  if (!current_thread)
-    done_event.reset(new rtc::Event());
-
-  bool ready = false;
-  absl::Cleanup cleanup = [this, &ready, current_thread,
-                           done = done_event.get()] {
-    if (current_thread) {
-      {
-        MutexLock lock(&mutex_);
-        ready = true;
-      }
-      current_thread->socketserver()->WakeUp();
-    } else {
-      done->Set();
-    }
-  };
+  Event done;
+  absl::Cleanup cleanup = [&done] { done.Set(); };
   PostTask([functor, cleanup = std::move(cleanup)] { functor(); });
-  if (current_thread) {
-    bool waited = false;
-    mutex_.Lock();
-    while (!ready) {
-      mutex_.Unlock();
-      current_thread->socketserver()->Wait(SocketServer::kForever, false);
-      waited = true;
-      mutex_.Lock();
-    }
-    mutex_.Unlock();
-
-    // Our Wait loop above may have consumed some WakeUp events for this
-    // Thread, that weren't relevant to this Send.  Losing these WakeUps can
-    // cause problems for some SocketServers.
-    //
-    // Concrete example:
-    // Win32SocketServer on thread A calls Send on thread B.  While processing
-    // the message, thread B Posts a message to A.  We consume the wakeup for
-    // that Post while waiting for the Send to complete, which means that when
-    // we exit this loop, we need to issue another WakeUp, or else the Posted
-    // message won't be processed in a timely manner.
-
-    if (waited) {
-      current_thread->socketserver()->WakeUp();
-    }
-  } else {
-    done_event->Wait(rtc::Event::kForever);
-  }
+  done.Wait(Event::kForever);
 }
 
 // Called by the ThreadManager when being set as the current thread.

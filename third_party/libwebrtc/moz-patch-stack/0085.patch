@@ -67,10 +67,10 @@ index 7df6becb4e..1af19a1fd2 100644
  // static
  std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 951c4a9b10..12ef57ba26 100644
+index f4e2861025..64f3187f51 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -170,11 +170,9 @@ class RTC_EXPORT DesktopCapturer {
+@@ -179,11 +179,9 @@ class RTC_EXPORT DesktopCapturer {
    // The return value if `pos` is out of the scope of the source is undefined.
    virtual bool IsOccluded(const DesktopVector& pos);
  
@@ -82,7 +82,7 @@ index 951c4a9b10..12ef57ba26 100644
  
    // Creates a DesktopCapturer instance which targets to capture windows.
    static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
-@@ -204,12 +202,10 @@ class RTC_EXPORT DesktopCapturer {
+@@ -213,12 +211,10 @@ class RTC_EXPORT DesktopCapturer {
    // CroppingWindowCapturer needs to create raw capturers without wrappers, so
    // the following two functions are protected.
  

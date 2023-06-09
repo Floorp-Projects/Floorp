@@ -463,6 +463,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   bool switch_encoder_on_init_failures_;
 
   const absl::optional<int> vp9_low_tier_core_threshold_;
+  const absl::optional<int> experimental_encoder_thread_limit_;
 
   // These are copies of restrictions (glorified max_pixel_count) set by
   // a) OnVideoSourceRestrictionsUpdated

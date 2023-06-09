@@ -35,6 +35,7 @@ class IvfVideoFrameGenerator : public FrameGeneratorInterface {
 
   VideoFrameData NextFrame() override;
   void ChangeResolution(size_t width, size_t height) override;
+  Resolution GetResolution() const override;
 
  private:
   class DecodedCallback : public DecodedImageCallback {

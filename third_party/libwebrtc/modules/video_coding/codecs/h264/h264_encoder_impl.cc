@@ -56,19 +56,30 @@ enum H264EncoderImplEvent {
   kH264EncoderEventMax = 16,
 };
 
-int NumberOfThreads(int width, int height, int number_of_cores) {
+int NumberOfThreads(absl::optional<int> encoder_thread_limit,
+                    int width,
+                    int height,
+                    int number_of_cores) {
   // TODO(hbos): In Chromium, multiple threads do not work with sandbox on Mac,
   // see crbug.com/583348. Until further investigated, only use one thread.
-  //  if (width * height >= 1920 * 1080 && number_of_cores > 8) {
-  //    return 8;  // 8 threads for 1080p on high perf machines.
-  //  } else if (width * height > 1280 * 960 && number_of_cores >= 6) {
-  //    return 3;  // 3 threads for 1080p.
-  //  } else if (width * height > 640 * 480 && number_of_cores >= 3) {
-  //    return 2;  // 2 threads for qHD/HD.
-  //  } else {
-  //    return 1;  // 1 thread for VGA or less.
-  //  }
-  // TODO(sprang): Also check sSliceArgument.uiSliceNum om GetEncoderPrams(),
+  // While this limitation is gone, this changes the bitstream format (see
+  // bugs.webrtc.org/14368) so still guarded by field trial to allow for
+  // experimentation using th experimental
+  // WebRTC-VideoEncoderSettings/encoder_thread_limit trial.
+  if (encoder_thread_limit.has_value()) {
+    int limit = encoder_thread_limit.value();
+    RTC_DCHECK_GE(limit, 1);
+    if (width * height >= 1920 * 1080 && number_of_cores > 8) {
+      return std::min(limit, 8);  // 8 threads for 1080p on high perf machines.
+    } else if (width * height > 1280 * 960 && number_of_cores >= 6) {
+      return std::min(limit, 3);  // 3 threads for 1080p.
+    } else if (width * height > 640 * 480 && number_of_cores >= 3) {
+      return std::min(limit, 2);  // 2 threads for qHD/HD.
+    } else {
+      return 1;  // 1 thread for VGA or less.
+    }
+  }
+  // TODO(sprang): Also check sSliceArgument.uiSliceNum on GetEncoderParams(),
   //               before enabling multithreading here.
   return 1;
 }
@@ -223,8 +234,9 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
   configurations_.resize(number_of_streams);
   tl0sync_limit_.resize(number_of_streams);
 
-  number_of_cores_ = settings.number_of_cores;
   max_payload_size_ = settings.max_payload_size;
+  number_of_cores_ = settings.number_of_cores;
+  encoder_thread_limit_ = settings.encoder_thread_limit;
   codec_ = *inst;
 
   // Code expects simulcastStream resolutions to be correct, make sure they are
@@ -524,7 +536,7 @@ int32_t H264EncoderImpl::Encode(
     encoded_images_[i].SetTimestamp(input_frame.timestamp());
     encoded_images_[i].SetColorSpace(input_frame.color_space());
     encoded_images_[i]._frameType = ConvertToVideoFrameType(info.eFrameType);
-    encoded_images_[i].SetSpatialIndex(configurations_[i].simulcast_idx);
+    encoded_images_[i].SetSimulcastIndex(configurations_[i].simulcast_idx);
 
     // Split encoded image up into fragments. This also updates
     // `encoded_image_`.
@@ -626,8 +638,9 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   //  0: auto (dynamic imp. internal encoder)
   //  1: single thread (default value)
   // >1: number of threads
-  encoder_params.iMultipleThreadIdc = NumberOfThreads(
-      encoder_params.iPicWidth, encoder_params.iPicHeight, number_of_cores_);
+  encoder_params.iMultipleThreadIdc =
+      NumberOfThreads(encoder_thread_limit_, encoder_params.iPicWidth,
+                      encoder_params.iPicHeight, number_of_cores_);
   // The base spatial layer 0 is the only one we use.
   encoder_params.sSpatialLayers[0].iVideoWidth = encoder_params.iPicWidth;
   encoder_params.sSpatialLayers[0].iVideoHeight = encoder_params.iPicHeight;

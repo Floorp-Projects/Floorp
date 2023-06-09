@@ -32,16 +32,16 @@ index f32e632ff6..0272f6a8fe 100644
      defines += [ "WEBRTC_MAC" ]
    }
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index 95548906c4..4a5bf62433 100644
+index aff496cc01..f675143451 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
-@@ -63,7 +63,7 @@ if (!build_with_chromium) {
-       "../../system_wrappers",
+@@ -69,7 +69,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+       "video_capture_options.h",
      ]
  
 -    if (is_linux || is_chromeos) {
 +    if (is_linux || is_bsd || is_chromeos) {
-       sources = [
+       sources += [
          "linux/device_info_linux.cc",
          "linux/device_info_v4l2.cc",
 diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h

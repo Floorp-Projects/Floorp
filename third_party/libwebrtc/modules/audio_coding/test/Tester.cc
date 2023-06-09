@@ -20,7 +20,6 @@
 #include "modules/audio_coding/test/TestRedFec.h"
 #include "modules/audio_coding/test/TestStereo.h"
 #include "modules/audio_coding/test/TestVADDTX.h"
-#include "modules/audio_coding/test/TwoWayCommunication.h"
 #include "modules/audio_coding/test/opus_test.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"

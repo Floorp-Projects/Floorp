@@ -30,6 +30,7 @@
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
+#include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "rtc_base/checks.h"
@@ -64,12 +65,16 @@ bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
 
 BandwidthLimitedCause GetBandwidthLimitedCause(
     LossBasedState loss_based_state,
+    bool is_rtt_above_limit,
     BandwidthUsage bandwidth_usage,
     bool not_probe_if_delay_increased) {
-  if (not_probe_if_delay_increased &&
-      (bandwidth_usage == BandwidthUsage::kBwOverusing ||
-       bandwidth_usage == BandwidthUsage::kBwUnderusing)) {
-    return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+  if (not_probe_if_delay_increased) {
+    if (bandwidth_usage == BandwidthUsage::kBwOverusing ||
+        bandwidth_usage == BandwidthUsage::kBwUnderusing) {
+      return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+    } else if (is_rtt_above_limit) {
+      return BandwidthLimitedCause::kRttBasedBackOffHighRtt;
+    }
   }
   switch (loss_based_state) {
     case LossBasedState::kDecreasing:
@@ -460,7 +465,7 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
 
     TimeDelta feedback_min_rtt = TimeDelta::PlusInfinity();
     for (const auto& packet_feedback : feedbacks) {
-      TimeDelta pending_time = packet_feedback.receive_time - max_recv_time;
+      TimeDelta pending_time = max_recv_time - packet_feedback.receive_time;
       TimeDelta rtt = report.feedback_time -
                       packet_feedback.sent_packet.send_time - pending_time;
       // Value used for predicting NACK round trip time in FEC controller.
@@ -561,7 +566,8 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   }
   bandwidth_estimation_->UpdateLossBasedEstimator(
       report, result.delay_detector_state, probe_bitrate,
-      estimate_ ? estimate_->link_capacity_upper : DataRate::PlusInfinity());
+      estimate_ ? estimate_->link_capacity_upper : DataRate::PlusInfinity(),
+      alr_start_time.has_value());
   if (result.updated) {
     // Update the estimate in the ProbeController, in case we want to probe.
     MaybeTriggerOnNetworkChanged(&update, report.feedback_time);
@@ -686,6 +692,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
         loss_based_target_rate,
         GetBandwidthLimitedCause(
             bandwidth_estimation_->loss_based_state(),
+            bandwidth_estimation_->IsRttAboveLimit(),
             delay_based_bwe_->last_state(),
             probe_controller_->DontProbeIfDelayIncreased()),
         at_time);

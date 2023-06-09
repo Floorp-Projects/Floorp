@@ -378,31 +378,35 @@ void VideoProcessor::FrameEncoded(
   }
 
   // Layer metadata.
-  size_t spatial_idx = encoded_image.SpatialIndex().value_or(0);
+  // We could either have simulcast layers or spatial layers.
+  // TODO(https://crbug.com/webrtc/14891): If we want to support a mix of
+  // simulcast and SVC we'll also need to consider the case where we have both
+  // simulcast and spatial indices.
+  size_t stream_idx = encoded_image.SpatialIndex().value_or(
+      encoded_image.SimulcastIndex().value_or(0));
   size_t temporal_idx = GetTemporalLayerIndex(codec_specific);
 
   FrameStatistics* frame_stat =
-      stats_->GetFrameWithTimestamp(encoded_image.Timestamp(), spatial_idx);
+      stats_->GetFrameWithTimestamp(encoded_image.Timestamp(), stream_idx);
   const size_t frame_number = frame_stat->frame_number;
 
   // Ensure that the encode order is monotonically increasing, within this
   // simulcast/spatial layer.
-  RTC_CHECK(first_encoded_frame_[spatial_idx] ||
-            last_encoded_frame_num_[spatial_idx] < frame_number);
+  RTC_CHECK(first_encoded_frame_[stream_idx] ||
+            last_encoded_frame_num_[stream_idx] < frame_number);
 
   // Ensure SVC spatial layers are delivered in ascending order.
   const size_t num_spatial_layers = config_.NumberOfSpatialLayers();
-  if (!first_encoded_frame_[spatial_idx] && num_spatial_layers > 1) {
-    for (size_t i = 0; i < spatial_idx; ++i) {
+  if (!first_encoded_frame_[stream_idx] && num_spatial_layers > 1) {
+    for (size_t i = 0; i < stream_idx; ++i) {
       RTC_CHECK_LE(last_encoded_frame_num_[i], frame_number);
     }
-    for (size_t i = spatial_idx + 1; i < num_simulcast_or_spatial_layers_;
-         ++i) {
+    for (size_t i = stream_idx + 1; i < num_simulcast_or_spatial_layers_; ++i) {
       RTC_CHECK_GT(frame_number, last_encoded_frame_num_[i]);
     }
   }
-  first_encoded_frame_[spatial_idx] = false;
-  last_encoded_frame_num_[spatial_idx] = frame_number;
+  first_encoded_frame_[stream_idx] = false;
+  last_encoded_frame_num_[stream_idx] = frame_number;
 
   RateProfile target_rate =
       std::prev(target_rates_.upper_bound(frame_number))->second;
@@ -416,7 +420,7 @@ void VideoProcessor::FrameEncoded(
   frame_stat->encode_time_us = GetElapsedTimeMicroseconds(
       frame_stat->encode_start_ns, encode_stop_ns - post_encode_time_ns_);
   frame_stat->target_bitrate_kbps =
-      bitrate_allocation.GetTemporalLayerSum(spatial_idx, temporal_idx) / 1000;
+      bitrate_allocation.GetTemporalLayerSum(stream_idx, temporal_idx) / 1000;
   frame_stat->target_framerate_fps = target_rate.input_fps;
   frame_stat->length_bytes = encoded_image.size();
   frame_stat->frame_type = encoded_image._frameType;
@@ -438,13 +442,13 @@ void VideoProcessor::FrameEncoded(
   if (config_.decode || !encoded_frame_writers_->empty()) {
     if (num_spatial_layers > 1) {
       encoded_image_for_decode = BuildAndStoreSuperframe(
-          encoded_image, codec_type, frame_number, spatial_idx,
+          encoded_image, codec_type, frame_number, stream_idx,
           frame_stat->inter_layer_predicted);
     }
   }
 
   if (config_.decode) {
-    DecodeFrame(*encoded_image_for_decode, spatial_idx);
+    DecodeFrame(*encoded_image_for_decode, stream_idx);
 
     if (codec_specific.end_of_picture && num_spatial_layers > 1) {
       // If inter-layer prediction is enabled and upper layer was dropped then
@@ -457,7 +461,7 @@ void VideoProcessor::FrameEncoded(
                                     last_decoded_frame_num_[i] < frame_number);
 
         // Ensure current layer was decoded.
-        RTC_CHECK(layer_dropped == false || i != spatial_idx);
+        RTC_CHECK(layer_dropped == false || i != stream_idx);
 
         if (!layer_dropped) {
           base_image = &merged_encoded_frames_[i];
@@ -477,7 +481,7 @@ void VideoProcessor::FrameEncoded(
   for (size_t write_temporal_idx = temporal_idx;
        write_temporal_idx < config_.NumberOfTemporalLayers();
        ++write_temporal_idx) {
-    const VideoProcessor::LayerKey layer_key(spatial_idx, write_temporal_idx);
+    const VideoProcessor::LayerKey layer_key(stream_idx, write_temporal_idx);
     auto it = encoded_frame_writers_->find(layer_key);
     if (it != encoded_frame_writers_->cend()) {
       RTC_CHECK(it->second->WriteFrame(*encoded_image_for_decode,

@@ -20,6 +20,7 @@
 #include "modules/congestion_controller/remb_throttler.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/remote_bitrate_estimator/remote_estimator_proxy.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -41,12 +42,13 @@ class ReceiveSideCongestionController : public CallStatsObserver {
 
   ~ReceiveSideCongestionController() override {}
 
+  void OnReceivedPacket(const RtpPacketReceived& packet, MediaType media_type);
+
+  // TODO(perkj, bugs.webrtc.org/14859): Remove all usage. This method is
+  // currently not used by PeerConnections.
   virtual void OnReceivedPacket(int64_t arrival_time_ms,
                                 size_t payload_size,
                                 const RTPHeader& header);
-
-  void SetSendPeriodicFeedback(bool send_periodic_feedback);
-
   // Implements CallStatsObserver.
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
 

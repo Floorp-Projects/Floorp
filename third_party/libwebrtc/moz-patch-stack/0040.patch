@@ -11,10 +11,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 3125993d4b..cda8b1f6af 100644
+index 767c3c64fd..ebbca12b25 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -203,6 +203,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -205,6 +205,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
        // disabled.
        KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
  
@@ -25,10 +25,10 @@ index 3125993d4b..cda8b1f6af 100644
  
        // See LntfConfig for description.
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index e7f88665b6..eed9770d93 100644
+index d7a789515b..41d6627a65 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -297,9 +297,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
        frames_decryptable_(false),
        absolute_capture_time_interpolator_(clock) {
    packet_sequence_checker_.Detach();

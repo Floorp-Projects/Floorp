@@ -16,10 +16,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b55b0368d9f21849f
  8 files changed, 34 insertions(+)
 
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 15b313a3b9..a7e82665c3 100644
+index 1918354009..b23350e6d1 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -144,6 +144,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -146,6 +146,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
      RtpReceiveStats rtp_stats;
      RtcpPacketTypeCounter rtcp_packet_type_counts;
  
@@ -48,10 +48,10 @@ index 0a24481762..7dfe4f0b5d 100644
    std::vector<ReportBlockData> result;
    MutexLock lock(&rtcp_receiver_lock_);
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index cdf4cbadf8..f68e57479b 100644
+index d3c07929dd..a79b387b0b 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -132,6 +132,10 @@ class RTCPReceiver final {
+@@ -129,6 +129,10 @@ class RTCPReceiver final {
  
    std::vector<rtcp::ReceiveTimeInfo> ConsumeReceivedXrReferenceTimeInfo();
  
@@ -63,7 +63,7 @@ index cdf4cbadf8..f68e57479b 100644
    int32_t RTT(uint32_t remote_ssrc,
                int64_t* last_rtt_ms,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index b7f23236fe..54fb82c2a1 100644
+index 8340a667f3..caee8755ed 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -527,6 +527,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
@@ -79,10 +79,10 @@ index b7f23236fe..54fb82c2a1 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index f164195168..dd916fbe40 100644
+index 58e7b9da9f..7319170917 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -192,6 +192,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
+@@ -191,6 +191,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
        StreamDataCounters* rtp_counters,
        StreamDataCounters* rtx_counters) const override;
  
@@ -93,7 +93,7 @@ index f164195168..dd916fbe40 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 31dd1499d5..d0f9c8ed1a 100644
+index 565e1ea785..ec011cad19 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -508,6 +508,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
@@ -109,7 +109,7 @@ index 31dd1499d5..d0f9c8ed1a 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index e7a3ac03e8..3ef76ab66a 100644
+index 59a99019f2..b9043e6a78 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -204,6 +204,9 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
@@ -123,7 +123,7 @@ index e7a3ac03e8..3ef76ab66a 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 2024b308dd..f23d4d0758 100644
+index f0c1650daf..a529e99847 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -399,6 +399,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

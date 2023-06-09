@@ -314,12 +314,6 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_THAT(transceiver_->SetOfferedRtpHeaderExtensions(modified_extensions),
               Property(&RTCError::type, RTCErrorType::INVALID_MODIFICATION));
   EXPECT_EQ(transceiver_->HeaderExtensionsToOffer(), extensions_);
-  modified_extensions = extensions_;
-  // Attempting to stop the mandatory video orientation extension.
-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
-  EXPECT_THAT(transceiver_->SetOfferedRtpHeaderExtensions(modified_extensions),
-              Property(&RTCError::type, RTCErrorType::INVALID_MODIFICATION));
-  EXPECT_EQ(transceiver_->HeaderExtensionsToOffer(), extensions_);
 }
 
 TEST_F(RtpTransceiverTestForHeaderExtensions,

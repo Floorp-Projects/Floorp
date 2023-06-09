@@ -39,14 +39,6 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
   ss << "{remote_ssrc: " << remote_ssrc;
   ss << ", local_ssrc: " << local_ssrc;
   ss << ", nack: " << nack.ToString();
-  ss << ", extensions: [";
-  for (size_t i = 0; i < extensions.size(); ++i) {
-    ss << extensions[i].ToString();
-    if (i != extensions.size() - 1) {
-      ss << ", ";
-    }
-  }
-  ss << ']';
   ss << ", rtcp_event_observer: "
      << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
   ss << '}';
@@ -255,18 +247,6 @@ void AudioReceiveStreamImpl::SetFrameDecryptor(
   // expect to be called on the network thread.
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   channel_receive_->SetFrameDecryptor(std::move(frame_decryptor));
-}
-
-void AudioReceiveStreamImpl::SetRtpExtensions(
-    std::vector<RtpExtension> extensions) {
-  // TODO(bugs.webrtc.org/11993): This is called via WebRtcAudioReceiveStream,
-  // expect to be called on the network thread.
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  config_.rtp.extensions = std::move(extensions);
-}
-
-RtpHeaderExtensionMap AudioReceiveStreamImpl::GetRtpExtensionMap() const {
-  return RtpHeaderExtensionMap(config_.rtp.extensions);
 }
 
 webrtc::AudioReceiveStreamInterface::Stats AudioReceiveStreamImpl::GetStats(

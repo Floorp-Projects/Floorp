@@ -58,6 +58,9 @@ class RTC_EXPORT DesktopCapturer {
   // Interface that must be implemented by the DesktopCapturer consumers.
   class Callback {
    public:
+    // Called before a frame capture is started.
+    virtual void OnFrameCaptureStart() {}
+
     // Called after a frame has been captured. `frame` is not nullptr if and
     // only if `result` is SUCCESS.
     virtual void OnCaptureResult(Result result,
@@ -102,6 +105,12 @@ class RTC_EXPORT DesktopCapturer {
   // Called at the beginning of a capturing session. `callback` must remain
   // valid until capturer is destroyed.
   virtual void Start(Callback* callback) = 0;
+
+  // Sets max frame rate for the capturer. This is best effort and may not be
+  // supported by all capturers. This will only affect the frequency at which
+  // new frames are available, not the frequency at which you are allowed to
+  // capture the frames.
+  virtual void SetMaxFrameRate(uint32_t max_frame_rate) {}
 
   // Returns a valid pointer if the capturer requires the user to make a
   // selection from a source list provided by the capturer.

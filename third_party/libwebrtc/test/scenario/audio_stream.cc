@@ -188,7 +188,6 @@ ReceiveAudioStream::ReceiveAudioStream(
   recv_config.rtcp_send_transport = feedback_transport;
   recv_config.rtp.remote_ssrc = send_stream->ssrc_;
   receiver->ssrc_media_types_[recv_config.rtp.remote_ssrc] = MediaType::AUDIO;
-  recv_config.rtp.extensions = GetAudioRtpExtensions(config);
   recv_config.decoder_factory = decoder_factory;
   recv_config.decoder_map = {
       {CallTest::kAudioSendPayloadType, {"opus", 48000, 2}}};

@@ -59,7 +59,7 @@ enum RetransmissionMode : uint8_t {
   kConditionallyRetransmitHigherLayers = 0x8
 };
 
-class RTPSenderVideo {
+class RTPSenderVideo : public RTPVideoFrameSenderInterface {
  public:
   static constexpr int64_t kTLRateWindowSizeMs = 2500;
 
@@ -99,6 +99,14 @@ class RTPSenderVideo {
                  rtc::ArrayView<const uint8_t> payload,
                  RTPVideoHeader video_header,
                  absl::optional<int64_t> expected_retransmission_time_ms);
+  bool SendVideo(int payload_type,
+                 absl::optional<VideoCodecType> codec_type,
+                 uint32_t rtp_timestamp,
+                 int64_t capture_time_ms,
+                 rtc::ArrayView<const uint8_t> payload,
+                 RTPVideoHeader video_header,
+                 absl::optional<int64_t> expected_retransmission_time_ms,
+                 std::vector<uint32_t> csrcs) override;
 
   bool SendEncodedImage(
       int payload_type,
@@ -117,7 +125,7 @@ class RTPSenderVideo {
   // Should only be used by a RTPSenderVideoFrameTransformerDelegate and exists
   // to ensure correct syncronization.
   void SetVideoStructureAfterTransformation(
-      const FrameDependencyStructure* video_structure);
+      const FrameDependencyStructure* video_structure) override;
 
   // Sets current active VideoLayersAllocation. The allocation will be sent
   // using the rtp video layers allocation extension. The allocation will be
@@ -128,7 +136,7 @@ class RTPSenderVideo {
   // Should only be used by a RTPSenderVideoFrameTransformerDelegate and exists
   // to ensure correct syncronization.
   void SetVideoLayersAllocationAfterTransformation(
-      VideoLayersAllocation allocation);
+      VideoLayersAllocation allocation) override;
 
   // Returns the current packetization overhead rate, in bps. Note that this is
   // the payload overhead, eg the VP8 payload headers, not the RTP headers

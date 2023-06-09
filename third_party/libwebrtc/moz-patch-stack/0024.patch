@@ -23,10 +23,10 @@ index 1ac71899ee..3fe86f2f85 100644
  #else
  constexpr bool kIsArm = false;
 diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 8e401fcc7b..cc84605ce7 100644
+index 5457402542..bceb321951 100644
 --- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
 +++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -687,7 +687,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+@@ -693,7 +693,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
  
  int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
  #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
@@ -35,7 +35,7 @@ index 8e401fcc7b..cc84605ce7 100644
    // On mobile platform, use a lower speed setting for lower resolutions for
    // CPUs with 4 or more cores.
    RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -720,7 +720,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+@@ -726,7 +726,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
  }
  
  int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
@@ -44,7 +44,7 @@ index 8e401fcc7b..cc84605ce7 100644
    if (width * height >= 320 * 180) {
      if (cpus >= 4) {
        // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -794,7 +794,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+@@ -800,7 +800,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
    // multi-res encoding feature?
    denoiserState denoiser_state = kDenoiserOnYOnly;
  #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \

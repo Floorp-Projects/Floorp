@@ -13,7 +13,6 @@
 
 #include <memory>
 
-#include "api/task_queue/task_queue_factory.h"
 #include "api/test/video_codec_tester.h"
 
 namespace webrtc {
@@ -22,29 +21,22 @@ namespace test {
 // A stateless implementation of `VideoCodecTester`. This class is thread safe.
 class VideoCodecTesterImpl : public VideoCodecTester {
  public:
-  VideoCodecTesterImpl();
-  explicit VideoCodecTesterImpl(TaskQueueFactory* task_queue_factory);
-
-  std::unique_ptr<VideoCodecTestStats> RunDecodeTest(
-      std::unique_ptr<CodedVideoSource> video_source,
-      std::unique_ptr<Decoder> decoder,
+  std::unique_ptr<VideoCodecStats> RunDecodeTest(
+      CodedVideoSource* video_source,
+      Decoder* decoder,
       const DecoderSettings& decoder_settings) override;
 
-  std::unique_ptr<VideoCodecTestStats> RunEncodeTest(
-      std::unique_ptr<RawVideoSource> video_source,
-      std::unique_ptr<Encoder> encoder,
+  std::unique_ptr<VideoCodecStats> RunEncodeTest(
+      RawVideoSource* video_source,
+      Encoder* encoder,
       const EncoderSettings& encoder_settings) override;
 
-  std::unique_ptr<VideoCodecTestStats> RunEncodeDecodeTest(
-      std::unique_ptr<RawVideoSource> video_source,
-      std::unique_ptr<Encoder> encoder,
-      std::unique_ptr<Decoder> decoder,
+  std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
+      RawVideoSource* video_source,
+      Encoder* encoder,
+      Decoder* decoder,
       const EncoderSettings& encoder_settings,
       const DecoderSettings& decoder_settings) override;
-
- protected:
-  std::unique_ptr<TaskQueueFactory> owned_task_queue_factory_;
-  TaskQueueFactory* task_queue_factory_;
 };
 
 }  // namespace test

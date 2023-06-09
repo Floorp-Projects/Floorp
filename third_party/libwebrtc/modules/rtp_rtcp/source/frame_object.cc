@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/frame_object.h"
+#include "modules/rtp_rtcp/source/frame_object.h"
 
 #include <string.h>
 
@@ -63,6 +63,10 @@ RtpFrameObject::RtpFrameObject(
   _encodedWidth = rtp_video_header_.width;
   _encodedHeight = rtp_video_header_.height;
 
+  if (packet_infos.begin() != packet_infos.end()) {
+    csrcs_ = packet_infos.begin()->csrcs();
+  }
+
   // EncodedFrame members
   SetPacketInfos(std::move(packet_infos));
 
@@ -89,8 +93,7 @@ RtpFrameObject::RtpFrameObject(
   is_last_spatial_layer = markerBit;
 }
 
-RtpFrameObject::~RtpFrameObject() {
-}
+RtpFrameObject::~RtpFrameObject() {}
 
 uint16_t RtpFrameObject::first_seq_num() const {
   return first_seq_num_;

@@ -35,6 +35,7 @@
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread.h"
@@ -910,7 +911,6 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
                                             int start_bwe,
                                             int max_bwe) {
   static const std::string kAudioTrackId = "audio_track_0";
-  static constexpr int kOpusBitrateFbBps = 32000;
   static constexpr int kBitrateStabilizationMs = 10000;
   static constexpr int kBitrateMeasurements = 10;
   static constexpr int kBitrateMeasurementMs = 1000;
@@ -989,8 +989,12 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
         }
         avg_rtt = avg_rtt / kBitrateMeasurements;
         if (avg_rtt > kMinGoodRttMs) {
+          RTC_LOG(LS_WARNING)
+              << "Failed test bitrate: " << test_bitrate << " RTT: " << avg_rtt;
           break;
         } else {
+          RTC_LOG(LS_INFO) << "Passed test bitrate: " << test_bitrate
+                           << " RTT: " << avg_rtt;
           last_passed_test_bitrate = test_bitrate;
         }
       }
@@ -1015,13 +1019,6 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
 
     size_t GetNumAudioStreams() const override { return 1; }
 
-    void ModifyAudioConfigs(AudioSendStream::Config* send_config,
-                            std::vector<AudioReceiveStreamInterface::Config>*
-                                receive_configs) override {
-      send_config->send_codec_spec->target_bitrate_bps =
-          absl::optional<int>(kOpusBitrateFbBps);
-    }
-
    private:
     const int test_bitrate_from_;
     const int test_bitrate_to_;
@@ -1039,13 +1036,7 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
   RunBaseTest(&test);
 }
 
-// TODO(bugs.webrtc.org/8878)
-#if defined(WEBRTC_MAC)
-#define MAYBE_Min_Bitrate_VideoAndAudio DISABLED_Min_Bitrate_VideoAndAudio
-#else
-#define MAYBE_Min_Bitrate_VideoAndAudio Min_Bitrate_VideoAndAudio
-#endif
-TEST_F(CallPerfTest, MAYBE_Min_Bitrate_VideoAndAudio) {
+TEST_F(CallPerfTest, Min_Bitrate_VideoAndAudio) {
   TestMinAudioVideoBitrate(110, 40, -10, 10000, 70000, 200000);
 }
 

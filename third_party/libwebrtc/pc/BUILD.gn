@@ -2269,6 +2269,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:logging",
       "../test:test_support",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 
   rtc_test("slow_peer_connection_unittests") {
@@ -2753,6 +2754,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/task_queue:default_task_queue_factory",
       "../api/units:time_delta",
       "../api/video:builtin_video_bitrate_allocator_factory",
+      "../api/video:resolution",
       "../api/video:video_frame",
       "../api/video:video_rtp_headers",
       "../api/video_codecs:builtin_video_decoder_factory",

@@ -11,10 +11,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2eb
  3 files changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index f874580471..b9af5f2441 100644
+index a9fdaf6307..005c5c1fde 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -81,6 +81,9 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -88,6 +88,9 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
    VideoCaptureImpl();
    ~VideoCaptureImpl() override;
  
@@ -24,7 +24,7 @@ index f874580471..b9af5f2441 100644
    char* _deviceUniqueId;  // current Device unique name;
    Mutex api_lock_;
    VideoCaptureCapability _requestedCapability;  // Should be set by platform
-@@ -89,7 +92,6 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -96,7 +99,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
   private:
    void UpdateFrameCount();
    uint32_t CalculateFrameRate(int64_t now_ns);

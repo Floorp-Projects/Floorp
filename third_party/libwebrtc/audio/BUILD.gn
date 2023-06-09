@@ -226,15 +226,22 @@ if (rtc_include_tests) {
     sources = [ "channel_receive_unittest.cc" ]
     deps = [
       ":audio",
+      "../api/audio_codecs:builtin_audio_decoder_factory",
       "../api/crypto:frame_decryptor_interface",
       "../api/task_queue:default_task_queue_factory",
+      "../logging:mocks",
       "../modules/audio_device:audio_device_api",
       "../modules/audio_device:mock_audio_device",
+      "../modules/rtp_rtcp",
+      "../modules/rtp_rtcp:rtp_rtcp_format",
+      "../rtc_base:logging",
       "../rtc_base:threading",
+      "../test:audio_codec_mocks",
       "../test:mock_transport",
       "../test:test_support",
       "../test/time_controller",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   }
 
   if (rtc_enable_protobuf && !build_with_chromium) {

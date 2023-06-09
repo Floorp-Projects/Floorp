@@ -54,8 +54,6 @@ class UlpfecReceiver {
 
   FecPacketCounter GetPacketCounter() const;
 
-  void SetRtpExtensions(rtc::ArrayView<const RtpExtension> extensions);
-
  private:
   const uint32_t ssrc_;
   const int ulpfec_payload_type_;

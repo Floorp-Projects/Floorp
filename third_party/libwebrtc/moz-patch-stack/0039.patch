@@ -27,7 +27,7 @@ index 7d6ec794d4..20af3f7722 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 0bca328846..c84a91770e 100644
+index 508bbd615a..13248a482a 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -56,6 +56,31 @@ class RtpPacketSenderProxy;
@@ -62,7 +62,7 @@ index 0bca328846..c84a91770e 100644
  class ChannelSend : public ChannelSendInterface,
                      public AudioPacketizationCallback,  // receive encoded
                                                          // packets from the ACM
-@@ -208,6 +233,8 @@ class ChannelSend : public ChannelSendInterface,
+@@ -210,6 +235,8 @@ class ChannelSend : public ChannelSendInterface,
    // RtcpBandwidthObserver
    const std::unique_ptr<VoERtcpObserver> rtcp_observer_;
  
@@ -71,7 +71,7 @@ index 0bca328846..c84a91770e 100644
    PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
        nullptr;
    TransportFeedbackObserver* const feedback_observer_;
-@@ -460,6 +487,7 @@ ChannelSend::ChannelSend(
+@@ -463,6 +490,7 @@ ChannelSend::ChannelSend(
      : ssrc_(ssrc),
        event_log_(rtc_event_log),
        rtcp_observer_(new VoERtcpObserver(this)),
@@ -79,7 +79,7 @@ index 0bca328846..c84a91770e 100644
        feedback_observer_(feedback_observer),
        rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
        retransmission_rate_limiter_(
-@@ -482,6 +510,8 @@ ChannelSend::ChannelSend(
+@@ -485,6 +513,8 @@ ChannelSend::ChannelSend(
  
    configuration.event_log = event_log_;
    configuration.rtt_stats = rtcp_rtt_stats;
@@ -88,7 +88,7 @@ index 0bca328846..c84a91770e 100644
    configuration.retransmission_rate_limiter =
        retransmission_rate_limiter_.get();
    configuration.extmap_allow_mixed = extmap_allow_mixed;
-@@ -759,6 +789,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -763,6 +793,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();

@@ -53,9 +53,6 @@ RTCTestStats::RTCTestStats(const std::string& id, Timestamp timestamp)
       m_map_string_uint64("mMapStringUint64"),
       m_map_string_double("mMapStringDouble") {}
 
-RTCTestStats::RTCTestStats(const std::string& id, int64_t timestamp_us)
-    : RTCTestStats(id, Timestamp::Micros(timestamp_us)) {}
-
 RTCTestStats::RTCTestStats(const RTCTestStats& other)
     : RTCStats(other.id(), other.timestamp()),
       m_bool(other.m_bool),

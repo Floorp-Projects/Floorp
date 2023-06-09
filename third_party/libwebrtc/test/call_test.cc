@@ -292,6 +292,8 @@ void CallTest::CreateAudioAndFecSendConfigs(size_t num_audio_streams,
 
     audio_send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
         kAudioSendPayloadType, {"opus", 48000, 2, {{"stereo", "1"}}});
+    audio_send_config.min_bitrate_bps = 6000;
+    audio_send_config.max_bitrate_bps = 60000;
     audio_send_config.encoder_factory = audio_encoder_factory_;
     SetAudioConfig(audio_send_config);
   }
@@ -372,8 +374,6 @@ void CallTest::AddMatchingVideoReceiveConfigs(
   RTC_DCHECK(!video_send_config.rtp.ssrcs.empty());
   VideoReceiveStreamInterface::Config default_config(rtcp_send_transport);
   default_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
-  for (const RtpExtension& extension : video_send_config.rtp.extensions)
-    default_config.rtp.extensions.push_back(extension);
   default_config.rtp.nack.rtp_history_ms = rtp_history_ms;
   // Enable RTT calculation so NTP time estimator will work.
   default_config.rtp.rtcp_xr.receiver_reference_time_report =
@@ -416,8 +416,6 @@ void CallTest::CreateMatchingAudioAndFecConfigs(
   RTC_DCHECK(num_flexfec_streams_ <= 1);
   if (num_flexfec_streams_ == 1) {
     CreateMatchingFecConfig(rtcp_send_transport, *GetVideoSendConfig());
-    for (const RtpExtension& extension : GetVideoSendConfig()->rtp.extensions)
-      GetFlexFecConfig()->rtp.extensions.push_back(extension);
   }
 }
 
@@ -436,7 +434,6 @@ AudioReceiveStreamInterface::Config CallTest::CreateMatchingAudioConfig(
   audio_config.rtp.local_ssrc = kReceiverLocalAudioSsrc;
   audio_config.rtcp_send_transport = transport;
   audio_config.rtp.remote_ssrc = send_config.rtp.ssrc;
-  audio_config.rtp.extensions = send_config.rtp.extensions;
   audio_config.decoder_factory = audio_decoder_factory;
   audio_config.decoder_map = {{kAudioSendPayloadType, {"opus", 48000, 2}}};
   audio_config.sync_group = sync_group;

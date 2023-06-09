@@ -600,13 +600,14 @@ WebRtcVideoEngine::~WebRtcVideoEngine() {
 }
 
 VideoMediaChannel* WebRtcVideoEngine::CreateMediaChannel(
+    MediaChannel::Role role,
     webrtc::Call* call,
     const MediaConfig& config,
     const VideoOptions& options,
     const webrtc::CryptoOptions& crypto_options,
     webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
   RTC_LOG(LS_INFO) << "CreateMediaChannel. Options: " << options.ToString();
-  return new WebRtcVideoChannel(call, config, options, crypto_options,
+  return new WebRtcVideoChannel(role, call, config, options, crypto_options,
                                 encoder_factory_.get(), decoder_factory_.get(),
                                 video_bitrate_allocator_factory);
 }
@@ -664,6 +665,7 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
 }
 
 WebRtcVideoChannel::WebRtcVideoChannel(
+    MediaChannel::Role role,
     webrtc::Call* call,
     const MediaConfig& config,
     const VideoOptions& options,
@@ -671,7 +673,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     webrtc::VideoEncoderFactory* encoder_factory,
     webrtc::VideoDecoderFactory* decoder_factory,
     webrtc::VideoBitrateAllocatorFactory* bitrate_allocator_factory)
-    : VideoMediaChannel(call->network_thread(), config.enable_dscp),
+    : VideoMediaChannel(role, call->network_thread(), config.enable_dscp),
       worker_thread_(call->worker_thread()),
       call_(call),
       default_sink_(nullptr),
@@ -979,14 +981,13 @@ bool WebRtcVideoChannel::ApplyChangedParams(
   for (auto& kv : send_streams_) {
     kv.second->SetSendParameters(changed_params);
   }
-  if (changed_params.send_codec || changed_params.rtcp_mode) {
-    // Update receive feedback parameters from new codec or RTCP mode.
-    RTC_LOG(LS_INFO)
-        << "SetFeedbackParameters on all the receive streams because the send "
-           "codec or RTCP mode has changed.";
-    for (auto& kv : receive_streams_) {
-      RTC_DCHECK(kv.second != nullptr);
-      kv.second->SetFeedbackParameters(
+  if (role() == MediaChannel::Role::kBoth) {
+    if (changed_params.send_codec || changed_params.rtcp_mode) {
+      // Update receive feedback parameters from new codec or RTCP mode.
+      RTC_LOG(LS_INFO) << "SetFeedbackParameters on all the receive streams "
+                          "because the send "
+                          "codec or RTCP mode has changed.";
+      SetReceiverFeedbackParameters(
           HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
           send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
                                          : webrtc::RtcpMode::kCompound,
@@ -994,6 +995,23 @@ bool WebRtcVideoChannel::ApplyChangedParams(
     }
   }
   return true;
+}
+
+void WebRtcVideoChannel::SetReceiverFeedbackParameters(
+    bool lntf_enabled,
+    bool nack_enabled,
+    webrtc::RtcpMode rtcp_mode,
+    absl::optional<int> rtx_time) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+
+  RTC_DCHECK(role() == MediaChannel::Role::kReceive ||
+             role() == MediaChannel::Role::kBoth);
+  // Update receive feedback parameters from new codec or RTCP mode.
+  for (auto& kv : receive_streams_) {
+    RTC_DCHECK(kv.second != nullptr);
+    kv.second->SetFeedbackParameters(lntf_enabled, nack_enabled, rtcp_mode,
+                                     rtx_time);
+  }
 }
 
 webrtc::RtpParameters WebRtcVideoChannel::GetRtpSendParameters(
@@ -1088,6 +1106,7 @@ webrtc::RtpParameters WebRtcVideoChannel::GetRtpReceiveParameters(
     return webrtc::RtpParameters();
   }
   rtp_params = it->second->GetRtpParameters();
+  rtp_params.header_extensions = recv_rtp_extensions_;
 
   // Add codecs, which any stream is prepared to receive.
   for (const VideoCodec& codec : recv_params_.codecs) {
@@ -1325,6 +1344,9 @@ bool WebRtcVideoChannel::ValidateReceiveSsrcAvailability(
 
 bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK(role() == MediaChannel::Role::kSend ||
+             role() == MediaChannel::Role::kBoth);
+
   RTC_LOG(LS_INFO) << "AddSendStream: " << sp.ToString();
   if (!ValidateStreamParams(sp))
     return false;
@@ -1363,8 +1385,12 @@ bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
   RTC_DCHECK(ssrc != 0);
   send_streams_[ssrc] = stream;
 
-  if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
-    SetReceiverReportSsrc(ssrc);
+  // If legacy kBoth mode, tell my receiver part about its SSRC.
+  // In kSend mode, this is the responsibility of the caller.
+  if (role() == MediaChannel::Role::kBoth) {
+    if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
+      SetReceiverReportSsrc(ssrc);
+    }
   }
 
   if (sending_) {
@@ -1507,8 +1533,6 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
   }
   sp.GetFidSsrc(ssrc, &config->rtp.rtx_ssrc);
 
-  config->rtp.extensions = recv_rtp_extensions_;
-
   // TODO(brandtr): Generalize when we add support for multistream protection.
   flexfec_config->payload_type = recv_flexfec_payload_type_;
   if (!IsDisabled(call_->trials(), "WebRTC-FlexFEC-03-Advertised") &&
@@ -1516,7 +1540,6 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
     flexfec_config->protected_media_ssrcs = {ssrc};
     flexfec_config->rtp.local_ssrc = config->rtp.local_ssrc;
     flexfec_config->rtcp_mode = config->rtp.rtcp_mode;
-    flexfec_config->rtp.extensions = config->rtp.extensions;
   }
 }
 
@@ -1554,6 +1577,15 @@ void WebRtcVideoChannel::ResetUnsignaledRecvStream() {
       ++it;
     }
   }
+}
+
+bool WebRtcVideoChannel::SetLocalSsrc(const StreamParams& sp) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK(role() == MediaChannel::Role::kReceive);
+  if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
+    SetReceiverReportSsrc(sp.first_ssrc());
+  }
+  return true;
 }
 
 absl::optional<uint32_t> WebRtcVideoChannel::GetUnsignaledSsrc() const {
@@ -1619,6 +1651,7 @@ bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
     log_stats = true;
   }
 
+  info->Clear();
   FillSenderStats(info, log_stats);
   FillSendCodecStats(info);
   // TODO(holmer): We should either have rtt available as a metric on
@@ -1794,10 +1827,7 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
     // stream, which will be associated with unsignaled media stream.
     absl::optional<uint32_t> current_default_ssrc = GetUnsignaledSsrc();
     if (current_default_ssrc) {
-      // TODO(bug.webrtc.org/14817): Consider associating the existing default
-      // stream with this RTX stream instead of recreating.
-      ReCreateDefaulReceiveStream(/*ssrc =*/*current_default_ssrc,
-                                  packet.Ssrc());
+      FindReceiveStream(*current_default_ssrc)->UpdateRtxSsrc(packet.Ssrc());
     } else {
       // Received unsignaled RTX packet before a media packet. Create a default
       // stream with a "random" SSRC and the RTX SSRC from the packet.  The
@@ -1824,10 +1854,7 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
       }
     }
   }
-
-  // TODO(bug.webrtc.org/14817): Consider creating a default stream with a fake
-  // RTX ssrc that can be updated when the real SSRC is known if rtx has been
-  // negotiated.
+  // RTX SSRC not yet known.
   ReCreateDefaulReceiveStream(packet.Ssrc(), absl::nullopt);
   last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
   return true;
@@ -2961,7 +2988,6 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetRtpParameters() const {
     rtp_parameters.encodings.back().ssrc = ssrc;
   }
 
-  rtp_parameters.header_extensions = config_.rtp.extensions;
   rtp_parameters.rtcp.reduced_size =
       config_.rtp.rtcp_mode == webrtc::RtcpMode::kReducedSize;
 
@@ -3108,20 +3134,6 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
   bool video_needs_recreation = false;
   if (params.codec_settings) {
     video_needs_recreation = ReconfigureCodecs(*params.codec_settings);
-  }
-
-  if (params.rtp_header_extensions) {
-    if (config_.rtp.extensions != *params.rtp_header_extensions) {
-      config_.rtp.extensions = *params.rtp_header_extensions;
-      stream_->SetRtpExtensions(config_.rtp.extensions);
-    }
-
-    if (flexfec_config_.rtp.extensions != *params.rtp_header_extensions) {
-      flexfec_config_.rtp.extensions = *params.rtp_header_extensions;
-      if (flexfec_stream_) {
-        flexfec_stream_->SetRtpExtensions(flexfec_config_.rtp.extensions);
-      }
-    }
   }
 
   if (params.flexfec_payload_type)
@@ -3373,6 +3385,11 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetLocalSsrc(uint32_t ssrc) {
     call_->OnLocalSsrcUpdated(*flexfec_stream_, ssrc);
 }
 
+void WebRtcVideoChannel::WebRtcVideoReceiveStream::UpdateRtxSsrc(
+    uint32_t ssrc) {
+  stream_->UpdateRtxSsrc(ssrc);
+}
+
 WebRtcVideoChannel::VideoCodecSettings::VideoCodecSettings()
     : flexfec_payload_type(-1), rtx_payload_type(-1) {}
 
@@ -3622,8 +3639,8 @@ void WebRtcVideoChannel::SetDepacketizerToDecoderFrameTransformer(
   RTC_DCHECK(frame_transformer);
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (ssrc == 0) {
-    // If the receiver is unsignaled, save the frame transformer and set it when
-    // the stream is associated with an ssrc.
+    // If the receiver is unsignaled, save the frame transformer and set it
+    // when the stream is associated with an ssrc.
     unsignaled_frame_transformer_ = std::move(frame_transformer);
     return;
   }

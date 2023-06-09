@@ -95,8 +95,6 @@ constexpr RtpExtensionSize kAudioExtensionSizes[] = {
     CreateExtensionSize<InbandComfortNoiseExtension>(),
     CreateExtensionSize<TransmissionOffset>(),
     CreateExtensionSize<TransportSequenceNumber>(),
-    CreateMaxExtensionSize<RtpStreamId>(),
-    CreateMaxExtensionSize<RepairedRtpStreamId>(),
     CreateMaxExtensionSize<RtpMid>(),
 };
 
@@ -529,6 +527,7 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
       &rtp_header_extension_map_, max_packet_size_ + kExtraCapacity);
   packet->SetSsrc(ssrc_);
   packet->SetCsrcs(csrcs_);
+
   // Reserve extensions, if registered, RtpSender set in SendToNetwork.
   packet->ReserveExtension<AbsoluteSendTime>();
   packet->ReserveExtension<TransmissionOffset>();
@@ -621,6 +620,11 @@ void RTPSender::SetMid(absl::string_view mid) {
   RTC_DCHECK_LE(mid.length(), RtpMid::kMaxValueSizeBytes);
   mid_ = std::string(mid);
   UpdateHeaderSizes();
+}
+
+std::vector<uint32_t> RTPSender::Csrcs() const {
+  MutexLock lock(&send_mutex_);
+  return csrcs_;
 }
 
 void RTPSender::SetCsrcs(const std::vector<uint32_t>& csrcs) {

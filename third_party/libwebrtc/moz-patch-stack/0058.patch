@@ -11,23 +11,23 @@ don't introduce unaudited use of it.
 Differential Revision: https://phabricator.services.mozilla.com/D127714
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e69945de4ac5c4ca71332e78ad8
 ---
- audio/channel_send.cc                            | 2 +-
- call/call.cc                                     | 2 ++
- call/call_factory.cc                             | 4 ++++
- call/degraded_call.cc                            | 2 ++
- modules/audio_coding/acm2/audio_coding_module.cc | 2 +-
- modules/rtp_rtcp/include/flexfec_receiver.h      | 2 ++
- modules/rtp_rtcp/source/flexfec_receiver.cc      | 2 ++
- rtc_base/task_utils/repeating_task.h             | 4 ++--
- system_wrappers/include/clock.h                  | 2 +-
- system_wrappers/source/clock.cc                  | 2 +-
+ audio/channel_send.cc                       | 2 +-
+ call/call.cc                                | 2 ++
+ call/call_factory.cc                        | 4 ++++
+ call/degraded_call.cc                       | 2 ++
+ modules/audio_coding/acm2/acm_receiver.cc   | 2 +-
+ modules/rtp_rtcp/include/flexfec_receiver.h | 2 ++
+ modules/rtp_rtcp/source/flexfec_receiver.cc | 2 ++
+ rtc_base/task_utils/repeating_task.h        | 4 ++--
+ system_wrappers/include/clock.h             | 2 +-
+ system_wrappers/source/clock.cc             | 2 +-
  10 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index c84a91770e..9609ac8a31 100644
+index 13248a482a..d6e1d1cea1 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -502,7 +502,7 @@ ChannelSend::ChannelSend(
+@@ -505,7 +505,7 @@ ChannelSend::ChannelSend(
    RtpRtcpInterface::Configuration configuration;
    configuration.bandwidth_callback = rtcp_observer_.get();
    configuration.transport_feedback_callback = feedback_observer_;
@@ -37,10 +37,10 @@ index c84a91770e..9609ac8a31 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index e676d7a30a..a63087f5c1 100644
+index ccfed35785..02f8e71d80 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -485,12 +485,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -478,12 +478,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
@@ -97,19 +97,19 @@ index fc76c7be5c..99c32296c3 100644
  
  DegradedCall::~DegradedCall() {
    RTC_DCHECK_RUN_ON(call_->worker_thread());
-diff --git a/modules/audio_coding/acm2/audio_coding_module.cc b/modules/audio_coding/acm2/audio_coding_module.cc
-index 4367ab08fa..2c186273b6 100644
---- a/modules/audio_coding/acm2/audio_coding_module.cc
-+++ b/modules/audio_coding/acm2/audio_coding_module.cc
-@@ -620,7 +620,7 @@ int AudioCodingModuleImpl::GetTargetBitrate() const {
- AudioCodingModule::Config::Config(
+diff --git a/modules/audio_coding/acm2/acm_receiver.cc b/modules/audio_coding/acm2/acm_receiver.cc
+index a77e472ec1..a5bf88e547 100644
+--- a/modules/audio_coding/acm2/acm_receiver.cc
++++ b/modules/audio_coding/acm2/acm_receiver.cc
+@@ -50,7 +50,7 @@ std::unique_ptr<NetEq> CreateNetEq(
+ 
+ AcmReceiver::Config::Config(
      rtc::scoped_refptr<AudioDecoderFactory> decoder_factory)
-     : neteq_config(),
--      clock(Clock::GetRealTimeClock()),
-+      clock(Clock::GetRealTimeClockRaw()),
-       decoder_factory(decoder_factory) {
+-    : clock(*Clock::GetRealTimeClock()), decoder_factory(decoder_factory) {
++    : clock(*Clock::GetRealTimeClockRaw()), decoder_factory(decoder_factory) {
    // Post-decode VAD is disabled by default in NetEq, however, Audio
    // Conference Mixer relies on VAD decisions and fails without them.
+   neteq_config.enable_post_decode_vad = true;
 diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
 index 3cf4c3845e..29d9e72786 100644
 --- a/modules/rtp_rtcp/include/flexfec_receiver.h

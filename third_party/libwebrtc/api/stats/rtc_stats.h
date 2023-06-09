@@ -58,9 +58,6 @@ class RTC_EXPORT RTCStats {
  public:
   RTCStats(const std::string& id, Timestamp timestamp)
       : id_(id), timestamp_(timestamp) {}
-  ABSL_DEPRECATED("Use constructor with Timestamp instead")
-  RTCStats(std::string id, int64_t timestamp_us)
-      : RTCStats(std::move(id), Timestamp::Micros(timestamp_us)) {}
 
   virtual ~RTCStats() {}
 
@@ -68,8 +65,6 @@ class RTC_EXPORT RTCStats {
 
   const std::string& id() const { return id_; }
   // Time relative to the UNIX epoch (Jan 1, 1970, UTC), in microseconds.
-  ABSL_DEPRECATED("Use .timestamp().us() instead")
-  int64_t timestamp_us() const { return timestamp_.us(); }
   Timestamp timestamp() const { return timestamp_; }
 
   // Returns the static member variable `kType` of the implementing class.
@@ -132,7 +127,7 @@ class RTC_EXPORT RTCStats {
 //    public:
 //     WEBRTC_RTCSTATS_DECL();
 //
-//     RTCFooStats(const std::string& id, int64_t timestamp_us);
+//     RTCFooStats(const std::string& id, Timestamp timestamp);
 //
 //     RTCStatsMember<int32_t> foo;
 //     RTCStatsMember<int32_t> bar;
@@ -143,8 +138,8 @@ class RTC_EXPORT RTCStats {
 //       &foo,
 //       &bar);
 //
-//   RTCFooStats::RTCFooStats(const std::string& id, int64_t timestamp_us)
-//       : RTCStats(id, timestamp_us),
+//   RTCFooStats::RTCFooStats(const std::string& id, Timestamp timestamp)
+//       : RTCStats(id, timestamp),
 //         foo("foo"),
 //         bar("bar") {
 //   }

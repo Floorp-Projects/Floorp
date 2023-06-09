@@ -34,7 +34,7 @@ namespace {
 
 constexpr int kPostponeDecodingLevel = 50;
 constexpr int kTargetLevelWindowMs = 100;
-constexpr int kMaxWaitForPacketTicks = 10;
+constexpr int kMaxWaitForPacketMs = 100;
 // The granularity of delay adjustments (accelerate/preemptive expand) is 15ms,
 // but round up since the clock has a granularity of 10ms.
 constexpr int kDelayAdjustmentGranularityMs = 20;
@@ -69,7 +69,7 @@ bool IsExpand(NetEq::Mode mode) {
 DecisionLogic::Config::Config() {
   StructParametersParser::Create(
       "enable_stable_playout_delay", &enable_stable_playout_delay,  //
-      "reinit_after_expands", &reinit_after_expands,                //
+      "reinit_after_expand_ms", &reinit_after_expand_ms,            //
       "packet_history_size_ms", &packet_history_size_ms,            //
       "cng_timeout_ms", &cng_timeout_ms,                            //
       "deceleration_target_level_offset_ms",
@@ -79,7 +79,7 @@ DecisionLogic::Config::Config() {
   RTC_LOG(LS_INFO) << "NetEq decision logic config:"
                    << " enable_stable_playout_delay="
                    << enable_stable_playout_delay
-                   << " reinit_after_expands=" << reinit_after_expands
+                   << " reinit_after_expand_ms=" << reinit_after_expand_ms
                    << " packet_history_size_ms=" << packet_history_size_ms
                    << " cng_timeout_ms=" << cng_timeout_ms.value_or(-1)
                    << " deceleration_target_level_offset_ms="
@@ -138,12 +138,6 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
     cng_state_ = kCngInternalOn;
   }
 
-  if (IsExpand(status.last_mode)) {
-    ++num_consecutive_expands_;
-  } else {
-    num_consecutive_expands_ = 0;
-  }
-
   if (!IsExpand(status.last_mode) && !IsCng(status.last_mode)) {
     last_playout_delay_ms_ = GetPlayoutDelayMs(status);
   }
@@ -177,7 +171,10 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
 
   // If the expand period was very long, reset NetEQ since it is likely that the
   // sender was restarted.
-  if (num_consecutive_expands_ > config_.reinit_after_expands) {
+  if (IsExpand(status.last_mode) &&
+      status.generated_noise_samples >
+          static_cast<size_t>(config_.reinit_after_expand_ms *
+                              sample_rate_khz_)) {
     *reset_decoder = true;
     return NetEq::Operation::kNormal;
   }
@@ -213,10 +210,6 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
   // This implies that available_timestamp < target_timestamp, which can
   // happen when a new stream or codec is received. Signal for a reset.
   return NetEq::Operation::kUndefined;
-}
-
-void DecisionLogic::NotifyMutedState() {
-  ++num_consecutive_expands_;
 }
 
 int DecisionLogic::TargetLevelMs() const {
@@ -438,30 +431,35 @@ bool DecisionLogic::UnderTargetLevel() const {
          TargetLevelMs() * sample_rate_khz_;
 }
 
-bool DecisionLogic::ReinitAfterExpands(uint32_t timestamp_leap) const {
-  return timestamp_leap >= static_cast<uint32_t>(output_size_samples_ *
-                                                 config_.reinit_after_expands);
+bool DecisionLogic::ReinitAfterExpands(
+    NetEqController::NetEqStatus status) const {
+  const uint32_t timestamp_leap =
+      status.next_packet->timestamp - status.target_timestamp;
+  return timestamp_leap >=
+         static_cast<uint32_t>(config_.reinit_after_expand_ms *
+                               sample_rate_khz_);
 }
 
-bool DecisionLogic::PacketTooEarly(uint32_t timestamp_leap) const {
-  return timestamp_leap >
-         static_cast<uint32_t>(output_size_samples_ * num_consecutive_expands_);
+bool DecisionLogic::PacketTooEarly(NetEqController::NetEqStatus status) const {
+  const uint32_t timestamp_leap =
+      status.next_packet->timestamp - status.target_timestamp;
+  return timestamp_leap > status.generated_noise_samples;
 }
 
-bool DecisionLogic::MaxWaitForPacket() const {
-  return num_consecutive_expands_ >= kMaxWaitForPacketTicks;
+bool DecisionLogic::MaxWaitForPacket(
+    NetEqController::NetEqStatus status) const {
+  return status.generated_noise_samples >=
+         static_cast<size_t>(kMaxWaitForPacketMs * sample_rate_khz_);
 }
 
 bool DecisionLogic::ShouldContinueExpand(
     NetEqController::NetEqStatus status) const {
-  uint32_t timestamp_leap =
-      status.next_packet->timestamp - status.target_timestamp;
   if (config_.enable_stable_playout_delay) {
     return GetNextPacketDelayMs(status) < HighThreshold() &&
-           PacketTooEarly(timestamp_leap);
+           PacketTooEarly(status);
   }
-  return !ReinitAfterExpands(timestamp_leap) && !MaxWaitForPacket() &&
-         PacketTooEarly(timestamp_leap) && UnderTargetLevel();
+  return !ReinitAfterExpands(status) && !MaxWaitForPacket(status) &&
+         PacketTooEarly(status) && UnderTargetLevel();
 }
 
 int DecisionLogic::GetNextPacketDelayMs(

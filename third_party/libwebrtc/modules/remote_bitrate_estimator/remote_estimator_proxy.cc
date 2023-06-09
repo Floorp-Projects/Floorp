@@ -11,13 +11,16 @@
 #include "modules/remote_bitrate_estimator/remote_estimator_proxy.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <utility>
 
+#include "absl/types/optional.h"
 #include "api/units/data_size.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/remote_estimate.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
+#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"
@@ -80,6 +83,39 @@ void RemoteEstimatorProxy::MaybeCullOldPackets(int64_t sequence_number,
   }
 }
 
+void RemoteEstimatorProxy::IncomingPacket(const RtpPacketReceived& packet) {
+  if (packet.arrival_time().IsInfinite()) {
+    RTC_LOG(LS_WARNING) << "Arrival time not set.";
+    return;
+  }
+
+  Packet internal_packet = {.arrival_time = packet.arrival_time(),
+                            .size = DataSize::Bytes(packet.size()),
+                            .ssrc = packet.Ssrc()};
+  uint16_t seqnum;
+  if (packet.GetExtension<TransportSequenceNumber>(&seqnum) ||
+      packet.GetExtension<TransportSequenceNumberV2>(
+          &seqnum, &internal_packet.feedback_request)) {
+    internal_packet.transport_sequence_number = seqnum;
+  } else {
+    // This function expected to be called only for packets that have
+    // TransportSequenceNumber rtp header extension, however malformed RTP
+    // packet may contain unparsable TransportSequenceNumber.
+    RTC_DCHECK(packet.HasExtension<TransportSequenceNumber>() ||
+               packet.HasExtension<TransportSequenceNumberV2>())
+        << " Expected transport sequence number.";
+    return;
+  }
+
+  internal_packet.absolute_send_time_24bits =
+      packet.GetExtension<AbsoluteSendTime>();
+
+  MutexLock lock(&lock_);
+  send_periodic_feedback_ = packet.HasExtension<TransportSequenceNumber>();
+
+  IncomingPacket(internal_packet);
+}
+
 void RemoteEstimatorProxy::IncomingPacket(int64_t arrival_time_ms,
                                           size_t payload_size,
                                           const RTPHeader& header) {
@@ -98,11 +134,11 @@ void RemoteEstimatorProxy::IncomingPacket(int64_t arrival_time_ms,
   }
   packet.feedback_request = header.extension.feedback_request;
 
+  MutexLock lock(&lock_);
   IncomingPacket(packet);
 }
 
 void RemoteEstimatorProxy::IncomingPacket(Packet packet) {
-  MutexLock lock(&lock_);
   media_ssrc_ = packet.ssrc;
   int64_t seq = 0;
 
@@ -154,6 +190,8 @@ void RemoteEstimatorProxy::IncomingPacket(Packet packet) {
 TimeDelta RemoteEstimatorProxy::Process(Timestamp now) {
   MutexLock lock(&lock_);
   if (!send_periodic_feedback_) {
+    // If TransportSequenceNumberV2 has been received in one packet,
+    // PeriodicFeedback is disabled for the rest of the call.
     return TimeDelta::PlusInfinity();
   }
   Timestamp next_process_time = last_process_time_ + send_interval_;
@@ -187,12 +225,6 @@ void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
 
   MutexLock lock(&lock_);
   send_interval_ = send_interval;
-}
-
-void RemoteEstimatorProxy::SetSendPeriodicFeedback(
-    bool send_periodic_feedback) {
-  MutexLock lock(&lock_);
-  send_periodic_feedback_ = send_periodic_feedback;
 }
 
 void RemoteEstimatorProxy::SetTransportOverhead(DataSize overhead_per_packet) {

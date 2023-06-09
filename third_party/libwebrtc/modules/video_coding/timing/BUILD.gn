@@ -8,10 +8,10 @@
 
 import("../../../webrtc.gni")
 
-rtc_library("codec_timer") {
+rtc_library("decode_time_percentile_filter") {
   sources = [
-    "codec_timer.cc",
-    "codec_timer.h",
+    "decode_time_percentile_filter.cc",
+    "decode_time_percentile_filter.h",
   ]
   deps = [ "../../../rtc_base:rtc_numerics" ]
 }
@@ -104,7 +104,7 @@ rtc_library("timing_module") {
     "timing.h",
   ]
   deps = [
-    ":codec_timer",
+    ":decode_time_percentile_filter",
     ":timestamp_extrapolator",
     "../../../api:field_trials_view",
     "../../../api/units:time_delta",
