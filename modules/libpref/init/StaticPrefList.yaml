@@ -5981,13 +5981,6 @@
   value: false
   mirror: once
 
-# Whether to defer destruction of Direct2D DrawTargets to the paint thread
-# when using OMTP.
-- name: gfx.direct2d.destroy-dt-on-paintthread
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: gfx.direct2d.target-independent-rasterization.disabled
   type: bool
   value: false
