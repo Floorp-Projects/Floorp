@@ -5,9 +5,10 @@ import argparse
 import os
 import re
 import shutil
+import sys
 
 from fetch_github_repo import fetch_repo
-from run_operations import run_git, run_shell
+from run_operations import run_git, run_hg, run_shell
 
 # This script restores the mozilla patch stack and no-op commit tracking
 # files.  In the case of repo corruption or a mistake made during
@@ -31,6 +32,14 @@ def get_last_line(file_path):
 def restore_patch_stack(
     github_path, github_branch, patch_directory, state_directory, tar_name
 ):
+    # make sure the repo is clean before beginning
+    stdout_lines = run_hg("hg status third_party/libwebrtc")
+    if len(stdout_lines) != 0:
+        print("There are modified or untracked files under third_party/libwebrtc")
+        print("Please cleanup the repo under third_party/libwebrtc before running")
+        print(os.path.basename(__file__))
+        sys.exit(1)
+
     # first, refetch the repo (hopefully utilizing the tarfile for speed) so
     # the patches apply cleanly
     fetch_repo(github_path, True, os.path.join(state_directory, tar_name))
