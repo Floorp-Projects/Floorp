@@ -344,11 +344,10 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   short shouldLoad(in nsContentPolicyType aContentType,
                    in nsICSPEventListener aCSPEventListener,
+                   in nsILoadInfo     aLoadInfo,
                    in nsIURI          aContentLocation,
                    in nsIURI          aOriginalURIIfRedirect,
-                   in bool            aSendViolationReports,
-                   in AString         aNonce,
-                   in boolean         aParserCreated);
+                   in bool            aSendViolationReports);
 
 %{ C++
 // nsIObserver topic to fire when the policy encounters a violation.
