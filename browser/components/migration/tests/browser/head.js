@@ -16,6 +16,9 @@ const { sinon } = ChromeUtils.importESModule(
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
 );
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
 
 const DIALOG_URL =
   "chrome://browser/content/migration/migration-dialog-window.html";
@@ -125,14 +128,26 @@ async function waitForMigrationWizardDialogTab() {
  * @param {object|string} expectedProfile
  *   The profile object or string that is expected to be passed
  *   to the InternalTestingProfileMigrator.migrate function.
+ * @param {number[]} [errorResourceTypes=[]]
+ *   Resource types that we should pretend have failed to complete
+ *   their migration properly.
  * @returns {Promise<undefined>}
  */
 async function waitForTestMigration(
   availableResourceTypes,
   expectedResourceTypes,
-  expectedProfile
+  expectedProfile,
+  errorResourceTypes = []
 ) {
   let sandbox = sinon.createSandbox();
+  let sourceHistogram = TelemetryTestUtils.getAndClearHistogram(
+    "FX_MIGRATION_SOURCE_BROWSER"
+  );
+  let usageHistogram =
+    TelemetryTestUtils.getAndClearKeyedHistogram("FX_MIGRATION_USAGE");
+  let errorHistogram = TelemetryTestUtils.getAndClearKeyedHistogram(
+    "FX_MIGRATION_ERRORS"
+  );
 
   // Fake out the getResources method of the migrator so that we return
   // a single fake MigratorResource per availableResourceType.
@@ -160,6 +175,11 @@ async function waitForTestMigration(
     logins: EXPECTED_QUANTITY,
     cards: EXPECTED_QUANTITY,
   });
+
+  sandbox
+    .stub(MigrationUtils, "getSourceIdForTelemetry")
+    .withArgs(InternalTestingProfileMigrator.key)
+    .returns(InternalTestingProfileMigrator.sourceID);
 
   // Fake out the migrate method of the migrator and assert that the
   // next time it's called, its arguments match our expectations.
@@ -189,9 +209,53 @@ async function waitForTestMigration(
         );
 
         for (let resourceType of expectedResourceTypes) {
-          aProgressCallback(resourceType);
+          let shouldError = errorResourceTypes.includes(resourceType);
+          aProgressCallback(resourceType, !shouldError);
         }
+
+        let usageHistogramSnapshot =
+          usageHistogram.snapshot()[InternalTestingProfileMigrator.key];
+
+        let errorHistogramSnapshot =
+          errorHistogram.snapshot()[InternalTestingProfileMigrator.key];
+
+        for (let resourceTypeName in MigrationUtils.resourceTypes) {
+          let resourceType = MigrationUtils.resourceTypes[resourceTypeName];
+          if (resourceType == MigrationUtils.resourceTypes.ALL) {
+            continue;
+          }
+
+          if (expectedResourceTypes.includes(resourceType)) {
+            Assert.equal(
+              usageHistogramSnapshot.values[Math.log2(resourceType)],
+              1,
+              `Should have set resource type ${resourceTypeName} on the FX_MIGRATION_USAGE keyed histogram.`
+            );
+
+            if (errorResourceTypes.includes(resourceType)) {
+              Assert.equal(
+                errorHistogramSnapshot.values[Math.log2(resourceType)],
+                1,
+                `Should have set resource type ${resourceTypeName} on the FX_MIGRATION_ERRORS keyed histogram.`
+              );
+            }
+          } else {
+            let value = usageHistogramSnapshot.values[Math.log2(resourceType)];
+            Assert.ok(
+              value === 0 || value === undefined,
+              `Should not have set resource type ${resourceTypeName} on the FX_MIGRATION_USAGE keyed histogram.`
+            );
+          }
+        }
+
         Services.obs.notifyObservers(null, "Migration:Ended");
+
+        TelemetryTestUtils.assertHistogram(
+          sourceHistogram,
+          InternalTestingProfileMigrator.sourceID,
+          1
+        );
+
         resolve();
       });
   }).finally(async () => {

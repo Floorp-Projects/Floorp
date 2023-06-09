@@ -3,9 +3,6 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
-});
 const CONTENT_MODAL_ENABLED_PREF = "browser.migrate.content-modal.enabled";
 const HISTOGRAM_ID = "FX_MIGRATION_ENTRY_POINT_CATEGORICAL";
 const LEGACY_HISTOGRAM_ID = "FX_MIGRATION_ENTRY_POINT";
