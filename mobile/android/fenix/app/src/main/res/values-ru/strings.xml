@@ -260,7 +260,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s будет отправлять в поисковую систему по умолчанию то, что вы вводите в адресной строке.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Поиск в %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Поиск прямо из адресной строки</string>
@@ -270,6 +270,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">В этот раз искать в:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Поисковая система %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -372,6 +375,14 @@
     <string name="preferences_category_general">Общие</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">О приложении</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Выберите</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Управление ссылками поисковиков</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Редактировать системы, видимые в меню поиска</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Системы, видимые в меню поиска</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Поисковая система по умолчанию</string>
     <!-- Preference for settings related to Search -->
@@ -1892,6 +1903,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Добавление поисковой системы</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Добавить новую поисковую систему</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Изменение поисковой системы</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1905,15 +1918,26 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Другое</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Имя</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Имя</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Имя поисковой системы</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL строки поиска</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Используемая поисковая строка</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL для поиска</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Замените строку запроса на “%s”. Пример:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Сведения о выбранной поисковой системе</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Сохранить</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Введите имя поисковой системы</string>

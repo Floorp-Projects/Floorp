@@ -250,7 +250,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s sẽ chia sẻ mọi thứ bạn nhập vào thanh địa chỉ với công cụ tìm kiếm mặc định của bạn.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Tìm kiếm %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Tìm kiếm trực tiếp từ thanh địa chỉ</string>
@@ -260,6 +260,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Lần này tìm kiếm trong:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Công cụ tìm kiếm %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -361,6 +364,14 @@
     <string name="preferences_category_general">Tổng quát</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Giới thiệu</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Chọn một</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Quản lý lối tắt tìm kiếm</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Chỉnh sửa công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Công cụ tìm kiếm mặc định</string>
     <!-- Preference for settings related to Search -->
@@ -1853,6 +1864,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Thêm công cụ tìm kiếm</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Thêm công cụ tìm kiếm mới</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Chỉnh sửa công cụ tìm kiếm</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1866,15 +1879,26 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Khác</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Tên</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Tên</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Tên công cụ tìm kiếm</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Chuỗi URL tìm kiếm</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Chuỗi tìm kiếm để sử dụng</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL để sử dụng cho tìm kiếm</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Chi tiết công cụ tìm kiếm tùy chỉnh</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Lưu</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Nhập tên công cụ tìm kiếm</string>

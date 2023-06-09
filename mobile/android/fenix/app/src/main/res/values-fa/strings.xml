@@ -248,7 +248,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s هر چیزی را که در نوار نشانی نوشته‌اید را به موتور جست‌وجو ارسال می‌کند.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">جست‌وجو در %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">مستقیماً از نوار نشانی جست‌وجو کنید</string>
@@ -258,6 +258,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">این بار جست‌وجو در:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">موتور جست‌وجوی %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -359,6 +362,14 @@
     <string name="preferences_category_general">عمومی</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">درباره</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">یکی را برگزینید</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">مدیریت میان‌برهای جست‌وجو</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">ویرایش موتورهای پدیدار در فهرست جست‌وجو</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">موتورهای پدیدار در فهرست جست‌وجو</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">موتور جست‌وجو پیش‌فرض</string>
     <!-- Preference for settings related to Search -->
@@ -1860,6 +1871,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">افزودن موتور جست‌وجو</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">افزودن موتور جست‌وجوی جدید</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ویرایش موتور جست‌وجو</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1873,14 +1886,25 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">دیگر</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">نام</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">نام</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">نام موتور جست‌وجو</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">نشانی جست‌وجوی رشته</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">رشته جست‌و‌جو برای استفاده</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">نشانی برای استفاده برای جست‌وجو</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">درخواست را با “%s” جایگزین کنید. مثال: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">جزئیات موتور جست‌وجو سفارشی</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">ذخیره</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">نام موتور جست‌وجو را وارد کنید</string>

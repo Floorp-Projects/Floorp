@@ -493,6 +493,9 @@
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">کھولو</string>
 
+    <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">شارٹ کٹاں وچ شامل تھی ڳیا!</string>
+
     <string name="error_hostLookup_title">سرور کائنی لبھا</string>
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
@@ -725,9 +728,6 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s ایں سائٹ دیاں کوکیاں صاف کریسی تے ورقہ تازہ کریسی۔ساریاں کوکیاں صاف کرݨ نال تساں سائن آوٹ تھی سڳدے ہو یا تہاݙی خریداری ریڑھی خالی تھی ویسی۔</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s آپݨے آپ کوکی بینراں دی درخواست کوں مسترد کرݨ دی کوشش کریندا ہے. اگر مسترد کرݨ دا آپشن موجودکائنی ، تاں %1$s ساری کوکیز کوں بینر ختم کرݨ پاروں قبول کر سڳدا ہے. </string>
-
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s آپݨے آپ کوکی ارداساں کوں مسترد کرݨ دی کوشش کر سڳدے۔</string>
 
     <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
@@ -746,13 +746,8 @@
     <string name="cookie_banner_the_site_was_reported">سپورٹ سائٹ دی ارداس جمع کرا ݙتی ڳئی ہے۔</string>
 
     <!-- Contextual Feature Recommendation Popups -->
-    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s پریشان کن کوکی بینراں کوں برخواست کرݨ دیاں کوکی ارداساں کوں مسترد کرݨ دی کوشش کریندے۔ \n\n ترتیباں وچ کوکی بینر ترجیحاں دا بندوبست کرو۔</string>
-
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">%1$s پریشان کن کوکی بینراں کوں برخواست کرݨ دیاں کوکی ارداساں کوں مسترد کرݨ دی کوشش کریندے۔ \n\n %2$s وچ کوکی بینر ترجیحاں دا بندوبست کرو۔</string>
-    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">ترتیباں</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">ترتیباں</string>
@@ -1021,13 +1016,7 @@
     <string name="preference_follow_device_theme">ڈیوائس تھیم تے عمل کرو</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">جہڑی سائٹ دی تساں ارداس کیتی ہے ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی</string>
-
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">ایہ سائٹ ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی</string>
-
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">ڈیفالٹ نال، ایچ ٹی ٹی پی ایس ورتیندے ہوئے ودھائی سلامتی کیتے %1$s کنکٹ کرݨ دی کوشش کریندے۔ ایہ ترتیب وٹاوݨ کیتے یا ٻیا سکھݨ کیتے، ترتیباں &gt; رازداری تے سلامتی &gt; سلامتی تے ون٘ڄو۔ </string>
 
      <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
         Contains a button that will redirect the user to Privacy & Security Screen-->

@@ -248,7 +248,7 @@
     <string name="search_suggestions_onboarding_title">نجی مجلساں وچ ڳولݨ تجویزاں دی اجازت ݙیووں؟</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">جہڑی شئے تساں پتہ بار وچ ٹائپ کریسو %s تہاݙے کیتے پہلوں مقرر ڳولݨ انجݨ نال شیئر کریسی۔</string>
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">%s ڳولو</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">پتہ پٹی نال براہ راست ڳولو</string>
@@ -257,6 +257,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ایں ویلے ایندے وچ ڳول:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s ڳولݨ انجݨ</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -1884,9 +1887,13 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">ٻیا</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">ناں</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ناں</string>
 
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">ڳولݨ انجݨ ناں</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ورتݨ کیتے تند ڳولو</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -1894,6 +1901,9 @@
 مثال:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">من پسند ڳولݨ انجݨ  تفصیلاں</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">محفوظ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ڳولݨ انجݨ دا ناں درج کرو</string>

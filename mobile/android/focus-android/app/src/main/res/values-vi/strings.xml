@@ -491,7 +491,10 @@
 
 
 
-  <string name="error_hostLookup_title">Không tìm thấy máy chủ</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Đã thêm vào lối tắt!</string>
+
+    <string name="error_hostLookup_title">Không tìm thấy máy chủ</string>
 
 
 

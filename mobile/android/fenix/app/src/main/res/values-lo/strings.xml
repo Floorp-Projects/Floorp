@@ -248,7 +248,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s ຈະແຊລທຸກຢ່າງທີ່ທ່ານພິມໃນແທັບທີ່ຢູ່ກັບເຄືອງມືການຄົ້ນຫາພື້ນຖານຂອງທ່ານ.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">ຄົ້ນຫາ %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ຄົ້ນຫາໂດຍກົງຈາກແທັບທີ່ຢູ່</string>
@@ -258,6 +258,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ເວລານີ້ຄົ້ນຫາໃນ:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">ເຄື່ອງມືການຄົ້ນຫາ %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -361,6 +364,14 @@
     <string name="preferences_category_general">ທົ່ວໄປ</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ກ່ຽວກັບ</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">ເລືອກ​ອັນ​ຫນຶ່ງ</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">ຈັດການທາງລັດຄົ້ນຫາ</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">ແກ້ໄຂເຄື່ອງຈັກທີ່ເຫັນໄດ້ໃນເມນູຄົ້ນຫາ</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">ເຄື່ອງມືທີ່ເຫັນໄດ້ໃນເມນູຄົ້ນຫາ</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">ເຄື່ອງມືການຄົ້ນຫາພື້ນຖານ</string>
     <!-- Preference for settings related to Search -->
@@ -1895,6 +1906,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">ເພີ່ມເຄື່ອງມືຊອກຫາໃຫມ່</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ແກ້ໄຂເຄື່ອງມືການຄົ້ນຫາ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1909,15 +1922,26 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">ອື່ນໆ</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">ຊື່</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ຊື່</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">ຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">ຊອກຫາສະຕຣິງ URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ຂໍ້ຄວາມທີ່ຈະໃຊ້ໃນການຄົ້ນຫາ</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL ທີ່ຈະໃຊ້ໃນການຄົ້ນຫາ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">ແທນທີ່ຄິວລີດ້ວຍ “%s”. ຕົວຢ່າ: \nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">ດັດແກ້ລາຍລະອຽດເຄື່ອງມືການຄົ້ນຫາ</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">ບັນທຶກ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ປ້ອນຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>

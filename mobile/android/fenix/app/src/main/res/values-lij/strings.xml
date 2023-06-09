@@ -12,7 +12,7 @@
     <string name="content_description_private_browsing_button">Abilita Navegaçion privâ</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Dizabilita Navegaçion privâ</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Scrivi ò çerca indirisso</string>
 
     <!-- No Open Tabs Message Description -->
@@ -29,11 +29,6 @@
     <string name="private_browsing_placeholder_description_2">%1$s o scancella a teu stöia de navegaçion e riçerche quande særi i feuggi e-i barcoin de navegaçion privâ. Sciben che questo o no te fa deventâ anònimo co-i sciti ò co-o fornitô de Internet, o l\'agiutta in a mantegnî privòu cöse ti fæ in linea a-i atri utenti de sto computer.</string>
     <string name="private_browsing_common_myths">Miti comuin in sciâ navegaçion privâ</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Azonzi \'n scorsaieu pe arvî i feuggi privæ da-a pagina prinçipâ.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Azonzi scorsaieu</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">No graçie</string>
 
@@ -476,8 +471,6 @@
     <string name="phone_feature_blocked_by_android">Blocou da Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Eceçioin</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Açeizo</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Asmòrtou</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -723,9 +716,9 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Proteçion anti-traciamento avansâ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Navega sensa ese ascorio</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navega sensa ese ascorio</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantegni i teu dæti pe ti mæximmo. %s o te protezze da-a magiô parte di elementi che te tracian in linia.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Mantegni i teu dæti pe ti mæximmo. %s o te protezze da-a magiô parte di elementi che te tracian in linia.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Atre informaçioin</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -855,6 +848,8 @@
     <string name="preferences_passwords_sync_logins">Scincronizza i acessi</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Acessi sarvæ</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">I acessi che ti sarvi ò ti scincronizzi in %s saian mostræ chi.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Ciù informaçioin in sce Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->

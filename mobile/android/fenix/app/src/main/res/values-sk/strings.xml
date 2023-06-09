@@ -239,7 +239,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skenovať</string>
     <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Vyhľadávací modul</string>
+    <string name="search_engine_button">Vyhľadávač</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Nastavenia vyhľadávania</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -252,9 +252,9 @@
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Povoliť návrhy vyhľadávania v súkromnom prehliadaní?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s bude zdieľať vami napísaný text v paneli s adresou s vyhľadávacím modulom.</string>
+    <string name="search_suggestions_onboarding_text">%s bude zdieľať vami napísaný text v paneli s adresou s vyhľadávačom.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Hľadať cez %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Vyhľadať na webe priamo z panela s adresou</string>
@@ -264,6 +264,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Tentokrát hľadať v:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Vyhľadávač %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -366,8 +369,16 @@
     <string name="preferences_category_general">Všeobecné</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">O aplikácii</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Zvoľte nejaký</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Spravovať skratky vyhľadávania</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Upraviť vyhľadávače viditeľné v ponuke vyhľadávania</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Vyhľadávače viditeľné v ponuke vyhľadávania</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_default_search_engine">Predvolený vyhľadávací modul</string>
+    <string name="preferences_default_search_engine">Predvolený vyhľadávač</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Vyhľadávanie</string>
     <!-- Preference for settings related to Search address bar -->
@@ -516,7 +527,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Vzdialené ladenie cez USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Zobraziť vyhľadávacie moduly</string>
+    <string name="preferences_show_search_engines">Zobraziť vyhľadávače</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Zobrazovať návrhy vyhľadávania</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1871,9 +1882,11 @@
     <string name="address_menu_delete_address">Odstrániť adresu</string>
 
     <!-- Title of the Add search engine screen -->
-    <string name="search_engine_add_custom_search_engine_title">Pridať vyhľadávací modul</string>
+    <string name="search_engine_add_custom_search_engine_title">Pridať vyhľadávač</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Pridať nový vyhľadávač</string>
     <!-- Title of the Edit search engine screen -->
-    <string name="search_engine_edit_custom_search_engine_title">Upraviť vyhľadávací modul</string>
+    <string name="search_engine_edit_custom_search_engine_title">Upraviť vyhľadávač</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Pridať</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
@@ -1885,18 +1898,29 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Iný</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Názov</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Názov</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Názov vyhľadávača</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Adresa URL vyhľadávacieho reťazca</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Výraz vyhľadávania</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Adresa URL, ktorá sa má použiť na vyhľadávanie</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Nahraďte výraz s „%s“. Príklad:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
-    <string name="search_add_custom_engine_form_description">Podrobnosti vlastného vyhľadávacieho modulu</string>
+    <string name="search_add_custom_engine_form_description">Podrobnosti vlastného vyhľadávača</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Uložiť</string>
 
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">Zadajte názov vyhľadávacieho modulu</string>
+    <string name="search_add_custom_engine_error_empty_name">Zadajte názov vyhľadávača</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Zadajte hľadaný výraz</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1904,11 +1928,11 @@
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Chyba pri pripájaní k „%s“</string>
     <!-- Text shown when a user creates a new search engine -->
-    <string name="search_add_custom_engine_success_message">Vytvorený %s</string>
+    <string name="search_add_custom_engine_success_message">Vyhľadávač %s bol vytvorený</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
-    <string name="search_edit_custom_engine_success_message">Uložený %s</string>
+    <string name="search_edit_custom_engine_success_message">Vyhľadávač %s bol uložený</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
-    <string name="search_delete_search_engine_success_message">Odstránený %s</string>
+    <string name="search_delete_search_engine_success_message">Vyhľadávač %s bol odstránený</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Postup pre povolenie:</string>
