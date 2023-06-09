@@ -8,8 +8,6 @@ use std::ops::DerefMut;
 use std::path::PathBuf;
 
 use firefox_on_glean::{metrics, pings};
-#[cfg(target_os = "android")]
-use nserror::NS_ERROR_NOT_IMPLEMENTED;
 use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::{nsACString, nsCString, nsString};
 use xpcom::interfaces::{nsIFile, nsIPrefService, nsIProperties, nsIXULAppInfo, nsIXULRuntime};
@@ -21,14 +19,12 @@ use glean::{ClientInfoMetrics, Configuration};
 mod upload_pref;
 #[cfg(not(target_os = "android"))]
 mod user_activity;
-#[cfg(not(target_os = "android"))]
 mod viaduct_uploader;
 
 #[cfg(not(target_os = "android"))]
 use upload_pref::UploadPrefObserver;
 #[cfg(not(target_os = "android"))]
 use user_activity::UserActivityObserver;
-#[cfg(not(target_os = "android"))]
 use viaduct_uploader::ViaductUploader;
 
 /// Project FOG's entry point.
@@ -287,7 +283,6 @@ fn get_app_info() -> Result<(String, String, String), nsresult> {
 
 /// **TEST-ONLY METHOD**
 /// Resets FOG and the underlying Glean SDK, clearing stores.
-#[cfg(not(target_os = "android"))]
 #[no_mangle]
 pub extern "C" fn fog_test_reset(
     data_path_override: &nsACString,
@@ -318,13 +313,22 @@ fn fog_test_reset_internal(
     Ok(())
 }
 
-/// **TEST-ONLY METHOD**
-/// Does nothing on Android. Returns NS_ERROR_NOT_IMPLEMENTED.
 #[cfg(target_os = "android")]
-#[no_mangle]
-pub extern "C" fn fog_test_reset(
-    _data_path_override: &nsACString,
-    _app_id_override: &nsACString,
-) -> nsresult {
-    NS_ERROR_NOT_IMPLEMENTED
+fn fog_test_reset_internal(
+    data_path_override: &nsACString,
+    app_id_override: &nsACString,
+) -> Result<(), nsresult> {
+    let (mut conf, client_info) = build_configuration(data_path_override, app_id_override)?;
+
+    // On Android always enable Glean upload.
+    conf.upload_enabled = true;
+
+    // Don't accidentally send "main" pings during tests.
+    conf.use_core_mps = false;
+
+    // Same as before, would prefer to reuse, but it gets moved into Glean so we build anew.
+    conf.uploader = Some(Box::new(ViaductUploader) as Box<dyn glean::net::PingUploader>);
+
+    glean::test_reset_glean(conf, client_info, true);
+    Ok(())
 }
