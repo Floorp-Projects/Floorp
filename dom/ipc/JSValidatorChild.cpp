@@ -5,19 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/JSValidatorChild.h"
-#include "js/JSON.h"
 #include "mozilla/dom/JSOracleChild.h"
 
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/ScriptDecoding.h"
 #include "mozilla/ipc/Endpoint.h"
 
-#include "js/experimental/JSStencil.h"
-#include "js/SourceText.h"
-#include "js/Exception.h"
-#include "js/GlobalObject.h"
 #include "js/CompileOptions.h"
-#include "js/RealmOptions.h"
+#include "js/JSON.h"
+#include "js/SourceText.h"
+#include "js/experimental/CompileScript.h"
+#include "js/experimental/JSStencil.h"
 
 using namespace mozilla::dom;
 using Encoding = mozilla::Encoding;
@@ -184,31 +182,26 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS(
 
   MOZ_DIAGNOSTIC_ASSERT(IsUtf8(aSpan));
 
-  JSContext* cx = JSOracleChild::JSContext();
-  if (!cx) {
-    return ValidatorResult::Failure;
-  }
-
-  JS::Rooted<JSObject*> global(cx, JSOracleChild::JSObject());
-  if (!global) {
+  JS::FrontendContext* fc = JSOracleChild::JSFrontendContext();
+  if (!fc) {
     return ValidatorResult::Failure;
   }
 
   JS::SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, aSpan.Elements(), aSpan.Length(),
+  if (!srcBuf.init(fc, aSpan.Elements(), aSpan.Length(),
                    JS::SourceOwnership::Borrowed)) {
-    JS_ClearPendingException(cx);
+    JS::ClearFrontendErrors(fc);
     return ValidatorResult::Failure;
   }
 
-  JSAutoRealm ar(cx, global);
-
   // Parse to JavaScript
+  JS::CompileOptions options((JS::CompileOptions::ForFrontendContext()));
+  JS::CompilationStorage storage;
   RefPtr<JS::Stencil> stencil =
-      CompileGlobalScriptToStencil(cx, JS::CompileOptions(cx), srcBuf);
+      JS::CompileGlobalScriptToStencil(fc, options, srcBuf, storage);
 
   if (!stencil) {
-    JS_ClearPendingException(cx);
+    JS::ClearFrontendErrors(fc);
     return ValidatorResult::Other;
   }
 

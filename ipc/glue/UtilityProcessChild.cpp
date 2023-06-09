@@ -117,13 +117,12 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   // At the moment, only ORB uses JSContext in the
   // Utility Process and ORB uses GENERIC_UTILITY
   if (mSandbox == SandboxingKind::GENERIC_UTILITY) {
-    JS::DisableJitBackend();
-    if (!JS_Init()) {
+    if (!JS_FrontendOnlyInit()) {
       return false;
     }
 #if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
     // Bug 1823458: delay pledge initialization, otherwise
-    // JS_Init triggers sysctl(KERN_PROC_ID) which isnt
+    // JS_FrontendOnlyInit triggers sysctl(KERN_PROC_ID) which isnt
     // permitted with the current pledge.utility config
     StartOpenBSDSandbox(GeckoProcessType_Utility, mSandbox);
 #endif
@@ -144,7 +143,7 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
         StaticMutexAutoLock lock(sUtilityProcessChildMutex);
         sUtilityProcessChild = nullptr;
         if (sandboxKind == SandboxingKind::GENERIC_UTILITY) {
-          JS_ShutDown();
+          JS_FrontendOnlyShutDown();
         }
       },
       ShutdownPhase::XPCOMShutdownFinal);
