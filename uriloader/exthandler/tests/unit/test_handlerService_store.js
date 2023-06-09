@@ -23,7 +23,7 @@ let localHandlerApp = Cc[
   "@mozilla.org/uriloader/local-handler-app;1"
 ].createInstance(Ci.nsILocalHandlerApp);
 localHandlerApp.name = "Local Handler";
-localHandlerApp.executable = FileUtils.getFile("TmpD", []);
+localHandlerApp.executable = new FileUtils.File(PathUtils.tempDir);
 let expectedLocalHandlerApp = {
   name: localHandlerApp.name,
   executable: localHandlerApp.executable,
@@ -275,7 +275,9 @@ add_task(async function test_store_localHandlerApp_missing() {
     "@mozilla.org/uriloader/local-handler-app;1"
   ].createInstance(Ci.nsILocalHandlerApp);
   missingHandlerApp.name = "Non-existing Handler";
-  missingHandlerApp.executable = FileUtils.getFile("TmpD", ["nonexisting"]);
+  missingHandlerApp.executable = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, "nonexisting")
+  );
 
   await deleteHandlerStore();
 
@@ -703,7 +705,10 @@ add_task(async function test_store_gioHandlerApp() {
   }
 
   // Create dummy exec file that following won't fail because file not found error
-  let dummyHandlerFile = FileUtils.getFile("TmpD", ["dummyHandler"]);
+  let dummyHandlerFile = await IOUtils.getFile(
+    PathUtils.tempDir,
+    "dummyHandler"
+  );
   dummyHandlerFile.createUnique(
     Ci.nsIFile.NORMAL_FILE_TYPE,
     parseInt("777", 8)
