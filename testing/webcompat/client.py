@@ -108,7 +108,7 @@ class Client:
             print("waiting for content blocker...")
             self.wait_for_content_blocker()
         if await_console_message is not None:
-            console_message = self.promise_console_message(await_console_message)
+            console_message = self.monitor_for_console_message(await_console_message)
         await self.session.bidi_session.session.subscribe(events=["log.entryAdded"])
         try:
             self.session.url = url
@@ -122,6 +122,12 @@ class Client:
             )
         if timeout is not None:
             self.session.timeouts.page_load = old_timeout
+
+    async def promise_console_message(self, message, timeout=20):
+        promise = self.monitor_for_console_message(message, timeout)
+        await self.session.bidi_session.session.subscribe(events=["log.entryAdded"])
+        await promise
+        await self.session.bidi_session.session.unsubscribe(events=["log.entryAdded"])
 
     def back(self):
         self.session.back()
@@ -164,7 +170,7 @@ class Client:
         )
         return asyncio.wait_for(future, timeout=timeout)
 
-    def promise_console_message(self, msg):
+    def monitor_for_console_message(self, msg, timeout=20):
         def check_messages(method, data):
             if "text" in data:
                 if msg in data["text"]:
@@ -173,7 +179,9 @@ class Client:
                 if msg in data["args"][0]["value"]:
                     return True
 
-        return self.promise_bidi_event("log.entryAdded", check_messages)
+        return self.promise_bidi_event(
+            "log.entryAdded", check_messages, timeout=timeout
+        )
 
     def execute_script(self, script, *args):
         return self.session.execute_script(script, args=args)
@@ -185,6 +193,13 @@ class Client:
         self.session.transport.send(
             "DELETE", "session/%s/cookie" % self.session.session_id
         )
+
+    def send_element_command(self, element, method, uri, body=None):
+        url = "element/%s/%s" % (element.id, uri)
+        return self.session.send_session_command(method, url, body)
+
+    def get_element_attribute(self, element, name):
+        return self.send_element_command(element, "GET", "attribute/%s" % name)
 
     def _do_is_displayed_check(self, ele, is_displayed):
         if ele is None:
@@ -357,19 +372,22 @@ class Client:
         self.execute_script(
             """
                 const sel = arguments[0];
-                sel.fastclicked = false;
+                window.fastclicked = false;
                 const evt = sel.nodeName === "SELECT" ? "mousedown" : "click";
                 document.addEventListener(evt, e => {
                     if (e.target === sel && !e.isTrusted) {
-                        sel.fastclicked = true;
+                        window.fastclicked = true;
                     }
                 }, true);
             """,
             element,
         )
         self.scroll_into_view(element)
+        # tap a few times in case the site's other code interferes
         self.touch.click(element=element).perform()
-        return self.execute_script("return arguments[0].fastclicked", element)
+        self.touch.click(element=element).perform()
+        self.touch.click(element=element).perform()
+        return self.execute_script("return window.fastclicked")
 
     def is_displayed(self, element):
         if element is None:
