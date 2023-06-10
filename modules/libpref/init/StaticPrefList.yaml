@@ -9039,11 +9039,6 @@
   value: false
   mirror: always
 
-- name: layout.display-list.flatten-transform
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: layout.display-list.improve-fragmentation
   type: RelaxedAtomicBool
   value: true
