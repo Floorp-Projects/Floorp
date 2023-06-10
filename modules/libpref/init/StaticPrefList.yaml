@@ -9123,11 +9123,6 @@
   value: true
   mirror: always
 
-- name: layout.min-active-layer-size
-  type: int32_t
-  value: 64
-  mirror: always
-
 # On Android, don't synth mouse move events after scrolling, as they cause
 # unexpected user-visible behaviour. Can remove this after bug 1633450 is
 # satisfactorily resolved.
