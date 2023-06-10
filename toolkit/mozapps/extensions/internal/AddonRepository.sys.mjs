@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
 });
 
@@ -104,8 +103,10 @@ function convertHTMLToPlainText(html) {
 }
 
 async function getAddonsToCache(aIds) {
-  let types =
-    lazy.Preferences.get(PREF_GETADDONS_CACHE_TYPES) || DEFAULT_CACHE_TYPES;
+  let types = Services.prefs.getStringPref(
+    PREF_GETADDONS_CACHE_TYPES,
+    DEFAULT_CACHE_TYPES
+  );
 
   types = types.split(",");
 
@@ -115,7 +116,7 @@ async function getAddonsToCache(aIds) {
   for (let [i, addon] of addons.entries()) {
     var preference = PREF_GETADDONS_CACHE_ID_ENABLED.replace("%ID%", aIds[i]);
     // If the preference doesn't exist caching is enabled by default
-    if (!lazy.Preferences.get(preference, true)) {
+    if (!Services.prefs.getBoolPref(preference, true)) {
       continue;
     }
 

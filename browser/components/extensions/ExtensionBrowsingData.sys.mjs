@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyGetter(lazy, "makeRange", () => {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
 });
 
@@ -62,7 +61,8 @@ export class BrowsingDataDelegate {
       // The property formData needs a different case than the
       // formdata preference.
       const name = item === "formdata" ? "formData" : item;
-      dataToRemove[name] = lazy.Preferences.get(`${PREF_DOMAIN}${item}`);
+      // We assume the pref exists, and throw if it doesn't.
+      dataToRemove[name] = Services.prefs.getBoolPref(`${PREF_DOMAIN}${item}`);
       // Firefox doesn't have the same concept of dataRemovalPermitted
       // as Chrome, so it will always be true.
       dataRemovalPermitted[name] = true;

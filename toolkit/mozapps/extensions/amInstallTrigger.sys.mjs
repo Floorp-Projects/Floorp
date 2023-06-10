@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
@@ -23,7 +22,9 @@ const SUPPORTED_XPI_SCHEMES = ["http", "https"];
 var log = Log.repository.getLogger("AddonManager.InstallTrigger");
 log.level =
   Log.Level[
-    Preferences.get("extensions.logging.enabled", false) ? "Warn" : "Trace"
+    Services.prefs.getBoolPref("extensions.logging.enabled", false)
+      ? "Warn"
+      : "Trace"
   ];
 
 function CallbackObject(id, callback, mediator) {
