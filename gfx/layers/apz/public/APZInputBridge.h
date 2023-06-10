@@ -54,7 +54,8 @@ struct APZHandledResult {
   // an event handler using preventDefault() in the callback, so call sites of
   // this function should be responsible to set a proper |aPlace|.
   APZHandledResult(APZHandledPlace aPlace,
-                   const AsyncPanZoomController* aTarget);
+                   const AsyncPanZoomController* aTarget,
+                   bool aPopulateDirectionsForUnhandled = false);
   APZHandledResult(APZHandledPlace aPlace, SideBits aScrollableDirections,
                    ScrollDirections aOverscrollDirections)
       : mPlace(aPlace),

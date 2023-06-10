@@ -108,10 +108,27 @@ void APZEventResult::UpdateHandledResult(
   }
 
   if (aTarget && !aTarget->IsRootContent()) {
-    auto [result, rootApzc] =
+    // If the event targets a subframe but the subframe and its ancestors
+    // are all scrolled to the top, we want an upward swipe to allow
+    // triggering pull-to-refresh.
+    bool mayTriggerPullToRefresh =
+        aBlock.GetOverscrollHandoffChain()->ScrollingUpWillTriggerPullToRefresh(
+            aTarget);
+    if (mayTriggerPullToRefresh) {
+      // Similar to what is done for the dynamic toolbar, we need to ensure
+      // that if the input has the dispatch to content flag, we need to change
+      // the handled result to Nothing(), so that GeckoView can wait for the
+      // result.
+      mHandledResult = (aDispatchToContent)
+                           ? Nothing()
+                           : Some(APZHandledResult{APZHandledPlace::Unhandled,
+                                                   aTarget, true});
+    }
+
+    auto [mayMoveDynamicToolbar, rootApzc] =
         aBlock.GetOverscrollHandoffChain()->ScrollingDownWillMoveDynamicToolbar(
             aTarget);
-    if (result) {
+    if (mayMoveDynamicToolbar) {
       MOZ_ASSERT(rootApzc && rootApzc->IsRootContent());
       // The event is actually consumed by a non-root APZC but scroll
       // positions in all relevant APZCs are at the bottom edge, so if there's
@@ -339,11 +356,16 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
 }
 
 APZHandledResult::APZHandledResult(APZHandledPlace aPlace,
-                                   const AsyncPanZoomController* aTarget)
+                                   const AsyncPanZoomController* aTarget,
+                                   bool aPopulateDirectionsForUnhandled)
     : mPlace(aPlace) {
   MOZ_ASSERT(aTarget);
   switch (aPlace) {
     case APZHandledPlace::Unhandled:
+      if (aPopulateDirectionsForUnhandled) {
+        mScrollableDirections = aTarget->ScrollableDirections();
+        mOverscrollDirections = aTarget->GetAllowedHandoffDirections();
+      }
       break;
     case APZHandledPlace::HandledByContent:
       if (aTarget) {

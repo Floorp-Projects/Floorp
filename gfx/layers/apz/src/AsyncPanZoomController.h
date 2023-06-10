@@ -564,6 +564,9 @@ class AsyncPanZoomController {
   // Return true if there is room to scroll downwards.
   bool CanScrollDownwards() const;
 
+  // Return true if there is room to scroll upwards.
+  bool CanOverscrollUpwards() const;
+
   /**
    * Convert a point on the scrollbar from this APZC's ParentLayer coordinates
    * to OuterCSS coordinates relative to the beginning of the scroll track.
