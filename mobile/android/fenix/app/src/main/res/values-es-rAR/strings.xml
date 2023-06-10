@@ -266,6 +266,9 @@
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Esta vez, buscar en:</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Buscador %s</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Conocé tu página de inicio personalizada. Las pestañas recientes, los marcadores y los resultados de búsqueda aparecerán aquí.</string>
@@ -369,13 +372,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Acerca de</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Selecciona una</string>
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Seleccioná uno</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Administrar atajos de búsqueda</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Editar buscadores visibles en el menú de búsqueda</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Motores visibles en el menú de búsqueda</string>
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Buscadores visibles en el menú de búsqueda</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motor de búsqueda predeterminado</string>
     <!-- Preference for settings related to Search -->
@@ -1898,7 +1901,7 @@
     <string name="search_engine_add_custom_search_engine_title">Agregar buscador</string>
 
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Agregar nuevo motor de búsqueda</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Agregar un nuevo buscador</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Agregar buscador</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->

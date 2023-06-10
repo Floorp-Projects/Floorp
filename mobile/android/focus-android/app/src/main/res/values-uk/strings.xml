@@ -491,7 +491,10 @@
 
 
 
-  <string name="error_hostLookup_title">Сервер не знайдено</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Додано до ярликів!</string>
+
+    <string name="error_hostLookup_title">Сервер не знайдено</string>
 
 
 
