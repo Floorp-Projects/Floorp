@@ -107,9 +107,9 @@ class InputResultDetailTest : BaseSessionTest() {
                         // Since sendDownEvent() just sends a touch-down, APZ doesn't
                         // yet know the direction, hence it allows scrolling in both
                         // the pan-x and pan-y cases.
-                        var expectedPlace = if (touchAction == "none" || (subframe && scrollable)) {
+                        var expectedPlace = if (touchAction == "none") {
                             PanZoomController.INPUT_RESULT_HANDLED_CONTENT
-                        } else if (scrollable) {
+                        } else if (scrollable && !subframe) {
                             PanZoomController.INPUT_RESULT_HANDLED
                         } else {
                             PanZoomController.INPUT_RESULT_UNHANDLED
@@ -283,7 +283,7 @@ class InputResultDetailTest : BaseSessionTest() {
             "handoff",
             value,
             PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
-            PanZoomController.SCROLLABLE_FLAG_BOTTOM,
+            (PanZoomController.SCROLLABLE_FLAG_BOTTOM or PanZoomController.SCROLLABLE_FLAG_TOP),
             PanZoomController.OVERSCROLL_FLAG_VERTICAL,
         )
 

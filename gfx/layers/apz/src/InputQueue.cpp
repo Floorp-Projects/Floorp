@@ -952,9 +952,17 @@ static APZHandledResult GetHandledResultFor(
                : APZHandledResult{APZHandledPlace::Unhandled, aApzc};
   }
 
-  auto [result, rootApzc] = aCurrentInputBlock.GetOverscrollHandoffChain()
-                                ->ScrollingDownWillMoveDynamicToolbar(aApzc);
-  if (!result) {
+  bool mayTriggerPullToRefresh =
+      aCurrentInputBlock.GetOverscrollHandoffChain()
+          ->ScrollingUpWillTriggerPullToRefresh(aApzc);
+  if (mayTriggerPullToRefresh) {
+    return APZHandledResult{APZHandledPlace::Unhandled, aApzc, true};
+  }
+
+  auto [willMoveDynamicToolbar, rootApzc] =
+      aCurrentInputBlock.GetOverscrollHandoffChain()
+          ->ScrollingDownWillMoveDynamicToolbar(aApzc);
+  if (!willMoveDynamicToolbar) {
     return APZHandledResult{APZHandledPlace::HandledByContent, aApzc};
   }
 

@@ -92,6 +92,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val IFRAME_UNKNOWN_PROTOCOL = "/assets/www/iframe_unknown_protocol.html"
         const val MEDIA_SESSION_DOM1_PATH = "/assets/www/media_session_dom1.html"
         const val MEDIA_SESSION_DEFAULT1_PATH = "/assets/www/media_session_default1.html"
+        const val PULL_TO_REFRESH_SUBFRAME_PATH = "/assets/www/pull-to-refresh-subframe.html"
         const val TOUCH_HTML_PATH = "/assets/www/touch.html"
         const val TOUCH_XORIGIN_HTML_PATH = "/assets/www/touch_xorigin.html"
         const val GETUSERMEDIA_XORIGIN_CONTAINER_HTML_PATH = "/assets/www/getusermedia_xorigin_container.html"

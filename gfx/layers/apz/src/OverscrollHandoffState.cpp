@@ -224,5 +224,22 @@ OverscrollHandoffChain::ScrollingDownWillMoveDynamicToolbar(
   return {false, nullptr};
 }
 
+bool OverscrollHandoffChain::ScrollingUpWillTriggerPullToRefresh(
+    const AsyncPanZoomController* aApzc) const {
+  MOZ_ASSERT(aApzc && !aApzc->IsRootContent(),
+             "Should be used for non-root APZC");
+
+  for (uint32_t i = IndexOf(aApzc); i < Length(); i++) {
+    if (mChain[i]->IsRootContent()) {
+      return mChain[i]->CanOverscrollUpwards();
+    }
+
+    if (!mChain[i]->CanOverscrollUpwards()) {
+      return false;
+    }
+  }
+  return false;
+}
+
 }  // namespace layers
 }  // namespace mozilla

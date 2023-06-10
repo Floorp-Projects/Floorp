@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="height=device-height,width=device-width,initial-scale=1.0"
+    />
+    <style type="text/css">
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        /* background contains one extra transparent.gif because we want trick the
+           contentful paint detection; We want to make sure the background is loaded
+           before the test starts so we always wait for the contentful paint timestamp
+           to exist, however, gradient isn't considered as contentful per spec, so Gecko
+           wouldn't generate a timestamp for it. Hence, we added a transparent gif
+           to the image list to trick the detection. */
+        background: url("/assets/www/transparent.gif"),
+          linear-gradient(135deg, red, white);
+      }
+
+      .container {
+        width: 100%;
+        height: 25%;
+        overflow: scroll;
+      }
+
+      .subframe {
+        width: 100%;
+        height: 100vh;
+      }
+
+      #one > .subframe {
+        background-color: red;
+      }
+
+      #two > .subframe {
+        background-color: green;
+      }
+
+      #three > .subframe {
+        background-color: blue;
+      }
+
+      #four > .subframe {
+        background-color: yellow;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="one" class="container">
+      <div class="subframe"></div>
+    </div>
+    <div id="two" class="container">
+      <div class="subframe"></div>
+    </div>
+    <div id="three" class="container">
+      <div class="subframe"></div>
+    </div>
+    <div id="four" class="container">
+      <div class="subframe"></div>
+    </div>
+  </body>
+  <script>
+    document
+      .getElementById("three")
+      .scrollTo({ top: 200, behavior: "instant" });
+
+    document.getElementById("four").addEventListener("touchstart", e => {
+      console.log("not preventing default");
+    });
+
+    document.getElementById("two").addEventListener("touchstart", e => {
+      console.log("preventing default");
+      e.preventDefault();
+    });
+  </script>
+</html>

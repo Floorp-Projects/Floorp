@@ -272,6 +272,44 @@ class PanZoomControllerTest : BaseSessionTest() {
 
     @WithDisplay(width = 100, height = 100)
     @Test
+    fun pullToRefreshSubframe() {
+        setupDocument(PULL_TO_REFRESH_SUBFRAME_PATH)
+
+        // No touch handler and no room to scroll up
+        var value = sessionRule.waitForResult(sendDownEvent(50f, 10f))
+        assertThat(
+            "Touch when subframe has no room to scroll up should be unhandled",
+            value,
+            equalTo(PanZoomController.INPUT_RESULT_UNHANDLED),
+        )
+
+        // Touch handler with preventDefault
+        value = sessionRule.waitForResult(sendDownEvent(50f, 35f))
+        assertThat(
+            "Touch when content handles the input should indicate so",
+            value,
+            equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT),
+        )
+
+        // Content with room to scroll up
+        value = sessionRule.waitForResult(sendDownEvent(50f, 60f))
+        assertThat(
+            "Touch when subframe has room to scroll up should be handled by content",
+            value,
+            equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT),
+        )
+
+        // Touch handler without preventDefault and no room to scroll up
+        value = sessionRule.waitForResult(sendDownEvent(50f, 85f))
+        assertThat(
+            "Touch no room up and not handled by content should be unhandled",
+            value,
+            equalTo(PanZoomController.INPUT_RESULT_UNHANDLED),
+        )
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
     fun touchEventForResultWithStaticToolbar() {
         setupTouch()
 
@@ -359,6 +397,22 @@ class PanZoomControllerTest : BaseSessionTest() {
 
         // There is a 100% height iframe which is scrollable.
         setupTouchEventDocument(IFRAME_100_PERCENT_HEIGHT_SCROLLABLE_HTML_PATH, withEventHandler)
+
+        // Scroll down a bit to ensure the original tap cannot be the start of a
+        // pull to refresh gesture.
+        mainSession.evaluateJS(
+            """
+        const iframe = document.querySelector('iframe');
+        iframe.contentWindow.scrollTo({
+          left: 0,
+          top: 50,
+          behavior: 'instant',
+        });
+            """.trimIndent(),
+        )
+        waitForScroll(scrollWaitTimeout)
+        mainSession.flushApzRepaints()
+
         value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
         // The input result should be handled in the iframe content.
         assertThat(
@@ -419,6 +473,22 @@ class PanZoomControllerTest : BaseSessionTest() {
 
         // There is a 98vh iframe which is scrollable.
         setupTouchEventDocument(IFRAME_98VH_SCROLLABLE_HTML_PATH, withEventHandler)
+
+        // Scroll down a bit to ensure the original tap cannot be the start of a
+        // pull to refresh gesture.
+        mainSession.evaluateJS(
+            """
+        const iframe = document.querySelector('iframe');
+        iframe.contentWindow.scrollTo({
+          left: 0,
+          top: 50,
+          behavior: 'instant',
+        });
+            """.trimIndent(),
+        )
+        waitForScroll(scrollWaitTimeout)
+        mainSession.flushApzRepaints()
+
         value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
         // The input result should be handled in the iframe content initially.
         assertThat(

@@ -29,7 +29,12 @@
   </style>
   <body>
     <div id="scroll" style="width: 100%; height: 100vh; overflow-y: scroll">
-      <div style="height: 200vh"></div>
+      <div style="height: 300vh"></div>
     </div>
   </body>
+  <script>
+    document
+      .getElementById("scroll")
+      .scrollTo({ top: 50, behavior: "instant" });
+  </script>
 </html>

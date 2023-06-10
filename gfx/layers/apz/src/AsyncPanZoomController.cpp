@@ -2339,6 +2339,11 @@ bool AsyncPanZoomController::CanVerticalScrollWithDynamicToolbar() const {
   return mY.CanVerticalScrollWithDynamicToolbar();
 }
 
+bool AsyncPanZoomController::CanOverscrollUpwards() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return !mY.CanScrollTo(eSideTop) && mY.OverscrollBehaviorAllowsHandoff();
+}
+
 bool AsyncPanZoomController::CanScrollDownwards() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   return mY.CanScrollTo(eSideBottom);
