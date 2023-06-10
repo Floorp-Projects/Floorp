@@ -346,6 +346,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     bool DrawPathAccel(const Path* aPath, const Pattern& aPattern,
                        const DrawOptions& aOptions,
                        const StrokeOptions* aStrokeOptions = nullptr,
+                       bool aAllowStrokeAlpha = false,
                        const ShadowOptions* aShadow = nullptr,
                        bool aCacheable = true);
 
@@ -545,7 +546,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                        const StrokeOptions* aStrokeOptions);
   void DrawPath(const Path* aPath, const Pattern& aPattern,
                 const DrawOptions& aOptions,
-                const StrokeOptions* aStrokeOptions = nullptr);
+                const StrokeOptions* aStrokeOptions = nullptr,
+                bool aAllowStrokeAlpha = false);
 
   bool MarkChanged();
 
