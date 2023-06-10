@@ -3561,9 +3561,6 @@ pref("browser.safebrowsing.provider.mozilla.lists.content", "moz-full");
 // The table and global pref for blocking plugin content
 pref("urlclassifier.blockedTable", "moztest-block-simple,mozplugin-block-digest256");
 
-// Wakelock is disabled by default.
-pref("dom.wakelock.enabled", false);
-
 #ifdef XP_MACOSX
   #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
     // In non-release builds we crash by default on insecure text input (when a
