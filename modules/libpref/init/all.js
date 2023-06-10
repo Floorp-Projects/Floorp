@@ -587,8 +587,6 @@ pref("accessibility.force_disabled", 0);
 
 pref("focusmanager.testmode", false);
 
-pref("accessibility.usetexttospeech", "");
-
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
 // Enable FAYT by pressing / or "
