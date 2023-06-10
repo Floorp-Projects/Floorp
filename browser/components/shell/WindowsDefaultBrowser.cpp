@@ -127,12 +127,12 @@ bool LaunchControlPanelDefaultPrograms() {
   return true;
 }
 
-static bool IsAppUserRegistered(const wchar_t* appRegName) {
+static bool IsAppRegistered(HKEY rootKey, const wchar_t* appRegName) {
   const wchar_t* keyPath = L"Software\\RegisteredApplications";
 
   DWORD size = sizeof(uint32_t);
-  LSTATUS ls = RegGetValueW(HKEY_CURRENT_USER, keyPath, appRegName, RRF_RT_ANY,
-                            nullptr, nullptr, &size);
+  LSTATUS ls = RegGetValueW(rootKey, keyPath, appRegName, RRF_RT_ANY, nullptr,
+                            nullptr, &size);
   return ls == ERROR_SUCCESS;
 }
 
@@ -155,7 +155,8 @@ static bool LaunchMsSettingsProtocol() {
     mozilla::UniquePtr<wchar_t[]> appRegName;
     GetAppRegName(appRegName);
     const wchar_t* paramFormat =
-        IsAppUserRegistered(appRegName.get())
+        IsAppRegistered(HKEY_CURRENT_USER, appRegName.get()) ||
+                !IsAppRegistered(HKEY_LOCAL_MACHINE, appRegName.get())
             ? L"ms-settings:defaultapps?registeredAppUser=%s"
             : L"ms-settings:defaultapps?registeredAppMachine=%s";
     int bufferSize = _scwprintf(paramFormat, appRegName.get());
