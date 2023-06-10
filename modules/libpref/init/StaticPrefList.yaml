@@ -7074,17 +7074,6 @@
   value: 4
   mirror: once
 
-# Minimum buffer size in KB before using volatile memory over the heap.
-- name: image.mem.volatile.min_threshold_kb
-  type: RelaxedAtomicInt32
-#if defined(ANDROID)
-  # On Android, volatile memory keeps file handles open for each buffer.
-  value: 100
-#else
-  value: -1
-#endif
-  mirror: always
-
 # How long in ms before we should start shutting down idle decoder threads.
 - name: image.multithreaded_decoding.idle_timeout
   type: int32_t
