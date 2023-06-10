@@ -7000,13 +7000,6 @@
   value: true
   mirror: once
 
-# Whether the heap should be used for frames from animated images. On Android,
-# volatile memory keeps file handles open for each buffer.
-- name: image.mem.animated.use_heap
-  type: RelaxedAtomicBool
-  value: @IS_ANDROID@
-  mirror: always
-
 # Enable extra information for debugging in the image memory reports.
 - name: image.mem.debug-reporting
   type: RelaxedAtomicBool
