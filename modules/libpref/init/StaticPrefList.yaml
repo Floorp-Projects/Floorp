@@ -9297,13 +9297,6 @@
   mirror: always
   rust: true
 
-# Is 'font-synthesis: small-caps' supported?
-- name: layout.css.font-synthesis-small-caps.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether we want scrollbar-width: thin to behave as scrollbar-width: auto.
 - name: layout.css.scrollbar-width-thin.disabled
   type: RelaxedAtomicBool
