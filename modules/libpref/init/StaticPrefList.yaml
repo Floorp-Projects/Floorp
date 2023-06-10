@@ -12728,13 +12728,6 @@
   value: false
   mirror: always
 
-# Enable/disable widget update area flashing --- only supported with
-# BasicLayers (other layer managers always update the entire widget area).
-- name: nglayout.debug.widget_update_flashing
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: nglayout.debug.disable_xul_cache
   type: bool
   value: false
