@@ -82,6 +82,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt;
 
 public class GeckoSession {
   private static final String LOGTAG = "GeckoSession";
@@ -4532,6 +4533,80 @@ public class GeckoSession {
       }
     }
 
+    /** Contains all the Identity credential prompts (FedCM) */
+    public final class IdentityCredential {
+      /**
+       * ProviderSelectorPrompt contains the information necessary to represent a prompt that allows
+       * the user to select the identity credential provider they would like to use.
+       */
+      public static class ProviderSelectorPrompt extends BasePrompt {
+        /** The providers from which the user could the select. */
+        public final @NonNull Provider[] providers;
+
+        /**
+         * Creates a new {@link ProviderSelectorPrompt} with the given parameters.
+         *
+         * @param id The identification for this prompt.
+         * @param providers The providers from which the user could the select.
+         * @param observer A callback to notify when the prompt has been completed.
+         */
+        protected ProviderSelectorPrompt(
+            @NonNull final String id,
+            @NonNull final Provider[] providers,
+            @NonNull final Observer observer) {
+          super(id, null, observer);
+          this.providers = providers;
+        }
+
+        /**
+         * Confirms the prompt and passes the provider index back to content.
+         *
+         * @param providerIndex providerIndex An integer representing the index of the provider
+         *     chosen by the user to be returned to content.
+         * @return A {@link PromptResponse} which can be used to complete the {@link GeckoResult}
+         *     associated with this prompt.
+         */
+        @UiThread
+        public @NonNull PromptResponse confirm(final int providerIndex) {
+          ensureResult().putInt("providerIndex", providerIndex);
+          return super.confirm();
+        }
+
+        /** A representation of an Identity Credential Provider. */
+        public static class Provider {
+          /** A base64 string for given icon for the provider; may be null. */
+          public final @Nullable String icon;
+
+          /** The name of the provider. */
+          public final @NonNull String name;
+
+          /** The id of the provider. */
+          public final int id;
+
+          /**
+           * Creates a new {@link Provider} with the given parameters.
+           *
+           * @param id The identification for this prompt.
+           * @param icon A string base64 icon.
+           * @param name The name of the {@link Provider}.
+           */
+          public Provider(final int id, final @NonNull String name, final @Nullable String icon) {
+            this.id = id;
+            this.icon = icon;
+            this.name = name;
+          }
+
+          /* package */
+          static @NonNull Provider fromBundle(final @NonNull GeckoBundle bundle) {
+            final int id = bundle.getInt("providerIndex");
+            final String icon = bundle.getString("icon");
+            final String name = bundle.getString("name");
+            return new Provider(id, name, icon);
+          }
+        }
+      }
+    }
+
     /**
      * ButtonPrompt contains the information necessary to represent a JavaScript confirm() call from
      * content.
@@ -5574,6 +5649,21 @@ public class GeckoSession {
     default @Nullable GeckoResult<PromptResponse> onLoginSelect(
         @NonNull final GeckoSession session,
         @NonNull final AutocompleteRequest<Autocomplete.LoginSelectOption> request) {
+      return null;
+    }
+
+    /**
+     * Handle an Identity Credential Provider selection prompt request. This is triggered by the
+     * user focusing on selecting a provider for authenticating.
+     *
+     * @param session The {@link GeckoSession} that triggered the request.
+     * @param prompt The {@link ProviderSelectorPrompt} containing the request details.
+     * @return A {@link GeckoResult} resolving to a {@link PromptResponse} which includes all
+     *     necessary information to resolve the prompt.
+     */
+    @UiThread
+    default @Nullable GeckoResult<PromptResponse> onSelectIdentityCredentialProvider(
+        @NonNull final GeckoSession session, @NonNull final ProviderSelectorPrompt prompt) {
       return null;
     }
 
