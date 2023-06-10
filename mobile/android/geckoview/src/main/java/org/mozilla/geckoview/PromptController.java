@@ -29,6 +29,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.ChoicePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.ColorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PopupPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptInstanceDelegate;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse;
@@ -536,7 +537,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
       for (int i = 0; i < options.length; ++i) {
         options[i] = Autocomplete.LoginSelectOption.fromBundle(optionBundles[i]);
       }
-
       return new AutocompleteRequest<>(info.getString("id"), options, observer);
     }
 
@@ -546,6 +546,34 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
         final GeckoSession session,
         final PromptDelegate delegate) {
       return delegate.onLoginSelect(session, prompt);
+    }
+  }
+
+  private static final class IdentityCredentialSelectProviderHandler
+      implements PromptHandler<ProviderSelectorPrompt> {
+    @Override
+    public ProviderSelectorPrompt newPrompt(final GeckoBundle info, final Observer observer) {
+      final GeckoBundle[] providerBundles = info.getBundleArray("providers");
+      if (providerBundles == null) {
+        return null;
+      }
+
+      final ProviderSelectorPrompt.Provider[] providers =
+          new ProviderSelectorPrompt.Provider[providerBundles.length];
+
+      for (int i = 0; i < providerBundles.length; ++i) {
+        providers[i] = ProviderSelectorPrompt.Provider.fromBundle(providerBundles[i]);
+      }
+
+      return new ProviderSelectorPrompt(info.getString("id"), providers, observer);
+    }
+
+    @Override
+    public GeckoResult<PromptResponse> callDelegate(
+        final ProviderSelectorPrompt prompt,
+        final GeckoSession session,
+        final PromptDelegate delegate) {
+      return delegate.onSelectIdentityCredentialProvider(session, prompt);
     }
   }
 
@@ -640,6 +668,8 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     sPromptHandlers.register(new CreditCardSaveHandler(), "Autocomplete:Save:CreditCard");
     sPromptHandlers.register(new AddressSaveHandler(), "Autocomplete:Save:Address");
     sPromptHandlers.register(new LoginSelectHandler(), "Autocomplete:Select:Login");
+    sPromptHandlers.register(
+        new IdentityCredentialSelectProviderHandler(), "IdentityCredential:Select:Provider");
     sPromptHandlers.register(new CreditCardSelectHandler(), "Autocomplete:Select:CreditCard");
     sPromptHandlers.register(new AddressSelectHandler(), "Autocomplete:Select:Address");
   }

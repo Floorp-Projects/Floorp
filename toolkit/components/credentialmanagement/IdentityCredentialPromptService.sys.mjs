@@ -5,6 +5,7 @@
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -22,6 +23,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewIdentityCredential:
+    "resource://gre/modules/GeckoViewIdentityCredential.sys.mjs",
+});
 const BEST_HEADER_ICON_SIZE = 16;
 const BEST_ICON_SIZE = 32;
 
@@ -135,6 +140,33 @@ export class IdentityCredentialPromptService {
     }
 
     let iconResults = await Promise.allSettled(promises);
+    if (AppConstants.platform === "android") {
+      const providers = [];
+      for (const [providerIndex, provider] of identityProviders.entries()) {
+        let providerURL = new URL(provider.configURL);
+        let displayDomain = lazy.IDNService.convertToDisplayIDN(
+          providerURL.host,
+          {}
+        );
+
+        let iconResult = iconResults[providerIndex];
+        const data = {
+          id: providerIndex,
+          icon: iconResult.value,
+          name: displayDomain,
+        };
+        providers.push(data);
+      }
+
+      return new Promise((resolve, reject) => {
+        lazy.GeckoViewIdentityCredential.onShowProviderPrompt(
+          browsingContext,
+          providers,
+          resolve,
+          reject
+        );
+      });
+    }
 
     // Localize all strings to be used
     // Bug 1797154 - Convert localization calls to use the async formatValues.
