@@ -973,8 +973,6 @@ pref("privacy.history.custom",              false);
 // 6 - Last 24 hours
 pref("privacy.sanitize.timeSpan", 1);
 
-pref("privacy.sanitize.migrateFx3Prefs",    false);
-
 pref("privacy.panicButton.enabled",         true);
 
 // Time until temporary permissions expire, in ms
