@@ -139,7 +139,7 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
     if test_type == "wdspec":
         options = {"args": []}
         if kwargs["binary"]:
-            if not "webdriver_args" in executor_kwargs:
+            if "webdriver_args" not in executor_kwargs:
                 executor_kwargs["webdriver_args"] = []
             executor_kwargs["webdriver_args"].extend(["--binary", kwargs["binary"]])
         if kwargs["binary_args"]:
