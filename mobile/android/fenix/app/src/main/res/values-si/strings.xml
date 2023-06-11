@@ -243,7 +243,7 @@
     <string name="search_suggestions_onboarding_title">පෞද්. වාරවල සෙවුම් යෝජනා සඳහා ඉඩ දෙන්නද?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">ඔබ ලිපින තීරුවේ ලියන සෑම දෙයක්ම ඔබගේ සෙවුම් යන්ත්‍රයට %s හරහා යවයි.</string>
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">%s සොයන්න</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ලිපින තීරුවෙන් කෙලින්ම සොයන්න</string>
@@ -252,6 +252,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">මෙවර සෙවීම:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s සෙවුම් යන්ත්‍රය</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -354,6 +357,14 @@
     <string name="preferences_category_general">සාමාන්‍ය</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">පිළිබඳව</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">එකක් තෝරගන්න</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">සෙවුම් කෙටිමං කළමනාකරණය</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">සෙවුමෙහි පෙනෙන යන්ත්‍ර සංශෝධනය</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">සෙවුම් වට්ටෝරුවෙහි පෙනෙන යන්ත්‍ර</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">පෙරනිමි සෙවුම් යන්ත්‍රය</string>
     <!-- Preference for settings related to Search -->
@@ -1842,6 +1853,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">සෙවුම් යන්ත්‍රයක් යොදන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">නව සෙවුම් යන්ත්‍රයක් යොදන්න</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">සෙවුම් යන්ත්‍රය සංස්කරණය</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1855,14 +1868,25 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">වෙනත්</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">නම</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">නම</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">සෙවුම් යන්ත්‍රයේ නම</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">සෙවුම් තන්තුවේ ඒ.ස.නි.</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">භාවිතයට සෙවුම් තන්තුව</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">සෙවීමට භාවිතා කරන ඒ.ස.නි.</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">“%s” සමඟ විමසුම ප්‍රතිස්ථාපනය කරන්න. නිදසුන:\nhttps://search.naver.com/search.naver?where=nexearch&amp;sm=top_hty&amp;fbm=0&amp;ie=utf8&amp;query=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">අභිරුචි සෙවුම් යන්ත්‍රයේ විස්තර</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">සුරකින්න</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">සෙවුම් යන්ත්‍රයේ නම යොදන්න</string>

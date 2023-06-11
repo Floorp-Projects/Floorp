@@ -489,7 +489,10 @@
 
 
 
-  <string name="error_hostLookup_title">서버를 찾을 수 없습니다</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">바로가기에 추가되었습니다!</string>
+
+    <string name="error_hostLookup_title">서버를 찾을 수 없습니다</string>
 
 
 

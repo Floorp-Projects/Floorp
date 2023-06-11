@@ -489,7 +489,10 @@
 
 
 
-  <string name="error_hostLookup_title">No s\'ha trobat el servidor</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">S’ha afegit a les dreceres</string>
+
+    <string name="error_hostLookup_title">No s\'ha trobat el servidor</string>
 
 
 

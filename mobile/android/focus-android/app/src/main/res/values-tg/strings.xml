@@ -491,6 +491,9 @@
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Кушодан</string>
 
+    <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ба миёнбурҳо илова карда шуд!</string>
+
     <string name="error_hostLookup_title">Сервер ёфт нашуд</string>
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->

@@ -490,6 +490,9 @@
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">අරින්න</string>
 
+    <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">කෙටිමං වෙත එක් කෙරිණි!</string>
+
     <string name="error_hostLookup_title">සේවාදායකය හමු නොවුණි</string>
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
