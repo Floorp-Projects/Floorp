@@ -2172,13 +2172,17 @@ impl Renderer {
 
     fn handle_prims(
         &mut self,
+        draw_target: &DrawTarget,
         prim_instances: &[PrimitiveInstanceData],
         mask_instances_fast: &[MaskInstance],
         mask_instances_slow: &[MaskInstance],
+        prim_instances_with_scissor: &FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
+        mask_instances_fast_with_scissor: &FastHashMap<DeviceIntRect, Vec<MaskInstance>>,
+        mask_instances_slow_with_scissor: &FastHashMap<DeviceIntRect, Vec<MaskInstance>>,
         projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
-        if prim_instances.is_empty() {
+        if prim_instances.is_empty() && prim_instances_with_scissor.is_empty() {
             return;
         }
 
@@ -2196,12 +2200,31 @@ impl Renderer {
                 &mut self.profile,
             );
 
-            self.draw_instanced_batch(
-                prim_instances,
-                VertexArrayKind::Primitive,
-                &BatchTextures::empty(),
-                stats,
-            );
+            if !prim_instances.is_empty() {
+                self.draw_instanced_batch(
+                    prim_instances,
+                    VertexArrayKind::Primitive,
+                    &BatchTextures::empty(),
+                    stats,
+                );
+            }
+
+            if !prim_instances_with_scissor.is_empty() {
+                self.device.enable_scissor();
+
+                for (scissor_rect, prim_instances) in prim_instances_with_scissor {
+                    self.device.set_scissor_rect(draw_target.to_framebuffer_rect(*scissor_rect));
+
+                    self.draw_instanced_batch(
+                        prim_instances,
+                        VertexArrayKind::Primitive,
+                        &BatchTextures::empty(),
+                        stats,
+                    );
+                }
+
+                self.device.disable_scissor();
+            }
         }
 
         {
@@ -2227,6 +2250,31 @@ impl Renderer {
                 );
             }
 
+            if !mask_instances_fast_with_scissor.is_empty() {
+                self.shaders.borrow_mut().ps_mask_fast.bind(
+                    &mut self.device,
+                    projection,
+                    None,
+                    &mut self.renderer_errors,
+                    &mut self.profile,
+                );
+
+                self.device.enable_scissor();
+
+                for (scissor_rect, instances) in mask_instances_fast_with_scissor {
+                    self.device.set_scissor_rect(draw_target.to_framebuffer_rect(*scissor_rect));
+
+                    self.draw_instanced_batch(
+                        instances,
+                        VertexArrayKind::Mask,
+                        &BatchTextures::empty(),
+                        stats,
+                    );
+                }
+
+                self.device.disable_scissor();
+            }
+
             if !mask_instances_slow.is_empty() {
                 self.shaders.borrow_mut().ps_mask.bind(
                     &mut self.device,
@@ -2242,6 +2290,31 @@ impl Renderer {
                     &BatchTextures::empty(),
                     stats,
                 );
+            }
+
+            if !mask_instances_slow_with_scissor.is_empty() {
+                self.shaders.borrow_mut().ps_mask.bind(
+                    &mut self.device,
+                    projection,
+                    None,
+                    &mut self.renderer_errors,
+                    &mut self.profile,
+                );
+
+                self.device.enable_scissor();
+
+                for (scissor_rect, instances) in mask_instances_slow_with_scissor {
+                    self.device.set_scissor_rect(draw_target.to_framebuffer_rect(*scissor_rect));
+
+                    self.draw_instanced_batch(
+                        instances,
+                        VertexArrayKind::Mask,
+                        &BatchTextures::empty(),
+                        stats,
+                    );
+                }
+
+                self.device.disable_scissor();
             }
         }
     }
@@ -3498,9 +3571,13 @@ impl Renderer {
         }
 
         self.handle_prims(
+            &draw_target,
             &target.prim_instances,
             &target.mask_instances_fast,
             &target.mask_instances_slow,
+            &target.prim_instances_with_scissor,
+            &target.mask_instances_fast_with_scissor,
+            &target.mask_instances_slow_with_scissor,
             projection,
             stats,
         );
