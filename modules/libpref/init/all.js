@@ -183,10 +183,6 @@ pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
 pref("browser.helperApps.deleteTempFileOnExit", false);
 
-// max image size for which it is placed in the tab icon for tabbrowser.
-// if 0, no images are used for tab icons for image documents.
-pref("browser.chrome.image_icons.max_size", 1024);
-
 pref("browser.triple_click_selects_paragraph", true);
 
 // Enable fillable forms in the PDF viewer.
