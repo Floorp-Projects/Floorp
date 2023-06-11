@@ -77,6 +77,15 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
   nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
 
   RefPtr<StrongWorkerRef> mWorkerRef;
+  // This is an additional refcount we add to `mWorkerRef` when we have a
+  // pending callback from mPipeOut.AsyncWait() which is guaranteed to fire when
+  // either we can write to the pipe or the stream has been closed.  Because
+  // this callback must run on our owning worker thread, we must ensure that the
+  // worker thread lives long enough to process the runnable (and potentially
+  // release the last reference to this non-thread-safe object on this thread).
+  //
+  // By holding an additional refcount we can avoid creating a mini state
+  // machine around mWorkerRef which hopefully improves clarity.
   RefPtr<StrongWorkerRef> mAsyncWaitWorkerRef;
 
   RefPtr<ReadableStreamDefaultReader> mReader;
