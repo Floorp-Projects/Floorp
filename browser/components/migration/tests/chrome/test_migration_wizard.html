@@ -1082,6 +1082,64 @@
           ""
         );
       });
+
+      /**
+       * Tests that if a file progress update comes down which puts a resource
+       * from being done to being back "inProgress", that the status message is
+       * cleared.
+       *
+       * This is extremely similar to the above test, except that it's for progress
+       * updates for file resources.
+       */
+      add_task(async function test_clear_status_message_when_in_file_progress() {
+        const STRING_TO_CLEAR = "This string should get cleared";
+        gWiz.toggleAttribute("dialog-mode", false);
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.FILE_IMPORT_PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
+              inProgress: false,
+              message: STRING_TO_CLEAR,
+            },
+          },
+        });
+
+        let passwordsGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW
+        );
+        ok(!isHidden(passwordsGroup), "Passwords group should be visible");
+        let progressIcon = passwordsGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          passwordsGroup.querySelector(".success-text").textContent,
+          STRING_TO_CLEAR
+        );
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.FILE_IMPORT_PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
+              inProgress: true,
+              message: "",
+            },
+          },
+        });
+
+        ok(!isHidden(passwordsGroup), "Passwords group should be visible");
+        ok(
+          !progressIcon.classList.contains("completed"),
+          "Progress should still be underway"
+        );
+        is(
+          passwordsGroup.querySelector(".success-text").textContent.trim(),
+          ""
+        );
+      });
     </script>
   </head>
   <body>
