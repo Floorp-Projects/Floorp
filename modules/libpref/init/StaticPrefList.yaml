@@ -3291,11 +3291,6 @@
   value: false
   mirror: always
 
-- name: dom.performance.children_results_ipc_timeout
-  type: uint32_t
-  value: 1000
-  mirror: always
-
 # Enable notification of performance timing
 - name: dom.performance.enable_notify_performance_timing
   type: bool
