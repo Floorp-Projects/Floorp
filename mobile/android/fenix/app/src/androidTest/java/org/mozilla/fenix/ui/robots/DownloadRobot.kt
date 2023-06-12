@@ -9,9 +9,12 @@ package org.mozilla.fenix.ui.robots
 import android.content.Intent
 import android.util.Log
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -20,13 +23,18 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -73,6 +81,36 @@ class DownloadRobot {
             .click()
     }
 
+    fun deleteDownloadedItem(fileName: String) =
+        onView(
+            allOf(
+                withId(R.id.overflow_menu),
+                hasSibling(withText(fileName)),
+            ),
+        ).click()
+
+    fun longClickDownloadedItem(title: String) =
+        onView(
+            allOf(
+                withId(R.id.title),
+                withText(title),
+            ),
+        ).perform(longClick())
+
+    fun selectDownloadedItem(title: String) =
+        onView(
+            allOf(
+                withId(R.id.title),
+                withText(title),
+            ),
+        ).perform(click())
+
+    fun openMultiSelectMoreOptionsMenu() =
+        itemWithDescription(getStringResource(R.string.content_description_menu)).click()
+
+    fun clickMultiSelectRemoveButton() =
+        itemWithResIdContainingText("$packageName:id/title", "Remove").click()
+
     class Transition {
         fun clickDownload(interact: DownloadRobot.() -> Unit): Transition {
             downloadButton().click()
@@ -90,6 +128,13 @@ class DownloadRobot {
 
         fun closePrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             closePromptButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun closeDownloadPrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            itemWithResId("$packageName:id/download_dialog_close_button").click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()

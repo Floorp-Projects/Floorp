@@ -193,7 +193,7 @@ class NavigationToolbarTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
             verifyFindInPageButton()
@@ -201,7 +201,7 @@ class NavigationToolbarTest {
             verifyFindInPageNextButton()
             verifyFindInPagePrevButton()
             verifyFindInPageCloseButton()
-            enterFindInPageQuery("o")
+            enterFindInPageQuery("l")
             verifyFindNextInPageResult("1/2")
             clickFindInPageNextButton()
             verifyFindNextInPageResult("2/2")

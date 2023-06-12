@@ -148,7 +148,7 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Select all")
             clickContextMenuItem("Copy")
@@ -160,7 +160,7 @@ class TextSelectionTest {
             clickClearButton()
             longClickToolbar()
             clickPasteText()
-            verifyTypedToolbarText("Washington Crossing the Delaware Wikipedia link")
+            verifyTypedToolbarText("Washington Crossing the Delaware Wikipedia linkName: Android")
         }
     }
 
@@ -172,7 +172,7 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Copy")
         }.openNavigationToolbar {
@@ -195,7 +195,7 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
@@ -210,7 +210,7 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Search")
             verifyTabCounter("2")
@@ -229,7 +229,7 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Private Search")
             verifyTabCounter("2")

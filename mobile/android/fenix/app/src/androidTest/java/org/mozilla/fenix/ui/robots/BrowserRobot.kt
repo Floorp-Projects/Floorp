@@ -316,7 +316,7 @@ class BrowserRobot {
         }
     }
 
-    fun longClickPDFImage() = longClickPageObject(itemWithResId("pdfjs_internal_id_8R"))
+    fun longClickPDFImage() = longClickPageObject(itemWithResId("pdfjs_internal_id_13R"))
 
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
@@ -871,6 +871,55 @@ class BrowserRobot {
 
     fun longClickToolbar() = mDevice.findObject(By.res("$packageName:id/mozac_browser_toolbar_url_view")).click(LONG_CLICK_DURATION)
 
+    fun verifyDownloadPromptIsDismissed() =
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/viewDynamicDownloadDialog"),
+            exists = false,
+        )
+
+    fun verifyCancelPrivateDownloadsPrompt(numberOfActiveDownloads: String) {
+        assertItemWithResIdAndTextExists(
+            itemWithResIdContainingText(
+                "$packageName:id/title",
+                getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_warning_content_title),
+            ),
+            itemWithResIdContainingText(
+                "$packageName:id/body",
+                "If you close all Private tabs now, $numberOfActiveDownloads download will be canceled. Are you sure you want to leave Private Browsing?",
+            ),
+            itemWithResIdContainingText(
+                "$packageName:id/deny_button",
+                getStringResource(R.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
+            ),
+            itemWithResIdContainingText(
+                "$packageName:id/accept_button",
+                getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_accept),
+            ),
+        )
+    }
+
+    fun clickStayInPrivateBrowsingPromptButton() =
+        itemWithResIdContainingText(
+            "$packageName:id/deny_button",
+            getStringResource(R.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
+        ).click()
+
+    fun clickCancelPrivateDownloadsPromptButton() {
+        itemWithResIdContainingText(
+            "$packageName:id/accept_button",
+            getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_accept),
+        ).click()
+
+        mDevice.waitForWindowUpdate(packageName, waitingTime)
+    }
+
+    fun fillPdfForm(name: String) {
+        // Set PDF form text for the text box
+        itemWithResId("pdfjs_internal_id_10R").setText(name)
+        // Click PDF form check box
+        itemWithResId("pdfjs_internal_id_11R").click()
+    }
+
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle(waitingTime)
@@ -1111,6 +1160,16 @@ class BrowserRobot {
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
+        }
+
+        fun clickDownloadPDFButton(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            itemWithResIdContainingText(
+                "download",
+                "Download",
+            ).click()
+
+            DownloadRobot().interact()
+            return DownloadRobot.Transition()
         }
     }
 }

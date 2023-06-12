@@ -6,19 +6,17 @@ package org.mozilla.fenix.ui.robots
 
 import android.app.NotificationManager
 import android.content.Context
-import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
-import androidx.test.uiautomator.Until
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.ext.waitNotNull
-import java.lang.AssertionError
+import kotlin.AssertionError
 
 class NotificationRobot {
 
@@ -52,15 +50,9 @@ class NotificationRobot {
     }
 
     fun verifySystemNotificationDoesNotExist(notificationMessage: String) {
-        mDevice.waitNotNull(
-            Until.gone(text(notificationMessage)),
-            waitingTime,
-        )
-
+        mDevice.findObject(UiSelector().textContains(notificationMessage)).waitUntilGone(waitingTime)
         assertFalse(
-            mDevice.findObject(
-                UiSelector().text(notificationMessage),
-            ).exists(),
+            mDevice.findObject(UiSelector().textContains(notificationMessage)).waitForExists(waitingTimeShort),
         )
     }
 
@@ -108,6 +100,60 @@ class NotificationRobot {
                 !mDevice.findObject(UiSelector().resourceId("android:id/actions_container")).exists()
             ) {
                 scrollToEnd()
+            }
+        }
+    }
+
+    // Performs swipe action on download system notifications
+    fun swipeDownloadNotification(
+        direction: String,
+        shouldDismissNotification: Boolean,
+        canExpandNotification: Boolean = true,
+    ) {
+        // In case it fails, retry max 6x the swipe action on download system notifications
+        for (i in 1..6) {
+            try {
+                // Swipe left the download system notification
+                if (direction == "Left") {
+                    itemContainingText(appName)
+                        .also {
+                            it.waitForExists(waitingTime)
+                            it.swipeLeft(3)
+                        }
+                } else {
+                    // Swipe right the download system notification
+                    itemContainingText(appName)
+                        .also {
+                            it.waitForExists(waitingTime)
+                            it.swipeRight(3)
+                        }
+                }
+                // Not all download related system notifications can be dismissed
+                if (shouldDismissNotification) {
+                    assertFalse(itemContainingText(appName).waitForExists(waitingTimeShort))
+                } else {
+                    assertTrue(itemContainingText(appName).waitForExists(waitingTimeShort))
+                }
+
+                break
+            } catch (e: AssertionError) {
+                if (i == 6) {
+                    throw e
+                } else {
+                    notificationShade {
+                    }.closeNotificationTray {
+                    }.openNotificationShade {
+                        // The download complete system notification can't be expanded
+                        if (canExpandNotification) {
+                            // In all cases the download system notification title will be the app name
+                            verifySystemNotificationExists(appName)
+                            expandNotificationMessage()
+                        } else {
+                            // Using the download completed system notification summary to bring in to view an properly verify it
+                            verifySystemNotificationExists("Download completed")
+                        }
+                    }
+                }
             }
         }
     }

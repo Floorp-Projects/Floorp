@@ -267,7 +267,8 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
+            waitForPageToLoad()
             longClickPageObject(itemWithText("Wikipedia link"))
             verifyLinkContextMenuItems("wikipedia.org".toUri(), false)
             dismissContentContextMenu()

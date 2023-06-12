@@ -12,16 +12,20 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_DOCS
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadedFileOnStorage
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.setNetworkEnabled
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.downloadRobot
+import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
 
@@ -39,7 +43,6 @@ class DownloadTest {
     /* Remote test page managed by Mozilla Mobile QA team at https://github.com/mozilla-mobile/testapp */
     private val downloadTestPage = "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
     private var downloadFile: String = ""
-    private val pdfFileName = "washington.pdf"
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
@@ -65,6 +68,8 @@ class DownloadTest {
         }
 
         mockWebServer.shutdown()
+
+        setNetworkEnabled(enabled = true)
     }
 
     @Test
@@ -83,6 +88,7 @@ class DownloadTest {
             verifyPhotosAppOpens()
         }
         mDevice.pressBack()
+        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     @Test
@@ -117,6 +123,7 @@ class DownloadTest {
         notificationShade {
             verifySystemNotificationExists("Download completed")
         }
+        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     @SmokeTest
@@ -149,6 +156,7 @@ class DownloadTest {
         }.openDownloadsManager {
             verifyEmptyDownloadsList()
         }
+        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     /* Verifies downloads in the Downloads Menu:
@@ -205,6 +213,7 @@ class DownloadTest {
             verifyPhotosAppOpens()
             mDevice.pressBack()
         }
+        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     @SmokeTest
@@ -215,27 +224,382 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemContainingText("PDF file"))
+            clickPageObject(itemContainingText("PDF form file"))
             verifyPageContent("Washington Crossing the Delaware")
         }
     }
 
+    // Save PDF file from the share overlay
     @SmokeTest
     @Test
     fun saveAndOpenPdfTest() {
         val genericURL =
             TestAssetHelper.getGenericAsset(mockWebServer, 3)
+        downloadFile = "pdfForm.pdf"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF file"))
+            clickPageObject(itemWithText("PDF form file"))
         }.openThreeDotMenu {
         }.clickShareButton {
         }.clickSaveAsPDF {
-            verifyDownloadPrompt(pdfFileName)
+            verifyDownloadPrompt(downloadFile)
         }.clickDownload {
         }.clickOpen("application/pdf") {
-            assertExternalAppOpens("com.google.android.apps.docs")
+            assertExternalAppOpens(GOOGLE_DOCS)
         }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    // Download PDF file using the download toolbar button
+    @Test
+    fun pdfViewerDownloadButtonTest() {
+        val genericURL =
+            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+        downloadFile = "pdfForm.pdf"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            clickPageObject(itemWithText("PDF form file"))
+        }.clickDownloadPDFButton {
+            verifyDownloadedFileName(downloadFile)
+        }.clickOpen("application/pdf") {
+            assertExternalAppOpens(GOOGLE_DOCS)
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun deleteDownloadedFileTest() {
+        downloadFile = "smallZip.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+            verifyDownloadedFileName(downloadFile)
+        }
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyDownloadedFileName(downloadFile)
+            deleteDownloadedItem(downloadFile)
+            verifyEmptyDownloadsList()
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun undoDeleteDownloadedFileTest() {
+        downloadFile = "smallZip.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+            verifyDownloadedFileName(downloadFile)
+        }
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyDownloadedFileName(downloadFile)
+            deleteDownloadedItem(downloadFile)
+            clickSnackbarButton("UNDO")
+            verifyDownloadedFileName(downloadFile)
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun deleteMultipleDownloadedFilesTest() {
+        val firstDownloadedFile = "smallZip.zip"
+        val secondDownloadedFile = "textfile.txt"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(firstDownloadedFile) {
+            verifyDownloadPrompt(firstDownloadedFile)
+        }.clickDownload {
+            verifyDownloadedFileName(firstDownloadedFile)
+        }.closeCompletedDownloadPrompt {
+        }.clickDownloadLink(secondDownloadedFile) {
+            verifyDownloadPrompt(secondDownloadedFile)
+        }.clickDownload {
+            verifyDownloadedFileName(secondDownloadedFile)
+        }
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyDownloadedFileName(firstDownloadedFile)
+            verifyDownloadedFileName(secondDownloadedFile)
+            longClickDownloadedItem(firstDownloadedFile)
+            selectDownloadedItem(secondDownloadedFile)
+            openMultiSelectMoreOptionsMenu()
+            clickMultiSelectRemoveButton()
+            verifyEmptyDownloadsList()
+        }
+        deleteDownloadedFileOnStorage(firstDownloadedFile)
+        deleteDownloadedFileOnStorage(secondDownloadedFile)
+    }
+
+    @Test
+    fun undoDeleteMultipleDownloadedFilesTest() {
+        val firstDownloadedFile = "smallZip.zip"
+        val secondDownloadedFile = "textfile.txt"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(firstDownloadedFile) {
+            verifyDownloadPrompt(firstDownloadedFile)
+        }.clickDownload {
+            verifyDownloadedFileName(firstDownloadedFile)
+        }.closeCompletedDownloadPrompt {
+        }.clickDownloadLink(secondDownloadedFile) {
+            verifyDownloadPrompt(secondDownloadedFile)
+        }.clickDownload {
+            verifyDownloadedFileName(secondDownloadedFile)
+        }
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openDownloadsManager {
+            verifyDownloadedFileName(firstDownloadedFile)
+            verifyDownloadedFileName(secondDownloadedFile)
+            longClickDownloadedItem(firstDownloadedFile)
+            selectDownloadedItem(secondDownloadedFile)
+            openMultiSelectMoreOptionsMenu()
+            clickMultiSelectRemoveButton()
+            clickSnackbarButton("UNDO")
+            verifyDownloadedFileName(firstDownloadedFile)
+            verifyDownloadedFileName(secondDownloadedFile)
+        }
+        deleteDownloadedFileOnStorage(firstDownloadedFile)
+        deleteDownloadedFileOnStorage(secondDownloadedFile)
+    }
+
+    @Test
+    fun systemNotificationCantBeDismissedWhileDownloadingTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
+        downloadFile = "1GB.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+        browserScreen {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
+            expandNotificationMessage()
+            swipeDownloadNotification("Left", false)
+            verifySystemNotificationExists("Firefox Fenix")
+        }.closeNotificationTray {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
+            expandNotificationMessage()
+            swipeDownloadNotification("Right", false)
+            verifySystemNotificationExists("Firefox Fenix")
+            clickDownloadNotificationControlButton("CANCEL")
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun systemNotificationCantBeDismissedWhileDownloadIsPausedTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
+        downloadFile = "1GB.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+        browserScreen {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
+            expandNotificationMessage()
+            clickDownloadNotificationControlButton("PAUSE")
+            swipeDownloadNotification("Left", false)
+            verifySystemNotificationExists("Firefox Fenix")
+        }.closeNotificationTray {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
+            expandNotificationMessage()
+            swipeDownloadNotification("Right", false)
+            verifySystemNotificationExists("Firefox Fenix")
+            clickDownloadNotificationControlButton("CANCEL")
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun notificationCanBeDismissedIfDownloadIsInterruptedTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
+        downloadFile = "1GB.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+
+        setNetworkEnabled(enabled = false)
+
+        browserScreen {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Download failed")
+            expandNotificationMessage()
+            swipeDownloadNotification("Left", true)
+            verifySystemNotificationDoesNotExist("Firefox Fenix")
+        }.closeNotificationTray {
+        }
+
+        downloadRobot {
+        }.closeDownloadPrompt {
+            verifyDownloadPromptIsDismissed()
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun notificationCanBeDismissedIfDownloadIsCompletedTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
+        downloadFile = "smallZip.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+
+        browserScreen {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Download completed")
+            swipeDownloadNotification("Left", true, false)
+            verifySystemNotificationDoesNotExist("Firefox Fenix")
+        }.closeNotificationTray {
+        }
+
+        downloadRobot {
+        }.closeDownloadPrompt {
+            verifyDownloadPromptIsDismissed()
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun stayInPrivateBrowsingPromptTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
+        downloadFile = "1GB.zip"
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+        browserScreen {
+        }.openTabDrawer {
+            closeTab()
+        }
+        browserScreen {
+            verifyCancelPrivateDownloadsPrompt("1")
+            clickStayInPrivateBrowsingPromptButton()
+        }.openNotificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    @Test
+    fun cancelActiveDownloadsFromPrivateBrowsingPromptTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
+        downloadFile = "1GB.zip"
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+        browserScreen {
+        }.openTabDrawer {
+            closeTab()
+        }
+        browserScreen {
+            verifyCancelPrivateDownloadsPrompt("1")
+            clickCancelPrivateDownloadsPromptButton()
+        }.openNotificationShade {
+            verifySystemNotificationDoesNotExist("Firefox Fenix")
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
+
+    // Save edited PDF file from the share overlay
+    @Test
+    fun saveEditedPdfTest() {
+        val genericURL =
+            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+        downloadFile = "pdfForm.pdf"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            clickPageObject(itemWithText("PDF form file"))
+            waitForPageToLoad()
+            fillPdfForm("Firefox")
+        }.openThreeDotMenu {
+        }.clickShareButton {
+        }.clickSaveAsPDF {
+            verifyDownloadPrompt("pdfForm.pdf")
+        }.clickDownload {
+        }.clickOpen("application/pdf") {
+            assertExternalAppOpens(GOOGLE_DOCS)
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
     }
 }
