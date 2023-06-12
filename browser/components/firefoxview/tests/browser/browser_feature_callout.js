@@ -9,6 +9,9 @@ const { MessageLoaderUtils } = ChromeUtils.import(
 const { BuiltInThemes } = ChromeUtils.importESModule(
   "resource:///modules/BuiltInThemes.sys.mjs"
 );
+const { FeatureCallout } = ChromeUtils.importESModule(
+  "resource:///modules/FeatureCallout.sys.mjs"
+);
 
 const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = getPrefValueByScreen(1);
@@ -767,5 +770,67 @@ add_task(async function feature_callout_does_not_display_arrow_if_hidden() {
       );
     }
   );
+  sandbox.restore();
+});
+
+add_task(async function feature_callout_dismisses_with_timer() {
+  const waitForRemoved = async (doc, screen) => {
+    await BrowserTestUtils.waitForCondition(() => {
+      return !doc.querySelector(screen.id);
+    });
+  };
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+  const config = {
+    win,
+    browser: win.gBrowser.selectedBrowser,
+    prefName: "fakepref",
+    page: "about:firefoxview",
+    theme: { preset: "chrome" },
+  };
+  const featureCallout = new FeatureCallout(config);
+  const testMessage = getCalloutMessageById(
+    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
+  );
+  const timer = 10;
+  testMessage.message.content.screens[0].content.dismiss_timer = timer;
+
+  const screen = testMessage.message.content.screens.find(s => s.id);
+  screen.parent_selector = "body";
+  const sandbox = createSandboxWithCalloutTriggerStub(testMessage, config.page);
+  const telemetrySpy = new TelemetrySpy(sandbox);
+
+  const startTimerSpy = sinon.spy(featureCallout, "startDismissCalloutTimer");
+  // Stubbing clearDismissCalloutTimer to avoid mouse interrruptions. Hovering the mouse
+  // on the featurecallout container(mouseenter) clears the timer, and mouseleave restarts the timer.
+  sandbox
+    .stub(featureCallout, "clearDismissCalloutTimer")
+    .callsFake(() =>
+      info("Stubbing clearDismissCalloutTimer to avoid mouse interruptions")
+    );
+
+  featureCallout.showFeatureCallout();
+  await waitForCalloutScreen(win.document, screen.id);
+
+  ok(
+    startTimerSpy.callCount >= 1,
+    `startDismissCalloutTimer called ${startTimerSpy.callCount} times, expected >= 1`
+  );
+
+  info("Waiting for callout to be removed");
+  await waitForRemoved(win.document, screen);
+  // Check that correct telemetry was sent
+  telemetrySpy.assertCalledWith({
+    event: "DISMISS",
+    event_context: {
+      source: "DISMISS_FEATURE_CALLOUT_AFTER_TIMER",
+      page: "about:firefoxview",
+    },
+    message_id: sinon.match("FIREFOX_VIEW_FEATURE_TOUR"),
+  });
+  await BrowserTestUtils.closeWindow(win);
   sandbox.restore();
 });
