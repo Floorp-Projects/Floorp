@@ -57,13 +57,17 @@ class VendorInfo final {
   };
 
   VendorInfo() : mSource(Source::None) {}
-  VendorInfo(const Source aSource, const nsAString& aVendor)
-      : mSource(aSource), mVendor(aVendor) {
+  VendorInfo(const Source aSource, const nsAString& aVendor,
+             bool aHasNestedMicrosoftSignature)
+      : mSource(aSource),
+        mVendor(aVendor),
+        mHasNestedMicrosoftSignature(aHasNestedMicrosoftSignature) {
     MOZ_ASSERT(aSource != Source::None && !aVendor.IsEmpty());
   }
 
   Source mSource;
   nsString mVendor;
+  bool mHasNestedMicrosoftSignature;
 };
 
 class ModulesMap;
@@ -285,6 +289,7 @@ struct ParamTraits<mozilla::VendorInfo> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     aWriter->WriteUInt32(static_cast<uint32_t>(aParam.mSource));
     WriteParam(aWriter, aParam.mVendor);
+    WriteParam(aWriter, aParam.mHasNestedMicrosoftSignature);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -296,6 +301,10 @@ struct ParamTraits<mozilla::VendorInfo> {
     aResult->mSource = static_cast<mozilla::VendorInfo::Source>(source);
 
     if (!ReadParam(aReader, &aResult->mVendor)) {
+      return false;
+    }
+
+    if (!ReadParam(aReader, &aResult->mHasNestedMicrosoftSignature)) {
       return false;
     }
 

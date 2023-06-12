@@ -119,12 +119,14 @@ void ModuleRecord::GetVersionAndVendorInfo(const nsAString& aPath) {
 
   // WinVerifyTrust is too slow and of limited utility for our purposes, so
   // we pass SkipTrustVerification here to avoid it.
-  UniquePtr<wchar_t[]> signedBy(
-      dllSvc->GetBinaryOrgName(PromiseFlatString(aPath).get(),
-                               AuthenticodeFlags::SkipTrustVerification));
+  bool hasNestedMicrosoftSignature = false;
+  UniquePtr<wchar_t[]> signedBy(dllSvc->GetBinaryOrgName(
+      PromiseFlatString(aPath).get(), &hasNestedMicrosoftSignature,
+      AuthenticodeFlags::SkipTrustVerification));
   if (signedBy) {
     mVendorInfo = Some(VendorInfo(VendorInfo::Source::Signature,
-                                  nsDependentString(signedBy.get())));
+                                  nsDependentString(signedBy.get()),
+                                  hasNestedMicrosoftSignature));
   }
 
   ModuleVersionInfo verInfo;
@@ -137,8 +139,8 @@ void ModuleRecord::GetVersionAndVendorInfo(const nsAString& aPath) {
   }
 
   if (!mVendorInfo && !verInfo.mCompanyName.IsEmpty()) {
-    mVendorInfo =
-        Some(VendorInfo(VendorInfo::Source::VersionInfo, verInfo.mCompanyName));
+    mVendorInfo = Some(VendorInfo(VendorInfo::Source::VersionInfo,
+                                  verInfo.mCompanyName, false));
   }
 }
 
