@@ -21,22 +21,25 @@ well as discuss some tips to make your React application faster.
 As a start let's discuss about how React renders normal plain components, that
 don't use `shouldComponentUpdate`. What we call plain components here are either:
 * classes that extend [`Component`](https://reactjs.org/docs/react-component.html)
-  ```javascript
+
+```javascript
   class Application extends React.Component {
     render() {
       return <div>{this.props.content}</div>;
     }
   }
-  ```
+```
+
 * normal functions that take some `props` as parameter and return some JSX. We
   call these functions either Stateless Components or Functional Components.
   This is important to understand that these Stateless Components are _not_
   especially optimized in React.
-  ```javascript
+
+```javascript
   function Application(props) {
     return <div>{props.content}</div>;
   }
-  ```
+```
   These functions are equivalent to classes extending `Component`. In
   the rest of the article we'll especially focus on the latter. Unless otherwise
   stated everything about classes extending `Component` is also true for
@@ -46,6 +49,7 @@ don't use `shouldComponentUpdate`. What we call plain components here are either
 Because we don't use a build step in mozilla-central yet, some of our
 tools don't use JSX and use [factories](https://reactjs.org/docs/react-api.html#createfactory)
 instead:
+
 ```javascript
 class Application extends React.Component {
   render() {
@@ -76,12 +80,14 @@ DOM tree. It will then render actual DOM elements to the specified container.
 
 There are several ways to trigger a rerender:
 1. We call `ReactDOM.render` again with the same component.
-  ```javascript
+
+```javascript
   ReactDOM.render(
     <Application content='Good Bye, Cruel World!'/>,
     document.getElementById('root')
   );
-  ```
+```
+
 2. One component's state changes, through the use of [`setState`](https://reactjs.org/docs/react-component.html#setstate).
    If the application is using Redux, this is how Redux-connected components
    trigger updates too.

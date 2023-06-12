@@ -194,7 +194,7 @@ To build IPDL files, list them (alphabetically sorted) in a ``moz.build`` file.
 In this example, the ``.ipdl`` and ``.ipdlh`` files would be alongside a
 ``moz.build`` containing:
 
-.. code-block:: c++
+.. code-block:: python
 
     IPDL_SOURCES += [
         "MyTypes.ipdlh",
@@ -216,7 +216,7 @@ are in the proper scope.  If it isn't included, the build will fail with
 ``#include`` errors in both your actor code and some internal ipc headers.  For
 example:
 
-.. code-block:: c++
+.. code-block::
 
     c:/mozilla-src/mozilla-unified/obj-64/dist/include\ipc/IPCMessageUtils.h(13,10): fatal error: 'build/build_config.h' file not found
 
@@ -461,7 +461,7 @@ The final part of the actor definition is the declaration of messages:
             returns (int32_t x, int32_t y, MyUnion aUnion);
         async PMyManaged();
       both:
-        [Tainted] async AnotherMsg(MyActorEnum aEnum, int32_t aNumber)
+        [Tainted] async AnotherMsg(MyActorEnum aEnum, int32_t a number)
             returns (MyOtherData aOtherData);
     };
 
@@ -998,7 +998,7 @@ So ``MyManagerParent.h`` looks like this:
         IPCResult Recv__delete__(const nsString& aNote);
         IPCResult RecvSomeMsg(const Maybe<MyActorPair>& aActors, const nsTArray<MyData>& aMyData,
                               int32_t* x, int32_t* y, MyUnion* aUnion);
-        IPCResult RecvAnotherMsg(const Tainted<MyActorEnum>& aEnum, const Tainted<int32_t>& aNumber,
+        IPCResult RecvAnotherMsg(const Tainted<MyActorEnum>& aEnum, const Tainted<int32_t>& a number,
                                  AnotherMsgResolver&& aResolver);
 
         already_AddRefed<PMyManagerParent> AllocPMyManagedParent();
@@ -1045,11 +1045,11 @@ are two signatures for ``Send`` and they look like this:
 
     // Return a Promise that IPDL will resolve with the response or reject.
     RefPtr<MozPromise<MyOtherData, ResponseRejectReason, true>>
-    SendAnotherMsg(const MyActorEnum& aEnum, int32_t aNumber);
+    SendAnotherMsg(const MyActorEnum& aEnum, int32_t a number);
 
     // Provide callbacks to process response / reject.  The callbacks are just
     // std::functions.
-    void SendAnotherMsg(const MyActorEnum& aEnum, int32_t aNumber,
+    void SendAnotherMsg(const MyActorEnum& aEnum, int32_t a number,
         ResolveCallback<MyOtherData>&& aResolve, RejectCallback&& aReject);
 
 The response is usually handled by lambda functions defined at the site of the
