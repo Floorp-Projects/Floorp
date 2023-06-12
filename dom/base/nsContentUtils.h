@@ -367,8 +367,8 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell,
                                          RFPTarget aTarget);
   // These functions are the new, nuanced functions
-  static bool ShouldResistFingerprinting(
-      nsIChannel* aChannel, RFPTarget aTarget = RFPTarget::Unknown);
+  static bool ShouldResistFingerprinting(nsIChannel* aChannel,
+                                         RFPTarget aTarget);
   static bool ShouldResistFingerprinting(
       nsILoadInfo* aLoadInfo, RFPTarget aTarget = RFPTarget::Unknown);
   // These functions are labeled as dangerous because they will do the wrong
