@@ -78,6 +78,7 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mResourceId(0),
       mCanSend(false),
       mActorDestroyed(false),
+      mPaused(false),
       mFwdTransactionId(0),
       mThread(NS_GetCurrentThread()),
       mProcessToken(0),
@@ -335,6 +336,7 @@ bool CompositorBridgeChild::SendPause() {
   if (!mCanSend) {
     return false;
   }
+  mPaused = true;
   return PCompositorBridgeChild::SendPause();
 }
 
@@ -342,6 +344,7 @@ bool CompositorBridgeChild::SendResume() {
   if (!mCanSend) {
     return false;
   }
+  mPaused = false;
   return PCompositorBridgeChild::SendResume();
 }
 
@@ -349,6 +352,7 @@ bool CompositorBridgeChild::SendResumeAsync() {
   if (!mCanSend) {
     return false;
   }
+  mPaused = false;
   return PCompositorBridgeChild::SendResumeAsync();
 }
 
