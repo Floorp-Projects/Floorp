@@ -7619,6 +7619,33 @@ var WebAuthnPromptHelper = {
         "pinAuthBlocked",
         "webauthn.pinAuthBlockedPrompt"
       );
+    } else if (data.action == "uv-blocked") {
+      this.show_info(
+        mgr,
+        data.origin,
+        data.tid,
+        "uvBlocked",
+        "webauthn.uvBlockedPrompt"
+      );
+    } else if (data.action == "uv-invalid") {
+      let retriesLeft = data.retriesLeft;
+      let dialogText;
+      if (retriesLeft == 0) {
+        // We can skip that because it will either be replaced
+        // by uv-blocked or by PIN-prompt
+        return;
+      } else if (retriesLeft < 0) {
+        dialogText = this._l10n.formatValueSync(
+          "webauthn-uv-invalid-short-prompt"
+        );
+      } else {
+        dialogText = this._l10n.formatValueSync(
+          "webauthn-uv-invalid-long-prompt",
+          { retriesLeft }
+        );
+      }
+      let mainAction = this.buildCancelAction(mgr, data.tid);
+      this.show_formatted_msg(data.tid, "uvInvalid", dialogText, mainAction);
     } else if (data.action == "device-blocked") {
       this.show_info(
         mgr,
@@ -7639,6 +7666,7 @@ var WebAuthnPromptHelper = {
   },
 
   prompt_for_password(origin, wasInvalid, retriesLeft, aPassword) {
+    this.reset();
     let dialogText;
     if (!wasInvalid) {
       dialogText = this._l10n.formatValueSync("webauthn-pin-required-prompt");
@@ -7764,14 +7792,6 @@ var WebAuthnPromptHelper = {
     secondaryActions = [],
     options = {}
   ) {
-    this.reset();
-
-    try {
-      origin = Services.io.newURI(origin).asciiHost;
-    } catch (e) {
-      /* Might fail for arbitrary U2F RP IDs. */
-    }
-
     let brandShortName = document
       .getElementById("bundle_brand")
       .getString("brandShortName");
@@ -7779,13 +7799,42 @@ var WebAuthnPromptHelper = {
       "<>",
       brandShortName,
     ]);
+
+    try {
+      origin = Services.io.newURI(origin).asciiHost;
+    } catch (e) {
+      /* Might fail for arbitrary U2F RP IDs. */
+    }
+    options.name = origin;
+    this.show_formatted_msg(
+      tid,
+      id,
+      message,
+      mainAction,
+      secondaryActions,
+      options
+    );
+  },
+
+  show_formatted_msg(
+    tid,
+    id,
+    message,
+    mainAction,
+    secondaryActions = [],
+    options = {}
+  ) {
+    this.reset();
+
+    let brandShortName = document
+      .getElementById("bundle_brand")
+      .getString("brandShortName");
     if (options.hintText) {
       options.hintText = gNavigatorBundle.getFormattedString(options.hintText, [
         brandShortName,
       ]);
     }
 
-    options.name = origin;
     options.hideClose = true;
     options.persistent = true;
     options.eventCallback = event => {
