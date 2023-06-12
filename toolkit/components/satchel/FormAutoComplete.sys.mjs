@@ -9,7 +9,7 @@
 // that we use the one defined here. To get around that, we explicitly
 // import the module here, out of the way of the other uses of
 // FormAutoCompleteResult.
-import { FormAutoCompleteResult as DataListAutoCompleteResult } from "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs";
+import { FormAutoCompleteResult as DataListAutoCompleteResult } from "resource://gre/modules/FormAutoCompleteResult.sys.mjs";
 
 function isAutocompleteDisabled(aField) {
   if (!aField) {
@@ -435,7 +435,7 @@ export class FormAutoComplete {
       // to deal with the <datalist> results here as well (and down below
       // in mergeResults).
       // If there were datalist results result is a FormAutoCompleteResult
-      // as defined in nsFormAutoCompleteResult.jsm with the entire list
+      // as defined in FormAutoCompleteResult.jsm with the entire list
       // of results in wrappedResult._items and only the results from
       // form history in wrappedResult.entries.
       // First, grab the entire list of old results.
