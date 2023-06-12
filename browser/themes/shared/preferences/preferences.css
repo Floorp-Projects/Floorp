@@ -1476,7 +1476,7 @@ richlistitem .text-link:hover {
   padding: 0 8px;
 }
 
-.translations-manage-language label {
+.translations-manage-language > label {
   flex: 1;
   margin: 0 15px;
 }
