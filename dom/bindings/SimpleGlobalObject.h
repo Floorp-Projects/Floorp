@@ -73,7 +73,8 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
     MOZ_CRASH("SimpleGlobalObject doesn't use DOM bindings!");
   }
 
-  bool ShouldResistFingerprinting(RFPTarget aTarget) const override {
+  bool ShouldResistFingerprinting(
+      RFPTarget aTarget = RFPTarget::Unknown) const override {
     return nsContentUtils::ShouldResistFingerprinting(
         "Presently we don't have enough context to make an informed decision"
         "on JS Sandboxes. See 1782853",

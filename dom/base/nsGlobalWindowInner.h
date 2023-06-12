@@ -244,7 +244,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   }
 
   // nsIGlobalObject
-  bool ShouldResistFingerprinting(RFPTarget aTarget) const final;
+  bool ShouldResistFingerprinting(
+      RFPTarget aTarget = RFPTarget::Unknown) const final;
   mozilla::OriginTrials Trials() const final;
   mozilla::dom::FontFaceSet* GetFonts() final;
 

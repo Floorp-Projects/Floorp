@@ -100,8 +100,7 @@ void nsPluginArray::GetSupportedNames(nsTArray<nsString>& aRetval) {
 
 bool nsPluginArray::ForceNoPlugins() {
   return StaticPrefs::pdfjs_disabled() &&
-         !nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting(
-             RFPTarget::Unknown);
+         !nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting();
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPluginArray)
