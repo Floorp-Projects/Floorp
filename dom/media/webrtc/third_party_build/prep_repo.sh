@@ -32,6 +32,11 @@ if [ ! -f $STATE_DIR/milestone.cache ]; then
   cp $SCRIPT_DIR/pre-warmed-milestone.cache $STATE_DIR/milestone.cache
 fi
 
+# If there is no .mozconfig file, copy a basic one from default_mozconfig
+if [ ! -f .mozconfig ]; then
+  cp $SCRIPT_DIR/default_mozconfig .mozconfig
+fi
+
 # fetch the github repro
 ./mach python $SCRIPT_DIR/fetch_github_repo.py \
     --repo-path $MOZ_LIBWEBRTC_SRC \

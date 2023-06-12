@@ -1,0 +1,7 @@
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../obj-fast-forward-build
+mk_add_options AUTOCLOBBER=1
+ac_add_options --with-ccache
+
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+
