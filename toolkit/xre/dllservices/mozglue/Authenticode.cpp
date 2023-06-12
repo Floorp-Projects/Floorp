@@ -32,6 +32,12 @@
 
 #include <string.h>
 
+// mingw build doesn't have this defined (in other builds
+// it gets pulled in from wintrust.h)
+#if !defined(szOID_NESTED_SIGNATURE)
+#  define szOID_NESTED_SIGNATURE "1.3.6.1.4.1.311.2.4.1"
+#endif  // !defined(szOID_NESTED_SIGNATURE)
+
 namespace {
 
 struct CertStoreDeleter {
@@ -164,7 +170,63 @@ SignedBinary::SignedBinary(const wchar_t* aFilePath,
   mCertCtx.swap(certCtx);
 }
 
-bool SignedBinary::HasNestedMicrosoftSignature() const { return false; }
+bool SignedBinary::HasNestedMicrosoftSignature() const {
+  // Look for nested certificates - see bug 1817026
+  DWORD attributesLen = 0;
+  BOOL ok = CryptMsgGetParam(mCryptMsg.get(), CMSG_SIGNER_UNAUTH_ATTR_PARAM, 0,
+                             nullptr, &attributesLen);
+  if (!ok) {
+    return false;
+  }
+
+  auto attributesBuf = mozilla::MakeUnique<char[]>(attributesLen);
+  ok = CryptMsgGetParam(mCryptMsg.get(), CMSG_SIGNER_UNAUTH_ATTR_PARAM, 0,
+                        attributesBuf.get(), &attributesLen);
+  if (!ok) {
+    return false;
+  }
+  auto attributesInfo =
+      reinterpret_cast<CRYPT_ATTRIBUTES*>(attributesBuf.get());
+  for (DWORD i = 0; i < attributesInfo->cAttr; ++i) {
+    PCRYPT_ATTRIBUTE cur = &attributesInfo->rgAttr[i];
+    if (!strcmp(cur->pszObjId, szOID_NESTED_SIGNATURE)) {
+      CryptMsgUniquePtr nestedMsg(
+          CryptMsgOpenToDecode(kEncodingTypes, 0, 0, NULL, NULL, NULL));
+      if (!nestedMsg) {
+        continue;
+      }
+      ok = CryptMsgUpdate(nestedMsg.get(), cur->rgValue->pbData,
+                          cur->rgValue->cbData, TRUE);
+      if (!ok) {
+        continue;
+      }
+
+      CertStoreUniquePtr nestedCertStore(
+          CertOpenStore(CERT_STORE_PROV_MSG, kEncodingTypes, NULL,
+                        CERT_STORE_OPEN_EXISTING_FLAG, nestedMsg.get()));
+      if (!nestedCertStore) {
+        continue;
+      }
+
+      CertContextUniquePtr nestedCertCtx =
+          GetCertificateFromCryptMsg(nestedMsg, nestedCertStore);
+      if (!nestedCertCtx) {
+        continue;
+      }
+
+      mozilla::UniquePtr<wchar_t[]> nestedSigner =
+          GetSignerOrganizationFromCertificate(nestedCertCtx);
+      if (!nestedSigner) {
+        continue;
+      }
+      if (!wcscmp(nestedSigner.get(), L"Microsoft Windows") ||
+          !wcscmp(nestedSigner.get(), L"Microsoft Corporation")) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 bool SignedBinary::QueryObject(const wchar_t* aFilePath) {
   DWORD encodingType, contentType, formatType;
