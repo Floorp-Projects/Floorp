@@ -282,6 +282,9 @@ class nsRFPService final : public nsIObserver {
 
   ~nsRFPService() = default;
 
+  nsCString mInitialTZValue;
+
+  void UpdateRFPPref();
   void UpdateFPPOverrideList();
   void StartShutdown();
 

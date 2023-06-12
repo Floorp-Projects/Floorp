@@ -552,6 +552,5 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
   if (!window) {
     return true;
   }
-  return !nsGlobalWindowInner::Cast(window)->ShouldResistFingerprinting(
-      RFPTarget::Unknown);
+  return !nsGlobalWindowInner::Cast(window)->ShouldResistFingerprinting();
 }

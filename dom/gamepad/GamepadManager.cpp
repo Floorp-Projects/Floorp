@@ -144,8 +144,7 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
     }
   }
 
-  if (!mEnabled || mShuttingDown ||
-      aWindow->ShouldResistFingerprinting(RFPTarget::Gamepad)) {
+  if (!mEnabled || mShuttingDown || aWindow->ShouldResistFingerprinting()) {
     return;
   }
 
@@ -280,7 +279,7 @@ void GamepadManager::NewConnectionEvent(GamepadHandle aHandle,
 
       // Do not fire gamepadconnected and gamepaddisconnected events when
       // privacy.resistFingerprinting is true.
-      if (listeners[i]->ShouldResistFingerprinting(RFPTarget::Gamepad)) {
+      if (listeners[i]->ShouldResistFingerprinting()) {
         continue;
       }
 
@@ -313,7 +312,7 @@ void GamepadManager::NewConnectionEvent(GamepadHandle aHandle,
 
       // Do not fire gamepadconnected and gamepaddisconnected events when
       // privacy.resistFingerprinting is true.
-      if (listeners[i]->ShouldResistFingerprinting(RFPTarget::Gamepad)) {
+      if (listeners[i]->ShouldResistFingerprinting()) {
         continue;
       }
 
@@ -348,8 +347,7 @@ void GamepadManager::FireConnectionEvent(EventTarget* aTarget,
 void GamepadManager::SyncGamepadState(GamepadHandle aHandle,
                                       nsGlobalWindowInner* aWindow,
                                       Gamepad* aGamepad) {
-  if (mShuttingDown || !mEnabled ||
-      aWindow->ShouldResistFingerprinting(RFPTarget::Gamepad)) {
+  if (mShuttingDown || !mEnabled || aWindow->ShouldResistFingerprinting()) {
     return;
   }
 
@@ -475,7 +473,7 @@ void GamepadManager::Update(const GamepadChangeEvent& aEvent) {
     // Only send events to non-background windows
     if (!listeners[i]->IsCurrentInnerWindow() ||
         listeners[i]->GetOuterWindow()->IsBackground() ||
-        listeners[i]->ShouldResistFingerprinting(RFPTarget::Gamepad)) {
+        listeners[i]->ShouldResistFingerprinting()) {
       continue;
     }
 

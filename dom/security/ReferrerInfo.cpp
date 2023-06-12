@@ -238,8 +238,7 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
     Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
     if (!cjs) {
       bool shouldResistFingerprinting =
-          nsContentUtils::ShouldResistFingerprinting(
-              aChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+          nsContentUtils::ShouldResistFingerprinting(aChannel);
       cjs = aPrivateBrowsing
                 ? net::CookieJarSettings::Create(CookieJarSettings::ePrivate,
                                                  shouldResistFingerprinting)

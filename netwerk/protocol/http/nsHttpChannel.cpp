@@ -1213,8 +1213,7 @@ nsresult nsHttpChannel::SetupTransaction() {
     mCaps |= NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
   }
 
-  if (nsContentUtils::ShouldResistFingerprinting(this,
-                                                 RFPTarget::HttpUserAgent)) {
+  if (nsContentUtils::ShouldResistFingerprinting(this)) {
     mCaps |= NS_HTTP_USE_RFP;
   }
 
