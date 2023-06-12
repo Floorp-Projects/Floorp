@@ -39,15 +39,15 @@ You need to add or edit four stanzas inside your module's ``build.gradle`` file.
     }
 
 
-**3. Java 11 required support**
+**3. Java 17 required support**
 
-As GeckoView uses some Java 11 APIs, it requires these compatibility flags:
+As GeckoView uses some Java 17 APIs, it requires these compatibility flags:
 
 .. code-block:: groovy
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
 **4. Add GeckoView Implementations**
