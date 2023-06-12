@@ -5,9 +5,6 @@
 import React from "react";
 import { mount, shallow } from "enzyme";
 import Frames from "../index.js";
-// eslint-disable-next-line
-import { formatCallStackFrames } from "../../../../selectors/getCallStackFrames";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
 
 function render(overrides = {}) {
   const defaultProps = {
@@ -183,41 +180,6 @@ describe("Frames", () => {
       });
 
       expect(component.find("Group").prop("getFrameTitle")).toBe(getFrameTitle);
-    });
-  });
-
-  describe("Blackboxed Frames", () => {
-    it("filters blackboxed frames", () => {
-      const source1 = makeMockSource("source1", "1");
-      const source2 = makeMockSource("source2", "2");
-      source2.isBlackBoxed = true;
-
-      const frames = [
-        makeMockFrame("1", source1),
-        makeMockFrame("2", source2),
-        makeMockFrame("3", source1),
-        makeMockFrame("8", source2),
-      ];
-
-      const blackboxedRanges = {
-        source2: [],
-      };
-
-      const processedFrames = formatCallStackFrames(
-        frames,
-        source1,
-        blackboxedRanges
-      );
-      const selectedFrame = frames[0];
-
-      const component = render({
-        frames: processedFrames,
-        frameworkGroupingOn: false,
-        selectedFrame,
-      });
-
-      expect(component.find("Frame")).toHaveLength(2);
-      expect(component).toMatchSnapshot();
     });
   });
 

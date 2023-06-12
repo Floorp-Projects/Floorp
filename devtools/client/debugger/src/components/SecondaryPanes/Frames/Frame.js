@@ -23,30 +23,39 @@ FrameTitle.propTypes = {
   l10n: PropTypes.object.isRequired,
 };
 
-const FrameLocation = memo(({ frame, displayFullUrl = false }) => {
-  if (frame.library) {
+function getFrameLocation(frame, shouldDisplayOriginalLocation) {
+  if (shouldDisplayOriginalLocation) {
+    return frame.location;
+  }
+  return frame.generatedLocation || frame.location;
+}
+
+const FrameLocation = memo(
+  ({ frame, displayFullUrl = false, shouldDisplayOriginalLocation }) => {
+    if (frame.library) {
+      return (
+        <span className="location">
+          {frame.library}
+          <AccessibleImage
+            className={`annotation-logo ${frame.library.toLowerCase()}`}
+          />
+        </span>
+      );
+    }
+
+    const location = getFrameLocation(frame, shouldDisplayOriginalLocation);
+    const filename = displayFullUrl
+      ? getFileURL(location.source, false)
+      : getFilename(location.source);
+
     return (
-      <span className="location">
-        {frame.library}
-        <AccessibleImage
-          className={`annotation-logo ${frame.library.toLowerCase()}`}
-        />
+      <span className="location" title={location.source.url}>
+        <span className="filename">{filename}</span>:
+        <span className="line">{location.line}</span>
       </span>
     );
   }
-
-  const { location } = frame;
-  const filename = displayFullUrl
-    ? getFileURL(location.source, false)
-    : getFilename(location.source);
-
-  return (
-    <span className="location" title={location.source.url}>
-      <span className="filename">{filename}</span>:
-      <span className="line">{location.line}</span>
-    </span>
-  );
-});
+);
 
 FrameLocation.displayName = "FrameLocation";
 
@@ -79,6 +88,7 @@ export default class FrameComponent extends Component {
       shouldMapDisplayName: PropTypes.bool.isRequired,
       toggleBlackBox: PropTypes.func,
       toggleFrameworkGrouping: PropTypes.func.isRequired,
+      shouldDisplayOriginalLocation: PropTypes.bool.isRequired,
     };
   }
 
@@ -134,6 +144,7 @@ export default class FrameComponent extends Component {
       displayFullUrl,
       getFrameTitle,
       disableContextMenu,
+      shouldDisplayOriginalLocation,
     } = this.props;
     const { l10n } = this.context;
 
@@ -141,10 +152,9 @@ export default class FrameComponent extends Component {
       selected: selectedFrame && selectedFrame.id === frame.id,
     });
 
+    const location = getFrameLocation(frame, shouldDisplayOriginalLocation);
     const title = getFrameTitle
-      ? getFrameTitle(
-          `${getFileURL(frame.location.source, false)}:${frame.location.line}`
-        )
+      ? getFrameTitle(`${getFileURL(location.source, false)}:${location.line}`)
       : undefined;
 
     return (
@@ -177,7 +187,11 @@ export default class FrameComponent extends Component {
         />
         {!hideLocation && <span className="clipboard-only"> </span>}
         {!hideLocation && (
-          <FrameLocation frame={frame} displayFullUrl={displayFullUrl} />
+          <FrameLocation
+            frame={frame}
+            displayFullUrl={displayFullUrl}
+            shouldDisplayOriginalLocation={shouldDisplayOriginalLocation}
+          />
         )}
         {this.isSelectable && <br className="clipboard-only" />}
       </div>

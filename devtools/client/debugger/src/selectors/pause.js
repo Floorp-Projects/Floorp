@@ -4,11 +4,13 @@
 
 import { getThreadPauseState } from "../reducers/pause";
 import { getSelectedSourceId, getSelectedLocation } from "./sources";
+import { getBlackBoxRanges } from "./source-blackbox";
 
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
 // eslint-disable-next-line
 import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";
+import { isFrameBlackBoxed } from "../utils/source";
 import { createSelector } from "reselect";
 
 export const getSelectedFrame = createSelector(
@@ -101,13 +103,22 @@ export function getFrames(state, thread) {
   return framesLoading ? null : frames;
 }
 
-export function getCurrentThreadFrames(state) {
-  const { frames, framesLoading } = getThreadPauseState(
-    state.pause,
-    getCurrentThread(state)
-  );
-  return framesLoading ? null : frames;
-}
+export const getCurrentThreadFrames = createSelector(
+  state => {
+    const { frames, framesLoading } = getThreadPauseState(
+      state.pause,
+      getCurrentThread(state)
+    );
+    if (framesLoading) {
+      return null;
+    }
+    return frames;
+  },
+  getBlackBoxRanges,
+  (frames, blackboxedRanges) => {
+    return frames.filter(frame => !isFrameBlackBoxed(frame, blackboxedRanges));
+  }
+);
 
 function getGeneratedFrameId(frameId) {
   if (frameId.includes("-originalFrame")) {

@@ -16,9 +16,10 @@ import { copyToTheClipboard } from "../../../utils/clipboard";
 import {
   getFrameworkGroupingState,
   getSelectedFrame,
-  getCallStackFrames,
+  getCurrentThreadFrames,
   getCurrentThread,
   getThreadContext,
+  getShouldSelectOriginalLocation,
 } from "../../../selectors";
 
 import "./Frames.css";
@@ -54,13 +55,19 @@ class Frames extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { frames, selectedFrame, frameworkGroupingOn } = this.props;
+    const {
+      frames,
+      selectedFrame,
+      frameworkGroupingOn,
+      shouldDisplayOriginalLocation,
+    } = this.props;
     const { showAllFrames } = this.state;
     return (
       frames !== nextProps.frames ||
       selectedFrame !== nextProps.selectedFrame ||
       showAllFrames !== nextState.showAllFrames ||
-      frameworkGroupingOn !== nextProps.frameworkGroupingOn
+      frameworkGroupingOn !== nextProps.frameworkGroupingOn ||
+      shouldDisplayOriginalLocation !== nextProps.shouldDisplayOriginalLocation
     );
   }
 
@@ -88,9 +95,11 @@ class Frames extends Component {
   }
 
   copyStackTrace = () => {
-    const { frames } = this.props;
+    const { frames, shouldDisplayOriginalLocation } = this.props;
     const { l10n } = this.context;
-    const framesToCopy = frames.map(f => formatCopyName(f, l10n)).join("\n");
+    const framesToCopy = frames
+      .map(f => formatCopyName(f, l10n, shouldDisplayOriginalLocation))
+      .join("\n");
     copyToTheClipboard(framesToCopy);
   };
 
@@ -112,6 +121,7 @@ class Frames extends Component {
       disableContextMenu,
       panel,
       restart,
+      shouldDisplayOriginalLocation,
     } = this.props;
 
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
@@ -132,6 +142,7 @@ class Frames extends Component {
               selectFrame={selectFrame}
               selectLocation={selectLocation}
               selectedFrame={selectedFrame}
+              shouldDisplayOriginalLocation={shouldDisplayOriginalLocation}
               toggleBlackBox={toggleBlackBox}
               key={String(frameOrGroup.id)}
               displayFullUrl={displayFullUrl}
@@ -210,9 +221,10 @@ Frames.contextTypes = { l10n: PropTypes.object };
 
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
-  frames: getCallStackFrames(state),
+  frames: getCurrentThreadFrames(state),
   frameworkGroupingOn: getFrameworkGroupingState(state),
   selectedFrame: getSelectedFrame(state, getCurrentThread(state)),
+  shouldDisplayOriginalLocation: getShouldSelectOriginalLocation(state),
   disableFrameTruncate: false,
   disableContextMenu: false,
   displayFullUrl: false,

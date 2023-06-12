@@ -13,7 +13,6 @@ CompiledModules(
     "event-listeners.js",
     "exceptions.js",
     "expressions.js",
-    "getCallStackFrames.js",
     "index.js",
     "isLineInScope.js",
     "isSelectedFrameVisible.js",

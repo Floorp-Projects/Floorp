@@ -304,6 +304,8 @@ class SmartTrace extends Component {
       disableFrameTruncate: true,
       disableContextMenu: true,
       frameworkGroupingOn: true,
+      // Force displaying the original location (we might try to use current Debugger state?)
+      shouldDisplayOriginalLocation: true,
       displayFullUrl: !this.state || !this.state.originalLocations,
       panel: "webconsole",
     });
