@@ -13,6 +13,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  processExtraData:
+    "chrome://remote/content/webdriver-bidi/modules/Intercept.sys.mjs",
   RealmType: "chrome://remote/content/shared/Realm.sys.mjs",
   setDefaultAndAssertSerializationOptions:
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
@@ -657,6 +659,11 @@ class ScriptModule extends Module {
   }
 
   #buildReturnValue(evaluationResult) {
+    evaluationResult = lazy.processExtraData(
+      this.messageHandler.sessionId,
+      evaluationResult
+    );
+
     const rv = { realm: evaluationResult.realmId };
     switch (evaluationResult.evaluationStatus) {
       // TODO: Compare with EvaluationStatus.Normal after Bug 1774444 is fixed.

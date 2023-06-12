@@ -62,7 +62,13 @@ class ScriptModule extends WindowGlobalBiDiModule {
     }
   }
 
-  #buildExceptionDetails(exception, stack, realm, resultOwnership) {
+  #buildExceptionDetails(
+    exception,
+    stack,
+    realm,
+    resultOwnership,
+    seenNodeIds
+  ) {
     exception = this.#toRawObject(exception);
 
     // A stacktrace is mandatory to build exception details and a missing stack
@@ -96,7 +102,8 @@ class ScriptModule extends WindowGlobalBiDiModule {
         exception,
         lazy.setDefaultSerializationOptions(),
         resultOwnership,
-        realm
+        realm,
+        { seenNodeIds }
       ),
       lineNumber: stack.line - 1,
       stackTrace: { callFrames },
@@ -150,28 +157,37 @@ class ScriptModule extends WindowGlobalBiDiModule {
       stack = rv.stack;
     }
 
+    const seenNodeIds = new Map();
     switch (evaluationStatus) {
       case EvaluationStatus.Normal:
+        const dataSuccess = this.serialize(
+          this.#toRawObject(result),
+          serializationOptions,
+          resultOwnership,
+          realm,
+          { seenNodeIds }
+        );
+
         return {
           evaluationStatus,
-          result: this.serialize(
-            this.#toRawObject(result),
-            serializationOptions,
-            resultOwnership,
-            realm
-          ),
           realmId: realm.id,
+          result: dataSuccess,
+          _extraData: { seenNodeIds },
         };
       case EvaluationStatus.Throw:
+        const dataThrow = this.#buildExceptionDetails(
+          exception,
+          stack,
+          realm,
+          resultOwnership,
+          seenNodeIds
+        );
+
         return {
           evaluationStatus,
-          exceptionDetails: this.#buildExceptionDetails(
-            exception,
-            stack,
-            realm,
-            resultOwnership
-          ),
+          exceptionDetails: dataThrow,
           realmId: realm.id,
+          _extraData: { seenNodeIds },
         };
       default:
         throw new lazy.error.UnsupportedOperationError(
@@ -194,17 +210,20 @@ class ScriptModule extends WindowGlobalBiDiModule {
       serializationOptions,
     } = channelProperties;
 
+    const seenNodeIds = new Map();
     const data = this.serialize(
       this.#toRawObject(message),
       lazy.setDefaultSerializationOptions(serializationOptions),
       ownershipType,
-      realm
+      realm,
+      { seenNodeIds }
     );
 
     this.emitEvent("script.message", {
       channel,
       data,
       source: this.#getSource(realm),
+      _extraData: { seenNodeIds },
     });
   };
 

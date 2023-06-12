@@ -57,7 +57,7 @@ export class WindowGlobalBiDiModule extends Module {
    *     Extra Remote Value serialization options.
    *
    * @returns {object}
-   *     Serialized representation of the value.
+   *     Promise that resolves to the serialized representation of the value.
    */
   serialize(
     value,
@@ -66,15 +66,18 @@ export class WindowGlobalBiDiModule extends Module {
     realm,
     extraOptions = {}
   ) {
-    extraOptions.nodeCache = this.#nodeCache;
+    const { nodeCache = this.#nodeCache, seenNodeIds = new Map() } =
+      extraOptions;
 
-    return lazy.serialize(
+    const serializedValue = lazy.serialize(
       value,
       serializationOptions,
       ownershipType,
       new Map(),
       realm,
-      extraOptions
+      { nodeCache, seenNodeIds }
     );
+
+    return serializedValue;
   }
 }

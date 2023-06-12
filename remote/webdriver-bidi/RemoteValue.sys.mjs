@@ -67,6 +67,9 @@ export const OwnershipModel = {
  *
  * @property {NodeCache=} nodeCache
  *     The cache containing DOM node references.
+ * @property {Map<BrowsingContext, Array<string>>} seenNodeIds
+ *     Map of browsing contexts to their seen node ids during the current
+ *     serialization.
  */
 
 /**
@@ -469,28 +472,27 @@ function getHandleForObject(realm, ownershipType, object) {
  *
  * @param {Node} node
  *    Node to create the unique reference for.
- * @param {Realm} realm
- *     The Realm in which the value is serialized.
  * @param {ExtraSerializationOptions} extraOptions
  *     Extra Remote Value serialization options.
  *
  * @returns {string}
  *    Shared unique reference for the Node.
  */
-function getSharedIdForNode(node, realm, extraOptions) {
-  const { nodeCache } = extraOptions;
+function getSharedIdForNode(node, extraOptions) {
+  const { nodeCache, seenNodeIds } = extraOptions;
+
+  node = Cu.unwaiveXrays(node);
 
   if (!Node.isInstance(node)) {
     return null;
   }
 
-  const browsingContext = realm.browsingContext;
+  const browsingContext = node.ownerGlobal.browsingContext;
   if (!browsingContext) {
     return null;
   }
 
-  const unwrapped = Cu.unwaiveXrays(node);
-  return nodeCache.getOrCreateNodeReference(unwrapped);
+  return nodeCache.getOrCreateNodeReference(node, seenNodeIds);
 }
 
 /**
@@ -514,7 +516,7 @@ function getSharedIdForNode(node, realm, extraOptions) {
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {ExtraSerializationOptions} options
+ * @param {ExtraSerializationOptions} extraOptions
  *     Extra Remote Value serialization options.
  *
  * @returns {object} Object for serialized values.
@@ -528,7 +530,7 @@ function serializeArrayLike(
   ownershipType,
   serializationInternalMap,
   realm,
-  options
+  extraOptions
 ) {
   const serialized = buildSerialized(production, handleId);
   setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
@@ -540,7 +542,7 @@ function serializeArrayLike(
       ownershipType,
       serializationInternalMap,
       realm,
-      options
+      extraOptions
     );
   }
 
@@ -899,7 +901,7 @@ export function serialize(
     const serialized = buildSerialized("node", handleId);
 
     // Get or create the shared id for WebDriver classic compat from the node.
-    const sharedId = getSharedIdForNode(value, realm, extraOptions);
+    const sharedId = getSharedIdForNode(value, extraOptions);
     if (sharedId !== null) {
       serialized.sharedId = sharedId;
     }

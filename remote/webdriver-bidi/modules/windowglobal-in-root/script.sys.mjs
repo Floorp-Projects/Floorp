@@ -7,6 +7,8 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  processExtraData:
+    "chrome://remote/content/webdriver-bidi/modules/Intercept.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
@@ -15,10 +17,12 @@ class ScriptModule extends Module {
 
   interceptEvent(name, payload) {
     if (name == "script.message") {
-      // Resolve browsing context to a TabManager id.
+      // Resolve browsing context to a Navigable id.
       payload.source.context = lazy.TabManager.getIdForBrowsingContext(
         payload.source.context
       );
+
+      payload = lazy.processExtraData(this.messageHandler.sessionId, payload);
     }
 
     return payload;
