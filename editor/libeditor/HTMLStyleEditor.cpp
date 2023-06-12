@@ -2279,6 +2279,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
   //       `<p><b><i>a[]bc</i></b></p>`, we want to make it as
   //       `<p><b><i>a</i></b><b><i>bc</i></b></p>`.
   EditorDOMPoint pointToPutCaret(aPoint);
+  AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(), &pointToPutCaret);
   Result<SplitNodeResult, nsresult> splitNodeResult =
       SplitAncestorStyledInlineElementsAt(
           aPoint, aStyleToRemove, SplitAtEdges::eAllowToCreateEmptyContainer);
@@ -2286,6 +2287,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
     NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
     return splitNodeResult.propagateErr();
   }
+  trackPointToPutCaret.FlushAndStopTracking();
   SplitNodeResult unwrappedSplitNodeResult = splitNodeResult.unwrap();
   unwrappedSplitNodeResult.MoveCaretPointTo(
       pointToPutCaret, *this,
@@ -2358,6 +2360,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
     }
     atStartOfNextNode.Set(atStartOfNextNode.GetContainerParent(), 0);
   }
+  AutoTrackDOMPoint trackPointToPutCaret2(RangeUpdaterRef(), &pointToPutCaret);
   Result<SplitNodeResult, nsresult> splitResultAtStartOfNextNode =
       SplitAncestorStyledInlineElementsAt(
           atStartOfNextNode, aStyleToRemove,
@@ -2366,6 +2369,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
     NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
     return splitResultAtStartOfNextNode.propagateErr();
   }
+  trackPointToPutCaret2.FlushAndStopTracking();
   SplitNodeResult unwrappedSplitResultAtStartOfNextNode =
       splitResultAtStartOfNextNode.unwrap();
   unwrappedSplitResultAtStartOfNextNode.MoveCaretPointTo(

@@ -683,7 +683,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HTMLWithContextInserter::Run(
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
         return pointToPutCaretOrError.propagateErr();
       }
-      if (pointToPutCaretOrError.inspect().IsSet()) {
+      if (pointToPutCaretOrError.inspect().IsSetAndValid()) {
         nsresult rv =
             mHTMLEditor.CollapseSelectionTo(pointToPutCaretOrError.unwrap());
         if (NS_FAILED(rv)) {

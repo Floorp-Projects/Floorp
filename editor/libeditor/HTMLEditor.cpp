@@ -4322,6 +4322,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
   // For making all MoveNodeTransactions have a referenc node in the current
   // parent, move nodes from last one to preceding ones.
   for (const OwningNonNull<nsIContent>& child : Reversed(arrayOfChildren)) {
+    if (MOZ_UNLIKELY(!HTMLEditUtils::IsRemovableNode(child))) {
+      continue;
+    }
     Result<MoveNodeResult, nsresult> moveChildResult = MoveNodeWithTransaction(
         MOZ_KnownLive(child),  // due to bug 1622253.
         previousChild ? EditorDOMPoint::After(previousChild)
@@ -4353,6 +4356,10 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
         "The removing element has already been moved to another element");
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
+
+  NS_WARNING_ASSERTION(!aElement.GetFirstChild(),
+                       "The removing container still has some children, but "
+                       "they are removed by removing the container");
 
   auto GetNextSiblingOf =
       [](const nsTArray<OwningNonNull<nsIContent>>& aArrayOfMovedContent,
