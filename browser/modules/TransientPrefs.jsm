@@ -6,10 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["TransientPrefs"];
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-
 var prefVisibility = new Map();
 
 /* Use for preferences that should only be visible when they've been modified.
@@ -18,7 +14,7 @@ var prefVisibility = new Map();
 
 var TransientPrefs = {
   prefShouldBeVisible(prefName) {
-    if (Preferences.isSet(prefName)) {
+    if (Services.prefs.prefHasUserValue(prefName)) {
       prefVisibility.set(prefName, true);
     }
 
