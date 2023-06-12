@@ -3,21 +3,46 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* global __LOCATION__ */
-/* import-globals-from ../httpd.js */
 
-var _HTTPD_JS_PATH = __LOCATION__.parent;
-_HTTPD_JS_PATH.append("httpd.js");
-load(_HTTPD_JS_PATH.path);
-
-// if these tests fail, we'll want the debug output
-var linDEBUG = true;
+const {
+  dumpn,
+  LineData,
+  HttpServer,
+  nsHttpHeaders,
+  overrideBinaryStreamsForTests,
+  WriteThroughCopier,
+} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 var { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
+);
+
+const CC = Components.Constructor;
+
+const ScriptableInputStream = CC(
+  "@mozilla.org/scriptableinputstream;1",
+  "nsIScriptableInputStream",
+  "init"
+);
+const FileInputStream = CC(
+  "@mozilla.org/network/file-input-stream;1",
+  "nsIFileInputStream",
+  "init"
+);
+
+/* These two are non-const only so a test can overwrite them. */
+var BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
+var BinaryOutputStream = CC(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
 );
 
 /**
@@ -27,7 +52,7 @@ var { NetUtil } = ChromeUtils.importESModule(
  * the server when used as an XPCOM component (not as an inline script).
  */
 function createServer() {
-  return new nsHttpServer();
+  return new HttpServer();
 }
 
 /**
