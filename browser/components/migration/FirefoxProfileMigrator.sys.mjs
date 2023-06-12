@@ -41,6 +41,10 @@ export class FirefoxProfileMigrator extends MigratorBase {
     return "migration-wizard-migrator-display-name-firefox";
   }
 
+  static get brandImage() {
+    return "chrome://branding/content/icon128.png";
+  }
+
   _getAllProfiles() {
     let allProfiles = new Map();
     let profileService = Cc[
