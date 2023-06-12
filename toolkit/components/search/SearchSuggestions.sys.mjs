@@ -43,7 +43,6 @@ class SuggestAutoComplete {
     if (this.#listener) {
       let result = new FormAutoCompleteResult(
         searchString,
-        0,
         results.map(result => ({
           value: result,
           label: result,

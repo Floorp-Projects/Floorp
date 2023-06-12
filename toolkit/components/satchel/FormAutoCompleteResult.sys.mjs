@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class FormAutoCompleteResult {
-  constructor(searchString, defaultIndex, items, prevResult) {
+  constructor(searchString, items, prevResult) {
     this.searchString = searchString;
-    this._defaultIndex = defaultIndex;
     this._items = items;
     this._formHistResult = prevResult;
     this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
@@ -16,9 +15,6 @@ export class FormAutoCompleteResult {
 
   // The user's query string
   searchString = "";
-
-  // The default item that should be entered if none is selected
-  _defaultIndex = 0;
 
   errorDescription = "";
 
@@ -51,7 +47,7 @@ export class FormAutoCompleteResult {
    * @returns {number} the default item that should be entered if none is selected
    */
   get defaultIndex() {
-    return this._defaultIndex;
+    return this._items.length ? 0 : -1;
   }
 
   /**

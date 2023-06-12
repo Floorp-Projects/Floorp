@@ -212,10 +212,7 @@ export class FormAutoCompleteResult {
   errorDescription = "";
 
   get defaultIndex() {
-    if (!this.entries.length) {
-      return -1;
-    }
-    return 0;
+    return this.entries.length ? 0 : -1;
   }
 
   get searchResult() {
@@ -524,14 +521,8 @@ export class FormAutoComplete {
 
   getDataListResult(aField, aUntrimmedSearchString) {
     const items = this.getDataListSuggestions(aField);
-    const defaultIndex = items.length ? 0 : -1;
 
-    return new DataListAutoCompleteResult(
-      aUntrimmedSearchString,
-      defaultIndex,
-      items,
-      null
-    );
+    return new DataListAutoCompleteResult(aUntrimmedSearchString, items, null);
   }
 
   getDataListSuggestions(aField) {
@@ -596,7 +587,6 @@ export class FormAutoComplete {
 
     return new DataListAutoCompleteResult(
       datalistResult.searchString,
-      0,
       finalItems,
       historyResult
     );
