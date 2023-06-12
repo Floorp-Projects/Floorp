@@ -233,10 +233,6 @@ pub struct ColorRenderTarget {
     pub prim_instances: Vec<PrimitiveInstanceData>,
     pub mask_instances_fast: Vec<MaskInstance>,
     pub mask_instances_slow: Vec<MaskInstance>,
-
-    pub prim_instances_with_scissor: FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
-    pub mask_instances_fast_with_scissor: FastHashMap<DeviceIntRect, Vec<MaskInstance>>,
-    pub mask_instances_slow_with_scissor: FastHashMap<DeviceIntRect, Vec<MaskInstance>>,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -262,9 +258,6 @@ impl RenderTarget for ColorRenderTarget {
             prim_instances: Vec::new(),
             mask_instances_fast: Vec::new(),
             mask_instances_slow: Vec::new(),
-            prim_instances_with_scissor: FastHashMap::default(),
-            mask_instances_fast_with_scissor: FastHashMap::default(),
-            mask_instances_slow_with_scissor: FastHashMap::default(),
         }
     }
 
@@ -375,7 +368,6 @@ impl RenderTarget for ColorRenderTarget {
         match task.kind {
             RenderTaskKind::Prim(ref info) => {
                 let render_task_address = task_id.into();
-                let target_rect = task.get_target_rect();
 
                 add_quad_to_batch(
                     render_task_address,
@@ -388,21 +380,12 @@ impl RenderTarget for ColorRenderTarget {
                     ZBufferId(0),
                     render_tasks,
                     |_, instance| {
-                        if info.needs_scissor_rect {
-                            self.prim_instances_with_scissor
-                                .entry(target_rect)
-                                .or_insert(Vec::new())
-                                .push(instance);
-                        } else {
-                            self.prim_instances.push(instance);
-                        }
+                        self.prim_instances.push(instance);
                     }
                 );
 
                 let mask_instances_fast = &mut self.mask_instances_fast;
                 let mask_instances_slow = &mut self.mask_instances_slow;
-                let mask_instances_fast_with_scissor = &mut self.mask_instances_fast_with_scissor;
-                let mask_instances_slow_with_scissor = &mut self.mask_instances_slow_with_scissor;
 
                 build_mask_tasks(
                     info.clip_node_range,
@@ -431,24 +414,10 @@ impl RenderTarget for ColorRenderTarget {
                                     info: [0; 2],
                                 };
 
-                                if info.needs_scissor_rect {
-                                    if fast_path {
-                                        mask_instances_fast_with_scissor
-                                            .entry(target_rect)
-                                            .or_insert(Vec::new())
-                                            .push(instance);
-                                    } else {
-                                        mask_instances_slow_with_scissor
-                                            .entry(target_rect)
-                                            .or_insert(Vec::new())
-                                            .push(instance);
-                                    }
+                                if fast_path {
+                                    mask_instances_fast.push(instance);
                                 } else {
-                                    if fast_path {
-                                        mask_instances_fast.push(instance);
-                                    } else {
-                                        mask_instances_slow.push(instance);
-                                    }
+                                    mask_instances_slow.push(instance);
                                 }
                             }
                         );

@@ -39,7 +39,6 @@ use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, 
 
 const MAX_MASK_SIZE: f32 = 4096.0;
 
-const MIN_BRUSH_SPLIT_SIZE: f32 = 256.0;
 const MIN_BRUSH_SPLIT_AREA: f32 = 128.0 * 128.0;
 
 pub fn prepare_primitives(
@@ -117,6 +116,9 @@ fn can_use_clip_chain_for_quad_path(
         prim_spatial_node_index,
         raster_spatial_node_index,
     );
+    if !map_prim_to_surface.is_2d_axis_aligned() {
+        return false;
+    }
     if map_prim_to_surface.is_perspective() {
         return false;
     }
@@ -138,7 +140,16 @@ fn can_use_clip_chain_for_quad_path(
         }
 
         match clip_node.item.kind {
-            ClipItemKind::RoundedRectangle { .. } | ClipItemKind::Rectangle { .. } => {}
+            ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
+                return false;
+            }
+            ClipItemKind::RoundedRectangle { .. } => {
+            }
+            ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } => {
+            }
+            ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {
+                panic!("bug: xf rect found as mask, not in lcr?");
+            }
             ClipItemKind::BoxShadow { .. } => {
                 // legacy path for box-shadows for now (move them to a separate primitive next)
                 return false;
@@ -153,72 +164,88 @@ fn can_use_clip_chain_for_quad_path(
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum QuadRenderStrategy {
+pub enum QuadRenderMode {
     Direct,
     Indirect,
     NinePatch {
         radius: LayoutVector2D,
         clip_rect: LayoutRect,
+        clip_out: bool,
     },
-    Tiled {
-        x_tiles: u16,
-        y_tiles: u16,
-    }
+}
+
+#[derive(Debug)]
+pub struct QuadRenderStrategy {
+    pub render_mode: QuadRenderMode,
 }
 
 fn get_prim_render_strategy(
     clip_chain: &ClipChainInstance,
     clip_store: &ClipStore,
     data_stores: &DataStores,
-    prim_is_2d_axis_aligned: bool,
 ) -> QuadRenderStrategy {
+    let mut render_mode = QuadRenderMode::Direct;
+
     if clip_chain.needs_mask {
-        fn tile_count_for_size(size: f32) -> u16 {
-            (size / MIN_BRUSH_SPLIT_SIZE).min(4.0).max(1.0).ceil() as u16
-        }
+        for i in 0 .. clip_chain.clips_range.count {
+            let clip_instance = clip_store.get_instance_from_range(&clip_chain.clips_range, i);
+            let clip_node = &data_stores.clip[clip_instance.handle];
 
-        let prim_coverage_size = clip_chain.pic_coverage_rect.size();
-        let x_tiles = tile_count_for_size(prim_coverage_size.width);
-        let y_tiles = tile_count_for_size(prim_coverage_size.height);
-        let try_split_prim = x_tiles > 1 || y_tiles > 1;
+            match clip_node.item.kind {
+                ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
+                    panic!("bug: box-shadow clips not expected on non-legacy rect/quads");
+                }
+                ClipItemKind::RoundedRectangle { ref radius, mode, rect, .. } => {
+                    match render_mode {
+                        QuadRenderMode::Direct => {
+                            let max_corner_width = radius.top_left.width
+                                                        .max(radius.bottom_left.width)
+                                                        .max(radius.top_right.width)
+                                                        .max(radius.bottom_right.width);
+                            let max_corner_height = radius.top_left.height
+                                                        .max(radius.bottom_left.height)
+                                                        .max(radius.top_right.height)
+                                                        .max(radius.bottom_right.height);
 
-        if try_split_prim {
-            if prim_is_2d_axis_aligned {
-                if clip_chain.clips_range.count == 1 {
-                    let clip_instance = clip_store.get_instance_from_range(&clip_chain.clips_range, 0);
-                    let clip_node = &data_stores.clip[clip_instance.handle];
+                            if clip_chain.pic_coverage_rect.area() > MIN_BRUSH_SPLIT_AREA &&
+                               max_corner_width <= 0.5 * rect.size().width &&
+                               max_corner_height <= 0.5 * rect.size().height {
 
-                    if let ClipItemKind::RoundedRectangle { ref radius, mode: ClipMode::Clip, rect, .. } = clip_node.item.kind {
-                        let max_corner_width = radius.top_left.width
-                                                    .max(radius.bottom_left.width)
-                                                    .max(radius.top_right.width)
-                                                    .max(radius.bottom_right.width);
-                        let max_corner_height = radius.top_left.height
-                                                    .max(radius.bottom_left.height)
-                                                    .max(radius.top_right.height)
-                                                    .max(radius.bottom_right.height);
+                                render_mode = QuadRenderMode::NinePatch {
+                                    radius: LayoutVector2D::new(max_corner_width, max_corner_height),
+                                    clip_rect: rect,
+                                    clip_out: mode == ClipMode::ClipOut,
+                                };
+                            } else {
+                                render_mode = QuadRenderMode::Indirect;
+                            }
+                        }
+                        QuadRenderMode::NinePatch { .. } => {
+                            render_mode = QuadRenderMode::Indirect;
+                        }
+                        QuadRenderMode::Indirect { .. } => {
 
-                        if max_corner_width <= 0.5 * rect.size().width &&
-                           max_corner_height <= 0.5 * rect.size().height {
-
-                            return QuadRenderStrategy::NinePatch {
-                                radius: LayoutVector2D::new(max_corner_width, max_corner_height),
-                                clip_rect: rect,
-                            };
                         }
                     }
                 }
+                ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } => {
+                    render_mode = QuadRenderMode::Indirect;
+                }
+                ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {
+                    panic!("bug: xf rects should not be on new clip path yet");
+                }
+                ClipItemKind::BoxShadow { .. } => {
+                    panic!("bug: box-shadow clips not expected on non-legacy rect/quads");
+                }
+                ClipItemKind::Image { .. } => {
+                    panic!("bug: image-masks not expected on rect/quads");
+                }
             }
-
-            QuadRenderStrategy::Tiled {
-                x_tiles,
-                y_tiles,
-            }
-        } else {
-            QuadRenderStrategy::Indirect
         }
-    } else {
-        QuadRenderStrategy::Direct
+    }
+
+    QuadRenderStrategy {
+        render_mode,
     }
 }
 
@@ -688,17 +715,10 @@ fn prepare_interned_prim_for_render(
                     }
                 );
             } else {
-                let map_prim_to_surface = frame_context.spatial_tree.get_relative_transform(
-                    prim_spatial_node_index,
-                    pic_context.raster_spatial_node_index,
-                );
-                let prim_is_2d_axis_aligned = map_prim_to_surface.is_2d_axis_aligned();
-
                 let strategy = get_prim_render_strategy(
                     &prim_instance.vis.clip_chain,
                     frame_state.clip_store,
                     data_stores,
-                    prim_is_2d_axis_aligned,
                 );
 
                 let prim_data = &data_stores.prim[*data_handle];
@@ -717,13 +737,17 @@ fn prepare_interned_prim_for_render(
 
                 let premul_color = color.premultiplied();
 
+                let map_prim_to_surface = frame_context.spatial_tree.get_relative_transform(
+                    prim_spatial_node_index,
+                    pic_context.raster_spatial_node_index,
+                );
+                let prim_is_2d_axis_aligned = map_prim_to_surface.is_2d_axis_aligned();
+
                 let mut quad_flags = QuadFlags::empty();
                 if is_opaque {
                     quad_flags |= QuadFlags::IS_OPAQUE;
                 }
-                if prim_is_2d_axis_aligned {
-                    quad_flags |= QuadFlags::APPLY_DEVICE_CLIP;
-                }
+                quad_flags |= QuadFlags::APPLY_DEVICE_CLIP;
 
                 // TODO(gw): For now, we don't select per-edge AA at all if the primitive
                 //           has a 2d transform, which matches existing behavior. However,
@@ -752,8 +776,8 @@ fn prepare_interned_prim_for_render(
                     &[],
                 );
 
-                match strategy {
-                    QuadRenderStrategy::Direct => {
+                match strategy.render_mode {
+                    QuadRenderMode::Direct => {
                         frame_state.push_prim(
                             &PrimitiveCommand::quad(
                                 prim_instance_index,
@@ -766,7 +790,7 @@ fn prepare_interned_prim_for_render(
                             targets,
                         );
                     }
-                    QuadRenderStrategy::Indirect => {
+                    QuadRenderMode::Indirect => {
                         let surface = &frame_state.surfaces[pic_context.surface_index.0];
                         let clipped_surface_rect = surface.get_surface_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
@@ -794,7 +818,6 @@ fn prepare_interned_prim_for_render(
                             aa_flags,
                             quad_flags,
                             device_pixel_scale,
-                            !prim_is_2d_axis_aligned,
                             frame_state,
                         );
 
@@ -808,93 +831,7 @@ fn prepare_interned_prim_for_render(
                             &[segment],
                         );
                     }
-                    QuadRenderStrategy::Tiled { x_tiles, y_tiles } => {
-                        let surface = &frame_state.surfaces[pic_context.surface_index.0];
-
-                        let clipped_surface_rect = surface.get_surface_rect(
-                            &prim_instance.vis.clip_chain.pic_coverage_rect,
-                            frame_context.spatial_tree,
-                        ).expect("bug: what can cause this?");
-
-                        let unclipped_surface_rect = surface.map_to_device_rect(
-                            &prim_instance.vis.clip_chain.pic_coverage_rect,
-                            frame_context.spatial_tree,
-                        );
-
-                        scratch.quad_segments.clear();
-
-                        let mut x_coords = vec![clipped_surface_rect.min.x.round()];
-                        let mut y_coords = vec![clipped_surface_rect.min.y.round()];
-
-                        let dx = (clipped_surface_rect.max.x - clipped_surface_rect.min.x) / x_tiles as f32;
-                        let dy = (clipped_surface_rect.max.y - clipped_surface_rect.min.y) / y_tiles as f32;
-
-                        for x in 1 .. x_tiles {
-                            x_coords.push((clipped_surface_rect.min.x + x as f32 * dx).round());
-                        }
-                        for y in 1 .. y_tiles {
-                            y_coords.push((clipped_surface_rect.min.y + y as f32 * dy).round());
-                        }
-
-                        x_coords.push(clipped_surface_rect.max.x.round());
-                        y_coords.push(clipped_surface_rect.max.y.round());
-
-                        for y in 0 .. y_coords.len()-1 {
-                            let y0 = y_coords[y];
-                            let y1 = y_coords[y+1];
-
-                            if y1 <= y0 {
-                                continue;
-                            }
-
-                            for x in 0 .. x_coords.len()-1 {
-                                let x0 = x_coords[x];
-                                let x1 = x_coords[x+1];
-
-                                if x1 <= x0 {
-                                    continue;
-                                }
-
-                                let create_task = true;
-
-                                let r = DeviceRect::new(DevicePoint::new(x0, y0), DevicePoint::new(x1, y1));
-
-                                let x0 = r.min.x;
-                                let y0 = r.min.y;
-                                let x1 = r.max.x;
-                                let y1 = r.max.y;
-
-                                let segment = add_segment(
-                                    x0,
-                                    y0,
-                                    x1,
-                                    y1,
-                                    create_task,
-                                    prim_instance,
-                                    prim_spatial_node_index,
-                                    main_prim_address,
-                                    transform_id,
-                                    aa_flags,
-                                    quad_flags,
-                                    device_pixel_scale,
-                                    !prim_is_2d_axis_aligned,
-                                    frame_state,
-                                );
-                                scratch.quad_segments.push(segment);
-                            }
-                        }
-
-                        add_composite_prim(
-                            prim_instance_index,
-                            unclipped_surface_rect.cast_unit(),
-                            premul_color,
-                            quad_flags,
-                            frame_state,
-                            targets,
-                            &scratch.quad_segments,
-                        );
-                    }
-                    QuadRenderStrategy::NinePatch { clip_rect, radius } => {
+                    QuadRenderMode::NinePatch { clip_rect, radius, clip_out } => {
                         let surface = &frame_state.surfaces[pic_context.surface_index.0];
                         let clipped_surface_rect = surface.get_surface_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
@@ -959,7 +896,11 @@ fn prepare_interned_prim_for_render(
                                 }
 
                                 let create_task = if x == 1 || y == 1 {
-                                    false
+                                    if clip_out {
+                                        continue;
+                                    } else {
+                                        false
+                                    }
                                 } else {
                                     true
                                 };
@@ -991,7 +932,6 @@ fn prepare_interned_prim_for_render(
                                     aa_flags,
                                     quad_flags,
                                     device_pixel_scale,
-                                    false,
                                     frame_state,
                                 );
                                 scratch.quad_segments.push(segment);
@@ -2013,7 +1953,6 @@ fn add_segment(
     aa_flags: EdgeAaSegmentMask,
     quad_flags: QuadFlags,
     device_pixel_scale: DevicePixelScale,
-    needs_scissor_rect: bool,
     frame_state: &mut FrameBuildingState,
 ) -> QuadSegment {
     let task_size = DeviceSize::new(x1 - x0, y1 - y0).round().to_i32();
@@ -2036,7 +1975,6 @@ fn add_segment(
                 aa_flags,
                 quad_flags,
                 prim_instance.vis.clip_chain.clips_range,
-                needs_scissor_rect,
             ),
         ));
 
