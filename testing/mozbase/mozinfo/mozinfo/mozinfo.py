@@ -76,6 +76,7 @@ info = {
     "os_version": unknown,
     "bits": unknown,
     "has_sandbox": unknown,
+    "display": None,
     "automation": bool(os.environ.get("MOZ_AUTOMATION", False)),
 }
 (system, node, release, version, machine, processor) = platform.uname()
@@ -128,6 +129,11 @@ elif system == "Linux":
     if not codename:
         codename = "unknown"
     version = "%s %s" % (distribution, os_version)
+
+    if os.environ.get("WAYLAND_DISPLAY"):
+        info["display"] = "wayland"
+    elif os.environ.get("DISPLAY"):
+        info["display"] = "x11"
 
     info["os"] = "linux"
     info["linux_distro"] = distribution
