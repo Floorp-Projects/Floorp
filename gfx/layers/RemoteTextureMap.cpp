@@ -733,7 +733,7 @@ wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
     // Use mLatestRenderedTextureHost for rendering. Remote texture of
     // aTextureId does not exist.
     remoteTexture = owner->mLatestRenderedTextureHost;
-    if (!it->second->mReadyCheckSuppressed || !owner->mIsContextLost) {
+    if (!it->second->mReadyCheckSuppressed && !owner->mIsContextLost) {
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       gfxCriticalNoteOnce << "remote texture for rendering does not exist id:"
                           << uint64_t(aTextureId);
