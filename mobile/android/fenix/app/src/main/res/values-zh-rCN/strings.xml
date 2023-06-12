@@ -1942,6 +1942,8 @@
     <string name="search_add_custom_engine_name_hint">名称</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">搜索引擎名称</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">搜索字符串 URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">搜索字符串</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->

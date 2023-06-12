@@ -257,7 +257,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s のアドレスバーに入力したすべての語句が既定の検索エンジンと共有されます。</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">%s で検索</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">アドレスバーから直接検索します</string>
@@ -267,6 +267,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">今回だけ使う検索エンジン:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s 検索エンジン</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->

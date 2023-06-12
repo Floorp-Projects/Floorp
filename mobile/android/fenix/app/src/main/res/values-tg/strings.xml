@@ -367,6 +367,14 @@
     <string name="preferences_category_general">Умумӣ</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Дар бораи барнома</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Интихоб намоед</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Идоракунии миёнбурҳои низомҳои ҷустуҷӯӣ</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Таҳрир кардани низомҳои намоён дар менюи ҷустуҷӯ</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Низомҳои намоён дар менюи ҷустуҷӯ</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Низоми ҷустуҷӯии пешфарз</string>
     <!-- Preference for settings related to Search -->
@@ -1877,6 +1885,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Илова кардани низоми ҷустуҷӯӣ</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Илова кардани низоми ҷустуҷӯии нав</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Таҳрир кардани низоми ҷустуҷӯӣ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1896,8 +1906,12 @@
     <string name="search_add_custom_engine_name_hint">Ном</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Номи низоми ҷустуҷӯӣ</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Нишонии URL-и сатри ҷустуҷӯ</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Сатри ҷустуҷӯ барои истифода</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Нишонии URL, ки барои ҷустуҷӯ истифода мешавад</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Сатри дархостро бо “%s” иваз намоед. Масалан:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
