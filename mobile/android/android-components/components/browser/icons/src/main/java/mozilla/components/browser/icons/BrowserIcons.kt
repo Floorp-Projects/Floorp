@@ -211,7 +211,9 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     }
 
     @MainThread
-    private fun loadIntoViewInternal(
+    @VisibleForTesting
+    @Suppress("UndocumentedPublicFunction") // this is visible only for tests
+    fun loadIntoViewInternal(
         view: WeakReference<ImageView>,
         request: IconRequest,
         placeholder: Drawable?,

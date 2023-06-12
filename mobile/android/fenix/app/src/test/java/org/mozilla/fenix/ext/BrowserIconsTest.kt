@@ -4,26 +4,42 @@
 
 package org.mozilla.fenix.ext
 
+import android.content.Context
 import android.widget.ImageView
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import java.lang.ref.WeakReference
 
-@RunWith(FenixRobolectricTestRunner::class)
 class BrowserIconsTest {
     @Test
     fun loadIntoViewTest() {
-        val imageView = spyk(ImageView(testContext))
-        val icons = spyk(BrowserIcons(testContext, httpClient = GeckoViewFetchClient(testContext)))
         val myUrl = "https://mozilla.com"
-        val request = spyk(IconRequest(url = myUrl))
+        val request = IconRequest(url = myUrl)
+        val imageView = mockk<ImageView>()
+        val context = mockk<Context>()
+        val weakReference = slot<WeakReference<ImageView>>()
+
+        every { context.assets } returns mockk()
+        every { context.resources.getDimensionPixelSize(any()) } returns 100
+
+        val icons = spyk(
+            BrowserIcons(context = context, httpClient = mockk<GeckoViewFetchClient>()),
+        )
+
+        every { icons.loadIntoViewInternal(any(), any(), any(), any()) } returns mockk()
+
         icons.loadIntoView(imageView, myUrl)
+
         verify { icons.loadIntoView(imageView, request) }
+        verify { icons.loadIntoViewInternal(capture(weakReference), request, null, null) }
+        assertEquals(imageView, weakReference.captured.get())
     }
 }
