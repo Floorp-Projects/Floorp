@@ -35,7 +35,10 @@ NS_IMPL_ISUPPORTS(nsJARInputStream, nsIInputStream)
 nsresult nsJARInputStream::InitFile(nsZipHandle* aFd, const uint8_t* aData,
                                     nsZipItem* aItem) {
   nsresult rv = NS_OK;
-  MOZ_ASSERT(aFd, "Argument may not be null");
+  MOZ_DIAGNOSTIC_ASSERT(aFd, "Argument may not be null");
+  if (!aFd) {
+    return NS_ERROR_INVALID_ARG;
+  }
   MOZ_ASSERT(aItem, "Argument may not be null");
 
   // Mark it as closed, in case something fails in initialisation
