@@ -132,18 +132,14 @@ AutoCompleteSearch.prototype = {
    */
   startSearch(aSearchString, aSearchParam, aPreviousResult, aListener) {
     var result = this._result;
-    if (result._values.length) {
-      result.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS_ONGOING;
-    } else {
-      result.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH_ONGOING;
-    }
+    result.searchResult = result._values.length
+      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS_ONGOING
+      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH_ONGOING;
     aListener.onSearchResult(this, result);
 
-    if (result._values.length) {
-      result.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-    } else {
-      result.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-    }
+    result.searchResult = result._values.length
+      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     aListener.onSearchResult(this, result);
   },
 

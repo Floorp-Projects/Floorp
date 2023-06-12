@@ -219,10 +219,9 @@ export class FormAutoCompleteResult {
   }
 
   get searchResult() {
-    if (!this.entries.length) {
-      return Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-    }
-    return Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+    return this.entries.length
+      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
   }
 
   get matchCount() {
@@ -374,7 +373,7 @@ export class FormAutoComplete {
       inputName: aInputName,
     });
 
-    function maybeNotifyListener(result) {
+    function reportSearchResult(result) {
       aListener?.onSearchCompletion(result);
     }
 
@@ -393,7 +392,7 @@ export class FormAutoComplete {
       );
 
     if (!this._enabled) {
-      maybeNotifyListener(emptyResult);
+      reportSearchResult(emptyResult);
       return;
     }
 
@@ -401,13 +400,13 @@ export class FormAutoComplete {
     // search bar history.
     if (aInputName == "searchbar-history" && aField) {
       this.log(`autoCompleteSearch for input name "${aInputName}" is denied`);
-      maybeNotifyListener(emptyResult);
+      reportSearchResult(emptyResult);
       return;
     }
 
     if (isAutocompleteDisabled(aField)) {
       this.log("autoCompleteSearch not allowed due to autcomplete=off");
-      maybeNotifyListener(emptyResult);
+      reportSearchResult(emptyResult);
       return;
     }
 
@@ -416,14 +415,11 @@ export class FormAutoComplete {
     );
     const searchString = aUntrimmedSearchString.trim().toLowerCase();
 
-    // reuse previous results if:
-    // a) length greater than one character (others searches are special cases) AND
-    // b) the the new results will be a subset of the previous results
     const prevSearchString = aPreviousResult?.searchString.trim();
-    if (
+    const reuseResult =
       prevSearchString?.length > 1 &&
-      searchString.includes(prevSearchString.toLowerCase())
-    ) {
+      searchString.includes(prevSearchString.toLowerCase());
+    if (reuseResult) {
       this.log("Using previous autocomplete result");
       const result = aPreviousResult;
       const wrappedResult = result.wrappedJSObject;
@@ -494,7 +490,7 @@ export class FormAutoComplete {
         wrappedResult._items = filteredEntries.concat(datalistItems);
       }
 
-      maybeNotifyListener(result);
+      reportSearchResult(result);
     } else {
       this.log("Creating new autocomplete search result.");
 
@@ -508,7 +504,7 @@ export class FormAutoComplete {
           )
         : emptyResult;
 
-      const processEntry = aEntries => {
+      this.getAutoCompleteValues(client, aInputName, searchString, aEntries => {
         if (aField?.maxLength > -1) {
           result.entries = aEntries.filter(
             el => el.text.length <= aField.maxLength
@@ -521,28 +517,17 @@ export class FormAutoComplete {
           result = this.mergeResults(result, dataListResult);
         }
 
-        maybeNotifyListener(result);
-      };
-
-      this.getAutoCompleteValues(
-        client,
-        aInputName,
-        searchString,
-        processEntry
-      );
+        reportSearchResult(result);
+      });
     }
   }
 
   getDataListResult(aField, aUntrimmedSearchString) {
     const items = this.getDataListSuggestions(aField);
-    const searchResult = items.length
-      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
-      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     const defaultIndex = items.length ? 0 : -1;
 
     return new DataListAutoCompleteResult(
       aUntrimmedSearchString,
-      searchResult,
       defaultIndex,
       "",
       items,
@@ -612,7 +597,6 @@ export class FormAutoComplete {
 
     return new DataListAutoCompleteResult(
       datalistResult.searchString,
-      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
       0,
       "",
       finalItems,
