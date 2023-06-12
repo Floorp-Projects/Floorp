@@ -56,7 +56,7 @@ function updatePrefsAndDefines() {
   } else if (port > 0) {
     uploadL10nId = "about-glean-upload-enabled-local";
   }
-  uploadMessageEl.setAttribute("data-l10n-id", uploadL10nId);
+  document.l10n.setAttributes(uploadMessageEl, uploadL10nId);
 }
 
 function camelToKebab(str) {

@@ -92,7 +92,7 @@ export class InfoItem extends HTMLElement {
     };
     let fluentID = stringMapping[labelId] || labelId;
 
-    label.setAttribute("data-l10n-id", "certificate-viewer-" + fluentID);
+    document.l10n.setAttributes(label, `certificate-viewer-${fluentID}`);
 
     this.classList.add(labelId);
 
@@ -102,7 +102,7 @@ export class InfoItem extends HTMLElement {
       return;
     }
     if (labelId === "other-name") {
-      info.setAttribute("data-l10n-id", "certificate-viewer-unsupported");
+      document.l10n.setAttributes(info, "certificate-viewer-unsupported");
       return;
     }
     if (typeof this.item.info === "boolean") {

@@ -27,9 +27,9 @@ export class InfoGroup extends HTMLElement {
 
   render() {
     let title = this.shadowRoot.querySelector(".info-group-title");
-    title.setAttribute(
-      "data-l10n-id",
-      "certificate-viewer-" + this.item.sectionId
+    document.l10n.setAttributes(
+      title,
+      `certificate-viewer-${this.item.sectionId}`
     );
 
     // Adds a class with the section title's name, to make
