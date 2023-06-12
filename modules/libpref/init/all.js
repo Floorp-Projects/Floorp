@@ -893,13 +893,6 @@ pref("dom.forms.selectSearch", false);
 
 pref("dom.cycle_collector.incremental", true);
 
-// Disable popups from plugins by default
-//   0 = openAllowed
-//   1 = openControlled
-//   2 = openBlocked
-//   3 = openAbused
-pref("privacy.popups.disable_from_plugins", 3);
-
 // List of domains exempted from RFP. The list is comma separated domain list.
 pref("privacy.resistFingerprinting.exemptedDomains", "*.example.invalid");
 
