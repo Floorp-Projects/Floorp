@@ -85,15 +85,9 @@ using namespace mozilla;
 static mozilla::LazyLogModule gResistFingerprintingLog(
     "nsResistFingerprinting");
 
-#define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
-#define RESIST_FINGERPRINTING_PBMODE_PREF "privacy.resistFingerprinting.pbmode"
-#define RESIST_FINGERPRINTINGPROTECTION_PREF "privacy.fingerprintingProtection"
-#define RESIST_FINGERPRINTINGPROTECTION_PBMODE_PREF \
-  "privacy.fingerprintingProtection.pbmode"
 #define RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF \
   "privacy.fingerprintingProtection.overrides"
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
-#define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
 
 static constexpr uint32_t kVideoFramesPerSec = 30;
@@ -139,10 +133,6 @@ nsRFPService* nsRFPService::GetOrCreate() {
 }
 
 static const char* gCallbackPrefs[] = {
-    RESIST_FINGERPRINTING_PREF,
-    RESIST_FINGERPRINTING_PBMODE_PREF,
-    RESIST_FINGERPRINTINGPROTECTION_PREF,
-    RESIST_FINGERPRINTINGPROTECTION_PBMODE_PREF,
     RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF,
     nullptr,
 };
@@ -166,21 +156,14 @@ nsresult nsRFPService::Init() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-#if defined(XP_WIN)
-  rv = obs->AddObserver(this, PROFILE_INITIALIZED_TOPIC, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
   Preferences::RegisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
                                  this);
-  // We backup the original TZ value here.
-  const char* tzValue = PR_GetEnv("TZ");
-  if (tzValue != nullptr) {
-    mInitialTZValue = nsCString(tzValue);
-  }
 
-  // Call Update here to cache the values of the prefs and set the timezone.
-  UpdateRFPPref();
+  JS::SetReduceMicrosecondTimePrecisionCallback(
+      nsRFPService::ReduceTimePrecisionAsUSecsWrapper);
+
+  // Called from here to get the initial list of enabled fingerprinting
+  // protections.
   UpdateFPPOverrideList();
 
   return rv;
@@ -207,71 +190,6 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
   }
 
   return false;
-}
-
-// This function updates every fingerprinting item necessary except
-// timing-related
-void nsRFPService::UpdateRFPPref() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting();
-
-  JS::SetReduceMicrosecondTimePrecisionCallback(
-      nsRFPService::ReduceTimePrecisionAsUSecsWrapper);
-
-  // The JavaScript engine can already set the timezone per realm/global,
-  // but we think there are still other users of libc that rely
-  // on the TZ environment variable.
-  if (!StaticPrefs::privacy_resistFingerprinting_testing_setTZtoUTC()) {
-    return;
-  }
-
-  if (resistFingerprinting) {
-    PR_SetEnv("TZ=UTC");
-  } else if (sInitialized) {
-    // We will not touch the TZ value if 'privacy.resistFingerprinting' is false
-    // during the time of initialization.
-    if (!mInitialTZValue.IsEmpty()) {
-      nsAutoCString tzValue = "TZ="_ns + mInitialTZValue;
-      static char* tz = nullptr;
-
-      // If the tz has been set before, we free it first since it will be
-      // allocated a new value later.
-      if (tz != nullptr) {
-        free(tz);
-      }
-      // PR_SetEnv() needs the input string been leaked intentionally, so
-      // we copy it here.
-      tz = ToNewCString(tzValue, mozilla::fallible);
-      if (tz != nullptr) {
-        PR_SetEnv(tz);
-      }
-    } else {
-#if defined(XP_WIN)
-      // For Windows, we reset the TZ to an empty string. This will make Windows
-      // to use its system timezone.
-      PR_SetEnv("TZ=");
-#else
-      // For POSIX like system, we reset the TZ to the /etc/localtime, which is
-      // the system timezone.
-      PR_SetEnv("TZ=:/etc/localtime");
-#endif
-    }
-  }
-
-  // If and only if the time zone was changed above, propagate the change to the
-  // <time.h> functions and the JS runtime.
-  if (resistFingerprinting || sInitialized) {
-    // localtime_r (and other functions) may not call tzset, so do this here
-    // after changing TZ to ensure all <time.h> functions use the new time zone.
-#if defined(XP_WIN)
-    _tzset();
-#else
-    tzset();
-#endif
-
-    nsJSUtils::ResetTimeZone();
-  }
 }
 
 void nsRFPService::UpdateFPPOverrideList() {
@@ -362,18 +280,6 @@ void nsRFPService::PrefChanged(const char* aPref) {
 
   if (pref.EqualsLiteral(RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF)) {
     UpdateFPPOverrideList();
-  } else {
-    UpdateRFPPref();
-
-#if defined(XP_WIN)
-    if (StaticPrefs::privacy_resistFingerprinting_testing_setTZtoUTC() &&
-        !XRE_IsE10sParentProcess()) {
-      // Windows does not follow POSIX. Updates to the TZ environment variable
-      // are not reflected immediately on that platform as they are on UNIX
-      // systems without this call.
-      _tzset();
-    }
-#endif
   }
 }
 
@@ -383,25 +289,6 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
   if (strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) == 0) {
     StartShutdown();
   }
-#if defined(XP_WIN)
-  else if (!strcmp(PROFILE_INITIALIZED_TOPIC, aTopic)) {
-    // If we're e10s, then we don't need to run this, since the child process
-    // will simply inherit the environment variable from the parent process, in
-    // which case it's unnecessary to call _tzset().
-    if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
-      // Windows does not follow POSIX. Updates to the TZ environment variable
-      // are not reflected immediately on that platform as they are on UNIX
-      // systems without this call.
-      _tzset();
-    }
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
-
-    nsresult rv = obs->RemoveObserver(this, PROFILE_INITIALIZED_TOPIC);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-#endif
 
   if (strcmp(LAST_PB_SESSION_EXITED_TOPIC, aTopic) == 0) {
     // Clear the private session key when the private session ends so that we
