@@ -52,7 +52,7 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_blocklist_lastModified_rs_scalars() {
-  resetBlocklistTelemetry();
+  Services.fog.testResetFOG();
   const now = Date.now();
 
   const lastEntryTimes = {
@@ -99,7 +99,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   });
   Assert.equal(
     undefined,
-    testGetValue(Glean.blocklist.lastModifiedRsAddonsMblf)
+    Glean.blocklist.lastModifiedRsAddonsMblf.testGetValue()
   );
 
   info("Test RS addon blocklist lastModified scalar");
@@ -116,7 +116,7 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
 
   Assert.equal(
     undefined,
-    testGetValue(Glean.blocklist.lastModifiedRsAddonsMblf)
+    Glean.blocklist.lastModifiedRsAddonsMblf.testGetValue()
   );
 
   await ExtensionBlocklistMLBF.ensureInitialized();
@@ -133,6 +133,6 @@ add_task(async function test_blocklist_lastModified_rs_scalars() {
   });
   Assert.equal(
     new Date(lastEntryTimesUTC.addons_mlbf).getTime(),
-    testGetValue(Glean.blocklist.lastModifiedRsAddonsMblf).getTime()
+    Glean.blocklist.lastModifiedRsAddonsMblf.testGetValue().getTime()
   );
 });
