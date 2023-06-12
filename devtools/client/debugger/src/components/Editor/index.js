@@ -10,7 +10,6 @@ import { connect } from "../../utils/connect";
 
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
-import { features } from "../../utils/prefs";
 import { getIndentation } from "../../utils/indentation";
 
 import { showMenu } from "../../context-menu/menu";
@@ -34,12 +33,10 @@ import {
   getConditionalPanelLocation,
   getSymbols,
   getIsCurrentThreadPaused,
-  getCurrentThread,
   getThreadContext,
   getSkipPausing,
   getInlinePreview,
   getEditorWrapping,
-  getHighlightedCalls,
   getBlackBoxRanges,
   isSourceBlackBoxed,
   getHighlightedLineRangeForSelectedSource,
@@ -61,7 +58,6 @@ import EmptyLines from "./EmptyLines";
 import EditorMenu from "./EditorMenu";
 import ConditionalPanel from "./ConditionalPanel";
 import InlinePreviews from "./InlinePreviews";
-import HighlightCalls from "./HighlightCalls";
 import Exceptions from "./Exceptions";
 import BlackboxLines from "./BlackboxLines";
 
@@ -123,13 +119,10 @@ class Editor extends PureComponent {
       openConditionalPanel: PropTypes.func.isRequired,
       updateViewport: PropTypes.func.isRequired,
       isPaused: PropTypes.bool.isRequired,
-      highlightCalls: PropTypes.func.isRequired,
-      unhighlightCalls: PropTypes.func.isRequired,
       breakpointActions: PropTypes.object.isRequired,
       editorActions: PropTypes.object.isRequired,
       addBreakpointAtLine: PropTypes.func.isRequired,
       continueToHere: PropTypes.func.isRequired,
-      toggleBlackBox: PropTypes.func.isRequired,
       updateCursorPosition: PropTypes.func.isRequired,
       jumpToMappedLocation: PropTypes.func.isRequired,
       selectedLocation: PropTypes.object,
@@ -215,11 +208,6 @@ class Editor extends PureComponent {
     const codeMirrorWrapper = codeMirror.getWrapperElement();
 
     codeMirror.on("gutterClick", this.onGutterClick);
-
-    if (features.commandClick) {
-      document.addEventListener("keydown", this.commandKeyDown);
-      document.addEventListener("keyup", this.commandKeyUp);
-    }
 
     // Set code editor wrapper to be focusable
     codeMirrorWrapper.tabIndex = 0;
@@ -352,22 +340,6 @@ class Editor extends PureComponent {
   };
 
   onEditorScroll = debounce(this.props.updateViewport, 75);
-
-  commandKeyDown = e => {
-    const { key } = e;
-    if (this.props.isPaused && key === "Meta") {
-      const { cx, highlightCalls } = this.props;
-      highlightCalls(cx);
-    }
-  };
-
-  commandKeyUp = e => {
-    const { key } = e;
-    if (key === "Meta") {
-      const { cx, unhighlightCalls } = this.props;
-      unhighlightCalls(cx);
-    }
-  };
 
   onKeyDown(e) {
     const { codeMirror } = this.state.editor;
@@ -685,7 +657,6 @@ class Editor extends PureComponent {
 
     return (
       <div>
-        <HighlightCalls editor={editor} selectedSource={selectedSource} />
         <DebugLine />
         <HighlightLine />
         <EmptyLines editor={editor} />
@@ -776,7 +747,6 @@ const mapStateToProps = state => {
     skipPausing: getSkipPausing(state),
     inlinePreviewEnabled: getInlinePreview(state),
     editorWrappingEnabled: getEditorWrapping(state),
-    highlightedCalls: getHighlightedCalls(state, getCurrentThread(state)),
     blackboxedRanges: getBlackBoxRanges(state),
     breakableLines: getSelectedBreakableLines(state),
     highlightedLineRange: getHighlightedLineRangeForSelectedSource(state),
@@ -795,9 +765,6 @@ const mapDispatchToProps = dispatch => ({
       updateViewport: actions.updateViewport,
       updateCursorPosition: actions.updateCursorPosition,
       closeTab: actions.closeTab,
-      toggleBlackBox: actions.toggleBlackBox,
-      highlightCalls: actions.highlightCalls,
-      unhighlightCalls: actions.unhighlightCalls,
     },
     dispatch
   ),

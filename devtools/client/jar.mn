@@ -313,7 +313,6 @@ devtools.jar:
     content/debugger/src/components/Editor/InlinePreview.css (debugger/src/components/Editor/InlinePreview.css)
     content/debugger/src/components/Editor/Preview.css (debugger/src/components/Editor/Preview.css)
     content/debugger/src/components/Editor/Preview/Popup.css (debugger/src/components/Editor/Preview/Popup.css)
-    content/debugger/src/components/Editor/HighlightCalls.css (debugger/src/components/Editor/HighlightCalls.css)
     content/debugger/src/components/Editor/SearchInFileBar.css (debugger/src/components/Editor/SearchInFileBar.css)
     content/debugger/src/components/Editor/Tabs.css (debugger/src/components/Editor/Tabs.css)
     content/debugger/src/components/PrimaryPanes/Outline.css (debugger/src/components/PrimaryPanes/Outline.css)

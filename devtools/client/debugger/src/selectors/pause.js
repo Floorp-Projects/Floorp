@@ -237,10 +237,6 @@ export function getSkipPausing(state) {
   return state.pause.skipPausing;
 }
 
-export function getHighlightedCalls(state, thread) {
-  return getThreadPauseState(state.pause, thread).highlightedCalls;
-}
-
 export function isMapScopesEnabled(state) {
   return state.pause.mapScopes;
 }

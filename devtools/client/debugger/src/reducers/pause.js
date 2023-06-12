@@ -28,7 +28,6 @@ export function initialPauseState(thread = "UnknownThread") {
       thread,
       pauseCounter: 0,
     },
-    highlightedCalls: null,
     threads: {},
     skipPausing: prefs.skipPausing,
     mapScopes: prefs.mapScopes,
@@ -49,7 +48,6 @@ const resumedPauseState = {
   selectedFrameId: null,
   why: null,
   inlinePreview: {},
-  highlightedCalls: null,
 };
 
 const createInitialPauseState = () => ({
@@ -360,18 +358,6 @@ function update(state = initialPauseState(), action) {
           ...threadState().inlinePreview,
           [selectedFrameId]: previews,
         },
-      });
-    }
-
-    case "HIGHLIGHT_CALLS": {
-      const { highlightedCalls } = action;
-      return updateThreadState({ ...threadState(), highlightedCalls });
-    }
-
-    case "UNHIGHLIGHT_CALLS": {
-      return updateThreadState({
-        ...threadState(),
-        highlightedCalls: null,
       });
     }
 
