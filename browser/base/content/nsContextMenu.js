@@ -1155,14 +1155,14 @@ class nsContextMenu {
       // Set the correct label for the fill menu
       let fillMenu = document.getElementById("fill-login");
       if (onPasswordLikeField) {
-        document.l10n.setAttributes(
-          fillMenu,
+        fillMenu.setAttribute(
+          "data-l10n-id",
           "main-context-menu-use-saved-password"
         );
       } else {
         // On a username field
-        document.l10n.setAttributes(
-          fillMenu,
+        fillMenu.setAttribute(
+          "data-l10n-id",
           "main-context-menu-use-saved-login"
         );
       }

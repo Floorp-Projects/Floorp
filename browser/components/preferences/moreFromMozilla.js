@@ -159,10 +159,10 @@ var gMoreFromMozillaPane = {
       let title = template.querySelector(".product-title");
       let desc = template.querySelector(".description");
 
-      document.l10n.setAttributes(title, product.title_string_id);
+      title.setAttribute("data-l10n-id", product.title_string_id);
       title.id = product.id;
 
-      document.l10n.setAttributes(desc, product.description_string_id);
+      desc.setAttribute("data-l10n-id", product.description_string_id);
 
       let isLink = product.button.type === "link";
       let actionElement = template.querySelector(
@@ -202,8 +202,8 @@ var gMoreFromMozillaPane = {
         qrcode.setAttribute("hidden", "false");
 
         let qrcode_title = template.querySelector(".qr-code-box-title");
-        document.l10n.setAttributes(
-          qrcode_title,
+        qrcode_title.setAttribute(
+          "data-l10n-id",
           product.qrcode.title.string_id
         );
 
@@ -222,8 +222,8 @@ var gMoreFromMozillaPane = {
           }` +
           ".svg";
         // Add image a11y attributes
-        document.l10n.setAttributes(
-          img,
+        img.setAttribute(
+          "data-l10n-id",
           "more-from-moz-qr-code-firefox-mobile-img"
         );
 
@@ -235,8 +235,8 @@ var gMoreFromMozillaPane = {
         // For supported locales, this link allows users to send themselves a
         // download link by email. It should be hidden for unsupported locales.
         if (BrowserUtils.sendToDeviceEmailsSupported()) {
-          document.l10n.setAttributes(
-            qrc_link,
+          qrc_link.setAttribute(
+            "data-l10n-id",
             product.qrcode.button.label.string_id
           );
           qrc_link.href = this.getURL(

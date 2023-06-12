@@ -1532,8 +1532,8 @@ var gBrowserInit = {
       if (!toolbarMenubar.hasAttribute("autohide")) {
         toolbarMenubar.setAttribute("autohide", true);
       }
-      document.l10n.setAttributes(
-        toolbarMenubar,
+      toolbarMenubar.setAttribute(
+        "data-l10n-id",
         "toolbar-context-menu-menu-bar-cmd"
       );
       toolbarMenubar.setAttribute("data-l10n-attrs", "toolbarname");
@@ -1987,8 +1987,8 @@ var gBrowserInit = {
               toplevel.toplevel_name
             );
           } else {
-            document.l10n.setAttributes(
-              managedBookmarksButton,
+            managedBookmarksButton.setAttribute(
+              "data-l10n-id",
               "managed-bookmarks"
             );
           }

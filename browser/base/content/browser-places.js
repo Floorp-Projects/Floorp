@@ -1246,7 +1246,7 @@ var PlacesToolbarHelper = {
         if (entry.name) {
           submenu.setAttribute("label", entry.name);
         } else {
-          document.l10n.setAttributes(submenu, "managed-bookmarks-subfolder");
+          submenu.setAttribute("data-l10n-id", "managed-bookmarks-subfolder");
         }
         submenu.setAttribute("container", "true");
         submenu.setAttribute(

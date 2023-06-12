@@ -194,10 +194,9 @@ customElements.define(
       // The data-extensionid attribute is used by context menu handlers
       // to identify the extension being manipulated by the context menu.
       this._menuButton.dataset.extensionid = this.extension.id;
-      this.ownerDocument.l10n.setAttributes(
-        this._menuButton,
-        "unified-extensions-item-open-menu",
-        { extensionName: this.extension.name }
+      this._menuButton.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ extensionName: this.extension.name })
       );
 
       this.#setStateMessage();
