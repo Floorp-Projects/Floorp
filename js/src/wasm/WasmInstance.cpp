@@ -1780,9 +1780,10 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
       }
 
       // Find the shape using the class and recursion group
+      const ObjectFlags objectFlags = {ObjectFlag::NotExtensible};
       typeDefData->shape =
           WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
-                                &typeDef.recGroup(), ObjectFlags());
+                                &typeDef.recGroup(), objectFlags);
       if (!typeDefData->shape) {
         return false;
       }

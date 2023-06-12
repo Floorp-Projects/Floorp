@@ -12,9 +12,9 @@
 
 #include "gc/Allocator.h"
 #include "gc/Pretenuring.h"
-#include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 #include "wasm/WasmInstanceData.h"
+#include "wasm/WasmMemory.h"
 #include "wasm/WasmTypeDef.h"
 #include "wasm/WasmValType.h"
 
@@ -86,20 +86,14 @@ class WasmGcObject : public JSObject {
     void set(uint32_t u32) { u32_ = u32; }
   };
 
-  [[nodiscard]] bool lookupProperty(JSContext* cx,
-                                    js::Handle<WasmGcObject*> object, jsid id,
-                                    PropOffset* offset, wasm::FieldType* type);
-  [[nodiscard]] bool hasProperty(JSContext* cx,
-                                 js::Handle<WasmGcObject*> object, jsid id) {
-    WasmGcObject::PropOffset offset;
-    wasm::FieldType type;
-    return lookupProperty(cx, object, id, &offset, &type);
-  }
-
-  bool loadValue(JSContext* cx, const WasmGcObject::PropOffset& offset,
-                 wasm::FieldType type, MutableHandleValue vp);
+  [[nodiscard]] static bool lookUpProperty(JSContext* cx,
+                                           Handle<WasmGcObject*> obj, jsid id,
+                                           PropOffset* offset, FieldType* type);
 
  public:
+  [[nodiscard]] static bool loadValue(JSContext* cx, Handle<WasmGcObject*> obj,
+                                      jsid id, MutableHandleValue vp);
+
   const wasm::SuperTypeVector& superTypeVector() const {
     return *superTypeVector_;
   }
@@ -289,7 +283,7 @@ class WasmStructObject : public WasmGcObject {
   // Given the offset of a field, return its actual address.  `fieldType` is
   // for assertional purposes only.
   inline uint8_t* fieldOffsetToAddress(FieldType fieldType,
-                                       uint32_t fieldOffset);
+                                       uint32_t fieldOffset) const;
 
   // JIT accessors
   static constexpr size_t offsetOfOutlineData() {
@@ -351,8 +345,8 @@ inline void WasmStructObject::fieldOffsetToAreaAndOffset(FieldType fieldType,
       ((fieldOffset + fieldType.size() - 1) < WasmStructObject_MaxInlineBytes));
 }
 
-inline uint8_t* WasmStructObject::fieldOffsetToAddress(FieldType fieldType,
-                                                       uint32_t fieldOffset) {
+inline uint8_t* WasmStructObject::fieldOffsetToAddress(
+    FieldType fieldType, uint32_t fieldOffset) const {
   bool areaIsOutline;
   uint32_t areaOffset;
   fieldOffsetToAreaAndOffset(fieldType, fieldOffset, &areaIsOutline,

@@ -160,62 +160,6 @@ using namespace wasm;
 //=========================================================================
 // WasmGcObject
 
-bool WasmGcObject::lookupProperty(JSContext* cx, Handle<WasmGcObject*> object,
-                                  jsid id, PropOffset* offset,
-                                  FieldType* type) {
-  switch (kind()) {
-    case wasm::TypeDefKind::Struct: {
-      const auto& structType = typeDef().structType();
-      uint32_t index;
-      if (!IdIsIndex(id, &index)) {
-        return false;
-      }
-      if (index >= structType.fields_.length()) {
-        return false;
-      }
-      const StructField& field = structType.fields_[index];
-      offset->set(field.offset);
-      *type = field.type;
-      return true;
-    }
-    case wasm::TypeDefKind::Array: {
-      const auto& arrayType = typeDef().arrayType();
-
-      // Special case for property 'length' that loads the length field at the
-      // beginning of the data buffer
-      if (id.isString() &&
-          id.toString() == cx->runtime()->commonNames->length) {
-        STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
-        *type = FieldType::I32;
-        offset->set(UINT32_MAX);
-        return true;
-      }
-
-      // Normal case of indexed properties for loading array elements
-      uint32_t index;
-      if (!IdIsIndex(id, &index)) {
-        return false;
-      }
-      uint32_t numElements = object->as<WasmArrayObject>().numElements_;
-      if (index >= numElements) {
-        return false;
-      }
-      uint64_t scaledIndex =
-          uint64_t(index) * uint64_t(arrayType.elementType_.size());
-      if (scaledIndex >= uint64_t(UINT32_MAX)) {
-        // It's unrepresentable as an WasmGcObject::PropOffset.  Give up.
-        return false;
-      }
-      offset->set(uint32_t(scaledIndex));
-      *type = arrayType.elementType_;
-      return true;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-      return false;
-  }
-}
-
 const ObjectOps WasmGcObject::objectOps_ = {
     WasmGcObject::obj_lookupProperty,            // lookupProperty
     WasmGcObject::obj_defineProperty,            // defineProperty
@@ -232,122 +176,52 @@ const ObjectOps WasmGcObject::objectOps_ = {
 bool WasmGcObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
                                       HandleId id, MutableHandleObject objp,
                                       PropertyResult* propp) {
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-  if (typedObj->hasProperty(cx, typedObj, id)) {
-    propp->setWasmGcProperty();
-    objp.set(obj);
-    return true;
-  }
-
-  RootedObject proto(cx, obj->staticPrototype());
-  if (!proto) {
-    objp.set(nullptr);
-    propp->setNotFound();
-    return true;
-  }
-
-  return LookupProperty(cx, proto, id, objp, propp);
+  objp.set(nullptr);
+  propp->setNotFound();
+  return true;
 }
 
 bool WasmGcObject::obj_defineProperty(JSContext* cx, HandleObject obj,
                                       HandleId id,
                                       Handle<PropertyDescriptor> desc,
                                       ObjectOpResult& result) {
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_OBJECT_NOT_EXTENSIBLE, "WasmGcObject");
-  return false;
+  result.failReadOnly();
+  return true;
 }
 
 bool WasmGcObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id,
                                    bool* foundp) {
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-  if (typedObj->hasProperty(cx, typedObj, id)) {
-    *foundp = true;
-    return true;
-  }
-
-  RootedObject proto(cx, obj->staticPrototype());
-  if (!proto) {
-    *foundp = false;
-    return true;
-  }
-
-  return HasProperty(cx, proto, id, foundp);
+  *foundp = false;
+  return true;
 }
 
 bool WasmGcObject::obj_getProperty(JSContext* cx, HandleObject obj,
                                    HandleValue receiver, HandleId id,
                                    MutableHandleValue vp) {
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-
-  WasmGcObject::PropOffset offset;
-  FieldType type;
-  if (typedObj->lookupProperty(cx, typedObj, id, &offset, &type)) {
-    return typedObj->loadValue(cx, offset, type, vp);
-  }
-
-  RootedObject proto(cx, obj->staticPrototype());
-  if (!proto) {
-    vp.setUndefined();
-    return true;
-  }
-
-  return GetProperty(cx, proto, receiver, id, vp);
+  vp.setUndefined();
+  return true;
 }
 
 bool WasmGcObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id,
                                    HandleValue v, HandleValue receiver,
                                    ObjectOpResult& result) {
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-
-  if (typedObj->hasProperty(cx, typedObj, id)) {
-    if (!receiver.isObject() || obj != &receiver.toObject()) {
-      return SetPropertyByDefining(cx, id, v, receiver, result);
-    }
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPEDOBJECT_SETTING_IMMUTABLE);
-    return false;
-  }
-
-  return SetPropertyOnProto(cx, obj, id, v, receiver, result);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_WASM_MODIFIED_GC_OBJECT);
+  return false;
 }
 
 bool WasmGcObject::obj_getOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
     MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-
-  WasmGcObject::PropOffset offset;
-  FieldType type;
-  if (typedObj->lookupProperty(cx, typedObj, id, &offset, &type)) {
-    RootedValue value(cx);
-    if (!typedObj->loadValue(cx, offset, type, &value)) {
-      return false;
-    }
-    desc.set(mozilla::Some(PropertyDescriptor::Data(
-        value,
-        {JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable})));
-    return true;
-  }
-
   desc.reset();
   return true;
 }
 
 bool WasmGcObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
                                       HandleId id, ObjectOpResult& result) {
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-  if (typedObj->hasProperty(cx, typedObj, id)) {
-    return Throw(cx, id, JSMSG_CANT_DELETE);
-  }
-
-  RootedObject proto(cx, obj->staticPrototype());
-  if (!proto) {
-    return result.succeed();
-  }
-
-  return DeleteProperty(cx, proto, id, result);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_WASM_MODIFIED_GC_OBJECT);
+  return false;
 }
 
 /* static */
@@ -375,9 +249,61 @@ WasmGcObject* WasmGcObject::create(JSContext* cx,
   return obj;
 }
 
-bool WasmGcObject::loadValue(JSContext* cx,
-                             const WasmGcObject::PropOffset& offset,
-                             FieldType type, MutableHandleValue vp) {
+bool WasmGcObject::lookUpProperty(JSContext* cx, Handle<WasmGcObject*> obj,
+                                  jsid id, WasmGcObject::PropOffset* offset,
+                                  FieldType* type) {
+  switch (obj->kind()) {
+    case wasm::TypeDefKind::Struct: {
+      const auto& structType = obj->typeDef().structType();
+      uint32_t index;
+      if (!IdIsIndex(id, &index)) {
+        return false;
+      }
+      if (index >= structType.fields_.length()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_OUT_OF_BOUNDS);
+        return false;
+      }
+      const StructField& field = structType.fields_[index];
+      offset->set(field.offset);
+      *type = field.type;
+      return true;
+    }
+    case wasm::TypeDefKind::Array: {
+      const auto& arrayType = obj->typeDef().arrayType();
+
+      uint32_t index;
+      if (!IdIsIndex(id, &index)) {
+        return false;
+      }
+      uint32_t numElements = obj->as<WasmArrayObject>().numElements_;
+      if (index >= numElements) {
+        return false;
+      }
+      uint64_t scaledIndex =
+          uint64_t(index) * uint64_t(arrayType.elementType_.size());
+      if (scaledIndex >= uint64_t(UINT32_MAX)) {
+        // It's unrepresentable as an WasmGcObject::PropOffset.  Give up.
+        return false;
+      }
+      offset->set(uint32_t(scaledIndex));
+      *type = arrayType.elementType_;
+      return true;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+      return false;
+  }
+}
+
+bool WasmGcObject::loadValue(JSContext* cx, Handle<WasmGcObject*> obj, jsid id,
+                             MutableHandleValue vp) {
+  WasmGcObject::PropOffset offset;
+  FieldType type;
+  if (!lookUpProperty(cx, obj, id, &offset, &type)) {
+    return false;
+  }
+
   // Temporary hack, (ref T) is not exposable to JS yet but some tests would
   // like to access it so we erase (ref T) with eqref when loading. This is
   // safe as (ref T) <: eqref and we're not in the writing case where we
@@ -392,10 +318,10 @@ bool WasmGcObject::loadValue(JSContext* cx,
     return false;
   }
 
-  if (is<WasmStructObject>()) {
+  if (obj->is<WasmStructObject>()) {
     // `offset` is the field offset, without regard to the in/out-line split.
     // That is handled by the call to `fieldOffsetToAddress`.
-    WasmStructObject& structObj = as<WasmStructObject>();
+    const WasmStructObject& structObj = obj->as<WasmStructObject>();
     // Ensure no out-of-range access possible
     MOZ_RELEASE_ASSERT(structObj.kind() == TypeDefKind::Struct);
     MOZ_RELEASE_ASSERT(offset.get() + type.size() <=
@@ -404,17 +330,8 @@ bool WasmGcObject::loadValue(JSContext* cx,
                      type, vp);
   }
 
-  MOZ_ASSERT(is<WasmArrayObject>());
-  WasmArrayObject& arrayObj = as<WasmArrayObject>();
-  if (offset.get() == UINT32_MAX) {
-    // This denotes "length"
-    uint32_t numElements = arrayObj.numElements_;
-    // We can't use `ToJSValue(.., ValType::I32, ..)` here since it will
-    // treat the integer as signed, which it isn't.  `vp.set(..)` will
-    // coerce correctly to a JS::Value, though.
-    vp.set(NumberValue(numElements));
-    return true;
-  }
+  MOZ_ASSERT(obj->is<WasmArrayObject>());
+  const WasmArrayObject& arrayObj = obj->as<WasmArrayObject>();
   return ToJSValue(cx, arrayObj.data_ + offset.get(), type, vp);
 }
 
@@ -426,38 +343,6 @@ bool WasmGcObject::isRuntimeSubtypeOf(
 bool WasmGcObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
                                     MutableHandleIdVector properties,
                                     bool enumerableOnly) {
-  MOZ_ASSERT(obj->is<WasmGcObject>());
-  Rooted<WasmGcObject*> typedObj(cx, &obj->as<WasmGcObject>());
-
-  size_t indexCount = 0;
-  size_t otherCount = 0;
-  switch (typedObj->kind()) {
-    case wasm::TypeDefKind::Struct: {
-      indexCount = typedObj->typeDef().structType().fields_.length();
-      break;
-    }
-    case wasm::TypeDefKind::Array: {
-      indexCount = typedObj->as<WasmArrayObject>().numElements_;
-      otherCount = 1;
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-  }
-
-  if (!properties.reserve(indexCount + otherCount)) {
-    return false;
-  }
-  RootedId id(cx);
-  for (size_t index = 0; index < indexCount; index++) {
-    id = PropertyKey::Int(int32_t(index));
-    properties.infallibleAppend(id);
-  }
-
-  if (typedObj->kind() == wasm::TypeDefKind::Array) {
-    properties.infallibleAppend(NameToId(cx->runtime()->commonNames->length));
-  }
-
   return true;
 }
 

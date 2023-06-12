@@ -61,7 +61,7 @@
     // writes are too large, but those will only be visible if we're running
     // on ASan or Valgrind.  In any case, add a fake data dependency below, so
     // that the construction of the object can't (so easily) be optimised away.
-    assertEq(obj8[0] + BigInt(obj8[31]), 0x12ACn); // == 0x1234 + 0x78
+    assertEq(wasmGcReadField(obj8, 0) + BigInt(wasmGcReadField(obj8, 31)), 0x12ACn); // == 0x1234 + 0x78
 }
 
 // And exactly the same, except for 16 bit fields.
@@ -97,7 +97,7 @@
      )`;
     let exports = wasmEvalText(txt).exports;
     let obj16 = exports.build16(0x4321n, 0x7865);
-    assertEq(obj16[0] + BigInt(obj16[23]), 0xBB86n); // == 0x4321 + 0x7865
+    assertEq(wasmGcReadField(obj16, 0) + BigInt(wasmGcReadField(obj16, 23)), 0xBB86n); // == 0x4321 + 0x7865
 }
 
 // Test that 8-bit field writes do not overwrite adjacent fields.
@@ -122,14 +122,14 @@
     let exports = wasmEvalText(txt).exports;
     let theObject = exports.create();
     exports.writeField8x8_3(theObject, 0x77);
-    assertEq(theObject[0], 0x55);
-    assertEq(theObject[1], 0x55);
-    assertEq(theObject[2], 0x55);
-    assertEq(theObject[3], 0x77);
-    assertEq(theObject[4], 0x55);
-    assertEq(theObject[5], 0x55);
-    assertEq(theObject[6], 0x55);
-    assertEq(theObject[7], 0x55);
+    assertEq(wasmGcReadField(theObject, 0), 0x55);
+    assertEq(wasmGcReadField(theObject, 1), 0x55);
+    assertEq(wasmGcReadField(theObject, 2), 0x55);
+    assertEq(wasmGcReadField(theObject, 3), 0x77);
+    assertEq(wasmGcReadField(theObject, 4), 0x55);
+    assertEq(wasmGcReadField(theObject, 5), 0x55);
+    assertEq(wasmGcReadField(theObject, 6), 0x55);
+    assertEq(wasmGcReadField(theObject, 7), 0x55);
 }
 
 // Test that 16-bit field writes do not overwrite adjacent fields.
@@ -154,14 +154,14 @@
     let exports = wasmEvalText(txt).exports;
     let theObject = exports.create();
     exports.writeField16x8_3(theObject, 0x7766);
-    assertEq(theObject[0], 0x5555);
-    assertEq(theObject[1], 0x5555);
-    assertEq(theObject[2], 0x5555);
-    assertEq(theObject[3], 0x7766);
-    assertEq(theObject[4], 0x5555);
-    assertEq(theObject[5], 0x5555);
-    assertEq(theObject[6], 0x5555);
-    assertEq(theObject[7], 0x5555);
+    assertEq(wasmGcReadField(theObject, 0), 0x5555);
+    assertEq(wasmGcReadField(theObject, 1), 0x5555);
+    assertEq(wasmGcReadField(theObject, 2), 0x5555);
+    assertEq(wasmGcReadField(theObject, 3), 0x7766);
+    assertEq(wasmGcReadField(theObject, 4), 0x5555);
+    assertEq(wasmGcReadField(theObject, 5), 0x5555);
+    assertEq(wasmGcReadField(theObject, 6), 0x5555);
+    assertEq(wasmGcReadField(theObject, 7), 0x5555);
 }
 
 // Test that 8-bit field reads sign/zero extend correctly.

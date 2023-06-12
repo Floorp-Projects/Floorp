@@ -71,11 +71,11 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
   function checkArray(array, length, init, setval) {
     // Check length
     assertEq(len(array), length);
-    assertEq(array.length, length);
+    assertEq(wasmGcArrayLength(array), length);
 
     // Check init value
     for (let i = 0; i < length; i++) {
-      assertEq(array[i], init);
+      assertEq(wasmGcReadField(array, i), init);
       assertEq(get(array, i), init);
     }
 
@@ -85,7 +85,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
 
       // Check there is no overwrite
       for (let j = i + 1; j < length; j++) {
-        assertEq(array[j], init);
+        assertEq(wasmGcReadField(array, j), init);
         assertEq(get(array, j), init);
       }
     }
@@ -161,10 +161,10 @@ for (let [fieldtype, max] of [
   assertEq(getU(a, 0), max);
 
   // JS-API defaults to sign extension
-  assertEq(a[0], getS(a, 0));
+  assertEq(wasmGcReadField(a, 0), getS(a, 0));
 
   // Check array.new truncates init value
-  assertEq(create(1, max + 1)[0], 0);
+  assertEq(wasmGcReadField(create(1, max + 1), 0), 0);
 
   // Check array.set truncates
   let b = create(1, 0);
@@ -401,11 +401,11 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let a = newFixed();
-    assertEq(a.length, 4);
-    assertEq(a[0], 66);
-    assertEq(a[1], 77);
-    assertEq(a[2], 88);
-    assertEq(a[3], 99);
+    assertEq(wasmGcArrayLength(a), 4);
+    assertEq(wasmGcReadField(a, 0), 66);
+    assertEq(wasmGcReadField(a, 1), 77);
+    assertEq(wasmGcReadField(a, 2), 88);
+    assertEq(wasmGcReadField(a, 3), 99);
 }
 
 // run: resulting zero-element array is as expected
@@ -417,7 +417,7 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let a = newFixed();
-    assertEq(a.length, 0);
+    assertEq(wasmGcArrayLength(a), 0);
 }
 
 // run: resulting 30-element array is as expected
@@ -459,9 +459,9 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let a = newFixed();
-    assertEq(a.length, 30);
+    assertEq(wasmGcArrayLength(a), 30);
     for (i = 0; i < 30; i++) {
-        assertEq(a[i], i + 1);
+        assertEq(wasmGcReadField(a, i), i + 1);
     }
 }
 
@@ -576,7 +576,7 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let arr = newData();
-    assertEq(arr.length, 0);
+    assertEq(wasmGcArrayLength(arr), 0);
 }
 
 // run: range to copy would require OOB read on data segment
@@ -608,11 +608,11 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let arr = newData();
-    assertEq(arr.length, 4);
-    assertEq(arr[0], 48+1);
-    assertEq(arr[1], 48+3);
-    assertEq(arr[2], 48+3);
-    assertEq(arr[3], 48+7);
+    assertEq(wasmGcArrayLength(arr), 4);
+    assertEq(wasmGcReadField(arr, 0), 48+1);
+    assertEq(wasmGcReadField(arr, 1), 48+3);
+    assertEq(wasmGcReadField(arr, 2), 48+3);
+    assertEq(wasmGcReadField(arr, 3), 48+7);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -770,7 +770,7 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let arr = newElem();
-    assertEq(arr.length, 0);
+    assertEq(wasmGcArrayLength(arr), 0);
 }
 
 // run: range to copy would require OOB read on elem segment
@@ -809,11 +809,11 @@ assertErrorMessage(() => wasmEvalText(`(module
         )
         )`).exports;
     let arr = newElem();
-    assertEq(arr.length, 4);
-    assertEq(arr[0], f1);
-    assertEq(arr[1], f2);
-    assertEq(arr[2], f3);
-    assertEq(arr[3], f4);
+    assertEq(wasmGcArrayLength(arr), 4);
+    assertEq(wasmGcReadField(arr, 0), f1);
+    assertEq(wasmGcReadField(arr, 1), f2);
+    assertEq(wasmGcReadField(arr, 2), f3);
+    assertEq(wasmGcReadField(arr, 3), f4);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -964,10 +964,16 @@ for (let [elemTy, valueTy, src, exp1, exp2] of ARRAY_COPY_TESTS) {
     assertEq(exp2.length, 6);
 
     function eqArrays(a1, a2) {
-        assertEq(a1.length, 6);
-        assertEq(a2.length, 6);
+        function len(arr) {
+            return Array.isArray(arr) ? arr.length : wasmGcArrayLength(arr);
+        }
+        function get(arr, i) {
+            return Array.isArray(arr) ? arr[i] : wasmGcReadField(arr, i);
+        }
+        assertEq(len(a1), 6);
+        assertEq(len(a2), 6);
         for (i = 0; i < 6; i++) {
-            if (a1[i] !== a2[i])
+            if (get(a1, i) !== get(a2, i))
                 return false;
         }
         return true;

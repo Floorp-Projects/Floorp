@@ -33,14 +33,14 @@ const { structNew, structNewDefault, structLarge } = wasmEvalText(`(module
 
 let result;
 result = structNew();
-assertEq(result[0], 2);
-assertEq(result[1], new Float32Array([3.140000104904175])[0]);
+assertEq(wasmGcReadField(result, 0), 2);
+assertEq(wasmGcReadField(result, 1), new Float32Array([3.140000104904175])[0]);
 result = structNewDefault();
-assertEq(result[0], 0);
-assertEq(result[1], 0);
+assertEq(wasmGcReadField(result, 0), 0);
+assertEq(wasmGcReadField(result, 1), 0);
 result = structLarge();
-assertEq(result[2], 3n);
-assertEq(result[19], 19);
+assertEq(wasmGcReadField(result, 2), 3n);
+assertEq(wasmGcReadField(result, 19), 19);
 
 // array.new, array.new_default, and array.new_fixed
 
@@ -62,14 +62,14 @@ const { arrayNew, arrayNewDefault, arrayNewFixed } = wasmEvalText(`(module
   )`).exports;
 
 result = arrayNew();
-assertEq(result.length, 3);
-assertEq(result[0], 3.14);
-assertEq(result[2], 3.14);
+assertEq(wasmGcArrayLength(result), 3);
+assertEq(wasmGcReadField(result, 0), 3.14);
+assertEq(wasmGcReadField(result, 2), 3.14);
 result = arrayNewDefault();
-assertEq(result.length, 2);
-assertEq(result[1], 0);
+assertEq(wasmGcArrayLength(result), 2);
+assertEq(wasmGcReadField(result, 1), 0);
 result = arrayNewFixed();
-assertEq(result.length, 2);
-assertEq(result[0][0], 10);
-assertEq(result[0][1], 16);
-assertEq(result[1], null);
+assertEq(wasmGcArrayLength(result), 2);
+assertEq(wasmGcReadField(wasmGcReadField(result, 0), 0), 10);
+assertEq(wasmGcReadField(wasmGcReadField(result, 0), 1), 16);
+assertEq(wasmGcReadField(result, 1), null);

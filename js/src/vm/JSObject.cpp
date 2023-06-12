@@ -1939,13 +1939,10 @@ bool js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto,
   }
 
   /*
-   * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
+   * Disallow mutating the [[Prototype]] on WebAssembly GC objects.
    */
   if (obj->is<WasmGcObject>()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_CANT_SET_PROTO_OF,
-                              "incompatible WebAssembly object");
-    return false;
+    return result.fail(JSMSG_CANT_SET_PROTO);
   }
 
   /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
@@ -1996,6 +1993,10 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj,
                            ObjectOpResult& result) {
   if (obj->is<ProxyObject>()) {
     return js::Proxy::preventExtensions(cx, obj, result);
+  }
+
+  if (obj->is<WasmGcObject>()) {
+    return result.failCantPreventExtensions();
   }
 
   if (!obj->nonProxyIsExtensible()) {
