@@ -8,6 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
@@ -478,24 +479,6 @@ function getSharedIdForNode(node, realm, options = {}) {
 }
 
 /**
- * Determines if <var>node</var> is shadow root.
- *
- * @param {Node} node
- *    Node to check.
- *
- * @returns {boolean}
- *    True if <var>node</var> is shadow root, false otherwise.
- */
-function isShadowRoot(node) {
-  const DOCUMENT_FRAGMENT_NODE = 11;
-  return (
-    node &&
-    node.nodeType === DOCUMENT_FRAGMENT_NODE &&
-    node.containingShadowRoot == node
-  );
-}
-
-/**
  * Helper to serialize an Array-like object.
  *
  * @see https://w3c.github.io/webdriver-bidi/#serialize-an-array-like
@@ -716,7 +699,7 @@ function serializeNode(
   serialized.childNodeCount = node.childNodes.length;
   if (
     maxDomDepth !== 0 &&
-    (!isShadowRoot(node) ||
+    (!lazy.dom.isShadowRoot(node) ||
       (includeShadowTree === IncludeShadowTreeMode.Open &&
         node.mode === "open") ||
       includeShadowTree === IncludeShadowTreeMode.All)
@@ -764,7 +747,7 @@ function serializeNode(
     }
   }
 
-  if (isShadowRoot(node)) {
+  if (lazy.dom.isShadowRoot(node)) {
     serialized.mode = node.mode;
   }
 

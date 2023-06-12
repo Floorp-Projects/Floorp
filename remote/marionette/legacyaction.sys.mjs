@@ -12,12 +12,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
-  element: "chrome://remote/content/marionette/element.sys.mjs",
+  dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   json: "chrome://remote/content/marionette/json.sys.mjs",
   event: "chrome://remote/content/marionette/event.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-  WebElement: "chrome://remote/content/marionette/element.sys.mjs",
+  WebElement: "chrome://remote/content/marionette/web-reference.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -226,7 +226,7 @@ action.Chain.prototype.singleTap = async function (
 ) {
   const doc = el.ownerDocument;
   // after this block, the element will be scrolled into view
-  let visible = lazy.element.isVisible(el, corx, cory);
+  let visible = lazy.dom.isVisible(el, corx, cory);
   if (!visible) {
     throw new lazy.error.ElementNotInteractableError(
       "Element is not currently visible and may not be manipulated"
@@ -240,7 +240,7 @@ action.Chain.prototype.singleTap = async function (
   if (!doc.createTouch) {
     this.mouseEventsOnly = true;
   }
-  let c = lazy.element.coordinates(el, corx, cory);
+  let c = lazy.dom.coordinates(el, corx, cory);
   if (!this.mouseEventsOnly) {
     let touchId = this.nextTouchId++;
     let touch = this.createATouch(el, c.x, c.y, touchId);
@@ -314,7 +314,7 @@ action.Chain.prototype.actions = function (
       el = this.seenEls.get(webEl);
       let button = pack[2];
       let clickCount = pack[3];
-      c = lazy.element.coordinates(el);
+      c = lazy.dom.coordinates(el);
       this.mouseTap(
         el.ownerDocument,
         c.x,
@@ -360,7 +360,7 @@ action.Chain.prototype.actions = function (
       }
       webEl = lazy.WebElement.fromUUID(pack[1]);
       el = this.seenEls.get(webEl);
-      c = lazy.element.coordinates(el, pack[2], pack[3]);
+      c = lazy.dom.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
@@ -381,7 +381,7 @@ action.Chain.prototype.actions = function (
     case "move":
       webEl = lazy.WebElement.fromUUID(pack[1]);
       el = this.seenEls.get(webEl);
-      c = lazy.element.coordinates(el);
+      c = lazy.dom.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
       break;
