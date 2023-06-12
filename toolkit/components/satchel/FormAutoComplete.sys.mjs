@@ -529,7 +529,6 @@ export class FormAutoComplete {
     return new DataListAutoCompleteResult(
       aUntrimmedSearchString,
       defaultIndex,
-      "",
       items,
       null
     );
@@ -598,7 +597,6 @@ export class FormAutoComplete {
     return new DataListAutoCompleteResult(
       datalistResult.searchString,
       0,
-      "",
       finalItems,
       historyResult
     );
