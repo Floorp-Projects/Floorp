@@ -543,6 +543,13 @@ class WorkerPrivate final
   }
 #endif
 
+  void AssertIsNotPotentiallyLastGCCCRunning() {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    auto data = mWorkerThreadAccessible.Access();
+    MOZ_DIAGNOSTIC_ASSERT(!data->mIsPotentiallyLastGCCCRunning);
+#endif
+  }
+
   void SetWorkerScriptExecutedSuccessfully() {
     AssertIsOnWorkerThread();
     // Should only be called once!
@@ -1479,6 +1486,9 @@ class WorkerPrivate final
     FlippedOnce<false> mDeletionScheduled;
     FlippedOnce<false> mCancelBeforeWorkerScopeConstructed;
     FlippedOnce<false> mPerformedShutdownAfterLastContentTaskExecuted;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    bool mIsPotentiallyLastGCCCRunning = false;
+#endif
   };
   ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
 
