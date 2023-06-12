@@ -11,8 +11,6 @@ import Popup from "./Popup";
 import {
   getPreview,
   getThreadContext,
-  getCurrentThread,
-  getHighlightedCalls,
   getIsCurrentThreadPaused,
 } from "../../../selectors";
 import actions from "../../../actions";
@@ -32,7 +30,6 @@ class Preview extends PureComponent {
       cx: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
       editorRef: PropTypes.object.isRequired,
-      highlightedCalls: PropTypes.array,
       isPaused: PropTypes.bool.isRequired,
       preview: PropTypes.object,
       setExceptionPreview: PropTypes.func.isRequired,
@@ -64,8 +61,7 @@ class Preview extends PureComponent {
   }
 
   onTokenEnter = ({ target, tokenPos }) => {
-    const { cx, editor, updatePreview, highlightedCalls, setExceptionPreview } =
-      this.props;
+    const { cx, editor, updatePreview, setExceptionPreview } = this.props;
 
     const isTargetException = target.classList.contains(EXCEPTION_MARKER);
 
@@ -74,12 +70,7 @@ class Preview extends PureComponent {
       return;
     }
 
-    if (
-      this.props.isPaused &&
-      !this.state.selecting &&
-      highlightedCalls === null &&
-      !isTargetException
-    ) {
+    if (this.props.isPaused && !this.state.selecting && !isTargetException) {
       updatePreview(cx, target, tokenPos, editor.codeMirror);
     }
   };
@@ -119,9 +110,7 @@ class Preview extends PureComponent {
 }
 
 const mapStateToProps = state => {
-  const thread = getCurrentThread(state);
   return {
-    highlightedCalls: getHighlightedCalls(state, thread),
     cx: getThreadContext(state),
     preview: getPreview(state),
     isPaused: getIsCurrentThreadPaused(state),

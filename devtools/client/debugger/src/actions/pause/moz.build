@@ -12,7 +12,6 @@ CompiledModules(
     "expandScopes.js",
     "fetchFrames.js",
     "fetchScopes.js",
-    "highlightCalls.js",
     "index.js",
     "inlinePreview.js",
     "mapDisplayNames.js",

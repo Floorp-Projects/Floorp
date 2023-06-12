@@ -21,7 +21,6 @@ CompiledModules(
     "Exception.js",
     "Exceptions.js",
     "Footer.js",
-    "HighlightCalls.js",
     "HighlightLine.js",
     "HighlightLines.js",
     "index.js",
