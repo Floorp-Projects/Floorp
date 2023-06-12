@@ -2526,10 +2526,6 @@ void InitializeQuotaManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gQuotaManagerInitialized);
 
-#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-  ScopedLogExtraInfo::Initialize();
-#endif
-
   if (!QuotaManager::IsRunningGTests()) {
     // These services have to be started on the main thread currently.
     const nsCOMPtr<mozIStorageService> ss =
@@ -2545,6 +2541,12 @@ void InitializeQuotaManager() {
 
 #ifdef DEBUG
   gQuotaManagerInitialized = true;
+#endif
+}
+
+void InitializeScopedLogExtraInfo() {
+#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
+  ScopedLogExtraInfo::Initialize();
 #endif
 }
 
