@@ -643,6 +643,11 @@ html {
           width: $split-section-width;
         }
 
+        migration-wizard::part(buttons) {
+          min-width: 240px;
+          flex-direction: column;
+        }
+
         .section-secondary,
         .section-main {
           width: $split-section-width;

@@ -813,6 +813,10 @@ html {
   .onboardingContainer .screen[pos=split]::before {
     width: 400px;
   }
+  .onboardingContainer .screen[pos=split] migration-wizard::part(buttons) {
+    min-width: 240px;
+    flex-direction: column;
+  }
   .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
     width: 400px;
