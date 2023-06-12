@@ -57,13 +57,15 @@ export class FormAutoCompleteResult {
     return this._items.length;
   }
 
-  _checkIndexBounds(index) {
-    if (index < 0 || index >= this._items.length) {
-      throw Components.Exception(
-        "Index out of range.",
-        Cr.NS_ERROR_ILLEGAL_VALUE
-      );
+  getAt(index) {
+    if (index >= 0 && index < this._items.length) {
+      return this._items[index];
     }
+
+    throw Components.Exception(
+      "Index out of range.",
+      Cr.NS_ERROR_ILLEGAL_VALUE
+    );
   }
 
   /**
@@ -73,13 +75,12 @@ export class FormAutoCompleteResult {
    * @returns {string}         the result at the specified index
    */
   getValueAt(index) {
-    this._checkIndexBounds(index);
-    return this._items[index].value;
+    return this.getAt(index).value;
   }
 
   getLabelAt(index) {
-    this._checkIndexBounds(index);
-    return this._items[index].label || this._items[index].value;
+    const item = this.getAt(index);
+    return item.label || item.value;
   }
 
   /**
@@ -89,8 +90,7 @@ export class FormAutoCompleteResult {
    * @returns {object}        the comment at the specified index
    */
   getCommentAt(index) {
-    this._checkIndexBounds(index);
-    return this._items[index].comment;
+    return this.getAt(index).comment;
   }
 
   /**
@@ -100,7 +100,7 @@ export class FormAutoCompleteResult {
    * @returns {string|null}    the style hint at the specified index
    */
   getStyleAt(index) {
-    this._checkIndexBounds(index);
+    this.getAt(index);
 
     if (index < this._formHistResult?.matchCount) {
       return "fromhistory";
@@ -123,7 +123,6 @@ export class FormAutoCompleteResult {
    * @returns {string}        the image url at the specified index
    */
   getImageAt(index) {
-    this._checkIndexBounds(index);
     return "";
   }
 
@@ -144,8 +143,7 @@ export class FormAutoCompleteResult {
    * @returns {boolean}        True if the value is removable
    */
   isRemovableAt(index) {
-    this._checkIndexBounds(index);
-    return this._items[index].removable;
+    return this.getAt(index).removable;
   }
 
   /**
@@ -154,7 +152,7 @@ export class FormAutoCompleteResult {
    * @param {number}  index    the index of the result to remove
    */
   removeValueAt(index) {
-    this._checkIndexBounds(index);
+    this.getAt(index);
     // Forward the removeValueAt call to the underlying result if we have one
     // Note: this assumes that the form history results were added to the top
     // of our arrays.

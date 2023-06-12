@@ -192,13 +192,15 @@ export class FormAutoCompleteResult {
   entries = null;
   fieldName = null;
 
-  _checkIndexBounds(index) {
-    if (index < 0 || index >= this.entries.length) {
-      throw Components.Exception(
-        "Index out of range.",
-        Cr.NS_ERROR_ILLEGAL_VALUE
-      );
+  getAt(index) {
+    if (index >= 0 && index < this.entries.length) {
+      return this.entries[index];
     }
+
+    throw Components.Exception(
+      "Index out of range.",
+      Cr.NS_ERROR_ILLEGAL_VALUE
+    );
   }
 
   // Allow autoCompleteSearch to get at the JS object so it can
@@ -226,26 +228,22 @@ export class FormAutoCompleteResult {
   }
 
   getValueAt(index) {
-    this._checkIndexBounds(index);
-    return this.entries[index].text;
+    return this.getAt(index).text;
   }
 
   getLabelAt(index) {
     return this.getValueAt(index);
   }
 
-  getCommentAt(index) {
-    this._checkIndexBounds(index);
+  getCommentAt(_index) {
     return "";
   }
 
-  getStyleAt(index) {
-    this._checkIndexBounds(index);
+  getStyleAt(_index) {
     return "";
   }
 
-  getImageAt(index) {
-    this._checkIndexBounds(index);
+  getImageAt(_index) {
     return "";
   }
 
@@ -254,12 +252,12 @@ export class FormAutoCompleteResult {
   }
 
   isRemovableAt(index) {
-    this._checkIndexBounds(index);
+    this.getAt(index);
     return true;
   }
 
   removeValueAt(index) {
-    this._checkIndexBounds(index);
+    this.getAt(index);
 
     const [removedEntry] = this.entries.splice(index, 1);
     this.client.remove(removedEntry.text, removedEntry.guid);
