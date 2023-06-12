@@ -2432,10 +2432,6 @@ pref("font.size.monospace.x-math", 13);
   // force_gdi_classic_for_families.
   pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
 
-  // Locate plugins by the directories specified in the Windows registry for PLIDs
-  // Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
-  pref("plugin.scan.plid.all", true);
-
   // Switch the keyboard layout per window
   pref("intl.keyboard.per_window_layout", false);
 
