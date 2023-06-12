@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class FormAutoCompleteResult {
-  constructor(searchString, defaultIndex, errorDescription, items, prevResult) {
+  constructor(searchString, defaultIndex, items, prevResult) {
     this.searchString = searchString;
     this._defaultIndex = defaultIndex;
-    this._errorDescription = errorDescription;
     this._items = items;
     this._formHistResult = prevResult;
     this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
@@ -21,8 +20,7 @@ export class FormAutoCompleteResult {
   // The default item that should be entered if none is selected
   _defaultIndex = 0;
 
-  // The reason the search failed
-  _errorDescription = "";
+  errorDescription = "";
 
   /**
    * A reference to the form history nsIAutocompleteResult that we're wrapping.
@@ -54,13 +52,6 @@ export class FormAutoCompleteResult {
    */
   get defaultIndex() {
     return this._defaultIndex;
-  }
-
-  /**
-   * @returns {string} the reason the search failed
-   */
-  get errorDescription() {
-    return this._errorDescription;
   }
 
   /**
