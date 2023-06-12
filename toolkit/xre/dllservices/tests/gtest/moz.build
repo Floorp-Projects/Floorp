@@ -6,6 +6,7 @@ Library("dllservicestest")
 
 UNIFIED_SOURCES += [
     "TestDLLBlocklist.cpp",
+    "TestDLLServices.cpp",
     "TestUntrustedModules.cpp",
 ]
 
@@ -33,6 +34,8 @@ TEST_DIRS += [
     "TestUntrustedModules_Dll1",
     "TestUntrustedModules_Dll2",
 ]
+
+TEST_HARNESS_FILES.gtest += ["msvcp140.dll"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
