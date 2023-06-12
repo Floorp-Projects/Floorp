@@ -6567,7 +6567,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
         return pointToPutCaretOrError;
       }
       pointToPutCaret = pointToPutCaretOrError.unwrap();
-      MOZ_ASSERT(pointToPutCaret.IsSet());
+      if (NS_WARN_IF(!pointToPutCaret.IsSetAndValid())) {
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      }
       pendingStyle = mPendingStylesToApplyToNewContent->TakeClearingStyle();
     }
   }
