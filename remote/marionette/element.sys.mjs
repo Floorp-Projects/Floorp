@@ -488,9 +488,10 @@ element.findClosest = function (startNode, selector) {
  *     longer the active document or it is no longer attached to the DOM.
  */
 element.getKnownElement = function (browsingContext, nodeId, nodeCache) {
-  if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
+  if (!isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
     throw new lazy.error.NoSuchElementError(
-      `The element with the reference ${nodeId} is not known in the current browsing context`
+      `The element with the reference ${nodeId} is not known in the current browsing context`,
+      { elementId: nodeId }
     );
   }
 
@@ -536,9 +537,10 @@ element.getKnownElement = function (browsingContext, nodeId, nodeCache) {
  *     longer the active document or it is no longer attached to the DOM.
  */
 element.getKnownShadowRoot = function (browsingContext, nodeId, nodeCache) {
-  if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
+  if (!isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
     throw new lazy.error.NoSuchShadowRootError(
-      `The shadow root with the reference ${nodeId} is not known in the current browsing context`
+      `The shadow root with the reference ${nodeId} is not known in the current browsing context`,
+      { shadowId: nodeId }
     );
   }
 
@@ -563,6 +565,39 @@ element.getKnownShadowRoot = function (browsingContext, nodeId, nodeCache) {
 
   return node;
 };
+
+/**
+ * Determines if the node reference is known for the given browsing context.
+ *
+ * For WebDriver classic only nodes from the same browsing context are
+ * allowed to be accessed.
+ *
+ * @param {BrowsingContext} browsingContext
+ *     The browsing context the element has to be part of.
+ * @param {ElementIdentifier} nodeId
+ *     The WebElement reference identifier for a DOM element.
+ * @param {NodeCache} nodeCache
+ *     Node cache that holds already seen node references.
+ *
+ * @returns {boolean}
+ *     True if the element is known in the given browsing context.
+ */
+function isNodeReferenceKnown(browsingContext, nodeId, nodeCache) {
+  const nodeDetails = nodeCache.getReferenceDetails(nodeId);
+  if (nodeDetails === null) {
+    return false;
+  }
+
+  if (nodeDetails.isTopBrowsingContext) {
+    // As long as Navigables are not available any cross-group navigation will
+    // cause a swap of the current top-level browsing context. The only unique
+    // identifier in such a case is the browser id the top-level browsing
+    // context actually lives in.
+    return nodeDetails.browserId === browsingContext.browserId;
+  }
+
+  return nodeDetails.browsingContextId === browsingContext.id;
+}
 
 /**
  * Determines if <var>obj<var> is an HTML or JS collection.
@@ -607,39 +642,6 @@ element.isDetached = function (shadowRoot) {
   return (
     !shadowRoot.ownerDocument.isActive() || element.isStale(shadowRoot.host)
   );
-};
-
-/**
- * Determines if the node reference is known for the given browsing context.
- *
- * For WebDriver classic only nodes from the same browsing context are
- * allowed to be accessed.
- *
- * @param {BrowsingContext} browsingContext
- *     The browsing context the element has to be part of.
- * @param {ElementIdentifier} nodeId
- *     The WebElement reference identifier for a DOM element.
- * @param {NodeCache} nodeCache
- *     Node cache that holds already seen node references.
- *
- * @returns {boolean}
- *     True if the element is known in the given browsing context.
- */
-element.isNodeReferenceKnown = function (browsingContext, nodeId, nodeCache) {
-  const nodeDetails = nodeCache.getReferenceDetails(nodeId);
-  if (nodeDetails === null) {
-    return false;
-  }
-
-  if (nodeDetails.isTopBrowsingContext) {
-    // As long as Navigables are not available any cross-group navigation will
-    // cause a swap of the current top-level browsing context. The only unique
-    // identifier in such a case is the browser id the top-level browsing
-    // context actually lives in.
-    return nodeDetails.browserId === browsingContext.browserId;
-  }
-
-  return nodeDetails.browsingContextId === browsingContext.id;
 };
 
 /**

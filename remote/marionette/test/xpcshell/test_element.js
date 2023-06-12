@@ -449,106 +449,123 @@ add_task(function test_coordinates() {
   );
 });
 
-add_task(function test_isNodeReferenceKnown() {
-  const { browser, nodeCache, childEl, iframeEl, videoEl } = setupTest();
-
-  // Unknown node reference
-  ok(!element.isNodeReferenceKnown(browser.browsingContext, "foo", nodeCache));
-
-  // Known node reference
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
-  ok(
-    element.isNodeReferenceKnown(browser.browsingContext, videoElRef, nodeCache)
-  );
-
-  // Different top-level browsing context
-  const browser2 = Services.appShell.createWindowlessBrowser(false);
-  ok(
-    !element.isNodeReferenceKnown(
-      browser2.browsingContext,
-      videoElRef,
-      nodeCache
-    )
-  );
-
-  // Different child browsing context
-  const childElRef = nodeCache.getOrCreateNodeReference(childEl);
-  const childBrowsingContext = iframeEl.contentWindow.browsingContext;
-  ok(element.isNodeReferenceKnown(childBrowsingContext, childElRef, nodeCache));
-
-  const iframeEl2 = browser2.document.createElement("iframe");
-  browser2.document.body.appendChild(iframeEl2);
-  const childBrowsingContext2 = iframeEl2.contentWindow.browsingContext;
-  ok(
-    !element.isNodeReferenceKnown(childBrowsingContext2, childElRef, nodeCache)
-  );
-});
-
-add_task(function test_getKnownElement() {
+add_task(async function test_getKnownElement() {
   const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
+  const seenNodes = new Set();
 
   // Unknown element reference
   Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, "foo", nodeCache);
+    element.getKnownElement(
+      browser.browsingContext,
+      "foo",
+      nodeCache,
+      seenNodes
+    );
   }, /NoSuchElementError/);
 
   // With a ShadowRoot reference
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
+  const seenNodeIds = new Map();
+  const shadowRootRef = nodeCache.getOrCreateNodeReference(
+    shadowRoot,
+    seenNodeIds
+  );
+  seenNodes.add(shadowRootRef);
+
   Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, shadowRootRef, nodeCache);
+    element.getKnownElement(
+      browser.browsingContext,
+      shadowRootRef,
+      nodeCache,
+      seenNodes
+    );
   }, /NoSuchElementError/);
 
-  // Deleted element (eg. garbage collected)
   let detachedEl = browser.document.createElement("div");
-  const detachedElRef = nodeCache.getOrCreateNodeReference(detachedEl);
+  const detachedElRef = nodeCache.getOrCreateNodeReference(
+    detachedEl,
+    seenNodeIds
+  );
+  seenNodes.add(detachedElRef);
 
-  // ... not connected to the DOM
+  // Element not connected to the DOM
   Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, detachedElRef, nodeCache);
+    element.getKnownElement(
+      browser.browsingContext,
+      detachedElRef,
+      nodeCache,
+      seenNodes
+    );
   }, /StaleElementReferenceError/);
 
-  // ... element garbage collected
+  // Element garbage collected
   detachedEl = null;
-  MemoryReporter.minimizeMemoryUsage(() => {
-    Assert.throws(() => {
-      element.getKnownElement(
-        browser.browsingContext,
-        detachedElRef,
-        nodeCache
-      );
-    }, /StaleElementReferenceError/);
-  });
+
+  await new Promise(resolve => MemoryReporter.minimizeMemoryUsage(resolve));
+  Assert.throws(() => {
+    element.getKnownElement(
+      browser.browsingContext,
+      detachedElRef,
+      nodeCache,
+      seenNodes
+    );
+  }, /StaleElementReferenceError/);
 
   // Known element reference
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
+  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl, seenNodeIds);
+  seenNodes.add(videoElRef);
+
   equal(
-    element.getKnownElement(browser.browsingContext, videoElRef, nodeCache),
+    element.getKnownElement(
+      browser.browsingContext,
+      videoElRef,
+      nodeCache,
+      seenNodes
+    ),
     videoEl
   );
 });
 
-add_task(function test_getKnownShadowRoot() {
+add_task(async function test_getKnownShadowRoot() {
   const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
+  const seenNodeIds = new Map();
+  const seenNodes = new Set();
 
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
+  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl, seenNodeIds);
+  seenNodes.add(videoElRef);
 
   // Unknown ShadowRoot reference
   Assert.throws(() => {
-    element.getKnownShadowRoot(browser.browsingContext, "foo", nodeCache);
+    element.getKnownShadowRoot(
+      browser.browsingContext,
+      "foo",
+      nodeCache,
+      seenNodes
+    );
   }, /NoSuchShadowRootError/);
 
   // With a HTMLElement reference
   Assert.throws(() => {
-    element.getKnownShadowRoot(browser.browsingContext, videoElRef, nodeCache);
+    element.getKnownShadowRoot(
+      browser.browsingContext,
+      videoElRef,
+      nodeCache,
+      seenNodes
+    );
   }, /NoSuchShadowRootError/);
 
   // Known ShadowRoot reference
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
+  const shadowRootRef = nodeCache.getOrCreateNodeReference(
+    shadowRoot,
+    seenNodeIds
+  );
+  seenNodes.add(shadowRootRef);
+
   equal(
     element.getKnownShadowRoot(
       browser.browsingContext,
       shadowRootRef,
-      nodeCache
+      nodeCache,
+      seenNodes
     ),
     shadowRoot
   );
@@ -558,30 +575,35 @@ add_task(function test_getKnownShadowRoot() {
   let detachedShadowRoot = el.attachShadow({ mode: "open" });
   detachedShadowRoot.innerHTML = "<input></input>";
 
-  const detachedShadowRootRef =
-    nodeCache.getOrCreateNodeReference(detachedShadowRoot);
+  const detachedShadowRootRef = nodeCache.getOrCreateNodeReference(
+    detachedShadowRoot,
+    seenNodeIds
+  );
+  seenNodes.add(detachedShadowRootRef);
 
   // ... not connected to the DOM
   Assert.throws(() => {
     element.getKnownShadowRoot(
       browser.browsingContext,
       detachedShadowRootRef,
-      nodeCache
+      nodeCache,
+      seenNodes
     );
   }, /DetachedShadowRootError/);
 
   // ... host and shadow root garbage collected
   el = null;
   detachedShadowRoot = null;
-  MemoryReporter.minimizeMemoryUsage(() => {
-    Assert.throws(() => {
-      element.getKnownShadowRoot(
-        browser.browsingContext,
-        detachedShadowRootRef,
-        nodeCache
-      );
-    }, /DetachedShadowRootError/);
-  });
+
+  await new Promise(resolve => MemoryReporter.minimizeMemoryUsage(resolve));
+  Assert.throws(() => {
+    element.getKnownShadowRoot(
+      browser.browsingContext,
+      detachedShadowRootRef,
+      nodeCache,
+      seenNodes
+    );
+  }, /DetachedShadowRootError/);
 });
 
 add_task(function test_isDetached() {

@@ -128,6 +128,34 @@ add_task(async function test_addTab_window() {
   }
 });
 
+add_task(async function test_getNavigableForBrowsingContext() {
+  const browser = gBrowser.selectedBrowser;
+
+  info(`Navigate to ${TEST_URL}`);
+  const loaded = BrowserTestUtils.browserLoaded(browser);
+  BrowserTestUtils.loadURIString(browser, TEST_URL);
+  await loaded;
+
+  const contexts = browser.browsingContext.getAllBrowsingContextsInSubtree();
+  is(contexts.length, 2, "Top context has 1 child");
+
+  // For a top-level browsing context the content browser is returned.
+  const topContext = contexts[0];
+  is(
+    TabManager.getNavigableForBrowsingContext(topContext),
+    browser,
+    "Top-Level browsing context has the content browser as navigable"
+  );
+
+  // For child browsing contexts the browsing context itself is returned.
+  const childContext = contexts[1];
+  is(
+    TabManager.getNavigableForBrowsingContext(childContext),
+    childContext,
+    "Child browsing context has itself as navigable"
+  );
+});
+
 add_task(async function test_getTabForBrowsingContext() {
   const tab = await TabManager.addTab();
   try {
