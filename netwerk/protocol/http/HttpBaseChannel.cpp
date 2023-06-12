@@ -4798,8 +4798,7 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
 }
 
 dom::ReplacementChannelConfigInit
-HttpBaseChannel::ReplacementChannelConfig::Serialize(
-    dom::ContentParent* aParent) {
+HttpBaseChannel::ReplacementChannelConfig::Serialize() {
   dom::ReplacementChannelConfigInit config;
   config.redirectFlags() = redirectFlags;
   config.classOfService() = classOfService;

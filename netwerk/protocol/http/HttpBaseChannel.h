@@ -532,7 +532,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
     Maybe<nsCString> contentType;
     Maybe<nsCString> contentLength;
 
-    dom::ReplacementChannelConfigInit Serialize(dom::ContentParent* aParent);
+    dom::ReplacementChannelConfigInit Serialize();
   };
 
   enum class ReplacementReason {
