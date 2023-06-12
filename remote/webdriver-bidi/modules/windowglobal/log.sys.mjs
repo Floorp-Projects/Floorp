@@ -135,9 +135,11 @@ class LogModule extends WindowGlobalBiDiModule {
     const args = messageArguments || [];
     text += args.map(String).join(" ");
 
-    // Serialize each arg as remote value.
     const defaultRealm = this.messageHandler.getRealm();
     const serializedArgs = [];
+    const seenNodeIds = new Map();
+
+    // Serialize each arg as remote value.
     for (const arg of args) {
       // Note that we can pass a default realm for now since realms are only
       // involved when creating object references, which will not happen with
@@ -147,7 +149,8 @@ class LogModule extends WindowGlobalBiDiModule {
           Cu.waiveXrays(arg),
           lazy.setDefaultSerializationOptions(),
           lazy.OwnershipModel.None,
-          defaultRealm
+          defaultRealm,
+          { seenNodeIds }
         )
       );
     }
@@ -172,6 +175,7 @@ class LogModule extends WindowGlobalBiDiModule {
       text,
       timestamp,
       stackTrace,
+      _extraData: { seenNodeIds },
     };
 
     // TODO: Those steps relate to:

@@ -18,7 +18,7 @@ class BrowsingContextModule extends Module {
       name == "browsingContext.domContentLoaded" ||
       name == "browsingContext.load"
     ) {
-      // Resolve browsing context to a TabManager id.
+      // Resolve browsing context to a Navigable id.
       payload.context = lazy.TabManager.getIdForBrowsingContext(
         payload.context
       );
