@@ -101,7 +101,7 @@ add_test(function test1() {
 add_test(function test2() {
   do_log_info("Check search contains all entries");
 
-  fac.autoCompleteSearchAsync("field1", "", null, null, null, {
+  fac.autoCompleteSearchAsync("field1", "", null, null, false, {
     onSearchCompletion(aResults) {
       Assert.equal(numRecords, aResults.matchCount);
       run_next_test();
@@ -113,7 +113,7 @@ add_test(function test3() {
   do_log_info("Check search result ordering with empty search term");
 
   let lastFound = numRecords;
-  fac.autoCompleteSearchAsync("field1", "", null, null, null, {
+  fac.autoCompleteSearchAsync("field1", "", null, null, false, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < numRecords; i += 2) {
         Assert.equal(
@@ -134,7 +134,7 @@ add_test(function test4() {
   do_log_info('Check search result ordering with "v"');
 
   let lastFound = numRecords;
-  fac.autoCompleteSearchAsync("field1", "v", null, null, null, {
+  fac.autoCompleteSearchAsync("field1", "v", null, null, false, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < numRecords; i += 2) {
         Assert.equal(
@@ -176,7 +176,7 @@ add_test(function test6() {
   do_log_info("Check search result ordering with empty search term");
 
   let lastFound = timesUsedSamples;
-  fac.autoCompleteSearchAsync("field2", "", null, null, null, {
+  fac.autoCompleteSearchAsync("field2", "", null, null, false, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < timesUsedSamples; i++) {
         Assert.equal(
@@ -193,7 +193,7 @@ add_test(function test7() {
   do_log_info('Check search result ordering with "v"');
 
   let lastFound = timesUsedSamples;
-  fac.autoCompleteSearchAsync("field2", "v", null, null, null, {
+  fac.autoCompleteSearchAsync("field2", "v", null, null, false, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < timesUsedSamples; i++) {
         Assert.equal(
@@ -235,7 +235,7 @@ add_test(function test8() {
 });
 
 add_test(function test9() {
-  fac.autoCompleteSearchAsync("field3", "", null, null, null, {
+  fac.autoCompleteSearchAsync("field3", "", null, null, false, {
     onSearchCompletion(aResults) {
       Assert.equal(aResults.getValueAt(0), "senior citizen");
       Assert.equal(aResults.getValueAt(1), "old but not senior");
@@ -276,7 +276,7 @@ add_test(function test10() {
 });
 
 add_test(function test11() {
-  fac.autoCompleteSearchAsync("field4", "", null, null, null, {
+  fac.autoCompleteSearchAsync("field4", "", null, null, false, {
     onSearchCompletion(aResults) {
       Assert.equal(aResults.matchCount, 3);
       run_next_test();
@@ -310,7 +310,7 @@ add_test(function test_token_limit_DB() {
       "a b c d e f g h i j .",
       null,
       previousResult,
-      null,
+      false,
       {
         onSearchCompletion(aResults) {
           Assert.equal(
@@ -346,7 +346,7 @@ add_test(function test_token_limit_DB() {
       "a b c d e f g h i j .",
       null,
       null,
-      null,
+      false,
       {
         onSearchCompletion(aResults) {
           Assert.equal(
@@ -377,7 +377,7 @@ add_test(async function can_search_escape_marker() {
     "/* Further reading */ t",
     null,
     null,
-    null,
+    false,
     {
       onSearchCompletion(aResults) {
         Assert.equal(1, aResults.matchCount);

@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "nsCRT.h"
 #include "nsIFormAutoComplete.h"
-#include "nsIInputListAutoComplete.h"
 #include "nsString.h"
 #include "nsPIDOMWindow.h"
 #include "nsIAutoCompleteResult.h"
@@ -732,11 +731,9 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
     MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: non-login field"));
     mLastListener = aListener;
 
-    nsCOMPtr<nsIAutoCompleteResult> datalistResult;
-    if (IsTextControl(mFocusedInput)) {
-      rv = PerformInputListAutoComplete(aSearchString,
-                                        getter_AddRefs(datalistResult));
-      NS_ENSURE_SUCCESS(rv, rv);
+    bool addDataList = IsTextControl(mFocusedInput);
+    if (addDataList) {
+      MaybeObserveDataListMutations();
     }
 
     auto formAutoComplete = GetFormAutoComplete();
@@ -744,27 +741,18 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
 
     formAutoComplete->AutoCompleteSearchAsync(aSearchParam, aSearchString,
                                               mFocusedInput, aPreviousResult,
-                                              datalistResult, this);
+                                              addDataList, this);
     mLastFormAutoComplete = formAutoComplete;
   }
 
   return NS_OK;
 }
 
-nsresult nsFormFillController::PerformInputListAutoComplete(
-    const nsAString& aSearch, nsIAutoCompleteResult** aResult) {
+void nsFormFillController::MaybeObserveDataListMutations() {
   // If an <input> is focused, check if it has a list="<datalist>" which can
   // provide the list of suggestions.
 
   MOZ_ASSERT(!mPwmgrInputs.Get(mFocusedInput));
-  nsresult rv;
-
-  nsCOMPtr<nsIInputListAutoComplete> inputListAutoComplete =
-      do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inputListAutoComplete->AutoCompleteSearch(aSearch, mFocusedInput,
-                                                 aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mFocusedInput) {
     Element* list = mFocusedInput->GetList();
@@ -782,8 +770,6 @@ nsresult nsFormFillController::PerformInputListAutoComplete(
       }
     }
   }
-
-  return NS_OK;
 }
 
 void nsFormFillController::RevalidateDataList() {

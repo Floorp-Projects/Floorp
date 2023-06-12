@@ -3,6 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This is ugly: there are two FormAutoCompleteResult classes in the
+// tree, one in a module and one in this file. Datalist results need to
+// use the one defined in the module but the rest of this file assumes
+// that we use the one defined here. To get around that, we explicitly
+// import the module here, out of the way of the other uses of
+// FormAutoCompleteResult.
+import { FormAutoCompleteResult as DataListAutoCompleteResult } from "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs";
+
 function isAutocompleteDisabled(aField) {
   if (!aField) {
     return false;
@@ -341,7 +349,7 @@ export class FormAutoComplete {
    * aUntrimmedSearchString -- current value of the input
    * aField -- HTMLInputElement being autocompleted (may be null if from chrome)
    * aPreviousResult -- previous search result, if any.
-   * aDatalistResult -- results from list=datalist for aField.
+   * aAddDataList -- add results from list=datalist for aField.
    * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
    *              that may be returned asynchronously.
    */
@@ -350,7 +358,7 @@ export class FormAutoComplete {
     aUntrimmedSearchString,
     aField,
     aPreviousResult,
-    aDatalistResult,
+    aAddDataList,
     aListener
   ) {
     // Guard against void DOM strings filtering into this code.
@@ -370,9 +378,13 @@ export class FormAutoComplete {
       aListener?.onSearchCompletion(result);
     }
 
+    const dataListResult = aAddDataList
+      ? this.getDataListResult(aField, aUntrimmedSearchString)
+      : null;
+
     // If we have datalist results, they become our "empty" result.
     const emptyResult =
-      aDatalistResult ||
+      dataListResult ||
       new FormAutoCompleteResult(
         client,
         [],
@@ -487,7 +499,7 @@ export class FormAutoComplete {
       this.log("Creating new autocomplete search result.");
 
       // Start with an empty list.
-      let result = aDatalistResult
+      let result = dataListResult
         ? new FormAutoCompleteResult(
             client,
             [],
@@ -505,8 +517,8 @@ export class FormAutoComplete {
           result.entries = aEntries;
         }
 
-        if (aDatalistResult?.matchCount > 0) {
-          result = this.mergeResults(result, aDatalistResult);
+        if (dataListResult?.matchCount > 0) {
+          result = this.mergeResults(result, dataListResult);
         }
 
         maybeNotifyListener(result);
@@ -519,6 +531,50 @@ export class FormAutoComplete {
         processEntry
       );
     }
+  }
+
+  getDataListResult(aField, aUntrimmedSearchString) {
+    const items = this.getDataListSuggestions(aField);
+    const searchResult = items.length
+      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    const defaultIndex = items.length ? 0 : -1;
+
+    return new DataListAutoCompleteResult(
+      aUntrimmedSearchString,
+      searchResult,
+      defaultIndex,
+      "",
+      items,
+      null
+    );
+  }
+
+  getDataListSuggestions(aField) {
+    const items = [];
+
+    if (!aField?.list) {
+      return items;
+    }
+
+    const upperFieldValue = aField.value.toUpperCase();
+
+    for (const option of aField.list.options) {
+      const label = option.label || option.text || option.value || "";
+
+      if (!label.toUpperCase().includes(upperFieldValue)) {
+        continue;
+      }
+
+      items.push({
+        label,
+        value: option.value,
+        comment: "",
+        removable: false,
+      });
+    }
+
+    return items;
   }
 
   mergeResults(historyResult, datalistResult) {
@@ -554,16 +610,7 @@ export class FormAutoComplete {
         entry => !isInArray(entry.text, items, "value")
       );
 
-    // This is ugly: there are two FormAutoCompleteResult classes in the
-    // tree, one in a module and one in this file. Datalist results need to
-    // use the one defined in the module but the rest of this file assumes
-    // that we use the one defined here. To get around that, we explicitly
-    // import the module here, out of the way of the other uses of
-    // FormAutoCompleteResult.
-    const { FormAutoCompleteResult } = ChromeUtils.importESModule(
-      "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs"
-    );
-    return new FormAutoCompleteResult(
+    return new DataListAutoCompleteResult(
       datalistResult.searchString,
       Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
       0,

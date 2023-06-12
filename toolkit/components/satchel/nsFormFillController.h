@@ -84,8 +84,7 @@ class nsFormFillController final : public nsIFormFillController,
   MOZ_CAN_RUN_SCRIPT
   void MaybeStartControllingInput(mozilla::dom::HTMLInputElement* aElement);
 
-  nsresult PerformInputListAutoComplete(const nsAString& aSearch,
-                                        nsIAutoCompleteResult** aResult);
+  void MaybeObserveDataListMutations();
 
   MOZ_CAN_RUN_SCRIPT void RevalidateDataList();
   bool RowMatch(nsFormHistory* aHistory, uint32_t aIndex,

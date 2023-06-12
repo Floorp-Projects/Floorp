@@ -20,7 +20,7 @@ interface nsIFormAutoComplete: nsISupports {
                                  in AString aSearchString,
                                  in HTMLInputElement aField,
                                  in nsIAutoCompleteResult aPreviousResult,
-                                 in nsIAutoCompleteResult aDatalistResult,
+                                 in bool aAddDatalist,
                                  in nsIFormAutoCompleteObserver aListener);
 
     /**
