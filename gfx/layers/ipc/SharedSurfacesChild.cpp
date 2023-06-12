@@ -11,6 +11,8 @@
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/RenderRootStateManager.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_image.h"
 
@@ -464,6 +466,13 @@ nsresult SharedSurfacesAnimation::SetCurrentFrame(
     --i;
     AnimationImageKeyData& entry = mKeys[i];
     MOZ_ASSERT(!entry.mManager->IsDestroyed());
+
+    if (auto* cbc =
+            entry.mManager->LayerManager()->GetCompositorBridgeChild()) {
+      if (cbc->IsPaused()) {
+        continue;
+      }
+    }
 
     entry.MergeDirtyRect(Some(aDirtyRect));
     Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();

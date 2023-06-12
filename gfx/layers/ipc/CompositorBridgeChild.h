@@ -124,6 +124,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   bool IPCOpen() const override { return mCanSend; }
 
+  bool IsPaused() const { return mPaused; }
+
   static void ShutDown();
 
   void UpdateFwdTransactionId() { ++mFwdTransactionId; }
@@ -214,6 +216,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   // False until the actor is destroyed.
   bool mActorDestroyed;
+
+  bool mPaused;
 
   /**
    * Transaction id of ShadowLayerForwarder.
