@@ -2021,9 +2021,6 @@ pref("layout.scrollbar.side", 0);
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
-// if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
-pref("plugin.override_internal_types", false);
-
 // enable single finger gesture input (win7+ tablets)
 pref("gestures.enable_single_finger_input", true);
 
