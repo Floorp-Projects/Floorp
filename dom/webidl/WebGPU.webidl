@@ -12,7 +12,7 @@ interface mixin GPUObjectBase {
 };
 
 dictionary GPUObjectDescriptorBase {
-    USVString label;
+    USVString label = "";
 };
 
 [Pref="dom.webgpu.enabled",
