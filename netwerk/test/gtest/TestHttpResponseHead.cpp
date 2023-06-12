@@ -33,7 +33,10 @@ void AssertRoundTrips(const nsHttpResponseHead& aHead) {
     // Assert it round-trips through operator=
     nsHttpResponseHead copied;
     copied = aHead;
-    ASSERT_EQ(aHead, copied);
+    // It is important that the below statement cannot be
+    // ASSERT_EQ(aHead, copied) to avoid potential lock-order inversion problem.
+    // See Bug 1829445 for more details
+    ASSERT_EQ(copied, aHead);
   }
 }
 
