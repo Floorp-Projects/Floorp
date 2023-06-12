@@ -5453,7 +5453,8 @@ nsresult HTMLEditor::HandleHTMLIndentAroundRanges(AutoRangeArray& aRanges,
 
     // Ignore all non-editable nodes.  Leave them be.
     // XXX We ignore non-editable nodes here, but not so in the above block.
-    if (!EditorUtils::IsEditableContent(content, EditorType::HTML)) {
+    if (!EditorUtils::IsEditableContent(content, EditorType::HTML) ||
+        !HTMLEditUtils::IsRemovableNode(content)) {
       continue;
     }
 
@@ -6033,6 +6034,9 @@ HTMLEditor::HandleOutdentAtSelectionInternal(const Element& aEditingHost) {
          (parentContent->IsHTMLElement(nsGkAtoms::table) ||
           !HTMLEditUtils::IsAnyTableElement(parentContent));
          parentContent = parentContent->GetParent()) {
+      if (MOZ_UNLIKELY(!HTMLEditUtils::IsRemovableNode(*parentContent))) {
+        continue;
+      }
       // If we reach a `<blockquote>` ancestor, it should be split at next
       // time at least for outdenting current node.
       if (parentContent->IsHTMLElement(nsGkAtoms::blockquote)) {
@@ -6395,6 +6399,10 @@ Result<SplitRangeOffFromNodeResult, nsresult> HTMLEditor::OutdentPartOfBlock(
         "HTMLEditor::SplitRangeOffFromBlock() didn't return middle content");
     unwrappedSplitResult.IgnoreCaretPointSuggestion();
     return Err(NS_ERROR_FAILURE);
+  }
+  if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*middleElement))) {
+    unwrappedSplitResult.IgnoreCaretPointSuggestion();
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   nsresult rv = unwrappedSplitResult.SuggestCaretPointTo(
