@@ -22,7 +22,6 @@ XPIDL_SOURCES += [
     "nsILoginManagerAuthPrompter.idl",
     "nsILoginManagerCrypto.idl",
     "nsILoginManagerPrompter.idl",
-    "nsILoginManagerStorage.idl",
     "nsILoginMetaInfo.idl",
     "nsIPromptInstance.idl",
 ]
@@ -54,11 +53,7 @@ EXTRA_JS_MODULES += [
     "storage-json.sys.mjs",
 ]
 
-if CONFIG["OS_TARGET"] == "Android":
-    EXTRA_JS_MODULES += [
-        "storage-geckoview.sys.mjs",
-    ]
-else:
+if CONFIG["OS_TARGET"] != "Android":
     EXTRA_JS_MODULES += [
         "CSV.sys.mjs",
         "LoginCSVImport.sys.mjs",

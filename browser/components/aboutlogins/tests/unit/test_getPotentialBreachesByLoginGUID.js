@@ -213,7 +213,7 @@ add_task(async function test_breachAlertHiddenAfterDismissal() {
   BREACHED_LOGIN.guid = "{d2de5ac1-4de6-e544-a7af-1f75abcba92b}";
 
   await Services.logins.initializationPromise;
-  const storageJSON = Services.logins.wrappedJSObject._storage.wrappedJSObject;
+  const storageJSON = Services.logins.wrappedJSObject._storage;
 
   storageJSON.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
 
