@@ -1465,7 +1465,7 @@ void DocumentLoadListener::RegisterEarlyHintLinksAndGetConnectArgs(
 
 void DocumentLoadListener::SerializeRedirectData(
     RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
-    uint32_t aRedirectFlags, uint32_t aLoadFlags, ContentParent* aParent,
+    uint32_t aRedirectFlags, uint32_t aLoadFlags,
     nsTArray<EarlyHintConnectArgs>&& aEarlyHints,
     uint32_t aEarlyHintLinkType) const {
   aArgs.uri() = GetChannelCreationURI();
@@ -1542,7 +1542,7 @@ void DocumentLoadListener::SerializeRedirectData(
                  ->CloneReplacementChannelConfig(
                      true, aRedirectFlags,
                      HttpBaseChannel::ReplacementReason::DocumentChannel)
-                 .Serialize(aParent));
+                 .Serialize());
   }
 
   uint32_t contentDispositionTemp;
@@ -2107,7 +2107,7 @@ DocumentLoadListener::RedirectToRealChannel(
 
     RedirectToRealChannelArgs args;
     SerializeRedirectData(args, /* aIsCrossProcess */ true, aRedirectFlags,
-                          aLoadFlags, cp, std::move(ehArgs),
+                          aLoadFlags, std::move(ehArgs),
                           mEarlyHintsService.LinkType());
     if (mTiming) {
       mTiming->Anonymize(args.uri());

@@ -149,7 +149,7 @@ DocumentChannelParent::RedirectToRealChannel(
 
   RedirectToRealChannelArgs args;
   mDocumentLoadListener->SerializeRedirectData(
-      args, false, aRedirectFlags, aLoadFlags, cp, std::move(earlyHints),
+      args, false, aRedirectFlags, aLoadFlags, std::move(earlyHints),
       aEarlyHintLinkType);
   return SendRedirectToRealChannel(args, std::move(aStreamFilterEndpoints));
 }
