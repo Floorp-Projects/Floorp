@@ -384,22 +384,6 @@ interface nsIPrefBranch : nsISupports
   Array<ACString> getChildList(in string aStartingAt);
 
   /**
-   * Called to reset all of the preferences referenced by this branch to their
-   * default values.
-   *
-   * @param aStartingAt The point on the branch at which to start the resetting
-   *                    preferences to their default values. Pass in "" to
-   *                    reset all preferences referenced by this branch.
-   *
-   * @note
-   * This method can be called on either a default or user branch but, in
-   * effect, always operates on the user branch.
-   *
-   * @throws Error The preference(s) do not exist or an error occurred.
-   */
-  void resetBranch(in string aStartingAt);
-
-  /**
    * Add a preference change observer. On preference changes, the following
    * arguments will be passed to the nsIObserver.observe() method:
    *   aSubject - The nsIPrefBranch object (this)
