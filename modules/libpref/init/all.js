@@ -3736,10 +3736,6 @@ pref("prompts.authentication_dialog_abuse_limit", 2);
 // content: 1, tab: 2, window: 3
 pref("prompts.modalType.httpAuth", 2);
 
-// Payment Request API preferences
-pref("dom.payments.loglevel", "Warn");
-pref("dom.payments.defaults.saveCreditCard", false);
-pref("dom.payments.defaults.saveAddress", true);
 pref("dom.payments.request.supportedRegions", "US,CA");
 
 #ifdef MOZ_ASAN_REPORTER
