@@ -36,7 +36,7 @@ ScopedLogExtraInfo::~ScopedLogExtraInfo() {
   }
 }
 
-ScopedLogExtraInfo::ScopedLogExtraInfo(ScopedLogExtraInfo&& aOther)
+ScopedLogExtraInfo::ScopedLogExtraInfo(ScopedLogExtraInfo&& aOther) noexcept
     : mTag(aOther.mTag),
       mPreviousValue(aOther.mPreviousValue),
       mCurrentValue(std::move(aOther.mCurrentValue)) {
@@ -51,15 +51,14 @@ ScopedLogExtraInfo::GetExtraInfoMap() {
   // the caller(s).
 
   ScopedLogExtraInfoMap map;
-  if (XRE_IsParentProcess()) {
-    if (sQueryValue.get()) {
-      map.emplace(kTagQuery, sQueryValue.get());
-    }
-
-    if (sContextValue.get()) {
-      map.emplace(kTagContext, sContextValue.get());
-    }
+  if (sQueryValue.get()) {
+    map.emplace(kTagQuery, sQueryValue.get());
   }
+
+  if (sContextValue.get()) {
+    map.emplace(kTagContext, sContextValue.get());
+  }
+
   return map;
 }
 
