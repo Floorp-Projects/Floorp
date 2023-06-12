@@ -1082,11 +1082,6 @@ pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.linksonly", false);
 pref("accessibility.typeaheadfind.flashBar", 1);
 
-pref("plugins.testmode", false);
-
-// Should plugins that are hidden show the infobar UI?
-pref("plugins.show_infobar", false);
-
 #if defined(_ARM64_) && defined(XP_WIN)
   pref("plugin.default.state", 0);
 #else
