@@ -610,6 +610,7 @@ enum class ExtContentPolicyType : uint8_t {
   TYPE_SPECULATIVE = nsIContentPolicy::TYPE_SPECULATIVE,
   TYPE_UA_FONT = nsIContentPolicy::TYPE_UA_FONT,
   TYPE_PROXIED_WEBRTC_MEDIA = nsIContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA,
+  TYPE_WEB_TRANSPORT = nsIContentPolicy::TYPE_WEB_TRANSPORT,
 };
 
 typedef ExtContentPolicyType ExtContentPolicy;
