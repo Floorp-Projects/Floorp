@@ -120,7 +120,7 @@ class AbstractPrivateNotificationServiceTest {
 
     private open class MockService(scope: CoroutineScope = TestScope()) :
         AbstractPrivateNotificationService(scope) {
-        override val store: BrowserStore = mock()
+        override val store: BrowserStore = spy(BrowserStore())
         override val notificationsDelegate: NotificationsDelegate = mock()
 
         override fun NotificationCompat.Builder.buildNotification() = Unit
