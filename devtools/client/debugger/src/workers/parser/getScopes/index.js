@@ -4,7 +4,7 @@
 
 import { buildScopeList, parseSourceScopes } from "./visitor";
 
-let parsedScopesCache = new Map();
+const parsedScopesCache = new Map();
 
 export default function getScopes(location) {
   const sourceId = location.source.id;
@@ -16,8 +16,10 @@ export default function getScopes(location) {
   return parsedScopes ? findScopes(parsedScopes, location) : [];
 }
 
-export function clearScopes() {
-  parsedScopesCache = new Map();
+export function clearScopes(sourceIds) {
+  for (const sourceId of sourceIds) {
+    parsedScopesCache.delete(sourceId);
+  }
 }
 
 export { buildScopeList };

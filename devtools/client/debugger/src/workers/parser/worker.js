@@ -12,18 +12,18 @@ import mapExpression from "./mapExpression";
 
 import { workerHandler } from "../../../../shared/worker-utils";
 
-function clearState() {
-  clearASTs();
-  clearScopes();
-  clearSources();
-  clearSymbols();
+function clearAllHelpersForSources(sourceIds) {
+  clearASTs(sourceIds);
+  clearScopes(sourceIds);
+  clearSources(sourceIds);
+  clearSymbols(sourceIds);
 }
 
 self.onmessage = workerHandler({
   findOutOfScopeLocations,
   getSymbols,
   getScopes,
-  clearState,
+  clearSources: clearAllHelpersForSources,
   hasSyntaxError,
   mapExpression,
   setSource,
