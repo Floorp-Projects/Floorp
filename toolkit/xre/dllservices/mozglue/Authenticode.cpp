@@ -81,7 +81,6 @@ class SignedBinary final {
   SignedBinary(const wchar_t* aFilePath, mozilla::AuthenticodeFlags aFlags);
 
   explicit operator bool() const { return mCertStore && mCryptMsg && mCertCtx; }
-  bool HasNestedMicrosoftSignature() const;
 
   mozilla::UniquePtr<wchar_t[]> GetOrgName();
 
@@ -106,48 +105,6 @@ class SignedBinary final {
   CertContextUniquePtr mCertCtx;
 };
 
-static CertContextUniquePtr GetCertificateFromCryptMsg(
-    const CryptMsgUniquePtr& aCryptMsg, const CertStoreUniquePtr& aCertStore) {
-  DWORD certInfoLen = 0;
-  BOOL ok = CryptMsgGetParam(aCryptMsg.get(), CMSG_SIGNER_CERT_INFO_PARAM, 0,
-                             nullptr, &certInfoLen);
-  if (!ok) {
-    return nullptr;
-  }
-
-  auto certInfoBuf = mozilla::MakeUnique<char[]>(certInfoLen);
-
-  ok = CryptMsgGetParam(aCryptMsg.get(), CMSG_SIGNER_CERT_INFO_PARAM, 0,
-                        certInfoBuf.get(), &certInfoLen);
-  if (!ok) {
-    return nullptr;
-  }
-
-  auto certInfo = reinterpret_cast<CERT_INFO*>(certInfoBuf.get());
-
-  PCCERT_CONTEXT certCtx =
-      CertFindCertificateInStore(aCertStore.get(), kEncodingTypes, 0,
-                                 CERT_FIND_SUBJECT_CERT, certInfo, nullptr);
-  return CertContextUniquePtr(certCtx);
-}
-
-static mozilla::UniquePtr<wchar_t[]> GetSignerOrganizationFromCertificate(
-    const CertContextUniquePtr& certCtx) {
-  DWORD charCount = CertGetNameStringW(
-      certCtx.get(), CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, nullptr, 0);
-  if (charCount <= 1) {
-    // Not found
-    return nullptr;
-  }
-
-  auto result = mozilla::MakeUnique<wchar_t[]>(charCount);
-  charCount = CertGetNameStringW(certCtx.get(), CERT_NAME_SIMPLE_DISPLAY_TYPE,
-                                 0, nullptr, result.get(), charCount);
-  MOZ_ASSERT(charCount > 1);
-
-  return result;
-}
-
 SignedBinary::SignedBinary(const wchar_t* aFilePath,
                            mozilla::AuthenticodeFlags aFlags)
     : mFlags(aFlags), mTrustSource(TrustSource::eNone) {
@@ -155,71 +112,31 @@ SignedBinary::SignedBinary(const wchar_t* aFilePath,
     return;
   }
 
-  CertContextUniquePtr certCtx =
-      GetCertificateFromCryptMsg(mCryptMsg, mCertStore);
+  DWORD certInfoLen = 0;
+  BOOL ok = CryptMsgGetParam(mCryptMsg.get(), CMSG_SIGNER_CERT_INFO_PARAM, 0,
+                             nullptr, &certInfoLen);
+  if (!ok) {
+    return;
+  }
+
+  auto certInfoBuf = mozilla::MakeUnique<char[]>(certInfoLen);
+
+  ok = CryptMsgGetParam(mCryptMsg.get(), CMSG_SIGNER_CERT_INFO_PARAM, 0,
+                        certInfoBuf.get(), &certInfoLen);
+  if (!ok) {
+    return;
+  }
+
+  auto certInfo = reinterpret_cast<CERT_INFO*>(certInfoBuf.get());
+
+  PCCERT_CONTEXT certCtx =
+      CertFindCertificateInStore(mCertStore.get(), kEncodingTypes, 0,
+                                 CERT_FIND_SUBJECT_CERT, certInfo, nullptr);
   if (!certCtx) {
     return;
   }
 
-  mCertCtx.swap(certCtx);
-}
-
-bool SignedBinary::HasNestedMicrosoftSignature() const {
-  // Look for nested certificates - see bug 1817026
-  DWORD attributesLen = 0;
-  BOOL ok = CryptMsgGetParam(mCryptMsg.get(), CMSG_SIGNER_UNAUTH_ATTR_PARAM, 0,
-                             nullptr, &attributesLen);
-  if (!ok) {
-    return false;
-  }
-
-  auto attributesBuf = mozilla::MakeUnique<char[]>(attributesLen);
-  ok = CryptMsgGetParam(mCryptMsg.get(), CMSG_SIGNER_UNAUTH_ATTR_PARAM, 0,
-                        attributesBuf.get(), &attributesLen);
-  if (!ok) {
-    return false;
-  }
-  auto attributesInfo =
-      reinterpret_cast<CRYPT_ATTRIBUTES*>(attributesBuf.get());
-  for (DWORD i = 0; i < attributesInfo->cAttr; ++i) {
-    PCRYPT_ATTRIBUTE cur = &attributesInfo->rgAttr[i];
-    if (!strcmp(cur->pszObjId, szOID_NESTED_SIGNATURE)) {
-      CryptMsgUniquePtr nestedMsg(
-          CryptMsgOpenToDecode(kEncodingTypes, 0, 0, NULL, NULL, NULL));
-      if (!nestedMsg) {
-        continue;
-      }
-      ok = CryptMsgUpdate(nestedMsg.get(), cur->rgValue->pbData,
-                          cur->rgValue->cbData, TRUE);
-      if (!ok) {
-        continue;
-      }
-
-      CertStoreUniquePtr nestedCertStore(
-          CertOpenStore(CERT_STORE_PROV_MSG, kEncodingTypes, NULL,
-                        CERT_STORE_OPEN_EXISTING_FLAG, nestedMsg.get()));
-      if (!nestedCertStore) {
-        continue;
-      }
-
-      CertContextUniquePtr nestedCertCtx =
-          GetCertificateFromCryptMsg(nestedMsg, nestedCertStore);
-      if (!nestedCertCtx) {
-        continue;
-      }
-
-      mozilla::UniquePtr<wchar_t[]> nestedSigner =
-          GetSignerOrganizationFromCertificate(nestedCertCtx);
-      if (!nestedSigner) {
-        continue;
-      }
-      if (!wcscmp(nestedSigner.get(), L"Microsoft Windows") ||
-          !wcscmp(nestedSigner.get(), L"Microsoft Corporation")) {
-        return true;
-      }
-    }
-  }
-  return false;
+  mCertCtx.reset(certCtx);
 }
 
 bool SignedBinary::QueryObject(const wchar_t* aFilePath) {
@@ -479,7 +396,19 @@ bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
 }
 
 mozilla::UniquePtr<wchar_t[]> SignedBinary::GetOrgName() {
-  return GetSignerOrganizationFromCertificate(mCertCtx);
+  DWORD charCount = CertGetNameStringW(
+      mCertCtx.get(), CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, nullptr, 0);
+  if (charCount <= 1) {
+    // Not found
+    return nullptr;
+  }
+
+  auto result = mozilla::MakeUnique<wchar_t[]>(charCount);
+  charCount = CertGetNameStringW(mCertCtx.get(), CERT_NAME_SIMPLE_DISPLAY_TYPE,
+                                 0, nullptr, result.get(), charCount);
+  MOZ_ASSERT(charCount > 1);
+
+  return result;
 }
 
 }  // anonymous namespace
@@ -489,24 +418,17 @@ namespace mozilla {
 class AuthenticodeImpl : public Authenticode {
  public:
   virtual UniquePtr<wchar_t[]> GetBinaryOrgName(
-      const wchar_t* aFilePath, bool* aHasNestedMicrosoftSignature = nullptr,
+      const wchar_t* aFilePath,
       AuthenticodeFlags aFlags = AuthenticodeFlags::Default) override;
 };
 
 UniquePtr<wchar_t[]> AuthenticodeImpl::GetBinaryOrgName(
-    const wchar_t* aFilePath, bool* aHasNestedMicrosoftSignature,
-    AuthenticodeFlags aFlags) {
-  if (aHasNestedMicrosoftSignature) {
-    *aHasNestedMicrosoftSignature = false;
-  }
+    const wchar_t* aFilePath, AuthenticodeFlags aFlags) {
   SignedBinary bin(aFilePath, aFlags);
   if (!bin) {
     return nullptr;
   }
 
-  if (aHasNestedMicrosoftSignature) {
-    *aHasNestedMicrosoftSignature = bin.HasNestedMicrosoftSignature();
-  }
   return bin.GetOrgName();
 }
 
