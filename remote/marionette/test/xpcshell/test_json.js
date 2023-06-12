@@ -27,68 +27,95 @@ function setupTest() {
   browser.document.body.appendChild(iframeEl);
   const childEl = iframeEl.contentDocument.createElement("div");
 
-  return { browser, nodeCache, childEl, iframeEl, htmlEl, shadowRoot, svgEl };
+  return {
+    browser,
+    browsingContext: browser.browsingContext,
+    nodeCache,
+    childEl,
+    iframeEl,
+    htmlEl,
+    seenNodeIds: new Map(),
+    shadowRoot,
+    svgEl,
+  };
+}
+
+function assert_cloned_value(value, clonedValue, nodeCache, seenNodes = []) {
+  const { seenNodeIds, serializedValue } = json.clone(value, nodeCache);
+
+  deepEqual(serializedValue, clonedValue);
+  deepEqual([...seenNodeIds.values()], seenNodes);
 }
 
 add_task(function test_clone_generalTypes() {
   const { nodeCache } = setupTest();
 
   // null
-  equal(json.clone(undefined, nodeCache), null);
-  equal(json.clone(null, nodeCache), null);
+  assert_cloned_value(undefined, null, nodeCache);
+  assert_cloned_value(null, null, nodeCache);
 
   // primitives
-  equal(json.clone(true, nodeCache), true);
-  equal(json.clone(42, nodeCache), 42);
-  equal(json.clone("foo", nodeCache), "foo");
+  assert_cloned_value(true, true, nodeCache);
+  assert_cloned_value(42, 42, nodeCache);
+  assert_cloned_value("foo", "foo", nodeCache);
 
   // toJSON
-  equal(
-    json.clone({
+  assert_cloned_value(
+    {
       toJSON() {
         return "foo";
       },
-    }),
-    "foo"
+    },
+    "foo",
+    nodeCache
   );
 });
 
 add_task(function test_clone_ShadowRoot() {
-  const { nodeCache, shadowRoot } = setupTest();
+  const { nodeCache, seenNodeIds, shadowRoot } = setupTest();
 
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
-  deepEqual(
-    json.clone(shadowRoot, nodeCache),
-    WebReference.from(shadowRoot, shadowRootRef).toJSON()
+  const shadowRootRef = nodeCache.getOrCreateNodeReference(
+    shadowRoot,
+    seenNodeIds
+  );
+  assert_cloned_value(
+    shadowRoot,
+    WebReference.from(shadowRoot, shadowRootRef).toJSON(),
+    nodeCache,
+    seenNodeIds
   );
 });
 
 add_task(function test_clone_WebElement() {
-  const { htmlEl, nodeCache, svgEl } = setupTest();
+  const { htmlEl, nodeCache, seenNodeIds, svgEl } = setupTest();
 
-  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
-  deepEqual(
-    json.clone(htmlEl, nodeCache),
-    WebReference.from(htmlEl, htmlElRef).toJSON()
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl, seenNodeIds);
+  assert_cloned_value(
+    htmlEl,
+    WebReference.from(htmlEl, htmlElRef).toJSON(),
+    nodeCache,
+    seenNodeIds
   );
 
   // Check an element with a different namespace
-  const svgElRef = nodeCache.getOrCreateNodeReference(svgEl);
-  deepEqual(
-    json.clone(svgEl, nodeCache),
-    WebReference.from(svgEl, svgElRef).toJSON()
+  const svgElRef = nodeCache.getOrCreateNodeReference(svgEl, seenNodeIds);
+  assert_cloned_value(
+    svgEl,
+    WebReference.from(svgEl, svgElRef).toJSON(),
+    nodeCache,
+    seenNodeIds
   );
 });
 
 add_task(function test_clone_Sequences() {
-  const { htmlEl, nodeCache } = setupTest();
+  const { htmlEl, nodeCache, seenNodeIds } = setupTest();
 
-  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl, seenNodeIds);
 
   const input = [
     null,
     true,
-    [],
+    [42],
     htmlEl,
     {
       toJSON() {
@@ -98,20 +125,25 @@ add_task(function test_clone_Sequences() {
     { bar: "baz" },
   ];
 
-  const actual = json.clone(input, nodeCache);
-
-  equal(actual[0], null);
-  equal(actual[1], true);
-  deepEqual(actual[2], []);
-  deepEqual(actual[3], { [WebElement.Identifier]: htmlElRef });
-  equal(actual[4], "foo");
-  deepEqual(actual[5], { bar: "baz" });
+  assert_cloned_value(
+    input,
+    [
+      null,
+      true,
+      [42],
+      { [WebElement.Identifier]: htmlElRef },
+      "foo",
+      { bar: "baz" },
+    ],
+    nodeCache,
+    seenNodeIds
+  );
 });
 
 add_task(function test_clone_objects() {
-  const { htmlEl, nodeCache } = setupTest();
+  const { htmlEl, nodeCache, seenNodeIds } = setupTest();
 
-  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl, seenNodeIds);
 
   const input = {
     null: null,
@@ -126,14 +158,19 @@ add_task(function test_clone_objects() {
     object: { bar: "baz" },
   };
 
-  const actual = json.clone(input, nodeCache);
-
-  equal(actual.null, null);
-  equal(actual.boolean, true);
-  deepEqual(actual.array, [42]);
-  deepEqual(actual.element, { [WebElement.Identifier]: htmlElRef });
-  equal(actual.toJSON, "foo");
-  deepEqual(actual.object, { bar: "baz" });
+  assert_cloned_value(
+    input,
+    {
+      null: null,
+      boolean: true,
+      array: [42],
+      element: { [WebElement.Identifier]: htmlElRef },
+      toJSON: "foo",
+      object: { bar: "baz" },
+    },
+    nodeCache,
+    seenNodeIds
+  );
 });
 
 add_task(function test_clone_сyclicReference() {
@@ -169,68 +206,84 @@ add_task(function test_clone_сyclicReference() {
 });
 
 add_task(function test_deserialize_generalTypes() {
-  const { browser, nodeCache } = setupTest();
-  const win = browser.document.ownerGlobal;
+  const { browsingContext, nodeCache } = setupTest();
 
   // null
-  equal(json.deserialize(undefined, nodeCache, win), undefined);
-  equal(json.deserialize(null, nodeCache, win), null);
+  equal(json.deserialize(undefined, nodeCache, browsingContext), undefined);
+  equal(json.deserialize(null, nodeCache, browsingContext), null);
 
   // primitives
-  equal(json.deserialize(true, nodeCache, win), true);
-  equal(json.deserialize(42, nodeCache, win), 42);
-  equal(json.deserialize("foo", nodeCache, win), "foo");
+  equal(json.deserialize(true, nodeCache, browsingContext), true);
+  equal(json.deserialize(42, nodeCache, browsingContext), 42);
+  equal(json.deserialize("foo", nodeCache, browsingContext), "foo");
 });
 
 add_task(function test_deserialize_ShadowRoot() {
-  const { browser, nodeCache, shadowRoot } = setupTest();
-  const win = browser.document.ownerGlobal;
+  const { browsingContext, nodeCache, seenNodeIds, shadowRoot } = setupTest();
+  const seenNodes = new Set();
 
   // Fails to resolve for unknown elements
   const unknownShadowRootId = { [ShadowRoot.Identifier]: "foo" };
   Assert.throws(() => {
-    json.deserialize(unknownShadowRootId, nodeCache, win);
+    json.deserialize(
+      unknownShadowRootId,
+      nodeCache,
+      browsingContext,
+      seenNodes
+    );
   }, /NoSuchShadowRootError/);
 
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
+  const shadowRootRef = nodeCache.getOrCreateNodeReference(
+    shadowRoot,
+    seenNodeIds
+  );
   const shadowRootEl = { [ShadowRoot.Identifier]: shadowRootRef };
 
   // Fails to resolve for missing window reference
   Assert.throws(() => json.deserialize(shadowRootEl, nodeCache), /TypeError/);
 
   // Previously seen element is associated with original web element reference
-  const root = json.deserialize(shadowRootEl, nodeCache, win);
+  seenNodes.add(shadowRootRef);
+  const root = json.deserialize(
+    shadowRootEl,
+    nodeCache,
+    browsingContext,
+    seenNodes
+  );
   deepEqual(root, shadowRoot);
-  deepEqual(root, nodeCache.getNode(browser.browsingContext, shadowRootRef));
+  deepEqual(root, nodeCache.getNode(browsingContext, shadowRootRef));
 });
 
 add_task(function test_deserialize_WebElement() {
-  const { browser, htmlEl, nodeCache } = setupTest();
-  const win = browser.document.ownerGlobal;
+  const { browser, browsingContext, htmlEl, nodeCache, seenNodeIds } =
+    setupTest();
+  const seenNodes = new Set();
 
   // Fails to resolve for unknown elements
   const unknownWebElId = { [WebElement.Identifier]: "foo" };
   Assert.throws(() => {
-    json.deserialize(unknownWebElId, nodeCache, win);
+    json.deserialize(unknownWebElId, nodeCache, browsingContext, seenNodes);
   }, /NoSuchElementError/);
 
-  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl, seenNodeIds);
   const htmlWebEl = { [WebElement.Identifier]: htmlElRef };
 
   // Fails to resolve for missing window reference
   Assert.throws(() => json.deserialize(htmlWebEl, nodeCache), /TypeError/);
 
   // Previously seen element is associated with original web element reference
-  const el = json.deserialize(htmlWebEl, nodeCache, win);
+  seenNodes.add(htmlElRef);
+  const el = json.deserialize(htmlWebEl, nodeCache, browsingContext, seenNodes);
   deepEqual(el, htmlEl);
   deepEqual(el, nodeCache.getNode(browser.browsingContext, htmlElRef));
 });
 
 add_task(function test_deserialize_Sequences() {
-  const { browser, htmlEl, nodeCache } = setupTest();
-  const win = browser.document.ownerGlobal;
+  const { browsingContext, htmlEl, nodeCache, seenNodeIds } = setupTest();
+  const seenNodes = new Set();
 
-  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl, seenNodeIds);
+  seenNodes.add(htmlElRef);
 
   const input = [
     null,
@@ -240,7 +293,7 @@ add_task(function test_deserialize_Sequences() {
     { bar: "baz" },
   ];
 
-  const actual = json.deserialize(input, nodeCache, win);
+  const actual = json.deserialize(input, nodeCache, browsingContext, seenNodes);
 
   equal(actual[0], null);
   equal(actual[1], true);
@@ -250,10 +303,11 @@ add_task(function test_deserialize_Sequences() {
 });
 
 add_task(function test_deserialize_objects() {
-  const { browser, htmlEl, nodeCache } = setupTest();
-  const win = browser.document.ownerGlobal;
+  const { browsingContext, htmlEl, nodeCache, seenNodeIds } = setupTest();
+  const seenNodes = new Set();
 
-  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
+  const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl, seenNodeIds);
+  seenNodes.add(htmlElRef);
 
   const input = {
     null: null,
@@ -263,7 +317,7 @@ add_task(function test_deserialize_objects() {
     object: { bar: "baz" },
   };
 
-  const actual = json.deserialize(input, nodeCache, win);
+  const actual = json.deserialize(input, nodeCache, browsingContext, seenNodes);
 
   equal(actual.null, null);
   equal(actual.boolean, true);

@@ -297,7 +297,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.navigate("about:robots")
         self.assertFalse(self.is_remote_tab)
 
-        with self.assertRaises(errors.NoSuchElementException):
+        with self.assertRaises(errors.StaleElementException):
             elem.click()
 
     def test_about_blank_for_new_docshell(self):

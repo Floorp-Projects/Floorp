@@ -82,10 +82,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
+
       const data = lazy.json.deserialize(
         serializedData,
         this.#processActor.getNodeCache(),
-        this.contentWindow
+        this.contentWindow.browsingContext
       );
 
       switch (name) {
@@ -183,9 +184,14 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
         await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
       }
 
-      return {
-        data: lazy.json.clone(result, this.#processActor.getNodeCache()),
-      };
+      const { seenNodeIds, serializedValue } = lazy.json.clone(
+        result,
+        this.#processActor.getNodeCache()
+      );
+
+      // Because in WebDriver classic nodes can only be returned from the same
+      // browsing context, we only need the seen unique ids as flat array.
+      return { seenNodeIds: [...seenNodeIds.values()].flat(), serializedValue };
     } catch (e) {
       // Always wrap errors as WebDriverError
       return { error: lazy.error.wrap(e).toJSON() };

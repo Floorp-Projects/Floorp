@@ -50,11 +50,14 @@ export class NodeCache {
    *
    * @param {Node} node
    *    The node to be added.
+   * @param {Map<BrowsingContext, Array<string>>} seenNodeIds
+   *     Map of browsing contexts to their seen node ids during the current
+   *     serialization.
    *
    * @returns {string}
    *     The unique node reference for the DOM node.
    */
-  getOrCreateNodeReference(node) {
+  getOrCreateNodeReference(node, seenNodeIds) {
     if (!Node.isInstance(node)) {
       throw new TypeError(`Failed to create node reference for ${node}`);
     }
@@ -82,6 +85,13 @@ export class NodeCache {
 
       this.#nodeIdMap.set(node, nodeId);
       this.#seenNodesMap.set(nodeId, details);
+
+      // Also add the information for the node id and its correlated browsing
+      // context to allow the parent process to update the seen nodes.
+      if (!seenNodeIds.has(browsingContext)) {
+        seenNodeIds.set(browsingContext, []);
+      }
+      seenNodeIds.get(browsingContext).push(nodeId);
     }
 
     return nodeId;

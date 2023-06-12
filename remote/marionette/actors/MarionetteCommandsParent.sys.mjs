@@ -9,6 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   capture: "chrome://remote/content/shared/Capture.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  getSeenNodesForBrowsingContext:
+    "chrome://remote/content/shared/webdriver/Session.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
@@ -18,7 +20,6 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 
 // Because Marionette supports a single session only we store its id
 // globally so that the parent actor can access it.
-// eslint-disable-next-line no-unused-vars
 let webDriverSessionId = null;
 
 export class MarionetteCommandsParent extends JSWindowActorParent {
@@ -32,20 +33,68 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     });
   }
 
-  async sendQuery(name, data) {
+  async sendQuery(name, serializedValue) {
+    const seenNodes = lazy.getSeenNodesForBrowsingContext(
+      webDriverSessionId,
+      this.manager.browsingContext
+    );
+
     // return early if a dialog is opened
-    const result = await Promise.race([
-      super.sendQuery(name, data),
+    const {
+      error,
+      seenNodeIds,
+      serializedValue: serializedResult,
+    } = await Promise.race([
+      super.sendQuery(name, serializedValue),
       this.dialogOpenedPromise(),
     ]).finally(() => {
       this._resolveDialogOpened = null;
     });
 
-    if ("error" in result) {
-      throw lazy.error.WebDriverError.fromJSON(result.error);
-    } else {
-      return result.data;
+    if (error) {
+      const err = lazy.error.WebDriverError.fromJSON(error);
+      this.#handleError(err, seenNodes);
     }
+
+    // Update seen nodes for serialized element and shadow root nodes.
+    seenNodeIds?.forEach(nodeId => seenNodes.add(nodeId));
+
+    return serializedResult;
+  }
+
+  /**
+   * Handle WebDriver error and replace error type if necessary.
+   *
+   * @param {WebDriverError} error
+   *     The WebDriver error to handle.
+   * @param {Set<string>} seenNodes
+   *     List of node ids already seen in this navigable.
+   *
+   * @throws {WebDriverError}
+   *     The original or replaced WebDriver error.
+   */
+  #handleError(error, seenNodes) {
+    // If an element hasn't been found during deserialization check if it
+    // may be a stale reference.
+    if (
+      error instanceof lazy.error.NoSuchElementError &&
+      error.data.elementId !== undefined &&
+      seenNodes.has(error.data.elementId)
+    ) {
+      throw new lazy.error.StaleElementReferenceError(error);
+    }
+
+    // If a shadow root hasn't been found during deserialization check if it
+    // may be a detached reference.
+    if (
+      error instanceof lazy.error.NoSuchShadowRootError &&
+      error.data.shadowId !== undefined &&
+      seenNodes.has(error.data.shadowId)
+    ) {
+      throw new lazy.error.DetachedShadowRootError(error);
+    }
+
+    throw error;
   }
 
   notifyDialogOpened() {

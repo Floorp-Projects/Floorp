@@ -7,7 +7,7 @@
 const { Capabilities, Timeouts } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs"
 );
-const { WebDriverSession, getWebDriverSessionById } =
+const { getWebDriverSessionById, WebDriverSession } =
   ChromeUtils.importESModule(
     "chrome://remote/content/shared/webdriver/Session.sys.mjs"
   );
