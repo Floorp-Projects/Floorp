@@ -3862,7 +3862,9 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
       mozannotation_retrieve(aTargetHandle);
 #endif
   AddChildProcessAnnotations(aTargetAnnotations, child_annotations);
-  mozannotation_free(child_annotations);
+  if (child_annotations) {
+    mozannotation_free(child_annotations);
+  }
 
   targetMinidump.forget(aMainDumpOut);
 
