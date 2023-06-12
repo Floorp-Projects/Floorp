@@ -121,7 +121,7 @@ add_task(async function basic() {
       description: "Sponsored result",
       input: "exa",
       payload: {
-        url: "http://example.com/",
+        url: "https://example.com/",
         isSponsored: true,
       },
       expected: {
@@ -133,12 +133,12 @@ add_task(async function basic() {
       description: "Bookmarked result",
       input: "exa",
       payload: {
-        url: "http://example.com/",
+        url: "https://example.com/",
       },
       bookmarks: [
         {
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-          url: Services.io.newURI("http://example.com/"),
+          url: Services.io.newURI("https://example.com/"),
           title: "test bookmark",
         },
       ],
@@ -151,13 +151,13 @@ add_task(async function basic() {
       description: "Sponsored and bookmarked result",
       input: "exa",
       payload: {
-        url: "http://example.com/",
+        url: "https://example.com/",
         isSponsored: true,
       },
       bookmarks: [
         {
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-          url: Services.io.newURI("http://example.com/"),
+          url: Services.io.newURI("https://example.com/"),
           title: "test bookmark",
         },
       ],
@@ -170,7 +170,7 @@ add_task(async function basic() {
       description: "Organic result",
       input: "exa",
       payload: {
-        url: "http://example.com/",
+        url: "https://example.com/",
       },
       expected: {
         source: VISIT_SOURCE_ORGANIC,
@@ -203,9 +203,9 @@ add_task(async function basic() {
 });
 
 add_task(async function redirection() {
-  const redirectTo = "http://example.com/";
+  const redirectTo = "https://example.com/";
   const payload = {
-    url: "http://example.com/browser/browser/components/urlbar/tests/browser/redirect_to.sjs?/",
+    url: "https://example.com/browser/browser/components/urlbar/tests/browser/redirect_to.sjs?/",
     isSponsored: true,
   };
   const input = "exa";
@@ -307,7 +307,7 @@ add_task(async function search() {
       await assertDatabase({ targetURL: resultURL, expected });
 
       // Open another URL to check whther the source is not inherited.
-      const payload = { url: "http://example.com/" };
+      const payload = { url: "https://example.com/" };
       const provider = registerProvider(payload);
       promiseVisited = waitForVisitNotification(payload.url);
       await pickResult({ input, payloadURL: payload.url });
