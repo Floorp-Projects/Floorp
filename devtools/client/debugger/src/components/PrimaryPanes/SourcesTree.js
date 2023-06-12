@@ -18,7 +18,6 @@ import {
   getFocusedSourceItem,
   getContext,
   getGeneratedSourceByURL,
-  getBlackBoxRanges,
   getHideIgnoredSources,
 } from "../../selectors";
 
@@ -118,7 +117,6 @@ class SourcesTree extends Component {
       selectSource: PropTypes.func.isRequired,
       selectedTreeLocation: PropTypes.object,
       setExpandedState: PropTypes.func.isRequired,
-      blackBoxRanges: PropTypes.object.isRequired,
       rootItems: PropTypes.object.isRequired,
       clearProjectDirectoryRoot: PropTypes.func.isRequired,
       projectRootName: PropTypes.string.isRequired,
@@ -291,53 +289,6 @@ class SourcesTree extends Component {
     return skipEmptyDirectories(item.parent);
   };
 
-  /**
-   * Computes 4 lists:
-   *  - `sourcesInside`: the list of all Source Items that are
-   *    children of the current item (can be thread/group/directory).
-   *    This include any nested level of children.
-   *  - `sourcesOutside`: all other Source Items.
-   *    i.e. all sources that are in any other folder of any group/thread.
-   *  - `allInsideBlackBoxed`, all sources of `sourcesInside` which are currently
-   *    blackboxed.
-   *  - `allOutsideBlackBoxed`, all sources of `sourcesOutside` which are currently
-   *    blackboxed.
-   */
-  getBlackBoxSourcesGroups = item => {
-    const allSources = [];
-    function collectAllSources(list, _item) {
-      if (_item.children) {
-        _item.children.forEach(i => collectAllSources(list, i));
-      }
-      if (_item.type == "source") {
-        list.push(_item.source);
-      }
-    }
-    for (const rootItem of this.props.rootItems) {
-      collectAllSources(allSources, rootItem);
-    }
-
-    const sourcesInside = [];
-    collectAllSources(sourcesInside, item);
-
-    const sourcesOutside = allSources.filter(
-      source => !sourcesInside.includes(source)
-    );
-    const allInsideBlackBoxed = sourcesInside.every(
-      source => this.props.blackBoxRanges[source.url]
-    );
-    const allOutsideBlackBoxed = sourcesOutside.every(
-      source => this.props.blackBoxRanges[source.url]
-    );
-
-    return {
-      sourcesInside,
-      sourcesOutside,
-      allInsideBlackBoxed,
-      allOutsideBlackBoxed,
-    };
-  };
-
   renderProjectRootHeader() {
     const { cx, projectRootName } = this.props;
 
@@ -361,7 +312,7 @@ class SourcesTree extends Component {
   }
 
   renderItem = (item, depth, focused, _, expanded) => {
-    const { mainThreadHost, projectRoot } = this.props;
+    const { mainThreadHost } = this.props;
     return (
       <SourcesTreeItem
         item={item}
@@ -371,9 +322,7 @@ class SourcesTree extends Component {
         expanded={expanded}
         focusItem={this.onFocus}
         selectSourceItem={this.selectSourceItem}
-        projectRoot={projectRoot}
         setExpanded={this.setExpanded}
-        getBlackBoxSourcesGroups={this.getBlackBoxSourcesGroups}
         getParent={this.getParent}
       />
     );
@@ -485,8 +434,6 @@ function getTreeLocation(state, location) {
 }
 
 const mapStateToProps = state => {
-  const rootItems = getSourcesTreeSources(state);
-
   return {
     cx: getContext(state),
     selectedTreeLocation: getTreeLocation(state, getSelectedLocation(state)),
@@ -494,8 +441,7 @@ const mapStateToProps = state => {
     expanded: getExpandedState(state),
     focused: getFocusedSourceItem(state),
     projectRoot: getProjectDirectoryRoot(state),
-    rootItems,
-    blackBoxRanges: getBlackBoxRanges(state),
+    rootItems: getSourcesTreeSources(state),
     projectRootName: getProjectDirectoryRootName(state),
     hideIgnoredSources: getHideIgnoredSources(state),
   };
