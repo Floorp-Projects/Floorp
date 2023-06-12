@@ -9,6 +9,15 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
+#include <unordered_set>
+
+namespace mozilla {
+class ErrorResult;
+namespace dom {
+enum class GPUFeatureName : uint8_t;
+}  // namespace dom
+}  // namespace mozilla
+
 namespace mozilla::webgpu {
 class Adapter;
 
@@ -19,9 +28,14 @@ class SupportedFeatures final : public nsWrapperCache, public ChildOf<Adapter> {
 
   explicit SupportedFeatures(Adapter* const aParent);
 
+  void Add(dom::GPUFeatureName, ErrorResult&);
+  const auto& Features() const { return mFeatures; }
+
  private:
   ~SupportedFeatures() = default;
   void Cleanup() {}
+
+  std::unordered_set<dom::GPUFeatureName> mFeatures;
 };
 
 }  // namespace mozilla::webgpu

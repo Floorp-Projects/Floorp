@@ -53,6 +53,8 @@ class ObjectBase : public nsWrapperCache {
 
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
+
+  auto CLabel() const { return NS_ConvertUTF16toUTF8(mLabel); }
 };
 
 }  // namespace mozilla::webgpu
