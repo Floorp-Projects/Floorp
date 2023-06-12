@@ -227,6 +227,6 @@ nsresult nsScreen::GetWindowInnerRect(CSSIntRect& aRect) {
 
 bool nsScreen::ShouldResistFingerprinting() const {
   nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
-  return owner &&
-         nsGlobalWindowInner::Cast(owner)->ShouldResistFingerprinting();
+  return owner && nsGlobalWindowInner::Cast(owner)->ShouldResistFingerprinting(
+                      RFPTarget::Unknown);
 }

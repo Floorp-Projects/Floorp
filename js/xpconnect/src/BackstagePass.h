@@ -68,8 +68,7 @@ class BackstagePass final : public nsIGlobalObject,
     mModuleLoader = aModuleLoader;
   }
 
-  bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const override {
+  bool ShouldResistFingerprinting(RFPTarget aTarget) const override {
     // BackstagePass is always the System Principal
     MOZ_RELEASE_ASSERT(mPrincipal->IsSystemPrincipal());
     return false;
