@@ -1233,13 +1233,12 @@ export class SearchService {
 
     let engineId = this._settings.getMetaDataAttribute(attributeName);
     let engine = this._engines.get(engineId) || null;
-    // If the selected engine is an application provided one, we can relax the
-    // verification hash check to reduce the annoyance for users who
-    // backup/sync their profile in custom ways.
     if (
       engine &&
-      (engine.isAppProvided ||
-        this._settings.getVerifiedMetaDataAttribute(attributeName))
+      this._settings.getVerifiedMetaDataAttribute(
+        attributeName,
+        engine.isAppProvided
+      )
     ) {
       if (privateMode) {
         this.#currentPrivateEngine = engine;

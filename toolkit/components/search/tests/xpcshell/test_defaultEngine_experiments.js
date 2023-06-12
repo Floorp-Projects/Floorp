@@ -74,9 +74,10 @@ async function switchExperiment(newExperiment) {
   await promiseSaved;
 }
 
-function getSettingsAttribute(setting) {
+function getSettingsAttribute(setting, isAppProvided) {
   return Services.search.wrappedJSObject._settings.getVerifiedMetaDataAttribute(
-    setting
+    setting,
+    isAppProvided
   );
 }
 
@@ -105,7 +106,10 @@ add_task(async function test_experiment_setting() {
     "Should have reset the default engine to the application default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should have kept the saved attribute as empty"
   );
@@ -120,14 +124,20 @@ add_task(async function test_experiment_setting_to_same_as_user() {
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine2@search.mozilla.orgdefault"
   );
 
   // Start the experiment, ensure user default is maintained.
   await switchExperiment("exp1");
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine2@search.mozilla.orgdefault"
   );
 
@@ -156,7 +166,10 @@ add_task(async function test_experiment_setting_to_same_as_user() {
     "Should have kept the engine the same "
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine2@search.mozilla.orgdefault",
     "Should have kept the saved attribute as the user's preference"
   );
@@ -171,7 +184,10 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
     "Should have the application default engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should have an empty settings attribute"
   );
@@ -185,7 +201,10 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should still have an empty settings attribute"
   );
@@ -198,7 +217,10 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine1@search.mozilla.orgdefault"
   );
 
@@ -217,7 +239,10 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
     "Should have kept the engine the same"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should have reset the saved attribute to empty after the experiment ended"
   );
@@ -233,7 +258,10 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("privateDefaultEngineId"),
+    getSettingsAttribute(
+      "privateDefaultEngineId",
+      Services.search.defaultPrivateEngine.isAppProvided
+    ),
     "",
     "Should have an empty settings attribute"
   );
@@ -247,7 +275,10 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should still have an empty settings attribute"
   );
@@ -261,7 +292,10 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("privateDefaultEngineId"),
+    getSettingsAttribute(
+      "privateDefaultEngineId",
+      Services.search.defaultPrivateEngine.isAppProvided
+    ),
     "engine1@search.mozilla.orgdefault"
   );
 
@@ -276,7 +310,10 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
     "Should have kept the engine the same "
   );
   Assert.equal(
-    getSettingsAttribute("privateDefaultEngineId"),
+    getSettingsAttribute(
+      "privateDefaultEngineId",
+      Services.search.defaultPrivateEngine.isAppProvided
+    ),
     "",
     "Should have reset the saved attribute to empty after the experiment ended"
   );
@@ -291,7 +328,10 @@ add_task(async function test_experiment_setting_user_changed_to_other_during() {
     "Should have the application default engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should have an empty settings attribute"
   );
@@ -305,7 +345,10 @@ add_task(async function test_experiment_setting_user_changed_to_other_during() {
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should still have an empty settings attribute"
   );
@@ -318,7 +361,10 @@ add_task(async function test_experiment_setting_user_changed_to_other_during() {
     "Should have the user selected engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine2@search.mozilla.orgdefault",
     "Should have correctly set the user's default in settings"
   );
@@ -338,7 +384,10 @@ add_task(async function test_experiment_setting_user_changed_to_other_during() {
     "Should have kept the user's choice of engine"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine2@search.mozilla.orgdefault",
     "Should have kept the user's choice in settings"
   );
@@ -366,7 +415,10 @@ add_task(async function test_experiment_setting_user_hid_app_default_during() {
     "Should have the application default engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should have an empty settings attribute"
   );
@@ -380,7 +432,10 @@ add_task(async function test_experiment_setting_user_hid_app_default_during() {
     "Should have set the experiment engine as default"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "",
     "Should still have an empty settings attribute"
   );
@@ -415,7 +470,10 @@ add_task(async function test_experiment_setting_user_hid_app_default_during() {
     "Should have reset the user's engine to the next available engine"
   );
   Assert.equal(
-    getSettingsAttribute("defaultEngineId"),
+    getSettingsAttribute(
+      "defaultEngineId",
+      Services.search.defaultEngine.isAppProvided
+    ),
     "engine2@search.mozilla.orgdefault",
     "Should have saved the choice in settings"
   );
