@@ -148,14 +148,14 @@ add_task(async function test_hideEngine() {
   let { browser } = await addTab();
   let engine = await Services.search.getEngineByName("Foo \u2661");
   let statePromise = await waitForTestMsg(browser, "CurrentState");
-  Services.prefs.setStringPref("browser.search.hiddenOneOffs", engine.name);
+  engine.hideOneOffButton = true;
   let msg = await statePromise.donePromise;
   checkMsg(msg, {
     type: "CurrentState",
     data: await currentStateObj(undefined, "Foo \u2661"),
   });
   statePromise = await waitForTestMsg(browser, "CurrentState");
-  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+  engine.hideOneOffButton = false;
   msg = await statePromise.donePromise;
   checkMsg(msg, {
     type: "CurrentState",

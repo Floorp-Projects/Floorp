@@ -514,7 +514,8 @@ add_task(async function test_disabledEngine() {
   });
 
   info("Now disable the engine.");
-  Services.prefs.setCharPref("browser.search.hiddenOneOffs", engine.name);
+  engine.hideOneOffButton = true;
+
   await check_results({
     context,
     autofilled: "disabled.com/",
@@ -528,7 +529,7 @@ add_task(async function test_disabledEngine() {
       }),
     ],
   });
-  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+  engine.hideOneOffButton = false;
 
   await cleanupPlaces();
   await extension.unload();

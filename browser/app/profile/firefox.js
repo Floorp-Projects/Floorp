@@ -684,9 +684,6 @@ pref("browser.search.openintab", false);
 // context menu searches open in the foreground
 pref("browser.search.context.loadInBackground", false);
 
-// comma separated list of of engines to hide in the search panel.
-pref("browser.search.hiddenOneOffs", "");
-
 // Mirrors whether the search-container widget is in the navigation toolbar.
 pref("browser.search.widget.inNavBar", false);
 

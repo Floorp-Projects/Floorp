@@ -102,7 +102,6 @@ export let ContentSearch = {
       Services.obs.addObserver(this, "browser-search-engine-modified");
       Services.obs.addObserver(this, "browser-search-service");
       Services.obs.addObserver(this, "shutdown-leaks-before-check");
-      Services.prefs.addObserver("browser.search.hiddenOneOffs", this);
       lazy.UrlbarPrefs.addObserver(this);
 
       this.initialized = true;
@@ -140,7 +139,6 @@ export let ContentSearch = {
       return this._destroyedPromise;
     }
 
-    Services.prefs.removeObserver("browser.search.hiddenOneOffs", this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
     Services.obs.removeObserver(this, "browser-search-service");
     Services.obs.removeObserver(this, "shutdown-leaks-before-check");
@@ -157,7 +155,6 @@ export let ContentSearch = {
           break;
         }
       // fall through
-      case "nsPref:changed":
       case "browser-search-engine-modified":
         this._eventQueue.push({
           type: "Observe",
@@ -349,13 +346,11 @@ export let ContentSearch = {
       currentPrivateEngine: await this._currentEngineObj(true),
     };
 
-    let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
-    let hiddenList = pref ? pref.split(",") : [];
     for (let engine of await Services.search.getVisibleEngines()) {
       state.engines.push({
         name: engine.name,
         iconData: await this._getEngineIconURL(engine),
-        hidden: hiddenList.includes(engine.name),
+        hidden: engine.hideOneOffButton,
         isAppProvided: engine.isAppProvided,
       });
     }

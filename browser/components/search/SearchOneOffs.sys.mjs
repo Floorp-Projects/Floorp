@@ -97,7 +97,6 @@ export class SearchOneOffs {
       "nsIObserver",
       "nsISupportsWeakReference",
     ]);
-    Services.prefs.addObserver("browser.search.hiddenOneOffs", this, true);
     Services.obs.addObserver(this, "browser-search-engine-modified", true);
     Services.obs.addObserver(this, "browser-search-service", true);
 
@@ -350,16 +349,13 @@ export class SearchOneOffs {
       currentEngineNameToIgnore = this._engineInfo.default.name;
     }
 
-    let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
-    let hiddenList = pref ? pref.split(",") : [];
-
     this._engineInfo.engines = (
       await Services.search.getVisibleEngines()
     ).filter(e => {
       let name = e.name;
       return (
         (!currentEngineNameToIgnore || name != currentEngineNameToIgnore) &&
-        !hiddenList.includes(name)
+        !e.hideOneOffButton
       );
     });
 
@@ -367,8 +363,16 @@ export class SearchOneOffs {
   }
 
   observe(aEngine, aTopic, aData) {
-    // Make sure the engine list was updated.
-    this.invalidateCache();
+    // For the "browser-search-service" topic, we only need to invalidate
+    // the cache on initialization complete or when the engines are reloaded.
+    if (
+      aTopic != "browser-search-service" ||
+      aData == "init-complete" ||
+      aData == "engines-reloaded"
+    ) {
+      // Make sure the engine list was updated.
+      this.invalidateCache();
+    }
   }
 
   _getAddEngines() {

@@ -168,6 +168,20 @@ export class SearchSettings {
       this.#migrateTelemetryLoadPaths();
     }
 
+    // Migration for hiddenOneOffs
+    if (this.#settings.version < 9 && this.#settings.engines) {
+      const hiddenOneOffsPrefs = Services.prefs.getStringPref(
+        "browser.search.hiddenOneOffs",
+        ""
+      );
+      for (const engine of this.#settings.engines) {
+        engine._metaData.hideOneOffButton = hiddenOneOffsPrefs.includes(
+          engine._name
+        );
+      }
+      Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+    }
+
     return structuredClone(json);
   }
 

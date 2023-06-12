@@ -12,6 +12,7 @@ var { Preferences } = ChromeUtils.importESModule(
 );
 
 let searchIcon;
+let engine;
 
 add_setup(async function () {
   let searchbar = await gCUITestUtils.addSearchBar();
@@ -21,7 +22,7 @@ add_setup(async function () {
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
   let defaultEngine = await Services.search.getDefault();
-  await SearchTestUtils.promiseNewSearchEngine({
+  engine = await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine_diacritics.xml",
   });
   registerCleanupFunction(async () => {
@@ -29,12 +30,12 @@ add_setup(async function () {
       defaultEngine,
       Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
-    Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+    engine.hideOneOffButton = false;
   });
 });
 
 add_task(async function test_hidden() {
-  Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
+  engine.hideOneOffButton = true;
 
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");
@@ -53,7 +54,7 @@ add_task(async function test_hidden() {
 });
 
 add_task(async function test_shown() {
-  Preferences.set("browser.search.hiddenOneOffs", "");
+  engine.hideOneOffButton = false;
 
   let oneOffsContainer = searchPopup.searchOneOffsContainer;
   let shownPromise = promiseEvent(searchPopup, "popupshown");
