@@ -1,0 +1,31 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" role="document" id="shopping">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src resource: chrome:; object-src 'none'; img-src chrome:;"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="preview/shopping.ftl" />
+
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/shopping/shopping.css"
+    />
+
+    <script
+      type="module"
+      src="chrome://browser/content/shopping/shopping.mjs"
+    ></script>
+    <title data-l10n-id="shopping-page-title"></title>
+  </head>
+  <body>
+    <div id="content"></div>
+  </body>
+</html>

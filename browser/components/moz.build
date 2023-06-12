@@ -66,6 +66,9 @@ DIRS += [
 
 DIRS += ["build"]
 
+if CONFIG["NIGHTLY_BUILD"]:
+    DIRS += ["shopping"]
+
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     DIRS += ["touchbar"]

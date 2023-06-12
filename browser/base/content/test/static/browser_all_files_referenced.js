@@ -71,6 +71,9 @@ var gExceptionPaths = [
 
   // Localization file added programatically in featureCallout.jsm
   "resource://app/localization/en-US/browser/featureCallout.ftl",
+
+  // Temporary allowlist for shopping - we'll reference this soon.
+  "chrome://browser/content/shopping/shopping.html",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
