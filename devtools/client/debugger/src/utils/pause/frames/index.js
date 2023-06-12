@@ -5,5 +5,4 @@
 export * from "./annotateFrames";
 export * from "./collapseFrames";
 export * from "./displayName";
-export * from "./getFrameUrl";
 export * from "./getLibraryFromUrl";

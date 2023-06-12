@@ -22,7 +22,7 @@ const Frames = createFactory(
     .Frames
 );
 const {
-  annotateFrames,
+  annotateFramesWithLibrary,
 } = require("resource://devtools/client/debugger/src/utils/pause/frames/annotateFrames.js");
 const {
   getDisplayURL,
@@ -232,59 +232,59 @@ class SmartTrace extends Component {
     const { onViewSourceInDebugger, onViewSource, stacktrace } = this.props;
     const { originalLocations } = this.state;
 
-    const frames = annotateFrames(
-      stacktrace.map(
-        (
-          {
-            filename,
-            sourceId,
-            lineNumber,
-            columnNumber,
-            functionName,
-            asyncCause,
+    const frames = stacktrace.map(
+      (
+        {
+          filename,
+          sourceId,
+          lineNumber,
+          columnNumber,
+          functionName,
+          asyncCause,
+        },
+        i
+      ) => {
+        // Create partial debugger frontend "location" objects compliant with <Frames> react component requirements
+        const sourceUrl = filename.split(" -> ").pop();
+        const generatedLocation = {
+          line: lineNumber,
+          column: columnNumber,
+          source: {
+            // 'id' isn't used by Frames, but by selectFrame callback below
+            id: sourceId,
+            url: sourceUrl,
+            // 'displayURL' might be used by FrameComponent via getFilename
+            displayURL: getDisplayURL(sourceUrl),
           },
-          i
-        ) => {
-          // Create partial debugger frontend "location" objects compliant with <Frames> react component requirements
-          const sourceUrl = filename.split(" -> ").pop();
-          const generatedLocation = {
-            line: lineNumber,
-            column: columnNumber,
+        };
+        let location = generatedLocation;
+        const originalLocation = originalLocations?.[i];
+        if (originalLocation) {
+          location = {
+            line: originalLocation.line,
+            column: originalLocation.column,
             source: {
-              // 'id' isn't used by Frames, but by selectFrame callback below
-              id: sourceId,
-              url: sourceUrl,
+              url: originalLocation.url,
               // 'displayURL' might be used by FrameComponent via getFilename
-              displayURL: getDisplayURL(sourceUrl),
+              displayURL: getDisplayURL(originalLocation.url),
             },
           };
-          let location = generatedLocation;
-          const originalLocation = originalLocations?.[i];
-          if (originalLocation) {
-            location = {
-              line: originalLocation.line,
-              column: originalLocation.column,
-              source: {
-                url: originalLocation.url,
-                // 'displayURL' might be used by FrameComponent via getFilename
-                displayURL: getDisplayURL(originalLocation.url),
-              },
-            };
-          }
-
-          return {
-            id: "fake-frame-id-" + i,
-            displayName: functionName,
-            asyncCause,
-            location,
-            // Note that for now, Frames component only uses 'location' attribute
-            // and never the 'generatedLocation'.
-            // But the code below does, the selectFrame callback.
-            generatedLocation,
-          };
         }
-      )
+
+        // Create partial debugger frontend "frame" objects compliant with <Frames> react component requirements
+        return {
+          id: "fake-frame-id-" + i,
+          displayName: functionName,
+          asyncCause,
+          location,
+          // Note that for now, Frames component only uses 'location' attribute
+          // and never the 'generatedLocation'.
+          // But the code below does, the selectFrame callback.
+          generatedLocation,
+        };
+      }
     );
+    annotateFramesWithLibrary(frames);
 
     return Frames({
       frames,

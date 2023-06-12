@@ -7,10 +7,10 @@ import { collapseFrames } from "../collapseFrames";
 describe("collapseFrames", () => {
   it("default", () => {
     const groups = collapseFrames([
-      { displayName: "a" },
+      { displayName: "a", location: { source: {} } },
 
-      { displayName: "b", library: "React" },
-      { displayName: "c", library: "React" },
+      { displayName: "b", library: "React", location: { source: {} } },
+      { displayName: "c", library: "React", location: { source: {} } },
     ]);
 
     expect(groups).toMatchSnapshot();
@@ -18,18 +18,24 @@ describe("collapseFrames", () => {
 
   it("promises", () => {
     const groups = collapseFrames([
-      { displayName: "a" },
+      { displayName: "a", location: { source: {} } },
 
-      { displayName: "b", library: "React" },
-      { displayName: "c", library: "React" },
+      { displayName: "b", library: "React", location: { source: {} } },
+      { displayName: "c", library: "React", location: { source: {} } },
       {
         displayName: "d",
         library: undefined,
         asyncCause: "promise callback",
+        location: { source: {} },
       },
-      { displayName: "e", library: "React" },
-      { displayName: "f", library: "React" },
-      { displayName: "g", library: undefined, asyncCause: null },
+      { displayName: "e", library: "React", location: { source: {} } },
+      { displayName: "f", library: "React", location: { source: {} } },
+      {
+        displayName: "g",
+        library: undefined,
+        asyncCause: null,
+        location: { source: {} },
+      },
     ]);
 
     expect(groups).toMatchSnapshot();
