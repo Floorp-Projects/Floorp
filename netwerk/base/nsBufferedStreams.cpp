@@ -460,7 +460,13 @@ nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
       mCursor += read;
     } else {
       rv = Fill();
-      if (NS_FAILED(rv) || mFillPoint == mCursor) {
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        break;
+      }
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (mFillPoint == mCursor) {
         break;
       }
     }
