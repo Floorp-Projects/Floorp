@@ -5,7 +5,6 @@
 import { getShouldSelectOriginalLocation } from "./sources";
 import { getBlackBoxRanges } from "./source-blackbox";
 import { getCurrentThreadFrames } from "./pause";
-import { annotateFrames } from "../utils/pause/frames";
 import { isFrameBlackBoxed } from "../utils/source";
 import { createSelector } from "reselect";
 
@@ -42,11 +41,9 @@ export function formatCallStackFrames(
     return null;
   }
 
-  const hackedFrames = frames
+  return frames
     .map(frame => hackFrameLocation(frame, shouldSelectOriginalLocation))
     .filter(frame => !isFrameBlackBoxed(frame, blackboxedRanges));
-
-  return annotateFrames(hackedFrames);
 }
 
 export const getCallStackFrames = createSelector(

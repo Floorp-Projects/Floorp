@@ -186,6 +186,7 @@ describe("pause", () => {
           generatedLocation,
           location: generatedLocation,
           originalDisplayName: "foo",
+          library: null,
           scope: {
             bindings: {
               arguments: [{ a: { value: {} } }],
@@ -294,6 +295,7 @@ describe("pause", () => {
           id: "1",
           index: undefined,
           isOriginal: true,
+          library: null,
           location: originalLocation,
           originalDisplayName: "fooBar",
           originalVariables: undefined,
@@ -310,6 +312,7 @@ describe("pause", () => {
           id: "1-originalFrame1",
           index: undefined,
           isOriginal: true,
+          library: null,
           location: originalLocation2,
           originalDisplayName: "barZoo",
           originalVariables: undefined,

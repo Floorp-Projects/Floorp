@@ -17,6 +17,7 @@ import {
   sourceMapToDebuggerLocation,
 } from "../../utils/location";
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
+import { annotateFramesWithLibrary } from "../../utils/pause/frames/annotateFrames";
 
 function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
@@ -54,7 +55,7 @@ function updateFrameLocations(frames, thunkArgs) {
   );
 }
 
-function isWasmOriginalSourceFrame(frame, getState) {
+function isWasmOriginalSourceFrame(frame) {
   if (isGeneratedId(frame.location.source.id)) {
     return false;
   }
@@ -66,7 +67,7 @@ async function expandFrames(frames, { getState, sourceMapLoader }) {
   const result = [];
   for (let i = 0; i < frames.length; ++i) {
     const frame = frames[i];
-    if (frame.isOriginal || !isWasmOriginalSourceFrame(frame, getState)) {
+    if (frame.isOriginal || !isWasmOriginalSourceFrame(frame)) {
       result.push(frame);
       continue;
     }
@@ -139,6 +140,9 @@ export function mapFrames(cx) {
     let mappedFrames = await updateFrameLocations(frames, thunkArgs);
 
     mappedFrames = await expandFrames(mappedFrames, thunkArgs);
+
+    // Add the "library" attribute on all frame objects (if relevant)
+    annotateFramesWithLibrary(mappedFrames);
 
     const selectedFrameId = getSelectedFrameId(
       getState(),

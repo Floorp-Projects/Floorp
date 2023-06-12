@@ -2,30 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getFrameUrl } from "./getFrameUrl";
 import { getLibraryFromUrl } from "./getLibraryFromUrl";
 
-export function annotateFrames(frames) {
-  const annotatedFrames = frames.map(f => annotateFrame(f, frames));
-  return annotateBabelAsyncFrames(annotatedFrames);
-}
-
-function annotateFrame(frame, frames) {
-  const library = getLibraryFromUrl(frame, frames);
-  if (library) {
-    return { ...frame, library };
+/**
+ * Augment all frame objects with a 'library' attribute.
+ */
+export function annotateFramesWithLibrary(frames) {
+  for (const frame of frames) {
+    frame.library = getLibraryFromUrl(frame, frames);
   }
 
-  return frame;
-}
-
-function annotateBabelAsyncFrames(frames) {
-  const babelFrameIndexes = getBabelFrameIndexes(frames);
-  const isBabelFrame = frameIndex => babelFrameIndexes.includes(frameIndex);
-
-  return frames.map((frame, frameIndex) =>
-    isBabelFrame(frameIndex) ? { ...frame, library: "Babel" } : frame
-  );
+  // Babel need some special treatment to recognize some particular async stack pattern
+  for (const idx of getBabelFrameIndexes(frames)) {
+    const frame = frames[idx];
+    frame.library = "Babel";
+  }
 }
 
 /**
@@ -38,22 +29,26 @@ function getBabelFrameIndexes(frames) {
   const startIndexes = [];
   const endIndexes = [];
 
-  frames.forEach((frame, index) => {
-    const frameUrl = getFrameUrl(frame);
+  for (let index = 0, length = frames.length; index < length; index++) {
+    const frame = frames[index];
+    const frameUrl = frame.location.source.url;
 
     if (
-      frameUrl.match(/regenerator-runtime/i) &&
-      frame.displayName === "tryCatch"
+      frame.displayName === "tryCatch" &&
+      frameUrl.match(/regenerator-runtime/i)
     ) {
       startIndexes.push(index);
     }
-    if (frame.displayName === "flush" && frameUrl.match(/_microtask/i)) {
-      endIndexes.push(index);
+
+    if (startIndexes.length > endIndexes.length) {
+      if (frame.displayName === "flush" && frameUrl.match(/_microtask/i)) {
+        endIndexes.push(index);
+      }
+      if (frame.displayName === "_asyncToGenerator/<") {
+        endIndexes.push(index + 1);
+      }
     }
-    if (frame.displayName === "_asyncToGenerator/<") {
-      endIndexes.push(index + 1);
-    }
-  });
+  }
 
   if (startIndexes.length != endIndexes.length || startIndexes.length === 0) {
     return [];

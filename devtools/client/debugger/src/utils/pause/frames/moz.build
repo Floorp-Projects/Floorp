@@ -9,7 +9,6 @@ CompiledModules(
     "annotateFrames.js",
     "collapseFrames.js",
     "displayName.js",
-    "getFrameUrl.js",
     "getLibraryFromUrl.js",
     "index.js",
 )

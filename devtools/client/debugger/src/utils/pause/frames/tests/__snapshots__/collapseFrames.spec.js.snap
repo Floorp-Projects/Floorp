@@ -4,15 +4,24 @@ exports[`collapseFrames default 1`] = `
 Array [
   Object {
     "displayName": "a",
+    "location": Object {
+      "source": Object {},
+    },
   },
   Array [
     Object {
       "displayName": "b",
       "library": "React",
+      "location": Object {
+        "source": Object {},
+      },
     },
     Object {
       "displayName": "c",
       "library": "React",
+      "location": Object {
+        "source": Object {},
+      },
     },
   ],
 ]
@@ -22,36 +31,57 @@ exports[`collapseFrames promises 1`] = `
 Array [
   Object {
     "displayName": "a",
+    "location": Object {
+      "source": Object {},
+    },
   },
   Array [
     Object {
       "displayName": "b",
       "library": "React",
+      "location": Object {
+        "source": Object {},
+      },
     },
     Object {
       "displayName": "c",
       "library": "React",
+      "location": Object {
+        "source": Object {},
+      },
     },
   ],
   Object {
     "asyncCause": "promise callback",
     "displayName": "d",
     "library": undefined,
+    "location": Object {
+      "source": Object {},
+    },
   },
   Array [
     Object {
       "displayName": "e",
       "library": "React",
+      "location": Object {
+        "source": Object {},
+      },
     },
     Object {
       "displayName": "f",
       "library": "React",
+      "location": Object {
+        "source": Object {},
+      },
     },
   ],
   Object {
     "asyncCause": null,
     "displayName": "g",
     "library": undefined,
+    "location": Object {
+      "source": Object {},
+    },
   },
 ]
 `;

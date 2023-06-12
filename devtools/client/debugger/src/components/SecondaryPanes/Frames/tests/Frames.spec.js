@@ -224,10 +224,10 @@ describe("Frames", () => {
   describe("Library Frames", () => {
     it("toggling framework frames", () => {
       const frames = [
-        { id: 1 },
-        { id: 2, library: "back" },
-        { id: 3, library: "back" },
-        { id: 8 },
+        { id: 1, location: { source: {} } },
+        { id: 2, library: "back", location: { source: {} } },
+        { id: 3, library: "back", location: { source: {} } },
+        { id: 8, location: { source: {} } },
       ];
 
       const selectedFrame = frames[0];
@@ -245,7 +245,7 @@ describe("Frames", () => {
 
     it("groups all the Webpack-related frames", () => {
       const frames = [
-        { id: "1-appFrame" },
+        { id: "1-appFrame", location: { source: {} } },
         {
           id: "2-webpackBootstrapFrame",
           location: {
@@ -280,10 +280,10 @@ describe("Frames", () => {
 
     it("selectable framework frames", () => {
       const frames = [
-        { id: 1 },
-        { id: 2, library: "back" },
-        { id: 3, library: "back" },
-        { id: 8 },
+        { id: 1, location: { source: {} } },
+        { id: 2, library: "back", location: { source: {} } },
+        { id: 3, library: "back", location: { source: {} } },
+        { id: 8, location: { source: {} } },
       ];
 
       const selectedFrame = frames[0];
