@@ -157,9 +157,7 @@ NS_IMETHODIMP InsertTextTransaction::Merge(nsITransaction* aOtherTransaction,
     return NS_OK;
   }
 
-  nsAutoString otherData;
-  otherInsertTextTransaction->GetData(otherData);
-  mStringToInsert += otherData;
+  mStringToInsert += otherInsertTextTransaction->GetData();
   *aDidMerge = true;
   MOZ_LOG(GetLogModule(), LogLevel::Debug,
           ("%p InsertTextTransaction::%s(aOtherTransaction=%p) returned true",
@@ -169,12 +167,8 @@ NS_IMETHODIMP InsertTextTransaction::Merge(nsITransaction* aOtherTransaction,
 
 /* ============ private methods ================== */
 
-void InsertTextTransaction::GetData(nsString& aResult) {
-  aResult = mStringToInsert;
-}
-
 bool InsertTextTransaction::IsSequentialInsert(
-    InsertTextTransaction& aOtherTransaction) {
+    InsertTextTransaction& aOtherTransaction) const {
   return aOtherTransaction.mTextNode == mTextNode &&
          aOtherTransaction.mOffset == mOffset + mStringToInsert.Length();
 }

@@ -7066,9 +7066,9 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
         QM_TRY_INSPECT(const int64_t& newUsage,
                        GetUsage(*connection, mArchivedOriginScope.get()));
 
-        if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
-          return NS_ERROR_FILE_NO_DEVICE_SPACE;
-        }
+        QM_TRY(
+            OkIf(quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)),
+            NS_ERROR_FILE_NO_DEVICE_SPACE);
 
         auto autoUpdateSize = MakeScopeExit([&quotaObject] {
           MOZ_ALWAYS_TRUE(
