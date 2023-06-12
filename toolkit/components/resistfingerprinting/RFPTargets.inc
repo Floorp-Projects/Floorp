@@ -38,6 +38,7 @@ ITEM_VALUE(StreamVideoFacingMode,       1u << 20)
 ITEM_VALUE(JSDateTimeUTC,               1u << 21)
 ITEM_VALUE(JSMathFdlibm,                1u << 22)
 ITEM_VALUE(Gamepad,                     1u << 23)
+ITEM_VALUE(HttpUserAgent,               1u << 24)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.

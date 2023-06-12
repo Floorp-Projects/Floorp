@@ -451,8 +451,8 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
 already_AddRefed<nsICookieJarSettings> CookieCommons::GetCookieJarSettings(
     nsIChannel* aChannel) {
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  bool shouldResistFingerprinting =
-      nsContentUtils::ShouldResistFingerprinting(aChannel);
+  bool shouldResistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
+      aChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     nsresult rv =

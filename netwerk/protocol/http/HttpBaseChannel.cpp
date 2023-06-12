@@ -396,7 +396,8 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
 
   rv = gHttpHandler->AddStandardRequestHeaders(
       &mRequestHead, isHTTPS, aContentPolicyType,
-      nsContentUtils::ShouldResistFingerprinting(this));
+      nsContentUtils::ShouldResistFingerprinting(this,
+                                                 RFPTarget::HttpUserAgent));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString type;
