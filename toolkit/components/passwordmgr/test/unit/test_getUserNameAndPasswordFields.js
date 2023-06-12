@@ -104,6 +104,16 @@ const TESTCASES = [
     document: `<input id="un1" autocomplete=username>`,
     returnedFieldIDs: [null, null, null],
   },
+  {
+    description: "username with type=user",
+    document: `<form><input id="un1" type="user"><input id="pwd" type="password"></form>`,
+    returnedFieldIDs: ["un1", "pwd", null],
+  },
+  {
+    description: "username with type=username",
+    document: `<form><input id="un1" type="username"><input id="pwd" type="password"></form>`,
+    returnedFieldIDs: ["un1", "pwd", null],
+  },
 ];
 
 function _setPrefs() {
