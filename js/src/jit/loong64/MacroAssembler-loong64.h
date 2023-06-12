@@ -144,7 +144,8 @@ class MacroAssemblerLOONG64 : public Assembler {
   void ma_pop(Register r);
   void ma_push(Register r);
 
-  void branchWithCode(InstImm code, Label* label, JumpKind jumpKind);
+  void branchWithCode(InstImm code, Label* label, JumpKind jumpKind,
+                      Register scratch = Register::Invalid());
   // branches when done from within la-specific code
   void ma_b(Register lhs, ImmWord imm, Label* l, Condition c,
             JumpKind jumpKind = LongJump);
@@ -281,7 +282,8 @@ class MacroAssemblerLOONG64 : public Assembler {
 
   // branches when done from within la-specific code
   void ma_b(Register lhs, Register rhs, Label* l, Condition c,
-            JumpKind jumpKind = LongJump);
+            JumpKind jumpKind = LongJump,
+            Register scratch = Register::Invalid());
   void ma_b(Register lhs, Imm32 imm, Label* l, Condition c,
             JumpKind jumpKind = LongJump);
   void ma_b(Register lhs, ImmPtr imm, Label* l, Condition c,
