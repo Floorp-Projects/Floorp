@@ -2,52 +2,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getSelectedSource } from "./sources";
+import { getShouldSelectOriginalLocation } from "./sources";
 import { getBlackBoxRanges } from "./source-blackbox";
 import { getCurrentThreadFrames } from "./pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isFrameBlackBoxed } from "../utils/source";
 import { createSelector } from "reselect";
 
-function getLocation(frame, isGeneratedSource) {
-  return isGeneratedSource
-    ? frame.generatedLocation || frame.location
-    : frame.location;
-}
-
-function getSourceForFrame(frame, isGeneratedSource) {
-  return getLocation(frame, isGeneratedSource).source;
-}
-
-function appendSource(frame, selectedSource) {
-  const isGeneratedSource = selectedSource && !selectedSource.isOriginal;
-  return {
-    ...frame,
-    location: getLocation(frame, isGeneratedSource),
-    source: getSourceForFrame(frame, isGeneratedSource),
-  };
+/**
+ * Only when:
+ *  - the debugger is not showing original locations by default (shouldSelectOriginalLocation = false),
+ *  - the frame is mapped (generatedLocation defined and different from location)
+ *
+ * hack frame's 'location' attribute to refer to its generated location.
+ * This helps frontend code to always read frame.location without having to fallback to
+ * frame.generatedLocation based on shouldSelectOriginalLocation value...
+ * To the cost of cloning many frame objects!
+ */
+function hackFrameLocation(frame, shouldSelectOriginalLocation) {
+  if (
+    !shouldSelectOriginalLocation &&
+    frame.generatedLocation &&
+    frame.generatedLocation != frame.location
+  ) {
+    return {
+      ...frame,
+      location: frame.generatedLocation,
+    };
+  }
+  return frame;
 }
 
 export function formatCallStackFrames(
   frames,
-  selectedSource,
+  shouldSelectOriginalLocation,
   blackboxedRanges
 ) {
   if (!frames) {
     return null;
   }
 
-  const formattedFrames = frames
-    .filter(frame => getSourceForFrame(frame))
-    .map(frame => appendSource(frame, selectedSource))
+  const hackedFrames = frames
+    .map(frame => hackFrameLocation(frame, shouldSelectOriginalLocation))
     .filter(frame => !isFrameBlackBoxed(frame, blackboxedRanges));
 
-  return annotateFrames(formattedFrames);
+  return annotateFrames(hackedFrames);
 }
 
 export const getCallStackFrames = createSelector(
   getCurrentThreadFrames,
-  getSelectedSource,
+  getShouldSelectOriginalLocation,
   getBlackBoxRanges,
   formatCallStackFrames
 );

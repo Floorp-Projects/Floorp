@@ -584,26 +584,34 @@ exports[`Frames Library Frames groups all the Webpack-related frames 1`] = `
         Array [
           Object {
             "id": "2-webpackBootstrapFrame",
-            "source": Object {
-              "url": "webpack:///webpack/bootstrap 01d88449ca6e9335a66f",
+            "location": Object {
+              "source": Object {
+                "url": "webpack:///webpack/bootstrap 01d88449ca6e9335a66f",
+              },
             },
           },
           Object {
             "id": "3-webpackBundleFrame",
-            "source": Object {
-              "url": "https://foo.com/bundle.js",
+            "location": Object {
+              "source": Object {
+                "url": "https://foo.com/bundle.js",
+              },
             },
           },
           Object {
             "id": "4-webpackBootstrapFrame",
-            "source": Object {
-              "url": "webpack:///webpack/bootstrap 01d88449ca6e9335a66f",
+            "location": Object {
+              "source": Object {
+                "url": "webpack:///webpack/bootstrap 01d88449ca6e9335a66f",
+              },
             },
           },
           Object {
             "id": "5-webpackBundleFrame",
-            "source": Object {
-              "url": "https://foo.com/bundle.js",
+            "location": Object {
+              "source": Object {
+                "url": "https://foo.com/bundle.js",
+              },
             },
           },
         ]
@@ -1383,9 +1391,9 @@ exports[`Frames Supports different number of frames passes the getFrameTitle pro
           "id": 1,
           "location": Object {
             "line": 55,
-          },
-          "source": Object {
-            "url": "http://myfile.com/mahscripts.js",
+            "source": Object {
+              "url": "http://myfile.com/mahscripts.js",
+            },
           },
         }
       }

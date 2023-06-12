@@ -3,5 +3,5 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export function getFrameUrl(frame) {
-  return frame?.source?.url ?? "";
+  return frame.location.source.url ?? "";
 }

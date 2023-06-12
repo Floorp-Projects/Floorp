@@ -87,10 +87,7 @@ export function formatDisplayName(
 
 export function formatCopyName(frame, l10n) {
   const displayName = formatDisplayName(frame, undefined, l10n);
-  if (!frame.source) {
-    throw new Error("no frame source");
-  }
-  const fileName = frame.source.url || frame.source.id;
+  const fileName = frame.location.source.url || frame.location.source.id;
   const frameLocation = frame.location.line;
 
   return `${displayName} (${fileName}#${frameLocation})`;

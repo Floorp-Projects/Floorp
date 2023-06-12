@@ -76,11 +76,11 @@ export function shouldBlackbox(source) {
  *                  or not.
  */
 export function isFrameBlackBoxed(frame, blackboxedRanges) {
+  const { source } = frame.location;
   return (
-    frame.source &&
-    !!blackboxedRanges[frame.source.url] &&
-    (!blackboxedRanges[frame.source.url].length ||
-      !!findBlackBoxRange(frame.source, blackboxedRanges, {
+    !!blackboxedRanges[source.url] &&
+    (!blackboxedRanges[source.url].length ||
+      !!findBlackBoxRange(source, blackboxedRanges, {
         start: frame.location.line,
         end: frame.location.line,
       }))

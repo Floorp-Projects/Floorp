@@ -245,20 +245,30 @@ class SmartTrace extends Component {
           },
           i
         ) => {
+          // Create partial debugger frontend "location" objects compliant with <Frames> react component requirements
+          const sourceUrl = filename.split(" -> ").pop();
           const generatedLocation = {
-            sourceUrl: filename.split(" -> ").pop(),
-            sourceId,
             line: lineNumber,
             column: columnNumber,
+            source: {
+              // 'id' isn't used by Frames, but by selectFrame callback below
+              id: sourceId,
+              url: sourceUrl,
+              // 'displayURL' might be used by FrameComponent via getFilename
+              displayURL: getDisplayURL(sourceUrl),
+            },
           };
           let location = generatedLocation;
-
           const originalLocation = originalLocations?.[i];
           if (originalLocation) {
             location = {
-              sourceUrl: originalLocation.url,
               line: originalLocation.line,
               column: originalLocation.column,
+              source: {
+                url: originalLocation.url,
+                // 'displayURL' might be used by FrameComponent via getFilename
+                displayURL: getDisplayURL(originalLocation.url),
+              },
             };
           }
 
@@ -266,12 +276,11 @@ class SmartTrace extends Component {
             id: "fake-frame-id-" + i,
             displayName: functionName,
             asyncCause,
-            generatedLocation,
             location,
-            source: {
-              url: location.sourceUrl,
-              displayURL: getDisplayURL(location.sourceUrl),
-            },
+            // Note that for now, Frames component only uses 'location' attribute
+            // and never the 'generatedLocation'.
+            // But the code below does, the selectFrame callback.
+            generatedLocation,
           };
         }
       )
@@ -283,8 +292,8 @@ class SmartTrace extends Component {
         const viewSource = onViewSourceInDebugger || onViewSource;
 
         viewSource({
-          id: generatedLocation.sourceId,
-          url: generatedLocation.sourceUrl,
+          id: generatedLocation.source.id,
+          url: generatedLocation.source.url,
           line: generatedLocation.line,
           column: generatedLocation.column,
         });

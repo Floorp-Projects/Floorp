@@ -24,10 +24,6 @@ FrameTitle.propTypes = {
 };
 
 const FrameLocation = memo(({ frame, displayFullUrl = false }) => {
-  if (!frame.source) {
-    return null;
-  }
-
   if (frame.library) {
     return (
       <span className="location">
@@ -39,13 +35,13 @@ const FrameLocation = memo(({ frame, displayFullUrl = false }) => {
     );
   }
 
-  const { location, source } = frame;
+  const { location } = frame;
   const filename = displayFullUrl
-    ? getFileURL(source, false)
-    : getFilename(source);
+    ? getFileURL(location.source, false)
+    : getFilename(location.source);
 
   return (
-    <span className="location" title={source.url}>
+    <span className="location" title={location.source.url}>
       <span className="filename">{filename}</span>:
       <span className="line">{location.line}</span>
     </span>
@@ -145,13 +141,9 @@ export default class FrameComponent extends Component {
       selected: selectedFrame && selectedFrame.id === frame.id,
     });
 
-    if (!frame.source) {
-      throw new Error("no frame source");
-    }
-
     const title = getFrameTitle
       ? getFrameTitle(
-          `${getFileURL(frame.source, false)}:${frame.location.line}`
+          `${getFileURL(frame.location.source, false)}:${frame.location.line}`
         )
       : undefined;
 
