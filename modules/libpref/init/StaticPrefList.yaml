@@ -12333,11 +12333,6 @@
   value: true
   mirror: always
 
-- name: network.http.http2.persistent-settings
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: network.http.http2.ping-threshold
   type: RelaxedAtomicInt32
   value: 58
