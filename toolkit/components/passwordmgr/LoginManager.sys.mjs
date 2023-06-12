@@ -6,6 +6,7 @@ const PERMISSION_SAVE_LOGINS = "login-saving";
 const MAX_DATE_MS = 8640000000000000;
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { LoginManagerStorage } from "resource://passwordmgr/passwordstorage.sys.mjs";
 
 const lazy = {};
 
@@ -76,18 +77,18 @@ LoginManager.prototype = {
   },
 
   _initStorage() {
-    this._storage = Cc[
-      "@mozilla.org/login-manager/storage/default;1"
-    ].createInstance(Ci.nsILoginManagerStorage);
-    this.initializationPromise = this._storage.initialize();
-    this.initializationPromise.then(() => {
-      lazy.log.debug(
-        "initializationPromise is resolved, updating isPrimaryPasswordSet in sharedData"
-      );
-      Services.ppmm.sharedData.set(
-        "isPrimaryPasswordSet",
-        lazy.LoginHelper.isPrimaryPasswordSet()
-      );
+    this.initializationPromise = new Promise(resolve => {
+      this._storage = LoginManagerStorage.create(() => {
+        resolve();
+
+        lazy.log.debug(
+          "initializationPromise is resolved, updating isPrimaryPasswordSet in sharedData"
+        );
+        Services.ppmm.sharedData.set(
+          "isPrimaryPasswordSet",
+          lazy.LoginHelper.isPrimaryPasswordSet()
+        );
+      });
     });
   },
 
@@ -606,7 +607,7 @@ LoginManager.prototype = {
     return loginsCount;
   },
 
-  /* Sync metadata functions - see nsILoginManagerStorage for details */
+  /* Sync metadata functions */
   async getSyncID() {
     return this._storage.getSyncID();
   },

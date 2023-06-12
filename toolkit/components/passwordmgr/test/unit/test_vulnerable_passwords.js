@@ -8,7 +8,7 @@ add_setup(async () => {
 });
 
 add_task(async function test_vulnerable_password_methods() {
-  const storageJSON = Services.logins.wrappedJSObject._storage.wrappedJSObject;
+  const storageJSON = Services.logins.wrappedJSObject._storage;
 
   const logins = TestData.loginList();
   Assert.greater(logins.length, 0, "Initial logins length should be > 0.");

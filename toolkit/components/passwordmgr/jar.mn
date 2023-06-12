@@ -4,3 +4,9 @@
 
 toolkit.jar:
 %   content passwordmgr %content/passwordmgr/
+% resource passwordmgr %passwordmgr/
+#ifdef ANDROID
+  passwordmgr/passwordstorage.sys.mjs (./storage-geckoview.sys.mjs)
+#else
+  passwordmgr/passwordstorage.sys.mjs (./storage-desktop.sys.mjs)
+#endif

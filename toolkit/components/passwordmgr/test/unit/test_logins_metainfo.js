@@ -282,7 +282,7 @@ add_task(function test_searchLogins_metainfo() {
 });
 
 /**
- * Tests that the default nsILoginManagerStorage module attached to the Login
+ * Tests that the default storage module attached to the Login
  * Manager service is able to save and reload nsILoginMetaInfo properties.
  */
 add_task(async function test_storage_metainfo() {

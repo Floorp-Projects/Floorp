@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * nsILoginManagerStorage implementation for the JSON back-end.
+ * LoginManagerStorage implementation for the JSON back-end.
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -24,14 +24,6 @@ export class LoginManagerStorage_json {
   constructor() {
     this.__crypto = null; // nsILoginManagerCrypto service
     this.__decryptedPotentiallyVulnerablePasswords = null;
-  }
-
-  get classID() {
-    return Components.ID("{c00c432d-a0c9-46d7-bef6-9c45b4d07341}");
-  }
-
-  get QueryInterface() {
-    return ChromeUtils.generateQI(["nsILoginManagerStorage"]);
   }
 
   get _crypto() {
