@@ -23,7 +23,7 @@ import { inferClassName } from "./utils/inferClassName";
 import getFunctionName from "./utils/getFunctionName";
 import { getFramework } from "./frameworks";
 
-let symbolDeclarations = new Map();
+const symbolDeclarations = new Map();
 
 function extractFunctionSymbol(path, state, symbols) {
   const name = getFunctionName(path.node, path.parent);
@@ -298,8 +298,10 @@ function getSnippet(path, prevPath, expression = "") {
   return "";
 }
 
-export function clearSymbols() {
-  symbolDeclarations = new Map();
+export function clearSymbols(sourceIds) {
+  for (const sourceId of sourceIds) {
+    symbolDeclarations.delete(sourceId);
+  }
 }
 
 export function getSymbols(sourceId) {

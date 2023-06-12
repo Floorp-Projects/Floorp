@@ -30,7 +30,6 @@ export function willNavigate(event) {
     sourceMapLoader.clearSourceMaps();
     clearWasmStates();
     clearDocuments();
-    parserWorker.clear();
     const thread = getMainThread(getState());
 
     dispatch({

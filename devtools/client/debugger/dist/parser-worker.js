@@ -60313,11 +60313,13 @@
       return source;
     }
 
-    function clearSources() {
-      cachedSources.clear();
+    function clearSources(sourceIds) {
+      for (const sourceId of sourceIds) {
+        cachedSources.delete(sourceId);
+      }
     }
 
-    let ASTs = new Map();
+    const ASTs = new Map();
 
     function _parse(code, opts) {
       return parse_1(code, {
@@ -60489,8 +60491,10 @@
       return ast;
     }
 
-    function clearASTs() {
-      ASTs = new Map();
+    function clearASTs(sourceIds) {
+      for (const sourceId of sourceIds) {
+        ASTs.delete(sourceId);
+      }
     }
 
     function traverseAst(sourceId, visitor, state) {
@@ -71402,7 +71406,7 @@
       return identifiers.some(identifier => identifier.name == "Redux");
     }
 
-    let symbolDeclarations = new Map();
+    const symbolDeclarations = new Map();
 
     function extractFunctionSymbol(path, state, symbols) {
       const name = getFunctionName(path.node, path.parent);
@@ -71677,8 +71681,10 @@
       return "";
     }
 
-    function clearSymbols() {
-      symbolDeclarations = new Map();
+    function clearSymbols(sourceIds) {
+      for (const sourceId of sourceIds) {
+        symbolDeclarations.delete(sourceId);
+      }
     }
 
     function getSymbols(sourceId) {
@@ -72712,7 +72718,7 @@
       });
     }
 
-    let parsedScopesCache = new Map();
+    const parsedScopesCache = new Map();
 
     function getScopes(location) {
       const sourceId = location.source.id;
@@ -72724,8 +72730,10 @@
       return parsedScopes ? findScopes(parsedScopes, location) : [];
     }
 
-    function clearScopes() {
-      parsedScopesCache = new Map();
+    function clearScopes(sourceIds) {
+      for (const sourceId of sourceIds) {
+        parsedScopesCache.delete(sourceId);
+      }
     }
 
     /**
@@ -73532,18 +73540,18 @@
     	}
     } (workerUtils));
 
-    function clearState() {
-      clearASTs();
-      clearScopes();
-      clearSources();
-      clearSymbols();
+    function clearAllHelpersForSources(sourceIds) {
+      clearASTs(sourceIds);
+      clearScopes(sourceIds);
+      clearSources(sourceIds);
+      clearSymbols(sourceIds);
     }
 
     self.onmessage = workerUtilsExports.workerHandler({
       findOutOfScopeLocations,
       getSymbols,
       getScopes,
-      clearState,
+      clearSources: clearAllHelpersForSources,
       hasSyntaxError,
       mapExpression,
       setSource,

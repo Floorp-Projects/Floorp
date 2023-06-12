@@ -17,6 +17,8 @@ export function getSource(sourceId) {
   return source;
 }
 
-export function clearSources() {
-  cachedSources.clear();
+export function clearSources(sourceIds) {
+  for (const sourceId of sourceIds) {
+    cachedSources.delete(sourceId);
+  }
 }

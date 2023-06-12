@@ -51,8 +51,6 @@ afterAll(() => {
 afterEach(() => {});
 
 beforeEach(async () => {
-  parserWorker.clear();
-
   clearDocuments();
   prefs.projectDirectoryRoot = "";
   prefs.projectDirectoryRootName = "";
