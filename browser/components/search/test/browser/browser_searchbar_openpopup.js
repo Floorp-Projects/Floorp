@@ -198,8 +198,9 @@ add_task(async function open_empty_hiddenOneOffs() {
   let engines = (await Services.search.getVisibleEngines()).filter(
     e => e.name != defaultEngine.name
   );
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.hiddenOneOffs", engines.map(e => e.name).join(",")]],
+
+  engines.forEach(e => {
+    e.hideOneOffButton = true;
   });
 
   textbox.value = "foo";
@@ -227,7 +228,9 @@ add_task(async function open_empty_hiddenOneOffs() {
   });
   await promise;
 
-  await SpecialPowers.popPrefEnv();
+  engines.forEach(e => {
+    e.hideOneOffButton = false;
+  });
   textbox.value = "";
 });
 

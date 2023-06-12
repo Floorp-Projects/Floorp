@@ -580,17 +580,6 @@ var gSearchPane = {
     return true;
   },
 
-  saveOneClickEnginesList() {
-    let hiddenList = [];
-    for (let engine of gEngineView._engineStore.engines) {
-      if (!engine.shown) {
-        hiddenList.push(engine.name);
-      }
-    }
-    Preferences.get("browser.search.hiddenOneOffs").value =
-      hiddenList.join(",");
-  },
-
   async setDefaultEngine() {
     await Services.search.setDefault(
       document.getElementById("defaultEngine").selectedItem.engine,
@@ -677,7 +666,6 @@ EngineStore.prototype = {
       clonedObj[i] = aEngine[i];
     }
     clonedObj.originalEngine = aEngine;
-    clonedObj.shown = !this.hiddenList.includes(clonedObj.name);
     return clonedObj;
   },
 
@@ -1059,7 +1047,7 @@ EngineView.prototype = {
       if (shortcut) {
         return UrlbarPrefs.get(shortcut.pref);
       }
-      return this._engineStore.engines[index].shown;
+      return !this._engineStore.engines[index].originalEngine.hideOneOffButton;
     }
     return undefined;
   },
@@ -1081,9 +1069,9 @@ EngineView.prototype = {
         this.invalidate();
         return;
       }
-      this._engineStore.engines[index].shown = value == "true";
+      this._engineStore.engines[index].originalEngine.hideOneOffButton =
+        value != "true";
       gEngineView.invalidate();
-      gSearchPane.saveOneClickEnginesList();
     }
   },
   setCellText(index, column, value) {

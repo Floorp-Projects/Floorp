@@ -147,6 +147,11 @@ interface nsISearchEngine : nsISupports
   attribute boolean hidden;
 
   /**
+   * Whether the associated one off button should be hidden from the user.
+   */
+  attribute boolean hideOneOffButton;
+
+  /**
    * A nsIURI corresponding to the engine's icon, stored locally. May be null.
    */
   readonly attribute nsIURI iconURI;

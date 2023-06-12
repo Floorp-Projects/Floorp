@@ -82,13 +82,6 @@ class SearchUtils {
     }
     prefix = prefix.toLowerCase();
 
-    let disabledEngines = onlyEnabled
-      ? Services.prefs
-          .getStringPref("browser.search.hiddenOneOffs", "")
-          .split(",")
-          .filter(e => !!e)
-      : [];
-
     // Array of partially matched engines, added through matchPrefix().
     let partialMatchEngines = [];
     function matchPrefix(engine, engineHost) {
@@ -104,7 +97,7 @@ class SearchUtils {
     let perfectMatchEngines = [];
     let perfectMatchEngineSet = new Set();
     for (let engine of await Services.search.getVisibleEngines()) {
-      if (disabledEngines.includes(engine.name)) {
+      if (engine.hideOneOffButton) {
         continue;
       }
       let domain = engine.searchUrlDomain;

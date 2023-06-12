@@ -64,12 +64,12 @@ add_task(async function onlyEnabled_option_nomatch() {
   let engine = await Services.search.getDefault();
   let domain = engine.searchUrlDomain;
   let token = domain.substr(0, 1);
-  Services.prefs.setCharPref("browser.search.hiddenOneOffs", engine.name);
+  engine.hideOneOffButton = true;
   let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
     onlyEnabled: true,
   });
   Assert.notEqual(matchedEngines[0].searchUrlDomain, domain);
-  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+  engine.hideOneOffButton = false;
   matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
     onlyEnabled: true,
   });

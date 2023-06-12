@@ -1271,6 +1271,20 @@ export class SearchEngine {
     }
   }
 
+  get hideOneOffButton() {
+    return this.getAttr("hideOneOffButton") || false;
+  }
+  set hideOneOffButton(val) {
+    const value = !!val;
+    if (value != this.hideOneOffButton) {
+      this.setAttr("hideOneOffButton", value);
+      lazy.SearchUtils.notifyAction(
+        this,
+        lazy.SearchUtils.MODIFIED_TYPE.CHANGED
+      );
+    }
+  }
+
   get iconURI() {
     if (this._iconURI) {
       return this._iconURI;
