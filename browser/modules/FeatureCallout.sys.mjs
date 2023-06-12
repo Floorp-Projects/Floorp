@@ -54,6 +54,7 @@ export class FeatureCallout {
     this._positionListenersRegistered = false;
     this.AWSetup = false;
     this.page = page;
+    this.dismissTimer = null;
     this._initTheme(theme);
 
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -130,6 +131,10 @@ export class FeatureCallout {
   }
 
   async _handlePrefChange() {
+    // If user clicks on primary button to navigate to the next screen,
+    // or if the current feature callout was dismissed for any reason,
+    // we need to reset the timer.
+    this.clearDismissCalloutTimer();
     if (this.doc.visibilityState === "hidden" || !this.featureTourProgress) {
       return;
     }
@@ -235,7 +240,6 @@ export class FeatureCallout {
       case "toggle":
         this._positionCallout();
         break;
-
       default:
     }
   }
@@ -726,6 +730,7 @@ export class FeatureCallout {
     });
     this.win.removeEventListener("keypress", this, { capture: true });
     this._pageEventManager?.clear();
+    this.clearDismissCalloutTimer();
 
     // We're deleting featureTourProgress here to ensure that the
     // reference is freed for garbage collection. This prevents errors
@@ -844,6 +849,28 @@ export class FeatureCallout {
 
     this.currentScreen = newScreen;
     return true;
+  }
+
+  clearDismissCalloutTimer() {
+    this.win.clearTimeout(this.dismissTimer);
+  }
+
+  startDismissCalloutTimer() {
+    this.clearDismissCalloutTimer();
+
+    const timeInMS = this.currentScreen?.content.dismiss_timer;
+
+    this.dismissTimer = this.win.setTimeout(() => {
+      this.win.AWSendEventTelemetry?.({
+        event: "DISMISS",
+        event_context: {
+          source: `DISMISS_FEATURE_CALLOUT_AFTER_TIMER`,
+          page: this.page,
+        },
+        message_id: this.config?.id.toUpperCase(),
+      });
+      this._dismiss();
+    }, timeInMS);
   }
 
   async _renderCallout() {
@@ -979,6 +1006,22 @@ export class FeatureCallout {
             );
             this.win.addEventListener("keypress", this, { capture: true });
             this._positionCallout();
+
+            // The dismiss timer starts as soon as the feature callout renders. If
+            // user's mouse enters the feature callout, we stop the timer. We start
+            // it again if their mouse leaves the callout.
+            if (this.currentScreen?.content.dismiss_timer) {
+              this.clearDismissCalloutTimer();
+              this._container.addEventListener("mouseenter", () => {
+                this.clearDismissCalloutTimer();
+              });
+              this._container.addEventListener("mouseleave", () => {
+                this.startDismissCalloutTimer();
+              });
+
+              this.startDismissCalloutTimer();
+            }
+
             let button = this._container.querySelector(".primary");
             button.focus();
             this.win.addEventListener("focus", this, {
