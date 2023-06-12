@@ -179,7 +179,7 @@ add_task(async function test_ui_state_signedin() {
   checkPanelHeader();
   checkFxaToolbarButtonPanel({
     headerTitle: "Manage account",
-    headerDescription: "foo@bar.com",
+    headerDescription: state.displayName,
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
       "PanelUI-fxa-menu-connect-device-button",
@@ -197,7 +197,7 @@ add_task(async function test_ui_state_signedin() {
   await openMainPanel();
 
   checkPanelUIStatusBar({
-    description: "foo@bar.com",
+    description: "Foo Bar",
     titleHidden: true,
     hideFxAText: true,
   });
@@ -341,7 +341,7 @@ add_task(async function test_ui_state_unconfigured() {
   await closeTabAndMainPanel();
 });
 
-add_task(async function test_ui_state_syncdisabled() {
+add_task(async function test_ui_state_signed_in() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
   let state = {
@@ -349,6 +349,51 @@ add_task(async function test_ui_state_syncdisabled() {
     syncEnabled: false,
     email: "foo@bar.com",
     displayName: "Foo Bar",
+    avatarURL: "https://foo.bar",
+  };
+
+  gSync.updateAllUI(state);
+
+  await openFxaPanel();
+
+  checkMenuBarItem("sync-enable");
+  checkPanelHeader();
+  checkFxaToolbarButtonPanel({
+    headerTitle: "Manage account",
+    headerDescription: "Foo Bar",
+    enabledItems: [
+      "PanelUI-fxa-menu-sendtab-button",
+      "PanelUI-fxa-menu-connect-device-button",
+      "PanelUI-fxa-menu-setup-sync-button",
+      "PanelUI-fxa-menu-account-signout-button",
+    ],
+    disabledItems: [],
+    hiddenItems: [
+      "PanelUI-fxa-menu-syncnow-button",
+      "PanelUI-fxa-menu-sync-prefs-button",
+    ],
+  });
+  checkFxAAvatar("signedin");
+  await closeFxaPanel();
+
+  await openMainPanel();
+
+  checkPanelUIStatusBar({
+    description: "Foo Bar",
+    titleHidden: true,
+    hideFxAText: true,
+  });
+
+  await closeTabAndMainPanel();
+});
+
+add_task(async function test_ui_state_signed_in_no_display_name() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
+
+  let state = {
+    status: UIState.STATUS_SIGNED_IN,
+    syncEnabled: false,
+    email: "foo@bar.com",
     avatarURL: "https://foo.bar",
   };
 
@@ -440,6 +485,7 @@ add_task(async function test_ui_state_loginFailed() {
   let state = {
     status: UIState.STATUS_LOGIN_FAILED,
     email: "foo@bar.com",
+    displayName: "Foo Bar",
   };
 
   gSync.updateAllUI(state);
@@ -454,7 +500,7 @@ add_task(async function test_ui_state_loginFailed() {
   checkPanelHeader();
   checkFxaToolbarButtonPanel({
     headerTitle: expectedLabel,
-    headerDescription: state.email,
+    headerDescription: state.displayName,
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
       "PanelUI-fxa-menu-setup-sync-button",
@@ -471,7 +517,7 @@ add_task(async function test_ui_state_loginFailed() {
   await openMainPanel();
 
   checkPanelUIStatusBar({
-    description: state.email,
+    description: state.displayName,
     title: expectedLabel,
     titleHidden: false,
     hideFxAText: true,
