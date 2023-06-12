@@ -23,7 +23,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AuthenticodeFlags)
 class Authenticode {
  public:
   virtual UniquePtr<wchar_t[]> GetBinaryOrgName(
-      const wchar_t* aFilePath,
+      const wchar_t* aFilePath, bool* aHasNestedMicrosoftSignature = nullptr,
       AuthenticodeFlags aFlags = AuthenticodeFlags::Default) = 0;
 };
 
