@@ -48,7 +48,7 @@ add_task(async function () {
   await openDebugger();
   await pauseDebugger(dbg);
 
-  const stackFrames = dbg.selectors.getCallStackFrames();
+  const stackFrames = dbg.selectors.getCurrentThreadFrames();
 
   info("frames added, select the console again");
   await openConsole();

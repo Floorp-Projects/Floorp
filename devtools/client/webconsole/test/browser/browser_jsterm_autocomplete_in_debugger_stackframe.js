@@ -62,7 +62,7 @@ add_task(async function () {
 
   info("Waiting for pause");
   await pauseDebugger(dbg);
-  const stackFrames = dbg.selectors.getCallStackFrames();
+  const stackFrames = dbg.selectors.getCurrentThreadFrames();
 
   info("Opening Console again");
   await toolbox.selectTool("webconsole");
