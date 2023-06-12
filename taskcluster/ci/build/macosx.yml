@@ -250,7 +250,6 @@ macosx64-aarch64-fuzzing/debug:
 
 macosx64-x64-devedition/opt:
     description: "MacOS X Dev Edition x64 (shippable)"
-    worker-type: b-linux-gcp
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -288,7 +287,6 @@ macosx64-x64-devedition/opt:
 
 macosx64-aarch64-devedition/opt:
     description: "MacOS X Dev Edition Aarch64 (shippable)"
-    worker-type: b-linux-gcp
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -328,7 +326,6 @@ macosx64-aarch64-devedition/opt:
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition Universal"
-    worker-type: b-linux-gcp
     attributes:
         shippable: true
         enable-build-signing: true
@@ -555,7 +552,6 @@ macosx64-add-on-devel/opt:
 
 macosx64-nightlyasrelease/opt:
     description: "MacOS X Nightly-As-Release"
-    worker-type: b-linux-gcp
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -588,7 +584,6 @@ macosx64-nightlyasrelease/opt:
 
 macosx64-x64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
-    worker-type: b-linux-gcp
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -622,7 +617,6 @@ macosx64-x64-shippable/opt:
 
 macosx64-aarch64-shippable/opt:
     description: "MacOS X aarch64 Cross-compile"
-    worker-type: b-linux-gcp
     use-pgo: macosx64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
@@ -659,7 +653,6 @@ macosx64-aarch64-shippable/opt:
 
 macosx64-shippable/opt:
     description: "MacOS X Universal"
-    worker-type: b-linux-gcp
     attributes:
         shippable: true
         enable-build-signing: true
