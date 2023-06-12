@@ -285,16 +285,6 @@ function run_test() {
   ps.lockPref("DefaultPref.char");
 
   //* *************************************************************************//
-  // resetBranch test
-
-  // NOT IMPLEMENTED YET in module/libpref. So we're not testing !
-  // uncomment the following if resetBranch ever gets implemented.
-  /* ps.resetBranch("DefaultPref");
-  do_check_eq(ps.getBoolPref("DefaultPref.bool"), true);
-  do_check_eq(ps.getIntPref("DefaultPref.int"), 100);
-  do_check_eq(ps.getCharPref("DefaultPref.char"), "_default");*/
-
-  //* *************************************************************************//
   // deleteBranch tests
 
   // TODO : Really, this should throw!, by documentation.

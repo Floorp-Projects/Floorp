@@ -2795,11 +2795,6 @@ nsPrefBranch::UnlockPref(const char* aPrefName) {
 }
 
 NS_IMETHODIMP
-nsPrefBranch::ResetBranch(const char* aStartingAt) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsPrefBranch::DeleteBranch(const char* aStartingAt) {
   ENSURE_PARENT_PROCESS("DeleteBranch", aStartingAt);
   NS_ENSURE_ARG(aStartingAt);

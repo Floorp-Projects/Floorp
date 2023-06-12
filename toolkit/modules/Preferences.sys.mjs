@@ -349,17 +349,7 @@ Preferences.ignore = function (prefName, callback, thisObject) {
 };
 
 Preferences.resetBranch = function (prefBranch = "") {
-  try {
-    this._prefBranch.resetBranch(prefBranch);
-  } catch (ex) {
-    // The current implementation of nsIPrefBranch in Mozilla
-    // doesn't implement resetBranch, so we do it ourselves.
-    if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-      this.reset(this._prefBranch.getChildList(prefBranch));
-    } else {
-      throw ex;
-    }
-  }
+  this.reset(this._prefBranch.getChildList(prefBranch));
 };
 
 /**
