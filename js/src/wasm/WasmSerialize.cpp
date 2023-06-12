@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "jit/ProcessExecutableMemory.h"
 #include "js/StreamConsumer.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmCodegenTypes.h"
@@ -880,7 +881,8 @@ CoderResult CodeModuleSegment(Coder<MODE_DECODE>& coder,
   MOZ_TRY(CodePod(coder, &length));
 
   // Allocate the code bytes
-  UniqueCodeBytes bytes = AllocateCodeBytes(length);
+  Maybe<jit::AutoMarkJitCodeWritableForThread> writable;
+  UniqueCodeBytes bytes = AllocateCodeBytes(writable, length);
   if (!bytes) {
     return Err(OutOfMemory());
   }

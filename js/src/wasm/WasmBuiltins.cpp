@@ -28,6 +28,7 @@
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
+#include "jit/ProcessExecutableMemory.h"
 #include "jit/Simulator.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -1828,6 +1829,8 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   if (!thunks->codeBase) {
     return false;
   }
+
+  AutoMarkJitCodeWritableForThread writable;
 
   masm.executableCopy(thunks->codeBase);
   memset(thunks->codeBase + masm.bytesNeeded(), 0,
