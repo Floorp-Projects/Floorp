@@ -653,21 +653,20 @@ Status ModularFrameEncoder::ComputeEncodingData(
 
   // if few colors, do all-channel palette before trying channel palette
   // Logic is as follows:
-  // - if you can make a palette with few colors (arbitrary threshold: 200),
+  // - if you can make a palette with few colors (threshold: 256, e.g. png8),
   //   then you can also make channel palettes, but they will just be extra
   //   signaling cost for almost no benefit
   // - if the palette needs more colors, then channel palette might help to
   //   reduce palette signaling cost
-  if (cparams_.palette_colors != 0 &&
-      cparams_.speed_tier < SpeedTier::kFalcon) {
+  if (cparams_.palette_colors != 0) {
     // all-channel palette (e.g. RGBA)
     if (gi.channel.size() > 1) {
       Transform maybe_palette(TransformId::kPalette);
       maybe_palette.begin_c = gi.nb_meta_channels;
       maybe_palette.num_c = gi.channel.size() - gi.nb_meta_channels;
       maybe_palette.nb_colors =
-          std::min(std::min(200, (int)(xsize * ysize / 8)),
-                   std::abs(cparams_.palette_colors) / 16);
+          std::min(std::min(256, (int)(xsize * ysize / 2)),
+                   std::abs(cparams_.palette_colors) / 4);
       maybe_palette.ordered_palette = cparams_.palette_colors >= 0;
       maybe_palette.lossy_palette = false;
       do_transform(gi, maybe_palette, weighted::Header(), pool);

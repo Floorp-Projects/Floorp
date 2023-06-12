@@ -15,6 +15,7 @@
 #include "lib/jpegli/color_transform.h"
 #include "lib/jpegli/downsample.h"
 #include "lib/jpegli/encode_internal.h"
+#include "lib/jpegli/encode_streaming.h"
 #include "lib/jpegli/entropy_coding.h"
 #include "lib/jpegli/error.h"
 #include "lib/jpegli/huffman.h"
@@ -572,8 +573,15 @@ void ProcessiMCURow(j_compress_ptr cinfo) {
     DownsampleInputBuffer(cinfo);
   }
   ComputeAdaptiveQuantField(cinfo);
-  bool streaming = IsStreamingSupported(cinfo);
-  EncodeiMCURow(cinfo, streaming);
+  if (IsStreamingSupported(cinfo)) {
+    if (cinfo->optimize_coding) {
+      ComputeTokensForiMCURow(cinfo);
+    } else {
+      WriteiMCURow(cinfo);
+    }
+  } else {
+    ComputeCoefficientsForiMCURow(cinfo);
+  }
   ++cinfo->master->next_iMCU_row;
 }
 

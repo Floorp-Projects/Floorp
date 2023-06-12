@@ -102,8 +102,8 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
   if ((1 << quant_kind) & kPartialBlockKinds) return;
 
   const float* JXL_RESTRICT qm = quantizer.InvDequantMatrix(quant_kind, c);
-  const float kQuantNormalizer = 0.38673969088045057;
-  float orig_quant = *quant * kQuantNormalizer;
+  const float kQuantNormalizer = 2.9037220690527175;
+  float orig_quant = kQuantNormalizer;
   float qac = quantizer.Scale() * (*quant);
   if (xsize > 1 || ysize > 1) {
     for (int i = 0; i < 4; ++i) {
@@ -186,21 +186,52 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
     }
   }
   {
-    static const double kMul1[3] = {
-        0.059869860931354137,
-        0.04700455981886717,
-        0.058750000000000011,
+    static const double kMul1[3][3] = {
+        {
+            0.30628347689416235,
+            0.19096514988140451,
+            0.10092267072278764,
+        },
+        {
+            0.68175730483344243,
+            0.19038660767376803,
+            0.14069887255219371,
+        },
+        {
+            0.74599469660659012,
+            0.10465705596003883,
+            0.075491104183520744,
+        },
     };
-    static const double kMul2[3] = {
-        0.15721000000000002,
-        0.7585142857142857,
-        2.1087201428571429,
+    static const double kMul2[3][3] = {
+        {
+            0.022707896753424779,
+            0.84465309720205983,
+            5.2275313293658812,
+        },
+        {
+            0.17545973555482378,
+            0.97395015736868384,
+            1.9659234163151995,
+        },
+        {
+            0.75243833661051895,
+            1.7774383804879366,
+            0.3793181712352986,
+        },
     };
     sum_of_error *= orig_quant;
     sum_of_vals *= orig_quant;
     if (quant_kind >= AcStrategy::Type::DCT16X16) {
-      if (sum_of_error > kMul1[c] * xsize * ysize * kBlockDim * kBlockDim &&
-          sum_of_error > kMul2[c] * sum_of_vals) {
+      int ix = 2;
+      if (quant_kind == AcStrategy::Type::DCT32X16 ||
+          quant_kind == AcStrategy::Type::DCT16X32) {
+        ix = 1;
+      } else if (quant_kind == AcStrategy::Type::DCT16X16) {
+        ix = 0;
+      }
+      if (sum_of_error > kMul1[ix][c] * xsize * ysize * kBlockDim * kBlockDim &&
+          sum_of_error > kMul2[ix][c] * sum_of_vals) {
         *quant += 1;
         if (*quant >= Quantizer::kQuantMax) {
           *quant = Quantizer::kQuantMax - 1;

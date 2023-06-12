@@ -357,7 +357,7 @@ TEST(JxlTest, RoundtripLargeFast) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_EFFORT, 7);  // kSquirrel
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 445684, 5000);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 453713, 5000);
   EXPECT_THAT(ComputeDistance2(t.ppf(), ppf_out), IsSlightlyBelow(100));
 }
 
@@ -470,7 +470,7 @@ TEST(JxlTest, RoundtripNoGaborishNoAR) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_GABORISH, 0);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 38561, 200);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 38009, 200);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.8));
 }
 
@@ -515,7 +515,7 @@ TEST(JxlTest, RoundtripSmallPatchesAlpha) {
 
   PackedPixelFile ppf_out;
   EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 597, 100);
-  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.019f));
+  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.015f));
 }
 
 TEST(JxlTest, RoundtripSmallPatches) {
@@ -540,7 +540,7 @@ TEST(JxlTest, RoundtripSmallPatches) {
 
   PackedPixelFile ppf_out;
   EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 486, 100);
-  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.019f));
+  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.015f));
 }
 
 // TODO(szabadka) Add encoder and decoder API functions that accept frame
@@ -1128,7 +1128,7 @@ TEST(JxlTest, RoundtripDots) {
   cparams.distance = 0.04;
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 274240, 3000);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 277976, 4000);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.35));
 }
 

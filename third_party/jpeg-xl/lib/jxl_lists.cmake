@@ -479,6 +479,8 @@ set(JPEGXL_INTERNAL_JPEGLI_SOURCES
   jpegli/encode.cc
   jpegli/encode.h
   jpegli/encode_internal.h
+  jpegli/encode_streaming.cc
+  jpegli/encode_streaming.h
   jpegli/entropy_coding-inl.h
   jpegli/entropy_coding.cc
   jpegli/entropy_coding.h

@@ -107,10 +107,20 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
         pos.x = read_num(kPatchPositionContext);
         pos.y = read_num(kPatchPositionContext);
       } else {
-        pos.x =
-            positions_.back().x + UnpackSigned(read_num(kPatchOffsetContext));
-        pos.y =
-            positions_.back().y + UnpackSigned(read_num(kPatchOffsetContext));
+        ssize_t deltax = UnpackSigned(read_num(kPatchOffsetContext));
+        if (deltax < 0 && static_cast<size_t>(-deltax) > positions_.back().x) {
+          return JXL_FAILURE("Invalid patch: negative x coordinate (%" PRIuS
+                             " base x %" PRIdS " delta x)",
+                             positions_.back().x, deltax);
+        }
+        pos.x = positions_.back().x + deltax;
+        ssize_t deltay = UnpackSigned(read_num(kPatchOffsetContext));
+        if (deltay < 0 && static_cast<size_t>(-deltay) > positions_.back().y) {
+          return JXL_FAILURE("Invalid patch: negative y coordinate (%" PRIuS
+                             " base y %" PRIdS " delta y)",
+                             positions_.back().y, deltay);
+        }
+        pos.y = positions_.back().y + deltay;
       }
       if (pos.x + ref_pos.xsize > xsize) {
         return JXL_FAILURE("Invalid patch x: at %" PRIuS " + %" PRIuS

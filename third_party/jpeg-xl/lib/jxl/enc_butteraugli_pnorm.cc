@@ -123,9 +123,8 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
   }
 }
 
-// TODO(lode): take alpha into account when needed
-double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
-                        const JxlCmsInterface& cms) {
+void ComputeSumOfSquares(const ImageBundle& ib1, const ImageBundle& ib2,
+                         const JxlCmsInterface& cms, double sum_of_squares[3]) {
   // Convert to sRGB - closer to perception than linear.
   const Image3F* srgb1 = &ib1.color();
   Image3F copy1;
@@ -148,7 +147,6 @@ double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
   float yuvmatrix[3][3] = {{0.299, 0.587, 0.114},
                            {-0.14713, -0.28886, 0.436},
                            {0.615, -0.51499, -0.10001}};
-  double sum_of_squares[3] = {};
   for (size_t y = 0; y < srgb1->ysize(); ++y) {
     const float* JXL_RESTRICT row1[3];
     const float* JXL_RESTRICT row2[3];
@@ -173,15 +171,6 @@ double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
       }
     }
   }
-  // Weighted PSNR as in JPEG-XL: chroma counts 1/8.
-  const float weights[3] = {6.0f / 8, 1.0f / 8, 1.0f / 8};
-  // Avoid squaring the weight - 1/64 is too extreme.
-  double norm = 0;
-  for (size_t i = 0; i < 3; i++) {
-    norm += std::sqrt(sum_of_squares[i]) * weights[i];
-  }
-  // This function returns distance *squared*.
-  return norm * norm;
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -197,10 +186,38 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
   return HWY_DYNAMIC_DISPATCH(ComputeDistanceP)(distmap, params, p);
 }
 
-HWY_EXPORT(ComputeDistance2);
+HWY_EXPORT(ComputeSumOfSquares);
+
 double ComputeDistance2(const ImageBundle& ib1, const ImageBundle& ib2,
                         const JxlCmsInterface& cms) {
-  return HWY_DYNAMIC_DISPATCH(ComputeDistance2)(ib1, ib2, cms);
+  double sum_of_squares[3] = {};
+  HWY_DYNAMIC_DISPATCH(ComputeSumOfSquares)(ib1, ib2, cms, sum_of_squares);
+  // Weighted PSNR as in JPEG-XL: chroma counts 1/8.
+  const float weights[3] = {6.0f / 8, 1.0f / 8, 1.0f / 8};
+  // Avoid squaring the weight - 1/64 is too extreme.
+  double norm = 0;
+  for (size_t i = 0; i < 3; i++) {
+    norm += std::sqrt(sum_of_squares[i]) * weights[i];
+  }
+  // This function returns distance *squared*.
+  return norm * norm;
+}
+
+double ComputePSNR(const ImageBundle& ib1, const ImageBundle& ib2,
+                   const JxlCmsInterface& cms) {
+  if (!SameSize(ib1, ib2)) return 0.0;
+  double sum_of_squares[3] = {};
+  HWY_DYNAMIC_DISPATCH(ComputeSumOfSquares)(ib1, ib2, cms, sum_of_squares);
+  constexpr double kChannelWeights[3] = {6.0 / 8, 1.0 / 8, 1.0 / 8};
+  double avg_psnr = 0;
+  const size_t input_pixels = ib1.xsize() * ib1.ysize();
+  for (int i = 0; i < 3; ++i) {
+    const double rmse = std::sqrt(sum_of_squares[i] / input_pixels);
+    const double psnr =
+        sum_of_squares[i] == 0 ? 99.99 : (20 * std::log10(1 / rmse));
+    avg_psnr += kChannelWeights[i] * psnr;
+  }
+  return avg_psnr;
 }
 
 }  // namespace jxl
