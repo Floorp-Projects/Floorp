@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
-  element: "chrome://remote/content/marionette/element.sys.mjs",
+  dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   interaction: "chrome://remote/content/marionette/interaction.sys.mjs",
@@ -257,7 +257,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     opts.all = false;
 
     const container = { frame: this.document.defaultView };
-    return lazy.element.find(container, strategy, selector, opts);
+    return lazy.dom.find(container, strategy, selector, opts);
   }
 
   /**
@@ -277,7 +277,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     opts.all = true;
 
     const container = { frame: this.document.defaultView };
-    return lazy.element.find(container, strategy, selector, opts);
+    return lazy.dom.find(container, strategy, selector, opts);
   }
 
   /**
@@ -327,7 +327,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
   async getElementAttribute(options = {}) {
     const { name, elem } = options;
 
-    if (lazy.element.isBooleanAttribute(elem, name)) {
+    if (lazy.dom.isBooleanAttribute(elem, name)) {
       if (elem.hasAttribute(name)) {
         return "true";
       }
@@ -436,7 +436,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
     if (elem) {
       if (scroll) {
-        lazy.element.scrollIntoView(elem);
+        lazy.dom.scrollIntoView(elem);
       }
       rect = this.getElementRect({ elem });
     } else if (full) {
@@ -461,7 +461,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
   async getShadowRoot(options = {}) {
     const { elem } = options;
 
-    return lazy.element.getShadowRoot(elem);
+    return lazy.dom.getShadowRoot(elem);
   }
 
   /**

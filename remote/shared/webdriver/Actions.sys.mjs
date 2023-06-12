@@ -12,7 +12,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
-  element: "chrome://remote/content/marionette/element.sys.mjs",
+  dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   event: "chrome://remote/content/marionette/event.sys.mjs",
   keyData: "chrome://remote/content/shared/webdriver/KeyData.sys.mjs",
@@ -459,7 +459,7 @@ class Origin {
     if (origin === "pointer") {
       return new PointerOrigin();
     }
-    if (lazy.element.isElement(origin)) {
+    if (lazy.dom.isElement(origin)) {
       return new ElementOrigin(origin);
     }
 
@@ -500,9 +500,9 @@ class ElementOrigin extends Origin {
           `Origin element is not displayed`
         );
       }
-      return lazy.element.getInViewCentrePoint(clientRects[0], win);
+      return lazy.dom.getInViewCentrePoint(clientRects[0], win);
     }
-    return lazy.element.coordinates(this.element);
+    return lazy.dom.coordinates(this.element);
   }
 }
 
