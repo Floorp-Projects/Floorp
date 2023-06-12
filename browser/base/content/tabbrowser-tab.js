@@ -558,6 +558,7 @@
       } else {
         tooltipEl.removeAttribute("data-l10n-id");
       }
+      // TODO(Itiel): Maybe simplify this when bug 1830989 lands
     }
 
     startUnselectedTabHoverTimer() {

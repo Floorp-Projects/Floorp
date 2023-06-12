@@ -1485,22 +1485,13 @@ class StorageUI {
       const separatorRegex = new RegExp(SEPARATOR_GUID, "g");
       const label = addEllipsis((name + "").replace(separatorRegex, "-"));
 
-      this._tablePopupDelete.setAttribute(
-        "data-l10n-args",
-        JSON.stringify({
-          itemName: label,
-        })
-      );
+      this._panelDoc.l10n.setArgs(this._tablePopupDelete, { itemName: label });
       this._tablePopupDelete.hidden = false;
     } else {
       this._tablePopupDelete.hidden = true;
     }
 
-    if (this.supportsAddItem(type, host)) {
-      this._tablePopupAddItem.hidden = false;
-    } else {
-      this._tablePopupAddItem.hidden = true;
-    }
+    this._tablePopupAddItem.hidden = !this.supportsAddItem(type, host);
 
     let showDeleteAllSessionCookies = false;
     if (this.supportsRemoveAllSessionCookies(type, host)) {
@@ -1515,12 +1506,9 @@ class StorageUI {
     if (type === "cookies") {
       const hostString = addEllipsis(data.host);
 
-      this._tablePopupDeleteAllFrom.setAttribute(
-        "data-l10n-args",
-        JSON.stringify({
-          host: hostString,
-        })
-      );
+      this._panelDoc.l10n.setArgs(this._tablePopupDeleteAllFrom, {
+        host: hostString,
+      });
       this._tablePopupDeleteAllFrom.hidden = false;
     } else {
       this._tablePopupDeleteAllFrom.hidden = true;
@@ -1575,10 +1563,7 @@ class StorageUI {
       this._treePopupDelete.hidden = !showDelete;
       if (showDelete) {
         const itemName = addEllipsis(selectedItem[selectedItem.length - 1]);
-        this._treePopupDelete.setAttribute(
-          "data-l10n-args",
-          JSON.stringify({ itemName })
-        );
+        this._panelDoc.l10n.setArgs(this._treePopupDelete, { itemName });
       }
 
       showMenu = showDeleteAll || showDelete;

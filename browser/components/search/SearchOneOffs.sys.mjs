@@ -508,11 +508,9 @@ export class SearchOneOffs {
       if (engine.icon) {
         button.setAttribute("image", engine.icon);
       }
-      button.setAttribute("data-l10n-id", "search-one-offs-add-engine");
-      button.setAttribute(
-        "data-l10n-args",
-        JSON.stringify({ engineName: engine.title })
-      );
+      this.document.l10n.setAttributes(button, "search-one-offs-add-engine", {
+        engineName: engine.title,
+      });
       button.setAttribute("engine-name", engine.title);
       button.setAttribute("uri", engine.uri);
       this.buttons.appendChild(button);

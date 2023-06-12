@@ -74,17 +74,17 @@ export default class LockwiseCard {
     if (hasLogins) {
       lockwiseCard.classList.remove("no-logins");
       lockwiseCard.classList.add("has-logins");
-      title.setAttribute("data-l10n-id", "passwords-title-logged-in");
-      headerContent.setAttribute(
-        "data-l10n-id",
+      document.l10n.setAttributes(title, "passwords-title-logged-in");
+      document.l10n.setAttributes(
+        headerContent,
         "lockwise-header-content-logged-in"
       );
       this.renderContentForLoggedInUser(numLogins, potentiallyBreachedLogins);
     } else {
       lockwiseCard.classList.remove("has-logins");
       lockwiseCard.classList.add("no-logins");
-      title.setAttribute("data-l10n-id", "lockwise-title");
-      headerContent.setAttribute("data-l10n-id", "passwords-header-content");
+      document.l10n.setAttributes(title, "lockwise-title");
+      document.l10n.setAttributes(headerContent, "passwords-header-content");
     }
 
     const lockwiseUI = document.querySelector(".card.lockwise-card.loading");

@@ -138,7 +138,7 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
   _createMenupopup(aChromeDoc) {
     let menuitem = aChromeDoc.createXULElement("menuitem");
     menuitem.id = "clipboardReadPasteMenuItem";
-    menuitem.setAttribute("data-l10n-id", "text-action-paste");
+    aChromeDoc.l10n.setAttributes(menuitem, "text-action-paste");
 
     let menupopup = aChromeDoc.createXULElement("menupopup");
     menupopup.id = kMenuPopupId;
