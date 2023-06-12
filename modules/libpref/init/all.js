@@ -2525,7 +2525,6 @@ pref("font.size.monospace.x-math", 13);
 #ifdef XP_MACOSX
   // Mac specific preference defaults
   pref("browser.drag_out_of_frame_style", 1);
-  pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 
   // default fonts (in UTF8 and using canonical names)
   // to determine canonical font names, use a debug build and
