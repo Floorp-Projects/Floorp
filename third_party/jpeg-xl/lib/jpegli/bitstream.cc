@@ -8,170 +8,10 @@
 #include <cmath>
 
 #include "lib/jpegli/bit_writer.h"
-#include "lib/jpegli/entropy_coding.h"
 #include "lib/jpegli/error.h"
 #include "lib/jpegli/memory_manager.h"
-#include "lib/jxl/base/bits.h"
 
-#undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "lib/jpegli/bitstream.cc"
-#include <hwy/foreach_target.h>
-#include <hwy/highway.h>
-
-#include "lib/jpegli/dct-inl.h"
-#include "lib/jpegli/entropy_coding-inl.h"
-
-HWY_BEFORE_NAMESPACE();
 namespace jpegli {
-namespace HWY_NAMESPACE {
-
-void WriteBlock(int32_t* JXL_RESTRICT block, int32_t* JXL_RESTRICT symbols,
-                int32_t* JXL_RESTRICT nonzero_idx, HuffmanCodeTable* dc_code,
-                HuffmanCodeTable* ac_code, JpegBitWriter* bw) {
-  ZigZagShuffle(block);
-  int num_nonzeros = CompactBlock(block, nonzero_idx);
-  ComputeSymbols(num_nonzeros, nonzero_idx, block, symbols);
-  int symbol = symbols[0];
-  WriteBits(bw, dc_code->depth[symbol], dc_code->code[symbol] | block[0]);
-  for (int i = 1; i < num_nonzeros; ++i) {
-    symbol = symbols[i];
-    while (symbol > 255) {
-      WriteBits(bw, ac_code->depth[0xf0], ac_code->code[0xf0]);
-      symbol -= 256;
-    }
-    WriteBits(bw, ac_code->depth[symbol], ac_code->code[symbol] | block[i]);
-  }
-  if (nonzero_idx[num_nonzeros - 1] < 1008) {
-    WriteBits(bw, ac_code->depth[0], ac_code->code[0]);
-  }
-}
-
-void EncodeiMCURow(j_compress_ptr cinfo, bool streaming) {
-  jpeg_comp_master* m = cinfo->master;
-  JpegBitWriter* bw = &m->bw;
-  int xsize_mcus = DivCeil(cinfo->image_width, 8 * cinfo->max_h_samp_factor);
-  int ysize_mcus = DivCeil(cinfo->image_height, 8 * cinfo->max_v_samp_factor);
-  int mcu_y = m->next_iMCU_row;
-  int32_t* block = m->block_tmp;
-  int32_t* symbols = m->block_tmp + DCTSIZE2;
-  int32_t* nonzero_idx = m->block_tmp + 3 * DCTSIZE2;
-  coeff_t* JXL_RESTRICT last_dc_coeff = m->last_dc_coeff;
-  bool output_tokens = streaming && cinfo->optimize_coding;
-  bool output_bits = streaming && !cinfo->optimize_coding;
-  bool save_coefficients = !streaming;
-  JBLOCKARRAY ba[kMaxComponents];
-  if (save_coefficients) {
-    for (int c = 0; c < cinfo->num_components; ++c) {
-      jpeg_component_info* comp = &cinfo->comp_info[c];
-      int by0 = mcu_y * comp->v_samp_factor;
-      int block_rows_left = comp->height_in_blocks - by0;
-      int max_block_rows = std::min(comp->v_samp_factor, block_rows_left);
-      ba[c] = (*cinfo->mem->access_virt_barray)(
-          reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[c], by0,
-          max_block_rows, true);
-    }
-  }
-  if (output_tokens) {
-    TokenArray* ta = &m->token_arrays[m->cur_token_array];
-    int max_tokens_per_mcu_row = MaxNumTokensPerMCURow(cinfo);
-    if (ta->num_tokens + max_tokens_per_mcu_row > m->num_tokens) {
-      if (ta->tokens) {
-        m->total_num_tokens += ta->num_tokens;
-        ++m->cur_token_array;
-        ta = &m->token_arrays[m->cur_token_array];
-      }
-      m->num_tokens =
-          EstimateNumTokens(cinfo, mcu_y, ysize_mcus, m->total_num_tokens,
-                            max_tokens_per_mcu_row);
-      ta->tokens = Allocate<Token>(cinfo, m->num_tokens, JPOOL_IMAGE);
-      m->next_token = ta->tokens;
-    }
-  }
-  const float* imcu_start[kMaxComponents];
-  for (int c = 0; c < cinfo->num_components; ++c) {
-    jpeg_component_info* comp = &cinfo->comp_info[c];
-    imcu_start[c] = m->raw_data[c]->Row(mcu_y * comp->v_samp_factor * DCTSIZE);
-  }
-  const float* qf = nullptr;
-  if (m->use_adaptive_quantization) {
-    qf = m->quant_field.Row(0);
-  }
-  HuffmanCodeTable* dc_code = nullptr;
-  HuffmanCodeTable* ac_code = nullptr;
-  const size_t qf_stride = m->quant_field.stride();
-  for (int mcu_x = 0; mcu_x < xsize_mcus; ++mcu_x) {
-    for (int c = 0; c < cinfo->num_components; ++c) {
-      jpeg_component_info* comp = &cinfo->comp_info[c];
-      if (output_bits) {
-        dc_code = &m->coding_tables[m->context_map[c]];
-        ac_code = &m->coding_tables[m->context_map[c + 4]];
-      }
-      float* JXL_RESTRICT qmc = m->quant_mul[c];
-      const size_t stride = m->raw_data[c]->stride();
-      const int h_factor = m->h_factor[c];
-      const float* zero_bias_offset = m->zero_bias_offset[c];
-      const float* zero_bias_mul = m->zero_bias_mul[c];
-      float aq_strength = 0.0f;
-      for (int iy = 0; iy < comp->v_samp_factor; ++iy) {
-        for (int ix = 0; ix < comp->h_samp_factor; ++ix) {
-          size_t by = mcu_y * comp->v_samp_factor + iy;
-          size_t bx = mcu_x * comp->h_samp_factor + ix;
-          if (bx >= comp->width_in_blocks || by >= comp->height_in_blocks) {
-            if (output_tokens) {
-              *m->next_token++ = Token(c, 0, 0);
-              *m->next_token++ = Token(c + 4, 0, 0);
-            } else if (output_bits) {
-              WriteBits(bw, dc_code->depth[0], dc_code->code[0]);
-              WriteBits(bw, ac_code->depth[0], ac_code->code[0]);
-            }
-            continue;
-          }
-          if (m->use_adaptive_quantization) {
-            aq_strength = qf[iy * qf_stride + bx * h_factor];
-          }
-          const float* pixels = imcu_start[c] + (iy * stride + bx) * DCTSIZE;
-          ComputeCoefficientBlock(pixels, stride, qmc, last_dc_coeff[c],
-                                  aq_strength, zero_bias_offset, zero_bias_mul,
-                                  m->dct_buffer, block);
-          if (save_coefficients) {
-            JCOEF* cblock = &ba[c][iy][bx][0];
-            for (int k = 0; k < DCTSIZE2; ++k) {
-              cblock[k] = block[kJPEGNaturalOrder[k]];
-            }
-          }
-          block[0] -= last_dc_coeff[c];
-          last_dc_coeff[c] += block[0];
-          if (output_tokens) {
-            ComputeTokensForBlock<int32_t, false>(block, 0, c, c + 4,
-                                                  &m->next_token);
-          } else if (output_bits) {
-            WriteBlock(block, symbols, nonzero_idx, dc_code, ac_code, bw);
-          }
-        }
-      }
-    }
-  }
-  if (output_tokens) {
-    TokenArray* ta = &m->token_arrays[m->cur_token_array];
-    ta->num_tokens = m->next_token - ta->tokens;
-    ScanTokenInfo* sti = &m->scan_token_info[0];
-    sti->num_tokens = m->total_num_tokens + ta->num_tokens;
-    sti->restarts[0] = sti->num_tokens;
-  }
-}
-
-// NOLINTNEXTLINE(google-readability-namespace-comments)
-}  // namespace HWY_NAMESPACE
-}  // namespace jpegli
-HWY_AFTER_NAMESPACE();
-
-#if HWY_ONCE
-namespace jpegli {
-HWY_EXPORT(EncodeiMCURow);
-
-void EncodeiMCURow(j_compress_ptr cinfo, bool streaming) {
-  HWY_DYNAMIC_DISPATCH(EncodeiMCURow)(cinfo, streaming);
-}
 
 void WriteOutput(j_compress_ptr cinfo, const uint8_t* buf, size_t bufsize) {
   size_t pos = 0;
@@ -430,6 +270,28 @@ void WriteScanHeader(j_compress_ptr cinfo, int scan_index) {
   EncodeSOS(cinfo, scan_index);
 }
 
+void WriteBlock(const int32_t* JXL_RESTRICT symbols,
+                const int32_t* JXL_RESTRICT extra_bits, const int num_nonzeros,
+                const bool emit_eob,
+                const HuffmanCodeTable* JXL_RESTRICT dc_code,
+                const HuffmanCodeTable* JXL_RESTRICT ac_code,
+                JpegBitWriter* JXL_RESTRICT bw) {
+  int symbol = symbols[0];
+  WriteBits(bw, dc_code->depth[symbol], dc_code->code[symbol] | extra_bits[0]);
+  for (int i = 1; i < num_nonzeros; ++i) {
+    symbol = symbols[i];
+    while (symbol > 255) {
+      WriteBits(bw, ac_code->depth[0xf0], ac_code->code[0xf0]);
+      symbol -= 256;
+    }
+    WriteBits(bw, ac_code->depth[symbol],
+              ac_code->code[symbol] | extra_bits[i]);
+  }
+  if (emit_eob) {
+    WriteBits(bw, ac_code->depth[0], ac_code->code[0]);
+  }
+}
+
 namespace {
 
 static JXL_INLINE void EmitMarker(JpegBitWriter* bw, int marker) {
@@ -580,4 +442,3 @@ void WriteScanData(j_compress_ptr cinfo, int scan_index) {
 }
 
 }  // namespace jpegli
-#endif  // HWY_ONCE

@@ -121,7 +121,6 @@ class Rec2408ToneMapper {
   const float max_lum_ = (InvEOTF(target_range_.second) - pq_mastering_min_) *
                          inv_pq_mastering_range_;
   const float ks_ = 1.5f * max_lum_ - 0.5f;
-  const float b_ = min_lum_;
 
   const float inv_one_minus_ks_ = 1.0f / std::max(1e-6f, 1.0f - ks_);
 

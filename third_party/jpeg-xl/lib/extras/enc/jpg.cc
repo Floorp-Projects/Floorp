@@ -243,12 +243,22 @@ Status SetChromaSubsampling(const std::string& subsampling,
   return false;
 }
 
+struct JpegParams {
+  // Common between sjpeg and libjpeg
+  int quality = 100;
+  std::string chroma_subsampling = "444";
+  // Libjpeg parameters
+  int progressive_id = -1;
+  bool optimize_coding = true;
+  bool is_xyb = false;
+  // Sjpeg parameters
+  int libjpeg_quality = 0;
+  std::string libjpeg_chroma_subsampling = "444";
+};
+
 Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
-                         const JxlColorEncoding& color_encoding,
                          const std::vector<uint8_t>& icc,
-                         std::vector<uint8_t> exif, size_t quality,
-                         const std::string& chroma_subsampling,
-                         int progressive_id, bool optimize_coding,
+                         std::vector<uint8_t> exif, const JpegParams& params,
                          std::vector<uint8_t>* bytes) {
   if (BITS_IN_JSAMPLE != 8 || sizeof(JSAMPLE) != 1) {
     return JXL_FAILURE("Only 8 bit JSAMPLE is supported.");
@@ -265,17 +275,19 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
   cinfo.input_components = info.num_color_channels;
   cinfo.in_color_space = info.num_color_channels == 1 ? JCS_GRAYSCALE : JCS_RGB;
   jpeg_set_defaults(&cinfo);
-  cinfo.optimize_coding = optimize_coding;
+  cinfo.optimize_coding = params.optimize_coding;
   if (cinfo.input_components == 3) {
-    JXL_RETURN_IF_ERROR(SetChromaSubsampling(chroma_subsampling, &cinfo));
+    JXL_RETURN_IF_ERROR(
+        SetChromaSubsampling(params.chroma_subsampling, &cinfo));
   }
-  if (color_encoding.color_space == JXL_COLOR_SPACE_XYB) {
+  if (params.is_xyb) {
     // Tell libjpeg not to convert XYB data to YCbCr.
     jpeg_set_colorspace(&cinfo, JCS_RGB);
   }
-  jpeg_set_quality(&cinfo, quality, TRUE);
+  jpeg_set_quality(&cinfo, params.quality, TRUE);
   std::vector<jpeg_scan_info> scan_infos;
-  JXL_RETURN_IF_ERROR(SetJpegProgression(progressive_id, &scan_infos, &cinfo));
+  JXL_RETURN_IF_ERROR(
+      SetJpegProgression(params.progressive_id, &scan_infos, &cinfo));
   jpeg_start_compress(&cinfo, TRUE);
   if (!icc.empty()) {
     WriteICCProfile(&cinfo, icc);
@@ -308,13 +320,12 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
 
 Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
                        const std::vector<uint8_t>& icc,
-                       std::vector<uint8_t> exif, size_t quality,
-                       const std::string& chroma_subsampling,
+                       std::vector<uint8_t> exif, const JpegParams& params,
                        std::vector<uint8_t>* bytes) {
 #if !JPEGXL_ENABLE_SJPEG
   return JXL_FAILURE("JPEG XL was built without sjpeg support");
 #else
-  sjpeg::EncoderParam param(quality);
+  sjpeg::EncoderParam param(params.quality);
   if (!icc.empty()) {
     param.iccp.assign(icc.begin(), icc.end());
   }
@@ -322,12 +333,26 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
     ResetExifOrientation(exif);
     param.exif.assign(exif.begin(), exif.end());
   }
-  if (chroma_subsampling == "444") {
+  if (params.chroma_subsampling == "444") {
     param.yuv_mode = SJPEG_YUV_444;
-  } else if (chroma_subsampling == "420") {
+  } else if (params.chroma_subsampling == "420") {
+    param.yuv_mode = SJPEG_YUV_420;
+  } else if (params.chroma_subsampling == "420sharp") {
     param.yuv_mode = SJPEG_YUV_SHARP;
   } else {
     return JXL_FAILURE("sjpeg does not support this chroma subsampling mode");
+  }
+  if (params.libjpeg_quality > 0) {
+    JpegParams libjpeg_params;
+    libjpeg_params.quality = params.libjpeg_quality;
+    libjpeg_params.chroma_subsampling = params.libjpeg_chroma_subsampling;
+    std::vector<uint8_t> libjpeg_bytes;
+    JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(image, info, icc, exif,
+                                          libjpeg_params, &libjpeg_bytes));
+    param.target_mode = sjpeg::EncoderParam::TARGET_SIZE;
+    param.target_value = libjpeg_bytes.size();
+    param.passes = 20;
+    param.tolerance = 0.1f;
   }
   size_t stride = info.xsize * 3;
   const uint8_t* pixels = reinterpret_cast<const uint8_t*>(image.pixels());
@@ -342,31 +367,28 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
 }
 
 Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
-                      const JxlColorEncoding& color_encoding,
                       const std::vector<uint8_t>& icc,
                       std::vector<uint8_t> exif, JpegEncoder encoder,
-                      size_t quality, const std::string& chroma_subsampling,
-                      int progressive_id, bool optimize_coding,
-                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
+                      const JpegParams& params, ThreadPool* pool,
+                      std::vector<uint8_t>* bytes) {
   if (image.format.data_type != JXL_TYPE_UINT8) {
     return JXL_FAILURE("Unsupported pixel data type");
   }
   if (info.alpha_bits > 0) {
     return JXL_FAILURE("alpha is not supported");
   }
-  if (quality > 100) {
+  if (params.quality > 100) {
     return JXL_FAILURE("please specify a 0-100 JPEG quality");
   }
 
   switch (encoder) {
     case JpegEncoder::kLibJpeg:
-      JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(
-          image, info, color_encoding, icc, std::move(exif), quality,
-          chroma_subsampling, progressive_id, optimize_coding, bytes));
+      JXL_RETURN_IF_ERROR(
+          EncodeWithLibJpeg(image, info, icc, std::move(exif), params, bytes));
       break;
     case JpegEncoder::kSJpeg:
-      JXL_RETURN_IF_ERROR(EncodeWithSJpeg(image, info, icc, std::move(exif),
-                                          quality, chroma_subsampling, bytes));
+      JXL_RETURN_IF_ERROR(
+          EncodeWithSJpeg(image, info, icc, std::move(exif), params, bytes));
       break;
     default:
       return JXL_FAILURE("tried to use an unknown JPEG encoder");
@@ -391,17 +413,19 @@ class JPEGEncoder : public Encoder {
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
                 ThreadPool* pool = nullptr) const override {
     JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
-    int quality = 100;
-    std::string chroma_subsampling = "444";
     JpegEncoder jpeg_encoder = JpegEncoder::kLibJpeg;
-    int progressive_id = -1;
-    bool optimize_coding = true;
+    JpegParams params;
     for (const auto& it : options()) {
       if (it.first == "q") {
         std::istringstream is(it.second);
-        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> quality));
+        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> params.quality));
+      } else if (it.first == "libjpeg_quality") {
+        std::istringstream is(it.second);
+        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> params.libjpeg_quality));
       } else if (it.first == "chroma_subsampling") {
-        chroma_subsampling = it.second;
+        params.chroma_subsampling = it.second;
+      } else if (it.first == "libjpeg_chroma_subsampling") {
+        params.libjpeg_chroma_subsampling = it.second;
       } else if (it.first == "jpeg_encoder") {
         if (it.second == "libjpeg") {
           jpeg_encoder = JpegEncoder::kLibJpeg;
@@ -412,11 +436,12 @@ class JPEGEncoder : public Encoder {
         }
       } else if (it.first == "progressive") {
         std::istringstream is(it.second);
-        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> progressive_id));
+        JXL_RETURN_IF_ERROR(static_cast<bool>(is >> params.progressive_id));
       } else if (it.first == "optimize" && it.second == "OFF") {
-        optimize_coding = false;
+        params.optimize_coding = false;
       }
     }
+    params.is_xyb = (ppf.color_encoding.color_space == JXL_COLOR_SPACE_XYB);
     std::vector<uint8_t> icc;
     if (!IsSRGBEncoding(ppf.color_encoding)) {
       icc = ppf.icc;
@@ -427,9 +452,8 @@ class JPEGEncoder : public Encoder {
       JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
       encoded_image->bitstreams.emplace_back();
       JXL_RETURN_IF_ERROR(EncodeImageJPG(
-          frame.color, ppf.info, ppf.color_encoding, icc, ppf.metadata.exif,
-          jpeg_encoder, quality, chroma_subsampling, progressive_id,
-          optimize_coding, pool, &encoded_image->bitstreams.back()));
+          frame.color, ppf.info, icc, ppf.metadata.exif, jpeg_encoder, params,
+          pool, &encoded_image->bitstreams.back()));
     }
     return true;
   }

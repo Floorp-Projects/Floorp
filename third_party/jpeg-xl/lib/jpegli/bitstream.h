@@ -13,8 +13,6 @@
 
 namespace jpegli {
 
-void EncodeiMCURow(j_compress_ptr cinfo, bool streaming);
-
 void WriteOutput(j_compress_ptr cinfo, const uint8_t* buf, size_t bufsize);
 void WriteOutput(j_compress_ptr cinfo, const std::vector<uint8_t>& bytes);
 void WriteOutput(j_compress_ptr cinfo, std::initializer_list<uint8_t> bytes);
@@ -33,6 +31,12 @@ void EncodeDHT(j_compress_ptr cinfo, size_t offset, size_t num);
 void EncodeSOS(j_compress_ptr cinfo, int scan_index);
 void WriteScanHeader(j_compress_ptr cinfo, int scan_index);
 
+void WriteBlock(const int32_t* JXL_RESTRICT symbols,
+                const int32_t* JXL_RESTRICT extra_bits, const int num_nonzeros,
+                const bool emit_eob,
+                const HuffmanCodeTable* JXL_RESTRICT dc_code,
+                const HuffmanCodeTable* JXL_RESTRICT ac_code,
+                JpegBitWriter* JXL_RESTRICT bw);
 void WriteScanData(j_compress_ptr cinfo, int scan_index);
 
 }  // namespace jpegli

@@ -108,6 +108,10 @@ void UpdateBitDepth(JxlBitDepth bit_depth, JxlDataType data_type, T* info) {
 bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
                     const JXLDecompressParams& dparams, size_t* decoded_bytes,
                     PackedPixelFile* ppf, std::vector<uint8_t>* jpeg_bytes) {
+  JxlSignature sig = JxlSignatureCheck(bytes, bytes_size);
+  // silently return false if this is not a JXL file
+  if (sig == JXL_SIG_INVALID) return false;
+
   auto decoder = JxlDecoderMake(/*memory_manager=*/nullptr);
   JxlDecoder* dec = decoder.get();
   ppf->frames.clear();

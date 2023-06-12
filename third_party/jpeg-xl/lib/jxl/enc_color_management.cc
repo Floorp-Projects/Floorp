@@ -1056,13 +1056,16 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
   PaddedBytes icc_src, icc_dst;
   icc_src.assign(input->icc.data, input->icc.data + input->icc.size);
   ColorEncoding c_src;
-  if (!c_src.SetICC(std::move(icc_src))) {
+  if (!(ConvertExternalToInternalColorEncoding(input->color_encoding, &c_src) ||
+        c_src.SetICC(std::move(icc_src)))) {
     JXL_NOTIFY_ERROR("JxlCmsInit: failed to parse input ICC");
     return nullptr;
   }
   icc_dst.assign(output->icc.data, output->icc.data + output->icc.size);
   ColorEncoding c_dst;
-  if (!c_dst.SetICC(std::move(icc_dst))) {
+  if (!(ConvertExternalToInternalColorEncoding(output->color_encoding,
+                                               &c_dst) ||
+        c_dst.SetICC(std::move(icc_dst)))) {
     JXL_NOTIFY_ERROR("JxlCmsInit: failed to parse output ICC");
     return nullptr;
   }

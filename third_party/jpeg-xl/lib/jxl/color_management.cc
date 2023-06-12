@@ -25,20 +25,105 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/dec_tone_mapping-inl.h"
 #include "lib/jxl/field_encodings.h"
+#include "lib/jxl/matrix_ops.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/transfer_functions-inl.h"
+
+#ifndef JXL_ENABLE_3D_ICC_TONEMAPPING
+#define JXL_ENABLE_3D_ICC_TONEMAPPING 1
+#endif
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
-// NOTE: this is only used to provide a reasonable ICC profile that other
-// software can read. Our own transforms use ExtraTF instead because that is
-// more precise and supports unbounded mode.
-std::vector<uint16_t> CreateTableCurve(uint32_t N, const ExtraTF tf) {
+Status ToneMapPixel(const ColorEncoding& c, const float in[3],
+                    uint8_t pcslab_out[3]) {
+  const PrimariesCIExy primaries = c.GetPrimaries();
+  const CIExy white_point = c.GetWhitePoint();
+  float primaries_XYZ[9];
+  JXL_RETURN_IF_ERROR(PrimariesToXYZ(
+      primaries.r.x, primaries.r.y, primaries.g.x, primaries.g.y, primaries.b.x,
+      primaries.b.y, white_point.x, white_point.y, primaries_XYZ));
+  const float luminances[3] = {primaries_XYZ[3], primaries_XYZ[4],
+                               primaries_XYZ[5]};
+  float linear[3];
+  HWY_CAPPED(float, 1) d;
+  if (c.tf.IsPQ()) {
+    for (size_t i = 0; i < 3; ++i) {
+      linear[i] = TF_PQ().DisplayFromEncoded(in[i]);
+    }
+  } else {
+    for (size_t i = 0; i < 3; ++i) {
+      linear[i] = TF_HLG().DisplayFromEncoded(in[i]);
+    }
+  }
+  auto r = LoadU(d, &linear[0]), g = LoadU(d, &linear[1]),
+       b = LoadU(d, &linear[2]);
+  if (c.tf.IsPQ()) {
+    Rec2408ToneMapper<decltype(d)> tone_mapper({0, 10000}, {0, 250},
+                                               luminances);
+    tone_mapper.ToneMap(&r, &g, &b);
+  } else {
+    HlgOOTF ootf(/*source_luminance=*/300, /*target_luminance=*/80, luminances);
+    ootf.Apply(&r, &g, &b);
+  }
+  GamutMap(&r, &g, &b, luminances, /*preserve_saturation=*/0.3f);
+  StoreU(r, d, &linear[0]);
+  StoreU(g, d, &linear[1]);
+  StoreU(b, d, &linear[2]);
+
+  float chad[9];
+  JXL_RETURN_IF_ERROR(AdaptToXYZD50(white_point.x, white_point.y, chad));
+  float to_xyzd50[9];
+  Mul3x3Matrix(chad, primaries_XYZ, to_xyzd50);
+
+  float xyz[3] = {0, 0, 0};
+  for (size_t xyz_c = 0; xyz_c < 3; ++xyz_c) {
+    for (size_t rgb_c = 0; rgb_c < 3; ++rgb_c) {
+      xyz[xyz_c] += linear[rgb_c] * to_xyzd50[3 * xyz_c + rgb_c];
+    }
+  }
+
+  const auto lab_f = [](const float x) {
+    static constexpr float kDelta = 6. / 29;
+    return x <= kDelta * kDelta * kDelta
+               ? x * (1 / (3 * kDelta * kDelta)) + 4.f / 29
+               : std::cbrt(x);
+  };
+  static constexpr float kXn = 0.964212;
+  static constexpr float kYn = 1;
+  static constexpr float kZn = 0.825188;
+
+  const float f_x = lab_f(xyz[0] / kXn);
+  const float f_y = lab_f(xyz[1] / kYn);
+  const float f_z = lab_f(xyz[2] / kZn);
+
+  pcslab_out[0] =
+      static_cast<uint8_t>(.5f + 255.f * Clamp1(1.16f * f_y - .16f, 0.f, 1.f));
+  pcslab_out[1] = static_cast<uint8_t>(
+      .5f + 128.f + Clamp1(500 * (f_x - f_y), -128.f, 127.f));
+  pcslab_out[2] = static_cast<uint8_t>(
+      .5f + 128.f + Clamp1(200 * (f_y - f_z), -128.f, 127.f));
+
+  return true;
+}
+
+std::vector<uint16_t> CreateTableCurve(uint32_t N, const ExtraTF tf,
+                                       bool tone_map) {
+  // The generated PQ curve will make room for highlights up to this luminance.
+  // TODO(sboukortt): make this variable?
+  static constexpr float kPQIntensityTarget = 10000;
+
   JXL_ASSERT(N <= 4096);  // ICC MFT2 only allows 4K entries
   JXL_ASSERT(tf == ExtraTF::kPQ || tf == ExtraTF::kHLG);
+
+  static constexpr float kLuminances[] = {1.f / 3, 1.f / 3, 1.f / 3};
+  using D = HWY_CAPPED(float, 1);
+  Rec2408ToneMapper<D> tone_mapper({0, kPQIntensityTarget},
+                                   {0, kDefaultIntensityTarget}, kLuminances);
   // No point using float - LCMS converts to 16-bit for A2B/MFT.
   std::vector<uint16_t> table(N);
   for (uint32_t i = 0; i < N; ++i) {
@@ -47,6 +132,15 @@ std::vector<uint16_t> CreateTableCurve(uint32_t N, const ExtraTF tf) {
     // LCMS requires EOTF (e.g. 2.4 exponent).
     double y = (tf == ExtraTF::kHLG) ? TF_HLG().DisplayFromEncoded(dx)
                                      : TF_PQ().DisplayFromEncoded(dx);
+    if (tone_map && tf == ExtraTF::kPQ &&
+        kPQIntensityTarget > kDefaultIntensityTarget) {
+      D df;
+      auto r = Set(df, y * 10000 / kPQIntensityTarget), g = r, b = r;
+      tone_mapper.ToneMap(&r, &g, &b);
+      float fy;
+      StoreU(r, df, &fy);
+      y = fy;
+    }
     JXL_ASSERT(y >= 0.0);
     // Clamp to table range - necessary for HLG.
     if (y > 1.0) y = 1.0;
@@ -64,7 +158,9 @@ HWY_AFTER_NAMESPACE();
 #if HWY_ONCE
 namespace jxl {
 
-HWY_EXPORT(CreateTableCurve);  // Local function.
+// Local functions.
+HWY_EXPORT(ToneMapPixel);
+HWY_EXPORT(CreateTableCurve);
 
 Status CIEXYZFromWhiteCIExy(const CIExy& xy, float XYZ[3]) {
   // Target Y = 1.
@@ -78,25 +174,20 @@ Status CIEXYZFromWhiteCIExy(const CIExy& xy, float XYZ[3]) {
 
 namespace {
 
-// NOTE: this is only used to provide a reasonable ICC profile that other
-// software can read. Our own transforms use ExtraTF instead because that is
-// more precise and supports unbounded mode.
-template <class Func>
-std::vector<uint16_t> CreateTableCurve(uint32_t N, const Func& func) {
-  JXL_ASSERT(N <= 4096);  // ICC MFT2 only allows 4K entries
-  // No point using float - LCMS converts to 16-bit for A2B/MFT.
-  std::vector<uint16_t> table(N);
-  for (uint32_t i = 0; i < N; ++i) {
-    const float x = static_cast<float>(i) / (N - 1);  // 1.0 at index N - 1.
-    // LCMS requires EOTF (e.g. 2.4 exponent).
-    double y = func.DisplayFromEncoded(static_cast<double>(x));
-    JXL_ASSERT(y >= 0.0);
-    // Clamp to table range - necessary for HLG.
-    if (y > 1.0) y = 1.0;
-    // 1.0 corresponds to table value 0xFFFF.
-    table[i] = static_cast<uint16_t>(roundf(y * 65535.0));
-  }
-  return table;
+constexpr bool kEnable3DToneMapping = JXL_ENABLE_3D_ICC_TONEMAPPING;
+
+bool CanToneMap(const ColorEncoding& encoding) {
+  // If the color space cannot be represented by a CICP tag in the ICC profile
+  // then the rest of the profile must unambiguously identify it; we have less
+  // freedom to do use it for tone mapping.
+  return encoding.GetColorSpace() == ColorSpace::kRGB &&
+         encoding.HasPrimaries() &&
+         (encoding.tf.IsPQ() || encoding.tf.IsHLG()) &&
+         ((encoding.primaries == Primaries::kP3 &&
+           (encoding.white_point == WhitePoint::kD65 ||
+            encoding.white_point == WhitePoint::kDCI)) ||
+          (encoding.primaries != Primaries::kCustom &&
+           encoding.white_point == WhitePoint::kD65));
 }
 
 void ICCComputeMD5(const PaddedBytes& data, uint8_t sum[16])
@@ -253,7 +344,15 @@ Status CreateICCHeader(const ColorEncoding& c,
       c.GetColorSpace() == ColorSpace::kXYB ? "scnr" : "mntr";
   WriteICCTag(profile_type, 12, header);
   WriteICCTag(c.IsGray() ? "GRAY" : "RGB ", 16, header);
-  WriteICCTag("XYZ ", 20, header);
+  if (kEnable3DToneMapping && CanToneMap(c)) {
+    // We are going to use a 3D LUT for tone mapping, which will be more compact
+    // with an 8-bit LUT to CIELAB than with a 16-bit LUT to XYZ. 8-bit XYZ
+    // would not be viable due to XYZ being linear, whereas it is fine with
+    // CIELAB's ~cube root.
+    WriteICCTag("Lab ", 20, header);
+  } else {
+    WriteICCTag("XYZ ", 20, header);
+  }
 
   // Three uint32_t's date/time encoding.
   // TODO(lode): encode actual date and time, this is a placeholder
@@ -503,6 +602,92 @@ Status CreateICCLutAtoBTagForXYB(PaddedBytes* JXL_RESTRICT tags) {
   }
   return true;
 }
+
+Status CreateICCLutAtoBTagForHDR(ColorEncoding c,
+                                 PaddedBytes* JXL_RESTRICT tags) {
+  static constexpr size_t k3DLutDim = 9;
+  WriteICCTag("mft1", tags->size(), tags);
+  // 4 reserved bytes set to 0
+  WriteICCUint32(0, tags->size(), tags);
+  // number of input channels
+  WriteICCUint8(3, tags->size(), tags);
+  // number of output channels
+  WriteICCUint8(3, tags->size(), tags);
+  // number of CLUT grid points
+  WriteICCUint8(k3DLutDim, tags->size(), tags);
+  // 1 reserved bytes for padding
+  WriteICCUint8(0, tags->size(), tags);
+
+  // Matrix (per specification, must be identity if input is not XYZ)
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
+      JXL_RETURN_IF_ERROR(
+          WriteICCS15Fixed16(i == j ? 1.f : 0.f, tags->size(), tags));
+    }
+  }
+
+  // Input tables
+  for (size_t c = 0; c < 3; ++c) {
+    for (size_t i = 0; i < 256; ++i) {
+      WriteICCUint8(i, tags->size(), tags);
+    }
+  }
+
+  for (size_t ix = 0; ix < k3DLutDim; ++ix) {
+    for (size_t iy = 0; iy < k3DLutDim; ++iy) {
+      for (size_t ib = 0; ib < k3DLutDim; ++ib) {
+        float f[3] = {ix * (1.0f / (k3DLutDim - 1)),
+                      iy * (1.0f / (k3DLutDim - 1)),
+                      ib * (1.0f / (k3DLutDim - 1))};
+        uint8_t pcslab_out[3];
+        JXL_RETURN_IF_ERROR(
+            HWY_DYNAMIC_DISPATCH(ToneMapPixel)(c, f, pcslab_out));
+        for (uint8_t val : pcslab_out) {
+          WriteICCUint8(val, tags->size(), tags);
+        }
+      }
+    }
+  }
+
+  // Output tables
+  for (size_t c = 0; c < 3; ++c) {
+    for (size_t i = 0; i < 256; ++i) {
+      WriteICCUint8(i, tags->size(), tags);
+    }
+  }
+
+  return true;
+}
+
+// Some software (Apple Safari, Preview) requires this.
+Status CreateICCNoOpBToATag(PaddedBytes* JXL_RESTRICT tags) {
+  WriteICCTag("mBA ", tags->size(), tags);
+  // 4 reserved bytes set to 0
+  WriteICCUint32(0, tags->size(), tags);
+  // number of input channels
+  WriteICCUint8(3, tags->size(), tags);
+  // number of output channels
+  WriteICCUint8(3, tags->size(), tags);
+  // 2 reserved bytes for padding
+  WriteICCUint16(0, tags->size(), tags);
+  // offset to first B curve
+  WriteICCUint32(32, tags->size(), tags);
+  // offset to matrix
+  WriteICCUint32(0, tags->size(), tags);
+  // offset to first M curve
+  WriteICCUint32(0, tags->size(), tags);
+  // offset to CLUT
+  WriteICCUint32(0, tags->size(), tags);
+  // offset to first A curve
+  WriteICCUint32(0, tags->size(), tags);
+
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+
+  return true;
+}
+
 }  // namespace
 
 Status MaybeCreateProfile(const ColorEncoding& c,
@@ -598,6 +783,16 @@ Status MaybeCreateProfile(const ColorEncoding& c,
     JXL_RETURN_IF_ERROR(CreateICCLutAtoBTagForXYB(&tags));
     FinalizeICCTag(&tags, &tag_offset, &tag_size);
     AddToICCTagTable("A2B0", tag_offset, tag_size, &tagtable, &offsets);
+    JXL_RETURN_IF_ERROR(CreateICCNoOpBToATag(&tags));
+    FinalizeICCTag(&tags, &tag_offset, &tag_size);
+    AddToICCTagTable("B2A0", tag_offset, tag_size, &tagtable, &offsets);
+  } else if (kEnable3DToneMapping && CanToneMap(c)) {
+    JXL_RETURN_IF_ERROR(CreateICCLutAtoBTagForHDR(c, &tags));
+    FinalizeICCTag(&tags, &tag_offset, &tag_size);
+    AddToICCTagTable("A2B0", tag_offset, tag_size, &tagtable, &offsets);
+    JXL_RETURN_IF_ERROR(CreateICCNoOpBToATag(&tags));
+    FinalizeICCTag(&tags, &tag_offset, &tag_size);
+    AddToICCTagTable("B2A0", tag_offset, tag_size, &tagtable, &offsets);
   } else {
     if (c.tf.IsGamma()) {
       float gamma = 1.0 / c.tf.GetGamma();
@@ -605,14 +800,14 @@ Status MaybeCreateProfile(const ColorEncoding& c,
     } else if (c.GetColorSpace() != ColorSpace::kXYB) {
       switch (c.tf.GetTransferFunction()) {
         case TransferFunction::kHLG:
-          CreateICCCurvCurvTag(
-              HWY_DYNAMIC_DISPATCH(CreateTableCurve)(4096, ExtraTF::kHLG),
-              &tags);
+          CreateICCCurvCurvTag(HWY_DYNAMIC_DISPATCH(CreateTableCurve)(
+                                   64, ExtraTF::kHLG, CanToneMap(c)),
+                               &tags);
           break;
         case TransferFunction::kPQ:
-          CreateICCCurvCurvTag(
-              HWY_DYNAMIC_DISPATCH(CreateTableCurve)(4096, ExtraTF::kPQ),
-              &tags);
+          CreateICCCurvCurvTag(HWY_DYNAMIC_DISPATCH(CreateTableCurve)(
+                                   64, ExtraTF::kPQ, CanToneMap(c)),
+                               &tags);
           break;
         case TransferFunction::kSRGB:
           JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(
