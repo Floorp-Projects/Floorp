@@ -105,10 +105,11 @@ document.addEventListener("DOMContentLoaded", e => {
       graph.classList.add("private-window");
     } else {
       let earliestDate = data.earliestDate || Date.now();
-      document.l10n.setAttributes(summary, "graph-total-tracker-summary", {
-        count: data.sumEvents,
-        earliestDate,
-      });
+      summary.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ count: data.sumEvents, earliestDate })
+      );
+      summary.setAttribute("data-l10n-id", "graph-total-tracker-summary");
     }
 
     // Set a default top size for the height of the graph bars so that small
@@ -174,10 +175,11 @@ document.addEventListener("DOMContentLoaded", e => {
             div.setAttribute("role", "img");
             div.setAttribute("data-type", type);
             div.style.height = `${dataHeight}%`;
-            document.l10n.setAttributes(div, `bar-tooltip-${type}`, {
-              count: content[type],
-              percentage: dataHeight,
-            });
+            div.setAttribute(
+              "data-l10n-args",
+              JSON.stringify({ count: content[type], percentage: dataHeight })
+            );
+            div.setAttribute("data-l10n-id", `bar-tooltip-${type}`);
             weekTypeCounts[type] += content[type];
             cellSpan.appendChild(div);
             innerBar.appendChild(cellSpan);
@@ -197,14 +199,16 @@ document.addEventListener("DOMContentLoaded", e => {
       graph.prepend(bar);
 
       if (data.isPrivate) {
-        document.l10n.setAttributes(
-          weekSummary,
+        weekSummary.setAttribute(
+          "data-l10n-id",
           "graph-week-summary-private-window"
         );
       } else {
-        document.l10n.setAttributes(weekSummary, "graph-week-summary", {
-          count: weekCount,
-        });
+        weekSummary.setAttribute(
+          "data-l10n-args",
+          JSON.stringify({ count: weekCount })
+        );
+        weekSummary.setAttribute("data-l10n-id", "graph-week-summary");
       }
 
       let label = document.createElement("span");
@@ -213,7 +217,7 @@ document.addEventListener("DOMContentLoaded", e => {
       label.id = "day" + (6 - i);
       label.setAttribute("role", "rowheader");
       if (i == 6) {
-        document.l10n.setAttributes(label, "graph-today");
+        label.setAttribute("data-l10n-id", "graph-today");
       } else {
         label.textContent = data.weekdays[(i + 1 + new Date().getDay()) % 7];
       }
@@ -268,18 +272,18 @@ document.addEventListener("DOMContentLoaded", e => {
 
     // User has turned off all blocking, show a different card.
     if (notBlocking) {
-      document.l10n.setAttributes(
-        document.getElementById("etp-card-content"),
-        "protection-report-etp-card-content-custom-not-blocking"
-      );
-      document.l10n.setAttributes(
-        document.querySelector(".etp-card .card-title"),
-        "etp-card-title-custom-not-blocking"
-      );
-      document.l10n.setAttributes(
-        document.getElementById("report-summary"),
-        "protection-report-page-summary"
-      );
+      document
+        .getElementById("etp-card-content")
+        .setAttribute(
+          "data-l10n-id",
+          "protection-report-etp-card-content-custom-not-blocking"
+        );
+      document
+        .querySelector(".etp-card .card-title")
+        .setAttribute("data-l10n-id", "etp-card-title-custom-not-blocking");
+      document
+        .getElementById("report-summary")
+        .setAttribute("data-l10n-id", "protection-report-page-summary");
       document.querySelector(".etp-card").classList.add("custom-not-blocking");
 
       // Hide the link to settings from the header, so we are not showing two links.
