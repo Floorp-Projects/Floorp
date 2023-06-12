@@ -807,11 +807,11 @@ RawId WebGPUChild::DeviceCreateComputePipelineImpl(
     PipelineCreationContext* const aContext,
     const dom::GPUComputePipelineDescriptor& aDesc, ByteBuf* const aByteBuf) {
   ffi::WGPUComputePipelineDescriptor desc = {};
-  nsCString label, entryPoint;
-  if (aDesc.mLabel.WasPassed()) {
-    CopyUTF16toUTF8(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+  nsCString entryPoint;
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
   if (aDesc.mLayout.IsGPUAutoLayoutMode()) {
     desc.layout = 0;
   } else if (aDesc.mLayout.IsGPUPipelineLayout()) {

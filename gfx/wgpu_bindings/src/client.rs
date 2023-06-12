@@ -49,8 +49,8 @@ impl ProgrammableStageDescriptor {
 }
 
 #[repr(C)]
-pub struct ComputePipelineDescriptor {
-    label: RawString,
+pub struct ComputePipelineDescriptor<'a> {
+    label: Option<&'a nsACString>,
     layout: Option<id::PipelineLayoutId>,
     stage: ProgrammableStageDescriptor,
 }
@@ -966,12 +966,14 @@ pub unsafe extern "C" fn wgpu_client_create_compute_pipeline(
     implicit_pipeline_layout_id: *mut Option<id::PipelineLayoutId>,
     implicit_bind_group_layout_ids: *mut Option<id::BindGroupLayoutId>,
 ) -> id::ComputePipelineId {
+    let label = wgpu_string(desc.label);
+
     let backend = device_id.backend();
     let mut identities = client.identities.lock();
     let id = identities.select(backend).compute_pipelines.alloc(backend);
 
     let wgpu_desc = wgc::pipeline::ComputePipelineDescriptor {
-        label: cow_label(&desc.label),
+        label,
         layout: desc.layout,
         stage: desc.stage.to_wgpu(),
     };
@@ -1009,7 +1011,7 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
     let id = identities.select(backend).render_pipelines.alloc(backend);
 
     let wgpu_desc = wgc::pipeline::RenderPipelineDescriptor {
-        label: label,
+        label,
         layout: desc.layout,
         vertex: desc.vertex.to_wgpu(),
         fragment: desc.fragment.map(FragmentState::to_wgpu),
