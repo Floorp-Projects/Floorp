@@ -29,6 +29,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
+// Global singleton that holds active WebDriver sessions
+const webDriverSessions = new Map();
+
 /**
  * Representation of WebDriver session.
  */
@@ -199,9 +202,13 @@ export class WebDriverSession {
     }
 
     lazy.registerProcessDataActor();
+
+    webDriverSessions.set(this.id, this);
   }
 
   destroy() {
+    webDriverSessions.delete(this.id);
+
     lazy.allowAllCerts.disable();
 
     // Close all open connections which unregister themselves.
@@ -341,4 +348,17 @@ export class WebDriverSession {
   get QueryInterface() {
     return ChromeUtils.generateQI(["nsIHttpRequestHandler"]);
   }
+}
+
+/**
+ * Get a WebDriver session corresponding to the session id.
+ *
+ * @param {string} sessionId
+ *     The ID of the WebDriver session to retrieve.
+ *
+ * @returns {WebDriverSession|undefined}
+ *     The WebDriver session or undefined if the id is not known.
+ */
+export function getWebDriverSessionById(sessionId) {
+  return webDriverSessions.get(sessionId);
 }
