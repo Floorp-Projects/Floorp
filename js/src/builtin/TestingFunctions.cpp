@@ -74,6 +74,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
+#include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/experimental/CodeCoverage.h"  // js::GetCodeCoverageSummary
 #include "js/experimental/CompileScript.h"  // JS::ParseGlobalScript, JS::PrepareForInstantiate
@@ -127,6 +128,7 @@
 #include "vm/StringType.h"
 #include "wasm/AsmJS.h"
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
@@ -1996,6 +1998,58 @@ static bool WasmIntrinsicI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().set(ObjectValue(*module.get()));
   return true;
 }
+
+#ifdef ENABLE_WASM_GC
+static bool WasmGcReadField(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.requireAtLeast(cx, "wasmGcReadField", 2)) {
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<WasmGcObject>()) {
+    ReportUsageErrorASCII(cx, callee,
+                          "First argument must be a WebAssembly GC object");
+    return false;
+  }
+
+  uint32_t fieldIndex;
+  if (!JS::ToUint32(cx, args[1], &fieldIndex)) {
+    ReportUsageErrorASCII(cx, callee, "Second argument must be an integer");
+    return false;
+  }
+
+  Rooted<WasmGcObject*> gcObject(cx, &args[0].toObject().as<WasmGcObject>());
+  Rooted<Value> gcValue(cx);
+  if (!WasmGcObject::loadValue(cx, gcObject, jsid::Int(int32_t(fieldIndex)),
+                               &gcValue)) {
+    return false;
+  }
+
+  args.rval().set(gcValue);
+  return true;
+}
+
+static bool WasmGcArrayLength(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.requireAtLeast(cx, "wasmGcArrayLength", 1)) {
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<WasmArrayObject>()) {
+    ReportUsageErrorASCII(cx, callee,
+                          "First argument must be a WebAssembly GC array");
+    return false;
+  }
+
+  WasmArrayObject& arr = args[0].toObject().as<WasmArrayObject>();
+  args.rval().setInt32(int32_t(arr.numElements_));
+  return true;
+}
+#endif  // ENABLE_WASM_GC
 
 static bool LargeArrayBufferSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -9182,6 +9236,16 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
     JS_FN_HELP("wasmIntrinsicI8VecMul", WasmIntrinsicI8VecMul, 0, 0,
 "wasmIntrinsicI8VecMul()",
 "  Returns a module that implements an i8 vector pairwise multiplication intrinsic."),
+
+#ifdef ENABLE_WASM_GC
+    JS_FN_HELP("wasmGcReadField", WasmGcReadField, 2, 0,
+"wasmGcReadField(obj, index)",
+"  Gets a field of a WebAssembly GC struct or array."),
+
+    JS_FN_HELP("wasmGcArrayLength", WasmGcArrayLength, 1, 0,
+"wasmGcArrayLength(arr)",
+"  Gets the length of a WebAssembly GC array."),
+#endif // ENABLE_WASM_GC
 
     JS_FN_HELP("largeArrayBufferSupported", LargeArrayBufferSupported, 0, 0,
 "largeArrayBufferSupported()",

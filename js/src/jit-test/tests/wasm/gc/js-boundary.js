@@ -14,12 +14,8 @@ let { newStruct } = wasmEvalText(`
 test('(ref null 0)', [newStruct()], WasmNonAnyrefValues, '(type (struct))');
 test('nullref', [null], WasmNonAnyrefValues);
 
-function test(type, validValues, invalidValues, typeSection) {
+function test(type, validValues, invalidValues, typeSection = "") {
   const CheckError = /can only pass|bad type/;
-
-  if (!typeSection) {
-    typeSection = "";
-  }
 
   // 1. Exported function params
   let {a} = wasmEvalText(`(module
@@ -103,5 +99,27 @@ function test(type, validValues, invalidValues, typeSection) {
     assertErrorMessage(() => table.set(0, val),
       TypeError,
       CheckError);
+  }
+
+  // 5. Verify that GC objects are opaque
+  for (const val of validValues) {
+    if (!val) continue;
+
+    assertEq(Reflect.getPrototypeOf(val), null);
+    assertEq(Reflect.setPrototypeOf(val, null), true);
+    assertEq(Reflect.setPrototypeOf(val, {}), false);
+    assertEq(Reflect.isExtensible(val), false);
+    assertEq(Reflect.preventExtensions(val), false);
+    assertEq(Reflect.getOwnPropertyDescriptor(val, "anything"), undefined);
+    assertEq(Reflect.defineProperty(val, "anything", { value: 42 }), false);
+    assertEq(Reflect.has(val, "anything"), false);
+    assertEq(Reflect.get(val, "anything"), undefined);
+    assertErrorMessage(() => { Reflect.set(val, "anything", 3); }, TypeError, /can't modify/);
+    assertErrorMessage(() => { Reflect.deleteProperty(val, "anything"); }, TypeError, /can't modify/);
+    assertEq(Reflect.ownKeys(val).length, 0, `gc objects should not have keys, but this one had: ${Reflect.ownKeys(val)}`);
+    for (const i in val) {
+      throw new Error(`GC objects should have no enumerable properties, but had ${i}`);
+    }
+    assertEq(val[Symbol.iterator], undefined, "GC objects should not be iterable");
   }
 }

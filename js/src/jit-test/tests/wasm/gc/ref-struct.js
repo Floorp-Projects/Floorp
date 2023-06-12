@@ -210,11 +210,11 @@ assertEq(wasmEvalText(
   let a = makeA();
 
   let b = makeB();
-  assertEq(b[0], 0);
-  assertEq(b[1], 0);
+  assertEq(wasmGcReadField(b, 0), 0);
+  assertEq(wasmGcReadField(b, 1), 0);
 
   let c = makeC();
-  assertEq(c[0], null);
+  assertEq(wasmGcReadField(c, 0), null);
 }
 
 // struct.new_default: valid if all struct fields are defaultable
