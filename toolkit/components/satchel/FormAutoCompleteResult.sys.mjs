@@ -3,16 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class FormAutoCompleteResult {
-  constructor(
-    searchString,
-    searchResult,
-    defaultIndex,
-    errorDescription,
-    items,
-    prevResult
-  ) {
+  constructor(searchString, defaultIndex, errorDescription, items, prevResult) {
     this.searchString = searchString;
-    this._searchResult = searchResult;
     this._defaultIndex = defaultIndex;
     this._errorDescription = errorDescription;
     this._items = items;
@@ -25,9 +17,6 @@ export class FormAutoCompleteResult {
 
   // The user's query string
   searchString = "";
-
-  // The result code of this result object, see |get searchResult| for possible values.
-  _searchResult = 0;
 
   // The default item that should be entered if none is selected
   _defaultIndex = 0;
@@ -55,7 +44,9 @@ export class FormAutoCompleteResult {
    *         RESULT_SUCCESS   (matches found)
    */
   get searchResult() {
-    return this._searchResult;
+    return this._items.length
+      ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+      : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
   }
 
   /**

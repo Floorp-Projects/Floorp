@@ -43,7 +43,6 @@ class SuggestAutoComplete {
     if (this.#listener) {
       let result = new FormAutoCompleteResult(
         searchString,
-        Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
         0,
         "",
         results.map(result => ({

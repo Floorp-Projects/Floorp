@@ -1052,11 +1052,11 @@ export class LoginManagerPrompter {
       result.appendMatch(value, comment, image, _style);
     }
 
-    if (usernames.length) {
-      result.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_SUCCESS);
-    } else {
-      result.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_NOMATCH);
-    }
+    result.setSearchResult(
+      usernames.length
+        ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+        : Ci.nsIAutoCompleteResult.RESULT_NOMATCH
+    );
 
     lazy.usernameAutocompleteSearch.overrideNextResult(result);
   }

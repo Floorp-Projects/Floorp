@@ -61,10 +61,10 @@ class ProfileAutoCompleteResult {
     // The result code of this result object.
     if (resultCode) {
       this.searchResult = resultCode;
-    } else if (matchingProfiles.length) {
-      this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     } else {
-      this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+      this.searchResult = matchingProfiles.length
+        ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+        : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     }
 
     // An array of primary and secondary labels for each profile.
