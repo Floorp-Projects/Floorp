@@ -739,6 +739,7 @@ export class MigrationWizard extends HTMLElement {
           "migration-wizard-progress-icon-in-progress"
         );
         progressIcon.classList.remove("completed");
+        successText.textContent = "";
         // With no status text, we re-insert the &nbsp; so that the status
         // text area does not fully collapse.
         successText.appendChild(document.createTextNode("\u00A0"));
