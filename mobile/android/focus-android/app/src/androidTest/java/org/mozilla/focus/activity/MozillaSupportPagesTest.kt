@@ -36,17 +36,6 @@ class MozillaSupportPagesTest {
 
     @SmokeTest
     @Test
-    fun openMenuWhatsNewPageTest() {
-        homeScreen {
-        }.openMainMenu {
-        }.openSettings {
-        }.clickWhatsNewLink {
-            verifyPageURL("support.mozilla.org")
-        }
-    }
-
-    @SmokeTest
-    @Test
     fun openMenuHelpPageTest() {
         homeScreen {
         }.openMainMenu {

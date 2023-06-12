@@ -5,20 +5,11 @@
 package org.mozilla.focus.settings
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import mozilla.components.browser.state.state.SessionState
-import org.mozilla.focus.GleanMetrics.SettingsScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.whatsnew.WhatsNew
 
 class SettingsFragment : BaseSettingsFragment() {
 
@@ -49,41 +40,6 @@ class SettingsFragment : BaseSettingsFragment() {
         )
 
         return super.onPreferenceTreeClick(preference)
-    }
-
-    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.menu_settings_main, menu)
-    }
-
-    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        if (menuItem.itemId == R.id.menu_whats_new) {
-            whatsNewClicked()
-            return true
-        }
-        return false
-    }
-
-    private fun whatsNewClicked() {
-        val context = requireContext()
-
-        SettingsScreen.whatsNewTapped.add()
-
-        TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(context))
-
-        WhatsNew.userViewedWhatsNew(context)
-
-        val sumoTopic = if (AppConstants.isKlarBuild) {
-            SupportUtils.SumoTopic.WHATS_NEW_KLAR
-        } else {
-            SupportUtils.SumoTopic.WHATS_NEW_FOCUS
-        }
-
-        val url = SupportUtils.getSumoURLForTopic(SupportUtils.getAppVersion(context), sumoTopic)
-        requireComponents.tabsUseCases.addTab(
-            url,
-            source = SessionState.Source.Internal.Menu,
-            private = true,
-        )
     }
 
     companion object {

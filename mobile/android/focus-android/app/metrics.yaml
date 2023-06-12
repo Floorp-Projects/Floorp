@@ -410,23 +410,6 @@ mozilla_products:
       - rtestard@mozilla.com
     expires: never
 
-settings_screen:
-  whats_new_tapped:
-    type: counter
-    description: |
-      A counter that indicates how many times a user has clicked
-      the whats new button from settings screen.
-    bugs:
-      - https://github.com/mozilla-mobile/focus-android/issues/5058
-    data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/5096
-      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 119
-
 autocomplete:
   domain_added:
     type: counter

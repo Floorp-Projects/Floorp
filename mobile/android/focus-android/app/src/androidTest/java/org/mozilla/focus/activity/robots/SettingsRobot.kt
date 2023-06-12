@@ -3,11 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity.robots
 
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
@@ -21,7 +16,6 @@ class SettingsRobot {
 
     fun verifySettingsMenuItems() {
         settingsMenuList.waitForExists(waitingTime)
-        whatsNewButton.check(matches(isDisplayed()))
         assertTrue(generalSettingsMenu().exists())
         assertTrue(searchSettingsMenu.exists())
         assertTrue(privacySettingsMenu.exists())
@@ -79,15 +73,6 @@ class SettingsRobot {
             return SettingsMozillaMenuRobot.Transition()
         }
 
-        fun clickWhatsNewLink(
-            interact: BrowserRobot.() -> Unit,
-        ): BrowserRobot.Transition {
-            whatsNewButton.perform(click())
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun goBackToHomeScreen(
             interact: SearchRobot.() -> Unit,
         ): SearchRobot.Transition {
@@ -127,5 +112,3 @@ private val mozillaSettingsMenu = settingsMenuList.getChild(
     UiSelector()
         .text(getStringResource(R.string.preference_mozilla_summary)),
 )
-
-private val whatsNewButton = onView(withId(R.id.menu_whats_new))

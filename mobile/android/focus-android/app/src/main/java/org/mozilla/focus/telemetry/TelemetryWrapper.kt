@@ -145,7 +145,6 @@ object TelemetryWrapper {
         const val CANCEL = "cancel"
         const val ADD_TO_HOMESCREEN = "add_to_homescreen"
         const val TAB = "tab"
-        const val WHATS_NEW = "whats_new"
         const val RESUME = "resume"
         const val RELOAD = "refresh"
         const val FULL_BROWSER = "full_browser"
@@ -680,13 +679,6 @@ object TelemetryWrapper {
     @JvmStatic
     fun openTabsTrayEvent() {
         TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.TABS_TRAY).queue()
-    }
-
-    @JvmStatic
-    fun openWhatsNewEvent(highlighted: Boolean) {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SETTING, Value.WHATS_NEW)
-            .extra(Extra.HIGHLIGHTED, highlighted.toString())
-            .queue()
     }
 
     @JvmStatic
