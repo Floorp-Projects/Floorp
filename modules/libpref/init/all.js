@@ -2035,9 +2035,6 @@ pref("dom.global_stop_script", true);
 // Support the input event queue on the main thread of content process
 pref("input_event_queue.supported", true);
 
-// This only supports one hidden ctp plugin, edit nsPluginArray.cpp if adding a second
-pref("plugins.navigator.hidden_ctp_plugin", "");
-
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
 
