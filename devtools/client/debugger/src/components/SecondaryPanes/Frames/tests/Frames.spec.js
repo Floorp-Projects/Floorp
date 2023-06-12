@@ -100,10 +100,10 @@ describe("Frames", () => {
           id: 1,
           displayName: "renderFoo",
           location: {
+            source: {
+              url: "http://myfile.com/mahscripts.js",
+            },
             line: 55,
-          },
-          source: {
-            url: "http://myfile.com/mahscripts.js",
           },
         },
       ];
@@ -126,10 +126,10 @@ describe("Frames", () => {
           id: 1,
           displayName: "renderFoo",
           location: {
+            source: {
+              url: "http://myfile.com/mahscripts.js",
+            },
             line: 55,
-          },
-          source: {
-            url: "http://myfile.com/mahscripts.js",
           },
         },
       ];
@@ -146,10 +146,10 @@ describe("Frames", () => {
           id: 1,
           displayName: "renderFoo",
           location: {
+            source: {
+              url: "http://myfile.com/mahscripts.js",
+            },
             line: 55,
-          },
-          source: {
-            url: "http://myfile.com/mahscripts.js",
           },
         },
         {
@@ -157,10 +157,10 @@ describe("Frames", () => {
           library: "back",
           displayName: "a",
           location: {
+            source: {
+              url: "http://myfile.com/back.js",
+            },
             line: 55,
-          },
-          source: {
-            url: "http://myfile.com/back.js",
           },
         },
         {
@@ -168,10 +168,10 @@ describe("Frames", () => {
           library: "back",
           displayName: "b",
           location: {
+            source: {
+              url: "http://myfile.com/back.js",
+            },
             line: 55,
-          },
-          source: {
-            url: "http://myfile.com/back.js",
           },
         },
       ];
@@ -248,19 +248,27 @@ describe("Frames", () => {
         { id: "1-appFrame" },
         {
           id: "2-webpackBootstrapFrame",
-          source: { url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f" },
+          location: {
+            source: {
+              url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f",
+            },
+          },
         },
         {
           id: "3-webpackBundleFrame",
-          source: { url: "https://foo.com/bundle.js" },
+          location: { source: { url: "https://foo.com/bundle.js" } },
         },
         {
           id: "4-webpackBootstrapFrame",
-          source: { url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f" },
+          location: {
+            source: {
+              url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f",
+            },
+          },
         },
         {
           id: "5-webpackBundleFrame",
-          source: { url: "https://foo.com/bundle.js" },
+          location: { source: { url: "https://foo.com/bundle.js" } },
         },
       ];
       const selectedFrame = frames[0];
