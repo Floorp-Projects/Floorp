@@ -95,25 +95,69 @@ void AdapterInfo::GetWgpuBackend(nsString& s) const {
 GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mBridge, mFeatures, mLimits)
 GPU_IMPL_JS_WRAP(Adapter)
 
-Maybe<uint32_t> Adapter::MakeFeatureBits(
+static Maybe<ffi::WGPUFeatures> ToWGPUFeatures(
+    const dom::GPUFeatureName aFeature) {
+  switch (aFeature) {
+    case dom::GPUFeatureName::Depth_clip_control:
+      return Some(WGPUFeatures_DEPTH_CLIP_CONTROL);
+
+    case dom::GPUFeatureName::Depth32float_stencil8:
+      return Some(WGPUFeatures_DEPTH32FLOAT_STENCIL8);
+
+    case dom::GPUFeatureName::Texture_compression_bc:
+      return Some(WGPUFeatures_TEXTURE_COMPRESSION_BC);
+
+    case dom::GPUFeatureName::Texture_compression_etc2:
+      return Some(WGPUFeatures_TEXTURE_COMPRESSION_ETC2);
+
+    case dom::GPUFeatureName::Texture_compression_astc:
+      return Some(WGPUFeatures_TEXTURE_COMPRESSION_ASTC);
+
+    case dom::GPUFeatureName::Timestamp_query:
+      return Some(WGPUFeatures_TIMESTAMP_QUERY);
+
+    case dom::GPUFeatureName::Indirect_first_instance:
+      return Some(WGPUFeatures_INDIRECT_FIRST_INSTANCE);
+
+    case dom::GPUFeatureName::Shader_f16:
+      return Some(WGPUFeatures_SHADER_F16);
+
+    case dom::GPUFeatureName::Rg11b10ufloat_renderable:
+      return Some(WGPUFeatures_RG11B10UFLOAT_RENDERABLE);
+
+    case dom::GPUFeatureName::Bgra8unorm_storage:
+#ifdef WGPUFeatures_BGRA8UNORM_STORAGE
+#  error fix todo
+#endif
+      return Nothing();  // TODO
+
+    case dom::GPUFeatureName::Float32_filterable:
+#ifdef WGPUFeatures_FLOAT32_FILTERABLE
+#  error fix todo
+#endif
+      return Nothing();  // TODO
+
+    case dom::GPUFeatureName::EndGuard_:
+      break;
+  }
+  MOZ_CRASH("Bad GPUFeatureName.");
+}
+
+static Maybe<ffi::WGPUFeatures> MakeFeatureBits(
     const dom::Sequence<dom::GPUFeatureName>& aFeatures) {
-  uint32_t bits = 0;
+  ffi::WGPUFeatures bits = 0;
   for (const auto& feature : aFeatures) {
-    if (feature == dom::GPUFeatureName::Depth_clip_control) {
-      bits |= WGPUFeatures_DEPTH_CLIP_CONTROL;
-    } else if (feature == dom::GPUFeatureName::Texture_compression_bc) {
-      bits |= WGPUFeatures_TEXTURE_COMPRESSION_BC;
-    } else if (feature == dom::GPUFeatureName::Indirect_first_instance) {
-      bits |= WGPUFeatures_INDIRECT_FIRST_INSTANCE;
-    } else if (feature == dom::GPUFeatureName::Depth32float_stencil8) {
-      bits |= WGPUFeatures_DEPTH32FLOAT_STENCIL8;
-    } else {
+    const auto bit = ToWGPUFeatures(feature);
+    if (!bit) {
+      const auto featureStr = dom::GPUFeatureNameValues::GetString(feature);
+      (void)featureStr;
       NS_WARNING(
-          nsPrintfCString("Requested feature bit '%d' is not recognized.",
-                          static_cast<int>(feature))
+          nsPrintfCString("Requested feature bit for '%s' is not implemented.",
+                          featureStr.data())
               .get());
       return Nothing();
     }
+    bits |= *bit;
   }
   return Some(bits);
 }
@@ -124,26 +168,47 @@ Adapter::Adapter(Instance* const aParent, WebGPUChild* const aBridge,
       mBridge(aBridge),
       mId(aInfo->id),
       mFeatures(new SupportedFeatures(this)),
-      mLimits(new SupportedLimits(this,
-                                  MakeUnique<ffi::WGPULimits>(aInfo->limits))),
+      mLimits(new SupportedLimits(this, aInfo->limits)),
       mInfo(aInfo) {
-  ErrorResult result;  // TODO: should this come from outside
-  // This list needs to match `AdapterRequestDevice`
-  if (aInfo->features & WGPUFeatures_DEPTH_CLIP_CONTROL) {
-    dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
-        mFeatures, u"depth-clip-control"_ns, result);
-  }
-  if (aInfo->features & WGPUFeatures_TEXTURE_COMPRESSION_BC) {
-    dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
-        mFeatures, u"texture-compression-bc"_ns, result);
-  }
-  if (aInfo->features & WGPUFeatures_INDIRECT_FIRST_INSTANCE) {
-    dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
-        mFeatures, u"indirect-first-instance"_ns, result);
-  }
-  if (aInfo->features & WGPUFeatures_DEPTH32FLOAT_STENCIL8) {
-    dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
-        mFeatures, u"depth32float-stencil8"_ns, result);
+  ErrorResult ignoredRv;  // It's onerous to plumb this in from outside in this
+                          // case, and we don't really need to.
+
+  static const auto FEATURE_BY_BIT = []() {
+    auto ret = std::unordered_map<ffi::WGPUFeatures, dom::GPUFeatureName>{};
+
+    for (const auto feature :
+         MakeEnumeratedRange(dom::GPUFeatureName::EndGuard_)) {
+      const auto bitForFeature = ToWGPUFeatures(feature);
+      if (!bitForFeature) {
+        // There are some features that don't have bits.
+        continue;
+      }
+      ret[*bitForFeature] = feature;
+    }
+
+    return ret;
+  }();
+
+  auto remainingFeatureBits = aInfo->features;
+  auto bitMask = decltype(remainingFeatureBits){0};
+  while (remainingFeatureBits) {
+    if (bitMask) {
+      bitMask <<= 1;
+    } else {
+      bitMask = 1;
+    }
+    const auto bit = remainingFeatureBits & bitMask;
+    remainingFeatureBits &= ~bitMask;  // Clear bit.
+    if (!bit) {
+      continue;
+    }
+
+    const auto featureForBit = FEATURE_BY_BIT.find(bit);
+    if (featureForBit != FEATURE_BY_BIT.end()) {
+      mFeatures->Add(featureForBit->second, ignoredRv);
+    } else {
+      // We don't recognize that bit, but maybe it's a wpgu-native-only feature.
+    }
   }
 }
 
@@ -162,6 +227,84 @@ bool Adapter::IsFallbackAdapter() const {
   return mInfo->device_type == ffi::WGPUDeviceType::WGPUDeviceType_Cpu;
 }
 
+static std::string_view ToJsKey(const Limit limit) {
+  switch (limit) {
+    case Limit::MaxTextureDimension1D:
+      return "maxTextureDimension1D";
+    case Limit::MaxTextureDimension2D:
+      return "maxTextureDimension2D";
+    case Limit::MaxTextureDimension3D:
+      return "maxTextureDimension3D";
+    case Limit::MaxTextureArrayLayers:
+      return "maxTextureArrayLayers";
+    case Limit::MaxBindGroups:
+      return "maxBindGroups";
+    case Limit::MaxBindGroupsPlusVertexBuffers:
+      return "maxBindGroupsPlusVertexBuffers";
+    case Limit::MaxBindingsPerBindGroup:
+      return "maxBindingsPerBindGroup";
+    case Limit::MaxDynamicUniformBuffersPerPipelineLayout:
+      return "maxDynamicUniformBuffersPerPipelineLayout";
+    case Limit::MaxDynamicStorageBuffersPerPipelineLayout:
+      return "maxDynamicStorageBuffersPerPipelineLayout";
+    case Limit::MaxSampledTexturesPerShaderStage:
+      return "maxSampledTexturesPerShaderStage";
+    case Limit::MaxSamplersPerShaderStage:
+      return "maxSamplersPerShaderStage";
+    case Limit::MaxStorageBuffersPerShaderStage:
+      return "maxStorageBuffersPerShaderStage";
+    case Limit::MaxStorageTexturesPerShaderStage:
+      return "maxStorageTexturesPerShaderStage";
+    case Limit::MaxUniformBuffersPerShaderStage:
+      return "maxUniformBuffersPerShaderStage";
+    case Limit::MaxUniformBufferBindingSize:
+      return "maxUniformBufferBindingSize";
+    case Limit::MaxStorageBufferBindingSize:
+      return "maxStorageBufferBindingSize";
+    case Limit::MinUniformBufferOffsetAlignment:
+      return "minUniformBufferOffsetAlignment";
+    case Limit::MinStorageBufferOffsetAlignment:
+      return "minStorageBufferOffsetAlignment";
+    case Limit::MaxVertexBuffers:
+      return "maxVertexBuffers";
+    case Limit::MaxBufferSize:
+      return "maxBufferSize";
+    case Limit::MaxVertexAttributes:
+      return "maxVertexAttributes";
+    case Limit::MaxVertexBufferArrayStride:
+      return "maxVertexBufferArrayStride";
+    case Limit::MaxInterStageShaderComponents:
+      return "maxInterStageShaderComponents";
+    case Limit::MaxInterStageShaderVariables:
+      return "maxInterStageShaderVariables";
+    case Limit::MaxColorAttachments:
+      return "maxColorAttachments";
+    case Limit::MaxColorAttachmentBytesPerSample:
+      return "maxColorAttachmentBytesPerSample";
+    case Limit::MaxComputeWorkgroupStorageSize:
+      return "maxComputeWorkgroupStorageSize";
+    case Limit::MaxComputeInvocationsPerWorkgroup:
+      return "maxComputeInvocationsPerWorkgroup";
+    case Limit::MaxComputeWorkgroupSizeX:
+      return "maxComputeWorkgroupSizeX";
+    case Limit::MaxComputeWorkgroupSizeY:
+      return "maxComputeWorkgroupSizeY";
+    case Limit::MaxComputeWorkgroupSizeZ:
+      return "maxComputeWorkgroupSizeZ";
+    case Limit::MaxComputeWorkgroupsPerDimension:
+      return "maxComputeWorkgroupsPerDimension";
+  }
+  MOZ_CRASH("Bad Limit");
+}
+
+// -
+// String helpers
+
+static auto ToACString(const nsAString& s) { return NS_ConvertUTF16toUTF8(s); }
+
+// -
+// Adapter::RequestDevice
+
 already_AddRefed<dom::Promise> Adapter::RequestDevice(
     const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv) {
   RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
@@ -169,23 +312,155 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
     return nullptr;
   }
 
-  if (!mBridge->CanSend()) {
-    promise->MaybeRejectWithInvalidStateError(
-        "WebGPUChild cannot send, must recreate Adapter");
-    return promise.forget();
+  ffi::WGPULimits deviceLimits = *mLimits->mFfi;
+  for (const auto limit : MakeInclusiveEnumeratedRange(Limit::_LAST)) {
+    const auto defaultValue = [&]() -> double {
+      switch (limit) {
+          // clang-format off
+      case Limit::MaxTextureDimension1D: return 8192;
+      case Limit::MaxTextureDimension2D: return 8192;
+      case Limit::MaxTextureDimension3D: return 2048;
+      case Limit::MaxTextureArrayLayers: return 256;
+      case Limit::MaxBindGroups: return 4;
+      case Limit::MaxBindGroupsPlusVertexBuffers: return 24;
+      case Limit::MaxBindingsPerBindGroup: return 1000;
+      case Limit::MaxDynamicUniformBuffersPerPipelineLayout: return 8;
+      case Limit::MaxDynamicStorageBuffersPerPipelineLayout: return 4;
+      case Limit::MaxSampledTexturesPerShaderStage: return 16;
+      case Limit::MaxSamplersPerShaderStage: return 16;
+      case Limit::MaxStorageBuffersPerShaderStage: return 8;
+      case Limit::MaxStorageTexturesPerShaderStage: return 4;
+      case Limit::MaxUniformBuffersPerShaderStage: return 12;
+      case Limit::MaxUniformBufferBindingSize: return 65536;
+      case Limit::MaxStorageBufferBindingSize: return 134217728;
+      case Limit::MinUniformBufferOffsetAlignment: return 256;
+      case Limit::MinStorageBufferOffsetAlignment: return 256;
+      case Limit::MaxVertexBuffers: return 8;
+      case Limit::MaxBufferSize: return 268435456;
+      case Limit::MaxVertexAttributes: return 16;
+      case Limit::MaxVertexBufferArrayStride: return 2048;
+      case Limit::MaxInterStageShaderComponents: return 60;
+      case Limit::MaxInterStageShaderVariables: return 16;
+      case Limit::MaxColorAttachments: return 8;
+      case Limit::MaxColorAttachmentBytesPerSample: return 32;
+      case Limit::MaxComputeWorkgroupStorageSize: return 16384;
+      case Limit::MaxComputeInvocationsPerWorkgroup: return 256;
+      case Limit::MaxComputeWorkgroupSizeX: return 256;
+      case Limit::MaxComputeWorkgroupSizeY: return 256;
+      case Limit::MaxComputeWorkgroupSizeZ: return 64;
+      case Limit::MaxComputeWorkgroupsPerDimension: return 65535;
+          // clang-format on
+      }
+      MOZ_CRASH("Bad Limit");
+    }();
+    SetLimit(&deviceLimits, limit, defaultValue);
   }
 
-  ffi::WGPULimits limits = {};
-  auto request = mBridge->AdapterRequestDevice(mId, aDesc, &limits);
-  if (request) {
-    RefPtr<Device> device =
-        new Device(this, request->mId, MakeUnique<ffi::WGPULimits>(limits));
-    // copy over the features
+  // -
+
+  [&]() {  // So that we can `return;` instead of `return promise.forget();`.
+    if (!mBridge->CanSend()) {
+      promise->MaybeRejectWithInvalidStateError(
+          "WebGPUChild cannot send, must recreate Adapter");
+      return;
+    }
+
+    // -
+    // Validate Features
+
+    for (const auto requested : aDesc.mRequiredFeatures) {
+      const bool supported = mFeatures->Features().count(requested);
+      if (!supported) {
+        const auto fstr = dom::GPUFeatureNameValues::GetString(requested);
+        const auto astr = this->LabelOrId();
+        nsPrintfCString msg(
+            "requestDevice: Feature '%s' requested must be supported by "
+            "adapter %s",
+            fstr.data(), astr.get());
+        promise->MaybeRejectWithTypeError(msg);
+        return;
+      }
+    }
+
+    // -
+    // Validate Limits
+
+    if (aDesc.mRequiredLimits.WasPassed()) {
+      static const auto LIMIT_BY_JS_KEY = []() {
+        std::unordered_map<std::string_view, Limit> ret;
+        for (const auto limit : MakeInclusiveEnumeratedRange(Limit::_LAST)) {
+          const auto jsKeyU8 = ToJsKey(limit);
+          ret[jsKeyU8] = limit;
+        }
+        return ret;
+      }();
+
+      for (const auto& entry : aDesc.mRequiredLimits.Value().Entries()) {
+        const auto& keyU16 = entry.mKey;
+        const nsCString keyU8 = ToACString(keyU16);
+        const auto itr = LIMIT_BY_JS_KEY.find(keyU8.get());
+        if (itr == LIMIT_BY_JS_KEY.end()) {
+          nsPrintfCString msg("requestDevice: Limit '%s' not recognized.",
+                              keyU8.get());
+          promise->MaybeRejectWithOperationError(msg);
+          return;
+        }
+
+        const auto& limit = itr->second;
+        const auto& requestedValue = entry.mValue;
+        const auto supportedValueF64 = GetLimit(*mLimits->mFfi, limit);
+        const auto supportedValue = static_cast<uint64_t>(supportedValueF64);
+        if (StringBeginsWith(keyU8, "max"_ns)) {
+          if (requestedValue > supportedValue) {
+            nsPrintfCString msg(
+                "requestDevice: Request for limit '%s' must be <= supported "
+                "%s, was %s.",
+                keyU8.get(), std::to_string(supportedValue).c_str(),
+                std::to_string(requestedValue).c_str());
+            promise->MaybeRejectWithOperationError(msg);
+            return;
+          }
+        } else {
+          MOZ_ASSERT(StringBeginsWith(keyU8, "min"_ns));
+          if (requestedValue < supportedValue) {
+            nsPrintfCString msg(
+                "requestDevice: Request for limit '%s' must be >= supported "
+                "%s, was %s.",
+                keyU8.get(), std::to_string(supportedValue).c_str(),
+                std::to_string(requestedValue).c_str());
+            promise->MaybeRejectWithOperationError(msg);
+            return;
+          }
+        }
+        if (StringEndsWith(keyU8, "Alignment"_ns)) {
+          if (!IsPowerOfTwo(requestedValue)) {
+            nsPrintfCString msg(
+                "requestDevice: Request for limit '%s' must be a power of two, "
+                "was %s.",
+                keyU8.get(), std::to_string(requestedValue).c_str());
+            promise->MaybeRejectWithOperationError(msg);
+            return;
+          }
+        }
+
+        SetLimit(&deviceLimits, limit, requestedValue);
+      }
+    }
+
+    // -
+
+    ffi::WGPUDeviceDescriptor ffiDesc = {};
+    ffiDesc.features = *MakeFeatureBits(aDesc.mRequiredFeatures);
+    ffiDesc.limits = deviceLimits;
+    auto request = mBridge->AdapterRequestDevice(mId, ffiDesc);
+    if (!request) {
+      promise->MaybeRejectWithNotSupportedError(
+          "Unable to instantiate a Device");
+      return;
+    }
+    RefPtr<Device> device = new Device(this, request->mId, ffiDesc.limits);
     for (const auto& feature : aDesc.mRequiredFeatures) {
-      NS_ConvertASCIItoUTF16 string(
-          dom::GPUFeatureNameValues::GetString(feature));
-      dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(device->mFeatures,
-                                                             string, aRv);
+      device->mFeatures->Add(feature, aRv);
     }
 
     request->mPromise->Then(
@@ -209,9 +484,7 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
           device->CleanupUnregisteredInParent();
           promise->MaybeRejectWithNotSupportedError("IPC error");
         });
-  } else {
-    promise->MaybeRejectWithNotSupportedError("Unable to instantiate a Device");
-  }
+  }();
 
   return promise.forget();
 }
