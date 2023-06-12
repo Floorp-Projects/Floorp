@@ -553,6 +553,10 @@ def aarch64_jscvt(fjcvtzs, target, simulator):
 
 set_define("MOZ_AARCH64_JSCVT", aarch64_jscvt)
 
+# On Apple Silicon we use MAP_JIT with pthread_jit_write_protect_np to implement
+# JIT code write protection.
+set_define("JS_USE_APPLE_FAST_WX", True, when=is_apple_silicon)
+
 # CTypes
 # =======================================================
 @depends(js_standalone)

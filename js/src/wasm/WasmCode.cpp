@@ -69,7 +69,8 @@ static uint32_t RoundupCodeLength(uint32_t codeLength) {
   return RoundUp(codeLength, ExecutableCodePageSize);
 }
 
-UniqueCodeBytes wasm::AllocateCodeBytes(uint32_t codeLength) {
+UniqueCodeBytes wasm::AllocateCodeBytes(
+    Maybe<AutoMarkJitCodeWritableForThread>& writable, uint32_t codeLength) {
   if (codeLength > MaxCodeBytesPerProcess) {
     return nullptr;
   }
@@ -96,6 +97,10 @@ UniqueCodeBytes wasm::AllocateCodeBytes(uint32_t codeLength) {
   if (!p) {
     return nullptr;
   }
+
+  // Construct AutoMarkJitCodeWritableForThread after allocating memory, to
+  // ensure it's not nested (OnLargeAllocationFailure can trigger GC).
+  writable.emplace();
 
   // Zero the padding.
   memset(((uint8_t*)p) + codeLength, 0, roundedCodeLength - codeLength);
@@ -145,6 +150,12 @@ void FreeCode::operator()(uint8_t* bytes) {
 }
 
 bool wasm::StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
+  if (!EnsureBuiltinThunksInitialized()) {
+    return false;
+  }
+
+  AutoMarkJitCodeWritableForThread writable;
+
   for (LinkData::InternalLink link : linkData.internalLinks) {
     CodeLabel label;
     label.patchAt()->bind(link.patchAtOffset);
@@ -153,10 +164,6 @@ bool wasm::StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
     label.setLinkMode(static_cast<CodeLabel::LinkMode>(link.mode));
 #endif
     Assembler::Bind(ms.base(), label);
-  }
-
-  if (!EnsureBuiltinThunksInitialized()) {
-    return false;
   }
 
   for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
@@ -296,7 +303,8 @@ UniqueModuleSegment ModuleSegment::create(Tier tier, MacroAssembler& masm,
                                           const LinkData& linkData) {
   uint32_t codeLength = masm.bytesNeeded();
 
-  UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
+  Maybe<AutoMarkJitCodeWritableForThread> writable;
+  UniqueCodeBytes codeBytes = AllocateCodeBytes(writable, codeLength);
   if (!codeBytes) {
     return nullptr;
   }
@@ -312,7 +320,8 @@ UniqueModuleSegment ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes,
                                           const LinkData& linkData) {
   uint32_t codeLength = unlinkedBytes.length();
 
-  UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
+  Maybe<AutoMarkJitCodeWritableForThread> writable;
+  UniqueCodeBytes codeBytes = AllocateCodeBytes(writable, codeLength);
   if (!codeBytes) {
     return nullptr;
   }
@@ -371,7 +380,8 @@ size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 
 UniqueLazyStubSegment LazyStubSegment::create(const CodeTier& codeTier,
                                               size_t length) {
-  UniqueCodeBytes codeBytes = AllocateCodeBytes(length);
+  Maybe<AutoMarkJitCodeWritableForThread> writable;
+  UniqueCodeBytes codeBytes = AllocateCodeBytes(writable, length);
   if (!codeBytes) {
     return nullptr;
   }
@@ -554,12 +564,15 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
     return false;
   }
 
-  masm.executableCopy(codePtr);
-  PatchDebugSymbolicAccesses(codePtr, masm);
-  memset(codePtr + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
+  {
+    AutoMarkJitCodeWritableForThread writable;
+    masm.executableCopy(codePtr);
+    PatchDebugSymbolicAccesses(codePtr, masm);
+    memset(codePtr + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
 
-  for (const CodeLabel& label : masm.codeLabels()) {
-    Assembler::Bind(codePtr, label);
+    for (const CodeLabel& label : masm.codeLabels()) {
+      Assembler::Bind(codePtr, label);
+    }
   }
 
   if (!ExecutableAllocator::makeExecutableAndFlushICache(codePtr, codeLength)) {

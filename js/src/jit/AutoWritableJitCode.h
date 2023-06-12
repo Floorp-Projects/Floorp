@@ -33,6 +33,7 @@ class MOZ_RAII AutoWritableJitCodeFallible {
   JSRuntime* rt_;
   void* addr_;
   size_t size_;
+  AutoMarkJitCodeWritableForThread writableForThread_;
 
  public:
   AutoWritableJitCodeFallible(JSRuntime* rt, void* addr, size_t size)

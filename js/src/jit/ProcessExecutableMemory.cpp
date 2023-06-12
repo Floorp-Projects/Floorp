@@ -480,16 +480,51 @@ static void* ComputeRandomAllocationAddress() {
 #  endif
 }
 
+static void DecommitPages(void* addr, size_t bytes);
+
 static void* ReserveProcessExecutableMemory(size_t bytes) {
+  // On most Unix platforms our strategy is as follows:
+  //
+  // * Reserve:  mmap with PROT_NONE
+  // * Commit:   mmap with MAP_FIXED, PROT_READ | ...
+  // * Decommit: mmap with MAP_FIXED, PROT_NONE
+  //
+  // On Apple Silicon this only works if we use mprotect to implement W^X. To
+  // use RWX pages with the faster pthread_jit_write_protect_np API for
+  // thread-local writable/executable switching, the kernel enforces the
+  // following rules:
+  //
+  // * The initial mmap must be called with MAP_JIT.
+  // * MAP_FIXED can't be used with MAP_JIT.
+  // * Since macOS 11.2, mprotect can't be used to change permissions of RWX JIT
+  //   pages (even PROT_NONE fails).
+  //   See https://developer.apple.com/forums/thread/672804.
+  //
+  // This means we have to use the following strategy on Apple Silicon:
+  //
+  // * Reserve:  mmap with PROT_READ | PROT_WRITE | PROT_EXEC, then decommit
+  // * Commit:   madvise with MADV_FREE_REUSE
+  // * Decommit: madvise with MADV_FREE_REUSABLE
+  //
+  // This is inspired by V8's code in OS::SetPermissions.
+
   // Note that randomAddr is just a hint: if the address is not available
   // mmap will pick a different address.
   void* randomAddr = ComputeRandomAllocationAddress();
-  void* p = MozTaggedAnonymousMmap(randomAddr, bytes, PROT_NONE,
-                                   MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1,
-                                   0, "js-executable-memory");
+  unsigned protection = PROT_NONE;
+  unsigned flags = MAP_NORESERVE | MAP_PRIVATE | MAP_ANON;
+#  ifdef JS_USE_APPLE_FAST_WX
+  protection = PROT_READ | PROT_WRITE | PROT_EXEC;
+  flags |= MAP_JIT;
+#  endif
+  void* p = MozTaggedAnonymousMmap(randomAddr, bytes, protection, flags, -1, 0,
+                                   "js-executable-memory");
   if (p == MAP_FAILED) {
     return nullptr;
   }
+#  ifdef JS_USE_APPLE_FAST_WX
+  DecommitPages(p, bytes);
+#  endif
   return p;
 }
 
@@ -530,23 +565,42 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
 
 [[nodiscard]] static bool CommitPages(void* addr, size_t bytes,
                                       ProtectionSetting protection) {
-  void* p = MozTaggedAnonymousMmap(
-      addr, bytes, ProtectionSettingToFlags(protection),
-      MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0, "js-executable-memory");
+  // See the comment in ReserveProcessExecutableMemory.
+#  ifdef JS_USE_APPLE_FAST_WX
+  int ret;
+  do {
+    ret = madvise(addr, bytes, MADV_FREE_REUSE);
+  } while (ret != 0 && errno == EAGAIN);
+  return ret == 0;
+#  else
+  unsigned flags = ProtectionSettingToFlags(protection);
+  void* p = MozTaggedAnonymousMmap(addr, bytes, flags,
+                                   MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0,
+                                   "js-executable-memory");
   if (p == MAP_FAILED) {
     return false;
   }
   MOZ_RELEASE_ASSERT(p == addr);
   return true;
+#  endif
 }
 
 static void DecommitPages(void* addr, size_t bytes) {
+  // See the comment in ReserveProcessExecutableMemory.
+#  ifdef JS_USE_APPLE_FAST_WX
+  int ret;
+  do {
+    ret = madvise(addr, bytes, MADV_FREE_REUSABLE);
+  } while (ret != 0 && errno == EAGAIN);
+  MOZ_RELEASE_ASSERT(ret == 0);
+#  else
   // Use mmap with MAP_FIXED and PROT_NONE. Inspired by jemalloc's
   // pages_decommit.
   void* p = MozTaggedAnonymousMmap(addr, bytes, PROT_NONE,
                                    MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0,
                                    "js-executable-memory");
   MOZ_RELEASE_ASSERT(addr == p);
+#  endif
 }
 #endif
 
@@ -900,6 +954,10 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
     return true;
   }
 
+#  ifdef JS_USE_APPLE_FAST_WX
+  MOZ_CRASH("writeProtectCode should always be false on Apple Silicon");
+#  endif
+
 #  ifdef XP_WIN
   DWORD flags = ProtectionSettingToFlags(protection);
   // This is a essentially a VirtualProtect, but with lighter impact on
@@ -932,5 +990,34 @@ static PRUNTIME_FUNCTION RuntimeFunctionCallback(DWORD64 ControlPc,
   }
   return (PRUNTIME_FUNCTION)(p - gc::SystemPageSize() +
                              offsetof(ExceptionHandlerRecord, runtimeFunction));
+}
+#endif
+
+#ifdef JS_USE_APPLE_FAST_WX
+void js::jit::AutoMarkJitCodeWritableForThread::markExecutable(
+    bool executable) {
+  if (__builtin_available(macOS 11.0, *)) {
+    pthread_jit_write_protect_np(executable);
+  } else {
+    MOZ_CRASH("pthread_jit_write_protect_np must be available");
+  }
+}
+#endif
+
+#ifdef DEBUG
+static MOZ_THREAD_LOCAL(bool) sMarkingWritable;
+
+void js::jit::AutoMarkJitCodeWritableForThread::checkConstructor() {
+  if (!sMarkingWritable.initialized()) {
+    sMarkingWritable.infallibleInit();
+  }
+  MOZ_ASSERT(!sMarkingWritable.get(),
+             "AutoMarkJitCodeWritableForThread shouldn't be nested");
+  sMarkingWritable.set(true);
+}
+
+void js::jit::AutoMarkJitCodeWritableForThread::checkDestructor() {
+  MOZ_ASSERT(sMarkingWritable.get());
+  sMarkingWritable.set(false);
 }
 #endif

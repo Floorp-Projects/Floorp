@@ -37,6 +37,7 @@
 #include "jstypes.h"
 
 #include "gc/Memory.h"
+#include "jit/ProcessExecutableMemory.h"
 #include "js/AllocPolicy.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -242,7 +243,9 @@ class ModuleSegment : public CodeSegment {
   WASM_DECLARE_FRIEND_SERIALIZE(ModuleSegment);
 };
 
-extern UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
+extern UniqueCodeBytes AllocateCodeBytes(
+    mozilla::Maybe<jit::AutoMarkJitCodeWritableForThread>& writable,
+    uint32_t codeLength);
 extern bool StaticallyLink(const ModuleSegment& ms, const LinkData& linkData);
 extern void StaticallyUnlink(uint8_t* base, const LinkData& linkData);
 
