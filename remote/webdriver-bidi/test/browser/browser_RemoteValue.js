@@ -447,7 +447,7 @@ add_task(function test_deserializePrimitiveTypes() {
     const { value: expectedValue, serialized } = type;
 
     info(`Checking '${serialized.type}'`);
-    const value = deserialize(realm, serialized);
+    const value = deserialize(realm, serialized, {});
 
     if (serialized.value == "NaN") {
       ok(Number.isNaN(value), `Got expected value for ${serialized}`);
@@ -481,7 +481,7 @@ add_task(function test_deserializeDateLocalValue() {
   ];
   for (const dateString of validaDateStrings) {
     info(`Checking '${dateString}'`);
-    const value = deserialize(realm, { type: "date", value: dateString });
+    const value = deserialize(realm, { type: "date", value: dateString }, {});
 
     Assert.equal(
       value.getTime(),
@@ -503,7 +503,7 @@ add_task(function test_deserializeLocalValues() {
     }
 
     info(`Checking '${serialized.type}'`);
-    const value = deserialize(realm, serialized);
+    const value = deserialize(realm, serialized, {});
     assertLocalValue(serialized.type, value, expectedValue);
   }
 });
@@ -533,13 +533,13 @@ add_task(async function test_deserializeChannel() {
   };
 
   info(`Checking 'channel'`);
-  const deserializedValue = deserialize(realm, channel, deserializationOptions);
+  const value = deserialize(realm, channel, deserializationOptions, {});
   Assert.equal(
-    Object.prototype.toString.call(deserializedValue),
+    Object.prototype.toString.call(value),
     "[object Function]",
     "Got expected type Function"
   );
-  Assert.equal(deserializedValue("foo"), "foo", "Got expected result");
+  Assert.equal(value("foo"), "foo", "Got expected result");
 });
 
 add_task(function test_deserializeLocalValuesByHandle() {
@@ -560,7 +560,8 @@ add_task(function test_deserializeLocalValuesByHandle() {
       { maxObjectDepth: 0 },
       "root",
       new Map(),
-      realm1
+      realm1,
+      {}
     );
 
     // Create a remote reference containing only the handle.
@@ -568,18 +569,18 @@ add_task(function test_deserializeLocalValuesByHandle() {
     const remoteReference = { handle: serializedValue.handle };
 
     // Check that the remote reference can be deserialized in realm1.
-    const deserializedValue = deserialize(realm1, remoteReference);
-    assertLocalValue(serialized.type, deserializedValue, expectedValue);
+    const value = deserialize(realm1, remoteReference, {});
+    assertLocalValue(serialized.type, value, expectedValue);
 
     Assert.throws(
-      () => deserialize(realm2, remoteReference),
+      () => deserialize(realm2, remoteReference, {}),
       /NoSuchHandleError:/,
       `Got expected error when using the wrong realm for deserialize`
     );
 
     realm1.removeObjectHandle(serializedValue.handle);
     Assert.throws(
-      () => deserialize(realm1, remoteReference),
+      () => deserialize(realm1, remoteReference, {}),
       /NoSuchHandleError:/,
       `Got expected error when after deleting the object handle`
     );
@@ -593,7 +594,7 @@ add_task(function test_deserializeHandleInvalidTypes() {
     info(`Checking type: '${invalidType}'`);
 
     Assert.throws(
-      () => deserialize(realm, { type: "object", handle: invalidType }),
+      () => deserialize(realm, { type: "object", handle: invalidType }, {}),
       /InvalidArgumentError:/,
       `Got expected error for type ${invalidType}`
     );
@@ -720,7 +721,7 @@ add_task(function test_deserializePrimitiveTypesInvalidValues() {
       info(`Checking '${type}' with value ${value}`);
 
       Assert.throws(
-        () => deserialize(realm, { type, value }),
+        () => deserialize(realm, { type, value }, {}),
         /InvalidArgument/,
         `Got expected error for type ${type} and value ${value}`
       );
@@ -771,7 +772,7 @@ add_task(function test_deserializeDateLocalValueInvalidValues() {
     info(`Checking '${dateString}'`);
 
     Assert.throws(
-      () => deserialize(realm, { type: "date", value: dateString }),
+      () => deserialize(realm, { type: "date", value: dateString }, {}),
       /InvalidArgumentError:/,
       `Got expected error for date string: ${dateString}`
     );
@@ -787,17 +788,21 @@ add_task(function test_deserializeLocalValuesInvalidType() {
     info(`Checking type: '${invalidType}'`);
 
     Assert.throws(
-      () => deserialize(realm, { type: invalidType }),
+      () => deserialize(realm, { type: invalidType }, {}),
       /InvalidArgumentError:/,
       `Got expected error for type ${invalidType}`
     );
 
     Assert.throws(
       () =>
-        deserialize(realm, {
-          type: "array",
-          value: [{ type: invalidType }],
-        }),
+        deserialize(
+          realm,
+          {
+            type: "array",
+            value: [{ type: invalidType }],
+          },
+          {}
+        ),
       /InvalidArgumentError:/,
       `Got expected error for nested type ${invalidType}`
     );
@@ -908,7 +913,7 @@ add_task(function test_deserializeLocalValuesInvalidValues() {
       info(`Checking '${type}' with value ${value}`);
 
       Assert.throws(
-        () => deserialize(realm, { type, value }),
+        () => deserialize(realm, { type, value }, {}),
         /InvalidArgumentError:/,
         `Got expected error for type ${type} and value ${value}`
       );
@@ -929,7 +934,8 @@ add_task(function test_serializePrimitiveTypes() {
       defaultSerializationOptions,
       "none",
       serializationInternalMap,
-      realm
+      realm,
+      {}
     );
     assertInternalIds(serializationInternalMap, 0);
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
@@ -942,7 +948,8 @@ add_task(function test_serializePrimitiveTypes() {
       defaultSerializationOptions,
       "root",
       serializationInternalMapWithRoot,
-      realm
+      realm,
+      {}
     );
     assertInternalIds(serializationInternalMapWithRoot, 0);
     Assert.deepEqual(serialized, serializedWithRoot, "Got expected structure");
@@ -963,7 +970,8 @@ add_task(function test_serializeRemoteSimpleValues() {
       defaultSerializationOptions,
       "none",
       serializationInternalMapWithNone,
-      realm
+      realm,
+      {}
     );
 
     assertInternalIds(serializationInternalMapWithNone, 0);
@@ -976,7 +984,8 @@ add_task(function test_serializeRemoteSimpleValues() {
       defaultSerializationOptions,
       "root",
       serializationInternalMapWithRoot,
-      realm
+      realm,
+      {}
     );
 
     assertInternalIds(serializationInternalMapWithRoot, 0);
@@ -1008,7 +1017,8 @@ add_task(function test_serializeRemoteComplexValues() {
       serializationOptionsWithDefaults,
       "none",
       serializationInternalMapWithNone,
-      realm
+      realm,
+      {}
     );
 
     assertInternalIds(serializationInternalMapWithNone, 0);
@@ -1021,7 +1031,8 @@ add_task(function test_serializeRemoteComplexValues() {
       serializationOptionsWithDefaults,
       "root",
       serializationInternalMapWithRoot,
-      realm
+      realm,
+      {}
     );
 
     assertInternalIds(serializationInternalMapWithRoot, 0);
@@ -1423,7 +1434,8 @@ add_task(function test_serializeWithSerializationInternalMap() {
       { maxObjectDepth: 2 },
       "none",
       serializationInternalMap,
-      realm
+      realm,
+      {}
     );
 
     assertInternalIds(serializationInternalMap, 1);
@@ -1477,7 +1489,8 @@ add_task(function test_serializeMultipleValuesWithSerializationInternalMap() {
     { maxObjectDepth: 2 },
     "none",
     serializationInternalMap,
-    realm
+    realm,
+    {}
   );
 
   assertInternalIds(serializationInternalMap, 2);
@@ -1627,7 +1640,7 @@ function deserializeInWindowRealm(serialized) {
       );
       const realm = new WindowRealm(content);
       info(`Checking '${_serialized.type}'`);
-      return deserialize(realm, _serialized);
+      return deserialize(realm, _serialized, {});
     }
   );
 }

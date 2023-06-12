@@ -50,6 +50,26 @@ export const OwnershipModel = {
 };
 
 /**
+ * Extra options for deserializing remote values.
+ *
+ * @typedef {object} ExtraDeserializationOptions
+ *
+ * @property {NodeCache=} nodeCache
+ *     The cache containing DOM node references.
+ * @property {Function=} emitScriptMessage
+ *     The function to emit "script.message" event.
+ */
+
+/**
+ * Extra options for serializing remote values.
+ *
+ * @typedef {object} ExtraSerializationOptions
+ *
+ * @property {NodeCache=} nodeCache
+ *     The cache containing DOM node references.
+ */
+
+/**
  * An object which holds the information of how
  * ECMAScript objects should be serialized.
  *
@@ -139,16 +159,15 @@ function checkDateTimeString(dateString) {
  *     The Realm in which the value is deserialized.
  * @param {Array} serializedValueList
  *     List of serialized values.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraDeserializationOptions} extraOptions
+ *     Extra Remote Value deserialization options.
  *
  * @returns {Array} List of deserialized values.
  *
  * @throws {InvalidArgumentError}
  *     If <var>serializedValueList</var> is not an array.
  */
-function deserializeValueList(realm, serializedValueList, options = {}) {
+function deserializeValueList(realm, serializedValueList, extraOptions) {
   lazy.assert.array(
     serializedValueList,
     `Expected "serializedValueList" to be an array, got ${serializedValueList}`
@@ -157,7 +176,7 @@ function deserializeValueList(realm, serializedValueList, options = {}) {
   const deserializedValues = [];
 
   for (const item of serializedValueList) {
-    deserializedValues.push(deserialize(realm, item, options));
+    deserializedValues.push(deserialize(realm, item, extraOptions));
   }
 
   return deserializedValues;
@@ -172,9 +191,8 @@ function deserializeValueList(realm, serializedValueList, options = {}) {
  *     The Realm in which the value is deserialized.
  * @param {Array} serializedKeyValueList
  *     List of serialized key-value.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraDeserializationOptions} extraOptions
+ *     Extra Remote Value deserialization options.
  *
  * @returns {Array} List of deserialized key-value.
  *
@@ -182,7 +200,7 @@ function deserializeValueList(realm, serializedValueList, options = {}) {
  *     If <var>serializedKeyValueList</var> is not an array or
  *     not an array of key-value arrays.
  */
-function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
+function deserializeKeyValueList(realm, serializedKeyValueList, extraOptions) {
   lazy.assert.array(
     serializedKeyValueList,
     `Expected "serializedKeyValueList" to be an array, got ${serializedKeyValueList}`
@@ -200,8 +218,8 @@ function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
     const deserializedKey =
       typeof serializedKey == "string"
         ? serializedKey
-        : deserialize(realm, serializedKey, options);
-    const deserializedValue = deserialize(realm, serializedValue, options);
+        : deserialize(realm, serializedKey, extraOptions);
+    const deserializedValue = deserialize(realm, serializedValue, extraOptions);
 
     deserializedKeyValueList.push([deserializedKey, deserializedValue]);
   }
@@ -220,14 +238,13 @@ function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
  *     Shared unique reference of the Node.
  * @param {Realm} realm
  *     The Realm in which the value is deserialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraDeserializationOptions} extraOptions
+ *     Extra Remote Value deserialization options.
  *
  * @returns {Node} The deserialized DOM node.
  */
-function deserializeSharedReference(sharedRef, realm, options = {}) {
-  const { nodeCache } = options;
+function deserializeSharedReference(sharedRef, realm, extraOptions) {
+  const { nodeCache } = extraOptions;
 
   const browsingContext = realm.browsingContext;
   if (!browsingContext) {
@@ -273,15 +290,12 @@ function deserializeSharedReference(sharedRef, realm, options = {}) {
  *     The Realm in which the value is deserialized.
  * @param {object} serializedValue
  *     Value of any type to be deserialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
- * @param {Function} options.emitScriptMessage
- *     The function to emit "script.message" event.
+ * @param {ExtraDeserializationOptions} extraOptions
+ *     Extra Remote Value deserialization options.
  *
  * @returns {object} Deserialized representation of the value.
  */
-export function deserialize(realm, serializedValue, options = {}) {
+export function deserialize(realm, serializedValue, extraOptions) {
   const { handle, sharedId, type, value } = serializedValue;
 
   // With a shared id present deserialize as node reference.
@@ -291,7 +305,7 @@ export function deserialize(realm, serializedValue, options = {}) {
       `Expected "sharedId" to be a string, got ${sharedId}`
     );
 
-    return deserializeSharedReference(sharedId, realm, options);
+    return deserializeSharedReference(sharedId, realm, extraOptions);
   }
 
   // With a handle present deserialize as remote reference.
@@ -360,14 +374,16 @@ export function deserialize(realm, serializedValue, options = {}) {
     // Script channel
     case "channel": {
       const channel = message =>
-        options.emitScriptMessage(realm, value, message);
+        extraOptions.emitScriptMessage(realm, value, message);
       return realm.cloneIntoRealm(channel);
     }
 
     // Non-primitive protocol values
     case "array":
       const array = realm.cloneIntoRealm([]);
-      deserializeValueList(realm, value, options).forEach(v => array.push(v));
+      deserializeValueList(realm, value, extraOptions).forEach(v =>
+        array.push(v)
+      );
       return array;
     case "date":
       // We want to support only Date Time String format,
@@ -377,14 +393,14 @@ export function deserialize(realm, serializedValue, options = {}) {
       return realm.cloneIntoRealm(new Date(value));
     case "map":
       const map = realm.cloneIntoRealm(new Map());
-      deserializeKeyValueList(realm, value, options).forEach(([k, v]) =>
+      deserializeKeyValueList(realm, value, extraOptions).forEach(([k, v]) =>
         map.set(k, v)
       );
 
       return map;
     case "object":
       const object = realm.cloneIntoRealm({});
-      deserializeKeyValueList(realm, value, options).forEach(
+      deserializeKeyValueList(realm, value, extraOptions).forEach(
         ([k, v]) => (object[k] = v)
       );
       return object;
@@ -413,7 +429,7 @@ export function deserialize(realm, serializedValue, options = {}) {
       }
     case "set":
       const set = realm.cloneIntoRealm(new Set());
-      deserializeValueList(realm, value, options).forEach(v => set.add(v));
+      deserializeValueList(realm, value, extraOptions).forEach(v => set.add(v));
       return set;
   }
 
@@ -455,15 +471,14 @@ function getHandleForObject(realm, ownershipType, object) {
  *    Node to create the unique reference for.
  * @param {Realm} realm
  *     The Realm in which the value is serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraSerializationOptions} extraOptions
+ *     Extra Remote Value serialization options.
  *
  * @returns {string}
  *    Shared unique reference for the Node.
  */
-function getSharedIdForNode(node, realm, options = {}) {
-  const { nodeCache } = options;
+function getSharedIdForNode(node, realm, extraOptions) {
+  const { nodeCache } = extraOptions;
 
   if (!Node.isInstance(node)) {
     return null;
@@ -499,9 +514,8 @@ function getSharedIdForNode(node, realm, options = {}) {
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraSerializationOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {object} Object for serialized values.
  */
@@ -548,9 +562,8 @@ function serializeArrayLike(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraSerializationOptions} extraOptions
+ *     Extra Remote Value serialization options.
  *
  * @returns {Array} List of serialized values.
  */
@@ -560,7 +573,7 @@ function serializeList(
   ownershipType,
   serializationInternalMap,
   realm,
-  options
+  extraOptions
 ) {
   const { maxObjectDepth } = serializationOptions;
   const serialized = [];
@@ -579,7 +592,7 @@ function serializeList(
         ownershipType,
         serializationInternalMap,
         realm,
-        options
+        extraOptions
       )
     );
   }
@@ -602,9 +615,8 @@ function serializeList(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraSerializationOptions} extraOptions
+ *     Extra Remote Value serialization options.
  *
  * @returns {Array} List of serialized values.
  */
@@ -614,7 +626,7 @@ function serializeMapping(
   ownershipType,
   serializationInternalMap,
   realm,
-  options
+  extraOptions
 ) {
   const { maxObjectDepth } = serializationOptions;
   const serialized = [];
@@ -635,7 +647,7 @@ function serializeMapping(
             ownershipType,
             serializationInternalMap,
             realm,
-            options
+            extraOptions
           );
     const serializedValue = serialize(
       item,
@@ -643,7 +655,7 @@ function serializeMapping(
       ownershipType,
       serializationInternalMap,
       realm,
-      options
+      extraOptions
     );
 
     serialized.push([serializedKey, serializedValue]);
@@ -665,9 +677,8 @@ function serializeMapping(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraSerializationOptions} extraOptions
+ *     Extra Remote Value serialization options.
  *
  * @returns {object} Serialized value.
  */
@@ -677,7 +688,7 @@ function serializeNode(
   ownershipType,
   serializationInternalMap,
   realm,
-  options
+  extraOptions
 ) {
   const { includeShadowTree, maxDomDepth } = serializationOptions;
   const isAttribute = Attr.isInstance(node);
@@ -719,7 +730,7 @@ function serializeNode(
           ownershipType,
           serializationInternalMap,
           realm,
-          options
+          extraOptions
         )
       );
     }
@@ -742,7 +753,7 @@ function serializeNode(
         ownershipType,
         serializationInternalMap,
         realm,
-        options
+        extraOptions
       );
     }
   }
@@ -769,9 +780,8 @@ function serializeNode(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {ExtraSerializationOptions} extraOptions
+ *     Extra Remote Value serialization options.
  *
  * @returns {object} Serialized representation of the value.
  */
@@ -781,7 +791,7 @@ export function serialize(
   ownershipType,
   serializationInternalMap,
   realm,
-  options
+  extraOptions
 ) {
   const { maxObjectDepth } = serializationOptions;
   const type = typeof value;
@@ -832,7 +842,7 @@ export function serialize(
       ownershipType,
       serializationInternalMap,
       realm,
-      options
+      extraOptions
     );
   } else if (className == "RegExp") {
     const serialized = buildSerialized("regexp", handleId);
@@ -889,7 +899,7 @@ export function serialize(
     const serialized = buildSerialized("node", handleId);
 
     // Get or create the shared id for WebDriver classic compat from the node.
-    const sharedId = getSharedIdForNode(value, realm, options);
+    const sharedId = getSharedIdForNode(value, realm, extraOptions);
     if (sharedId !== null) {
       serialized.sharedId = sharedId;
     }
@@ -903,7 +913,7 @@ export function serialize(
         ownershipType,
         serializationInternalMap,
         realm,
-        options
+        extraOptions
       );
     }
 
@@ -924,7 +934,7 @@ export function serialize(
       ownershipType,
       serializationInternalMap,
       realm,
-      options
+      extraOptions
     );
   }
   return serialized;
