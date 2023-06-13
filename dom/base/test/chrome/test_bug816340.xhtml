@@ -16,15 +16,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816340
   </body>
 
   <!-- test code goes here -->
-  <script type="application/javascript"><![CDATA[
+  <script>
   SimpleTest.waitForExplicitFinish();
 
   function done() {
     SimpleTest.finish();
   }
 
-  addLoadEvent(function() {
-    window.openDialog("file_bug816340.xhtml", "", "chrome,noopener", window);
+  SpecialPowers.pushPrefEnv({
+    set: [["dom.forms.fieldset_disable_only_descendants.enabled", true]]
+  }).then(() => {
+      window.openDialog("file_bug816340.xhtml", "", "chrome,noopener", window);
   });
-  ]]></script>
+  </script>
 </window>
