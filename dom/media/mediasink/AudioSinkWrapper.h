@@ -107,7 +107,7 @@ class AudioSinkWrapper : public MediaSink {
   media::TimeUnit GetSystemClockPosition(TimeStamp aNow) const;
   bool CheckIfEnded() const;
 
-  void OnAudioEnded();
+  void OnAudioEnded(const EndedPromise::ResolveOrRejectValue& aValue);
 
   bool IsAudioSourceEnded(const MediaInfo& aInfo) const;
 

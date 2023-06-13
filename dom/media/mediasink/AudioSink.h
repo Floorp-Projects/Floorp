@@ -52,8 +52,7 @@ class AudioSink : private AudioStream::DataSource {
                                  InitializationType aInitializationType);
 
   // Start audio playback.
-  nsresult Start(const media::TimeUnit& aStartTime,
-                 MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise);
+  RefPtr<MediaSink::EndedPromise> Start(const media::TimeUnit& aStartTime);
 
   /*
    * All public functions are not thread-safe.
@@ -69,10 +68,8 @@ class AudioSink : private AudioStream::DataSource {
   // The duration of the buffered frames.
   media::TimeUnit UnplayedDuration() const;
 
-  // Shut down the AudioSink's resources. If an AudioStream existed, return the
-  // ended promise it had, if it's shutting down-mid stream becaues it's muting.
-  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> Shutdown(
-      ShutdownCause aShutdownCause = ShutdownCause::Regular);
+  // Shut down the AudioSink's resources.
+  void ShutDown();
 
   void SetVolume(double aVolume);
   void SetStreamName(const nsAString& aStreamName);

@@ -154,7 +154,7 @@ AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
 AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState.load());
   MOZ_ASSERT(mState == SHUTDOWN && !mCubebStream,
-             "Should've called Shutdown() before deleting an AudioStream");
+             "Should've called ShutDown() before deleting an AudioStream");
 }
 
 size_t AudioStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -322,8 +322,7 @@ void AudioStream::SetStreamName(const nsAString& aStreamName) {
   }
 }
 
-nsresult AudioStream::Start(
-    MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise) {
+RefPtr<MediaSink::EndedPromise> AudioStream::Start() {
   TRACE("AudioStream::Start");
   MOZ_ASSERT(mState == INITIALIZED);
   mState = STARTED;
@@ -333,28 +332,26 @@ nsresult AudioStream::Start(
     // As cubeb might call audio stream's state callback very soon after we
     // start cubeb, we have to create the promise beforehand in order to handle
     // the case where we immediately get `drained`.
-    mEndedPromise = std::move(aEndedPromise);
+    promise = mEndedPromise.Ensure(__func__);
     mPlaybackComplete = false;
 
     if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
       mState = ERRORED;
+      mEndedPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
     }
-  }
 
-  LOG("started, state %s", mState == STARTED   ? "STARTED"
-                           : mState == DRAINED ? "DRAINED"
-                                               : "ERRORED");
-  if (mState == STARTED || mState == DRAINED) {
-    return NS_OK;
+    LOG("started, state %s", mState == STARTED   ? "STARTED"
+                             : mState == DRAINED ? "DRAINED"
+                                                 : "ERRORED");
   }
-  return NS_ERROR_FAILURE;
+  return promise;
 }
 
 void AudioStream::Pause() {
   TRACE("AudioStream::Pause");
   MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
   MOZ_ASSERT(mState != STOPPED, "Already Pause()ed.");
-  MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
+  MOZ_ASSERT(mState != SHUTDOWN, "Already ShutDown()ed.");
 
   // Do nothing if we are already drained or errored.
   if (mState == DRAINED || mState == ERRORED) {
@@ -375,7 +372,7 @@ void AudioStream::Resume() {
   TRACE("AudioStream::Resume");
   MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
   MOZ_ASSERT(mState != STARTED, "Already Start()ed.");
-  MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
+  MOZ_ASSERT(mState != SHUTDOWN, "Already ShutDown()ed.");
 
   // Do nothing if we are already drained or errored.
   if (mState == DRAINED || mState == ERRORED) {
@@ -392,10 +389,9 @@ void AudioStream::Resume() {
   }
 }
 
-Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioStream::Shutdown(
-    ShutdownCause aCause) {
-  TRACE("AudioStream::Shutdown");
-  LOG("Shutdown, state %d", mState.load());
+void AudioStream::ShutDown() {
+  TRACE("AudioStream::ShutDown");
+  LOG("ShutDown, state %d", mState.load());
 
   MonitorAutoLock mon(mMonitor);
   if (mCubebStream) {
@@ -416,15 +412,7 @@ Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioStream::Shutdown(
   }
 
   mState = SHUTDOWN;
-  // When shutting down, if this AudioStream is shutting down because the
-  // HTMLMediaElement is now muted, hand back the ended promise, so that it can
-  // properly be resolved if the end of the media is reached while muted (i.e.
-  // without having an AudioStream)
-  if (aCause != ShutdownCause::Muting) {
-    mEndedPromise.ResolveIfExists(true, __func__);
-    return Nothing();
-  }
-  return Some(std::move(mEndedPromise));
+  mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 int64_t AudioStream::GetPosition() {
