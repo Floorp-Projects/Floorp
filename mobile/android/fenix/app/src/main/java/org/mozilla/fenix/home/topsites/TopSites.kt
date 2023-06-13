@@ -125,10 +125,13 @@ fun TopSites(
         }
 
         if (pageCount > 1) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             PagerIndicator(
                 pagerState = pagerState,
                 pageCount = pageCount,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                spacing = 4.dp,
             )
         }
     }

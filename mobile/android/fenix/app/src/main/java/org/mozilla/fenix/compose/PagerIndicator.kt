@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -43,6 +44,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param inactiveColor The color of page indicators that are inactive.
  * @param leaveTrail Whether to leave the trail of indicators to show progress.
  * This defaults to false and just shows the current one as active.
+ * @param spacing The spacing between each pager indicator in [Dp].
  */
 @Composable
 fun PagerIndicator(
@@ -52,10 +54,11 @@ fun PagerIndicator(
     activeColor: Color = FirefoxTheme.colors.indicatorActive,
     inactiveColor: Color = FirefoxTheme.colors.indicatorInactive,
     leaveTrail: Boolean = false,
+    spacing: Dp = 8.dp,
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val showActiveModifier: (pageIndex: Int) -> Boolean =
