@@ -58,6 +58,8 @@ add_task(async function test_tracking() {
     changes = await engine.getChangedIDs();
     do_check_attribute_count(changes, 1);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(changes.GUID0.counter, 1);
+    Assert.ok(typeof changes.GUID0.modified, "number");
 
     _("Starting twice won't do any harm.");
     tracker.start();
@@ -65,7 +67,11 @@ add_task(async function test_tracking() {
     changes = await engine.getChangedIDs();
     do_check_attribute_count(changes, 2);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(changes.GUID0.counter, 1);
+    Assert.equal(changes.GUID1.counter, 1);
 
+    // The tracker doesn't keep track of changes, so 3 changes
+    // should still be returned, but the score is not updated.
     _("Let's stop tracking again.");
     tracker.resetScore();
     await tracker.stop();
@@ -73,6 +79,9 @@ add_task(async function test_tracking() {
     changes = await engine.getChangedIDs();
     do_check_attribute_count(changes, 3);
     Assert.equal(tracker.score, 0);
+    Assert.equal(changes.GUID0.counter, 1);
+    Assert.equal(changes.GUID1.counter, 1);
+    Assert.equal(changes.GUID2.counter, 1);
 
     _("Stopping twice won't do any harm.");
     await tracker.stop();
