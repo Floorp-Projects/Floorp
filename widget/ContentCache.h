@@ -40,8 +40,8 @@ class BrowserParent;
 
 class ContentCache {
  public:
-  typedef CopyableTArray<LayoutDeviceIntRect> RectArray;
-  typedef widget::IMENotification IMENotification;
+  using RectArray = CopyableTArray<LayoutDeviceIntRect>;
+  using IMENotification = widget::IMENotification;
 
   ContentCache() = default;
 
@@ -109,12 +109,12 @@ class ContentCache {
       mRect.SetEmpty();
     }
     bool HasRects() const {
-      for (auto& rect : mAnchorCharRects) {
+      for (const auto& rect : mAnchorCharRects) {
         if (!rect.IsEmpty()) {
           return true;
         }
       }
-      for (auto& rect : mFocusCharRects) {
+      for (const auto& rect : mFocusCharRects) {
         if (!rect.IsEmpty()) {
           return true;
         }
@@ -192,7 +192,7 @@ class ContentCache {
   LayoutDeviceIntRect mFirstCharRect;
 
   struct Caret final {
-    uint32_t mOffset;
+    uint32_t mOffset = 0u;
     LayoutDeviceIntRect mRect;
 
     explicit Caret(uint32_t aOffset, LayoutDeviceIntRect aCaretRect)
@@ -215,6 +215,7 @@ class ContentCache {
     }
 
    private:
+    // For ParamTraits<Caret>
     Caret() = default;
 
     friend struct IPC::ParamTraits<ContentCache::Caret>;
@@ -223,7 +224,7 @@ class ContentCache {
   Maybe<Caret> mCaret;
 
   struct TextRectArray final {
-    uint32_t mStart;
+    uint32_t mStart = 0u;
     RectArray mRects;
 
     explicit TextRectArray(uint32_t aStartOffset) : mStart(aStartOffset) {}
@@ -288,6 +289,7 @@ class ContentCache {
     }
 
    private:
+    // For ParamTraits<TextRectArray>
     TextRectArray() = default;
 
     friend struct IPC::ParamTraits<ContentCache::TextRectArray>;
@@ -373,6 +375,7 @@ class ContentCacheInChild final : public ContentCache {
 
 class ContentCacheInParent final : public ContentCache {
  public:
+  ContentCacheInParent() = delete;
   explicit ContentCacheInParent(dom::BrowserParent& aBrowserParent);
 
   /**
@@ -605,8 +608,6 @@ class ContentCacheInParent final : public ContentCache {
   // requests commit composition whose commit has already been sent to it.
   // Then, set to false when the child process ignores the commit event.
   bool mIsChildIgnoringCompositionEvents;
-
-  ContentCacheInParent() = delete;
 
   /**
    * When following methods' aRoundToExistingOffset is true, even if specified
