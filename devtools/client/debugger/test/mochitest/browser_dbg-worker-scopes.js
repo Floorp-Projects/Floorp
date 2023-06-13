@@ -94,9 +94,3 @@ function findNodeValue(dbg, text) {
     }
   }
 }
-
-async function removeBreakpointViaGutter(dbg, line) {
-  const onRemoved = waitForDispatch(dbg.store, "REMOVE_BREAKPOINT");
-  await clickGutter(dbg, line);
-  await onRemoved;
-}
