@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIConstraintValidation.h"
 #include "nsIFormControl.h"

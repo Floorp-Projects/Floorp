@@ -16,6 +16,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInternals.h"
+#include "mozilla/dom/ElementInternalsBinding.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -43,6 +44,7 @@ enum class ElementCallbackType {
   eFormAssociated,
   eFormReset,
   eFormDisabled,
+  eFormStateRestore,
   eGetCustomInterface
 };
 
@@ -62,6 +64,10 @@ struct LifecycleCallbackArgs {
 
   // Used by the form disabled callback.
   bool mDisabled;
+
+  // Used by the form state restore callback.
+  Nullable<OwningFileOrUSVStringOrFormData> mState;
+  RestoreReason mReason;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 };
