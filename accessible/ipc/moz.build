@@ -24,11 +24,6 @@ else:
         LOCAL_INCLUDES += [
             "/accessible/mac",
         ]
-    elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-        LOCAL_INCLUDES += [
-            "/accessible/android",
-            "/widget/android",
-        ]
     else:
         LOCAL_INCLUDES += [
             "/accessible/other",

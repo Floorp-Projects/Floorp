@@ -110,10 +110,34 @@ class SessionAccessibility final
   jni::NativeWeakPtr<widget::GeckoViewSupport> mWindow;  // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
 
+  class IDMappingEntry {
+   public:
+    explicit IDMappingEntry(Accessible* aAccessible);
+
+    IDMappingEntry& operator=(Accessible* aAccessible);
+
+    operator Accessible*() const;
+
+   private:
+    // A strong reference to a DocAccessible or DocAccessibleParent. They don't
+    // share any useful base class except nsISupports, so we use that.
+    // When we retrieve the document from this reference we cast it to
+    // LocalAccessible in the DocAccessible case because DocAccessible has
+    // multiple inheritance paths for nsISupports.
+    RefPtr<nsISupports> mDoc;
+    // The ID of the accessible as used in the internal doc mapping.
+    // We rely on this ID being pointer derived and therefore divisible by two
+    // so we can use the first bit to mark if it is remote or not.
+    uint64_t mInternalID;
+
+    static const uintptr_t IS_REMOTE = 0x1;
+  };
+
   /*
    * This provides a mapping from 32 bit id to accessible objects.
    */
-  nsTHashMap<nsUint32HashKey, Accessible*> mIDToAccessibleMap;
+  nsBaseHashtable<nsUint32HashKey, IDMappingEntry, Accessible*>
+      mIDToAccessibleMap;
 };
 
 }  // namespace a11y
