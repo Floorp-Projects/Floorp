@@ -8347,7 +8347,7 @@
 # Whether we cache inline styles in a document unconditionally or not.
 - name: layout.css.inline-style-caching.always-enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether we should return an empty style on invalid pseudo-elements starting
