@@ -1053,11 +1053,28 @@ async function addBreakpoint(dbg, source, line, column, options) {
  * Similar to `addBreakpoint`, but uses the UI instead or calling
  * the actions directly. This only support breakpoint on lines,
  * not on a specific column.
+ * @param {*} dbg
+ * @param {*} line
+ * @returns {Promise}
  */
 async function addBreakpointViaGutter(dbg, line) {
   info(`Add breakpoint via the editor on line ${line}`);
+  const onAdded = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await clickGutter(dbg, line);
-  return waitForDispatch(dbg.store, "SET_BREAKPOINT");
+  return onAdded;
+}
+
+/**
+ * Remove a breakpoint via the editor gutter
+ * @param {*} dbg
+ * @param {*} line
+ * @returns {Promise}
+ */
+async function removeBreakpointViaGutter(dbg, line) {
+  info(`Remove breakpoint via the editor on line ${line}`);
+  const onRemoved = waitForDispatch(dbg.store, "REMOVE_BREAKPOINT");
+  await clickGutter(dbg, line);
+  return onRemoved;
 }
 
 function disableBreakpoint(dbg, source, line, column) {
