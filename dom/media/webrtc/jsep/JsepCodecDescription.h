@@ -422,7 +422,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     auto codec = MakeUnique<JsepVideoCodecDescription>("97", "H264", 90000);
     codec->mPacketizationMode = 0;
     // Defaults for mandatory params
-    codec->mProfileLevelId = 0x42E00D;
+    codec->mProfileLevelId = 0x42E01F;
     if (aUseRtx) {
       codec->EnableRtx("98");
     }
@@ -434,7 +434,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     auto codec = MakeUnique<JsepVideoCodecDescription>("126", "H264", 90000);
     codec->mPacketizationMode = 1;
     // Defaults for mandatory params
-    codec->mProfileLevelId = 0x42E00D;
+    codec->mProfileLevelId = 0x42E01F;
     if (aUseRtx) {
       codec->EnableRtx("127");
     }

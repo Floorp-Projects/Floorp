@@ -1482,7 +1482,7 @@ TEST_F(JsepTrackTest, RtcpFbWithPayloadTypeAsymmetry) {
       "c=IN IP4 0.0.0.0\r\n"
       "a=sendrecv\r\n"
       "a=fmtp:136 "
-      "profile-level-id=42e00d;level-asymmetry-allowed=1;packetization-mode="
+      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode="
       "1\r\n"
       "a=msid:stream_id\r\n"
       "a=rtcp-fb:136 nack\r\n"
@@ -1651,12 +1651,12 @@ TEST_F(JsepTrackTest, VideoSdpFmtpLine) {
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 2)));
   EXPECT_EQ("H264", codec->mName);
   EXPECT_EQ(
-      "profile-level-id=42e00d;level-asymmetry-allowed=1;packetization-mode=1",
+      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
       codec->mSdpFmtpLine.valueOr("nothing"));
   EXPECT_TRUE((codec = GetVideoCodec(mSendAns, 4, 2)));
   EXPECT_EQ("H264", codec->mName);
   EXPECT_EQ(
-      "profile-level-id=42e00d;level-asymmetry-allowed=1;packetization-mode=1",
+      "profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1",
       codec->mSdpFmtpLine.valueOr("nothing"));
 
   EXPECT_TRUE((codec = GetVideoCodec(mSendOff, 4, 3)));
