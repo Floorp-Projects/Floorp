@@ -101,6 +101,7 @@ add_task(async function () {
 });
 
 // Tests creation of disabled breakpoint with shift-click
+// and that disabled breakpoints are not triggered across toolbox restarts
 add_task(async function testDisabledBreakpointsViaKeyShortcut() {
   const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 
@@ -121,7 +122,24 @@ add_task(async function testDisabledBreakpointsViaKeyShortcut() {
   await wait(1000);
   assertNotPaused(dbg, "The disabled breakpoint is not hit");
 
-  await removeBreakpointViaGutter(dbg, 5);
+  info("Close and reopen the web toolbox");
+  await dbg.toolbox.closeToolbox();
+  const toolbox = await openToolboxForTab(gBrowser.selectedTab, "webconsole");
+
+  invokeInTab("simple");
+  await wait(1000);
+
+  info(
+    "Assert that the there was no pause, and there was no switch to the debugger"
+  );
+  const panel = toolbox.getPanel("jsdebugger");
+  ok(!panel, "There was no pause and switch to the debugger ");
+
+  info("Switch to the debugger and cleanup the breakpoint");
+  await toolbox.selectTool("jsdebugger");
+  const dbg2 = createDebuggerContext(toolbox);
+  assertNotPaused(dbg);
+  await removeBreakpointViaGutter(dbg2, 5);
 });
 
 function toggleBreakpoint(dbg, index) {
