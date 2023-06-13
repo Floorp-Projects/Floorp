@@ -7,10 +7,12 @@ Object {
   "location": Object {
     "end": Position {
       "column": 17,
+      "index": 78,
       "line": 6,
     },
     "start": Position {
       "column": 16,
+      "index": 77,
       "line": 6,
     },
   },
@@ -24,10 +26,12 @@ Object {
   "location": Object {
     "end": Position {
       "column": 13,
+      "index": 13,
       "line": 1,
     },
     "start": Position {
       "column": 10,
+      "index": 10,
       "line": 1,
     },
   },
@@ -41,10 +45,12 @@ Object {
   "location": Object {
     "end": Position {
       "column": 9,
+      "index": 54,
       "line": 5,
     },
     "start": Position {
       "column": 6,
+      "index": 51,
       "line": 5,
     },
   },
