@@ -7075,19 +7075,6 @@
   value: 4
   mirror: once
 
-# How long in ms before we should start shutting down idle decoder threads.
-- name: image.multithreaded_decoding.idle_timeout
-  type: int32_t
-  value: 600000
-  mirror: once
-
-# How many threads we'll use for multithreaded decoding. If < 0, will be
-# automatically determined based on the system's number of cores.
-- name: image.multithreaded_decoding.limit
-  type: int32_t
-  value: -1
-  mirror: once
-
 # Whether we record SVG images as blobs or not.
 - name: image.svg.blob-image
   type: RelaxedAtomicBool
