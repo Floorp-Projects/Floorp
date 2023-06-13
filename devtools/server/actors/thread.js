@@ -810,12 +810,6 @@ class ThreadActor extends Actor {
       }
     }
 
-    if (options.xhrBreakpoints) {
-      for (const breakpoint of options.xhrBreakpoints) {
-        this.setXHRBreakpoint(breakpoint.path, breakpoint.method);
-      }
-    }
-
     if (options.eventBreakpoints) {
       this.setActiveEventBreakpoints(options.eventBreakpoints);
     }
