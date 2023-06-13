@@ -104,6 +104,7 @@ UNIFIED_SOURCES += [
     "testRecordTupleToSource.cpp",
     "testRegExp.cpp",
     "testResolveRecursion.cpp",
+    "testResult.cpp",
     "tests.cpp",
     "testSABAccounting.cpp",
     "testSameValue.cpp",
