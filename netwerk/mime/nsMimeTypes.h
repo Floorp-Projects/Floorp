@@ -130,6 +130,7 @@
 #define AUDIO_MIDI "audio/x-midi"
 #define AUDIO_MATROSKA "audio/x-matroska"
 #define AUDIO_AAC "audio/aac"
+#define AUDIO_AACP "audio/aacp"
 #define AUDIO_MPEG_TS "audio/mp2t"
 #define AUDIO_MPEG_URL "audio/mpegurl"
 
