@@ -233,33 +233,43 @@ static bool scanArp(char* ip, char* mac, size_t maclen) {
   mib[5] = RTF_LLINFO;
 
   size_t needed;
-  if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
-    return false;
-  }
-  if (needed == 0) {
-    LOG(("scanArp: empty table"));
-    return false;
-  }
-
-  UniquePtr<char[]> buf(new char[needed]);
-
-  for (;;) {
-    st = sysctl(mib, 6, &buf[0], &needed, nullptr, 0);
-    if (st == 0 || errno != ENOMEM) {
-      break;
+  auto allocateBuf = [&]() -> UniquePtr<char[]> {
+    // calling sysctl with a null buffer to get the minimum buffer size
+    if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
+      return nullptr;
     }
 
-    size_t increased = needed;
-    increased += increased / 8;
+    if (needed == 0) {
+      LOG(("scanArp: empty table"));
+      return nullptr;
+    }
 
-    auto tmp = MakeUnique<char[]>(increased);
-    memcpy(&tmp[0], &buf[0], needed);
-    buf = std::move(tmp);
-    needed = increased;
-  }
-  if (st == -1) {
+    return MakeUnique<char[]>(needed);
+  };
+
+  UniquePtr<char[]> buf = allocateBuf();
+  if (!buf) {
     return false;
   }
+
+  st = sysctl(mib, 6, &buf[0], &needed, nullptr, 0);
+  // If errno is ENOMEM, try to allocate a new buffer and try again.
+  if (st != 0) {
+    if (errno != ENOMEM) {
+      return false;
+    }
+
+    buf = allocateBuf();
+    if (!buf) {
+      return false;
+    }
+
+    st = sysctl(mib, 6, &buf[0], &needed, nullptr, 0);
+    if (st == -1) {
+      return false;
+    }
+  }
+
   lim = &buf[needed];
 
   struct rt_msghdr* rtm;
