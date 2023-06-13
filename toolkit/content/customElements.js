@@ -840,7 +840,9 @@
         elementNames
           .filter(name => !customElements.get(name))
           .map(name => importCustomElementFromESModule(name))
-      ).then(() => null);
+      )
+        .then(() => null)
+        .catch(console.error);
     };
 
     for (let script of [
