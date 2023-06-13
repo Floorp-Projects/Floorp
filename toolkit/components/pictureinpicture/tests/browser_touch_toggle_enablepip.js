@@ -27,7 +27,22 @@ add_task(async () => {
       let toggleStyles = DEFAULT_TOGGLE_STYLES;
       let stage = "hoverVideo";
       let toggleStylesForStage = toggleStyles.stages[stage];
+
+      // Remove other page elements before reading PiP toggle's client rect.
+      // Otherwise, we will provide the wrong coordinates when simulating the touch event.
+      await SpecialPowers.spawn(browser, [], async args => {
+        info(
+          "Removing other elements first to make the PiP toggle more visible"
+        );
+        this.content.document.getElementById("no-controls").remove();
+        let otherEls = this.content.document.querySelectorAll("h1");
+        for (let el of otherEls) {
+          el.remove();
+        }
+      });
+
       let toggleClientRect = await getToggleClientRect(browser, videoID);
+      await prepareForToggleClick(browser, videoID);
 
       await SpecialPowers.spawn(
         browser,
@@ -69,17 +84,23 @@ add_task(async () => {
             }
           }
           let { videoID, toggleClientRect, toggleStylesForStage } = args;
-          let video = content.document.getElementById(videoID);
+          let video = this.content.document.getElementById(videoID);
           let shadowRoot = video.openOrClosedShadowRoot;
 
           info("Creating a new button in the content window");
           let button = this.content.document.createElement("button");
           let buttonSelected = false;
           button.ontouchstart = () => {
+            info("Button selected via touch event");
             buttonSelected = true;
             return true;
           };
           button.id = "testbutton";
+          button.style.backgroundColor = "red";
+          // Move button to the top for better visibility.
+          button.style.position = "absolute";
+          button.style.top = "0";
+          button.textContent = "test button";
           this.content.document.body.appendChild(button);
 
           await video.play();
@@ -150,6 +171,10 @@ add_task(async () => {
             "Touchstart event's default actions should be prevented"
           );
           ok(!video.paused, "Video should still be playing");
+
+          await ContentTaskUtils.waitForCondition(() => {
+            return video.isCloningElementVisually;
+          }, "Video is being cloned visually.");
 
           let testButton = this.content.document.getElementById("testbutton");
           let buttonRect = testButton.getBoundingClientRect();
