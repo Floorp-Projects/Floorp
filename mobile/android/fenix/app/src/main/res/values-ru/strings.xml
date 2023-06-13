@@ -378,7 +378,7 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Выберите</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Управление ссылками поисковиков</string>
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Управление ярлыками поисковиков</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Редактировать системы, видимые в меню поиска</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->

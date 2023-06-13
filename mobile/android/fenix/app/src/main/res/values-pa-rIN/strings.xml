@@ -258,7 +258,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">ਤੁਹਾਡੇ ਵਲੋਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਲਿਖੀ ਹਰ ਚੀਜ਼ ਨੂੰ %s ਤੁਹਾਡੇ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨਾਲ ਸਾਂਝਾ ਕਰੇਗਾ।</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">%s ਖੋਜ</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚੋਂ ਸਿ਼ੱਧਾ ਖੋਜੋ</string>
@@ -268,6 +268,9 @@
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ਇਸ ਵਾਰ ਇਸ ਵਿੱਚ ਖੋਜੋ:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s ਖੋਜ ਇੰਜਣ</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -370,6 +373,10 @@
     <string name="preferences_category_general">ਆਮ</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ਇਸ ਬਾਰੇ</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">ਇੱਕ ਚੁਣੋ</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">ਖੋਜ ਸ਼ਾਰਟਕੱਟਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">ਮੂਲ ਖੋਜ ਇੰਜਣ</string>
     <!-- Preference for settings related to Search -->
@@ -1886,6 +1893,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">ਨਵਾਂ ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਸੋਧੋ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1899,15 +1908,26 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">ਹੋਰ</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">ਨਾਂ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ਨਾਂ</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">ਖੋਜ ਇੰਜਣ ਦਾ ਨਾਂ</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">ਖੋਜ ਸਤਰ URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ਵਰਤਣ ਲਈ ਖੋਜ ਸਤਰ</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">ਖੋਜਣ ਲਈ URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">“%s” ਨਾਲ ਕਿਊਰੀ ਨੂੰ ਤਬਦੀਲ ਕਰੋ। ਮਿਸਾਲ ਵਜੋਂ:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">ਕਸਟਮ ਖੋਜ ਇੰਜਣ ਵੇਰਵੇ</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">ਸੰਭਾਲੋ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂ ਦਿਓ</string>
