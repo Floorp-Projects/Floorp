@@ -275,10 +275,3 @@ These preferences should not be used and may be removed at any time.
 browser.urlbar.autoFill.searchEngines (boolean, default: false)
   If true, the domains of the user's installed search engines will be
   autofilled even if the user hasn't actually visited them.
-
-browser.urlbar.usepreloadedtopurls.enabled (boolean, default: false)
-  Results will include a built-in set of popular domains when this is true.
-
-browser.urlbar.usepreloadedtopurls.expire_days (integer, default: 14)
-  After this many days from the profile creation date, the built-in set of
-  popular domains will no longer be included in the results.

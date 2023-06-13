@@ -34,7 +34,6 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderOmnibox.sys.mjs",
     "UrlbarProviderOpenTabs.sys.mjs",
     "UrlbarProviderPlaces.sys.mjs",
-    "UrlbarProviderPreloadedSites.sys.mjs",
     "UrlbarProviderPrivateSearch.sys.mjs",
     "UrlbarProviderQuickActions.sys.mjs",
     "UrlbarProviderQuickSuggest.sys.mjs",
