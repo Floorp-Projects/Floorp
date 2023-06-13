@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -47,11 +48,16 @@ import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.ceil
 
 private const val TOP_SITES_PER_PAGE = 8
 private const val TOP_SITES_PER_ROW = 4
+private const val TOP_SITES_ITEM_SIZE = 84
+private const val TOP_SITES_ROW_WIDTH = TOP_SITES_PER_ROW * TOP_SITES_ITEM_SIZE
+private const val TOP_SITES_FAVICON_CARD_SIZE = 60
+private const val TOP_SITES_FAVICON_SIZE = 36
 
 /**
  * A list of top sites.
@@ -94,7 +100,7 @@ fun TopSites(
                     )[page].chunked(TOP_SITES_PER_ROW)
 
                     for (items in topSitesWindows) {
-                        Row(modifier = Modifier.defaultMinSize(minWidth = 336.dp)) {
+                        Row(modifier = Modifier.defaultMinSize(minWidth = TOP_SITES_ROW_WIDTH.dp)) {
                             items.forEach { topSite ->
                                 TopSiteItem(
                                     topSite = topSite,
@@ -158,7 +164,7 @@ private fun TopSiteItem(
                         menuExpanded = true
                     },
                 )
-                .width(84.dp),
+                .width(TOP_SITES_ITEM_SIZE.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(4.dp))
@@ -168,7 +174,7 @@ private fun TopSiteItem(
             Spacer(modifier = Modifier.height(6.dp))
 
             Row(
-                modifier = Modifier.width(84.dp),
+                modifier = Modifier.width(TOP_SITES_ITEM_SIZE.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -193,7 +199,7 @@ private fun TopSiteItem(
             Text(
                 text = stringResource(id = R.string.top_sites_sponsored_label),
                 modifier = Modifier
-                    .width(84.dp)
+                    .width(TOP_SITES_ITEM_SIZE.dp)
                     .alpha(alpha = if (topSite is TopSite.Provided) 1f else 0f),
                 color = FirefoxTheme.colors.textSecondary,
                 fontSize = 10.sp,
@@ -219,24 +225,47 @@ private fun TopSiteItem(
 @Composable
 private fun TopSiteFaviconCard(topSite: TopSite) {
     Card(
-        modifier = Modifier.size(60.dp),
+        modifier = Modifier.size(TOP_SITES_FAVICON_CARD_SIZE.dp),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Surface(
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(TOP_SITES_FAVICON_SIZE.dp),
+                color = FirefoxTheme.colors.layer2,
                 shape = RoundedCornerShape(4.dp),
             ) {
-                Favicon(
-                    url = topSite.url,
-                    size = 36.dp,
-                )
+                val drawableForUrl = getDrawableForUrl(topSite.url)
+
+                if (drawableForUrl != null) {
+                    Image(
+                        painter = painterResource(id = drawableForUrl),
+                        contentDescription = null,
+                        modifier = Modifier.size(TOP_SITES_FAVICON_SIZE.dp),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Favicon(
+                        url = topSite.url,
+                        size = TOP_SITES_FAVICON_SIZE.dp,
+                    )
+                }
             }
         }
     }
 }
+
+private fun getDrawableForUrl(url: String) =
+    when (url) {
+        SupportUtils.POCKET_TRENDING_URL -> R.drawable.ic_pocket
+        SupportUtils.BAIDU_URL -> R.drawable.ic_baidu
+        SupportUtils.JD_URL -> R.drawable.ic_jd
+        SupportUtils.PDD_URL -> R.drawable.ic_pdd
+        SupportUtils.TC_URL -> R.drawable.ic_tc
+        SupportUtils.MEITUAN_URL -> R.drawable.ic_meituan
+        else -> null
+    }
 
 @Composable
 @Suppress("LongParameterList")
@@ -355,6 +384,15 @@ private fun TopSitesPreview() {
                             ),
                         )
                     }
+
+                    add(
+                        TopSite.Default(
+                            id = null,
+                            title = "Top Articles",
+                            url = "https://getpocket.com/fenix-top-articles",
+                            createdAt = 0L,
+                        ),
+                    )
                 },
                 onTopSiteClick = {},
                 onTopSiteLongClick = {},
