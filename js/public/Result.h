@@ -68,7 +68,6 @@
  *     JS_TRY_OR_RETURN_FALSE(cx, DefenestrateObject(cx, obj));
  *     JS_TRY_VAR_OR_RETURN_FALSE(cx, v, GetObjectThrug(cx, obj));
  *
- *     JS_TRY_OR_RETURN_NULL(cx, DefenestrateObject(cx, obj));
  *     JS_TRY_VAR_OR_RETURN_NULL(cx, v, GetObjectThrug(cx, obj));
  *
  * When TRY is not what you want, because you need to do some cleanup or
@@ -131,19 +130,6 @@
   do {                                                             \
     auto tmpResult_ = (expr);                                      \
     if (tmpResult_.isErr()) return (cx)->resultToBool(tmpResult_); \
-  } while (0)
-
-/**
- * Like JS_TRY_OR_RETURN_FALSE, but returning nullptr on error,
- * rather than false.
- */
-#define JS_TRY_OR_RETURN_NULL(cx, expr)                 \
-  do {                                                  \
-    auto tmpResult_ = (expr);                           \
-    if (tmpResult_.isErr()) {                           \
-      MOZ_ALWAYS_FALSE((cx)->resultToBool(tmpResult_)); \
-      return nullptr;                                   \
-    }                                                   \
   } while (0)
 
 #define JS_TRY_VAR_OR_RETURN_FALSE(cx, target, expr)               \
