@@ -118,3 +118,17 @@ add_task(async function test_BookmarksFileMigrator_JSON() {
     "Returned the expected success state."
   );
 });
+
+add_task(async function test_BookmarksFileMigrator_invalid() {
+  let migrator = new BookmarksFileMigrator();
+
+  const INVALID_FILE_PATH = PathUtils.join(
+    do_get_cwd().path,
+    "bookmarks.invalid.html"
+  );
+
+  await Assert.rejects(
+    migrator.migrate(INVALID_FILE_PATH),
+    /Pick another file/
+  );
+});
