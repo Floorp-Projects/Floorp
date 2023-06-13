@@ -336,15 +336,8 @@ partial interface Window {
   [Throws, NeedsCallerType] undefined resizeBy(long x, long y);
 
   // viewport
-  // These are writable because we allow chrome to write them.  And they need
-  // to use 'any' as the type, because non-chrome writing them needs to act
-  // like a [Replaceable] attribute would, which needs the original JS value.
-  // TODO: These can be updated to follow the spec exactly a while after we
-  // enable dom.window_position_size_properties_replaceable.enabled=true
-  //[Replaceable, Throws] readonly attribute double innerWidth;
-  //[Replaceable, Throws] readonly attribute double innerHeight;
-  [Throws, NeedsCallerType] attribute any innerWidth;
-  [Throws, NeedsCallerType] attribute any innerHeight;
+  [Replaceable, Throws] readonly attribute double innerWidth;
+  [Replaceable, Throws] readonly attribute double innerHeight;
 
   // viewport scrolling
   undefined scroll(unrestricted double x, unrestricted double y);
@@ -370,19 +363,10 @@ partial interface Window {
   [Replaceable, Throws, NeedsCallerType] readonly attribute double screenTop;
 
   // client
-  // These are writable because we allow chrome to write them.  And they need
-  // to use 'any' as the type, because non-chrome writing them needs to act
-  // like a [Replaceable] attribute would, which needs the original JS value.
-  // TODO: These can be updated to follow the spec exactly a while after we
-  // enable dom.window_position_size_properties_replaceable.enabled=true
-  //[Replaceable, Throws] readonly attribute double screenX;
-  //[Replaceable, Throws] readonly attribute double screenY;
-  //[Replaceable, Throws] readonly attribute double outerWidth;
-  //[Replaceable, Throws] readonly attribute double outerHeight;
-  [Throws, NeedsCallerType] attribute any screenX;
-  [Throws, NeedsCallerType] attribute any screenY;
-  [Throws, NeedsCallerType] attribute any outerWidth;
-  [Throws, NeedsCallerType] attribute any outerHeight;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute double screenX;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute double screenY;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute double outerWidth;
+  [Replaceable, Throws, NeedsCallerType] readonly attribute double outerHeight;
 };
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames

@@ -3412,48 +3412,18 @@ void nsGlobalWindowInner::SetName(const nsAString& aName,
   FORWARD_TO_OUTER_OR_THROW(SetNameOuter, (aName, aError), aError, );
 }
 
-double nsGlobalWindowInner::GetInnerWidth(CallerType aCallerType,
-                                          ErrorResult& aError) {
-  // We ignore aCallerType; we only have that argument because some other things
-  // called by GetReplaceableWindowCoord need it.  If this ever changes, fix
-  //   nsresult nsGlobalWindowInner::GetInnerWidth(double* aInnerWidth)
-  // to actually take a useful CallerType and pass it in here.
+double nsGlobalWindowInner::GetInnerWidth(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetInnerWidthOuter, (aError), aError, 0);
 }
 
-void nsGlobalWindowInner::GetInnerWidth(JSContext* aCx,
-                                        JS::MutableHandle<JS::Value> aValue,
-                                        CallerType aCallerType,
-                                        ErrorResult& aError) {
-  GetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::GetInnerWidth, aValue,
-                            aCallerType, aError);
-}
-
-nsresult nsGlobalWindowInner::GetInnerWidth(double* aInnerWidth) {
+nsresult nsGlobalWindowInner::GetInnerWidth(double* aWidth) {
   ErrorResult rv;
   // Callee doesn't care about the caller type, but play it safe.
-  *aInnerWidth = GetInnerWidth(CallerType::NonSystem, rv);
-
+  *aWidth = GetInnerWidth(rv);
   return rv.StealNSResult();
 }
 
-void nsGlobalWindowInner::SetInnerWidth(double aInnerWidth,
-                                        CallerType aCallerType,
-                                        ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SetInnerWidthOuter,
-                            (aInnerWidth, aCallerType, aError), aError, );
-}
-
-void nsGlobalWindowInner::SetInnerWidth(JSContext* aCx,
-                                        JS::Handle<JS::Value> aValue,
-                                        CallerType aCallerType,
-                                        ErrorResult& aError) {
-  SetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::SetInnerWidth, aValue,
-                            "innerWidth", aCallerType, aError);
-}
-
-double nsGlobalWindowInner::GetInnerHeight(CallerType aCallerType,
-                                           ErrorResult& aError) {
+double nsGlobalWindowInner::GetInnerHeight(ErrorResult& aError) {
   // We ignore aCallerType; we only have that argument because some other things
   // called by GetReplaceableWindowCoord need it.  If this ever changes, fix
   //   nsresult nsGlobalWindowInner::GetInnerHeight(double* aInnerWidth)
@@ -3461,35 +3431,11 @@ double nsGlobalWindowInner::GetInnerHeight(CallerType aCallerType,
   FORWARD_TO_OUTER_OR_THROW(GetInnerHeightOuter, (aError), aError, 0);
 }
 
-void nsGlobalWindowInner::GetInnerHeight(JSContext* aCx,
-                                         JS::MutableHandle<JS::Value> aValue,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  GetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::GetInnerHeight, aValue,
-                            aCallerType, aError);
-}
-
-nsresult nsGlobalWindowInner::GetInnerHeight(double* aInnerHeight) {
+nsresult nsGlobalWindowInner::GetInnerHeight(double* aHeight) {
   ErrorResult rv;
   // Callee doesn't care about the caller type, but play it safe.
-  *aInnerHeight = GetInnerHeight(CallerType::NonSystem, rv);
-
+  *aHeight = GetInnerHeight(rv);
   return rv.StealNSResult();
-}
-
-void nsGlobalWindowInner::SetInnerHeight(double aInnerHeight,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SetInnerHeightOuter,
-                            (aInnerHeight, aCallerType, aError), aError, );
-}
-
-void nsGlobalWindowInner::SetInnerHeight(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  SetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::SetInnerHeight, aValue,
-                            "innerHeight", aCallerType, aError);
 }
 
 int32_t nsGlobalWindowInner::GetOuterWidth(CallerType aCallerType,
@@ -3498,56 +3444,10 @@ int32_t nsGlobalWindowInner::GetOuterWidth(CallerType aCallerType,
                             0);
 }
 
-void nsGlobalWindowInner::GetOuterWidth(JSContext* aCx,
-                                        JS::MutableHandle<JS::Value> aValue,
-                                        CallerType aCallerType,
-                                        ErrorResult& aError) {
-  GetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::GetOuterWidth, aValue,
-                            aCallerType, aError);
-}
-
 int32_t nsGlobalWindowInner::GetOuterHeight(CallerType aCallerType,
                                             ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetOuterHeightOuter, (aCallerType, aError), aError,
                             0);
-}
-
-void nsGlobalWindowInner::GetOuterHeight(JSContext* aCx,
-                                         JS::MutableHandle<JS::Value> aValue,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  GetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::GetOuterHeight, aValue,
-                            aCallerType, aError);
-}
-
-void nsGlobalWindowInner::SetOuterWidth(int32_t aOuterWidth,
-                                        CallerType aCallerType,
-                                        ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SetOuterWidthOuter,
-                            (aOuterWidth, aCallerType, aError), aError, );
-}
-
-void nsGlobalWindowInner::SetOuterWidth(JSContext* aCx,
-                                        JS::Handle<JS::Value> aValue,
-                                        CallerType aCallerType,
-                                        ErrorResult& aError) {
-  SetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::SetOuterWidth, aValue,
-                            "outerWidth", aCallerType, aError);
-}
-
-void nsGlobalWindowInner::SetOuterHeight(int32_t aOuterHeight,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SetOuterHeightOuter,
-                            (aOuterHeight, aCallerType, aError), aError, );
-}
-
-void nsGlobalWindowInner::SetOuterHeight(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  SetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::SetOuterHeight, aValue,
-                            "outerHeight", aCallerType, aError);
 }
 
 double nsGlobalWindowInner::ScreenEdgeSlopX() const {
@@ -3563,12 +3463,9 @@ int32_t nsGlobalWindowInner::GetScreenX(CallerType aCallerType,
   FORWARD_TO_OUTER_OR_THROW(GetScreenXOuter, (aCallerType, aError), aError, 0);
 }
 
-void nsGlobalWindowInner::GetScreenX(JSContext* aCx,
-                                     JS::MutableHandle<JS::Value> aValue,
-                                     CallerType aCallerType,
-                                     ErrorResult& aError) {
-  GetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::GetScreenX, aValue,
-                            aCallerType, aError);
+int32_t nsGlobalWindowInner::GetScreenY(CallerType aCallerType,
+                                        ErrorResult& aError) {
+  FORWARD_TO_OUTER_OR_THROW(GetScreenYOuter, (aCallerType, aError), aError, 0);
 }
 
 float nsGlobalWindowInner::GetMozInnerScreenX(CallerType aCallerType,
@@ -3679,47 +3576,6 @@ already_AddRefed<MediaQueryList> nsGlobalWindowInner::MatchMedia(
     ErrorResult& aError) {
   ENSURE_ACTIVE_DOCUMENT(aError, nullptr);
   return mDoc->MatchMedia(aMediaQueryList, aCallerType);
-}
-
-void nsGlobalWindowInner::SetScreenX(int32_t aScreenX, CallerType aCallerType,
-                                     ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SetScreenXOuter, (aScreenX, aCallerType, aError),
-                            aError, );
-}
-
-void nsGlobalWindowInner::SetScreenX(JSContext* aCx,
-                                     JS::Handle<JS::Value> aValue,
-                                     CallerType aCallerType,
-                                     ErrorResult& aError) {
-  SetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::SetScreenX, aValue,
-                            "screenX", aCallerType, aError);
-}
-
-int32_t nsGlobalWindowInner::GetScreenY(CallerType aCallerType,
-                                        ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(GetScreenYOuter, (aCallerType, aError), aError, 0);
-}
-
-void nsGlobalWindowInner::GetScreenY(JSContext* aCx,
-                                     JS::MutableHandle<JS::Value> aValue,
-                                     CallerType aCallerType,
-                                     ErrorResult& aError) {
-  GetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::GetScreenY, aValue,
-                            aCallerType, aError);
-}
-
-void nsGlobalWindowInner::SetScreenY(int32_t aScreenY, CallerType aCallerType,
-                                     ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(SetScreenYOuter, (aScreenY, aCallerType, aError),
-                            aError, );
-}
-
-void nsGlobalWindowInner::SetScreenY(JSContext* aCx,
-                                     JS::Handle<JS::Value> aValue,
-                                     CallerType aCallerType,
-                                     ErrorResult& aError) {
-  SetReplaceableWindowCoord(aCx, &nsGlobalWindowInner::SetScreenY, aValue,
-                            "screenY", aCallerType, aError);
 }
 
 int32_t nsGlobalWindowInner::GetScrollMinX(ErrorResult& aError) {
@@ -7498,46 +7354,6 @@ void nsGlobalWindowInner::RedefineProperty(JSContext* aCx,
       !JS_DefineProperty(aCx, thisObj, aPropName, aValue, JSPROP_ENUMERATE)) {
     aError.Throw(NS_ERROR_FAILURE);
   }
-}
-
-template <typename T>
-void nsGlobalWindowInner::GetReplaceableWindowCoord(
-    JSContext* aCx, nsGlobalWindowInner::WindowCoordGetter<T> aGetter,
-    JS::MutableHandle<JS::Value> aRetval, CallerType aCallerType,
-    ErrorResult& aError) {
-  T coord = (this->*aGetter)(aCallerType, aError);
-  if (!aError.Failed() && !ToJSValue(aCx, coord, aRetval)) {
-    aError.Throw(NS_ERROR_FAILURE);
-  }
-}
-
-template <typename T>
-void nsGlobalWindowInner::SetReplaceableWindowCoord(
-    JSContext* aCx, nsGlobalWindowInner::WindowCoordSetter<T> aSetter,
-    JS::Handle<JS::Value> aValue, const char* aPropName, CallerType aCallerType,
-    ErrorResult& aError) {
-  /*
-   * If caller is not chrome and the user has not explicitly exempted the site,
-   * just treat this the way we would an IDL replaceable property.
-   */
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (StaticPrefs::dom_window_position_size_properties_replaceable_enabled() ||
-      !outer || !outer->CanMoveResizeWindows(aCallerType) ||
-      mBrowsingContext->IsSubframe()) {
-    MOZ_DIAGNOSTIC_ASSERT(aCallerType != CallerType::System,
-                          "Setting this property in chrome code does nothing "
-                          "anymore, use resizeTo/moveTo as needed");
-    RedefineProperty(aCx, aPropName, aValue, aError);
-    return;
-  }
-
-  T value;
-  if (!ValueToPrimitive<T, eDefault>(aCx, aValue, aPropName, &value)) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  (this->*aSetter)(value, aCallerType, aError);
 }
 
 void nsGlobalWindowInner::FireOnNewGlobalObject() {

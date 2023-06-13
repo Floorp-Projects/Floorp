@@ -3497,68 +3497,6 @@ nsresult nsGlobalWindowOuter::GetInnerWidth(double* aInnerWidth) {
   FORWARD_TO_INNER(GetInnerWidth, (aInnerWidth), NS_ERROR_UNEXPECTED);
 }
 
-void nsGlobalWindowOuter::SetInnerSize(int32_t aLengthCSSPixels, bool aIsWidth,
-                                       mozilla::dom::CallerType aCallerType,
-                                       mozilla::ErrorResult& aError) {
-  if (!mDocShell) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  CSSIntCoord length(aLengthCSSPixels);
-
-  CheckSecurityWidthAndHeight((aIsWidth ? &length.value : nullptr),
-                              (aIsWidth ? nullptr : &length.value),
-                              aCallerType);
-
-  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
-
-  // Setting inner size should set the CSS viewport. If the CSS viewport
-  // has been overridden, change the override.
-  if (presShell && presShell->UsesMobileViewportSizing()) {
-    RefPtr<nsPresContext> presContext;
-    presContext = presShell->GetPresContext();
-
-    nsRect shellArea = presContext->GetVisibleArea();
-    if (aIsWidth) {
-      shellArea.width = CSSPixel::ToAppUnits(CSSCoord(length));
-    } else {
-      shellArea.height = CSSPixel::ToAppUnits(CSSCoord(length));
-    }
-
-    SetCSSViewportWidthAndHeight(shellArea.Width(), shellArea.Height());
-    return;
-  }
-
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
-  if (!treeOwnerAsWin) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
-  LayoutDeviceIntCoord valueDev = (CSSCoord(length) * scale).Rounded();
-
-  Maybe<LayoutDeviceIntCoord> width, height;
-  if (aIsWidth) {
-    width.emplace(valueDev);
-  } else {
-    height.emplace(valueDev);
-  }
-
-  aError = treeOwnerAsWin->SetDimensions(
-      {DimensionKind::Inner, Nothing(), Nothing(), width, height});
-
-  CheckForDPIChange();
-}
-
-void nsGlobalWindowOuter::SetInnerWidthOuter(double aInnerWidth,
-                                             CallerType aCallerType,
-                                             ErrorResult& aError) {
-  SetInnerSize(NSToIntRound(ToZeroIfNonfinite(aInnerWidth)),
-               /* aIsWidth */ true, aCallerType, aError);
-}
-
 double nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError) {
   CSSSize size;
   aError = GetInnerSize(size);
@@ -3567,13 +3505,6 @@ double nsGlobalWindowOuter::GetInnerHeightOuter(ErrorResult& aError) {
 
 nsresult nsGlobalWindowOuter::GetInnerHeight(double* aInnerHeight) {
   FORWARD_TO_INNER(GetInnerHeight, (aInnerHeight), NS_ERROR_UNEXPECTED);
-}
-
-void nsGlobalWindowOuter::SetInnerHeightOuter(double aInnerHeight,
-                                              CallerType aCallerType,
-                                              ErrorResult& aError) {
-  SetInnerSize(NSToIntRound(ToZeroIfNonfinite(aInnerHeight)),
-               /* aIsWidth */ false, aCallerType, aError);
 }
 
 CSSIntSize nsGlobalWindowOuter::GetOuterSize(CallerType aCallerType,
@@ -3612,48 +3543,6 @@ int32_t nsGlobalWindowOuter::GetOuterWidthOuter(CallerType aCallerType,
 int32_t nsGlobalWindowOuter::GetOuterHeightOuter(CallerType aCallerType,
                                                  ErrorResult& aError) {
   return GetOuterSize(aCallerType, aError).height;
-}
-
-void nsGlobalWindowOuter::SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
-                                       CallerType aCallerType,
-                                       ErrorResult& aError) {
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
-  if (!treeOwnerAsWin) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  CheckSecurityWidthAndHeight(aIsWidth ? &aLengthCSSPixels : nullptr,
-                              aIsWidth ? nullptr : &aLengthCSSPixels,
-                              aCallerType);
-
-  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
-  LayoutDeviceIntCoord value =
-      (CSSCoord(CSSIntCoord(aLengthCSSPixels)) * scale).Rounded();
-
-  Maybe<LayoutDeviceIntCoord> width, height;
-  if (aIsWidth) {
-    width.emplace(value);
-  } else {
-    height.emplace(value);
-  }
-
-  aError = treeOwnerAsWin->SetDimensions(
-      {DimensionKind::Outer, Nothing(), Nothing(), width, height});
-
-  CheckForDPIChange();
-}
-
-void nsGlobalWindowOuter::SetOuterWidthOuter(int32_t aOuterWidth,
-                                             CallerType aCallerType,
-                                             ErrorResult& aError) {
-  SetOuterSize(aOuterWidth, true, aCallerType, aError);
-}
-
-void nsGlobalWindowOuter::SetOuterHeightOuter(int32_t aOuterHeight,
-                                              CallerType aCallerType,
-                                              ErrorResult& aError) {
-  SetOuterSize(aOuterHeight, false, aCallerType, aError);
 }
 
 CSSPoint nsGlobalWindowOuter::ScreenEdgeSlop() {
@@ -3791,50 +3680,9 @@ float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
   return nsPresContext::AppUnitsToFloatCSSPixels(r.y);
 }
 
-void nsGlobalWindowOuter::SetScreenCoord(int32_t aCoordCSSPixels, bool aIsX,
-                                         CallerType aCallerType,
-                                         ErrorResult& aError) {
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
-  if (!treeOwnerAsWin) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  CheckSecurityLeftAndTop(aIsX ? &aCoordCSSPixels : nullptr,
-                          aIsX ? nullptr : &aCoordCSSPixels, aCallerType);
-
-  auto scale = CSSToDevScaleForBaseWindow(treeOwnerAsWin);
-  LayoutDeviceIntCoord coord =
-      (CSSCoord(CSSIntCoord(aCoordCSSPixels)) * scale).Rounded();
-
-  Maybe<LayoutDeviceIntCoord> x, y;
-  if (aIsX) {
-    x.emplace(coord);
-  } else {
-    y.emplace(coord);
-  }
-
-  aError = treeOwnerAsWin->SetDimensions(
-      {DimensionKind::Outer, x, y, Nothing(), Nothing()});
-
-  CheckForDPIChange();
-}
-
-void nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
-                                          CallerType aCallerType,
-                                          ErrorResult& aError) {
-  SetScreenCoord(aScreenX, /* aIsX */ true, aCallerType, aError);
-}
-
 int32_t nsGlobalWindowOuter::GetScreenYOuter(CallerType aCallerType,
                                              ErrorResult& aError) {
   return GetScreenXY(aCallerType, aError).y;
-}
-
-void nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
-                                          CallerType aCallerType,
-                                          ErrorResult& aError) {
-  SetScreenCoord(aScreenY, /* aIsX */ false, aCallerType, aError);
 }
 
 // NOTE: Arguments to this function should have values scaled to
