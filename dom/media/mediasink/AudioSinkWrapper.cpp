@@ -42,19 +42,26 @@ RefPtr<MediaSink::EndedPromise> AudioSinkWrapper::OnEnded(TrackType aType) {
 TimeUnit AudioSinkWrapper::GetEndTime(TrackType aType) const {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
-  if (aType == TrackInfo::kAudioTrack && mAudioSink &&
-      mAudioSink->AudioStreamCallbackStarted()) {
-    return mAudioSink->GetEndTime();
+  if (aType != TrackInfo::kAudioTrack) {
+    return TimeUnit::Zero();
   }
 
-  if (aType == TrackInfo::kAudioTrack && !mAudioSink && IsMuted()) {
-    if (IsPlaying()) {
-      return GetSystemClockPosition(TimeStamp::Now());
-    }
-
-    return mPositionAtClockStart;
+  if (mAudioSink && mAudioSink->AudioStreamCallbackStarted()) {
+    auto time = mAudioSink->GetEndTime();
+    LOGV("%p: GetEndTime return %lf from sink", this, time.ToSeconds());
+    return time;
   }
-  return TimeUnit::Zero();
+
+  RefPtr<const AudioData> audio = mAudioQueue.PeekBack();
+  if (audio) {
+    LOGV("%p: GetEndTime return %lf from queue", this,
+         audio->GetEndTime().ToSeconds());
+    return audio->GetEndTime();
+  }
+
+  LOGV("%p: GetEndTime return %lf from last packet", this,
+       mLastPacketEndTime.ToSeconds());
+  return mLastPacketEndTime;
 }
 
 TimeUnit AudioSinkWrapper::GetSystemClockPosition(TimeStamp aNow) const {
@@ -146,11 +153,12 @@ void AudioSinkWrapper::DropAudioPacketsIfNeeded(
     const TimeUnit& aMediaPosition) {
   RefPtr<AudioData> audio = mAudioQueue.PeekFront();
   uint32_t dropped = 0;
-  while (audio && audio->mTime + audio->mDuration < aMediaPosition) {
+  while (audio && audio->GetEndTime() < aMediaPosition) {
     // drop this packet, try the next one
     audio = mAudioQueue.PopFront();
     dropped++;
     if (audio) {
+      mLastPacketEndTime = audio->GetEndTime();
       LOGV(
           "Dropping audio packets: media position: %lf, "
           "packet dropped: [%lf, %lf] (%u so far).\n",
@@ -280,6 +288,7 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
   mPositionAtClockStart = aStartTime;
   mClockStartTime = TimeStamp::Now();
   mAudioEnded = IsAudioSourceEnded(aInfo);
+  mLastPacketEndTime = TimeUnit::Zero();
 
   if (mAudioEnded) {
     // Resolve promise if we start playback at the end position of the audio.
@@ -317,6 +326,7 @@ void AudioSinkWrapper::ShutDownAudioSink() {
     mClockStartTime = TimeStamp::Now();
   }
   mAudioSink->ShutDown();
+  mLastPacketEndTime = mAudioSink->GetEndTime();
   mAudioSink = nullptr;
 }
 
@@ -456,6 +466,7 @@ void AudioSinkWrapper::OnAudioEnded(
     // System time is now used for the clock as video may not have ended.
     mClockStartTime = TimeStamp::Now();
   }
+  mLastPacketEndTime = mAudioSink->GetEndTime();
   mAudioEnded = true;
   mEndedPromiseHolder.ResolveOrReject(aValue, __func__);
 }

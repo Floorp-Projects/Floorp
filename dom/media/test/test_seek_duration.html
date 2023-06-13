@@ -19,33 +19,40 @@
 
 SimpleTest.waitForExplicitFinish();
 
-(async function startTest()
+async function test(name, videoProperties)
 {
   const video = document.createElement('video');
   video.src = "bunny.webm";
+  Object.assign(video, videoProperties);
   document.body.appendChild(video);
 
   const loadedMetadata = once(video, "loadedmetadata");
   const canplay = once(video, "canplay");
   const end = once(video, "ended");
 
-  info(`- wait for video loading metadata -`);
+  info(`- wait for ${name} video loading metadata -`);
   await loadedMetadata;
   const originalDuration = video.duration;
 
-  info(`- seek video to the position which is close to end time -`);
+  info(`- seek ${name} video to the position which is close to end time -`);
   // video's duration is 2.1 and the last key frame is in 2.0, we want to seek
   // to that keyframe.
   video.currentTime = originalDuration - 0.1;
 
-  info(`- play video until it ends -`);
+  info(`- play ${name} video until it ends -`);
   await canplay;
   await video.play();
   await end;
 
-  ok(video.duration === originalDuration, `Duration shouldn't change`);
+  is(video.duration, originalDuration, `${name} duration shouldn't change`);
   removeNodeAndSource(video);
+}
 
+(async function startTest() {
+  await Promise.all([
+    test("unmuted", {}),
+    test("muted", {muted: true}),
+  ]);
   SimpleTest.finish();
 })();
 

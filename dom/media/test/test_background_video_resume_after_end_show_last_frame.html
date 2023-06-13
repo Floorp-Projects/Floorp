@@ -100,8 +100,10 @@ startTest({
   ],
   tests: gDecodeSuspendTests,
 
-  runTest: (test, token) => {
+  runTest: async (test, token) => {
     let v = appendVideoToDocWithoutLoad(token);
+    let vMuted = appendVideoToDocWithoutLoad(token+"-muted");
+    vMuted.muted = true;
     let vReference = appendVideoToDocWithoutLoad(token+"-ref");
     manager.started(token);
 
@@ -110,22 +112,30 @@ startTest({
      * resuming video decoder should seek to the last frame.
      * This issue was found in bug 1358057.
      */
-    waitUntilVisible(v)
-      .then(() => {
-        return Promise.all([loadAndWaitUntilLoadedmetadata(v, test.name), loadAndWaitUntilLoadedmetadata(vReference, test.name, "auto")]);
-      })
-      .then(() => waitUntilPlaying(v))
-      .then(() => testVideoSuspendsWhenHidden(v))
-      .then(() => {
-        return Promise.all([waitUntilEnded(v), waitUntilSeekToLastFrame(vReference)]);
-      })
-      .then(() => testVideoOnlySeekCompletedWhenShown(v))
-      .then(() => {
-        testSameContent(v, vReference);
-        removeNodeAndSource(v);
-        removeNodeAndSource(vReference);
-        manager.finished(token);
-      });
-    }
+    await waitUntilVisible(v);
+    await Promise.all([
+      loadAndWaitUntilLoadedmetadata(v, test.name),
+      loadAndWaitUntilLoadedmetadata(vMuted, test.name),
+      loadAndWaitUntilLoadedmetadata(vReference, test.name, "auto"),
+    ]);
+    
+    await waitUntilPlaying(v);
+    await waitUntilPlaying(vMuted);
+    await testVideoSuspendsWhenHidden(v);
+    await testVideoSuspendsWhenHidden(vMuted);
+    await Promise.all([
+      waitUntilEnded(v),
+      waitUntilEnded(vMuted),
+      waitUntilSeekToLastFrame(vReference),
+    ]);
+    await testVideoOnlySeekCompletedWhenShown(v);
+    await testVideoOnlySeekCompletedWhenShown(vMuted);
+    testSameContent(v, vReference);
+    testSameContent(vMuted, vReference);
+    removeNodeAndSource(v);
+    removeNodeAndSource(vMuted);
+    removeNodeAndSource(vReference);
+    manager.finished(token);
+  }
 });
 </script>

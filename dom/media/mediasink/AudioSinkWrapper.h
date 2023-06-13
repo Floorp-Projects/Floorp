@@ -133,6 +133,9 @@ class AudioSinkWrapper : public MediaSink {
   // then this is the media position from which to resume playback.  The value
   // is Invalid() before Start() to facilitate debug.
   media::TimeUnit mPositionAtClockStart = media::TimeUnit::Invalid();
+  // End time of last packet played or dropped.
+  // Only up-to-date when there is no AudioSink.
+  media::TimeUnit mLastPacketEndTime;
 
   bool mAudioEnded = true;
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedRequest;
