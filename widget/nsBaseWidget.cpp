@@ -1395,11 +1395,11 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
 #elif defined(MOZ_WIDGET_ANDROID)
     MOZ_ASSERT(supportsAcceleration);
     options.SetAllowSoftwareWebRenderOGL(
-        StaticPrefs::gfx_webrender_software_opengl_AtStartup());
+        gfx::gfxVars::AllowSoftwareWebRenderOGL());
 #elif defined(MOZ_WIDGET_GTK)
     if (supportsAcceleration) {
       options.SetAllowSoftwareWebRenderOGL(
-          StaticPrefs::gfx_webrender_software_opengl_AtStartup());
+          gfx::gfxVars::AllowSoftwareWebRenderOGL());
     }
 #endif
 

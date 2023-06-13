@@ -2684,6 +2684,12 @@ void gfxPlatform::InitWebRenderConfig() {
 
   UpdateForceSubpixelAAWherePossible();
 
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
+  if (StaticPrefs::gfx_webrender_software_opengl_AtStartup()) {
+    gfxVars::SetAllowSoftwareWebRenderOGL(true);
+  }
+#endif
+
 #ifdef XP_WIN
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT)) {
     gfxVars::SetUseWebRenderDCompWin(true);
@@ -3709,6 +3715,29 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::GetFeature(Feature::D3D11_COMPOSITING)
         .ForceDisable(aStatus, aMessage, aFailureId);
+  }
+#endif
+
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
+  // Before we disable OpenGL and HW_COMPOSITING, we should check if we can
+  // fallback from WebRender to Software WebRender + OpenGL compositing.
+  if (swglFallbackAllowed && gfxVars::AllowSoftwareWebRenderOGL() &&
+      gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING) &&
+      !gfxVars::UseSoftwareWebRender()) {
+    // Fallback to Software WebRender + OpenGL compositing.
+    gfxCriticalNote << "Fallback WR to SW-WR + OpenGL";
+    gfxVars::SetUseSoftwareWebRender(true);
+    return true;
+  }
+#endif
+  // Android does not want to fallback to SW-WR.
+#ifdef MOZ_WIDGET_GTK
+  if (swglFallbackAllowed && gfxVars::AllowSoftwareWebRenderOGL() &&
+      gfxVars::UseSoftwareWebRender()) {
+    // Fallback from Software WebRender + OpenGL to Software WebRender.
+    gfxCriticalNote << "Fallback SW-WR + OpenGL to SW-WR";
+    gfxVars::SetAllowSoftwareWebRenderOGL(false);
+    return true;
   }
 #endif
 
