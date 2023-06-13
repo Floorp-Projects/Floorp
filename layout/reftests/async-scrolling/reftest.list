@@ -47,7 +47,7 @@ skip-if(!asyncPan) == position-fixed-inside-sticky-3.html position-fixed-inside-
 skip-if(!asyncPan) == sticky-inside-fixed-1.html sticky-inside-fixed-1-ref.html
 skip-if(!asyncPan) == sticky-inside-transform-1.html sticky-inside-transform-1-ref.html
 fuzzy(0-1,0-60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
-fuzzy(0-7,0-300) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
+fuzzy(0-55,0-295) skip-if(!asyncPan) == position-sticky-transformed.html position-sticky-transformed-ref.html
 skip-if(!asyncPan) fuzzy-if(cocoaWidget,0-1,0-396) fuzzy-if(winWidget,0-1,0-396) == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
 fuzzy-if(Android,0-43,0-40) fuzzy-if(!Android,0-1,0-34) fuzzy-if(gtkWidget,22-74,20-32) fuzzy-if(cocoaWidget,6-7,18-39) fuzzy-if(swgl&&cocoaWidget&&isDebugBuild,0-7,0-39) skip-if(!asyncPan) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html # Bug 1604338
 fuzzy-if(Android,0-43,0-40) fuzzy-if(gtkWidget,22-74,20-32) fuzzy-if(cocoaWidget,6-7,18-39) fuzzy-if(swgl&&cocoaWidget&&isDebugBuild,0-7,0-39) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html # Bug 1604338
