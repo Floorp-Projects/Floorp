@@ -25,6 +25,10 @@ export DATE
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TARGET_TAR_XZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.xz"
 SOURCE_DEST="${WORKSPACE}/source"
+
+# When updating this, please make sure to keep in sync the script for symbol
+# scraping at
+# https://github.com/mozilla/symbol-scrapers/blob/master/firefox-flatpak/script.sh
 FREEDESKTOP_VERSION="22.08"
 FIREFOX_BASEAPP_CHANNEL="22.08"
 

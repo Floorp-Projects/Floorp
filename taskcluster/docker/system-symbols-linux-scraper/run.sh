@@ -72,7 +72,7 @@ pushd "${MOZ_FETCHES_DIR}/symbol-scrapers/${DISTRO}"
   download_verify_extract_sha256sums "${sha256}"
   DUMP_SYMS=${MOZ_FETCHES_DIR}/dump_syms/dump_syms /bin/bash script.sh
   zip -r9 /builds/worker/artifacts/${SHA256SUMS} SHA256SUMS
-  cp wget*.log /builds/worker/artifacts/
+  cp wget*.log /builds/worker/artifacts/ || true
 popd
 
 if [ ! -f "/builds/worker/artifacts/target.crashreporter-symbols.zip" ]; then
