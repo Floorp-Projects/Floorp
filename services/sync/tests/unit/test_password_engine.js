@@ -14,6 +14,14 @@ const LoginInfo = Components.Constructor(
   "init"
 );
 
+const { LoginCSVImport } = ChromeUtils.import(
+  "resource://gre/modules/LoginCSVImport.jsm"
+);
+
+const { FileTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/FileTestUtils.sys.mjs"
+);
+
 const PropertyBag = Components.Constructor(
   "@mozilla.org/hash-property-bag;1",
   Ci.nsIWritablePropertyBag
@@ -1042,5 +1050,93 @@ add_task(async function test_roundtrip_unknown_fields() {
     equal(serverRec.someObjField.newField, "I am a new field");
   } finally {
     await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_new_passwords_from_csv() {
+  _("Test syncing records imported from a csv file");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  engine._tracker.start();
+
+  let data = [
+    {
+      hostname: "https://example.com",
+      url: "https://example.com/path",
+      username: "exampleuser",
+      password: "examplepassword",
+    },
+    {
+      hostname: "https://mozilla.org",
+      url: "https://mozilla.org",
+      username: "mozillauser",
+      password: "mozillapassword",
+    },
+    {
+      hostname: "https://www.example.org",
+      url: "https://www.example.org/example1/example2",
+      username: "person",
+      password: "mypassword",
+    },
+  ];
+
+  let csvData = ["url,username,login_password"];
+  for (let row of data) {
+    csvData.push(row.url + "," + row.username + "," + row.password);
+  }
+
+  let csvFile = FileTestUtils.getTempFile(`firefox_logins.csv`);
+  await IOUtils.writeUTF8(csvFile.path, csvData.join("\r\n"));
+
+  await LoginCSVImport.importFromCSV(csvFile.path);
+
+  equal(
+    engine._tracker.score,
+    SCORE_INCREMENT_XLARGE,
+    "Should only get one update notification for import"
+  );
+
+  _("Ensure that the csv import is correct");
+  for (let item of data) {
+    let foundLogins = await Services.logins.searchLoginsAsync({
+      origin: item.hostname,
+    });
+    equal(foundLogins.length, 1);
+    equal(foundLogins[0].syncCounter, 1);
+    equal(foundLogins[0].everSynced, false);
+    equal(foundLogins[0].username, item.username);
+    equal(foundLogins[0].password, item.password);
+  }
+
+  _("Perform sync after modifying the password");
+  await sync_engine_and_validate_telem(engine, false);
+
+  _("Verify that the sync counter and status are updated");
+  for (let item of data) {
+    let foundLogins = await Services.logins.searchLoginsAsync({
+      origin: item.hostname,
+    });
+    equal(foundLogins.length, 1);
+    equal(foundLogins[0].syncCounter, 0);
+    equal(foundLogins[0].everSynced, true);
+    equal(foundLogins[0].username, item.username);
+    equal(foundLogins[0].password, item.password);
+    item.guid = foundLogins[0].guid;
+  }
+
+  equal(Object.keys(await engine.getChangedIDs()), 0);
+  equal(collection.count(), 3);
+
+  for (let item of data) {
+    // The remote login should have the imported username and password.
+    let newRec = collection.cleartext(item.guid);
+    equal(newRec.username, item.username);
+    equal(newRec.password, item.password);
   }
 });

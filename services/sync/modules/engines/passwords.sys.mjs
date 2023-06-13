@@ -469,6 +469,7 @@ PasswordTracker.prototype = {
 
       case "addLogin":
       case "removeLogin":
+      case "importLogins":
         this.score += SCORE_INCREMENT_XLARGE;
         break;
 

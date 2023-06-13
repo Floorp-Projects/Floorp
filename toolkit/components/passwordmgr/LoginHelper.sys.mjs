@@ -1512,6 +1512,7 @@ export const LoginHelper = {
       this.importing = false;
 
       Services.obs.notifyObservers(null, "passwordmgr-reload-all");
+      this.notifyStorageChanged("importLogins", []);
     }
   },
 
