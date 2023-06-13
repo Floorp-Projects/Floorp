@@ -16,7 +16,6 @@ EXTRA_JS_MODULES["components-utils"] = [
     "FilterExpressions.sys.mjs",
     "JsonSchemaValidator.sys.mjs",
     "mozjexl.js",
-    "PreferenceFilters.sys.mjs",
     "Sampling.sys.mjs",
     "WindowsInstallsInfo.sys.mjs",
     "WindowsVersionInfo.sys.mjs",

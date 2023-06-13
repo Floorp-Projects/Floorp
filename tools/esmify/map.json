@@ -834,7 +834,6 @@
   "resource://gre/modules/components-utils/ClientEnvironment.jsm": "toolkit/components/utils/ClientEnvironment.jsm",
   "resource://gre/modules/components-utils/FilterExpressions.jsm": "toolkit/components/utils/FilterExpressions.jsm",
   "resource://gre/modules/components-utils/JsonSchemaValidator.jsm": "toolkit/components/utils/JsonSchemaValidator.jsm",
-  "resource://gre/modules/components-utils/PreferenceFilters.jsm": "toolkit/components/utils/PreferenceFilters.jsm",
   "resource://gre/modules/components-utils/Sampling.jsm": "toolkit/components/utils/Sampling.jsm",
   "resource://gre/modules/components-utils/WindowsInstallsInfo.jsm": "toolkit/components/utils/WindowsInstallsInfo.jsm",
   "resource://gre/modules/components-utils/WindowsVersionInfo.jsm": "toolkit/components/utils/WindowsVersionInfo.jsm",

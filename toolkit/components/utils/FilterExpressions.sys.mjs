@@ -7,8 +7,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PreferenceFilters:
-    "resource://gre/modules/components-utils/PreferenceFilters.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
@@ -17,15 +15,35 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/components-utils/mozjexl.js"
 );
 
+function getPrefValue(prefKey, defaultValue) {
+  switch (Services.prefs.getPrefType(prefKey)) {
+    case Ci.nsIPrefBranch.PREF_STRING:
+      return Services.prefs.getStringPref(prefKey);
+
+    case Ci.nsIPrefBranch.PREF_INT:
+      return Services.prefs.getIntPref(prefKey);
+
+    case Ci.nsIPrefBranch.PREF_BOOL:
+      return Services.prefs.getBoolPref(prefKey);
+
+    case Ci.nsIPrefBranch.PREF_INVALID:
+      return defaultValue;
+
+    default:
+      throw new Error(`Error getting pref ${prefKey}.`);
+  }
+}
+
 XPCOMUtils.defineLazyGetter(lazy, "jexl", () => {
   const jexl = new lazy.mozjexl.Jexl();
   jexl.addTransforms({
     date: dateString => new Date(dateString),
     stableSample: lazy.Sampling.stableSample,
     bucketSample: lazy.Sampling.bucketSample,
-    preferenceValue: lazy.PreferenceFilters.preferenceValue,
-    preferenceIsUserSet: lazy.PreferenceFilters.preferenceIsUserSet,
-    preferenceExists: lazy.PreferenceFilters.preferenceExists,
+    preferenceValue: getPrefValue,
+    preferenceIsUserSet: prefKey => Services.prefs.prefHasUserValue(prefKey),
+    preferenceExists: prefKey =>
+      Services.prefs.getPrefType(prefKey) != Ci.nsIPrefBranch.PREF_INVALID,
     keys,
     length,
     mapToProperty,
