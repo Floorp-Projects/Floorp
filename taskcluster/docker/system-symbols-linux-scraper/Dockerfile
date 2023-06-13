@@ -10,10 +10,13 @@ WORKDIR /builds/worker
 # AUFS slowness.
 VOLUME /builds/worker/checkouts
 
+RUN echo "deb http://cdn.debian.net/debian bullseye-backports main" > /etc/apt/sources.list.d/bullseye-backports
+
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         binutils build-essential cpio curl elfutils jq libxml2-utils \
         python3-pip rpm2cpio squashfs-tools unzip wget zip && \
+    apt-get install --no-install-recommends -y flatpak -t bullseye-backports && \
     apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 COPY run.sh /builds/worker/run.sh
