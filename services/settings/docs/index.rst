@@ -177,7 +177,12 @@ It is possible to package a dump of the server records that will be loaded into 
 
 The JSON dump will serve as the default dataset for ``.get()``, instead of doing a round-trip to pull the latest data. It will also reduce the amount of data to be downloaded on the first synchronization.
 
-#. Place the JSON dump of the server records in the ``services/settings/dumps/main/`` folder
+#. Place the JSON dump of the server records in the ``services/settings/dumps/main/`` folder. Using this command:
+   ::
+
+      CID="your-collection"
+      curl "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/${CID}/changeset?_expected=0" | jq '{"data": .changes, "timestamp": .timestamp}' > services/settings/dumps/main/${CID}.json``
+
 #. Add the filename to the ``FINAL_TARGET_FILES`` list in ``services/settings/dumps/main/moz.build``
 #. Add the filename to the ``[browser]`` section of ``mobile/android/installer/package-manifest.in`` IF the file should be bundled with Android.
 
