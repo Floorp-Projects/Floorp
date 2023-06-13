@@ -172,13 +172,7 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
   if (aMuted) {
     if (mAudioSink) {
       LOG("AudioSinkWrapper muted, shutting down AudioStream.");
-      mAudioSinkEndedRequest.DisconnectIfExists();
-      if (IsPlaying()) {
-        mPositionAtClockStart = mAudioSink->GetPosition();
-        mClockStartTime = TimeStamp::Now();
-      }
-      mAudioSink->ShutDown();
-      mAudioSink = nullptr;
+      ShutDownAudioSink();
     }
   } else {
     LOG("%p: AudioSinkWrapper unmuted, maybe re-creating an AudioStream.",
@@ -316,6 +310,16 @@ void AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime) {
       ->Track(mAudioSinkEndedRequest);
 }
 
+void AudioSinkWrapper::ShutDownAudioSink() {
+  mAudioSinkEndedRequest.DisconnectIfExists();
+  if (IsPlaying()) {
+    mPositionAtClockStart = mAudioSink->GetPosition();
+    mClockStartTime = TimeStamp::Now();
+  }
+  mAudioSink->ShutDown();
+  mAudioSink = nullptr;
+}
+
 void AudioSinkWrapper::MaybeAsyncCreateAudioSink() {
   MOZ_ASSERT(!mAudioSink);
   MOZ_ASSERT(!mAudioSinkEndedRequest.Exists());
@@ -423,13 +427,10 @@ void AudioSinkWrapper::Stop() {
   mClockStartTime = TimeStamp();
   mPositionAtClockStart = TimeUnit::Invalid();
   mAudioEnded = true;
-
-  mAudioSinkEndedRequest.DisconnectIfExists();
-
   if (mAudioSink) {
-    mAudioSink->ShutDown();
-    mAudioSink = nullptr;
+    ShutDownAudioSink();
   }
+
   mEndedPromiseHolder.ResolveIfExists(true, __func__);
   mEndedPromise = nullptr;
 }
