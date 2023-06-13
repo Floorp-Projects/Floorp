@@ -23,8 +23,16 @@ add_task(async function test_tracking() {
   let recordNum = 0;
 
   _("Verify we've got an empty tracker to work with.");
-  let changes = await tracker.getChangedIDs();
+  let changes = await engine.getChangedIDs();
   do_check_empty(changes);
+
+  let exceptionHappened = false;
+  try {
+    await tracker.getChangedIDs();
+  } catch (ex) {
+    exceptionHappened = true;
+  }
+  ok(exceptionHappened, "tracker does not keep track of changes");
 
   async function createPassword() {
     _("RECORD NUM: " + recordNum);
@@ -45,47 +53,36 @@ add_task(async function test_tracking() {
   }
 
   try {
-    _(
-      "Create a password record. Won't show because we haven't started tracking yet"
-    );
-    await createPassword();
-    changes = await tracker.getChangedIDs();
-    do_check_empty(changes);
-    Assert.equal(tracker.score, 0);
-
-    _("Tell the tracker to start tracking changes.");
     tracker.start();
     await createPassword();
-    changes = await tracker.getChangedIDs();
+    changes = await engine.getChangedIDs();
     do_check_attribute_count(changes, 1);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     _("Starting twice won't do any harm.");
     tracker.start();
     await createPassword();
-    changes = await tracker.getChangedIDs();
+    changes = await engine.getChangedIDs();
     do_check_attribute_count(changes, 2);
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
     _("Let's stop tracking again.");
-    await tracker.clearChangedIDs();
     tracker.resetScore();
     await tracker.stop();
     await createPassword();
-    changes = await tracker.getChangedIDs();
-    do_check_empty(changes);
+    changes = await engine.getChangedIDs();
+    do_check_attribute_count(changes, 3);
     Assert.equal(tracker.score, 0);
 
     _("Stopping twice won't do any harm.");
     await tracker.stop();
     await createPassword();
-    changes = await tracker.getChangedIDs();
-    do_check_empty(changes);
+    changes = await engine.getChangedIDs();
+    do_check_attribute_count(changes, 4);
     Assert.equal(tracker.score, 0);
   } finally {
     _("Clean up.");
     await store.wipe();
-    await tracker.clearChangedIDs();
     tracker.resetScore();
     await tracker.stop();
   }
@@ -93,7 +90,7 @@ add_task(async function test_tracking() {
 
 add_task(async function test_onWipe() {
   _("Verify we've got an empty tracker to work with.");
-  const changes = await tracker.getChangedIDs();
+  const changes = await engine.getChangedIDs();
   do_check_empty(changes);
   Assert.equal(tracker.score, 0);
 
@@ -114,47 +111,58 @@ add_task(async function test_removeAllLogins() {
   let recordNum = 0;
   _("Verify that all tracked logins are removed.");
 
-  async function createPassword() {
-    _("RECORD NUM: " + recordNum);
-    let record = new LoginRec("passwords", "GUID" + recordNum);
-    record.cleartext = {
-      id: "GUID" + recordNum,
-      hostname: "http://foo.bar.com",
-      formSubmitURL: "http://foo.bar.com",
-      username: "john" + recordNum,
-      password: "smith",
-      usernameField: "username",
-      passwordField: "password",
-    };
-    recordNum++;
-    let login = store._nsLoginInfoFromRecord(record);
-    await Services.logins.addLoginAsync(login);
-    await tracker.asyncObserver.promiseObserversComplete();
-  }
-  try {
-    _("Tell tracker to start tracking changes");
-    tracker.start();
-    await createPassword();
-    await createPassword();
-    let changes = await tracker.getChangedIDs();
-    do_check_attribute_count(changes, 2);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+  // Perform this test twice, the first time where a sync is not performed
+  // between adding and removing items and the second time where a sync is
+  // performed. In the former case, the logins will just be deleted because
+  // they have never been synced, so they won't be detected as changes. In
+  // the latter case, the logins have been synced so they will be marked for
+  // deletion.
+  for (let syncBeforeRemove of [false, true]) {
+    async function createPassword() {
+      _("RECORD NUM: " + recordNum);
+      let record = new LoginRec("passwords", "GUID" + recordNum);
+      record.cleartext = {
+        id: "GUID" + recordNum,
+        hostname: "http://foo.bar.com",
+        formSubmitURL: "http://foo.bar.com",
+        username: "john" + recordNum,
+        password: "smith",
+        usernameField: "username",
+        passwordField: "password",
+      };
+      recordNum++;
+      let login = store._nsLoginInfoFromRecord(record);
+      await Services.logins.addLoginAsync(login);
 
-    await tracker.clearChangedIDs();
-    changes = await tracker.getChangedIDs();
-    do_check_attribute_count(changes, 0);
+      await tracker.asyncObserver.promiseObserversComplete();
+    }
+    try {
+      _("Tell tracker to start tracking changes");
+      tracker.start();
+      await createPassword();
+      await createPassword();
+      let changes = await engine.getChangedIDs();
+      do_check_attribute_count(changes, 2);
+      Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
-    _("Tell sync to remove all logins");
-    Services.logins.removeAllUserFacingLogins();
-    await tracker.asyncObserver.promiseObserversComplete();
-    changes = await tracker.getChangedIDs();
-    do_check_attribute_count(changes, 2);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 5);
-  } finally {
-    _("Clean up.");
-    await store.wipe();
-    await tracker.clearChangedIDs();
-    tracker.resetScore();
-    await tracker.stop();
+      if (syncBeforeRemove) {
+        let logins = await Services.logins.getAllLoginsAsync(true);
+        for (let login of logins) {
+          engine.markSynced(login.guid);
+        }
+      }
+
+      _("Tell sync to remove all logins");
+      Services.logins.removeAllUserFacingLogins();
+      await tracker.asyncObserver.promiseObserversComplete();
+      changes = await engine.getChangedIDs();
+      do_check_attribute_count(changes, syncBeforeRemove ? 2 : 0);
+      Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 5);
+    } finally {
+      _("Clean up.");
+      await store.wipe();
+      tracker.resetScore();
+      await tracker.stop();
+    }
   }
 });

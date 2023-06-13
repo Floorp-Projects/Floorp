@@ -82,19 +82,19 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
   }
 
   /**
-   * Returns an array of all saved logins that can be decrypted.
+   * Returns a promise resolving to an array of all saved logins that can be decrypted.
    *
    * @resolve {nsILoginInfo[]}
    */
-  async getAllLoginsAsync() {
-    return this._getLoginsAsync({});
+  getAllLoginsAsync(includeDeleted) {
+    return this._getLoginsAsync({}, includeDeleted);
   }
 
-  async searchLoginsAsync(matchData) {
+  async searchLoginsAsync(matchData, includeDeleted) {
     this.log(
       `Searching for matching saved logins for origin: ${matchData.origin}`
     );
-    return this._getLoginsAsync(matchData);
+    return this._getLoginsAsync(matchData, includeDeleted);
   }
 
   _baseHostnameFromOrigin(origin) {
@@ -117,7 +117,7 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
     }
   }
 
-  async _getLoginsAsync(matchData) {
+  async _getLoginsAsync(matchData, includeDeleted) {
     let baseHostname = this._baseHostnameFromOrigin(matchData.origin);
 
     // Query all logins for the eTLD+1 and then filter the logins in _searchLogins
@@ -164,6 +164,7 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
 
     const [logins] = this._searchLogins(
       realMatchData,
+      includeDeleted,
       options,
       candidateLogins.map(this._vanillaLoginToStorageLogin)
     );

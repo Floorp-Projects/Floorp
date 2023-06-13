@@ -45,17 +45,19 @@ add_task(async function test_ignored_fields() {
 
   enableValidationPrefs();
 
-  let login = await Services.logins.addLoginAsync(
-    new LoginInfo(
-      "https://example.com",
-      "",
-      null,
-      "username",
-      "password",
-      "",
-      ""
-    )
+  let loginInfo = new LoginInfo(
+    "https://example.com",
+    "",
+    null,
+    "username",
+    "password",
+    "",
+    ""
   );
+
+  // Setting syncCounter to -1 so that it will be incremented to 0 when added.
+  loginInfo.syncCounter = -1;
+  let login = await Services.logins.addLoginAsync(loginInfo);
   login.QueryInterface(Ci.nsILoginMetaInfo); // For `guid`.
 
   engine._tracker.start();
