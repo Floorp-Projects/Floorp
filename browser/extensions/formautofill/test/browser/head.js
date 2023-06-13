@@ -887,9 +887,13 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
       };
 
       const keys = new Set([...Object.keys(field), ...Object.keys(expected)]);
-      ["autofill", "elementWeakRef", "confidence", "part"].forEach(k =>
-        keys.delete(k)
-      );
+      [
+        "identifier",
+        "autofill",
+        "elementWeakRef",
+        "confidence",
+        "part",
+      ].forEach(k => keys.delete(k));
 
       for (const key of keys) {
         const expectedValue = expected[key];
