@@ -5,6 +5,9 @@
 // Current version of the format used by Session Restore.
 const FORMAT_VERSION = 1;
 
+const PERSIST_SESSIONS = Services.prefs.getBoolPref(
+  "browser.sessionstore.persist_closed_tabs_between_sessions"
+);
 const TAB_CUSTOM_VALUES = new WeakMap();
 const TAB_LAZY_STATES = new WeakMap();
 const TAB_STATE_NEEDS_RESTORE = 1;
@@ -3814,21 +3817,20 @@ var SessionStoreInternal = {
 
       // If there's a window already open that we can restore into, use that
       if (canUseWindow) {
-        // Since we're not overwriting existing tabs, we want to merge _closedTabs,
-        // putting existing ones first. Then make sure we're respecting the max pref.
-        if (winState._closedTabs && winState._closedTabs.length) {
-          let curWinState = this._windows[windowToUse.__SSi];
-          curWinState._closedTabs = curWinState._closedTabs.concat(
-            winState._closedTabs
-          );
-          curWinState._closedTabs.splice(
-            this._max_tabs_undo,
-            curWinState._closedTabs.length
-          );
+        if (!PERSIST_SESSIONS) {
+          // Since we're not overwriting existing tabs, we want to merge _closedTabs,
+          // putting existing ones first. Then make sure we're respecting the max pref.
+          if (winState._closedTabs && winState._closedTabs.length) {
+            let curWinState = this._windows[windowToUse.__SSi];
+            curWinState._closedTabs = curWinState._closedTabs.concat(
+              winState._closedTabs
+            );
+            curWinState._closedTabs.splice(
+              this._max_tabs_undo,
+              curWinState._closedTabs.length
+            );
+          }
         }
-
-        // XXXzpao This is going to merge extData together (taking what was in
-        //        winState over what is in the window already.
         // We don't restore window right away, just store its data.
         // Later, these windows will be restored with newly opened windows.
         this._updateWindowRestoreState(windowToUse, {
@@ -4278,6 +4280,7 @@ var SessionStoreInternal = {
     let windowsOpened = [];
     for (let winData of root.windows) {
       if (!winData || !winData.tabs || !winData.tabs[0]) {
+        this._restoreCount--;
         continue;
       }
       windowsOpened.push(this._openWindowWithState({ windows: [winData] }));
@@ -4434,12 +4437,17 @@ var SessionStoreInternal = {
       // or we're the first window to be restored.
       this._windows[aWindow.__SSi]._closedTabs = newClosedTabsData;
     } else if (this._max_tabs_undo > 0) {
-      // If we merge tabs, we also want to merge closed tabs data. We'll assume
-      // the restored tabs were closed more recently and append the current list
-      // of closed tabs to the new one...
-      newClosedTabsData = newClosedTabsData.concat(
-        this._windows[aWindow.__SSi]._closedTabs
-      );
+      // We preserve tabs between sessions so we just want to filter out any previously open tabs that
+      // were added to the _closedTabs list prior to restoreLastSession
+      if (PERSIST_SESSIONS) {
+        newClosedTabsData = this._windows[aWindow.__SSi]._closedTabs.filter(
+          tab => !tab.removeAfterRestore
+        );
+      } else {
+        newClosedTabsData = newClosedTabsData.concat(
+          this._windows[aWindow.__SSi]._closedTabs
+        );
+      }
 
       // ... and make sure that we don't exceed the max number of closed tabs
       // we can restore.
@@ -5731,23 +5739,24 @@ var SessionStoreInternal = {
    * (defaultState) will be a state that should still be restored at startup,
    * while the second part (state) is a state that should be saved for later.
    * defaultState will be comprised of windows with only pinned tabs, extracted
-   * from state. It will also contain window position information.
+   * from a clone of startupState. It will also contain window position information.
    *
    * defaultState will be restored at startup. state will be passed into
    * LastSession and will be kept in case the user explicitly wants
    * to restore the previous session (publicly exposed as restoreLastSession).
    *
    * @param state
-   *        The state, presumably from SessionStartup.state
+   *        The startupState, presumably from SessionStartup.state
    * @returns [defaultState, state]
    */
-  _prepDataForDeferredRestore: function ssi_prepDataForDeferredRestore(state) {
+  _prepDataForDeferredRestore: function ssi_prepDataForDeferredRestore(
+    startupState
+  ) {
     // Make sure that we don't modify the global state as provided by
     // SessionStartup.state.
-    state = Cu.cloneInto(state, {});
+    let state = Cu.cloneInto(startupState, {});
 
     let defaultState = { windows: [], selectedWindow: 1 };
-
     state.selectedWindow = state.selectedWindow || 1;
 
     // Look at each window, remove pinned tabs, adjust selectedindex,
@@ -5755,52 +5764,90 @@ var SessionStoreInternal = {
     for (let wIndex = 0; wIndex < state.windows.length; ) {
       let window = state.windows[wIndex];
       window.selected = window.selected || 1;
-      // We're going to put the state of the window into this object
-      let pinnedWindowState = { tabs: [] };
+      // We're going to put the state of the window into this object, but for closedTabs
+      // we want to preserve the original closedTabs since that will be saved as the lastSessionState
+      let newWindowState = {
+        tabs: [],
+      };
+      if (PERSIST_SESSIONS) {
+        newWindowState._closedTabs = Cu.cloneInto(window._closedTabs, {});
+      }
       for (let tIndex = 0; tIndex < window.tabs.length; ) {
         if (window.tabs[tIndex].pinned) {
           // Adjust window.selected
           if (tIndex + 1 < window.selected) {
             window.selected -= 1;
           } else if (tIndex + 1 == window.selected) {
-            pinnedWindowState.selected = pinnedWindowState.tabs.length + 1;
+            newWindowState.selected = newWindowState.tabs.length + 1;
           }
           // + 1 because the tab isn't actually in the array yet
 
           // Now add the pinned tab to our window
-          pinnedWindowState.tabs = pinnedWindowState.tabs.concat(
+          newWindowState.tabs = newWindowState.tabs.concat(
             window.tabs.splice(tIndex, 1)
           );
           // We don't want to increment tIndex here.
           continue;
+        } else if (!window.tabs[tIndex].hidden && PERSIST_SESSIONS) {
+          // Add any previously open tabs that aren't pinned or hidden to the recently closed tabs list
+          // which we want to persist between sessions; if the session is manually restored, they will
+          // be filtered out of the closed tabs list (due to removeAfterRestore property) and reopened
+          // per expected session restore behavior.
+
+          let tabState = window.tabs[tIndex];
+
+          // Ensure the index is in bounds.
+          let activeIndex = tabState.index;
+          activeIndex = Math.min(activeIndex, tabState.entries.length - 1);
+          activeIndex = Math.max(activeIndex, 0);
+
+          let title =
+            tabState.entries[activeIndex].title ||
+            tabState.entries[activeIndex].url;
+
+          let tabData = {
+            state: tabState,
+            title,
+            image: tabState.image,
+            pos: tIndex,
+            closedAt: Date.now(),
+            closedInGroup: false,
+            removeAfterRestore: true,
+          };
+
+          if (this._shouldSaveTabState(tabState)) {
+            this.saveClosedTabData(window, newWindowState._closedTabs, tabData);
+          }
         }
         tIndex++;
       }
 
       // At this point the window in the state object has been modified (or not)
       // We want to build the rest of this new window object if we have pinnedTabs.
-      if (pinnedWindowState.tabs.length) {
+      if (
+        newWindowState.tabs.length ||
+        (PERSIST_SESSIONS && newWindowState._closedTabs.length)
+      ) {
         // First get the other attributes off the window
         WINDOW_ATTRIBUTES.forEach(function (attr) {
           if (attr in window) {
-            pinnedWindowState[attr] = window[attr];
+            newWindowState[attr] = window[attr];
             delete window[attr];
           }
         });
         // We're just copying position data into the pinned window.
         // Not copying over:
-        // - _closedTabs
         // - extData
         // - isPopup
         // - hidden
 
         // Assign a unique ID to correlate the window to be opened with the
         // remaining data
-        window.__lastSessionWindowID = pinnedWindowState.__lastSessionWindowID =
+        window.__lastSessionWindowID = newWindowState.__lastSessionWindowID =
           "" + Date.now() + Math.random();
 
         // Actually add this window to our defaultState
-        defaultState.windows.push(pinnedWindowState);
+        defaultState.windows.push(newWindowState);
         // Remove the window from the state if it doesn't have any tabs
         if (!window.tabs.length) {
           if (wIndex + 1 <= state.selectedWindow) {
@@ -5816,7 +5863,8 @@ var SessionStoreInternal = {
       }
       wIndex++;
     }
-
+    // we return state here rather than startupState so as to avoid duplicating
+    // pinned tabs that we add to the defaultState (when a user restores a session)
     return [defaultState, state];
   },
 
@@ -5825,6 +5873,9 @@ var SessionStoreInternal = {
       // not all windows restored, yet
       if (this._restoreCount > 1) {
         this._restoreCount--;
+        this._log.warn(
+          `waiting on ${this._restoreCount} windows to be restored before sending restore complete notifications.`
+        );
         return;
       }
 
