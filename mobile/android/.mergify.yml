@@ -39,6 +39,7 @@ pull_request_rules:
     conditions:
       - author=github-actions[bot]
       - status-success=complete-pr
+      - status-success=complete-push
       - files~=^android-components/(\.buildconfig\.yml|plugins/dependencies/src/main/java/(ApplicationServices|DependenciesPlugin|Gecko)\.kt)
       - -files~=^(?!android-components/(\.buildconfig\.yml|plugins/dependencies/src/main/java/(ApplicationServices|DependenciesPlugin|Gecko)\.kt)).+$
     actions:
