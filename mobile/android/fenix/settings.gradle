@@ -5,11 +5,13 @@
 pluginManagement {
     includeBuild("../android-components/plugins/publicsuffixlist")
     includeBuild("../android-components/plugins/dependencies")
+    includeBuild("../android-components/plugins/config")
     includeBuild("./plugins/fenixdependencies")
 }
 
 plugins {
     id 'FenixDependenciesPlugin'
+    id "mozac.ConfigPlugin"
     id 'mozac.DependenciesPlugin'
 }
 
