@@ -2281,7 +2281,7 @@ TEST_F(VideoConduitTest, TestExternalRemoteSsrcCollision) {
 }
 
 TEST_F(VideoConduitTest, TestVideoConfigurationH264) {
-  const int profileLevelId1 = 0x42E00D;
+  const int profileLevelId1 = 0x42E01F;
   const int profileLevelId2 = 0x64000C;
   const char* sprop1 = "foo bar";
   const char* sprop2 = "baz";
@@ -2309,7 +2309,7 @@ TEST_F(VideoConduitTest, TestVideoConfigurationH264) {
     ASSERT_TRUE(Call()->mVideoSendEncoderConfig);
     auto& params = Call()->mVideoSendEncoderConfig->video_format.parameters;
     EXPECT_EQ(params[cricket::kH264FmtpPacketizationMode], "0");
-    EXPECT_EQ(params[cricket::kH264FmtpProfileLevelId], "42e00d");
+    EXPECT_EQ(params[cricket::kH264FmtpProfileLevelId], "42e01f");
     EXPECT_EQ(params[cricket::kH264FmtpSpropParameterSets], sprop1);
   }
 

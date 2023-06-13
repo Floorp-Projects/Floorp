@@ -3412,7 +3412,7 @@ TEST_F(JsepSessionTest, ValidateOfferedVideoCodecParams) {
   const auto& parsed_h264_1_params =
       *static_cast<const SdpFmtpAttributeList::H264Parameters*>(h264_1_params);
 
-  ASSERT_EQ((uint32_t)0x42e00d, parsed_h264_1_params.profile_level_id);
+  ASSERT_EQ((uint32_t)0x42e01f, parsed_h264_1_params.profile_level_id);
   ASSERT_TRUE(parsed_h264_1_params.level_asymmetry_allowed);
   ASSERT_EQ(1U, parsed_h264_1_params.packetization_mode);
 
@@ -3437,7 +3437,7 @@ TEST_F(JsepSessionTest, ValidateOfferedVideoCodecParams) {
   const auto& parsed_h264_0_params =
       *static_cast<const SdpFmtpAttributeList::H264Parameters*>(h264_0_params);
 
-  ASSERT_EQ((uint32_t)0x42e00d, parsed_h264_0_params.profile_level_id);
+  ASSERT_EQ((uint32_t)0x42e01f, parsed_h264_0_params.profile_level_id);
   ASSERT_TRUE(parsed_h264_0_params.level_asymmetry_allowed);
   ASSERT_EQ(0U, parsed_h264_0_params.packetization_mode);
 
@@ -3888,7 +3888,7 @@ static void ForceH264(JsepSession& session, uint32_t profileLevelId) {
 
 TEST_F(JsepSessionTest, TestH264Negotiation) {
   ForceH264(*mSessionOff, 0x42e00b);
-  ForceH264(*mSessionAns, 0x42e00d);
+  ForceH264(*mSessionAns, 0x42e01f);
 
   AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
@@ -3908,7 +3908,7 @@ TEST_F(JsepSessionTest, TestH264Negotiation) {
   ASSERT_EQ("H264", offererSendCodec->mName);
   const JsepVideoCodecDescription* offererVideoSendCodec(
       static_cast<const JsepVideoCodecDescription*>(offererSendCodec.get()));
-  ASSERT_EQ((uint32_t)0x42e00d, offererVideoSendCodec->mProfileLevelId);
+  ASSERT_EQ((uint32_t)0x42e01f, offererVideoSendCodec->mProfileLevelId);
 
   UniquePtr<JsepCodecDescription> offererRecvCodec;
   GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &offererRecvCodec);
@@ -3930,12 +3930,12 @@ TEST_F(JsepSessionTest, TestH264Negotiation) {
   ASSERT_EQ("H264", answererRecvCodec->mName);
   const JsepVideoCodecDescription* answererVideoRecvCodec(
       static_cast<const JsepVideoCodecDescription*>(answererRecvCodec.get()));
-  ASSERT_EQ((uint32_t)0x42e00d, answererVideoRecvCodec->mProfileLevelId);
+  ASSERT_EQ((uint32_t)0x42e01f, answererVideoRecvCodec->mProfileLevelId);
 }
 
 TEST_F(JsepSessionTest, TestH264NegotiationFails) {
   ForceH264(*mSessionOff, 0x42000b);
-  ForceH264(*mSessionAns, 0x42e00d);
+  ForceH264(*mSessionAns, 0x42e01f);
 
   AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
@@ -4016,7 +4016,7 @@ TEST_F(JsepSessionTest, TestH264NegotiationOffererNoFmtp) {
 
 TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithLowLevel) {
   ForceH264(*mSessionOff, 0x42e00b);
-  ForceH264(*mSessionAns, 0x42e00d);
+  ForceH264(*mSessionAns, 0x42e01f);
 
   AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
@@ -4053,7 +4053,7 @@ TEST_F(JsepSessionTest, TestH264LevelAsymmetryDisallowedByOffererWithLowLevel) {
 
 TEST_F(JsepSessionTest,
        TestH264LevelAsymmetryDisallowedByOffererWithHighLevel) {
-  ForceH264(*mSessionOff, 0x42e00d);
+  ForceH264(*mSessionOff, 0x42e01f);
   ForceH264(*mSessionAns, 0x42e00b);
 
   AddTracks(*mSessionOff, "video");
@@ -4091,7 +4091,7 @@ TEST_F(JsepSessionTest,
 
 TEST_F(JsepSessionTest,
        TestH264LevelAsymmetryDisallowedByAnswererWithLowLevel) {
-  ForceH264(*mSessionOff, 0x42e00d);
+  ForceH264(*mSessionOff, 0x42e01f);
   ForceH264(*mSessionAns, 0x42e00b);
 
   AddTracks(*mSessionOff, "video");
@@ -4130,7 +4130,7 @@ TEST_F(JsepSessionTest,
 TEST_F(JsepSessionTest,
        TestH264LevelAsymmetryDisallowedByAnswererWithHighLevel) {
   ForceH264(*mSessionOff, 0x42e00b);
-  ForceH264(*mSessionAns, 0x42e00d);
+  ForceH264(*mSessionAns, 0x42e01f);
 
   AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
