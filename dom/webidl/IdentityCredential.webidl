@@ -44,6 +44,7 @@ dictionary IdentityProviderBranding {
   USVString background_color;
   USVString color;
   sequence<IdentityProviderIcon> icons;
+  USVString name;
 };
 
 // https://fedidcg.github.io/FedCM/#dictdef-identityproviderapiconfig

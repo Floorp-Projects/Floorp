@@ -134,6 +134,10 @@ export class IdentityCredentialPromptService {
       return iconResult ? iconResult : Promise.reject();
     });
 
+    const providerNames = identityManifests.map(
+      providerManifest => providerManifest?.branding?.name
+    );
+
     // Sanity check that we made one promise per IDP.
     if (promises.length != identityManifests.length) {
       throw new Error("Mismatch promise array length");
@@ -235,8 +239,20 @@ export class IdentityCredentialPromptService {
 
       // Set the words that the user sees in the selection
       newItem.getElementsByClassName(
-        "identity-credential-list-item-label"
-      )[0].textContent = displayDomain;
+        "identity-credential-list-item-label-primary"
+      )[0].textContent = providerNames[providerIndex] || displayDomain;
+      newItem.getElementsByClassName(
+        "identity-credential-list-item-label-secondary"
+      )[0].hidden = true;
+
+      if (providerNames[providerIndex] && displayDomain) {
+        newItem.getElementsByClassName(
+          "identity-credential-list-item-label-secondary"
+        )[0].hidden = false;
+        newItem.getElementsByClassName(
+          "identity-credential-list-item-label-secondary"
+        )[0].textContent = displayDomain;
+      }
 
       // Add the new item to the DOM!
       listBox.append(newItem);
@@ -330,6 +346,8 @@ export class IdentityCredentialPromptService {
       "chrome://global/skin/icons/defaultFavicon.svg"
     );
 
+    const providerName = identityManifest?.branding?.name;
+
     return new Promise(function (resolve, reject) {
       let browser = browsingContext.top.embedderElement;
       if (!browser) {
@@ -364,7 +382,7 @@ export class IdentityCredentialPromptService {
       let title = localization.formatValueSync(
         "identity-credential-policy-title",
         {
-          provider: providerDisplayDomain,
+          provider: providerName || providerDisplayDomain,
         }
       );
 
@@ -495,6 +513,7 @@ export class IdentityCredentialPromptService {
       ["browser/identityCredentialNotification.ftl"],
       true
     );
+    const providerName = providerManifest?.branding?.name;
     let providerURL = new URL(provider.configURL);
     let displayDomain = lazy.IDNService.convertToDisplayIDN(
       providerURL.host,
@@ -503,7 +522,7 @@ export class IdentityCredentialPromptService {
     let headerMessage = localization.formatValueSync(
       "identity-credential-header-accounts",
       {
-        provider: displayDomain,
+        provider: providerName || displayDomain,
       }
     );
     let [accept, cancel] = localization.formatMessagesSync([
@@ -558,10 +577,10 @@ export class IdentityCredentialPromptService {
 
       // Add information to the label
       newItem.getElementsByClassName(
-        "identity-credential-list-item-label-name"
+        "identity-credential-list-item-label-primary"
       )[0].textContent = account.name;
       newItem.getElementsByClassName(
-        "identity-credential-list-item-label-email"
+        "identity-credential-list-item-label-secondary"
       )[0].textContent = account.email;
 
       // Add the item to the DOM!
