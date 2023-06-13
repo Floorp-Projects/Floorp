@@ -144,9 +144,10 @@ class CompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
           return;
       }
 
-      // Stream should end only when flushed and vise versa, see above
+      // Stream should end only when flushed, see above
+      // The reverse is not true as zlib may have big data to be flushed that is
+      // larger than the buffer size
       MOZ_ASSERT_IF(err == Z_STREAM_END, aFlush == ZLibFlush::Yes);
-      MOZ_ASSERT_IF(aFlush == ZLibFlush::Yes, err == Z_STREAM_END);
 
       // At this point we either exhausted the input or the output buffer
       MOZ_ASSERT(!mZStream.avail_in || !mZStream.avail_out);
