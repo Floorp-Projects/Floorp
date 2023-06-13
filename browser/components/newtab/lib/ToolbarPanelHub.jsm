@@ -10,7 +10,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
 
@@ -101,7 +100,7 @@ class _ToolbarPanelHub {
     // Checkbox onclick handler gets called before the checkbox state gets toggled,
     // so we have to call it with the opposite value.
     let newValue = !event.target.checked;
-    lazy.Preferences.set(WHATSNEW_ENABLED_PREF, newValue);
+    Services.prefs.setBoolPref(WHATSNEW_ENABLED_PREF, newValue);
 
     this.sendUserEventTelemetry(
       event.target.ownerGlobal,
@@ -191,7 +190,7 @@ class _ToolbarPanelHub {
   // Render what's new messages into the panel.
   async renderMessages(win, doc, containerId, options = {}) {
     // Set the checked status of the footer checkbox
-    let value = lazy.Preferences.get(WHATSNEW_ENABLED_PREF);
+    let value = Services.prefs.getBoolPref(WHATSNEW_ENABLED_PREF);
     let checkbox = win.document.getElementById("panelMenu-toggleWhatsNew");
 
     checkbox.checked = value;

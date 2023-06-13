@@ -8,7 +8,6 @@ describe("ToolbarPanelHub", () => {
   let sandbox;
   let instance;
   let everyWindowStub;
-  let preferencesStub;
   let fakeDocument;
   let fakeWindow;
   let fakeElementById;
@@ -110,10 +109,6 @@ describe("ToolbarPanelHub", () => {
       registerCallback: sandbox.stub(),
       unregisterCallback: sandbox.stub(),
     };
-    preferencesStub = {
-      get: sandbox.stub(),
-      set: sandbox.stub(),
-    };
     scriptloaderStub = { loadSubScript: sandbox.stub() };
     addObserverStub = sandbox.stub();
     removeObserverStub = sandbox.stub();
@@ -151,7 +146,6 @@ describe("ToolbarPanelHub", () => {
       PrivateBrowsingUtils: {
         isBrowserPrivate: isBrowserPrivateStub,
       },
-      Preferences: preferencesStub,
       TrackingDBService: {
         getEarliestRecordedDate: getEarliestRecordedDateStub,
         getEventsByDateRange: getEventsByDateRangeStub,
@@ -204,7 +198,7 @@ describe("ToolbarPanelHub", () => {
     });
   });
   describe("#toggleWhatsNewPref", () => {
-    it("should call Preferences.set() with the opposite value", () => {
+    it("should call Services.prefs.setBoolPref() with the opposite value", () => {
       let checkbox = {};
       let event = { target: checkbox };
       // checkbox starts false
@@ -215,9 +209,9 @@ describe("ToolbarPanelHub", () => {
       // so we have to call it with the opposite value.
       instance.toggleWhatsNewPref(event);
 
-      assert.calledOnce(preferencesStub.set);
+      assert.calledOnce(setBoolPrefStub);
       assert.calledWith(
-        preferencesStub.set,
+        setBoolPrefStub,
         "browser.messaging-system.whatsNewPanel.enabled",
         !checkbox.checked
       );
