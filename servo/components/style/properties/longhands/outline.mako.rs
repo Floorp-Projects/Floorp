@@ -38,7 +38,7 @@ ${helpers.predefined_type(
     "app_units::Au::from_px(3)",
     engines="gecko servo-2013 servo-2020",
     servo_2020_pref="layout.2020.unimplemented",
-    initial_specified_value="specified::BorderSideWidth::Medium",
+    initial_specified_value="specified::BorderSideWidth::medium()",
     animation_value_type="NonNegativeLength",
     spec="https://drafts.csswg.org/css-ui/#propdef-outline-width",
 )}

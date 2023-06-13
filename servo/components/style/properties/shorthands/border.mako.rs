@@ -93,7 +93,7 @@ pub fn parse_border<'i, 't>(
     if any {
         Ok((color.unwrap_or_else(|| Color::currentcolor()),
             style.unwrap_or(BorderStyle::None),
-            width.unwrap_or(BorderSideWidth::Medium)))
+            width.unwrap_or(BorderSideWidth::medium())))
     } else {
         Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
     }
