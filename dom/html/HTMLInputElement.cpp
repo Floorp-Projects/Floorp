@@ -454,6 +454,8 @@ HTMLInputElement::nsFilePickerShownCallback::Done(
         u"cancel"_ns, CanBubble::eYes, Cancelable::eNo);
   }
 
+  mInput->OwnerDoc()->NotifyUserGestureActivation();
+
   nsIFilePicker::Mode mode;
   mFilePicker->GetMode(&mode);
 
@@ -610,9 +612,9 @@ class nsColorPickerShownCallback final : public nsIColorPickerShownCallback {
 nsresult nsColorPickerShownCallback::UpdateInternal(const nsAString& aColor,
                                                     bool aTrustedUpdate) {
   bool valueChanged = false;
-
   nsAutoString oldValue;
   if (aTrustedUpdate) {
+    mInput->OwnerDoc()->NotifyUserGestureActivation();
     valueChanged = true;
   } else {
     mInput->GetValue(oldValue, CallerType::System);
@@ -807,7 +809,7 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
 
   if (aType == FILE_PICKER_DIRECTORY) {
     mode = nsIFilePicker::modeGetFolder;
-  } else if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+  } else if (HasAttr(nsGkAtoms::multiple)) {
     mode = nsIFilePicker::modeOpenMultiple;
   } else {
     mode = nsIFilePicker::modeOpen;
@@ -822,14 +824,11 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
 
   // Native directory pickers ignore file type filters, so we don't spend
   // cycles adding them for FILE_PICKER_DIRECTORY.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::accept) &&
-      aType != FILE_PICKER_DIRECTORY) {
+  if (HasAttr(nsGkAtoms::accept) && aType != FILE_PICKER_DIRECTORY) {
     SetFilePickerFiltersFromAccept(filePicker);
 
     if (StaticPrefs::dom_capture_enabled()) {
-      const nsAttrValue* captureVal =
-          GetParsedAttr(nsGkAtoms::capture, kNameSpaceID_None);
-      if (captureVal) {
+      if (const nsAttrValue* captureVal = GetParsedAttr(nsGkAtoms::capture)) {
         filePicker->SetCapture(static_cast<nsIFilePicker::CaptureTarget>(
             captureVal->GetEnumValue()));
       }
