@@ -28,7 +28,6 @@ void AudioSinkWrapper::Shutdown() {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "Must be called after playback stopped.");
   mSinkCreator = nullptr;
-  mEndedPromiseHolder.ResolveIfExists(true, __func__);
 }
 
 RefPtr<MediaSink::EndedPromise> AudioSinkWrapper::OnEnded(TrackType aType) {
@@ -315,17 +314,17 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
     return NS_OK;
   }
 
+  mEndedPromise = mEndedPromiseHolder.Ensure(__func__);
   return StartAudioSink(aStartTime, AudioSinkStartPolicy::SYNC);
 }
 
 nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
                                           AudioSinkStartPolicy aPolicy) {
   MOZ_RELEASE_ASSERT(!mAudioSink);
+  MOZ_ASSERT(!mAudioSinkEndedPromise.Exists());
 
   nsresult rv = NS_OK;
 
-  mAudioSinkEndedPromise.DisconnectIfExists();
-  mEndedPromise = mEndedPromiseHolder.Ensure(__func__);
   mEndedPromise
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
@@ -450,8 +449,10 @@ void AudioSinkWrapper::Stop() {
         mAudioSink->Shutdown();
     MOZ_ASSERT(rv.inspect().isNothing());
     mAudioSink = nullptr;
-    mEndedPromise = nullptr;
+  } else {
+    mEndedPromiseHolder.ResolveIfExists(true, __func__);
   }
+  mEndedPromise = nullptr;
 }
 
 bool AudioSinkWrapper::IsStarted() const {

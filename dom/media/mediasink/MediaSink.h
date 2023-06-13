@@ -46,7 +46,8 @@ class MediaSink {
 
   // Return a promise which is resolved when the track finishes
   // or null if no such track.
-  // Must be called after playback starts.
+  // Must be called after Start().
+  // Returns null if the TrackType does not exist or if Stop() has been called.
   virtual RefPtr<EndedPromise> OnEnded(TrackType aType) = 0;
 
   // Return the end time of the audio/video data that has been consumed
