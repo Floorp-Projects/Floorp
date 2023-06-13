@@ -111,6 +111,8 @@ const STDERR_BODY = String.raw`
   sys.stderr.write("${STDERR_MSG}")
 `;
 
+const PLATFORM_PATH_SEP = AppConstants.platform == "win" ? "\\" : "/";
+
 let SCRIPTS = [
   {
     name: "echo",
@@ -123,6 +125,18 @@ let SCRIPTS = [
     script: ECHO_BODY.replace(/^ {2}/gm, ""),
     _hookModifyManifest(manifest) {
       manifest.path = PathUtils.filename(manifest.path);
+    },
+  },
+  {
+    name: "relative_dotdot.echo",
+    description: "a native app that echos; relative path with dot dot",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      // Set to ..\NativeMessagingHosts\relative_dotdot.bat (Windows)
+      manifest.path = [
+        "..",
+        ...manifest.path.split(PLATFORM_PATH_SEP).slice(-2),
+      ].join(PLATFORM_PATH_SEP);
     },
   },
   {
@@ -150,6 +164,33 @@ let SCRIPTS = [
       // On Linux/macOS, this doesn't change anything.
       // On Windows, this turns C:\Program Files\... in C:/Program Files/...
       manifest.path = manifest.path.replaceAll("\\", "/");
+    },
+  },
+  {
+    name: "dot.echo",
+    description: "a native app that echos; with dot slash in path",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      // Replace / with /./ (or \ with \.\ on Windows).
+      manifest.path = manifest.path.replaceAll(
+        PLATFORM_PATH_SEP,
+        PLATFORM_PATH_SEP + "." + PLATFORM_PATH_SEP
+      );
+    },
+  },
+  {
+    name: "dotdot.echo",
+    description: "a native app that echos; with dot dot slash in path",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      // The binary is in a directory called "TYPE_SLUG". Turn
+      // /TYPE_SLUG/ in /TYPE_SLUG/../TYPE_SLUG/ to have equivalent directories
+      // that ought to be considered a valid absolute path.
+      const dirWithSlashes = PLATFORM_PATH_SEP + TYPE_SLUG + PLATFORM_PATH_SEP;
+      manifest.path = manifest.path.replace(
+        dirWithSlashes,
+        dirWithSlashes + ".." + dirWithSlashes
+      );
     },
   },
   {
@@ -372,6 +413,12 @@ if (AppConstants.platform == "win") {
     return simpleTest("relative.echo");
   });
 
+  add_task(function test_relative_dotdot_path() {
+    // Note: relative paths only supported on Windows.
+    // For non-Windows, see test_relative_dotdot_path_unsupported instead.
+    return simpleTest("relative_dotdot.echo");
+  });
+
   // "echocmd" uses a .cmd file instead of a .bat file
   add_task(function test_cmd_file() {
     return simpleTest("echocmd");
@@ -387,7 +434,24 @@ if (AppConstants.platform == "win") {
       ],
     });
   });
+  add_task(function test_relative_dotdot_path_unsupported() {
+    return testBrokenApp({
+      appname: "relative_dotdot.echo",
+      expectedError: "An unexpected error occurred",
+      expectedConsoleMessages: [
+        /NativeApp requires absolute path to command on this platform/,
+      ],
+    });
+  });
 }
+
+add_task(async function test_absolute_path_dot_one() {
+  return simpleTest("dot.echo");
+});
+
+add_task(async function test_absolute_path_dotdot() {
+  return simpleTest("dotdot.echo");
+});
 
 add_task(async function test_error_name_mismatch() {
   await testBrokenApp({
