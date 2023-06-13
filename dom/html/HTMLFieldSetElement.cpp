@@ -7,6 +7,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/HTMLFieldSetElementBinding.h"
@@ -49,6 +50,9 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement,
 NS_IMPL_ELEMENT_CLONE(HTMLFieldSetElement)
 
 bool HTMLFieldSetElement::IsDisabledForEvents(WidgetEvent* aEvent) {
+  if (StaticPrefs::dom_forms_fieldset_disable_only_descendants_enabled()) {
+    return false;
+  }
   return IsElementDisabledForEvents(aEvent, nullptr);
 }
 
