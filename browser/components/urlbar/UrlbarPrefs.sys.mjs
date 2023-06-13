@@ -404,13 +404,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The index where we show unit conversion results.
   ["unitConversion.suggestedIndex", 1],
 
-  // Results will include a built-in set of popular domains when this is true.
-  ["usepreloadedtopurls.enabled", false],
-
-  // After this many days from the profile creation date, the built-in set of
-  // popular domains will no longer be included in the results.
-  ["usepreloadedtopurls.expire_days", 14],
-
   // Controls the empty search behavior in Search Mode:
   //  0 - Show nothing
   //  1 - Show search history

@@ -55,8 +55,6 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderInterventions.sys.mjs",
   UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.sys.mjs",
   UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
-  UrlbarProviderPreloadedSites:
-    "resource:///modules/UrlbarProviderPreloadedSites.sys.mjs",
   UrlbarProviderPrivateSearch:
     "resource:///modules/UrlbarProviderPrivateSearch.sys.mjs",
   UrlbarProviderQuickActions:

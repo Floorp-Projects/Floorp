@@ -71,7 +71,6 @@ user_pref("browser.urlbar.speculativeConnect.enabled", false);
 // Turn off search suggestions in the location bar so as not to trigger network
 // connections.
 user_pref("browser.urlbar.suggest.searches", false);
-user_pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 // URIFixup whitelist
 user_pref("browser.fixup.domainsuffixwhitelist.test", true);
 user_pref("browser.warnOnQuit", false);
