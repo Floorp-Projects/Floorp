@@ -18,7 +18,6 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -91,7 +90,7 @@ class ComposeTabbedBrowsingTest {
             verifyNoOpenTabsInNormalBrowsing()
         }.openNewTab {
         }.submitQuery(defaultWebPage.url.toString()) {
-            mDevice.waitForIdle()
+            verifyPageContent(defaultWebPage.content)
             verifyTabCounter("1")
         }.openComposeTabDrawer(composeTestRule) {
             verifyNormalBrowsingButtonIsSelected()
@@ -251,14 +250,16 @@ class ComposeTabbedBrowsingTest {
         homeScreen { }.togglePrivateBrowsingMode()
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            verifyPageContent(genericURL.content)
         }.openComposeTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
-            TestHelper.verifySnackBarText("Private tab closed")
-            TestHelper.clickSnackbarButton("UNDO")
+            verifySnackBarText("Private tab closed")
+            clickSnackbarButton("UNDO")
         }
 
         browserScreen {
+            verifyPageContent(genericURL.content)
             verifyTabCounter("1")
         }.openComposeTabDrawer(composeTestRule) {
             verifyExistingOpenTabs("Test_Page_1")
