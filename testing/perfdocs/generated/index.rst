@@ -12,6 +12,7 @@ Performance Testing
   fxrecord
   mach-try-perf
   mozperftest
+  perf-sheriffing
   raptor
   talos
 
@@ -26,6 +27,7 @@ For more detailed information about each test suite and project, see their docum
   * :doc:`fxrecord`
   * :doc:`mach-try-perf`
   * :doc:`mozperftest`
+  * :doc:`perf-sheriffing`
   * :doc:`raptor`
   * :doc:`talos`
 
