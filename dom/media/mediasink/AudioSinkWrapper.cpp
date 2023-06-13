@@ -188,10 +188,8 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
       mAudioSink = nullptr;
     }
   } else {
-    if (!IsPlaying()) {
-      LOG("%p: AudioSinkWrapper::OnMuted: not playing, not re-creating an "
-          "AudioSink",
-          this);
+    if (!NeedAudioSink()) {
+      LOG("%p: AudioSinkWrapper::OnMuted: AudioSink not needed", this);
       return;
     }
     LOG("%p: AudioSinkWrapper unmuted, re-creating an AudioStream.", this);
@@ -268,18 +266,17 @@ void AudioSinkWrapper::SetPlaying(bool aPlaying) {
 
   if (mAudioSink) {
     mAudioSink->SetPlaying(aPlaying);
-  } else {
-    if (aPlaying) {
-      LOG("%p: AudioSinkWrapper::SetPlaying : starting an AudioSink", this);
-      TimeUnit switchTime = GetPosition();
-      DropAudioPacketsIfNeeded(switchTime);
-      StartAudioSink(switchTime, AudioSinkStartPolicy::SYNC);
-    }
   }
 
   if (aPlaying) {
     MOZ_ASSERT(mClockStartTime.IsNull());
+    TimeUnit switchTime = GetPosition();
     mClockStartTime = TimeStamp::Now();
+    if (!mAudioSink && NeedAudioSink()) {
+      LOG("%p: AudioSinkWrapper::SetPlaying : starting an AudioSink", this);
+      DropAudioPacketsIfNeeded(switchTime);
+      StartAudioSink(switchTime, AudioSinkStartPolicy::SYNC);
+    }
   } else {
     // Remember how long we've played.
     mPositionAtClockStart = GetPosition();
@@ -315,7 +312,19 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
   }
 
   mEndedPromise = mEndedPromiseHolder.Ensure(__func__);
+  if (!NeedAudioSink()) {
+    return NS_OK;
+  }
   return StartAudioSink(aStartTime, AudioSinkStartPolicy::SYNC);
+}
+
+bool AudioSinkWrapper::NeedAudioSink() {
+  // An AudioSink is needed if unmuted, playing, and not ended.  The not-ended
+  // check also avoids creating an AudioSink when there is no audio track.
+  // mEndedPromiseHolder can be non-empty only if the promise is not managed
+  // by an existing AudioSink.
+  MOZ_ASSERT(!mAudioSink);
+  return !IsMuted() && IsPlaying() && !mEndedPromiseHolder.IsEmpty();
 }
 
 nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
@@ -333,11 +342,6 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
   LOG("%p: AudioSinkWrapper::StartAudioSink (%s)", this,
       aPolicy == AudioSinkStartPolicy::ASYNC ? "Async" : "Sync");
 
-  if (IsMuted()) {
-    LOG("%p: Muted: not starting an audio sink", this);
-    return NS_OK;
-  }
-  LOG("%p: Not muted: starting a new audio sink", this);
   if (aPolicy == AudioSinkStartPolicy::ASYNC) {
     UniquePtr<AudioSink> audioSink = mSinkCreator();
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
@@ -371,12 +375,10 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
                 // initialization) right after unmuting.
                 // 2. The media element was muted while the async initialization
                 // was happening.
-                // 3. The AudioSinkWrapper was stopped during asynchronous
-                // creation.
-                // 4. The AudioSinkWrapper was paused during asynchronous
-                // creation.
-                if (mAudioSink || IsMuted() || !mIsStarted ||
-                    mClockStartTime.IsNull()) {
+                // 3. The AudioSinkWrapper was paused or stopped during
+                // asynchronous initialization.
+                // 4. The audio has ended during asynchronous initialization.
+                if (mAudioSink || !NeedAudioSink()) {
                   LOG("AudioSink initialized async isn't needed, shutting "
                       "it down.");
                   DebugOnly<Maybe<MozPromiseHolder<EndedPromise>>> rv =
