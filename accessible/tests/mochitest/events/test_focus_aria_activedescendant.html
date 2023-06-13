@@ -241,6 +241,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       listbox.setAttribute("aria-activedescendant", "item2");
       await evtProm;
 
+      info("Setting aria-activedescendant to invalid id on non-focused node");
+      const combobox_entry = getNode("combobox_entry");
+      evtProm = PromEvents.waitForEvents({
+        expected: [[EVENT_FOCUS, combobox_entry]],
+        unexpected: [[EVENT_FOCUS, listbox]],
+      });
+      combobox_entry.focus();
+      listbox.setAttribute("aria-activedescendant", "invalid");
+      await evtProm;
+
       SimpleTest.finish();
     }
 

@@ -928,14 +928,16 @@ void DocAccessible::ARIAActiveDescendantChanged(LocalAccessible* aAccessible) {
     }
 
     // aria-activedescendant was cleared or changed to a non-existent node.
-    // Move focus back to the element itself.
-    FocusMgr()->ActiveItemChanged(aAccessible, false);
+    // Move focus back to the element itself if it has DOM focus.
+    if (aAccessible->IsActiveWidget()) {
+      FocusMgr()->ActiveItemChanged(aAccessible, false);
 #ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eFocus)) {
-      logging::ActiveItemChangeCausedBy("ARIA activedescedant cleared",
-                                        aAccessible);
-    }
+      if (logging::IsEnabled(logging::eFocus)) {
+        logging::ActiveItemChangeCausedBy("ARIA activedescedant cleared",
+                                          aAccessible);
+      }
 #endif
+    }
   }
 }
 
