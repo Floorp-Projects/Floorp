@@ -464,10 +464,19 @@ class GeckoEngine(
             (extension as GeckoWebExtension).nativeExtension,
             allowed,
         ).then(
-            {
-                val ext = GeckoWebExtension(it!!, runtime)
-                webExtensionDelegate?.onAllowedInPrivateBrowsingChanged(ext)
-                onSuccess(ext)
+            { geckoExtension ->
+                if (geckoExtension == null) {
+                    onError(
+                        Exception(
+                            "Gecko extension was not returned after trying to" +
+                                " setAllowedInPrivateBrowsing with value $allowed",
+                        ),
+                    )
+                } else {
+                    val ext = GeckoWebExtension(geckoExtension, runtime)
+                    webExtensionDelegate?.onAllowedInPrivateBrowsingChanged(ext)
+                    onSuccess(ext)
+                }
                 GeckoResult<Void>()
             },
             { throwable ->

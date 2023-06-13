@@ -1787,6 +1787,43 @@ class GeckoEngineTest {
         verify(webExtensionsDelegate, never()).onAllowedInPrivateBrowsingChanged(any())
     }
 
+    @Test
+    fun `GIVEN null native extension WHEN calling setAllowedInPrivateBrowsing THEN call onError`() {
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+
+        val allowedInPrivateBrowsingExtensionResult = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.setAllowedInPrivateBrowsing(any(), anyBoolean())).thenReturn(
+            allowedInPrivateBrowsingExtensionResult,
+        )
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            mockNativeWebExtension(),
+            runtime,
+        )
+        var result: WebExtension? = null
+        var throwable: Throwable? = null
+
+        engine.setAllowedInPrivateBrowsing(
+            extension,
+            true,
+            onSuccess = { ext -> result = ext },
+            onError = { throwable = it },
+        )
+        allowedInPrivateBrowsingExtensionResult.complete(null)
+
+        shadowOf(getMainLooper()).idle()
+
+        assertNotNull(throwable)
+        assertNull(result)
+        verify(webExtensionsDelegate, never()).onAllowedInPrivateBrowsingChanged(any())
+    }
+
     @Test(expected = RuntimeException::class)
     fun `WHEN GeckoRuntime is shutting down THEN GeckoEngine throws runtime exception`() {
         val runtime: GeckoRuntime = mock()
