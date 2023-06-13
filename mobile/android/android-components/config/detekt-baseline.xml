@@ -92,7 +92,6 @@
     <ID>UndocumentedPublicClass:Request.kt$Request$Redirect</ID>
     <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$AppIntent : InterceptionResponse</ID>
     <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$Content : InterceptionResponse</ID>
-    <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$Url : InterceptionResponse</ID>
     <ID>UndocumentedPublicClass:RustLog.kt$RustLog</ID>
     <ID>UndocumentedPublicClass:SampleApplication.kt$SampleApplication : Application</ID>
     <ID>UndocumentedPublicClass:SampleToolbarHelpers.kt$ConfigurationAdapter : Adapter</ID>
@@ -184,7 +183,7 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFullScreenChange(enabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLoadingStateChange(loading: Boolean)</ID>
-    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLocationChange(url: String)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLocationChange(url: String, hasUserGesture: Boolean)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLongPress(hitResult: HitResult)</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigateBack()</ID>
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)</ID>

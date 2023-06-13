@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **concept-engine**
+  * Added `onLocationChange#hasUserGesture` parameter. This indicates if a location change was requested while a user gesture was active. [bug #1804636](https://bugzilla.mozilla.org/show_bug.cgi?id=1804636)
+
 # 124.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v123..releases_v124)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v124/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

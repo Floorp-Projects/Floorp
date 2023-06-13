@@ -48,7 +48,7 @@ abstract class EngineSession(
          */
         fun onScrollChange(scrollX: Int, scrollY: Int) = Unit
 
-        fun onLocationChange(url: String) = Unit
+        fun onLocationChange(url: String, hasUserGesture: Boolean) = Unit
         fun onTitleChange(title: String) = Unit
 
         /**

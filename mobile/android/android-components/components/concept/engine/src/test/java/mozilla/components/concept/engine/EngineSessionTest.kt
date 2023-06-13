@@ -52,8 +52,8 @@ class EngineSessionTest {
 
         session.notifyInternalObservers { onScrollChange(1234, 4321) }
         session.notifyInternalObservers { onScrollChange(2345, 5432) }
-        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
-        session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
+        session.notifyInternalObservers { onLocationChange("https://www.firefox.com", false) }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
@@ -85,8 +85,8 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProcessKilled() }
         session.notifyInternalObservers { onShowDynamicToolbar() }
 
-        verify(observer).onLocationChange("https://www.mozilla.org")
-        verify(observer).onLocationChange("https://www.firefox.com")
+        verify(observer).onLocationChange("https://www.mozilla.org", false)
+        verify(observer).onLocationChange("https://www.firefox.com", false)
         verify(observer).onScrollChange(1234, 4321)
         verify(observer).onScrollChange(2345, 5432)
         verify(observer).onProgress(25)
@@ -136,7 +136,7 @@ class EngineSessionTest {
         session.register(observer)
 
         session.notifyInternalObservers { onScrollChange(1234, 4321) }
-        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
@@ -165,7 +165,7 @@ class EngineSessionTest {
         val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
 
         session.notifyInternalObservers { onScrollChange(2345, 5432) }
-        session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onLocationChange("https://www.firefox.com", false) }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
@@ -195,7 +195,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onShowDynamicToolbar() }
 
         verify(observer).onScrollChange(1234, 4321)
-        verify(observer).onLocationChange("https://www.mozilla.org")
+        verify(observer).onLocationChange("https://www.mozilla.org", false)
         verify(observer).onProgress(25)
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
@@ -216,7 +216,7 @@ class EngineSessionTest {
         verify(observer).onLaunchIntentRequest("https://www.mozilla.org", null)
         verify(observer).onShowDynamicToolbar()
         verify(observer, never()).onScrollChange(2345, 5432)
-        verify(observer, never()).onLocationChange("https://www.firefox.com")
+        verify(observer, never()).onLocationChange("https://www.firefox.com", false)
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
@@ -261,7 +261,7 @@ class EngineSessionTest {
         session.register(otherObserver)
 
         session.notifyInternalObservers { onScrollChange(1234, 4321) }
-        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
@@ -288,7 +288,7 @@ class EngineSessionTest {
         val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
 
         session.notifyInternalObservers { onScrollChange(2345, 5432) }
-        session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onLocationChange("https://www.firefox.com", false) }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
@@ -315,7 +315,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onShowDynamicToolbar() }
 
         verify(observer).onScrollChange(1234, 4321)
-        verify(observer).onLocationChange("https://www.mozilla.org")
+        verify(observer).onLocationChange("https://www.mozilla.org", false)
         verify(observer).onProgress(25)
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
@@ -333,7 +333,7 @@ class EngineSessionTest {
         verify(observer).onWindowRequest(windowRequest)
         verify(observer).onShowDynamicToolbar()
         verify(observer, never()).onScrollChange(2345, 5432)
-        verify(observer, never()).onLocationChange("https://www.firefox.com")
+        verify(observer, never()).onLocationChange("https://www.firefox.com", false)
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
@@ -358,7 +358,7 @@ class EngineSessionTest {
         verify(observer, never()).onMediaMuteChanged(true)
         verify(observer, never()).onMediaFullscreenChanged(true, mediaSessionElementMetadata)
         verify(otherObserver, never()).onScrollChange(2345, 5432)
-        verify(otherObserver, never()).onLocationChange("https://www.firefox.com")
+        verify(otherObserver, never()).onLocationChange("https://www.firefox.com", false)
         verify(otherObserver, never()).onProgress(100)
         verify(otherObserver, never()).onLoadingStateChange(false)
         verify(otherObserver, never()).onSecurityChange(false, "", "")
@@ -398,7 +398,7 @@ class EngineSessionTest {
         session.register(observer)
 
         session.notifyInternalObservers { onScrollChange(1234, 4321) }
-        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
@@ -425,7 +425,7 @@ class EngineSessionTest {
         val mediaSessionElementMetadata: MediaSession.ElementMetadata = mock()
 
         session.notifyInternalObservers { onScrollChange(2345, 5432) }
-        session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onLocationChange("https://www.firefox.com", false) }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
         session.notifyInternalObservers { onSecurityChange(false, "", "") }
@@ -452,7 +452,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onShowDynamicToolbar() }
 
         verify(observer).onScrollChange(1234, 4321)
-        verify(observer).onLocationChange("https://www.mozilla.org")
+        verify(observer).onLocationChange("https://www.mozilla.org", false)
         verify(observer).onProgress(25)
         verify(observer).onLoadingStateChange(true)
         verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
@@ -470,7 +470,7 @@ class EngineSessionTest {
         verify(observer).onWindowRequest(windowRequest)
         verify(observer).onShowDynamicToolbar()
         verify(observer, never()).onScrollChange(2345, 5432)
-        verify(observer, never()).onLocationChange("https://www.firefox.com")
+        verify(observer, never()).onLocationChange("https://www.firefox.com", false)
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
         verify(observer, never()).onSecurityChange(false, "", "")
@@ -513,8 +513,8 @@ class EngineSessionTest {
         session.register(observer)
 
         otherSession.notifyInternalObservers { onScrollChange(1234, 4321) }
-        otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
-        otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
+        otherSession.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
         otherSession.notifyInternalObservers { onProgress(25) }
         otherSession.notifyInternalObservers { onLoadingStateChange(true) }
         otherSession.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
@@ -540,7 +540,7 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
         otherSession.notifyInternalObservers { onShowDynamicToolbar() }
         verify(observer, never()).onScrollChange(1234, 4321)
-        verify(observer, never()).onLocationChange("https://www.mozilla.org")
+        verify(observer, never()).onLocationChange("https://www.mozilla.org", false)
         verify(observer, never()).onProgress(25)
         verify(observer, never()).onLoadingStateChange(true)
         verify(observer, never()).onSecurityChange(true, "mozilla.org", "issuer")
@@ -567,7 +567,7 @@ class EngineSessionTest {
         verify(observer, never()).onShowDynamicToolbar()
 
         session.notifyInternalObservers { onScrollChange(1234, 4321) }
-        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        session.notifyInternalObservers { onLocationChange("https://www.mozilla.org", false) }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
         session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
@@ -593,7 +593,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onMediaFullscreenChanged(true, mediaSessionElementMetadata) }
         session.notifyInternalObservers { onShowDynamicToolbar() }
         verify(observer, times(1)).onScrollChange(1234, 4321)
-        verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
+        verify(observer, times(1)).onLocationChange("https://www.mozilla.org", false)
         verify(observer, times(1)).onProgress(25)
         verify(observer, times(1)).onLoadingStateChange(true)
         verify(observer, times(1)).onSecurityChange(true, "mozilla.org", "issuer")
@@ -837,7 +837,7 @@ class EngineSessionTest {
 
         defaultObserver.onTitleChange("")
         defaultObserver.onScrollChange(0, 0)
-        defaultObserver.onLocationChange("")
+        defaultObserver.onLocationChange("", false)
         defaultObserver.onPreviewImageChange("")
         defaultObserver.onLongPress(HitResult.UNKNOWN(""))
         defaultObserver.onExternalResource("", "")
@@ -945,8 +945,8 @@ class EngineSessionTest {
         val tracker: Tracker = mock()
 
         observer.onScrollChange(1234, 4321)
-        observer.onLocationChange("https://www.mozilla.org")
-        observer.onLocationChange("https://www.firefox.com")
+        observer.onLocationChange("https://www.mozilla.org", false)
+        observer.onLocationChange("https://www.firefox.com", false)
         observer.onProgress(25)
         observer.onProgress(100)
         observer.onLoadingStateChange(true)

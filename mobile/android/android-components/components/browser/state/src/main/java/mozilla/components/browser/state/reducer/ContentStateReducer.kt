@@ -57,6 +57,11 @@ internal object ContentStateReducer {
                     } else {
                         it.permissionRequestsList
                     },
+                    searchTerms = if (action.hasUserGesture) {
+                        ""
+                    } else {
+                        it.searchTerms
+                    },
                 )
             }
             is ContentAction.UpdateProgressAction -> updateContentState(state, action.sessionId) {

@@ -1107,6 +1107,7 @@ class GeckoEngineSession(
             session: GeckoSession,
             url: String?,
             geckoPermissions: List<ContentPermission>,
+            hasUserGesture: Boolean,
         ) {
             this@GeckoEngineSession.geckoPermissions = geckoPermissions
             if (url == null) {
@@ -1140,7 +1141,7 @@ class GeckoEngineSession(
             }
             // Reset the status of current page being product or not when user navigates away.
             notifyObservers { onProductUrlChange(false) }
-            notifyObservers { onLocationChange(url) }
+            notifyObservers { onLocationChange(url, hasUserGesture) }
         }
 
         override fun onLoadRequest(

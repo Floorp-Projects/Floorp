@@ -298,13 +298,17 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
+        var observedUserGesture = true
         var observedCanGoBack = false
         var observedCanGoForward = false
         var cookieBanner = CookieBannerHandlingStatus.HANDLED
         var displaysProduct = false
         engineSession.register(
             object : EngineSession.Observer {
-                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onLocationChange(url: String, hasUserGesture: Boolean) {
+                    observedUrl = url
+                    observedUserGesture = hasUserGesture
+                }
                 override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
                     canGoBack?.let { observedCanGoBack = canGoBack }
                     canGoForward?.let { observedCanGoForward = canGoForward }
@@ -320,8 +324,9 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org", emptyList(), false)
         assertEquals("http://mozilla.org", observedUrl)
+        assertEquals(false, observedUserGesture)
         assertEquals(CookieBannerHandlingStatus.NO_DETECTED, cookieBanner)
         // TO DO: add a positive test case after a test endpoint is implemented in desktop (Bug 1846341)
         assertEquals(false, displaysProduct)
@@ -858,22 +863,22 @@ class GeckoEngineSessionTest {
         var observedUrl = ""
         engineSession.register(
             object : EngineSession.Observer {
-                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onLocationChange(url: String, hasUserGesture: Boolean) { observedUrl = url }
             },
         )
 
         captureDelegates()
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList(), false)
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList(), false)
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org", emptyList(), false)
         assertEquals("https://www.mozilla.org", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList(), false)
         assertEquals("about:blank", observedUrl)
     }
 
@@ -883,7 +888,7 @@ class GeckoEngineSessionTest {
         captureDelegates()
         assertTrue(session.initialLoad)
 
-        navigationDelegate.value.onLocationChange(mock(), "https://mozilla.org", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "https://mozilla.org", emptyList(), false)
         assertFalse(session.initialLoad)
 
         navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("moz-extension://1234-test"))
@@ -892,16 +897,16 @@ class GeckoEngineSessionTest {
         var observedUrl = ""
         session.register(
             object : EngineSession.Observer {
-                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onLocationChange(url: String, hasUserGesture: Boolean) { observedUrl = url }
             },
         )
-        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList(), false)
         assertEquals("", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org", emptyList(), false)
         assertEquals("https://www.mozilla.org", observedUrl)
 
-        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList())
+        navigationDelegate.value.onLocationChange(mock(), "about:blank", emptyList(), false)
         assertEquals("about:blank", observedUrl)
     }
 
@@ -931,10 +936,10 @@ class GeckoEngineSessionTest {
         geckoResult.complete(true)
 
         assertNull(engineSession.currentUrl)
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org", emptyList())
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org", emptyList(), false)
         assertEquals("https://www.mozilla.org", engineSession.currentUrl)
 
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.firefox.com", emptyList())
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.firefox.com", emptyList(), false)
         assertEquals("https://www.firefox.com", engineSession.currentUrl)
     }
 
@@ -944,7 +949,7 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org", listOf(mock()))
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org", listOf(mock()), false)
 
         assertTrue(engineSession.geckoPermissions.isNotEmpty())
     }
@@ -955,7 +960,7 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        navigationDelegate.value.onLocationChange(geckoSession, null, listOf(mock()))
+        navigationDelegate.value.onLocationChange(geckoSession, null, listOf(mock()), false)
 
         assertTrue(engineSession.geckoPermissions.isNotEmpty())
     }
@@ -981,7 +986,7 @@ class GeckoEngineSessionTest {
         verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
 
         // This sets the currentUrl.
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com", emptyList())
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com", emptyList(), false)
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
         verify(historyTrackingDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"))
@@ -1038,7 +1043,7 @@ class GeckoEngineSessionTest {
 
         engineSession.register(
             object : EngineSession.Observer {
-                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onLocationChange(url: String, hasUserGesture: Boolean) { observedUrl = url }
                 override fun onTitleChange(title: String) { observedTitle = title }
             },
         )
@@ -1072,7 +1077,7 @@ class GeckoEngineSessionTest {
             ),
         )
 
-        navigationDelegate.value.onLocationChange(geckoSession, emptyPageUrl, emptyList())
+        navigationDelegate.value.onLocationChange(geckoSession, emptyPageUrl, emptyList(), false)
         contentDelegate.value.onTitleChange(geckoSession, emptyPageUrl)
 
         historyDelegate.value.onVisited(
@@ -1112,7 +1117,7 @@ class GeckoEngineSessionTest {
         verify(historyTrackingDelegate, never()).onPreviewImageChange(anyString(), anyString())
 
         // This sets the currentUrl.
-        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com", emptyList())
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com", emptyList(), false)
 
         contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
         verify(historyTrackingDelegate).onPreviewImageChange(eq("https://www.mozilla.com"), eq(previewImageUrl))

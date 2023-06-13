@@ -456,7 +456,11 @@ sealed class ContentAction : BrowserAction() {
     /**
      * Updates the URL of the [ContentState] with the given [sessionId].
      */
-    data class UpdateUrlAction(val sessionId: String, val url: String) : ContentAction()
+    data class UpdateUrlAction(
+        val sessionId: String,
+        val url: String,
+        val hasUserGesture: Boolean = false,
+    ) : ContentAction()
 
     /**
      * Updates the progress of the [ContentState] with the given [sessionId].

@@ -108,12 +108,16 @@ class SystemEngineViewTest {
         engineView.render(engineSession)
 
         var observedUrl = ""
+        var observedUserGesture = true
         var observedLoadingState = false
         var observedSecurityChange: Triple<Boolean, String?, String?> = Triple(false, null, null)
         engineSession.register(
             object : EngineSession.Observer {
                 override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
-                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onLocationChange(url: String, hasUserGesture: Boolean) {
+                    observedUrl = url
+                    observedUserGesture = hasUserGesture
+                }
                 override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
                     observedSecurityChange = Triple(secure, host, issuer)
                 }
@@ -127,6 +131,7 @@ class SystemEngineViewTest {
         observedLoadingState = true
         engineSession.webView.webViewClient.onPageFinished(null, "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
+        assertEquals(false, observedUserGesture)
         assertFalse(observedLoadingState)
         assertEquals(Triple(false, null, null), observedSecurityChange)
 
@@ -1016,7 +1021,7 @@ class SystemEngineViewTest {
         engineSession.register(
             object : EngineSession.Observer {
                 override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
-                override fun onLocationChange(url: String) { observedUrl = url }
+                override fun onLocationChange(url: String, hasUserGesture: Boolean) { observedUrl = url }
                 override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
                     observedSecurityChange = Triple(secure, host, issuer)
                 }

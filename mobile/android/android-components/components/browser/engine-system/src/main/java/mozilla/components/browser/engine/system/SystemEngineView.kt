@@ -169,7 +169,7 @@ class SystemEngineView @JvmOverloads constructor(
                 session?.currentUrl = url
                 session?.internalNotifyObservers {
                     onLoadingStateChange(true)
-                    onLocationChange(it)
+                    onLocationChange(it, false)
                     onNavigationStateChange(view.canGoBack(), view.canGoForward())
                 }
             }
@@ -179,7 +179,7 @@ class SystemEngineView @JvmOverloads constructor(
             url?.let {
                 val cert = view?.certificate
                 session?.internalNotifyObservers {
-                    onLocationChange(it)
+                    onLocationChange(it, false)
                     onLoadingStateChange(false)
                     onSecurityChange(
                         secure = cert != null,

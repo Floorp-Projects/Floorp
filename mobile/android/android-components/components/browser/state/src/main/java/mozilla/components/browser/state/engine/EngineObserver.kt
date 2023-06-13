@@ -86,8 +86,8 @@ internal class EngineObserver(
         store.dispatch(ContentAction.UpdateFirstContentfulPaintStateAction(tabId, false))
     }
 
-    override fun onLocationChange(url: String) {
-        store.dispatch(ContentAction.UpdateUrlAction(tabId, url))
+    override fun onLocationChange(url: String, hasUserGesture: Boolean) {
+        store.dispatch(ContentAction.UpdateUrlAction(tabId, url, hasUserGesture))
     }
 
     @Suppress("DEPRECATION") // Session observable is deprecated

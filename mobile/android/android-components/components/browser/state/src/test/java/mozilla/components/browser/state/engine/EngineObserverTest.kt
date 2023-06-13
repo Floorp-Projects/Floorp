@@ -147,7 +147,7 @@ class EngineObserverTest {
             override fun exitFullScreenMode() {}
             override fun purgeHistory() {}
             override fun loadData(data: String, mimeType: String, encoding: String) {
-                notifyObservers { onLocationChange(data) }
+                notifyObservers { onLocationChange(data, false) }
                 notifyObservers { onProgress(100) }
                 notifyObservers { onLoadingStateChange(true) }
                 notifyObservers { onNavigationStateChange(true, true) }
@@ -160,7 +160,7 @@ class EngineObserverTest {
                 flags: LoadUrlFlags,
                 additionalHeaders: Map<String, String>?,
             ) {
-                notifyObservers { onLocationChange(url) }
+                notifyObservers { onLocationChange(url, false) }
                 notifyObservers { onProgress(100) }
                 notifyObservers { onLoadingStateChange(true) }
                 notifyObservers { onNavigationStateChange(true, true) }
@@ -494,7 +494,7 @@ class EngineObserverTest {
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
 
-        observer.onLocationChange("https://getpocket.com")
+        observer.onLocationChange("https://getpocket.com", false)
         store.waitUntilIdle()
 
         assertEquals("", store.state.tabs[0].content.title)
@@ -521,7 +521,7 @@ class EngineObserverTest {
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
 
-        observer.onLocationChange("https://www.mozilla.org")
+        observer.onLocationChange("https://www.mozilla.org", false)
         store.waitUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
@@ -548,7 +548,7 @@ class EngineObserverTest {
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
 
-        observer.onLocationChange("https://www.mozilla.org/#something")
+        observer.onLocationChange("https://www.mozilla.org/#something", false)
         store.waitUntilIdle()
 
         assertEquals("Mozilla", store.state.tabs[0].content.title)
@@ -575,7 +575,7 @@ class EngineObserverTest {
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
 
-        observer.onLocationChange("https://getpocket.com")
+        observer.onLocationChange("https://getpocket.com", false)
         store.waitUntilIdle()
 
         assertNull(store.state.tabs[0].content.previewImageUrl)
@@ -603,12 +603,12 @@ class EngineObserverTest {
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
 
-        observer.onLocationChange("https://www.mozilla.org")
+        observer.onLocationChange("https://www.mozilla.org", false)
         store.waitUntilIdle()
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
 
-        observer.onLocationChange("https://www.mozilla.org/#something")
+        observer.onLocationChange("https://www.mozilla.org/#something", false)
         store.waitUntilIdle()
 
         assertEquals(previewImageUrl, store.state.tabs[0].content.previewImageUrl)
@@ -696,7 +696,7 @@ class EngineObserverTest {
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
-        observer.onLocationChange("https://getpocket.com")
+        observer.onLocationChange("https://getpocket.com", false)
         store.waitUntilIdle()
 
         assertNull(store.state.tabs[0].content.webAppManifest)
@@ -724,7 +724,7 @@ class EngineObserverTest {
 
         assertEquals(listOf(request), store.state.tabs[0].content.permissionRequestsList)
 
-        observer.onLocationChange("https://getpocket.com")
+        observer.onLocationChange("https://getpocket.com", false)
         store.waitUntilIdle()
 
         assertEquals(emptyList<PermissionRequest>(), store.state.tabs[0].content.permissionRequestsList)
@@ -752,7 +752,7 @@ class EngineObserverTest {
 
         assertEquals(listOf(request), store.state.tabs[0].content.permissionRequestsList)
 
-        observer.onLocationChange("https://www.mozilla.org/hello.html")
+        observer.onLocationChange("https://www.mozilla.org/hello.html", false)
         store.waitUntilIdle()
 
         assertEquals(listOf(request), store.state.tabs[0].content.permissionRequestsList)
@@ -780,7 +780,7 @@ class EngineObserverTest {
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
-        observer.onLocationChange("https://www.mozilla.org/hello.html")
+        observer.onLocationChange("https://www.mozilla.org/hello.html", false)
         store.waitUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
@@ -812,12 +812,12 @@ class EngineObserverTest {
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
-        observer.onLocationChange("https://www.mozilla.org/hello/page2.html")
+        observer.onLocationChange("https://www.mozilla.org/hello/page2.html", false)
         store.waitUntilIdle()
 
         assertEquals(manifest, store.state.tabs[0].content.webAppManifest)
 
-        observer.onLocationChange("https://www.mozilla.org/hello.html")
+        observer.onLocationChange("https://www.mozilla.org/hello.html", false)
         store.waitUntilIdle()
         assertNull(store.state.tabs[0].content.webAppManifest)
     }
@@ -1527,7 +1527,7 @@ class EngineObserverTest {
         )
 
         val observer = EngineObserver("test-id", store)
-        observer.onLocationChange("https://www.mozilla.org/en-US/")
+        observer.onLocationChange("https://www.mozilla.org/en-US/", false)
 
         store.waitUntilIdle()
 
@@ -1712,11 +1712,32 @@ class EngineObserverTest {
         observer.onLoadUrl()
         store.waitUntilIdle()
 
-        middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
         middleware.assertLastAction(ContentAction.UpdateIsSearchAction::class) { action ->
             assertEquals(false, action.isSearch)
             assertEquals("test-id", action.sessionId)
         }
+    }
+
+    @Test
+    fun `GIVEN a search is performed WHEN the location is changed without user interaction THEN the search terms are not cleared`() {
+        val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "test-id"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+
+        store.dispatch(ContentAction.UpdateIsSearchAction("test-id", true))
+        store.waitUntilIdle()
+
+        val observer = EngineObserver("test-id", store)
+        observer.onLocationChange("testUrl", false)
+        store.waitUntilIdle()
+
+        middleware.assertNotDispatched(ContentAction.UpdateSearchTermsAction::class)
     }
 
     @Test

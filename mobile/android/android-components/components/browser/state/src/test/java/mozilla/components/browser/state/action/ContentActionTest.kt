@@ -132,6 +132,28 @@ class ContentActionTest {
     }
 
     @Test
+    fun `WHEN UpdateUrlAction is dispatched by user gesture THEN the search terms are cleared`() {
+        val searchTerms = "Firefox"
+        store.dispatch(
+            ContentAction.UpdateSearchTermsAction(tab.id, searchTerms),
+        ).joinBlocking()
+
+        assertEquals(searchTerms, tab.content.searchTerms)
+
+        store.dispatch(
+            ContentAction.UpdateUrlAction(tab.id, "https://www.mozilla.org", false),
+        ).joinBlocking()
+
+        assertEquals(searchTerms, tab.content.searchTerms)
+
+        store.dispatch(
+            ContentAction.UpdateUrlAction(tab.id, "https://www.mozilla.org/firefox", true),
+        ).joinBlocking()
+
+        assertEquals("", tab.content.searchTerms)
+    }
+
+    @Test
     fun `UpdateLoadingStateAction updates loading state`() {
         assertFalse(tab.content.loading)
         assertFalse(otherTab.content.loading)
