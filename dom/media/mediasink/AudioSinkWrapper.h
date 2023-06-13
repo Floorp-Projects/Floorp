@@ -97,9 +97,8 @@ class AudioSinkWrapper : public MediaSink {
   // In asynchronous mode, the clock will keep going forward (using the system
   // clock) until the AudioSink is started, at which point the clock will use
   // the AudioSink clock. This is used when unmuting a media element.
-  enum class AudioSinkStartPolicy { SYNC, ASYNC };
-  nsresult CreateAudioSink(const media::TimeUnit& aStartTime,
-                           AudioSinkStartPolicy aPolicy);
+  nsresult SyncCreateAudioSink(const media::TimeUnit& aStartTime);
+  void MaybeAsyncCreateAudioSink();
 
   // Get the current media position using the system clock. This is used when
   // the audio is muted, or when the media has no audio track. Otherwise, the
