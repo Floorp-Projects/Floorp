@@ -1,0 +1,31 @@
+schema: 1
+
+bugzilla:
+  product: "Firefox Build System"
+  component: "General"
+
+origin:
+  name: msgpack
+  description: MessagePack implementation for C and C++
+
+  url: https://github.com/msgpack/msgpack-c
+
+  release: b6803a5fecbe321458faafd6a079dac466614ff9 (2018-08-21T13:30:54Z).
+  revision: b6803a5fecbe321458faafd6a079dac466614ff9
+
+  license: BSL-1.0
+  license-file: LICENSE_1_0.txt
+
+vendoring:
+  url: https://github.com/msgpack/msgpack-c
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - "**"
+
+  include:
+    - src/
+    - include/
+    - LICENSE_1_0.txt
