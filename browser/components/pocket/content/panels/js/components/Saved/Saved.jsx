@@ -19,7 +19,6 @@ function Saved(props) {
     useState({});
   const [savedStory, setSavedStoryState] = useState();
   const [articleInfoAttempted, setArticleInfoAttempted] = useState();
-  const [{ similarRecs, similarRecsModel }, setSimilarRecsState] = useState({});
   const utmParams = `utm_source=${utmSource}${
     utmCampaign && utmContent
       ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}`
@@ -91,19 +90,6 @@ function Saved(props) {
       }
     );
 
-    panelMessaging.addMessageListener("PKT_renderItemRecs", function (resp) {
-      const { data } = resp;
-
-      // This is the ML model used to recommend the story.
-      // Right now this value is the same for all three items returned together,
-      // so we can just use the first item's value for all.
-      const model = data?.recommendations?.[0]?.experiment || "";
-      setSimilarRecsState({
-        similarRecs: data?.recommendations?.map(rec => rec.item),
-        similarRecsModel: model,
-      });
-    });
-
     // tell back end we're ready
     panelMessaging.sendMessage("PKT_show_saved");
   }, []);
@@ -152,20 +138,6 @@ function Saved(props) {
               />
             )}
             {articleInfoAttempted && <TagPicker tags={[]} itemUrl={itemUrl} />}
-            {articleInfoAttempted &&
-              similarRecs?.length &&
-              locale?.startsWith("en") && (
-                <>
-                  <hr />
-                  <h3 className="header_medium">Similar Stories</h3>
-                  <ArticleList
-                    articles={similarRecs}
-                    source="on_save_recs"
-                    model={similarRecsModel}
-                    utmParams={utmParams}
-                  />
-                </>
-              )}
           </>
         )}
         {savedStatus === "loading" && (
