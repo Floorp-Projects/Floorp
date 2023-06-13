@@ -36,6 +36,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Interactions: "resource:///modules/Interactions.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
+  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -2264,6 +2265,12 @@ BrowserGlue.prototype = {
     this._setupSearchDetection();
 
     this._monitorGPCPref();
+
+    // Loading the MigrationUtils module does the work of registering the
+    // migration wizard JSWindowActor pair. In case nothing else has done
+    // this yet, load the MigrationUtils so that the wizard is ready to be
+    // used.
+    lazy.MigrationUtils;
   },
 
   /**
