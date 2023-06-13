@@ -225,10 +225,9 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   rangeRecorder.recordOffset("Trampoline: DoubleToInt32ValueStub");
 
   JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
-  if (!generateVMWrappers(cx, masm)) {
+  if (!generateVMWrappers(cx, masm, rangeRecorder)) {
     return false;
   }
-  rangeRecorder.recordOffset("Trampoline: VM Wrapper");
 
   JitSpew(JitSpew_Codegen, "# Emitting profiler exit frame tail stub");
   Label profilerExitTail;
