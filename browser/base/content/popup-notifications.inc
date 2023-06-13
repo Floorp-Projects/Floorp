@@ -188,7 +188,10 @@
           <html:label class="identity-credential-list-item" align="center">
             <html:input type="radio" name="credential-provider" class="identity-credential-list-item-radio"></html:input>
             <html:img class="identity-credential-list-item-icon" src="chrome://global/skin/icons/defaultFavicon.svg"></html:img>
-            <span class="identity-credential-list-item-label"></span>
+            <div class="identity-credential-list-item-info">
+              <span class="identity-credential-list-item-label-primary"></span>
+              <span class="identity-credential-list-item-label-secondary" hidden="true"></span>
+            </div>
           </html:label>
         </html:template>
       </popupnotificationcontent>
@@ -206,8 +209,8 @@
             <html:input type="radio" name="credential-account" class="identity-credential-list-item-radio"></html:input>
             <html:img class="identity-credential-list-item-icon" src="chrome://browser/skin/fxa/avatar.svg"></html:img>
             <div class="identity-credential-list-item-label-stack">
-              <div class="identity-credential-list-item-label-name"></div>
-              <div class="identity-credential-list-item-label-email"></div>
+              <div class="identity-credential-list-item-label-primary"></div>
+              <div class="identity-credential-list-item-label-secondary"></div>
             </div>
           </html:label>
         </html:template>
