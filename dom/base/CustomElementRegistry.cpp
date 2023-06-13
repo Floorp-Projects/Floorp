@@ -20,6 +20,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/UseCounter.h"
@@ -189,6 +190,14 @@ UniquePtr<CustomElementCallback> CustomElementCallback::Create(
       }
       break;
 
+    case ElementCallbackType::eFormStateRestore:
+      if (aDefinition->mFormAssociatedCallbacks->mFormStateRestoreCallback
+              .WasPassed()) {
+        func = aDefinition->mFormAssociatedCallbacks->mFormStateRestoreCallback
+                   .Value();
+      }
+      break;
+
     case ElementCallbackType::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
       break;
@@ -234,6 +243,27 @@ void CustomElementCallback::Call() {
       static_cast<LifecycleFormDisabledCallback*>(mCallback.get())
           ->Call(mThisObject, mArgs.mDisabled);
       break;
+    case ElementCallbackType::eFormStateRestore: {
+      if (mArgs.mState.IsNull()) {
+        MOZ_ASSERT_UNREACHABLE(
+            "A null state should never be restored to a form-associated "
+            "custom element");
+        return;
+      }
+
+      const OwningFileOrUSVStringOrFormData& owningValue = mArgs.mState.Value();
+      Nullable<FileOrUSVStringOrFormData> value;
+      if (owningValue.IsFormData()) {
+        value.SetValue().SetAsFormData() = owningValue.GetAsFormData();
+      } else if (owningValue.IsFile()) {
+        value.SetValue().SetAsFile() = owningValue.GetAsFile();
+      } else {
+        value.SetValue().SetAsUSVString().ShareOrDependUpon(
+            owningValue.GetAsUSVString());
+      }
+      static_cast<LifecycleFormStateRestoreCallback*>(mCallback.get())
+          ->Call(mThisObject, value, mArgs.mReason);
+    } break;
     case ElementCallbackType::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
       break;
