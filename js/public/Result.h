@@ -121,16 +121,6 @@
 #include "mozilla/Result.h"
 
 /**
- * Evaluate the boolean expression expr. If it's true, do nothing.
- * If it's false, return an error result.
- */
-#define JS_TRY_BOOL_TO_RESULT(cx, expr)       \
-  do {                                        \
-    bool ok_ = (expr);                        \
-    if (!ok_) return (cx)->boolToResult(ok_); \
-  } while (0)
-
-/**
  * JS_TRY_OR_RETURN_FALSE(cx, expr) runs expr to compute a Result value.
  * On success, nothing happens; on error, it returns false immediately.
  *
