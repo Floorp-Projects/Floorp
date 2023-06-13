@@ -119,7 +119,12 @@
         <label id="addon-webext-perm-single-entry" class="addon-webext-perm-single-entry"/>
         <html:ul id="addon-webext-perm-list" class="addon-webext-perm-list"/>
         <hbox>
-          <label id="addon-webext-perm-info" is="text-link" class="popup-notification-learnmore-link"/>
+          <html:a
+            is="moz-support-link"
+            id="addon-webext-perm-info"
+            class="popup-notification-learnmore-link"
+            support-page="extension-permissions"
+          />
         </hbox>
       </popupnotificationcontent>
     </popupnotification>
