@@ -645,7 +645,7 @@ nsresult PuppetWidget::RequestIMEToCommitComposition(bool aCancel) {
   bool isCommitted = false;
   nsAutoString committedString;
   if (NS_WARN_IF(!mBrowserChild->SendRequestIMEToCommitComposition(
-          aCancel, composition->Id(), &isCommitted, &committedString))) {
+          aCancel, &isCommitted, &committedString))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -673,7 +673,7 @@ nsresult PuppetWidget::RequestIMEToCommitComposition(bool aCancel) {
   mIgnoreCompositionEvents = true;
 
   Unused << mBrowserChild->SendOnEventNeedingAckHandled(
-      eCompositionCommitRequestHandled, composition->Id());
+      eCompositionCommitRequestHandled);
 
   // NOTE: PuppetWidget might be destroyed already.
   return NS_OK;
