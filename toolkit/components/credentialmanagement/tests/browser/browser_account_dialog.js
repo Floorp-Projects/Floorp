@@ -401,7 +401,6 @@ add_task(async function test_multiple_acccount_show_picture() {
             url: "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
           },
         ],
-        name: "demo ip",
       },
     }
   );
@@ -431,12 +430,6 @@ add_task(async function test_multiple_acccount_show_picture() {
   const headerIcon = document.getElementsByClassName(
     "identity-credential-header-icon"
   )[0];
-
-  let title = document.getElementById("identity-credential-header-text");
-  ok(
-    title.textContent.includes("demo ip"),
-    "Popup title appears as business short name"
-  );
 
   ok(BrowserTestUtils.is_visible(headerIcon), "Header Icon is showing");
   ok(

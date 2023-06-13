@@ -69,7 +69,6 @@ add_task(async function test_policy_dialog() {
             url: "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
           },
         ],
-        name: "demo ip",
       },
     },
     {
@@ -112,8 +111,8 @@ add_task(async function test_policy_dialog() {
 
   let title = document.getElementById("identity-credential-header-text");
   ok(
-    title.textContent.includes("demo ip"),
-    "IDP domain in the policy prompt header as business short name"
+    title.textContent.includes("idp.example"),
+    "IDP domain in the policy prompt header"
   );
 
   const headerIcon = document.getElementsByClassName(
@@ -180,12 +179,6 @@ add_task(async function test_policy_reject() {
   );
 
   let document = tab.linkedBrowser.browsingContext.topChromeWindow.document;
-
-  let title = document.getElementById("identity-credential-header-text");
-  ok(
-    title.textContent.includes("idp.example"),
-    "IDP domain in the policy prompt header as domain"
-  );
 
   // Click reject.
   document
