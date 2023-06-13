@@ -467,6 +467,17 @@ class ContentCacheInParent final : public ContentCache {
            !mHandlingCompositions.LastElement().mSentCommitEvent;
   }
 
+  // Return true if there is a pending composition which has already sent
+  // a commit event to the remote process, but not yet handled by it.
+  [[nodiscard]] bool HasPendingCommit() const {
+    for (const HandlingCompositionData& data : mHandlingCompositions) {
+      if (data.mSentCommitEvent) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   IMENotification mPendingSelectionChange;
   IMENotification mPendingTextChange;
   IMENotification mPendingLayoutChange;
@@ -546,9 +557,6 @@ class ContentCacheInParent final : public ContentCache {
   // are 2 or more pending compositions, this cache won't be used because in
   // such case, anyway ContentCacheInParent cannot return proper character rect.
   uint32_t mPendingCommitLength;
-  // mPendingCommitCount is number of eCompositionCommit(AsIs) events which
-  // were sent to the child process but not yet handled in it.
-  uint8_t mPendingCommitCount;
   // mIsChildIgnoringCompositionEvents is set to true if the child process
   // requests commit composition whose commit has already been sent to it.
   // Then, set to false when the child process ignores the commit event.
