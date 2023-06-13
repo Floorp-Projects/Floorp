@@ -520,7 +520,7 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
 
       mTOC.reserve(vbriSeekOffsetsTableSize + 1);
 
-      int (*readFunc)(BufferReader*);
+      int (*readFunc)(BufferReader*) = nullptr;
       switch (vbriSeekOffsetsBytesPerEntry) {
         case 1:
           readFunc = &readAndConvertToInt<uint8_t>;
@@ -539,7 +539,7 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
                  vbriSeekOffsetsBytesPerEntry);
           break;
       }
-      for (uint32_t i = 0; i < vbriSeekOffsetsTableSize; i++) {
+      for (uint32_t i = 0; readFunc && i < vbriSeekOffsetsTableSize; i++) {
         int entry = readFunc(aReader);
         mTOC.push_back(entry * vbriSeekOffsetsScaleFactor);
       }
