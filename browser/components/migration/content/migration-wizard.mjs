@@ -62,8 +62,8 @@ export class MigrationWizard extends HTMLElement {
               <span class="error-icon" role="img"></span>
               <div data-l10n-id="migration-wizard-import-browser-no-resources"></div>
             </div>
-            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text hide-on-error"></div>
-            <details class="resource-selection-details hide-on-error">
+            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text hide-on-no-resources-error"></div>
+            <details class="resource-selection-details hide-on-no-resources-error">
               <summary id="resource-selection-summary">
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
                 <div class="selected-data deemphasized-text">&nbsp;</div>
@@ -90,6 +90,11 @@ export class MigrationWizard extends HTMLElement {
                 </label>
               </fieldset>
             </details>
+
+            <div class="file-import-error error-message">
+              <span class="error-icon" role="img"></span>
+              <div id="file-import-error-message"></div>
+            </div>
 
             <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
@@ -493,8 +498,16 @@ export class MigrationWizard extends HTMLElement {
    * @param {object} state
    *   The state object passed into setState. The following properties are
    *   used:
-   * @param {string[]} state.migrators An array of source browser names that
-   *   can be migrated from.
+   * @param {string[]} state.migrators
+   *   An array of source browser names that can be migrated from.
+   * @param {string} [state.migratorKey=null]
+   *   The key for a migrator to automatically select in the migrators array.
+   *   If not defined, the first item in the array will be selected.
+   * @param {string} [state.fileImportErrorMessage=null]
+   *   An error message to display in the event that an attempt at doing a
+   *   file import failed. File import failures are special in that they send
+   *   the wizard back to the selection page with an error message. If not
+   *   defined, it is presumed that a file import error has not occurred.
    */
   #onShowingSelection(state) {
     this.#ensureSelectionDropdown();
@@ -574,6 +587,25 @@ export class MigrationWizard extends HTMLElement {
       this.#onBrowserProfileSelectionChanged(
         this.#browserProfileSelectorList.firstElementChild
       );
+    }
+
+    if (state.migratorKey) {
+      let panelItem = this.#browserProfileSelectorList.querySelector(
+        `panel-item[key="${state.migratorKey}"]`
+      );
+      this.#onBrowserProfileSelectionChanged(panelItem);
+    }
+
+    let fileImportErrorMessageEl = selectionPage.querySelector(
+      "#file-import-error-message"
+    );
+
+    if (state.fileImportErrorMessage) {
+      fileImportErrorMessageEl.textContent = state.fileImportErrorMessage;
+      selectionPage.toggleAttribute("file-import-error", true);
+    } else {
+      fileImportErrorMessageEl.textContent = "";
+      selectionPage.toggleAttribute("file-import-error", false);
     }
 
     // Since this is called before the named-deck actually switches to

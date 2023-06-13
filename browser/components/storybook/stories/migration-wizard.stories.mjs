@@ -342,3 +342,15 @@ NoBrowsersFound.args = {
     hasFileMigrators: true,
   },
 };
+
+export const FileImportError = Template.bind({});
+FileImportError.args = {
+  dialogMode: true,
+  state: {
+    page: MigrationWizardConstants.PAGES.SELECTION,
+    migrators: FAKE_MIGRATOR_LIST,
+    showImportAll: false,
+    migratorKey: "file-password-csv",
+    fileImportErrorMessage: "Some file import error message",
+  },
+};

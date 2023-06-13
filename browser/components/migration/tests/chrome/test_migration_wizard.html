@@ -1139,6 +1139,60 @@
           ""
         );
       });
+
+      /**
+       * Tests that the migration wizard can be put into the selection page after
+       * a file migrator error and show an error message.
+       */
+      add_task(async function test_file_migrator_error() {
+        const FILE_MIGRATOR_KEY = "some-file-migrator";
+        const FILE_IMPORT_ERROR_MESSAGE = "This is an error message";
+        const MIGRATORS = [
+          {
+            key: "some-browser-0",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
+            displayName: "Some Browser 0",
+            resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+            profile: { id: "person-2", name: "Person 2" },
+          },
+          {
+            key: "some-browser-1",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
+            displayName: "Some Browser 1",
+            resourceTypes: ["HISTORY", "BOOKMARKS"],
+            profile: null,
+          },
+          {
+            key: FILE_MIGRATOR_KEY,
+            type: MigrationWizardConstants.MIGRATOR_TYPES.FILE,
+            displayName: "Some File Migrator",
+            resourceTypes: [],
+          },
+        ];
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATORS,
+          showImportAll: true,
+          migratorKey: "some-file-migrator",
+          fileImportErrorMessage: FILE_IMPORT_ERROR_MESSAGE,
+        });
+
+        let errorMessageContainer = gShadowRoot.querySelector(".file-import-error");
+        ok(!isHidden(errorMessageContainer), "Error message should be shown.");
+        let errorText = gShadowRoot.querySelector("#file-import-error-message").textContent;
+        is(errorText, FILE_IMPORT_ERROR_MESSAGE);
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATORS,
+          showImportAll: true,
+        });
+
+        ok(isHidden(errorMessageContainer), "Error message should be hidden.");
+        errorText = gShadowRoot.querySelector("#file-import-error-message").textContent;
+        is(errorText, "");
+      });
     </script>
   </head>
   <body>
