@@ -27,7 +27,7 @@ AudioSinkWrapper::~AudioSinkWrapper() = default;
 void AudioSinkWrapper::Shutdown() {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "Must be called after playback stopped.");
-  mCreator = nullptr;
+  mSinkCreator = nullptr;
   mEndedPromiseHolder.ResolveIfExists(true, __func__);
 }
 
@@ -340,7 +340,7 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
   LOG("%p: Not muted: starting a new audio sink", this);
   if (aPolicy == AudioSinkStartPolicy::ASYNC) {
     UniquePtr<AudioSink> audioSink;
-    audioSink.reset(mCreator->Create());
+    audioSink.reset(mSinkCreator());
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
         "StartAudioSink (Async part: initialization)",
         [self = RefPtr<AudioSinkWrapper>(this), audioSink{std::move(audioSink)},
@@ -404,7 +404,7 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
               }));
         }));
   } else {
-    mAudioSink.reset(mCreator->Create());
+    mAudioSink.reset(mSinkCreator());
     nsresult rv = mAudioSink->InitializeAudioStream(
         mParams, mAudioDevice, AudioSink::InitializationType::INITIAL);
     if (NS_FAILED(rv)) {
