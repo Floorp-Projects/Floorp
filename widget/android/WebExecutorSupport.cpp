@@ -386,8 +386,8 @@ nsresult WebExecutorSupport::CreateStreamLoader(
     channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
   }
 
-  bool shouldResistFingerprinting =
-      nsContentUtils::ShouldResistFingerprinting(channel);
+  bool shouldResistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
+      channel, RFPTarget::IsAlwaysEnabledForPrecompute);
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   if (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_PRIVATE) {
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
