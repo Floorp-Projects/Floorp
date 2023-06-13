@@ -25,15 +25,33 @@ class MediaQueue;
  */
 class AudioSinkWrapper : public MediaSink {
   using PlaybackParams = AudioSink::PlaybackParams;
-  using SinkCreator = std::function<UniquePtr<AudioSink>()>;
+
+  // An AudioSink factory.
+  class Creator {
+   public:
+    virtual ~Creator() = default;
+    virtual AudioSink* Create() = 0;
+  };
+
+  // Wrap around a function object which creates AudioSinks.
+  template <typename Function>
+  class CreatorImpl : public Creator {
+   public:
+    explicit CreatorImpl(const Function& aFunc) : mFunction(aFunc) {}
+    AudioSink* Create() override { return mFunction(); }
+
+   private:
+    Function mFunction;
+  };
 
  public:
+  template <typename Function>
   AudioSinkWrapper(AbstractThread* aOwnerThread,
-                   MediaQueue<AudioData>& aAudioQueue, SinkCreator aFunc,
+                   MediaQueue<AudioData>& aAudioQueue, const Function& aFunc,
                    double aVolume, double aPlaybackRate, bool aPreservesPitch,
                    RefPtr<AudioDeviceInfo> aAudioDevice)
       : mOwnerThread(aOwnerThread),
-        mSinkCreator(std::move(aFunc)),
+        mCreator(new CreatorImpl<Function>(aFunc)),
         mAudioDevice(std::move(aAudioDevice)),
         mIsStarted(false),
         mParams(aVolume, aPlaybackRate, aPreservesPitch),
@@ -114,7 +132,7 @@ class AudioSinkWrapper : public MediaSink {
   bool IsAudioSourceEnded(const MediaInfo& aInfo) const;
 
   const RefPtr<AbstractThread> mOwnerThread;
-  SinkCreator mSinkCreator;
+  UniquePtr<Creator> mCreator;
   UniquePtr<AudioSink> mAudioSink;
   // The output device this AudioSink is playing data to. The system's default
   // device is used if this is null.

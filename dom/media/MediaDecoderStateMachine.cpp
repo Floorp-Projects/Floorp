@@ -3474,16 +3474,16 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
 
   auto audioSinkCreator = [s = RefPtr<MediaDecoderStateMachine>(this), this]() {
     MOZ_ASSERT(OnTaskQueue());
-    UniquePtr<AudioSink> audioSink{new AudioSink(
-        mTaskQueue, mAudioQueue, Info().mAudio, mShouldResistFingerprinting)};
+    AudioSink* audioSink = new AudioSink(mTaskQueue, mAudioQueue, Info().mAudio,
+                                         mShouldResistFingerprinting);
     mAudibleListener.DisconnectIfExists();
     mAudibleListener = audioSink->AudibleEvent().Connect(
         mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);
     return audioSink;
   };
-  return new AudioSinkWrapper(
-      mTaskQueue, mAudioQueue, std::move(audioSinkCreator), mVolume,
-      mPlaybackRate, mPreservesPitch, mSinkDevice.Ref());
+  return new AudioSinkWrapper(mTaskQueue, mAudioQueue, audioSinkCreator,
+                              mVolume, mPlaybackRate, mPreservesPitch,
+                              mSinkDevice.Ref());
 }
 
 already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {

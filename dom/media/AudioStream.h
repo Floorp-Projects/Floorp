@@ -255,6 +255,8 @@ class AudioStream final {
   Maybe<MozPromiseHolder<MediaSink::EndedPromise>> Shutdown(
       ShutdownCause = ShutdownCause::Regular);
 
+  void Reset();
+
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
   void SetVolume(double aVolume);
