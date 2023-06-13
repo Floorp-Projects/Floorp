@@ -324,12 +324,13 @@ var ExtensionsUI = {
       collapseOrigins: true,
     });
     strings.addonName = info.addon.name;
-    strings.learnMore = lazy.l10n.formatValueSync("webext-perms-learn-more");
     return strings;
   },
 
   async showPermissionsPrompt(target, strings, icon) {
     let { browser, window } = getTabBrowser(target);
+
+    await window.ensureCustomElements("moz-support-link");
 
     // Wait for any pending prompts to complete before showing the next one.
     let pending;
@@ -359,10 +360,6 @@ var ExtensionsUI = {
           listIntroEl.hidden = !strings.msgs.length || !strings.listIntro;
 
           let listInfoEl = doc.getElementById("addon-webext-perm-info");
-          listInfoEl.textContent = strings.learnMore;
-          listInfoEl.href =
-            Services.urlFormatter.formatURLPref("app.support.baseURL") +
-            "extension-permissions";
           listInfoEl.hidden = !strings.msgs.length;
 
           let list = doc.getElementById("addon-webext-perm-list");
