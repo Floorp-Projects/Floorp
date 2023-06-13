@@ -3481,9 +3481,9 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
         mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);
     return audioSink;
   };
-  return new AudioSinkWrapper(mTaskQueue, mAudioQueue, audioSinkCreator,
-                              mVolume, mPlaybackRate, mPreservesPitch,
-                              mSinkDevice.Ref());
+  return new AudioSinkWrapper(
+      mTaskQueue, mAudioQueue, std::move(audioSinkCreator), mVolume,
+      mPlaybackRate, mPreservesPitch, mSinkDevice.Ref());
 }
 
 already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {
