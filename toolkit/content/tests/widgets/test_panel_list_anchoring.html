@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Panel List Anchoring</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <button id="anchor-button">Open</button>
+  <panel-list id="panel-list">
+    <panel-item>one</panel-item>
+    <panel-item>two</panel-item>
+    <panel-item>three</panel-item>
+  </panel-list>
+</div>
+<pre id="test">
+<script  class="testbody" type="application/javascript">
+  const {BrowserTestUtils} = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+  let anchorButton, panelList, panelItems;
+
+  add_setup(function setup() {
+    panelList = document.getElementById("panel-list");
+    anchorButton = document.getElementById("anchor-button");
+    anchorButton.addEventListener("click", e => panelList.toggle(e));
+  });
+
+  add_task(async function checkAlignment() {
+    async function getBounds() {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      let button = anchorButton.getBoundingClientRect();
+      let menu = panelList.getBoundingClientRect();
+      return {
+        button: {
+          top: Math.round(button.top),
+          right: Math.round(button.right),
+          bottom: Math.round(button.bottom),
+          left: Math.round(button.left),
+        },
+        menu: {
+          top: Math.round(menu.top),
+          right: Math.round(menu.right),
+          bottom: Math.round(menu.bottom),
+          left: Math.round(menu.left),
+        },
+      }
+    };
+
+    async function showPanel() {
+      let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+      anchorButton.click();
+      await shown;
+    }
+
+    async function hidePanel() {
+      let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+      panelList.hide();
+      await hidden;
+    }
+
+    anchorButton.style.position = "fixed";
+
+    info("Verify menu alignment in the top left corner of the browser window");
+
+    anchorButton.style.top = "32px";
+    anchorButton.style.right = "unset";
+    anchorButton.style.bottom = "unset";
+    anchorButton.style.left = "32px";
+
+    await showPanel();
+    let bounds = await getBounds();
+    is(bounds.menu.top, bounds.button.bottom,  "Button's bottom matches Menu's top");
+    is(bounds.menu.left, bounds.button.left, "Button and Menu have the same left value");
+    await hidePanel();
+
+    info("Verify menu alignment in the top right corner of the browser window");
+
+    anchorButton.style.top = "32px";
+    anchorButton.style.right = "32px";
+    anchorButton.style.bottom = "unset";
+    anchorButton.style.left = "unset";
+
+    await showPanel();
+    bounds = await getBounds();
+    is(bounds.menu.top, bounds.button.bottom,  "Button's bottom matches Menu's top");
+    is(bounds.menu.right, bounds.button.right, "Button and Menu have the same right value");
+    await hidePanel();
+
+    info("Verify menu alignment in the bottom right corner of the browser window");
+
+    anchorButton.style.top = "unset";
+    anchorButton.style.right = "32px";
+    anchorButton.style.bottom = "32px";
+    anchorButton.style.left = "unset";
+
+    await showPanel();
+    bounds = await getBounds();
+    is(bounds.menu.bottom, bounds.button.top,  "Button's top matches Menu's bottom");
+    is(bounds.menu.right, bounds.button.right, "Button and Menu have the same right value");
+    await hidePanel();
+
+    info("Verify menu alignment in the bottom left corner of the browser window");
+
+    anchorButton.style.top = "unset";
+    anchorButton.style.right = "unset";
+    anchorButton.style.bottom = "32px";
+    anchorButton.style.left = "32px";
+
+    await showPanel();
+    bounds = await getBounds();
+    is(bounds.menu.bottom, bounds.button.top,  "Button's top matches Menu's bottom");
+    is(bounds.menu.left, bounds.button.left, "Button and Menu have the same left value");
+    await hidePanel();
+  });
+</script>
+</pre>
+</body>
+</html>
