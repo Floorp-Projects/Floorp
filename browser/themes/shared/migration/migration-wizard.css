@@ -268,13 +268,19 @@ summary {
   align-items: start;
 }
 
+.file-import-error,
 .no-resources-found {
   font-size: 0.84em;
   margin-block-start: 16px;
 }
 
+.file-import-error {
+  margin-inline-start: 8px;
+}
+
 div[name="page-selection"]:not([no-resources]) .no-resources-found,
-div[name="page-selection"][no-resources] .hide-on-error {
+div[name="page-selection"][no-resources] .hide-on-no-resources-error,
+div[name="page-selection"]:not([file-import-error]) .file-import-error {
   display: none;
 }
 

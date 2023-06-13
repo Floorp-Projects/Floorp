@@ -233,7 +233,18 @@ export class MigrationWizardParent extends JSWindowActorParent {
       title: progressHeaderString,
       progress,
     });
-    let migrationResult = await fileMigrator.migrate(path);
+
+    let migrationResult;
+    try {
+      migrationResult = await fileMigrator.migrate(path);
+    } catch (e) {
+      this.sendAsyncMessage("FileImportProgressError", {
+        migratorKey: key,
+        fileImportErrorMessage: e.message,
+      });
+      return;
+    }
+
     let successProgress = {};
     for (let resourceType in migrationResult) {
       successProgress[resourceType] = {

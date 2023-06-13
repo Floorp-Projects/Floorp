@@ -22,6 +22,53 @@ export class MigrationWizardChild extends JSWindowActorChild {
   #wizardEl = null;
 
   /**
+   * Retrieves the list of browsers and profiles from the parent process, and then
+   * puts the migration wizard onto the selection page showing the list that they
+   * can import from.
+   *
+   * @param {boolean} [allowOnlyFileMigrators=null]
+   *   Set to true if showing the selection page is allowed if no browser migrators
+   *   are found. If not true, and no browser migrators are found, then the wizard
+   *   will be sent to the NO_BROWSERS_FOUND page.
+   * @param {string} [migratorKey=null]
+   *   If set, this will automatically select the first associated migrator with that
+   *   migratorKey in the selector. If not set, the first item in the retrieved list
+   *   of migrators will be selected.
+   * @param {string} [fileImportErrorMessage=null]
+   *   If set, this will display an error message below the browser / profile selector
+   *   indicating that something had previously gone wrong with an import of type
+   *   MIGRATOR_TYPES.FILE.
+   */
+  async #populateMigrators(
+    allowOnlyFileMigrators,
+    migratorKey,
+    fileImportErrorMessage
+  ) {
+    let migrators = await this.sendQuery("GetAvailableMigrators");
+    let hasBrowserMigrators = migrators.some(migrator => {
+      return migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.BROWSER;
+    });
+    let hasFileMigrators = migrators.some(migrator => {
+      return migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.FILE;
+    });
+    if (!hasBrowserMigrators && !allowOnlyFileMigrators) {
+      this.setComponentState({
+        page: MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND,
+        hasFileMigrators,
+      });
+      this.#sendTelemetryEvent("no_browsers_found");
+    } else {
+      this.setComponentState({
+        migrators,
+        page: MigrationWizardConstants.PAGES.SELECTION,
+        showImportAll: lazy.SHOW_IMPORT_ALL_PREF,
+        migratorKey,
+        fileImportErrorMessage,
+      });
+    }
+  }
+
+  /**
    * General event handler function for events dispatched from the
    * <migration-wizard> component.
    *
@@ -40,28 +87,7 @@ export class MigrationWizardChild extends JSWindowActorChild {
           page: MigrationWizardConstants.PAGES.LOADING,
         });
 
-        let migrators = await this.sendQuery("GetAvailableMigrators");
-        let hasBrowserMigrators = migrators.some(migrator => {
-          return (
-            migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.BROWSER
-          );
-        });
-        let hasFileMigrators = migrators.some(migrator => {
-          return migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.FILE;
-        });
-        if (!hasBrowserMigrators && !event.detail?.allowOnlyFileMigrators) {
-          this.setComponentState({
-            page: MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND,
-            hasFileMigrators,
-          });
-          this.#sendTelemetryEvent("no_browsers_found");
-        } else {
-          this.setComponentState({
-            migrators,
-            page: MigrationWizardConstants.PAGES.SELECTION,
-            showImportAll: lazy.SHOW_IMPORT_ALL_PREF,
-          });
-        }
+        await this.#populateMigrators(event.detail?.allowOnlyFileMigrators);
 
         this.#wizardEl.dispatchEvent(
           new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
@@ -298,6 +324,14 @@ export class MigrationWizardChild extends JSWindowActorChild {
           progress: message.data.progress,
           title: message.data.title,
         });
+        break;
+      }
+      case "FileImportProgressError": {
+        this.#populateMigrators(
+          true,
+          message.data.migratorKey,
+          message.data.fileImportErrorMessage
+        );
         break;
       }
     }
