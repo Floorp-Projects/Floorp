@@ -22,6 +22,15 @@ export function makeBreakpointServerLocationId(breakpointServerLocation) {
   return `${sourceUrlOrId}:${line}:${columnString}`;
 }
 
+// Map frontend options to a more restricted subset of what
+// the server supports. For example frontend uses `hidden` attribute
+// which isn't meant to be passed to the server.
+// (note that protocol.js specification isn't enough to filter attributes,
+//  all primitive attributes will be passed as-is)
+export function makeBreakpointServerOptions(options) {
+  return { logValue: options.logValue, condition: options.condition };
+}
+
 /**
  * Create a location object to set a breakpoint on the server.
  *

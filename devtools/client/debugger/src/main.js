@@ -4,7 +4,7 @@
 
 import * as firefox from "./client/firefox";
 
-import { asyncStore, verifyPrefSchema, prefs } from "./utils/prefs";
+import { asyncStore, verifyPrefSchema } from "./utils/prefs";
 import { setupHelper } from "./utils/dbg";
 import { setToolboxTelemetry } from "./utils/telemetry";
 
@@ -22,40 +22,6 @@ import { initialUIState } from "./reducers/ui";
 import { initialSourceBlackBoxState } from "./reducers/source-blackbox";
 
 const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
-
-async function syncBreakpoints() {
-  const breakpoints = await asyncStore.pendingBreakpoints;
-  const breakpointValues = Object.values(sanitizeBreakpoints(breakpoints));
-  return Promise.all(
-    breakpointValues.map(({ disabled, options, generatedLocation }) => {
-      if (disabled) {
-        return Promise.resolve();
-      }
-      // Set the breakpoint on the server using the generated location as generated
-      // sources are known on server, not original sources.
-      return firefox.clientCommands.setBreakpoint(generatedLocation, options);
-    })
-  );
-}
-
-async function syncXHRBreakpoints() {
-  const breakpoints = await asyncStore.xhrBreakpoints;
-  return Promise.all(
-    breakpoints.map(({ path, method, disabled }) => {
-      if (!disabled) {
-        firefox.clientCommands.setXHRBreakpoint(path, method);
-      }
-    })
-  );
-}
-
-function setPauseOnExceptions() {
-  const { pauseOnExceptions, pauseOnCaughtException } = prefs;
-  return firefox.clientCommands.pauseOnExceptions(
-    pauseOnExceptions,
-    pauseOnCaughtException
-  );
-}
 
 async function loadInitialState(commands, toolbox) {
   const pendingBreakpoints = sanitizeBreakpoints(
@@ -106,10 +72,6 @@ export async function bootstrap({
     actions,
     store
   );
-
-  await syncBreakpoints();
-  await syncXHRBreakpoints();
-  await setPauseOnExceptions();
 
   setupHelper({
     store,

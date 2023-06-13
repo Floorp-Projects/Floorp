@@ -3,7 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createFrame } from "./create";
-import { makeBreakpointServerLocationId } from "../../utils/breakpoint";
+import {
+  makeBreakpointServerLocationId,
+  makeBreakpointServerOptions,
+} from "../../utils/breakpoint";
 
 import Reps from "devtools/client/shared/components/reps/index";
 
@@ -239,15 +242,7 @@ async function setBreakpoint(location, options) {
   }
   breakpoints[makeBreakpointServerLocationId(location)] = { location, options };
 
-  // Map frontend options to a more restricted subset of what
-  // the server supports. For example frontend uses `hidden` attribute
-  // which isn't meant to be passed to the server.
-  // (note that protocol.js specification isn't enough to filter attributes,
-  //  all primitive attributes will be passed as-is)
-  const serverOptions = {
-    condition: options.condition,
-    logValue: options.logValue,
-  };
+  const serverOptions = makeBreakpointServerOptions(options);
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
     // Without watcher support, unconditionally forward setBreakpoint to all threads.
