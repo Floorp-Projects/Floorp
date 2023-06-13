@@ -25,6 +25,7 @@
 #include "nsLiteralString.h"
 #include "nsNetCID.h"               // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
 #include "nsServiceManagerUtils.h"  // do_GetService
+#include "nsXULAppAPI.h"
 #include "mozilla/ErrorResult.h"
 #include "nsProxyRelease.h"  // nsMainThreadPtrHolder
 #include "mozilla/Telemetry.h"
@@ -174,7 +175,9 @@ static void ClearLongTermStats() {
   }
 
   GetWebrtcGlobalStatsStash().Clear();
-  WebrtcGlobalStatsHistory::Clear();
+  if (XRE_IsParentProcess()) {
+    WebrtcGlobalStatsHistory::Clear();
+  }
   if (auto* ctx = GetPeerConnectionCtx()) {
     ctx->ClearClosedStats();
   }
@@ -739,7 +742,6 @@ mozilla::ipc::IPCResult WebrtcGlobalChild::RecvClearStats() {
   }
 
   ClearLongTermStats();
-  WebrtcGlobalStatsHistory::Clear();
   return IPC_OK();
 }
 
