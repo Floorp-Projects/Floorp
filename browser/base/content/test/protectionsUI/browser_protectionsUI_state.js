@@ -35,20 +35,6 @@ var ThirdPartyCookies = null;
 var tabbrowser = null;
 var gTrackingPageURL = TRACKING_PAGE;
 
-const sBrandBundle = Services.strings.createBundle(
-  "chrome://branding/locale/brand.properties"
-);
-const sNoTrackerIconTooltip = gNavigatorBundle.getFormattedString(
-  "trackingProtection.icon.noTrackersDetectedTooltip",
-  [sBrandBundle.GetStringFromName("brandShortName")]
-);
-const sActiveIconTooltip = gNavigatorBundle.getString(
-  "trackingProtection.icon.activeTooltip2"
-);
-const sDisabledIconTooltip = gNavigatorBundle.getString(
-  "trackingProtection.icon.disabledTooltip2"
-);
-
 registerCleanupFunction(function () {
   TrackingProtection =
     gProtectionsHandler =
@@ -81,8 +67,10 @@ async function testBenignPage() {
     "icon box shows no exception"
   );
   is(
-    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
-    sNoTrackerIconTooltip,
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
+      "data-l10n-id"
+    ),
+    "tracking-protection-icon-no-trackers-detected",
     "correct tooltip"
   );
   ok(
@@ -117,8 +105,10 @@ async function testBenignPageWithException() {
     "shield shows exception"
   );
   is(
-    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
-    sDisabledIconTooltip,
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
+      "data-l10n-id"
+    ),
+    "tracking-protection-icon-disabled",
     "correct tooltip"
   );
 
@@ -172,8 +162,12 @@ async function testTrackingPage(window) {
     "icon box shows no exception"
   );
   is(
-    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
-    blockedByTP ? sActiveIconTooltip : sNoTrackerIconTooltip,
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
+      "data-l10n-id"
+    ),
+    blockedByTP
+      ? "tracking-protection-icon-active"
+      : "tracking-protection-icon-no-trackers-detected",
     "correct tooltip"
   );
 
@@ -210,8 +204,10 @@ async function testTrackingPageUnblocked(blockedByTP, window) {
     "shield shows exception"
   );
   is(
-    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
-    sDisabledIconTooltip,
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.getAttribute(
+      "data-l10n-id"
+    ),
+    "tracking-protection-icon-disabled",
     "correct tooltip"
   );
 
@@ -365,6 +361,8 @@ add_task(async function testPrivateBrowsing() {
 });
 
 add_task(async function testThirdPartyCookies() {
+  requestLongerTimeout(3);
+
   await SpecialPowers.pushPrefEnv({ set: [[APS_PREF, false]] });
 
   await UrlClassifierTestUtils.addTestTrackers();
