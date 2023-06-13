@@ -22,7 +22,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
@@ -289,18 +288,7 @@ export class BrowserToolboxLauncher extends EventEmitter {
     const customBinaryPath = Services.env.get("MOZ_BROWSER_TOOLBOX_BINARY");
     if (customBinaryPath) {
       command = customBinaryPath;
-      const dir = lazy.FileUtils.getDir("TmpD", ["browserToolboxProfile"]);
-
-      try {
-        dir.create(Ci.nsIFile.DIRECTORY_TYPE, lazy.FileUtils.PERMS_DIRECTORY);
-      } catch (ex) {
-        if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
-          throw ex;
-        }
-        // Ignore the exception due to a directory that already exists.
-      }
-
-      profilePath = dir.path;
+      profilePath = PathUtils.join(PathUtils.tempDir, "browserToolboxProfile");
     }
 
     dumpn("Running chrome debugging process.");
@@ -360,14 +348,17 @@ export class BrowserToolboxLauncher extends EventEmitter {
     }
 
     dump(`Starting Browser Toolbox ${command} ${args.join(" ")}\n`);
-    Subprocess.call({
-      command,
-      arguments: args,
-      environmentAppend: true,
-      stderr: "stdout",
-      environment,
-    }).then(
-      proc => {
+    IOUtils.makeDirectory(profilePath, { ignoreExisting: true })
+      .then(() =>
+        Subprocess.call({
+          command,
+          arguments: args,
+          environmentAppend: true,
+          stderr: "stdout",
+          environment,
+        })
+      )
+      .then(proc => {
         this.#dbgProcess = proc;
 
         this.#telemetry.toolOpened("jsbrowserdebugger", this);
@@ -399,14 +390,13 @@ export class BrowserToolboxLauncher extends EventEmitter {
         proc.wait().then(() => this.close());
 
         return proc;
-      },
-      err => {
+      })
+      .catch(err => {
         console.log(
           `Error loading Browser Toolbox: ${command} ${args.join(" ")}`,
           err
         );
-      }
-    );
+      });
   }
 
   /**
