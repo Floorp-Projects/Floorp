@@ -305,12 +305,9 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
       return GetInstanceFor(doc->GetPresShell());
     }
   } else {
-    DocAccessibleParent* remoteDoc = aAccessible->AsRemote()->Document();
-    if (remoteDoc->mSessionAccessibility) {
-      return remoteDoc->mSessionAccessibility;
-    }
     dom::CanonicalBrowsingContext* cbc =
-        static_cast<dom::BrowserParent*>(remoteDoc->Manager())
+        static_cast<dom::BrowserParent*>(
+            aAccessible->AsRemote()->Document()->Manager())
             ->GetBrowsingContext()
             ->Top();
     dom::BrowserParent* bp = cbc->GetBrowserParent();
@@ -321,10 +318,7 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     if (auto element = bp->GetOwnerElement()) {
       if (auto doc = element->OwnerDoc()) {
         if (nsPresContext* presContext = doc->GetPresContext()) {
-          RefPtr<SessionAccessibility> sessionAcc =
-              GetInstanceFor(presContext->PresShell());
-          remoteDoc->mSessionAccessibility = sessionAcc;
-          return sessionAcc;
+          return GetInstanceFor(presContext->PresShell());
         }
       } else {
         MOZ_ASSERT_UNREACHABLE(
@@ -720,14 +714,7 @@ void SessionAccessibility::PopulateNodeInfo(
 }
 
 Accessible* SessionAccessibility::GetAccessibleByID(int32_t aID) const {
-  Accessible* accessible = mIDToAccessibleMap.Get(aID);
-  if (accessible && accessible->IsLocal() &&
-      accessible->AsLocal()->IsDefunct()) {
-    MOZ_ASSERT_UNREACHABLE("Registered accessible is defunct!");
-    return nullptr;
-  }
-
-  return accessible;
+  return mIDToAccessibleMap.Get(aID);
 }
 
 #ifdef DEBUG
@@ -740,6 +727,58 @@ static bool IsDetachedDoc(Accessible* aAccessible) {
          aAccessible->Parent()->FirstChild() != aAccessible;
 }
 #endif
+
+SessionAccessibility::IDMappingEntry::IDMappingEntry(Accessible* aAccessible)
+    : mInternalID(0) {
+  *this = aAccessible;
+}
+
+SessionAccessibility::IDMappingEntry&
+SessionAccessibility::IDMappingEntry::operator=(Accessible* aAccessible) {
+  mInternalID = aAccessible->ID();
+  MOZ_ASSERT(!(mInternalID & IS_REMOTE), "First bit is used in accessible ID!");
+  if (aAccessible->IsRemote()) {
+    mInternalID |= IS_REMOTE;
+  }
+
+  Accessible* docAcc = nsAccUtils::DocumentFor(aAccessible);
+  MOZ_ASSERT(docAcc);
+  if (docAcc) {
+    MOZ_ASSERT(docAcc->IsRemote() == aAccessible->IsRemote());
+    if (docAcc->IsRemote()) {
+      mDoc = docAcc->AsRemote()->AsDoc();
+    } else {
+      mDoc = docAcc->AsLocal();
+    }
+  }
+
+  return *this;
+}
+
+SessionAccessibility::IDMappingEntry::operator Accessible*() const {
+  if (mInternalID == 0) {
+    return static_cast<LocalAccessible*>(mDoc.get());
+  }
+
+  if (mInternalID == IS_REMOTE) {
+    return static_cast<DocAccessibleParent*>(mDoc.get());
+  }
+
+  if (mInternalID & IS_REMOTE) {
+    return static_cast<DocAccessibleParent*>(mDoc.get())
+        ->GetAccessible(mInternalID & ~IS_REMOTE);
+  }
+
+  Accessible* accessible =
+      static_cast<LocalAccessible*>(mDoc.get())
+          ->AsDoc()
+          ->GetAccessibleByUniqueID(reinterpret_cast<void*>(mInternalID));
+  // If the accessible is retrievable from the DocAccessible, it can't be
+  // defunct.
+  MOZ_ASSERT(!accessible->AsLocal()->IsDefunct());
+
+  return accessible;
+}
 
 void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
   if (IPCAccessibilityActive()) {
@@ -802,7 +841,6 @@ void SessionAccessibility::UnregisterAccessible(Accessible* aAccessible) {
   }
 
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
-  MOZ_ASSERT(sessionAcc, "Need SessionAccessibility to unregister Accessible!");
   if (sessionAcc) {
     Accessible* registeredAcc =
         sessionAcc->mIDToAccessibleMap.Get(virtualViewID);
