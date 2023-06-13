@@ -386,8 +386,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   friend void js::ReportOversizedAllocation(JSContext*, const unsigned);
 
  public:
-  inline JS::Result<> boolToResult(bool ok);
-
   /**
    * Intentionally awkward signpost method that is stationed on the
    * boundary between Result-using and non-Result-using code.
@@ -961,15 +959,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<js::Debugger*> insideDebuggerEvaluationWithOnNativeCallHook;
 
 }; /* struct JSContext */
-
-inline JS::Result<> JSContext::boolToResult(bool ok) {
-  if (MOZ_LIKELY(ok)) {
-    MOZ_ASSERT(!isExceptionPending());
-    MOZ_ASSERT(!isPropagatingForcedReturn());
-    return JS::Ok();
-  }
-  return JS::Result<>(JS::Error());
-}
 
 inline JSContext* JSRuntime::mainContextFromOwnThread() {
   MOZ_ASSERT(mainContextFromAnyThread() == js::TlsContext.get());
