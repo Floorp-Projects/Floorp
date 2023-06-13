@@ -32,7 +32,7 @@ struct ParamTraits<mozilla::EventMessage>
 
 template <>
 struct ParamTraits<mozilla::BaseEventFlags> {
-  using paramType = mozilla::BaseEventFlags;
+  typedef mozilla::BaseEventFlags paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     aWriter->WriteBytes(&aParam, sizeof(aParam));
@@ -45,7 +45,7 @@ struct ParamTraits<mozilla::BaseEventFlags> {
 
 template <>
 struct ParamTraits<mozilla::WidgetEvent> {
-  using paramType = mozilla::WidgetEvent;
+  typedef mozilla::WidgetEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     // Mark the event as posted to another process.
@@ -83,7 +83,7 @@ struct ParamTraits<mozilla::WidgetEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetGUIEvent> {
-  using paramType = mozilla::WidgetGUIEvent;
+  typedef mozilla::WidgetGUIEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetEvent&>(aParam));
@@ -96,7 +96,7 @@ struct ParamTraits<mozilla::WidgetGUIEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetInputEvent> {
-  using paramType = mozilla::WidgetInputEvent;
+  typedef mozilla::WidgetInputEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
@@ -111,7 +111,7 @@ struct ParamTraits<mozilla::WidgetInputEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetMouseEventBase> {
-  using paramType = mozilla::WidgetMouseEventBase;
+  typedef mozilla::WidgetMouseEventBase paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetInputEvent&>(aParam));
@@ -133,7 +133,7 @@ struct ParamTraits<mozilla::WidgetMouseEventBase> {
 
 template <>
 struct ParamTraits<mozilla::WidgetWheelEvent> {
-  using paramType = mozilla::WidgetWheelEvent;
+  typedef mozilla::WidgetWheelEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter,
@@ -191,7 +191,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetPointerHelper> {
-  using paramType = mozilla::WidgetPointerHelper;
+  typedef mozilla::WidgetPointerHelper paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.pointerId);
@@ -216,7 +216,7 @@ struct ParamTraits<mozilla::WidgetPointerHelper> {
 
 template <>
 struct ParamTraits<mozilla::WidgetMouseEvent> {
-  using paramType = mozilla::WidgetMouseEvent;
+  typedef mozilla::WidgetMouseEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter,
@@ -264,7 +264,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetDragEvent> {
-  using paramType = mozilla::WidgetDragEvent;
+  typedef mozilla::WidgetDragEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetMouseEvent&>(aParam));
@@ -283,7 +283,7 @@ struct ParamTraits<mozilla::WidgetDragEvent> {
 
 template <>
 struct ParamTraits<mozilla::WidgetPointerEvent> {
-  using paramType = mozilla::WidgetPointerEvent;
+  typedef mozilla::WidgetPointerEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetMouseEvent&>(aParam));
@@ -365,7 +365,7 @@ struct ParamTraits<mozilla::WidgetTouchEvent> {
 
 template <>
 struct ParamTraits<mozilla::AlternativeCharCode> {
-  using paramType = mozilla::AlternativeCharCode;
+  typedef mozilla::AlternativeCharCode paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mUnshiftedCharCode);
@@ -380,7 +380,7 @@ struct ParamTraits<mozilla::AlternativeCharCode> {
 
 template <>
 struct ParamTraits<mozilla::ShortcutKeyCandidate> {
-  using paramType = mozilla::ShortcutKeyCandidate;
+  typedef mozilla::ShortcutKeyCandidate paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mCharCode);
@@ -395,7 +395,7 @@ struct ParamTraits<mozilla::ShortcutKeyCandidate> {
 
 template <>
 struct ParamTraits<mozilla::WidgetKeyboardEvent> {
-  using paramType = mozilla::WidgetKeyboardEvent;
+  typedef mozilla::WidgetKeyboardEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetInputEvent&>(aParam));
@@ -464,7 +464,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent> {
 
 template <>
 struct ParamTraits<mozilla::TextRangeStyle> {
-  using paramType = mozilla::TextRangeStyle;
+  typedef mozilla::TextRangeStyle paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mDefinedStyles);
@@ -493,7 +493,7 @@ struct ParamTraits<mozilla::TextRangeStyle> {
 
 template <>
 struct ParamTraits<mozilla::TextRange> {
-  using paramType = mozilla::TextRange;
+  typedef mozilla::TextRange paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mStartOffset);
@@ -517,7 +517,7 @@ struct ParamTraits<mozilla::TextRange> {
 
 template <>
 struct ParamTraits<mozilla::TextRangeArray> {
-  using paramType = mozilla::TextRangeArray;
+  typedef mozilla::TextRangeArray paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.Length());
@@ -545,13 +545,12 @@ struct ParamTraits<mozilla::TextRangeArray> {
 
 template <>
 struct ParamTraits<mozilla::WidgetCompositionEvent> {
-  using paramType = mozilla::WidgetCompositionEvent;
+  typedef mozilla::WidgetCompositionEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aWriter, aParam.mData);
     WriteParam(aWriter, aParam.mNativeIMEContext);
-    WriteParam(aWriter, aParam.mCompositionId);
     bool hasRanges = !!aParam.mRanges;
     WriteParam(aWriter, hasRanges);
     if (hasRanges) {
@@ -564,7 +563,6 @@ struct ParamTraits<mozilla::WidgetCompositionEvent> {
     if (!ReadParam(aReader, static_cast<mozilla::WidgetGUIEvent*>(aResult)) ||
         !ReadParam(aReader, &aResult->mData) ||
         !ReadParam(aReader, &aResult->mNativeIMEContext) ||
-        !ReadParam(aReader, &aResult->mCompositionId) ||
         !ReadParam(aReader, &hasRanges)) {
       return false;
     }
@@ -583,7 +581,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent> {
 
 template <>
 struct ParamTraits<mozilla::FontRange> {
-  using paramType = mozilla::FontRange;
+  typedef mozilla::FontRange paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mStartOffset);
@@ -600,7 +598,7 @@ struct ParamTraits<mozilla::FontRange> {
 
 template <>
 struct ParamTraits<mozilla::WidgetSelectionEvent> {
-  using paramType = mozilla::WidgetSelectionEvent;
+  typedef mozilla::WidgetSelectionEvent paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
@@ -625,7 +623,7 @@ struct ParamTraits<mozilla::WidgetSelectionEvent> {
 
 template <>
 struct ParamTraits<mozilla::widget::IMENotificationRequests> {
-  using paramType = mozilla::widget::IMENotificationRequests;
+  typedef mozilla::widget::IMENotificationRequests paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mWantUpdates);
@@ -638,7 +636,7 @@ struct ParamTraits<mozilla::widget::IMENotificationRequests> {
 
 template <>
 struct ParamTraits<mozilla::widget::NativeIMEContext> {
-  using paramType = mozilla::widget::NativeIMEContext;
+  typedef mozilla::widget::NativeIMEContext paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mRawNativeIMEContext);
@@ -653,7 +651,7 @@ struct ParamTraits<mozilla::widget::NativeIMEContext> {
 
 template <>
 struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
-  using paramType = mozilla::widget::IMENotification::SelectionChangeDataBase;
+  typedef mozilla::widget::IMENotification::SelectionChangeDataBase paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     MOZ_RELEASE_ASSERT(aParam.mString);
@@ -684,7 +682,7 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeDataBase> {
 
 template <>
 struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase> {
-  using paramType = mozilla::widget::IMENotification::TextChangeDataBase;
+  typedef mozilla::widget::IMENotification::TextChangeDataBase paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mStartOffset);
@@ -707,7 +705,7 @@ struct ParamTraits<mozilla::widget::IMENotification::TextChangeDataBase> {
 
 template <>
 struct ParamTraits<mozilla::widget::IMENotification::MouseButtonEventData> {
-  using paramType = mozilla::widget::IMENotification::MouseButtonEventData;
+  typedef mozilla::widget::IMENotification::MouseButtonEventData paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mEventMessage);
@@ -732,7 +730,7 @@ struct ParamTraits<mozilla::widget::IMENotification::MouseButtonEventData> {
 
 template <>
 struct ParamTraits<mozilla::widget::IMENotification> {
-  using paramType = mozilla::widget::IMENotification;
+  typedef mozilla::widget::IMENotification paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter,
@@ -786,7 +784,7 @@ struct ParamTraits<mozilla::widget::IMEState::Open>
 
 template <>
 struct ParamTraits<mozilla::widget::IMEState> {
-  using paramType = mozilla::widget::IMEState;
+  typedef mozilla::widget::IMEState paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mEnabled);
@@ -808,7 +806,7 @@ struct ParamTraits<mozilla::widget::InputContext::Origin>
 
 template <>
 struct ParamTraits<mozilla::widget::InputContext> {
-  using paramType = mozilla::widget::InputContext;
+  typedef mozilla::widget::InputContext paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mIMEState);
@@ -853,7 +851,7 @@ struct ParamTraits<mozilla::widget::InputContextAction::FocusChange>
 
 template <>
 struct ParamTraits<mozilla::widget::InputContextAction> {
-  using paramType = mozilla::widget::InputContextAction;
+  typedef mozilla::widget::InputContextAction paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mCause);
@@ -868,7 +866,7 @@ struct ParamTraits<mozilla::widget::InputContextAction> {
 
 template <>
 struct ParamTraits<mozilla::WritingMode> {
-  using paramType = mozilla::WritingMode;
+  typedef mozilla::WritingMode paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mWritingMode.bits);
@@ -881,7 +879,7 @@ struct ParamTraits<mozilla::WritingMode> {
 
 template <>
 struct ParamTraits<mozilla::ContentCache::Selection> {
-  using paramType = mozilla::ContentCache::Selection;
+  typedef mozilla::ContentCache::Selection paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mAnchor);
@@ -910,7 +908,7 @@ struct ParamTraits<mozilla::ContentCache::Selection> {
 
 template <>
 struct ParamTraits<mozilla::ContentCache::Caret> {
-  using paramType = mozilla::ContentCache::Caret;
+  typedef mozilla::ContentCache::Caret paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mOffset);
@@ -925,7 +923,7 @@ struct ParamTraits<mozilla::ContentCache::Caret> {
 
 template <>
 struct ParamTraits<mozilla::ContentCache::TextRectArray> {
-  using paramType = mozilla::ContentCache::TextRectArray;
+  typedef mozilla::ContentCache::TextRectArray paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mStart);
@@ -940,7 +938,7 @@ struct ParamTraits<mozilla::ContentCache::TextRectArray> {
 
 template <>
 struct ParamTraits<mozilla::ContentCache> {
-  using paramType = mozilla::ContentCache;
+  typedef mozilla::ContentCache paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mCompositionStart);
@@ -967,7 +965,7 @@ struct ParamTraits<mozilla::ContentCache> {
 
 template <>
 struct ParamTraits<mozilla::widget::CandidateWindowPosition> {
-  using paramType = mozilla::widget::CandidateWindowPosition;
+  typedef mozilla::widget::CandidateWindowPosition paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mPoint);
@@ -992,7 +990,7 @@ struct ParamTraits<mozilla::InputType>
 
 template <>
 struct ParamTraits<mozilla::InputData> {
-  using paramType = mozilla::InputData;
+  typedef mozilla::InputData paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mInputType);
@@ -1013,7 +1011,7 @@ struct ParamTraits<mozilla::InputData> {
 
 template <>
 struct ParamTraits<mozilla::SingleTouchData::HistoricalTouchData> {
-  using paramType = mozilla::SingleTouchData::HistoricalTouchData;
+  typedef mozilla::SingleTouchData::HistoricalTouchData paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mTimeStamp);
@@ -1113,7 +1111,7 @@ struct ParamTraits<mozilla::MouseInput::ButtonType>
 
 template <>
 struct ParamTraits<mozilla::MouseInput> {
-  using paramType = mozilla::MouseInput;
+  typedef mozilla::MouseInput paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::InputData&>(aParam));
@@ -1157,7 +1155,7 @@ struct ParamTraits<mozilla::PanGestureInput::PanDeltaType>
 template <>
 struct ParamTraits<mozilla::PanGestureInput>
     : BitfieldHelper<mozilla::PanGestureInput> {
-  using paramType = mozilla::PanGestureInput;
+  typedef mozilla::PanGestureInput paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::InputData&>(aParam));
@@ -1219,7 +1217,7 @@ struct ParamTraits<mozilla::PinchGestureInput::PinchGestureSource>
 
 template <>
 struct ParamTraits<mozilla::PinchGestureInput> {
-  using paramType = mozilla::PinchGestureInput;
+  typedef mozilla::PinchGestureInput paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::InputData&>(aParam));
@@ -1257,7 +1255,7 @@ struct ParamTraits<mozilla::TapGestureInput::TapGestureType>
 
 template <>
 struct ParamTraits<mozilla::TapGestureInput> {
-  using paramType = mozilla::TapGestureInput;
+  typedef mozilla::TapGestureInput paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::InputData&>(aParam));
@@ -1304,7 +1302,7 @@ struct ParamTraits<mozilla::layers::APZWheelAction>
 
 template <>
 struct ParamTraits<mozilla::ScrollWheelInput> {
-  using paramType = mozilla::ScrollWheelInput;
+  typedef mozilla::ScrollWheelInput paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::InputData&>(aParam));
@@ -1362,7 +1360,7 @@ struct ParamTraits<mozilla::KeyboardInput::KeyboardEventType>
 
 template <>
 struct ParamTraits<mozilla::KeyboardInput> {
-  using paramType = mozilla::KeyboardInput;
+  typedef mozilla::KeyboardInput paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, static_cast<const mozilla::InputData&>(aParam));
