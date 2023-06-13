@@ -704,7 +704,8 @@ JitScript* ICScript::outerJitScript() {
 //    other than the first changes from 0.
 // 3. The hash will change if the entered count of the fallback stub
 //    changes from 0.
-//
+// 4. The hash will change if the failure count of the fallback stub
+//    changes from 0.
 HashNumber ICScript::hash() {
   HashNumber h = 0;
   for (size_t i = 0; i < numICEntries(); i++) {
@@ -722,9 +723,10 @@ HashNumber ICScript::hash() {
       }
     }
 
-    // Hash whether the fallback has entry count 0.
+    // Hash whether the fallback has entry count 0 and failure count 0.
     MOZ_ASSERT(stub->isFallback());
     h = mozilla::AddToHash(h, stub->enteredCount() == 0);
+    h = mozilla::AddToHash(h, stub->toFallbackStub()->state().hasFailures());
   }
 
   return h;
