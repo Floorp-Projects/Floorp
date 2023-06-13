@@ -23,7 +23,7 @@ add_heuristic_tests(
             { fieldName: "postal-code" }, // EXt
             { fieldName: "email" },
             { fieldName: "tel" },
-            { fieldName: "tel-extension" },
+            { fieldName: "tel-extension", reason: "update-heuristic" },
           ],
         },
       ],
