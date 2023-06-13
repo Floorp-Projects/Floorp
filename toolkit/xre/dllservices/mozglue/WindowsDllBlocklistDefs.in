@@ -406,6 +406,9 @@ UTILITY_PROCESSES += [
     DllBlocklistEntry("ipseng32.dll", ALL_VERSIONS),
     DllBlocklistEntry("ks3rdhmpg.dll", ALL_VERSIONS),
     DllBlocklistEntry("kwsui64.dll", ALL_VERSIONS),
+
+    # Messes with user32 and breaks Utility on Win7 x86
+    DllBlocklistEntry("aswhook.dll", ALL_VERSIONS, BLOCK_WIN7_AND_OLDER),
 ]
 
 UTILITY_PROCESSES_TESTS += [
