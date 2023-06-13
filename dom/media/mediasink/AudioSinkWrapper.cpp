@@ -177,14 +177,7 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
         mPositionAtClockStart = mAudioSink->GetPosition();
         mClockStartTime = TimeStamp::Now();
       }
-      Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv =
-          mAudioSink->Shutdown(ShutdownCause::Muting);
-      // There will generally be a promise here, except if the stream has
-      // errored out, or if it has just finished. In both cases, the promise has
-      // been handled appropriately, there is nothing to do.
-      if (rv.isSome()) {
-        mEndedPromiseHolder = std::move(rv.ref());
-      }
+      mAudioSink->ShutDown();
       mAudioSink = nullptr;
     }
   } else {
@@ -321,20 +314,11 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
 bool AudioSinkWrapper::NeedAudioSink() {
   // An AudioSink is needed if unmuted, playing, and not ended.  The not-ended
   // check also avoids creating an AudioSink when there is no audio track.
-  // mEndedPromiseHolder can be non-empty only if the promise is not managed
-  // by an existing AudioSink.
-  MOZ_ASSERT(!mAudioSink);
   return !IsMuted() && IsPlaying() && !mEndedPromiseHolder.IsEmpty();
 }
 
 void AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime) {
-  nsresult rv = mAudioSink->Start(aStartTime, mEndedPromiseHolder);
-  if (NS_FAILED(rv)) {
-    LOG("AudioSinkWrapper::StartAudioSink failed");
-    mEndedPromiseHolder.RejectIfExists(rv, __func__);
-    return;
-  }
-  mEndedPromise
+  mAudioSink->Start(aStartTime)
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded)
       ->Track(mAudioSinkEndedPromise);
@@ -387,9 +371,7 @@ nsresult AudioSinkWrapper::CreateAudioSink(const TimeUnit& aStartTime,
                 if (mAudioSink || !NeedAudioSink()) {
                   LOG("AudioSink initialized async isn't needed, shutting "
                       "it down.");
-                  DebugOnly<Maybe<MozPromiseHolder<EndedPromise>>> rv =
-                      audioSink->Shutdown();
-                  MOZ_ASSERT(rv.inspect().isNothing());
+                  audioSink->ShutDown();
                   return;
                 }
 
@@ -444,13 +426,10 @@ void AudioSinkWrapper::Stop() {
   mAudioSinkEndedPromise.DisconnectIfExists();
 
   if (mAudioSink) {
-    DebugOnly<Maybe<MozPromiseHolder<EndedPromise>>> rv =
-        mAudioSink->Shutdown();
-    MOZ_ASSERT(rv.inspect().isNothing());
+    mAudioSink->ShutDown();
     mAudioSink = nullptr;
-  } else {
-    mEndedPromiseHolder.ResolveIfExists(true, __func__);
   }
+  mEndedPromiseHolder.ResolveIfExists(true, __func__);
   mEndedPromise = nullptr;
 }
 
@@ -465,9 +444,10 @@ bool AudioSinkWrapper::IsPlaying() const {
   return !mClockStartTime.IsNull();
 }
 
-void AudioSinkWrapper::OnAudioEnded() {
+void AudioSinkWrapper::OnAudioEnded(
+    const EndedPromise::ResolveOrRejectValue& aValue) {
   AssertOwnerThread();
-  LOG("%p: AudioSinkWrapper::OnAudioEnded", this);
+  LOG("%p: AudioSinkWrapper::OnAudioEnded %i", this, aValue.IsResolve());
   mAudioSinkEndedPromise.Complete();
   mPositionAtClockStart = GetPosition();
   if (!mClockStartTime.IsNull()) {  // playing
@@ -475,6 +455,7 @@ void AudioSinkWrapper::OnAudioEnded() {
     mClockStartTime = TimeStamp::Now();
   }
   mAudioEnded = true;
+  mEndedPromiseHolder.ResolveOrReject(aValue, __func__);
 }
 
 void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {

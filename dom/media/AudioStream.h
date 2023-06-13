@@ -35,13 +35,6 @@ struct CubebDestroyPolicy {
   }
 };
 
-enum class ShutdownCause {
-  // Regular shutdown, signal the end of the audio stream.
-  Regular,
-  // Shutdown for muting, don't signal the end of the audio stream.
-  Muting
-};
-
 class AudioStream;
 class FrameHistory;
 class AudioConfig;
@@ -252,8 +245,7 @@ class AudioStream final {
   nsresult Init(AudioDeviceInfo* aSinkInfo);
 
   // Closes the stream. All future use of the stream is an error.
-  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> Shutdown(
-      ShutdownCause = ShutdownCause::Regular);
+  void ShutDown();
 
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
@@ -262,7 +254,7 @@ class AudioStream final {
   void SetStreamName(const nsAString& aStreamName);
 
   // Start the stream.
-  nsresult Start(MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise);
+  RefPtr<MediaSink::EndedPromise> Start();
 
   // Pause audio playback.
   void Pause();
@@ -349,7 +341,7 @@ class AudioStream final {
 
   const uint32_t mOutChannels;
 
-  // Owning reference to a cubeb_stream.  Set in Init(), cleared in Shutdown, so
+  // Owning reference to a cubeb_stream.  Set in Init(), cleared in ShutDown, so
   // no lock is needed to access.
   UniquePtr<cubeb_stream, CubebDestroyPolicy> mCubebStream;
 
@@ -359,7 +351,7 @@ class AudioStream final {
     STOPPED,      // Stopped by a call to Pause().
     DRAINED,      // StateCallback has indicated that the drain is complete.
     ERRORED,      // Stream disabled due to an internal error.
-    SHUTDOWN      // Shutdown has been called
+    SHUTDOWN      // ShutDown has been called
   };
 
   std::atomic<StreamState> mState;
