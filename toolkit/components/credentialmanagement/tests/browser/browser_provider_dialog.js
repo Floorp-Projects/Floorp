@@ -58,7 +58,7 @@ add_task(async function test_single_provider_dialog() {
 
   // Make sure the IDP Site is in the label
   let label = inputs[0].getElementsByClassName(
-    "identity-credential-list-item-label"
+    "identity-credential-list-item-label-primary"
   )[0];
   ok(label.textContent.includes("idp.example"), "IDP site in label");
 
@@ -192,14 +192,14 @@ add_task(async function test_multiple_provider_dialog() {
   is(inputs.length, 2, "Two IDPs visible");
 
   let label1 = inputs[0].getElementsByClassName(
-    "identity-credential-list-item-label"
+    "identity-credential-list-item-label-primary"
   )[0];
   ok(
     label1.textContent.includes("idp1.example"),
     "First IDP label includes its site"
   );
   let label2 = inputs[1].getElementsByClassName(
-    "identity-credential-list-item-label"
+    "identity-credential-list-item-label-primary"
   )[0];
   ok(
     label2.textContent.includes("idp2.example"),
@@ -272,14 +272,14 @@ add_task(async function test_multiple_provider_choose_second() {
   is(inputs.length, 2, "Two IDPs visible");
 
   let label1 = inputs[0].getElementsByClassName(
-    "identity-credential-list-item-label"
+    "identity-credential-list-item-label-primary"
   )[0];
   ok(
     label1.textContent.includes("idp1.example"),
     "First IDP label includes its site"
   );
   let label2 = inputs[1].getElementsByClassName(
-    "identity-credential-list-item-label"
+    "identity-credential-list-item-label-primary"
   )[0];
   ok(
     label2.textContent.includes("idp2.example"),
@@ -342,6 +342,7 @@ add_task(async function test_multiple_provider_show_branding() {
               url: "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
             },
           ],
+          name: "demo ip",
         },
       },
     ]
@@ -369,6 +370,15 @@ add_task(async function test_multiple_provider_show_branding() {
     ),
     "The second icon matches the custom.svg"
   );
+
+  let inputs = document
+    .getElementById("identity-credential-provider")
+    .getElementsByClassName("identity-credential-list-item");
+  is(inputs.length, 2, "One IDP");
+  let label = inputs[1].getElementsByClassName(
+    "identity-credential-list-item-label-primary"
+  )[0];
+  ok(label.textContent.includes("demo ip"), "should show business short time");
 
   // Click continue
   document
