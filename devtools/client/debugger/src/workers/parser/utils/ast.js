@@ -29,6 +29,7 @@ const sourceOptions = {
       "optionalChaining",
       "privateIn",
       "nullishCoalescingOperator",
+      "regexpUnicodeSets",
     ],
   },
   original: {
@@ -53,6 +54,7 @@ const sourceOptions = {
       "functionSent",
       "dynamicImport",
       "react-jsx",
+      "regexpUnicodeSets",
     ],
   },
 };
@@ -119,6 +121,7 @@ export function parseConsoleScript(text, opts) {
         "dynamicImport",
         "nullishCoalescingOperator",
         "optionalChaining",
+        "regexpUnicodeSets",
       ],
       ...opts,
       allowAwaitOutsideFunction: true,

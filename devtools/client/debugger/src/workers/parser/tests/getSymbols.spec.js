@@ -45,5 +45,7 @@ cases(
     { name: "flow", file: "flow", original: true },
     { name: "jsx", file: "jsx", original: true },
     { name: "destruct", file: "destructuring" },
+
+    { name: "regexp", file: "regexp" },
   ]
 );

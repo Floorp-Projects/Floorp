@@ -1,0 +1,1 @@
+const re = /^\p{RGI_Emoji}$/v;

@@ -5,7 +5,7 @@ function checkValues() {
   const d = null;
   const e = [];
   const f = {};
-
+  const reg = /^\p{RGI_Emoji}$/v;
   const obj = {
     foo: 1,
   };
