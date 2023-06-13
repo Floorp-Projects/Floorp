@@ -27,7 +27,8 @@ AudioSinkWrapper::~AudioSinkWrapper() = default;
 void AudioSinkWrapper::Shutdown() {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "Must be called after playback stopped.");
-  mSinkCreator = nullptr;
+  mCreator = nullptr;
+  mEndedPromiseHolder.ResolveIfExists(true, __func__);
 }
 
 RefPtr<MediaSink::EndedPromise> AudioSinkWrapper::OnEnded(TrackType aType) {
@@ -313,17 +314,17 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
     return NS_OK;
   }
 
-  mEndedPromise = mEndedPromiseHolder.Ensure(__func__);
   return StartAudioSink(aStartTime, AudioSinkStartPolicy::SYNC);
 }
 
 nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
                                           AudioSinkStartPolicy aPolicy) {
   MOZ_RELEASE_ASSERT(!mAudioSink);
-  MOZ_ASSERT(!mAudioSinkEndedPromise.Exists());
 
   nsresult rv = NS_OK;
 
+  mAudioSinkEndedPromise.DisconnectIfExists();
+  mEndedPromise = mEndedPromiseHolder.Ensure(__func__);
   mEndedPromise
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded, &AudioSinkWrapper::OnAudioEnded)
@@ -338,7 +339,8 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
   }
   LOG("%p: Not muted: starting a new audio sink", this);
   if (aPolicy == AudioSinkStartPolicy::ASYNC) {
-    UniquePtr<AudioSink> audioSink = mSinkCreator();
+    UniquePtr<AudioSink> audioSink;
+    audioSink.reset(mCreator->Create());
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
         "StartAudioSink (Async part: initialization)",
         [self = RefPtr<AudioSinkWrapper>(this), audioSink{std::move(audioSink)},
@@ -402,7 +404,7 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
               }));
         }));
   } else {
-    mAudioSink = mSinkCreator();
+    mAudioSink.reset(mCreator->Create());
     nsresult rv = mAudioSink->InitializeAudioStream(
         mParams, mAudioDevice, AudioSink::InitializationType::INITIAL);
     if (NS_FAILED(rv)) {
@@ -446,10 +448,8 @@ void AudioSinkWrapper::Stop() {
         mAudioSink->Shutdown();
     MOZ_ASSERT(rv.inspect().isNothing());
     mAudioSink = nullptr;
-  } else {
-    mEndedPromiseHolder.ResolveIfExists(true, __func__);
+    mEndedPromise = nullptr;
   }
-  mEndedPromise = nullptr;
 }
 
 bool AudioSinkWrapper::IsStarted() const {
