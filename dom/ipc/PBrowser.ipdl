@@ -318,6 +318,8 @@ parent:
      * Requests chrome to commit or cancel composition of IME.
      *
      *  cancel                Set true if composition should be cancelled.
+     *  compositionId         Set the composition ID to requesting commit
+     *                        (stored in TextComposition).
      *
      *  isCommitted           Returns true if the request causes composition
      *                        being committed synchronously.
@@ -326,7 +328,8 @@ parent:
      *                        try to restore selected string which was
      *                        replaced with the composition.
      */
-    [Nested=inside_cpow] sync RequestIMEToCommitComposition(bool cancel)
+    [Nested=inside_cpow] sync RequestIMEToCommitComposition(bool cancel,
+                                                            uint32_t aCompositionId)
       returns (bool isCommitted, nsString committedString);
 
     /**
@@ -334,9 +337,13 @@ parent:
      * composition event or a selection event which is sent from the parent
      * process.
      *
-     * message      The message value of the handled event.
+     * message          The message value of the handled event.
+     * compositionId    The composition ID of handled composition event if
+     *                  the message is a composition event message.  Otherwise,
+     *                  0.
      */
-    [Nested=inside_cpow] async OnEventNeedingAckHandled(EventMessage message);
+    [Nested=inside_cpow] async OnEventNeedingAckHandled(EventMessage message,
+                                                        uint32_t compositionId);
 
     /**
      * Request that the parent process move focus to the browser's frame. If

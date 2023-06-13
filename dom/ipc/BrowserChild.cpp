@@ -2088,7 +2088,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvCompositionEvent(
   WidgetCompositionEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   DispatchWidgetEventViaAPZ(localEvent);
-  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage);
+  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage,
+                                         localEvent.mCompositionId);
   return IPC_OK();
 }
 
@@ -2102,7 +2103,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvSelectionEvent(
   WidgetSelectionEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   DispatchWidgetEventViaAPZ(localEvent);
-  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage);
+  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage, 0u);
   return IPC_OK();
 }
 
