@@ -25,7 +25,7 @@ class MediaQueue;
  */
 class AudioSinkWrapper : public MediaSink {
   using PlaybackParams = AudioSink::PlaybackParams;
-  using SinkCreator = std::function<AudioSink*()>;
+  using SinkCreator = std::function<UniquePtr<AudioSink>()>;
 
  public:
   AudioSinkWrapper(AbstractThread* aOwnerThread,
