@@ -3,9 +3,6 @@ if test `uname -s` = Linux; then
 fi
 
 if [ -n "$TASKCLUSTER_PGO_PROFILE_USE" -a -z "$USE_ARTIFACT" ]; then
-    # Work around https://github.com/llvm/llvm-project/issues/57734
-    export LDFLAGS=-Wl,-mllvm,--opaque-pointers
-
     # Keep using ld64 on PGO/LTO builds because of performance regressions when using lld.
     ac_add_options --enable-linker=ld64
 fi
