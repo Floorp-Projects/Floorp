@@ -1610,8 +1610,7 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 // nsGlobalWindowInner::nsIScriptGlobalObject
 //*****************************************************************************
 
-bool nsGlobalWindowInner::ShouldResistFingerprinting(
-    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
+bool nsGlobalWindowInner::ShouldResistFingerprinting(RFPTarget aTarget) const {
   if (mDoc) {
     return mDoc->ShouldResistFingerprinting(aTarget);
   }
@@ -4831,8 +4830,8 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (mDoc) {
     cookieJarSettings = mDoc->CookieJarSettings();
   } else {
-    cookieJarSettings =
-        net::CookieJarSettings::GetBlockingAll(ShouldResistFingerprinting());
+    cookieJarSettings = net::CookieJarSettings::GetBlockingAll(
+        ShouldResistFingerprinting(RFPTarget::IsAlwaysEnabledForPrecompute));
   }
 
   // Note that this behavior is observable: if we grant storage permission to a
@@ -6414,7 +6413,7 @@ void nsGlobalWindowInner::DisableDeviceSensor(uint32_t aType) {
 
 #if defined(MOZ_WIDGET_ANDROID)
 void nsGlobalWindowInner::EnableOrientationChangeListener() {
-  if (!ShouldResistFingerprinting()) {
+  if (!ShouldResistFingerprinting(RFPTarget::Unknown)) {
     mHasOrientationChangeListeners = true;
     mOrientationAngle = Orientation(CallerType::System);
   }
@@ -6741,7 +6740,7 @@ void nsGlobalWindowInner::GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads) {
 
   // navigator.getGamepads() always returns an empty array when
   // privacy.resistFingerprinting is true.
-  if (ShouldResistFingerprinting()) {
+  if (ShouldResistFingerprinting(RFPTarget::Gamepad)) {
     return;
   }
 
