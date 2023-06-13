@@ -3474,8 +3474,8 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
 
   auto audioSinkCreator = [s = RefPtr<MediaDecoderStateMachine>(this), this]() {
     MOZ_ASSERT(OnTaskQueue());
-    AudioSink* audioSink = new AudioSink(mTaskQueue, mAudioQueue, Info().mAudio,
-                                         mShouldResistFingerprinting);
+    UniquePtr<AudioSink> audioSink{new AudioSink(
+        mTaskQueue, mAudioQueue, Info().mAudio, mShouldResistFingerprinting)};
     mAudibleListener.DisconnectIfExists();
     mAudibleListener = audioSink->AudibleEvent().Connect(
         mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);
