@@ -1,0 +1,20 @@
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+index 48e58ff4b2677..39a54d38023c8 100644
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -108,6 +108,7 @@ static struct unicode_info2* utf_tbl = NULL;
+ static int utf_tbl_count =
+     0;  // utf_tbl can be used by multiple Hunspell instances
+ 
++#ifndef MOZILLA_CLIENT
+ void myopen(std::ifstream& stream, const char* path, std::ios_base::openmode mode)
+ {
+ #if defined(_WIN32) && defined(_MSC_VER)
+@@ -127,6 +128,7 @@ void myopen(std::ifstream& stream, const char* path, std::ios_base::openmode mod
+ #endif
+   stream.open(path, mode);
+ }
++#endif
+ 
+ std::string& u16_u8(std::string& dest, const std::vector<w_char>& src) {
+   dest.clear();
