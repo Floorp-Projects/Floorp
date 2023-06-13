@@ -13175,13 +13175,6 @@
   value: 480
   mirror: always
 
-# Setting TZ=UTC ensures that even libc functions use the spoofed time zone.
-# We want to remove that override as soon as possible however.
-- name: privacy.resistFingerprinting.testing.setTZtoUTC
-  type: bool
-  value: false
-  mirror: always
-
 # Enable resetting the fingerprinting randomization key daily for normal windwos.
 - name: privacy.resistFingerprinting.randomization.daily_reset.enabled
   type: RelaxedAtomicBool
