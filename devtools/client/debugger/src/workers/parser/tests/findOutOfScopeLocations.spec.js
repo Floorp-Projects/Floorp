@@ -58,9 +58,14 @@ describe("Parser.findOutOfScopeLocations", () => {
       column: 2,
     });
 
-    expect(actual).toEqual([
-      { end: { column: 15, line: 1 }, start: { column: 0, line: 1 } },
-    ]);
+    expect(actual.length).toBe(1);
+
+    const location = actual[0];
+    expect(location.start.line).toBe(1);
+    expect(location.start.column).toBe(0);
+
+    expect(location.end.line).toBe(1);
+    expect(location.end.column).toBe(15);
   });
 
   it("should not exclude in-scope inner locations", () => {
