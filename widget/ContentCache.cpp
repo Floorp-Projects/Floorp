@@ -216,17 +216,17 @@ bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
     const uint32_t offset = mSelection->StartOffset();
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetQueryContentEvent queryCaretRectEvet(true, eQueryCaretRect, aWidget);
-    queryCaretRectEvet.InitForQueryCaretRect(offset);
-    aWidget->DispatchEvent(&queryCaretRectEvet, status);
-    if (NS_WARN_IF(queryCaretRectEvet.Failed())) {
+    WidgetQueryContentEvent queryCaretRectEvent(true, eQueryCaretRect, aWidget);
+    queryCaretRectEvent.InitForQueryCaretRect(offset);
+    aWidget->DispatchEvent(&queryCaretRectEvent, status);
+    if (NS_WARN_IF(queryCaretRectEvent.Failed())) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
               ("0x%p   CacheCaret(), FAILED, couldn't retrieve the caret rect "
                "at offset=%u",
                this, offset));
       return false;
     }
-    mCaret.emplace(offset, queryCaretRectEvet.mReply->mRect);
+    mCaret.emplace(offset, queryCaretRectEvent.mReply->mRect);
   }
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p   CacheCaret(), Succeeded, mSelection=%s, mCaret=%s", this,
@@ -1273,25 +1273,25 @@ bool ContentCacheInParent::GetCaretRect(uint32_t aOffset,
 }
 
 bool ContentCacheInParent::OnCompositionEvent(
-    const WidgetCompositionEvent& aEvent) {
+    const WidgetCompositionEvent& aCompositionEvent) {
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
-      ("0x%p OnCompositionEvent(aEvent={ "
+      ("0x%p OnCompositionEvent(aCompositionEvent={ "
        "mMessage=%s, mData=\"%s\", mRanges->Length()=%zu }), "
        "PendingEventsNeedingAck()=%u, WidgetHasComposition()=%s, "
        "mHandlingCompositions.Length()=%zu, HasPendingCommit()=%s, "
        "mIsChildIgnoringCompositionEvents=%s, mCommitStringByRequest=0x%p",
-       this, ToChar(aEvent.mMessage),
-       PrintStringDetail(aEvent.mData,
+       this, ToChar(aCompositionEvent.mMessage),
+       PrintStringDetail(aCompositionEvent.mData,
                          PrintStringDetail::kMaxLengthForCompositionString)
            .get(),
-       aEvent.mRanges ? aEvent.mRanges->Length() : 0, PendingEventsNeedingAck(),
-       GetBoolName(WidgetHasComposition()), mHandlingCompositions.Length(),
-       GetBoolName(HasPendingCommit()),
+       aCompositionEvent.mRanges ? aCompositionEvent.mRanges->Length() : 0,
+       PendingEventsNeedingAck(), GetBoolName(WidgetHasComposition()),
+       mHandlingCompositions.Length(), GetBoolName(HasPendingCommit()),
        GetBoolName(mIsChildIgnoringCompositionEvents), mCommitStringByRequest));
 
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  mDispatchedEventMessages.AppendElement(aEvent.mMessage);
+  mDispatchedEventMessages.AppendElement(aCompositionEvent.mMessage);
 #endif  // #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   // We must be able to simulate the selection because
@@ -1308,25 +1308,26 @@ bool ContentCacheInParent::OnCompositionEvent(
                                    ? mSelection->StartOffset()
                                    : 0u);
     }
-    MOZ_ASSERT(aEvent.mMessage == eCompositionStart);
+    MOZ_ASSERT(aCompositionEvent.mMessage == eCompositionStart);
     mHandlingCompositions.AppendElement(
-        HandlingCompositionData(aEvent.mCompositionId));
+        HandlingCompositionData(aCompositionEvent.mCompositionId));
   }
 
   mHandlingCompositions.LastElement().mSentCommitEvent =
-      aEvent.CausesDOMCompositionEndEvent();
+      aCompositionEvent.CausesDOMCompositionEndEvent();
   MOZ_ASSERT(mHandlingCompositions.LastElement().mCompositionId ==
-             aEvent.mCompositionId);
+             aCompositionEvent.mCompositionId);
 
   if (!WidgetHasComposition()) {
     // mCompositionStart will be reset when commit event is completely handled
     // in the remote process.
     if (mHandlingCompositions.Length() == 1u) {
-      mPendingCommitLength = aEvent.mData.Length();
+      mPendingCommitLength = aCompositionEvent.mData.Length();
     }
     MOZ_ASSERT(HasPendingCommit());
-  } else if (aEvent.mMessage != eCompositionStart) {
-    mHandlingCompositions.LastElement().mCompositionString = aEvent.mData;
+  } else if (aCompositionEvent.mMessage != eCompositionStart) {
+    mHandlingCompositions.LastElement().mCompositionString =
+        aCompositionEvent.mData;
   }
 
   // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
@@ -1337,13 +1338,13 @@ bool ContentCacheInParent::OnCompositionEvent(
   // RequestIMEToCommitComposition().  Then, eCommitComposition event will
   // be dispatched with the committed string in the remote process internally.
   if (mCommitStringByRequest) {
-    if (aEvent.mMessage == eCompositionCommitAsIs) {
+    if (aCompositionEvent.mMessage == eCompositionCommitAsIs) {
       *mCommitStringByRequest =
           mHandlingCompositions.LastElement().mCompositionString;
     } else {
-      MOZ_ASSERT(aEvent.mMessage == eCompositionChange ||
-                 aEvent.mMessage == eCompositionCommit);
-      *mCommitStringByRequest = aEvent.mData;
+      MOZ_ASSERT(aCompositionEvent.mMessage == eCompositionChange ||
+                 aCompositionEvent.mMessage == eCompositionCommit);
+      *mCommitStringByRequest = aCompositionEvent.mData;
     }
     // We need to wait eCompositionCommitRequestHandled from the remote process
     // in this case.  Therefore, mPendingEventsNeedingAck needs to be
