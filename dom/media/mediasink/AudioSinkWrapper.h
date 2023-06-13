@@ -36,7 +36,8 @@ class AudioSinkWrapper : public MediaSink {
         mSinkCreator(std::move(aFunc)),
         mAudioDevice(std::move(aAudioDevice)),
         mParams(aVolume, aPlaybackRate, aPreservesPitch),
-        mAudioQueue(aAudioQueue) {}
+        mAudioQueue(aAudioQueue),
+        mRetrySinkTime(TimeStamp::Now()) {}
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
@@ -87,7 +88,8 @@ class AudioSinkWrapper : public MediaSink {
   }
 
   bool NeedAudioSink();
-  void StartAudioSink(const media::TimeUnit& aStartTime);
+  void StartAudioSink(UniquePtr<AudioSink> aAudioSink,
+                      const media::TimeUnit& aStartTime);
   void ShutDownAudioSink();
   // Create and start mAudioSink.
   // An AudioSink can be started synchronously from the MDSM thread, or
@@ -100,6 +102,7 @@ class AudioSinkWrapper : public MediaSink {
   // the AudioSink clock. This is used when unmuting a media element.
   nsresult SyncCreateAudioSink(const media::TimeUnit& aStartTime);
   void MaybeAsyncCreateAudioSink();
+  void ScheduleRetrySink();
 
   // Get the current media position using the system clock. This is used when
   // the audio is muted, or when the media has no audio track. Otherwise, the
@@ -141,6 +144,15 @@ class AudioSinkWrapper : public MediaSink {
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedRequest;
   MediaQueue<AudioData>& mAudioQueue;
 
+  // Time when next to re-try AudioSink creation.
+  // Set to a useful value only when another sink is needed.  At other times
+  // it needs to be non-null for a comparison where the result will be
+  // irrelevant.
+  // This is checked in GetPosition() which is triggered periodically during
+  // playback by MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
+  TimeStamp mRetrySinkTime;
+  // Number of async AudioSink creation tasks in flight
+  uint32_t mAsyncCreateCount = 0;
   // True if we'd like to treat underrun as silent frames. But that can only be
   // applied in the special situation for seamless looping.
   bool mTreatUnderrunAsSilence = false;

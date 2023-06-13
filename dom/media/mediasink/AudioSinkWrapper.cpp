@@ -86,7 +86,7 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
   TimeUnit pos;
   TimeStamp t = TimeStamp::Now();
 
-  if (!mAudioEnded && !IsMuted() && mAudioSink) {
+  if (mAudioSink) {
     if (mLastClockSource == ClockSource::SystemClock) {
       TimeUnit switchTime = GetSystemClockPosition(t);
       // Update the _actual_ start time of the audio stream now that it has
@@ -105,22 +105,24 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     pos = GetSystemClockPosition(t);
     LOGV("%p: Getting position from the system clock %lf", this,
          pos.ToSeconds());
-    if (IsMuted()) {
-      if (mAudioQueue.GetSize() > 0) {
-        // audio track, but it's muted and won't be dequeued, discard packets
-        // that are behind the current media time, to keep the queue size under
-        // control.
-        DropAudioPacketsIfNeeded(pos);
-      }
-      // If muted, it's necessary to manually check if the audio has "ended",
-      // meaning that all the audio packets have been consumed, to resolve the
-      // ended promise.
-      if (CheckIfEnded()) {
-        MOZ_ASSERT(!mAudioSink);
-        mEndedPromiseHolder.ResolveIfExists(true, __func__);
-      }
+    if (mAudioQueue.GetSize() > 0) {
+      // Audio track, but it won't be dequeued.  Discard packets
+      // that are behind the current media time, to keep the queue size under
+      // control.
+      DropAudioPacketsIfNeeded(pos);
+    }
+    // Without an AudioSink, it's necessary to manually check if the audio has
+    // "ended", meaning that all the audio packets have been consumed,
+    // to resolve the ended promise.
+    if (CheckIfEnded()) {
+      MOZ_ASSERT(!mAudioSink);
+      mEndedPromiseHolder.ResolveIfExists(true, __func__);
     }
     mLastClockSource = ClockSource::SystemClock;
+
+    if (!mAudioSink && mAsyncCreateCount == 0 && t > mRetrySinkTime) {
+      MaybeAsyncCreateAudioSink();
+    }
   } else {
     // Return how long we've played if we are not playing.
     pos = mPositionAtClockStart;
@@ -216,7 +218,7 @@ void AudioSinkWrapper::SetStreamName(const nsAString& aStreamName) {
 
 void AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
-  if (!mAudioEnded && mAudioSink) {
+  if (mAudioSink) {
     // Pass the playback rate to the audio sink. The underlying AudioStream
     // will handle playback rate changes and report correct audio position.
     mAudioSink->SetPlaybackRate(aPlaybackRate);
@@ -312,7 +314,9 @@ bool AudioSinkWrapper::NeedAudioSink() {
   return !IsMuted() && IsPlaying() && !mEndedPromiseHolder.IsEmpty();
 }
 
-void AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime) {
+void AudioSinkWrapper::StartAudioSink(UniquePtr<AudioSink> aAudioSink,
+                                      const TimeUnit& aStartTime) {
+  mAudioSink = std::move(aAudioSink);
   mAudioSink->Start(aStartTime)
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded)
@@ -342,6 +346,7 @@ void AudioSinkWrapper::MaybeAsyncCreateAudioSink() {
 
   LOG("%p: AudioSinkWrapper::MaybeAsyncCreateAudioSink: AudioSink needed",
       this);
+  ++mAsyncCreateCount;
   UniquePtr<AudioSink> audioSink = mSinkCreator();
   NS_DispatchBackgroundTask(NS_NewRunnableFunction(
       "MaybeAsyncCreateAudioSink (Async part: initialization)",
@@ -360,8 +365,16 @@ void AudioSinkWrapper::MaybeAsyncCreateAudioSink() {
             [self = RefPtr<AudioSinkWrapper>(this),
              audioSink{std::move(audioSink)}, this, rv]() mutable {
               LOG("AudioSink async init done, back on MDSM thread");
+              ScopeExit decr([&] { --mAsyncCreateCount; });
+
               if (NS_FAILED(rv)) {
                 LOG("Async AudioSink initialization failed");
+                if (mAudioDevice) {
+                  // Device will be started when available again.
+                  ScheduleRetrySink();
+                  return;
+                }
+                // Default device not available.  Report error.
                 mEndedPromiseHolder.RejectIfExists(rv, __func__);
                 return;
               }
@@ -387,13 +400,12 @@ void AudioSinkWrapper::MaybeAsyncCreateAudioSink() {
               MOZ_ASSERT(!mAudioSink);
               TimeUnit switchTime = GetPosition();
               DropAudioPacketsIfNeeded(switchTime);
-              mAudioSink.swap(audioSink);
               if (mTreatUnderrunAsSilence) {
-                mAudioSink->EnableTreatAudioUnderrunAsSilence(
+                audioSink->EnableTreatAudioUnderrunAsSilence(
                     mTreatUnderrunAsSilence);
               }
               LOG("AudioSink async, start");
-              StartAudioSink(switchTime);
+              StartAudioSink(std::move(audioSink), switchTime);
             }));
       }));
 }
@@ -404,20 +416,33 @@ nsresult AudioSinkWrapper::SyncCreateAudioSink(const TimeUnit& aStartTime) {
 
   LOG("%p: AudioSinkWrapper::SyncCreateAudioSink", this);
 
-  mAudioSink = mSinkCreator();
-  nsresult rv = mAudioSink->InitializeAudioStream(
+  UniquePtr<AudioSink> audioSink = mSinkCreator();
+  nsresult rv = audioSink->InitializeAudioStream(
       mParams, mAudioDevice, AudioSink::InitializationType::INITIAL);
   if (NS_FAILED(rv)) {
-    mEndedPromiseHolder.RejectIfExists(rv, __func__);
     LOG("Sync AudioSinkWrapper initialization failed");
+    // If a specific device has been specified through setSinkId()
+    // the sink is started after the device becomes available again.
+    if (mAudioDevice) {
+      ScheduleRetrySink();
+      return NS_OK;
+    }
+    // If a default output device is not available, the system may not support
+    // audio output.  Report an error so that playback can be aborted if there
+    // is no video.
+    mEndedPromiseHolder.RejectIfExists(rv, __func__);
     return rv;
   }
   if (mTreatUnderrunAsSilence) {
-    mAudioSink->EnableTreatAudioUnderrunAsSilence(mTreatUnderrunAsSilence);
+    audioSink->EnableTreatAudioUnderrunAsSilence(mTreatUnderrunAsSilence);
   }
-  StartAudioSink(aStartTime);
+  StartAudioSink(std::move(audioSink), aStartTime);
 
   return NS_OK;
+}
+
+void AudioSinkWrapper::ScheduleRetrySink() {
+  mRetrySinkTime = TimeStamp::Now() + TimeDuration::FromSeconds(1.0);
 }
 
 bool AudioSinkWrapper::IsAudioSourceEnded(const MediaInfo& aInfo) const {
@@ -461,14 +486,19 @@ void AudioSinkWrapper::OnAudioEnded(
   AssertOwnerThread();
   LOG("%p: AudioSinkWrapper::OnAudioEnded %i", this, aValue.IsResolve());
   mAudioSinkEndedRequest.Complete();
-  mPositionAtClockStart = GetPosition();
-  if (!mClockStartTime.IsNull()) {  // playing
-    // System time is now used for the clock as video may not have ended.
-    mClockStartTime = TimeStamp::Now();
+  ShutDownAudioSink();
+  // System time is now used for the clock as video may not have ended.
+  if (aValue.IsResolve()) {
+    mAudioEnded = true;
+    mEndedPromiseHolder.Resolve(aValue.ResolveValue(), __func__);
+    return;
   }
-  mLastPacketEndTime = mAudioSink->GetEndTime();
-  mAudioEnded = true;
-  mEndedPromiseHolder.ResolveOrReject(aValue, __func__);
+  if (mAudioDevice) {
+    ScheduleRetrySink();  // Device will be restarted when available again.
+    return;
+  }
+  // Default device not available.  Report error.
+  mEndedPromiseHolder.Reject(aValue.RejectValue(), __func__);
 }
 
 void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
