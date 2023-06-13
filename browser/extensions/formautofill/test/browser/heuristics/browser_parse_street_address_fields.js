@@ -7,59 +7,30 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_heuristic_tests([
   {
-    // This bug happens only when the last element is address-lineX and
-    // the field is identified by regular expressions in `HeuristicsRegExp` but is not
-    // identified by regular expressions defined in `_parseAddressFields`
+    description: "Apply heuristic when we only see one street-address fields",
     fixtureData: `
-        <html>
-        <body>
-          <form>
-            <p><label>country: <input type="text" id="country" name="country" /></label></p>
-            <p><label>tel: <input type="text" id="tel" name="tel" /></label></p>
-            <p><label><input type="text" id="housenumber" /></label></p>
-          </form>
-        </body>
-        </html>`,
+        <html><body>
+          <form><input type="text" id="street-address"/></form>
+          <form><input type="text" id="addr-1"/></form>
+          <form><input type="text" id="addr-2"/></form>
+          <form><input type="text" id="addr-3"/></form>
+        </body></html>`,
     expectedResult: [
       {
-        description:
-          "Address Line1 in the last element and is not updated in _parsedAddressFields",
-        default: {
-          reason: "regex-heuristic",
-        },
-        fields: [
-          { fieldName: "country" },
-          { fieldName: "tel" },
-          { fieldName: "address-line1" },
-        ],
+        invalid: true,
+        fields: [{ fieldName: "street-address", reason: "regex-heuristic" }],
       },
-    ],
-  },
-  {
-    fixtureData: `
-        <html>
-        <body>
-          <form>
-            <p><label>country: <input type="text" id="country" name="country" /></label></p>
-            <p><label>tel: <input type="text" id="tel" name="tel" /></label></p>
-            <p><label><input type="text" id="housenumber" /></label></p>
-            <p><label><input type="text" id="addrcomplement" /></label></p>
-          </form>
-        </body>
-        </html>`,
-    expectedResult: [
       {
-        description:
-          "Address Line2 in the last element and is not updated in _parsedAddressFields",
-        default: {
-          reason: "regex-heuristic",
-        },
-        fields: [
-          { fieldName: "country" },
-          { fieldName: "tel" },
-          { fieldName: "address-line1" },
-          { fieldName: "address-line2" },
-        ],
+        invalid: true,
+        fields: [{ fieldName: "address-line1", reason: "regex-heuristic" }],
+      },
+      {
+        invalid: true,
+        fields: [{ fieldName: "address-line1", reason: "update-heuristic" }],
+      },
+      {
+        invalid: true,
+        fields: [{ fieldName: "address-line1", reason: "update-heuristic" }],
       },
     ],
   },
@@ -131,6 +102,45 @@ add_heuristic_tests([
           { fieldName: "street-address", reason: "autocomplete" },
           { fieldName: "address-line1", reason: "autocomplete" },
           { fieldName: "email", reason: "autocomplete" },
+        ],
+      },
+    ],
+  },
+  {
+    description:
+      "street-address field is treated as address-line1 when address-line2 is present while adddress-line1 is not",
+    fixtureData: `
+        <html>
+        <body>
+          <form>
+            <input type="text" id="addr-3"/>
+            <input type="text" id="addr-2"/>
+            <input type="text" id="addr-1"/>
+          </form>
+          <form>
+            <input type="text" id="addr-3" autocomplete="address-line3"/>
+            <input type="text" id="addr-2" autocomplete="address-line2"/>
+            <input type="text" id="addr-1" autocomplete="address-line1"/>
+          </form>
+        </body>
+        </html>`,
+    expectedResult: [
+      {
+        description:
+          "Apply heuristic when we see 3 street-address fields occur in a row",
+        fields: [
+          { fieldName: "address-line1", reason: "update-heuristic" },
+          { fieldName: "address-line2", reason: "regex-heuristic" },
+          { fieldName: "address-line3", reason: "update-heuristic" },
+        ],
+      },
+      {
+        description:
+          "Do not apply heuristic when we see 3 street-address fields occur in a row but autocomplete attribute is present",
+        fields: [
+          { fieldName: "address-line3", reason: "autocomplete" },
+          { fieldName: "address-line2", reason: "autocomplete" },
+          { fieldName: "address-line1", reason: "autocomplete" },
         ],
       },
     ],
