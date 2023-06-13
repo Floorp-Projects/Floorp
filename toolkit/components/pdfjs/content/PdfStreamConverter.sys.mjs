@@ -63,32 +63,8 @@ XPCOMUtils.defineLazyGetter(lazy, "gOurBinary", () => {
   return file;
 });
 
-function getBoolPref(pref, def) {
-  try {
-    return Services.prefs.getBoolPref(pref);
-  } catch (ex) {
-    return def;
-  }
-}
-
-function getIntPref(pref, def) {
-  try {
-    return Services.prefs.getIntPref(pref);
-  } catch (ex) {
-    return def;
-  }
-}
-
-function getStringPref(pref, def) {
-  try {
-    return Services.prefs.getStringPref(pref);
-  } catch (ex) {
-    return def;
-  }
-}
-
 function log(aMsg) {
-  if (!getBoolPref(PREF_PREFIX + ".pdfBugEnabled", false)) {
+  if (!Services.prefs.getBoolPref(PREF_PREFIX + ".pdfBugEnabled", false)) {
     return;
   }
   var msg = "PdfStreamConverter.js: " + (aMsg.join ? aMsg.join("") : aMsg);
@@ -246,7 +222,7 @@ class ChromeActions {
       return res;
     }
 
-    if (!getBoolPref(PREF_PREFIX + ".enableScripting", false)) {
+    if (!Services.prefs.getBoolPref(PREF_PREFIX + ".enableScripting", false)) {
       return sendResp(false);
     }
 
@@ -344,24 +320,29 @@ class ChromeActions {
   }
 
   supportsDocumentFonts() {
-    var prefBrowser = getIntPref("browser.display.use_document_fonts", 1);
-    var prefGfx = getBoolPref("gfx.downloadable_fonts.enabled", true);
+    const prefBrowser = Services.prefs.getIntPref(
+      "browser.display.use_document_fonts"
+    );
+    const prefGfx = Services.prefs.getBoolPref(
+      "gfx.downloadable_fonts.enabled"
+    );
     return !!prefBrowser && prefGfx;
   }
 
   supportsPinchToZoom() {
-    return getBoolPref("apz.allow_zooming", true);
+    return Services.prefs.getBoolPref("apz.allow_zooming");
   }
 
   supportedMouseWheelZoomModifierKeys() {
     return {
-      ctrlKey: getIntPref("mousewheel.with_control.action", 3) === 3,
-      metaKey: getIntPref("mousewheel.with_meta.action", 1) === 3,
+      ctrlKey:
+        Services.prefs.getIntPref("mousewheel.with_control.action") === 3,
+      metaKey: Services.prefs.getIntPref("mousewheel.with_meta.action") === 3,
     };
   }
 
   getCanvasMaxArea() {
-    return getIntPref("gfx.max-alloc-size", 500000000);
+    return Services.prefs.getIntPref("gfx.max-alloc-size");
   }
 
   isInAutomation() {
@@ -534,13 +515,13 @@ class ChromeActions {
       prefName = PREF_PREFIX + "." + key;
       switch (typeof prefValue) {
         case "boolean":
-          currentPrefs[key] = getBoolPref(prefName, prefValue);
+          currentPrefs[key] = Services.prefs.getBoolPref(prefName, prefValue);
           break;
         case "number":
-          currentPrefs[key] = getIntPref(prefName, prefValue);
+          currentPrefs[key] = Services.prefs.getIntPref(prefName, prefValue);
           break;
         case "string":
-          currentPrefs[key] = getStringPref(prefName, prefValue);
+          currentPrefs[key] = Services.prefs.getStringPref(prefName, prefValue);
           break;
       }
     }
@@ -1002,7 +983,7 @@ PdfStreamConverter.prototype = {
       if (
         !isPDF ||
         !toplevelOctetStream ||
-        !getBoolPref(PREF_PREFIX + ".handleOctetStream", false)
+        !Services.prefs.getBoolPref(PREF_PREFIX + ".handleOctetStream", false)
       ) {
         throw new Components.Exception(
           "Ignore PDF.js for this download.",
@@ -1080,17 +1061,20 @@ PdfStreamConverter.prototype = {
       } catch (e) {}
 
       var hash = aRequest.URI.ref;
-      var isPDFBugEnabled = getBoolPref(PREF_PREFIX + ".pdfBugEnabled", false);
+      const isPDFBugEnabled = Services.prefs.getBoolPref(
+        PREF_PREFIX + ".pdfBugEnabled",
+        false
+      );
       rangeRequest =
         contentEncoding === "identity" &&
         acceptRanges === "bytes" &&
         aRequest.contentLength >= 0 &&
-        !getBoolPref(PREF_PREFIX + ".disableRange", false) &&
+        !Services.prefs.getBoolPref(PREF_PREFIX + ".disableRange", false) &&
         (!isPDFBugEnabled || !hash.toLowerCase().includes("disablerange=true"));
       streamRequest =
         contentEncoding === "identity" &&
         aRequest.contentLength >= 0 &&
-        !getBoolPref(PREF_PREFIX + ".disableStream", false) &&
+        !Services.prefs.getBoolPref(PREF_PREFIX + ".disableStream", false) &&
         (!isPDFBugEnabled ||
           !hash.toLowerCase().includes("disablestream=true"));
     }
