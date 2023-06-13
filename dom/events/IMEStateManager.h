@@ -277,13 +277,12 @@ class IMEStateManager {
   /**
    * Get TextComposition from widget.
    */
-  static already_AddRefed<TextComposition> GetTextCompositionFor(
-      nsIWidget* aWidget);
+  static TextComposition* GetTextCompositionFor(nsIWidget* aWidget);
 
   /**
    * Returns TextComposition instance for the event.
    */
-  static already_AddRefed<TextComposition> GetTextCompositionFor(
+  static TextComposition* GetTextCompositionFor(
       const WidgetCompositionEvent* aCompositionEvent);
 
   /**
@@ -291,8 +290,7 @@ class IMEStateManager {
    * Be aware, even if another pres context which shares native IME context with
    * specified pres context has composition, this returns nullptr.
    */
-  static already_AddRefed<TextComposition> GetTextCompositionFor(
-      nsPresContext* aPresContext);
+  static TextComposition* GetTextCompositionFor(nsPresContext* aPresContext);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what

@@ -551,6 +551,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent> {
     WriteParam(aWriter, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aWriter, aParam.mData);
     WriteParam(aWriter, aParam.mNativeIMEContext);
+    WriteParam(aWriter, aParam.mCompositionId);
     bool hasRanges = !!aParam.mRanges;
     WriteParam(aWriter, hasRanges);
     if (hasRanges) {
@@ -563,6 +564,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent> {
     if (!ReadParam(aReader, static_cast<mozilla::WidgetGUIEvent*>(aResult)) ||
         !ReadParam(aReader, &aResult->mData) ||
         !ReadParam(aReader, &aResult->mNativeIMEContext) ||
+        !ReadParam(aReader, &aResult->mCompositionId) ||
         !ReadParam(aReader, &hasRanges)) {
       return false;
     }
