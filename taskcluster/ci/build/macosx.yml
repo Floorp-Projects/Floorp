@@ -524,16 +524,18 @@ macosx64-aarch64-noopt/debug:
             - macosx64-sdk
             - sysroot-wasm32-wasi
 
-macosx64-add-on-devel/opt:
+macosx64-x64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
     index:
-        job-name: macosx64-add-on-devel
+        job-name: macosx64-x64-add-on-devel
     treeherder:
         platform: osx-cross-add-on-devel/opt
-        symbol: B
+        symbol: Bx64
         tier: 2
     worker:
         max-run-time: 3600
+        env:
+            PERFHERDER_EXTRA_OPTIONS: x64
     run:
         config:
             - builds/releng_base_firefox.py
@@ -549,6 +551,103 @@ macosx64-add-on-devel/opt:
             - linux64-sccache
             - macosx64-sdk
             - sysroot-wasm32-wasi
+
+macosx64-aarch64-add-on-devel/opt:
+    description: "MacOS X Aarch64 add-on-devel"
+    index:
+        job-name: macosx64-aarch64-add-on-devel
+    treeherder:
+        platform: osx-cross-add-on-devel/opt
+        symbol: Ba64
+        tier: 2
+    worker:
+        max-run-time: 3600
+        env:
+            PERFHERDER_EXTRA_OPTIONS: aarch64
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+        custom-build-variant-cfg: add-on-devel
+        mozconfig-variant: add-on-devel
+        extra-config:
+            mozconfig_platform: macosx64-aarch64
+    run-on-projects: ['mozilla-beta', 'mozilla-release']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-sccache
+            - macosx64-sdk
+            - sysroot-wasm32-wasi
+
+macosx64-add-on-devel/opt:
+    description: "MacOS X add-on-devel"
+    index:
+        job-name: macosx64-add-on-devel
+    treeherder:
+        platform: osx-cross-add-on-devel/opt
+        symbol: B
+        tier: 2
+    worker:
+        max-run-time: 1800
+    run:
+        job-script: taskcluster/scripts/misc/unify.sh
+        config:
+            - builds/releng_base_firefox.py
+    dependencies:
+        macosx64-x64-add-on-devel-opt: build-macosx64-x64-add-on-devel/opt
+        macosx64-aarch64-add-on-devel-opt: build-macosx64-aarch64-add-on-devel/opt
+    fetches:
+        macosx64-x64-add-on-devel-opt:
+            - artifact: target.dmg
+              extract: false
+              dest: x64
+            - artifact: buildhub.json
+              extract: false
+              dest: ../artifacts
+            - artifact: host/bin/mar
+              extract: false
+              dest: ../artifacts/host/bin
+            - artifact: host/bin/mbsdiff
+              extract: false
+              dest: ../artifacts/host/bin
+            - artifact: target.txt
+              extract: false
+              dest: ../artifacts
+            - artifact: target_info.txt
+              extract: false
+              dest: ../artifacts
+            - artifact: target.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.mozinfo.json
+              extract: false
+              dest: ../artifacts
+            - artifact: target.crashreporter-symbols.zip
+              dest: x64/crashreporter-symbols
+            - artifact: target.jsshell.zip
+              dest: x64/jsshell
+            - artifact: target.generated-files.tar.gz
+              extract: false
+              dest: ../artifacts
+            - artifact: target.langpack.xpi
+              extract: false
+              dest: ../artifacts
+            - artifact: mozharness.zip
+              extract: false
+              dest: ../artifacts
+        macosx64-aarch64-add-on-devel-opt:
+            - artifact: target.dmg
+              extract: false
+              dest: aarch64
+            - artifact: target.crashreporter-symbols.zip
+              dest: aarch64/crashreporter-symbols
+            - artifact: target.jsshell.zip
+              dest: aarch64/jsshell
+        toolchain:
+            - linux64-cctools-port
 
 macosx64-nightlyasrelease/opt:
     description: "MacOS X Nightly-As-Release"
