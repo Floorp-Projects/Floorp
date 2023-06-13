@@ -116,6 +116,7 @@ using EnterJitCode = void (*)(void*, unsigned int, Value*, InterpreterFrame*,
                               CalleeToken, JSObject*, size_t, Value*);
 
 class JitcodeGlobalTable;
+class PerfSpewerRangeRecorder;
 
 class JitRuntime {
  private:
@@ -261,8 +262,10 @@ class JitRuntime {
 
   template <typename IdT>
   bool generateVMWrappers(JSContext* cx, MacroAssembler& masm,
-                          VMWrapperOffsets& offsets);
-  bool generateVMWrappers(JSContext* cx, MacroAssembler& masm);
+                          VMWrapperOffsets& offsets,
+                          PerfSpewerRangeRecorder& rangeRecorder);
+  bool generateVMWrappers(JSContext* cx, MacroAssembler& masm,
+                          PerfSpewerRangeRecorder& rangeRecorder);
 
   uint32_t startTrampolineCode(MacroAssembler& masm);
 

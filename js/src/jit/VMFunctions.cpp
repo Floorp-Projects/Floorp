@@ -404,7 +404,8 @@ static DynFn GetVMFunctionTarget(TailCallVMFunctionId id) {
 
 template <typename IdT>
 bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
-                                    VMWrapperOffsets& offsets) {
+                                    VMWrapperOffsets& offsets,
+                                    PerfSpewerRangeRecorder& rangeRecorder) {
   // Generate all VM function wrappers.
 
   static constexpr size_t NumVMFunctions = size_t(IdT::Count);
@@ -436,6 +437,9 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
     if (!generateVMWrapper(cx, masm, fun, GetVMFunctionTarget(id), &offset)) {
       return false;
     }
+#if defined(JS_ION_PERF)
+    rangeRecorder.recordVMWrapperOffset(fun.name());
+#endif
 
     MOZ_ASSERT(offsets.length() == size_t(id));
     offsets.infallibleAppend(offset);
@@ -444,13 +448,15 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
   return true;
 };
 
-bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
-  if (!generateVMWrappers<VMFunctionId>(cx, masm, functionWrapperOffsets_)) {
+bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
+                                    PerfSpewerRangeRecorder& rangeRecorder) {
+  if (!generateVMWrappers<VMFunctionId>(cx, masm, functionWrapperOffsets_,
+                                        rangeRecorder)) {
     return false;
   }
 
   if (!generateVMWrappers<TailCallVMFunctionId>(
-          cx, masm, tailCallFunctionWrapperOffsets_)) {
+          cx, masm, tailCallFunctionWrapperOffsets_, rangeRecorder)) {
     return false;
   }
 

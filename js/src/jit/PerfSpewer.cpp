@@ -1185,6 +1185,15 @@ void js::jit::PerfSpewerRangeRecorder::recordOffset(const char* name) {
   appendEntry(desc);
 }
 
+void js::jit::PerfSpewerRangeRecorder::recordVMWrapperOffset(const char* name) {
+  if (!PerfEnabled()) {
+    return;
+  }
+
+  UniqueChars desc = JS_smprintf("VMWrapper: %s", name);
+  appendEntry(desc);
+}
+
 void js::jit::PerfSpewerRangeRecorder::recordOffset(const char* name,
                                                     JSContext* cx,
                                                     JSScript* script) {
