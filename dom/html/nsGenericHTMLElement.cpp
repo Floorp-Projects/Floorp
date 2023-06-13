@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/DeclarationBlock.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -15,29 +13,24 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/StaticPrefs_html5.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_accessibility.h"
-
 #include "mozilla/dom/FormData.h"
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
-#include "nsAttrValueInlines.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsQueryObject.h"
-#include "nsIContentInlines.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsPIDOMWindow.h"
-#include "nsEscape.h"
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
@@ -45,7 +38,6 @@
 #include "nsIWidget.h"
 #include "nsRange.h"
 #include "nsPresContext.h"
-#include "nsNameSpaceManager.h"
 #include "nsError.h"
 #include "nsIPrincipal.h"
 #include "nsContainerFrame.h"
@@ -60,7 +52,6 @@
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsString.h"
-#include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsITextControlFrame.h"
@@ -68,15 +59,11 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsFocusManager.h"
 
-#include "mozilla/InternalMutationEvent.h"
 #include "nsDOMStringMap.h"
 #include "nsDOMString.h"
 
 #include "nsLayoutUtils.h"
-#include "mozAutoDocUpdate.h"
-#include "nsHtml5Module.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include "mozilla/dom/ElementInlines.h"
 #include "HTMLFieldSetElement.h"
 #include "nsTextNode.h"
 #include "HTMLBRElement.h"
@@ -84,20 +71,16 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/Link.h"
-#include "mozilla/BloomFilter.h"
 #include "mozilla/dom/ScriptLoader.h"
 
-#include "nsVariant.h"
 #include "nsDOMTokenList.h"
 #include "nsThreadUtils.h"
-#include "nsTextFragment.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/ToggleEvent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/ErrorResult.h"
 #include "nsHTMLDocument.h"
-#include "nsGlobalWindow.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 #include "nsComputedDOMStyle.h"
@@ -2260,7 +2243,22 @@ void nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify) {
 //----------------------------------------------------------------------
 
 void nsGenericHTMLElement::Click(CallerType aCallerType) {
-  if (IsDisabled() || HandlingClick()) {
+  if (HandlingClick()) {
+    return;
+  }
+
+  // There are two notions of disabled.
+  // "disabled":
+  // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#attr-fe-disabled
+  // "actually disabled":
+  // https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled
+  // click() reads the former but IsDisabled() is for the latter. <fieldset> is
+  // included only in the latter, so we exclude it here.
+  // XXX(krosylight): What about <optgroup>? And should we add a separate method
+  // for this?
+  if (IsDisabled() &&
+      !(mNodeInfo->Equals(nsGkAtoms::fieldset) &&
+        StaticPrefs::dom_forms_fieldset_disable_only_descendants_enabled())) {
     return;
   }
 

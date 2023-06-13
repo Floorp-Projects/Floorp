@@ -16,12 +16,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816340
       window.arguments[0].ok(val, msg);
     }
 
-    var elems = 
+    var elems =
       [
         "input",
         "textarea",
         "select",
-        "fieldset",
         "button",
       ];
 
@@ -49,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816340
       ok(contentDidGetEvent == contentShouldGetEvent, "content: " + el + (disabled ? " disabled" : ""));
       ok(chromeDidGetEvent, "chrome: " + el + (disabled ? " disabled" : ""));
     }
-      
+
     function start() {
       // Test common element.
       testElement("div", false, true);
