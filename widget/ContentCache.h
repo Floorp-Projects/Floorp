@@ -458,6 +458,15 @@ class ContentCacheInParent final : public ContentCache {
   void MaybeNotifyIME(nsIWidget* aWidget, const IMENotification& aNotification);
 
  private:
+  // Return true when the widget in this process thinks that IME has
+  // composition.  So, this returns true when there is at least one handling
+  // composition data and the last handling composition has not dispatched
+  // composition commit event to the remote process yet.
+  [[nodiscard]] bool WidgetHasComposition() const {
+    return !mHandlingCompositions.IsEmpty() &&
+           !mHandlingCompositions.LastElement().mSentCommitEvent;
+  }
+
   IMENotification mPendingSelectionChange;
   IMENotification mPendingTextChange;
   IMENotification mPendingLayoutChange;
@@ -505,6 +514,15 @@ class ContentCacheInParent final : public ContentCache {
       mRequestIMEToCommitCompositionResults;
 #endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
+  // Stores pending compositions (meaning eCompositionStart was dispatched, but
+  // eCompositionCommit(AsIs) has not been handled by the remote process yet).
+  struct HandlingCompositionData {
+    // true if eCompositionCommit(AsIs) has already been sent to the remote
+    // process.
+    bool mSentCommitEvent = false;
+  };
+  AutoTArray<HandlingCompositionData, 2> mHandlingCompositions;
+
   // mBrowserParent is owner of the instance.
   dom::BrowserParent& MOZ_NON_OWNING_REF mBrowserParent;
   // mCompositionString is composition string which were sent to the remote
@@ -524,20 +542,13 @@ class ContentCacheInParent final : public ContentCache {
   // mPendingCommitLength is commit string length of the first pending
   // composition.  This is used by relative offset query events when querying
   // new composition start offset.
-  // Note that when mPendingCompositionCount is not 0, i.e., there are 2 or
-  // more pending compositions, this cache won't be used because in such case,
-  // anyway ContentCacheInParent cannot return proper character rect.
+  // Note that when mHandlingCompositions has 2 or more elements, i.e., there
+  // are 2 or more pending compositions, this cache won't be used because in
+  // such case, anyway ContentCacheInParent cannot return proper character rect.
   uint32_t mPendingCommitLength;
-  // mPendingCompositionCount is number of compositions which started in widget
-  // but not yet handled in the child process.
-  uint8_t mPendingCompositionCount;
   // mPendingCommitCount is number of eCompositionCommit(AsIs) events which
   // were sent to the child process but not yet handled in it.
   uint8_t mPendingCommitCount;
-  // mWidgetHasComposition is true when the widget in this process thinks that
-  // IME has composition.  So, this is set to true when eCompositionStart is
-  // dispatched and set to false when eCompositionCommit(AsIs) is dispatched.
-  bool mWidgetHasComposition;
   // mIsChildIgnoringCompositionEvents is set to true if the child process
   // requests commit composition whose commit has already been sent to it.
   // Then, set to false when the child process ignores the commit event.
