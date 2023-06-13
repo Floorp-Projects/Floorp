@@ -8856,7 +8856,7 @@ nsresult InitTemporaryStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("InitTemporaryStorageOp::DoDirectoryWork", OTHER);
 
-  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_NOT_INITIALIZED);
 
   QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
 
@@ -8925,7 +8925,7 @@ nsresult InitializePersistentOriginOp::DoDirectoryWork(
 
   AUTO_PROFILER_LABEL("InitializePersistentOriginOp::DoDirectoryWork", OTHER);
 
-  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_NOT_INITIALIZED);
 
   QM_TRY_UNWRAP(
       mCreated,
@@ -8961,9 +8961,10 @@ nsresult InitializeTemporaryOriginOp::DoDirectoryWork(
 
   AUTO_PROFILER_LABEL("InitializeTemporaryOriginOp::DoDirectoryWork", OTHER);
 
-  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(aQuotaManager.IsStorageInitialized()), NS_ERROR_NOT_INITIALIZED);
 
-  QM_TRY(OkIf(aQuotaManager.IsTemporaryStorageInitialized()), NS_ERROR_FAILURE);
+  QM_TRY(OkIf(aQuotaManager.IsTemporaryStorageInitialized()),
+         NS_ERROR_NOT_INITIALIZED);
 
   QM_TRY_UNWRAP(
       mCreated,
