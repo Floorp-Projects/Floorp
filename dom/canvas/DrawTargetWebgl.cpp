@@ -2595,6 +2595,14 @@ HashNumber PathCacheEntry::HashPath(const QuantizedPath& aPath,
   HashNumber hash = 0;
   hash = AddToHash(hash, aPath.mPath.num_types);
   hash = AddToHash(hash, aPath.mPath.num_points);
+  if (aPath.mPath.num_points > 0) {
+    hash = AddToHash(hash, aPath.mPath.points[0].x);
+    hash = AddToHash(hash, aPath.mPath.points[0].y);
+    if (aPath.mPath.num_points > 1) {
+      hash = AddToHash(hash, aPath.mPath.points[1].x);
+      hash = AddToHash(hash, aPath.mPath.points[1].y);
+    }
+  }
   // Quantize the relative offset of the path to its bounds.
   IntPoint offset = RoundedToInt((aOrigin - Point(aBounds.TopLeft())) * 16.0f);
   hash = AddToHash(hash, offset.x);
