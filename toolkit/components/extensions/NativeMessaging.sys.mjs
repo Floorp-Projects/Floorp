@@ -78,10 +78,13 @@ export var NativeApp = class extends EventEmitter {
           command = command.replaceAll("/", "\\");
 
           if (!PathUtils.isAbsolute(command)) {
+            // Note: hostInfo.path is an absolute path to the manifest.
             const parentPath = PathUtils.parent(
               hostInfo.path.replaceAll("/", "\\")
             );
-            command = PathUtils.joinRelative(parentPath, command);
+            // PathUtils.joinRelative cannot be used because it throws for "..".
+            // but command is allowed to contain ".." to traverse the directory.
+            command = `${parentPath}\\${command}`;
           }
         } else if (!PathUtils.isAbsolute(command)) {
           // Only windows supports relative paths.
