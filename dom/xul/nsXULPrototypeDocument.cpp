@@ -501,16 +501,11 @@ void nsXULPrototypeDocument::RebuildL10nPrototype(Element* aElement,
     return;
   }
 
+  MOZ_ASSERT(aElement->HasAttr(nsGkAtoms::datal10nid));
+
   Document* doc = aElement->OwnerDoc();
-
-  nsAutoString id;
-  MOZ_RELEASE_ASSERT(aElement->GetAttr(nsGkAtoms::datal10nid, id));
-
-  if (!doc) {
-    return;
+  if (RefPtr<nsXULPrototypeElement> proto =
+          doc->mL10nProtoElements.Get(aElement)) {
+    RebuildPrototypeFromElement(proto, aElement, aDeep);
   }
-
-  RefPtr<nsXULPrototypeElement> proto = doc->mL10nProtoElements.Get(aElement);
-  MOZ_RELEASE_ASSERT(proto);
-  RebuildPrototypeFromElement(proto, aElement, aDeep);
 }
