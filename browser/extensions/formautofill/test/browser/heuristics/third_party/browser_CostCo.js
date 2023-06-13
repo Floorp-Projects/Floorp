@@ -18,7 +18,7 @@ add_heuristic_tests(
             { fieldName: "organization" },
             { fieldName: "country" },
             { fieldName: "address-line1" },
-            { fieldName: "address-line2" },
+            { fieldName: "address-line2", reason:"update-heuristic" },
             { fieldName: "address-level2" }, // city
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },
@@ -37,7 +37,7 @@ add_heuristic_tests(
             { fieldName: "organization" },
             { fieldName: "country" },
             { fieldName: "address-line1" },
-            { fieldName: "address-line2" },
+            { fieldName: "address-line2", reason:"update-heuristic" },
             { fieldName: "address-level2" }, // city
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },
@@ -86,7 +86,7 @@ add_heuristic_tests(
             { fieldName: "organization" },
             { fieldName: "country" },
             { fieldName: "address-line1" },
-            { fieldName: "address-line2" },
+            { fieldName: "address-line2", reason:"update-heuristic" },
             { fieldName: "address-level2" }, // city
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },
@@ -105,7 +105,7 @@ add_heuristic_tests(
             { fieldName: "organization" },
             { fieldName: "country" },
             { fieldName: "address-line1" },
-            { fieldName: "address-line2" },
+            { fieldName: "address-line2", reason:"update-heuristic" },
             { fieldName: "address-level2" },
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },

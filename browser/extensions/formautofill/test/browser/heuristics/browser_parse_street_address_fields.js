@@ -51,7 +51,7 @@ add_heuristic_tests([
     expectedResult: [
       {
         fields: [
-          { fieldName: "address-line1", reason: "regexp-heuristic" },
+          { fieldName: "address-line1", reason: "update-heuristic" },
           { fieldName: "address-line2", reason: "autocomplete" },
           { fieldName: "email", reason: "autocomplete" },
         ],

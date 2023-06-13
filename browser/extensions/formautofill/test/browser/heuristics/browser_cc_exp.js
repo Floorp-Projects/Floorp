@@ -30,7 +30,7 @@ add_heuristic_tests(
           description: "form3",
           fields: [
             { fieldName: "cc-number", reason: "autocomplete" },
-            { fieldName: "cc-exp", reason: "regex-heuristic" },
+            { fieldName: "cc-exp", reason: "update-heuristic" },
           ],
         },
         {
@@ -43,10 +43,10 @@ add_heuristic_tests(
         },
         {
           description: "form5",
-          invalid: true,
           fields: [
+            { fieldName: "cc-number", reason: "autocomplete" },
             { fieldName: "cc-exp-month", reason: "regex-heuristic" },
-            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "update-heuristic" },
           ],
         },
       ],

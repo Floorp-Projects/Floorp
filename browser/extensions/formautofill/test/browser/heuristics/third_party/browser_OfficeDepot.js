@@ -21,10 +21,10 @@ add_heuristic_tests(
             { fieldName: "address-level2" }, // City & State
             { fieldName: "address-level2" }, // City
             { fieldName: "address-level1" }, // State
-            { fieldName: "tel-area-code" },
-            { fieldName: "tel-local-prefix" },
-            { fieldName: "tel-local-suffix" },
-            { fieldName: "tel-extension" },
+            { fieldName: "tel-area-code", reason: "update-heuristic" },
+            { fieldName: "tel-local-prefix", reason: "update-heuristic" },
+            { fieldName: "tel-local-suffix", reason: "update-heuristic" },
+            { fieldName: "tel-extension", reason: "update-heuristic" },
             { fieldName: "email" },
           ],
         },
@@ -58,10 +58,10 @@ add_heuristic_tests(
             { fieldName: "address-level2" }, // City & State
             { fieldName: "address-level2" }, // City
             { fieldName: "address-level1" }, // state
-            { fieldName: "tel-area-code" },
-            { fieldName: "tel-local-prefix" },
-            { fieldName: "tel-local-suffix" },
-            { fieldName: "tel-extension" },
+            { fieldName: "tel-area-code", reason: "update-heuristic" },
+            { fieldName: "tel-local-prefix", reason: "update-heuristic" },
+            { fieldName: "tel-local-suffix", reason: "update-heuristic" },
+            { fieldName: "tel-extension", reason: "update-heuristic" },
             { fieldName: "email" },
           ],
         },
