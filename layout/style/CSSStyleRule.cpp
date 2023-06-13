@@ -11,6 +11,7 @@
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/dom/CSSStyleRuleBinding.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsCSSPseudoElements.h"
 
 #include "mozAutoDocUpdate.h"
@@ -232,8 +233,34 @@ nsresult CSSStyleRule::SelectorMatchesElement(Element* aElement,
     return NS_OK;
   }
 
+  auto* host = [&]() -> Element* {
+    auto* sheet = GetStyleSheet();
+    if (!sheet) {
+      return nullptr;
+    }
+    if (auto* owner = sheet->GetAssociatedDocumentOrShadowRoot()) {
+      if (auto* shadow = ShadowRoot::FromNode(owner->AsNode())) {
+        return shadow->Host();
+      }
+    }
+    for (auto* adopter : sheet->SelfOrAncestorAdopters()) {
+      // Try to guess. This is not fully correct but it's the best we can do
+      // with the info at hand...
+      auto* shadow = ShadowRoot::FromNode(adopter->AsNode());
+      if (!shadow) {
+        continue;
+      }
+      if (shadow->Host() == aElement ||
+          shadow == aElement->GetContainingShadow()) {
+        return shadow->Host();
+      }
+    }
+    return nullptr;
+  }();
+
   *aMatches = Servo_StyleRule_SelectorMatchesElement(
-      mRawRule, aElement, aSelectorIndex, *pseudoType, aRelevantLinkVisited);
+      mRawRule, aElement, aSelectorIndex, host, *pseudoType,
+      aRelevantLinkVisited);
   return NS_OK;
 }
 

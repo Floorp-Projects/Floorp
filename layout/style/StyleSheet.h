@@ -413,6 +413,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
     mAdopters.RemoveElement(&aAdopter);
   }
 
+  const nsTArray<dom::DocumentOrShadowRoot*>& SelfOrAncestorAdopters() const {
+    return OutermostSheet().mAdopters;
+  }
+
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
