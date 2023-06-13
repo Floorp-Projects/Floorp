@@ -13,7 +13,7 @@ task-defaults:
     treeherder:
         kind: test
         platform: 'nightly-start-test/opt'
-        tier: 2
+        tier: 1
     worker-type: b-android
     worker:
         docker-image: {in-tree: ui-tests}
