@@ -294,7 +294,8 @@ export var BackgroundUpdate = {
       "backgroundupdate",
     ];
 
-    let workingDirectory = lazy.FileUtils.getDir("UpdRootD", [], true).path;
+    let workingDirectory = Services.dirsvc.get("UpdRootD", Ci.nsIFile).path;
+    await IOUtils.makeDirectory(workingDirectory, { ignoreExisting: true });
 
     let description = await lazy.localization.formatValue(
       "backgroundupdate-task-description"

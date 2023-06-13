@@ -10,7 +10,6 @@ function debug(s) {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   KeyValueService: "resource://gre/modules/kvstore.sys.mjs",
 });
 
@@ -150,11 +149,9 @@ var NotificationDB = {
   // Attempt to read notification file, if it's not there we will create it.
   async load() {
     // Get and cache a handle to the kvstore.
-    const dir = lazy.FileUtils.getDir("ProfD", ["notificationstore"], true);
-    this._store = await lazy.KeyValueService.getOrCreate(
-      dir.path,
-      "notifications"
-    );
+    const dir = PathUtils.join(PathUtils.profileDir, "notificationstore");
+    await IOUtils.makeDirectory(dir, { ignoreExisting: true });
+    this._store = await lazy.KeyValueService.getOrCreate(dir, "notifications");
 
     // Migrate data from the old JSON file to the new kvstore if the old file
     // is present in the user's profile directory.
