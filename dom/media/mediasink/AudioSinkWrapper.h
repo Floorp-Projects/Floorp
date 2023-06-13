@@ -135,7 +135,7 @@ class AudioSinkWrapper : public MediaSink {
   media::TimeUnit mPositionAtClockStart = media::TimeUnit::Invalid();
 
   bool mAudioEnded = true;
-  MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
+  MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedRequest;
   MediaQueue<AudioData>& mAudioQueue;
 
   // True if we'd like to treat underrun as silent frames. But that can only be
