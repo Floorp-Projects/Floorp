@@ -439,6 +439,8 @@ void AudioSinkWrapper::Stop() {
   LOG("%p: AudioSinkWrapper::Stop", this);
 
   mIsStarted = false;
+  mClockStartTime = TimeStamp();
+  mPositionAtClockStart = TimeUnit::Invalid();
   mAudioEnded = true;
 
   mAudioSinkEndedPromise.DisconnectIfExists();
@@ -459,7 +461,8 @@ bool AudioSinkWrapper::IsStarted() const {
 
 bool AudioSinkWrapper::IsPlaying() const {
   AssertOwnerThread();
-  return IsStarted() && !mClockStartTime.IsNull();
+  MOZ_ASSERT(mClockStartTime.IsNull() || IsStarted());
+  return !mClockStartTime.IsNull();
 }
 
 void AudioSinkWrapper::OnAudioEnded() {
