@@ -45,26 +45,6 @@ namespace mozilla {
 
 #define IDEOGRAPHIC_SPACE (u"\x3000"_ns)
 
-static uint32_t GetOrCreateCompositionId(WidgetCompositionEvent* aEvent) {
-  // If we're in the parent process, return new composition ID.
-  if (XRE_IsParentProcess()) {
-    static uint32_t sNextCompositionId = 1u;
-    if (MOZ_UNLIKELY(sNextCompositionId == UINT32_MAX)) {
-      sNextCompositionId = 1u;
-    }
-    // FYI: When we send the event to a remote process, TextComposition will
-    // set aEvent->mCompositionId to this value.  Therefore, we don't need to
-    // set it here.
-    return sNextCompositionId++;
-  }
-  // If aEvent comes from the parent process, the event has composition ID
-  // considered by the parent process.  Then, we should use it.
-  // Otherwise, aEvent is synthesized in this process, it won't cross the
-  // process boundary between this process and the parent process.  Therefore,
-  // we don't need to set meaningful composition ID for the text composition.
-  return aEvent->mCompositionId;
-}
-
 /******************************************************************************
  * TextComposition
  ******************************************************************************/
@@ -78,7 +58,6 @@ TextComposition::TextComposition(nsPresContext* aPresContext, nsINode* aNode,
       mNode(aNode),
       mBrowserParent(aBrowserParent),
       mNativeContext(aCompositionEvent->mNativeIMEContext),
-      mCompositionId(GetOrCreateCompositionId(aCompositionEvent)),
       mCompositionStartOffset(0),
       mTargetClauseOffsetInComposition(0),
       mCompositionStartOffsetInTextNode(UINT32_MAX),
@@ -265,8 +244,8 @@ void TextComposition::OnCompositionEventDiscarded(
              "Shouldn't be called with untrusted event");
 
   if (mBrowserParent) {
-    Unused << mBrowserParent->SendCompositionEvent(*aCompositionEvent,
-                                                   mCompositionId);
+    // The composition event should be discarded in the child process too.
+    Unused << mBrowserParent->SendCompositionEvent(*aCompositionEvent);
   }
 
   // XXX If composition events are discarded, should we dispatch them with
@@ -364,8 +343,7 @@ void TextComposition::DispatchCompositionEvent(
   // If the content is a container of BrowserParent, composition should be in
   // the remote process.
   if (mBrowserParent) {
-    Unused << mBrowserParent->SendCompositionEvent(*aCompositionEvent,
-                                                   mCompositionId);
+    Unused << mBrowserParent->SendCompositionEvent(*aCompositionEvent);
     aCompositionEvent->StopPropagation();
     if (aCompositionEvent->CausesDOMTextEvent()) {
       mLastData = aCompositionEvent->mData;
@@ -666,7 +644,6 @@ void TextComposition::DispatchCompositionEventRunnable(
 }
 
 nsresult TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard) {
-  MOZ_ASSERT(this == IMEStateManager::GetTextCompositionFor(aWidget));
   // If this composition is already requested to be committed or canceled,
   // or has already finished in IME, we don't need to request it again because
   // request from this instance shouldn't cause committing nor canceling current
@@ -909,11 +886,11 @@ RawRangeBoundary TextComposition::LastIMESelectionEndRef() const {
  ******************************************************************************/
 
 TextComposition::CompositionEventDispatcher::CompositionEventDispatcher(
-    TextComposition* aTextComposition, nsINode* aEventTarget,
+    TextComposition* aComposition, nsINode* aEventTarget,
     EventMessage aEventMessage, const nsAString& aData,
     bool aIsSynthesizedEvent)
     : Runnable("TextComposition::CompositionEventDispatcher"),
-      mTextComposition(aTextComposition),
+      mTextComposition(aComposition),
       mEventTarget(aEventTarget),
       mData(aData),
       mEventMessage(aEventMessage),
