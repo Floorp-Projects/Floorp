@@ -411,6 +411,12 @@ pref("browser.urlbar.suggest.calculator",           false);
   pref("browser.urlbar.trending.featureGate", true);
 #endif
 
+#if defined(NIGHTLY_BUILD)
+  // Enable Rich Entities.
+  pref("browser.urlbar.richSuggestions.featureGate", true);
+  pref("browser.search.param.search_rich_suggestions", "fen");
+#endif
+
 // Feature gate pref for weather suggestions in the urlbar.
 pref("browser.urlbar.weather.featureGate", false);
 
