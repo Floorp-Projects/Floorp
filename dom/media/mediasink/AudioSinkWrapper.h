@@ -35,12 +35,7 @@ class AudioSinkWrapper : public MediaSink {
       : mOwnerThread(aOwnerThread),
         mSinkCreator(std::move(aFunc)),
         mAudioDevice(std::move(aAudioDevice)),
-        mIsStarted(false),
         mParams(aVolume, aPlaybackRate, aPreservesPitch),
-        // Give an invalid value to facilitate debug if used before playback
-        // starts.
-        mPlayDuration(media::TimeUnit::Invalid()),
-        mAudioEnded(true),
         mAudioQueue(aAudioQueue) {}
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
@@ -122,14 +117,22 @@ class AudioSinkWrapper : public MediaSink {
   // Will only exist when media has an audio track.
   RefPtr<EndedPromise> mEndedPromise;
   MozPromiseHolder<EndedPromise> mEndedPromiseHolder;
-
-  bool mIsStarted;
+  // true between Start() and Stop()
+  bool mIsStarted = false;
   PlaybackParams mParams;
+  // mClockStartTime is null before Start() and between SetPlaying(false) and
+  // SetPlaying(true).  When the system time is used for the clock, this is
+  // the time corresponding to mPositionAtClockStart.  When an AudioStream is
+  // used for the clock, non-null values don't have specific meaning beyond
+  // indicating that the clock is advancing.  The value is not useful after
+  // Stop() has been called.
+  TimeStamp mClockStartTime;
+  // The media position at the clock datum.  If the clock is not advancing,
+  // then this is the media position from which to resume playback.  The value
+  // is Invalid() before Start() to facilitate debug.
+  media::TimeUnit mPositionAtClockStart = media::TimeUnit::Invalid();
 
-  TimeStamp mPlayStartTime;
-  media::TimeUnit mPlayDuration;
-
-  bool mAudioEnded;
+  bool mAudioEnded = true;
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
   MediaQueue<AudioData>& mAudioQueue;
 
