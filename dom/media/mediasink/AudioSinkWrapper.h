@@ -86,6 +86,7 @@ class AudioSinkWrapper : public MediaSink {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
+  bool NeedAudioSink();
   // An AudioSink can be started synchronously from the MDSM thread, or
   // asynchronously.
   // In synchronous mode, the clock doesn't advance until the sink has been
