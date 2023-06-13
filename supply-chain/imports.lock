@@ -233,13 +233,6 @@ user-login = "cuviper"
 user-name = "Josh Stone"
 
 [[publisher.inherent]]
-version = "1.0.4"
-when = "2023-02-15"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.inherent]]
 version = "1.0.7"
 when = "2023-03-25"
 user-id = 3618
@@ -436,13 +429,6 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.serde_repr]]
-version = "0.1.10"
-when = "2022-12-17"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.serde_repr]]
 version = "0.1.12"
 when = "2023-03-18"
 user-id = 3618
@@ -483,20 +469,6 @@ when = "2023-01-15"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
-
-[[publisher.thiserror]]
-version = "1.0.38"
-when = "2022-12-17"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
-[[publisher.thiserror-impl]]
-version = "1.0.38"
-when = "2022-12-17"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
 
 [[publisher.threadbound]]
 version = "0.1.5"
@@ -862,16 +834,16 @@ criteria = "safe-to-deploy"
 version = "0.99.17"
 notes = "No unsafe usage or ambient capabilities"
 
-[[audits.embark-studios.audits.epaint]]
-who = "Johan Andersson <opensource@embark-studios.com>"
-criteria = "safe-to-deploy"
-violation = "<0.20.0"
-notes = "Specified crate license does not include licenses of embedded fonts if using default features or the `default_fonts` feature. Tracked in: https://github.com/emilk/egui/issues/2321"
-
 [[audits.embark-studios.audits.ident_case]]
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "1.0.1"
+notes = "No unsafe usage or ambient capabilities"
+
+[[audits.embark-studios.audits.line-wrap]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "0.1.1"
 notes = "No unsafe usage or ambient capabilities"
 
 [[audits.embark-studios.audits.thiserror]]
@@ -885,6 +857,12 @@ who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
 version = "1.0.40"
 notes = "Found no unsafe or ambient capabilities used"
+
+[[audits.embark-studios.audits.yaml-rust]]
+who = "Johan Andersson <opensource@embark-studios.com>"
+criteria = "safe-to-deploy"
+version = "0.4.5"
+notes = "No unsafe usage or ambient capabilities"
 
 [[audits.google.audits.ash]]
 who = "David Koloski <dkoloski@google.com>"
