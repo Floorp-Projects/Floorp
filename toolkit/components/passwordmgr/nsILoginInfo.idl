@@ -101,6 +101,17 @@ interface nsILoginInfo : nsISupports {
   attribute AString unknownFields;
 
   /**
+   * True if the login has ever been synced at some point.
+   */
+  attribute boolean everSynced;
+
+  /**
+   * A counter used to indicate that syncing is occuring. It will get restored to 0
+   * once syncing is complete.
+   */
+  attribute long syncCounter;
+
+  /**
    * Initialize a newly created nsLoginInfo object.
    *
    * The arguments are the fields for the new object.

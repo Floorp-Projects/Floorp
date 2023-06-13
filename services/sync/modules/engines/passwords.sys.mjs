@@ -2,17 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  Collection,
-  CryptoWrapper,
-} from "resource://services-sync/record.sys.mjs";
+import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
 
 import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
 import { CollectionValidator } from "resource://services-sync/collection_validator.sys.mjs";
 import {
+  Changeset,
   Store,
   SyncEngine,
-  LegacyTracker,
+  Tracker,
 } from "resource://services-sync/engines.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
@@ -37,38 +35,17 @@ const VALID_LOGIN_FIELDS = [
   "timesUsed",
   "username",
   "usernameField",
+  "everSynced",
+  "syncCounter",
   "unknownFields",
 ];
 
-const SYNCABLE_LOGIN_FIELDS = [
-  // `nsILoginInfo` fields.
-  "hostname",
-  "formSubmitURL",
-  "httpRealm",
-  "username",
-  "password",
-  "usernameField",
-  "passwordField",
+import { LoginManagerStorage } from "resource://passwordmgr/passwordstorage.sys.mjs";
 
-  // `nsILoginMetaInfo` fields.
-  "timeCreated",
-  "timePasswordChanged",
-];
-
-// Compares two logins to determine if their syncable fields changed. The login
-// manager fires `modifyLogin` for changes to all fields, including ones we
-// don't sync. In particular, `timeLastUsed` changes shouldn't mark the login
-// for upload; otherwise, we might overwrite changed passwords before they're
-// downloaded (bug 973166).
-function isSyncableChange(oldLogin, newLogin) {
-  oldLogin.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
-  newLogin.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
-  for (let property of SYNCABLE_LOGIN_FIELDS) {
-    if (oldLogin[property] != newLogin[property]) {
-      return true;
-    }
-  }
-  return false;
+// Sync and many tests rely on having an time that is rounded to the nearest
+// 100th of a second otherwise tests can fail intermittently.
+function roundTimeForSync(time) {
+  return Math.round(time / 10) / 100;
 }
 
 export function LoginRec(collection, id) {
@@ -111,7 +88,10 @@ PasswordEngine.prototype = {
 
   syncPriority: 2,
 
-  // Metadata for syncing is stored in the login manager
+  emptyChangeset() {
+    return new PasswordsChangeset();
+  },
+
   async ensureCurrentSyncID(newSyncID) {
     return Services.logins.ensureCurrentSyncID(newSyncID);
   },
@@ -126,46 +106,54 @@ PasswordEngine.prototype = {
       );
       return legacyValue;
     }
-    return Services.logins.getLastSync();
+    return this._store.storage.getLastSync();
   },
 
   async setLastSync(timestamp) {
-    await Services.logins.setLastSync(timestamp);
+    await this._store.storage.setLastSync(timestamp);
   },
 
-  async _syncFinish() {
-    await SyncEngine.prototype._syncFinish.call(this);
+  // Testing function to emulate that a login has been synced.
+  async markSynced(guid) {
+    this._store.storage.resetSyncCounter(guid, 0);
+  },
 
-    // Delete the Weave credentials from the server once.
-    if (!Svc.Prefs.get("deletePwdFxA", false)) {
-      try {
-        let ids = [];
-        for (let host of Utils.getSyncCredentialsHosts()) {
-          for (let info of Services.logins.findLogins(host, "", "")) {
-            ids.push(info.QueryInterface(Ci.nsILoginMetaInfo).guid);
-          }
+  async pullAllChanges() {
+    return this._getChangedIDs(true);
+  },
+
+  async getChangedIDs() {
+    return this._getChangedIDs(false);
+  },
+
+  async _getChangedIDs(getAll) {
+    let changes = {};
+
+    let logins = await this._store.storage.getAllLoginsAsync(true);
+    for (let login of logins) {
+      if (getAll || login.syncCounter > 0) {
+        if (Utils.getSyncCredentialsHosts().has(login.origin)) {
+          continue;
         }
-        if (ids.length) {
-          let coll = new Collection(this.engineURL, null, this.service);
-          coll.ids = ids;
-          let ret = await coll.delete();
-          this._log.debug("Delete result: " + ret);
-          if (!ret.success && ret.status != 400) {
-            // A non-400 failure means try again next time.
-            return;
-          }
-        } else {
-          this._log.debug("Didn't find any passwords to delete");
-        }
-        // If there were no ids to delete, or we succeeded, or got a 400,
-        // record success.
-        Svc.Prefs.set("deletePwdFxA", true);
-        Svc.Prefs.reset("deletePwd"); // The old prefname we previously used.
-      } catch (ex) {
-        if (Async.isShutdownException(ex)) {
-          throw ex;
-        }
-        this._log.debug("Password deletes failed", ex);
+
+        changes[login.guid] = {
+          counter: login.syncCounter, // record the initial counter value
+          modified: roundTimeForSync(login.timePasswordChanged),
+          deleted: this._store.storage.loginIsDeleted(login.guid),
+        };
+      }
+    }
+
+    return changes;
+  },
+
+  async trackRemainingChanges() {
+    // Reset the syncCounter on the items that were changed.
+    for (let [guid, { counter, synced }] of Object.entries(
+      this._modified.changes
+    )) {
+      if (synced) {
+        this._store.storage.resetSyncCounter(guid, counter);
       }
     }
   },
@@ -176,7 +164,7 @@ PasswordEngine.prototype = {
       return null;
     }
 
-    let logins = Services.logins.findLogins(
+    let logins = this._store.storage.findLogins(
       login.origin,
       login.formActionOrigin,
       login.httpRealm
@@ -194,13 +182,8 @@ PasswordEngine.prototype = {
     return null;
   },
 
-  async pullAllChanges() {
-    let changes = {};
-    let ids = await this._store.getAllIDs();
-    for (let [id, info] of Object.entries(ids)) {
-      changes[id] = info.timePasswordChanged / 1000;
-    }
-    return changes;
+  _deleteId(id) {
+    this._noteDeletedId(id);
   },
 
   getValidator() {
@@ -216,6 +199,7 @@ function PasswordStore(name, engine) {
     Ci.nsILoginInfo,
     "init"
   );
+  this.storage = LoginManagerStorage.create();
 }
 PasswordStore.prototype = {
   _newPropertyBag() {
@@ -299,25 +283,30 @@ PasswordStore.prototype = {
     return info;
   },
 
-  async _getLoginFromGUID(id) {
-    let prop = this._newPropertyBag();
-    prop.setPropertyAsAUTF8String("guid", id);
-
-    let logins = Services.logins.searchLogins(prop);
-    await Async.promiseYield(); // Yield back to main thread after synchronous operation.
-
+  async _getLoginFromGUID(guid) {
+    let logins = await this.storage.searchLoginsAsync({ guid }, true);
     if (logins.length) {
-      this._log.trace(logins.length + " items matching " + id + " found.");
+      this._log.trace(logins.length + " items matching " + guid + " found.");
       return logins[0];
     }
 
-    this._log.trace("No items matching " + id + " found. Ignoring");
+    this._log.trace("No items matching " + guid + " found. Ignoring");
     return null;
+  },
+
+  async applyIncoming(record) {
+    if (record.deleted) {
+      // Need to supply the sourceSync flag.
+      await this.remove(record, { sourceSync: true });
+      return;
+    }
+
+    await super.applyIncoming(record);
   },
 
   async getAllIDs() {
     let items = {};
-    let logins = Services.logins.getAllLogins();
+    let logins = await this.storage.getAllLoginsAsync(true);
 
     for (let i = 0; i < logins.length; i++) {
       // Skip over Weave password/passphrase entries.
@@ -335,8 +324,7 @@ PasswordStore.prototype = {
   async changeItemID(oldID, newID) {
     this._log.trace("Changing item ID: " + oldID + " to " + newID);
 
-    let oldLogin = await this._getLoginFromGUID(oldID);
-    if (!oldLogin) {
+    if (!(await this.itemExists(oldID))) {
       this._log.trace("Can't change item ID: item doesn't exist");
       return;
     }
@@ -348,18 +336,20 @@ PasswordStore.prototype = {
     let prop = this._newPropertyBag();
     prop.setPropertyAsAUTF8String("guid", newID);
 
-    Services.logins.modifyLogin(oldLogin, prop);
+    let oldLogin = await this._getLoginFromGUID(oldID);
+    this.storage.modifyLogin(oldLogin, prop, true);
   },
 
   async itemExists(id) {
-    return !!(await this._getLoginFromGUID(id));
+    let login = await this._getLoginFromGUID(id);
+    return login && !this.storage.loginIsDeleted(id);
   },
 
   async createRecord(id, collection) {
     let record = new LoginRec(collection, id);
     let login = await this._getLoginFromGUID(id);
 
-    if (!login) {
+    if (!login || this.storage.loginIsDeleted(id)) {
       record.deleted = true;
       return record;
     }
@@ -399,6 +389,8 @@ PasswordStore.prototype = {
       return;
     }
 
+    login.everSynced = true;
+
     this._log.trace("Adding login for " + record.hostname);
     this._log.trace(
       "httpRealm: " +
@@ -410,7 +402,7 @@ PasswordStore.prototype = {
     await Services.logins.addLoginAsync(login);
   },
 
-  async remove(record) {
+  async remove(record, { sourceSync = false } = {}) {
     this._log.trace("Removing login " + record.id);
 
     let loginItem = await this._getLoginFromGUID(record.id);
@@ -419,12 +411,12 @@ PasswordStore.prototype = {
       return;
     }
 
-    Services.logins.removeLogin(loginItem);
+    this.storage.removeLogin(loginItem, sourceSync);
   },
 
   async update(record) {
     let loginItem = await this._getLoginFromGUID(record.id);
-    if (!loginItem) {
+    if (!loginItem || this.storage.loginIsDeleted(record.id)) {
       this._log.trace("Skipping update for unknown item: " + record.hostname);
       return;
     }
@@ -435,17 +427,19 @@ PasswordStore.prototype = {
       return;
     }
 
-    Services.logins.modifyLogin(loginItem, newinfo);
+    loginItem.everSynced = true;
+
+    this.storage.modifyLogin(loginItem, newinfo, true);
   },
 
   async wipe() {
-    Services.logins.removeAllUserFacingLogins();
+    this.storage.removeAllUserFacingLogins(true);
   },
 };
 Object.setPrototypeOf(PasswordStore.prototype, Store.prototype);
 
 function PasswordTracker(name, engine) {
-  LegacyTracker.call(this, name, engine);
+  Tracker.call(this, name, engine);
 }
 PasswordTracker.prototype = {
   onStart() {
@@ -461,66 +455,32 @@ PasswordTracker.prototype = {
       return;
     }
 
-    // A single add, remove or change or removing all items
-    // will trigger a sync for MULTI_DEVICE.
     switch (data) {
-      case "modifyLogin": {
-        subject.QueryInterface(Ci.nsIArrayExtensions);
-        let oldLogin = subject.GetElementAt(0);
-        let newLogin = subject.GetElementAt(1);
-        if (!isSyncableChange(oldLogin, newLogin)) {
-          this._log.trace(`${data}: Ignoring change for ${newLogin.guid}`);
-          break;
-        }
-        const tracked = await this._trackLogin(newLogin);
-        if (tracked) {
-          this._log.trace(`${data}: Tracking change for ${newLogin.guid}`);
+      case "modifyLogin":
+        // The syncCounter should have been incremented only for
+        // those items that need to be sycned.
+        if (
+          subject.QueryInterface(Ci.nsIArrayExtensions).GetElementAt(1)
+            .syncCounter > 0
+        ) {
+          this.score += SCORE_INCREMENT_XLARGE;
         }
         break;
-      }
 
       case "addLogin":
       case "removeLogin":
-        subject
-          .QueryInterface(Ci.nsILoginMetaInfo)
-          .QueryInterface(Ci.nsILoginInfo);
-        const tracked = await this._trackLogin(subject);
-        if (tracked) {
-          this._log.trace(data + ": " + subject.guid);
-        }
-        break;
-
-      // Bug 1613620: We iterate through the removed logins and track them to ensure
-      // the logins are deleted across synced devices/accounts
-      case "removeAllLogins":
-        subject.QueryInterface(Ci.nsIArrayExtensions);
-        let count = subject.Count();
-        for (let i = 0; i < count; i++) {
-          let currentSubject = subject.GetElementAt(i);
-          let tracked = await this._trackLogin(currentSubject);
-          if (tracked) {
-            this._log.trace(data + ": " + currentSubject.guid);
-          }
-        }
         this.score += SCORE_INCREMENT_XLARGE;
         break;
-    }
-  },
 
-  async _trackLogin(login) {
-    if (Utils.getSyncCredentialsHosts().has(login.origin)) {
-      // Skip over Weave password/passphrase changes.
-      return false;
+      case "removeAllLogins":
+        this.score +=
+          SCORE_INCREMENT_XLARGE *
+          (subject.QueryInterface(Ci.nsIArrayExtensions).Count() + 1);
+        break;
     }
-    const added = await this.addChangedID(login.guid);
-    if (!added) {
-      return false;
-    }
-    this.score += SCORE_INCREMENT_XLARGE;
-    return true;
   },
 };
-Object.setPrototypeOf(PasswordTracker.prototype, LegacyTracker.prototype);
+Object.setPrototypeOf(PasswordTracker.prototype, Tracker.prototype);
 
 export class PasswordValidator extends CollectionValidator {
   constructor() {
@@ -561,5 +521,29 @@ export class PasswordValidator extends CollectionValidator {
 
   async normalizeServerItem(item) {
     return Object.assign({ guid: item.id }, item);
+  }
+}
+
+export class PasswordsChangeset extends Changeset {
+  getModifiedTimestamp(id) {
+    return this.changes[id].modified;
+  }
+
+  has(id) {
+    let change = this.changes[id];
+    if (change) {
+      return !change.synced;
+    }
+    return false;
+  }
+
+  delete(id) {
+    let change = this.changes[id];
+    if (change) {
+      // Mark the change as synced without removing it from the set.
+      // This allows the sync counter to be reset when sync is complete
+      // within trackRemainingChanges.
+      change.synced = true;
+    }
   }
 }

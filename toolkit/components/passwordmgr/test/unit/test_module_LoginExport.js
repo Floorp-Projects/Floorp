@@ -102,6 +102,8 @@ add_task(async function test_no_new_properties_to_export() {
       "password",
       "passwordField",
       "unknownFields",
+      "everSynced",
+      "syncCounter",
       "init",
       "equals",
       "matches",

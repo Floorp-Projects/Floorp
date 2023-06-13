@@ -15,6 +15,37 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginStore: "resource://gre/modules/LoginStore.sys.mjs",
 });
 
+const SYNCABLE_LOGIN_FIELDS = [
+  // `nsILoginInfo` fields.
+  "hostname",
+  "formSubmitURL",
+  "httpRealm",
+  "username",
+  "password",
+  "usernameField",
+  "passwordField",
+
+  // `nsILoginMetaInfo` fields.
+  "timeCreated",
+  "timePasswordChanged",
+];
+
+// Compares two logins to determine if their syncable fields changed. The login
+// manager fires `modifyLogin` for changes to all fields, including ones we
+// don't sync. In particular, `timeLastUsed` changes shouldn't mark the login
+// for upload; otherwise, we might overwrite changed passwords before they're
+// downloaded (bug 973166).
+function isSyncableChange(oldLogin, newLogin) {
+  oldLogin.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
+  newLogin.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
+  return SYNCABLE_LOGIN_FIELDS.some(prop => oldLogin[prop] != newLogin[prop]);
+}
+
+// Returns true if the argument is for the FxA login.
+function isFXAHost(login) {
+  return login.hostname == lazy.FXA_PWDMGR_HOST;
+}
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
@@ -147,6 +178,29 @@ export class LoginManagerStorage_json {
     this._store.saveSoon();
   }
 
+  #incrementSyncCounter(login) {
+    login.syncCounter++;
+  }
+
+  async resetSyncCounter(guid, value) {
+    this._store.ensureDataReady();
+
+    // This will also find deleted items.
+    let login = this._store.data.logins.find(login => login.guid == guid);
+    if (login?.syncCounter > 0) {
+      login.syncCounter = Math.max(0, login.syncCounter - value);
+      login.everSynced = true;
+    }
+
+    this._store.saveSoon();
+  }
+
+  // Returns false if the login has marked as deleted or doesn't exist.
+  loginIsDeleted(guid) {
+    let login = this._store.data.logins.find(l => l.guid == guid);
+    return !!login?.deleted;
+  }
+
   addLogin(
     login,
     preEncrypted = false,
@@ -225,6 +279,12 @@ export class LoginManagerStorage_json {
       loginClone.timesUsed = 1;
     }
 
+    // If the everSynced is already set, then this login is an incoming
+    // sync record, so there is no need to mark this as needed to be synced.
+    if (!loginClone.everSynced && !isFXAHost(loginClone)) {
+      this.#incrementSyncCounter(loginClone);
+    }
+
     this._store.data.logins.push({
       id: this._store.data.nextId++,
       hostname: loginClone.origin,
@@ -240,6 +300,8 @@ export class LoginManagerStorage_json {
       timeLastUsed: loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
       timesUsed: loginClone.timesUsed,
+      syncCounter: loginClone.syncCounter,
+      everSynced: loginClone.everSynced,
       encryptedUnknownFields: encUnknownFields,
     });
     this._store.saveSoon();
@@ -249,7 +311,7 @@ export class LoginManagerStorage_json {
     return loginClone;
   }
 
-  removeLogin(login) {
+  removeLogin(login, fromSync) {
     this._store.ensureDataReady();
 
     let [idToDelete, storedLogin] = this._getIdForLogin(login);
@@ -259,14 +321,27 @@ export class LoginManagerStorage_json {
 
     let foundIndex = this._store.data.logins.findIndex(l => l.id == idToDelete);
     if (foundIndex != -1) {
-      this._store.data.logins.splice(foundIndex, 1);
-      this._store.saveSoon();
+      let login = this._store.data.logins[foundIndex];
+      if (!login.deleted) {
+        if (fromSync) {
+          login.deleted = true;
+        } else if (login.everSynced) {
+          // The login has been synced, so mark it as deleted.
+          login.deleted = true;
+          this.#incrementSyncCounter(login);
+        } else {
+          // The login was never synced, so just remove it from the data.
+          this._store.data.logins.splice(foundIndex, 1);
+        }
+
+        this._store.saveSoon();
+      }
     }
 
     lazy.LoginHelper.notifyStorageChanged("removeLogin", storedLogin);
   }
 
-  modifyLogin(oldLogin, newLoginData) {
+  modifyLogin(oldLogin, newLoginData, fromSync) {
     this._store.ensureDataReady();
 
     let [idToModify, oldStoredLogin] = this._getIdForLogin(oldLogin);
@@ -303,12 +378,22 @@ export class LoginManagerStorage_json {
       }
     }
 
+    // Don't sync changes to the accounts password or when changes were only
+    // made to fields that should not be synced.
+    if (
+      !fromSync &&
+      !isFXAHost(newLogin) &&
+      isSyncableChange(oldLogin, newLogin)
+    ) {
+      this.#incrementSyncCounter(newLogin);
+    }
+
     // Get the encrypted value of the username and password.
     let [encUsername, encPassword, encType, encUnknownFields] =
       this._encryptLogin(newLogin);
 
     for (let loginItem of this._store.data.logins) {
-      if (loginItem.id == idToModify) {
+      if (loginItem.id == idToModify && !loginItem.deleted) {
         loginItem.hostname = newLogin.origin;
         loginItem.httpRealm = newLogin.httpRealm;
         loginItem.formSubmitURL = newLogin.formActionOrigin;
@@ -323,6 +408,7 @@ export class LoginManagerStorage_json {
         loginItem.timePasswordChanged = newLogin.timePasswordChanged;
         loginItem.timesUsed = newLogin.timesUsed;
         loginItem.encryptedUnknownFields = encUnknownFields;
+        loginItem.syncCounter = newLogin.syncCounter;
         this._store.saveSoon();
         break;
       }
@@ -383,10 +469,10 @@ export class LoginManagerStorage_json {
    *
    * @resolve {nsILoginInfo[]}
    */
-  async getAllLoginsAsync() {
+  async getAllLoginsAsync(includeDeleted) {
     this._store.ensureDataReady();
 
-    let [logins] = this._searchLogins({});
+    let [logins] = this._searchLogins({}, includeDeleted);
     if (!logins.length) {
       return [];
     }
@@ -431,9 +517,12 @@ export class LoginManagerStorage_json {
     return result;
   }
 
-  async searchLoginsAsync(matchData) {
+  async searchLoginsAsync(matchData, includeDeleted) {
     this.log(`Searching for matching logins for origin ${matchData.origin}.`);
-    let result = this.searchLogins(lazy.LoginHelper.newPropertyBag(matchData));
+    let result = this.searchLogins(
+      lazy.LoginHelper.newPropertyBag(matchData),
+      includeDeleted
+    );
     // Emulate being async:
     return Promise.resolve(result);
   }
@@ -444,7 +533,7 @@ export class LoginManagerStorage_json {
    *
    * @return {nsILoginInfo[]} which are decrypted.
    */
-  searchLogins(matchData) {
+  searchLogins(matchData, includeDeleted) {
     this._store.ensureDataReady();
 
     let realMatchData = {};
@@ -477,7 +566,7 @@ export class LoginManagerStorage_json {
       }
     }
 
-    let [logins] = this._searchLogins(realMatchData, options);
+    let [logins] = this._searchLogins(realMatchData, includeDeleted, options);
 
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
@@ -495,6 +584,7 @@ export class LoginManagerStorage_json {
    */
   _searchLogins(
     matchData,
+    includeDeleted = false,
     aOptions = {
       schemeUpgrades: false,
       acceptDifferentSubdomains: false,
@@ -579,6 +669,8 @@ export class LoginManagerStorage_json {
           case "timeLastUsed":
           case "timePasswordChanged":
           case "timesUsed":
+          case "syncCounter":
+          case "everSynced":
             if (wantedValue == null && aLoginItem[storageFieldName]) {
               return false;
             } else if (aLoginItem[storageFieldName] != wantedValue) {
@@ -596,6 +688,10 @@ export class LoginManagerStorage_json {
     let foundLogins = [],
       foundIds = [];
     for (let loginItem of candidateLogins) {
+      if (loginItem.deleted && !includeDeleted) {
+        continue; // skip deleted items
+      }
+
       if (match(loginItem)) {
         // Create the new nsLoginInfo object, push to array
         let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
@@ -617,6 +713,8 @@ export class LoginManagerStorage_json {
         login.timeLastUsed = loginItem.timeLastUsed;
         login.timePasswordChanged = loginItem.timePasswordChanged;
         login.timesUsed = loginItem.timesUsed;
+        login.syncCounter = loginItem.syncCounter;
+        login.everSynced = loginItem.everSynced;
 
         // Any unknown fields along for the ride
         login.unknownFields = loginItem.encryptedUnknownFields;
@@ -638,45 +736,58 @@ export class LoginManagerStorage_json {
    *
    */
   removeAllLogins() {
-    this._store.ensureDataReady();
-    this._store.data.logins = [];
-    this._store.data.potentiallyVulnerablePasswords = [];
-    this.__decryptedPotentiallyVulnerablePasswords = null;
-    this._store.data.dismissedBreachAlertsByLoginGUID = {};
-    this._store.saveSoon();
-
-    lazy.LoginHelper.notifyStorageChanged("removeAllLogins", []);
+    this.#removeLogins(false, true);
   }
 
   /**
    * Removes all user facing logins from storage. e.g. all logins except the FxA Sync key
    *
    * If you need to remove the FxA key, use `removeAllLogins` instead
+   *
+   * @param fullyRemove remove the logins rather than mark them deleted.
    */
-  removeAllUserFacingLogins() {
+  removeAllUserFacingLogins(fullyRemove) {
+    this.#removeLogins(fullyRemove, false);
+  }
+
+  /**
+   * Removes all logins from storage. If removeFXALogin is true, then the FxA Sync
+   * key is also removed.
+   *
+   * @param fullyRemove remove the logins rather than mark them deleted.
+   * @param removeFXALogin also remove the FxA Sync key.
+   */
+  #removeLogins(fullyRemove, removeFXALogin = false) {
     this._store.ensureDataReady();
     this.log("Removing all logins.");
 
-    let [allLogins] = this._searchLogins({});
-
-    let fxaKey = this._store.data.logins.find(
-      login =>
-        login.hostname == lazy.FXA_PWDMGR_HOST &&
+    let removedLogins = [];
+    let remainingLogins = [];
+    for (let login of this._store.data.logins) {
+      if (
+        !removeFXALogin &&
+        isFXAHost(login) &&
         login.httpRealm == lazy.FXA_PWDMGR_REALM
-    );
-    if (fxaKey) {
-      this._store.data.logins = [fxaKey];
-      allLogins = allLogins.filter(item => item != fxaKey);
-    } else {
-      this._store.data.logins = [];
+      ) {
+        remainingLogins.push(login);
+      } else {
+        removedLogins.push(login);
+        if (!fullyRemove && login?.everSynced) {
+          // The login has been synced, so mark it as deleted.
+          login.deleted = true;
+          this.#incrementSyncCounter(login);
+          remainingLogins.push(login);
+        }
+      }
     }
+    this._store.data.logins = remainingLogins;
 
     this._store.data.potentiallyVulnerablePasswords = [];
     this.__decryptedPotentiallyVulnerablePasswords = null;
     this._store.data.dismissedBreachAlertsByLoginGUID = {};
     this._store.saveSoon();
 
-    lazy.LoginHelper.notifyStorageChanged("removeAllLogins", allLogins);
+    lazy.LoginHelper.notifyStorageChanged("removeAllLogins", removedLogins);
   }
 
   findLogins(origin, formActionOrigin, httpRealm) {

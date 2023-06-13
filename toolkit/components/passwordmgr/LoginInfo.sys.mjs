@@ -27,6 +27,9 @@ nsLoginInfo.prototype = {
   passwordField: null,
   unknownFields: null,
 
+  everSynced: false,
+  syncCounter: 0,
+
   get displayOrigin() {
     let displayOrigin = this.origin;
     try {
@@ -120,6 +123,8 @@ nsLoginInfo.prototype = {
     clone.timeLastUsed = this.timeLastUsed;
     clone.timePasswordChanged = this.timePasswordChanged;
     clone.timesUsed = this.timesUsed;
+    clone.syncCounter = this.syncCounter;
+    clone.everSynced = this.everSynced;
 
     // Unknown fields from other clients
     clone.unknownFields = this.unknownFields;
