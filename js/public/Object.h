@@ -131,4 +131,17 @@ inline void SetObjectISupports(JSObject* obj, void* nsISupportsValue) {
 
 }  // namespace JS
 
+// JSObject* is an aligned pointer, but this information isn't available in the
+// public header. We specialize HasFreeLSB here so that JS::Result<JSObject*>
+// compiles.
+
+namespace mozilla {
+namespace detail {
+template <>
+struct HasFreeLSB<JSObject*> {
+  static constexpr bool value = true;
+};
+}  // namespace detail
+}  // namespace mozilla
+
 #endif  // js_public_Object_h
