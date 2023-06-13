@@ -22,6 +22,7 @@ const PropertyBag = Components.Constructor(
 async function cleanup(engine, server) {
   await engine._tracker.stop();
   await engine.wipeClient();
+  engine.lastModified = null;
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
   if (server) {
@@ -120,6 +121,13 @@ add_task(async function test_ignored_sync_credentials() {
 
     noChanges = await engine.pullNewChanges();
     deepEqual(noChanges, {}, "Should not track changes to FxA credentials");
+
+    let foundLogins = await Services.logins.searchLoginsAsync({
+      origin: FXA_PWDMGR_HOST,
+    });
+    equal(foundLogins.length, 1);
+    equal(foundLogins[0].syncCounter, 0);
+    equal(foundLogins[0].everSynced, false);
   } finally {
     await cleanup(engine, server);
   }
@@ -228,6 +236,455 @@ add_task(async function test_password_engine() {
       "n3wpa55",
       "Should update local password for older login"
     );
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_sync_outgoing() {
+  _("Test syncing outgoing records");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  let loginInfo = new LoginInfo(
+    "http://mozilla.com",
+    "http://mozilla.com",
+    null,
+    "theuser",
+    "thepassword",
+    "username",
+    "password"
+  );
+  let login = await Services.logins.addLoginAsync(loginInfo);
+
+  engine._tracker.start();
+
+  try {
+    let foundLogins = await Services.logins.searchLoginsAsync({
+      origin: "http://mozilla.com",
+    });
+    equal(foundLogins.length, 1);
+    equal(foundLogins[0].syncCounter, 1);
+    equal(foundLogins[0].everSynced, false);
+    equal(collection.count(), 0);
+
+    let guid = foundLogins[0].QueryInterface(Ci.nsILoginMetaInfo).guid;
+
+    let changes = await engine.getChangedIDs();
+    let change = changes[guid];
+    equal(Object.keys(changes).length, 1);
+    equal(change.counter, 1);
+    ok(!change.deleted);
+
+    // This test modifies the password and then performs a sync and
+    // then ensures that the synced record is correct. This is done twice
+    // to ensure that syncing occurs correctly when the server record does not
+    // yet exist and when it does already exist.
+    for (let i = 1; i <= 2; i++) {
+      _("Modify the password iteration " + i);
+      foundLogins[0].password = "newpassword" + i;
+      Services.logins.modifyLogin(login, foundLogins[0]);
+      foundLogins = await Services.logins.searchLoginsAsync({
+        origin: "http://mozilla.com",
+      });
+      equal(foundLogins.length, 1);
+      // On the first pass, the counter should be 2, one for the add and one for the modify.
+      // No sync has occurred yet so everSynced should be false.
+      // On the second pass, the counter will only be 1 for the modify. The everSynced
+      // property should be true as the sync happened on the last iteration.
+      equal(foundLogins[0].syncCounter, i == 2 ? 1 : 2);
+      equal(foundLogins[0].everSynced, i == 2);
+
+      changes = await engine.getChangedIDs();
+      change = changes[guid];
+      equal(Object.keys(changes).length, 1);
+      equal(change.counter, i == 2 ? 1 : 2);
+      ok(!change.deleted);
+
+      _("Perform sync after modifying the password");
+      await sync_engine_and_validate_telem(engine, false);
+
+      equal(Object.keys(await engine.getChangedIDs()), 0);
+
+      // The remote login should have the updated password.
+      let newRec = collection.cleartext(guid);
+      equal(
+        newRec.password,
+        "newpassword" + i,
+        "Should update remote password for login"
+      );
+
+      foundLogins = await Services.logins.searchLoginsAsync({
+        origin: "http://mozilla.com",
+      });
+      equal(foundLogins.length, 1);
+      equal(foundLogins[0].syncCounter, 0);
+      equal(foundLogins[0].everSynced, true);
+
+      login.password = "newpassword" + i;
+    }
+
+    // Next, modify the username and sync.
+    _("Modify the username");
+    foundLogins[0].username = "newuser";
+    Services.logins.modifyLogin(login, foundLogins[0]);
+    foundLogins = await Services.logins.searchLoginsAsync({
+      origin: "http://mozilla.com",
+    });
+    equal(foundLogins.length, 1);
+    equal(foundLogins[0].syncCounter, 1);
+    equal(foundLogins[0].everSynced, true);
+
+    _("Perform sync after modifying the username");
+    await sync_engine_and_validate_telem(engine, false);
+
+    // The remote login should have the updated password.
+    let newRec = collection.cleartext(guid);
+    equal(
+      newRec.username,
+      "newuser",
+      "Should update remote username for login"
+    );
+
+    foundLogins = await Services.logins.searchLoginsAsync({
+      origin: "http://mozilla.com",
+    });
+    equal(foundLogins.length, 1);
+    equal(foundLogins[0].syncCounter, 0);
+    equal(foundLogins[0].everSynced, true);
+
+    // Finally, remove the login. The server record should be marked as deleted.
+    _("Remove the login");
+    equal(collection.count(), 1);
+    equal(Services.logins.countLogins("", "", ""), 2);
+    equal(Services.logins.findLogins("", "", "").length, 2);
+    equal(Services.logins.getAllLogins().length, 2);
+    equal((await Services.logins.getAllLoginsAsync()).length, 2);
+    ok(await engine._store.itemExists(guid));
+
+    ok((await engine._store.getAllIDs())[guid]);
+
+    Services.logins.removeLogin(foundLogins[0]);
+    foundLogins = await Services.logins.searchLoginsAsync({
+      origin: "http://mozilla.com",
+    });
+    equal(foundLogins.length, 0);
+
+    changes = await engine.getChangedIDs();
+    change = changes[guid];
+    equal(Object.keys(changes).length, 1);
+    equal(change.counter, 1);
+    ok(change.deleted);
+
+    _("Perform sync after removing the login");
+    await sync_engine_and_validate_telem(engine, false);
+
+    equal(collection.count(), 1);
+    let payload = collection.payloads()[0];
+    ok(payload.deleted);
+
+    equal(Object.keys(await engine.getChangedIDs()), 0);
+
+    // All of these should not include the deleted login. Only the FxA password should exist.
+    equal(Services.logins.countLogins("", "", ""), 1);
+    equal(Services.logins.findLogins("", "", "").length, 1);
+    equal(Services.logins.getAllLogins().length, 1);
+    equal((await Services.logins.getAllLoginsAsync()).length, 1);
+    ok(!(await engine._store.itemExists(guid)));
+
+    // getAllIDs includes deleted items but skips the FxA login.
+    ok((await engine._store.getAllIDs())[guid]);
+  } finally {
+    await engine._tracker.stop();
+
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_sync_incoming() {
+  _("Test syncing incoming records");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  const checkFields = [
+    "formSubmitURL",
+    "hostname",
+    "httpRealm",
+    "username",
+    "password",
+    "usernameField",
+    "passwordField",
+    "timeCreated",
+  ];
+
+  let guid1 = Utils.makeGUID();
+  let details = {
+    formSubmitURL: "https://www.example.com",
+    hostname: "https://www.example.com",
+    httpRealm: null,
+    username: "camel",
+    password: "llama",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+
+  try {
+    // This test creates a remote server record and then verifies that the login
+    // has been added locally after the sync occurs.
+    _("Create remote login");
+    collection.insertRecord(Object.assign({}, details, { id: guid1 }));
+
+    _("Perform sync when remote login has been added");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
+    equal(logins.length, 1);
+
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
+    checkFields.forEach(field => {
+      equal(logins[0][field], details[field]);
+    });
+    equal(logins[0].timePasswordChanged, details.timePasswordChanged);
+    equal(logins[0].syncCounter, 0);
+    equal(logins[0].everSynced, true);
+
+    // Modify the password within the remote record and then sync again.
+    _("Perform sync when remote login's password has been modified");
+    let newTime = Date.now();
+    collection.updateRecord(
+      guid1,
+      cleartext => {
+        cleartext.password = "alpaca";
+      },
+      newTime / 1000 + 10
+    );
+
+    await engine.setLastSync(newTime / 1000 - 30);
+    await sync_engine_and_validate_telem(engine, false);
+
+    logins = Services.logins.findLogins("https://www.example.com", "", "");
+    equal(logins.length, 1);
+
+    details.password = "alpaca";
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
+    checkFields.forEach(field => {
+      equal(logins[0][field], details[field]);
+    });
+    ok(logins[0].timePasswordChanged > details.timePasswordChanged);
+    equal(logins[0].syncCounter, 0);
+    equal(logins[0].everSynced, true);
+
+    // Modify the username within the remote record and then sync again.
+    _("Perform sync when remote login's username has been modified");
+    newTime = Date.now();
+    collection.updateRecord(
+      guid1,
+      cleartext => {
+        cleartext.username = "guanaco";
+      },
+      newTime / 1000 + 10
+    );
+
+    await engine.setLastSync(newTime / 1000 - 30);
+    await sync_engine_and_validate_telem(engine, false);
+
+    logins = Services.logins.findLogins("https://www.example.com", "", "");
+    equal(logins.length, 1);
+
+    details.username = "guanaco";
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
+    checkFields.forEach(field => {
+      equal(logins[0][field], details[field]);
+    });
+    ok(logins[0].timePasswordChanged > details.timePasswordChanged);
+    equal(logins[0].syncCounter, 0);
+    equal(logins[0].everSynced, true);
+
+    // Mark the remote record as deleted and then sync again.
+    _("Perform sync when remote login has been marked for deletion");
+    newTime = Date.now();
+    collection.updateRecord(
+      guid1,
+      cleartext => {
+        cleartext.deleted = true;
+      },
+      newTime / 1000 + 10
+    );
+
+    await engine.setLastSync(newTime / 1000 - 30);
+    await sync_engine_and_validate_telem(engine, false);
+
+    logins = Services.logins.findLogins("https://www.example.com", "", "");
+    equal(logins.length, 0);
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_sync_incoming_deleted() {
+  _("Test syncing incoming deleted records");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  let guid1 = Utils.makeGUID();
+  let details2 = {
+    formSubmitURL: "https://www.example.org",
+    hostname: "https://www.example.org",
+    httpRealm: null,
+    username: "capybara",
+    password: "beaver",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+    deleted: true,
+  };
+
+  try {
+    // This test creates a remote server record that has been deleted
+    // and then verifies that the login is not imported locally.
+    _("Create remote login");
+    collection.insertRecord(Object.assign({}, details2, { id: guid1 }));
+
+    _("Perform sync when remote login has been deleted");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins("https://www.example.org", "", "");
+    equal(logins.length, 0);
+    ok(!(await engine._store.getAllIDs())[guid1]);
+    ok(!(await engine._store.itemExists(guid1)));
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_sync_incoming_deleted_localchanged_remotenewer() {
+  _(
+    "Test syncing incoming deleted records where the local login has been changed but the remote record is newer"
+  );
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  let loginInfo = new LoginInfo(
+    "http://mozilla.com",
+    "http://mozilla.com",
+    null,
+    "kangaroo",
+    "kaola",
+    "username",
+    "password"
+  );
+  let login = await Services.logins.addLoginAsync(loginInfo);
+  let guid = login.QueryInterface(Ci.nsILoginMetaInfo).guid;
+
+  try {
+    _("Perform sync on new login");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let foundLogins = await Services.logins.searchLoginsAsync({
+      origin: "http://mozilla.com",
+    });
+    foundLogins[0].password = "wallaby";
+    Services.logins.modifyLogin(login, foundLogins[0]);
+
+    // Use a time in the future to ensure that the remote record is newer.
+    collection.updateRecord(
+      guid,
+      cleartext => {
+        cleartext.deleted = true;
+      },
+      Date.now() / 1000 + 1000
+    );
+
+    _(
+      "Perform sync when remote login has been deleted and local login has been changed"
+    );
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins("http://mozilla.com", "", "");
+    equal(logins.length, 0);
+    ok(await engine._store.getAllIDs());
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_sync_incoming_deleted_localchanged_localnewer() {
+  _(
+    "Test syncing incoming deleted records where the local login has been changed but the local record is newer"
+  );
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  let loginInfo = new LoginInfo(
+    "http://www.mozilla.com",
+    "http://www.mozilla.com",
+    null,
+    "lion",
+    "tiger",
+    "username",
+    "password"
+  );
+  let login = await Services.logins.addLoginAsync(loginInfo);
+  let guid = login.QueryInterface(Ci.nsILoginMetaInfo).guid;
+
+  try {
+    _("Perform sync on new login");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let foundLogins = await Services.logins.searchLoginsAsync({
+      origin: "http://www.mozilla.com",
+    });
+    foundLogins[0].password = "cheetah";
+    Services.logins.modifyLogin(login, foundLogins[0]);
+
+    // Use a time in the past to ensure that the local record is newer.
+    collection.updateRecord(
+      guid,
+      cleartext => {
+        cleartext.deleted = true;
+      },
+      Date.now() / 1000 - 1000
+    );
+
+    _(
+      "Perform sync when remote login has been deleted and local login has been changed"
+    );
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins("http://www.mozilla.com", "", "");
+    equal(logins.length, 1);
+    equal(logins[0].password, "cheetah");
+    equal(logins[0].syncCounter, 0);
+    equal(logins[0].everSynced, true);
+    ok(await engine._store.getAllIDs());
   } finally {
     await cleanup(engine, server);
   }

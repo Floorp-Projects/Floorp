@@ -327,7 +327,7 @@ ServerCollection.prototype = {
    * Insert a record, which may either an object with a cleartext property, or
    * the cleartext property itself.
    */
-  insertRecord(record, timestamp = Date.now() / 1000) {
+  insertRecord(record, timestamp = Math.round(Date.now() / 10) / 100) {
     if (typeof timestamp != "number") {
       throw new TypeError("insertRecord: Timestamp is not a number.");
     }
