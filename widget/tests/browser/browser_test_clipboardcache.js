@@ -29,7 +29,7 @@ var SHORT_STRING_NO_CACHE = "short string that will not be cached to the disk";
 // data persists after a copy). It does not detect cache files that exist only
 // temporarily (e.g. after a paste).
 function getClipboardCacheFDCount() {
-  let dir;
+  let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   if (AppConstants.platform === "win") {
     // On Windows, nsAnonymousTemporaryFile does not immediately delete a file.
     // Instead, the Windows-specific FILE_FLAG_DELETE_ON_CLOSE flag is used,
@@ -42,13 +42,9 @@ function getClipboardCacheFDCount() {
     // handles, so if FILE_FLAG_DELETE_ON_CLOSE does the thing it promises, the
     // file is actually removed when the handle is closed.
 
-    let { FileUtils } = ChromeUtils.importESModule(
-      "resource://gre/modules/FileUtils.sys.mjs"
-    );
     // Path from nsAnonymousTemporaryFile.cpp, GetTempDir.
-    dir = FileUtils.getFile("TmpD", ["mozilla-temp-files"]);
+    dir.initWithPath(PathUtils.join(PathUtils.tempDir, "mozilla-temp-files"));
   } else {
-    dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     dir.initWithPath("/dev/fd");
   }
   let count = 0;

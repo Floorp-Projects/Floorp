@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
   // the expected data (and assume that any mutations in file descriptor counts
   // are caused by our test).
   function getClipboardCacheFDCount() {
-    var dir;
+    var dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     if (isWindows()) {
       // On Windows, nsAnonymousTemporaryFile does not immediately delete the file.
       // Instead, the Windows-specific FILE_FLAG_DELETE_ON_CLOSE flag is used,
@@ -45,11 +45,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       // handles, so if FILE_FLAG_DELETE_ON_CLOSE does the thing it promises, the
       // file is actually removed when the handle is closed.
 
-      var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
       // Path from nsAnonymousTemporaryFile.cpp, GetTempDir.
-      dir = FileUtils.getFile("TmpD", ["mozilla-temp-files"]);
+      dir.initWithPath(PathUtils.join(PathUtils.tempDir, "mozilla-temp-files"));
     } else {
-      dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       dir.initWithPath("/dev/fd");
     }
     var count = 0;
