@@ -1051,7 +1051,16 @@ function getUpdateDirCreate(pathArray) {
     }
   }
 
-  return FileUtils.getDir(KEY_UPDROOT, pathArray, true);
+  let dir = FileUtils.getDir(KEY_UPDROOT, pathArray);
+  try {
+    dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+      throw ex;
+    }
+    // Ignore the exception due to a directory that already exists.
+  }
+  return dir;
 }
 
 /**
@@ -5985,7 +5994,19 @@ Downloader.prototype = {
         this._bitsActiveNotifications = true;
       }
 
-      let updateRootDir = FileUtils.getDir(KEY_UPDROOT, [], true);
+      let updateRootDir = FileUtils.getDir(KEY_UPDROOT, []);
+      try {
+        updateRootDir.create(
+          Ci.nsIFile.DIRECTORY_TYPE,
+          FileUtils.PERMS_DIRECTORY
+        );
+      } catch (ex) {
+        if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+          throw ex;
+        }
+        // Ignore the exception due to a directory that already exists.
+      }
+
       let jobName = "MozillaUpdate " + updateRootDir.leafName;
       let updatePath = updateDir.path;
       if (!Bits.initialized) {
