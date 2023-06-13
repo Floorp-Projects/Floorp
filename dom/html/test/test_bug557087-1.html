@@ -102,7 +102,7 @@ function checkClickEvent(aFieldset)
 
   sendMouseEvent({type:'click'}, aFieldset);
   SimpleTest.executeSoon(function() {
-    ok(clickHandled, "When disabled, fieldset should not prevent click events");
+    ok(!clickHandled, "When disabled, fieldset should prevent click events");
     SimpleTest.finish();
   });
 }

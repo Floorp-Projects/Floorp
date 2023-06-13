@@ -21,8 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=557087
 
 SimpleTest.waitForExplicitFinish();
 
-var elementsPreventingClick = [ "input", "button", "select", "textarea" ];
-var elementsWithClick = [ "option", "optgroup", "output", "label", "object", "fieldset" ];
+var elementsPreventingClick = [ "input", "button", "select", "textarea", "fieldset" ];
+var elementsWithClick = [ "option", "optgroup", "output", "label", "object" ];
 var gHandled = 0;
 
 function clickShouldNotHappenHandler(aEvent)
