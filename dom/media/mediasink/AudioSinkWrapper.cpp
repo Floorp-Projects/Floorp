@@ -172,7 +172,7 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
   if (aMuted) {
     if (mAudioSink) {
       LOG("AudioSinkWrapper muted, shutting down AudioStream.");
-      mAudioSinkEndedPromise.DisconnectIfExists();
+      mAudioSinkEndedRequest.DisconnectIfExists();
       if (IsPlaying()) {
         mPositionAtClockStart = mAudioSink->GetPosition();
         mClockStartTime = TimeStamp::Now();
@@ -321,13 +321,13 @@ void AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime) {
   mAudioSink->Start(aStartTime)
       ->Then(mOwnerThread.get(), __func__, this,
              &AudioSinkWrapper::OnAudioEnded)
-      ->Track(mAudioSinkEndedPromise);
+      ->Track(mAudioSinkEndedRequest);
 }
 
 nsresult AudioSinkWrapper::CreateAudioSink(const TimeUnit& aStartTime,
                                            AudioSinkStartPolicy aPolicy) {
   MOZ_RELEASE_ASSERT(!mAudioSink);
-  MOZ_ASSERT(!mAudioSinkEndedPromise.Exists());
+  MOZ_ASSERT(!mAudioSinkEndedRequest.Exists());
 
   LOG("%p: AudioSinkWrapper::CreateAudioSink (%s)", this,
       aPolicy == AudioSinkStartPolicy::ASYNC ? "Async" : "Sync");
@@ -423,7 +423,7 @@ void AudioSinkWrapper::Stop() {
   mPositionAtClockStart = TimeUnit::Invalid();
   mAudioEnded = true;
 
-  mAudioSinkEndedPromise.DisconnectIfExists();
+  mAudioSinkEndedRequest.DisconnectIfExists();
 
   if (mAudioSink) {
     mAudioSink->ShutDown();
@@ -448,7 +448,7 @@ void AudioSinkWrapper::OnAudioEnded(
     const EndedPromise::ResolveOrRejectValue& aValue) {
   AssertOwnerThread();
   LOG("%p: AudioSinkWrapper::OnAudioEnded %i", this, aValue.IsResolve());
-  mAudioSinkEndedPromise.Complete();
+  mAudioSinkEndedRequest.Complete();
   mPositionAtClockStart = GetPosition();
   if (!mClockStartTime.IsNull()) {  // playing
     // System time is now used for the clock as video may not have ended.
