@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace 'org.mozilla.fenix.benchmark'
-    compileSdk Config.compileSdkVersion
+    compileSdk config.compileSdkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         minSdk 23
-        targetSdk Config.targetSdkVersion
+        targetSdk config.targetSdkVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

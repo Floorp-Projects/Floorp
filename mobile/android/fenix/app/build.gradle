@@ -23,7 +23,7 @@ import static org.gradle.api.tasks.testing.TestResult.ResultType
 apply from: 'benchmark.gradle'
 
 android {
-    compileSdkVersion Config.compileSdkVersion
+    compileSdkVersion config.compileSdkVersion
 
     project.maybeConfigForJetpackBenchmark(it)
     if (project.hasProperty("testBuildType")) {
@@ -34,8 +34,8 @@ android {
 
     defaultConfig {
         applicationId "org.mozilla"
-        minSdkVersion Config.minSdkVersion
-        targetSdkVersion Config.targetSdkVersion
+        minSdkVersion config.minSdkVersion
+        targetSdkVersion config.targetSdkVersion
         versionCode 1
         versionName Config.generateDebugVersionName()
         vectorDrawables.useSupportLibrary = true
