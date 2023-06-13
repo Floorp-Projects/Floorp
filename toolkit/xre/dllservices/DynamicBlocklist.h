@@ -66,7 +66,7 @@ class DynamicBlockList final : public DynamicBlockListBase {
     testEntry->mName.MaximumLength = kTestDllBytes;
     testEntry->mName.Buffer = reinterpret_cast<PWSTR>(nameOffset);
     testEntry->mMaxVersion = DllBlockInfo::ALL_VERSIONS;
-    testEntry->mFlags = DllBlockInfo::FLAGS_DEFAULT;
+    testEntry->mFlags = DllBlockInfoFlags::FLAGS_DEFAULT;
   }
 
   void CreateListWithTestEntry() {

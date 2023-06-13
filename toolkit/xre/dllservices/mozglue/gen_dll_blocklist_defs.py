@@ -559,7 +559,7 @@ class DllBlocklistEntry(object):
 
     @staticmethod
     def get_flag_string(flag):
-        return "DllBlockInfo::" + flag
+        return "mozilla::DllBlockInfoFlags::" + flag
 
     def get_flags_list(self):
         return self._flags
