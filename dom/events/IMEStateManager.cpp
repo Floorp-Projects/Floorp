@@ -306,7 +306,7 @@ void IMEStateManager::MaybeStartOffsetUpdatedInChild(nsIWidget* aWidget,
     return;
   }
 
-  TextComposition* const composition = GetTextCompositionFor(aWidget);
+  RefPtr<TextComposition> composition = GetTextCompositionFor(aWidget);
   if (NS_WARN_IF(!composition)) {
     MOZ_LOG(sISMLog, LogLevel::Warning,
             ("MaybeStartOffsetUpdatedInChild(aWidget=0x%p, aStartOffset=%u), "
@@ -2328,24 +2328,36 @@ nsresult IMEStateManager::GetFocusSelectionAndRootElement(
 }
 
 // static
-TextComposition* IMEStateManager::GetTextCompositionFor(nsIWidget* aWidget) {
-  return sTextCompositions ? sTextCompositions->GetCompositionFor(aWidget)
-                           : nullptr;
+already_AddRefed<TextComposition> IMEStateManager::GetTextCompositionFor(
+    nsIWidget* aWidget) {
+  if (!sTextCompositions) {
+    return nullptr;
+  }
+  RefPtr<TextComposition> textComposition =
+      sTextCompositions->GetCompositionFor(aWidget);
+  return textComposition.forget();
 }
 
 // static
-TextComposition* IMEStateManager::GetTextCompositionFor(
+already_AddRefed<TextComposition> IMEStateManager::GetTextCompositionFor(
     const WidgetCompositionEvent* aCompositionEvent) {
-  return sTextCompositions
-             ? sTextCompositions->GetCompositionFor(aCompositionEvent)
-             : nullptr;
+  if (!sTextCompositions) {
+    return nullptr;
+  }
+  RefPtr<TextComposition> textComposition =
+      sTextCompositions->GetCompositionFor(aCompositionEvent);
+  return textComposition.forget();
 }
 
 // static
-TextComposition* IMEStateManager::GetTextCompositionFor(
+already_AddRefed<TextComposition> IMEStateManager::GetTextCompositionFor(
     nsPresContext* aPresContext) {
-  return sTextCompositions ? sTextCompositions->GetCompositionFor(aPresContext)
-                           : nullptr;
+  if (!sTextCompositions) {
+    return nullptr;
+  }
+  RefPtr<TextComposition> textComposition =
+      sTextCompositions->GetCompositionFor(aPresContext);
+  return textComposition.forget();
 }
 
 }  // namespace mozilla

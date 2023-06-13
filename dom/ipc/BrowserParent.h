@@ -353,11 +353,10 @@ class BrowserParent final : public PBrowserParent,
       const widget::IMENotification& aEventMessage);
 
   mozilla::ipc::IPCResult RecvOnEventNeedingAckHandled(
-      const EventMessage& aMessage, const uint32_t& aCompositionId);
+      const EventMessage& aMessage);
 
   mozilla::ipc::IPCResult RecvRequestIMEToCommitComposition(
-      const bool& aCancel, const uint32_t& aCompositionId, bool* aIsCommitted,
-      nsString* aCommittedString);
+      const bool& aCancel, bool* aIsCommitted, nsString* aCommittedString);
 
   mozilla::ipc::IPCResult RecvGetInputContext(widget::IMEState* aIMEState);
 
@@ -581,8 +580,7 @@ class BrowserParent final : public PBrowserParent,
    * If you need to check if it's actually posted to the remote process,
    * you can refer aEvent.HasBeenPostedToRemoteProcess().
    */
-  bool SendCompositionEvent(mozilla::WidgetCompositionEvent& aEvent,
-                            uint32_t aCompositionId);
+  bool SendCompositionEvent(mozilla::WidgetCompositionEvent& aEvent);
 
   bool SendSelectionEvent(mozilla::WidgetSelectionEvent& aEvent);
 
