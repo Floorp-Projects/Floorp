@@ -22,6 +22,7 @@ add_task(async function () {
     { identifier: "d:", value: "null" },
     { identifier: "e:", value: "Array []" },
     { identifier: "f:", value: "Object { }" },
+    { identifier: "reg:", value: "/^\\p{RGI_Emoji}$/v" },
     { identifier: "obj:", value: "Object { foo: 1 }" },
     {
       identifier: "bs:",

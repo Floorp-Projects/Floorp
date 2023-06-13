@@ -60073,6 +60073,7 @@
           "optionalChaining",
           "privateIn",
           "nullishCoalescingOperator",
+          "regexpUnicodeSets",
         ],
       },
       original: {
@@ -60097,6 +60098,7 @@
           "functionSent",
           "dynamicImport",
           "react-jsx",
+          "regexpUnicodeSets",
         ],
       },
     };
@@ -60163,6 +60165,7 @@
             "dynamicImport",
             "nullishCoalescingOperator",
             "optionalChaining",
+            "regexpUnicodeSets",
           ],
           ...opts,
           allowAwaitOutsideFunction: true,

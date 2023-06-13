@@ -1453,6 +1453,41 @@ hasTypes: false
 framework: React"
 `;
 
+exports[`Parser.getSymbols regexp 1`] = `
+"functions:
+
+
+callExpressions:
+
+
+memberExpressions:
+
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 8)] re re
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+framework: null"
+`;
+
 exports[`Parser.getSymbols var 1`] = `
 "functions:
 
