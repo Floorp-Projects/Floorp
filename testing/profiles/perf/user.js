@@ -95,3 +95,5 @@ user_pref("startup.homepage_welcome_url.additional", "");
 // tests (bug 1725270). Can be removed once non-about:blank intermediate pages
 // are used instead (bug 1724261).
 user_pref("browser.tabs.remote.systemTriggeredAboutBlankAnywhere", true);
+// Make sure speech dispatcher notification error does not impact how we measure visual perception in raptor tests
+user_pref("media.webspeech.synth.dont_notify_on_error", true);
