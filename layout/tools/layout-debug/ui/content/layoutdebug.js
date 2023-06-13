@@ -18,9 +18,6 @@ var gWrittenProfile = false;
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs"
 );
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserToolboxLauncher:
@@ -56,7 +53,7 @@ class Debugger {
     this._attached = false;
 
     for (let [name, pref] of Object.entries(FEATURES)) {
-      this._flags.set(name, !!Preferences.get(pref, false));
+      this._flags.set(name, !!Services.prefs.getBoolPref(pref, false));
     }
 
     this.attachBrowser();
@@ -137,7 +134,7 @@ for (let [name, pref] of Object.entries(FEATURES)) {
     },
     set: function (v) {
       v = !!v;
-      Preferences.set(pref, v);
+      Services.prefs.setBoolPref(pref, v);
       this._flags.set(name, v);
       // XXX PresShell should watch for this pref change itself.
       if (name == "reflowCounts") {
