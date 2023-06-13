@@ -200,7 +200,11 @@ def vendor_rust(command_context, **kwargs):
     if issues_json:
         with open(issues_json, "w") as fh:
             fh.write(vendor_command.serialize_issues_json())
-    sys.exit(0 if ok else 1)
+    if ok:
+        sys.exit(0)
+    else:
+        print("Errors occured; new rust crates were not vendored.")
+        sys.exit(1)
 
 
 # =====================================================================
