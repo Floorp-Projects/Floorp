@@ -315,6 +315,14 @@ export class BookmarksFileMigrator extends FileMigratorBase {
     } else if (pathCheck.endsWith("json") || pathCheck.endsWith("jsonlz4")) {
       importedCount = await lazy.BookmarkJSONUtils.importFromFile(filePath);
     }
+
+    if (!importedCount) {
+      let errorMessage = await lazy.gFluentStrings.formatValue(
+        "migration-bookmarks-from-file-no-valid-data"
+      );
+      throw new Error(errorMessage);
+    }
+
     let importedMessage = await lazy.gFluentStrings.formatValue(
       "migration-wizard-progress-success-new-bookmarks",
       {
