@@ -289,11 +289,18 @@ export class BrowserToolboxLauncher extends EventEmitter {
     const customBinaryPath = Services.env.get("MOZ_BROWSER_TOOLBOX_BINARY");
     if (customBinaryPath) {
       command = customBinaryPath;
-      profilePath = lazy.FileUtils.getDir(
-        "TmpD",
-        ["browserToolboxProfile"],
-        true
-      ).path;
+      const dir = lazy.FileUtils.getDir("TmpD", ["browserToolboxProfile"]);
+
+      try {
+        dir.create(Ci.nsIFile.DIRECTORY_TYPE, lazy.FileUtils.PERMS_DIRECTORY);
+      } catch (ex) {
+        if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+          throw ex;
+        }
+        // Ignore the exception due to a directory that already exists.
+      }
+
+      profilePath = dir.path;
     }
 
     dumpn("Running chrome debugging process.");
