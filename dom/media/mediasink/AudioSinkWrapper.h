@@ -120,12 +120,11 @@ class AudioSinkWrapper : public MediaSink {
   // true between Start() and Stop()
   bool mIsStarted = false;
   PlaybackParams mParams;
-  // mClockStartTime is null before Start() and between SetPlaying(false) and
-  // SetPlaying(true).  When the system time is used for the clock, this is
-  // the time corresponding to mPositionAtClockStart.  When an AudioStream is
-  // used for the clock, non-null values don't have specific meaning beyond
-  // indicating that the clock is advancing.  The value is not useful after
-  // Stop() has been called.
+  // mClockStartTime is null before Start(), after Stop(), and between
+  // SetPlaying(false) and SetPlaying(true).  When the system time is used for
+  // the clock, this is the time corresponding to mPositionAtClockStart.  When
+  // an AudioStream is used for the clock, non-null values don't have specific
+  // meaning beyond indicating that the clock is advancing.
   TimeStamp mClockStartTime;
   // The media position at the clock datum.  If the clock is not advancing,
   // then this is the media position from which to resume playback.  The value
