@@ -358,12 +358,41 @@ async function GetHistoryResource() {
     Date.now() - MigrationUtils.HISTORY_MAX_AGE_IN_MILLISECONDS
   );
 
-  let countQuery = `
-    SELECT COUNT(*)
-    FROM history_items LEFT JOIN history_visits
-    ON history_items.id = history_visits.history_item
-    WHERE history_visits.visit_time > ${maxAge}
-    LIMIT 1;`;
+  // If we have read access to the Safari profile directory, check to
+  // see if there's any history to import. If we can't access the profile
+  // directory, let's assume that there's history to import and give the
+  // user the option to migrate it.
+  let canReadHistory = false;
+  try {
+    // 'stat' is always allowed, but reading is somehow not, if the user hasn't
+    // allowed it:
+    await IOUtils.read(dbPath, { maxBytes: 1 });
+    canReadHistory = true;
+  } catch (ex) {
+    console.error(
+      "Cannot yet read from Safari profile directory. Will presume history exists for import."
+    );
+  }
+
+  if (canReadHistory) {
+    let countQuery = `
+      SELECT COUNT(*)
+      FROM history_items LEFT JOIN history_visits
+      ON history_items.id = history_visits.history_item
+      WHERE history_visits.visit_time > ${maxAge}
+      LIMIT 1;`;
+
+    let countResult = await MigrationUtils.getRowsFromDBWithoutLocks(
+      dbPath,
+      "Safari history",
+      countQuery
+    );
+
+    if (!countResult[0].getResultByName("COUNT(*)")) {
+      return null;
+    }
+  }
+
   let selectQuery = `
     SELECT
       history_items.url as history_url,
@@ -372,16 +401,6 @@ async function GetHistoryResource() {
     FROM history_items LEFT JOIN history_visits
     ON history_items.id = history_visits.history_item
     WHERE history_visits.visit_time > ${maxAge};`;
-
-  let countResult = await MigrationUtils.getRowsFromDBWithoutLocks(
-    dbPath,
-    "Safari history",
-    countQuery
-  );
-
-  if (!countResult[0].getResultByName("COUNT(*)")) {
-    return null;
-  }
 
   return {
     type: MigrationUtils.resourceTypes.HISTORY,
