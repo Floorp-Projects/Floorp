@@ -87,6 +87,8 @@ class AudioSinkWrapper : public MediaSink {
   }
 
   bool NeedAudioSink();
+  void StartAudioSink(const media::TimeUnit& aStartTime);
+  // Create and start mAudioSink.
   // An AudioSink can be started synchronously from the MDSM thread, or
   // asynchronously.
   // In synchronous mode, the clock doesn't advance until the sink has been
@@ -96,8 +98,8 @@ class AudioSinkWrapper : public MediaSink {
   // clock) until the AudioSink is started, at which point the clock will use
   // the AudioSink clock. This is used when unmuting a media element.
   enum class AudioSinkStartPolicy { SYNC, ASYNC };
-  nsresult StartAudioSink(const media::TimeUnit& aStartTime,
-                          AudioSinkStartPolicy aPolicy);
+  nsresult CreateAudioSink(const media::TimeUnit& aStartTime,
+                           AudioSinkStartPolicy aPolicy);
 
   // Get the current media position using the system clock. This is used when
   // the audio is muted, or when the media has no audio track. Otherwise, the
