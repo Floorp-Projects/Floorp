@@ -155,6 +155,7 @@ bool LoadPWLibrary() {
     GET_FUNC(pw_stream_new, pwLib);
     GET_FUNC(pw_stream_queue_buffer, pwLib);
     GET_FUNC(pw_stream_update_params, pwLib);
+    GET_FUNC(pw_stream_state_as_string, pwLib);
     GET_FUNC(pw_thread_loop_destroy, pwLib);
     GET_FUNC(pw_thread_loop_get_loop, pwLib);
     GET_FUNC(pw_thread_loop_new, pwLib);
@@ -166,6 +167,7 @@ bool LoadPWLibrary() {
     GET_FUNC(pw_thread_loop_wait, pwLib);
     GET_FUNC(pw_properties_new_string, pwLib);
     GET_FUNC(pw_get_library_version, pwLib);
+    GET_FUNC(pw_proxy_destroy, pwLib);
   }
 
   return IsPwLibraryLoaded();
