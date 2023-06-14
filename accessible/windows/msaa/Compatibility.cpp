@@ -13,7 +13,6 @@
 #include "nsIXULRuntime.h"
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"
-#include "nsWindowsDllInterceptor.h"
 #include "nsWinUtils.h"
 #include "Statistics.h"
 #include "AccessibleWrap.h"
@@ -46,89 +45,6 @@ bool Compatibility::IsModuleVersionLessThan(HMODULE aModuleHandle,
 ////////////////////////////////////////////////////////////////////////////////
 // Compatibility
 ////////////////////////////////////////////////////////////////////////////////
-
-static WindowsDllInterceptor sUser32Interceptor;
-static WindowsDllInterceptor::FuncHookType<decltype(&InSendMessageEx)>
-    sInSendMessageExStub;
-static bool sInSendMessageExHackEnabled = false;
-static PVOID sVectoredExceptionHandler = nullptr;
-
-#if defined(_MSC_VER)
-#  include <intrin.h>
-#  pragma intrinsic(_ReturnAddress)
-#  define RETURN_ADDRESS() _ReturnAddress()
-#elif defined(__GNUC__) || defined(__clang__)
-#  define RETURN_ADDRESS() \
-    __builtin_extract_return_addr(__builtin_return_address(0))
-#endif
-
-static inline bool IsCurrentThreadInBlockingMessageSend(
-    const DWORD aStateBits) {
-  // From the MSDN docs for InSendMessageEx
-  return (aStateBits & (ISMEX_REPLIED | ISMEX_SEND)) == ISMEX_SEND;
-}
-
-/**
- * COM assumes that if you're invoking a proxy from an STA thread while
- * InSendMessageEx reports that the calling thread is blocked, that you'll
- * deadlock your own process. It returns the RPC_E_CANTCALLOUT_ININPUTSYNCCALL
- * error code. This is not actually true in our case: we are calling into
- * the multithreaded apartment via ALPC. In this hook, we check to see if the
- * caller is COM, and if so, we lie to it.
- *
- * This hack is necessary for ATs who invoke COM proxies from within
- * WH_CALLWNDPROC hooks, WinEvent hooks, or a WndProc handling a sent
- * (as opposed to posted) message.
- */
-static DWORD WINAPI InSendMessageExHook(LPVOID lpReserved) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  DWORD result = sInSendMessageExStub(lpReserved);
-  if (NS_IsMainThread() && sInSendMessageExHackEnabled &&
-      IsCurrentThreadInBlockingMessageSend(result)) {
-    // We want to take a strong reference to the dll so that it is never
-    // unloaded/reloaded from this point forward, hence we use LoadLibrary
-    // and not GetModuleHandle.
-    static const HMODULE comModule = []() -> HMODULE {
-      HMODULE module = LoadLibraryW(L"combase.dll");
-      if (!module) {
-        // combase is not present on Windows 7, so we fall back to ole32 there
-        module = LoadLibraryW(L"ole32.dll");
-      }
-
-      return module;
-    }();
-
-    MOZ_ASSERT(comModule);
-    if (!comModule) {
-      return result;
-    }
-
-    // Check if InSendMessageEx is being called from code within comModule
-    HMODULE callingModule;
-    if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                          reinterpret_cast<LPCWSTR>(RETURN_ADDRESS()),
-                          &callingModule) &&
-        callingModule == comModule) {
-      result = ISMEX_NOTIFY;
-    }
-  }
-  return result;
-}
-
-static LONG CALLBACK
-DetectInSendMessageExCompat(PEXCEPTION_POINTERS aExceptionInfo) {
-  DWORD exceptionCode = aExceptionInfo->ExceptionRecord->ExceptionCode;
-  if (exceptionCode == static_cast<DWORD>(RPC_E_CANTCALLOUT_ININPUTSYNCCALL) &&
-      NS_IsMainThread()) {
-    sInSendMessageExHackEnabled = true;
-    // We don't need this exception handler anymore, so remove it
-    if (RemoveVectoredExceptionHandler(sVectoredExceptionHandler)) {
-      sVectoredExceptionHandler = nullptr;
-    }
-  }
-  return EXCEPTION_CONTINUE_SEARCH;
-}
 
 uint32_t Compatibility::sConsumers = Compatibility::UNKNOWN;
 
@@ -205,26 +121,6 @@ void Compatibility::Init() {
     // bail out (respect the user settings). If not, set it.
     if (!Preferences::HasUserValue("browser.ctrlTab.disallowForScreenReaders"))
       Preferences::SetBool("browser.ctrlTab.disallowForScreenReaders", true);
-  }
-
-  // If we have a consumer who is not NVDA, we enable detection for the
-  // InSendMessageEx compatibility hack. NVDA does not require this.
-  // We also skip UIA, as we see crashes there.
-  if ((sConsumers & (~(UIAUTOMATION | NVDA))) && BrowserTabsRemoteAutostart()) {
-    sUser32Interceptor.Init("user32.dll");
-    sInSendMessageExStub.Set(sUser32Interceptor, "InSendMessageEx",
-                             &InSendMessageExHook);
-
-    // The vectored exception handler allows us to catch exceptions ahead of any
-    // SEH handlers.
-    if (!sVectoredExceptionHandler) {
-      // We need to let ASan's ShadowExceptionHandler remain in the firstHandler
-      // position, otherwise we'll get infinite recursion when our handler
-      // faults on shadow memory.
-      const ULONG firstHandler = FALSE;
-      sVectoredExceptionHandler = AddVectoredExceptionHandler(
-          firstHandler, &DetectInSendMessageExCompat);
-    }
   }
 }
 
