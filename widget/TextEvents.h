@@ -885,6 +885,11 @@ class WidgetCompositionEvent : public WidgetGUIEvent {
   // the another event's mMessage.
   EventMessage mOriginalMessage;
 
+  // Composition ID considered by TextComposition.  If the event has not been
+  // handled by TextComposition yet, this is 0.  And also if the event is for
+  // a composition synthesized in a content process, this is always 0.
+  uint32_t mCompositionId = 0;
+
   void AssignCompositionEventData(const WidgetCompositionEvent& aEvent,
                                   bool aCopyTargets) {
     AssignGUIEventData(aEvent, aCopyTargets);

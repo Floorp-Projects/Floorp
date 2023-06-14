@@ -426,7 +426,8 @@ class ContentCacheInParent final : public ContentCache {
    *          BrowserParent or aWidget.  Therefore, the caller must not destroy
    *          this instance during a call of this method.
    */
-  void OnEventNeedingAckHandled(nsIWidget* aWidget, EventMessage aMessage);
+  void OnEventNeedingAckHandled(nsIWidget* aWidget, EventMessage aMessage,
+                                uint32_t aCompositionId);
 
   /**
    * RequestIMEToCommitComposition() requests aWidget to commit or cancel
@@ -436,6 +437,9 @@ class ContentCacheInParent final : public ContentCache {
    *                    the composition.
    * @param aCancel     When the caller tries to cancel the composition, true.
    *                    Otherwise, i.e., tries to commit the composition, false.
+   * @param aCompositionId
+   *                    The composition ID which should be committed or
+   *                    canceled.
    * @param aCommittedString    The committed string (i.e., the last data of
    *                            dispatched composition events during requesting
    *                            IME to commit composition.
@@ -443,6 +447,7 @@ class ContentCacheInParent final : public ContentCache {
    *                    synchronously.
    */
   bool RequestIMEToCommitComposition(nsIWidget* aWidget, bool aCancel,
+                                     uint32_t aCompositionId,
                                      nsAString& aCommittedString);
 
   /**
