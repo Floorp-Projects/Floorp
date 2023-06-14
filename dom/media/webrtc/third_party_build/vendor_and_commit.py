@@ -142,7 +142,12 @@ def vendor_and_commit(
     print("handle_noop_commit: {}".format(handle_noop_commit))
     if handle_noop_commit:
         print("***")
-        print("*** detected special commit msg, setting handle_noop_commit")
+        print("*** Detected special commit msg, setting handle_noop_commit.")
+        print("*** This commit is flagged as having been handled by a")
+        print("*** previous commit, meaning the changed file count between")
+        print("*** upstream and our vendored commit will not match. The")
+        print("*** commit message is annotated with info on the previous")
+        print("*** commit.")
         print("***")
 
     resume_state = ""
