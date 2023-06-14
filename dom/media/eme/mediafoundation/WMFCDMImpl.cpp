@@ -6,6 +6,8 @@
 
 #include "WMFCDMImpl.h"
 
+#include <unordered_map>
+
 #include "mozilla/dom/MediaKeySession.h"
 
 namespace mozilla {
@@ -78,17 +80,33 @@ bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
   nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
   NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
 
-  // TODO : store the result to avoid further redundant ipc calls
+  // Retrieve result from our cached key system
+  static std::unordered_map<std::string, nsTArray<KeySystemConfig>>
+      sKeySystemConfigs{};
+  auto keySystem = std::string{NS_ConvertUTF16toUTF8(mCDM->KeySystem()).get()};
+  if (auto rv = sKeySystemConfigs.find(keySystem);
+      rv != sKeySystemConfigs.end()) {
+    EME_LOG("Return cached capabilities for %s", keySystem.c_str());
+    for (const auto& config : rv->second) {
+      aOutConfigs.AppendElement(config);
+#ifdef DEBUG
+      EME_LOG("-- capabilities (%s)",
+              NS_ConvertUTF16toUTF8(config.GetDebugInfo()).get());
+#endif
+    }
+    return true;
+  }
+
+  // Not cached result, ask the remote process.
   bool ok = false;
   static const bool sIsHwSecure[2] = {false, true};
   for (const auto& isHWSecure : sIsHwSecure) {
     media::Await(
         do_AddRef(backgroundTaskQueue), mCDM->GetCapabilities(isHWSecure),
-        [&ok, &aOutConfigs,
+        [&ok, &aOutConfigs, keySystem,
          isHWSecure](const MFCDMCapabilitiesIPDL& capabilities) {
-          EME_LOG("capabilities for hw-secure=%d", isHWSecure);
-          EME_LOG("capabilities: keySystem=%s",
-                  NS_ConvertUTF16toUTF8(capabilities.keySystem()).get());
+          EME_LOG("capabilities: keySystem=%s (hw-secure=%d)",
+                  keySystem.c_str(), isHWSecure);
           for (const auto& v : capabilities.videoCapabilities()) {
             EME_LOG("capabilities: video=%s",
                     NS_ConvertUTF16toUTF8(v.contentType()).get());
@@ -103,6 +121,7 @@ bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
           }
           KeySystemConfig* config = aOutConfigs.AppendElement();
           MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);
+          sKeySystemConfigs[keySystem].AppendElement(*config);
           ok = true;
         },
         [](nsresult rv) {

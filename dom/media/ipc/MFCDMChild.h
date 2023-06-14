@@ -67,6 +67,7 @@ class MFCDMChild final : public PMFCDMChild {
       const MFCDMKeyExpiration& aExpiration);
 
   uint64_t Id() const { return mId; }
+  const nsString& KeySystem() const { return mKeySystem; }
 
   void IPDLActorDestroyed() {
     AssertOnManagerThread();
