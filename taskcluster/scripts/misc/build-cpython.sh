@@ -46,6 +46,9 @@ case `uname -s` in
         # see https://bugs.python.org/issue44065
         sed -i -e 's,$CC --print-multiarch,:,' ${python_src}/configure
         ;;
+    Linux)
+        export LDFLAGS="${LDFLAGS} -Wl,-rpath,\\\$ORIGIN/../.."
+        ;;
 esac
 
 # Patch Python to honor MOZPYTHONHOME instead of PYTHONHOME. That way we have a
@@ -66,5 +69,13 @@ cd ${work_dir}
 
 ${work_dir}/python/bin/python3 -m pip install --upgrade pip==23.0
 ${work_dir}/python/bin/python3 -m pip install -r ${GECKO_PATH}/build/psutil_requirements.txt -r ${GECKO_PATH}/build/zstandard_requirements.txt
+
+case `uname -s` in
+    Linux)
+        cp /usr/lib/x86_64-linux-gnu/libffi.so.* ${work_dir}/python/lib/
+        cp /lib/x86_64-linux-gnu/libncursesw.so.* ${work_dir}/python/lib/
+        cp /lib/x86_64-linux-gnu/libtinfo.so.* ${work_dir}/python/lib/
+        ;;
+esac
 
 $(dirname $0)/pack.sh ${tardir}

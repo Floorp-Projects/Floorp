@@ -23,6 +23,8 @@ linux64-python-3.7:
         toolchain:
             - linux64-clang-toolchain
             - linux64-x64-compiler-rt-16
+    worker:
+        docker-image: {in-tree: ubuntu1804-build-python}
 
 linux64-python-3.8:
     treeherder:
@@ -36,6 +38,8 @@ linux64-python-3.8:
         toolchain:
             - linux64-clang-toolchain
             - linux64-x64-compiler-rt-16
+    worker:
+        docker-image: {in-tree: ubuntu1804-build-python}
 
 win64-python-3.8:
     description: "cpython 3.8.10"
