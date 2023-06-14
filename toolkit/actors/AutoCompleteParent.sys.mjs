@@ -6,10 +6,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-});
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "DELEGATE_AUTOCOMPLETE",
@@ -18,6 +14,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
