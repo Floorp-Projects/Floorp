@@ -188,6 +188,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
   MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
   MFCDMCapabilitiesIPDL capabilities;
+  capabilities.keySystem() = mKeySystem;
+  // WMF CDMs usually require these. See
+  // https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_factory.cc;l=69-73;drc=b3ca5c09fa0aa07b7f9921501f75e43d80f3ba48
+  capabilities.persistentState() = KeySystemConfig::Requirement::Required;
+  capabilities.distinctiveID() = KeySystemConfig::Requirement::Required;
 
   // TODO : check HW CDM creation
   // TODO : add HEVC support?
@@ -214,7 +219,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
     }
   }
   if (supportedVideoCodecs.IsEmpty()) {
-    // Return empty capabilities when no video codec is supported.
+    // Return a capabilities with no codec supported.
     aResolver(std::move(capabilities));
     return IPC_OK();
   }
@@ -264,12 +269,6 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
       KeySystemConfig::SessionType::Temporary);
   capabilities.sessionTypes().AppendElement(
       KeySystemConfig::SessionType::PersistentLicense);
-  // WMF CDMs usually require these. See
-  // https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_factory.cc;l=69-73;drc=b3ca5c09fa0aa07b7f9921501f75e43d80f3ba48
-  capabilities.persistentState() = KeySystemConfig::Requirement::Required;
-  capabilities.distinctiveID() = KeySystemConfig::Requirement::Required;
-
-  capabilities.keySystem() = mKeySystem;
 
   aResolver(std::move(capabilities));
   return IPC_OK();
