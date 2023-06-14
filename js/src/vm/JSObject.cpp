@@ -32,6 +32,7 @@
 #include "builtin/Symbol.h"
 #include "builtin/WeakSetObject.h"
 #include "ds/IdValuePair.h"  // js::IdValuePair
+#include "gc/AllocKind.h"
 #include "gc/Policy.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable, JS::IsConstructor
 #include "js/CharacterEncoding.h"
@@ -1228,21 +1229,6 @@ bool ProxyObject::fixupAfterSwap(JSContext* cx,
   return true;
 }
 
-#ifdef DEBUG
-static bool IsBackgroundFinalizedWhenTenured(JSObject* obj) {
-  if (obj->isTenured()) {
-    return gc::IsBackgroundFinalized(obj->asTenured().getAllocKind());
-  }
-
-  if (obj->is<ProxyObject>()) {
-    return gc::IsBackgroundFinalized(
-        obj->as<ProxyObject>().allocKindForTenure());
-  }
-
-  return js::gc::CanUseBackgroundAllocKind(obj->getClass());
-}
-#endif
-
 static gc::AllocKind SwappableObjectAllocKind(JSObject* obj) {
   MOZ_ASSERT(ObjectMayBeSwapped(obj));
 
@@ -1261,8 +1247,7 @@ static gc::AllocKind SwappableObjectAllocKind(JSObject* obj) {
 void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
                     AutoEnterOOMUnsafeRegion& oomUnsafe) {
   // Ensure swap doesn't cause a finalizer to be run at the wrong time.
-  MOZ_ASSERT(IsBackgroundFinalizedWhenTenured(a) ==
-             IsBackgroundFinalizedWhenTenured(b));
+  MOZ_ASSERT(a->isBackgroundFinalized() == b->isBackgroundFinalized());
 
   MOZ_ASSERT(a->compartment() == b->compartment());
 
@@ -3279,6 +3264,15 @@ JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx) {
 
 bool JSObject::canHaveFixedElements() const {
   return (is<ArrayObject>() || IF_RECORD_TUPLE(is<TupleType>(), false));
+}
+
+bool JSObject::isBackgroundFinalized() const {
+  if (isTenured()) {
+    return js::gc::IsBackgroundFinalized(asTenured().getAllocKind());
+  }
+
+  js::Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+  return js::gc::IsBackgroundFinalized(allocKindForTenure(nursery));
 }
 
 js::gc::AllocKind JSObject::allocKindForTenure(
