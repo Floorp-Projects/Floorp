@@ -2713,10 +2713,6 @@ pref("font.size.monospace.x-math", 13);
   // the parent window when the managed popup is shown.
   pref("ui.panel.default_level_parent", true);
 
-  // Forward downloads with known OMA MIME types to Android's download manager
-  // instead of downloading them in the browser.
-  pref("browser.download.forward_oma_android_download_manager", false);
-
 #endif // ANDROID
 
 #if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
