@@ -39,9 +39,6 @@ class PerftestResultsHandler(object):
     def __init__(
         self,
         gecko_profile=False,
-        power_test=False,
-        cpu_test=False,
-        memory_test=False,
         live_sites=False,
         app=None,
         conditioned_profile=None,
@@ -54,9 +51,6 @@ class PerftestResultsHandler(object):
         **kwargs
     ):
         self.gecko_profile = gecko_profile
-        self.power_test = power_test
-        self.cpu_test = cpu_test
-        self.memory_test = memory_test
         self.live_sites = live_sites
         self.app = app
         self.conditioned_profile = conditioned_profile
@@ -188,11 +182,6 @@ class PerftestResultsHandler(object):
         self.existing_results = directory
 
     def _get_expected_perfherder(self, output):
-        def is_resource_test():
-            if self.power_test or self.cpu_test or self.memory_test:
-                return True
-            return False
-
         # if results exists, determine if any test is of type 'scenario'
         is_scenario = False
         if output.summarized_results or output.summarized_supporting_data:
@@ -204,27 +193,10 @@ class PerftestResultsHandler(object):
                 if data_type == "scenario":
                     is_scenario = True
                     break
-
-        if is_scenario and not is_resource_test():
-            # skip perfherder check when a scenario test-type is run without
-            # a resource flag
+        if is_scenario:
+            # skip perfherder check when a scenario test-type is run
             return None
-
-        expected_perfherder = 1
-
-        if is_resource_test():
-            # when resource tests are run, no perfherder data is output
-            # for the regular raptor tests (i.e. speedometer) so we
-            # expect one per resource-type, starting with 0
-            expected_perfherder = 0
-            if self.power_test:
-                expected_perfherder += 1
-            if self.memory_test:
-                expected_perfherder += 1
-            if self.cpu_test:
-                expected_perfherder += 1
-
-        return expected_perfherder
+        return 1
 
     def _validate_treeherder_data(self, output, output_perfdata):
         # late import is required, because install is done in create_virtualenv
@@ -602,28 +574,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     not in NON_FIREFOX_BROWSERS + NON_FIREFOX_BROWSERS_MOBILE
                 ):
                     bt_result["measurements"].setdefault("cpuTime", []).extend(cpu_vals)
-
-            if self.power_test:
-                power_result = {
-                    "bt_ver": bt_ver,
-                    "browser": bt_browser,
-                    "url": bt_url,
-                    "measurements": {},
-                    "statistics": {},
-                    "power_data": True,
-                }
-
-                for cycle in raw_result["android"]["power"]:
-                    for metric in cycle:
-                        if "total" in metric:
-                            continue
-                        power_result["measurements"].setdefault(metric, []).append(
-                            cycle[metric]
-                        )
-                power_result["statistics"] = raw_result["statistics"]["android"][
-                    "power"
-                ]
-                results.append(power_result)
 
             custom_types = raw_result["extras"][0]
             if custom_types:

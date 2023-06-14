@@ -287,7 +287,7 @@ def setup_browsertime(config, tasks):
         # files, the transition is straight-forward.
         extra_options = task.get("mozharness", {}).get("extra-options", [])
 
-        if task["suite"] != "raptor" or "--webext" in extra_options:
+        if task["suite"] != "raptor":
             yield task
             continue
 

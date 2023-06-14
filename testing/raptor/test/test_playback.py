@@ -28,7 +28,7 @@ def test_get_playback(get_binary):
         return
     config["obj_path"] = os.path.dirname(get_binary("firefox"))
     config["playback_tool"] = "mitmproxy"
-    config["playback_version"] = "7.0.4"
+    config["playback_version"] = "8.1.1"
     config["playback_files"] = [
         os.path.join(
             os.path.dirname(os.path.abspath(os.path.dirname(__file__))),

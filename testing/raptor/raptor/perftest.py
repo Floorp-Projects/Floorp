@@ -27,9 +27,6 @@ from mozproxy import get_playback
 here = os.path.abspath(os.path.dirname(__file__))
 paths = [here]
 
-webext_dir = os.path.join(here, "..", "webext")
-paths.append(webext_dir)
-
 for path in paths:
     if not os.path.exists(path):
         raise IOError("%s does not exist. " % path)
@@ -82,10 +79,7 @@ class Perftest(object):
         extra_profiler_run=False,
         symbols_path=None,
         host=None,
-        power_test=False,
-        cpu_test=False,
         cold=False,
-        memory_test=False,
         live_sites=False,
         is_release_build=False,
         debug_mode=False,
@@ -135,13 +129,9 @@ class Perftest(object):
             "extra_profiler_run": extra_profiler_run,
             "symbols_path": symbols_path,
             "host": host,
-            "power_test": power_test,
-            "memory_test": memory_test,
-            "cpu_test": cpu_test,
             "cold": cold,
             "live_sites": live_sites,
             "is_release_build": is_release_build,
-            "enable_control_server_wait": memory_test or cpu_test,
             "e10s": e10s,
             "device_name": device_name,
             "fission": fission,
@@ -689,11 +679,6 @@ class PerftestAndroid(Perftest):
 
     def set_reverse_ports(self):
         if self.is_localhost:
-
-            # only raptor-webext uses the control server
-            if self.config.get("browsertime", False) is False:
-                LOG.info("making the raptor control server port available to device")
-                self.set_reverse_port(self.control_server.port)
 
             if self.playback:
                 LOG.info("making the raptor playback server port available to device")

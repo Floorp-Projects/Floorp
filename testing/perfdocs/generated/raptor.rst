@@ -16,16 +16,13 @@ Locally, Raptor can be invoked with the following command:
 
     ./mach raptor
 
-**We're in the process of migrating away from webextension to browsertime. Currently, raptor supports both of them, but at the end of the migration, the support for webextension will be removed.**
 
 .. toctree::
    :titlesonly:
 
    browsertime
-   webextension
    debugging
    contributing
-   test-list
    metrics
 
 .. contents::
