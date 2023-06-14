@@ -562,6 +562,9 @@ export class TranslationsParent extends JSWindowActorParent {
     return true;
   }
 
+  /** @type {Promise<LanguageIdModelRecord> | null} */
+  #languageIdModelRecord = null;
+
   /**
    * Retrieves the language-identification model binary from remote settings.
    *
@@ -572,36 +575,50 @@ export class TranslationsParent extends JSWindowActorParent {
     const now = Date.now();
     const client = this.#getLanguageIdModelRemoteClient();
 
-    /** @type {LanguageIdModelRecord[]} */
-    let modelRecords = await TranslationsParent.getMaxVersionRecords(client);
+    if (!this.#languageIdModelRecord) {
+      // Place the records into a promise to prevent any races.
+      this.#languageIdModelRecord = (async () => {
+        /** @type {LanguageIdModelRecord[]} */
+        let modelRecords = await TranslationsParent.getMaxVersionRecords(
+          client
+        );
 
-    if (modelRecords.length === 0) {
-      throw new Error(
-        "Unable to get language-identification model record from remote settings"
-      );
-    }
+        if (modelRecords.length === 0) {
+          throw new Error(
+            "Unable to get language-identification model record from remote settings"
+          );
+        }
 
-    if (modelRecords.length > 1) {
-      TranslationsParent.reportError(
-        new Error(
-          "Expected the language-identification model collection to have only 1 record."
-        ),
-        modelRecords
-      );
+        if (modelRecords.length > 1) {
+          TranslationsParent.reportError(
+            new Error(
+              "Expected the language-identification model collection to have only 1 record."
+            ),
+            modelRecords
+          );
+        }
+        return modelRecords[0];
+      })();
     }
-    const [modelRecord] = modelRecords;
 
     await chaosMode(1 / 3);
 
-    /** @type {{buffer: ArrayBuffer}} */
-    const { buffer } = await client.attachments.download(modelRecord);
+    try {
+      /** @type {{buffer: ArrayBuffer}} */
+      const { buffer } = await client.attachments.download(
+        await this.#languageIdModelRecord
+      );
 
-    const duration = (Date.now() - now) / 1000;
-    lazy.console.log(
-      `Remote language-identification model loaded in ${duration} seconds.`
-    );
+      const duration = (Date.now() - now) / 1000;
+      lazy.console.log(
+        `Remote language-identification model loaded in ${duration} seconds.`
+      );
 
-    return buffer;
+      return buffer;
+    } catch (error) {
+      this.#languageIdModelRecord = null;
+      throw error;
+    }
   }
 
   /**
