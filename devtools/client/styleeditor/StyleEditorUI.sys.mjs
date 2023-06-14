@@ -17,7 +17,6 @@ import {
 } from "resource://devtools/client/styleeditor/StyleEditorUtil.sys.mjs";
 import { StyleSheetEditor } from "resource://devtools/client/styleeditor/StyleSheetEditor.sys.mjs";
 
-const { PluralForm } = require("resource://devtools/shared/plural-form.js");
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
 const KeyShortcuts = require("resource://devtools/client/shared/key-shortcuts.js");
@@ -1237,6 +1236,13 @@ export class StyleEditorUI extends EventEmitter {
       ruleCount = "-";
     }
 
+    this.#panelDoc.l10n.setArgs(
+      summary.querySelector(".stylesheet-rule-count"),
+      {
+        ruleCount,
+      }
+    );
+
     summary.classList.toggle("disabled", !!editor.styleSheet.disabled);
     summary.classList.toggle("unsaved", !!editor.unsaved);
     summary.classList.toggle("linked-file-error", !!editor.linkedCSSFileError);
@@ -1255,14 +1261,6 @@ export class StyleEditorUI extends EventEmitter {
     }
     text(summary, ".stylesheet-linked-file", linkedCSSSource);
     text(summary, ".stylesheet-title", editor.styleSheet.title || "");
-    text(
-      summary,
-      ".stylesheet-rule-count",
-      PluralForm.get(ruleCount, getString("ruleCount.label")).replace(
-        "#1",
-        ruleCount
-      )
-    );
 
     // We may need to change the summary visibility as a result of the changes.
     this.handleSummaryVisibility(summary);

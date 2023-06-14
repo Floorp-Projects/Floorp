@@ -21,7 +21,7 @@ add_task(async function () {
 
   await waitForPropertyChange;
 
-  testUpdated(editor, originalHref);
+  await testUpdated(editor, originalHref);
 });
 
 function onPropertyChange(editor) {
@@ -79,7 +79,7 @@ function typeInEditor(editor, panelWindow) {
   });
 }
 
-function testUpdated(editor, originalHref) {
+async function testUpdated(editor, originalHref) {
   info("Testing the state of the new editor after editing it");
 
   is(
@@ -88,10 +88,19 @@ function testUpdated(editor, originalHref) {
     "rule bracket has been auto-closed"
   );
 
-  const ruleCount = editor.summary.querySelector(
-    ".stylesheet-rule-count"
-  ).textContent;
-  is(parseInt(ruleCount, 10), 1, "new editor shows 1 rule after modification");
+  const count = await waitFor(() => {
+    const int = parseInt(
+      editor.summary.querySelector(".stylesheet-rule-count").textContent,
+      10
+    );
+    if (int == 0) {
+      return false;
+    }
+
+    return int;
+  });
+
+  is(count, 1, "new editor shows 1 rule after modification");
 
   is(editor.styleSheet.href, originalHref, "style sheet href did not change");
 }
