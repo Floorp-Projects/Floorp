@@ -339,7 +339,7 @@ class AwesomeBarView(
     internal fun getHistoryProvidersForSearchEngine(
         searchEngineSource: SearchEngineSource,
     ): AwesomeBar.SuggestionProvider? {
-        val searchEngineHostFilter = searchEngineSource.searchEngine?.resultsUrl?.host ?: return null
+        val searchEngineUriFilter = searchEngineSource.searchEngine?.resultsUrl ?: return null
 
         return if (activity.settings().historyMetadataUIFeature) {
             CombinedHistorySuggestionProvider(
@@ -351,7 +351,7 @@ class AwesomeBarView(
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
                 showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-                resultsHostFilter = searchEngineHostFilter,
+                resultsUriFilter = searchEngineUriFilter,
             )
         } else {
             HistoryStorageSuggestionProvider(
@@ -362,7 +362,7 @@ class AwesomeBarView(
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
                 showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-                resultsHostFilter = searchEngineHostFilter,
+                resultsUriFilter = searchEngineUriFilter,
             )
         }
     }

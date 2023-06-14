@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -18,7 +19,6 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -245,12 +245,12 @@ class HistoryMetadataSuggestionProviderTest {
             historyStorage = storage,
             loadUrlUseCase = mock(),
             maxNumberOfSuggestions = 2,
-            resultsHostFilter = "test",
+            resultsUriFilter = "test".toUri(),
         )
 
         provider.onInputChanged("moz")
 
-        verify(storage).queryHistoryMetadata("test", expectedQueryCount)
+        verify(storage).queryHistoryMetadata("moz", expectedQueryCount)
     }
 
     @Test
@@ -271,12 +271,52 @@ class HistoryMetadataSuggestionProviderTest {
         val provider = HistoryMetadataSuggestionProvider(
             historyStorage = storage,
             loadUrlUseCase = mock(),
-            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+            resultsUriFilter = "https://mozilla.com".toUri(),
         )
 
         val suggestions = provider.onInputChanged("moz")
 
-        assertEquals(1, suggestions.size)
+        assertEquals(2, suggestions.size)
         assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("http://www.mozilla.com"))
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN return results containing mobile subdomains`() = runTest {
+        val storage: HistoryMetadataStorage = mock()
+        val metadataKey1 = HistoryMetadataKey("https://m.mozilla.com/firefox", null, null)
+        val historyEntry1 = HistoryMetadata(
+            key = metadataKey1,
+            title = "mozilla",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null,
+        )
+
+        val metadataKey2 = HistoryMetadataKey("http://www.mobile.mozilla.com/firefox", null, null)
+        val historyEntry2 = HistoryMetadata(
+            key = metadataKey2,
+            title = "mozilla",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null,
+        )
+        doReturn(listOf(historyEntry1, historyEntry2)).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
+
+        val provider = HistoryMetadataSuggestionProvider(
+            historyStorage = storage,
+            loadUrlUseCase = mock(),
+            resultsUriFilter = "https://mozilla.com".toUri(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(2, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("http://www.mobile.mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://m.mozilla.com/firefox"))
     }
 }

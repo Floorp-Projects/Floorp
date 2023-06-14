@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -13,7 +14,6 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -289,8 +289,8 @@ class CombinedHistorySuggestionProviderTest {
     fun `GIVEN a results host filter WHEN querying history THEN query more than the usual default results for the host url`() = runTest {
         val history: HistoryStorage = mock()
         val metadata: HistoryMetadataStorage = mock()
-        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("test"), anyInt())
-        doReturn(emptyList<SearchResult>()).`when`(history).getSuggestions(eq("test"), anyInt())
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
+        doReturn(emptyList<SearchResult>()).`when`(history).getSuggestions(eq("moz"), anyInt())
         val expectedQueryCount = DEFAULT_COMBINED_SUGGESTION_LIMIT * COMBINED_HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR
 
         val provider = CombinedHistorySuggestionProvider(
@@ -298,13 +298,13 @@ class CombinedHistorySuggestionProviderTest {
             historyMetadataStorage = metadata,
             loadUrlUseCase = mock(),
             showEditSuggestion = false,
-            resultsHostFilter = "test",
+            resultsUriFilter = "test".toUri(),
         )
 
         provider.onInputChanged("moz")
 
-        verify(history).getSuggestions("test", expectedQueryCount)
-        verify(metadata).queryHistoryMetadata("test", expectedQueryCount)
+        verify(history).getSuggestions("moz", expectedQueryCount)
+        verify(metadata).queryHistoryMetadata("moz", expectedQueryCount)
     }
 
     @Test
@@ -327,13 +327,45 @@ class CombinedHistorySuggestionProviderTest {
             historyMetadataStorage = metadata,
             loadUrlUseCase = mock(),
             showEditSuggestion = false,
-            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+            resultsUriFilter = "https://mozilla.com".toUri(),
         )
 
         val suggestions = provider.onInputChanged("moz")
 
-        assertEquals(2, suggestions.size)
+        assertEquals(3, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("http://www.mozilla.com/firefox"))
         assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/thunderbird"))
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN return the results containing mobile domains`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(anyString(), anyInt())
+        doReturn(
+            listOf(
+                SearchResult("3", "https://m.mozilla.com/firefox", 10),
+                SearchResult("5", "http://firefox.com/mozilla", 10),
+                SearchResult("2", "http://allizom.com/focus/", 10),
+                SearchResult("4", "https://mozilla.com/thunderbird", 10),
+                SearchResult("16", "http://www.mobile.mozilla.com/firefox", 22),
+            ),
+        ).`when`(history).getSuggestions(anyString(), anyInt())
+
+        val provider = CombinedHistorySuggestionProvider(
+            historyStorage = history,
+            historyMetadataStorage = metadata,
+            loadUrlUseCase = mock(),
+            showEditSuggestion = false,
+            resultsUriFilter = "https://mozilla.com".toUri(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(3, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("http://www.mobile.mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://m.mozilla.com/firefox"))
         assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/thunderbird"))
     }
 }

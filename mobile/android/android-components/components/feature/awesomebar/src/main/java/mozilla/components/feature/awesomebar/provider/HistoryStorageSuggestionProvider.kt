@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import mozilla.components.browser.icons.BrowserIcons
@@ -14,6 +15,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.feature.awesomebar.facts.emitHistorySuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import java.util.UUID
 
 /**
@@ -43,7 +45,7 @@ internal const val HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR = 10
  * defaults to [DEFAULT_HISTORY_SUGGESTION_LIMIT]
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
- * @param resultsHostFilter Optional filter for the host url of the suggestions to show.
+ * @param resultsUriFilter Optional filter for the host url of the suggestions to show.
  */
 class HistoryStorageSuggestionProvider(
     @get:VisibleForTesting internal val historyStorage: HistoryStorage,
@@ -53,7 +55,7 @@ class HistoryStorageSuggestionProvider(
     @get:VisibleForTesting internal var maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT,
     @get:VisibleForTesting val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
-    @get:VisibleForTesting val resultsHostFilter: String? = null,
+    @get:VisibleForTesting val resultsUriFilter: Uri? = null,
 ) : AwesomeBar.SuggestionProvider {
 
     override val id: String = UUID.randomUUID().toString()
@@ -69,9 +71,9 @@ class HistoryStorageSuggestionProvider(
             return emptyList()
         }
 
-        val suggestions = when (resultsHostFilter) {
+        val suggestions = when (resultsUriFilter) {
             null -> getHistorySuggestions(text)
-            else -> getHistorySuggestionsFromHost(resultsHostFilter, text)
+            else -> getHistorySuggestionsFromHost(resultsUriFilter, text)
         }
 
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
@@ -117,18 +119,17 @@ class HistoryStorageSuggestionProvider(
         .take(maxNumberOfSuggestions)
 
     /**
-     * Get up to [maxNumberOfSuggestions] history suggestions matching [query] from the indicated [host].
+     * Get up to [maxNumberOfSuggestions] history suggestions matching [query] from the indicated [url].
      *
      * @param query String to filter history entry's title or URL by.
-     * @param host URL host to filter all history entry's URL host by.
+     * @param url URL host to filter all history entry's URL host by.
      */
-    private fun getHistorySuggestionsFromHost(host: String, query: String) = historyStorage
-        .getSuggestions(host, maxNumberOfSuggestions * HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR)
+    private fun getHistorySuggestionsFromHost(url: Uri, query: String) = historyStorage
+        .getSuggestions(query, maxNumberOfSuggestions * HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR)
         .sortedByDescending { it.score }
         .distinctBy { it.id }
         .filter {
-            it.url.toUri().host == host &&
-                (it.url.contains(query, true) || it.title?.contains(query, true) ?: false)
+            it.url.toUri().sameHostWithoutMobileSubdomainAs(url)
         }
         .take(maxNumberOfSuggestions)
 }

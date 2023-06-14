@@ -37,10 +37,12 @@ val Uri.hostWithoutCommonPrefixes: String?
  */
 fun Uri.sameHostWithoutMobileSubdomainAs(other: Uri): Boolean {
     val thisHost = hostWithoutCommonPrefixes?.let {
-        it.split(".").filter { mobileSubdomains.none(String::equals) }
+        it.split(".")
+            .filter { subdomain -> mobileSubdomains.none { mobileSubdomain -> mobileSubdomain == subdomain } }
     } ?: return false
     val otherHost = other.hostWithoutCommonPrefixes?.let {
-        it.split(".").filter { mobileSubdomains.none(String::equals) }
+        it.split(".")
+            .filter { subdomain -> mobileSubdomains.none { mobileSubdomain -> mobileSubdomain == subdomain } }
     } ?: return false
     return thisHost == otherHost
 }

@@ -171,12 +171,13 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true) {
             every { historyMetadataUIFeature } returns true
         }
+        val url = Uri.parse("test.com")
         every { activity.settings() } returns settings
         val state = getSearchProviderState(
             showAllHistorySuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
                 mockk(relaxed = true) {
-                    every { resultsUrl.host } returns "test"
+                    every { resultsUrl } returns url
                 },
             ),
         )
@@ -185,7 +186,7 @@ class AwesomeBarViewTest {
 
         val historyProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider }
         assertNotNull(historyProvider)
-        assertEquals("test", (historyProvider as CombinedHistorySuggestionProvider).resultsHostFilter)
+        assertEquals(url, (historyProvider as CombinedHistorySuggestionProvider).resultsUriFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, historyProvider.getMaxNumberOfSuggestions())
     }
 
@@ -546,12 +547,13 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true) {
             every { historyMetadataUIFeature } returns false
         }
+        val url = Uri.parse("test.com")
         every { activity.settings() } returns settings
         val state = getSearchProviderState(
             showAllHistorySuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
                 mockk(relaxed = true) {
-                    every { resultsUrl.host } returns "test"
+                    every { resultsUrl } returns url
                 },
             ),
         )
@@ -560,7 +562,7 @@ class AwesomeBarViewTest {
 
         val historyProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider }
         assertNotNull(historyProvider)
-        assertEquals("test", (historyProvider as HistoryStorageSuggestionProvider).resultsHostFilter)
+        assertEquals(url, (historyProvider as HistoryStorageSuggestionProvider).resultsUriFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, historyProvider.getMaxNumberOfSuggestions())
     }
 
@@ -811,8 +813,8 @@ class AwesomeBarViewTest {
 
         val historyProviders: List<HistoryStorageSuggestionProvider> = result.filterIsInstance<HistoryStorageSuggestionProvider>()
         assertEquals(2, historyProviders.size)
-        assertNull(historyProviders[0].resultsHostFilter) // the general history provider
-        assertNotNull(historyProviders[1].resultsHostFilter) // the filtered history provider
+        assertNull(historyProviders[0].resultsUriFilter) // the general history provider
+        assertNotNull(historyProviders[1].resultsUriFilter) // the filtered history provider
         val bookmarksProviders: List<BookmarksStorageSuggestionProvider> = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
         assertEquals(2, bookmarksProviders.size)
         assertNull(bookmarksProviders[0].resultsUriFilter) // the general bookmarks provider
@@ -883,7 +885,7 @@ class AwesomeBarViewTest {
 
         assertNotNull(result)
         assertTrue(result is CombinedHistorySuggestionProvider)
-        assertNotNull((result as CombinedHistorySuggestionProvider).resultsHostFilter)
+        assertNotNull((result as CombinedHistorySuggestionProvider).resultsUriFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, result.getMaxNumberOfSuggestions())
     }
 
@@ -899,7 +901,7 @@ class AwesomeBarViewTest {
 
         assertNotNull(result)
         assertTrue(result is HistoryStorageSuggestionProvider)
-        assertNotNull((result as HistoryStorageSuggestionProvider).resultsHostFilter)
+        assertNotNull((result as HistoryStorageSuggestionProvider).resultsUriFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, result.getMaxNumberOfSuggestions())
     }
 

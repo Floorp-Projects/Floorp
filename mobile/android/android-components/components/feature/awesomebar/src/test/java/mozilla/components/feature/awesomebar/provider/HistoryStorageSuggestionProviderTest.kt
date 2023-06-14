@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -16,7 +17,6 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -326,13 +326,13 @@ class HistoryStorageSuggestionProviderTest {
             historyStorage = history,
             loadUrlUseCase = mock(),
             maxNumberOfSuggestions = 13,
-            resultsHostFilter = "test",
+            resultsUriFilter = "test".toUri(),
         )
         val expectedQueryCount = 13 * HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR
 
         provider.onInputChanged("moz")
 
-        verify(history).getSuggestions("test", expectedQueryCount)
+        verify(history).getSuggestions("moz", expectedQueryCount)
     }
 
     @Test
@@ -351,13 +351,39 @@ class HistoryStorageSuggestionProviderTest {
         val provider = HistoryStorageSuggestionProvider(
             historyStorage = history,
             loadUrlUseCase = mock(),
-            resultsHostFilter = "https://mozilla.com".tryGetHostFromUrl(),
+            resultsUriFilter = "https://mozilla.com".toUri(),
         )
 
         val suggestions = provider.onInputChanged("moz")
 
-        assertEquals(2, suggestions.size)
+        assertEquals(3, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("http://www.mozilla.com/firefox"))
         assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/thunderbird"))
+    }
+
+    @Test
+    fun `GIVEN a results host filter WHEN querying history THEN return mobile domain results`() = runTest {
+        val history: HistoryStorage = mock()
+        doReturn(
+            listOf(
+                SearchResult("1", "https://m.mozilla.com/firefox", 10),
+                SearchResult("2", "https://mozilla.com/thunderbird", 10),
+                SearchResult("3", "http://www.mobile.mozilla.com/firefox", 22),
+            ),
+        ).`when`(history).getSuggestions(anyString(), anyInt())
+
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history,
+            loadUrlUseCase = mock(),
+            resultsUriFilter = "https://mozilla.com".toUri(),
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+
+        assertEquals(3, suggestions.size)
+        assertTrue(suggestions.map { it.description }.contains("https://m.mozilla.com/firefox"))
+        assertTrue(suggestions.map { it.description }.contains("http://www.mobile.mozilla.com/firefox"))
         assertTrue(suggestions.map { it.description }.contains("https://mozilla.com/thunderbird"))
     }
 }
