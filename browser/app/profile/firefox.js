@@ -1668,8 +1668,6 @@ pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true);
 // - "key=value" - Search param named "key" with value "value"
 pref("browser.newtabpage.activity-stream.hideTopSitesWithSearchParam", "mfadid=adm");
 
-// Used to display triplet cards on newtab
-pref("trailhead.firstrun.newtab.triplets", "");
 // Separate about welcome
 pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
