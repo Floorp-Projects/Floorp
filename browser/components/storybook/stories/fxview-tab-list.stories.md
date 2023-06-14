@@ -64,6 +64,7 @@ With dismiss button:
 ### Properties
 
 You'll need to pass along some of the following properties:
+* `compactRows` (**Optional**): If `true`, displays shorter rows by omitting the URL and date/time. The default value is `false`.
 * `dateTimeFormat` (**Optional**): A string to indicate the expected format/options for the date and/or time displayed on each tab item in the list. The default for this if not given is `"relative"`.
     * Options include:
         * `relative` (Ex: "Just now", "2m ago", etc.)
@@ -77,7 +78,7 @@ You'll need to pass along some of the following properties:
         * `icon` (**Required**) - The location string for the favicon. Will fallback to default favicon if none is found.
         * `primaryL10nId` (**Required**) - The l10n id to be used for the primary action element. This fluent string should ONLY define a `.title` attribute to describe the link element in each row.
         * `primaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the primary action element
-        * `secondaryL10nId` (**Required**) -  The l10n id to be used for the secondary action button. This fluent string should ONLY define a `.title` attribute to describe the secondary button in each row.
+        * `secondaryL10nId` (**Optional**) -  The l10n id to be used for the secondary action button. This fluent string should ONLY define a `.title` attribute to describe the secondary button in each row.
         * `secondaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the secondary action button
         * `tabid` (**Optional**) - Optional property expected for Recently Closed tab data
         * `time` (**Required**) - The time in milliseconds for expected last interaction with the tab (Ex: `lastUsed` for SyncedTabs tabs, `closedAt` for RecentlyClosed tabs, etc.)
