@@ -115,9 +115,13 @@ class ErrorObject : public NativeObject {
     return val.isString() ? val.toString() : nullptr;
   }
 
+  /*
+   * Return Nothing if the error was created without an initial cause or if the
+   * initial cause data property has been redefined to an accessor property.
+   */
   mozilla::Maybe<Value> getCause() const {
     const auto& value = getReservedSlot(CAUSE_SLOT);
-    if (value.isMagic(JS_ERROR_WITHOUT_CAUSE)) {
+    if (value.isMagic(JS_ERROR_WITHOUT_CAUSE) || value.isPrivateGCThing()) {
       return mozilla::Nothing();
     }
     return mozilla::Some(value);
