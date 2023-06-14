@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Svc.Prefs.set("registerEngines", "");
+Svc.PrefBranch.setCharPref("registerEngines", "");
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
@@ -174,7 +174,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
 
   _("Test unsuccessful sync calls adjustSyncInterval");
   // Force sync to fail.
-  Svc.Prefs.set("firstSync", "notReady");
+  Svc.PrefBranch.setCharPref("firstSync", "notReady");
 
   let server = await sync_httpd_setup();
   await setUp(server);
@@ -226,7 +226,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
     "Test as long as idle && numClients > 1 our sync interval is idleInterval."
   );
   // idle == true && numClients > 1 && hasIncomingItems == true
-  Svc.Prefs.set("clients.devices.mobile", 2);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 2);
   scheduler.updateClientMode();
 
   await Service.sync();
@@ -278,22 +278,32 @@ add_task(async function test_back_triggers_sync() {
 
   // Single device: no sync triggered.
   scheduler.idle = true;
-  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "active",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.ok(!scheduler.idle);
 
   // Multiple devices: sync is triggered.
-  Svc.Prefs.set("clients.devices.mobile", 2);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 2);
   scheduler.updateClientMode();
 
   let promiseDone = promiseOneObserver("weave:service:sync:finish");
 
   scheduler.idle = true;
-  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "active",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.ok(!scheduler.idle);
   await promiseDone;
 
   Service.recordManager.clearCache();
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   scheduler.setDefaults();
   await clientsEngine.resetClient();
 
@@ -316,13 +326,13 @@ add_task(async function test_adjust_interval_on_sync_error() {
 
   _("Test unsuccessful sync updates client mode & sync intervals");
   // Force a sync fail.
-  Svc.Prefs.set("firstSync", "notReady");
+  Svc.PrefBranch.setCharPref("firstSync", "notReady");
 
   Assert.equal(syncFailures, 0);
   Assert.equal(false, scheduler.numClients > 1);
   Assert.equal(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
-  Svc.Prefs.set("clients.devices.mobile", 2);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 2);
   await Service.sync();
 
   Assert.equal(syncFailures, 1);
@@ -410,7 +420,7 @@ add_task(async function test_adjust_timer_larger_syncInterval() {
   _(
     "Test syncInterval > current timout period && nextSync != 0, syncInterval is NOT used."
   );
-  Svc.Prefs.set("clients.devices.mobile", 2);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 2);
   scheduler.updateClientMode();
   Assert.equal(scheduler.syncInterval, scheduler.activeInterval);
 
@@ -422,7 +432,7 @@ add_task(async function test_adjust_timer_larger_syncInterval() {
 
   // Make interval large again
   await clientsEngine._wipeClient();
-  Svc.Prefs.reset("clients.devices.mobile");
+  Svc.PrefBranch.clearUserPref("clients.devices.mobile");
   scheduler.updateClientMode();
   Assert.equal(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
@@ -447,7 +457,7 @@ add_task(async function test_adjust_timer_smaller_syncInterval() {
   Assert.equal(scheduler.syncTimer.delay, scheduler.singleDeviceInterval);
 
   // Make interval smaller
-  Svc.Prefs.set("clients.devices.mobile", 2);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 2);
   scheduler.updateClientMode();
   Assert.equal(scheduler.syncInterval, scheduler.activeInterval);
 

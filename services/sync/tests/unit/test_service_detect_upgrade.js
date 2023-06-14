@@ -175,7 +175,9 @@ add_task(async function v4_upgrade() {
     // Clean up.
     await Service.startOver();
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });
@@ -258,7 +260,9 @@ add_task(async function v5_upgrade() {
     // Clean up.
     await Service.startOver();
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });

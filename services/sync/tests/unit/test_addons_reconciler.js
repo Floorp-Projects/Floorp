@@ -40,7 +40,7 @@ function makeAddonsReconciler() {
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  Svc.Prefs.set("engine.addons", true);
+  Svc.PrefBranch.setBoolPref("engine.addons", true);
   await Service.engineManager.register(AddonsEngine);
 });
 

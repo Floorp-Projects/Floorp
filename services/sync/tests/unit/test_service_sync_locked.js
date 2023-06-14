@@ -31,7 +31,7 @@ add_task(async function run_test() {
   augmentLogger(Service._log);
 
   // Avoid daily ping
-  Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
+  Svc.PrefBranch.setIntPref("lastPing", Math.floor(Date.now() / 1000));
 
   _("Check that sync will log appropriately if already in 'progress'.");
   Service._locked = true;

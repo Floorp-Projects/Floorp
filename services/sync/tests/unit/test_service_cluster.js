@@ -29,7 +29,9 @@ add_task(async function test_findCluster() {
     let cluster = await Service.identity._findCluster();
     Assert.equal(cluster, "http://weave.user.node/");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -55,6 +57,8 @@ add_task(async function test_setCluster() {
     Assert.ok(!(await Service.identity.setCluster()));
     Assert.equal(Service.clusterURL, "http://weave.user.node/");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });

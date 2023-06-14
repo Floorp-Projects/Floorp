@@ -110,7 +110,9 @@ add_task(async function test_verifyLogin() {
     Assert.equal(Service.status.service, LOGIN_FAILED);
     Assert.equal(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     server.stop(do_test_finished);
   }
 });

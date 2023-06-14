@@ -41,7 +41,9 @@ async function testSteamEngineStorage(test) {
     await checkEngine.resetClient();
     await checkEngine.finalize();
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 }
 
@@ -61,7 +63,9 @@ add_task(async function test_url_attributes() {
     Assert.equal(engine.engineURL, "https://cluster/1.1/foo/storage/steam");
     Assert.equal(engine.metaURL, "https://cluster/1.1/foo/storage/meta/global");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -71,18 +75,23 @@ add_task(async function test_syncID() {
   let engine = await makeSteamEngine();
   try {
     // Ensure pristine environment
-    Assert.equal(Svc.Prefs.get("steam.syncID"), undefined);
+    Assert.equal(
+      Svc.PrefBranch.getPrefType("steam.syncID"),
+      Ci.nsIPrefBranch.PREF_INVALID
+    );
     Assert.equal(await engine.getSyncID(), "");
 
     // Performing the first get on the attribute will generate a new GUID.
     Assert.equal(await engine.resetLocalSyncID(), "fake-guid-00");
-    Assert.equal(Svc.Prefs.get("steam.syncID"), "fake-guid-00");
+    Assert.equal(Svc.PrefBranch.getStringPref("steam.syncID"), "fake-guid-00");
 
-    Svc.Prefs.set("steam.syncID", Utils.makeGUID());
-    Assert.equal(Svc.Prefs.get("steam.syncID"), "fake-guid-01");
+    Svc.PrefBranch.setStringPref("steam.syncID", Utils.makeGUID());
+    Assert.equal(Svc.PrefBranch.getStringPref("steam.syncID"), "fake-guid-01");
     Assert.equal(await engine.getSyncID(), "fake-guid-01");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -92,25 +101,30 @@ add_task(async function test_lastSync() {
   let engine = await makeSteamEngine();
   try {
     // Ensure pristine environment
-    Assert.equal(Svc.Prefs.get("steam.lastSync"), undefined);
+    Assert.equal(
+      Svc.PrefBranch.getPrefType("steam.lastSync"),
+      Ci.nsIPrefBranch.PREF_INVALID
+    );
     Assert.equal(await engine.getLastSync(), 0);
 
     // Floats are properly stored as floats and synced with the preference
     await engine.setLastSync(123.45);
     Assert.equal(await engine.getLastSync(), 123.45);
-    Assert.equal(Svc.Prefs.get("steam.lastSync"), "123.45");
+    Assert.equal(Svc.PrefBranch.getCharPref("steam.lastSync"), "123.45");
 
     // Integer is properly stored
     await engine.setLastSync(67890);
     Assert.equal(await engine.getLastSync(), 67890);
-    Assert.equal(Svc.Prefs.get("steam.lastSync"), "67890");
+    Assert.equal(Svc.PrefBranch.getCharPref("steam.lastSync"), "67890");
 
     // resetLastSync() resets the value (and preference) to 0
     await engine.resetLastSync();
     Assert.equal(await engine.getLastSync(), 0);
-    Assert.equal(Svc.Prefs.get("steam.lastSync"), "0");
+    Assert.equal(Svc.PrefBranch.getCharPref("steam.lastSync"), "0");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -232,7 +246,10 @@ add_task(async function test_resetClient() {
   let engine = await makeSteamEngine();
   try {
     // Ensure pristine environment
-    Assert.equal(Svc.Prefs.get("steam.lastSync"), undefined);
+    Assert.equal(
+      Svc.PrefBranch.getPrefType("steam.lastSync"),
+      Ci.nsIPrefBranch.PREF_INVALID
+    );
     Assert.equal(engine.toFetch.size, 0);
 
     await engine.setLastSync(123.45);
@@ -244,7 +261,9 @@ add_task(async function test_resetClient() {
     Assert.equal(engine.toFetch.size, 0);
     Assert.equal(engine.previousFailed.size, 0);
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -272,7 +291,9 @@ add_task(async function test_wipeServer() {
     Assert.equal(engine.toFetch.size, 0);
   } finally {
     steamServer.stop(do_test_finished);
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 

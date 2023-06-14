@@ -19,8 +19,10 @@ function makeRotaryEngine() {
 }
 
 async function clean(engine) {
-  Svc.Prefs.resetBranch("");
-  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
+  Svc.PrefBranch.setCharPref("log.logger.engine.rotary", "Trace");
   Service.recordManager.clearCache();
   await engine._tracker.clearChangedIDs();
   await engine.finalize();
@@ -76,7 +78,7 @@ async function createServerAndConfigureClient() {
 
 add_task(async function setup() {
   await generateNewKeys(Service.collectionKeys);
-  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
+  Svc.PrefBranch.setCharPref("log.logger.engine.rotary", "Trace");
 });
 
 add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {

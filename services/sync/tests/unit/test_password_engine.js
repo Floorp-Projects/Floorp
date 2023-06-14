@@ -31,7 +31,9 @@ async function cleanup(engine, server) {
   await engine._tracker.stop();
   await engine.wipeClient();
   engine.lastModified = null;
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   Service.recordManager.clearCache();
   if (server) {
     await promiseStopServer(server);
@@ -947,10 +949,13 @@ add_task(async function test_sync_password_validation() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  Svc.Prefs.set("engine.passwords.validation.interval", 0);
-  Svc.Prefs.set("engine.passwords.validation.percentageChance", 100);
-  Svc.Prefs.set("engine.passwords.validation.maxRecords", -1);
-  Svc.Prefs.set("engine.passwords.validation.enabled", true);
+  Svc.PrefBranch.setIntPref("engine.passwords.validation.interval", 0);
+  Svc.PrefBranch.setIntPref(
+    "engine.passwords.validation.percentageChance",
+    100
+  );
+  Svc.PrefBranch.setIntPref("engine.passwords.validation.maxRecords", -1);
+  Svc.PrefBranch.setBoolPref("engine.passwords.validation.enabled", true);
 
   try {
     let ping = await wait_for_ping(() => Service.sync());

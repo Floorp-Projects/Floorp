@@ -73,7 +73,7 @@ add_task(async function test_desktop_post() {
 
 add_task(async function test_desktop_get() {
   _("Testing async.");
-  Svc.Prefs.set("client.type", "desktop");
+  Svc.PrefBranch.setCharPref("client.type", "desktop");
   let r = new Resource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   await r.get();
   _("User-Agent: " + ua);
@@ -83,7 +83,7 @@ add_task(async function test_desktop_get() {
 
 add_task(async function test_mobile_get() {
   _("Testing mobile.");
-  Svc.Prefs.set("client.type", "mobile");
+  Svc.PrefBranch.setCharPref("client.type", "mobile");
   let r = new Resource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   await r.get();
   _("User-Agent: " + ua);

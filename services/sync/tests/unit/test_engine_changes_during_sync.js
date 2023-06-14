@@ -43,7 +43,9 @@ async function assertChildGuids(folderGuid, expectedChildGuids, message) {
 async function cleanup(engine, server) {
   await engine._tracker.stop();
   await engine._store.wipe();
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   Service.recordManager.clearCache();
   await promiseStopServer(server);
 }

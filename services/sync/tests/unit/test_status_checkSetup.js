@@ -19,6 +19,8 @@ add_task(async function test_status_checkSetup() {
     Assert.equal(Status.checkSetup(), STATUS_OK);
     Status.resetSync();
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });

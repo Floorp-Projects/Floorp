@@ -45,7 +45,7 @@ add_task(async function run_test() {
     await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
     Service.scheduler.globalScore = GLOBAL_SCORE;
     // Avoid daily ping
-    Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
+    Svc.PrefBranch.setIntPref("lastPing", Math.floor(Date.now() / 1000));
 
     let threw = false;
     Svc.Obs.add("weave:service:sync:error", function (subject, data) {
@@ -82,7 +82,9 @@ add_task(async function run_test() {
     } catch (ex) {}
     Assert.equal(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });
