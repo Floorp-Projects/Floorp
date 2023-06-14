@@ -1610,10 +1610,6 @@ pref("intl.ellipsis",                       "chrome://global-platform/locale/int
 // like date/time formatting, unit formatting, calendars etc. should use
 // OS locale set instead of the app locale set.
 pref("intl.regional_prefs.use_os_locales",  false);
-// fallback charset list for Unicode conversion (converting from Unicode)
-// currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
-// for ISO-8859-1
-pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://global/locale/intl.properties");
 pref("font.cjk_pref_fallback_order",        "zh-cn,zh-hk,zh-tw,ja,ko");
 
