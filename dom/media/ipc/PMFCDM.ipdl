@@ -69,6 +69,8 @@ struct MFCDMInitParamsIPDL {
   nsString[] initDataTypes;
   Requirement distinctiveID;
   Requirement persistentState;
+  MFCDMMediaCapability[] audioCapabilities;
+  MFCDMMediaCapability[] videoCapabilities;
   bool hwSecure;
 };
 

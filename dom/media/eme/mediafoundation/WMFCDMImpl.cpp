@@ -143,6 +143,7 @@ RefPtr<WMFCDMImpl::InitPromise> WMFCDMImpl::Init(
              aParams.mDistinctiveIdentifierRequired
                  ? KeySystemConfig::Requirement::Required
                  : KeySystemConfig::Requirement::Optional,
+             aParams.mAudioCapabilities, aParams.mVideoCapabilities,
              aParams.mHWSecure, aParams.mProxyCallback)
       ->Then(
           mCDM->ManagerThread(), __func__,

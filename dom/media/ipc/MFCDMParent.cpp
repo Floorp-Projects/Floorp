@@ -13,6 +13,7 @@
 #include "mozilla/EMEUtils.h"
 #include "mozilla/KeySystemConfig.h"
 #include "MFCDMProxy.h"
+#include "MFMediaEngineUtils.h"
 #include "RemoteDecodeUtils.h"       // For GetCurrentSandboxingKind()
 #include "SpecialSystemDirectory.h"  // For temp dir
 
@@ -339,13 +340,46 @@ static inline LPCWSTR InitDataTypeToString(const nsAString& aInitDataType) {
   }
 }
 
+static void BuildCapabilitiesArray(
+    const nsTArray<MFCDMMediaCapability>& aCapabilities,
+    AutoPropVar& capabilitiesPropOut) {
+  PROPVARIANT* capabilitiesArray = (PROPVARIANT*)CoTaskMemAlloc(
+      sizeof(PROPVARIANT) * aCapabilities.Length());
+  for (size_t idx = 0; idx < aCapabilities.Length(); idx++) {
+    ComPtr<IPropertyStore> capabilitiesProperty;
+    RETURN_VOID_IF_FAILED(
+        PSCreateMemoryPropertyStore(IID_PPV_ARGS(&capabilitiesProperty)));
+
+    AutoPropVar contentType;
+    auto* var = contentType.Receive();
+    var->vt = VT_BSTR;
+    var->bstrVal = SysAllocString(aCapabilities[idx].contentType().get());
+    RETURN_VOID_IF_FAILED(
+        capabilitiesProperty->SetValue(MF_EME_CONTENTTYPE, contentType.get()));
+
+    AutoPropVar robustness;
+    var = robustness.Receive();
+    var->vt = VT_BSTR;
+    var->bstrVal = SysAllocString(aCapabilities[idx].robustness().get());
+    RETURN_VOID_IF_FAILED(
+        capabilitiesProperty->SetValue(MF_EME_ROBUSTNESS, robustness.get()));
+
+    capabilitiesArray[idx].vt = VT_UNKNOWN;
+    capabilitiesArray[idx].punkVal = capabilitiesProperty.Detach();
+  }
+  auto* var = capabilitiesPropOut.Receive();
+  var->vt = VT_VARIANT | VT_VECTOR;
+  var->capropvar.cElems = aCapabilities.Length();
+  var->capropvar.pElems = capabilitiesArray;
+}
+
 static HRESULT BuildCDMAccessConfig(const MFCDMInitParamsIPDL& aParams,
                                     ComPtr<IPropertyStore>& aConfig) {
   ComPtr<IPropertyStore> mksc;  // EME MediaKeySystemConfiguration
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksc)));
 
-  // If we don't set `MF_EME_INITDATATYPES` then we won't be able to create
-  // CDM module on Windows 10, which is not documented officially.
+  // Init type. If we don't set `MF_EME_INITDATATYPES` then we won't be able to
+  // create CDM module on Windows 10, which is not documented officially.
   BSTR* initDataTypeArray =
       (BSTR*)CoTaskMemAlloc(sizeof(BSTR) * aParams.initDataTypes().Length());
   for (size_t i = 0; i < aParams.initDataTypes().Length(); i++) {
@@ -360,47 +394,26 @@ static HRESULT BuildCDMAccessConfig(const MFCDMInitParamsIPDL& aParams,
   MFCDM_RETURN_IF_FAILED(
       mksc->SetValue(MF_EME_INITDATATYPES, initDataTypes.get()));
 
-  // Empty 'audioCapabilities'.
+  // Audio capabilities
   AutoPropVar audioCapabilities;
-  var = audioCapabilities.Receive();
-  var->vt = VT_VARIANT | VT_VECTOR;
-  var->capropvar.cElems = 0;
+  BuildCapabilitiesArray(aParams.audioCapabilities(), audioCapabilities);
   MFCDM_RETURN_IF_FAILED(
       mksc->SetValue(MF_EME_AUDIOCAPABILITIES, audioCapabilities.get()));
 
-  // 'videoCapabilites'.
-  ComPtr<IPropertyStore> mksmc;  // EME MediaKeySystemMediaCapability
-  MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksmc)));
-  if (aParams.hwSecure()) {
-    AutoPropVar robustness;
-    var = robustness.Receive();
-    var->vt = VT_BSTR;
-    var->bstrVal = SysAllocString(L"HW_SECURE_ALL");
-    MFCDM_RETURN_IF_FAILED(
-        mksmc->SetValue(MF_EME_ROBUSTNESS, robustness.get()));
-  }
-  // Store mksmc in a PROPVARIANT.
-  AutoPropVar videoCapability;
-  var = videoCapability.Receive();
-  var->vt = VT_UNKNOWN;
-  var->punkVal = mksmc.Detach();
-  // Insert element.
+  // Video capabilities
   AutoPropVar videoCapabilities;
-  var = videoCapabilities.Receive();
-  var->vt = VT_VARIANT | VT_VECTOR;
-  var->capropvar.cElems = 1;
-  var->capropvar.pElems =
-      reinterpret_cast<PROPVARIANT*>(CoTaskMemAlloc(sizeof(PROPVARIANT)));
-  PropVariantCopy(var->capropvar.pElems, videoCapability.ptr());
+  BuildCapabilitiesArray(aParams.videoCapabilities(), videoCapabilities);
   MFCDM_RETURN_IF_FAILED(
       mksc->SetValue(MF_EME_VIDEOCAPABILITIES, videoCapabilities.get()));
 
+  // Persist state
   AutoPropVar persistState;
   InitPropVariantFromUInt32(ToMFRequirement(aParams.persistentState()),
                             persistState.Receive());
   MFCDM_RETURN_IF_FAILED(
       mksc->SetValue(MF_EME_PERSISTEDSTATE, persistState.get()));
 
+  // Distintive Id
   AutoPropVar distinctiveID;
   InitPropVariantFromUInt32(ToMFRequirement(aParams.distinctiveID()),
                             distinctiveID.Receive());

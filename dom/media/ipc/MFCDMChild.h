@@ -33,12 +33,13 @@ class MFCDMChild final : public PMFCDMChild {
       MozPromiseHolder<PromiseType>& aPromise);
 
   using InitPromise = MozPromise<MFCDMInitIPDL, nsresult, true>;
-  RefPtr<InitPromise> Init(const nsAString& aOrigin,
-                           const CopyableTArray<nsString>& aInitDataTypes,
-                           const KeySystemConfig::Requirement aPersistentState,
-                           const KeySystemConfig::Requirement aDistinctiveID,
-                           const bool aHWSecure,
-                           WMFCDMProxyCallback* aProxyCallback);
+  RefPtr<InitPromise> Init(
+      const nsAString& aOrigin, const CopyableTArray<nsString>& aInitDataTypes,
+      const KeySystemConfig::Requirement aPersistentState,
+      const KeySystemConfig::Requirement aDistinctiveID,
+      const CopyableTArray<MFCDMMediaCapability>& aAudioCapabilities,
+      const CopyableTArray<MFCDMMediaCapability>& aVideoCapabilities,
+      const bool aHWSecure, WMFCDMProxyCallback* aProxyCallback);
 
   using SessionPromise = MozPromise<nsString, nsresult, true>;
   RefPtr<SessionPromise> CreateSessionAndGenerateRequest(
