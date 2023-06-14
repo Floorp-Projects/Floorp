@@ -5,3 +5,4 @@ load 1789908.html
 load 1799168.html
 load 1816708.html
 load 1821477.html
+pref(media.navigator.permission.device,true) pref(media.audio_loopback_dev,"real-device-request-with-clear-cache") load getUserMedia-audio.html # bug 1767893
