@@ -9,8 +9,6 @@ const TEST_URI =
   "test/browser/test-console-custom-formatters.html";
 
 add_task(async function () {
-  // ToDo: This preference can be removed once the custom formatters feature is stable enough
-  await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
