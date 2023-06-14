@@ -32,8 +32,6 @@ from signal_handler import SignalHandler
 from utils import view_gecko_profile_from_raptor
 from webextension import (
     WebExtensionAndroid,
-    WebExtensionDesktopChrome,
-    WebExtensionFirefox,
 )
 
 LOG = RaptorLogger(component="raptor-main")
@@ -77,11 +75,7 @@ def main(args=sys.argv[1:]):
         LOG.info(next_test["name"])
 
     if not args.browsertime:
-        if args.app == "firefox":
-            raptor_class = WebExtensionFirefox
-        elif args.app in CHROMIUM_DISTROS:
-            raptor_class = WebExtensionDesktopChrome
-        else:
+        if args.app != "firefox" and args.app not in CHROMIUM_DISTROS:
             raptor_class = WebExtensionAndroid
     else:
 

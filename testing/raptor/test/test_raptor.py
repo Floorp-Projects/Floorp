@@ -1,7 +1,6 @@
 import os
 import sys
 import threading
-import time
 import traceback
 from unittest import mock
 from unittest.mock import Mock
@@ -9,8 +8,6 @@ from unittest.mock import Mock
 import mozunit
 import pytest
 from mozprofile import BaseProfile
-from mozrunner.errors import RunnerNotStartedError
-from six import reraise
 
 # need this so the raptor unit tests can find output & filter classes
 here = os.path.abspath(os.path.dirname(__file__))
@@ -21,8 +18,6 @@ sys.path.insert(0, raptor_dir)
 from browsertime import BrowsertimeAndroid, BrowsertimeDesktop
 from webextension import (
     WebExtensionAndroid,
-    WebExtensionDesktopChrome,
-    WebExtensionFirefox,
 )
 
 DEFAULT_TIMEOUT = 125
@@ -53,9 +48,6 @@ class TestBrowserThread(threading.Thread):
 @pytest.mark.parametrize(
     "perftest_class, app_name",
     [
-        [WebExtensionFirefox, "firefox"],
-        [WebExtensionDesktopChrome, "chrome"],
-        [WebExtensionDesktopChrome, "chromium"],
         [WebExtensionAndroid, "geckoview"],
         [BrowsertimeDesktop, "firefox"],
         [BrowsertimeDesktop, "chrome"],
@@ -190,47 +182,6 @@ def test_perftest_run_test_setup(
     perftest.run_test_setup(mock_test)
 
     assert perftest.config["subtest_alert_on"] == expected_alert
-
-
-# WebExtension tests
-@pytest.mark.parametrize(
-    "app", ["firefox", pytest.mark.xfail("chrome"), pytest.mark.xfail("chromium")]
-)
-def test_start_browser(get_binary, app):
-    binary = get_binary(app)
-    assert binary
-
-    raptor = WebExtensionFirefox(app, binary, post_startup_delay=0)
-
-    tests = [{"name": "raptor-{}-tp6".format(app), "page_timeout": 1000}]
-    test_names = [test["name"] for test in tests]
-
-    thread = TestBrowserThread(raptor, tests, test_names)
-    thread.start()
-
-    timeout = time.time() + 5  # seconds
-    while time.time() < timeout:
-        try:
-            is_running = raptor.runner.is_running()
-            assert is_running
-            break
-        except RunnerNotStartedError:
-            time.sleep(0.1)
-    else:
-        # browser didn't start
-        # if the thread had an error, display it here
-        thread.print_error()
-        assert False
-
-    raptor.clean_up()
-    thread.join(5)
-
-    if thread.exc is not None:
-        exc, value, tb = thread.exc
-        reraise(exc, value, tb)
-
-    assert not raptor.runner.is_running()
-    assert raptor.runner.returncode is not None
 
 
 # Browsertime tests

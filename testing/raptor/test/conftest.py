@@ -12,7 +12,6 @@ sys.path.insert(0, raptor_dir)
 
 from browsertime import Browsertime
 from perftest import Perftest
-from webextension import WebExtensionFirefox
 
 
 @pytest.fixture
@@ -40,11 +39,6 @@ def browsertime_options(options):
     options["browsertime_visualmetrics"] = "browsertime_visualmetrics"
     options["browsertime_no_ffwindowrecorder"] = "browsertime_no_ffwindowrecorder"
     return options
-
-
-@pytest.fixture
-def raptor(options):
-    return WebExtensionFirefox(**options)
 
 
 @pytest.fixture
