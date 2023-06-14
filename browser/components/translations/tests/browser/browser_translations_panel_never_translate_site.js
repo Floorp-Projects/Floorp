@@ -102,7 +102,7 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   );
 
   await assertTranslationsButton(
-    { button: false },
+    { button: true },
     "The translations button should be visible, because this content principal " +
       "has not been denied translations permissions"
   );
@@ -255,7 +255,7 @@ add_task(
     );
 
     await assertTranslationsButton(
-      { button: false },
+      { button: true },
       "The translations button should be visible, because this content principal " +
         "has not been denied translations permissions"
     );
