@@ -64,221 +64,6 @@ DEFINE_PROPERTYKEY(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, 0x1218a3e2, 0xcfb0,
     }                                                              \
   } while (false)
 
-void MFCDMParent::Register() {
-  MOZ_ASSERT(!sRegisteredCDMs.Contains(this->mId));
-  sRegisteredCDMs.InsertOrUpdate(this->mId, this);
-  MFCDM_PARENT_LOG("Registered!");
-}
-
-void MFCDMParent::Unregister() {
-  MOZ_ASSERT(sRegisteredCDMs.Contains(this->mId));
-  sRegisteredCDMs.Remove(this->mId);
-  MFCDM_PARENT_LOG("Unregistered!");
-}
-
-MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
-                         RemoteDecoderManagerParent* aManager,
-                         nsISerialEventTarget* aManagerThread)
-    : mKeySystem(aKeySystem),
-      mManager(aManager),
-      mManagerThread(aManagerThread),
-      mId(sNextId++),
-      mKeyMessageEvents(aManagerThread),
-      mKeyChangeEvents(aManagerThread),
-      mExpirationEvents(aManagerThread) {
-  // TODO: check Widevine too when it's ready.
-  MOZ_ASSERT(IsPlayReadyKeySystemAndSupported(aKeySystem));
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aManagerThread);
-  MOZ_ASSERT(XRE_IsUtilityProcess());
-  MOZ_ASSERT(GetCurrentSandboxingKind() ==
-             ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
-
-  mIPDLSelfRef = this;
-  LoadFactory();
-  Register();
-
-  mKeyMessageListener = mKeyMessageEvents.Connect(
-      mManagerThread, this, &MFCDMParent::SendOnSessionKeyMessage);
-  mKeyChangeListener = mKeyChangeEvents.Connect(
-      mManagerThread, this, &MFCDMParent::SendOnSessionKeyStatusesChanged);
-  mExpirationListener = mExpirationEvents.Connect(
-      mManagerThread, this, &MFCDMParent::SendOnSessionKeyExpiration);
-}
-
-void MFCDMParent::Destroy() {
-  AssertOnManagerThread();
-  mKeyMessageEvents.DisconnectAll();
-  mKeyChangeEvents.DisconnectAll();
-  mExpirationEvents.DisconnectAll();
-  mKeyMessageListener.DisconnectIfExists();
-  mKeyChangeListener.DisconnectIfExists();
-  mExpirationListener.DisconnectIfExists();
-  mIPDLSelfRef = nullptr;
-}
-
-HRESULT MFCDMParent::LoadFactory() {
-  ComPtr<IMFMediaEngineClassFactory4> clsFactory;
-  MFCDM_RETURN_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
-                                          nullptr, CLSCTX_INPROC_SERVER,
-                                          IID_PPV_ARGS(&clsFactory)));
-
-  ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
-  MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
-      mKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
-
-  mFactory.Swap(cdmFactory);
-  return S_OK;
-}
-
-// Use IMFContentDecryptionModuleFactory::IsTypeSupported() to get DRM
-// capabilities. It appears to be the same as
-// Windows.Media.Protection.ProtectionCapabilities.IsTypeSupported(). See
-// https://learn.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-19041
-static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
-                            const nsString& aKeySystem,
-                            const KeySystemConfig::EMECodecString& aVideoCodec,
-                            const KeySystemConfig::EMECodecString& aAudioCodec =
-                                KeySystemConfig::EMECodecString(""),
-                            const nsString& aAdditionalFeatures = nsString(u""),
-                            bool aIsHWSecure = false) {
-  // MP4 is the only container supported.
-  nsString contentType(u"video/mp4;codecs=\"");
-  MOZ_ASSERT(!aVideoCodec.IsEmpty());
-  contentType.AppendASCII(aVideoCodec);
-  if (!aAudioCodec.IsEmpty()) {
-    contentType.AppendLiteral(u",");
-    contentType.AppendASCII(aAudioCodec);
-  }
-  // These features are required to call IsTypeSupported(). We only care about
-  // codec and encryption scheme so hardcode the rest.
-  contentType.AppendLiteral(
-      u"\";features=\"decode-bpp=8,"
-      "decode-res-x=1920,decode-res-y=1080,"
-      "decode-bitrate=10000000,decode-fps=30,");
-  if (!aAdditionalFeatures.IsEmpty()) {
-    contentType.Append(aAdditionalFeatures);
-  }
-  if (aIsHWSecure) {
-    contentType.AppendLiteral(u"encryption-robustness=HW_SECURE_ALL");
-  } else {
-    contentType.AppendLiteral(u"encryption-robustness=SW_SECURE_DECODE");
-  }
-  // End of the query string
-  contentType.AppendLiteral(u"\"");
-  bool rv = aFactory->IsTypeSupported(aKeySystem.get(), contentType.get());
-  MFCDM_PARENT_SLOG("IsTypeSupport=%d (key-system=%s, content-type=%s)", rv,
-                    NS_ConvertUTF16toUTF8(aKeySystem).get(),
-                    NS_ConvertUTF16toUTF8(contentType).get());
-  // TODO : for hw support, above result can be true even if the system doesn't
-  // support HWDRM. Need to find a way to confirm the real answer.
-  return rv;
-}
-
-static nsString GetRobustnessStringForKeySystem(const nsString& aKeySystem,
-                                                const bool aIsHWSecure,
-                                                const bool aIsVideo = true) {
-  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
-    // Audio doesn't support SL3000.
-    return aIsHWSecure && aIsVideo ? nsString(u"3000") : nsString(u"2000");
-  }
-  // TODO : implement Widevine L1, HW_SECURE_ALL/HW_SECURE_DECODE/....
-  return nsString(u"");
-}
-
-mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
-    const bool aIsHWSecure, GetCapabilitiesResolver&& aResolver) {
-  MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  MFCDMCapabilitiesIPDL capabilities;
-  capabilities.keySystem() = mKeySystem;
-  // WMF CDMs usually require these. See
-  // https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_factory.cc;l=69-73;drc=b3ca5c09fa0aa07b7f9921501f75e43d80f3ba48
-  capabilities.persistentState() = KeySystemConfig::Requirement::Required;
-  capabilities.distinctiveID() = KeySystemConfig::Requirement::Required;
-
-  // TODO : check HW CDM creation
-  // TODO : add HEVC support?
-  static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
-      KeySystemConfig::EME_CODEC_H264,
-      KeySystemConfig::EME_CODEC_VP8,
-      KeySystemConfig::EME_CODEC_VP9,
-  });
-  // Remember supported video codecs.
-  // It will be used when collecting audio codec and encryption scheme
-  // support.
-  nsTArray<KeySystemConfig::EMECodecString> supportedVideoCodecs;
-  for (auto& codec : kVideoCodecs) {
-    if (FactorySupports(mFactory, mKeySystem, codec,
-                        KeySystemConfig::EMECodecString(""), nsString(u""),
-                        aIsHWSecure)) {
-      MFCDMMediaCapability* c =
-          capabilities.videoCapabilities().AppendElement();
-      c->contentType() = NS_ConvertUTF8toUTF16(codec);
-      c->robustness() =
-          GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure);
-      MFCDM_PARENT_LOG("%s: +video:%s", __func__, codec.get());
-      supportedVideoCodecs.AppendElement(codec);
-    }
-  }
-  if (supportedVideoCodecs.IsEmpty()) {
-    // Return a capabilities with no codec supported.
-    aResolver(std::move(capabilities));
-    return IPC_OK();
-  }
-
-  static nsTArray<KeySystemConfig::EMECodecString> kAudioCodecs({
-      KeySystemConfig::EME_CODEC_AAC,
-      KeySystemConfig::EME_CODEC_FLAC,
-      KeySystemConfig::EME_CODEC_OPUS,
-      KeySystemConfig::EME_CODEC_VORBIS,
-  });
-  for (auto& codec : kAudioCodecs) {
-    if (FactorySupports(mFactory, mKeySystem, supportedVideoCodecs[0], codec)) {
-      MFCDMMediaCapability* c =
-          capabilities.audioCapabilities().AppendElement();
-      c->contentType() = NS_ConvertUTF8toUTF16(codec);
-      c->robustness() = GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure,
-                                                        false /* isVideo */);
-      MFCDM_PARENT_LOG("%s: +audio:%s", __func__, codec.get());
-    }
-  }
-
-  // Collect schemes supported by all video codecs.
-  static nsTArray<std::pair<CryptoScheme, nsDependentString>> kSchemes = {
-      std::pair<CryptoScheme, nsDependentString>(
-          CryptoScheme::Cenc, u"encryption-type=cenc,encryption-iv-size=8,"),
-      std::pair<CryptoScheme, nsDependentString>(
-          CryptoScheme::Cbcs, u"encryption-type=cbcs,encryption-iv-size=16,")};
-  for (auto& scheme : kSchemes) {
-    bool ok = true;
-    for (auto& codec : supportedVideoCodecs) {
-      ok &= FactorySupports(
-          mFactory, mKeySystem, codec, KeySystemConfig::EMECodecString(""),
-          scheme.second /* additional feature */, aIsHWSecure);
-      if (!ok) {
-        break;
-      }
-    }
-    if (ok) {
-      capabilities.encryptionSchemes().AppendElement(scheme.first);
-      MFCDM_PARENT_LOG("%s: +scheme:%s", __func__,
-                       scheme.first == CryptoScheme::Cenc ? "cenc" : "cbcs");
-    }
-  }
-
-  // TODO: don't hardcode
-  capabilities.initDataTypes().AppendElement(u"keyids");
-  capabilities.initDataTypes().AppendElement(u"cenc");
-  capabilities.sessionTypes().AppendElement(
-      KeySystemConfig::SessionType::Temporary);
-  capabilities.sessionTypes().AppendElement(
-      KeySystemConfig::SessionType::PersistentLicense);
-
-  aResolver(std::move(capabilities));
-  return IPC_OK();
-}
-
 // RAIIized PROPVARIANT. See
 // third_party/libwebrtc/modules/audio_device/win/core_audio_utility_win.h
 class AutoPropVar {
@@ -467,6 +252,268 @@ static HRESULT BuildCDMProperties(const nsString& aOrigin,
   return S_OK;
 }
 
+static HRESULT CreateContentDecryptionModule(
+    ComPtr<IMFContentDecryptionModuleFactory> aFactory,
+    const nsString& aKeySystem, const MFCDMInitParamsIPDL& aParams,
+    ComPtr<IMFContentDecryptionModule>& aCDMOut) {
+  // Get access object to CDM.
+  ComPtr<IPropertyStore> accessConfig;
+  RETURN_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig));
+
+  AutoTArray<IPropertyStore*, 1> configs = {accessConfig.Get()};
+  ComPtr<IMFContentDecryptionModuleAccess> cdmAccess;
+  RETURN_IF_FAILED(aFactory->CreateContentDecryptionModuleAccess(
+      aKeySystem.get(), configs.Elements(), configs.Length(), &cdmAccess));
+
+  // Get CDM.
+  ComPtr<IPropertyStore> cdmProps;
+  RETURN_IF_FAILED(BuildCDMProperties(aParams.origin(), cdmProps));
+  ComPtr<IMFContentDecryptionModule> cdm;
+  RETURN_IF_FAILED(
+      cdmAccess->CreateContentDecryptionModule(cdmProps.Get(), &cdm));
+  aCDMOut.Swap(cdm);
+  return S_OK;
+}
+
+void MFCDMParent::Register() {
+  MOZ_ASSERT(!sRegisteredCDMs.Contains(this->mId));
+  sRegisteredCDMs.InsertOrUpdate(this->mId, this);
+  MFCDM_PARENT_LOG("Registered!");
+}
+
+void MFCDMParent::Unregister() {
+  MOZ_ASSERT(sRegisteredCDMs.Contains(this->mId));
+  sRegisteredCDMs.Remove(this->mId);
+  MFCDM_PARENT_LOG("Unregistered!");
+}
+
+MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
+                         RemoteDecoderManagerParent* aManager,
+                         nsISerialEventTarget* aManagerThread)
+    : mKeySystem(aKeySystem),
+      mManager(aManager),
+      mManagerThread(aManagerThread),
+      mId(sNextId++),
+      mKeyMessageEvents(aManagerThread),
+      mKeyChangeEvents(aManagerThread),
+      mExpirationEvents(aManagerThread) {
+  // TODO: check Widevine too when it's ready.
+  MOZ_ASSERT(IsPlayReadyKeySystemAndSupported(aKeySystem));
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aManagerThread);
+  MOZ_ASSERT(XRE_IsUtilityProcess());
+  MOZ_ASSERT(GetCurrentSandboxingKind() ==
+             ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
+
+  mIPDLSelfRef = this;
+  LoadFactory();
+  Register();
+
+  mKeyMessageListener = mKeyMessageEvents.Connect(
+      mManagerThread, this, &MFCDMParent::SendOnSessionKeyMessage);
+  mKeyChangeListener = mKeyChangeEvents.Connect(
+      mManagerThread, this, &MFCDMParent::SendOnSessionKeyStatusesChanged);
+  mExpirationListener = mExpirationEvents.Connect(
+      mManagerThread, this, &MFCDMParent::SendOnSessionKeyExpiration);
+}
+
+void MFCDMParent::Destroy() {
+  AssertOnManagerThread();
+  mKeyMessageEvents.DisconnectAll();
+  mKeyChangeEvents.DisconnectAll();
+  mExpirationEvents.DisconnectAll();
+  mKeyMessageListener.DisconnectIfExists();
+  mKeyChangeListener.DisconnectIfExists();
+  mExpirationListener.DisconnectIfExists();
+  mIPDLSelfRef = nullptr;
+}
+
+HRESULT MFCDMParent::LoadFactory() {
+  ComPtr<IMFMediaEngineClassFactory4> clsFactory;
+  MFCDM_RETURN_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
+                                          nullptr, CLSCTX_INPROC_SERVER,
+                                          IID_PPV_ARGS(&clsFactory)));
+
+  ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
+  MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
+      mKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
+
+  mFactory.Swap(cdmFactory);
+  return S_OK;
+}
+
+// Use IMFContentDecryptionModuleFactory::IsTypeSupported() to get DRM
+// capabilities. It appears to be the same as
+// Windows.Media.Protection.ProtectionCapabilities.IsTypeSupported(). See
+// https://learn.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-19041
+static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
+                            const nsString& aKeySystem,
+                            const KeySystemConfig::EMECodecString& aVideoCodec,
+                            const KeySystemConfig::EMECodecString& aAudioCodec =
+                                KeySystemConfig::EMECodecString(""),
+                            const nsString& aAdditionalFeatures = nsString(u""),
+                            bool aIsHWSecure = false) {
+  // MP4 is the only container supported.
+  nsString contentType(u"video/mp4;codecs=\"");
+  MOZ_ASSERT(!aVideoCodec.IsEmpty());
+  contentType.AppendASCII(aVideoCodec);
+  if (!aAudioCodec.IsEmpty()) {
+    contentType.AppendLiteral(u",");
+    contentType.AppendASCII(aAudioCodec);
+  }
+  // These features are required to call IsTypeSupported(). We only care about
+  // codec and encryption scheme so hardcode the rest.
+  contentType.AppendLiteral(
+      u"\";features=\"decode-bpp=8,"
+      "decode-res-x=1920,decode-res-y=1080,"
+      "decode-bitrate=10000000,decode-fps=30,");
+  if (!aAdditionalFeatures.IsEmpty()) {
+    contentType.Append(aAdditionalFeatures);
+  }
+  if (aIsHWSecure) {
+    contentType.AppendLiteral(u"encryption-robustness=HW_SECURE_ALL");
+  } else {
+    contentType.AppendLiteral(u"encryption-robustness=SW_SECURE_DECODE");
+  }
+  // End of the query string
+  contentType.AppendLiteral(u"\"");
+  bool support = aFactory->IsTypeSupported(aKeySystem.get(), contentType.get());
+  MFCDM_PARENT_SLOG("IsTypeSupport=%d (key-system=%s, content-type=%s)",
+                    support, NS_ConvertUTF16toUTF8(aKeySystem).get(),
+                    NS_ConvertUTF16toUTF8(contentType).get());
+  if (aIsHWSecure && support) {
+    // For HWDRM, `IsTypeSupported` can't tell the answer correctly, so we
+    // need to create a dummy CDM to see if the HWDRM is really usable or not.
+    nsTArray<nsString> dummyInitDataType{nsString(u"cenc"),
+                                         nsString(u"keyids")};
+    // TODO : support Widevine 'HW_SECURE_ALL'
+    MFCDMMediaCapability dummyVideoCapability{
+        nsString(u""), IsPlayReadyKeySystemAndSupported(aKeySystem)
+                           ? nsString(u"3000")
+                           : nsString(u"")};
+    MFCDMInitParamsIPDL dummyParam{
+        nsString(u"dummy"),
+        dummyInitDataType,
+        KeySystemConfig::Requirement::Required /* distintiveID */,
+        KeySystemConfig::Requirement::Required /* persistent */,
+        {} /* audio capabilites */,
+        {dummyVideoCapability} /* video capabilites */,
+        true /* hw secured */};
+    ComPtr<IMFContentDecryptionModule> dummyCDM;
+    if (FAILED(CreateContentDecryptionModule(aFactory, aKeySystem, dummyParam,
+                                             dummyCDM))) {
+      MFCDM_PARENT_SLOG("HWDRM actually not supported for %s",
+                        NS_ConvertUTF16toUTF8(aKeySystem).get());
+      support = false;
+    }
+  }
+  return support;
+}
+
+static nsString GetRobustnessStringForKeySystem(const nsString& aKeySystem,
+                                                const bool aIsHWSecure,
+                                                const bool aIsVideo = true) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
+    // Audio doesn't support SL3000.
+    return aIsHWSecure && aIsVideo ? nsString(u"3000") : nsString(u"2000");
+  }
+  // TODO : implement Widevine L1, HW_SECURE_ALL/HW_SECURE_DECODE/....
+  return nsString(u"");
+}
+
+mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
+    const bool aIsHWSecure, GetCapabilitiesResolver&& aResolver) {
+  MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+  MFCDMCapabilitiesIPDL capabilities;
+  capabilities.keySystem() = mKeySystem;
+  // WMF CDMs usually require these. See
+  // https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_factory.cc;l=69-73;drc=b3ca5c09fa0aa07b7f9921501f75e43d80f3ba48
+  capabilities.persistentState() = KeySystemConfig::Requirement::Required;
+  capabilities.distinctiveID() = KeySystemConfig::Requirement::Required;
+
+  // TODO : check HW CDM creation
+  // TODO : add HEVC support?
+  static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
+      KeySystemConfig::EME_CODEC_H264,
+      KeySystemConfig::EME_CODEC_VP8,
+      KeySystemConfig::EME_CODEC_VP9,
+  });
+  // Remember supported video codecs.
+  // It will be used when collecting audio codec and encryption scheme
+  // support.
+  nsTArray<KeySystemConfig::EMECodecString> supportedVideoCodecs;
+  for (auto& codec : kVideoCodecs) {
+    if (FactorySupports(mFactory, mKeySystem, codec,
+                        KeySystemConfig::EMECodecString(""), nsString(u""),
+                        aIsHWSecure)) {
+      MFCDMMediaCapability* c =
+          capabilities.videoCapabilities().AppendElement();
+      c->contentType() = NS_ConvertUTF8toUTF16(codec);
+      c->robustness() =
+          GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure);
+      MFCDM_PARENT_LOG("%s: +video:%s", __func__, codec.get());
+      supportedVideoCodecs.AppendElement(codec);
+    }
+  }
+  if (supportedVideoCodecs.IsEmpty()) {
+    // Return a capabilities with no codec supported.
+    aResolver(std::move(capabilities));
+    return IPC_OK();
+  }
+
+  static nsTArray<KeySystemConfig::EMECodecString> kAudioCodecs({
+      KeySystemConfig::EME_CODEC_AAC,
+      KeySystemConfig::EME_CODEC_FLAC,
+      KeySystemConfig::EME_CODEC_OPUS,
+      KeySystemConfig::EME_CODEC_VORBIS,
+  });
+  for (auto& codec : kAudioCodecs) {
+    if (FactorySupports(mFactory, mKeySystem, supportedVideoCodecs[0], codec)) {
+      MFCDMMediaCapability* c =
+          capabilities.audioCapabilities().AppendElement();
+      c->contentType() = NS_ConvertUTF8toUTF16(codec);
+      c->robustness() = GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure,
+                                                        false /* isVideo */);
+      MFCDM_PARENT_LOG("%s: +audio:%s", __func__, codec.get());
+    }
+  }
+
+  // Collect schemes supported by all video codecs.
+  static nsTArray<std::pair<CryptoScheme, nsDependentString>> kSchemes = {
+      std::pair<CryptoScheme, nsDependentString>(
+          CryptoScheme::Cenc, u"encryption-type=cenc,encryption-iv-size=8,"),
+      std::pair<CryptoScheme, nsDependentString>(
+          CryptoScheme::Cbcs, u"encryption-type=cbcs,encryption-iv-size=16,")};
+  for (auto& scheme : kSchemes) {
+    bool ok = true;
+    for (auto& codec : supportedVideoCodecs) {
+      ok &= FactorySupports(
+          mFactory, mKeySystem, codec, KeySystemConfig::EMECodecString(""),
+          scheme.second /* additional feature */, aIsHWSecure);
+      if (!ok) {
+        break;
+      }
+    }
+    if (ok) {
+      capabilities.encryptionSchemes().AppendElement(scheme.first);
+      MFCDM_PARENT_LOG("%s: +scheme:%s", __func__,
+                       scheme.first == CryptoScheme::Cenc ? "cenc" : "cbcs");
+    }
+  }
+
+  // TODO: don't hardcode
+  capabilities.initDataTypes().AppendElement(u"keyids");
+  capabilities.initDataTypes().AppendElement(u"cenc");
+  capabilities.sessionTypes().AppendElement(
+      KeySystemConfig::SessionType::Temporary);
+  capabilities.sessionTypes().AppendElement(
+      KeySystemConfig::SessionType::PersistentLicense);
+
+  aResolver(std::move(capabilities));
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult MFCDMParent::RecvInit(
     const MFCDMInitParamsIPDL& aParams, InitResolver&& aResolver) {
   static auto RequirementToStr = [](KeySystemConfig::Requirement aRequirement) {
@@ -490,27 +537,10 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       RequirementToStr(aParams.persistentState()), aParams.hwSecure());
   MOZ_ASSERT(mFactory->IsTypeSupported(mKeySystem.get(), nullptr));
 
-  // Get access object to CDM.
-  ComPtr<IPropertyStore> accessConfig;
-  MFCDM_REJECT_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig),
-                         NS_ERROR_FAILURE);
-
-  AutoTArray<IPropertyStore*, 1> configs = {accessConfig.Get()};
-  ComPtr<IMFContentDecryptionModuleAccess> cdmAccess;
   MFCDM_REJECT_IF_FAILED(
-      mFactory->CreateContentDecryptionModuleAccess(
-          mKeySystem.get(), configs.Elements(), configs.Length(), &cdmAccess),
+      CreateContentDecryptionModule(mFactory, mKeySystem, aParams, mCDM),
       NS_ERROR_FAILURE);
-  // Get CDM.
-  ComPtr<IPropertyStore> cdmProps;
-  MFCDM_REJECT_IF_FAILED(BuildCDMProperties(aParams.origin(), cdmProps),
-                         NS_ERROR_FAILURE);
-  ComPtr<IMFContentDecryptionModule> cdm;
-  MFCDM_REJECT_IF_FAILED(
-      cdmAccess->CreateContentDecryptionModule(cdmProps.Get(), &cdm),
-      NS_ERROR_FAILURE);
-
-  mCDM.Swap(cdm);
+  MOZ_ASSERT(mCDM);
   MFCDM_PARENT_LOG("Created a CDM!");
 
   // TODO : for Widevine CDM, would we still need to do following steps?
