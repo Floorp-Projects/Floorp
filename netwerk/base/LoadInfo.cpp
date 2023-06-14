@@ -379,7 +379,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow, nsIURI* aURI,
   bool shouldResistFingerprinting =
       nsContentUtils::ShouldResistFingerprinting_dangerous(
           aURI, mOriginAttributes,
-          "We are creating CookieJarSettings, so we can't have one already.");
+          "We are creating CookieJarSettings, so we can't have one already.",
+          RFPTarget::IsAlwaysEnabledForPrecompute);
   mCookieJarSettings = CookieJarSettings::Create(
       isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular,
       shouldResistFingerprinting);
@@ -427,7 +428,8 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
   bool shouldResistFingerprinting =
       nsContentUtils::ShouldResistFingerprinting_dangerous(
           aURI, mOriginAttributes,
-          "We are creating CookieJarSettings, so we can't have one already.");
+          "We are creating CookieJarSettings, so we can't have one already.",
+          RFPTarget::IsAlwaysEnabledForPrecompute);
   mCookieJarSettings = CookieJarSettings::Create(
       isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular,
       shouldResistFingerprinting);
@@ -1060,7 +1062,8 @@ LoadInfo::GetCookieJarSettings(nsICookieJarSettings** aCookieJarSettings) {
     bool shouldResistFingerprinting =
         nsContentUtils::ShouldResistFingerprinting_dangerous(
             loadingPrincipal,
-            "CookieJarSettings can't exist yet, we're creating it");
+            "CookieJarSettings can't exist yet, we're creating it",
+            RFPTarget::IsAlwaysEnabledForPrecompute);
     mCookieJarSettings = CreateCookieJarSettings(
         mInternalContentPolicyType, isPrivate, shouldResistFingerprinting);
   }
