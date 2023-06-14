@@ -71,7 +71,7 @@ XPCOMUtils.defineLazyServiceGetter(
 // from themselves (and us from them!) the minimum time they can specify
 // is 60s.
 function getThrottledIntervalPreference(prefName) {
-  return Math.max(Svc.Prefs.get(prefName), 60) * 1000;
+  return Math.max(Svc.PrefBranch.getIntPref(prefName), 60) * 1000;
 }
 
 export function SyncScheduler(service) {
@@ -126,10 +126,10 @@ SyncScheduler.prototype = {
 
   // nextSync is in milliseconds, but prefs can't hold that much
   get nextSync() {
-    return Svc.Prefs.get("nextSync", 0) * 1000;
+    return Svc.PrefBranch.getIntPref("nextSync", 0) * 1000;
   },
   set nextSync(value) {
-    Svc.Prefs.set("nextSync", Math.floor(value / 1000));
+    Svc.PrefBranch.setIntPref("nextSync", Math.floor(value / 1000));
   },
 
   get missedFxACommandsFetchInterval() {
@@ -913,7 +913,7 @@ ErrorHandler.prototype = {
         ) {
           // Great. Let's clear our mid-sync 401 note.
           this._log.trace("Clearing lastSyncReassigned.");
-          Svc.Prefs.reset("lastSyncReassigned");
+          Svc.PrefBranch.clearUserPref("lastSyncReassigned");
         }
 
         if (lazy.Status.service == SYNC_FAILED_PARTIAL) {
@@ -927,7 +927,7 @@ ErrorHandler.prototype = {
           .then(() => {
             // although for privacy reasons we also delete all logs (but we allow
             // a preference to avoid this to help with debugging.)
-            if (!Svc.Prefs.get("log.keepLogsOnReset", false)) {
+            if (!Svc.PrefBranch.getBoolPref("log.keepLogsOnReset", false)) {
               return logManager.removeAllLogs().then(() => {
                 Svc.Obs.notify("weave:service:remove-file-log");
               });
@@ -999,7 +999,7 @@ ErrorHandler.prototype = {
         this.service.clusterURL = null;
 
         let delay = 0;
-        if (Svc.Prefs.get("lastSyncReassigned")) {
+        if (Svc.PrefBranch.getBoolPref("lastSyncReassigned", false)) {
           // We got a 401 in the middle of the previous sync, and we just got
           // another. Login must have succeeded in order for us to get here, so
           // the password should be correct.
@@ -1009,7 +1009,7 @@ ErrorHandler.prototype = {
           delay = MINIMUM_BACKOFF_INTERVAL;
         } else {
           this._log.debug("New mid-sync 401 failure. Making a note.");
-          Svc.Prefs.set("lastSyncReassigned", true);
+          Svc.PrefBranch.setBoolPref("lastSyncReassigned", true);
         }
         this._log.info("Attempting to schedule another sync.");
         this.service.scheduler.scheduleNextSync(delay, { why: "reschedule" });

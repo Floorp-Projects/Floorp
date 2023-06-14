@@ -33,13 +33,18 @@ export var Doctor = {
     let result = {};
     for (let e of recentlySyncedEngines) {
       let prefPrefix = `engine.${e.name}.`;
-      if (!Svc.Prefs.get(prefPrefix + "validation.enabled", false)) {
+      if (
+        !Svc.PrefBranch.getBoolPref(prefPrefix + "validation.enabled", false)
+      ) {
         log.info(`Skipping check of ${e.name} - disabled via preferences`);
         continue;
       }
       // Check the last validation time for the engine.
-      let lastValidation = Svc.Prefs.get(prefPrefix + "validation.lastTime", 0);
-      let validationInterval = Svc.Prefs.get(
+      let lastValidation = Svc.PrefBranch.getIntPref(
+        prefPrefix + "validation.lastTime",
+        0
+      );
+      let validationInterval = Svc.PrefBranch.getIntPref(
         prefPrefix + "validation.interval"
       );
       let nowSeconds = this._now();
@@ -53,11 +58,17 @@ export var Doctor = {
       // Update the time now, even if we decline to actually perform a
       // validation. We don't want to check the rest of these more frequently
       // than once a day.
-      Svc.Prefs.set(prefPrefix + "validation.lastTime", Math.floor(nowSeconds));
+      Svc.PrefBranch.setIntPref(
+        prefPrefix + "validation.lastTime",
+        Math.floor(nowSeconds)
+      );
 
       // Validation only occurs a certain percentage of the time.
       let validationProbability =
-        Svc.Prefs.get(prefPrefix + "validation.percentageChance", 0) / 100.0;
+        Svc.PrefBranch.getIntPref(
+          prefPrefix + "validation.percentageChance",
+          0
+        ) / 100.0;
       if (validationProbability < Math.random()) {
         log.info(
           `Skipping validation of ${e.name}: Probability threshold not met`
@@ -65,7 +76,9 @@ export var Doctor = {
         continue;
       }
 
-      let maxRecords = Svc.Prefs.get(prefPrefix + "validation.maxRecords");
+      let maxRecords = Svc.PrefBranch.getIntPref(
+        prefPrefix + "validation.maxRecords"
+      );
       if (!maxRecords) {
         log.info(`Skipping validation of ${e.name}: No maxRecords specified`);
         continue;

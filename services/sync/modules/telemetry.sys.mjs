@@ -736,10 +736,15 @@ class SyncTelemetryImpl {
     this.events = [];
     this.histograms = {};
     this.migrations = [];
-    this.maxEventsCount = lazy.Svc.Prefs.get("telemetry.maxEventsCount", 1000);
-    this.maxPayloadCount = lazy.Svc.Prefs.get("telemetry.maxPayloadCount");
+    this.maxEventsCount = lazy.Svc.PrefBranch.getIntPref(
+      "telemetry.maxEventsCount",
+      1000
+    );
+    this.maxPayloadCount = lazy.Svc.PrefBranch.getIntPref(
+      "telemetry.maxPayloadCount"
+    );
     this.submissionInterval =
-      lazy.Svc.Prefs.get("telemetry.submissionInterval") * 1000;
+      lazy.Svc.PrefBranch.getIntPref("telemetry.submissionInterval") * 1000;
     this.lastSubmissionTime = Services.telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastSyncNodeType = null;
