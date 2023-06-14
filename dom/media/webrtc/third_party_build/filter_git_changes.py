@@ -64,7 +64,11 @@ if __name__ == "__main__":
         help="path to libwebrtc repo",
     )
     parser.add_argument("--commit-sha", required=True, help="sha of commit to examine")
-    parser.add_argument("--diff-filter", choices=("A", "D", "R"))
+    parser.add_argument(
+        "--diff-filter",
+        choices=("A", "D", "R"),
+        help="filter for adds (A), deletes (D), or renames (R)",
+    )
     args = parser.parse_args()
 
     paths = filter_git_changes(args.repo_path, args.commit_sha, args.diff_filter)
