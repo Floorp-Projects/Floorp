@@ -24,7 +24,7 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
     gURLBar.focus();
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     const inputValue = "http://example.org/?q=typed";
-    gURLBar.inputField.value = inputValue.slice(0, -1);
+    gURLBar.value = inputValue.slice(0, -1);
     EventUtils.sendString(inputValue.slice(-1));
 
     if (CONTENT_PROMPT_SUBDIALOG) {

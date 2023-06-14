@@ -15,7 +15,7 @@ add_task(async function noAutofillWhenCaretNotAtEnd() {
   ]);
 
   // Fill the input with xample.
-  gURLBar.inputField.value = "xample";
+  gURLBar.value = "xample";
 
   // Move the caret to the beginning and type e.
   gURLBar.selectionStart = 0;

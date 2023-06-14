@@ -99,7 +99,7 @@ add_task(async function test_webnavigation_urlbar_typed_transitions() {
 
   gURLBar.focus();
   const inputValue = "http://example.com/?q=typed";
-  gURLBar.inputField.value = inputValue.slice(0, -1);
+  gURLBar.value = inputValue.slice(0, -1);
   EventUtils.sendString(inputValue.slice(-1));
   EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
 

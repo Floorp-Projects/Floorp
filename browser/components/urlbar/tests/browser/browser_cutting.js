@@ -4,7 +4,9 @@
 
 add_task(async function test() {
   gURLBar.focus();
-  gURLBar.inputField.value = "https://example.com/";
+  await UrlbarTestUtils.inputIntoURLBar(window, "https://example.com/", {
+    replaceContent: true,
+  });
   gURLBar.selectionStart = 4;
   gURLBar.selectionEnd = 5;
   goDoCommand("cmd_cut");

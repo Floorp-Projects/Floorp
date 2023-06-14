@@ -35,7 +35,11 @@ add_setup(async function () {
 
 async function promiseSearch(searchtext) {
   gURLBar.focus();
-  gURLBar.inputField.value = searchtext.substr(0, searchtext.length - 1);
+  await UrlbarTestUtils.inputIntoURLBar(
+    window,
+    searchtext.substr(0, searchtext.length - 1),
+    { replaceContent: true }
+  );
   EventUtils.sendString(searchtext.substr(-1, 1));
   await UrlbarTestUtils.promiseSearchComplete(window);
 }
