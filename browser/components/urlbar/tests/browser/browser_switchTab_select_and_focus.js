@@ -35,31 +35,72 @@ add_task(async function () {
 
   await doTest({
     targetTab: webpageTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: userTypedTab,
   });
   await doTest({
     targetTab: webpageTab,
+    targetSelectionStart: 2,
+    targetSelectionEnd: 5,
+    anotherTab: userTypedTab,
+  });
+  await doTest({
+    targetTab: webpageTab,
+    targetSelectionStart: webpageTabURL.length,
+    targetSelectionEnd: webpageTabURL.length,
+    anotherTab: userTypedTab,
+  });
+  await doTest({
+    targetTab: webpageTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: emptyTab,
   });
   await doTest({
     targetTab: userTypedTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: webpageTab,
   });
   await doTest({
     targetTab: userTypedTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
+    anotherTab: emptyTab,
+  });
+  await doTest({
+    targetTab: userTypedTab,
+    targetSelectionStart: 1,
+    targetSelectionEnd: 2,
+    anotherTab: emptyTab,
+  });
+  await doTest({
+    targetTab: userTypedTab,
+    targetSelectionStart: userTypedTabText.length,
+    targetSelectionEnd: userTypedTabText.length,
     anotherTab: emptyTab,
   });
   await doTest({
     targetTab: emptyTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: webpageTab,
   });
   await doTest({
     targetTab: emptyTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: userTypedTab,
   });
 });
 
-async function doTest({ targetTab, anotherTab }) {
+async function doTest({
+  targetTab,
+  targetSelectionStart,
+  targetSelectionEnd,
+  anotherTab,
+}) {
   const testCases = [
     {
       targetFocus: false,
@@ -79,6 +120,10 @@ async function doTest({ targetTab, anotherTab }) {
     // Setup the target tab.
     await switchTab(targetTab);
     setURLBarFocus(targetFocus);
+    gURLBar.inputField.setSelectionRange(
+      targetSelectionStart,
+      targetSelectionEnd
+    );
     const targetValue = gURLBar.value;
 
     // Switch to another tab.
@@ -92,8 +137,8 @@ async function doTest({ targetTab, anotherTab }) {
     Assert.equal(gURLBar.value, targetValue);
     Assert.equal(gURLBar.focused, targetFocus);
     if (gURLBar.focused) {
-      Assert.equal(gURLBar.selectionStart, 0);
-      Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
+      Assert.equal(gURLBar.selectionStart, targetSelectionStart);
+      Assert.equal(gURLBar.selectionEnd, targetSelectionEnd);
     } else {
       Assert.equal(gURLBar.selectionStart, gURLBar.value.length);
       Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
