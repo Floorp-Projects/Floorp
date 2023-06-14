@@ -68,66 +68,112 @@ add_task(async function invalidURL() {
 });
 
 /**
- * Test whether the text will be selected properly when tab switching if the text
- * field had focused.
+ * Test the urlbar status of text selection and focusing by tab switching.
  */
-add_task(async function select() {
-  const tab1 = gBrowser.selectedTab;
-  const tab1ExpectedResult = {
-    value: "",
-    textSelected: false,
-  };
-
-  const tab2 = await BrowserTestUtils.openNewForegroundTab(
+add_task(async function selectAndFocus() {
+  // Create a tab with normal web page.
+  const webpageTabURL = "https://example.com";
+  const webpageTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    "http://example.com/"
-  );
-  const tab2ExpectedResult = {
-    value: "example.com",
-    textSelected: false,
-  };
+    url: webpageTabURL,
+  });
 
-  const tab3 = await BrowserTestUtils.openNewForegroundTab(
+  // Create a tab with userTypedValue.
+  const userTypedTabText = "test";
+  const userTypedTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    "http://example.org/"
-  );
-  gURLBar.focus();
-  const tab3ExpectedResult = {
-    value: "example.org",
-    textSelected: true,
-  };
+  });
+  await UrlbarTestUtils.inputIntoURLBar(window, userTypedTabText);
 
-  await assertInputStatusAfterSwitchingTab(tab1, tab1ExpectedResult);
-  await assertInputStatusAfterSwitchingTab(tab2, tab2ExpectedResult);
-  await assertInputStatusAfterSwitchingTab(tab3, tab3ExpectedResult);
-  await assertInputStatusAfterSwitchingTab(tab2, tab2ExpectedResult);
-  await assertInputStatusAfterSwitchingTab(tab3, tab3ExpectedResult);
+  // Create an empty tab.
+  const emptyTab = await BrowserTestUtils.openNewForegroundTab({ gBrowser });
 
-  BrowserTestUtils.removeTab(tab2);
-  BrowserTestUtils.removeTab(tab3);
+  registerCleanupFunction(async () => {
+    await PlacesUtils.history.clear();
+    BrowserTestUtils.removeTab(webpageTab);
+    BrowserTestUtils.removeTab(userTypedTab);
+    BrowserTestUtils.removeTab(emptyTab);
+  });
+
+  await doSelectAndFocusTest({
+    targetTab: webpageTab,
+    anotherTab: userTypedTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: webpageTab,
+    anotherTab: emptyTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: userTypedTab,
+    anotherTab: webpageTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: userTypedTab,
+    anotherTab: emptyTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: emptyTab,
+    anotherTab: webpageTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: emptyTab,
+    anotherTab: userTypedTab,
+  });
 });
 
-async function assertInputStatusAfterSwitchingTab(tab, expected) {
-  await BrowserTestUtils.switchTab(gBrowser, tab);
-  info(`Test for ${expected.value}`);
-  is(gURLBar.value, expected.value, "Text is correct");
-  if (expected.textSelected) {
-    is(
-      gURLBar.inputField.ownerDocument.activeElement,
-      gURLBar.inputField,
-      "The input field has focus"
-    );
-    is(gURLBar.inputField.selectionStart, 0, "selectionStart is correct");
-    is(
-      gURLBar.inputField.selectionEnd,
-      expected.value.length,
-      "selectionEnd is correct"
-    );
+async function doSelectAndFocusTest({ targetTab, anotherTab }) {
+  const testCases = [
+    {
+      targetFocus: false,
+      anotherFocus: false,
+    },
+    {
+      targetFocus: true,
+      anotherFocus: false,
+    },
+    {
+      targetFocus: true,
+      anotherFocus: true,
+    },
+  ];
+
+  for (const { targetFocus, anotherFocus } of testCases) {
+    // Setup the target tab.
+    await switchTab(targetTab);
+    setURLBarFocus(targetFocus);
+    const targetValue = gURLBar.value;
+
+    // Switch to another tab.
+    await switchTab(anotherTab);
+    setURLBarFocus(anotherFocus);
+
+    // Switch back to the target tab.
+    await switchTab(targetTab);
+
+    // Check whether the value, selection and focusing status are reverted.
+    Assert.equal(gURLBar.value, targetValue);
+    Assert.equal(gURLBar.focused, targetFocus);
+    if (gURLBar.focused) {
+      Assert.equal(gURLBar.selectionStart, 0);
+      Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
+    } else {
+      Assert.equal(gURLBar.selectionStart, gURLBar.value.length);
+      Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
+    }
+  }
+}
+
+function setURLBarFocus(focus) {
+  if (focus) {
+    gURLBar.focus();
   } else {
-    isnot(
-      gURLBar.inputField.ownerDocument.activeElement,
-      gURLBar.inputField,
-      "The input field does not have focus"
-    );
+    gURLBar.blur();
+  }
+}
+
+async function switchTab(tab) {
+  if (gBrowser.selectedTab !== tab) {
+    EventUtils.synthesizeMouseAtCenter(tab, {});
+    await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab === tab);
   }
 }

@@ -1416,6 +1416,10 @@
 
       oldBrowser._urlbarFocused = gURLBar && gURLBar.focused;
 
+      if (this._asyncTabSwitching) {
+        newBrowser._userTypedValueAtBeforeTabSwitch = newBrowser.userTypedValue;
+      }
+
       if (this.isFindBarInitialized(oldTab)) {
         let findBar = this.getCachedFindBar(oldTab);
         oldTab._findBarFocused =
@@ -1474,14 +1478,6 @@
       // In full screen mode, only bother making the location bar visible
       // if the tab is a blank one.
       if (newBrowser._urlbarFocused && gURLBar) {
-        // If the user happened to type into the URL bar for this browser
-        // by the time we got here, focusing will cause the text to be
-        // selected which could cause them to overwrite what they've
-        // already typed in.
-        if (gURLBar.focused && newBrowser.userTypedValue) {
-          return;
-        }
-
         let selectURL = () => {
           if (this._asyncTabSwitching) {
             // Set _awaitingSetURI flag to suppress popup notification
@@ -1498,10 +1494,27 @@
             gURLBar.inputField.addEventListener(
               "SetURI",
               () => {
-                if (currentActiveElement === document.activeElement) {
-                  gURLBar.select();
-                }
                 delete newBrowser._awaitingSetURI;
+
+                // If the user happened to type into the URL bar for this browser
+                // by the time we got here, focusing will cause the text to be
+                // selected which could cause them to overwrite what they've
+                // already typed in.
+                let userTypedValueAtBeforeTabSwitch =
+                  newBrowser._userTypedValueAtBeforeTabSwitch;
+                delete newBrowser._userTypedValueAtBeforeTabSwitch;
+                if (
+                  newBrowser.userTypedValue &&
+                  newBrowser.userTypedValue != userTypedValueAtBeforeTabSwitch
+                ) {
+                  return;
+                }
+
+                if (currentActiveElement != document.activeElement) {
+                  return;
+                }
+
+                gURLBar.select();
               },
               { once: true }
             );
