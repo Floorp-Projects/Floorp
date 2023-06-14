@@ -140,6 +140,9 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
 
+  // nsIScriptElement
+  nsIContent* GetAsContent() override { return this; }
+
   // ScriptElement
   virtual bool HasScriptContent() override;
 };

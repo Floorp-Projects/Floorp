@@ -11,6 +11,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsPresContext.h"
@@ -41,7 +42,7 @@ ScriptElement::ScriptAvailable(nsresult aResult, nsIScriptElement* aElement,
 
 /* virtual */
 nsresult ScriptElement::FireErrorEvent() {
-  nsCOMPtr<nsIContent> cont = do_QueryInterface((nsIScriptElement*)this);
+  nsIContent* cont = GetAsContent();
 
   return nsContentUtils::DispatchTrustedEvent(
       cont->OwnerDoc(), cont, u"error"_ns, CanBubble::eNo, Cancelable::eNo);
@@ -52,7 +53,7 @@ ScriptElement::ScriptEvaluated(nsresult aResult, nsIScriptElement* aElement,
                                bool aIsInline) {
   nsresult rv = NS_OK;
   if (!aIsInline) {
-    nsCOMPtr<nsIContent> cont = do_QueryInterface((nsIScriptElement*)this);
+    nsCOMPtr<nsIContent> cont = GetAsContent();
 
     RefPtr<nsPresContext> presContext =
         nsContentUtils::GetContextForContent(cont);
@@ -77,7 +78,28 @@ void ScriptElement::CharacterDataChanged(nsIContent* aContent,
 void ScriptElement::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                      nsAtom* aAttribute, int32_t aModType,
                                      const nsAttrValue* aOldValue) {
-  MaybeProcessScript();
+  // https://html.spec.whatwg.org/#script-processing-model
+  // When a script element el that is not parser-inserted experiences one of the
+  // events listed in the following list, the user agent must immediately
+  // prepare the script element el:
+  //  - The script element is connected and has a src attribute set where
+  //  previously the element had no such attribute.
+  if (aElement->IsSVGElement() && ((aNameSpaceID != kNameSpaceID_XLink &&
+                                    aNameSpaceID != kNameSpaceID_None) ||
+                                   aAttribute != nsGkAtoms::href)) {
+    return;
+  }
+  if (aElement->IsHTMLElement() &&
+      (aNameSpaceID != kNameSpaceID_None || aAttribute != nsGkAtoms::src)) {
+    return;
+  }
+  if (mParserCreated == NOT_FROM_PARSER &&
+      aModType == MutationEvent_Binding::ADDITION) {
+    auto* cont = GetAsContent();
+    if (cont->IsInComposedDoc()) {
+      MaybeProcessScript();
+    }
+  }
 }
 
 void ScriptElement::ContentAppended(nsIContent* aFirstNewContent) {
@@ -89,10 +111,17 @@ void ScriptElement::ContentInserted(nsIContent* aChild) {
 }
 
 bool ScriptElement::MaybeProcessScript() {
-  nsCOMPtr<nsIContent> cont = do_QueryInterface((nsIScriptElement*)this);
+  nsIContent* cont = GetAsContent();
 
   NS_ASSERTION(cont->DebugGetSlots()->mMutationObservers.contains(this),
                "You forgot to add self as observer");
+
+  // https://html.spec.whatwg.org/#parsing-main-incdata
+  // An end tag whose tag name is "script"
+  //  - If the active speculative HTML parser is null and the JavaScript
+  // execution context stack is empty, then perform a microtask checkpoint.
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
 
   if (mAlreadyStarted || !mDoneAddingChildren || !cont->GetComposedDoc() ||
       mMalformed) {
@@ -110,13 +139,33 @@ bool ScriptElement::MaybeProcessScript() {
     return false;
   }
 
+  // Check the type attribute to determine language and version. If type exists,
+  // it trumps the deprecated 'language='.
+  nsAutoString type;
+  bool hasType = GetScriptType(type);
+  if (!type.IsEmpty()) {
+    NS_ENSURE_TRUE(nsContentUtils::IsJavascriptMIMEType(type) ||
+                       type.LowerCaseEqualsASCII("module") ||
+                       type.LowerCaseEqualsASCII("importmap"),
+                   false);
+  } else if (!hasType) {
+    // "language" is a deprecated attribute of HTML, so we check it only for
+    // HTML script elements.
+    if (cont->IsHTMLElement()) {
+      nsAutoString language;
+      cont->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::language,
+                                 language);
+      if (!language.IsEmpty() &&
+          !nsContentUtils::IsJavaScriptLanguage(language)) {
+        return false;
+      }
+    }
+  }
+
   Document* ownerDoc = cont->OwnerDoc();
   FreezeExecutionAttrs(ownerDoc);
 
   mAlreadyStarted = true;
-
-  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-      "ScriptElement::MaybeProcessScript", []() { nsAutoMicroTask mt; }));
 
   nsCOMPtr<nsIParser> parser = ((nsIScriptElement*)this)->GetCreatorParser();
   if (parser) {
@@ -131,5 +180,5 @@ bool ScriptElement::MaybeProcessScript() {
   }
 
   RefPtr<ScriptLoader> loader = ownerDoc->ScriptLoader();
-  return loader->ProcessScriptElement(this);
+  return loader->ProcessScriptElement(this, type);
 }

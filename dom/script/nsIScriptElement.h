@@ -22,6 +22,7 @@
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "nsIPrincipal.h"
 
+class nsIContent;
 class nsIParser;
 class nsIPrincipal;
 class nsIURI;
@@ -269,6 +270,11 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
    * retreive async state from script elements without bringing the type in.
    */
   virtual bool GetAsyncState() = 0;
+
+  /**
+   * Allow implementing elements to avoid unnecessary QueryReferences.
+   */
+  virtual nsIContent* GetAsContent() = 0;
 
   /**
    * The start line number of the script.
