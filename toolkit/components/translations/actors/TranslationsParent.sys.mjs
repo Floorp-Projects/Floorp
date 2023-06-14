@@ -1109,6 +1109,9 @@ export class TranslationsParent extends JSWindowActorParent {
     return client;
   }
 
+  /** @type {Promise<WasmRecord> | null} */
+  #bergamotWasmRecord = null;
+
   /**
    * Bergamot is the translation engine that has been compiled to wasm. It is shipped
    * to the user via Remote Settings.
@@ -1121,46 +1124,62 @@ export class TranslationsParent extends JSWindowActorParent {
   async #getBergamotWasmArrayBuffer() {
     const start = Date.now();
     const client = this.#getTranslationsWasmRemoteClient();
+    if (!this.#bergamotWasmRecord) {
+      // Place the records into a promise to prevent any races.
+      this.#bergamotWasmRecord = (async () => {
+        // Load the wasm binary from remote settings, if it hasn't been already.
+        lazy.console.log(`Getting remote bergamot-translator wasm records.`);
 
-    // Load the wasm binary from remote settings, if it hasn't been already.
-    lazy.console.log(`Getting remote bergamot-translator wasm records.`);
+        /** @type {WasmRecord[]} */
+        const wasmRecords = await TranslationsParent.getMaxVersionRecords(
+          client,
+          {
+            filters: { name: "bergamot-translator" },
+          }
+        );
 
-    /** @type {WasmRecord[]} */
-    const wasmRecords = await TranslationsParent.getMaxVersionRecords(client, {
-      filters: { name: "bergamot-translator" },
-    });
+        if (wasmRecords.length === 0) {
+          // The remote settings client provides an empty list of records when there is
+          // an error.
+          throw new Error(
+            "Unable to get the bergamot translator from Remote Settings."
+          );
+        }
 
-    if (wasmRecords.length === 0) {
-      // The remote settings client provides an empty list of records when there is
-      // an error.
-      throw new Error(
-        "Unable to get the bergamot translator from Remote Settings."
-      );
+        if (wasmRecords.length > 1) {
+          TranslationsParent.reportError(
+            new Error(
+              "Expected the bergamot-translator to only have 1 record."
+            ),
+            wasmRecords
+          );
+        }
+        return wasmRecords[0];
+      })();
     }
-
-    if (wasmRecords.length > 1) {
-      TranslationsParent.reportError(
-        new Error("Expected the bergamot-translator to only have 1 record."),
-        wasmRecords
-      );
-    }
-
     // Unlike the models, greedily download the wasm. It will pull it from a locale
     // cache on disk if it's already been downloaded. Do not retain a copy, as
     // this will be running in the parent process. It's not worth holding onto
     // this much memory, so reload it every time it is needed.
 
-    await chaosModeError(1 / 3);
+    try {
+      await chaosModeError(1 / 3);
 
-    /** @type {{buffer: ArrayBuffer}} */
-    const { buffer } = await client.attachments.download(wasmRecords[0]);
+      /** @type {{buffer: ArrayBuffer}} */
+      const { buffer } = await client.attachments.download(
+        await this.#bergamotWasmRecord
+      );
 
-    const duration = Date.now() - start;
-    lazy.console.log(
-      `"bergamot-translator" wasm binary loaded in ${duration / 1000} seconds`
-    );
+      const duration = Date.now() - start;
+      lazy.console.log(
+        `"bergamot-translator" wasm binary loaded in ${duration / 1000} seconds`
+      );
 
-    return buffer;
+      return buffer;
+    } catch (error) {
+      this.#bergamotWasmRecord = null;
+      throw error;
+    }
   }
 
   /**
