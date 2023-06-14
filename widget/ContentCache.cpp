@@ -1389,19 +1389,21 @@ void ContentCacheInParent::OnSelectionEvent(
 }
 
 void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
-                                                    EventMessage aMessage) {
+                                                    EventMessage aMessage,
+                                                    uint32_t aCompositionId) {
   // This is called when the child process receives WidgetCompositionEvent or
   // WidgetSelectionEvent.
 
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
       ("0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
-       "aMessage=%s), mPendingEventsNeedingAck=%u, "
+       "aMessage=%s, aCompositionId=%" PRIu32 "), mPendingEventsNeedingAck=%u, "
        "mWidgetHasComposition=%s, mPendingCompositionCount=%" PRIu8 ", "
        "mPendingCommitCount=%" PRIu8 ", mIsChildIgnoringCompositionEvents=%s",
-       this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck,
-       GetBoolName(mWidgetHasComposition), mPendingCompositionCount,
-       mPendingCommitCount, GetBoolName(mIsChildIgnoringCompositionEvents)));
+       this, aWidget, ToChar(aMessage), aCompositionId,
+       mPendingEventsNeedingAck, GetBoolName(mWidgetHasComposition),
+       mPendingCompositionCount, mPendingCommitCount,
+       GetBoolName(mIsChildIgnoringCompositionEvents)));
 
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
   mReceivedEventMessages.AppendElement(aMessage);
@@ -1513,16 +1515,19 @@ void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
 }
 
 bool ContentCacheInParent::RequestIMEToCommitComposition(
-    nsIWidget* aWidget, bool aCancel, nsAString& aCommittedString) {
+    nsIWidget* aWidget, bool aCancel, uint32_t aCompositionId,
+    nsAString& aCommittedString) {
   MOZ_LOG(
       sContentCacheLog, LogLevel::Info,
       ("0x%p RequestToCommitComposition(aWidget=%p, "
-       "aCancel=%s), mPendingCompositionCount=%" PRIu8 ", "
-       "mPendingCommitCount=%" PRIu8 ", mIsChildIgnoringCompositionEvents=%s, "
+       "aCancel=%s, aCompositionId=%" PRIu32
+       "), mPendingCompositionCount=%" PRIu8 ", mPendingCommitCount=%" PRIu8
+       ", mIsChildIgnoringCompositionEvents=%s, "
        "IMEStateManager::DoesBrowserParentHaveIMEFocus(&mBrowserParent)=%s, "
        "mWidgetHasComposition=%s, mCommitStringByRequest=%p",
-       this, aWidget, GetBoolName(aCancel), mPendingCompositionCount,
-       mPendingCommitCount, GetBoolName(mIsChildIgnoringCompositionEvents),
+       this, aWidget, GetBoolName(aCancel), aCompositionId,
+       mPendingCompositionCount, mPendingCommitCount,
+       GetBoolName(mIsChildIgnoringCompositionEvents),
        GetBoolName(
            IMEStateManager::DoesBrowserParentHaveIMEFocus(&mBrowserParent)),
        GetBoolName(mWidgetHasComposition), mCommitStringByRequest));

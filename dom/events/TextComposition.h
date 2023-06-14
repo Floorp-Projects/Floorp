@@ -51,6 +51,8 @@ class TextComposition final {
   TextComposition(nsPresContext* aPresContext, nsINode* aNode,
                   BrowserParent* aBrowserParent,
                   WidgetCompositionEvent* aCompositionEvent);
+  TextComposition() = delete;
+  TextComposition(const TextComposition& aOther) = delete;
 
   bool Destroyed() const { return !mPresContext; }
   nsPresContext* GetPresContext() const { return mPresContext; }
@@ -91,6 +93,10 @@ class TextComposition final {
   // Returns true if the composition is started with synthesized event which
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
+
+  // Returns the composition ID.  It must be 0 if the composition is synthesized
+  // in a content process.  Otherwise, returns 1 or larger value.
+  uint32_t Id() const { return mCompositionId; }
 
   const widget::NativeIMEContext& GetNativeIMEContext() const {
     return mNativeContext;
@@ -323,6 +329,11 @@ class TextComposition final {
   // editor.
   nsString mString;
 
+  // Composition ID of this composition.  If this is in a parent process,
+  // this is 1 or larger.  If the composition is created for managing a
+  // composition synthesized in a content process, this is 0.
+  const uint32_t mCompositionId = 0;
+
   // Offset of the composition string from start of the editor
   uint32_t mCompositionStartOffset;
   // Offset of the selected clause of the composition string from
@@ -386,26 +397,6 @@ class TextComposition final {
   // mWasCompositionStringEmpty is true if the composition string was empty
   // when DispatchCompositionEvent() is called.
   bool mWasCompositionStringEmpty;
-
-  // Hide the default constructor and copy constructor.
-  TextComposition()
-      : mPresContext(nullptr),
-        mNativeContext(nullptr),
-        mCompositionStartOffset(0),
-        mTargetClauseOffsetInComposition(0),
-        mCompositionStartOffsetInTextNode(UINT32_MAX),
-        mCompositionLengthInTextNode(UINT32_MAX),
-        mIsSynthesizedForTests(false),
-        mIsComposing(false),
-        mIsEditorHandlingEvent(false),
-        mIsRequestingCommit(false),
-        mIsRequestingCancel(false),
-        mRequestedToCommitOrCancel(false),
-        mHasReceivedCommitEvent(false),
-        mWasNativeCompositionEndEventDiscarded(false),
-        mAllowControlCharacters(false),
-        mWasCompositionStringEmpty(true) {}
-  TextComposition(const TextComposition& aOther);
 
   /**
    * If we're requesting IME to commit or cancel composition, or we've already
