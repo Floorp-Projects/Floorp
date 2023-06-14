@@ -176,25 +176,32 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
   return keySystemConfigs;
 }
 
-static bool GetKeySystemConfig(const nsAString& aKeySystem,
-                               KeySystemConfig& aOutKeySystemConfig) {
-  for (auto&& config : GetSupportedKeySystems()) {
-    // TODO : handle multiple configs for the same key system.
+static bool GetKeySystemConfigs(
+    const nsAString& aKeySystem,
+    nsTArray<KeySystemConfig>& aOutKeySystemConfig) {
+  bool foundConfigs = false;
+  for (auto& config : GetSupportedKeySystems()) {
     if (config.mKeySystem.Equals(aKeySystem)) {
-      aOutKeySystemConfig = std::move(config);
-      return true;
+      aOutKeySystemConfig.AppendElement(std::move(config));
+      foundConfigs = true;
     }
   }
-  // No matching key system found.
-  return false;
+  return foundConfigs;
 }
 
 /* static */
 bool MediaKeySystemAccess::KeySystemSupportsInitDataType(
     const nsAString& aKeySystem, const nsAString& aInitDataType) {
-  KeySystemConfig implementation;
-  return GetKeySystemConfig(aKeySystem, implementation) &&
-         implementation.mInitDataTypes.Contains(aInitDataType);
+  nsTArray<KeySystemConfig> implementations;
+  GetKeySystemConfigs(aKeySystem, implementations);
+  bool containInitType = false;
+  for (const auto& config : implementations) {
+    if (config.mInitDataTypes.Contains(aInitDataType)) {
+      containInitType = true;
+      break;
+    }
+  }
+  return containInitType;
 }
 
 enum CodecType { Audio, Video, Invalid };
@@ -955,18 +962,19 @@ bool MediaKeySystemAccess::GetSupportedConfig(
     MediaKeySystemConfiguration& aOutConfig,
     DecoderDoctorDiagnostics* aDiagnostics, bool aIsPrivateBrowsing,
     const std::function<void(const char*)>& aDeprecationLogFn) {
-  KeySystemConfig implementation;
-  if (!GetKeySystemConfig(aKeySystem, implementation)) {
+  nsTArray<KeySystemConfig> implementations;
+  if (!GetKeySystemConfigs(aKeySystem, implementations)) {
     return false;
   }
-  for (const MediaKeySystemConfiguration& candidate : aConfigs) {
-    if (mozilla::dom::GetSupportedConfig(implementation, candidate, aOutConfig,
-                                         aDiagnostics, aIsPrivateBrowsing,
-                                         aDeprecationLogFn)) {
-      return true;
+  for (const auto& implementation : implementations) {
+    for (const MediaKeySystemConfiguration& candidate : aConfigs) {
+      if (mozilla::dom::GetSupportedConfig(
+              implementation, candidate, aOutConfig, aDiagnostics,
+              aIsPrivateBrowsing, aDeprecationLogFn)) {
+        return true;
+      }
     }
   }
-
   return false;
 }
 
