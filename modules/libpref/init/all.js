@@ -213,11 +213,6 @@ pref("media.omt_data_delivery.enabled", true);
 // This means we'll only throttle the download if there's no concern that
 // throttling would cause us to stop and buffer.
 pref("media.throttle-factor", 2);
-// By default, we'll throttle media download once we've reached the the
-// readahead_limit if the download is fast. This pref toggles the "and the
-// download is fast" check off, so that we can always throttle the download
-// once the readaheadd limit is reached even on a slow network.
-pref("media.throttle-regardless-of-download-rate", false);
 
 // Master HTML5 media volume scale.
 pref("media.volume_scale", "1.0");
