@@ -5,16 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RemoteDecoderManagerChild.h"
 
-#include "ErrorList.h"
-#include "nsPrintfCString.h"
 #include "PDMFactory.h"
-#include "PlatformDecoderModule.h"
 #include "RemoteAudioDecoder.h"
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
@@ -311,17 +307,7 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
   } else if (aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
     launchPromise = LaunchUtilityProcessIfNeeded(aLocation);
   } else {
-    if (StaticPrefs::media_allow_audio_non_utility()) {
-      launchPromise = LaunchRDDProcessIfNeeded();
-    } else {
-      return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
-          MediaResult(
-              NS_ERROR_DOM_MEDIA_DENIED_IN_NON_UTILITY,
-              nsPrintfCString("%s is not allowed to perform audio decoding",
-                              RemoteDecodeInToStr(aLocation))
-                  .get()),
-          __func__);
-    }
+    launchPromise = LaunchRDDProcessIfNeeded();
   }
   LOG("Create audio decoder in %s", RemoteDecodeInToStr(aLocation));
 

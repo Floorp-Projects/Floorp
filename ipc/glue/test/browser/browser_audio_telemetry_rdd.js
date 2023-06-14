@@ -15,7 +15,7 @@ add_setup(async function testNoTelemetry() {
 });
 
 add_task(async function testAudioDecodingInRDD() {
-  await runTest({ expectUtility: false, expectRDD: true, expectError: true });
+  await runTest({ expectUtility: false, expectRDD: true });
 });
 
 add_task(async function testRDDTelemetry() {
@@ -25,5 +25,5 @@ add_task(async function testRDDTelemetry() {
     await verifyNoTelemetryForProcess(exp.process, exp.codecs, extraKey);
   }
   const codecs = ["vorbis", "mp3", "aac", "flac"];
-  await verifyNoTelemetryForProcess("rdd", codecs, extraKey);
+  await verifyTelemetryForProcess("rdd", codecs, extraKey);
 });
