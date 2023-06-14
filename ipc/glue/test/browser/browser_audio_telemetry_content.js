@@ -15,13 +15,13 @@ add_setup(async function testNoTelemetry() {
 });
 
 add_task(async function testAudioDecodingInContent() {
-  await runTest({ expectUtility: false, expectRDD: false });
+  await runTest({ expectUtility: false, expectRDD: false, expectError: true });
 });
 
 add_task(async function testUtilityTelemetry() {
   const codecs = ["vorbis", "mp3", "aac", "flac"];
   const extraKey = ",rdd-disabled,utility-disabled";
-  await verifyTelemetryForProcess("tab", codecs, extraKey);
+  await verifyNoTelemetryForProcess("tab", codecs, extraKey);
 
   const platform = Services.appinfo.OS;
   for (let exp of utilityPerCodecs[platform]) {

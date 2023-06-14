@@ -88,9 +88,13 @@ async function waitForValue(process, codecNames, extra = "") {
   );
 }
 
-async function runTest({ expectUtility = false, expectRDD = false }) {
+async function runTest({
+  expectUtility = false,
+  expectRDD = false,
+  expectError = false,
+}) {
   info(
-    `Running tests with decoding from Utility or RDD: expectUtility=${expectUtility} expectRDD=${expectRDD}`
+    `Running tests with decoding from Utility or RDD: expectUtility=${expectUtility} expectRDD=${expectRDD} expectError=${expectError}`
   );
 
   await SpecialPowers.pushPrefEnv({
@@ -117,9 +121,11 @@ async function runTest({ expectUtility = false, expectRDD = false }) {
     info("Play tab");
     await play(
       tab,
-      expectUtility ? expectation.process : "RDD",
+      expectation.process,
       expectation.decoder,
-      !expectUtility && !expectRDD
+      !expectUtility && !expectRDD,
+      false,
+      expectError
     );
 
     info("Stop tab");
