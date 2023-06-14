@@ -63,7 +63,6 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/css/StreamLoader.h"
 #include "mozilla/SharedStyleSheetCache.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "ReferrerInfo.h"
 
@@ -1756,9 +1755,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
 
   // We only cache sheets if in shadow trees, since regular document sheets are
   // likely to be unique.
-  const bool isWorthCaching =
-      StaticPrefs::layout_css_inline_style_caching_always_enabled() ||
-      aInfo.mContent->IsInShadowTree();
+  const bool isWorthCaching = aInfo.mContent->IsInShadowTree();
   RefPtr<StyleSheet> sheet;
   if (isWorthCaching) {
     sheet = LookupInlineSheetInCache(aBuffer);
@@ -1801,11 +1798,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   if (sheetFromCache) {
     MOZ_ASSERT(sheet->IsComplete());
     completed = Completed::Yes;
-    if (dom::Document* doc = GetDocument()) {
-      // We post these events for devtools, even though the applicable state has
-      // not actually changed, to make the cache not observable.
-      doc->PostStyleSheetApplicableStateChangeEvent(*sheet);
-    }
   } else {
     auto data = MakeRefPtr<SheetLoadData>(
         this, aInfo.mTitle, nullptr, sheet, false, aInfo.mContent, isAlternate,
@@ -1822,9 +1814,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     NS_ConvertUTF16toUTF8 utf8(aBuffer);
     completed = ParseSheet(utf8, *data, AllowAsyncParse::No);
     if (completed == Completed::Yes) {
-      // TODO(emilio): Try to cache sheets with @import rules, maybe? Should be
-      // a matter of scheduling the load event appropriately...
-      if (isWorthCaching && sheet->ChildSheets().IsEmpty()) {
+      // TODO(emilio): Try to cache sheets with @import rules, maybe?
+      if (isWorthCaching) {
         mInlineSheets.InsertOrUpdate(aBuffer, std::move(sheet));
       }
     } else {
