@@ -11,6 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
@@ -519,6 +520,18 @@ class StringTest {
         assertEquals("mozilla.org", ("m.mozilla.org").stripCommonSubdomains())
         assertEquals("mozilla.org", ("mobile.mozilla.org").stripCommonSubdomains())
         assertEquals("random.mozilla.org", ("random.mozilla.org").stripCommonSubdomains())
+    }
+
+    @Test
+    fun `given an invalid base64 image string when converting it into bitmap then the result is null`() {
+        val invalidBase64BitmapString = "aa"
+        assertNull(invalidBase64BitmapString.base64PngToBitmap())
+    }
+
+    @Test
+    fun `given a valid base64 png string when converting it into bitmap then the result is not null and no exception is thrown`() {
+        val validBase64BitmapString = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAABfGlDQ1BpY2MAACiRfZE9SMNAHMVfU0UpLQ52EFHIUJ0siIo4ahWKUCHUCq06mFz6BU0akhQXR8G14ODHYtXBxVlXB1dBEPwAcXF1UnSREv+XFFrEeHDcj3f3HnfvAKFRYZrVNQ5oum2mkwkxm1sVe14RwjDCiCEiM8uYk6QUfMfXPQJ8vYvzLP9zf46ImrcYEBCJZ5lh2sQbxNObtsF5nzjKSrJKfE48ZtIFiR+5rnj8xrnossAzo2YmPU8cJRaLHax0MCuZGvEUcUzVdMoXsh6rnLc4a5Uaa92TvzCc11eWuU5zCEksYgkSRCiooYwKbMRp1UmxkKb9hI9/0PVL5FLIVQYjxwKq0CC7fvA/+N2tVZic8JLCCaD7xXE+RoCeXaBZd5zvY8dpngDBZ+BKb/urDWDmk/R6W4sdAX3bwMV1W1P2gMsdYODJkE3ZlYI0hUIBeD+jb8oB/bdAaM3rrbWP0wcgQ12lboCDQ2C0SNnrPu/u7ezt3zOt/n4AYeJyoPRouWIAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZQTFRF33Fi////EyzH0AAAAAF0Uk5ToeE3SxgAAAABYktHRAH/Ai3eAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH5wYVEDYOXZDMlQAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjMtMDYtMjFUMTY6NTQ6MDErMDA6MDAxTfjQAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIzLTA2LTIxVDE2OjU0OjAxKzAwOjAwQBBAbAAAAABJRU5ErkJggg=="
+        assertNotNull(validBase64BitmapString.base64PngToBitmap())
     }
 
     private infix fun String.shortenedShouldBecome(expect: String) {

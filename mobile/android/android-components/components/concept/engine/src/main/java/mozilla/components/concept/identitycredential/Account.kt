@@ -9,15 +9,17 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 /**
- * Represents an Identity credential provider:
- * @property id An identifier for this [Provider].
- * @property icon An icon of the provider, normally the logo of the brand.
- * @property name The name of this [Provider].
+ * Represents an Identity credential account:
+ * @property id An identifier for this [Account].
+ * @property email The email associated to this [Account].
+ * @property name The name of this [Account].
+ * @property icon An icon for the [Account], normally the profile picture
  */
 @SuppressLint("ParcelCreator")
 @Parcelize
-data class Provider(
+data class Account(
     val id: Int,
-    val icon: String?,
+    val email: String,
     val name: String,
+    val icon: String?,
 ) : Parcelable

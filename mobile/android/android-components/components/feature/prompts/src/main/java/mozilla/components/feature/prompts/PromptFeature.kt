@@ -72,6 +72,7 @@ import mozilla.components.feature.prompts.facts.emitCreditCardSaveShownFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.identitycredential.SelectAccountDialogFragment
 import mozilla.components.feature.prompts.identitycredential.SelectProviderDialogFragment
 import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginExceptions
@@ -179,7 +180,8 @@ class PromptFeature private constructor(
     // This set of weak references of fragments is only used for dismissing all prompts on navigation.
     // For all other code only `activePrompt` is tracked for now.
     @VisibleForTesting(otherwise = PRIVATE)
-    internal val activePromptsToDismiss = Collections.newSetFromMap(WeakHashMap<PromptDialogFragment, Boolean>())
+    internal val activePromptsToDismiss =
+        Collections.newSetFromMap(WeakHashMap<PromptDialogFragment, Boolean>())
 
     constructor(
         activity: Activity,
@@ -881,6 +883,15 @@ class PromptFeature private constructor(
                 )
             }
 
+            is PromptRequest.IdentityCredential.SelectAccount -> {
+                SelectAccountDialogFragment.newInstance(
+                    sessionId = session.id,
+                    promptRequestUID = promptRequest.uid,
+                    shouldDismissOnLoad = true,
+                    accounts = promptRequest.accounts,
+                )
+            }
+
             else -> throw InvalidParameterException("Not valid prompt request type $promptRequest")
         }
 
@@ -942,6 +953,7 @@ class PromptFeature private constructor(
             is SelectAddress,
             is Share,
             is PromptRequest.IdentityCredential.SelectProvider,
+            is PromptRequest.IdentityCredential.SelectAccount,
             -> true
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }
