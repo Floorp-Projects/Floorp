@@ -8,25 +8,13 @@ import shutil
 import sys
 
 from fetch_github_repo import fetch_repo
-from run_operations import run_git, run_hg, run_shell
+from run_operations import get_last_line, run_git, run_hg, run_shell
 
 # This script restores the mozilla patch stack and no-op commit tracking
 # files.  In the case of repo corruption or a mistake made during
 # various rebase conflict resolution operations, the patch-stack can be
 # restored rather than requiring the user to restart the fast-forward
 # process from the beginning.
-
-
-def get_last_line(file_path):
-    # technique from https://stackoverflow.com/questions/46258499/how-to-read-the-last-line-of-a-file-in-python
-    with open(file_path, "rb") as f:
-        try:  # catch OSError in case of a one line file
-            f.seek(-2, os.SEEK_END)
-            while f.read(1) != b"\n":
-                f.seek(-2, os.SEEK_CUR)
-        except OSError:
-            f.seek(0)
-        return f.readline().decode().strip()
 
 
 def restore_patch_stack(
