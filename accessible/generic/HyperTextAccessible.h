@@ -173,29 +173,7 @@ class HyperTextAccessible : public AccessibleWrap,
   void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
                               uint32_t aCoordinateType, int32_t aX, int32_t aY);
 
-  /**
-   * Return a range that encloses the text control or the document this
-   * accessible belongs to.
-   */
-  void EnclosingRange(TextRange& aRange) const;
-
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
-
-  /**
-   * Return an array of disjoint ranges of visible text within the text control
-   * or the document this accessible belongs to.
-   */
-  void VisibleRanges(nsTArray<TextRange>* aRanges) const;
-
-  /**
-   * Return a range containing the given accessible.
-   */
-  void RangeByChild(LocalAccessible* aChild, TextRange& aRange) const;
-
-  /**
-   * Return a range containing an accessible at the given point.
-   */
-  void RangeAtPoint(int32_t aX, int32_t aY, TextRange& aRange) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible

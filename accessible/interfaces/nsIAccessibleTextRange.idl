@@ -27,11 +27,6 @@ interface nsIAccessibleTextRange : nsISupports
   readonly attribute nsIAccessible container;
 
   /**
-   * Return embedded children within the range.
-   */
-  readonly attribute nsIArray embeddedChildren;
-
-  /**
    * Return true if this range has the same end points of the given range.
    */
   boolean compare(in nsIAccessibleTextRange aOtherRange);
@@ -53,20 +48,10 @@ interface nsIAccessibleTextRange : nsISupports
                         in unsigned long aOtherRangeEndPoint);
 
   /**
-   * Return text within the range.
-   */
-  readonly attribute AString text;
-
-  /**
    * Crops the range by the given accessible element.
    */
   boolean crop(in nsIAccessible aContainer);
 
   const unsigned long AlignToTop = 0;
   const unsigned long AlignToBottom = 1;
-
-  /**
-   * Scroll the range into view.
-   */
-  void scrollIntoView(in unsigned long aHow);
 };
