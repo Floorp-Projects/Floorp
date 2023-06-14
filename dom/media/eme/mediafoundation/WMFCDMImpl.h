@@ -42,7 +42,6 @@ class WMFCDMImpl final {
     CopyableTArray<nsString> mInitDataTypes;
     bool mPersistentStateRequired;
     bool mDistinctiveIdentifierRequired;
-    bool mHWSecure;
     WMFCDMProxyCallback* mProxyCallback;
     CopyableTArray<MFCDMMediaCapability> mAudioCapabilities;
     CopyableTArray<MFCDMMediaCapability> mVideoCapabilities;

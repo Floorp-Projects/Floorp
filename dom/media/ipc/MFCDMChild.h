@@ -39,7 +39,7 @@ class MFCDMChild final : public PMFCDMChild {
       const KeySystemConfig::Requirement aDistinctiveID,
       const CopyableTArray<MFCDMMediaCapability>& aAudioCapabilities,
       const CopyableTArray<MFCDMMediaCapability>& aVideoCapabilities,
-      const bool aHWSecure, WMFCDMProxyCallback* aProxyCallback);
+      WMFCDMProxyCallback* aProxyCallback);
 
   using SessionPromise = MozPromise<nsString, nsresult, true>;
   RefPtr<SessionPromise> CreateSessionAndGenerateRequest(

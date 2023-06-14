@@ -144,7 +144,7 @@ RefPtr<WMFCDMImpl::InitPromise> WMFCDMImpl::Init(
                  ? KeySystemConfig::Requirement::Required
                  : KeySystemConfig::Requirement::Optional,
              aParams.mAudioCapabilities, aParams.mVideoCapabilities,
-             aParams.mHWSecure, aParams.mProxyCallback)
+             aParams.mProxyCallback)
       ->Then(
           mCDM->ManagerThread(), __func__,
           [self, this](const MFCDMInitIPDL& init) {

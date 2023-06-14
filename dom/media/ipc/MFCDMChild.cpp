@@ -174,7 +174,7 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
     const KeySystemConfig::Requirement aDistinctiveID,
     const CopyableTArray<MFCDMMediaCapability>& aAudioCapabilities,
     const CopyableTArray<MFCDMMediaCapability>& aVideoCapabilities,
-    const bool aHWSecure, WMFCDMProxyCallback* aProxyCallback) {
+    WMFCDMProxyCallback* aProxyCallback) {
   MOZ_ASSERT(mManagerThread);
 
   if (mShutdown) {
@@ -187,9 +187,9 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
   }
 
   mProxyCallback = aProxyCallback;
-  MFCDMInitParamsIPDL params{
-      nsString(aOrigin),  aInitDataTypes,     aDistinctiveID, aPersistentState,
-      aAudioCapabilities, aVideoCapabilities, aHWSecure};
+  MFCDMInitParamsIPDL params{nsString(aOrigin),  aInitDataTypes,
+                             aDistinctiveID,     aPersistentState,
+                             aAudioCapabilities, aVideoCapabilities};
   auto doSend = [self = RefPtr{this}, this, params]() {
     SendInit(params)
         ->Then(
