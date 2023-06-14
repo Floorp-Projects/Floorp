@@ -107,7 +107,6 @@ WINDOWS_WORKER_TYPES = {
 
 # os x worker types keyed by test-platform
 MACOSX_WORKER_TYPES = {
-    "macosx1015-64-power": "t-osx-1015-power",
     "macosx1015-64": "t-osx-1015-r8",
     "macosx1100-64": "t-osx-1100-m1",
 }
@@ -127,10 +126,7 @@ def set_worker_type(config, tasks):
             # Unless the value is set to "default", in that case ignore it.
             pass
         elif test_platform.startswith("macosx1015-64"):
-            if "--power-test" in task["mozharness"]["extra-options"]:
-                task["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64-power"]
-            else:
-                task["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64"]
+            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64"]
         elif test_platform.startswith("macosx1100-64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1100-64"]
         elif test_platform.startswith("win"):

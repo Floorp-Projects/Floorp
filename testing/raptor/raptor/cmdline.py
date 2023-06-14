@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 import argparse
 import os
-import platform
 
 import six
 from mozlog.commandline import add_logging_group
@@ -121,26 +120,7 @@ def create_parser(mach_interface=False):
         "loaded from the environment variable HOST_IP.",
         default="127.0.0.1",
     )
-    add_arg(
-        "--power-test",
-        dest="power_test",
-        action="store_true",
-        help="Use Raptor to measure power usage on Android browsers (Geckoview Example, "
-        "Fenix, and Refbrow) as well as on Intel-based MacOS machines that have "
-        "Intel Power Gadget installed.",
-    )
-    add_arg(
-        "--memory-test",
-        dest="memory_test",
-        action="store_true",
-        help="Use Raptor to measure memory usage.",
-    )
-    add_arg(
-        "--cpu-test",
-        dest="cpu_test",
-        action="store_true",
-        help="Use Raptor to measure CPU usage. Currently supported for Android only.",
-    )
+
     add_arg(
         "--live-sites",
         dest="live_sites",
@@ -377,14 +357,6 @@ def create_parser(mach_interface=False):
         "if we should obtain the profile from CI.",
     )
     add_arg(
-        "--webext",
-        dest="webext",
-        action="store_true",
-        default=False,
-        help="Whether to use webextension to execute pageload tests "
-        "(WebExtension is being deprecated).",
-    )
-    add_arg(
         "--test-bytecode-cache",
         dest="test_bytecode_cache",
         default=False,
@@ -549,10 +521,6 @@ def verify_options(parser, args):
     if hasattr(args, "run_local") and (not args.run_local and args.debug_mode):
         parser.error("Cannot run debug mode in CI")
 
-    # If running on webextension, browsertime flag is changed (browsertime is run by default)
-    if args.webext:
-        args.browsertime = False
-
     # make sure that browsertime_video is set if visual metrics are requested
     if args.browsertime_visualmetrics and not args.browsertime_video:
         args.browsertime_video = True
@@ -592,29 +560,6 @@ def verify_options(parser, args):
     # if geckoProfile specified but running on Chrom[e|ium], not supported
     if args.gecko_profile and args.app in CHROMIUM_DISTROS:
         parser.error("Gecko profiling is not supported on Chrome/Chromium!")
-
-    if args.power_test:
-        if args.app not in ["geckoview", "refbrow", "fenix"]:
-            if platform.system().lower() not in ("darwin",):
-                parser.error(
-                    "Power tests are only available on MacOS desktop machines or "
-                    "Firefox android browers. App requested: %s. Platform "
-                    "detected: %s." % (args.app, platform.system().lower())
-                )
-
-    if args.cpu_test:
-        if args.app not in ["geckoview", "refbrow", "fenix"]:
-            parser.error(
-                "CPU test is only supported when running Raptor on Firefox Android "
-                "browsers!"
-            )
-
-    if args.memory_test:
-        if args.app not in ["geckoview", "refbrow", "fenix"]:
-            parser.error(
-                "Memory test is only supported when running Raptor on Firefox Android "
-                "browsers!"
-            )
 
     if args.fission:
         print("Fission enabled through browser preferences")

@@ -54,9 +54,6 @@ class RaptorRunner(MozbuildObject):
             kwargs["host"] = os.environ["HOST_IP"]
         self.host = kwargs["host"]
         self.is_release_build = kwargs["is_release_build"]
-        self.memory_test = kwargs["memory_test"]
-        self.power_test = kwargs["power_test"]
-        self.cpu_test = kwargs["cpu_test"]
         self.live_sites = kwargs["live_sites"]
         self.disable_perf_tuning = kwargs["disable_perf_tuning"]
         self.conditioned_profile = kwargs["conditioned_profile"]
@@ -109,9 +106,6 @@ class RaptorRunner(MozbuildObject):
             "default_actions": default_actions,
             "raptor_cmd_line_args": self.raptor_args,
             "host": self.host,
-            "power_test": self.power_test,
-            "memory_test": self.memory_test,
-            "cpu_test": self.cpu_test,
             "live_sites": self.live_sites,
             "disable_perf_tuning": self.disable_perf_tuning,
             "conditioned_profile": self.conditioned_profile,
@@ -370,10 +364,6 @@ def create_parser():
     parser=create_parser,
 )
 def run_raptor(command_context, **kwargs):
-    # Defers this import so that a transitive dependency doesn't
-    # stop |mach bootstrap| from running
-    from raptor.power import disable_charging, enable_charging
-
     build_obj = command_context
 
     # Setup node for browsertime
@@ -382,7 +372,6 @@ def run_raptor(command_context, **kwargs):
     is_android = Conditions.is_android(build_obj) or kwargs["app"] in ANDROID_BROWSERS
 
     if is_android:
-        from mozdevice import ADBDeviceFactory
         from mozrunner.devices.android_device import (
             InstallIntent,
             verify_android_device,
@@ -423,12 +412,8 @@ def run_raptor(command_context, **kwargs):
             in_mach = False
 
     raptor = command_context._spawn(RaptorRunner)
-    device = None
 
     try:
-        if kwargs["power_test"] and is_android:
-            device = ADBDeviceFactory(verbose=True)
-            disable_charging(device)
         return raptor.run_test(argv, kwargs)
     except BinaryNotFoundException as e:
         command_context.log(
@@ -439,9 +424,6 @@ def run_raptor(command_context, **kwargs):
     except Exception as e:
         print(repr(e))
         return 1
-    finally:
-        if kwargs["power_test"] and device:
-            enable_charging(device)
 
 
 @Command(

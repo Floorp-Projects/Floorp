@@ -325,7 +325,11 @@ class Mitmproxy(Playback):
                             ),
                         ]
                     )
-                elif self.config["playback_version"] in ["4.0.4", "5.1.1", "6.0.2"]:
+                elif self.config["playback_version"] in [
+                    "4.0.4",
+                    "5.1.1",
+                    "6.0.2",
+                ]:
                     command.extend(
                         [
                             "--set",
