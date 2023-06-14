@@ -2950,11 +2950,13 @@ bool TextControlState::SetValueWithoutTextEditor(
       if (mBoundFrame) {
         mBoundFrame->UpdateValueDisplay(true);
       }
+
       // If the text control element has focus, IMEContentObserver is not
-      // observing the content changes due to no bound frame.  Therefore,
-      // we need to let IMEContentObserver know all values are being replaced.
-      else if (IMEContentObserver* observer = GetIMEContentObserver()) {
-        observer->OnTextControlValueChangedDuringNoFrame(mValue);
+      // observing the content changes due to no bound frame or no TextEditor.
+      // Therefore, we need to let IMEContentObserver know all values are being
+      // replaced.
+      if (IMEContentObserver* observer = GetIMEContentObserver()) {
+        observer->OnTextControlValueChangedWhileNotObservable(mValue);
       }
     }
 
