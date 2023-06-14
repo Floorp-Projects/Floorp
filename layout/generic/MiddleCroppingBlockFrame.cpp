@@ -30,6 +30,7 @@ MiddleCroppingBlockFrame::MiddleCroppingBlockFrame(ComputedStyle* aStyle,
 MiddleCroppingBlockFrame::~MiddleCroppingBlockFrame() = default;
 
 void MiddleCroppingBlockFrame::UpdateDisplayedValue(const nsAString& aValue,
+                                                    bool aIsCropped,
                                                     bool aNotify) {
   auto* text = mTextNode.get();
   uint32_t oldLength = aNotify ? 0 : text->TextLength();
@@ -45,13 +46,14 @@ void MiddleCroppingBlockFrame::UpdateDisplayedValue(const nsAString& aValue,
       LinesBegin()->MarkDirty();
     }
   }
+  mCropped = aIsCropped;
 }
 
 void MiddleCroppingBlockFrame::UpdateDisplayedValueToUncroppedValue(
     bool aNotify) {
   nsAutoString value;
   GetUncroppedValue(value);
-  UpdateDisplayedValue(value, aNotify);
+  UpdateDisplayedValue(value, /* aIsCropped = */ false, aNotify);
 }
 
 nscoord MiddleCroppingBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
@@ -67,12 +69,22 @@ nscoord MiddleCroppingBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
 
+  nsAutoString prevValue;
+  bool restoreOldValue = false;
+
   // Make sure we measure with the uncropped value.
-  if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
+  if (mCropped && mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
+    mTextNode->GetNodeValue(prevValue);
+    restoreOldValue = true;
     UpdateDisplayedValueToUncroppedValue(false);
   }
 
   result = nsBlockFrame::GetPrefISize(aRenderingContext);
+
+  if (restoreOldValue) {
+    UpdateDisplayedValue(prevValue, /* aIsCropped = */ true, false);
+  }
+
   return result;
 }
 
@@ -152,13 +164,13 @@ void MiddleCroppingBlockFrame::Reflow(nsPresContext* aPresContext,
   // Restore the uncropped value.
   nsAutoString value;
   GetUncroppedValue(value);
-  bool done = false;
+  bool cropped = false;
   while (true) {
-    UpdateDisplayedValue(value, false);  // update the text node
+    UpdateDisplayedValue(value, cropped, false);  // update the text node
     AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     LinesBegin()->MarkDirty();
     nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
-    if (done) {
+    if (cropped) {
       break;
     }
     nscoord currentICoord = aReflowInput.mLineLayout
@@ -175,7 +187,7 @@ void MiddleCroppingBlockFrame::Reflow(nsPresContext* aPresContext,
         AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
         mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
         mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
-        done = true;
+        cropped = true;
         continue;
       }
     }
