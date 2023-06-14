@@ -9,10 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=185236
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script>
     var pendingEventCounter = 0;
-    var messagePosted = false;
     SimpleTest.waitForExplicitFinish();
     addLoadEvent(function() {
-      is(messagePosted, true, "Should have gotten onmessage event");
       is(pendingEventCounter, 0,
          "How did onload for the page fire before onload for all the stylesheets?");
       SimpleTest.finish();
@@ -33,25 +31,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=185236
   
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 /** Test for Bug 185236 **/
-// Verify that there are no in-flight sheet loads right now; we should have
-// waited for them when we hit the script tag
-is(pendingEventCounter, 0, "There should be no pending events");
-
-// Test sheet that will already be complete when we write it out
-++pendingEventCounter;
-
-// Make sure that a postMessage we do right now fires after the onload handler
-// for the stylesheet.  If we ever change the timing of sheet onload, we will
-// need to change that.
-window.onmessage = function() {
-  messagePosted = true;
-  // There are 6 pending events: two from the two direct example.com loads,
-  // and 4 from the two data:text/css loads that import things
-  is(pendingEventCounter, 6, "Load event for sheet should have fired");
-}
-window.postMessage("", "*");
 
 function checkSheetComplete(sheet, length) {
   try {
@@ -61,6 +42,18 @@ function checkSheetComplete(sheet, length) {
   }
 }
 
+
+// There should be usually 1 pending event but the load event might have fired
+// if the parser yields between the link and starting the script execution.
+const pendingEventCounterAtStart = pendingEventCounter;
+
+ok(pendingEventCounter <= 1, `There should be at most one pending event, got ${pendingEventCounterAtStart}`);
+
+is(document.styleSheets.length, 2, "Should have two stylesheets");
+checkSheetComplete(document.styleSheets[1], 1);
+
+// Test sheet that will already be complete when we write it out
+++pendingEventCounter;
 document.write('<link rel="stylesheet" href="data:text/css,*{}"\
                 onload="--pendingEventCounter;\
                         ok(true, \'Load event firing on basic stylesheet\')"\
@@ -76,9 +69,9 @@ is(document.styleSheets.length, 3, "Should have three stylesheets");
 checkSheetComplete(document.styleSheets[2], 1);
 
 // Make sure the load event for that stylesheet has not fired yet
-is(pendingEventCounter, 1, "There should be one pending event");
-
+is(pendingEventCounter, pendingEventCounterAtStart + 1, "After first document write");
 ++pendingEventCounter;
+
 document.write('<style\
                 onload="--pendingEventCounter;\
                         ok(true, \'Load event firing on inline stylesheet\')"\
@@ -86,16 +79,16 @@ document.write('<style\
                         ok(false, \'Error event firing on inline stylesheet\')"></style>');
 
 // Make sure the load event for that second stylesheet has not fired yet
-is(pendingEventCounter, 2, "There should be two pending events");
-
+is(pendingEventCounter, pendingEventCounterAtStart + 2, "after second document write");
 ++pendingEventCounter;
+
 document.write('<link rel="stylesheet" href="http://www.example.com"\
                 onload="--pendingEventCounter;\
                         ok(false, \'Load event firing on broken stylesheet 1\')"\
                 onerror="--pendingEventCounter;\
                         ok(true, \'Error event firing on broken stylesheet 1\')">');
-
 ++pendingEventCounter;
+
 var link = document.createElement("link");
 link.rel = "stylesheet";
 link.href = "http://www.example.com";
@@ -176,8 +169,7 @@ link.onerror = function() { --pendingEventCounter;
 document.body.appendChild(link);
 
 // Make sure the load events for all those stylesheets have not fired yet
-is(pendingEventCounter, 9, "There should be nine pending events");
-
+is(pendingEventCounter, pendingEventCounterAtStart + 9, "There should be nine more pending events");
 </script>
 </pre>
 </body>
