@@ -546,16 +546,6 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
-   * Returns the principal from the content window's origin.
-   * @returns {nsIPrincipal}
-   */
-  getContentWindowPrincipal() {
-    return Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      this.contentWindow.location.origin
-    );
-  }
-
-  /**
    * Only translate pages that match certain protocols, that way internal pages like
    * about:* pages will not be translated.
    */
@@ -928,8 +918,6 @@ export class TranslationsChild extends JSWindowActorChild {
         break;
       case "Translations:GetLangTagsForTranslation":
         return this.getLangTagsForTranslation();
-      case "Translations:GetContentWindowPrincipal":
-        return this.getContentWindowPrincipal();
       default:
         lazy.console.warn("Unknown message.", name);
     }
