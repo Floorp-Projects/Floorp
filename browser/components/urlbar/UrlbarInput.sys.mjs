@@ -329,6 +329,25 @@ export class UrlbarInput {
     this._suppressPrimaryAdjustment = false;
   }
 
+  setSelectionRange(selectionStart, selectionEnd) {
+    this.focus();
+
+    let beforeSelect = new CustomEvent("beforeselect", {
+      bubbles: true,
+      cancelable: true,
+    });
+    this.inputField.dispatchEvent(beforeSelect);
+    if (beforeSelect.defaultPrevented) {
+      return;
+    }
+
+    // See _on_select().  HTMLInputElement.select() dispatches a "select"
+    // event but does not set the primary selection.
+    this._suppressPrimaryAdjustment = true;
+    this.inputField.setSelectionRange(selectionStart, selectionEnd);
+    this._suppressPrimaryAdjustment = false;
+  }
+
   /**
    * Sets the URI to display in the location bar.
    *
