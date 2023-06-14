@@ -158,7 +158,7 @@ function setContent(element, text, l10n) {
   if (text) {
     element.textContent = text;
   } else if (l10n) {
-    element.setAttribute("data-l10n-id", l10n);
+    document.l10n.setAttributes(element, l10n);
   }
 }
 
@@ -224,7 +224,7 @@ async function onBlock(event) {
         ? "third-party-button-to-unblock-disabled"
         : "third-party-button-to-unblock";
     }
-    event.target.setAttribute("data-l10n-id", blockButtonL10nId);
+    document.l10n.setAttributes(event.target, blockButtonL10nId);
     updatedBlocklist = true;
   } catch (ex) {
     console.error("Failed to update the blocklist file - ", ex.result);
@@ -384,8 +384,8 @@ function setUpBlockButton(aCard, isBlocklistDisabled, aModule) {
     blockButton.classList.add("blocklist-disabled");
   }
   if (blockButton.classList.contains("module-blocked")) {
-    blockButton.setAttribute(
-      "data-l10n-id",
+    document.l10n.setAttributes(
+      blockButton,
       isBlocklistDisabled
         ? "third-party-button-to-unblock-disabled"
         : "third-party-button-to-unblock"

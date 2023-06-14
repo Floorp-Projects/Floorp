@@ -1940,7 +1940,7 @@ var CustomizableUIInternal = {
       }
 
       if (aWidget.l10nId) {
-        node.setAttribute("data-l10n-id", aWidget.l10nId);
+        aDocument.l10n.setAttributes(node, aWidget.l10nId);
         if (button != node) {
           // This is probably a "button-and-view" widget, such as the Profiler
           // button. In that case, "node" is the "toolbaritem" container, and
@@ -1948,7 +1948,7 @@ var CustomizableUIInternal = {
           // In this case, the values on the "node" is used in the Customize
           // view, as well as the tooltips over both buttons; the values on the
           // "button" are used in the overflow menu.
-          button.setAttribute("data-l10n-id", aWidget.l10nId);
+          aDocument.l10n.setAttributes(button, aWidget.l10nId);
         }
 
         if (shortcut) {
@@ -4837,7 +4837,7 @@ export var CustomizableUI = {
       // Sentence case in the AppMenu / panels.
       let l10nId = menuChild.getAttribute("appmenu-data-l10n-id");
       if (l10nId) {
-        subviewItem.setAttribute("data-l10n-id", l10nId);
+        doc.l10n.setAttributes(subviewItem, l10nId);
       }
 
       fragment.appendChild(subviewItem);

@@ -36,8 +36,8 @@ export class AboutCertificateSection extends HTMLElement {
     RPMSendQuery("getCertificates").then(this.filterCerts.bind(this));
 
     let title = this.shadowRoot.querySelector(".title");
-    title.setAttribute(
-      "data-l10n-id",
+    document.l10n.setAttributes(
+      title,
       "certificate-viewer-certificate-section-title"
     );
   }
