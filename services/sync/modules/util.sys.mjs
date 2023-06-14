@@ -16,7 +16,6 @@ import {
   WEAVE_VERSION,
 } from "resource://services-sync/constants.sys.mjs";
 
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -773,7 +772,6 @@ XPCOMUtils.defineLazyGetter(Utils, "utf8Encoder", () => new TextEncoder());
  */
 export var Svc = {};
 
-Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.PrefBranch = Services.prefs.getBranch(PREFS_BRANCH);
 Svc.Obs = Observers;
 
