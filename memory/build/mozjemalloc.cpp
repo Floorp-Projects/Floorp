@@ -3651,6 +3651,27 @@ MOZ_NEVER_INLINE jemalloc_ptr_info_t* jemalloc_ptr_info(const void* aPtr) {
 }
 }  // namespace Debug
 
+// Used in crash reporting to query what pointer jemalloc was working on when it
+// crashed.
+static MOZ_THREAD_LOCAL(unsigned) gWorkingCount;
+
+struct MOZ_RAII AutoSetWorking {
+  explicit AutoSetWorking() { gWorkingCount.set(gWorkingCount.get() + 1); }
+
+  AutoSetWorking(const AutoSetWorking&) = delete;
+  AutoSetWorking(AutoSetWorking&&) = delete;
+
+  ~AutoSetWorking() {
+    MOZ_ASSERT(gWorkingCount.get());
+    gWorkingCount.set(gWorkingCount.get() - 1);
+  }
+};
+
+template <>
+inline bool MozJemalloc::jemalloc_is_working() {
+  return !!gWorkingCount.get();
+}
+
 arena_chunk_t* arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr,
                                     arena_chunk_map_t* aMapElm) {
   arena_run_t* run;
@@ -3735,6 +3756,8 @@ static inline void arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena) {
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aOffset != 0);
   MOZ_ASSERT(GetChunkOffsetForPtr(aPtr) == aOffset);
+
+  AutoSetWorking auto_working;
 
   auto chunk = (arena_chunk_t*)((uintptr_t)aPtr - aOffset);
   auto arena = chunk->arena;
@@ -4279,6 +4302,7 @@ static bool malloc_init_hard() {
   if (!thread_arena.init()) {
     return true;
   }
+  MOZ_ASSERT(gWorkingCount.init());
 
   // Get page size and number of CPUs
   const size_t result = GetKernelPageSize();
@@ -4543,6 +4567,7 @@ inline void* BaseAllocator::realloc(void* aPtr, size_t aSize) {
 
   if (aPtr) {
     MOZ_RELEASE_ASSERT(malloc_initialized);
+    AutoSetWorking auto_working;
 
     auto info = AllocInfo::Get(aPtr);
     auto arena = info.Arena();
@@ -4649,6 +4674,7 @@ inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
 
 template <>
 inline size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
+  AutoSetWorking auto_working;
   return AllocInfo::GetValidated(aPtr).Size();
 }
 

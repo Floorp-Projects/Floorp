@@ -40,6 +40,7 @@
 #include "common/windows/guid_string.h"
 
 #ifdef MOZ_PHC
+#include "mozmemory.h"
 #include "replace_malloc_bridge.h"
 #endif
 
@@ -915,8 +916,12 @@ ExceptionHandler::MinidumpResult ExceptionHandler::WriteMinidumpWithException(
 {
   mozilla::phc::AddrInfo* addr_info = nullptr;
 #ifdef MOZ_PHC
-  addr_info = &mozilla::phc::gAddrInfo;
-  GetPHCAddrInfo(exinfo, addr_info);
+  if (!jemalloc_is_working()) {
+    // If jemalloc crashed then the PHC information is invalid. Only retrive
+    // it when we know its valid.
+    addr_info = &mozilla::phc::gAddrInfo;
+    GetPHCAddrInfo(exinfo, addr_info);
+  }
 #endif
 
   // Give user code a chance to approve or prevent writing a minidump.  If the
