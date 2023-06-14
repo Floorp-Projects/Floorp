@@ -1152,7 +1152,7 @@ void IMEContentObserver::MaybeNotifyIMEOfAddedTextDuringDocumentChange() {
   ClearAddedNodesDuringDocumentChange();
 }
 
-void IMEContentObserver::OnTextControlValueChangedDuringNoFrame(
+void IMEContentObserver::OnTextControlValueChangedWhileNotObservable(
     const nsAString& aNewValue) {
   MOZ_ASSERT(mEditorBase);
   MOZ_ASSERT(mEditorBase->IsTextEditor());
