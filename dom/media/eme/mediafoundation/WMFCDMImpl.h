@@ -34,7 +34,7 @@ class WMFCDMImpl final {
 
   static bool Supports(const nsAString& aKeySystem);
   // TODO: make this async?
-  bool GetCapabilities(KeySystemConfig& aConfig);
+  bool GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs);
 
   using InitPromise = GenericPromise;
   struct InitParams {

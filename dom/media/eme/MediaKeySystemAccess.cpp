@@ -171,27 +171,15 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
 #endif
   };
   for (const auto& name : keySystemNames) {
-    KeySystemConfig config;
-    if (KeySystemConfig::GetConfig(name, config)) {
-      if (IsClearkeyKeySystem(name) &&
-          StaticPrefs::media_clearkey_test_key_systems_enabled()) {
-        // Add testing key systems. These offer the same capabilities as the
-        // base clearkey system, so just clone clearkey and change the name.
-        KeySystemConfig clearkeyWithProtectionQuery{config};
-        clearkeyWithProtectionQuery.mKeySystem.AssignLiteral(
-            kClearKeyWithProtectionQueryKeySystemName);
-        keySystemConfigs.AppendElement(std::move(clearkeyWithProtectionQuery));
-      }
-      keySystemConfigs.AppendElement(std::move(config));
-    }
+    Unused << KeySystemConfig::CreateKeySystemConfigs(name, keySystemConfigs);
   }
-
   return keySystemConfigs;
 }
 
 static bool GetKeySystemConfig(const nsAString& aKeySystem,
                                KeySystemConfig& aOutKeySystemConfig) {
   for (auto&& config : GetSupportedKeySystems()) {
+    // TODO : handle multiple configs for the same key system.
     if (config.mKeySystem.Equals(aKeySystem)) {
       aOutKeySystemConfig = std::move(config);
       return true;
