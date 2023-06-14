@@ -94,6 +94,8 @@ class ImageDocument final : public MediaDocument,
     return std::min(mVisibleWidth / mImageWidth, mVisibleHeight / mImageHeight);
   }
 
+  bool IsSiteSpecific();
+
   void ResetZoomLevel();
   float GetZoomLevel();
   void CheckFullZoom();

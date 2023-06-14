@@ -394,8 +394,8 @@ class nsContentUtils {
    * require a legacy function. (Additionally, we sometimes use the coarse
    * check first, to avoid running additional code to support a nuanced check.)
    */
-  static bool ShouldResistFingerprinting(
-      const char* aJustification, RFPTarget aTarget = RFPTarget::Unknown);
+  static bool ShouldResistFingerprinting(const char* aJustification,
+                                         RFPTarget aTarget);
 
   // A helper function to calculate the rounded window size for fingerprinting
   // resistance. The rounded size is based on the chrome UI size and available

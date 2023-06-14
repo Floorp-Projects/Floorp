@@ -2204,8 +2204,8 @@ const char* kExemptedDomainsPrefName =
     "privacy.resistFingerprinting.exemptedDomains";
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    const char* aJustification, RFPTarget aTarget /* = RFPTarget::Unknown */) {
+bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification,
+                                                RFPTarget aTarget) {
   // See comment in header file for information about usage
   return ShouldResistFingerprinting(aTarget);
 }

@@ -45,14 +45,6 @@
 #include "mozilla/Preferences.h"
 #include <algorithm>
 
-// XXX A hack needed for Firefox's site specific zoom.
-static bool IsSiteSpecific() {
-  return !nsContentUtils::ShouldResistFingerprinting(
-             "This needs to read the global pref as long as "
-             "browser-fullZoom.js also does so.") &&
-         mozilla::Preferences::GetBool("browser.zoom.siteSpecific", false);
-}
-
 namespace mozilla::dom {
 
 class ImageListener : public MediaDocumentStreamListener {
@@ -723,6 +715,12 @@ void ImageDocument::UpdateTitleAndCharset() {
 
   MediaDocument::UpdateTitleAndCharset(typeStr, mChannel, formatNames,
                                        mImageWidth, mImageHeight, status);
+}
+
+bool ImageDocument::IsSiteSpecific() {
+  // TODO(Bug 1837976) Need an RFPTarget for FullZoom._isSiteSpecific
+  return !ShouldResistFingerprinting(RFPTarget::IsAlwaysEnabledForPrecompute) &&
+         mozilla::Preferences::GetBool("browser.zoom.siteSpecific", false);
 }
 
 void ImageDocument::ResetZoomLevel() {

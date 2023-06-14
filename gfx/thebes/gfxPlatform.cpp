@@ -3300,7 +3300,7 @@ bool gfxPlatform::IsInLayoutAsapMode() {
 static int LayoutFrameRateFromPrefs() {
   auto val = StaticPrefs::layout_frame_rate();
   if (nsContentUtils::ShouldResistFingerprinting(
-          "The frame rate is a global property.")) {
+          "The frame rate is a global property.", RFPTarget::Unknown)) {
     val = 60;
   }
   return val;
