@@ -1544,3 +1544,8 @@ opaqueResponseBlocking:
       description: Whether filtering of internal responses in the parent ORB is enabled
       type: int
       setPref: "browser.opaqueResponseBlocking.filterFetchResponse"
+    mediaExceptionsStrategy:
+      description: >-
+        If we partially or wholly allow audio and video MIME types in conflict with spec.
+      type: int
+      setPref: "browser.opaqueResponseBlocking.mediaExceptionsStrategy"
