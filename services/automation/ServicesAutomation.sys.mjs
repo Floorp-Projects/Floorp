@@ -292,10 +292,10 @@ export var Sync = {
     lazy.Svc.Obs.add("weave:service:setup-complete", this);
     lazy.Svc.Obs.add("weave:service:tracking-started", this);
     // Delay the automatic sync operations, so we can trigger it manually
-    lazy.Weave.Svc.Prefs.set("scheduler.immediateInterval", 7200);
-    lazy.Weave.Svc.Prefs.set("scheduler.idleInterval", 7200);
-    lazy.Weave.Svc.Prefs.set("scheduler.activeInterval", 7200);
-    lazy.Weave.Svc.Prefs.set("syncThreshold", 10000000);
+    lazy.Weave.Svc.PrefBranch.setIntPref("scheduler.immediateInterval", 7200);
+    lazy.Weave.Svc.PrefBranch.setIntPref("scheduler.idleInterval", 7200);
+    lazy.Weave.Svc.PrefBranch.setIntPref("scheduler.activeInterval", 7200);
+    lazy.Weave.Svc.PrefBranch.setIntPref("syncThreshold", 10000000);
     // Wipe all the logs
     await this.wipeLogs();
   },
