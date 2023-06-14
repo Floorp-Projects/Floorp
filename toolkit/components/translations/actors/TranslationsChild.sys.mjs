@@ -20,29 +20,6 @@
  */
 const lazy = {};
 
-/**
- * The threshold that the language-identification confidence
- * value must be greater than in order to provide the detected language
- * tag for translations.
- *
- * This value should ideally be one that does not allow false positives
- * while also not being too restrictive.
- *
- * At this time, this value is not driven by statistical data or analysis.
- */
-const DOC_LANGUAGE_DETECTION_THRESHOLD = 0.65;
-
-/**
- * The length of the substring to pull from the document's text for language
- * identification.
- *
- * This value should ideally be one that is large enough to yield a confident
- * identification result without being too large or expensive to extract.
- *
- * At this time, this value is not driven by statistical data or analysis.
- */
-const DOC_TEXT_TO_IDENTIFY_LENGTH = 1024;
-
 const PIVOT_LANGUAGE = "en";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -125,21 +102,6 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   static languagePairKey(fromLanguage, toLanguage) {
     return `${fromLanguage},${toLanguage}`;
-  }
-
-  /**
-   * Retrieve a substring of text from the document body to be
-   * analyzed by the LanguageIdEngine to determine the page's language.
-   *
-   * @returns {string}
-   */
-  #getTextToIdentify() {
-    let encoder = Cu.createDocumentEncoder("text/plain");
-    encoder.init(this.document, "text/plain", encoder.SkipInvisibleContent);
-    return encoder
-      .encodeToStringWithMaxLength(DOC_TEXT_TO_IDENTIFY_LENGTH)
-      .replaceAll("\r", "")
-      .replaceAll("\n", " ");
   }
 
   /**
@@ -552,6 +514,10 @@ export class TranslationsChild extends JSWindowActorChild {
         break;
       case "Translations:GetLangTagsForTranslation":
         return this.getLangTagsForTranslation();
+      case "Translations:IdentifyLanguage": {
+        const engine = await this.createLanguageIdEngine();
+        return engine.identifyLanguageFromDocument(this.document);
+      }
       default:
         lazy.console.warn("Unknown message.", name);
     }
@@ -656,20 +622,9 @@ export class TranslationsChild extends JSWindowActorChild {
     });
   }
 
-  /**
-   * Construct and initialize the LanguageIdEngine.
-   *
-   * @returns {LanguageIdEngine}
-   */
-  async createLanguageIdEngine() {
-    const payload = await this.#getLanguageIdEnginePayload();
-    const engine = new lazy.LanguageIdEngine({
-      type: "initialize",
-      isLoggingEnabled: lazy.logLevel === "All",
-      ...payload,
-    });
-    await engine.isReady;
-    return engine;
+  createLanguageIdEngine() {
+    return lazy.LanguageIdEngine.getOrCreate(() =>
+      this.sendQuery("Translations:GetLanguageIdEnginePayload")
   }
 
   /**
