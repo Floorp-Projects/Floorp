@@ -842,143 +842,61 @@ static nsAtom* LangValue(Implementor* aElement) {
   return atom.forget().take();
 }
 
-template <typename Implementor, typename MatchFn>
-static bool DoMatch(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                    MatchFn aMatch) {
-  if (MOZ_LIKELY(aNS)) {
-    int32_t ns = aNS == nsGkAtoms::_empty
-                     ? kNameSpaceID_None
-                     : nsNameSpaceManager::GetInstance()->GetNameSpaceID(
-                           aNS, aElement->IsInChromeDocument());
-
-    MOZ_ASSERT(ns == nsNameSpaceManager::GetInstance()->GetNameSpaceID(
-                         aNS, aElement->IsInChromeDocument()));
-    NS_ENSURE_TRUE(ns != kNameSpaceID_Unknown, false);
-    const nsAttrValue* value = aElement->GetParsedAttr(aName, ns);
-    return value && aMatch(value);
-  }
-
-  // No namespace means any namespace - we have to check them all. :-(
-  BorrowedAttrInfo attrInfo;
-  for (uint32_t i = 0; (attrInfo = aElement->GetAttrInfoAt(i)); ++i) {
-    if (attrInfo.mName->LocalName() != aName) {
-      continue;
-    }
-    if (aMatch(attrInfo.mValue)) {
-      return true;
-    }
-  }
-  return false;
+bool Gecko_AttrEquals(const nsAttrValue* aValue, const nsAtom* aStr,
+                      bool aIgnoreCase) {
+  return aValue->Equals(aStr, aIgnoreCase ? eIgnoreCase : eCaseMatters);
 }
 
-template <typename Implementor>
-static bool HasAttr(Implementor* aElement, nsAtom* aNS, nsAtom* aName) {
-  auto match = [](const nsAttrValue* aValue) { return true; };
-  return DoMatch(aElement, aNS, aName, match);
-}
-
-template <typename Implementor>
-static bool AttrEquals(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                       nsAtom* aStr, bool aIgnoreCase) {
-  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
-    return aValue->Equals(aStr, aIgnoreCase ? eIgnoreCase : eCaseMatters);
-  };
-  return DoMatch(aElement, aNS, aName, match);
-}
-
-#define WITH_COMPARATOR(ignore_case_, c_, expr_)                  \
-  auto c_ = ignore_case_ ? nsASCIICaseInsensitiveStringComparator \
-                         : nsTDefaultStringComparator<char16_t>;  \
+#define WITH_COMPARATOR(ignore_case_, c_, expr_)                    \
+  auto c_ = (ignore_case_) ? nsASCIICaseInsensitiveStringComparator \
+                           : nsTDefaultStringComparator<char16_t>;  \
   return expr_;
 
-template <typename Implementor>
-static bool AttrDashEquals(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                           nsAtom* aStr, bool aIgnoreCase) {
-  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
-    nsAutoString str;
-    aValue->ToString(str);
-    WITH_COMPARATOR(
-        aIgnoreCase, c,
-        nsStyleUtil::DashMatchCompare(str, nsDependentAtomString(aStr), c))
-  };
-  return DoMatch(aElement, aNS, aName, match);
+bool Gecko_AttrDashEquals(const nsAttrValue* aValue, const nsAtom* aStr,
+                          bool aIgnoreCase) {
+  nsAutoString str;
+  aValue->ToString(str);
+  WITH_COMPARATOR(
+      aIgnoreCase, c,
+      nsStyleUtil::DashMatchCompare(str, nsDependentAtomString(aStr), c))
 }
 
-template <typename Implementor>
-static bool AttrIncludes(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                         nsAtom* aStr, bool aIgnoreCase) {
-  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
-    nsAutoString str;
-    aValue->ToString(str);
-    WITH_COMPARATOR(
-        aIgnoreCase, c,
-        nsStyleUtil::ValueIncludes(str, nsDependentAtomString(aStr), c))
-  };
-  return DoMatch(aElement, aNS, aName, match);
+bool Gecko_AttrIncludes(const nsAttrValue* aValue, const nsAtom* aStr,
+                        bool aIgnoreCase) {
+  if (aStr == nsGkAtoms::_empty) {
+    return false;
+  }
+  nsAutoString str;
+  aValue->ToString(str);
+  WITH_COMPARATOR(
+      aIgnoreCase, c,
+      nsStyleUtil::ValueIncludes(str, nsDependentAtomString(aStr), c))
 }
 
-template <typename Implementor>
-static bool AttrHasSubstring(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                             nsAtom* aStr, bool aIgnoreCase) {
-  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
-    return aValue->HasSubstring(nsDependentAtomString(aStr),
-                                aIgnoreCase ? eIgnoreCase : eCaseMatters);
-  };
-  return DoMatch(aElement, aNS, aName, match);
+bool Gecko_AttrHasSubstring(const nsAttrValue* aValue, const nsAtom* aStr,
+                            bool aIgnoreCase) {
+  return aStr != nsGkAtoms::_empty &&
+         aValue->HasSubstring(nsDependentAtomString(aStr),
+                              aIgnoreCase ? eIgnoreCase : eCaseMatters);
 }
 
-template <typename Implementor>
-static bool AttrHasPrefix(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                          nsAtom* aStr, bool aIgnoreCase) {
-  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
-    return aValue->HasPrefix(nsDependentAtomString(aStr),
-                             aIgnoreCase ? eIgnoreCase : eCaseMatters);
-  };
-  return DoMatch(aElement, aNS, aName, match);
+bool Gecko_AttrHasPrefix(const nsAttrValue* aValue, const nsAtom* aStr,
+                         bool aIgnoreCase) {
+  return aStr != nsGkAtoms::_empty &&
+         aValue->HasPrefix(nsDependentAtomString(aStr),
+                           aIgnoreCase ? eIgnoreCase : eCaseMatters);
 }
 
-template <typename Implementor>
-static bool AttrHasSuffix(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
-                          nsAtom* aStr, bool aIgnoreCase) {
-  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
-    return aValue->HasSuffix(nsDependentAtomString(aStr),
-                             aIgnoreCase ? eIgnoreCase : eCaseMatters);
-  };
-  return DoMatch(aElement, aNS, aName, match);
+bool Gecko_AttrHasSuffix(const nsAttrValue* aValue, const nsAtom* aStr,
+                         bool aIgnoreCase) {
+  return aStr != nsGkAtoms::_empty &&
+         aValue->HasSuffix(nsDependentAtomString(aStr),
+                           aIgnoreCase ? eIgnoreCase : eCaseMatters);
 }
 
-#define SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)      \
-  nsAtom* prefix_##LangValue(implementor_ aElement) {                          \
-    return LangValue(aElement);                                                \
-  }                                                                            \
-  bool prefix_##HasAttr(implementor_ aElement, nsAtom* aNS, nsAtom* aName) {   \
-    return HasAttr(aElement, aNS, aName);                                      \
-  }                                                                            \
-  bool prefix_##AttrEquals(implementor_ aElement, nsAtom* aNS, nsAtom* aName,  \
-                           nsAtom* aStr, bool aIgnoreCase) {                   \
-    return AttrEquals(aElement, aNS, aName, aStr, aIgnoreCase);                \
-  }                                                                            \
-  bool prefix_##AttrDashEquals(implementor_ aElement, nsAtom* aNS,             \
-                               nsAtom* aName, nsAtom* aStr,                    \
-                               bool aIgnoreCase) {                             \
-    return AttrDashEquals(aElement, aNS, aName, aStr, aIgnoreCase);            \
-  }                                                                            \
-  bool prefix_##AttrIncludes(implementor_ aElement, nsAtom* aNS,               \
-                             nsAtom* aName, nsAtom* aStr, bool aIgnoreCase) {  \
-    return AttrIncludes(aElement, aNS, aName, aStr, aIgnoreCase);              \
-  }                                                                            \
-  bool prefix_##AttrHasSubstring(implementor_ aElement, nsAtom* aNS,           \
-                                 nsAtom* aName, nsAtom* aStr,                  \
-                                 bool aIgnoreCase) {                           \
-    return AttrHasSubstring(aElement, aNS, aName, aStr, aIgnoreCase);          \
-  }                                                                            \
-  bool prefix_##AttrHasPrefix(implementor_ aElement, nsAtom* aNS,              \
-                              nsAtom* aName, nsAtom* aStr, bool aIgnoreCase) { \
-    return AttrHasPrefix(aElement, aNS, aName, aStr, aIgnoreCase);             \
-  }                                                                            \
-  bool prefix_##AttrHasSuffix(implementor_ aElement, nsAtom* aNS,              \
-                              nsAtom* aName, nsAtom* aStr, bool aIgnoreCase) { \
-    return AttrHasSuffix(aElement, aNS, aName, aStr, aIgnoreCase);             \
+#define SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_) \
+  nsAtom* prefix_##LangValue(implementor_ aElement) {                     \
+    return LangValue(aElement);                                           \
   }
 
 SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, const Element*)
