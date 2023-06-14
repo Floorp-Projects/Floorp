@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::consts::*;
+use crate::transport::hid::HIDDevice;
 use crate::util::io_err;
 use serde::Serialize;
 use std::{cmp, fmt, io, str};
@@ -18,33 +19,6 @@ pub fn trace_hex(data: &[u8]) {
     }
 }
 
-// Trait for representing U2F HID Devices. Requires getters/setters for the
-// channel ID, created during device initialization.
-pub trait U2FDevice {
-    fn get_cid(&self) -> &[u8; 4];
-    fn set_cid(&mut self, cid: [u8; 4]);
-
-    fn in_rpt_size(&self) -> usize;
-    fn in_init_data_size(&self) -> usize {
-        self.in_rpt_size() - INIT_HEADER_SIZE
-    }
-    fn in_cont_data_size(&self) -> usize {
-        self.in_rpt_size() - CONT_HEADER_SIZE
-    }
-
-    fn out_rpt_size(&self) -> usize;
-    fn out_init_data_size(&self) -> usize {
-        self.out_rpt_size() - INIT_HEADER_SIZE
-    }
-    fn out_cont_data_size(&self) -> usize {
-        self.out_rpt_size() - CONT_HEADER_SIZE
-    }
-
-    fn get_property(&self, prop_name: &str) -> io::Result<String>;
-    fn get_device_info(&self) -> U2FDeviceInfo;
-    fn set_device_info(&mut self, dev_info: U2FDeviceInfo);
-}
-
 // Init structure for U2F Communications. Tells the receiver what channel
 // communication is happening on, what command is running, and how much data to
 // expect to receive over all.
@@ -54,10 +28,7 @@ pub trait U2FDevice {
 pub struct U2FHIDInit {}
 
 impl U2FHIDInit {
-    pub fn read<T>(dev: &mut T) -> io::Result<(HIDCmd, Vec<u8>)>
-    where
-        T: U2FDevice + io::Read,
-    {
+    pub fn read<T: HIDDevice>(dev: &mut T) -> io::Result<(HIDCmd, Vec<u8>)> {
         let mut frame = vec![0u8; dev.in_rpt_size()];
         let mut count = dev.read(&mut frame)?;
 
@@ -74,16 +45,17 @@ impl U2FHIDInit {
         let cap = (frame[5] as usize) << 8 | (frame[6] as usize);
         let mut data = Vec::with_capacity(cap);
 
-        let len = cmp::min(cap, dev.in_init_data_size());
+        let len = if dev.in_rpt_size() >= INIT_HEADER_SIZE {
+            cmp::min(cap, dev.in_rpt_size() - INIT_HEADER_SIZE)
+        } else {
+            cap
+        };
         data.extend_from_slice(&frame[7..7 + len]);
 
         Ok((cmd, data))
     }
 
-    pub fn write<T>(dev: &mut T, cmd: u8, data: &[u8]) -> io::Result<usize>
-    where
-        T: U2FDevice + io::Write,
-    {
+    pub fn write<T: HIDDevice>(dev: &mut T, cmd: u8, data: &[u8]) -> io::Result<usize> {
         if data.len() > 0xffff {
             return Err(io_err("payload length > 2^16"));
         }
@@ -94,7 +66,11 @@ impl U2FHIDInit {
         frame[6] = (data.len() >> 8) as u8;
         frame[7] = data.len() as u8;
 
-        let count = cmp::min(data.len(), dev.out_init_data_size());
+        let count = if dev.out_rpt_size() >= INIT_HEADER_SIZE {
+            cmp::min(data.len(), dev.out_rpt_size() - INIT_HEADER_SIZE)
+        } else {
+            data.len()
+        };
         frame[8..8 + count].copy_from_slice(&data[..count]);
         trace_hex(&frame);
 
@@ -116,10 +92,7 @@ impl U2FHIDInit {
 pub struct U2FHIDCont {}
 
 impl U2FHIDCont {
-    pub fn read<T>(dev: &mut T, seq: u8, max: usize) -> io::Result<Vec<u8>>
-    where
-        T: U2FDevice + io::Read,
-    {
+    pub fn read<T: HIDDevice>(dev: &mut T, seq: u8, max: usize) -> io::Result<Vec<u8>> {
         let mut frame = vec![0u8; dev.in_rpt_size()];
         let mut count = dev.read(&mut frame)?;
 
@@ -135,19 +108,24 @@ impl U2FHIDCont {
             return Err(io_err("invalid sequence number"));
         }
 
-        let max = cmp::min(max, dev.in_cont_data_size());
+        let max = if dev.in_rpt_size() >= CONT_HEADER_SIZE {
+            cmp::min(max, dev.in_rpt_size() - CONT_HEADER_SIZE)
+        } else {
+            max
+        };
         Ok(frame[5..5 + max].to_vec())
     }
 
-    pub fn write<T>(dev: &mut T, seq: u8, data: &[u8]) -> io::Result<usize>
-    where
-        T: U2FDevice + io::Write,
-    {
+    pub fn write<T: HIDDevice>(dev: &mut T, seq: u8, data: &[u8]) -> io::Result<usize> {
         let mut frame = vec![0u8; dev.out_rpt_size() + 1];
         frame[1..5].copy_from_slice(dev.get_cid());
         frame[5] = seq;
 
-        let count = cmp::min(data.len(), dev.out_cont_data_size());
+        let count = if dev.out_rpt_size() >= CONT_HEADER_SIZE {
+            cmp::min(data.len(), dev.out_rpt_size() - CONT_HEADER_SIZE)
+        } else {
+            data.len()
+        };
         frame[6..6 + count].copy_from_slice(&data[..count]);
         trace_hex(&frame);
 
@@ -178,7 +156,7 @@ impl U2FHIDInitResp {
     pub fn read(data: &[u8], nonce: &[u8]) -> io::Result<U2FHIDInitResp> {
         assert_eq!(nonce.len(), INIT_NONCE_SIZE);
 
-        if data.len() != INIT_NONCE_SIZE + 9 {
+        if data.len() < INIT_NONCE_SIZE + 9 {
             return Err(io_err("invalid init response"));
         }
 

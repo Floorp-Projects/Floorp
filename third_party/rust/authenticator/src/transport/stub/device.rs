@@ -4,9 +4,9 @@
 
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::hid::HIDDevice;
-use crate::transport::FidoDevice;
+use crate::transport::{FidoDevice, FidoProtocol};
 use crate::transport::{HIDError, SharedSecret};
-use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
+use crate::u2ftypes::U2FDeviceInfo;
 use std::hash::Hash;
 use std::io;
 use std::io::{Read, Write};
@@ -17,47 +17,17 @@ pub struct Device {}
 
 impl Read for Device {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        panic!("not implemented");
+        unimplemented!();
     }
 }
 
 impl Write for Device {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        panic!("not implemented");
+        unimplemented!();
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        panic!("not implemented");
-    }
-}
-
-impl U2FDevice for Device {
-    fn get_cid(&self) -> &[u8; 4] {
-        panic!("not implemented");
-    }
-
-    fn set_cid(&mut self, cid: [u8; 4]) {
-        panic!("not implemented");
-    }
-
-    fn in_rpt_size(&self) -> usize {
-        panic!("not implemented");
-    }
-
-    fn out_rpt_size(&self) -> usize {
-        panic!("not implemented");
-    }
-
-    fn get_property(&self, prop_name: &str) -> io::Result<String> {
-        panic!("not implemented")
-    }
-
-    fn get_device_info(&self) -> U2FDeviceInfo {
-        panic!("not implemented")
-    }
-
-    fn set_device_info(&mut self, dev_info: U2FDeviceInfo) {
-        panic!("not implemented")
+        unimplemented!();
     }
 }
 
@@ -69,12 +39,50 @@ impl HIDDevice for Device {
         unimplemented!();
     }
 
-    fn initialized(&self) -> bool {
+    fn id(&self) -> Self::Id {
+        unimplemented!()
+    }
+
+    fn get_cid(&self) -> &[u8; 4] {
         unimplemented!();
     }
 
-    fn id(&self) -> Self::Id {
-        unimplemented!()
+    fn set_cid(&mut self, cid: [u8; 4]) {
+        unimplemented!();
+    }
+
+    fn in_rpt_size(&self) -> usize {
+        unimplemented!();
+    }
+
+    fn out_rpt_size(&self) -> usize {
+        unimplemented!();
+    }
+
+    fn get_property(&self, prop_name: &str) -> io::Result<String> {
+        unimplemented!();
+    }
+
+    fn get_device_info(&self) -> U2FDeviceInfo {
+        unimplemented!();
+    }
+
+    fn set_device_info(&mut self, dev_info: U2FDeviceInfo) {
+        unimplemented!();
+    }
+}
+
+impl FidoDevice for Device {
+    fn pre_init(&mut self) -> Result<(), HIDError> {
+        unimplemented!();
+    }
+
+    fn should_try_ctap2(&self) -> bool {
+        unimplemented!();
+    }
+
+    fn initialized(&self) -> bool {
+        unimplemented!();
     }
 
     fn is_u2f(&mut self) -> bool {
@@ -96,6 +104,12 @@ impl HIDDevice for Device {
     fn get_shared_secret(&self) -> Option<&SharedSecret> {
         unimplemented!()
     }
-}
 
-impl FidoDevice for Device {}
+    fn get_protocol(&self) -> FidoProtocol {
+        unimplemented!()
+    }
+
+    fn downgrade_to_ctap1(&mut self) {
+        unimplemented!()
+    }
+}

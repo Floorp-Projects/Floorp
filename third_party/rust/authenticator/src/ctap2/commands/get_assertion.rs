@@ -16,15 +16,11 @@ use crate::ctap2::commands::make_credentials::UserVerification;
 use crate::ctap2::server::{
     PublicKeyCredentialDescriptor, RelyingPartyWrapper, RpIdHash, User, UserVerificationRequirement,
 };
+use crate::ctap2::utils::{read_be_u32, read_byte};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::FidoDevice;
+use crate::transport::{FidoDevice, VirtualFidoDevice};
 use crate::u2ftypes::CTAP1RequestAPDU;
-use nom::{
-    error::VerboseError,
-    number::complete::{be_u32, be_u8},
-    sequence::tuple,
-};
 use serde::{
     de::{Error as DesError, MapAccess, Visitor},
     ser::{Error as SerError, SerializeMap},
@@ -33,7 +29,7 @@ use serde::{
 use serde_bytes::ByteBuf;
 use serde_cbor::{de::from_slice, ser, Value};
 use std::fmt;
-use std::io;
+use std::io::Cursor;
 
 #[derive(Clone, Copy, Debug, Serialize)]
 #[cfg_attr(test, derive(Deserialize))]
@@ -161,9 +157,9 @@ impl GetAssertionExtensions {
 
 #[derive(Debug, Clone)]
 pub struct GetAssertion {
-    pub(crate) client_data_hash: ClientDataHash,
-    pub(crate) rp: RelyingPartyWrapper,
-    pub(crate) allow_list: Vec<PublicKeyCredentialDescriptor>,
+    pub client_data_hash: ClientDataHash,
+    pub rp: RelyingPartyWrapper,
+    pub allow_list: Vec<PublicKeyCredentialDescriptor>,
 
     // https://www.w3.org/TR/webauthn/#client-extension-input
     // The client extension input, which is a value that can be encoded in JSON,
@@ -171,13 +167,13 @@ pub struct GetAssertion {
     // create() call, while the CBOR authenticator extension input is passed
     // from the client to the authenticator for authenticator extensions during
     // the processing of these calls.
-    pub(crate) extensions: GetAssertionExtensions,
-    pub(crate) options: GetAssertionOptions,
-    pub(crate) pin: Option<Pin>,
-    pub(crate) pin_uv_auth_param: Option<PinUvAuthParam>,
+    pub extensions: GetAssertionExtensions,
+    pub options: GetAssertionOptions,
+    pub pin: Option<Pin>,
+    pub pin_uv_auth_param: Option<PinUvAuthParam>,
 
     // This is used to implement the FIDO AppID extension.
-    pub(crate) alternate_rp_id: Option<String>,
+    pub alternate_rp_id: Option<String>,
 }
 
 impl GetAssertion {
@@ -368,6 +364,13 @@ impl RequestCtap1 for GetAssertion {
             .map_err(HIDError::Command)
             .map_err(Retryable::Error)
     }
+
+    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
+        &self,
+        dev: &mut Dev,
+    ) -> Result<Self::Output, HIDError> {
+        dev.get_assertion(self)
+    }
 }
 
 impl RequestCtap2 for GetAssertion {
@@ -381,14 +384,11 @@ impl RequestCtap2 for GetAssertion {
         Ok(ser::to_vec(&self).map_err(CommandError::Serializing)?)
     }
 
-    fn handle_response_ctap2<Dev>(
+    fn handle_response_ctap2<Dev: FidoDevice>(
         &self,
         dev: &mut Dev,
         input: &[u8],
-    ) -> Result<Self::Output, HIDError>
-    where
-        Dev: FidoDevice + io::Read + io::Write + fmt::Debug,
-    {
+    ) -> Result<Self::Output, HIDError> {
         if input.is_empty() {
             return Err(CommandError::InputTooSmall.into());
         }
@@ -425,6 +425,13 @@ impl RequestCtap2 for GetAssertion {
             Err(CommandError::StatusCode(status, None).into())
         }
     }
+
+    fn send_to_virtual_device<Dev: VirtualFidoDevice>(
+        &self,
+        dev: &mut Dev,
+    ) -> Result<Self::Output, HIDError> {
+        dev.get_assertion(self)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -456,17 +463,11 @@ impl GetAssertionResult {
         rp_id_hash: &RpIdHash,
         key_handle: &PublicKeyCredentialDescriptor,
     ) -> Result<GetAssertionResult, CommandError> {
-        let parse_authentication = |input| {
-            // Parsing an u8, then a u32, and the rest is the signature
-            let (rest, (user_presence, counter)) = tuple((be_u8, be_u32))(input)?;
-            let signature = Vec::from(rest);
-            Ok((user_presence, counter, signature))
-        };
-        let (user_presence, counter, signature) =
-            parse_authentication(input).map_err(|e: nom::Err<VerboseError<_>>| {
-                error!("error while parsing authentication: {:?}", e);
-                CommandError::Deserializing(DesError::custom("unable to parse authentication"))
-            })?;
+        let mut data = Cursor::new(input);
+        let user_presence = read_byte(&mut data).map_err(CommandError::Deserializing)?;
+        let counter = read_be_u32(&mut data).map_err(CommandError::Deserializing)?;
+        // Remaining data is signature (Note: `data.remaining_slice()` is not yet stabilized)
+        let signature = Vec::from(&data.get_ref()[data.position() as usize..]);
 
         // Step 5 of Section 10.3 of CTAP2.1: "Copy bits 0 (the UP bit) and bit 1 from the
         // CTAP2/U2F response user presence byte to bits 0 and 1 of the CTAP2 flags, respectively.
@@ -504,12 +505,12 @@ impl GetAssertionResult {
     }
 }
 
-pub(crate) struct GetAssertionResponse {
-    credentials: Option<PublicKeyCredentialDescriptor>,
-    auth_data: AuthenticatorData,
-    signature: Vec<u8>,
-    user: Option<User>,
-    number_of_credentials: Option<usize>,
+pub struct GetAssertionResponse {
+    pub credentials: Option<PublicKeyCredentialDescriptor>,
+    pub auth_data: AuthenticatorData,
+    pub signature: Vec<u8>,
+    pub user: Option<User>,
+    pub number_of_credentials: Option<usize>,
 }
 
 impl<'de> Deserialize<'de> for GetAssertionResponse {
@@ -616,8 +617,8 @@ pub mod test {
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
-    use crate::transport::FidoDevice;
-    use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
+    use crate::transport::{FidoDevice, FidoDeviceIO, FidoProtocol};
+    use crate::u2ftypes::U2FDeviceInfo;
     use rand::{thread_rng, RngCore};
 
     #[test]
@@ -655,6 +656,7 @@ pub mod test {
             None,
         );
         let mut device = Device::new("commands/get_assertion").unwrap();
+        assert_eq!(device.get_protocol(), FidoProtocol::CTAP2);
         let mut cid = [0u8; 4];
         thread_rng().fill_bytes(&mut cid);
         device.set_cid(cid);
@@ -857,6 +859,8 @@ pub mod test {
         );
         let mut device = Device::new("commands/get_assertion").unwrap(); // not really used (all functions ignore it)
                                                                          // channel id
+        device.downgrade_to_ctap1();
+        assert_eq!(device.get_protocol(), FidoProtocol::CTAP1);
         let mut cid = [0u8; 4];
         thread_rng().fill_bytes(&mut cid);
 
@@ -948,6 +952,8 @@ pub mod test {
 
         let mut device = Device::new("commands/get_assertion").unwrap(); // not really used (all functions ignore it)
                                                                          // channel id
+        device.downgrade_to_ctap1();
+        assert_eq!(device.get_protocol(), FidoProtocol::CTAP1);
         let mut cid = [0u8; 4];
         thread_rng().fill_bytes(&mut cid);
 
@@ -1127,6 +1133,7 @@ pub mod test {
             None,
         );
         let mut device = Device::new("commands/get_assertion").unwrap();
+        assert_eq!(device.get_protocol(), FidoProtocol::CTAP2);
         let mut cid = [0u8; 4];
         thread_rng().fill_bytes(&mut cid);
         device.set_cid(cid);
@@ -1152,7 +1159,7 @@ pub mod test {
                 ..Default::default()
             },
             max_msg_size: Some(1200),
-            pin_protocols: vec![1],
+            pin_protocols: Some(vec![1]),
             max_credential_count_in_list: None,
             max_credential_id_length: Some(80),
             transports: None,

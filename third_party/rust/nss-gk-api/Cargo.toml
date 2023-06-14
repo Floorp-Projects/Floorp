@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.57.0"
 name = "nss-gk-api"
-version = "0.2.1"
+version = "0.3.0"
 authors = [
     "Martin Thomson <mt@lowentropy.net>",
     "Andy Leiserson <aleiserson@mozilla.com>",
