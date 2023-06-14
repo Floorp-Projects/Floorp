@@ -1799,10 +1799,6 @@ pref("identity.fxaccounts.commands.enabled", true);
 // Default is 24 hours.
 pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 
-// Whether we should run a test-pattern through EME GMPs before assuming they'll
-// decode H.264.
-pref("media.gmp.trial-create.enabled", true);
-
 // Note: when media.gmp-*.visible is true, provided we're running on a
 // supported platform/OS version, the corresponding CDM appears in the
 // plugins list, Firefox will download the GMP/CDM if enabled, and our
