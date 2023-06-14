@@ -100,7 +100,7 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
 
   void CleanupUnregisteredInParent();
 
-  void GenerateError(const nsCString& aMessage);
+  void GenerateValidationError(const nsCString& aMessage);
 
   bool IsLost() const;
 

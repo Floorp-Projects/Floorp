@@ -233,33 +233,43 @@ void WebGPUParent::MaintainDevices() {
   ffi::wgpu_server_poll_all_devices(mContext.get(), false);
 }
 
-bool WebGPUParent::ForwardError(RawId aDeviceId, ErrorBuffer& aError) {
+bool WebGPUParent::ForwardError(const Maybe<RawId> aDeviceId,
+                                ErrorBuffer& aError) {
   // don't do anything if the error is empty
   auto cString = aError.GetError();
   if (!cString) {
     return false;
   }
 
-  ReportError(aDeviceId, cString.value());
-
+  // Risky: These are probably not all Validation errors.
+  ReportError(aDeviceId, dom::GPUErrorFilter::Validation, cString.value());
   return true;
 }
 
 // Generate an error on the Device timeline of aDeviceId.
 // aMessage is interpreted as UTF-8.
-void WebGPUParent::ReportError(RawId aDeviceId, const nsCString& aMessage) {
+void WebGPUParent::ReportError(const Maybe<RawId> aDeviceId,
+                               const GPUErrorFilter aType,
+                               const nsCString& aMessage) {
   // find the appropriate error scope
-  const auto& lookup = mErrorScopeMap.find(aDeviceId);
-  if (lookup != mErrorScopeMap.end() && !lookup->second.mStack.IsEmpty()) {
-    auto& last = lookup->second.mStack.LastElement();
-    if (last.isNothing()) {
-      last.emplace(ScopedError{false, aMessage});
+  if (aDeviceId) {
+    const auto& itr = mErrorScopeStackByDevice.find(*aDeviceId);
+    if (itr != mErrorScopeStackByDevice.end()) {
+      auto& stack = itr->second;
+      for (auto& scope : Reversed(stack)) {
+        if (scope.filter != aType) {
+          continue;
+        }
+        if (!scope.firstMessage) {
+          scope.firstMessage = Some(aMessage);
+        }
+        return;
+      }
     }
-  } else {
-    // fall back to the uncaptured error handler
-    if (!SendDeviceUncapturedError(aDeviceId, aMessage)) {
-      NS_ERROR("Unable to SendError");
-    }
+  }
+  // No error scope found, so fall back to the uncaptured error handler
+  if (!SendUncapturedError(aDeviceId, aMessage)) {
+    NS_ERROR("SendDeviceUncapturedError failed");
   }
 }
 
@@ -312,7 +322,7 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   if (ForwardError(0, error)) {
     resolver(false);
   } else {
-    mErrorScopeMap.insert({aAdapterId, ErrorScopeStack()});
+    mErrorScopeStackByDevice.insert({aDeviceId, {}});
     resolver(true);
   }
   return IPC_OK();
@@ -325,7 +335,7 @@ ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aAdapterId) {
 
 ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aDeviceId) {
   ffi::wgpu_server_device_drop(mContext.get(), aDeviceId);
-  mErrorScopeMap.erase(aDeviceId);
+  mErrorScopeStackByDevice.erase(aDeviceId);
   return IPC_OK();
 }
 
@@ -1083,45 +1093,78 @@ ipc::IPCResult WebGPUParent::RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(RawId aDeviceId) {
-  const auto& lookup = mErrorScopeMap.find(aDeviceId);
-  if (lookup == mErrorScopeMap.end()) {
+ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(
+    RawId aDeviceId, const dom::GPUErrorFilter aFilter) {
+  const auto& itr = mErrorScopeStackByDevice.find(aDeviceId);
+  if (itr == mErrorScopeStackByDevice.end()) {
     // Content can cause this simply by destroying a device and then
     // calling `pushErrorScope`.
     return IPC_OK();
   }
+  auto& stack = itr->second;
 
-  lookup->second.mStack.EmplaceBack();
+  // Let's prevent `while (true) { pushErrorScope(); }`.
+  constexpr size_t MAX_ERROR_SCOPE_STACK_SIZE = 1'000'000;
+  if (stack.size() >= MAX_ERROR_SCOPE_STACK_SIZE) {
+    nsPrintfCString m("pushErrorScope: Hit MAX_ERROR_SCOPE_STACK_SIZE of %zu",
+                      MAX_ERROR_SCOPE_STACK_SIZE);
+    ReportError(Some(aDeviceId), dom::GPUErrorFilter::Out_of_memory, m);
+    return IPC_OK();
+  }
+
+  const auto newScope = ErrorScope{aFilter};
+  stack.push_back(newScope);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
     RawId aDeviceId, DevicePopErrorScopeResolver&& aResolver) {
-  const auto& lookup = mErrorScopeMap.find(aDeviceId);
-  if (lookup == mErrorScopeMap.end()) {
-    // Content can cause this simply by destroying a device and then
-    // calling `popErrorScope`.
-    ScopedError error = {true};
-    aResolver(Some(error));
-    return IPC_OK();
-  }
+  const auto popResult = [&]() {
+    const auto& itr = mErrorScopeStackByDevice.find(aDeviceId);
+    if (itr == mErrorScopeStackByDevice.end()) {
+      // Content can cause this simply by destroying a device and then
+      // calling `popErrorScope`.
+      return PopErrorScopeResult{PopErrorScopeResultType::DeviceLost};
+    }
 
-  if (lookup->second.mStack.IsEmpty()) {
-    // Content can cause this simply by calling `popErrorScope` when
-    // there is no error scope pushed.
-    ScopedError error = {true};
-    aResolver(Some(error));
-    return IPC_OK();
-  }
+    auto& stack = itr->second;
+    if (!stack.size()) {
+      // Content can cause this simply by calling `popErrorScope` when
+      // there is no error scope pushed.
+      return PopErrorScopeResult{PopErrorScopeResultType::ThrowOperationError,
+                                 "popErrorScope on empty stack"_ns};
+    }
 
-  auto scope = lookup->second.mStack.PopLastElement();
-  aResolver(scope);
+    const auto& scope = stack.back();
+    const auto popLater = MakeScopeExit([&]() { stack.pop_back(); });
+
+    auto ret = PopErrorScopeResult{PopErrorScopeResultType::NoError};
+    if (scope.firstMessage) {
+      ret.message = *scope.firstMessage;
+    }
+    switch (scope.filter) {
+      case dom::GPUErrorFilter::Validation:
+        ret.resultType = PopErrorScopeResultType::ValidationError;
+        break;
+      case dom::GPUErrorFilter::Out_of_memory:
+        ret.resultType = PopErrorScopeResultType::OutOfMemory;
+        break;
+      // case dom::GPUErrorFilter::Internal:
+      //   ret.resultType = PopErrorScopeResultType::InternalError;
+      //   break;
+      case dom::GPUErrorFilter::EndGuard_:
+        MOZ_CRASH("Bad GPUErrorFilter");
+    }
+    return ret;
+  }();
+  aResolver(popResult);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvGenerateError(RawId aDeviceId,
+ipc::IPCResult WebGPUParent::RecvGenerateError(const Maybe<RawId> aDeviceId,
+                                               const dom::GPUErrorFilter aType,
                                                const nsCString& aMessage) {
-  ReportError(aDeviceId, aMessage);
+  ReportError(aDeviceId, aType, aMessage);
   return IPC_OK();
 }
 
