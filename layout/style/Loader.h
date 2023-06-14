@@ -544,7 +544,7 @@ class Loader final {
       CORSMode aCORSMode, const nsAString& aIntegrity,
       uint64_t aEarlyHintPreloaderId);
 
-  RefPtr<StyleSheet> LookupInlineSheetInCache(const nsAString&, nsIPrincipal*);
+  RefPtr<StyleSheet> LookupInlineSheetInCache(const nsAString&);
 
   // Post a load event for aObserver to be notified about aSheet.  The
   // notification will be sent with status NS_OK unless the load event is
