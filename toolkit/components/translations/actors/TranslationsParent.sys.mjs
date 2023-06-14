@@ -74,7 +74,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   ALWAYS_TRANSLATE_LANGS_PREF,
   /* aDefaultPrefValue */ "",
   /* onUpdate */ null,
-  /* aTransform */ rawLangTags => (rawLangTags ? rawLangTags.split(",") : [])
+  /* aTransform */ rawLangTags =>
+    rawLangTags ? new Set(rawLangTags.split(",")) : new Set()
 );
 
 /**
@@ -86,7 +87,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   NEVER_TRANSLATE_LANGS_PREF,
   /* aDefaultPrefValue */ "",
   /* onUpdate */ null,
-  /* aTransform */ rawLangTags => (rawLangTags ? rawLangTags.split(",") : [])
+  /* aTransform */ rawLangTags =>
+    rawLangTags ? new Set(rawLangTags.split(",")) : new Set()
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -1519,7 +1521,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {boolean}
    */
   static shouldAlwaysTranslateLanguage(langTag) {
-    return lazy.alwaysTranslateLangTags.includes(langTag);
+    return lazy.alwaysTranslateLangTags.has(langTag);
   }
 
   /**
@@ -1530,7 +1532,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {boolean}
    */
   static shouldNeverTranslateLanguage(langTag) {
-    return lazy.neverTranslateLangTags.includes(langTag);
+    return lazy.neverTranslateLangTags.has(langTag);
   }
 
   /**
@@ -1567,8 +1569,8 @@ export class TranslationsParent extends JSWindowActorParent {
       prefName === ALWAYS_TRANSLATE_LANGS_PREF
         ? lazy.alwaysTranslateLangTags
         : lazy.neverTranslateLangTags;
-    const newLangTags = langTags.filter(tag => tag !== langTag);
-    Services.prefs.setCharPref(prefName, newLangTags.join(","));
+    const newLangTags = [...langTags].filter(tag => tag !== langTag);
+    Services.prefs.setCharPref(prefName, [...newLangTags].join(","));
   }
 
   /**
@@ -1582,10 +1584,10 @@ export class TranslationsParent extends JSWindowActorParent {
       prefName === ALWAYS_TRANSLATE_LANGS_PREF
         ? lazy.alwaysTranslateLangTags
         : lazy.neverTranslateLangTags;
-    if (!langTags.includes(langTag)) {
-      langTags.push(langTag);
+    if (!langTags.has(langTag)) {
+      langTags.add(langTag);
     }
-    Services.prefs.setCharPref(prefName, langTags.join(","));
+    Services.prefs.setCharPref(prefName, [...langTags].join(","));
   }
 
   /**
