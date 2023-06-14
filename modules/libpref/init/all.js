@@ -406,10 +406,6 @@ pref("media.video-queue.default-size", 10);
 // By default, send all of them.
 pref("media.video-queue.send-to-compositor-size", 9999);
 
-// Log level for cubeb, the audio input/output system. Valid values are
-// "verbose", "normal" and "" (log disabled).
-pref("media.cubeb.logging_level", "");
-
 pref("media.cubeb.output_voice_routing", true);
 
 // GraphRunner (fixed MediaTrackGraph thread) control
