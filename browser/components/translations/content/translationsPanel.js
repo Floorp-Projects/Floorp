@@ -388,7 +388,7 @@ var TranslationsPanel = new (class {
    */
   async #fetchDetectedLanguages() {
     this.detectedLanguages =
-      await this.#getTranslationsActor().getLangTagsForTranslation();
+      await this.#getTranslationsActor().getDetectedLanguages();
     return this.detectedLanguages;
   }
 
@@ -923,7 +923,8 @@ var TranslationsPanel = new (class {
     const actor = this.#getTranslationsActor();
     actor.translate(
       this.elements.fromMenuList.value,
-      this.elements.toMenuList.value
+      this.elements.toMenuList.value,
+      false // reportAsAutoTranslate
     );
   }
 
