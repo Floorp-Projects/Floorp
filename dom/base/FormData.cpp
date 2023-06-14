@@ -6,6 +6,7 @@
 
 #include "FormData.h"
 #include "nsIInputStream.h"
+#include "mozilla/dom/CustomElementTypes.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/HTMLFormElement.h"
@@ -387,4 +388,22 @@ nsresult FormData::CopySubmissionDataTo(
   }
 
   return NS_OK;
+}
+
+CustomElementFormValue FormData::ConvertToCustomElementFormValue() {
+  nsTArray<mozilla::dom::FormDataTuple> formValue;
+  ForEach([&formValue](const nsString& aName,
+                       const OwningBlobOrDirectoryOrUSVString& aValue) -> bool {
+    if (aValue.IsBlob()) {
+      FormDataValue value(WrapNotNull(aValue.GetAsBlob()->Impl()));
+      formValue.AppendElement(mozilla::dom::FormDataTuple(aName, value));
+    } else if (aValue.IsUSVString()) {
+      formValue.AppendElement(
+          mozilla::dom::FormDataTuple(aName, aValue.GetAsUSVString()));
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Can't save FormData entry Directory value!");
+    }
+    return true;
+  });
+  return formValue;
 }
