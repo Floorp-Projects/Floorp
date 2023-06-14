@@ -29,16 +29,6 @@ typedef uint32_t (*FilterFuncPtr)(LocalAccessible*);
  */
 uint32_t GetSelected(LocalAccessible* aAccessible);
 uint32_t GetSelectable(LocalAccessible* aAccessible);
-
-/**
- * Matches row accessibles in subtree.
- */
-uint32_t GetRow(LocalAccessible* aAccessible);
-
-/**
- * Matches cell accessibles in children.
- */
-uint32_t GetCell(LocalAccessible* aAccessible);
 }  // namespace filters
 }  // namespace a11y
 }  // namespace mozilla
