@@ -8,10 +8,11 @@ import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleOwner
-import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
+import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
  * View holder for top sites.
@@ -30,11 +31,13 @@ class TopSitesViewHolder(
     @Composable
     override fun Content() {
         val topSites =
-            components.appStore.observeAsComposableState { state -> state.topSites }.value
-                ?: emptyList()
+            components.appStore.observeAsState(emptyList()) { state -> state.topSites }.value
+        val wallpaperState = components.appStore
+            .observeAsState(WallpaperState.default) { state -> state.wallpaperState }.value
 
         TopSites(
             topSites = topSites,
+            topSiteColors = TopSiteColors.colors(wallpaperState = wallpaperState),
             onTopSiteClick = { topSite ->
                 interactor.onSelectTopSite(topSite, topSites.indexOf(topSite))
             },

@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -58,6 +60,7 @@ import org.mozilla.fenix.ext.bitmapForUrl
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.wallpapers.WallpaperState
 import kotlin.math.ceil
 
 private const val TOP_SITES_PER_PAGE = 8
@@ -71,12 +74,23 @@ private const val TOP_SITES_FAVICON_SIZE = 36
  * A list of top sites.
  *
  * @param topSites List of [TopSite] to display.
+ * @param topSiteColors The color set defined by [TopSiteColors] used to style a top site.
+ * @param onTopSiteClick Invoked when the user clicks on a top site.
+ * @param onTopSiteLongClick Invoked when the user long clicks on a top site.
+ * @param onOpenInPrivateTabClicked Invoked when the user clicks on the "Open in private tab"
+ * menu item.
+ * @param onRenameTopSiteClicked Invoked when the user clicks on the "Rename" menu item.
+ * @param onRemoveTopSiteClicked Invoked when the user clicks on the "Remove" menu item.
+ * @param onSettingsClicked Invoked when the user clicks on the "Settings" menu item.
+ * @param onSponsorPrivacyClicked Invoked when the user clicks on the "Our sponsors & your privacy"
+ * menu item.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("LongParameterList")
 fun TopSites(
     topSites: List<TopSite>,
+    topSiteColors: TopSiteColors = TopSiteColors.colors(),
     onTopSiteClick: (TopSite) -> Unit,
     onTopSiteLongClick: (TopSite) -> Unit,
     onOpenInPrivateTabClicked: (topSite: TopSite) -> Unit,
@@ -120,6 +134,7 @@ fun TopSites(
                                         onSettingsClicked = onSettingsClicked,
                                         onSponsorPrivacyClicked = onSponsorPrivacyClicked,
                                     ),
+                                    topSiteColors = topSiteColors,
                                     onTopSiteClick = { item -> onTopSiteClick(item) },
                                     onTopSiteLongClick = onTopSiteLongClick,
                                 )
@@ -146,10 +161,66 @@ fun TopSites(
 }
 
 /**
+ * Represents the colors used by top sites.
+ */
+data class TopSiteColors(
+    val titleTextColor: Color,
+    val sponsoredTextColor: Color,
+    val faviconCardBackgroundColor: Color,
+) {
+    companion object {
+        /**
+         * Builder function used to construct an instance of [TopSiteColors].
+         */
+        @Composable
+        fun colors(
+            titleTextColor: Color = FirefoxTheme.colors.textPrimary,
+            sponsoredTextColor: Color = FirefoxTheme.colors.textSecondary,
+            faviconCardBackgroundColor: Color = FirefoxTheme.colors.layer2,
+        ) = TopSiteColors(
+            titleTextColor = titleTextColor,
+            sponsoredTextColor = sponsoredTextColor,
+            faviconCardBackgroundColor = faviconCardBackgroundColor,
+        )
+
+        /**
+         * Builder function used to construct an instance of [TopSiteColors] given a
+         * [WallpaperState].
+         */
+        @Composable
+        fun colors(wallpaperState: WallpaperState): TopSiteColors {
+            val textColor: Long? = wallpaperState.currentWallpaper.textColor
+            val (titleTextColor, sponsoredTextColor) = if (textColor == null) {
+                FirefoxTheme.colors.textPrimary to FirefoxTheme.colors.textSecondary
+            } else {
+                Color(textColor) to Color(textColor)
+            }
+
+            var faviconCardBackgroundColor = FirefoxTheme.colors.layer2
+
+            wallpaperState.composeRunIfWallpaperCardColorsAreAvailable { cardColorLight, cardColorDark ->
+                faviconCardBackgroundColor = if (isSystemInDarkTheme()) {
+                    cardColorDark
+                } else {
+                    cardColorLight
+                }
+            }
+
+            return TopSiteColors(
+                titleTextColor = titleTextColor,
+                sponsoredTextColor = sponsoredTextColor,
+                faviconCardBackgroundColor = faviconCardBackgroundColor,
+            )
+        }
+    }
+}
+
+/**
  * A top site item.
  *
  * @param topSite The [TopSite] to display.
  * @param menuItems List of [MenuItem]s to display in a top site dropdown menu.
+ * @param topSiteColors The color set defined by [TopSiteColors] used to style a top site.
  * @param onTopSiteClick Invoked when the user clicks on a top site.
  * @param onTopSiteLongClick Invoked when the user long clicks on a top site.
  */
@@ -158,6 +229,7 @@ fun TopSites(
 private fun TopSiteItem(
     topSite: TopSite,
     menuItems: List<MenuItem>,
+    topSiteColors: TopSiteColors,
     onTopSiteClick: (TopSite) -> Unit,
     onTopSiteLongClick: (TopSite) -> Unit,
 ) {
@@ -180,7 +252,10 @@ private fun TopSiteItem(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            TopSiteFaviconCard(topSite = topSite)
+            TopSiteFaviconCard(
+                topSite = topSite,
+                backgroundColor = topSiteColors.faviconCardBackgroundColor,
+            )
 
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -200,7 +275,7 @@ private fun TopSiteItem(
 
                 Text(
                     text = topSite.title ?: topSite.url,
-                    color = FirefoxTheme.colors.textPrimary,
+                    color = topSiteColors.titleTextColor,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = FirefoxTheme.typography.caption,
@@ -212,7 +287,7 @@ private fun TopSiteItem(
                 modifier = Modifier
                     .width(TOP_SITES_ITEM_SIZE.dp)
                     .alpha(alpha = if (topSite is TopSite.Provided) 1f else 0f),
-                color = FirefoxTheme.colors.textSecondary,
+                color = topSiteColors.sponsoredTextColor,
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
@@ -232,19 +307,23 @@ private fun TopSiteItem(
  * The top site favicon card.
  *
  * @param topSite The [TopSite] to display.
+ * @param backgroundColor The background [Color] of the card.
  */
 @Composable
-private fun TopSiteFaviconCard(topSite: TopSite) {
+private fun TopSiteFaviconCard(
+    topSite: TopSite,
+    backgroundColor: Color,
+) {
     Card(
         modifier = Modifier.size(TOP_SITES_FAVICON_CARD_SIZE.dp),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Surface(
                 modifier = Modifier.size(TOP_SITES_FAVICON_SIZE.dp),
-                color = FirefoxTheme.colors.layer2,
+                color = backgroundColor,
                 shape = RoundedCornerShape(4.dp),
             ) {
                 val drawableForUrl = getDrawableForUrl(topSite.url)
