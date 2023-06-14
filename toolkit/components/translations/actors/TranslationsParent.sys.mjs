@@ -399,35 +399,7 @@ export class TranslationsParent extends JSWindowActorParent {
     switch (name) {
       case "Translations:GetTranslationsEnginePayload": {
         const { fromLanguage, toLanguage } = data;
-        const bergamotWasmArrayBuffer = this.#getBergamotWasmArrayBuffer();
-
-        let files = await this.getLanguageTranslationModelFiles(
-          fromLanguage,
-          toLanguage
-        );
-
-        let languageModelFiles;
-        if (files) {
-          languageModelFiles = [files];
-        } else {
-          // No matching model was found, try to pivot between English.
-          const [files1, files2] = await Promise.all([
-            this.getLanguageTranslationModelFiles(fromLanguage, PIVOT_LANGUAGE),
-            this.getLanguageTranslationModelFiles(PIVOT_LANGUAGE, toLanguage),
-          ]);
-          if (!files1 || !files2) {
-            throw new Error(
-              `No language models were found for ${fromLanguage} to ${toLanguage}`
-            );
-          }
-          languageModelFiles = [files1, files2];
-        }
-
-        return {
-          bergamotWasmArrayBuffer: await bergamotWasmArrayBuffer,
-          languageModelFiles,
-          isMocked: TranslationsParent.#isTranslationsEngineMocked,
-        };
+        return this.getTranslationsEnginePayload(fromLanguage, toLanguage);
       }
       case "Translations:GetLanguageIdEnginePayload": {
         const [modelBuffer, wasmBuffer] = await Promise.all([
@@ -503,6 +475,59 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     }
     return undefined;
+  }
+
+  /**
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   */
+  async getTranslationsEnginePayload(fromLanguage, toLanguage) {
+    const wasmStartTime = Cu.now();
+    const bergamotWasmArrayBufferPromise = this.#getBergamotWasmArrayBuffer();
+    bergamotWasmArrayBufferPromise.then(() => {
+      ChromeUtils.addProfilerMarker(
+        "TranslationsParent",
+        { innerWindowId: this.innerWindowId, startTime: wasmStartTime },
+        "Loading bergamot wasm array buffer"
+      );
+    });
+
+    const modelStartTime = Cu.now();
+    let files = await this.getLanguageTranslationModelFiles(
+      fromLanguage,
+      toLanguage
+    );
+
+    let languageModelFiles;
+    if (files) {
+      languageModelFiles = [files];
+    } else {
+      // No matching model was found, try to pivot between English.
+      const [files1, files2] = await Promise.all([
+        this.getLanguageTranslationModelFiles(fromLanguage, PIVOT_LANGUAGE),
+        this.getLanguageTranslationModelFiles(PIVOT_LANGUAGE, toLanguage),
+      ]);
+      if (!files1 || !files2) {
+        throw new Error(
+          `No language models were found for ${fromLanguage} to ${toLanguage}`
+        );
+      }
+      languageModelFiles = [files1, files2];
+    }
+
+    ChromeUtils.addProfilerMarker(
+      "TranslationsParent",
+      { innerWindowId: this.innerWindowId, startTime: modelStartTime },
+      "Loading translation model files"
+    );
+
+    const bergamotWasmArrayBuffer = await bergamotWasmArrayBufferPromise;
+
+    return {
+      bergamotWasmArrayBuffer,
+      languageModelFiles,
+      isMocked: TranslationsParent.#isTranslationsEngineMocked,
+    };
   }
 
   /**
