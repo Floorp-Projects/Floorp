@@ -451,7 +451,7 @@ add_task(async function buttons() {
       expected: {
         mousedownSelected: true,
         topSites: {
-          pageProxyState: "invalid",
+          pageProxyState: "valid",
           value: UrlbarPrefs.get("resultMenu") ? initialTabUrl : otherResultUrl,
         },
         searchString: {

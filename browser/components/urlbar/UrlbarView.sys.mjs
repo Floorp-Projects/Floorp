@@ -3168,7 +3168,7 @@ export class UrlbarView {
     // like it would be harmless, but it has side effects in the input we want
     // to avoid (see `on_mousedown()`).
     if (this.#mousedownSelectedElement?.isConnected) {
-      this.#selectElement(null);
+      this.clearSelection();
     }
     this.#mousedownSelectedElement = null;
   }
