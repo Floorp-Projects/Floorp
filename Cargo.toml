@@ -158,12 +158,6 @@ moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 # Workaround for https://github.com/rust-lang/cargo/issues/11232
 rure = { path = "third_party/rust/rure" }
 
-# 0.31.1 but without rust-cssparser#342.
-# TODO: Remove these, and just use v0.31.1 once bug 1836219 lands
-# (which will get syn 2 into the tree).
-cssparser = { path = "third_party/rust/cssparser" }
-cssparser-macros = { path = "third_party/rust/cssparser-macros" }
-
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }

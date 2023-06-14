@@ -39,14 +39,6 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "This is upstream plus a warning fix from bug 1823866."
 
-[policy.cssparser]
-audit-as-crates-io = true
-notes = "Upstream code plus nesting changes that haven't been published yet authored by us"
-
-[policy.cssparser-macros]
-audit-as-crates-io = true
-notes = "Needed because this crate lives along cssparser"
-
 [policy.d3d12]
 audit-as-crates-io = true
 notes = "Unpublished wgpu revisions point to unpublished d3d12 revisions."

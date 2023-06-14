@@ -68,9 +68,9 @@ fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
 #![recursion_limit = "200"] // For color::parse_color_keyword
 
 pub use crate::color::{
-    hsl_to_rgb, hwb_to_rgb, parse_color_keyword, parse_color_with, parse_hash_color, AngleOrNumber,
-    Color, ColorFunction, ColorParser, FromParsedColor, Hsl, Hwb, Lab, Lch, NumberOrPercentage,
-    Oklab, Oklch, PredefinedColorSpace, RGBA,
+    hsl_to_rgb, hwb_to_rgb, parse_color_keyword, parse_color_with, parse_hash_color,
+    serialize_color_alpha, AngleOrNumber, Color, ColorFunction, ColorParser, FromParsedColor, Hsl,
+    Hwb, Lab, Lch, NumberOrPercentage, Oklab, Oklch, PredefinedColorSpace, RGBA,
 };
 pub use crate::cow_rc_str::CowRcStr;
 pub use crate::from_bytes::{stylesheet_encoding, EncodingSupport};
@@ -84,7 +84,7 @@ pub use crate::parser::{Delimiter, Delimiters, Parser, ParserInput, ParserState}
 pub use crate::rules_and_declarations::{parse_important, parse_one_declaration};
 pub use crate::rules_and_declarations::{parse_one_rule, StyleSheetParser};
 pub use crate::rules_and_declarations::{AtRuleParser, QualifiedRuleParser};
-pub use crate::rules_and_declarations::{RuleBodyParser, RuleBodyItemParser, DeclarationParser};
+pub use crate::rules_and_declarations::{DeclarationParser, RuleBodyItemParser, RuleBodyParser};
 pub use crate::serializer::{serialize_identifier, serialize_name, serialize_string};
 pub use crate::serializer::{CssStringWriter, ToCss, TokenSerializationType};
 pub use crate::tokenizer::{SourceLocation, SourcePosition, Token};
