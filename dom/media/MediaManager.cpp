@@ -185,9 +185,11 @@ using dom::Sequence;
 using dom::UserActivation;
 using dom::WindowGlobalChild;
 using ConstDeviceSetPromise = MediaManager::ConstDeviceSetPromise;
+using DeviceSetPromise = MediaManager::DeviceSetPromise;
 using LocalDevicePromise = MediaManager::LocalDevicePromise;
 using LocalDeviceSetPromise = MediaManager::LocalDeviceSetPromise;
 using LocalMediaDeviceSetRefCnt = MediaManager::LocalMediaDeviceSetRefCnt;
+using MediaDeviceSetRefCnt = MediaManager::MediaDeviceSetRefCnt;
 using media::NewRunnableFrom;
 using media::NewTaskFrom;
 using media::Refcountable;
@@ -1796,12 +1798,36 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
   }
 }
 
+namespace {
+
+// Class to hold the promise returned by EnumerateRawDevices() and to resolve
+// even if |task| does not run, either because GeckoViewPermissionProcessChild
+// gets destroyed before ask-device-permission receives its
+// got-device-permission reply, or because the media thread is no longer
+// available.  In either case, the process is shutting down so the result is
+// not important.  Resolve with an empty set, so that callers do not need to
+// handle rejection.
+class DeviceSetPromiseHolderWithFallback
+    : public MozPromiseHolder<DeviceSetPromise> {
+ public:
+  DeviceSetPromiseHolderWithFallback() = default;
+  DeviceSetPromiseHolderWithFallback(DeviceSetPromiseHolderWithFallback&&) =
+      default;
+  ~DeviceSetPromiseHolderWithFallback() {
+    if (!IsEmpty()) {
+      Resolve(new MediaDeviceSetRefCnt(), __func__);
+    }
+  }
+};
+
+}  // anonymous namespace
+
 /**
  * EnumerateRawDevices - Enumerate a list of audio & video devices that
  * satisfy passed-in constraints. List contains raw id's.
  */
 
-RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
+RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
     MediaSourceEnum aVideoInputType, MediaSourceEnum aAudioInputType,
     EnumerationFlags aFlags) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1813,13 +1839,11 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
       static_cast<uint8_t>(aVideoInputType),
       static_cast<uint8_t>(aAudioInputType));
 
-  MozPromiseHolder<DeviceSetPromise> holder;
+  DeviceSetPromiseHolderWithFallback holder;
   RefPtr<DeviceSetPromise> promise = holder.Ensure(__func__);
   if (sHasMainThreadShutdown) {
     // The media thread is no longer available but the result will not be
-    // observable.  Resolve with an empty set, so that callers do not need to
-    // handle rejection.
-    holder.Resolve(new MediaDeviceSetRefCnt(), __func__);
+    // observable.  |holder| will resolve |promise| on destruction.
     return promise;
   }
 
