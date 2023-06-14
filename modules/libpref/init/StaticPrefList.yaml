@@ -10704,6 +10704,14 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# The getDisplayMedia prompt uses getDisplayMedia under the hood to show previews.
+# This can be turned off if, e.g. on systems with known issues like X11, or if
+# previews are not desired.
+- name: media.getdisplaymedia.previews.enabled
+  type: bool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
 # Turn off any cameras (but not mics) while in the background. This is desirable
 # on mobile.
 - name: media.getusermedia.camera.background.mute.enabled

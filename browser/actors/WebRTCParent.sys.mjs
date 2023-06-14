@@ -976,7 +976,13 @@ function prompt(aActor, aBrowser, aRequest) {
 
           // We don't have access to any screen content besides our browser tabs
           // on Wayland, therefore there are no previews we can show.
-          if (!isPipeWireDetected || mediaSource == "browser") {
+          if (
+            (!isPipeWireDetected || mediaSource == "browser") &&
+            Services.prefs.getBoolPref(
+              "media.getdisplaymedia.previews.enabled",
+              true
+            )
+          ) {
             video.deviceId = deviceId;
             let constraints = {
               video: { mediaSource, deviceId: { exact: deviceId } },
