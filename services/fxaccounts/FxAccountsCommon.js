@@ -5,9 +5,6 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
@@ -45,7 +42,7 @@ XPCOMUtils.defineLazyGetter(exports, "logManager", function () {
   ];
 
   // for legacy reasons, the log manager still thinks it's part of sync
-  return new LogManager(new Preferences("services.sync."), logs, "sync");
+  return new LogManager("services.sync.", logs, "sync");
 });
 
 // A boolean to indicate if personally identifiable information (or anything
