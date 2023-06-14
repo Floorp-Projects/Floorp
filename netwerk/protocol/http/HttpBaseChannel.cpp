@@ -6240,25 +6240,92 @@ void HttpBaseChannel::LogORBError(
   Telemetry::AccumulateCategorical(label);
 
   switch (mLoadInfo->GetExternalContentPolicyType()) {
+    case ExtContentPolicy::TYPE_INVALID:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::INVALID);
+      break;
+    case ExtContentPolicy::TYPE_OTHER:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::OTHER);
+      break;
     case ExtContentPolicy::TYPE_FETCH:
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::BLOCKED_FETCH);
-      break;
-    case ExtContentPolicy::TYPE_IMAGE:
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ORB_BLOCK_INITIATOR::IMAGE);
       break;
     case ExtContentPolicy::TYPE_SCRIPT:
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::SCRIPT);
       break;
+    case ExtContentPolicy::TYPE_IMAGE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::IMAGE);
+      break;
+    case ExtContentPolicy::TYPE_STYLESHEET:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::STYLESHEET);
+      break;
+    case ExtContentPolicy::TYPE_XMLHTTPREQUEST:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::XMLHTTPREQUEST);
+      break;
+    case ExtContentPolicy::TYPE_DTD:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::DTD);
+      break;
+    case ExtContentPolicy::TYPE_FONT:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::FONT);
+      break;
     case ExtContentPolicy::TYPE_MEDIA:
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::MEDIA);
       break;
-    default:
+    case ExtContentPolicy::TYPE_CSP_REPORT:
       Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ORB_BLOCK_INITIATOR::OTHER);
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::CSP_REPORT);
+      break;
+    case ExtContentPolicy::TYPE_XSLT:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::XSLT);
+      break;
+    case ExtContentPolicy::TYPE_IMAGESET:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::IMAGESET);
+      break;
+    case ExtContentPolicy::TYPE_WEB_MANIFEST:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::WEB_MANIFEST);
+      break;
+    case ExtContentPolicy::TYPE_SPECULATIVE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::SPECULATIVE);
+      break;
+    case ExtContentPolicy::TYPE_UA_FONT:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::UA_FONT);
+      break;
+    case ExtContentPolicy::TYPE_PROXIED_WEBRTC_MEDIA:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::PROXIED_WEBRTC_MEDIA);
+      break;
+    case ExtContentPolicy::TYPE_PING:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::PING);
+      break;
+    case ExtContentPolicy::TYPE_BEACON:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::BEACON);
+      break;
+    case ExtContentPolicy::TYPE_WEB_TRANSPORT:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::WEB_TRANSPORT);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Shouldn't block this type");
+      // DOCUMENT, SUBDOCUMENT, OBJECT, OBJECT_SUBREQUEST,
+      // WEBSOCKET and SAVEAS_DOWNLOAD are excluded from ORB
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_ORB_BLOCK_INITIATOR::EXCLUDED);
       break;
   }
 }
