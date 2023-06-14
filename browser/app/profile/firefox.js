@@ -114,11 +114,11 @@ pref("app.update.link.updateManualWhatsNew", "update-manual-whats-new");
 
 // How many times we should let downloads fail before prompting the user to
 // download a fresh installer.
-pref("app.update.download.promptMaxAttempts", 2);
+pref("app.update.download.maxAttempts", 2);
 
 // How many times we should let an elevation prompt fail before prompting the user to
 // download a fresh installer.
-pref("app.update.elevation.promptMaxAttempts", 2);
+pref("app.update.elevate.maxAttempts", 2);
 
 #ifdef NIGHTLY_BUILD
   // Whether to delay popup notifications when an update is available and
