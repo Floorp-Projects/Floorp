@@ -115,9 +115,8 @@ function write_commit_message_file {
   echo "-------"
   echo "------- Write commit message file ($TMP_DIR/commit_msg.txt)"
   echo "-------"
-  UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
-      git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
-      | grep "^commit " | awk '{ print $NF }'`
+  UPSTREAM_LONG_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
+      git show --format='%H' --no-patch $MOZ_LIBWEBRTC_NEXT_BASE`
   echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
       > $TMP_DIR/commit_msg.txt
   echo "" >> $TMP_DIR/commit_msg.txt
@@ -125,7 +124,7 @@ function write_commit_message_file {
     cat $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> $TMP_DIR/commit_msg.txt
     echo "" >> $TMP_DIR/commit_msg.txt
   fi
-  echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> $TMP_DIR/commit_msg.txt
+  echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_LONG_SHA" >> $TMP_DIR/commit_msg.txt
   (cd $MOZ_LIBWEBRTC_SRC && \
   git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> $TMP_DIR/commit_msg.txt
 }
