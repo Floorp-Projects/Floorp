@@ -37,6 +37,21 @@ static bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType) {
   return nsContentUtils::IsJavascriptMIMEType(typeString);
 }
 
+// These need to be kept in sync with
+// "browser.opaqueResponseBlocking.mediaExceptionsStrategy"
+enum class OpaqueResponseMediaException { NoExceptions, AllowSome, AllowAll };
+
+static OpaqueResponseMediaException ConfiguredMediaExceptionsStrategy() {
+  uint32_t pref = StaticPrefs::
+      browser_opaqueResponseBlocking_mediaExceptionsStrategy_DoNotUseDirectly();
+  if (NS_WARN_IF(pref > static_cast<uint32_t>(
+                            OpaqueResponseMediaException::AllowAll))) {
+    return OpaqueResponseMediaException::AllowAll;
+  }
+
+  return static_cast<OpaqueResponseMediaException>(pref);
+}
+
 static bool IsOpaqueSafeListedSpecBreakingMIMEType(
     const nsACString& aContentType, bool aNoSniff) {
   // Avoid trouble with DASH/HLS. See bug 1698040.
@@ -53,13 +68,22 @@ static bool IsOpaqueSafeListedSpecBreakingMIMEType(
     return true;
   }
 
-  // This is not a good solution, but we need this until we solve Bug 1827684 in
-  // a better way. Chromium currently allows all "audio/*" and "video/*", but
-  // from discussion in bug, we want to try only "audio/mpeg".
-  if (aContentType.EqualsLiteral(AUDIO_MP3) ||
-      aContentType.EqualsLiteral(AUDIO_AAC) ||
-      aContentType.EqualsLiteral(AUDIO_AACP)) {
-    return true;
+  switch (ConfiguredMediaExceptionsStrategy()) {
+    case OpaqueResponseMediaException::NoExceptions:
+      break;
+    case OpaqueResponseMediaException::AllowSome:
+      if (aContentType.EqualsLiteral(AUDIO_MP3) ||
+          aContentType.EqualsLiteral(AUDIO_AAC) ||
+          aContentType.EqualsLiteral(AUDIO_AACP)) {
+        return true;
+      }
+      break;
+    case OpaqueResponseMediaException::AllowAll:
+      if (StringBeginsWith(aContentType, "audio/"_ns) ||
+          StringBeginsWith(aContentType, "video/"_ns)) {
+        return true;
+      }
+      break;
   }
 
   return false;

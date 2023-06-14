@@ -1742,6 +1742,19 @@
   mirror: always
   do_not_use_directly: true
 
+# This pref controls how exceptions to opaque response blocking for the media MIME types
+# `audio/*` and `video/*` are handled. This is because step 8 in the spec that performs
+# audio or video type pattern matching cannot handle certain MIME types (yet).
+# See https://whatpr.org/fetch/1442.html#orb-algorithm
+#   0) No exceptions
+#   1) Some exceptions, explicitly hard coded in `IsOpaqueSafeListedSpecBreakingMIMEType`
+#   2) Allow all MIME types beginning with `audio/*` or `video/*`.
+- name: browser.opaqueResponseBlocking.mediaExceptionsStrategy
+  type: uint32_t
+  value: 1
+  mirror: always
+  do_not_use_directly: true
+
 # When this pref is enabled, <object> and <embed> elements will create
 # synthetic documents when the resource type they're loading is an image.
 - name: browser.opaqueResponseBlocking.syntheticBrowsingContext
