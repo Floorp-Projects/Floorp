@@ -533,6 +533,9 @@ impl Global {
                     error_buf.init(err);
                 }
             }
+            DeviceAction::CreateRenderBundleError(buffer_id, label) => {
+                self.create_render_bundle_error::<A>(buffer_id, label);
+            }
             DeviceAction::CreateCommandEncoder(id, desc) => {
                 let (_, error) = self.device_create_command_encoder::<A>(self_id, &desc, id);
                 if let Some(err) = error {

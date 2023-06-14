@@ -4,11 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGPUChild.h"
+
 #include "js/RootingAPI.h"
 #include "js/String.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "js/Warnings.h"  // JS::WarnUTF8
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/dom/Console.h"
@@ -26,6 +28,8 @@
 #include "CompilationInfo.h"
 #include "mozilla/ipc/RawShmem.h"
 #include "nsGlobalWindowInner.h"
+
+#include <utility>
 
 namespace mozilla::webgpu {
 
@@ -448,6 +452,21 @@ RawId WebGPUChild::RenderBundleEncoderFinish(
   ipc::ByteBuf bb;
   RawId id = ffi::wgpu_client_create_render_bundle(
       mClient.get(), &aEncoder, aDeviceId, &desc, ToFFI(&bb));
+
+  if (!SendDeviceAction(aDeviceId, std::move(bb))) {
+    MOZ_CRASH("IPC failure");
+  }
+
+  return id;
+}
+
+RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
+                                                  const nsString& aLabel) {
+  webgpu::StringHelper label(aLabel);
+
+  ipc::ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_render_bundle_error(
+      mClient.get(), aDeviceId, label.Get(), ToFFI(&bb));
 
   if (!SendDeviceAction(aDeviceId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
