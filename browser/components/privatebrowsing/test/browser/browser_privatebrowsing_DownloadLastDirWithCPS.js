@@ -48,7 +48,7 @@ async function runTest() {
     "resource://gre/modules/DownloadLastDir.sys.mjs"
   );
 
-  let tmpDir = FileUtils.getDir("TmpD", [], true);
+  let tmpDir = FileUtils.getDir("TmpD", []);
   let dir1 = newDirectory();
   let dir2 = newDirectory();
   let dir3 = newDirectory();

@@ -21,9 +21,7 @@ async function setFile(downloadLastDir, aURI, aValue) {
 }
 
 function newDirectory() {
-  let tmpDir = FileUtils.getDir("TmpD", [], true);
-  let dir = tmpDir.clone();
-  dir.append("testdir");
+  let dir = FileUtils.getDir("TmpD", ["testdir"]);
   dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   return dir;
 }
@@ -52,7 +50,7 @@ add_task(async function () {
     "http://mochi.test:8888/browser/toolkit/content/tests/browser/doggy.png";
 
   await BrowserTestUtils.withNewTab(IMAGE_URL, async function (browser) {
-    let tmpDir = FileUtils.getDir("TmpD", [], true);
+    let tmpDir = FileUtils.getDir("TmpD", []);
     let dir = newDirectory();
     let downloadLastDir = new DownloadLastDir(null);
     // Set the desired target directory for the IMAGE_URL
