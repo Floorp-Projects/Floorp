@@ -294,15 +294,18 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * Only translate pages that match certain protocols, that way internal pages like
    * about:* pages will not be translated.
-   * @param {string} url
+   * @param {string} scheme - The URI spec
+   * @returns {boolean}
    */
-  static isRestrictedPage(url) {
+  static isRestrictedPage(scheme) {
     // Keep this logic up to date with TranslationsChild.prototype.#isRestrictedPage.
-    return !(
-      url.startsWith("http://") ||
-      url.startsWith("https://") ||
-      url.startsWith("file:///")
-    );
+    switch (scheme) {
+      case "https":
+      case "http":
+      case "file":
+        return false;
+    }
+    return true;
   }
 
   static #resetPreferredLanguages() {
