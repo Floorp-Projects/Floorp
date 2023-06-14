@@ -100,16 +100,8 @@ add_task(async function enter_search_mode_button() {
     window,
     value: "test",
   });
-  let oneOffButton = await TestUtils.waitForCondition(() =>
-    window.document.getElementById("urlbar-engine-one-off-item-actions")
-  );
-  Assert.ok(oneOffButton, "One off button is available when preffed on");
 
-  EventUtils.synthesizeMouseAtCenter(oneOffButton, {}, window);
-  await UrlbarTestUtils.assertSearchMode(window, {
-    source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
-    entry: "oneoff",
-  });
+  await clickQuickActionOneoffButton();
 
   await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   Assert.ok(true, "Actions are shown when we enter actions search mode.");
@@ -781,3 +773,93 @@ add_task(async function test_whitespace() {
   );
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function search_mode_on_webpage() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+
+  info("Show result by click");
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {}, window);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  info("Enter quick action search mode");
+  await clickQuickActionOneoffButton();
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  Assert.ok(true, "Actions are shown when we enter actions search mode.");
+
+  info("Trigger the screenshot mode");
+  const initialActionButtons = window.document.querySelectorAll(
+    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+  );
+  let screenshotButton;
+  for (let i = 0; i < initialActionButtons.length; i++) {
+    const item = initialActionButtons.item(i);
+    if (item.dataset.key === "screenshot") {
+      screenshotButton = item;
+      break;
+    }
+  }
+  EventUtils.synthesizeMouseAtCenter(screenshotButton, {}, window);
+  await TestUtils.waitForCondition(
+    isScreenshotInitialized,
+    "Screenshot component is active",
+    200,
+    100
+  );
+
+  info("Press Escape to exit screenshot mode");
+  EventUtils.synthesizeKey("KEY_Escape", {}, window);
+  await TestUtils.waitForCondition(
+    async () => !(await isScreenshotInitialized()),
+    "Screenshot component has been dismissed"
+  );
+
+  info("Check the urlbar state");
+  Assert.equal(gURLBar.value, "https://example.com");
+  Assert.equal(gURLBar.getAttribute("pageproxystate"), "valid");
+
+  info("Show result again");
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {}, window);
+  });
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  info("Enter quick action search mode again");
+  await clickQuickActionOneoffButton();
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  const finalActionButtons = window.document.querySelectorAll(
+    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+  );
+
+  info("Check the action buttons and the urlbar");
+  Assert.equal(
+    finalActionButtons.length,
+    initialActionButtons.length,
+    "The same buttons as initially displayed will display"
+  );
+  Assert.equal(gURLBar.value, "");
+
+  info("Clean up");
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+  BrowserTestUtils.removeTab(tab);
+  await PlacesUtils.history.clear();
+});
+
+async function clickQuickActionOneoffButton() {
+  const oneOffButton = await TestUtils.waitForCondition(() =>
+    window.document.getElementById("urlbar-engine-one-off-item-actions")
+  );
+  Assert.ok(oneOffButton, "One off button is available when preffed on");
+
+  EventUtils.synthesizeMouseAtCenter(oneOffButton, {}, window);
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
+    entry: "oneoff",
+  });
+}
