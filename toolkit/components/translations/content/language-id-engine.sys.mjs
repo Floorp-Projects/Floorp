@@ -59,10 +59,11 @@ export class LanguageIdEngine {
   static #cachedEngineTimeoutMS = 30_000;
 
   /**
-   * Gets a cached engine, or creates a new one.
+   * Gets a cached engine, or creates a new one. Returns `null` when the engine
+   * payload fails to download.
    *
    * @param {() => Object} getPayload
-   * @returns {LanguageIdEngine}
+   * @returns {LanguageIdEngine | null}
    */
   static getOrCreate(getPayload) {
     if (!this.#cachedEngine) {
@@ -73,10 +74,23 @@ export class LanguageIdEngine {
 
   /**
    * @param {() => Object} getPayload
-   * @returns {Promise<LanguageIdEngine>}
+   * @returns {Promise<LanguageIdEngine | null>}
    */
   static async #create(getPayload) {
-    const engine = new LanguageIdEngine(await getPayload());
+    let payload;
+    try {
+      payload = await getPayload();
+    } catch (error) {
+      // The payload may not be able to be downloaded. Report this as a normal
+      // console.log, as this is the default behavior in automation.
+      lazy.console.log(
+        "The language id payload was unable to be downloaded.",
+        error
+      );
+      return null;
+    }
+
+    const engine = new LanguageIdEngine(payload);
     await engine.isReady;
     LanguageIdEngine.#resetCacheTimeout();
     return engine;

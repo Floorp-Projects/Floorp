@@ -76,8 +76,15 @@ export class TranslationsChild extends JSWindowActorChild {
       case "Translations:GetDocumentElementLang":
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
-        const engine = await this.createLanguageIdEngine();
-        return engine.identifyLanguageFromDocument(this.document);
+        try {
+          const engine = await this.createLanguageIdEngine();
+          if (!engine) {
+            return null;
+          }
+          return engine.identifyLanguageFromDocument(this.document);
+        } catch (error) {
+          return null;
+        }
       }
       case "Translations:DownloadedLanguageFile":
       case "Translations:DownloadLanguageFileError":
