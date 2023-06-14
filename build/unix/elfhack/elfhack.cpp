@@ -181,10 +181,12 @@ class ElfRelHackCode_Section : public ElfSection {
 
     // If the original init function is located too far away, we're going to
     // need to use a trampoline. See comment in inject.c.
-    // Theoretically, we should check for (init - instr) > 0xffffff, where instr
-    // is the virtual address of the instruction that calls the original init,
-    // but we don't have it at this point, so punt to just init.
-    if (init > 0xffffff && parent.getMachine() == EM_ARM) {
+    // Theoretically, we should check for (init - instr) > boundary, where
+    // boundary is the platform-dependent limit, and instr is the virtual
+    // address of the instruction that calls the original init, but we don't
+    // have it at this point, so punt to just init.
+    if ((init > 0xffffff && parent.getMachine() == EM_ARM) ||
+        (init > 0x07ffffff && parent.getMachine() == EM_AARCH64)) {
       Elf_SymValue* trampoline = symtab->lookup("init_trampoline");
       if (!trampoline) {
         throw std::runtime_error(
@@ -514,6 +516,9 @@ class ElfRelHackCode_Section : public ElfSection {
         case REL(ARM, GOTPC):
         case REL(ARM, REL32):
         case REL(AARCH64, PREL32):
+        case REL(AARCH64,
+                 PREL64):  // In theory PREL64 should have its own relocation
+                           // function, but in practice it doesn't matter.
           apply_relocation<pc32_relocation>(the_code, buf, &*r, addr);
           break;
         case REL(ARM, CALL):
