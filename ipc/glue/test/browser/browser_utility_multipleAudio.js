@@ -3,18 +3,8 @@
 
 "use strict";
 
-async function runTest(expectUtility) {
-  info(
-    `Running tests with decoding from Utility or RDD: expectUtility=${expectUtility}`
-  );
-
-  // Utility should now be the default, so dont toggle the pref unless we test
-  // RDD
-  if (!expectUtility) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["media.utility-process.enabled", expectUtility]],
-    });
-  }
+async function runTest() {
+  info(`Running tests with decoding from Utility`);
 
   const platform = Services.appinfo.OS;
 
@@ -32,13 +22,7 @@ async function runTest(expectUtility) {
 
     info("Play tabs");
     for (let tab of tabs) {
-      playback.push(
-        play(
-          tab,
-          expectUtility ? expectation.process : "RDD",
-          expectation.decoder
-        )
-      );
+      playback.push(play(tab, expectation.process, expectation.decoder));
     }
 
     info("Wait all playback");
