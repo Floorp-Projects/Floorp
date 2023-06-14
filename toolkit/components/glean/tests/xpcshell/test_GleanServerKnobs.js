@@ -32,8 +32,8 @@ add_task(function test_fog_metrics_disabled_remotely() {
   Glean.testOnly.cheesyString.set(str2);
   Assert.equal(str1, Glean.testOnly.cheesyString.testGetValue("test-ping"));
 
-  // Clear the configuration so it doesn't interfere with other tests.
-  Services.fog.setMetricsFeatureConfig("{}");
+  // Reset everything so it doesn't interfere with other tests.
+  Services.fog.testResetFOG();
 });
 
 add_task(function test_fog_multiple_metrics_disabled_remotely() {
@@ -79,9 +79,8 @@ add_task(function test_fog_multiple_metrics_disabled_remotely() {
   Glean.testOnly.meaningOfLife.set(qty3);
   Assert.equal(qty1, Glean.testOnly.meaningOfLife.testGetValue("test-ping"));
 
-  // Clear the configuration so it doesn't interfere with other tests. This
-  // is done by passing in an empty dictionary.
-  Services.fog.setMetricsFeatureConfig("{}");
+  // Reset everything so it doesn't interfere with other tests.
+  Services.fog.testResetFOG();
 
   // Set some final metrics. This should record in both metrics because they
   // are both `disabled: false` by default.
@@ -117,28 +116,19 @@ add_task(function test_fog_metrics_feature_config_api_handles_null_values() {
   Services.fog.setMetricsFeatureConfig(null);
 
   // Attempt to set another cheesy string in the test metric. This should now
-  // record because `null` should clear the configuration.
+  // record because `null` doesn't change already existing configuration.
   Glean.testOnly.cheesyString.set(str2);
-  Assert.equal(str2, Glean.testOnly.cheesyString.testGetValue("test-ping"));
-
-  // Reset back to the feature configuration that disables the test metric.
-  Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
-
-  // Attempt to set another cheesy string in the test metric. This should not
-  // record because of the override to the metric's default value in the
-  // feature configuration.
-  Glean.testOnly.cheesyString.set(str1);
-  Assert.equal(str2, Glean.testOnly.cheesyString.testGetValue("test-ping"));
+  Assert.equal(str1, Glean.testOnly.cheesyString.testGetValue("test-ping"));
 
   // Set the configuration to `""` to replicate getting an empty string from
   // Nimbus.
   Services.fog.setMetricsFeatureConfig("");
 
   // Attempt to set another cheesy string in the test metric. This should now
-  // record again because `""` should be clear the configuration.
+  // record again because `""` doesn't change already existing configuration.
   const str3 = "another cheesy string v3";
   Glean.testOnly.cheesyString.set(str3);
-  Assert.equal(str3, Glean.testOnly.cheesyString.testGetValue("test-ping"));
+  Assert.equal(str1, Glean.testOnly.cheesyString.testGetValue("test-ping"));
 });
 
 add_task(function test_fog_metrics_disabled_reset_fog_behavior() {
@@ -169,6 +159,6 @@ add_task(function test_fog_metrics_disabled_reset_fog_behavior() {
   Glean.testOnly.cheesyString.set(str2);
   Assert.equal(str2, Glean.testOnly.cheesyString.testGetValue("test-ping"));
 
-  // Clear the configuration so it doesn't interfere with other tests.
-  Services.fog.setMetricsFeatureConfig("{}");
+  // Reset everything so it doesn't interfere with other tests.
+  Services.fog.testResetFOG();
 });

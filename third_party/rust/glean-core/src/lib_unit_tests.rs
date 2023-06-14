@@ -816,7 +816,7 @@ fn test_setting_log_pings() {
 }
 
 #[test]
-fn test_set_metrics_disabled() {
+fn test_set_remote_metric_configuration() {
     let (glean, _t) = new_glean(None);
     let metric = StringMetric::new(CommonMetricData {
         category: "category".to_string(),
@@ -882,13 +882,19 @@ fn test_set_metrics_disabled() {
         "Shouldn't set when disabled"
     );
 
-    // 4. Set a new configuration where the metrics are enabled
-    metrics_enabled_config = json!({}).to_string();
+    // 4. Set a new configuration where one metric is enabled
+    metrics_enabled_config = json!(
+        {
+            "category.string_metric": true,
+        }
+    )
+    .to_string();
     glean.set_metrics_enabled_config(
         MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
     );
 
-    // 5. Since the metrics are now enabled, setting a new value should work
+    // 5. Since the first metric is enabled, setting a new value should work
+    // on it but not the second metric
     metric.set_sync(&glean, "VALUE_AFTER_REENABLED");
     assert_eq!(
         "VALUE_AFTER_REENABLED",
@@ -899,7 +905,38 @@ fn test_set_metrics_disabled() {
         .get("label1")
         .set_sync(&glean, "VALUE_AFTER_REENABLED");
     assert_eq!(
-        "VALUE_AFTER_REENABLED",
+        "TEST_VALUE",
+        another_metric
+            .get("label1")
+            .get_value(&glean, "baseline")
+            .unwrap(),
+        "Should not set if metric config entry unchanged"
+    );
+
+    // 6. Set a new configuration where the second metric is enabled. This
+    // should be merged with the existing configuration and then both
+    // metrics should be enabled at that point.
+    metrics_enabled_config = json!(
+        {
+            "category.labeled_string_metric": true,
+        }
+    )
+    .to_string();
+    glean.set_metrics_enabled_config(
+        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
+    );
+
+    // 7. Now both metrics are enabled, setting a new value should work for
+    // both metrics with the merged configurations
+    metric.set_sync(&glean, "FINAL VALUE");
+    assert_eq!(
+        "FINAL VALUE",
+        metric.get_value(&glean, "baseline").unwrap(),
+        "Should set when still enabled"
+    );
+    another_metric.get("label1").set_sync(&glean, "FINAL VALUE");
+    assert_eq!(
+        "FINAL VALUE",
         another_metric
             .get("label1")
             .get_value(&glean, "baseline")

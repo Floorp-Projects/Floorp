@@ -19,8 +19,8 @@ use crate::storage::{StorageManager, INTERNAL_STORAGE};
 use crate::upload::{PingUploadManager, PingUploadTask, UploadResult, UploadTaskAction};
 use crate::util::{local_now_with_offset, sanitize_application_id};
 use crate::{
-    scheduler, system, CommonMetricData, ErrorKind, InternalConfiguration, Lifetime, Result,
-    DEFAULT_MAX_EVENTS, GLEAN_SCHEMA_VERSION, GLEAN_VERSION, KNOWN_CLIENT_ID,
+    scheduler, system, CommonMetricData, ErrorKind, InternalConfiguration, Lifetime, PingRateLimit,
+    Result, DEFAULT_MAX_EVENTS, GLEAN_SCHEMA_VERSION, GLEAN_VERSION, KNOWN_CLIENT_ID,
 };
 
 static GLEAN: OnceCell<Mutex<Glean>> = OnceCell::new();
@@ -113,6 +113,7 @@ where
 ///     use_core_mps: false,
 ///     trim_data_to_registered_pings: false,
 ///     log_level: None,
+///     rate_limit: None,
 /// };
 /// let mut glean = Glean::new(cfg).unwrap();
 /// let ping = PingType::new("sample", true, false, vec![]);
@@ -175,8 +176,13 @@ impl Glean {
 
         // Create an upload manager with rate limiting of 15 pings every 60 seconds.
         let mut upload_manager = PingUploadManager::new(&cfg.data_path, &cfg.language_binding_name);
+        let rate_limit = cfg.rate_limit.as_ref().unwrap_or(&PingRateLimit {
+            seconds_per_interval: 60,
+            pings_per_interval: 15,
+        });
         upload_manager.set_rate_limiter(
-            /* seconds per interval */ 60, /* max pings per interval */ 15,
+            rate_limit.seconds_per_interval,
+            rate_limit.pings_per_interval,
         );
 
         // We only scan the pending ping directories when calling this from a subprocess,
@@ -295,6 +301,7 @@ impl Glean {
             use_core_mps: false,
             trim_data_to_registered_pings: false,
             log_level: None,
+            rate_limit: None,
         };
 
         let mut glean = Self::new(cfg).unwrap();
@@ -714,8 +721,10 @@ impl Glean {
     pub fn set_metrics_enabled_config(&self, cfg: MetricsEnabledConfig) {
         // Set the current MetricsEnabledConfig, keeping the lock until the epoch is
         // updated to prevent against reading a "new" config but an "old" epoch
-        let mut lock = self.remote_settings_metrics_config.lock().unwrap();
-        *lock = cfg;
+        let mut metric_config = self.remote_settings_metrics_config.lock().unwrap();
+
+        // Merge the exising configuration with the supplied one
+        metric_config.metrics_enabled.extend(cfg.metrics_enabled);
 
         // Update remote_settings epoch
         self.remote_settings_epoch.fetch_add(1, Ordering::SeqCst);

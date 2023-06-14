@@ -14,9 +14,9 @@ use crate::CommonMetricData;
 use crate::Glean;
 
 // Maximum length of any list
-const MAX_LIST_LENGTH: usize = 20;
+const MAX_LIST_LENGTH: usize = 100;
 // Maximum length of any string in the list
-const MAX_STRING_LENGTH: usize = 50;
+const MAX_STRING_LENGTH: usize = 100;
 
 /// A string list metric.
 ///
