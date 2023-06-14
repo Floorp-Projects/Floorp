@@ -456,10 +456,6 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:GetPreferredLanguages": {
         return TranslationsParent.getPreferredLanguages();
       }
-      case "Translations:ClearLangTags": {
-        this.languageState.detectedLanguages = null;
-        return undefined;
-      }
       case "Translations:ReportLangTags": {
         const { documentElementLang, href } = data;
         const detectedLanguages = await this.getDetectedLanguages(
