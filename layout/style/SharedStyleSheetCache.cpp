@@ -90,7 +90,8 @@ void SharedStyleSheetCache::InsertIfNeeded(css::SheetLoadData& aData) {
 
   if (!aData.mURI) {
     LOG("  Inline or constructable style sheet, bailing");
-    // Inline sheet caching happens in Loader::mInlineSheets.
+    // Inline sheet caching happens in Loader::mInlineSheets, where we still
+    // have the input text available.
     // Constructable sheets are not worth caching, they're always unique.
     return;
   }
@@ -156,7 +157,6 @@ void SharedStyleSheetCache::LoadCompletedInternal(
         data->mLoader->InsertSheetInTree(*data->mSheet);
       }
       data->mSheet->SetComplete();
-      data->ScheduleLoadEventIfNeeded();
     } else if (data->mSheet->IsApplicable()) {
       if (dom::Document* doc = data->mLoader->GetDocument()) {
         // We post these events for devtools, even though the applicable state
@@ -164,7 +164,7 @@ void SharedStyleSheetCache::LoadCompletedInternal(
         doc->PostStyleSheetApplicableStateChangeEvent(*data->mSheet);
       }
     }
-
+    data->ScheduleLoadEventIfNeeded();
     aDatasToNotify.AppendElement(data);
 
     NS_ASSERTION(!data->mParentData || data->mParentData->mPendingChildren != 0,

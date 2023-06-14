@@ -40,7 +40,6 @@ static_assert(eAuthorSheetFeatures == 0 && eUserSheetFeatures == 1 &&
 class SheetLoadData final
     : public PreloaderBase,
       public SharedSubResourceCacheLoadingValueBase<SheetLoadData>,
-      public nsIRunnable,
       public nsIThreadObserver {
   using MediaMatched = dom::LinkStyle::MediaMatched;
   using IsAlternate = dom::LinkStyle::IsAlternate;
@@ -93,7 +92,6 @@ class SheetLoadData final
                                    nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
   NS_DECL_NSITHREADOBSERVER
 
   css::Loader& Loader() { return *mLoader; }
@@ -268,7 +266,7 @@ class SheetLoadData final
 
  private:
   const SheetLoadData& RootLoadData() const {
-    auto* top = this;
+    const auto* top = this;
     while (top->mParentData) {
       top = top->mParentData;
     }
@@ -287,7 +285,7 @@ using SheetLoadDataHolder = nsMainThreadPtrHolder<SheetLoadData>;
  * This method handles that.
  */
 inline nsISupports* ToSupports(mozilla::css::SheetLoadData* p) {
-  return NS_ISUPPORTS_CAST(nsIRunnable*, p);
+  return NS_ISUPPORTS_CAST(nsIThreadObserver*, p);
 }
 
 #endif  // mozilla_css_SheetLoadData_h
