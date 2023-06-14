@@ -11031,6 +11031,13 @@
   value: 8
   mirror: always
 
+# The interval of time in milliseconds between attempts to reopen any
+# previously unavailable audio device.
+- name: media.audio.device.retry.ms
+  type: RelaxedAtomicInt32
+  value: 1000
+  mirror: always
+
 # Time-stretch algorithm single processing sequence length in milliseconds.
 # This determines to how long sequences the original sound is chopped in the
 # time-stretch algorithm.
