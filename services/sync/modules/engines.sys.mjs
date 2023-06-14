@@ -17,6 +17,7 @@ import {
   ENGINE_DOWNLOAD_FAIL,
   ENGINE_UPLOAD_FAIL,
   VERSION_OUT_OF_DATE,
+  PREFS_BRANCH,
 } from "resource://services-sync/constants.sys.mjs";
 
 import {
@@ -646,7 +647,10 @@ EngineManager.prototype = {
   },
 
   persistDeclined() {
-    Svc.Prefs.set("declinedEngines", [...this._declined].join(","));
+    Svc.PrefBranch.setCharPref(
+      "declinedEngines",
+      [...this._declined].join(",")
+    );
   },
 
   /**
@@ -872,7 +876,11 @@ SyncEngine.prototype = {
   async initialize() {
     await this._toFetchStorage.load();
     await this._previousFailedStorage.load();
-    Svc.Prefs.observe(`engine.${this.prefName}`, this.asyncObserver);
+    Services.prefs.addObserver(
+      `${PREFS_BRANCH}engine.${this.prefName}`,
+      this.asyncObserver,
+      true
+    );
     this._log.debug("SyncEngine initialized", this.name);
   },
 
@@ -886,7 +894,7 @@ SyncEngine.prototype = {
 
   set enabled(val) {
     if (!!val != this._enabled) {
-      Svc.Prefs.set("engine." + this.prefName, !!val);
+      Svc.PrefBranch.setBoolPref("engine." + this.prefName, !!val);
     }
   },
 
@@ -995,8 +1003,8 @@ SyncEngine.prototype = {
       return existingSyncID;
     }
     this._log.debug("Engine syncIDs: " + [newSyncID, existingSyncID]);
-    Svc.Prefs.set(this.name + ".syncID", newSyncID);
-    Svc.Prefs.set(this.name + ".lastSync", "0");
+    Svc.PrefBranch.setStringPref(this.name + ".syncID", newSyncID);
+    Svc.PrefBranch.setCharPref(this.name + ".lastSync", "0");
     return newSyncID;
   },
 
@@ -1041,7 +1049,7 @@ SyncEngine.prototype = {
   },
   async setLastSync(lastSync) {
     // Store the value as a string to keep floating point precision
-    Svc.Prefs.set(this.name + ".lastSync", lastSync.toString());
+    Svc.PrefBranch.setCharPref(this.name + ".lastSync", lastSync.toString());
   },
   async resetLastSync() {
     this._log.debug("Resetting " + this.name + " last sync time");
@@ -2173,7 +2181,10 @@ SyncEngine.prototype = {
   },
 
   async finalize() {
-    Svc.Prefs.ignore(`engine.${this.prefName}`, this.asyncObserver);
+    Services.prefs.removeObserver(
+      `${PREFS_BRANCH}engine.${this.prefName}`,
+      this.asyncObserver
+    );
     await this.asyncObserver.promiseObserversComplete();
     await this._tracker.finalize();
     await this._toFetchStorage.finalize();

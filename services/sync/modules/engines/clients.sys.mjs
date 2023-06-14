@@ -148,10 +148,13 @@ ClientEngine.prototype = {
   },
 
   get lastRecordUpload() {
-    return Svc.Prefs.get(this.name + ".lastRecordUpload", 0);
+    return Svc.PrefBranch.getIntPref(this.name + ".lastRecordUpload", 0);
   },
   set lastRecordUpload(value) {
-    Svc.Prefs.set(this.name + ".lastRecordUpload", Math.floor(value));
+    Svc.PrefBranch.setIntPref(
+      this.name + ".lastRecordUpload",
+      Math.floor(value)
+    );
   },
 
   get remoteClients() {
@@ -672,7 +675,7 @@ ClientEngine.prototype = {
         this._lastDeviceCounts == null ||
         this._lastDeviceCounts.get(prefName) != count
       ) {
-        Svc.Prefs.set(prefName, count);
+        Svc.PrefBranch.setIntPref(prefName, count);
       }
     }
     this._lastDeviceCounts = deviceTypeCounts;
