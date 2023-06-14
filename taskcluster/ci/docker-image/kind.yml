@@ -56,6 +56,9 @@ jobs:
     ubuntu1804-test:
         symbol: I(ub18-test)
         parent: ubuntu1804-test-base
+    ubuntu1804-build-python:
+        symbol: I(ub18-build-python)
+        parent: ubuntu1804-base
     # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
     # packages dependencies.
     ubuntu2004-raw:
