@@ -677,6 +677,10 @@ pocketNewtab:
       # Defined under `pocketNewtab` as it needs to be used along with other variables
       type: int
       description: The maximum number of sponsored Top Sites to be displayed
+    topSitesContileMaxSponsored:
+      # Defined under `pocketNewtab` as it needs to be used along with other variables
+      type: int
+      description: The maximum number of sponsored Top Sites used from Contile
     topSitesContileSovEnabled:
       # Defined under `pocketNewtab` as it needs to be used along with other variables
       description: Enable the Share-of-Voice feature for Sponsored Topsites.
