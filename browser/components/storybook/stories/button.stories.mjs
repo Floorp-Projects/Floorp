@@ -7,6 +7,12 @@ import { classMap, html } from "lit.all.mjs";
 export default {
   title: "UI Widgets/Button",
   component: "button",
+  argTypes: {
+    size: {
+      options: ["default", "small"],
+      control: { type: "radio" },
+    },
+  },
   parameters: {
     status: "stable",
     fluent: `
@@ -14,6 +20,7 @@ button-regular = Regular
 button-primary = Primary
 button-disabled = Disabled
 button-danger = Danger
+button-small = Small
     `,
   },
 };
@@ -25,6 +32,7 @@ const Template = ({
   ghostButton,
   icon,
   dangerButton,
+  size,
 }) =>
   html`
     <style>
@@ -39,6 +47,7 @@ const Template = ({
         "ghost-button": ghostButton,
         "icon-button": icon,
         "danger-button": dangerButton,
+        "small-button": size === "small",
       })}
       data-l10n-id=${l10nId}
     ></button>
@@ -49,18 +58,21 @@ RegularButton.args = {
   l10nId: "button-regular",
   primary: false,
   disabled: false,
+  size: "default",
 };
 export const PrimaryButton = Template.bind({});
 PrimaryButton.args = {
   l10nId: "button-primary",
   primary: true,
   disabled: false,
+  size: "default",
 };
 export const DisabledButton = Template.bind({});
 DisabledButton.args = {
   l10nId: "button-disabled",
   primary: false,
   disabled: true,
+  size: "default",
 };
 
 export const DangerButton = Template.bind({});
@@ -69,6 +81,7 @@ DangerButton.args = {
   primary: true,
   disabled: false,
   dangerButton: true,
+  size: "default",
 };
 
 export const GhostIconButton = Template.bind({});
@@ -76,4 +89,12 @@ GhostIconButton.args = {
   icon: "chrome://browser/skin/login.svg",
   disabled: false,
   ghostButton: true,
+  size: "default",
+};
+export const SmallButton = Template.bind({});
+SmallButton.args = {
+  l10nId: "button-small",
+  primary: true,
+  disabled: false,
+  size: "small",
 };
