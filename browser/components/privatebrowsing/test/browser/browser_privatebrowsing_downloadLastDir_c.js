@@ -19,7 +19,7 @@ function test() {
 
   let validateFileNameToRestore = validateFileName;
   let prefs = Services.prefs.getBranch("browser.download.");
-  let tmpDir = FileUtils.getDir("TmpD", [], true);
+  let tmpDir = FileUtils.getDir("TmpD", []);
   let dir1 = newDirectory();
   let dir2 = newDirectory();
   let dir3 = newDirectory();

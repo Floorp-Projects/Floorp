@@ -4,7 +4,7 @@
  * on how it behaves when private browsing windows open.
  */
 add_task(async function test_downloads_last_dir_toggle() {
-  let tmpDir = FileUtils.getDir("TmpD", [], true);
+  let tmpDir = FileUtils.getDir("TmpD", []);
   let dir1 = newDirectory();
 
   registerCleanupFunction(function () {

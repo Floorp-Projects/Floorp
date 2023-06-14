@@ -46,7 +46,8 @@ Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
 const SYSTEM_ADDON_ID = "system1@tests.mozilla.org";
 add_task(async function setupSystemAddon() {
-  const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
+  const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"]);
+  distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   AddonTestUtils.registerDirectory("XREAppFeat", distroDir);
 
   let xpi = await AddonTestUtils.createTempWebExtensionFile({
