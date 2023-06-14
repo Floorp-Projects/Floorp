@@ -12,7 +12,7 @@ rust-ini = "0.10"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 uuid = { version = "1.0", features = ["v4"] }
-winapi = "0.3"
+winapi = { version = "0.3", features = ["basetsd", "combaseapi", "handleapi", "impl-default", "knownfolders", "memoryapi", "minwinbase", "minwindef", "ntdef", "ntstatus", "processthreadsapi", "psapi", "shlobj", "synchapi", "winbase", "winerror"] }
 
 [lib]
 name = "mozwer_s"
