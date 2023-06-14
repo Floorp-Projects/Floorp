@@ -34,10 +34,6 @@ if [ "x$MOZ_LIBWEBRTC_BRANCH" = "x" ]; then
   exit
 fi
 
-if [ "x$HANDLE_NOOP_COMMIT" = "x" ]; then
-  HANDLE_NOOP_COMMIT=""
-fi
-
 RESUME=""
 if [ -f $STATE_DIR/resume_state ]; then
   RESUME=`tail -1 $STATE_DIR/resume_state`
@@ -72,20 +68,6 @@ fi
 find_base_commit
 find_next_commit
 
-echo "looking for $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg"
-if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
-  echo "***"
-  echo "*** detected special commit msg, setting HANDLE_NOOP_COMMIT"
-  echo "***"
-  HANDLE_NOOP_COMMIT="1"
-fi
-
-UPSTREAM_ADDED_FILES=""
-
-# Grab the filtered changes from git based on what we vendor.
-FILTERED_GIT_CHANGES=`./mach python $SCRIPT_DIR/filter_git_changes.py \
-   --repo-path $MOZ_LIBWEBRTC_SRC --commit-sha $MOZ_LIBWEBRTC_NEXT_BASE`
-
 # After this point:
 # * eE: All commands should succeed.
 # * u: All variables should be defined before use.
@@ -94,7 +76,6 @@ set -eEuo pipefail
 
 echo "     MOZ_LIBWEBRTC_BASE: $MOZ_LIBWEBRTC_BASE"
 echo "MOZ_LIBWEBRTC_NEXT_BASE: $MOZ_LIBWEBRTC_NEXT_BASE"
-echo "HANDLE_NOOP_COMMIT: $HANDLE_NOOP_COMMIT"
 echo " RESUME: $RESUME"
 echo "SKIP_TO: $SKIP_TO"
 
@@ -117,7 +98,6 @@ jump to the github repo at $MOZ_LIBWEBRTC_SRC .
 When the github rebase is complete, re-run the script to resume the
 fast-forward process.
 "
-#"rebase_mozlibwebrtc_stack help for rebase failure"
 function rebase_mozlibwebrtc_stack {
   echo "-------"
   echo "------- Rebase $MOZ_LIBWEBRTC_BRANCH to $MOZ_LIBWEBRTC_NEXT_BASE"
@@ -131,72 +111,23 @@ function rebase_mozlibwebrtc_stack {
   ERROR_HELP=""
 }
 
-function vendor_off_next_commit {
+function write_commit_message_file {
   echo "-------"
-  echo "------- Vendor $MOZ_LIBWEBRTC_BRANCH from $MOZ_LIBWEBRTC_SRC"
+  echo "------- Write commit message file ($TMP_DIR/commit_msg.txt)"
   echo "-------"
-  ./mach python $SCRIPT_DIR/vendor-libwebrtc.py \
-            --from-local $MOZ_LIBWEBRTC_SRC \
-            --commit $MOZ_LIBWEBRTC_BRANCH \
-            libwebrtc
-}
-
-# The vendoring script (called above in vendor_off_next_commit) replaces
-# the entire third_party/libwebrtc directory, which effectively removes
-# all the generated moz.build files.  It is easier (less error prone),
-# to revert only those missing moz.build files rather than attempt to
-# rebuild them because the rebuild may need json updates to work properly.
-function regen_mozbuild_files {
-  echo "-------"
-  echo "------- Restore moz.build files from repo"
-  echo "-------"
-  hg revert --include "third_party/libwebrtc/**moz.build" \
-    third_party/libwebrtc &> $LOG_DIR/log-regen-mozbuild-files.txt
-}
-
-function add_new_upstream_files {
-  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
-    return
+  UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
+      git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
+      | grep "^commit " | awk '{ print $NF }'`
+  echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
+      > $TMP_DIR/commit_msg.txt
+  echo "" >> $TMP_DIR/commit_msg.txt
+  if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
+    cat $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> $TMP_DIR/commit_msg.txt
+    echo "" >> $TMP_DIR/commit_msg.txt
   fi
-  UPSTREAM_ADDED_FILES=`echo "$FILTERED_GIT_CHANGES" | grep "^A" \
-      | awk '{print $2;}' || true`
-  if [ "x$UPSTREAM_ADDED_FILES" != "x" ]; then
-    echo "-------"
-    echo "------- Add new upstream files"
-    echo "-------"
-    (cd third_party/libwebrtc && hg add $UPSTREAM_ADDED_FILES)
-    echo "$UPSTREAM_ADDED_FILES" &> $LOG_DIR/log-new-upstream-files.txt
-  fi
-}
-
-function remove_deleted_upstream_files {
-  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
-    return
-  fi
-  UPSTREAM_DELETED_FILES=`echo "$FILTERED_GIT_CHANGES" | grep "^D" \
-      | awk '{print $2;}' || true`
-  if [ "x$UPSTREAM_DELETED_FILES" != "x" ]; then
-    echo "-------"
-    echo "------- Remove deleted upstream files"
-    echo "-------"
-    (cd third_party/libwebrtc && hg rm $UPSTREAM_DELETED_FILES)
-    echo "$UPSTREAM_DELETED_FILES" &> $LOG_DIR/log-deleted-upstream-files.txt
-  fi
-}
-
-function handle_renamed_upstream_files {
-  if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
-    return
-  fi
-  UPSTREAM_RENAMED_FILES=`echo "$FILTERED_GIT_CHANGES" | grep "^R" \
-      | awk '{print $2 " " $3;}' || true`
-  if [ "x$UPSTREAM_RENAMED_FILES" != "x" ]; then
-    echo "-------"
-    echo "------- Handle renamed upstream files"
-    echo "-------"
-    (cd third_party/libwebrtc && echo "$UPSTREAM_RENAMED_FILES" | while read line; do hg rename --after $line; done)
-    echo "$UPSTREAM_RENAMED_FILES" &> $LOG_DIR/log-renamed-upstream-files.txt
-  fi
+  echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> $TMP_DIR/commit_msg.txt
+  (cd $MOZ_LIBWEBRTC_SRC && \
+  git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> $TMP_DIR/commit_msg.txt
 }
 
 if [ $SKIP_TO = "run" ]; then
@@ -207,50 +138,22 @@ fi
 if [ $SKIP_TO = "resume2" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
   echo "resume3" > $STATE_DIR/resume_state
-  vendor_off_next_commit;
+  write_commit_message_file;
 fi
 
 if [ $SKIP_TO = "resume3" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume4" > $STATE_DIR/resume_state
-  regen_mozbuild_files;
-fi
-
-if [ $SKIP_TO = "resume4" ]; then SKIP_TO="run"; fi
-if [ $SKIP_TO = "run" ]; then
-  echo "resume5" > $STATE_DIR/resume_state
-  remove_deleted_upstream_files;
-fi
-
-if [ $SKIP_TO = "resume5" ]; then SKIP_TO="run"; fi
-if [ $SKIP_TO = "run" ]; then
-  echo "resume6" > $STATE_DIR/resume_state
-  add_new_upstream_files;
-fi
-
-if [ $SKIP_TO = "resume6" ]; then SKIP_TO="run"; fi
-if [ $SKIP_TO = "run" ]; then
-  echo "resume7" > $STATE_DIR/resume_state
-  handle_renamed_upstream_files;
+  ./mach python dom/media/webrtc/third_party_build/vendor_and_commit.py \
+      --repo-path $MOZ_LIBWEBRTC_SRC \
+      --script-path $SCRIPT_DIR \
+      --commit-msg-path $TMP_DIR/commit_msg.txt \
+      --commit-sha $MOZ_LIBWEBRTC_NEXT_BASE
 fi
 
 echo "" > $STATE_DIR/resume_state
-echo "-------"
-echo "------- Commit vendored changes from $MOZ_LIBWEBRTC_NEXT_BASE"
-echo "-------"
-UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
-    git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
-    | grep "^commit " | awk '{ print $NF }'`
-echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
-    > $TMP_DIR/commit_msg.txt
-echo "" >> $TMP_DIR/commit_msg.txt
+
+# now that we've committed the vendored code, we can delete the
+# no-op commit tracking file if it exists.
 if [ -f $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg ]; then
-  cat $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg >> $TMP_DIR/commit_msg.txt
-  echo "" >> $TMP_DIR/commit_msg.txt
   rm $STATE_DIR/$MOZ_LIBWEBRTC_NEXT_BASE.no-op-cherry-pick-msg
 fi
-echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> $TMP_DIR/commit_msg.txt
-(cd $MOZ_LIBWEBRTC_SRC && \
-git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> $TMP_DIR/commit_msg.txt
-
-hg commit -l $TMP_DIR/commit_msg.txt third_party/libwebrtc
