@@ -403,6 +403,7 @@ class IMEContentObserver final : public nsStubMutationObserver,
    */
   class DocumentObserver final : public nsStubDocumentObserver {
    public:
+    DocumentObserver() = delete;
     explicit DocumentObserver(IMEContentObserver& aIMEContentObserver)
         : mIMEContentObserver(&aIMEContentObserver), mDocumentUpdating(0) {
       SetEnabledCallbacks(nsIMutationObserver::kBeginUpdate |
@@ -423,7 +424,6 @@ class IMEContentObserver final : public nsStubMutationObserver,
     bool IsUpdating() const { return mDocumentUpdating != 0; }
 
    private:
-    DocumentObserver() = delete;
     virtual ~DocumentObserver() { Destroy(); }
 
     RefPtr<IMEContentObserver> mIMEContentObserver;

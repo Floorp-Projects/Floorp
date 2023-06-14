@@ -909,11 +909,11 @@ RawRangeBoundary TextComposition::LastIMESelectionEndRef() const {
  ******************************************************************************/
 
 TextComposition::CompositionEventDispatcher::CompositionEventDispatcher(
-    TextComposition* aComposition, nsINode* aEventTarget,
+    TextComposition* aTextComposition, nsINode* aEventTarget,
     EventMessage aEventMessage, const nsAString& aData,
     bool aIsSynthesizedEvent)
     : Runnable("TextComposition::CompositionEventDispatcher"),
-      mTextComposition(aComposition),
+      mTextComposition(aTextComposition),
       mEventTarget(aEventTarget),
       mData(aData),
       mEventMessage(aEventMessage),

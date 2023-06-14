@@ -37,12 +37,12 @@ class Selection;
  */
 
 class IMEStateManager {
-  typedef dom::BrowserParent BrowserParent;
-  typedef widget::IMEMessage IMEMessage;
-  typedef widget::IMENotification IMENotification;
-  typedef widget::IMEState IMEState;
-  typedef widget::InputContext InputContext;
-  typedef widget::InputContextAction InputContextAction;
+  using BrowserParent = dom::BrowserParent;
+  using IMEMessage = widget::IMEMessage;
+  using IMENotification = widget::IMENotification;
+  using IMEState = widget::IMEState;
+  using InputContext = widget::InputContext;
+  using InputContextAction = widget::InputContextAction;
 
  public:
   static void Init();
