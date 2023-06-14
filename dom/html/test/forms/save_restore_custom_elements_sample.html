@@ -1,0 +1,43 @@
+<script>
+  class CEBase extends HTMLElement {
+    static formAssociated = true;
+    constructor() {
+      super();
+      this.internals = this.attachInternals();
+      this.state_ = undefined;
+    }
+    formStateRestoreCallback(state, reason) {
+      if (reason == "restore") {
+        this.state_ = state;
+      }
+    }
+    set(state, value) {
+      this.state_ = state;
+      this.value_ = value;
+      this.internals.setFormValue(value, state);
+    }
+    get state() {
+      return this.state_;
+    }
+    get value() {
+      return this.value_;
+    }
+  }
+
+  customElements.define("c-e", class extends CEBase {});
+</script>
+<form>
+  <c-e id="custom0"></c-e>
+  <c-e id="custom1"></c-e>
+  <c-e id="custom2"></c-e>
+  <c-e id="custom3"></c-e>
+  <c-e id="custom4"></c-e>
+  <upgraded-ce id="upgraded0"></upgraded-ce>
+  <upgraded-ce id="upgraded1"></upgraded-ce>
+  <upgraded-ce id="upgraded2"></upgraded-ce>
+  <upgraded-ce id="upgraded3"></upgraded-ce>
+  <upgraded-ce id="upgraded4"></upgraded-ce>
+</form>
+<script>
+  customElements.define("upgraded-ce", class extends CEBase {});
+</script>
