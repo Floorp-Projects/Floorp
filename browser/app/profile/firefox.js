@@ -938,8 +938,6 @@ pref("dom.disable_window_flip",                   true);
 
 pref("privacy.popups.showBrowserMessage",   true);
 
-pref("privacy.item.cookies",                false);
-
 pref("privacy.clearOnShutdown.history",     true);
 pref("privacy.clearOnShutdown.formdata",    true);
 pref("privacy.clearOnShutdown.downloads",   true);
