@@ -47,7 +47,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FxAccountsKeys: "resource://gre/modules/FxAccountsKeys.sys.mjs",
   FxAccountsProfile: "resource://gre/modules/FxAccountsProfile.sys.mjs",
   FxAccountsTelemetry: "resource://gre/modules/FxAccountsTelemetry.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
@@ -931,7 +930,9 @@ FxAccountsInternal.prototype = {
     if (!lazy.FXA_ENABLED) {
       throw new Error("Cannot call setSignedInUser when FxA is disabled.");
     }
-    lazy.Preferences.resetBranch(PREF_ACCOUNT_ROOT);
+    for (const pref of Services.prefs.getChildList(PREF_ACCOUNT_ROOT)) {
+      Services.prefs.clearUserPref(pref);
+    }
     log.debug("setSignedInUser - aborting any existing flows");
     const signedInUser = await this.currentAccountState.getUserAccountData();
     if (signedInUser) {
@@ -1070,7 +1071,9 @@ FxAccountsInternal.prototype = {
   },
 
   async _signOutLocal() {
-    lazy.Preferences.resetBranch(PREF_ACCOUNT_ROOT);
+    for (const pref of Services.prefs.getChildList(PREF_ACCOUNT_ROOT)) {
+      Services.prefs.clearUserPref(pref);
+    }
     await this.currentAccountState.signOut();
     // this "aborts" this.currentAccountState but doesn't make a new one.
     await this.abortExistingFlow();
