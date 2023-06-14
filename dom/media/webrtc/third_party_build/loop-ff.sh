@@ -71,9 +71,10 @@ rm -f $LOOP_OUTPUT_LOG
 hg revert -C third_party/libwebrtc/README.moz-ff-commit &> /dev/null
 
 # check for a resume situation from fast-forward-libwebrtc.sh
+RESUME_FILE=$STATE_DIR/fast_forward.resume
 RESUME=""
-if [ -f $STATE_DIR/resume_state ]; then
-  RESUME=`tail -1 $STATE_DIR/resume_state`
+if [ -f $RESUME_FILE ]; then
+  RESUME=`tail -1 $RESUME_FILE`
 fi
 
 # check for the situation where we've encountered an error when running

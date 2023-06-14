@@ -34,9 +34,10 @@ if [ "x$MOZ_LIBWEBRTC_BRANCH" = "x" ]; then
   exit
 fi
 
+RESUME_FILE=$STATE_DIR/fast_forward.resume
 RESUME=""
-if [ -f $STATE_DIR/resume_state ]; then
-  RESUME=`tail -1 $STATE_DIR/resume_state`
+if [ -f $RESUME_FILE ]; then
+  RESUME=`tail -1 $RESUME_FILE`
 fi
 
 GIT_IS_REBASING=`cd $MOZ_LIBWEBRTC_SRC && git status | grep "interactive rebase in progress" | wc -l | tr -d " " || true`
@@ -130,13 +131,13 @@ function write_commit_message_file {
 }
 
 if [ $SKIP_TO = "run" ]; then
-  echo "resume2" > $STATE_DIR/resume_state
+  echo "resume2" > $RESUME_FILE
   rebase_mozlibwebrtc_stack;
 fi
 
 if [ $SKIP_TO = "resume2" ]; then SKIP_TO="run"; fi
 if [ $SKIP_TO = "run" ]; then
-  echo "resume3" > $STATE_DIR/resume_state
+  echo "resume3" > $RESUME_FILE
   write_commit_message_file;
 fi
 
@@ -149,7 +150,7 @@ if [ $SKIP_TO = "run" ]; then
       --commit-sha $MOZ_LIBWEBRTC_NEXT_BASE
 fi
 
-echo "" > $STATE_DIR/resume_state
+echo "" > $RESUME_FILE
 
 # now that we've committed the vendored code, we can delete the
 # no-op commit tracking file if it exists.
