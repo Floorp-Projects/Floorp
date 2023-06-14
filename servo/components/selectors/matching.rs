@@ -734,25 +734,18 @@ where
             ref value,
             operator,
             case_sensitivity,
-            never_matches,
         } => {
-            if never_matches {
-                return false;
-            }
             element.attr_matches(
                 &NamespaceConstraint::Specific(&crate::parser::namespace_empty_string::<E::Impl>()),
                 local_name,
                 &AttrSelectorOperation::WithValue {
                     operator,
                     case_sensitivity: to_unconditional_case_sensitivity(case_sensitivity, element),
-                    expected_value: value,
+                    value,
                 },
             )
         },
         Component::AttributeOther(ref attr_sel) => {
-            if attr_sel.never_matches {
-                return false;
-            }
             let empty_string;
             let namespace = match attr_sel.namespace() {
                 Some(ns) => ns,
@@ -769,14 +762,14 @@ where
                     ParsedAttrSelectorOperation::WithValue {
                         operator,
                         case_sensitivity,
-                        ref expected_value,
+                        ref value,
                     } => AttrSelectorOperation::WithValue {
                         operator,
                         case_sensitivity: to_unconditional_case_sensitivity(
                             case_sensitivity,
                             element,
                         ),
-                        expected_value,
+                        value,
                     },
                 },
             )
