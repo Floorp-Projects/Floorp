@@ -21,13 +21,6 @@ add_heuristic_tests(
             { fieldName: "cc-exp-year", reason: "regex-heuristic" },
           ],
         },
-        {
-          // Tmporarily: This should be removed in Bug 1821019
-          invalid: true,
-          fields: [
-            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
-          ],
-        },
       ],
     },
   ],

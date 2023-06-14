@@ -238,15 +238,23 @@ export class FormAutofillHandler {
     const sections = lazy.FormAutofillHeuristics.getFormInfo(this.form);
     const allValidDetails = [];
     for (const section of sections) {
+      // We don't support csc field, so remove csc fields from section
+      const fieldDetails = section.fieldDetails.filter(
+        f => !["cc-csc"].includes(f.fieldName)
+      );
+      if (!fieldDetails.length) {
+        continue;
+      }
+
       let autofillableSection;
       if (section.type == lazy.FormSection.ADDRESS) {
         autofillableSection = new lazy.FormAutofillAddressSection(
-          section,
+          fieldDetails,
           this
         );
       } else {
         autofillableSection = new lazy.FormAutofillCreditCardSection(
-          section,
+          fieldDetails,
           this
         );
       }

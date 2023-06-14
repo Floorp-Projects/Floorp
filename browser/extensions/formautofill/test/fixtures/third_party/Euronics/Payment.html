@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<form autocomplete="on" method="POST" action="https://www.euronics.it/on/demandware.store/Sites-euronics-Site/it_IT/CheckoutServices-SubmitPayment" data-address-mode="edit" name="dwfrm_billing" id="dwfrm_billing" novalidate="">
+  <fieldset class="contact-info-block">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="form-group d-none required dwfrm_billing_contactInfoFields_phone is-completed"></div>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset>
+    <div class="form-nav billing-nav payment-information" data-payment-method-id="CREDIT_CARD" data-is-new-payment="true">
+      <ul class="nav nav-tabs nav-fill payment-options" role="tablist">
+        <div class="tabs-title">
+          <h5 class="font-bold" id="payment-form">Metodi di pagamento</h5>
+          <hr class="ml-0">
+        </div>
+        <li class="nav-item" data-method-id="CREDIT_CARD">
+          <a class="nav-link credit-card-tab active" data-toggle="tab" href="#credit-card-content" role="tab">
+          <strong class="d-inline-block">
+          <span class="font-bold align-middle ">Carta di credito / debito </span>
+          <img class="card-payment-images ml-3"  alt="american express" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dw22bfa1f1/images/payments/american_express.png">
+          <img class="card-payment-images ml-3" alt="mastercard" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dw49e689fb/images/payments/mastercard.png">
+          <img class="card-payment-images ml-3" alt="visa" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dw8d5e2c11/images/payments/visa.png">
+          </strong>
+          </a>
+        </li>
+        <div class="tab-pane active credit-card-content" id="credit-card-content" role="tabpanel">
+          <fieldset class="payment-form-fields">
+            <input type="hidden" class="form-control" name="dwfrm_billing_paymentMethod" value="CREDIT_CARD" checked="checked">
+            <fieldset class="credit-card-form ">
+              <input type="hidden" class="form-control" id="cardType" name="dwfrm_billing_creditCardFields_cardType" value="">
+              <div class="row mt-3">
+                <div class="col-lg-6 col-sm 6 col-12">
+                  <div class="form-group mat-div required dwfrm_billing_creditCardFields_cardNumber is-completed">
+                    <label class="form-control-label mat-label" for="cardNumber">Numero di carta*</label>
+                    <div class="card-number-wrapper">
+                      <input type="text" class="form-control cardNumber mat-input bg-transparent" id="cardNumber" value="" name="dwfrm_billing_creditCardFields_cardNumber" required="" aria-required="true" maxlength="20" autocomplete="cc-number">
+                      <div class="invalid-feedback"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-4 col-lg-4 offset-lg-2 offset-sm-2 col-12">
+                  <div class="form-group mat-div required dwfrm_billing_creditCardFields_securityCode">
+                    <label class="form-control-label mat-label" for="securityCode">Codice di sicurezza</label>
+                    <div class="info-tooltip">
+                      <span aria-label="Inserisci il codice di sicurezza (CVV) presente sul retro della carta." data-microtip-position="top-left" role="tooltip">
+                      <i class="icon-info-1 text-warning"></i>
+                      </span>
+                    </div>
+                    <input type="text" class="form-control securityCode mat-input" id="securityCode" name="dwfrm_billing_creditCardFields_securityCode" required="" aria-required="true" value="" maxlength="4">
+                    <div class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-6 col-sm-6 col-12">
+                  <div class="form-group mat-div is-completed required dwfrm_billing_creditCardFields_expirationMonth">
+                    <label class="form-control-label mat-label" for="expirationMonth">Mese di scadenza</label>
+                    <select class="form-control expirationMonth custom-select" id="expirationMonth" name="dwfrm_billing_creditCardFields_expirationMonth" required="" aria-required="true" autocomplete="cc-exp-month">
+                      <option id="" value="">
+                        mese
+                      </option>
+                      <option id="01" value="1">
+                        01
+                      </option>
+                      <option id="02" value="2">
+                        02
+                      </option>
+                      <option id="03" value="3">
+                        03
+                      </option>
+                      <option id="04" value="4">
+                        04
+                      </option>
+                      <option id="05" value="5">
+                        05
+                      </option>
+                      <option id="06" value="6">
+                        06
+                      </option>
+                      <option id="07" value="7">
+                        07
+                      </option>
+                      <option id="08" value="8">
+                        08
+                      </option>
+                      <option id="09" value="9">
+                        09
+                      </option>
+                      <option id="10" value="10">
+                        10
+                      </option>
+                      <option id="11" value="11">
+                        11
+                      </option>
+                      <option id="12" value="12">
+                        12
+                      </option>
+                    </select>
+                    <div class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-lg-6 col-sm-6 col-12">
+                  <div class="form-group mat-div is-completed required dwfrm_billing_creditCardFields_expirationYear">
+                    <label class="form-control-label mat-label" for="expirationYear">Anno di scadenza</label>
+                    <select class="form-control expirationYear custom-select" id="expirationYear" name="dwfrm_billing_creditCardFields_expirationYear" required="" aria-required="true" autocomplete="cc-exp-year">
+                      <option value="">anno</option>
+                      <option id="2023" value="2023">
+                        2023
+                      </option>
+                      <option id="2024" value="2024">
+                        2024
+                      </option>
+                      <option id="2025" value="2025">
+                        2025
+                      </option>
+                      <option id="2026" value="2026">
+                        2026
+                      </option>
+                      <option id="2027" value="2027">
+                        2027
+                      </option>
+                      <option id="2028" value="2028">
+                        2028
+                      </option>
+                      <option id="2029" value="2029">
+                        2029
+                      </option>
+                      <option id="2030" value="2030">
+                        2030
+                      </option>
+                      <option id="2031" value="2031">
+                        2031
+                      </option>
+                      <option id="2032" value="2032">
+                        2032
+                      </option>
+                    </select>
+                    <div class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-lg-6 col-sm-6 col-12" hidden="hidden">
+                  <div class="form-group mat-div dwfrm_billing_creditCardFields_email is-completed">
+                    <label class="form-control-label mat-label" for="email">E-mail</label>
+                    <div class="info-tooltip">
+                      <span aria-label="Inserisci un indirizzo e-mail valido." data-microtip-position="top-left" role="tooltip">
+                      <i class="icon-info-1 text-warning"></i>
+                      </span>
+                    </div>
+                    <input type="text" class="form-control email mat-input" id="email" value="" name="dwfrm_billing_creditCardFields_email" maxlength="254">
+                    <div class="invalid-feedback"></div>
+                  </div>
+                </div>
+                <div class="col-lg-6 col-sm-6 col-12" hidden="hidden">
+                  <div class="is-active form-group mat-div dwfrm_billing_creditCardFields_phone is-completed">
+                    <label class="form-control-label mat-label" for="phoneNumber">Numero di telefono</label>
+                    <div class="info-tooltip">
+                      <span aria-label="Numero di telefono associato a questa carta di credito." data-microtip-position="top-left" role="tooltip">
+                      <i class="icon-info-1 text-warning">
+                      </i>
+                      </span>
+                    </div>
+                    <input type="tel" class="form-control phone mat-input" id="phoneNumber" value="" name="dwfrm_billing_creditCardFields_phone" maxlength="20">
+                    <div class="invalid-feedback"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col"></div>
+              </div>
+            </fieldset>
+          </fieldset>
+        </div>
+        <li class="nav-item">
+          <a class="nav-link PayPal test" data-toggle="tab" href="#PayPal" role="tab" data-method-id="PayPal">
+          <span class="d-flex text-features align-items-center">
+          <img class="payment-images paypal" alt="paypal" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dw2b93be57/images/payments/paypal.png">
+          </span>
+          </a>
+        </li>
+        <div class="tab-pane PayPal" id="PayPal" role="tabpanel">
+          <fieldset class="payment-form-fields">
+            <input type="hidden" class="form-control" name="dwfrm_billing_paymentMethod" value="PayPal">
+          </fieldset>
+        </div>
+        <li class="nav-item" data-method-id="BONIFICO">
+          <a class="nav-link bonifico-tab" data-toggle="tab" href="#bonifico-content" role="tab">
+          Bonifico
+          </a>
+        </li>
+        <div class="tab-pane bonifico-content" id="bonifico-content" role="tabpanel">
+          <fieldset class="payment-form-fields">
+            <input type="hidden" class="form-control" name="dwfrm_billing_paymentMethod" value="BONIFICO">
+          </fieldset>
+        </div>
+        <li class="nav-item">
+          <a class="nav-link KLARNA test" data-toggle="tab" href="#KLARNA" role="tab" data-method-id="KLARNA">
+          <span class="d-flex text-features align-items-center">
+          <span>Pagamento a rate con</span>
+          <img class="payment-images klarna ml-3" alt="KLARNA" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dw678dbb52/images/payments/logo-klarna.svg">
+          </span>
+          </a>
+        </li>
+        <div class="tab-pane KLARNA" id="KLARNA" role="tabpanel">
+          <fieldset class="payment-form-fields">
+            <input type="hidden" class="form-control" name="dwfrm_billing_paymentMethod" value="KLARNA">
+          </fieldset>
+        </div>
+        <li class="nav-item" data-method-id="AGOS">
+          <a class="nav-link agos-tab" data-toggle="tab" href="#agos-content" role="tab">
+            <div class="d-none">
+              Agos
+            </div>
+            <span class="d-flex text-features">
+            Pagamento a rate con
+            <img class="payment-images ml-3" alt="agos" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dwd7bbbf32/images/payments/agos.png">
+            </span>
+          </a>
+        </li>
+        <div class="tab-pane agos-content" id="agos-content" role="tabpanel">
+          <fieldset class="payment-form-fields">
+            <input type="hidden" class="form-control" name="dwfrm_billing_paymentMethod" value="AGOS">
+          </fieldset>
+        </div>
+        <li class="nav-item" data-method-id="FINDOMESTIC">
+          <a class="nav-link findomestic-tab" data-toggle="tab" href="#findomestic-content" role="tab">
+            <div class="d-none">
+              Findomestic
+            </div>
+            <span class="d-flex flex-column">
+              <div class="d-flex text-features mt-1">
+                Pagamento a rate con
+                <img class="payment-images ml-3" alt="findomestic" data-original-src="https://www.euronics.it/on/demandware.static/Sites-euronics-Site/-/default/dw64609921/images/payments/findomestic.png">
+              </div>
+              <span class="payment-tab-description">Messaggio pubblicitario con finalità promozionale. Per tutte le condizioni economiche e contrattuali, fare riferimento alle Informazioni Europee di Base sul Credito ai Consumatori (IEBCC) nel percorso online. Salvo approvazione di Findomestic Banca S.p.A. per cui il partner opera quale intermediario del credito non in esclusiva. </span>
+            </span>
+          </a>
+        </li>
+        <div class="tab-pane findomestic-content" id="findomestic-content" role="tabpanel">
+          <fieldset class="payment-form-fields">
+            <input type="hidden" class="form-control" name="dwfrm_billing_paymentMethod" value="FINDOMESTIC">
+          </fieldset>
+        </div>
+        <fieldset>
+          <div class="row GiftCardSection">
+            <div id="cardEnable" data-url="/on/demandware.store/Sites-euronics-Site/it_IT/CheckoutServices-EnableCard" class="d-none"></div>
+            <div id="giftCardData" action-url-remove="/on/demandware.store/Sites-euronics-Site/it_IT/GiftCard-Remove" class="d-none" data-giftcard="false" data-object="{}"></div>
+            <div class="col-sm-12 d-flex flex-column mt-3">
+              <p class="body-large text-secondary">Giftcard</p>
+              <p class="body-small text-secondary gcdescription payment-description">Puoi usare le Gift Card online per un massimo di 999,99€. <br> <strong>Questo metodo di pagamento è compatibile soltanto con Carta di credito/debito e bonifico</strong></p>
+              <p class="body-small text-features font-bold gcdescriptiondisabled payment-description d-none">*La Gift Card non è compatibile con la modalità di pagamento selezionata. Se vuoi utilizzare una Gift Card devi selezionare Carta di credito / debito o Bonifico.</p>
+            </div>
+            <div class="col-12">
+              <div class="giftcard-list"></div>
+            </div>
+            <div class="gcForm col-lg-5 col-sm-6 col-12">
+              <div class="form-group mat-div dwfrm_billing_giftCardFields_pan">
+                <label class="form-control-label mat-label" for="pan">PAN</label>
+                <input type="text" id="gcprimaryinput" class="form-control pan mat-input" value="" name="dwfrm_billing_giftCardFields_pan" maxlength="19" minlength="19">
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="gcForm col-lg-3 col-sm-4 col-12">
+              <div class="form-group mat-div dwfrm_billing_giftCardFields_pin">
+                <label class="form-control-label mat-label" for="pin">PIN</label>
+                <input type="text" id="gcsecondinput" class="form-control pin mat-input" value="" name="dwfrm_billing_giftCardFields_pin" maxlength="3" minlength="3">
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+            <div class="gcFormCTA col-lg-4 col-sm-6 col-12 aling-items-center pb-5 pt-3">
+              <button type="button" class="btn-eur-outline-sm blue mw-100 giftcardCTA" data-url-action="/on/demandware.store/Sites-euronics-Site/it_IT/GiftCard-Apply" data-label-show-details="Dettagli" data-label-hide-details="Meno dettagli" data-label-remain="Saldo" data-label-value="Valore" daat-label-remove="Rimuovi">
+                <span class="body-small">CONFERMA GIFT CARD </span><i class="icon-freccia-dx ml-2"></i>
+                <div class="lds-ring ml-2">
+                  <div class="border-primary"></div>
+                  <div class="border-primary"></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </button>
+            </div>
+            <div class="addGcCTA d-none col-12 aling-items-center pb-5 pt-3">
+              <button type="button" class="btn-eur-outline-sm blue mw-100 ml-lg-auto"><span class="body-small">AGGIUNGI GIFT CARD </span><i class="icon-freccia-dx ml-2"></i></button>
+            </div>
+            <div class="col-12">
+              <hr>
+            </div>
+          </div>
+          <div class="modal fade cpgcmodal" id="completePaymentGifcartModal" tabindex="-1" role="dialog" aria-labelledby="completePaymentGifcartModal">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header border-0 px-0">
+                  <h5 class="text-primary modal-title text-center">Seleziona una modalità di pagamento o aggiungi un’altra gift card per finalizzare il tuo ordine</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+                <div class="modal-body border-0 px-0 delete-confirmation-body">
+                  <p class="body-large text-center">Ti ricordiamo che le Gift card sono compatibili solo con carta di credito o bonifico</p>
+                </div>
+                <div class="modal-footer d-flex justify-content-center border-0">
+                  <button type="button" class="btn-eur-sm yellow mw-100 w-75" data-dismiss="modal">
+                  <span class="body-medium">Continua</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </ul>
+    </div>
+  </fieldset>
+  <fieldset></fieldset>
+  <fieldset class="billing-address-block">
+    <fieldset class="address-selector-block">
+      <div class="form-group is-completed">
+        <label class="form-control-label" for="billingAddressSelector">
+        Indirizzo di fatturazione
+        </label>
+        <select id="billingAddressSelector" name="addressSelector" class="addressSelector form-control custom-select" data-create-shipment-url="https://www.euronics.it/on/demandware.store/Sites-euronics-Site/it_IT/Checkout-SetBillingAddress">
+          <option class="" value="new" data-first-name="" data-last-name="" data-address1="" data-city="" data-state-code="" data-postal-code="" data-house-number="" data-country-code="" data-phone="" data-is-gift="" data-gift-message="">Nuovo indirizzo</option>
+          <option class="" disabled="">- Spedizioni esistenti -</option>
+          <option class="" value="1f92e369e49eff5c712488bed6" data-first-name="test" data-last-name="test" data-address1="Via dell'Esse" data-city="Cortona" data-state-code="AR" data-postal-code="52044" data-house-number="test" data-country-code="IT" data-phone="1111111111" data-is-gift="" data-gift-message="" selected="selected">test test Via dell'Esse test Cortona AR 52044</option>
+        </select>
+        <div class="invalid-feedback"></div>
+        <div class="d-flex justify-content-between mt-3">
+          <button class="col-lg-6 col-sm-6 col-5 text-center btn-show-details btn-eur-sm yellow pt-2" type="button"><span class="body-small">Aggiorna indirizzo</span> </button>
+          <button class="col-lg-6 col-sm-6 col-5 text-center btn-add-new btn-eur-sm yellow" type="button"><span class="body-small">Aggiungi nuovo</span> </button>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset class="billing-address">
+      <div class="d-flex align-items justify-content-between mb-3">
+        <h5>
+          I tuoi dati
+        </h5>
+        <span class="body-small float-right">*Dati obbligatori</span>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          <div class="form-group mat-div required dwfrm_billing_addressFields_firstName is-completed">
+            <label class="form-control-label mat-label" for="billingFirstName">Nome</label>
+            <input autofocus="" type="text" class="form-control billingFirstName mat-input" id="billingFirstName" value="" name="dwfrm_billing_addressFields_firstName" required="" aria-required="true" maxlength="50" pattern="^[A-Za-zÀ-ÖØ-öø-ÿ\-\s\'\’]*" autocomplete="new-password">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="form-group mat-div required dwfrm_billing_addressFields_lastName is-completed">
+            <label class="form-control-label mat-label" for="billingLastName">Cognome</label>
+            <input type="text" class="form-control billingLastName mat-input" id="billingLastName" value="" name="dwfrm_billing_addressFields_lastName" required="" aria-required="true" maxlength="50" pattern="^[A-Za-zÀ-ÖØ-öø-ÿ\-\s\'\’]*" autocomplete="new-password">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          <div class="form-group mat-div required dwfrm_billing_addressFields_email is-completed">
+            <label class="form-control-label mat-label" for="billingEmail">Email</label>
+            <input autofocus="" type="text" class="form-control billingEmail mat-input" id="billingEmail" value="" name="dwfrm_billing_addressFields_email" required="" aria-required="true" maxlength="50" pattern="^[\w.%+_-]+@[\w_-]+\.[\w]{2,6}$" autocomplete="new-password">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+      </div>
+      <h5 class="mb-3">
+        Il tuo indirizzo
+      </h5>
+      <div class="newaddresswrap">
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="form-group mat-div position-relative">
+              <label class="form-control-label mat-label" for="fullAddress_three">
+              * Inserisci il tuo indirizzo completo
+              </label>
+              <input type="text" class="form-control mat-input fullAddress" id="fullAddress_three" value="" autocomplete="new-password">
+              <div class="autocomplete-results-container" style="display: none;">
+                <div class="autocomplete-results localities-container"></div>
+              </div>
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-8">
+            <div class="form-group mat-div readonly-helper required dwfrm_billing_addressFields_address1 is-completed">
+              <label class="form-control-label mat-label" for="billingAddressOne">Indirizzo</label>
+              <input type="text" class="form-control billingAddressOne mat-input" id="billingAddressOne" data-autocomplete="address1" value="" name="dwfrm_billing_addressFields_address1" required="" aria-required="true" maxlength="50" pattern="^[A-Za-zÀ-ÖØ-öø-ÿ\d\-\_\s\'\’\/\,\.\(\)]*" autocomplete="new-password">
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group mat-div readonly-helper required dwfrm_billing_addressFields_houseNumber is-completed">
+              <label class="form-control-label mat-label" for="billingHouseNumber">Numero civico</label>
+              <input type="text" class="form-control billingHouseNumber mat-input" id="billingHouseNumber" data-autocomplete="housenumber" value="" name="dwfrm_billing_addressFields_houseNumber" required="" aria-required="true" maxlength="6" pattern="[\w\d\\_\-\\/\s]*" autocomplete="new-password">
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group mat-div is-completed readonly-helper dwfrm_billing_addressFields_country">
+              <label class="form-control-label mat-label invisible" for="country-fake">
+              Italia
+              </label>
+              <input type="text" name="country" readonly="" id="country-fake" placeholder="Italia" value="Italia" class="form-control bg-white mat-input">
+              <select class="form-control billingCountry custom-select d-none" id="billingCountry" data-autocomplete="country" name="dwfrm_billing_addressFields_country" autocomplete="new-password">
+                <option label=" "></option>
+                <option id="IT" value="IT">
+                  Italia
+                </option>
+              </select>
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group mat-div readonly-helper required dwfrm_billing_addressFields_states_stateCode is-completed">
+              <label class="form-control-label mat-label" for="billingState">Provincia</label>
+              <select class="form-control billingState custom-select" id="billingState" data-autocomplete="state" name="dwfrm_billing_addressFields_states_stateCode" required="" aria-required="true" autocomplete="new-password">
+                <option id="" value=""></option>
+                <option id="AG" value="AG">
+                  Agrigento
+                </option>
+                <option id="AL" value="AL">
+                  Alessandria
+                </option>
+                <option id="AN" value="AN">
+                  Ancona
+                </option>
+                <option id="AO" value="AO">
+                  Aosta
+                </option>
+                <option id="AR" value="AR">
+                  Arezzo
+                </option>
+                <option id="AP" value="AP">
+                  Ascoli Piceno
+                </option>
+                <option id="AT" value="AT">
+                  Asti
+                </option>
+                <option id="AV" value="AV">
+                  Avellino
+                </option>
+                <option id="BA" value="BA">
+                  Bari
+                </option>
+                <option id="BT" value="BT">
+                  Barletta-Andria-Trani
+                </option>
+                <option id="BL" value="BL">
+                  Belluno
+                </option>
+                <option id="BN" value="BN">
+                  Benevento
+                </option>
+                <option id="BG" value="BG">
+                  Bergamo
+                </option>
+                <option id="BI" value="BI">
+                  Biella
+                </option>
+                <option id="BO" value="BO">
+                  Bologna
+                </option>
+                <option id="BZ" value="BZ">
+                  Bolzano
+                </option>
+                <option id="BS" value="BS">
+                  Brescia
+                </option>
+                <option id="BR" value="BR">
+                  Brindisi
+                </option>
+                <option id="CA" value="CA">
+                  Cagliari
+                </option>
+                <option id="CL" value="CL">
+                  Caltanissetta
+                </option>
+                <option id="CB" value="CB">
+                  Campobasso
+                </option>
+                <option id="CI" value="CI">
+                  Carbonia-Iglesias
+                </option>
+                <option id="CE" value="CE">
+                  Caserta
+                </option>
+                <option id="CT" value="CT">
+                  Catania
+                </option>
+                <option id="CZ" value="CZ">
+                  Catanzaro
+                </option>
+                <option id="CH" value="CH">
+                  Chieti
+                </option>
+                <option id="CO" value="CO">
+                  Como
+                </option>
+                <option id="CS" value="CS">
+                  Cosenza
+                </option>
+                <option id="CR" value="CR">
+                  Cremona
+                </option>
+                <option id="KR" value="KR">
+                  Crotone
+                </option>
+                <option id="CN" value="CN">
+                  Cuneo
+                </option>
+                <option id="EN" value="EN">
+                  Enna
+                </option>
+                <option id="FM" value="FM">
+                  Fermo
+                </option>
+                <option id="FE" value="FE">
+                  Ferrara
+                </option>
+                <option id="FI" value="FI">
+                  Firenze
+                </option>
+                <option id="FG" value="FG">
+                  Foggia
+                </option>
+                <option id="FC" value="FC">
+                  Forli-Cesena
+                </option>
+                <option id="FR" value="FR">
+                  Frosinone
+                </option>
+                <option id="GE" value="GE">
+                  Genova
+                </option>
+                <option id="GO" value="GO">
+                  Gorizia
+                </option>
+                <option id="GR" value="GR">
+                  Grosseto
+                </option>
+                <option id="IM" value="IM">
+                  Imperia
+                </option>
+                <option id="IS" value="IS">
+                  Isernia
+                </option>
+                <option id="AQ" value="AQ">
+                  L’Aquila
+                </option>
+                <option id="SP" value="SP">
+                  La Spezia
+                </option>
+                <option id="LT" value="LT">
+                  Latina
+                </option>
+                <option id="LE" value="LE">
+                  Lecce
+                </option>
+                <option id="LC" value="LC">
+                  Lecco
+                </option>
+                <option id="LI" value="LI">
+                  Livorno
+                </option>
+                <option id="LO" value="LO">
+                  Lodi
+                </option>
+                <option id="LU" value="LU">
+                  Lucca
+                </option>
+                <option id="MC" value="MC">
+                  Macerata
+                </option>
+                <option id="MN" value="MN">
+                  Mantova
+                </option>
+                <option id="MS" value="MS">
+                  Massa-Carrara
+                </option>
+                <option id="MT" value="MT">
+                  Matera
+                </option>
+                <option id="VS" value="VS">
+                  Medio Campidano
+                </option>
+                <option id="ME" value="ME">
+                  Messina
+                </option>
+                <option id="MI" value="MI">
+                  Milano
+                </option>
+                <option id="MO" value="MO">
+                  Modena
+                </option>
+                <option id="MB" value="MB">
+                  Monza e della Brianza
+                </option>
+                <option id="NA" value="NA">
+                  Napoli
+                </option>
+                <option id="NO" value="NO">
+                  Novara
+                </option>
+                <option id="NU" value="NU">
+                  Nuoro
+                </option>
+                <option id="OG" value="OG">
+                  Ogliastra
+                </option>
+                <option id="OT" value="OT">
+                  Olbia-Tempio
+                </option>
+                <option id="OR" value="OR">
+                  Oristano
+                </option>
+                <option id="PD" value="PD">
+                  Padova
+                </option>
+                <option id="PA" value="PA">
+                  Palermo
+                </option>
+                <option id="PR" value="PR">
+                  Parma
+                </option>
+                <option id="PV" value="PV">
+                  Pavia
+                </option>
+                <option id="PG" value="PG">
+                  Perugia
+                </option>
+                <option id="PU" value="PU">
+                  Pesaro e Urbino
+                </option>
+                <option id="PE" value="PE">
+                  Pescara
+                </option>
+                <option id="PC" value="PC">
+                  Piacenza
+                </option>
+                <option id="PI" value="PI">
+                  Pisa
+                </option>
+                <option id="PT" value="PT">
+                  Pistoia
+                </option>
+                <option id="PN" value="PN">
+                  Pordenone
+                </option>
+                <option id="PZ" value="PZ">
+                  Potenza
+                </option>
+                <option id="PO" value="PO">
+                  Prato
+                </option>
+                <option id="RG" value="RG">
+                  Ragusa
+                </option>
+                <option id="RA" value="RA">
+                  Ravenna
+                </option>
+                <option id="RC" value="RC">
+                  Reggio di Calabria
+                </option>
+                <option id="RE" value="RE">
+                  Reggio nell’Emilia
+                </option>
+                <option id="RI" value="RI">
+                  Rieti
+                </option>
+                <option id="RN" value="RN">
+                  Rimini
+                </option>
+                <option id="RM" value="RM">
+                  Roma
+                </option>
+                <option id="RO" value="RO">
+                  Rovigo
+                </option>
+                <option id="SA" value="SA">
+                  Salerno
+                </option>
+                <option id="SS" value="SS">
+                  Sassari
+                </option>
+                <option id="SV" value="SV">
+                  Savona
+                </option>
+                <option id="SI" value="SI">
+                  Siena
+                </option>
+                <option id="SR" value="SR">
+                  Siracusa
+                </option>
+                <option id="SO" value="SO">
+                  Sondrio
+                </option>
+                <option id="TA" value="TA">
+                  Taranto
+                </option>
+                <option id="TE" value="TE">
+                  Teramo
+                </option>
+                <option id="TR" value="TR">
+                  Terni
+                </option>
+                <option id="TO" value="TO">
+                  Torino
+                </option>
+                <option id="TP" value="TP">
+                  Trapani
+                </option>
+                <option id="TN" value="TN">
+                  Trento
+                </option>
+                <option id="TV" value="TV">
+                  Treviso
+                </option>
+                <option id="TS" value="TS">
+                  Trieste
+                </option>
+                <option id="UD" value="UD">
+                  Udine
+                </option>
+                <option id="VA" value="VA">
+                  Varese
+                </option>
+                <option id="VE" value="VE">
+                  Venezia
+                </option>
+                <option id="VB" value="VB">
+                  Verbano-Cusio-Ossola
+                </option>
+                <option id="VC" value="VC">
+                  Vercelli
+                </option>
+                <option id="VR" value="VR">
+                  Verona
+                </option>
+                <option id="VV" value="VV">
+                  Vibo Valentia
+                </option>
+                <option id="VI" value="VI">
+                  Vicenza
+                </option>
+                <option id="VT" value="VT">
+                  Viterbo
+                </option>
+              </select>
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group mat-div readonly-helper required dwfrm_billing_addressFields_city is-completed">
+              <label class="form-control-label mat-label" for="billingAddressCity">Città</label>
+              <input type="text" class="form-control billingAddressCity mat-input" id="billingAddressCity" data-autocomplete="city" value="" name="dwfrm_billing_addressFields_city" required="" aria-required="true" maxlength="50" minlength="2" pattern="^[A-Za-zÀ-ÖØ-öø-ÿ\-\s\'\’]*" autocomplete="new-password">
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group mat-div readonly-helper required dwfrm_billing_addressFields_postalCode is-completed">
+              <label class="form-control-label mat-label" for="billingZipCode">CAP</label>
+              <input type="text" class="form-control billingZipCode mat-input" id="billingZipCode" data-autocomplete="zipcode" value="" name="dwfrm_billing_addressFields_postalCode" required="" aria-required="true" maxlength="5" minlength="5" pattern="(^\d{5}?$)" autocomplete="new-password">
+              <div class="invalid-feedback"></div>
+              <span>Esempio: 12345</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h5 class="mb-3">
+        I tuoi contatti
+      </h5>
+      <div class="row">
+        <div class="col-sm-2 col-4">
+          <div class="form-group mat-div dwfrm_billing_addressFields_prefix is-completed">
+            <label class="form-control-label mat-label invisible" for="billingPrefix">
+            prefix
+            </label>
+            <select class="form-control billingPrefix custom-select" id="billingPrefix" name="dwfrm_billing_addressFields_prefix" value="" maxlength="2147483647">
+              <option id="+93" value="+93">
+                +93
+              </option>
+              <option id="+358" value="+358">
+                +358
+              </option>
+              <option id="+355" value="+355">
+                +355
+              </option>
+              <option id="+213" value="+213">
+                +213
+              </option>
+              <option id="+1684" value="+1684">
+                +1684
+              </option>
+              <option id="+376" value="+376">
+                +376
+              </option>
+              <option id="+244" value="+244">
+                +244
+              </option>
+              <option id="+1264" value="+1264">
+                +1264
+              </option>
+              <option id="+672" value="+672">
+                +672
+              </option>
+              <option id="+1268" value="+1268">
+                +1268
+              </option>
+              <option id="+54" value="+54">
+                +54
+              </option>
+              <option id="+374" value="+374">
+                +374
+              </option>
+              <option id="+297" value="+297">
+                +297
+              </option>
+              <option id="+61" value="+61">
+                +61
+              </option>
+              <option id="+43" value="+43">
+                +43
+              </option>
+              <option id="+994" value="+994">
+                +994
+              </option>
+              <option id="+1242" value="+1242">
+                +1242
+              </option>
+              <option id="+973" value="+973">
+                +973
+              </option>
+              <option id="+880" value="+880">
+                +880
+              </option>
+              <option id="+1246" value="+1246">
+                +1246
+              </option>
+              <option id="+375" value="+375">
+                +375
+              </option>
+              <option id="+32" value="+32">
+                +32
+              </option>
+              <option id="+501" value="+501">
+                +501
+              </option>
+              <option id="+229" value="+229">
+                +229
+              </option>
+              <option id="+1441" value="+1441">
+                +1441
+              </option>
+              <option id="+975" value="+975">
+                +975
+              </option>
+              <option id="+591" value="+591">
+                +591
+              </option>
+              <option id="+387" value="+387">
+                +387
+              </option>
+              <option id="+267" value="+267">
+                +267
+              </option>
+              <option id="+55" value="+55">
+                +55
+              </option>
+              <option id="+246" value="+246">
+                +246
+              </option>
+              <option id="+673" value="+673">
+                +673
+              </option>
+              <option id="+359" value="+359">
+                +359
+              </option>
+              <option id="+226" value="+226">
+                +226
+              </option>
+              <option id="+257" value="+257">
+                +257
+              </option>
+              <option id="+855" value="+855">
+                +855
+              </option>
+              <option id="+237" value="+237">
+                +237
+              </option>
+              <option id="+1" value="+1">
+                +1
+              </option>
+              <option id="+238" value="+238">
+                +238
+              </option>
+              <option id="+ 345" value="+ 345">
+                + 345
+              </option>
+              <option id="+236" value="+236">
+                +236
+              </option>
+              <option id="+235" value="+235">
+                +235
+              </option>
+              <option id="+56" value="+56">
+                +56
+              </option>
+              <option id="+86" value="+86">
+                +86
+              </option>
+              <option id="+61" value="+61">
+                +61
+              </option>
+              <option id="+61" value="+61">
+                +61
+              </option>
+              <option id="+57" value="+57">
+                +57
+              </option>
+              <option id="+269" value="+269">
+                +269
+              </option>
+              <option id="+242" value="+242">
+                +242
+              </option>
+              <option id="+243" value="+243">
+                +243
+              </option>
+              <option id="+682" value="+682">
+                +682
+              </option>
+              <option id="+506" value="+506">
+                +506
+              </option>
+              <option id="+225" value="+225">
+                +225
+              </option>
+              <option id="+385" value="+385">
+                +385
+              </option>
+              <option id="+53" value="+53">
+                +53
+              </option>
+              <option id="+357" value="+357">
+                +357
+              </option>
+              <option id="+420" value="+420">
+                +420
+              </option>
+              <option id="+45" value="+45">
+                +45
+              </option>
+              <option id="+253" value="+253">
+                +253
+              </option>
+              <option id="+1767" value="+1767">
+                +1767
+              </option>
+              <option id="+1849" value="+1849">
+                +1849
+              </option>
+              <option id="+593" value="+593">
+                +593
+              </option>
+              <option id="+20" value="+20">
+                +20
+              </option>
+              <option id="+503" value="+503">
+                +503
+              </option>
+              <option id="+240" value="+240">
+                +240
+              </option>
+              <option id="+291" value="+291">
+                +291
+              </option>
+              <option id="+372" value="+372">
+                +372
+              </option>
+              <option id="+251" value="+251">
+                +251
+              </option>
+              <option id="+500" value="+500">
+                +500
+              </option>
+              <option id="+298" value="+298">
+                +298
+              </option>
+              <option id="+679" value="+679">
+                +679
+              </option>
+              <option id="+358" value="+358">
+                +358
+              </option>
+              <option id="+33" value="+33">
+                +33
+              </option>
+              <option id="+594" value="+594">
+                +594
+              </option>
+              <option id="+689" value="+689">
+                +689
+              </option>
+              <option id="+241" value="+241">
+                +241
+              </option>
+              <option id="+220" value="+220">
+                +220
+              </option>
+              <option id="+995" value="+995">
+                +995
+              </option>
+              <option id="+49" value="+49">
+                +49
+              </option>
+              <option id="+233" value="+233">
+                +233
+              </option>
+              <option id="+350" value="+350">
+                +350
+              </option>
+              <option id="+30" value="+30">
+                +30
+              </option>
+              <option id="+299" value="+299">
+                +299
+              </option>
+              <option id="+1473" value="+1473">
+                +1473
+              </option>
+              <option id="+590" value="+590">
+                +590
+              </option>
+              <option id="+1671" value="+1671">
+                +1671
+              </option>
+              <option id="+502" value="+502">
+                +502
+              </option>
+              <option id="+44" value="+44">
+                +44
+              </option>
+              <option id="+224" value="+224">
+                +224
+              </option>
+              <option id="+245" value="+245">
+                +245
+              </option>
+              <option id="+595" value="+595">
+                +595
+              </option>
+              <option id="+509" value="+509">
+                +509
+              </option>
+              <option id="+379" value="+379">
+                +379
+              </option>
+              <option id="+504" value="+504">
+                +504
+              </option>
+              <option id="+852" value="+852">
+                +852
+              </option>
+              <option id="+36" value="+36">
+                +36
+              </option>
+              <option id="+354" value="+354">
+                +354
+              </option>
+              <option id="+91" value="+91">
+                +91
+              </option>
+              <option id="+62" value="+62">
+                +62
+              </option>
+              <option id="+98" value="+98">
+                +98
+              </option>
+              <option id="+964" value="+964">
+                +964
+              </option>
+              <option id="+353" value="+353">
+                +353
+              </option>
+              <option id="+44" value="+44">
+                +44
+              </option>
+              <option id="+972" value="+972">
+                +972
+              </option>
+              <option id="+39" value="+39" selected="">
+                +39
+              </option>
+              <option id="+1876" value="+1876">
+                +1876
+              </option>
+              <option id="+81" value="+81">
+                +81
+              </option>
+              <option id="+44" value="+44">
+                +44
+              </option>
+              <option id="+962" value="+962">
+                +962
+              </option>
+              <option id="+77" value="+77">
+                +77
+              </option>
+              <option id="+254" value="+254">
+                +254
+              </option>
+              <option id="+686" value="+686">
+                +686
+              </option>
+              <option id="+850" value="+850">
+                +850
+              </option>
+              <option id="+82" value="+82">
+                +82
+              </option>
+              <option id="+965" value="+965">
+                +965
+              </option>
+              <option id="+996" value="+996">
+                +996
+              </option>
+              <option id="+856" value="+856">
+                +856
+              </option>
+              <option id="+371" value="+371">
+                +371
+              </option>
+              <option id="+961" value="+961">
+                +961
+              </option>
+              <option id="+266" value="+266">
+                +266
+              </option>
+              <option id="+231" value="+231">
+                +231
+              </option>
+              <option id="+218" value="+218">
+                +218
+              </option>
+              <option id="+423" value="+423">
+                +423
+              </option>
+              <option id="+370" value="+370">
+                +370
+              </option>
+              <option id="+352" value="+352">
+                +352
+              </option>
+              <option id="+853" value="+853">
+                +853
+              </option>
+              <option id="+389" value="+389">
+                +389
+              </option>
+              <option id="+261" value="+261">
+                +261
+              </option>
+              <option id="+265" value="+265">
+                +265
+              </option>
+              <option id="+60" value="+60">
+                +60
+              </option>
+              <option id="+960" value="+960">
+                +960
+              </option>
+              <option id="+223" value="+223">
+                +223
+              </option>
+              <option id="+356" value="+356">
+                +356
+              </option>
+              <option id="+692" value="+692">
+                +692
+              </option>
+              <option id="+596" value="+596">
+                +596
+              </option>
+              <option id="+222" value="+222">
+                +222
+              </option>
+              <option id="+230" value="+230">
+                +230
+              </option>
+              <option id="+262" value="+262">
+                +262
+              </option>
+              <option id="+52" value="+52">
+                +52
+              </option>
+              <option id="+691" value="+691">
+                +691
+              </option>
+              <option id="+373" value="+373">
+                +373
+              </option>
+              <option id="+377" value="+377">
+                +377
+              </option>
+              <option id="+976" value="+976">
+                +976
+              </option>
+              <option id="+382" value="+382">
+                +382
+              </option>
+              <option id="+1664" value="+1664">
+                +1664
+              </option>
+              <option id="+212" value="+212">
+                +212
+              </option>
+              <option id="+258" value="+258">
+                +258
+              </option>
+              <option id="+95" value="+95">
+                +95
+              </option>
+              <option id="+264" value="+264">
+                +264
+              </option>
+              <option id="+674" value="+674">
+                +674
+              </option>
+              <option id="+977" value="+977">
+                +977
+              </option>
+              <option id="+31" value="+31">
+                +31
+              </option>
+              <option id="+599" value="+599">
+                +599
+              </option>
+              <option id="+687" value="+687">
+                +687
+              </option>
+              <option id="+64" value="+64">
+                +64
+              </option>
+              <option id="+505" value="+505">
+                +505
+              </option>
+              <option id="+227" value="+227">
+                +227
+              </option>
+              <option id="+234" value="+234">
+                +234
+              </option>
+              <option id="+683" value="+683">
+                +683
+              </option>
+              <option id="+672" value="+672">
+                +672
+              </option>
+              <option id="+1670" value="+1670">
+                +1670
+              </option>
+              <option id="+47" value="+47">
+                +47
+              </option>
+              <option id="+968" value="+968">
+                +968
+              </option>
+              <option id="+92" value="+92">
+                +92
+              </option>
+              <option id="+680" value="+680">
+                +680
+              </option>
+              <option id="+970" value="+970">
+                +970
+              </option>
+              <option id="+507" value="+507">
+                +507
+              </option>
+              <option id="+675" value="+675">
+                +675
+              </option>
+              <option id="+595" value="+595">
+                +595
+              </option>
+              <option id="+51" value="+51">
+                +51
+              </option>
+              <option id="+63" value="+63">
+                +63
+              </option>
+              <option id="+872" value="+872">
+                +872
+              </option>
+              <option id="+48" value="+48">
+                +48
+              </option>
+              <option id="+351" value="+351">
+                +351
+              </option>
+              <option id="+1939" value="+1939">
+                +1939
+              </option>
+              <option id="+974" value="+974">
+                +974
+              </option>
+              <option id="+40" value="+40">
+                +40
+              </option>
+              <option id="+7" value="+7">
+                +7
+              </option>
+              <option id="+250" value="+250">
+                +250
+              </option>
+              <option id="+262" value="+262">
+                +262
+              </option>
+              <option id="+590" value="+590">
+                +590
+              </option>
+              <option id="+290" value="+290">
+                +290
+              </option>
+              <option id="+1869" value="+1869">
+                +1869
+              </option>
+              <option id="+1758" value="+1758">
+                +1758
+              </option>
+              <option id="+590" value="+590">
+                +590
+              </option>
+              <option id="+508" value="+508">
+                +508
+              </option>
+              <option id="+1784" value="+1784">
+                +1784
+              </option>
+              <option id="+685" value="+685">
+                +685
+              </option>
+              <option id="+378" value="+378">
+                +378
+              </option>
+              <option id="+239" value="+239">
+                +239
+              </option>
+              <option id="+966" value="+966">
+                +966
+              </option>
+              <option id="+221" value="+221">
+                +221
+              </option>
+              <option id="+381" value="+381">
+                +381
+              </option>
+              <option id="+248" value="+248">
+                +248
+              </option>
+              <option id="+232" value="+232">
+                +232
+              </option>
+              <option id="+65" value="+65">
+                +65
+              </option>
+              <option id="+421" value="+421">
+                +421
+              </option>
+              <option id="+386" value="+386">
+                +386
+              </option>
+              <option id="+677" value="+677">
+                +677
+              </option>
+              <option id="+252" value="+252">
+                +252
+              </option>
+              <option id="+27" value="+27">
+                +27
+              </option>
+              <option id="+211" value="+211">
+                +211
+              </option>
+              <option id="+500" value="+500">
+                +500
+              </option>
+              <option id="+34" value="+34">
+                +34
+              </option>
+              <option id="+94" value="+94">
+                +94
+              </option>
+              <option id="+249" value="+249">
+                +249
+              </option>
+              <option id="+597" value="+597">
+                +597
+              </option>
+              <option id="+47" value="+47">
+                +47
+              </option>
+              <option id="+268" value="+268">
+                +268
+              </option>
+              <option id="+46" value="+46">
+                +46
+              </option>
+              <option id="+41" value="+41">
+                +41
+              </option>
+              <option id="+963" value="+963">
+                +963
+              </option>
+              <option id="+886" value="+886">
+                +886
+              </option>
+              <option id="+992" value="+992">
+                +992
+              </option>
+              <option id="+255" value="+255">
+                +255
+              </option>
+              <option id="+66" value="+66">
+                +66
+              </option>
+              <option id="+670" value="+670">
+                +670
+              </option>
+              <option id="+228" value="+228">
+                +228
+              </option>
+              <option id="+690" value="+690">
+                +690
+              </option>
+              <option id="+676" value="+676">
+                +676
+              </option>
+              <option id="+1868" value="+1868">
+                +1868
+              </option>
+              <option id="+216" value="+216">
+                +216
+              </option>
+              <option id="+90" value="+90">
+                +90
+              </option>
+              <option id="+993" value="+993">
+                +993
+              </option>
+              <option id="+1649" value="+1649">
+                +1649
+              </option>
+              <option id="+688" value="+688">
+                +688
+              </option>
+              <option id="+256" value="+256">
+                +256
+              </option>
+              <option id="+380" value="+380">
+                +380
+              </option>
+              <option id="+971" value="+971">
+                +971
+              </option>
+              <option id="+44" value="+44">
+                +44
+              </option>
+              <option id="+1" value="+1">
+                +1
+              </option>
+              <option id="+598" value="+598">
+                +598
+              </option>
+              <option id="+998" value="+998">
+                +998
+              </option>
+              <option id="+678" value="+678">
+                +678
+              </option>
+              <option id="+58" value="+58">
+                +58
+              </option>
+              <option id="+84" value="+84">
+                +84
+              </option>
+              <option id="+1284" value="+1284">
+                +1284
+              </option>
+              <option id="+1340" value="+1340">
+                +1340
+              </option>
+              <option id="+681" value="+681">
+                +681
+              </option>
+              <option id="+967" value="+967">
+                +967
+              </option>
+              <option id="+260" value="+260">
+                +260
+              </option>
+              <option id="+263" value="+263">
+                +263
+              </option>
+            </select>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-4 col-8">
+          <div class="form-group mat-div required dwfrm_billing_addressFields_phone is-completed">
+            <label class="form-control-label mat-label" for="billingAddressPhone">Numero di telefono</label>
+            <input type="text" class="form-control billingAddressPhone mat-input" id="billingAddressPhone" value="" name="dwfrm_billing_addressFields_phone" required="" aria-required="true" maxlength="14" minlength="4" pattern="^[0-9]*" autocomplete="new-password">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group mat-div dwfrm_billing_addressFields_telephone">
+            <label class="form-control-label mat-label" for="billingZipCode">Altro recapito</label>
+            <input type="text" class="form-control billingAddressTelephone mat-input" id="billingAddressTelephone" value="" autocomplete="new-password" name="dwfrm_billing_addressFields_telephone" maxlength="14" minlength="4" pattern="^[0-9]*">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex billing-disclaimer">
+        <span class="body-small">
+        *Inserisci almeno un contatto telefonico
+        </span>
+      </div>
+    </fieldset>
+    <fieldset class="billing-address-invoice">
+      <div class="invoice-options my-3">
+        <div class="d-flex align-items-center">
+          <input type="radio" id="requireInvoice" name="enableInvoice" value="false">
+          <label class="mb-0 ml-2 body-large font-bold" for="requireInvoice">Voglio richiedere la fattura</label>
+        </div>
+        <div class="d-flex align-items-center">
+          <input type="radio" id="notRequireInvoice" name="enableInvoice" value="false" checked="">
+          <label class="mb-0 ml-2 body-large font-bold" for="notRequireInvoice">Voglio richiedere la ricevuta</label>
+        </div>
+      </div>
+      <div class="form-group mt-2 is-completed">
+        <div class="col-sm-12">
+          <input type="hidden" class="form-control invoiceRequestControl mat-input" id="requireInvoiceValue" value="false" name="dwfrm_billing_invoiceFields_flagInvoice" required="" aria-required="true" maxlength="2147483647">
+          <label class="invalid-feedback">null</label>
+        </div>
+      </div>
+      <input type="hidden" id="requireTypeValue" name="requireTypeValue" value="false">
+      <div class="row invoiceFormStack d-none">
+        <div class="col-sm-12">
+          <div class="form-group mat-div is-completed required dwfrm_billing_invoiceFields_invoiceType">
+            <label class="form-control-label mat-label invisible" for="invoiceType">Tipo</label>
+            <select class="form-control invoiceTypeControl custom-select d-none" id="invoiceType" name="dwfrm_billing_invoiceFields_invoiceType" required="" aria-required="true" autocomplete="billing invoice ">
+              <option id="private" value="private">Privato</option>
+              <option id="freelance" value="freelance">Libero Professionista / Azienda</option>
+              <option id="publicAdministration" value="publicAdministration">Pubblica amministrazione</option>
+              <option id="other" value="other">Altro</option>
+            </select>
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="businessNameInput" class="form-group d-none mat-div required dwfrm_billing_invoiceFields_businessName">
+            <label class="form-control-label mat-label" for="businessName">Ragione Sociale</label>
+            <input type="text" class="form-control businessNameControl mat-input" id="businessName" value="" name="dwfrm_billing_invoiceFields_businessName" required="" aria-required="true" maxlength="40" minlength="2" autocomplete="businessName">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="fiscalCodeInput" class="form-group d-none mat-div required dwfrm_billing_invoiceFields_fiscalCode">
+            <label class="form-control-label mat-label" for="fiscalCode">Codice Fiscale</label>
+            <input type="text" class="form-control invoiceFiscalCodeControl mat-input" id="fiscalCode" value="" name="dwfrm_billing_invoiceFields_fiscalCode" required="" aria-required="true" maxlength="2147483647" minlength="11" pattern="^[A-Za-z0-9]*" autocomplete="fiscalCode">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="vatNumberInput" class="form-group d-none mat-div dwfrm_billing_invoiceFields_vatNumber">
+            <label class="form-control-label mat-label" for="vatNumber">Partita Iva</label>
+            <input type="text" class="form-control vatNumberControl mat-input" id="vatNumber" value="" name="dwfrm_billing_invoiceFields_vatNumber" maxlength="11" minlength="11" pattern="^[0-9]*" autocomplete="vatNumber">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="pecInput" class="form-group d-none mat-div dwfrm_billing_invoiceFields_pec">
+            <label class="form-control-label mat-label" for="pec">PEC (obbligatorio compilare pec o sdi) </label>
+            <input type="text" class="form-control pecControl mat-input" id="pec" value="" name="dwfrm_billing_invoiceFields_pec" maxlength="2147483647" pattern="^[\w.%+-_]+@[\w.-_]+\.[\w]{2,6}$" autocomplete="pec">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="sdiInput" class="form-group d-none mat-div dwfrm_billing_invoiceFields_sdi">
+            <label class="form-control-label mat-label" for="sdi">SDI</label>
+            <input type="text" class="form-control sdiControl mat-input" id="sdi" value="" name="dwfrm_billing_invoiceFields_sdi" maxlength="7" minlength="7" pattern="^[A-Za-z0-9]*" autocomplete="sdi">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="officeCodeInput" class="form-group d-none mat-div required dwfrm_billing_invoiceFields_officeCode">
+            <label class="form-control-label mat-label" for="officeCode">Codice Ufficio</label>
+            <input type="text" class="form-control officeCodeControl mat-input" id="officeCode" value="" name="dwfrm_billing_invoiceFields_officeCode" required="" aria-required="true" maxlength="6" pattern="^[A-Za-z0-9]*" autocomplete="officeCode">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="cupInput" class="form-group d-none mat-div dwfrm_billing_invoiceFields_cup">
+            <label class="form-control-label mat-label" for="cup">CUP</label>
+            <input type="text" class="form-control cupControl mat-input" id="cup" value="" name="dwfrm_billing_invoiceFields_cup" maxlength="15" pattern="^[A-Za-z0-9]*" autocomplete="cup">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div id="tendersInput" class="form-group d-none mat-div dwfrm_billing_invoiceFields_tenders">
+            <label class="form-control-label mat-label" for="tenders">Bando di gara</label>
+            <input type="text" class="form-control tendersControl mat-input" id="tenders" value="" name="dwfrm_billing_invoiceFields_tenders" maxlength="15" pattern="^[A-Za-z0-9 \s]*" autocomplete="tenders">
+            <div class="invalid-feedback"></div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+    <input type="hidden" name="csrf_token" value="v48HV1I_F5_q1s1Ft79gqplsf1PLaHI_m-FgDCm_Yk2iT-_-OJH1EVPNp7eCPW2sTxfC_DLCC1fCRCv9cfTbIKgG-CgJ8_sRhXINO2MBhxGdTAPb2aRb07JjMvjUFrWVt0yGGlK_PoT939n0CSS_DQ84reT1fbQbu3MxO9zGW8c4iw5jFwc=">
+    <input type="hidden" name="localizedNewAddressTitle" value="Nuovo indirizzo">
+  </fieldset>
+  <div class="next-step-button mb-3">
+    <button class="align-items-center btn-cta btn-eur-md yellow mw-100 submit-payment" type="submit" name="submit" value="submit-payment">
+      Continua
+      <i class="icon-freccia-dx ml-2"></i> 
+      <div class="lds-ring ml-2">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </button>
+  </div>
+</form>
+</body>
+</html>

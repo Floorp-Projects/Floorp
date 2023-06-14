@@ -25,6 +25,7 @@ export const HeuristicsRegExp = {
     "given-name": undefined,
     "additional-name": undefined,
     "family-name": undefined,
+    "cc-csc": undefined,
     "cc-number": undefined,
     "cc-exp-month": undefined,
     "cc-exp-year": undefined,
@@ -582,6 +583,13 @@ export const HeuristicsRegExp = {
         "|有効期限" + // ja-JP
         "|validade" + // pt-BR, pt-PT
         "|Срок действия карты", // ru
+
+      "cc-csc":
+        "verification|card.?identification|security.?code|card.?code" +
+        "|security.?value" +
+        "|security.?number|card.?pin|c-v-v" +
+        "|(cvn|cvv|cvc|csc|cvd|cid|ccv)(field)?" +
+        "|\\bcid\\b",
     },
   ],
 
