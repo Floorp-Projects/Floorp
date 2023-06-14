@@ -686,11 +686,11 @@ export var Utils = {
    * Foo.prototype = {
    *   ...
    *   get syncID() {
-   *     let syncID = Svc.Prefs.get("client.syncID", "");
+   *     let syncID = Svc.PrefBranch.getStringPref("client.syncID", "");
    *     return syncID == "" ? this.syncID = Utils.makeGUID() : syncID;
    *   },
    *   set syncID(value) {
-   *     Svc.Prefs.set("client.syncID", value);
+   *     Svc.PrefBranch.setStringPref("client.syncID", value);
    *   },
    *   ...
    * };
@@ -774,6 +774,7 @@ XPCOMUtils.defineLazyGetter(Utils, "utf8Encoder", () => new TextEncoder());
 export var Svc = {};
 
 Svc.Prefs = new Preferences(PREFS_BRANCH);
+Svc.PrefBranch = Services.prefs.getBranch(PREFS_BRANCH);
 Svc.Obs = Observers;
 
 Svc.Obs.add("xpcom-shutdown", function () {
