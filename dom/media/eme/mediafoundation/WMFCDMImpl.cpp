@@ -75,9 +75,12 @@ bool WMFCDMImpl::GetCapabilities(KeySystemConfig& aConfig) {
   nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
   NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
 
+  // TODO : request capabilities for hw secured as well
+  // TODO : store the result to avoid further redundant ipc calls
   bool ok = false;
   media::Await(
-      backgroundTaskQueue.forget(), mCDM->GetCapabilities(),
+      backgroundTaskQueue.forget(),
+      mCDM->GetCapabilities(false /* isHWSecured */),
       [&ok, &aConfig](const MFCDMCapabilitiesIPDL& capabilities) {
         EME_LOG("capabilities: keySystem=%s",
                 NS_ConvertUTF16toUTF8(capabilities.keySystem()).get());
