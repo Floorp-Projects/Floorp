@@ -180,7 +180,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * @param aElement The element representing the script to be loaded and
    *        evaluated.
    */
-  bool ProcessScriptElement(nsIScriptElement* aElement);
+  bool ProcessScriptElement(nsIScriptElement* aElement,
+                            const nsAutoString& aTypeAttr);
 
   /**
    * Gets the currently executing script. This is useful if you want to
