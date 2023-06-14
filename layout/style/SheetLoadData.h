@@ -39,8 +39,7 @@ static_assert(eAuthorSheetFeatures == 0 && eUserSheetFeatures == 1 &&
 
 class SheetLoadData final
     : public PreloaderBase,
-      public SharedSubResourceCacheLoadingValueBase<SheetLoadData>,
-      public nsIThreadObserver {
+      public SharedSubResourceCacheLoadingValueBase<SheetLoadData> {
   using MediaMatched = dom::LinkStyle::MediaMatched;
   using IsAlternate = dom::LinkStyle::IsAlternate;
   using UseSystemPrincipal = css::Loader::UseSystemPrincipal;
@@ -92,7 +91,6 @@ class SheetLoadData final
                                    nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSITHREADOBSERVER
 
   css::Loader& Loader() { return *mLoader; }
 
@@ -272,20 +270,10 @@ class SheetLoadData final
     }
     return *top;
   }
-
-  void FireLoadEvent(nsIThreadInternal* aThread);
 };
 
 using SheetLoadDataHolder = nsMainThreadPtrHolder<SheetLoadData>;
 
 }  // namespace mozilla::css
-
-/**
- * Casting SheetLoadData to nsISupports is ambiguous.
- * This method handles that.
- */
-inline nsISupports* ToSupports(mozilla::css::SheetLoadData* p) {
-  return NS_ISUPPORTS_CAST(nsIThreadObserver*, p);
-}
 
 #endif  // mozilla_css_SheetLoadData_h

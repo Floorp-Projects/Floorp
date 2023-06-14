@@ -21,6 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 <script class="testbody" type="text/javascript">
 
 var t = $("target");
+
+// FIXME(bug 1838346): This shouldn't need to be async probably?
+SimpleTest.waitForExplicitFinish();
+onload = function() {
   
 /** Test for Bug 300691 **/
 function valueIs(arg, reason) {
@@ -112,7 +116,9 @@ defValueIs("abcdefghlmno", "Normalization changes nothing for the value 4");
 t.defaultValue = "abc";
 valueIs("abcdeTesth", "Setting default value shouldn't affect edited textarea");
 defValueIs("abc", "Just set the default value textarea");
+SimpleTest.finish();
 
+};
 </script>
 </pre>
 </body>

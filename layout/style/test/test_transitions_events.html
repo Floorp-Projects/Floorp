@@ -79,6 +79,9 @@ var did_finish_six = false;
 var got_before = false;
 var got_after = false;
 
+// Flush layout to guarantee consistent transitions.
+document.body.getBoundingClientRect();
+
 document.documentElement.addEventListener("transitionend",
   function(event) {
     if (event.target == $("one")) {
