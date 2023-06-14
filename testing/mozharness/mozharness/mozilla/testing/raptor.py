@@ -803,9 +803,8 @@ class Raptor(
                 gecko_results.extend(
                     ["--gecko-profile-threads", self.gecko_profile_threads]
                 )
-        else:
-            if self.extra_profiler_run:
-                gecko_results.append("--extra-profiler-run")
+        elif self.extra_profiler_run:
+            gecko_results.append("--extra-profiler-run")
         return gecko_results
 
     def query_abs_dirs(self):
@@ -985,12 +984,12 @@ class Raptor(
         elif self.app == "safari" and not self.run_local:
             binary_path = "/Applications/Safari.app/Contents/MacOS/Safari"
             kw_options["binary"] = binary_path
-        else:  # Running on Chromium
-            if not self.run_local:
-                # When running locally we already set the Chromium binary above, in init.
-                # In production, we already installed Chromium, so set the binary path
-                # to our install.
-                kw_options["binary"] = self.chromium_dist_path or ""
+        # Running on Chromium
+        elif not self.run_local:
+            # When running locally we already set the Chromium binary above, in init.
+            # In production, we already installed Chromium, so set the binary path
+            # to our install.
+            kw_options["binary"] = self.chromium_dist_path or ""
 
         # Options overwritten from **kw
         if "test" in self.config:

@@ -125,9 +125,9 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         return self.abs_dirs
 
     def logcat_start(self):
-        """Overrides logcat_start in android.py - ensures any pre-existing logcat
-        is cleared before starting to record the new logcat. This is helpful
-        when running multiple times in a local emulator."""
+        """Ensures any pre-existing logcat is cleared before starting to record
+        the new logcat. This is helpful when running multiple times in a local
+        emulator."""
         logcat_cmd = [self.adb_path, "-s", self.device_serial, "logcat", "-c"]
         self.info(" ".join(logcat_cmd))
         subprocess.check_call(logcat_cmd)
