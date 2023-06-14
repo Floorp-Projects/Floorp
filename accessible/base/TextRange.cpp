@@ -108,80 +108,6 @@ TextRange::TextRange(Accessible* aRoot, Accessible* aStartContainer,
       mStartOffset(aStartOffset),
       mEndOffset(aEndOffset) {}
 
-void TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const {
-  HyperTextAccessibleBase* startHyper = mStartContainer->AsHyperTextBase();
-  if (mStartContainer == mEndContainer) {
-    int32_t startIdx = startHyper->GetChildIndexAtOffset(mStartOffset);
-    int32_t endIdx = startHyper->GetChildIndexAtOffset(mEndOffset);
-    for (int32_t idx = startIdx; idx <= endIdx; idx++) {
-      Accessible* child = mStartContainer->ChildAt(idx);
-      if (!child->IsText()) {
-        aChildren->AppendElement(child);
-      }
-    }
-    return;
-  }
-
-  Accessible* p1 = startHyper->GetChildAtOffset(mStartOffset);
-  HyperTextAccessibleBase* endHyper = mEndContainer->AsHyperTextBase();
-  Accessible* p2 = endHyper->GetChildAtOffset(mEndOffset);
-
-  uint32_t pos1 = 0, pos2 = 0;
-  AutoTArray<Accessible*, 30> parents1, parents2;
-  Accessible* container =
-      CommonParent(p1, p2, &parents1, &pos1, &parents2, &pos2);
-
-  // Traverse the tree up to the container and collect embedded objects.
-  for (uint32_t idx = 0; idx < pos1 - 1; idx++) {
-    Accessible* parent = parents1[idx + 1];
-    Accessible* child = parents1[idx];
-    uint32_t childCount = parent->ChildCount();
-    for (uint32_t childIdx = child->IndexInParent(); childIdx < childCount;
-         childIdx++) {
-      Accessible* next = parent->ChildAt(childIdx);
-      if (!next->IsText()) {
-        aChildren->AppendElement(next);
-      }
-    }
-  }
-
-  // Traverse through direct children in the container.
-  int32_t endIdx = parents2[pos2 - 1]->IndexInParent();
-  int32_t childIdx = parents1[pos1 - 1]->IndexInParent() + 1;
-  for (; childIdx < endIdx; childIdx++) {
-    Accessible* next = container->ChildAt(childIdx);
-    if (!next->IsText()) {
-      aChildren->AppendElement(next);
-    }
-  }
-
-  // Traverse down from the container to end point.
-  for (int32_t idx = pos2 - 2; idx > 0; idx--) {
-    Accessible* parent = parents2[idx];
-    Accessible* child = parents2[idx - 1];
-    int32_t endIdx = child->IndexInParent();
-    for (int32_t childIdx = 0; childIdx < endIdx; childIdx++) {
-      Accessible* next = parent->ChildAt(childIdx);
-      if (!next->IsText()) {
-        aChildren->AppendElement(next);
-      }
-    }
-  }
-}
-
-void TextRange::Text(nsAString& aText) const {
-  HyperTextAccessibleBase* startHyper = mStartContainer->AsHyperTextBase();
-  Accessible* current = startHyper->GetChildAtOffset(mStartOffset);
-  uint32_t startIntlOffset = mStartOffset - startHyper->GetChildOffset(current);
-
-  while (current && TextInternal(aText, current, startIntlOffset)) {
-    current = current->Parent();
-    if (!current) break;
-
-    current = current->NextSibling();
-  }
-}
-
 bool TextRange::Crop(Accessible* aContainer) {
   uint32_t boundaryPos = 0, containerPos = 0;
   AutoTArray<Accessible*, 30> boundaryParents, containerParents;
@@ -404,39 +330,6 @@ void TextRange::Set(Accessible* aRoot, Accessible* aStartContainer,
   mEndContainer = aEndContainer;
   mStartOffset = aStartOffset;
   mEndOffset = aEndOffset;
-}
-
-bool TextRange::TextInternal(nsAString& aText, Accessible* aCurrent,
-                             uint32_t aStartIntlOffset) const {
-  bool moveNext = true;
-  int32_t endIntlOffset = -1;
-  HyperTextAccessibleBase* endHyper = mEndContainer->AsHyperTextBase();
-  if (aCurrent->Parent() == mEndContainer &&
-      endHyper->GetChildAtOffset(mEndOffset) == aCurrent) {
-    uint32_t currentStartOffset = endHyper->GetChildOffset(aCurrent);
-    endIntlOffset = mEndOffset - currentStartOffset;
-    if (endIntlOffset == 0) return false;
-
-    moveNext = false;
-  }
-
-  if (aCurrent->IsTextLeaf()) {
-    aCurrent->AppendTextTo(aText, aStartIntlOffset,
-                           endIntlOffset - aStartIntlOffset);
-    if (!moveNext) return false;
-  }
-
-  Accessible* next = aCurrent->FirstChild();
-  if (next) {
-    if (!TextInternal(aText, next, 0)) return false;
-  }
-
-  next = aCurrent->NextSibling();
-  if (next) {
-    if (!TextInternal(aText, next, 0)) return false;
-  }
-
-  return moveNext;
 }
 
 Accessible* TextRange::CommonParent(Accessible* aAcc1, Accessible* aAcc2,

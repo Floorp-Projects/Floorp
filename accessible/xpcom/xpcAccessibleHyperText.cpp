@@ -359,23 +359,6 @@ xpcAccessibleHyperText::ScrollSubstringToPoint(int32_t aStartOffset,
 }
 
 NS_IMETHODIMP
-xpcAccessibleHyperText::GetEnclosingRange(nsIAccessibleTextRange** aRange) {
-  NS_ENSURE_ARG_POINTER(aRange);
-  *aRange = nullptr;
-
-  if (!IntlLocal()) return NS_ERROR_FAILURE;
-
-  TextRange range;
-  IntlLocal()->EnclosingRange(range);
-  NS_ASSERTION(range.IsValid(), "Should always have an enclosing range!");
-  RefPtr<xpcAccessibleTextRange> xpcRange = new xpcAccessibleTextRange(range);
-
-  xpcRange.forget(aRange);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges) {
   NS_ENSURE_ARG_POINTER(aRanges);
   *aRanges = nullptr;
@@ -393,69 +376,6 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges) {
   }
 
   xpcRanges.forget(aRanges);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleHyperText::GetVisibleRanges(nsIArray** aRanges) {
-  NS_ENSURE_ARG_POINTER(aRanges);
-  *aRanges = nullptr;
-
-  if (!IntlLocal()) return NS_ERROR_FAILURE;
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIMutableArray> xpcRanges =
-      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<TextRange> ranges;
-  IntlLocal()->VisibleRanges(&ranges);
-  uint32_t len = ranges.Length();
-  for (uint32_t idx = 0; idx < len; idx++) {
-    xpcRanges->AppendElement(new xpcAccessibleTextRange(ranges[idx]));
-  }
-
-  xpcRanges.forget(aRanges);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleHyperText::GetRangeByChild(nsIAccessible* aChild,
-                                        nsIAccessibleTextRange** aRange) {
-  NS_ENSURE_ARG_POINTER(aRange);
-  *aRange = nullptr;
-
-  if (!IntlLocal()) return NS_ERROR_FAILURE;
-
-  LocalAccessible* child = aChild->ToInternalAccessible();
-  if (child) {
-    TextRange range;
-    IntlLocal()->RangeByChild(child, range);
-    if (range.IsValid()) {
-      RefPtr<xpcAccessibleTextRange> xpcRange =
-          new xpcAccessibleTextRange(range);
-      xpcRange.forget(aRange);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleHyperText::GetRangeAtPoint(int32_t aX, int32_t aY,
-                                        nsIAccessibleTextRange** aRange) {
-  NS_ENSURE_ARG_POINTER(aRange);
-  *aRange = nullptr;
-
-  if (!IntlLocal()) return NS_ERROR_FAILURE;
-
-  TextRange range;
-  IntlLocal()->RangeAtPoint(aX, aY, range);
-  if (range.IsValid()) {
-    RefPtr<xpcAccessibleTextRange> xpcRange = new xpcAccessibleTextRange(range);
-    xpcRange.forget(aRange);
-  }
-
   return NS_OK;
 }
 

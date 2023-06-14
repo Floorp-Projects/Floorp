@@ -36,15 +36,12 @@ class xpcAccessibleTextRange final : public nsIAccessibleTextRange {
   NS_IMETHOD GetEndContainer(nsIAccessibleText** aAnchor) final;
   NS_IMETHOD GetEndOffset(int32_t* aOffset) final;
   NS_IMETHOD GetContainer(nsIAccessible** aContainer) final;
-  NS_IMETHOD GetEmbeddedChildren(nsIArray** aList) final;
   NS_IMETHOD Compare(nsIAccessibleTextRange* aOtherRange, bool* aResult) final;
   NS_IMETHOD CompareEndPoints(uint32_t aEndPoint,
                               nsIAccessibleTextRange* aOtherRange,
                               uint32_t aOtherRangeEndPoint,
                               int32_t* aResult) final;
-  NS_IMETHOD GetText(nsAString& aText) final;
   NS_IMETHOD Crop(nsIAccessible* aContainer, bool* aSuccess) final;
-  NS_IMETHOD ScrollIntoView(uint32_t aHow) final;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLETEXTRANGE_IMPL_IID)
 

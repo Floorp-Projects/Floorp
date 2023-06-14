@@ -79,26 +79,6 @@ xpcAccessibleTextRange::GetContainer(nsIAccessible** aContainer) {
 }
 
 NS_IMETHODIMP
-xpcAccessibleTextRange::GetEmbeddedChildren(nsIArray** aList) {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIMutableArray> xpcList =
-      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<Accessible*> objects;
-  Range().EmbeddedChildren(&objects);
-
-  uint32_t len = objects.Length();
-  for (uint32_t idx = 0; idx < len; idx++) {
-    xpcList->AppendElement(static_cast<nsIAccessible*>(ToXPC(objects[idx])));
-  }
-
-  xpcList.forget(aList);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessibleTextRange::Compare(nsIAccessibleTextRange* aOtherRange,
                                 bool* aResult) {
   RefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
@@ -134,15 +114,6 @@ xpcAccessibleTextRange::CompareEndPoints(uint32_t aEndPoint,
 }
 
 NS_IMETHODIMP
-xpcAccessibleTextRange::GetText(nsAString& aText) {
-  nsAutoString text;
-  Range().Text(text);
-  aText.Assign(text);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessibleTextRange::Crop(nsIAccessible* aContainer, bool* aSuccess) {
   Accessible* container = aContainer->ToInternalGeneric();
   NS_ENSURE_TRUE(container, NS_ERROR_INVALID_ARG);
@@ -154,6 +125,3 @@ xpcAccessibleTextRange::Crop(nsIAccessible* aContainer, bool* aSuccess) {
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-xpcAccessibleTextRange::ScrollIntoView(uint32_t aHow) { return NS_OK; }
