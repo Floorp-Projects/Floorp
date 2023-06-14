@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "cssparser-macros"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "Procedural macros for cssparser"
 documentation = "https://docs.rs/cssparser-macros/"
@@ -23,11 +23,11 @@ repository = "https://github.com/servo/rust-cssparser"
 path = "lib.rs"
 proc-macro = true
 
-[dependencies]
-quote = "1"
+[dependencies.quote]
+version = "1"
 
 [dependencies.syn]
-version = "1"
+version = "2"
 features = [
     "full",
     "extra-traits",

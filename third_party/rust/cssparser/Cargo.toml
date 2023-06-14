@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.63"
 name = "cssparser"
-version = "0.31.0"
+version = "0.31.2"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 exclude = [
     "src/css-parsing-tests/**",
@@ -30,13 +30,14 @@ keywords = [
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-cssparser"
 
-[dependencies]
-dtoa-short = "0.3"
-itoa = "1.0"
-smallvec = "1.0"
-
 [dependencies.cssparser-macros]
-version = "0.6"
+version = "0.6.1"
+
+[dependencies.dtoa-short]
+version = "0.3"
+
+[dependencies.itoa]
+version = "1.0"
 
 [dependencies.phf]
 version = ">=0.8,<=0.11"
@@ -46,30 +47,18 @@ features = ["macros"]
 version = "1.0"
 optional = true
 
-[dev-dependencies]
-difference = "2.0"
-encoding_rs = "0.8"
-serde_json = "1.0"
+[dependencies.smallvec]
+version = "1.0"
 
-[build-dependencies]
-proc-macro2 = "1"
-quote = "1"
+[dev-dependencies.difference]
+version = "2.0"
 
-[build-dependencies.syn]
-version = "1"
-features = [
-    "extra-traits",
-    "fold",
-    "full",
-]
+[dev-dependencies.encoding_rs]
+version = "0.8"
+
+[dev-dependencies.serde_json]
+version = "1.0"
 
 [features]
 bench = []
 dummy_match_byte = []
-
-[workspace]
-members = [
-    ".",
-    "./macros",
-    "./procedural-masquerade",
-]

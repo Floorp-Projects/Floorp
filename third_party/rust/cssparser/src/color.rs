@@ -9,7 +9,7 @@ use std::f32::consts::PI;
 use std::fmt;
 use std::str::FromStr;
 
-use super::{ParseError, Parser, ToCss, Token};
+use super::{CowRcStr, ParseError, Parser, ToCss, Token};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -26,9 +26,10 @@ where
     }
 }
 
+/// Serialize the alpha copmonent of a color according to the specification.
 /// <https://drafts.csswg.org/css-color-4/#serializing-alpha-values>
 #[inline]
-fn serialize_alpha(
+pub fn serialize_color_alpha(
     dest: &mut impl fmt::Write,
     alpha: Option<f32>,
     legacy_syntax: bool,
@@ -146,7 +147,7 @@ impl ToCss for RGBA {
         self.blue.unwrap_or(0).to_css(dest)?;
 
         // Legacy syntax does not allow none components.
-        serialize_alpha(dest, Some(self.alpha.unwrap_or(0.0)), true)?;
+        serialize_color_alpha(dest, Some(self.alpha.unwrap_or(0.0)), true)?;
 
         dest.write_char(')')
     }
@@ -367,7 +368,7 @@ macro_rules! impl_lab_like {
                 serialize_none_or(dest, &self.a)?;
                 dest.write_char(' ')?;
                 serialize_none_or(dest, &self.b)?;
-                serialize_alpha(dest, self.alpha, false)?;
+                serialize_color_alpha(dest, self.alpha, false)?;
                 dest.write_char(')')
             }
         }
@@ -458,7 +459,7 @@ macro_rules! impl_lch_like {
                 serialize_none_or(dest, &self.chroma)?;
                 dest.write_char(' ')?;
                 serialize_none_or(dest, &self.hue)?;
-                serialize_alpha(dest, self.alpha, false)?;
+                serialize_color_alpha(dest, self.alpha, false)?;
                 dest.write_char(')')
             }
         }
@@ -584,7 +585,7 @@ impl ToCss for ColorFunction {
         dest.write_char(' ')?;
         serialize_none_or(dest, &self.c3)?;
 
-        serialize_alpha(dest, self.alpha, false)?;
+        serialize_color_alpha(dest, self.alpha, false)?;
 
         dest.write_char(')')
     }
@@ -901,7 +902,7 @@ where
         Token::Function(ref name) => {
             let name = name.clone();
             return input.parse_nested_block(|arguments| {
-                parse_color_function(color_parser, &name, arguments)
+                parse_color_function(color_parser, name, arguments)
             });
         }
         _ => Err(()),
@@ -1209,13 +1210,13 @@ where
 #[inline]
 fn parse_color_function<'i, 't, P>(
     color_parser: &P,
-    name: &str,
+    name: CowRcStr<'i>,
     arguments: &mut Parser<'i, 't>,
 ) -> Result<P::Output, ParseError<'i, P::Error>>
 where
     P: ColorParser<'i>,
 {
-    let color = match_ignore_ascii_case! { name,
+    let color = match_ignore_ascii_case! { &name,
         "rgb" | "rgba" => parse_rgb(color_parser, arguments),
 
         "hsl" | "hsla" => parse_hsl(color_parser, arguments),
@@ -1240,7 +1241,7 @@ where
 
         "color" => parse_color_with_color_space(color_parser, arguments),
 
-        _ => return Err(arguments.new_unexpected_token_error(Token::Ident(name.to_owned().into()))),
+        _ => return Err(arguments.new_unexpected_token_error(Token::Ident(name))),
     }?;
 
     arguments.expect_exhausted()?;
