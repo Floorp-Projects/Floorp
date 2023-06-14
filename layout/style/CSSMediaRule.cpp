@@ -15,7 +15,8 @@ namespace mozilla::dom {
 CSSMediaRule::CSSMediaRule(RefPtr<StyleMediaRule> aRawRule, StyleSheet* aSheet,
                            css::Rule* aParentRule, uint32_t aLine,
                            uint32_t aColumn)
-    : ConditionRule(aSheet, aParentRule, aLine, aColumn),
+    : ConditionRule(Servo_MediaRule_GetRules(aRawRule).Consume(), aSheet,
+                    aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}
 
 CSSMediaRule::~CSSMediaRule() {
@@ -24,7 +25,12 @@ CSSMediaRule::~CSSMediaRule() {
   }
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSMediaRule, css::ConditionRule)
+NS_IMPL_ADDREF_INHERITED(CSSMediaRule, css::ConditionRule)
+NS_IMPL_RELEASE_INHERITED(CSSMediaRule, css::ConditionRule)
+
+// QueryInterface implementation for MediaRule
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSMediaRule)
+NS_INTERFACE_MAP_END_INHERITING(css::ConditionRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSMediaRule)
 
@@ -41,10 +47,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSMediaRule,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-bool CSSMediaRule::IsCCLeaf() const {
-  return ConditionRule::IsCCLeaf() && !mMediaList;
-}
-
 /* virtual */
 void CSSMediaRule::DropSheetReference() {
   if (mMediaList) {
@@ -60,11 +62,8 @@ void CSSMediaRule::SetRawAfterClone(RefPtr<StyleMediaRule> aRaw) {
     mMediaList->SetStyleSheet(nullptr);
     mMediaList->SetStyleSheet(GetStyleSheet());
   }
-  css::ConditionRule::DidSetRawAfterClone();
-}
-
-already_AddRefed<StyleLockedCssRules> CSSMediaRule::GetOrCreateRawRules() {
-  return Servo_MediaRule_GetRules(mRawRule).Consume();
+  css::ConditionRule::SetRawAfterClone(
+      Servo_MediaRule_GetRules(mRawRule).Consume());
 }
 
 StyleCssRuleType CSSMediaRule::Type() const { return StyleCssRuleType::Media; }

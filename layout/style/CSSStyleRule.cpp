@@ -70,11 +70,6 @@ DeclarationBlock* CSSStyleRuleDeclaration::GetOrCreateCSSDeclaration(
 void CSSStyleRule::SetRawAfterClone(RefPtr<StyleLockedStyleRule> aRaw) {
   mRawRule = std::move(aRaw);
   mDecls.SetRawAfterClone(Servo_StyleRule_GetStyle(mRawRule).Consume());
-  GroupRule::DidSetRawAfterClone();
-}
-
-already_AddRefed<StyleLockedCssRules> CSSStyleRule::GetOrCreateRawRules() {
-  return Servo_StyleRule_EnsureRules(mRawRule, IsReadOnly()).Consume();
 }
 
 void CSSStyleRuleDeclaration::SetRawAfterClone(
@@ -115,15 +110,15 @@ CSSStyleRuleDeclaration::GetParsingEnvironment(
 CSSStyleRule::CSSStyleRule(already_AddRefed<StyleLockedStyleRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
                            uint32_t aLine, uint32_t aColumn)
-    : GroupRule(aSheet, aParentRule, aLine, aColumn),
+    : css::Rule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(aRawRule),
       mDecls(Servo_StyleRule_GetStyle(mRawRule).Consume()) {}
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSStyleRule, GroupRule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSStyleRule, css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSStyleRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSStyleRule, GroupRule)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSStyleRule, css::Rule)
   // Keep this in sync with IsCCLeaf.
 
   // Trace the wrapper for our declaration.  This just expands out
@@ -132,7 +127,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSStyleRule, GroupRule)
   tmp->mDecls.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSStyleRule, GroupRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleRule)
   // Keep this in sync with IsCCLeaf.
 
   // Unlink the wrapper for our declaration.
@@ -140,16 +135,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSStyleRule, GroupRule)
   // Note that this has to happen before unlinking css::Rule.
   tmp->UnlinkDeclarationWrapper(tmp->mDecls);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::Rule)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleRule, GroupRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleRule, css::Rule)
   // Keep this in sync with IsCCLeaf.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 bool CSSStyleRule::IsCCLeaf() const {
-  if (!GroupRule::IsCCLeaf()) {
+  if (!Rule::IsCCLeaf()) {
     return false;
   }
+
   return !mDecls.PreservingWrapper();
 }
 
