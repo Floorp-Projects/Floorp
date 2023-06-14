@@ -1688,25 +1688,18 @@ void Loader::MarkLoadTreeFailed(SheetLoadData& aLoadData,
   } while (data);
 }
 
-RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(
-    const nsAString& aBuffer, nsIPrincipal* aSheetPrincipal) {
+RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(const nsAString& aBuffer) {
   auto result = mInlineSheets.Lookup(aBuffer);
   if (!result) {
     return nullptr;
   }
-  StyleSheet* sheet = result.Data();
-  if (NS_WARN_IF(sheet->HasModifiedRules())) {
+  if (result.Data()->HasModifiedRules()) {
     // Remove it now that we know that we're never going to use this stylesheet
     // again.
     result.Remove();
     return nullptr;
   }
-  if (NS_WARN_IF(!sheet->Principal()->Equals(aSheetPrincipal))) {
-    // If the sheet is going to have different access rights, don't return it
-    // from the cache.
-    return nullptr;
-  }
-  return sheet->Clone(nullptr, nullptr);
+  return result.Data()->Clone(nullptr, nullptr);
 }
 
 void Loader::MaybeNotifyPreloadUsed(SheetLoadData& aData) {
@@ -1755,23 +1748,11 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   nsIURI* originalURI = nullptr;
 
   MOZ_ASSERT(aInfo.mIntegrity.IsEmpty());
+
   nsIPrincipal* loadingPrincipal = LoaderPrincipal();
   nsIPrincipal* principal = aInfo.mTriggeringPrincipal
                                 ? aInfo.mTriggeringPrincipal.get()
                                 : loadingPrincipal;
-  nsIPrincipal* sheetPrincipal = [&] {
-    // The triggering principal may be an expanded principal, which is safe to
-    // use for URL security checks, but not as the loader principal for a
-    // stylesheet. So treat this as principal inheritance, and downgrade if
-    // necessary.
-    //
-    // FIXME(emilio): Why doing this for inline sheets but not for links?
-    if (aInfo.mTriggeringPrincipal) {
-      return BasePrincipal::Cast(aInfo.mTriggeringPrincipal)
-          ->PrincipalToInherit();
-    }
-    return LoaderPrincipal();
-  }();
 
   // We only cache sheets if in shadow trees, since regular document sheets are
   // likely to be unique.
@@ -1780,7 +1761,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
       aInfo.mContent->IsInShadowTree();
   RefPtr<StyleSheet> sheet;
   if (isWorthCaching) {
-    sheet = LookupInlineSheetInCache(aBuffer, sheetPrincipal);
+    sheet = LookupInlineSheetInCache(aBuffer);
   }
   const bool sheetFromCache = !!sheet;
   if (!sheet) {
@@ -1790,7 +1771,18 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     nsIReferrerInfo* referrerInfo =
         aInfo.mContent->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
     sheet->SetReferrerInfo(referrerInfo);
-    // We never actually load this, so just set its principal directly.
+
+    nsIPrincipal* sheetPrincipal = principal;
+    if (aInfo.mTriggeringPrincipal) {
+      // The triggering principal may be an expanded principal, which is safe to
+      // use for URL security checks, but not as the loader principal for a
+      // stylesheet. So treat this as principal inheritance, and downgrade if
+      // necessary.
+      sheetPrincipal =
+          BasePrincipal::Cast(aInfo.mTriggeringPrincipal)->PrincipalToInherit();
+    }
+
+    // We never actually load this, so just set its principal directly
     sheet->SetPrincipal(sheetPrincipal);
   }
 
