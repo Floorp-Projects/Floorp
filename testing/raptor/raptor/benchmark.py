@@ -8,10 +8,12 @@ import shutil
 import socket
 import subprocess
 import tempfile
+from urllib.parse import unquote
 
 import mozfile
 from logger.logger import RaptorLogger
 from wptserve import handlers, server
+from wptserve.handlers import handler
 
 LOG = RaptorLogger(component="raptor-benchmark")
 here = pathlib.Path(__file__).parent.resolve()
@@ -74,13 +76,36 @@ class Benchmark(object):
     def setup_webserver(self, webserver):
         LOG.info("starting webserver on %r" % webserver)
         LOG.info("serving benchmarks from here: %s" % self.bench_dir)
-        self.host, self.port = webserver.split(":")
 
+        @handler
+        def directory_index_handler(request, response):
+            """Handler for serving index.html when a directory is requested."""
+            headers = [("Content-Type", "text/html")]
+            path = unquote(request.url_parts.path)
+
+            if path.startswith("/"):
+                path = path[1:]
+
+            if ".." in path:
+                # Not allowing people to do this!
+                raise
+
+            new_path = pathlib.Path(request.doc_root, path, "index.html")
+            if new_path.exists():
+                content = new_path.read_bytes()
+            else:
+                LOG.info("index.html not found for directory request")
+            return headers, content
+
+        self.host, self.port = webserver.split(":")
         return server.WebTestHttpd(
             host=self.host,
             port=int(self.port),
             doc_root=str(self.bench_dir),
-            routes=[("GET", "*", handlers.file_handler)],
+            routes=[
+                ("GET", "*/", directory_index_handler),
+                ("GET", "*", handlers.file_handler),
+            ],
         )
 
     def stop_serve(self):
