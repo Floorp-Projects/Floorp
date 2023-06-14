@@ -127,18 +127,17 @@ class FormData final : public nsISupports,
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
 
-  using FormDataEntryCallback =
-      bool (*)(const nsString& aName,
-               const OwningBlobOrDirectoryOrUSVString& aValue, void* aClosure);
-
   uint32_t Length() const { return mFormData.Length(); }
 
   // Stops iteration and returns false if any invocation of callback returns
   // false. Returns true otherwise.
-  bool ForEach(FormDataEntryCallback aFunc, void* aClosure) {
+  // Accepts callbacks of the form `bool(const nsString&, const
+  // OwningBlobOrDirectoryOrUSVString&)`.
+  template <typename F>
+  bool ForEach(F&& aCallback) {
     for (uint32_t i = 0; i < mFormData.Length(); ++i) {
       FormDataTuple& tuple = mFormData[i];
-      if (!aFunc(tuple.name, tuple.value, aClosure)) {
+      if (!aCallback(tuple.name, tuple.value)) {
         return false;
       }
     }
