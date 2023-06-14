@@ -79,12 +79,12 @@ void MFCDMChild::Shutdown() {
   mShutdown = true;
   mProxyCallback = nullptr;
 
-  mRemoteRequest.DisconnectIfExists();
-  mInitRequest.DisconnectIfExists();
-
   if (mState == NS_OK) {
     mManagerThread->Dispatch(
         NS_NewRunnableFunction(__func__, [self = RefPtr{this}, this]() {
+          mRemoteRequest.DisconnectIfExists();
+          mInitRequest.DisconnectIfExists();
+
           for (auto& promise : mPendingSessionPromises) {
             promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
           }
