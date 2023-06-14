@@ -54,6 +54,29 @@ set_config(
     depends_if("--enable-unverified-updates")(lambda _: True),
 )
 
+# Use NSS for MAR signatures even on platforms where system libraries are
+# supported (currently Windows and macOS).
+# ==============================================================
+
+can_toggle_nss_mar = target_is_windows | target_is_osx
+
+option(
+    "--enable-nss-mar",
+    when=can_toggle_nss_mar,
+    help="Enable using NSS to check MAR signatures instead of system crypto.",
+)
+
+
+@depends(
+    depends("--enable-nss-mar", when=can_toggle_nss_mar)(lambda x: x),
+    can_toggle_nss_mar,
+)
+def enable_nss_mar(enabled, can_toggle_nss_mar):
+    return enabled or not can_toggle_nss_mar
+
+
+set_config("MOZ_USE_NSS_FOR_MAR", True, when=enable_nss_mar)
+
 # Maintenance service (Windows only)
 # ==============================================================
 

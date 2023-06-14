@@ -228,6 +228,9 @@ for var in ("APP_VERSION", "APP_ID"):
 if CONFIG["MOZ_BUILD_APP"] == "browser":
     DEFINES["MOZ_BUILD_APP_IS_BROWSER"] = True
 
+if CONFIG["MOZ_USE_NSS_FOR_MAR"]:
+    DEFINES["MAR_NSS"] = True
+
 LOCAL_INCLUDES += [
     "../../other-licenses/nsis/Contrib/CityHash/cityhash",
     "../components/find",

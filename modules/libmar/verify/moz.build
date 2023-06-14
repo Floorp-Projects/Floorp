@@ -15,7 +15,7 @@ FORCE_STATIC_LIB = True
 
 if CONFIG["OS_ARCH"] == "WINNT":
     USE_STATIC_LIBS = True
-elif CONFIG["OS_ARCH"] == "Darwin":
+elif CONFIG["OS_ARCH"] == "Darwin" and not CONFIG["MOZ_USE_NSS_FOR_MAR"]:
     UNIFIED_SOURCES += [
         "MacVerifyCrypto.cpp",
     ]
@@ -23,24 +23,27 @@ elif CONFIG["OS_ARCH"] == "Darwin":
         "-framework Security",
     ]
 else:
-    DEFINES["MAR_NSS"] = True
-    LOCAL_INCLUDES += ["../sign"]
     USE_LIBS += [
         "nspr",
         "nss",
         "signmar",
     ]
-    # Ideally, this would be '-Wl,-rpath=$ORIGIN', but the build system
-    # doesn't do the right escaping yet. Even more ideally, this would
-    # be LDFLAGS, but the build system doesn't propagate those like USE_LIBS
-    # and OS_LIBS. Bug #1041943.
-    OS_LIBS += [
-        "-Wl,-rpath=\\$$ORIGIN",
-    ]
+    if CONFIG["OS_ARCH"] != "Darwin":
+        # Ideally, this would be '-Wl,-rpath=$ORIGIN', but the build system
+        # doesn't do the right escaping yet. Even more ideally, this would
+        # be LDFLAGS, but the build system doesn't propagate those like
+        # USE_LIBS and OS_LIBS. Bug #1041943.
+        OS_LIBS += [
+            "-Wl,-rpath=\\$$ORIGIN",
+        ]
 
 LOCAL_INCLUDES += [
     "../src",
 ]
+
+if CONFIG["MOZ_USE_NSS_FOR_MAR"]:
+    LOCAL_INCLUDES += ["../sign"]
+    DEFINES["MAR_NSS"] = True
 
 # C11 for static_assert
 c11_flags = ["-std=gnu11"]

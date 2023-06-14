@@ -43,15 +43,21 @@ if CONFIG["MOZ_BUILD_APP"] != "tools/update-packaging":
         "verifymar",
     ]
 
+    if CONFIG["MOZ_USE_NSS_FOR_MAR"]:
+        DEFINES["MAR_NSS"] = True
+
     if CONFIG["OS_ARCH"] == "WINNT":
         USE_STATIC_LIBS = True
 
         OS_LIBS += [
             "ws2_32",
-            "crypt32",
-            "advapi32",
         ]
-    elif CONFIG["OS_ARCH"] == "Darwin":
+        if not CONFIG["MOZ_USE_NSS_FOR_MAR"]:
+            OS_LIBS += [
+                "crypt32",
+                "advapi32",
+            ]
+    elif CONFIG["OS_ARCH"] == "Darwin" and not CONFIG["MOZ_USE_NSS_FOR_MAR"]:
         OS_LIBS += [
             "-framework CoreFoundation",
             "-framework Security",
