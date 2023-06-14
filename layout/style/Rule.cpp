@@ -101,6 +101,7 @@ void Rule::AssertParentRuleType() {
   if (mParentRule) {
     auto type = mParentRule->Type();
     MOZ_ASSERT(type == StyleCssRuleType::Media ||
+               type == StyleCssRuleType::Style ||
                type == StyleCssRuleType::Document ||
                type == StyleCssRuleType::Supports ||
                type == StyleCssRuleType::Keyframes ||

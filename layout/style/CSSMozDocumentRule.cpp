@@ -88,8 +88,7 @@ CSSMozDocumentRule::CSSMozDocumentRule(RefPtr<StyleDocumentRule> aRawRule,
                                        StyleSheet* aSheet,
                                        css::Rule* aParentRule, uint32_t aLine,
                                        uint32_t aColumn)
-    : css::ConditionRule(Servo_DocumentRule_GetRules(aRawRule).Consume(),
-                         aSheet, aParentRule, aLine, aColumn),
+    : css::ConditionRule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}
 
 NS_IMPL_ADDREF_INHERITED(CSSMozDocumentRule, css::ConditionRule)
@@ -113,8 +112,12 @@ void CSSMozDocumentRule::List(FILE* out, int32_t aIndent) const {
 
 void CSSMozDocumentRule::SetRawAfterClone(RefPtr<StyleDocumentRule> aRaw) {
   mRawRule = std::move(aRaw);
-  css::ConditionRule::SetRawAfterClone(
-      Servo_DocumentRule_GetRules(mRawRule).Consume());
+  css::ConditionRule::DidSetRawAfterClone();
+}
+
+already_AddRefed<StyleLockedCssRules>
+CSSMozDocumentRule::GetOrCreateRawRules() {
+  return Servo_DocumentRule_GetRules(mRawRule).Consume();
 }
 
 StyleCssRuleType CSSMozDocumentRule::Type() const {

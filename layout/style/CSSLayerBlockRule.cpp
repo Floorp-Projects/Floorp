@@ -13,16 +13,13 @@ namespace mozilla::dom {
 CSSLayerBlockRule::CSSLayerBlockRule(RefPtr<StyleLayerBlockRule> aRawRule,
                                      StyleSheet* aSheet, css::Rule* aParentRule,
                                      uint32_t aLine, uint32_t aColumn)
-    : css::GroupRule(Servo_LayerBlockRule_GetRules(aRawRule).Consume(), aSheet,
-                     aParentRule, aLine, aColumn),
+    : css::GroupRule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}
 
-NS_IMPL_ADDREF_INHERITED(CSSLayerBlockRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(CSSLayerBlockRule, GroupRule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(CSSLayerBlockRule,
+                                               css::GroupRule)
 
 // QueryInterface implementation for SupportsRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSLayerBlockRule)
-NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 #ifdef DEBUG
 void CSSLayerBlockRule::List(FILE* out, int32_t aIndent) const {
@@ -39,10 +36,13 @@ StyleCssRuleType CSSLayerBlockRule::Type() const {
   return StyleCssRuleType::LayerBlock;
 }
 
+already_AddRefed<StyleLockedCssRules> CSSLayerBlockRule::GetOrCreateRawRules() {
+  return Servo_LayerBlockRule_GetRules(mRawRule).Consume();
+}
+
 void CSSLayerBlockRule::SetRawAfterClone(RefPtr<StyleLayerBlockRule> aRaw) {
   mRawRule = std::move(aRaw);
-  css::GroupRule::SetRawAfterClone(
-      Servo_LayerBlockRule_GetRules(mRawRule).Consume());
+  css::GroupRule::DidSetRawAfterClone();
 }
 
 void CSSLayerBlockRule::GetCssText(nsACString& aCssText) const {

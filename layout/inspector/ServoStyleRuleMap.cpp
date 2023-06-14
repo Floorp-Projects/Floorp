@@ -37,7 +37,7 @@ void ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot) {
   for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
     FillTableFromStyleSheet(*aShadowRoot.SheetAt(index));
   }
-  for (auto& sheet : aShadowRoot.AdoptedStyleSheets()) {
+  for (const auto& sheet : aShadowRoot.AdoptedStyleSheets()) {
     FillTableFromStyleSheet(*sheet);
   }
 }
@@ -80,18 +80,14 @@ void ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
   }
 
   switch (aStyleRule.Type()) {
-    case StyleCssRuleType::Style: {
-      auto& rule = static_cast<CSSStyleRule&>(aStyleRule);
-      mTable.Remove(rule.Raw());
-      break;
-    }
+    case StyleCssRuleType::Style:
     case StyleCssRuleType::Import:
     case StyleCssRuleType::Media:
     case StyleCssRuleType::Supports:
     case StyleCssRuleType::LayerBlock:
     case StyleCssRuleType::Container:
     case StyleCssRuleType::Document: {
-      // See the comment in StyleSheetRemoved.
+      // See the comment in SheetRemoved.
       mTable.Clear();
       break;
     }
@@ -121,7 +117,7 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
     case StyleCssRuleType::Style: {
       auto& rule = static_cast<CSSStyleRule&>(aRule);
       mTable.InsertOrUpdate(rule.Raw(), &rule);
-      break;
+      [[fallthrough]];
     }
     case StyleCssRuleType::LayerBlock:
     case StyleCssRuleType::Media:
@@ -129,9 +125,7 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
     case StyleCssRuleType::Container:
     case StyleCssRuleType::Document: {
       auto& rule = static_cast<css::GroupRule&>(aRule);
-      if (ServoCSSRuleList* ruleList = rule.GetCssRules()) {
-        FillTableFromRuleList(*ruleList);
-      }
+      FillTableFromRuleList(*rule.CssRules());
       break;
     }
     case StyleCssRuleType::Import: {

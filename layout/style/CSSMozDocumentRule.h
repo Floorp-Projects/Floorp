@@ -11,8 +11,7 @@
 #include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/ServoBindingTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CSSMozDocumentRule final : public css::ConditionRule {
  public:
@@ -31,6 +30,7 @@ class CSSMozDocumentRule final : public css::ConditionRule {
 
   StyleDocumentRule* Raw() const { return mRawRule; }
   void SetRawAfterClone(RefPtr<StyleDocumentRule>);
+  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -48,7 +48,6 @@ class CSSMozDocumentRule final : public css::ConditionRule {
   RefPtr<StyleDocumentRule> mRawRule;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CSSMozDocumentRule_h
