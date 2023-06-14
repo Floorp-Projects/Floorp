@@ -69,7 +69,9 @@ add_task(async function test_processIncoming_abort() {
   Assert.equal(err, undefined);
 
   await promiseStopServer(server);
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   Service.recordManager.clearCache();
 
   await engine._tracker.clearChangedIDs();

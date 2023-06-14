@@ -557,10 +557,13 @@ async function registerRotaryEngine() {
 // Set the validation prefs to attempt validation every time to avoid non-determinism.
 function enableValidationPrefs(engines = ["bookmarks"]) {
   for (let engine of engines) {
-    Svc.Prefs.set(`engine.${engine}.validation.interval`, 0);
-    Svc.Prefs.set(`engine.${engine}.validation.percentageChance`, 100);
-    Svc.Prefs.set(`engine.${engine}.validation.maxRecords`, -1);
-    Svc.Prefs.set(`engine.${engine}.validation.enabled`, true);
+    Svc.PrefBranch.setIntPref(`engine.${engine}.validation.interval`, 0);
+    Svc.PrefBranch.setIntPref(
+      `engine.${engine}.validation.percentageChance`,
+      100
+    );
+    Svc.PrefBranch.setIntPref(`engine.${engine}.validation.maxRecords`, -1);
+    Svc.PrefBranch.setBoolPref(`engine.${engine}.validation.enabled`, true);
   }
 }
 

@@ -101,7 +101,9 @@ add_task(async function hmac_error_during_404() {
   } finally {
     await tracker.clearChangedIDs();
     await Service.engineManager.unregister(engine);
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     Service.recordManager.clearCache();
     await promiseStopServer(server);
   }
@@ -231,7 +233,9 @@ add_task(async function hmac_error_during_node_reassignment() {
 
             await tracker.clearChangedIDs();
             await Service.engineManager.unregister(engine);
-            Svc.Prefs.resetBranch("");
+            for (const pref of Svc.PrefBranch.getChildList("")) {
+              Svc.PrefBranch.clearUserPref(pref);
+            }
             Service.recordManager.clearCache();
             server.stop(resolve);
           };

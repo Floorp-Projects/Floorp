@@ -50,6 +50,8 @@ add_task(async function test_clients_escape() {
     Assert.equal(record.id, "ascii");
     Assert.equal(record.name, "wéävê");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });

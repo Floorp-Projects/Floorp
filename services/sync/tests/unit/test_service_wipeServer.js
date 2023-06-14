@@ -1,4 +1,4 @@
-Svc.Prefs.set("registerEngines", "");
+Svc.PrefBranch.setStringPref("registerEngines", "");
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
@@ -66,7 +66,9 @@ add_task(async function test_wipeServer_list_success() {
     Assert.ok(diesel_coll.deleted);
   } finally {
     await promiseStopServer(server);
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -110,7 +112,9 @@ add_task(async function test_wipeServer_list_503() {
     Assert.ok(!diesel_coll.deleted);
   } finally {
     await promiseStopServer(server);
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -141,7 +145,9 @@ add_task(async function test_wipeServer_all_success() {
   Assert.equal(returnedTimestamp, serverTimestamp);
 
   await promiseStopServer(server);
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
 });
 
 add_task(async function test_wipeServer_all_404() {
@@ -173,7 +179,9 @@ add_task(async function test_wipeServer_all_404() {
   Assert.equal(returnedTimestamp, serverTimestamp);
 
   await promiseStopServer(server);
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
 });
 
 add_task(async function test_wipeServer_all_503() {
@@ -205,7 +213,9 @@ add_task(async function test_wipeServer_all_503() {
   Assert.equal(error.status, 503);
 
   await promiseStopServer(server);
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
 });
 
 add_task(async function test_wipeServer_all_connectionRefused() {
@@ -223,6 +233,8 @@ add_task(async function test_wipeServer_all_connectionRefused() {
     Assert.equal(ex.result, Cr.NS_ERROR_CONNECTION_REFUSED);
   }
 
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   await promiseStopServer(server);
 });

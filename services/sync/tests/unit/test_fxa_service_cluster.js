@@ -52,5 +52,7 @@ add_task(async function test_findCluster() {
   // The cluster manager ensures a trailing "/"
   Assert.strictEqual(cluster, endpoint + "/");
 
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
 });

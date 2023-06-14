@@ -81,7 +81,9 @@ class SteamValidationProblemData {
 
 async function cleanAndGo(engine, server) {
   await engine._tracker.clearChangedIDs();
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   syncTestLogging();
   Service.recordManager.clearCache();
   await promiseStopServer(server);
@@ -140,7 +142,9 @@ add_task(async function test_basic() {
   ok("version" in ping.os, "there is an OS version");
   ok("locale" in ping.os, "there is an OS locale");
 
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   await promiseStopServer(server);
 });
 

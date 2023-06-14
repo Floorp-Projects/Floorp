@@ -118,52 +118,58 @@ add_test(function test_prefAttributes() {
   Assert.equal(scheduler.nextSync, Math.floor(TIMESTAMP1 / 1000) * 1000);
 
   _("'syncInterval' defaults to singleDeviceInterval.");
-  Assert.equal(Svc.Prefs.get("syncInterval"), undefined);
+  Assert.equal(
+    Svc.PrefBranch.getPrefType("syncInterval"),
+    Ci.nsIPrefBranch.PREF_INVALID
+  );
   Assert.equal(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
   _("'syncInterval' corresponds to a preference setting.");
   scheduler.syncInterval = INTERVAL;
   Assert.equal(scheduler.syncInterval, INTERVAL);
-  Assert.equal(Svc.Prefs.get("syncInterval"), INTERVAL);
+  Assert.equal(Svc.PrefBranch.getIntPref("syncInterval"), INTERVAL);
 
   _(
     "'syncThreshold' corresponds to preference, defaults to SINGLE_USER_THRESHOLD"
   );
-  Assert.equal(Svc.Prefs.get("syncThreshold"), undefined);
+  Assert.equal(
+    Svc.PrefBranch.getPrefType("syncThreshold"),
+    Ci.nsIPrefBranch.PREF_INVALID
+  );
   Assert.equal(scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   scheduler.syncThreshold = THRESHOLD;
   Assert.equal(scheduler.syncThreshold, THRESHOLD);
 
   _("'globalScore' corresponds to preference, defaults to zero.");
-  Assert.equal(Svc.Prefs.get("globalScore"), 0);
+  Assert.equal(Svc.PrefBranch.getIntPref("globalScore"), 0);
   Assert.equal(scheduler.globalScore, 0);
   scheduler.globalScore = SCORE;
   Assert.equal(scheduler.globalScore, SCORE);
-  Assert.equal(Svc.Prefs.get("globalScore"), SCORE);
+  Assert.equal(Svc.PrefBranch.getIntPref("globalScore"), SCORE);
 
   _("Intervals correspond to default preferences.");
   Assert.equal(
     scheduler.singleDeviceInterval,
-    Svc.Prefs.get("scheduler.fxa.singleDeviceInterval") * 1000
+    Svc.PrefBranch.getIntPref("scheduler.fxa.singleDeviceInterval") * 1000
   );
   Assert.equal(
     scheduler.idleInterval,
-    Svc.Prefs.get("scheduler.idleInterval") * 1000
+    Svc.PrefBranch.getIntPref("scheduler.idleInterval") * 1000
   );
   Assert.equal(
     scheduler.activeInterval,
-    Svc.Prefs.get("scheduler.activeInterval") * 1000
+    Svc.PrefBranch.getIntPref("scheduler.activeInterval") * 1000
   );
   Assert.equal(
     scheduler.immediateInterval,
-    Svc.Prefs.get("scheduler.immediateInterval") * 1000
+    Svc.PrefBranch.getIntPref("scheduler.immediateInterval") * 1000
   );
 
   _("Custom values for prefs will take effect after a restart.");
-  Svc.Prefs.set("scheduler.fxa.singleDeviceInterval", 420);
-  Svc.Prefs.set("scheduler.idleInterval", 230);
-  Svc.Prefs.set("scheduler.activeInterval", 180);
-  Svc.Prefs.set("scheduler.immediateInterval", 31415);
+  Svc.PrefBranch.setIntPref("scheduler.fxa.singleDeviceInterval", 420);
+  Svc.PrefBranch.setIntPref("scheduler.idleInterval", 230);
+  Svc.PrefBranch.setIntPref("scheduler.activeInterval", 180);
+  Svc.PrefBranch.setIntPref("scheduler.immediateInterval", 31415);
   scheduler.setDefaults();
   Assert.equal(scheduler.idleInterval, 230000);
   Assert.equal(scheduler.singleDeviceInterval, 420000);
@@ -171,17 +177,19 @@ add_test(function test_prefAttributes() {
   Assert.equal(scheduler.immediateInterval, 31415000);
 
   _("Custom values for interval prefs can't be less than 60 seconds.");
-  Svc.Prefs.set("scheduler.fxa.singleDeviceInterval", 42);
-  Svc.Prefs.set("scheduler.idleInterval", 50);
-  Svc.Prefs.set("scheduler.activeInterval", 50);
-  Svc.Prefs.set("scheduler.immediateInterval", 10);
+  Svc.PrefBranch.setIntPref("scheduler.fxa.singleDeviceInterval", 42);
+  Svc.PrefBranch.setIntPref("scheduler.idleInterval", 50);
+  Svc.PrefBranch.setIntPref("scheduler.activeInterval", 50);
+  Svc.PrefBranch.setIntPref("scheduler.immediateInterval", 10);
   scheduler.setDefaults();
   Assert.equal(scheduler.idleInterval, 60000);
   Assert.equal(scheduler.singleDeviceInterval, 60000);
   Assert.equal(scheduler.activeInterval, 60000);
   Assert.equal(scheduler.immediateInterval, 60000);
 
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   scheduler.setDefaults();
   run_next_test();
 });
@@ -244,8 +252,8 @@ add_task(async function test_updateClientMode() {
   Assert.ok(!scheduler.idle);
 
   // Trigger a change in interval & threshold by noting there are multiple clients.
-  Svc.Prefs.set("clients.devices.desktop", 1);
-  Svc.Prefs.set("clients.devices.mobile", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.desktop", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 1);
   scheduler.updateClientMode();
 
   Assert.equal(scheduler.syncThreshold, MULTI_DEVICE_THRESHOLD);
@@ -255,7 +263,7 @@ add_task(async function test_updateClientMode() {
 
   // Resets the number of clients to 0.
   await clientsEngine.resetClient();
-  Svc.Prefs.reset("clients.devices.mobile");
+  Svc.PrefBranch.clearUserPref("clients.devices.mobile");
   scheduler.updateClientMode();
 
   // Goes back to single user if # clients is 1.
@@ -461,7 +469,7 @@ add_task(async function test_handleSyncError() {
   await setUp(server);
 
   // Force sync to fail.
-  Svc.Prefs.set("firstSync", "notReady");
+  Svc.PrefBranch.setCharPref("firstSync", "notReady");
 
   _("Ensure expected initial environment.");
   Assert.equal(scheduler._syncErrors, 0);
@@ -515,7 +523,7 @@ add_task(async function test_handleSyncError() {
 
   _("Arrange for a successful sync to reset the scheduler error count");
   let promiseObserved = promiseOneObserver("weave:service:sync:finish");
-  Svc.Prefs.set("firstSync", "wipeRemote");
+  Svc.PrefBranch.setCharPref("firstSync", "wipeRemote");
   scheduler.scheduleNextSync(-1);
   await promiseObserved;
   await cleanUpAndGo(server);
@@ -654,7 +662,7 @@ add_task(async function test_no_autoconnect_during_wizard() {
   await setUp(server);
 
   // Simulate the Sync setup wizard.
-  Svc.Prefs.set("firstSync", "notReady");
+  Svc.PrefBranch.setCharPref("firstSync", "notReady");
 
   // Ensure we don't actually try to sync (or log in for that matter).
   function onLoginStart() {
@@ -693,16 +701,24 @@ add_task(async function test_idle_adjustSyncInterval() {
   Assert.equal(scheduler.idle, false);
 
   // Single device: nothing changes.
-  scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "idle",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.equal(scheduler.idle, true);
   Assert.equal(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
   // Multiple devices: switch to idle interval.
   scheduler.idle = false;
-  Svc.Prefs.set("clients.devices.desktop", 1);
-  Svc.Prefs.set("clients.devices.mobile", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.desktop", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 1);
   scheduler.updateClientMode();
-  scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "idle",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.equal(scheduler.idle, true);
   Assert.equal(scheduler.syncInterval, scheduler.idleInterval);
 
@@ -715,9 +731,13 @@ add_task(async function test_back_triggersSync() {
   Assert.equal(Status.backoffInterval, 0);
 
   // Set up: Define 2 clients and put the system in idle.
-  Svc.Prefs.set("clients.devices.desktop", 1);
-  Svc.Prefs.set("clients.devices.mobile", 1);
-  scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  Svc.PrefBranch.setIntPref("clients.devices.desktop", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 1);
+  scheduler.observe(
+    null,
+    "idle",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.ok(scheduler.idle);
 
   // We don't actually expect the sync (or the login, for that matter) to
@@ -725,7 +745,11 @@ add_task(async function test_back_triggersSync() {
   let promiseObserved = promiseOneObserver("weave:service:login:error");
 
   // Send an 'active' event to trigger sync soonish.
-  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "active",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   await promiseObserved;
   await cleanUpAndGo();
 });
@@ -737,9 +761,13 @@ add_task(async function test_active_triggersSync_observesBackoff() {
   // Set up: Set backoff, define 2 clients and put the system in idle.
   const BACKOFF = 7337;
   Status.backoffInterval = scheduler.idleInterval + BACKOFF;
-  Svc.Prefs.set("clients.devices.desktop", 1);
-  Svc.Prefs.set("clients.devices.mobile", 1);
-  scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  Svc.PrefBranch.setIntPref("clients.devices.desktop", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 1);
+  scheduler.observe(
+    null,
+    "idle",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.equal(scheduler.idle, true);
 
   function onLoginStart() {
@@ -754,7 +782,11 @@ add_task(async function test_active_triggersSync_observesBackoff() {
   );
 
   // Send an 'active' event to try to trigger sync soonish.
-  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "active",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   await promiseTimer;
   Svc.Obs.remove("weave:service:login:start", onLoginStart);
 
@@ -773,9 +805,13 @@ add_task(async function test_back_debouncing() {
   Assert.equal(scheduler.idle, false);
 
   // Set up: Define 2 clients and put the system in idle.
-  Svc.Prefs.set("clients.devices.desktop", 1);
-  Svc.Prefs.set("clients.devices.mobile", 1);
-  scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  Svc.PrefBranch.setIntPref("clients.devices.desktop", 1);
+  Svc.PrefBranch.setIntPref("clients.devices.mobile", 1);
+  scheduler.observe(
+    null,
+    "idle",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
   Assert.equal(scheduler.idle, true);
 
   function onLoginStart() {
@@ -784,8 +820,16 @@ add_task(async function test_back_debouncing() {
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
   // Create spurious back-then-idle events as observed on OS X:
-  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
-  scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(
+    null,
+    "active",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
+  scheduler.observe(
+    null,
+    "idle",
+    Svc.PrefBranch.getIntPref("scheduler.idleTime")
+  );
 
   await promiseNamedTimer(IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
   Svc.Obs.remove("weave:service:login:start", onLoginStart);

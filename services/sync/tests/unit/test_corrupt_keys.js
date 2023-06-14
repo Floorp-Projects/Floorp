@@ -37,7 +37,7 @@ add_task(async function test_locally_changed_keys() {
   server.start();
 
   try {
-    Svc.Prefs.set("registerEngines", "Tab");
+    Svc.PrefBranch.setCharPref("registerEngines", "Tab");
 
     await configureIdentity({ username: "johndoe" }, server);
     // We aren't doing a .login yet, so fudge the cluster URL.
@@ -233,7 +233,9 @@ add_task(async function test_locally_changed_keys() {
       await PlacesUtils.history.hasVisits("http://foo/bar?record-no--9")
     );
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });

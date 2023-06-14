@@ -28,7 +28,9 @@ add_task(async function test_offline() {
     Assert.equal(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
     Services.io.offline = false;
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -73,7 +75,9 @@ add_task(async function test_not_logged_in() {
     Assert.ok(!Service.isLoggedIn, "no user configured, so can't be logged in");
     Assert.equal(Service._checkSync(), kSyncNotConfigured);
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });
@@ -109,7 +113,9 @@ add_task(async function test_login_logout() {
     Service.logout();
     Assert.ok(!Service.isLoggedIn);
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });
@@ -210,7 +216,9 @@ add_task(async function test_login_on_sync() {
     // N.B., a bunch of methods are stubbed at this point. Be careful putting
     // new tests after this point!
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     await promiseStopServer(server);
   }
 });

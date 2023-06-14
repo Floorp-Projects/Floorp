@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
@@ -12,15 +9,17 @@ add_task(async function run_test() {
   let engine = Service.engineManager.get("prefs");
   let tracker = engine._tracker;
 
-  let prefs = new Preferences();
-
   try {
     _("tracker.modified corresponds to preference.");
-    Assert.equal(Svc.Prefs.get("engine.prefs.modified"), undefined);
+    // Assert preference is not defined.
+    Assert.equal(
+      Svc.PrefBranch.getPrefType("engine.prefs.modified"),
+      Ci.nsIPrefBranch.PREF_INVALID
+    );
     Assert.ok(!tracker.modified);
 
     tracker.modified = true;
-    Assert.equal(Svc.Prefs.get("engine.prefs.modified"), true);
+    Assert.equal(Svc.PrefBranch.getBoolPref("engine.prefs.modified"), true);
     Assert.ok(tracker.modified);
 
     _("Engine's getChangedID() just returns the one GUID we have.");
@@ -29,7 +28,7 @@ add_task(async function run_test() {
     Assert.equal(ids.length, 1);
     Assert.equal(ids[0], CommonUtils.encodeBase64URL(Services.appinfo.ID));
 
-    Svc.Prefs.set("engine.prefs.modified", false);
+    Svc.PrefBranch.setBoolPref("engine.prefs.modified", false);
     Assert.ok(!tracker.modified);
 
     _("No modified state, so no changed IDs.");
@@ -39,7 +38,7 @@ add_task(async function run_test() {
     Assert.equal(tracker.score, 0);
 
     _("Test fixtures.");
-    Svc.Prefs.set("prefs.sync.testing.int", true);
+    Svc.PrefBranch.setBoolPref("prefs.sync.testing.int", true);
 
     _(
       "Test fixtures haven't upped the tracker score yet because it hasn't started tracking yet."
@@ -48,7 +47,7 @@ add_task(async function run_test() {
 
     _("Tell the tracker to start tracking changes.");
     tracker.start();
-    prefs.set("testing.int", 23);
+    Services.prefs.setIntPref("testing.int", 23);
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     Assert.equal(tracker.modified, true);
@@ -58,14 +57,14 @@ add_task(async function run_test() {
     Assert.equal(tracker.modified, false);
 
     _("Resetting a pref ups the score, too.");
-    prefs.reset("testing.int");
+    Services.prefs.clearUserPref("testing.int");
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
     Assert.equal(tracker.modified, true);
     await tracker.clearChangedIDs();
 
     _("So does changing a pref sync pref.");
-    Svc.Prefs.set("prefs.sync.testing.int", false);
+    Svc.PrefBranch.setBoolPref("prefs.sync.testing.int", false);
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, true);
@@ -74,19 +73,21 @@ add_task(async function run_test() {
     _(
       "Now that the pref sync pref has been flipped, changes to it won't be picked up."
     );
-    prefs.set("testing.int", 42);
+    Services.prefs.setIntPref("testing.int", 42);
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, false);
     await tracker.clearChangedIDs();
 
     _("Changing some other random pref won't do anything.");
-    prefs.set("testing.other", "blergh");
+    Services.prefs.setCharPref("testing.other", "blergh");
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, false);
   } finally {
     await tracker.stop();
-    prefs.resetBranch("");
+    for (const pref of Services.prefs.getChildList("")) {
+      Services.prefs.clearUserPref(pref);
+    }
   }
 });

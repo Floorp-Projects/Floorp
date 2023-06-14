@@ -12,7 +12,9 @@ const { Service } = ChromeUtils.importESModule(
 async function cleanup(engine, server) {
   await engine._tracker.stop();
   await engine.wipeClient();
-  Svc.Prefs.resetBranch("");
+  for (const pref of Svc.PrefBranch.getChildList("")) {
+    Svc.PrefBranch.clearUserPref(pref);
+  }
   Service.recordManager.clearCache();
   await promiseStopServer(server);
 }

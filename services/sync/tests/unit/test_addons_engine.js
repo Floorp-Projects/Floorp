@@ -15,16 +15,12 @@ const { AddonsEngine } = ChromeUtils.importESModule(
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
 
-const prefs = new Preferences();
-prefs.set(
+Services.prefs.setStringPref(
   "extensions.getAddons.get.url",
   "http://localhost:8888/search/guid:%IDS%"
 );
-prefs.set("extensions.install.requireSecureOrigin", false);
+Services.prefs.setBoolPref("extensions.install.requireSecureOrigin", false);
 
 let engine;
 let syncID;
@@ -118,11 +114,13 @@ add_task(async function test_find_dupe() {
 });
 
 add_task(async function test_get_changed_ids() {
-  let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
-  Preferences.set("privacy.reduceTimerPrecision", false);
+  let timerPrecision = Services.prefs.getBoolPref(
+    "privacy.reduceTimerPrecision"
+  );
+  Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
 
   registerCleanupFunction(function () {
-    Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
+    Services.prefs.setBoolPref("privacy.reduceTimerPrecision", timerPrecision);
   });
 
   _("Ensure getChangedIDs() has the appropriate behavior.");

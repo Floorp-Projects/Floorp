@@ -233,7 +233,9 @@ add_task(async function run_test() {
     Assert.equal(false, await Service.verifyAndFetchSymmetricKeys());
     Assert.equal(Service.status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     server.stop(do_test_finished);
   }
 });

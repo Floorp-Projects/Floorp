@@ -41,7 +41,9 @@ add_task(async function test_urls() {
       "http://weave.cluster/1.1/johndoe/storage/meta/global"
     );
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   }
 });
 
@@ -51,17 +53,22 @@ add_test(function test_syncID() {
 
   try {
     // Ensure pristine environment
-    Assert.equal(Svc.Prefs.get("client.syncID"), undefined);
+    Assert.equal(
+      Svc.PrefBranch.getPrefType("client.syncID"),
+      Ci.nsIPrefBranch.PREF_INVALID
+    );
 
     // Performing the first get on the attribute will generate a new GUID.
     Assert.equal(Service.syncID, "fake-guid-00");
-    Assert.equal(Svc.Prefs.get("client.syncID"), "fake-guid-00");
+    Assert.equal(Svc.PrefBranch.getStringPref("client.syncID"), "fake-guid-00");
 
-    Svc.Prefs.set("client.syncID", Utils.makeGUID());
-    Assert.equal(Svc.Prefs.get("client.syncID"), "fake-guid-01");
+    Svc.PrefBranch.setStringPref("client.syncID", Utils.makeGUID());
+    Assert.equal(Svc.PrefBranch.getStringPref("client.syncID"), "fake-guid-01");
     Assert.equal(Service.syncID, "fake-guid-01");
   } finally {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     new FakeGUIDService();
     run_next_test();
   }

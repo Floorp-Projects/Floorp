@@ -14,7 +14,9 @@ const fakeServerUrl = "http://localhost:" + fakeServer.port;
 
 registerCleanupFunction(function () {
   return promiseStopServer(fakeServer).finally(() => {
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
   });
 });
 
