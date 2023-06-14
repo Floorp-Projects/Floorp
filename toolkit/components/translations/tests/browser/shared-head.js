@@ -122,7 +122,7 @@ async function openAboutTranslations({
     runInPage
   );
 
-  await removeMocks();
+  removeMocks();
 
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
@@ -292,7 +292,6 @@ async function setupActorTest({
   prefs,
   detectedLanguageConfidence,
   detectedLangTag,
-  autoDownloadFromRemoteSettings = false,
 }) {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -307,7 +306,6 @@ async function setupActorTest({
     languagePairs,
     detectedLangTag,
     detectedLanguageConfidence,
-    autoDownloadFromRemoteSettings,
   });
 
   // Create a new tab so each test gets a new actor, and doesn't re-use the old one.
@@ -320,9 +318,9 @@ async function setupActorTest({
   return {
     actor: getTranslationsParent(),
     remoteClients,
-    async cleanup() {
+    cleanup() {
       BrowserTestUtils.removeTab(tab);
-      await removeMocks();
+      removeMocks();
       return SpecialPowers.popPrefEnv();
     },
   };
@@ -366,15 +364,7 @@ async function createAndMockRemoteSettings({
     remoteClients.languageIdModels.client
   );
   return {
-    async removeMocks() {
-      await remoteClients.translationModels.client.attachments.deleteAll();
-      await remoteClients.translationsWasm.client.attachments.deleteAll();
-      await remoteClients.languageIdModels.client.attachments.deleteAll();
-
-      await remoteClients.translationModels.client.db.clear();
-      await remoteClients.translationsWasm.client.db.clear();
-      await remoteClients.languageIdModels.client.db.clear();
-
+    removeMocks() {
       TranslationsParent.unmockTranslationsEngine();
       TranslationsParent.unmockLanguageIdentification();
     },
@@ -457,8 +447,8 @@ async function loadTestPage({
     /**
      * @returns {Promise<void>}
      */
-    async cleanup() {
-      await removeMocks();
+    cleanup() {
+      removeMocks();
       Services.fog.testResetFOG();
       BrowserTestUtils.removeTab(tab);
       return Promise.all([
@@ -539,30 +529,18 @@ async function autoTranslatePage(options) {
 
 /**
  * @param {RemoteSettingsClient} client
- * @param {string} mockedCollectionName - The name of the mocked collection without
- *  the incrementing "id" part. This is provided so that attachments can be asserted
- *  as being of a certain version.
  * @param {boolean} autoDownloadFromRemoteSettings - Skip the manual download process,
  *  and automatically download the files. Normally it's preferrable to manually trigger
  *  the downloads to trigger the download behavior, but this flag lets you bypass this
  *  and automatically download the files.
  */
-function createAttachmentMock(
-  client,
-  mockedCollectionName,
-  autoDownloadFromRemoteSettings
-) {
+function createAttachmentMock(client, autoDownloadFromRemoteSettings) {
   const pendingDownloads = [];
   client.attachments.download = record =>
     new Promise((resolve, reject) => {
       console.log("Download requested:", client.collectionName, record.name);
       if (autoDownloadFromRemoteSettings) {
-        const encoder = new TextEncoder();
-        const { buffer } = encoder.encode(
-          `Mocked download: ${mockedCollectionName} ${record.name} ${record.version}`
-        );
-
-        resolve({ buffer });
+        resolve({ buffer: new ArrayBuffer() });
       } else {
         pendingDownloads.push({ record, resolve, reject });
       }
@@ -641,40 +619,6 @@ function createAttachmentMock(
  */
 const FILES_PER_LANGUAGE_PAIR = 3;
 
-function createRecordsForLanguagePair(fromLang, toLang, isBeta = false) {
-  const records = [];
-  const lang = fromLang + toLang;
-  const models = [
-    { fileType: "model", name: `model.${lang}.intgemm.alphas.bin` },
-    { fileType: "lex", name: `lex.50.50.${lang}.s2t.bin` },
-    { fileType: "vocab", name: `vocab.${lang}.spm` },
-  ];
-
-  if (models.length !== FILES_PER_LANGUAGE_PAIR) {
-    throw new Error("Files per language pair was wrong.");
-  }
-
-  for (const { fileType, name } of models) {
-    records.push({
-      id: crypto.randomUUID(),
-      name,
-      fromLang,
-      toLang,
-      fileType,
-      version: isBeta ? "0.1" : "1.0",
-      last_modified: Date.now(),
-      schema: Date.now(),
-    });
-  }
-  return records;
-}
-
-/**
- * Increments each time a remote settings client is created to ensure a unique client
- * name for each test run.
- */
-let _remoteSettingsMockId = 0;
-
 /**
  * Creates a local RemoteSettingsClient for use within tests.
  *
@@ -688,25 +632,40 @@ async function createTranslationModelsRemoteClient(
 ) {
   const records = [];
   for (const { fromLang, toLang, isBeta } of langPairs) {
-    records.push(...createRecordsForLanguagePair(fromLang, toLang, isBeta));
+    const lang = fromLang + toLang;
+    const models = [
+      { fileType: "model", name: `model.${lang}.intgemm.alphas.bin` },
+      { fileType: "lex", name: `lex.50.50.${lang}.s2t.bin` },
+      { fileType: "vocab", name: `vocab.${lang}.spm` },
+    ];
+
+    if (models.length !== FILES_PER_LANGUAGE_PAIR) {
+      throw new Error("Files per language pair was wrong.");
+    }
+
+    for (const { fileType, name } of models) {
+      records.push({
+        id: crypto.randomUUID(),
+        name,
+        fromLang,
+        toLang,
+        fileType,
+        version: isBeta ? "0.1" : "1.0",
+        last_modified: Date.now(),
+        schema: Date.now(),
+      });
+    }
   }
 
   const { RemoteSettings } = ChromeUtils.importESModule(
     "resource://services-settings/remote-settings.sys.mjs"
   );
-  const mockedCollectionName = "test-translation-models";
-  const client = RemoteSettings(
-    `${mockedCollectionName}-${_remoteSettingsMockId++}`
-  );
+  const client = RemoteSettings("test-translation-models");
   const metadata = {};
   await client.db.clear();
   await client.db.importChanges(metadata, Date.now(), records);
 
-  return createAttachmentMock(
-    client,
-    mockedCollectionName,
-    autoDownloadFromRemoteSettings
-  );
+  return createAttachmentMock(client, autoDownloadFromRemoteSettings);
 }
 
 /**
@@ -729,19 +688,12 @@ async function createTranslationsWasmRemoteClient(
   const { RemoteSettings } = ChromeUtils.importESModule(
     "resource://services-settings/remote-settings.sys.mjs"
   );
-  const mockedCollectionName = "test-translation-wasm";
-  const client = RemoteSettings(
-    `${mockedCollectionName}-${_remoteSettingsMockId++}`
-  );
+  const client = RemoteSettings("test-translations-wasm");
   const metadata = {};
   await client.db.clear();
   await client.db.importChanges(metadata, Date.now(), records);
 
-  return createAttachmentMock(
-    client,
-    mockedCollectionName,
-    autoDownloadFromRemoteSettings
-  );
+  return createAttachmentMock(client, autoDownloadFromRemoteSettings);
 }
 
 /**
@@ -766,19 +718,12 @@ async function createLanguageIdModelsRemoteClient(
   const { RemoteSettings } = ChromeUtils.importESModule(
     "resource://services-settings/remote-settings.sys.mjs"
   );
-  const client = RemoteSettings(
-    "test-language-id-models" + _remoteSettingsMockId++
-  );
-  const mockedCollectionName = "test-language-id-models";
+  const client = RemoteSettings("test-language-id-models");
   const metadata = {};
   await client.db.clear();
   await client.db.importChanges(metadata, Date.now(), records);
 
-  return createAttachmentMock(
-    client,
-    mockedCollectionName,
-    autoDownloadFromRemoteSettings
-  );
+  return createAttachmentMock(client, autoDownloadFromRemoteSettings);
 }
 
 async function selectAboutPreferencesElements() {
@@ -898,7 +843,7 @@ async function setupAboutPreferences(languagePairs) {
 
   async function cleanup() {
     gBrowser.removeCurrentTab();
-    await removeMocks();
+    removeMocks();
     await SpecialPowers.popPrefEnv();
   }
 
