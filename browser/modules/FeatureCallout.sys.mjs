@@ -301,7 +301,7 @@ export class FeatureCallout {
       );
       this._container.classList.toggle(
         "hidden-arrow",
-        this.currentScreen?.content?.hide_arrow
+        !!this.currentScreen?.content?.hide_arrow
       );
       this._container.id = CONTAINER_ID;
       // This value is reported as the "page" in about:welcome telemetry
@@ -1062,7 +1062,7 @@ export class FeatureCallout {
       // part of the content of a page in a browser tab (like PDF.js).
       this._container.classList.toggle(
         "simulateContent",
-        this.page === "chrome" && this.theme.simulateContent
+        !!(this.page === "chrome" && this.theme.simulateContent)
       );
       for (const type of ["light", "dark", "hcm"]) {
         const scheme = this.theme[type];
