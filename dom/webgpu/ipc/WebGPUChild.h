@@ -79,7 +79,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   RawId RenderBundleEncoderFinish(ffi::WGPURenderBundleEncoder& aEncoder,
                                   RawId aDeviceId,
                                   const dom::GPURenderBundleDescriptor& aDesc);
-  RawId RenderBundleEncoderFinishError(RawId aDeviceId, const nsString& aLabel);
   RawId DeviceCreateBindGroupLayout(
       RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc);
   RawId DeviceCreatePipelineLayout(
