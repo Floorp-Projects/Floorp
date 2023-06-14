@@ -340,47 +340,48 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo& info,
   printf_stderr("LdrLoadDll: info->mName: '%s'\n", info->mName);
 #endif
 
-  if (info.mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) {
+  if (info.mFlags & DllBlockInfoFlags::REDIRECT_TO_NOOP_ENTRYPOINT) {
     printf_stderr(
         "LdrLoadDll: "
         "Ignoring the REDIRECT_TO_NOOP_ENTRYPOINT flag\n");
   }
 
-  if ((info.mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) &&
+  if ((info.mFlags & DllBlockInfoFlags::BLOCK_WIN8_AND_OLDER) &&
       IsWin8Point1OrLater()) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::BLOCK_WIN7_AND_OLDER) && IsWin8OrLater()) {
+  if ((info.mFlags & DllBlockInfoFlags::BLOCK_WIN7_AND_OLDER) &&
+      IsWin8OrLater()) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfoFlags::CHILD_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::UTILITY_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfoFlags::UTILITY_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsUtilityProcess)) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::SOCKET_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfoFlags::SOCKET_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsSocketProcess)) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::GPU_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfoFlags::GPU_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsGPUProcess)) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
+  if ((info.mFlags & DllBlockInfoFlags::BROWSER_PROCESS_ONLY) &&
       (sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return false;
   }
 
-  if ((info.mFlags & DllBlockInfo::GMPLUGIN_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfoFlags::GMPLUGIN_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsGMPluginProcess)) {
     return false;
   }
@@ -403,7 +404,7 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo& info,
       return true;
     }
 
-    if (info.mFlags & DllBlockInfo::USE_TIMESTAMP) {
+    if (info.mFlags & DllBlockInfoFlags::USE_TIMESTAMP) {
       *fVersion = GetTimestamp(full_fname.get());
       if (*fVersion > info.mMaxVersion) {
         return false;

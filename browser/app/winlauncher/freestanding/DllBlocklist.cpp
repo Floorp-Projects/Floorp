@@ -17,6 +17,8 @@
 #include "ModuleLoadFrame.h"
 #include "SharedSection.h"
 
+using mozilla::DllBlockInfoFlags;
+
 #define DLL_BLOCKLIST_ENTRY(name, ...) \
   {MOZ_LITERAL_UNICODE_STRING(L##name), __VA_ARGS__},
 #define DLL_BLOCKLIST_STRING_TYPE UNICODE_STRING
@@ -168,53 +170,53 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
                                   uint64_t& aVersion) {
   aVersion = DllBlockInfo::ALL_VERSIONS;
 
-  if (aInfo->mFlags & (DllBlockInfo::BLOCK_WIN8_AND_OLDER |
-                       DllBlockInfo::BLOCK_WIN7_AND_OLDER)) {
+  if (aInfo->mFlags & (DllBlockInfoFlags::BLOCK_WIN8_AND_OLDER |
+                       DllBlockInfoFlags::BLOCK_WIN7_AND_OLDER)) {
     RTL_OSVERSIONINFOW osv = {sizeof(osv)};
     NTSTATUS ntStatus = ::RtlGetVersion(&osv);
     if (!NT_SUCCESS(ntStatus)) {
       return BlockAction::Error;
     }
 
-    if ((aInfo->mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) &&
+    if ((aInfo->mFlags & DllBlockInfoFlags::BLOCK_WIN8_AND_OLDER) &&
         (osv.dwMajorVersion > 6 ||
          (osv.dwMajorVersion == 6 && osv.dwMinorVersion > 2))) {
       return BlockAction::Allow;
     }
 
-    if ((aInfo->mFlags & DllBlockInfo::BLOCK_WIN7_AND_OLDER) &&
+    if ((aInfo->mFlags & DllBlockInfoFlags::BLOCK_WIN7_AND_OLDER) &&
         (osv.dwMajorVersion > 6 ||
          (osv.dwMajorVersion == 6 && osv.dwMinorVersion > 1))) {
       return BlockAction::Allow;
     }
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
+  if ((aInfo->mFlags & DllBlockInfoFlags::CHILD_PROCESSES_ONLY) &&
       !(gBlocklistInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return BlockAction::Allow;
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::UTILITY_PROCESSES_ONLY) &&
+  if ((aInfo->mFlags & DllBlockInfoFlags::UTILITY_PROCESSES_ONLY) &&
       !(gBlocklistInitFlags & eDllBlocklistInitFlagIsUtilityProcess)) {
     return BlockAction::Allow;
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::SOCKET_PROCESSES_ONLY) &&
+  if ((aInfo->mFlags & DllBlockInfoFlags::SOCKET_PROCESSES_ONLY) &&
       !(gBlocklistInitFlags & eDllBlocklistInitFlagIsSocketProcess)) {
     return BlockAction::Allow;
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::GPU_PROCESSES_ONLY) &&
+  if ((aInfo->mFlags & DllBlockInfoFlags::GPU_PROCESSES_ONLY) &&
       !(gBlocklistInitFlags & eDllBlocklistInitFlagIsGPUProcess)) {
     return BlockAction::Allow;
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
+  if ((aInfo->mFlags & DllBlockInfoFlags::BROWSER_PROCESS_ONLY) &&
       (gBlocklistInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return BlockAction::Allow;
   }
 
-  if ((aInfo->mFlags & DllBlockInfo::GMPLUGIN_PROCESSES_ONLY) &&
+  if ((aInfo->mFlags & DllBlockInfoFlags::GMPLUGIN_PROCESSES_ONLY) &&
       !(gBlocklistInitFlags & eDllBlocklistInitFlagIsGMPluginProcess)) {
     return BlockAction::Allow;
   }
@@ -227,7 +229,7 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
     return BlockAction::Error;
   }
 
-  if (aInfo->mFlags & DllBlockInfo::USE_TIMESTAMP) {
+  if (aInfo->mFlags & DllBlockInfoFlags::USE_TIMESTAMP) {
     DWORD timestamp;
     if (!aHeaders.GetTimeStamp(timestamp)) {
       return BlockAction::Error;
@@ -352,7 +354,7 @@ static BlockAction DetermineBlockAction(
 
   gBlockSet.Add(entry->mName, version);
 
-  if ((entry->mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) &&
+  if ((entry->mFlags & DllBlockInfoFlags::REDIRECT_TO_NOOP_ENTRYPOINT) &&
       aK32Exports && RedirectToNoOpEntryPoint(headers, *aK32Exports)) {
     MOZ_ASSERT(!blockedByDynamicBlocklist, "dynamic blocklist has redirect?");
     return BlockAction::NoOpEntryPoint;
