@@ -26,6 +26,8 @@ class CSSLayerBlockRule final : public css::GroupRule {
   StyleLayerBlockRule* Raw() const { return mRawRule; }
   void SetRawAfterClone(RefPtr<StyleLayerBlockRule>);
 
+  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
+
   // WebIDL interface
   StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;

@@ -7,7 +7,7 @@
 #ifndef mozilla_CSSStyleRule_h
 #define mozilla_CSSStyleRule_h
 
-#include "mozilla/css/Rule.h"
+#include "mozilla/css/GroupRule.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/WeakPtr.h"
@@ -55,7 +55,7 @@ class CSSStyleRuleDeclaration final : public nsDOMCSSDeclaration {
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class CSSStyleRule final : public css::Rule, public SupportsWeakPtr {
+class CSSStyleRule final : public css::GroupRule, public SupportsWeakPtr {
  public:
   CSSStyleRule(already_AddRefed<StyleLockedStyleRule> aRawRule,
                StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
@@ -63,7 +63,7 @@ class CSSStyleRule final : public css::Rule, public SupportsWeakPtr {
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSStyleRule,
-                                                         css::Rule)
+                                                         css::GroupRule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
   uint32_t GetSelectorCount() const;
@@ -84,6 +84,7 @@ class CSSStyleRule final : public css::Rule, public SupportsWeakPtr {
 
   StyleLockedStyleRule* Raw() const { return mRawRule; }
   void SetRawAfterClone(RefPtr<StyleLockedStyleRule>);
+  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
 
   // Methods of mozilla::css::Rule
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
