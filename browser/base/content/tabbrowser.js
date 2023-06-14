@@ -1191,6 +1191,11 @@
         newBrowser.docShellIsActive = !document.hidden;
       }
 
+      if (gURLBar) {
+        oldBrowser._urlbarSelectionStart = gURLBar.selectionStart;
+        oldBrowser._urlbarSelectionEnd = gURLBar.selectionEnd;
+      }
+
       this._selectedBrowser = newBrowser;
       this._selectedTab = newTab;
       this.showTab(newTab);
@@ -1511,12 +1516,18 @@
                   return;
                 }
 
-                gURLBar.select();
+                gURLBar.setSelectionRange(
+                  newBrowser._urlbarSelectionStart,
+                  newBrowser._urlbarSelectionEnd
+                );
               },
               { once: true }
             );
           } else {
-            gURLBar.select();
+            gURLBar.setSelectionRange(
+              newBrowser._urlbarSelectionStart,
+              newBrowser._urlbarSelectionEnd
+            );
           }
         };
 

@@ -97,31 +97,72 @@ add_task(async function selectAndFocus() {
 
   await doSelectAndFocusTest({
     targetTab: webpageTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: userTypedTab,
   });
   await doSelectAndFocusTest({
     targetTab: webpageTab,
+    targetSelectionStart: 2,
+    targetSelectionEnd: 5,
+    anotherTab: userTypedTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: webpageTab,
+    targetSelectionStart: webpageTabURL.length,
+    targetSelectionEnd: webpageTabURL.length,
+    anotherTab: userTypedTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: webpageTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: emptyTab,
   });
   await doSelectAndFocusTest({
     targetTab: userTypedTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: webpageTab,
   });
   await doSelectAndFocusTest({
     targetTab: userTypedTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
+    anotherTab: emptyTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: userTypedTab,
+    targetSelectionStart: 1,
+    targetSelectionEnd: 2,
+    anotherTab: emptyTab,
+  });
+  await doSelectAndFocusTest({
+    targetTab: userTypedTab,
+    targetSelectionStart: userTypedTabText.length,
+    targetSelectionEnd: userTypedTabText.length,
     anotherTab: emptyTab,
   });
   await doSelectAndFocusTest({
     targetTab: emptyTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: webpageTab,
   });
   await doSelectAndFocusTest({
     targetTab: emptyTab,
+    targetSelectionStart: 0,
+    targetSelectionEnd: 0,
     anotherTab: userTypedTab,
   });
 });
 
-async function doSelectAndFocusTest({ targetTab, anotherTab }) {
+async function doSelectAndFocusTest({
+  targetTab,
+  targetSelectionStart,
+  targetSelectionEnd,
+  anotherTab,
+}) {
   const testCases = [
     {
       targetFocus: false,
@@ -141,6 +182,10 @@ async function doSelectAndFocusTest({ targetTab, anotherTab }) {
     // Setup the target tab.
     await switchTab(targetTab);
     setURLBarFocus(targetFocus);
+    gURLBar.inputField.setSelectionRange(
+      targetSelectionStart,
+      targetSelectionEnd
+    );
     const targetValue = gURLBar.value;
 
     // Switch to another tab.
@@ -154,8 +199,8 @@ async function doSelectAndFocusTest({ targetTab, anotherTab }) {
     Assert.equal(gURLBar.value, targetValue);
     Assert.equal(gURLBar.focused, targetFocus);
     if (gURLBar.focused) {
-      Assert.equal(gURLBar.selectionStart, 0);
-      Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
+      Assert.equal(gURLBar.selectionStart, targetSelectionStart);
+      Assert.equal(gURLBar.selectionEnd, targetSelectionEnd);
     } else {
       Assert.equal(gURLBar.selectionStart, gURLBar.value.length);
       Assert.equal(gURLBar.selectionEnd, gURLBar.value.length);
