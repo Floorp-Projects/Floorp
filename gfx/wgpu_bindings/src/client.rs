@@ -700,6 +700,28 @@ pub unsafe extern "C" fn wgpu_client_create_render_bundle(
     id
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_client_create_render_bundle_error(
+    client: &Client,
+    device_id: id::DeviceId,
+    label: Option<&nsACString>,
+    bb: &mut ByteBuf,
+) -> id::RenderBundleId {
+    let label = wgpu_string(label);
+
+    let backend = device_id.backend();
+    let id = client
+        .identities
+        .lock()
+        .select(backend)
+        .render_bundles
+        .alloc(backend);
+
+    let action = DeviceAction::CreateRenderBundleError(id, label);
+    *bb = make_byte_buf(&action);
+    id
+}
+
 #[repr(C)]
 pub struct ComputePassDescriptor<'a> {
     pub label: Option<&'a nsACString>,
