@@ -78,13 +78,13 @@ function getEngineModules() {
     result.History = { module: "history.js", symbol: "HistoryEngine" };
     result.Tab = { module: "tabs.js", symbol: "TabEngine" };
   }
-  if (Svc.Prefs.get("engine.addresses.available", false)) {
+  if (Svc.PrefBranch.getBoolPref("engine.addresses.available", false)) {
     result.Addresses = {
       module: "resource://autofill/FormAutofillSync.jsm",
       symbol: "AddressesEngine",
     };
   }
-  if (Svc.Prefs.get("engine.creditcards.available", false)) {
+  if (Svc.PrefBranch.getBoolPref("engine.creditcards.available", false)) {
     result.CreditCards = {
       module: "resource://autofill/FormAutofillSync.jsm",
       symbol: "CreditCardsEngine",
@@ -423,8 +423,11 @@ Sync11Service.prototype = {
     let engines = [];
     // We allow a pref, which has no default value, to limit the engines
     // which are registered. We expect only tests will use this.
-    if (Svc.Prefs.has("registerEngines")) {
-      engines = Svc.Prefs.get("registerEngines").split(",");
+    if (
+      Svc.PrefBranch.getPrefType("registerEngines") !=
+      Ci.nsIPrefBranch.PREF_INVALID
+    ) {
+      engines = Svc.PrefBranch.getCharPref("registerEngines").split(",");
       this._log.info("Registering custom set of engines", engines);
     } else {
       // default is all engines.
@@ -432,7 +435,7 @@ Sync11Service.prototype = {
     }
 
     let declined = [];
-    let pref = Svc.Prefs.get("declinedEngines");
+    let pref = Svc.PrefBranch.getCharPref("declinedEngines", null);
     if (pref) {
       declined = pref.split(",");
     }
@@ -497,7 +500,7 @@ Sync11Service.prototype = {
     await this.promiseInitialized;
 
     // Sanity check, this method is not meant to be run if Sync is enabled!
-    if (Svc.Prefs.get("username", "")) {
+    if (Svc.PrefBranch.getStringPref("username", "")) {
       throw new Error("Sync is enabled!");
     }
 
@@ -524,7 +527,10 @@ Sync11Service.prototype = {
     this._ignorePrefObserver = true;
     try {
       for (const engine of allEngines) {
-        Svc.Prefs.set(`engine.${engine}`, !declinedEngines.includes(engine));
+        Svc.PrefBranch.setBoolPref(
+          `engine.${engine}`,
+          !declinedEngines.includes(engine)
+        );
       }
     } finally {
       this._ignorePrefObserver = false;
@@ -544,7 +550,10 @@ Sync11Service.prototype = {
         // We check if we're running TPS here to avoid TPS failing because it
         // couldn't get to get the sync lock, due to us currently syncing the
         // clients engine.
-        if (data.includes("clients") && !Svc.Prefs.get("testing.tps", false)) {
+        if (
+          data.includes("clients") &&
+          !Svc.PrefBranch.getBoolPref("testing.tps", false)
+        ) {
           // Sync in the background (it's fine not to wait on the returned promise
           // because sync() has a lock).
           // [] = clients collection only
@@ -585,12 +594,12 @@ Sync11Service.prototype = {
 
   _handleEngineStatusChanged(engine) {
     this._log.trace("Status for " + engine + " engine changed.");
-    if (Svc.Prefs.get("engineStatusChanged." + engine, false)) {
+    if (Svc.PrefBranch.getBoolPref("engineStatusChanged." + engine, false)) {
       // The enabled status being changed back to what it was before.
-      Svc.Prefs.reset("engineStatusChanged." + engine);
+      Svc.PrefBranch.clearUserPref("engineStatusChanged." + engine);
     } else {
       // Remember that the engine status changed locally until the next sync.
-      Svc.Prefs.set("engineStatusChanged." + engine, true);
+      Svc.PrefBranch.setBoolPref("engineStatusChanged." + engine, true);
     }
   },
 
@@ -954,7 +963,7 @@ Sync11Service.prototype = {
       throw new Error("No FxA user is signed in");
     }
     this._log.info("Configuring sync with current FxA user");
-    Svc.Prefs.set("username", user.email);
+    Svc.PrefBranch.setStringPref("username", user.email);
     Svc.Obs.notify("weave:connected");
   },
 
@@ -992,11 +1001,13 @@ Sync11Service.prototype = {
 
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
-    Svc.Prefs.resetBranch("");
+    for (const pref of Svc.PrefBranch.getChildList("")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     this._ignorePrefObserver = false;
     this.clusterURL = null;
 
-    Svc.Prefs.set("lastversion", WEAVE_VERSION);
+    Svc.PrefBranch.setCharPref("lastversion", WEAVE_VERSION);
 
     try {
       this.identity.finalize();
@@ -1290,7 +1301,7 @@ Sync11Service.prototype = {
       Utils.mpLocked()
     ) {
       reason = kSyncMasterPasswordLocked;
-    } else if (Svc.Prefs.get("firstSync") == "notReady") {
+    } else if (Svc.PrefBranch.getCharPref("firstSync", null) == "notReady") {
       reason = kFirstSyncChoiceNotMade;
     } else if (!Async.isAppReady()) {
       reason = kFirefoxShuttingDown;

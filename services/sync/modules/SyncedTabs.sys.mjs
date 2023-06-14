@@ -9,7 +9,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CLIENT_NOT_CONFIGURED: "resource://services-sync/constants.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 
@@ -118,7 +117,7 @@ let SyncedTabsInternal = {
     }
 
     // A boolean that controls whether we should show the icon from the remote tab.
-    const showRemoteIcons = lazy.Preferences.get(
+    const showRemoteIcons = Services.prefs.getBoolPref(
       "services.sync.syncedTabs.showRemoteIcons",
       true
     );
@@ -161,7 +160,10 @@ let SyncedTabsInternal = {
   async syncTabs(force) {
     if (!force) {
       // Don't bother refetching tabs if we already did so recently
-      let lastFetch = lazy.Preferences.get("services.sync.lastTabFetch", 0);
+      let lastFetch = Services.prefs.getIntPref(
+        "services.sync.lastTabFetch",
+        0
+      );
       let now = Math.floor(Date.now() / 1000);
       if (now - lastFetch < TABS_FRESH_ENOUGH_INTERVAL_SECONDS) {
         lazy.log.info("_refetchTabs was done recently, do not doing it again");
@@ -206,7 +208,7 @@ let SyncedTabsInternal = {
         // The tabs engine just finished syncing
         // Set our lastTabFetch pref here so it tracks both explicit sync calls
         // and normally scheduled ones.
-        lazy.Preferences.set(
+        Services.prefs.setIntPref(
           "services.sync.lastTabFetch",
           Math.floor(Date.now() / 1000)
         );
@@ -214,7 +216,7 @@ let SyncedTabsInternal = {
         break;
       case "weave:service:start-over":
         // start-over needs to notify so consumers find no tabs.
-        lazy.Preferences.reset("services.sync.lastTabFetch");
+        Services.prefs.clearUserPref("services.sync.lastTabFetch");
         Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       case "nsPref:changed":
