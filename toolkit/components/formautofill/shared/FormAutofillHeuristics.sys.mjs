@@ -623,16 +623,10 @@ export const FormAutofillHeuristics = {
     let fieldNames = [];
     const isAutoCompleteOff =
       element.autocomplete == "off" || element.form?.autocomplete == "off";
-    if (
-      FormAutofill.isAutofillCreditCardsAvailable &&
-      (!isAutoCompleteOff || FormAutofill.creditCardsAutocompleteOff)
-    ) {
+    if (!isAutoCompleteOff || FormAutofill.creditCardsAutocompleteOff) {
       fieldNames.push(...this.CREDIT_CARD_FIELDNAMES);
     }
-    if (
-      FormAutofill.isAutofillAddressesAvailable &&
-      (!isAutoCompleteOff || FormAutofill.addressesAutocompleteOff)
-    ) {
+    if (!isAutoCompleteOff || FormAutofill.addressesAutocompleteOff) {
       fieldNames.push(...this.ADDRESS_FIELDNAMES);
     }
 
