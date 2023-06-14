@@ -20,24 +20,25 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   innerWindowId = null;
   isDestroyed = false;
-  #areLangTagsReported = false;
+  #isPageHidden = false;
   #wasTranslationsEngineCreated = false;
 
   handleEvent(event) {
     switch (event.type) {
       case "DOMContentLoaded":
-        this.innerWindowId = this.contentWindow.windowGlobalChild.innerWindowId;
+        this.innerWindowId =
+          this.contentWindow?.windowGlobalChild.innerWindowId;
         if (!this.#isRestrictedPage()) {
-          this.#areLangTagsReported = true;
           this.sendAsyncMessage("Translations:ReportLangTags", {
             documentElementLang: this.document.documentElement.lang,
           });
         }
         break;
+      case "pageshow":
+        this.#isPageHidden = false;
+        break;
       case "pagehide":
-        if (this.#areLangTagsReported) {
-          this.sendAsyncMessage("Translations:ClearLangTags");
-        }
+        this.#isPageHidden = true;
         break;
     }
   }
@@ -47,6 +48,9 @@ export class TranslationsChild extends JSWindowActorChild {
    * about:* pages will not be translated.
    */
   #isRestrictedPage() {
+    if (!this.contentWindow?.location) {
+      return true;
+    }
     const { href } = this.contentWindow.location;
     // Keep this logic up to date with TranslationsParent.isRestrictedPage.
     return !(
@@ -141,9 +145,12 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   createLanguageIdEngine() {
-    return lazy.LanguageIdEngine.getOrCreate(() =>
-      this.sendQuery("Translations:GetLanguageIdEnginePayload")
-    );
+    return lazy.LanguageIdEngine.getOrCreate(() => {
+      if (this.#isPageHidden) {
+        throw new Error("The page was already hidden.");
+      }
+      return this.sendQuery("Translations:GetLanguageIdEnginePayload");
+    });
   }
 
   createTranslationsEngine(fromLanguage, toLanguage) {
