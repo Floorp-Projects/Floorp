@@ -1341,7 +1341,8 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
             "We are creating a new CookieJar Settings, so none exists "
             "currently. Although the variable is called 'triggering principal',"
             "it is used as the loading principal in the download channel, so we"
-            "treat it as a loading principal also.");
+            "treat it as a loading principal also.",
+            RFPTarget::IsAlwaysEnabledForPrecompute);
     cookieJarSettings =
         aIsPrivate
             ? net::CookieJarSettings::Create(net::CookieJarSettings::ePrivate,

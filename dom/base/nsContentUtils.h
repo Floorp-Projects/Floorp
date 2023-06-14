@@ -379,10 +379,10 @@ class nsContentUtils {
   // (see below for more on justification strings.)
   static bool ShouldResistFingerprinting_dangerous(
       nsIURI* aURI, const mozilla::OriginAttributes& aOriginAttributes,
-      const char* aJustification, RFPTarget aTarget = RFPTarget::Unknown);
-  static bool ShouldResistFingerprinting_dangerous(
-      nsIPrincipal* aPrincipal, const char* aJustification,
-      RFPTarget aTarget = RFPTarget::Unknown);
+      const char* aJustification, RFPTarget aTarget);
+  static bool ShouldResistFingerprinting_dangerous(nsIPrincipal* aPrincipal,
+                                                   const char* aJustification,
+                                                   RFPTarget aTarget);
 
   /**
    * Implement a RFP function that only checks the pref, and does not take

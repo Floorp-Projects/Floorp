@@ -605,7 +605,8 @@ nsresult ServiceWorkerPrivate::Initialize() {
           "Service Workers exist outside a Document or Channel; as a property "
           "of the domain (and origin attributes). We don't have a "
           "CookieJarSettings to perform the nested check, but we can rely on"
-          "the FPI/dFPI partition key check."),
+          "the FPI/dFPI partition key check. The WorkerPrivate's ShouldResistFingerprinting function for the ServiceWorker depends on this boolean and will also consider an explicit RFPTarget.",
+          RFPTarget::IsAlwaysEnabledForPrecompute),
       // Origin trials are associated to a window, so it doesn't make sense on
       // service workers.
       OriginTrials(), std::move(serviceWorkerData), regInfo->AgentClusterId(),
