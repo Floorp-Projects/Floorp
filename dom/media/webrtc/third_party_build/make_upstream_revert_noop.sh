@@ -85,16 +85,30 @@ echo "We already cherry-picked this when we vendored $MOZ_LIBWEBRTC_NEXT_BASE." 
 > $STATE_DIR/$MOZ_LIBWEBRTC_REVERT_SHA.no-op-cherry-pick-msg
 
 cd $MOZ_LIBWEBRTC_SRC
-rm -f $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
 git checkout -b moz-cherry-pick $MOZ_LIBWEBRTC_BASE
-git format-patch -o $TMP_DIR -k --start-number 1 \
-    $MOZ_LIBWEBRTC_NEXT_BASE^..$MOZ_LIBWEBRTC_NEXT_BASE
-git format-patch -o $TMP_DIR -k --start-number 2 \
-    $MOZ_LIBWEBRTC_REVERT_SHA^..$MOZ_LIBWEBRTC_REVERT_SHA
-sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_NEXT_BASE)/" $TMP_DIR/0001*.patch
-sed -i.bak -e "/^Subject: / s/$/ ($MOZ_LIBWEBRTC_REVERT_SHA)/" $TMP_DIR/0002*.patch
-sed -i.bak -e 's/^Subject: /Subject: (tmp-cherry-pick) /' $TMP_DIR/*.patch
-git am $TMP_DIR/*.patch
+
+COMMIT_MSG_FILE=$TMP_DIR/commit.msg
+
+# build commit message with annotated summary
+git show --format='%s%n%n%b' --no-patch $MOZ_LIBWEBRTC_NEXT_BASE > $COMMIT_MSG_FILE
+ed -s $COMMIT_MSG_FILE <<EOF
+1,s/^\(.*\)$/(tmp-cherry-pick) & ($MOZ_LIBWEBRTC_NEXT_BASE)/
+w
+q
+EOF
+git cherry-pick --no-commit $MOZ_LIBWEBRTC_NEXT_BASE
+git commit --file $COMMIT_MSG_FILE
+
+# build commit message with annotated summary
+git show --format='%s%n%n%b' --no-patch $MOZ_LIBWEBRTC_REVERT_SHA > $COMMIT_MSG_FILE
+ed -s $COMMIT_MSG_FILE <<EOF
+1,s/^\(.*\)$/(tmp-cherry-pick) & ($MOZ_LIBWEBRTC_REVERT_SHA)/
+w
+q
+EOF
+git cherry-pick --no-commit $MOZ_LIBWEBRTC_REVERT_SHA
+git commit --file $COMMIT_MSG_FILE
+
 git checkout $MOZ_LIBWEBRTC_BRANCH
 git rebase moz-cherry-pick
 git branch -d moz-cherry-pick
