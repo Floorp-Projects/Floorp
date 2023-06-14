@@ -343,7 +343,8 @@ class ElementStyle {
         earlier &&
         computedProp.priority === "important" &&
         earlier.priority !== "important" &&
-        !computedProp.textProp.rule.inherited
+        // For !important only consider rules applying to the same parent node.
+        computedProp.textProp.rule.inherited == earlier.textProp.rule.inherited
       ) {
         // New property is higher priority. Mark the earlier property
         // overridden (which will reverse its dirty state).
