@@ -43,4 +43,7 @@ def add_startup_test(config, tasks):
             yield task
             continue
         task["dependencies"]["startup-test"] = "startup-test-nightly-arm"
+        for dep_label, dep_task in config.kind_dependencies_tasks.items():
+            if dep_task.kind == "startup-test" and dep_task.attributes['shipping-product'] == task['attributes']['shipping-product']:
+                task["dependencies"]["startup-test"] = dep_label
         yield task

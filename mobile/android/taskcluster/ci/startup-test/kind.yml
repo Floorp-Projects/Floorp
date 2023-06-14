@@ -9,7 +9,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 task-defaults:
-    description: Run a simple UI test to verify Nightly build can start
+    description: Runs UI tests for sanity checking startup on Nightly
     treeherder:
         kind: test
         platform: 'nightly-start-test/opt'
@@ -20,7 +20,6 @@ task-defaults:
         max-run-time: 7200
         env:
             GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
-            GOOGLE_PROJECT: moz-fenix
         artifacts:
             - name: public
               path: /builds/worker/artifacts
@@ -28,26 +27,22 @@ task-defaults:
     run:
         using: run-commands
         use-caches: false
-        secrets:
-            - name: project/mobile/firefox-android/fenix/firebase
-              key: firebaseToken
-              path: .firebase_token.json
-              json: true
     run-on-tasks-for: []
-    attributes:
-        build-type: fenix-nightly-firebase
-        shipping-product: fenix
-        # cannot safely run this in Firebase
-        # turning off til we can safely run test in taskcluster
-        # https://github.com/mozilla-mobile/fenix/issues/7702
-        #nightly: true
-    dependencies:
-        signing: signing-apk-fenix-nightly-firebase
-        signing-android-test: signing-apk-fenix-android-test-nightly
 
 tasks:
-    nightly-arm:
+    fenix-arm-nightly:
+        attributes:
+            build-type: fenix-nightly-firebase
+            shipping-product: fenix
+        dependencies:
+            signing: signing-apk-fenix-nightly-firebase
+            signing-android-test: signing-apk-fenix-android-test-nightly
         run:
+            secrets:
+                - name: project/mobile/firefox-android/fenix/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
             pre-commands:
                 - ["cd", "fenix"]
             commands:
@@ -56,3 +51,30 @@ tasks:
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
         treeherder:
             symbol: fenix-nightly(startup-arm)
+        worker:
+            env:
+                GOOGLE_PROJECT: moz-fenix
+    focus-arm-nightly:
+        attributes:
+            build-type: focus-nightly-firebase
+            shipping-product: focus
+        dependencies:
+            signed-apk-debug-apk: signing-apk-focus-nightly-firebase
+            signed-apk-android-test: signing-apk-focus-android-test-nightly
+        run:
+            secrets:
+                - name: project/mobile/firefox-android/focus-android/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
+            pre-commands:
+                - ["cd", "focus-android"]
+            commands:
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
+        treeherder:
+            symbol: focus-nightly(startup-arm)
+        worker:
+            env:
+                GOOGLE_PROJECT: moz-focus-android
