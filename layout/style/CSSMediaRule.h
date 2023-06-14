@@ -28,8 +28,6 @@ class CSSMediaRule final : public css::ConditionRule {
 
   StyleMediaRule* Raw() const { return mRawRule; }
   void SetRawAfterClone(RefPtr<StyleMediaRule>);
-  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
-  bool IsCCLeaf() const override;
 
   // WebIDL interface
   StyleCssRuleType Type() const override;

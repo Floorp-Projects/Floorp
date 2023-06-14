@@ -1466,7 +1466,7 @@ nsresult StyleSheet::InsertRuleIntoGroupInternal(const nsACString& aRule,
                                                  uint32_t aIndex) {
   MOZ_ASSERT(!IsReadOnly());
 
-  ServoCSSRuleList* rules = aGroup->CssRules();
+  ServoCSSRuleList* rules = aGroup->GetCssRules();
   MOZ_ASSERT(rules && rules->GetParentRule() == aGroup);
   return rules->InsertRule(aRule, aIndex);
 }
