@@ -196,7 +196,7 @@ add_task(async function navigate_around() {
     // See Bug 1835693. This means that it is invoked on each page load.
     knownProblematicPrefs["browser.translations.logLevel"] = {
       min: 50,
-      max: 50,
+      max: 150,
     };
   }
 
