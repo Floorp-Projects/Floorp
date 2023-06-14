@@ -137,14 +137,14 @@ export var UrlbarTestUtils = {
     }
 
     const setup = () => {
-      window.gURLBar.inputField.focus();
+      window.gURLBar.focus();
       // Using the value setter in some cases may trim and fetch unexpected
       // results, then pick an alternate path.
       if (
         lazy.UrlbarPrefs.get("trimURLs") &&
         value != lazy.BrowserUIUtils.trimURL(value)
       ) {
-        window.gURLBar.inputField.value = value;
+        window.gURLBar._setValue(value, false);
         fireInputEvent = true;
       } else {
         window.gURLBar.value = value;
@@ -1236,12 +1236,17 @@ export var UrlbarTestUtils = {
    *   The browser window containing target gURLBar.
    * @param {string} text
    *   The text to be input.
+   * @param {boolean} [replaceContent=false]
+   *   When set to true the content of gURLBar is erased, before inserting new content.
    */
-  async inputIntoURLBar(win, text) {
+  async inputIntoURLBar(win, text, { replaceContent = false } = {}) {
     this.EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
     await lazy.BrowserTestUtils.waitForCondition(
       () => win.document.activeElement === win.gURLBar.inputField
     );
+    if (replaceContent === true) {
+      win.gURLBar.value = "";
+    }
     this.EventUtils.sendString(text, win);
   },
 };

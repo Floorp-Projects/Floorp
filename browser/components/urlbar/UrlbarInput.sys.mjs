@@ -3316,8 +3316,8 @@ export class UrlbarInput {
         }
       }
       if (untrim) {
-        this.inputField.value = this._focusUntrimmedValue =
-          this._untrimmedValue;
+        this._focusUntrimmedValue = this._untrimmedValue;
+        this._setValue(this._focusUntrimmedValue, false);
       }
     }
 
@@ -3637,8 +3637,7 @@ export class UrlbarInput {
       event.stopImmediatePropagation();
 
       const value = oldStart + pasteData + oldEnd;
-      this.inputField.value = value;
-      this._untrimmedValue = value;
+      this._setValue(value);
       this.window.gBrowser.userTypedValue = value;
 
       if (this._untrimmedValue) {
