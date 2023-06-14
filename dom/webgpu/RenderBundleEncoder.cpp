@@ -188,6 +188,11 @@ already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
       MOZ_ASSERT(encoder);
       id = bridge->RenderBundleEncoderFinish(*encoder, mParent->mId, aDesc);
     }
+  } else {
+    auto bridge = mParent->GetBridge();
+    if (bridge && bridge->CanSend()) {
+      id = bridge->RenderBundleEncoderFinishError(mParent->mId, mLabel);
+    }
   }
   RefPtr<RenderBundle> bundle = new RenderBundle(mParent, id);
   return bundle.forget();
