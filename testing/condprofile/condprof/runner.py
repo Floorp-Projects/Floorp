@@ -91,7 +91,6 @@ class Runner:
             if not os.path.exists(self.archive):
                 os.makedirs(self.archive, exist_ok=True)
 
-        logger.info("Verifying Geckodriver binary presence")
         if shutil.which(self.geckodriver) is None and not os.path.exists(
             self.geckodriver
         ):
