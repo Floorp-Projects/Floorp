@@ -47,6 +47,8 @@ fn main() {
         "ioctl_s390xbe.rs"
     } else if cfg!(all(target_arch = "riscv64", target_endian = "little")) {
         "ioctl_riscv64.rs"
+    } else if cfg!(all(target_arch = "loongarch64", target_endian = "little")) {
+        "ioctl_loongarch64.rs"
     } else {
         panic!("architecture not supported");
     };

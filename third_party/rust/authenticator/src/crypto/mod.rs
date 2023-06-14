@@ -32,9 +32,11 @@ mod dummy;
 use dummy as backend;
 
 use backend::{
-    decrypt_aes_256_cbc_no_pad, ecdhe_p256_raw, encrypt_aes_256_cbc_no_pad, hmac_sha256,
+    decrypt_aes_256_cbc_no_pad, ecdhe_p256_raw, encrypt_aes_256_cbc_no_pad, gen_p256, hmac_sha256,
     random_bytes, sha256,
 };
+
+pub use backend::ecdsa_p256_sha256_sign_raw;
 
 // Object identifiers in DER tag-length-value form
 const DER_OID_EC_PUBLIC_KEY_BYTES: &[u8] = &[
@@ -150,11 +152,26 @@ impl TryFrom<&AuthenticatorInfo> for PinUvAuthProtocol {
         // "If there are multiple mutually supported protocols, and the platform
         // has no preference, it SHOULD select the one listed first in
         // pinUvAuthProtocols."
-        for proto_id in info.pin_protocols.iter() {
-            match proto_id {
-                1 => return Ok(PinUvAuthProtocol(Box::new(PinUvAuth1 {}))),
-                2 => return Ok(PinUvAuthProtocol(Box::new(PinUvAuth2 {}))),
-                _ => continue,
+        if let Some(pin_protocols) = &info.pin_protocols {
+            for proto_id in pin_protocols.iter() {
+                match proto_id {
+                    1 => return Ok(PinUvAuthProtocol(Box::new(PinUvAuth1 {}))),
+                    2 => return Ok(PinUvAuthProtocol(Box::new(PinUvAuth2 {}))),
+                    _ => continue,
+                }
+            }
+        } else {
+            match info.max_supported_version() {
+                crate::ctap2::commands::get_info::AuthenticatorVersion::U2F_V2 => {
+                    return Err(CommandError::UnsupportedPinProtocol)
+                }
+                crate::ctap2::commands::get_info::AuthenticatorVersion::FIDO_2_0 => {
+                    return Ok(PinUvAuthProtocol(Box::new(PinUvAuth1 {})))
+                }
+                crate::ctap2::commands::get_info::AuthenticatorVersion::FIDO_2_1_PRE
+                | crate::ctap2::commands::get_info::AuthenticatorVersion::FIDO_2_1 => {
+                    return Ok(PinUvAuthProtocol(Box::new(PinUvAuth2 {})))
+                }
             }
         }
         Err(CommandError::UnsupportedPinProtocol)
@@ -866,6 +883,23 @@ pub struct COSEKey {
     pub key: COSEKeyType,
 }
 
+impl COSEKey {
+    /// Generates a new key pair for the specified algorithm.
+    /// Returns an PKCS#8 encoding of the private key, and the public key as a COSEKey.
+    pub fn generate(alg: COSEAlgorithm) -> Result<(Vec<u8>, Self), CryptoError> {
+        if alg != COSEAlgorithm::ES256 && alg != COSEAlgorithm::ECDH_ES_HKDF256 {
+            return Err(CryptoError::UnsupportedAlgorithm(alg));
+        }
+        let (private, public) = gen_p256()?;
+        let cose_ec2_key = COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, &public)?;
+        let public = COSEKey {
+            alg,
+            key: COSEKeyType::EC2(cose_ec2_key),
+        };
+        Ok((private, public))
+    }
+}
+
 impl<'de> Deserialize<'de> for COSEKey {
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -1126,14 +1160,23 @@ pub fn parse_u2f_der_certificate(data: &[u8]) -> Result<U2FRegisterAnswer, Crypt
 
 #[cfg(all(test, not(feature = "crypto_dummy")))]
 mod test {
+    use std::convert::TryFrom;
+
+    #[cfg(feature = "crypto_nss")]
+    use super::backend::{ecdsa_p256_sha256_sign_raw, test_ecdsa_p256_sha256_verify_raw};
     use super::{
         backend::hmac_sha256, backend::sha256, backend::test_ecdh_p256_raw, COSEAlgorithm, COSEKey,
         Curve, PinProtocolImpl, PinUvAuth1, PinUvAuth2, PinUvAuthProtocol, PublicInputs,
         SharedSecret,
     };
     use crate::crypto::{COSEEC2Key, COSEKeyType};
+    use crate::ctap2::attestation::AAGuid;
     use crate::ctap2::commands::client_pin::Pin;
+    use crate::ctap2::commands::get_info::{
+        tests::AAGUID_RAW, AuthenticatorOptions, AuthenticatorVersion,
+    };
     use crate::util::decode_hex;
+    use crate::AuthenticatorInfo;
     use serde_cbor::de::from_slice;
 
     #[test]
@@ -1339,5 +1382,103 @@ mod test {
             .authenticate(&shared_secret, &new_pin_enc)
             .expect("HMAC-SHA256 failed");
         assert_eq!(pin_auth[0..16], expected_pin_auth);
+    }
+
+    #[test]
+    fn test_pin_protocol() {
+        let mut info = AuthenticatorInfo {
+            versions: vec![AuthenticatorVersion::U2F_V2, AuthenticatorVersion::FIDO_2_0],
+            extensions: vec![],
+            aaguid: AAGuid(AAGUID_RAW),
+            options: AuthenticatorOptions {
+                platform_device: false,
+                resident_key: true,
+                client_pin: Some(false),
+                user_presence: true,
+                ..Default::default()
+            },
+            max_msg_size: Some(1200),
+            pin_protocols: None,
+            ..Default::default()
+        };
+
+        // Valid pin_protocols
+        info.pin_protocols = Some(vec![1, 2]);
+        let pin = PinUvAuthProtocol::try_from(&info).unwrap();
+        assert_eq!(pin.id(), 1); // The one listed first
+
+        // Invalid pin_protocols
+        info.pin_protocols = Some(vec![0, 10]);
+        PinUvAuthProtocol::try_from(&info).unwrap_err();
+
+        info.pin_protocols = None;
+        // No PIN protocols. CTAP1 - not supported
+        info.versions = vec![AuthenticatorVersion::U2F_V2];
+        PinUvAuthProtocol::try_from(&info).unwrap_err();
+
+        // No PIN protocols. CTAP2.0 - Fallback to 1
+        info.versions = vec![AuthenticatorVersion::U2F_V2, AuthenticatorVersion::FIDO_2_0];
+        let pin = PinUvAuthProtocol::try_from(&info).unwrap();
+        assert_eq!(pin.id(), 1);
+
+        // No PIN protocols. CTAP2.1 - Fallback to 2
+        info.versions = vec![AuthenticatorVersion::FIDO_2_1];
+        let pin = PinUvAuthProtocol::try_from(&info).unwrap();
+        assert_eq!(pin.id(), 2);
+
+        // No PIN protocols. CTAP2.1_PRE - Fallback to 2
+        info.versions = vec![
+            AuthenticatorVersion::FIDO_2_0,
+            AuthenticatorVersion::FIDO_2_1_PRE,
+        ];
+        let pin = PinUvAuthProtocol::try_from(&info).unwrap();
+        assert_eq!(pin.id(), 2);
+    }
+
+    #[test]
+    #[cfg(feature = "crypto_nss")]
+    fn test_sign() {
+        let (good_private, good_public) =
+            COSEKey::generate(COSEAlgorithm::ES256).expect("could not generate a key pair");
+        let good_spki = match good_public.key {
+            COSEKeyType::EC2(ref x) => x.der_spki().expect("could not serialize public key"),
+            _ => unreachable!(),
+        };
+
+        let good_data = vec![1, 2, 3, 4, 5, 6, 7, 8];
+        let good_signature =
+            ecdsa_p256_sha256_sign_raw(&good_private, &good_data).expect("could not sign");
+        let good_signature2 =
+            ecdsa_p256_sha256_sign_raw(&good_private, &good_data).expect("could not sign");
+
+        // Signing is randomized
+        assert_ne!(good_signature, good_signature2);
+
+        // Good signature verifies
+        assert!(test_ecdsa_p256_sha256_verify_raw(&good_spki, &good_signature, &good_data).is_ok());
+
+        // Wrong data does not verify
+        let other_data = vec![0, 0, 0, 0, 5, 6, 7, 8];
+        assert!(
+            test_ecdsa_p256_sha256_verify_raw(&good_spki, &good_signature, &other_data).is_err()
+        );
+
+        // Wrong signature does not verify
+        let other_signature =
+            ecdsa_p256_sha256_sign_raw(&good_private, &other_data).expect("could not sign");
+        assert!(
+            test_ecdsa_p256_sha256_verify_raw(&good_spki, &other_signature, &good_data).is_err()
+        );
+
+        // Wrong key does not verify
+        let (_, other_public) =
+            COSEKey::generate(COSEAlgorithm::ES256).expect("could not generate a key pair");
+        let other_spki = match other_public.key {
+            COSEKeyType::EC2(ref x) => x.der_spki().expect("could not serialize public key"),
+            _ => unreachable!(),
+        };
+        assert!(
+            test_ecdsa_p256_sha256_verify_raw(&other_spki, &good_signature, &good_data).is_err()
+        );
     }
 }

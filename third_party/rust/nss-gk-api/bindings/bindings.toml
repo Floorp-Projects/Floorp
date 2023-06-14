@@ -165,6 +165,7 @@ functions = [
     "PK11_DigestOp",
     "PK11_DigestFinal",
     "PK11_Encrypt",
+    "PK11_ExportDERPrivateKeyInfo",
     "PK11_ExtractKeyValue",
     "PK11_FindCertFromNickname",
     "PK11_FindKeyByAnyCert",
@@ -184,6 +185,9 @@ functions = [
     "PK11_PubDeriveWithKDF",
     "PK11_ReadRawAttribute",
     "PK11_ReferenceSymKey",
+    "PK11_SignWithMechanism",
+    "PK11_VerifyWithMechanism",
+    "PK11_WrapPrivKey",
     "SECKEY_CopyPrivateKey",
     "SECKEY_CopyPublicKey",
     "SECKEY_DecodeDERSubjectPublicKeyInfo",
@@ -212,6 +216,7 @@ opaque = [
 ]
 variables = [
     "AES_BLOCK_SIZE",
+    "PK11_ATTR_EXTRACTABLE",
     "PK11_ATTR_INSENSITIVE",
     "PK11_ATTR_PRIVATE",
     "PK11_ATTR_PUBLIC",
