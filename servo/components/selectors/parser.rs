@@ -3,8 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use crate::attr::{AttrSelectorOperator, AttrSelectorWithOptionalNamespace};
-use crate::attr::{NamespaceConstraint, ParsedAttrSelectorOperation};
-use crate::attr::{ParsedCaseSensitivity, SELECTOR_WHITESPACE};
+use crate::attr::{NamespaceConstraint, ParsedAttrSelectorOperation, ParsedCaseSensitivity};
 use crate::bloom::BLOOM_HASH_MASK;
 use crate::builder::{
     relative_selector_list_specificity_and_flags, selector_list_specificity_and_flags,
@@ -612,6 +611,7 @@ impl AncestorHashes {
     }
 }
 
+#[inline]
 pub fn namespace_empty_string<Impl: SelectorImpl>() -> Impl::NamespaceUrl {
     // Rust type’s default, not default namespace
     Impl::NamespaceUrl::default()
@@ -1643,7 +1643,6 @@ pub enum Component<Impl: SelectorImpl> {
         #[shmem(field_bound)]
         value: Impl::AttrValue,
         case_sensitivity: ParsedCaseSensitivity,
-        never_matches: bool,
     },
     // Use a Box in the less common cases with more data to keep size_of::<Component>() small.
     AttributeOther(Box<AttrSelectorWithOptionalNamespace<Impl>>),
@@ -1821,11 +1820,7 @@ impl<Impl: SelectorImpl> Component<Impl> {
                     return false;
                 }
             },
-            AttributeInNoNamespace {
-                ref local_name,
-                never_matches,
-                ..
-            } if !never_matches => {
+            AttributeInNoNamespace { ref local_name, .. } => {
                 if !visitor.visit_attribute_selector(
                     &NamespaceConstraint::Specific(&namespace_empty_string::<Impl>()),
                     local_name,
@@ -1834,7 +1829,7 @@ impl<Impl: SelectorImpl> Component<Impl> {
                     return false;
                 }
             },
-            AttributeOther(ref attr_selector) if !attr_selector.never_matches => {
+            AttributeOther(ref attr_selector) => {
                 let empty_string;
                 let namespace = match attr_selector.namespace() {
                     Some(ns) => ns,
@@ -2275,11 +2270,11 @@ impl<Impl: SelectorImpl> ToCss for AttrSelectorWithOptionalNamespace<Impl> {
             ParsedAttrSelectorOperation::WithValue {
                 operator,
                 case_sensitivity,
-                ref expected_value,
+                ref value,
             } => {
                 operator.to_css(dest)?;
                 dest.write_char('"')?;
-                expected_value.to_css(dest)?;
+                value.to_css(dest)?;
                 dest.write_char('"')?;
                 match case_sensitivity {
                     ParsedCaseSensitivity::CaseSensitive |
@@ -2647,7 +2642,6 @@ where
                         local_name,
                         local_name_lower,
                         operation: ParsedAttrSelectorOperation::Exists,
-                        never_matches: false,
                     },
                 )));
             } else {
@@ -2685,18 +2679,8 @@ where
         }) => return Err(location.new_custom_error(SelectorParseErrorKind::BadValueInAttr(t))),
         Err(e) => return Err(e.into()),
     };
-    let never_matches = match operator {
-        AttrSelectorOperator::Equal | AttrSelectorOperator::DashMatch => false,
-
-        AttrSelectorOperator::Includes => value.is_empty() || value.contains(SELECTOR_WHITESPACE),
-
-        AttrSelectorOperator::Prefix |
-        AttrSelectorOperator::Substring |
-        AttrSelectorOperator::Suffix => value.is_empty(),
-    };
 
     let attribute_flags = parse_attribute_flags(input)?;
-
     let value = value.as_ref().into();
     let local_name_lower;
     let local_name_is_ascii_lowercase;
@@ -2715,11 +2699,10 @@ where
                 namespace,
                 local_name,
                 local_name_lower,
-                never_matches,
                 operation: ParsedAttrSelectorOperation::WithValue {
                     operator,
                     case_sensitivity,
-                    expected_value: value,
+                    value,
                 },
             },
         )))
@@ -2729,7 +2712,6 @@ where
             operator,
             value,
             case_sensitivity,
-            never_matches,
         })
     }
 }
@@ -3890,7 +3872,6 @@ pub mod tests {
                     local_name: DummyAtom::from("attr"),
                     operator: AttrSelectorOperator::DashMatch,
                     value: DummyAttrValue::from("foo"),
-                    never_matches: false,
                     case_sensitivity: ParsedCaseSensitivity::CaseSensitive,
                 }],
                 specificity(0, 1, 0),
