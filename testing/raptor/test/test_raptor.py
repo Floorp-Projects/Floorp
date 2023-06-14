@@ -3,7 +3,6 @@ import sys
 import threading
 import traceback
 from unittest import mock
-from unittest.mock import Mock
 
 import mozunit
 import pytest
@@ -16,9 +15,6 @@ sys.path.insert(0, raptor_dir)
 
 
 from browsertime import BrowsertimeAndroid, BrowsertimeDesktop
-from webextension import (
-    WebExtensionAndroid,
-)
 
 DEFAULT_TIMEOUT = 125
 
@@ -48,7 +44,6 @@ class TestBrowserThread(threading.Thread):
 @pytest.mark.parametrize(
     "perftest_class, app_name",
     [
-        [WebExtensionAndroid, "geckoview"],
         [BrowsertimeDesktop, "firefox"],
         [BrowsertimeDesktop, "chrome"],
         [BrowsertimeDesktop, "chromium"],
@@ -292,65 +287,6 @@ def test_compute_process_timeout(
     )
     bt_timeout = browsertime._compute_process_timeout(mock_test, timeout, [])
     assert bt_timeout == expected_timeout
-
-
-@pytest.mark.parametrize(
-    "host, playback, benchmark",
-    [["127.0.0.1", True, False], ["localhost", False, True]],
-)
-def test_android_reverse_ports(host, playback, benchmark):
-    original_get = WebExtensionAndroid.get_browser_meta
-    WebExtensionAndroid.get_browser_meta = mock.MagicMock()
-    WebExtensionAndroid.get_browser_meta.return_value = ("app", "version")
-
-    raptor = WebExtensionAndroid(
-        "geckoview",
-        "org.mozilla.geckoview_example",
-        host=host,
-        extra_prefs={},
-    )
-    WebExtensionAndroid.get_browser_meta = original_get
-
-    if benchmark:
-        benchmark_mock = mock.patch("raptor.raptor.benchmark.Benchmark")
-        raptor.benchmark = benchmark_mock
-        raptor.benchmark.port = 1234
-
-    if playback:
-        playback_mock = mock.patch(
-            "mozbase.mozproxy.mozproxy.backends.mitm.mitm.MitmproxyAndroid"
-        )
-        playback_mock.port = 4321
-        raptor.playback = playback_mock
-
-    raptor.set_reverse_port = Mock()
-    raptor.set_reverse_ports()
-
-    raptor.set_reverse_port.assert_any_call(raptor.control_server.port)
-    if benchmark:
-        raptor.set_reverse_port.assert_any_call(1234)
-
-    if playback:
-        raptor.set_reverse_port.assert_any_call(4321)
-
-
-def test_android_reverse_ports_non_local_host():
-    original_get = WebExtensionAndroid.get_browser_meta
-    WebExtensionAndroid.get_browser_meta = mock.MagicMock()
-    WebExtensionAndroid.get_browser_meta.return_value = ("app", "version")
-
-    raptor = WebExtensionAndroid(
-        "geckoview",
-        "org.mozilla.geckoview_example",
-        host="192.168.100.10",
-        extra_prefs={},
-    )
-    WebExtensionAndroid.get_browser_meta = original_get
-
-    raptor.set_reverse_port = Mock()
-    raptor.set_reverse_ports()
-
-    raptor.set_reverse_port.assert_not_called()
 
 
 if __name__ == "__main__":
