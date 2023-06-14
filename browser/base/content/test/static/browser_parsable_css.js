@@ -331,8 +331,7 @@ function processCSSRules(container) {
       continue;
     }
     if (rule.cssRules) {
-      processCSSRules(rule); // @supports, @media, @layer (block), @keyframes
-      continue;
+      processCSSRules(rule); // @supports, @media, @layer (block), @keyframes, style rules with nested rules.
     }
     if (!rule.style) {
       continue; // @layer (statement), @font-feature-values, @counter-style

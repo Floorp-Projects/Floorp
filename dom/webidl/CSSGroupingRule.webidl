@@ -10,7 +10,7 @@
 // https://drafts.csswg.org/cssom/#cssgroupingrule
 [Exposed=Window]
 interface CSSGroupingRule : CSSRule {
-  [SameObject] readonly attribute CSSRuleList? cssRules;
+  [SameObject] readonly attribute CSSRuleList cssRules;
   [Throws]
   unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws]

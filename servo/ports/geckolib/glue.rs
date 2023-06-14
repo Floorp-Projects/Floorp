@@ -2270,6 +2270,25 @@ impl_basic_rule_funcs! { (Style, StyleRule, Locked<StyleRule>),
     changed: Servo_StyleSet_StyleRuleChanged,
 }
 
+#[no_mangle]
+pub extern "C" fn Servo_StyleRule_EnsureRules(rule: &LockedStyleRule, read_only: bool) -> Strong<LockedCssRules> {
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let lock = &global_style_data.shared_lock;
+    if read_only {
+        let guard = lock.read();
+        if let Some(ref rules) = rule.read_with(&guard).rules {
+            return rules.clone().into();
+        }
+        return CssRules::new(vec![], lock).into();
+    }
+    let mut guard = lock.write();
+    rule.write_with(&mut guard)
+        .rules
+        .get_or_insert_with(|| CssRules::new(vec![], lock))
+        .clone()
+        .into()
+}
+
 impl_basic_rule_funcs! { (Import, ImportRule, Locked<ImportRule>),
     getter: Servo_CssRules_GetImportRuleAt,
     debug: Servo_ImportRule_Debug,
