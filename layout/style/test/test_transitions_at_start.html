@@ -29,6 +29,7 @@ const anchor = document.getElementById('anchor');
 const span   = document.getElementById('span');
 
 test(() => {
+  anchor.getBoundingClientRect();
   anchor.classList.add('active');
   assert_equals(getComputedStyle(span).color, 'rgb(255, 0, 0)',
                 'The child of a transitioning element should inherit its'
