@@ -216,7 +216,7 @@ add_task(async function test_tabSwitch() {
   await promiseState;
   await UrlbarTestUtils.promiseSearchComplete(win);
   Assert.equal(win.gURLBar.value, "xam", "check value");
-  Assert.equal(win.gURLBar.selectionStart, 0);
+  Assert.equal(win.gURLBar.selectionStart, 3);
   Assert.equal(win.gURLBar.selectionEnd, 3);
 
   info("autofill in tab2, switch to tab1, then back to tab2 with the mouse");
