@@ -1647,6 +1647,12 @@ void TrackBuffersManager::OnAudioDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   mTaskQueueCapability->AssertOnCurrentThread();
   MSE_DEBUG("%zu audio samples demuxed", aSamples->GetSamples().Length());
+  // When using MSE, it's possible for each fragments to have their own
+  // duration, with a duration that is incorrectly rounded. Ignore the trimming
+  // information set by the demuxer to ensure a continous playback.
+  for (const auto& sample : aSamples->GetSamples()) {
+    sample->mOriginalPresentationWindow = Nothing();
+  }
   mAudioTracks.mDemuxRequest.Complete();
   mAudioTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
   CompleteCodedFrameProcessing();
