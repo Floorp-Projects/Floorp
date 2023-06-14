@@ -10,6 +10,7 @@
 #include "VideoUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Result.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsPrintfCString.h"
 
 mozilla::LazyLogModule gAudioSinkWrapperLog("AudioSinkWrapper");
@@ -442,7 +443,9 @@ nsresult AudioSinkWrapper::SyncCreateAudioSink(const TimeUnit& aStartTime) {
 }
 
 void AudioSinkWrapper::ScheduleRetrySink() {
-  mRetrySinkTime = TimeStamp::Now() + TimeDuration::FromSeconds(1.0);
+  mRetrySinkTime =
+      TimeStamp::Now() + TimeDuration::FromMilliseconds(
+                             StaticPrefs::media_audio_device_retry_ms());
 }
 
 bool AudioSinkWrapper::IsAudioSourceEnded(const MediaInfo& aInfo) const {

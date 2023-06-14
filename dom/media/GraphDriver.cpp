@@ -15,6 +15,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "CubebDeviceEnumerator.h"
 #include "MediaTrackGraphImpl.h"
 #include "CallbackThreadRegistry.h"
@@ -1283,9 +1284,10 @@ void AudioCallbackDriver::MaybeStartAudioStream() {
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver %p Attempting to re-init "
                         "audio stream from fallback driver.",
                         Graph(), this));
-  mNextReInitBackoffStep = std::min(
-      mNextReInitBackoffStep * 2,
-      TimeDuration::FromMilliseconds(AUDIO_MAX_FALLBACK_BACKOFF_STEP_MS));
+  mNextReInitBackoffStep =
+      std::min(mNextReInitBackoffStep * 2,
+               TimeDuration::FromMilliseconds(
+                   StaticPrefs::media_audio_device_retry_ms()));
   mNextReInitAttempt = now + mNextReInitBackoffStep;
   Start();
 }
