@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "name": "lid.176.ftz",
+      "schema": 1681239259655,
+      "version": "1.0",
+      "attachment": {
+        "hash": "8f3472cfe8738a7b6099e8e999c3cbfae0dcd15696aac7d7738a8039db603e83",
+        "size": 938013,
+        "filename": "lid.176.ftz",
+        "location": "main-workspace/translations-identification-models/fc2a4381-bc9e-47ad-8cff-a31163538e27.ftz",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "",
+      "id": "a4446164-b886-11ed-932c-c7bfd1c4d2fa",
+      "last_modified": 1681500405555
+    }
+  ],
+  "timestamp": 1681500405555
+}
