@@ -27,10 +27,6 @@ pref("extensions.logging.enabled", false);
 // Disables strict compatibility, making addons compatible-by-default.
 pref("extensions.strictCompatibility", false);
 
-// Temporary preference to forcibly make themes more safe with Australis even if
-// extensions.checkCompatibility=false has been set.
-pref("extensions.checkCompatibility.temporaryThemeOverride_minAppVersion", "29.0a1");
-
 pref("extensions.webextOptionalPermissionPrompts", true);
 // If enabled, install origin permission verification happens after addons are downloaded.
 pref("extensions.postDownloadThirdPartyPrompt", true);
