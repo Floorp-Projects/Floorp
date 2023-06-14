@@ -542,6 +542,18 @@ static void AppendSubString(nsString& aString, const Text& aTextNode,
 }
 
 #if defined(XP_WIN)
+template <typename StringType>
+static uint32_t CountNewlinesInXPLength(const StringType& aString) {
+  uint32_t count = 0;
+  const auto* end = aString.EndReading();
+  for (const auto* iter = aString.BeginReading(); iter < end; ++iter) {
+    if (*iter == '\n') {
+      count++;
+    }
+  }
+  return count;
+}
+
 static uint32_t CountNewlinesInXPLength(const Text& aTextNode,
                                         uint32_t aXPLength) {
   const nsTextFragment& textFragment = aTextNode.TextFragment();
@@ -549,21 +561,31 @@ static uint32_t CountNewlinesInXPLength(const Text& aTextNode,
   MOZ_ASSERT(aXPLength == UINT32_MAX || aXPLength <= textFragment.GetLength(),
              "aXPLength is out-of-bounds");
   const uint32_t length = std::min(aXPLength, textFragment.GetLength());
-  uint32_t newlines = 0;
-  for (uint32_t i = 0; i < length; ++i) {
-    if (textFragment.CharAt(i) == '\n') {
-      ++newlines;
-    }
+  if (!length) {
+    return 0;
   }
-  return newlines;
+  if (textFragment.Is2b()) {
+    nsDependentSubstring str(textFragment.Get2b(), length);
+    return CountNewlinesInXPLength(str);
+  }
+  nsDependentCSubstring str(textFragment.Get1b(), length);
+  return CountNewlinesInXPLength(str);
 }
 
-static uint32_t CountNewlinesInXPLength(const nsAString& aText) {
+template <typename StringType>
+static uint32_t CountNewlinesInNativeLength(const StringType& aString,
+                                            uint32_t aNativeLength) {
+  MOZ_ASSERT(
+      (aNativeLength == UINT32_MAX || aNativeLength <= aString.Length() * 2),
+      "aNativeLength is unexpected value");
   uint32_t count = 0;
-  const char16_t* end = aText.EndReading();
-  for (const char16_t* iter = aText.BeginReading(); iter < end; ++iter) {
+  uint32_t nativeOffset = 0;
+  const auto* end = aString.EndReading();
+  for (const auto* iter = aString.BeginReading();
+       iter < end && nativeOffset < aNativeLength; ++iter, ++nativeOffset) {
     if (*iter == '\n') {
       count++;
+      nativeOffset++;
     }
   }
   return count;
@@ -572,22 +594,16 @@ static uint32_t CountNewlinesInXPLength(const nsAString& aText) {
 static uint32_t CountNewlinesInNativeLength(const Text& aTextNode,
                                             uint32_t aNativeLength) {
   const nsTextFragment& textFragment = aTextNode.TextFragment();
-  // For automated tests, we should abort on debug build.
-  MOZ_ASSERT((aNativeLength == UINT32_MAX ||
-              aNativeLength <= textFragment.GetLength() * 2),
-             "aNativeLength is unexpected value");
   const uint32_t xpLength = textFragment.GetLength();
-  uint32_t newlines = 0;
-  for (uint32_t i = 0, nativeOffset = 0;
-       i < xpLength && nativeOffset < aNativeLength; ++i, ++nativeOffset) {
-    // For automated tests, we should abort on debug build.
-    MOZ_ASSERT(i < xpLength, "i is out-of-bounds");
-    if (textFragment.CharAt(i) == '\n') {
-      ++newlines;
-      ++nativeOffset;
-    }
+  if (!xpLength) {
+    return 0;
   }
-  return newlines;
+  if (textFragment.Is2b()) {
+    nsDependentSubstring str(textFragment.Get2b(), xpLength);
+    return CountNewlinesInNativeLength(str, aNativeLength);
+  }
+  nsDependentCSubstring str(textFragment.Get1b(), xpLength);
+  return CountNewlinesInNativeLength(str, aNativeLength);
 }
 #endif
 
