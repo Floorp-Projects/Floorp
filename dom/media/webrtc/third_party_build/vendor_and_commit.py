@@ -6,7 +6,7 @@ import os
 import re
 
 from filter_git_changes import filter_git_changes
-from run_operations import get_last_line, run_hg, run_shell
+from run_operations import get_last_line, run_hg, run_shell, update_resume_state
 
 # This script vendors moz-libwebrtc, handles add/deletes/renames and
 # commits the newly vendored code with the provided commit message.
@@ -20,12 +20,6 @@ def log_output_lines(lines, log_dir, filename):
         for line in lines:
             ofile.write(line)
             ofile.write("\n")
-
-
-def update_resume_state(state, resume_state_filename):
-    with open(resume_state_filename, "w") as ofile:
-        ofile.write(state)
-        ofile.write("\n")
 
 
 def vendor_current_stack(github_branch, github_path, script_dir):
