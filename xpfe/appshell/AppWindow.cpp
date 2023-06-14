@@ -2968,20 +2968,19 @@ void AppWindow::FullscreenWillChange(bool aInFullscreen) {
   }
   MOZ_ASSERT(mFullscreenChangeState == FullscreenChangeState::NotChanging);
 
-  int32_t winWidth = 0;
-  int32_t winHeight = 0;
-  GetSize(&winWidth, &winHeight);
+  CSSToLayoutDeviceScale scale = UnscaledDevicePixelsPerCSSPixel();
+  CSSIntSize windowSizeCSS = RoundedToInt(GetSize() / scale);
 
-  int32_t screenWidth = 0;
-  int32_t screenHeight = 0;
-  GetAvailScreenSize(&screenWidth, &screenHeight);
+  CSSIntSize screenSizeCSS;
+  GetAvailScreenSize(&screenSizeCSS.width, &screenSizeCSS.height);
 
   // Check if the window is already at the expected dimensions. If it is, set
   // the fullscreen change state to WidgetResized to avoid waiting for a resize
   // event. On macOS, a fullscreen window could be slightly higher than
   // available screen size because of the OS menu bar isn't yet hidden.
   mFullscreenChangeState =
-      (aInFullscreen == (winWidth == screenWidth && winHeight >= screenHeight))
+      (aInFullscreen == (windowSizeCSS.width == screenSizeCSS.width &&
+                         windowSizeCSS.height >= screenSizeCSS.height))
           ? FullscreenChangeState::WidgetResized
           : FullscreenChangeState::WillChange;
 }
