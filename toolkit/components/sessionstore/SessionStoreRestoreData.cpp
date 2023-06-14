@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CustomElementTypes.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/sessionstore/SessionStoreTypes.h"
 #include "mozilla/dom/WindowContext.h"
@@ -167,6 +170,27 @@ SessionStoreRestoreData::AddMultipleSelect(bool aIsXPath,
                                            const nsAString& aIdOrXPath,
                                            const nsTArray<nsString>& aValues) {
   AddFormEntry(aIsXPath, aIdOrXPath, sessionstore::MultipleSelect{aValues});
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionStoreRestoreData::AddCustomElement(bool aIsXPath,
+                                          const nsAString& aIdOrXPath,
+                                          JS::Handle<JS::Value> aValue,
+                                          JS::Handle<JS::Value> aState) {
+  AutoJSContext cx;
+  Nullable<OwningFileOrUSVStringOrFormData> value;
+  if (!aValue.isNull() && !value.SetValue().Init(cx, aValue)) {
+    return NS_ERROR_FAILURE;
+  }
+  Nullable<OwningFileOrUSVStringOrFormData> state;
+  if (!aState.isNull() && !state.SetValue().Init(cx, aState)) {
+    return NS_ERROR_FAILURE;
+  }
+  AddFormEntry(aIsXPath, aIdOrXPath,
+               CustomElementTuple(
+                   nsContentUtils::ConvertToCustomElementFormValue(value),
+                   nsContentUtils::ConvertToCustomElementFormValue(state)));
   return NS_OK;
 }
 
