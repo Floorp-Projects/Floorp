@@ -53,6 +53,8 @@
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Wählen Sie eine Farbe</string>
 
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Wählen Sie einen Login-Anbieter</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Erlauben</string>
 
@@ -129,8 +131,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Die Kartennummer wird verschlüsselt. Der Sicherheitscode wird nicht gespeichert.</string>
 
     <!-- Address Autofill -->
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">Adressen auswählen</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Adresse auswählen</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->

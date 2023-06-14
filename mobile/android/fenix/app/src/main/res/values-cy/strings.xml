@@ -262,7 +262,7 @@
     <string name="search_header_menu_item_2">Y tro hwn chwiliwch yn:</string>
 
     <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
-    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s peiriant chwilio</string>
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Peiriant chwilio %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->

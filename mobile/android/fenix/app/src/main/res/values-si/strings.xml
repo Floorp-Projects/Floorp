@@ -1936,7 +1936,7 @@
     <string name="browser_menu_remove_from_shortcuts">කෙටිමං වෙතින් ඉවත් කරන්න</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
-    <string name="certificate_info_verified_by">තහවුරු කළේ: %1$s</string>
+    <string name="certificate_info_verified_by">සත්‍යාපනය: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">මකන්න</string>
     <!-- Login overflow menu edit button -->
