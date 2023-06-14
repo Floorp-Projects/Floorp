@@ -638,6 +638,9 @@ export class TranslationsParent extends JSWindowActorParent {
     return client;
   }
 
+  /** @type {Promise<LanguageIdModelRecord> | null} */
+  #languageIdWasmRecord = null;
+
   /**
    * Retrieves the language-identification wasm binary from remote settings.
    *
@@ -649,45 +652,60 @@ export class TranslationsParent extends JSWindowActorParent {
 
     // Load the wasm binary from remote settings, if it hasn't been already.
     lazy.console.log(`Getting remote language-identification wasm binary.`);
+    if (!this.#languageIdWasmRecord) {
+      // Place the records into a promise to prevent any races.
+      this.#languageIdWasmRecord = (async () => {
+        /** @type {WasmRecord[]} */
+        let wasmRecords = await TranslationsParent.getMaxVersionRecords(
+          client,
+          {
+            filters: { name: "fasttext-wasm" },
+          }
+        );
 
-    /** @type {WasmRecord[]} */
-    let wasmRecords = await TranslationsParent.getMaxVersionRecords(client, {
-      filters: { name: "fasttext-wasm" },
-    });
+        if (wasmRecords.length === 0) {
+          // The remote settings client provides an empty list of records when there is
+          // an error.
+          throw new Error(
+            'Unable to get "fasttext-wasm" language-identification wasm binary from Remote Settings.'
+          );
+        }
 
-    if (wasmRecords.length === 0) {
-      // The remote settings client provides an empty list of records when there is
-      // an error.
-      throw new Error(
-        'Unable to get "fasttext-wasm" language-identification wasm binary from Remote Settings.'
-      );
+        if (wasmRecords.length > 1) {
+          TranslationsParent.reportError(
+            new Error(
+              'Expected the "fasttext-wasm" language-identification wasm collection to only have 1 record.'
+            ),
+            wasmRecords
+          );
+        }
+        return wasmRecords[0];
+      })();
     }
 
-    if (wasmRecords.length > 1) {
-      TranslationsParent.reportError(
-        new Error(
-          'Expected the "fasttext-wasm" language-identification wasm collection to only have 1 record.'
-        ),
-        wasmRecords
+    try {
+      // Unlike the models, greedily download the wasm. It will pull it from a locale
+      // cache on disk if it's already been downloaded. Do not retain a copy, as
+      // this will be running in the parent process. It's not worth holding onto
+      // this much memory, so reload it every time it is needed.
+
+      await chaosMode(1 / 3);
+
+      /** @type {{buffer: ArrayBuffer}} */
+      const { buffer } = await client.attachments.download(
+        await this.#languageIdWasmRecord
       );
+
+      const duration = (Date.now() - start) / 1000;
+      lazy.console.log(
+        `Remote language-identification wasm binary loaded in ${duration} seconds.`
+      );
+
+      return buffer;
+    } catch (error) {
+      this.#languageIdWasmRecord = null;
+      throw error;
     }
-
-    // Unlike the models, greedily download the wasm. It will pull it from a locale
-    // cache on disk if it's already been downloaded. Do not retain a copy, as
-    // this will be running in the parent process. It's not worth holding onto
-    // this much memory, so reload it every time it is needed.
-
-    await chaosMode(1 / 3);
-
-    /** @type {{buffer: ArrayBuffer}} */
-    const { buffer } = await client.attachments.download(wasmRecords[0]);
-
-    const duration = (Date.now() - start) / 1000;
-    lazy.console.log(
-      `Remote language-identification wasm binary loaded in ${duration} seconds.`
-    );
-
-    return buffer;
   }
 
   /**
