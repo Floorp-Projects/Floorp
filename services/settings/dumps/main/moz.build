@@ -17,6 +17,9 @@ FINAL_TARGET_FILES.defaults.settings.main += [
     "search-telemetry-v2.json",
     "sites-classification.json",
     "top-sites.json",
+    "translations-identification-models.json",
+    "translations-models.json",
+    "translations-wasm.json",
     "url-classifier-skip-urls.json",
     "websites-with-shared-credential-backends.json",
 ]
