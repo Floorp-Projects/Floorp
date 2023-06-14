@@ -2704,7 +2704,7 @@ uint32_t LocalAccessible::EmbeddedChildCount() {
   return ChildCount();
 }
 
-LocalAccessible* LocalAccessible::EmbeddedChildAt(uint32_t aIndex) {
+Accessible* LocalAccessible::EmbeddedChildAt(uint32_t aIndex) {
   if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
@@ -2714,7 +2714,7 @@ LocalAccessible* LocalAccessible::EmbeddedChildAt(uint32_t aIndex) {
                : nullptr;
   }
 
-  return LocalChildAt(aIndex);
+  return ChildAt(aIndex);
 }
 
 int32_t LocalAccessible::IndexOfEmbeddedChild(Accessible* aChild) {
