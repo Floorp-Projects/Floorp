@@ -720,23 +720,33 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * The cached language pairs.
+   * @type {Promise<Array<LanguagePair>> | null}
+   */
+  static #languagePairs = null;
+
+  /**
    * Get the list of translation pairs supported by the translations engine.
    *
    * @returns {Promise<Array<LanguagePair>>}
    */
-  async getLanguagePairs() {
-    const records = await TranslationsParent.#getTranslationModelRecords();
-    const languagePairMap = new Map();
+  getLanguagePairs() {
+    if (!TranslationsParent.#languagePairs) {
+      TranslationsParent.#languagePairs =
+        TranslationsParent.#getTranslationModelRecords().then(records => {
+          const languagePairMap = new Map();
 
-    for (const { fromLang, toLang, version } of records.values()) {
-      const isBeta = Services.vc.compare(version, "1.0") < 0;
-      const key = TranslationsParent.languagePairKey(fromLang, toLang);
-      if (!languagePairMap.has(key)) {
-        languagePairMap.set(key, { fromLang, toLang, isBeta });
-      }
+          for (const { fromLang, toLang, version } of records.values()) {
+            const isBeta = Services.vc.compare(version, "1.0") < 0;
+            const key = TranslationsParent.languagePairKey(fromLang, toLang);
+            if (!languagePairMap.has(key)) {
+              languagePairMap.set(key, { fromLang, toLang, isBeta });
+            }
+          }
+          return Array.from(languagePairMap.values());
+        });
     }
-
-    return Array.from(languagePairMap.values());
+    return TranslationsParent.#languagePairs;
   }
 
   /**
@@ -861,6 +871,9 @@ export class TranslationsParent extends JSWindowActorParent {
     for (const record of created) {
       records.set(record.id, record);
     }
+
+    // Invalidate cached data.
+    TranslationsParent.#languagePairs = null;
   }
 
   /**
@@ -1511,6 +1524,7 @@ export class TranslationsParent extends JSWindowActorParent {
     );
 
     TranslationsParent.#translationModelRecords = null;
+    TranslationsParent.#languagePairs = null;
 
     TranslationsParent.#translationModelsRemoteClient = null;
     TranslationsParent.#translationsWasmRemoteClient = null;
