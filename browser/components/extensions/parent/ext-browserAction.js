@@ -237,8 +237,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
           "unified-extensions-item-message",
           "unified-extensions-item-message-hover-menu-button"
         );
-        messageHoverForMenuButton.setAttribute(
-          "data-l10n-id",
+        document.l10n.setAttributes(
+          messageHoverForMenuButton,
           "unified-extensions-item-message-manage"
         );
         deck.appendChild(messageHoverForMenuButton);
@@ -253,8 +253,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
           "unified-extensions-item-menu-button"
         );
 
-        menuButton.setAttribute(
-          "data-l10n-id",
+        document.l10n.setAttributes(
+          menuButton,
           "unified-extensions-item-open-menu"
         );
         // Allow the users to quickly move between extension items using
@@ -324,9 +324,10 @@ this.browserAction = class extends ExtensionAPIPersistent {
         const menuButton = node.querySelector(
           ".unified-extensions-item-menu-button"
         );
-        menuButton.setAttribute(
-          "data-l10n-args",
-          JSON.stringify({ extensionName: this.extension.name })
+        node.ownerDocument.l10n.setAttributes(
+          menuButton,
+          "unified-extensions-item-open-menu",
+          { extensionName: this.extension.name }
         );
 
         menuButton.onblur = event => this.handleMenuButtonEvent(event);

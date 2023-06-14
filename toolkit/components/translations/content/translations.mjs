@@ -461,7 +461,7 @@ class TranslationsUI {
    * @param {string} l10nId
    */
   showInfo(l10nId) {
-    this.translationInfoMessage.setAttribute("data-l10n-id", l10nId);
+    document.l10n.setAttributes(this.translationInfoMessage, l10nId);
     this.translationInfo.style.display = "flex";
   }
 

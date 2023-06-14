@@ -385,8 +385,8 @@ function init() {
   try {
     let running = Services.prefs.getBoolPref("logging.config.running");
     gLoggingSettings.running = running;
-    $("#toggle-logging-button").setAttribute(
-      "data-l10n-id",
+    document.l10n.setAttributes(
+      $("#toggle-logging-button"),
       `about-logging-${gLoggingSettings.running ? "stop" : "start"}-logging`
     );
   } catch {}

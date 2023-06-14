@@ -215,7 +215,7 @@ Menu.buildFromTemplate = () => {
 
 function applyItemAttributesToNode(item, node) {
   if (item.l10nID) {
-    node.setAttribute("data-l10n-id", item.l10nID);
+    node.ownerDocument.l10n.setAttributes(node, item.l10nID);
   } else {
     node.setAttribute("label", item.label);
     if (item.accelerator) {

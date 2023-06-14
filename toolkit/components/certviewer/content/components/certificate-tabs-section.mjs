@@ -35,8 +35,8 @@ export class CertificateTabsSection extends HTMLElement {
     if (tabName) {
       tab.textContent = tabName;
     } else {
-      tab.setAttribute(
-        "data-l10n-id",
+      document.l10n.setAttributes(
+        tab,
         "certificate-viewer-unknown-group-label"
       );
     }
@@ -47,7 +47,7 @@ export class CertificateTabsSection extends HTMLElement {
     tab.classList.add("certificate-tab");
     tab.classList.add("tab");
     if (this.isAboutCertificate) {
-      tab.setAttribute("data-l10n-id", tabName);
+      document.l10n.setAttributes(tab, tabName);
     } else {
       // Display tabs on `about:certificate?cert=` pages as dir=auto
       // to avoid text like `mozilla.org.*` in RTL.

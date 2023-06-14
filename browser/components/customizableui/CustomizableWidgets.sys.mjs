@@ -457,7 +457,7 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
           ? "syncing-data-l10n-id"
           : "sync-now-data-l10n-id"
       );
-      syncNowBtn.setAttribute("data-l10n-id", l10nId);
+      doc.l10n.setAttributes(syncNowBtn, l10nId);
 
       let SyncedTabsPanelList = doc.defaultView.SyncedTabsPanelList;
       panelview.syncedTabsPanelList = new SyncedTabsPanelList(

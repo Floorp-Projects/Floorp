@@ -487,7 +487,7 @@
         }
 
         if (localeId) {
-          buttonElem.setAttribute("data-l10n-id", localeId);
+          document.l10n.setAttributes(buttonElem, localeId);
         } else {
           buttonElem.setAttribute(link ? "value" : "label", button.label);
           if (typeof button.accessKey == "string") {

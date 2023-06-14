@@ -2569,7 +2569,7 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
         this._sizeUnit == settings.kPaperSizeMillimeters ? "mm" : "inches";
       for (let elem of this.querySelectorAll("[data-unit-prefix-l10n-id]")) {
         let l10nId = elem.getAttribute("data-unit-prefix-l10n-id") + unitStr;
-        elem.setAttribute("data-l10n-id", l10nId);
+        document.l10n.setAttributes(elem, l10nId);
       }
     }
 

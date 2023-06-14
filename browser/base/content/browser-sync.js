@@ -526,7 +526,7 @@ var gSync = {
         ? "syncing-data-l10n-id"
         : "sync-now-data-l10n-id"
     );
-    syncNowBtn.setAttribute("data-l10n-id", l10nId);
+    document.l10n.setAttributes(syncNowBtn, l10nId);
 
     // This needs to exist because if the user is signed in
     // but the user disabled or disconnected sync we should not show the button
@@ -1615,7 +1615,7 @@ var gSync = {
 
     document.querySelectorAll(".syncnow-label").forEach(el => {
       let l10nId = el.getAttribute("syncing-data-l10n-id");
-      el.setAttribute("data-l10n-id", l10nId);
+      document.l10n.setAttributes(el, l10nId);
     });
 
     document.querySelectorAll(".syncNowBtn").forEach(el => {
@@ -1638,7 +1638,7 @@ var gSync = {
 
     document.querySelectorAll(".syncnow-label").forEach(el => {
       let l10nId = el.getAttribute("sync-now-data-l10n-id");
-      el.setAttribute("data-l10n-id", l10nId);
+      document.l10n.setAttributes(el, l10nId);
     });
 
     document.querySelectorAll(".syncNowBtn").forEach(el => {
