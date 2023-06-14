@@ -44,6 +44,8 @@ class WMFCDMImpl final {
     bool mDistinctiveIdentifierRequired;
     bool mHWSecure;
     WMFCDMProxyCallback* mProxyCallback;
+    CopyableTArray<MFCDMMediaCapability> mAudioCapabilities;
+    CopyableTArray<MFCDMMediaCapability> mVideoCapabilities;
   };
 
   RefPtr<InitPromise> Init(const InitParams& aParams);

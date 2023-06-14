@@ -7,6 +7,7 @@
 #include "WMFCDMProxy.h"
 
 #include "mozilla/dom/MediaKeySession.h"
+#include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/WMFCDMProxyCallback.h"
 #include "WMFCDMImpl.h"
 #include "WMFCDMProxyCallback.h"
@@ -76,12 +77,15 @@ void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
 
   mCDM = MakeRefPtr<WMFCDMImpl>(mKeySystem);
   mProxyCallback = new WMFCDMProxyCallback(this);
-  WMFCDMImpl::InitParams params{nsString(aOrigin),
-                                mConfig.mInitDataTypes,
-                                mPersistentStateRequired,
-                                mDistinctiveIdentifierRequired,
-                                false /* TODO : support HW secure */,
-                                mProxyCallback};
+  WMFCDMImpl::InitParams params{
+      nsString(aOrigin),
+      mConfig.mInitDataTypes,
+      mPersistentStateRequired,
+      mDistinctiveIdentifierRequired,
+      false /* TODO : support HW secure */,
+      mProxyCallback,
+      GenerateMFCDMMediaCapabilities(mConfig.mAudioCapabilities),
+      GenerateMFCDMMediaCapabilities(mConfig.mVideoCapabilities)};
   mCDM->Init(params)->Then(
       mMainThread, __func__,
       [self = RefPtr{this}, this, aPromiseId](const bool) {
@@ -93,6 +97,17 @@ void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
             aPromiseId,
             nsLiteralCString("WMFCDMProxy::Init: WMFCDM init error"));
       });
+}
+
+CopyableTArray<MFCDMMediaCapability>
+WMFCDMProxy::GenerateMFCDMMediaCapabilities(
+    const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities) {
+  CopyableTArray<MFCDMMediaCapability> outCapabilites;
+  for (const auto& capabilities : aCapabilities) {
+    outCapabilites.AppendElement(MFCDMMediaCapability{
+        capabilities.mContentType, capabilities.mRobustness});
+  }
+  return outCapabilites;
 }
 
 void WMFCDMProxy::ResolvePromise(PromiseId aId) {

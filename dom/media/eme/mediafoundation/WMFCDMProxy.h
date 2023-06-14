@@ -10,12 +10,17 @@
 #include "mozilla/CDMProxy.h"
 #include "mozilla/CDMCaps.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WMFCDMImpl.h"
 
 #include "nsString.h"
+
+namespace dom {
+struct MediaKeySystemMediaCapability;
+};
 
 namespace mozilla {
 
@@ -118,6 +123,9 @@ class WMFCDMProxy : public CDMProxy {
                                  const nsCString& aReason);
   // Reject promise with an InvalidStateError and the given message.
   void RejectPromiseWithStateError(PromiseId aId, const nsCString& aReason);
+
+  CopyableTArray<MFCDMMediaCapability> GenerateMFCDMMediaCapabilities(
+      const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities);
 
   RefPtr<WMFCDMImpl> mCDM;
 
