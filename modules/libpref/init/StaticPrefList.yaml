@@ -6338,11 +6338,6 @@
   value: false
   mirror: once
 
-- name: gfx.vsync.collect-scroll-transforms
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: gfx.vsync.compositor.unobserve-count
   type: int32_t
   value: 10

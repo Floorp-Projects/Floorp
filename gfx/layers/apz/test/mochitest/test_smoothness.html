@@ -57,10 +57,6 @@
       SimpleTest.ok(true, "APZ not enabled, skipping test");
       SimpleTest.finish();
     }
-
-    waitUntilApzStable()
-    .then(() => pushPrefs([["gfx.vsync.collect-scroll-transforms", true]]))
-    .then(startTest);
     </script>
 </head>
 
