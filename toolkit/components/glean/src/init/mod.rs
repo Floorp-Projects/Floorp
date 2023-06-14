@@ -161,6 +161,7 @@ fn build_configuration(
         use_core_mps: true,
         trim_data_to_registered_pings: true,
         log_level: None,
+        rate_limit: None,
     };
 
     Ok((configuration, client_info))

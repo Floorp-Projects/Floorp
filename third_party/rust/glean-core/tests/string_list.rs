@@ -121,7 +121,7 @@ fn long_string_values_are_truncated() {
 
     // Ensure the string was truncated to the proper length.
     assert_eq!(
-        vec![test_string[..50].to_string()],
+        vec![test_string[..100].to_string()],
         metric.get_value(&glean, "store1").unwrap()
     );
 
@@ -135,7 +135,7 @@ fn long_string_values_are_truncated() {
 
     // Ensure the string was truncated to the proper length.
     assert_eq!(
-        vec![test_string[..50].to_string()],
+        vec![test_string[..100].to_string()],
         metric.get_value(&glean, "store1").unwrap()
     );
 
@@ -186,18 +186,18 @@ fn string_lists_dont_exceed_max_items() {
         ..Default::default()
     });
 
-    for _n in 1..21 {
+    for _n in 1..101 {
         metric.add_sync(&glean, "test_string");
     }
 
     let expected: Vec<String> = "test_string "
-        .repeat(20)
+        .repeat(100)
         .split_whitespace()
         .map(|s| s.to_string())
         .collect();
     assert_eq!(expected, metric.get_value(&glean, "store1").unwrap());
 
-    // Ensure the 21st string wasn't added.
+    // Ensure the 101st string wasn't added.
     metric.add_sync(&glean, "test_string");
     assert_eq!(expected, metric.get_value(&glean, "store1").unwrap());
 
@@ -207,9 +207,9 @@ fn string_lists_dont_exceed_max_items() {
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 
-    // Try to set it to a list that's too long. Ensure it cuts off at 20 elements.
+    // Try to set it to a list that's too long. Ensure it cuts off at 100 elements.
     let too_many: Vec<String> = "test_string "
-        .repeat(21)
+        .repeat(101)
         .split_whitespace()
         .map(|s| s.to_string())
         .collect();

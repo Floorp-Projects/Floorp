@@ -13,6 +13,9 @@ namespace glean {
     // It will return immediately.
     void glean_initialize(InternalConfiguration cfg, ClientInfoMetrics client_info, OnGleanEvents callbacks);
 
+    /// Shuts down Glean in an orderly fashion.
+    void glean_shutdown();
+
     // Creates and initializes a new Glean object for use in a subprocess.
     //
     // Importantly, this will not send any pings at startup, since that
@@ -70,6 +73,13 @@ dictionary InternalConfiguration {
     boolean use_core_mps;
     boolean trim_data_to_registered_pings;
     LevelFilter? log_level;
+    PingRateLimit? rate_limit;
+};
+
+// How to specify the rate pings may be uploaded before they are throttled.
+dictionary PingRateLimit {
+    u64 seconds_per_interval;
+    u32 pings_per_interval;
 };
 
 // An enum representing the different logging levels for the `log` crate.
