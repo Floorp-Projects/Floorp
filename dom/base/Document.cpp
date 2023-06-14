@@ -207,6 +207,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ResizeObserverController.h"
+#include "mozilla/dom/RustTypes.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -15128,8 +15129,17 @@ nsTArray<Element*> Document::AutoPopoverList() const {
 Element* Document::GetTopmostAutoPopover() const {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-    if (element && element->IsAutoPopover()) {
-      return element;
+    if (!element) {
+      continue;
+    }
+    if (element->State().HasState(ElementState::FULLSCREEN)) {
+      continue;
+    }
+    if (element->IsAutoPopover()) {
+      auto* dialog = HTMLDialogElement::FromNode(element);
+      if (!dialog || !dialog->IsInTopLayer()) {
+        return element;
+      }
     }
   }
   return nullptr;
