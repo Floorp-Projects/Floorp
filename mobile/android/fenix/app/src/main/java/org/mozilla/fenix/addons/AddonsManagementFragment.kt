@@ -53,7 +53,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     private var binding: FragmentAddOnsManagementBinding? = null
 
     private val webExtensionPromptFeature = ViewBoundFeatureWrapper<WebExtensionPromptFeature>()
-    private lateinit var addons: List<Addon>
+    private var addons: List<Addon> = emptyList()
 
     /**
      * Whether or not an add-on installation is in progress.
