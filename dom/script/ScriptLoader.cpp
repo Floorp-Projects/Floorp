@@ -872,7 +872,8 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
   return aRequest.forget();
 }
 
-bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
+bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement,
+                                        const nsAutoString& aTypeAttr) {
   // We need a document to evaluate scripts.
   NS_ENSURE_TRUE(mDocument, false);
 
@@ -884,9 +885,6 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
   NS_ASSERTION(!aElement->IsMalformed(), "Executing malformed script");
 
   nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
-
-  nsAutoString type;
-  bool hasType = aElement->GetScriptType(type);
 
   ScriptKind scriptKind;
   if (aElement->GetScriptIsModule()) {
@@ -902,28 +900,6 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
     return false;
   }
 
-  // For classic scripts, check the type attribute to determine language and
-  // version. If type exists, it trumps the deprecated 'language='
-  if (scriptKind == ScriptKind::eClassic) {
-    if (!type.IsEmpty()) {
-      NS_ENSURE_TRUE(nsContentUtils::IsJavascriptMIMEType(type), false);
-    } else if (!hasType) {
-      // no 'type=' element
-      // "language" is a deprecated attribute of HTML, so we check it only for
-      // HTML script elements.
-      if (scriptContent->IsHTMLElement()) {
-        nsAutoString language;
-        scriptContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::language, language);
-        if (!language.IsEmpty()) {
-          if (!nsContentUtils::IsJavaScriptLanguage(language)) {
-            return false;
-          }
-        }
-      }
-    }
-  }
-
   // "In modern user agents that support module scripts, the script element with
   // the nomodule attribute will be ignored".
   // "The nomodule attribute must not be specified on module scripts (and will
@@ -937,7 +913,8 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement) {
 
   // Step 15. and later in the HTML5 spec
   if (aElement->GetScriptExternal()) {
-    return ProcessExternalScript(aElement, scriptKind, type, scriptContent);
+    return ProcessExternalScript(aElement, scriptKind, aTypeAttr,
+                                 scriptContent);
   }
 
   return ProcessInlineScript(aElement, scriptKind);
