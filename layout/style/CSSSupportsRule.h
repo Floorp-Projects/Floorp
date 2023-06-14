@@ -10,10 +10,9 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/ServoBindingTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
-class CSSSupportsRule : public css::ConditionRule {
+class CSSSupportsRule final : public css::ConditionRule {
  public:
   CSSSupportsRule(RefPtr<StyleSupportsRule> aRawRule, StyleSheet* aSheet,
                   css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
@@ -31,6 +30,7 @@ class CSSSupportsRule : public css::ConditionRule {
   StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
+  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
 
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
   JSObject* WrapObject(JSContext* aCx,
@@ -42,7 +42,6 @@ class CSSSupportsRule : public css::ConditionRule {
   RefPtr<StyleSupportsRule> mRawRule;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CSSSupportsRule_h

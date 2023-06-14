@@ -19,11 +19,9 @@ using namespace mozilla::dom;
 
 namespace mozilla::css {
 
-GroupRule::GroupRule(already_AddRefed<StyleLockedCssRules> aRules,
-                     StyleSheet* aSheet, Rule* aParentRule,
+GroupRule::GroupRule(StyleSheet* aSheet, Rule* aParentRule,
                      uint32_t aLineNumber, uint32_t aColumnNumber)
-    : Rule(aSheet, aParentRule, aLineNumber, aColumnNumber),
-      mRuleList(new ServoCSSRuleList(std::move(aRules), aSheet, this)) {}
+    : Rule(aSheet, aParentRule, aLineNumber, aColumnNumber) {}
 
 GroupRule::~GroupRule() {
   MOZ_ASSERT(!mSheet, "SetStyleSheet should have been called");
@@ -39,8 +37,20 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GroupRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 bool GroupRule::IsCCLeaf() const {
-  // Let's not worry for now about sorting out whether we're a leaf or not.
-  return false;
+  if (!Rule::IsCCLeaf()) {
+    return false;
+  }
+  return !mRuleList;
+}
+
+ServoCSSRuleList* GroupRule::CssRules() {
+  if (!mRuleList) {
+    // Lazily create the rule list since most style rules won't have child
+    // rules.
+    mRuleList =
+        new ServoCSSRuleList(GetOrCreateRawRules(), GetStyleSheet(), this);
+  }
+  return mRuleList;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)

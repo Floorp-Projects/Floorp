@@ -26,6 +26,8 @@ class CSSContainerRule final : public css::ConditionRule {
   StyleContainerRule* Raw() const { return mRawRule; }
   void SetRawAfterClone(RefPtr<StyleContainerRule>);
 
+  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
+
   // WebIDL interface
   StyleCssRuleType Type() const override;
   // WebIDL interface

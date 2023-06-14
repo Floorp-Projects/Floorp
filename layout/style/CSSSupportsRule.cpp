@@ -17,8 +17,7 @@ namespace mozilla::dom {
 CSSSupportsRule::CSSSupportsRule(RefPtr<StyleSupportsRule> aRawRule,
                                  StyleSheet* aSheet, css::Rule* aParentRule,
                                  uint32_t aLine, uint32_t aColumn)
-    : css::ConditionRule(Servo_SupportsRule_GetRules(aRawRule).Consume(),
-                         aSheet, aParentRule, aLine, aColumn),
+    : css::ConditionRule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)) {}
 
 NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, ConditionRule)
@@ -55,9 +54,11 @@ void CSSSupportsRule::GetCssText(nsACString& aCssText) const {
 
 void CSSSupportsRule::SetRawAfterClone(RefPtr<StyleSupportsRule> aRaw) {
   mRawRule = std::move(aRaw);
+  css::ConditionRule::DidSetRawAfterClone();
+}
 
-  css::ConditionRule::SetRawAfterClone(
-      Servo_SupportsRule_GetRules(mRawRule).Consume());
+already_AddRefed<StyleLockedCssRules> CSSSupportsRule::GetOrCreateRawRules() {
+  return Servo_SupportsRule_GetRules(mRawRule).Consume();
 }
 
 /* virtual */

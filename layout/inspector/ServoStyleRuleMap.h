@@ -55,9 +55,8 @@ class ServoStyleRuleMap {
   void FillTableFromRuleList(ServoCSSRuleList&);
   void FillTableFromStyleSheet(StyleSheet&);
 
-  typedef nsTHashMap<nsPtrHashKey<const StyleLockedStyleRule>,
-                     WeakPtr<dom::CSSStyleRule>>
-      Hashtable;
+  using Hashtable = nsTHashMap<nsPtrHashKey<const StyleLockedStyleRule>,
+                               WeakPtr<dom::CSSStyleRule>>;
   Hashtable mTable;
 };
 
