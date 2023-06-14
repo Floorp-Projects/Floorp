@@ -34,7 +34,7 @@ bool DllBlockInfo::IsValidDynamicBlocklistEntry() const {
   }
   MOZ_ASSERT(mMaxVersion == DllBlockInfo::ALL_VERSIONS,
              "dynamic blocklist does not allow custom version");
-  MOZ_ASSERT(mFlags == DllBlockInfo::Flags::FLAGS_DEFAULT,
+  MOZ_ASSERT(mFlags == DllBlockInfoFlags::FLAGS_DEFAULT,
              "dynamic blocklist does not allow custom flags");
   return true;
 }

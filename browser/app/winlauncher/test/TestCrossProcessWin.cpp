@@ -45,22 +45,22 @@ const UNICODE_STRING kStringNotInBlocklist =
 const UNICODE_STRING kTestDependentModuleString =
     MOZ_LITERAL_UNICODE_STRING(L"Test_DependentModule.dll");
 
+using namespace mozilla;
+using namespace mozilla::freestanding;
+
 // clang-format off
 const DllBlockInfo kDllBlocklistShort[] = {
   // The entries do not have to be sorted.
   DLL_BLOCKLIST_ENTRY("X Y Z_Test", MAKE_VERSION(1, 2, 65535, 65535),
-                      DllBlockInfo::BLOCK_WIN8_AND_OLDER)
+                      DllBlockInfoFlags::BLOCK_WIN8_AND_OLDER)
   DLL_BLOCKLIST_ENTRY("\u30E9\u30FC\u30E1\u30F3_Test")
   DLL_BLOCKLIST_ENTRY("Avmvirtualsource_Test.ax", MAKE_VERSION(1, 0, 0, 3),
-                      DllBlockInfo::BROWSER_PROCESS_ONLY)
+                      DllBlockInfoFlags::BROWSER_PROCESS_ONLY)
   DLL_BLOCKLIST_ENTRY("1ccelerator_Test.dll", MAKE_VERSION(3, 2, 1, 6))
   DLL_BLOCKLIST_ENTRY("atkdx11disp_Test.dll", DllBlockInfo::ALL_VERSIONS)
   {},
 };
 // clang-format on
-
-using namespace mozilla;
-using namespace mozilla::freestanding;
 
 namespace mozilla::freestanding {
 class SharedSectionTestHelper {
