@@ -71,7 +71,6 @@ struct MFCDMInitParamsIPDL {
   Requirement persistentState;
   MFCDMMediaCapability[] audioCapabilities;
   MFCDMMediaCapability[] videoCapabilities;
-  bool hwSecure;
 };
 
 struct MFCDMInitIPDL {

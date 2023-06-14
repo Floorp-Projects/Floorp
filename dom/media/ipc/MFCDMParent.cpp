@@ -398,7 +398,7 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
         KeySystemConfig::Requirement::Required /* persistent */,
         {} /* audio capabilites */,
         {dummyVideoCapability} /* video capabilites */,
-        true /* hw secured */};
+    };
     ComPtr<IMFContentDecryptionModule> dummyCDM;
     if (FAILED(CreateContentDecryptionModule(aFactory, aKeySystem, dummyParam,
                                              dummyCDM))) {
@@ -419,6 +419,23 @@ static nsString GetRobustnessStringForKeySystem(const nsString& aKeySystem,
   }
   // TODO : implement Widevine L1, HW_SECURE_ALL/HW_SECURE_DECODE/....
   return nsString(u"");
+}
+
+static bool IsKeySystemHWSecure(
+    const nsAString& aKeySystem,
+    const nsTArray<MFCDMMediaCapability>& aCapabilities) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
+    if (aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware)) {
+      return true;
+    }
+    for (const auto& capabilities : aCapabilities) {
+      if (capabilities.robustness().EqualsLiteral("3000")) {
+        return true;
+      }
+    }
+  }
+  // TODO : implement for Widevine
+  return false;
 }
 
 mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
@@ -534,7 +551,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       NS_ConvertUTF16toUTF8(mKeySystem).get(),
       NS_ConvertUTF16toUTF8(aParams.origin()).get(),
       RequirementToStr(aParams.distinctiveID()),
-      RequirementToStr(aParams.persistentState()), aParams.hwSecure());
+      RequirementToStr(aParams.persistentState()),
+      IsKeySystemHWSecure(mKeySystem, aParams.videoCapabilities()));
   MOZ_ASSERT(mFactory->IsTypeSupported(mKeySystem.get(), nullptr));
 
   MFCDM_REJECT_IF_FAILED(
