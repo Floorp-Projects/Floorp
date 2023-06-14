@@ -475,7 +475,9 @@ class CssLogic {
         return true;
       }
     } while (
-      (element = element.parentNode) &&
+      // Loop on flattenedTreeParentNode instead of parentNode to reach the
+      // shadow host from the shadow dom.
+      (element = element.flattenedTreeParentNode) &&
       element.nodeType === nodeConstants.ELEMENT_NODE
     );
 
@@ -595,7 +597,9 @@ class CssLogic {
 
       distance--;
     } while (
-      (element = element.parentNode) &&
+      // Loop on flattenedTreeParentNode instead of parentNode to reach the
+      // shadow host from the shadow dom.
+      (element = element.flattenedTreeParentNode) &&
       element.nodeType === nodeConstants.ELEMENT_NODE
     );
   }
