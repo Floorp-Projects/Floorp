@@ -58,11 +58,11 @@ fun TabsTrayFab(
 
         Page.SyncedTabs -> {
             icon = painterResource(id = R.drawable.ic_fab_sync)
-            contentDescription = stringResource(id = R.string.tab_drawer_fab_sync)
+            contentDescription = stringResource(id = R.string.resync_button_content_description)
             label = if (isSyncing) {
                 stringResource(id = R.string.sync_syncing_in_progress)
             } else {
-                stringResource(id = R.string.resync_button_content_description)
+                stringResource(id = R.string.tab_drawer_fab_sync)
             }.uppercase()
             onClick = onSyncedTabsFabClicked
         }
