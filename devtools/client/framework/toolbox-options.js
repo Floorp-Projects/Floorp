@@ -424,15 +424,17 @@ OptionsPanel.prototype = {
    * Add extra checkbox options bound to a boolean preference.
    */
   setupAdditionalOptions() {
-    const prefDefinitions = [
-      {
+    const prefDefinitions = [];
+
+    if (GetPref("devtools.custom-formatters")) {
+      prefDefinitions.push({
         pref: "devtools.custom-formatters.enabled",
         l10nLabelId: "options-enable-custom-formatters-label",
         l10nTooltipId: "options-enable-custom-formatters-tooltip",
         id: "devtools-custom-formatters",
         parentId: "context-options",
-      },
-    ];
+      });
+    }
 
     const createPreferenceOption = ({
       pref,
