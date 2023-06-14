@@ -175,9 +175,11 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
 }
 
 static nsString GetRobustnessStringForKeySystem(const nsString& aKeySystem,
-                                                const bool aIsHWSecure) {
+                                                const bool aIsHWSecure,
+                                                const bool aIsVideo = true) {
   if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
-    return aIsHWSecure ? nsString(u"3000") : nsString(u"2000");
+    // Audio doesn't support SL3000.
+    return aIsHWSecure && aIsVideo ? nsString(u"3000") : nsString(u"2000");
   }
   // TODO : implement Widevine L1, HW_SECURE_ALL/HW_SECURE_DECODE/....
   return nsString(u"");
@@ -235,6 +237,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
       MFCDMMediaCapability* c =
           capabilities.audioCapabilities().AppendElement();
       c->contentType() = NS_ConvertUTF8toUTF16(codec);
+      c->robustness() = GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure,
+                                                        false /* isVideo */);
       MFCDM_PARENT_LOG("%s: +audio:%s", __func__, codec.get());
     }
   }
