@@ -4,48 +4,31 @@
 import argparse
 import importlib
 import re
-import subprocess
 import sys
 
 sys.path.insert(0, "./dom/media/webrtc/third_party_build")
 vendor_libwebrtc = importlib.import_module("vendor-libwebrtc")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Get relevant change count from an upstream git commit"
-    )
-    parser.add_argument(
-        "--repo-path",
-        required=True,
-        help="path to libwebrtc repo",
-    )
-    parser.add_argument("--commit-sha", required=True, help="sha of commit to examine")
-    parser.add_argument("--diff-filter", choices=("A", "D", "R"))
-    args = parser.parse_args()
+from run_operations import run_git
 
+
+def filter_git_changes(github_path, commit_sha, diff_filter):
     command = [
         "git",
         "show",
         "--oneline",
         "--name-status",
         "--pretty=format:",
-        None if not args.diff_filter else "--diff-filter={}".format(args.diff_filter),
-        args.commit_sha,
+        None if not diff_filter else "--diff-filter={}".format(diff_filter),
+        commit_sha,
     ]
     # strip possible empty elements from command list
-    command = [x for x in command if x is not None]
+    command = " ".join([x for x in command if x is not None])
 
     # Get the list of changes in the upstream commit.
-    res = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        cwd=args.repo_path,
-    )
-    if res.returncode != 0:
-        sys.exit("error: {}".format(res.stderr.strip()))
+    stdout_lines = run_git(command, github_path)
 
-    changed_files = [line.strip() for line in res.stdout.strip().split("\n")]
+    changed_files = [line.strip() for line in stdout_lines]
     changed_files = [line for line in changed_files if line != ""]
 
     # Fetch the list of excludes and includes used in the vendoring script.
@@ -68,5 +51,22 @@ if __name__ == "__main__":
         path for path in changed_files if not re.findall(regex_excludes, path)
     ]
 
-    for path in included_files + files_not_excluded:
+    return included_files + files_not_excluded
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Get relevant change count from an upstream git commit"
+    )
+    parser.add_argument(
+        "--repo-path",
+        required=True,
+        help="path to libwebrtc repo",
+    )
+    parser.add_argument("--commit-sha", required=True, help="sha of commit to examine")
+    parser.add_argument("--diff-filter", choices=("A", "D", "R"))
+    args = parser.parse_args()
+
+    paths = filter_git_changes(args.repo_path, args.commit_sha, args.diff_filter)
+    for path in paths:
         print(path)
