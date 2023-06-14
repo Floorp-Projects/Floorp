@@ -294,12 +294,6 @@ var whitelist = [
 
   // Bug 1824826 - Implement a view of history in Firefox View
   { file: "resource://gre/modules/PlacesQuery.sys.mjs" },
-
-  // Should be removed in bug 1824826 when fxview-tab-list is used in Firefox View
-  { file: "resource://app/localization/en-US/browser/fxviewTabList.ftl" },
-  { file: "chrome://browser/content/firefoxview/fxview-tab-list.css" },
-  { file: "chrome://browser/content/firefoxview/fxview-tab-list.mjs" },
-  { file: "chrome://browser/content/firefoxview/fxview-tab-row.css" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

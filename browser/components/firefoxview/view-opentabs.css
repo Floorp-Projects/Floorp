@@ -2,12 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.fxview-tab-list {
+.view-opentabs-card-container {
   display: grid;
-  grid-template-columns: min-content 3fr 2fr 1fr 1fr min-content;
-  gap: 8px;
+  gap: 1em;
 }
 
-:host([compactRows]) .fxview-tab-list {
-  grid-template-columns: min-content 1fr min-content;
+.one-column {
+  grid-template-columns: 1fr;
+}
+
+.two-columns {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.three-columns {
+  grid-template-columns: repeat(3, 1fr);
 }

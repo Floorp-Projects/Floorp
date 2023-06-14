@@ -11,6 +11,7 @@ browser.jar:
     content/browser/firefoxview/firefoxview-next.mjs
     content/browser/firefoxview/history.mjs
     content/browser/firefoxview/opentabs.mjs
+    content/browser/firefoxview/view-opentabs.css
     content/browser/firefoxview/overview.mjs
     content/browser/firefoxview/firefoxview.css
     content/browser/firefoxview/firefoxview-next.css
