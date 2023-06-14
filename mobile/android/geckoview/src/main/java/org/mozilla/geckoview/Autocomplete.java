@@ -813,7 +813,7 @@ public class Autocomplete {
       value = {UsedField.PASSWORD})
   public @interface LSUsedField {}
 
-  // Sync with UsedField in GeckoViewAutocomplete.jsm.
+  // Sync with UsedField in GeckoViewAutocomplete.sys.mjs.
   /** Possible login entry field types for {@link StorageDelegate#onLoginUsed}. */
   public static class UsedField {
     /** The password field of a login entry. */

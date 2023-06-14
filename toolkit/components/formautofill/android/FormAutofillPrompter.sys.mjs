@@ -7,17 +7,12 @@
  * the doorhager UI for formautofill related features.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CreditCard: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
 });
 
 // Sync with Autocomplete.SaveOption.Hint in Autocomplete.java

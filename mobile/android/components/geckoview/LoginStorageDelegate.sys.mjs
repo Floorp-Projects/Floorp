@@ -3,17 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
+  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("LoginStorageDelegate");

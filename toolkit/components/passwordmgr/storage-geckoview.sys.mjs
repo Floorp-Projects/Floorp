@@ -13,12 +13,9 @@ import { LoginManagerStorage_json } from "resource://gre/modules/storage-json.sy
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
+  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
 });
 
 export class LoginManagerStorage extends LoginManagerStorage_json {

@@ -2,23 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "GeckoViewAutocomplete",
-  "LoginEntry",
-  "CreditCard",
-  "Address",
-  "SelectOption",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -35,7 +20,7 @@ XPCOMUtils.defineLazyGetter(lazy, "LoginInfo", () =>
   )
 );
 
-class LoginEntry {
+export class LoginEntry {
   constructor({
     origin,
     formActionOrigin,
@@ -110,7 +95,7 @@ class LoginEntry {
   }
 }
 
-class Address {
+export class Address {
   constructor({
     name,
     givenName,
@@ -216,7 +201,7 @@ class Address {
   }
 }
 
-class CreditCard {
+export class CreditCard {
   constructor({
     name,
     number,
@@ -291,7 +276,7 @@ class CreditCard {
   }
 }
 
-class SelectOption {
+export class SelectOption {
   // Sync with Autocomplete.SelectOption.Hint in Autocomplete.java.
   static Hint = {
     NONE: 0,
@@ -310,7 +295,7 @@ class SelectOption {
 // Sync with Autocomplete.UsedField in Autocomplete.java.
 const UsedField = { PASSWORD: 1 };
 
-const GeckoViewAutocomplete = {
+export const GeckoViewAutocomplete = {
   /** current opened prompt */
   _prompt: null,
 
