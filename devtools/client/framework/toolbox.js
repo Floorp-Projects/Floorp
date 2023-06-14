@@ -2170,9 +2170,10 @@ Toolbox.prototype = {
       return;
     }
 
-    const customFormatters =
-      Services.prefs.getBoolPref("devtools.custom-formatters", false) &&
-      Services.prefs.getBoolPref("devtools.custom-formatters.enabled", false);
+    const customFormatters = Services.prefs.getBoolPref(
+      "devtools.custom-formatters.enabled",
+      false
+    );
 
     await this.commands.targetConfigurationCommand.updateConfiguration({
       customFormatters,
