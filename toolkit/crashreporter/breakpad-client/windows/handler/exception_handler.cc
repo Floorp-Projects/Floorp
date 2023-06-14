@@ -909,8 +909,10 @@ static void GetPHCAddrInfo(EXCEPTION_POINTERS* exinfo,
 #endif
 
 ExceptionHandler::MinidumpResult ExceptionHandler::WriteMinidumpWithException(
-    DWORD requesting_thread_id, EXCEPTION_POINTERS* exinfo,
-    MDRawAssertionInfo* assertion) {
+    DWORD requesting_thread_id,
+    EXCEPTION_POINTERS* exinfo,
+    MDRawAssertionInfo* assertion)
+{
   mozilla::phc::AddrInfo* addr_info = nullptr;
 #ifdef MOZ_PHC
   addr_info = &mozilla::phc::gAddrInfo;
