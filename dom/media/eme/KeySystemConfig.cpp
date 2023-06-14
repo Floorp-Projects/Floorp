@@ -185,6 +185,46 @@ bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
   return false;
 }
 
+#ifdef DEBUG
+nsString KeySystemConfig::GetDebugInfo() const {
+  nsString debugInfo;
+  debugInfo.Append(mKeySystem);
+  debugInfo.AppendLiteral(",init-data-type=");
+  for (const auto& type : mInitDataTypes) {
+    debugInfo.Append(type);
+    debugInfo.AppendLiteral(",");
+  }
+  debugInfo.AppendASCII(
+      nsPrintfCString(",persistent=%s", RequirementToStr(mPersistentState))
+          .get());
+  debugInfo.AppendASCII(
+      nsPrintfCString(",distinctive=%s",
+                      RequirementToStr(mDistinctiveIdentifier))
+          .get());
+  debugInfo.AppendLiteral(",sessionType=");
+  for (const auto& type : mSessionTypes) {
+    debugInfo.AppendASCII(nsPrintfCString("%s,", SessionTypeToStr(type)).get());
+  }
+  debugInfo.AppendLiteral(",video-robustness=");
+  for (const auto& robustness : mVideoRobustness) {
+    debugInfo.Append(robustness);
+  }
+  debugInfo.AppendLiteral(",audio-robustness=");
+  for (const auto& robustness : mAudioRobustness) {
+    debugInfo.Append(robustness);
+  }
+  debugInfo.AppendLiteral(",scheme=");
+  for (const auto& scheme : mEncryptionSchemes) {
+    debugInfo.Append(scheme);
+  }
+  debugInfo.AppendLiteral(",MP4=");
+  debugInfo.Append(NS_ConvertUTF8toUTF16(mMP4.GetDebugInfo()));
+  debugInfo.AppendLiteral(",WEBM=");
+  debugInfo.Append(NS_ConvertUTF8toUTF16(mWebM.GetDebugInfo()));
+  return debugInfo;
+}
+#endif
+
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
     dom::MediaKeySessionType aType) {
   switch (aType) {
@@ -207,6 +247,17 @@ const char* SessionTypeToStr(KeySystemConfig::SessionType aType) {
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid session type");
       return "Invalid";
+  }
+}
+
+const char* RequirementToStr(KeySystemConfig::Requirement aRequirement) {
+  switch (aRequirement) {
+    case KeySystemConfig::Requirement::Required:
+      return "required";
+    case KeySystemConfig::Requirement::Optional:
+      return "optional";
+    default:
+      return "not-allowed";
   }
 }
 

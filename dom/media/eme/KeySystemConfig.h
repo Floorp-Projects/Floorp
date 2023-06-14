@@ -94,6 +94,24 @@ struct KeySystemConfig {
       mCodecsDecrypted.AppendElement(aCodec);
     }
 
+#ifdef DEBUG
+    EMECodecString GetDebugInfo() const {
+      EMECodecString info;
+      info.AppendLiteral("decoding: [");
+      for (const auto& codec : mCodecsDecoded) {
+        info.Append(codec);
+        info.AppendLiteral(",");
+      }
+      info.AppendLiteral("], ");
+      info.AppendLiteral("decrypting: [");
+      for (const auto& codec : mCodecsDecrypted) {
+        info.Append(codec);
+        info.AppendLiteral(",");
+      }
+      info.AppendLiteral("]");
+      return info;
+    }
+#endif
    private:
     nsTArray<EMECodecString> mCodecsDecoded;
     nsTArray<EMECodecString> mCodecsDecrypted;
@@ -135,6 +153,10 @@ struct KeySystemConfig {
   KeySystemConfig(KeySystemConfig&&) = default;
   KeySystemConfig& operator=(KeySystemConfig&&) = default;
 
+#ifdef DEBUG
+  nsString GetDebugInfo() const;
+#endif
+
   nsString mKeySystem;
   nsTArray<nsString> mInitDataTypes;
   Requirement mPersistentState = Requirement::NotAllowed;
@@ -151,6 +173,7 @@ struct KeySystemConfig {
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
     dom::MediaKeySessionType aType);
 const char* SessionTypeToStr(KeySystemConfig::SessionType aType);
+const char* RequirementToStr(KeySystemConfig::Requirement aRequirement);
 
 }  // namespace mozilla
 
