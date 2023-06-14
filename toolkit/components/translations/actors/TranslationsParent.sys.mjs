@@ -142,6 +142,12 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   languageState;
 
+  /**
+   * Do not send queries or do work when the actor is already destroyed. This flag needs
+   * to be checked after calls to `await`.
+   */
+  #isDestroyed = false;
+
   actorCreated() {
     this.languageState = new TranslationsLanguageState(this);
 
@@ -460,6 +466,11 @@ export class TranslationsParent extends JSWindowActorParent {
           documentElementLang,
           href
         );
+        if (!detectedLanguages) {
+          // The actor was already destroyed, and the detectedLanguages weren't reported
+          // in time.
+          return undefined;
+        }
 
         this.languageState.detectedLanguages = detectedLanguages;
 
@@ -1657,7 +1668,13 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   async queryIdentifyLanguage() {
-    return this.sendQuery("Translations:IdentifyLanguage");
+    return this.sendQuery("Translations:IdentifyLanguage").catch(error => {
+      if (this.#isDestroyed) {
+        // The actor was destroyed while this message was still being resolved.
+        return null;
+      }
+      return Promise.reject(error);
+    });
   }
 
   /**
@@ -1693,7 +1710,8 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @param {string} [documentElementLang]
    * @param {string} [href]
-   * @returns {Promise<LangTags>}
+   * @returns {Promise<LangTags | null>} - Returns null if the actor was destroyed before
+   *   the result could be resolved.
    */
   async getDetectedLanguages(documentElementLang, href) {
     if (this.languageState.detectedLanguages) {
@@ -1717,9 +1735,15 @@ export class TranslationsParent extends JSWindowActorParent {
     }
     if (documentElementLang === undefined) {
       documentElementLang = await this.queryDocumentElementLang();
+      if (this.#isDestroyed) {
+        return null;
+      }
     }
 
     let languagePairs = await this.getLanguagePairs();
+    if (this.#isDestroyed) {
+      return null;
+    }
 
     const determineIsDocLangTagSupported = () =>
       Boolean(
@@ -1737,6 +1761,9 @@ export class TranslationsParent extends JSWindowActorParent {
     // to identify the page's language using the LanguageIdEngine.
     if (!langTags.docLangTag) {
       langTags.docLangTag = await this.queryIdentifyLanguage();
+      if (this.#isDestroyed) {
+        return null;
+      }
       langTags.isDocLangTagSupported = determineIsDocLangTagSupported();
     }
 
@@ -1752,6 +1779,9 @@ export class TranslationsParent extends JSWindowActorParent {
       lazy.console.log(message, href);
 
       const languagePairs = await this.getLanguagePairs();
+      if (this.#isDestroyed) {
+        return null;
+      }
 
       // Attempt to find a good language to select for the user.
       langTags.userLangTag =
@@ -1954,6 +1984,10 @@ export class TranslationsParent extends JSWindowActorParent {
         perms.DENY_ACTION
       );
     }
+  }
+
+  didDestroy() {
+    this.#isDestroyed = true;
   }
 }
 
