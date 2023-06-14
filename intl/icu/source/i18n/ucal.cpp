@@ -24,6 +24,7 @@
 #include "unicode/localpointer.h"
 #include "cmemory.h"
 #include "cstring.h"
+#include "iso8601cal.h"
 #include "ustrenum.h"
 #include "uenumimp.h"
 #include "ulist.h"
@@ -307,7 +308,8 @@ ucal_setGregorianChange(UCalendar *cal, UDate date, UErrorCode *pErrorCode) {
         *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }
-    if(typeid(*cpp_cal) != typeid(GregorianCalendar)) {
+    if(typeid(*cpp_cal) != typeid(GregorianCalendar) &&
+       typeid(*cpp_cal) != typeid(ISO8601Calendar)) {
         *pErrorCode = U_UNSUPPORTED_ERROR;
         return;
     }
@@ -329,7 +331,8 @@ ucal_getGregorianChange(const UCalendar *cal, UErrorCode *pErrorCode) {
         *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
         return (UDate)0;
     }
-    if(typeid(*cpp_cal) != typeid(GregorianCalendar)) {
+    if(typeid(*cpp_cal) != typeid(GregorianCalendar) &&
+       typeid(*cpp_cal) != typeid(ISO8601Calendar)) {
         *pErrorCode = U_UNSUPPORTED_ERROR;
         return (UDate)0;
     }
