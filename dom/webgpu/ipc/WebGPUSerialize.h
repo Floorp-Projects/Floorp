@@ -24,6 +24,9 @@ namespace IPC {
 #define DEFINE_IPC_SERIALIZER_FFI_ENUM(something) \
   DEFINE_IPC_SERIALIZER_ENUM_GUARD(something, something##_Sentinel)
 
+// -
+
+DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUErrorFilter);
 DEFINE_IPC_SERIALIZER_DOM_ENUM(mozilla::dom::GPUPowerPreference);
 
 DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUHostMap);
@@ -36,8 +39,8 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPURequestAdapterOptions,
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUBufferDescriptor, mSize,
                                   mUsage, mMappedAtCreation);
 
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ScopedError, operationError,
-                                  validationMessage);
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::PopErrorScopeResult,
+                                  resultType, message);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::WebGPUCompilationMessage,
                                   message, lineNum, linePos);
@@ -46,5 +49,15 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::WebGPUCompilationMessage,
 #undef DEFINE_IPC_SERIALIZER_DOM_ENUM
 #undef DEFINE_IPC_SERIALIZER_ENUM_GUARD
 
+// -
+
+template <>
+struct ParamTraits<mozilla::webgpu::PopErrorScopeResultType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::webgpu::PopErrorScopeResultType,
+          mozilla::webgpu::PopErrorScopeResultType{0},
+          mozilla::webgpu::PopErrorScopeResultType::_LAST> {};
+
 }  // namespace IPC
+
 #endif  // WEBGPU_SERIALIZE_H_

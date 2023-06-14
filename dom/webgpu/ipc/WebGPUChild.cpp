@@ -1064,25 +1064,30 @@ RefPtr<PipelinePromise> WebGPUChild::DeviceCreateRenderPipelineAsync(
           });
 }
 
-ipc::IPCResult WebGPUChild::RecvDeviceUncapturedError(
-    RawId aDeviceId, const nsACString& aMessage) {
-  auto targetIter = mDeviceMap.find(aDeviceId);
-  if (!aDeviceId || targetIter == mDeviceMap.end()) {
+ipc::IPCResult WebGPUChild::RecvUncapturedError(const Maybe<RawId> aDeviceId,
+                                                const nsACString& aMessage) {
+  RefPtr<Device> device;
+  if (aDeviceId) {
+    const auto itr = mDeviceMap.find(*aDeviceId);
+    if (itr != mDeviceMap.end()) {
+      device = itr->second.get();
+      MOZ_ASSERT(device);
+    }
+  }
+  if (!device) {
     JsWarning(nullptr, aMessage);
   } else {
-    auto* target = targetIter->second.get();
-    MOZ_ASSERT(target);
     // We don't want to spam the errors to the console indefinitely
-    if (target->CheckNewWarning(aMessage)) {
-      JsWarning(target->GetOwnerGlobal(), aMessage);
+    if (device->CheckNewWarning(aMessage)) {
+      JsWarning(device->GetOwnerGlobal(), aMessage);
 
       dom::GPUUncapturedErrorEventInit init;
       init.mError.SetAsGPUValidationError() =
-          new ValidationError(target->GetParentObject(), aMessage);
+          new ValidationError(device->GetParentObject(), aMessage);
       RefPtr<mozilla::dom::GPUUncapturedErrorEvent> event =
           dom::GPUUncapturedErrorEvent::Constructor(
-              target, u"uncapturederror"_ns, init);
-      target->DispatchEvent(*event);
+              device, u"uncapturederror"_ns, init);
+      device->DispatchEvent(*event);
     }
   }
   return IPC_OK();

@@ -11,21 +11,34 @@
 #include "nsString.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
+namespace mozilla::dom {
+enum class GPUErrorFilter : uint8_t;
+}  // namespace mozilla::dom
+
 namespace mozilla::webgpu {
 
 using RawId = uint64_t;
 using BufferAddress = uint64_t;
 
-struct ScopedError {
-  // Did an error occur as a result the attempt to retrieve an error
-  // (e.g. from a dead device, from an empty scope stack)?
-  bool operationError = false;
-
-  // If non-empty, the first error generated when this scope was on
-  // the top of the stack. This is interpreted as UTF-8.
-  nsCString validationMessage;
+struct ErrorScope {
+  dom::GPUErrorFilter filter;
+  Maybe<nsCString> firstMessage;
 };
-using MaybeScopedError = Maybe<ScopedError>;
+
+enum class PopErrorScopeResultType : uint8_t {
+  NoError,
+  ThrowOperationError,
+  ValidationError,
+  OutOfMemory,
+  InternalError,
+  DeviceLost,
+  _LAST = DeviceLost,
+};
+
+struct PopErrorScopeResult {
+  PopErrorScopeResultType resultType;
+  nsCString message;
+};
 
 enum class WebGPUCompilationMessageType { Error, Warning, Info };
 

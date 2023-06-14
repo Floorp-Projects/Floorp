@@ -24,10 +24,6 @@ namespace webgpu {
 class ErrorBuffer;
 class PresentationData;
 
-struct ErrorScopeStack {
-  nsTArray<MaybeScopedError> mStack;
-};
-
 class WebGPUParent final : public PWebGPUParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent, override)
 
@@ -103,10 +99,11 @@ class WebGPUParent final : public PWebGPUParent {
                                                  uint32_t aIndex,
                                                  RawId aAssignId);
 
-  ipc::IPCResult RecvDevicePushErrorScope(RawId aDeviceId);
+  ipc::IPCResult RecvDevicePushErrorScope(RawId aDeviceId, dom::GPUErrorFilter);
   ipc::IPCResult RecvDevicePopErrorScope(
       RawId aDeviceId, DevicePopErrorScopeResolver&& aResolver);
-  ipc::IPCResult RecvGenerateError(RawId aDeviceId, const nsCString& message);
+  ipc::IPCResult RecvGenerateError(Maybe<RawId> aDeviceId, dom::GPUErrorFilter,
+                                   const nsCString& message);
 
   ipc::IPCResult GetFrontBufferSnapshot(
       IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
@@ -129,8 +126,14 @@ class WebGPUParent final : public PWebGPUParent {
 
   virtual ~WebGPUParent();
   void MaintainDevices();
-  bool ForwardError(RawId aDeviceId, ErrorBuffer& aError);
-  void ReportError(RawId aDeviceId, const nsCString& message);
+
+  bool ForwardError(const RawId aDeviceId, ErrorBuffer& aError) {
+    return ForwardError(Some(aDeviceId), aError);
+  }
+  bool ForwardError(Maybe<RawId> aDeviceId, ErrorBuffer& aError);
+
+  void ReportError(Maybe<RawId> aDeviceId, GPUErrorFilter,
+                   const nsCString& message);
 
   UniquePtr<ffi::WGPUGlobal> mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
@@ -147,7 +150,8 @@ class WebGPUParent final : public PWebGPUParent {
   RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
 
   /// Associated stack of error scopes for each device.
-  std::unordered_map<uint64_t, ErrorScopeStack> mErrorScopeMap;
+  std::unordered_map<uint64_t, std::vector<ErrorScope>>
+      mErrorScopeStackByDevice;
 };
 
 }  // namespace webgpu

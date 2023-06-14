@@ -131,7 +131,7 @@ ffi::WGPURenderPass* BeginRenderPass(
   }
 
   if (aDesc.mColorAttachments.Length() > WGPUMAX_COLOR_ATTACHMENTS) {
-    aParent->GetDevice()->GenerateError(nsLiteralCString(
+    aParent->GetDevice()->GenerateValidationError(nsLiteralCString(
         "Too many color attachments in GPURenderPassDescriptor"));
     return nullptr;
   }
