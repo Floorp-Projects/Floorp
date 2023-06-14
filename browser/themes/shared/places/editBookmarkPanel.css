@@ -22,38 +22,6 @@
   padding-bottom: 0;
 }
 
-html|div#editBookmarkPanelFaviconContainer {
-  display: flex;
-}
-
-#editBookmarkPanelInfoArea {
-  overflow: hidden;
-  padding: 4px var(--arrowpanel-padding) 0;
-  flex: none;
-}
-
-html|img#editBookmarkPanelFavicon[src] {
-  box-sizing: content-box;
-  width: 32px;
-  height: 32px;
-  padding: 5px;
-  background-color: #F9F9FA;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
-  border-radius: 6px;
-  margin-top: 10px;
-  margin-inline-start: 10px;
-  margin-bottom: -52px; /* margin-top + paddings + height */
-}
-
-#editBookmarkPanelImage {
-  border-radius: 4px;
-  height: 150px;
-  background-image: -moz-element(#editBookmarkPanelImageCanvas);
-  background-repeat: no-repeat;
-  background-size: cover;
-  margin: 0;
-}
-
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
 #editBMPanel_folderTree {
   min-width: 27em;
@@ -83,8 +51,7 @@ html|img#editBookmarkPanelFavicon[src] {
   background-color: var(--button-active-bgcolor);
 }
 
-#editBookmarkPanel > #editBookmarkHeaderSeparator,
-#editBookmarkPanel > .panel-subview-body > #editBookmarkSeparator {
+#editBookmarkPanel > #editBookmarkHeaderSeparator {
   margin-bottom: 0;
   margin-inline: 16px;
 }

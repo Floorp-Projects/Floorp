@@ -241,8 +241,6 @@ var StarUI = {
       });
     }
 
-    this._setIconAndPreviewImage();
-
     let onPanelReady = fn => {
       let target = this.panel;
       if (target.parentNode) {
@@ -278,27 +276,6 @@ var StarUI = {
       let clone = template.content.cloneNode(true);
       template.replaceWith(clone);
     }
-  },
-
-  _setIconAndPreviewImage() {
-    let faviconImage = this._element("editBookmarkPanelFavicon");
-    faviconImage.removeAttribute("iconloadingprincipal");
-    faviconImage.removeAttribute("src");
-
-    let tab = gBrowser.selectedTab;
-    if (tab.hasAttribute("image") && !tab.hasAttribute("busy")) {
-      faviconImage.setAttribute(
-        "iconloadingprincipal",
-        tab.getAttribute("iconloadingprincipal")
-      );
-      faviconImage.setAttribute("src", tab.getAttribute("image"));
-    }
-
-    let canvas = PageThumbs.createCanvas(window);
-    PageThumbs.captureToCanvas(gBrowser.selectedBrowser, canvas).catch(e =>
-      console.error(e)
-    );
-    document.mozSetImageElement("editBookmarkPanelImageCanvas", canvas);
   },
 
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
