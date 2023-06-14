@@ -18,6 +18,7 @@ import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.NimbusMessagingStorage
 import mozilla.components.service.nimbus.messaging.OnDiskMessageMetadataStorage
+import mozilla.components.support.utils.BrowsersCache
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -34,7 +35,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.messaging.CustomAttributeProvider
 import org.mozilla.fenix.perf.lazyMonitored
-import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VENDOR
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION

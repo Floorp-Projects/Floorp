@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @file:Suppress("DEPRECATION")
 
-package org.mozilla.fenix.utils
+package mozilla.components.support.utils
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -11,17 +11,13 @@ import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.utils.Browsers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Ignore
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
-@RunWith(FenixRobolectricTestRunner::class)
 @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1794926")
 class BrowsersCacheTest {
 

@@ -9,8 +9,8 @@ import android.util.AttributeSet
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.switchmaterial.SwitchMaterial
+import mozilla.components.support.utils.BrowsersCache
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.BrowsersCache
 
 class DefaultBrowserPreference @JvmOverloads constructor(
     context: Context,

@@ -59,6 +59,7 @@ import mozilla.components.support.locale.LocaleAwareApplication
 import mozilla.components.support.rusterrors.initializeRustErrors
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
+import mozilla.components.support.utils.BrowsersCache
 import mozilla.components.support.utils.logElapsedTime
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.GleanMetrics.Addons
@@ -97,7 +98,6 @@ import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
-import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.wallpapers.Wallpaper
