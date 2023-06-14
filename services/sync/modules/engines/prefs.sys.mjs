@@ -26,7 +26,6 @@ const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 const PREF_SYNC_SEEN_PREFIX = "services.sync.prefs.sync-seen.";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
 import {
   Store,
@@ -175,7 +174,7 @@ PrefStore.prototype = {
   __prefs: null,
   get _prefs() {
     if (!this.__prefs) {
-      this.__prefs = new Preferences();
+      this.__prefs = Services.prefs.getBranch("");
     }
     return this.__prefs;
   },
@@ -200,7 +199,7 @@ PrefStore.prototype = {
 
     // This is the pref itself - it must be both allowed, and have a control
     // pref which is true.
-    if (!this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false)) {
+    if (!this._prefs.getBoolPref(PREF_SYNC_PREFS_PREFIX + pref, false)) {
       return false;
     }
     return isAllowedPrefName(pref);
@@ -213,19 +212,39 @@ PrefStore.prototype = {
       // us not to apply (syncable) changes to preferences that are set locally
       // which have unsyncable urls.
       if (this._isSynced(pref) && !isUnsyncableURLPref(pref)) {
-        let isSet = this._prefs.isSet(pref);
+        let isSet = this._prefs.prefHasUserValue(pref);
         // Missing and default prefs get the null value, unless that `seen`
         // pref is set, in which case it always gets the value.
-        let forceValue = this._prefs.get(PREF_SYNC_SEEN_PREFIX + pref, false);
-        values[pref] = isSet || forceValue ? this._prefs.get(pref, null) : null;
+        let forceValue = this._prefs.getBoolPref(
+          PREF_SYNC_SEEN_PREFIX + pref,
+          false
+        );
+        if (isSet || forceValue) {
+          switch (this._prefs.getPrefType(pref)) {
+            case Ci.nsIPrefBranch.PREF_STRING:
+              values[pref] = this._prefs.getStringPref(pref);
+              break;
+            case Ci.nsIPrefBranch.PREF_INT:
+              values[pref] = this._prefs.getIntPref(pref);
+              break;
+            case Ci.nsIPrefBranch.PREF_BOOL:
+              values[pref] = this._prefs.getBoolPref(pref);
+              break;
+            case Ci.nsIPrefBranch.PREF_INVALID:
+              values[pref] = null;
+              break;
+          }
+        } else {
+          values[pref] = null;
+        }
         // If this is a special "sync-seen" pref, and it's not the default value,
         // set the seen pref to true.
         if (
           isSet &&
-          this._prefs.get(PREF_SYNC_SEEN_PREFIX + pref, false) === false
+          this._prefs.getBoolPref(PREF_SYNC_SEEN_PREFIX + pref, false) === false
         ) {
           this._log.trace(`toggling sync-seen pref for '${pref}' to true`);
-          this._prefs.set(PREF_SYNC_SEEN_PREFIX + pref, true);
+          this._prefs.setBoolPref(PREF_SYNC_SEEN_PREFIX + pref, true);
         }
       }
     }
@@ -234,7 +253,10 @@ PrefStore.prototype = {
 
   _setAllPrefs(values) {
     const selectedThemeIDPref = "extensions.activeThemeID";
-    let selectedThemeIDBefore = this._prefs.get(selectedThemeIDPref, null);
+    let selectedThemeIDBefore = this._prefs.getCharPref(
+      selectedThemeIDPref,
+      null
+    );
     let selectedThemeIDAfter = selectedThemeIDBefore;
 
     // Update 'services.sync.prefs.sync.foo.pref' before 'foo.pref', otherwise
@@ -260,7 +282,7 @@ PrefStore.prototype = {
             let controlPref = PREF_SYNC_PREFS_PREFIX + pref;
             let controlPrefExists;
             try {
-              Services.prefs.getBoolPref(controlPref);
+              this._prefs.getBoolPref(controlPref);
               controlPrefExists = true;
             } catch (ex) {
               controlPrefExists = false;
@@ -297,10 +319,20 @@ PrefStore.prototype = {
         default:
           if (value == null) {
             // Pref has gone missing. The best we can do is reset it.
-            this._prefs.reset(pref);
+            this._prefs.clearUserPref(pref);
           } else {
             try {
-              this._prefs.set(pref, value);
+              switch (typeof value) {
+                case "string":
+                  this._prefs.setStringPref(pref, value);
+                  break;
+                case "number":
+                  this._prefs.setIntPref(pref, value);
+                  break;
+                case "boolean":
+                  this._prefs.setBoolPref(pref, value);
+                  break;
+              }
             } catch (ex) {
               this._log.trace(`Failed to set pref: ${pref}`, ex);
             }
@@ -308,8 +340,10 @@ PrefStore.prototype = {
           // If there's a "sync-seen" pref for this it gets toggled to true
           // regardless of the value.
           let seenPref = PREF_SYNC_SEEN_PREFIX + pref;
-          if (this._prefs.get(seenPref, undefined) === false) {
-            this._prefs.set(PREF_SYNC_SEEN_PREFIX + pref, true);
+          if (
+            this._prefs.getPrefType(seenPref) != Ci.nsIPrefBranch.PREF_INVALID
+          ) {
+            this._prefs.setBoolPref(PREF_SYNC_SEEN_PREFIX + pref, true);
           }
       }
     }
@@ -410,10 +444,10 @@ PrefTracker.prototype = {
   },
 
   get modified() {
-    return Svc.Prefs.get("engine.prefs.modified", false);
+    return Svc.PrefBranch.getBoolPref("engine.prefs.modified", false);
   },
   set modified(value) {
-    Svc.Prefs.set("engine.prefs.modified", value);
+    Svc.PrefBranch.setBoolPref("engine.prefs.modified", value);
   },
 
   clearChangedIDs: function clearChangedIDs() {
@@ -423,7 +457,7 @@ PrefTracker.prototype = {
   __prefs: null,
   get _prefs() {
     if (!this.__prefs) {
-      this.__prefs = new Preferences();
+      this.__prefs = Services.prefs.getBranch("");
     }
     return this.__prefs;
   },
@@ -450,7 +484,7 @@ PrefTracker.prototype = {
         // which prefs are synced or a regular pref change.
         if (
           data.indexOf(PREF_SYNC_PREFS_PREFIX) == 0 ||
-          this._prefs.get(PREF_SYNC_PREFS_PREFIX + data, false)
+          this._prefs.getBoolPref(PREF_SYNC_PREFS_PREFIX + data, false)
         ) {
           this.score += SCORE_INCREMENT_XLARGE;
           this.modified = true;

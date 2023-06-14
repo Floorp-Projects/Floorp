@@ -73,11 +73,11 @@ EngineSynchronizer.prototype = {
     // Ping the server with a special info request once a day.
     let infoURL = this.service.infoURL;
     let now = Math.floor(Date.now() / 1000);
-    let lastPing = Svc.Prefs.get("lastPing", 0);
+    let lastPing = Svc.PrefBranch.getIntPref("lastPing", 0);
     if (now - lastPing > 86400) {
       // 60 * 60 * 24
       infoURL += "?v=" + WEAVE_VERSION;
-      Svc.Prefs.set("lastPing", now);
+      Svc.PrefBranch.setIntPref("lastPing", now);
     }
 
     let engineManager = this.service.engineManager;
@@ -111,7 +111,7 @@ EngineSynchronizer.prototype = {
     // a first sync.
     let allowEnginesHint = false;
     // Wipe data in the desired direction if necessary
-    switch (Svc.Prefs.get("firstSync")) {
+    switch (Svc.PrefBranch.getCharPref("firstSync", null)) {
       case "resetClient":
         await this.service.resetClient(engineManager.enabledEngineNames);
         break;
@@ -227,10 +227,10 @@ EngineSynchronizer.prototype = {
         this.service.status.service == SYNC_FAILED_PARTIAL ||
         this.service.status.service == STATUS_OK
       ) {
-        Svc.Prefs.set("lastSync", new Date().toString());
+        Svc.PrefBranch.setCharPref("lastSync", new Date().toString());
       }
     } finally {
-      Svc.Prefs.reset("firstSync");
+      Svc.PrefBranch.clearUserPref("firstSync");
 
       let syncTime = ((Date.now() - startTime) / 1000).toFixed(2);
       let dateStr = Utils.formatTimestamp(new Date());
@@ -326,7 +326,12 @@ EngineSynchronizer.prototype = {
 
       let attemptedEnable = false;
       // If the engine was enabled remotely, enable it locally.
-      if (!Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
+      if (
+        !Svc.PrefBranch.getBoolPref(
+          "engineStatusChanged." + engine.prefName,
+          false
+        )
+      ) {
         this._log.trace(
           "Engine " + engineName + " was enabled. Marking as non-declined."
         );
@@ -367,7 +372,12 @@ EngineSynchronizer.prototype = {
     // Any remaining engines were either enabled locally or disabled remotely.
     for (let engineName of enabled) {
       let engine = engineManager.get(engineName);
-      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
+      if (
+        Svc.PrefBranch.getBoolPref(
+          "engineStatusChanged." + engine.prefName,
+          false
+        )
+      ) {
         this._log.trace("The " + engineName + " engine was enabled locally.");
         toUndecline.add(engineName);
       } else {
@@ -385,7 +395,9 @@ EngineSynchronizer.prototype = {
     engineManager.decline(toDecline);
     engineManager.undecline(toUndecline);
 
-    Svc.Prefs.resetBranch("engineStatusChanged.");
+    for (const pref of Svc.PrefBranch.getChildList("engineStatusChanged.")) {
+      Svc.PrefBranch.clearUserPref(pref);
+    }
     this.service._ignorePrefObserver = false;
   },
 

@@ -35,8 +35,6 @@
  * See the documentation in all.js for the behavior of these prefs.
  */
 
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
-
 import { AddonUtils } from "resource://services-sync/addonutils.sys.mjs";
 import { AddonsReconciler } from "resource://services-sync/addonsreconciler.sys.mjs";
 import {
@@ -264,7 +262,7 @@ AddonsStore.prototype = {
   // Define the add-on types (.type) that we support.
   _syncableTypes: ["extension", "theme"],
 
-  _extensionsPrefs: new Preferences("extensions."),
+  _extensionsPrefs: Services.prefs.getBranch("extensions."),
 
   get reconciler() {
     return this.engine._reconciler;
@@ -333,7 +331,7 @@ AddonsStore.prototype = {
         id: record.addonID,
         syncGUID: record.id,
         enabled: record.enabled,
-        requireSecureURI: this._extensionsPrefs.get(
+        requireSecureURI: this._extensionsPrefs.getBoolPref(
           "install.requireSecureOrigin",
           true
         ),
@@ -649,7 +647,7 @@ AddonsStore.prototype = {
     // For security reasons, we currently limit synced add-ons to those
     // installed from trusted hostname(s). We additionally require TLS with
     // the add-ons site to help prevent forgeries.
-    let trustedHostnames = Svc.Prefs.get(
+    let trustedHostnames = Svc.PrefBranch.getStringPref(
       "addons.trustedSourceHostnames",
       ""
     ).split(",");
@@ -693,7 +691,7 @@ AddonsStore.prototype = {
     }
 
     // A pref allows changes to the enabled flag to be ignored.
-    if (Svc.Prefs.get("addons.ignoreUserEnabledChanges", false)) {
+    if (Svc.PrefBranch.getBoolPref("addons.ignoreUserEnabledChanges", false)) {
       this._log.info(
         "Ignoring enabled state change due to preference: " + addon.id
       );

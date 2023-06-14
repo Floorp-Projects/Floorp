@@ -100,7 +100,7 @@ PasswordEngine.prototype = {
     let legacyValue = await super.getLastSync();
     if (legacyValue) {
       await this.setLastSync(legacyValue);
-      Svc.Prefs.reset(this.name + ".lastSync");
+      Svc.PrefBranch.clearUserPref(this.name + ".lastSync");
       this._log.debug(
         `migrated timestamp of ${legacyValue} to the logins store`
       );
