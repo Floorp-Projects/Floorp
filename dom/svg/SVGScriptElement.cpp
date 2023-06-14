@@ -187,20 +187,6 @@ nsresult SVGScriptElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void SVGScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                    const nsAttrValue* aValue,
-                                    const nsAttrValue* aOldValue,
-                                    nsIPrincipal* aSubjectPrincipal,
-                                    bool aNotify) {
-  if ((aNamespaceID == kNameSpaceID_XLink ||
-       aNamespaceID == kNameSpaceID_None) &&
-      aName == nsGkAtoms::href) {
-    MaybeProcessScript();
-  }
-  return SVGScriptElementBase::AfterSetAttr(
-      aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
-}
-
 bool SVGScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
