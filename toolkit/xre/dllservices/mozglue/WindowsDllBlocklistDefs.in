@@ -344,6 +344,9 @@ BROWSER_PROCESS += [
 
     # Nahimic audio driver (bug 1540883)
     DllBlocklistEntry("audiodevprops2.dll", (2, 6, 14, 0)),
+
+    # Kingsoft internet security (bug 1837242)
+    DllBlocklistEntry("kisfdpro64.dll", (2023, 5, 31, 209)),
 ]
 
 CHILD_PROCESSES += [
