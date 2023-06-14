@@ -88,3 +88,9 @@ def get_last_line(file_path):
         except OSError:
             f.seek(0)
         return f.readline().decode().strip()
+
+
+def update_resume_state(state, resume_state_filename):
+    with open(resume_state_filename, "w") as ofile:
+        ofile.write(state)
+        ofile.write("\n")
