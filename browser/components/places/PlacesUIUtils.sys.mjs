@@ -1190,7 +1190,7 @@ export var PlacesUIUtils = {
   shouldShowTabsFromOtherComputersMenuitem() {
     let weaveOK =
       lazy.Weave.Status.checkSetup() != lazy.Weave.CLIENT_NOT_CONFIGURED &&
-      lazy.Weave.Svc.Prefs.get("firstSync", "") != "notReady";
+      lazy.Weave.Svc.PrefBranch.getCharPref("firstSync", "") != "notReady";
     return weaveOK;
   },
 
