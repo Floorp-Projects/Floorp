@@ -23,8 +23,8 @@ buildscript {
     }
 
     dependencies {
-        classpath FocusDependencies.android_gradle_plugin
-        classpath FocusDependencies.kotlin_gradle_plugin
+        classpath ComponentsDependencies.tools_androidgradle
+        classpath ComponentsDependencies.tools_kotlingradle
         classpath FocusDependencies.osslicenses_plugin
         classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
         classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
@@ -36,8 +36,8 @@ buildscript {
     // Variables in plugins {} aren't directly supported. Hack around it by setting an
     // intermediate variable which can pull from FocusDependenciesPlugin.kt and be used later.
     ext {
-        detekt_plugin = FocusVersions.detekt_version
-        python_envs_plugin = FocusVersions.python_envs_plugin_version
+        detekt_plugin = Versions.detekt
+        python_envs_plugin = Versions.python_envs_plugin
     }
 }
 
@@ -113,7 +113,7 @@ configurations {
 }
 
 dependencies {
-    ktlint("com.pinterest:ktlint:${FocusVersions.ktlint_version}") {
+    ktlint("com.pinterest:ktlint:${Versions.ktlint}") {
         attributes {
             attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
         }
