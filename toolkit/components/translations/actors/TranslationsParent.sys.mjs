@@ -32,6 +32,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  TranslationsTelemetry:
+    "chrome://global/content/translations/TranslationsTelemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
@@ -153,7 +155,11 @@ export class TranslationsParent extends JSWindowActorParent {
         `Translating on a page reload from "${fromLanguage}" to "${toLanguage}".`
       );
 
-      this.translate(fromLanguage, toLanguage);
+      this.translate(
+        fromLanguage,
+        toLanguage,
+        false // reportAsAutoTranslate
+      );
     }
   }
 
@@ -419,9 +425,6 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:GetIsTranslationsEngineMocked": {
         return TranslationsParent.#isTranslationsEngineMocked;
       }
-      case "Translations:GetIsTranslationsEngineSupported": {
-        return TranslationsParent.getIsTranslationsEngineSupported();
-      }
       case "Translations:FullPageTranslationFailed": {
         this.languageState.error = data.reason;
         break;
@@ -444,37 +447,42 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:DeleteLanguageFiles": {
         return this.deleteLanguageFiles(data.language);
       }
-      case "Translations:GetLanguagePairs": {
-        return this.getLanguagePairs();
-      }
       case "Translations:GetPreferredLanguages": {
         return TranslationsParent.getPreferredLanguages();
+      }
+      case "Translations:ClearLangTags": {
+        this.languageState.detectedLanguages = null;
+        return undefined;
+      }
+      case "Translations:ReportLangTags": {
+        const { documentElementLang, href } = data;
+        const detectedLanguages = await this.getDetectedLanguages(
+          documentElementLang,
+          href
+        );
+
+        this.languageState.detectedLanguages = detectedLanguages;
+
+        if (this.shouldAutoTranslate(detectedLanguages)) {
+          this.translate(
+            detectedLanguages.docLangTag,
+            detectedLanguages.userLangTag,
+            true // reportAsAutoTranslate
+          );
+        }
+        return undefined;
       }
       case "Translations:EngineIsReady": {
         this.isEngineReady = true;
         this.languageState.isEngineReady = true;
         break;
       }
-      case "Translations:GetTranslationConditions": {
-        const maybeAutoTranslate = TranslationsParent.#maybeAutoTranslate(
-          data.docLangTag
-        );
-        const maybeNeverTranslate =
-          TranslationsParent.shouldNeverTranslateLanguage(data.docLangTag) ||
-          this.shouldNeverTranslateSite();
-
-        if (maybeAutoTranslate && !maybeNeverTranslate) {
-          this.languageState.requestedTranslationPair = {
-            fromLanguage: data.docLangTag,
-            toLanguage: data.userLangTag,
-          };
-        }
-
-        return { maybeAutoTranslate, maybeNeverTranslate };
-      }
       case "Translations:ReportDetectedLangTags": {
         this.languageState.detectedLanguages = data.langTags;
         return undefined;
+      }
+      case "Translations:IsTranslationsEngineSupported": {
+        return TranslationsParent.getIsTranslationsEngineSupported();
       }
     }
     return undefined;
@@ -750,7 +758,11 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Returns all of the information needed to render dropdowns for translation
+   * Get the list of languages and their display names, sorted by their display names.
+   * This is more expensive of a call than getLanguagePairs since the display names
+   * are looked up.
+   *
+   * This is all of the information needed to render dropdowns for translation
    * language selection.
    *
    * @returns {Promise<SupportedLanguages>}
@@ -1525,6 +1537,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     TranslationsParent.#translationModelRecords = null;
     TranslationsParent.#languagePairs = null;
+    TranslationsParent.#isTranslationsEngineSupported = null;
 
     TranslationsParent.#translationModelsRemoteClient = null;
     TranslationsParent.#translationsWasmRemoteClient = null;
@@ -1572,8 +1585,10 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * @param {string} fromLanguage
    * @param {string} toLanguage
+   * @param {boolean} reportAsAutoTranslate - In telemetry, report this as
+   *   an auto-translate.
    */
-  translate(fromLanguage, toLanguage) {
+  translate(fromLanguage, toLanguage, reportAsAutoTranslate) {
     if (this.languageState.requestedTranslationPair) {
       // This page has already been translated, restore it and translate it
       // again once the actor has been recreated.
@@ -1584,6 +1599,11 @@ export class TranslationsParent extends JSWindowActorParent {
         fromLanguage,
         toLanguage,
       };
+      lazy.TranslationsTelemetry.onTranslate({
+        fromLanguage,
+        toLanguage,
+        autoTranslate: reportAsAutoTranslate,
+      });
       this.sendAsyncMessage("Translations:TranslatePage", {
         fromLanguage,
         toLanguage,
@@ -1641,12 +1661,175 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Returns the lang tags that should be offered for translation.
+   * Returns the language from the document element.
    *
+   * @returns {Promise<string>}
+   */
+  queryDocumentElementLang() {
+    return this.sendQuery("Translations:GetDocumentElementLang");
+  }
+
+  /**
+   * @param {LangTags} langTags
+   */
+  shouldAutoTranslate(langTags) {
+    if (
+      langTags.docLangTag &&
+      langTags.userLangTag &&
+      langTags.isDocLangTagSupported &&
+      TranslationsParent.#maybeAutoTranslate(langTags.docLangTag) &&
+      !TranslationsParent.shouldNeverTranslateLanguage(langTags.docLangTag) &&
+      !this.shouldNeverTranslateSite()
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Returns the lang tags that should be offered for translation. This is in the parent
+   * rather than the child to remove the per-content process memory allocation amount.
+   *
+   * @param {string} [documentElementLang]
+   * @param {string} [href]
    * @returns {Promise<LangTags>}
    */
-  getLangTagsForTranslation() {
-    return this.sendQuery("Translations:GetLangTagsForTranslation");
+  async getDetectedLanguages(documentElementLang, href) {
+    if (this.languageState.detectedLanguages) {
+      return this.languageState.detectedLanguages;
+    }
+    const langTags = {
+      docLangTag: null,
+      userLangTag: null,
+      isDocLangTagSupported: false,
+    };
+    if (!TranslationsParent.getIsTranslationsEngineSupported()) {
+      return langTags;
+    }
+
+    if (
+      TranslationsParent.isRestrictedPage(
+        this.browsingContext.currentWindowGlobal.documentURI.scheme
+      )
+    ) {
+      return langTags;
+    }
+    if (documentElementLang === undefined) {
+      documentElementLang = await this.queryDocumentElementLang();
+    }
+
+    let languagePairs = await this.getLanguagePairs();
+
+    const determineIsDocLangTagSupported = () =>
+      Boolean(
+        languagePairs.find(({ fromLang }) => fromLang === langTags.docLangTag)
+      );
+
+    // First try to get the langTag from the document's markup.
+    try {
+      const docLocale = new Intl.Locale(documentElementLang);
+      langTags.docLangTag = docLocale.language;
+      langTags.isDocLangTagSupported = determineIsDocLangTagSupported();
+    } catch (error) {}
+
+    // If the document's markup had no specified langTag, attempt
+    // to identify the page's language using the LanguageIdEngine.
+    if (!langTags.docLangTag) {
+      langTags.docLangTag = await this.queryIdentifyLanguage();
+      langTags.isDocLangTagSupported = determineIsDocLangTagSupported();
+    }
+
+    const preferredLanguages = TranslationsParent.getPreferredLanguages();
+
+    if (!langTags.docLangTag) {
+      const message = "No valid language detected.";
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        { innerWindowId: this.innerWindowId },
+        message
+      );
+      lazy.console.log(message, href);
+
+      const languagePairs = await this.getLanguagePairs();
+
+      // Attempt to find a good language to select for the user.
+      langTags.userLangTag =
+        preferredLanguages.find(langTag => langTag === languagePairs.toLang) ??
+        null;
+
+      return langTags;
+    }
+
+    // This is a special case where we do not offer a translation if the main app language
+    // and the doc language match. The main app language should be the first preferred
+    // language.
+    if (preferredLanguages[0] === langTags.docLangTag) {
+      // The doc language and the main language match.
+      const message =
+        "The app and document languages match, so not translating.";
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        { innerWindowId: this.innerWindowId },
+        message
+      );
+      lazy.console.log(message, href);
+      // The docLangTag will be set, while the userLangTag will be null.
+      return langTags;
+    }
+
+    // Attempt to find a matching language pair for a preferred language.
+    for (const preferredLangTag of preferredLanguages) {
+      if (!langTags.isDocLangTagSupported) {
+        if (languagePairs.some(({ toLang }) => toLang === preferredLangTag)) {
+          // Only match the "to" language, since the "from" is not supported.
+          langTags.userLangTag = preferredLangTag;
+        }
+        break;
+      }
+
+      // Is there a direct language pair match?
+      if (
+        languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === langTags.docLangTag && toLang === preferredLangTag
+        )
+      ) {
+        // A match was found in one of the preferred languages.
+        langTags.userLangTag = preferredLangTag;
+        break;
+      }
+
+      // Is there a pivot language match?
+      if (
+        // Match doc -> pivot
+        languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === langTags.docLangTag && toLang === PIVOT_LANGUAGE
+        ) &&
+        // Match pivot -> preferred language
+        languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === PIVOT_LANGUAGE && toLang === preferredLangTag
+        )
+      ) {
+        langTags.userLangTag = preferredLangTag;
+        break;
+      }
+    }
+
+    if (!langTags.userLangTag) {
+      // No language pairs match.
+      const message = `No matching translation pairs were found for translating from "${langTags.docLangTag}".`;
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        { innerWindowId: this.innerWindowId },
+        message
+      );
+      lazy.console.log(message, languagePairs);
+    }
+
+    return langTags;
   }
 
   /**

@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * @typedef {import("./translations-document.sys.mjs").TranslationsDocument} TranslationsDocument
+ * @typedef {import("../translations.js").TranslationsEnginePayload} TranslationsEnginePayload
+ */
+
 const lazy = {};
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -22,17 +27,47 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
 ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  TranslationsTelemetry:
+    "chrome://global/content/translations/TranslationsTelemetry.sys.mjs",
+  TranslationsDocument:
+    "chrome://global/content/translations/translations-document.sys.mjs",
 });
 
 // How long the cache remains alive between uses, in milliseconds.
 const CACHE_TIMEOUT_MS = 10_000;
 
-class TranslationsEngineCache {
-  /** @type {Record<string, Promise<TranslationsEngine>>} */
-  #engines = {};
+/**
+ * The TranslationsEngine encapsulates the logic for translating messages. It can
+ * only be set up for a single language translation pair. In order to change languages
+ * a new engine should be constructed.
+ *
+ * The actual work for the translations happens in a worker. This class manages
+ * instantiating and messaging the worker.
+ *
+ * Keep 1 language engine around in the TranslationsEngine.#cachedEngine cache in case
+ * page navigation happens and we can re-use the previous engine. The engines are very
+ * heavy-weight, so we only want to keep one around at a time.
+ */
+export class TranslationsEngine {
+  /** @type {null | { languagePairKey: string, enginePromise: Promise<TranslationsEngine> }} */
+  static #cachedEngine = null;
 
-  /** @type {Record<string, TimeoutID>} */
-  #timeouts = {};
+  /** @type {null | TimeoutID} */
+  static #keepAliveTimeout = null;
+
+  /** @type {Worker} */
+  #translationsWorker;
+
+  /**
+   * Multiple messages can be sent before a response is received. This ID is used to keep
+   * track of the messages. It is incremented on every use.
+   */
+  #messageId = 0;
+
+  /**
+   * @type {TranslationsDocument | null}
+   */
+  translatedDoc = null;
 
   /**
    * Returns a getter function that will create a translations engine on the first
@@ -42,114 +77,176 @@ class TranslationsEngineCache {
    * @param {TranslationsChild} actor
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @returns {(() => Promise<TranslationsEngine>) | ((onlyFromCache: true) => Promise<TranslationsEngine | null>)}
+   * @returns {Promise<TranslationsEngine | null>}
    */
-  createGetter(actor, fromLanguage, toLanguage) {
-    return async (onlyFromCache = false) => {
-      let enginePromise =
-        this.#engines[
-          TranslationsChild.languagePairKey(fromLanguage, toLanguage)
-        ];
-      if (enginePromise) {
-        return enginePromise;
-      }
-      if (onlyFromCache) {
-        return null;
-      }
+  static getOrCreate(actor, fromLanguage, toLanguage) {
+    const languagePairKey = getLanguagePairKey(fromLanguage, toLanguage);
+    if (this.#cachedEngine?.languagePairKey === languagePairKey) {
+      return this.#cachedEngine.enginePromise;
+    }
 
-      // A new engine needs to be created.
-      enginePromise = actor.createTranslationsEngine(fromLanguage, toLanguage);
+    // A new engine needs to be created.
+    const enginePromise = TranslationsEngine.create(
+      actor,
+      fromLanguage,
+      toLanguage
+    );
 
-      const key = TranslationsChild.languagePairKey(fromLanguage, toLanguage);
-      this.#engines[key] = enginePromise;
+    this.#cachedEngine = { languagePairKey, enginePromise };
+    TranslationsEngine.keepAlive(languagePairKey);
 
-      // Remove the engine if it fails to initialize.
-      enginePromise.catch(error => {
-        lazy.console.log(
+    enginePromise.then(
+      () => {
+        void TranslationsEngine.keepAlive(languagePairKey);
+      },
+      error => {
+        lazy.console.error(
           `The engine failed to load for translating "${fromLanguage}" to "${toLanguage}". Removing it from the cache.`,
           error
         );
-        this.#engines[key] = null;
-      });
+        // Remove the engine if it fails to initialize.
+        this.#cachedEngine = null;
+      }
+    );
 
-      const engine = await enginePromise;
-
-      // These methods will be spied on, and when called they will keep the engine alive.
-      this.spyOn(engine, "translateText");
-      this.spyOn(engine, "translateHTML");
-      this.spyOn(engine, "discardTranslationQueue");
-      this.keepAlive(fromLanguage, toLanguage);
-
-      return engine;
-    };
+    return enginePromise;
   }
 
   /**
-   * Spies on a method, so that when it is called, the engine is kept alive.
+   * Create a TranslationsEngine and bypass the cache.
    *
-   * @param {TranslationsEngine} engine
-   * @param {string} methodName
-   */
-  spyOn(engine, methodName) {
-    const method = engine[methodName].bind(engine);
-    engine[methodName] = (...args) => {
-      this.keepAlive(engine.fromLanguage, engine.toLanguage);
-      return method(...args);
-    };
-  }
-
-  /**
+   * @param {TranslationsChild} actor
    * @param {string} fromLanguage
    * @param {string} toLanguage
+   * @returns {Promise<TranslationsEngine>}
    */
-  keepAlive(fromLanguage, toLanguage) {
-    const key = TranslationsChild.languagePairKey(fromLanguage);
-    const timeoutId = this.#timeouts[key];
-    if (timeoutId) {
-      lazy.clearTimeout(timeoutId);
+  static async create(actor, fromLanguage, toLanguage) {
+    const startTime = actor.docShell.now();
+
+    const engine = new TranslationsEngine(
+      fromLanguage,
+      toLanguage,
+      await actor.getTranslationsEnginePayload(fromLanguage, toLanguage),
+      actor.innerWindowId
+    );
+
+    await engine.isReady;
+
+    ChromeUtils.addProfilerMarker(
+      "TranslationsEngine",
+      { innerWindowId: actor.innerWindowId, startTime },
+      `Translations engine loaded for "${fromLanguage}" to "${toLanguage}"`
+    );
+
+    return engine;
+  }
+
+  /**
+   * Only get the engine from the cache if it exists.
+   */
+  static getFromCache(fromLanguage, toLanguage) {
+    if (
+      this.#cachedEngine?.languagePairKey ===
+      getLanguagePairKey(fromLanguage, toLanguage)
+    ) {
+      return this.#cachedEngine.enginePromise;
     }
-    const enginePromise = this.#engines[key];
-    if (!enginePromise) {
-      // It appears that the engine is already dead.
+    return null;
+  }
+
+  /**
+   * @param {string} languagePairKey
+   */
+  static keepAlive(languagePairKey) {
+    if (
+      !TranslationsEngine.#cachedEngine?.languagePairKey !== languagePairKey
+    ) {
+      // It appears that the engine is already dead or another language pair
+      // is being used.
       return;
     }
-    this.#timeouts[key] = lazy.setTimeout(() => {
-      // Delete the caches.
-      delete this.#engines[key];
-      delete this.#timeouts[key];
+    if (TranslationsEngine.#keepAliveTimeout) {
+      lazy.clearTimeout(TranslationsEngine.#keepAliveTimeout);
+    }
 
+    TranslationsEngine.#keepAliveTimeout = lazy.setTimeout(() => {
       // Terminate the engine worker.
-      enginePromise.then(engine => engine.terminate());
+      TranslationsEngine.#cachedEngine?.enginePromise.then(engine =>
+        engine.terminate()
+      );
     }, CACHE_TIMEOUT_MS);
   }
 
   /**
-   * Sees if an engine is still in the cache.
+   * Load the translation engine and translate the page.
+   *
+   * @param {TranslationsChild} actor
+   * @param {{fromLanguage: string, toLanguage: string}} langTags
+   * @returns {Promise<void>}
    */
-  isInCache(fromLanguage, toLanguage) {
-    this.keepAlive(fromLanguage, toLanguage);
-    return Boolean(
-      this.#engines[TranslationsChild.languagePairKey(fromLanguage, toLanguage)]
+  static async translatePage(actor, { fromLanguage, toLanguage }) {
+    const translationsStart = actor.docShell.now();
+
+    const getEngine = () =>
+      TranslationsEngine.getOrCreate(actor, fromLanguage, toLanguage);
+
+    getEngine().catch(error => {
+      lazy.TranslationsTelemetry.onError(error);
+    });
+
+    // Wait for the engine to be ready.
+    const engine = await getEngine();
+
+    const { document, innerWindowId } = actor;
+
+    if (engine.translatedDoc?.innerWindowId === innerWindowId) {
+      lazy.console.error("This page was already translated.");
+      return;
+    }
+
+    const translatedDoc = new lazy.TranslationsDocument(
+      document,
+      fromLanguage,
+      innerWindowId,
+      html =>
+        getEngine().then(engine =>
+          engine.translateHTML([html], actor.innerWindowId)
+        ),
+      text =>
+        getEngine().then(engine =>
+          engine.translateText([text], actor.innerWindowId)
+        ),
+      () => this.docShell.now()
     );
+
+    engine.translatedDoc = translatedDoc;
+
+    lazy.console.log(
+      "Beginning to translate.",
+      actor.contentWindow.location.href
+    );
+
+    actor.sendEngineIsReady();
+
+    translatedDoc.addRootElement(document.querySelector("title"));
+    translatedDoc.addRootElement(
+      document.body,
+      true /* reportWordsInViewport */
+    );
+
+    translatedDoc.viewportTranslated.then(() => {
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        { innerWindowId, startTime: actor.docShell.now() },
+        "Viewport translations"
+      );
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        { innerWindowId, startTime: translationsStart },
+        "Time to first translation"
+      );
+    });
   }
-}
-
-const translationsEngineCache = new TranslationsEngineCache();
-
-/**
- * The TranslationsEngine encapsulates the logic for translating messages. It can
- * only be set up for a single language translation pair. In order to change languages
- * a new engine should be constructed.
- *
- * The actual work for the translations happens in a worker. This class manages
- * instantiating and messaging the worker.
- */
-export class TranslationsEngine {
-  /** @type {Worker} */
-  #translationsWorker;
-  // Multiple messages can be sent before a response is received. This ID is used to keep
-  // track of the messages. It is incremented on every use.
-  #messageId = 0;
 
   /**
    * Construct and initialize the worker.
@@ -166,6 +263,7 @@ export class TranslationsEngine {
     this.fromLanguage = fromLanguage;
     /** @type {string} */
     this.toLanguage = toLanguage;
+    this.languagePairKey = getLanguagePairKey(fromLanguage, toLanguage);
     this.#translationsWorker = new Worker(
       "chrome://global/content/translations/translations-engine-worker.js"
     );
@@ -242,6 +340,8 @@ export class TranslationsEngine {
    * @returns {Promise<string[]>}
    */
   #translate(messageBatch, isHTML, innerWindowId) {
+    TranslationsEngine.keepAlive(this.languagePairKey);
+
     const messageId = this.#messageId++;
 
     return new Promise((resolve, reject) => {
@@ -289,6 +389,27 @@ export class TranslationsEngine {
    */
   terminate() {
     this.#translationsWorker.terminate();
+    TranslationsEngine.#cachedEngine?.then(engine => {
+      if (engine === this) {
+        TranslationsEngine.#cachedEngine = null;
+      }
+    });
+  }
+
+  /**
+   * Stop processing the translation queue. All in-progress messages will be discarded.
+   *
+   * @param {number} innerWindowId
+   */
+  static discardTranslationQueue(innerWindowId) {
+    TranslationsEngine.#cachedEngine?.enginePromise.then(engine => {
+      ChromeUtils.addProfilerMarker(
+        "TranslationsChild",
+        null,
+        "Request to discard translation queue"
+      );
+      engine.discardTranslationQueue(innerWindowId);
+    });
   }
 
   /**
@@ -297,14 +418,24 @@ export class TranslationsEngine {
    * @param {number} innerWindowId
    */
   discardTranslationQueue(innerWindowId) {
-    ChromeUtils.addProfilerMarker(
-      "TranslationsChild",
-      null,
-      "Request to discard translation queue"
-    );
     this.#translationsWorker.postMessage({
       type: "discard-translation-queue",
       innerWindowId,
     });
+    this.translatedDoc = null;
+
+    // Keep alive for another page laod.
+    TranslationsEngine.keepAlive(this.languagePairKey);
   }
+}
+
+/**
+ * Creates a lookup key that is unique to each fromLanguage-toLanguage pair.
+ *
+ * @param {string} fromLanguage
+ * @param {string} toLanguage
+ * @returns {string}
+ */
+function getLanguagePairKey(fromLanguage, toLanguage) {
+  return `${fromLanguage},${toLanguage}`;
 }
