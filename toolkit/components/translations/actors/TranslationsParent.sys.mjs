@@ -1636,6 +1636,10 @@ export class TranslationsParent extends JSWindowActorParent {
     return locationChangeId === TranslationsParent.#locationChangeId;
   }
 
+  async queryIdentifyLanguage() {
+    return this.sendQuery("Translations:IdentifyLanguage");
+  }
+
   /**
    * Returns the lang tags that should be offered for translation.
    *
