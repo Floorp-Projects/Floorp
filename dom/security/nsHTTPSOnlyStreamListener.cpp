@@ -234,6 +234,7 @@ void nsHTTPSOnlyStreamListener::RecordUpgradeTelemetry(nsIRequest* request,
       case ExtContentPolicy::TYPE_BEACON:
       case ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD:
       case ExtContentPolicy::TYPE_SPECULATIVE:
+      case ExtContentPolicy::TYPE_WEB_TRANSPORT:
         break;
         // Do not add default: so that compilers can catch the missing case.
     }
