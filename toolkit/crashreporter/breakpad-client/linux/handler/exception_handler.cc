@@ -102,7 +102,6 @@
 #endif
 
 #ifdef MOZ_PHC
-#include "mozmemory.h"
 #include "replace_malloc_bridge.h"
 #endif
 
@@ -468,19 +467,13 @@ static void GetPHCAddrInfo(siginfo_t* siginfo,
 // Runs on the crashing thread.
 bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
   mozilla::phc::AddrInfo* addr_info = nullptr;
-
 #ifdef MOZ_PHC
-  if (!jemalloc_is_working()) {
-    // If jemalloc crashed then the PHC information is invalid. Only retrive
-    // it when we know its valid.
-    addr_info = &mozilla::phc::gAddrInfo;
-    GetPHCAddrInfo(info, addr_info);
-  }
+  addr_info = &mozilla::phc::gAddrInfo;
+  GetPHCAddrInfo(info, addr_info);
 #endif
 
-  if (filter_ && !filter_(callback_context_)) {
+  if (filter_ && !filter_(callback_context_))
     return false;
-  }
 
   // Allow ourselves to be dumped if the signal is trusted.
   bool signal_trusted = info->si_code > 0;

@@ -112,12 +112,6 @@ MALLOC_DECL(jemalloc_thread_local_arena, void, bool)
 
 // Provide information about any allocation enclosing the given address.
 MALLOC_DECL(jemalloc_ptr_info, void, const void*, jemalloc_ptr_info_t*)
-
-// If jemalloc is currently doing something on this thread then this will return
-// true. This is for signal handlers, if jemalloc causes a segfault during free
-// (or realloc etc) then this can tell the signal handler that the crashing
-// address isn't useful for something like PHC.
-MALLOC_DECL(jemalloc_is_working, bool)
 #  endif
 
 #  if MALLOC_FUNCS & MALLOC_FUNCS_ARENA_BASE

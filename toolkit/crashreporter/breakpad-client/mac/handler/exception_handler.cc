@@ -43,7 +43,6 @@
 #include "mozilla/Assertions.h"
 
 #ifdef MOZ_PHC
-#include "mozmemory.h"
 #include "replace_malloc_bridge.h"
 #endif
 
@@ -445,12 +444,8 @@ bool ExceptionHandler::WriteMinidumpWithException(
 
   mozilla::phc::AddrInfo* addr_info = nullptr;
 #ifdef MOZ_PHC
-  if (!jemalloc_is_working()) {
-    // If jemalloc crashed then the PHC information is invalid. Only retrive
-    // it when we know its valid.
-    addr_info = &mozilla::phc::gAddrInfo;
-    GetPHCAddrInfo(exception_type, exception_subcode, addr_info);
-  }
+  addr_info = &mozilla::phc::gAddrInfo;
+  GetPHCAddrInfo(exception_type, exception_subcode, addr_info);
 #endif
 
   if (directCallback_) {
@@ -458,18 +453,17 @@ bool ExceptionHandler::WriteMinidumpWithException(
                         exception_type,
                         exception_code,
                         exception_subcode,
-                        thread_name) &&
-        exit_after_write) {
-      _exit(exception_type);
+                        thread_name) ) {
+      if (exit_after_write)
+        _exit(exception_type);
     }
 #if !TARGET_OS_IPHONE
   } else if (IsOutOfProcess()) {
     if (exception_type && exception_code) {
       // If this is a real exception, give the filter (if any) a chance to
       // decide if this should be sent.
-      if (filter_ && !filter_(callback_context_)) {
+      if (filter_ && !filter_(callback_context_))
         return false;
-      }
       result = crash_generation_client_->RequestDumpForException(
           exception_type,
           exception_code,
@@ -500,9 +494,8 @@ bool ExceptionHandler::WriteMinidumpWithException(
       if (exception_type && exception_code) {
         // If this is a real exception, give the filter (if any) a chance to
         // decide if this should be sent.
-        if (filter_ && !filter_(callback_context_)) {
+        if (filter_ && !filter_(callback_context_))
           return false;
-        }
 
         md.SetExceptionInformation(exception_type, exception_code,
                                    exception_subcode, thread_name);
@@ -518,8 +511,9 @@ bool ExceptionHandler::WriteMinidumpWithException(
       // If the user callback returned true and we're handling an exception
       // (rather than just writing out the file), then we should exit without
       // forwarding the exception to the next handler.
-      if (result && exit_after_write) {
-        _exit(exception_type);
+      if (result) {
+        if (exit_after_write)
+          _exit(exception_type);
       }
     }
   }
