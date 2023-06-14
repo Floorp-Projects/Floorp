@@ -1,0 +1,59 @@
+{
+  "data": [
+    {
+      "name": "fasttext-wasm",
+      "schema": 1681248641301,
+      "license": "MIT",
+      "release": "v0.9.2",
+      "version": "1.0",
+      "revision": "3697152e0fd772d9185697fdbd4a1d340ca5571d",
+      "attachment": {
+        "hash": "ef84129d43648c3f0bded0e7cc3cb03b8855f22c7a1ab9d5515474b62ff3110e",
+        "size": 953921,
+        "filename": "fasttext_wasm.wasm",
+        "location": "main-workspace/translations-wasm/5ee35b78-d0d4-43b0-8bee-e40fe57726b3.wasm",
+        "mimetype": "application/wasm"
+      },
+      "filter_expression": "",
+      "id": "a51c66f6-d8af-11ed-a7b4-dbd50622f5f6",
+      "last_modified": 1681500422552
+    },
+    {
+      "name": "bergamot-translator",
+      "schema": 1681242478400,
+      "license": "MPL-2.0",
+      "release": "v0.4.4",
+      "version": "1.0",
+      "revision": "5ae1b1ebb3fa9a3eabed8a64ca6798154bd486eb",
+      "attachment": {
+        "hash": "dad40ec05e6e26f6df56aa37f0d3a208adcd5d35d3347e0f9a8a267c89d4f947",
+        "size": 5175863,
+        "filename": "bergamot-translator.wasm",
+        "location": "main-workspace/translations-wasm/3453d482-85f3-43f2-bdb9-cf86228b721b.wasm",
+        "mimetype": "application/wasm"
+      },
+      "filter_expression": "",
+      "id": "9aaec48d-7855-4fd5-88d7-9213747e9ef5",
+      "last_modified": 1681500422546
+    },
+    {
+      "name": "fasttext-wasm",
+      "schema": 1681242495582,
+      "license": "MIT",
+      "release": "v0.9.2",
+      "version": "0.1",
+      "revision": "3697152e0fd772d9185697fdbd4a1d340ca5571d",
+      "attachment": {
+        "hash": "fa3146187eb393d2e3a2d00ac004133e6701136d132ea5124449d54a60358959",
+        "size": 875075,
+        "filename": "fasttext_wasm.wasm",
+        "location": "main-workspace/translations-wasm/a9bf0ece-6a35-40a7-9813-2e3ecaa7d7f9.wasm",
+        "mimetype": "application/wasm"
+      },
+      "filter_expression": "",
+      "id": "ecf7c0f8-70e2-4057-a205-33bb160871f3",
+      "last_modified": 1681500422542
+    }
+  ],
+  "timestamp": 1681500422552
+}
