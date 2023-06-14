@@ -461,7 +461,7 @@ export class TranslationsParent extends JSWindowActorParent {
         );
         const maybeNeverTranslate =
           TranslationsParent.shouldNeverTranslateLanguage(data.docLangTag) ||
-          (await this.shouldNeverTranslateSite());
+          this.shouldNeverTranslateSite();
 
         if (maybeAutoTranslate && !maybeNeverTranslate) {
           this.languageState.requestedTranslationPair = {
@@ -1646,14 +1646,6 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Returns the principal from the content window's origin.
-   * @returns {nsIPrincipal}
-   */
-  getContentWindowPrincipal() {
-    return this.sendQuery("Translations:GetContentWindowPrincipal");
-  }
-
-  /**
    * Returns true if the given language tag is present in the always-translate
    * languages preference, otherwise false.
    *
@@ -1681,17 +1673,10 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @returns {Promise<boolean>}
    */
-  async shouldNeverTranslateSite() {
-    let principal;
-    try {
-      principal = await this.getContentWindowPrincipal();
-    } catch {
-      // Unable to get content window principal.
-      return false;
-    }
+  shouldNeverTranslateSite() {
     const perms = Services.perms;
     const permission = perms.getPermissionObject(
-      principal,
+      this.browsingContext.currentWindowGlobal.documentPrincipal,
       TRANSLATIONS_PERMISSION,
       /* exactHost */ false
     );
@@ -1770,15 +1755,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * Toggles the never-translate site permissions by adding DENY_ACTION to
    * the site principal if it is not present, or removing it if it is present.
    */
-  async toggleNeverTranslateSitePermissions() {
+  toggleNeverTranslateSitePermissions() {
     const perms = Services.perms;
-    const principal = await this.getContentWindowPrincipal();
-    const shouldNeverTranslateSite = await this.shouldNeverTranslateSite();
-    if (shouldNeverTranslateSite) {
-      perms.removeFromPrincipal(principal, TRANSLATIONS_PERMISSION);
+    const { documentPrincipal } = this.browsingContext.currentWindowGlobal;
+    if (this.shouldNeverTranslateSite()) {
+      perms.removeFromPrincipal(documentPrincipal, TRANSLATIONS_PERMISSION);
     } else {
       perms.addFromPrincipal(
-        principal,
+        documentPrincipal,
         TRANSLATIONS_PERMISSION,
         perms.DENY_ACTION
       );
