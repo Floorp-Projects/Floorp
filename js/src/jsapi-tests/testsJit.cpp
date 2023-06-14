@@ -63,14 +63,13 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
     return false;
   }
 
-  Linker linker(masm);
-  JitCode* code = linker.newCode(cx, CodeKind::Other);
-  if (!code) {
-    return false;
-  }
-  if (!ExecutableAllocator::makeExecutableAndFlushICache(code->raw(),
-                                                         code->bufferSize())) {
-    return false;
+  JitCode* code = nullptr;
+  {
+    Linker linker(masm);
+    code = linker.newCode(cx, CodeKind::Other);
+    if (!code) {
+      return false;
+    }
   }
 
   JS::AutoSuppressGCAnalysis suppress;
