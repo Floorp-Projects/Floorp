@@ -50,63 +50,75 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
 }
 
 /* static */
-bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
-                                KeySystemConfig& aConfig) {
+bool KeySystemConfig::CreateKeySystemConfigs(
+    const nsAString& aKeySystem, nsTArray<KeySystemConfig>& aOutConfigs) {
   if (!Supports(aKeySystem)) {
     return false;
   }
 
   if (IsClearkeyKeySystem(aKeySystem)) {
-    aConfig.mKeySystem = aKeySystem;
-    aConfig.mInitDataTypes.AppendElement(u"cenc"_ns);
-    aConfig.mInitDataTypes.AppendElement(u"keyids"_ns);
-    aConfig.mInitDataTypes.AppendElement(u"webm"_ns);
-    aConfig.mPersistentState = Requirement::Optional;
-    aConfig.mDistinctiveIdentifier = Requirement::NotAllowed;
-    aConfig.mSessionTypes.AppendElement(SessionType::Temporary);
-    aConfig.mEncryptionSchemes.AppendElement(u"cenc"_ns);
-    aConfig.mEncryptionSchemes.AppendElement(u"cbcs"_ns);
-    aConfig.mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
+    KeySystemConfig* config = aOutConfigs.AppendElement();
+    config->mKeySystem = aKeySystem;
+    config->mInitDataTypes.AppendElement(u"cenc"_ns);
+    config->mInitDataTypes.AppendElement(u"keyids"_ns);
+    config->mInitDataTypes.AppendElement(u"webm"_ns);
+    config->mPersistentState = Requirement::Optional;
+    config->mDistinctiveIdentifier = Requirement::NotAllowed;
+    config->mSessionTypes.AppendElement(SessionType::Temporary);
+    config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
     if (StaticPrefs::media_clearkey_persistent_license_enabled()) {
-      aConfig.mSessionTypes.AppendElement(SessionType::PersistentLicense);
+      config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
     }
 #if defined(XP_WIN)
     // Clearkey CDM uses WMF's H.264 decoder on Windows.
     if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::H264)) {
-      aConfig.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
+      config->mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
     } else {
-      aConfig.mMP4.SetCanDecrypt(EME_CODEC_H264);
+      config->mMP4.SetCanDecrypt(EME_CODEC_H264);
     }
 #else
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_H264);
+    config->mMP4.SetCanDecrypt(EME_CODEC_H264);
 #endif
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_AAC);
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_VP9);
-    aConfig.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
-    aConfig.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
-    aConfig.mWebM.SetCanDecrypt(EME_CODEC_VP8);
-    aConfig.mWebM.SetCanDecrypt(EME_CODEC_VP9);
+    config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mMP4.SetCanDecrypt(EME_CODEC_VP9);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
+    config->mWebM.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VP8);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VP9);
+
+    if (StaticPrefs::media_clearkey_test_key_systems_enabled()) {
+      // Add testing key systems. These offer the same capabilities as the
+      // base clearkey system, so just clone clearkey and change the name.
+      KeySystemConfig clearkeyWithProtectionQuery{*config};
+      clearkeyWithProtectionQuery.mKeySystem.AssignLiteral(
+          kClearKeyWithProtectionQueryKeySystemName);
+      aOutConfigs.AppendElement(std::move(clearkeyWithProtectionQuery));
+    }
     return true;
   }
+
   if (IsWidevineKeySystem(aKeySystem)) {
-    aConfig.mKeySystem = aKeySystem;
-    aConfig.mInitDataTypes.AppendElement(u"cenc"_ns);
-    aConfig.mInitDataTypes.AppendElement(u"keyids"_ns);
-    aConfig.mInitDataTypes.AppendElement(u"webm"_ns);
-    aConfig.mPersistentState = Requirement::Optional;
-    aConfig.mDistinctiveIdentifier = Requirement::NotAllowed;
-    aConfig.mSessionTypes.AppendElement(SessionType::Temporary);
+    KeySystemConfig* config = aOutConfigs.AppendElement();
+    config->mKeySystem = aKeySystem;
+    config->mInitDataTypes.AppendElement(u"cenc"_ns);
+    config->mInitDataTypes.AppendElement(u"keyids"_ns);
+    config->mInitDataTypes.AppendElement(u"webm"_ns);
+    config->mPersistentState = Requirement::Optional;
+    config->mDistinctiveIdentifier = Requirement::NotAllowed;
+    config->mSessionTypes.AppendElement(SessionType::Temporary);
 #ifdef MOZ_WIDGET_ANDROID
-    aConfig.mSessionTypes.AppendElement(SessionType::PersistentLicense);
+    config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
 #endif
-    aConfig.mAudioRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
-    aConfig.mVideoRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
-    aConfig.mVideoRobustness.AppendElement(u"SW_SECURE_DECODE"_ns);
-    aConfig.mEncryptionSchemes.AppendElement(u"cenc"_ns);
-    aConfig.mEncryptionSchemes.AppendElement(u"cbcs"_ns);
-    aConfig.mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
+    config->mAudioRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
+    config->mVideoRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
+    config->mVideoRobustness.AppendElement(u"SW_SECURE_DECODE"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
 
 #if defined(MOZ_WIDGET_ANDROID)
     // MediaDrm.isCryptoSchemeSupported only allows passing
@@ -123,23 +135,23 @@ bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
 
     DataForValidation validationList[] = {
         {nsCString(VIDEO_MP4), EME_CODEC_H264, java::MediaDrmProxy::AVC,
-         &aConfig.mMP4},
+         &config->mMP4},
         {nsCString(VIDEO_MP4), EME_CODEC_VP9, java::MediaDrmProxy::AVC,
-         &aConfig.mMP4},
+         &config->mMP4},
         {nsCString(AUDIO_MP4), EME_CODEC_AAC, java::MediaDrmProxy::AAC,
-         &aConfig.mMP4},
+         &config->mMP4},
         {nsCString(AUDIO_MP4), EME_CODEC_FLAC, java::MediaDrmProxy::FLAC,
-         &aConfig.mMP4},
+         &config->mMP4},
         {nsCString(AUDIO_MP4), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
-         &aConfig.mMP4},
+         &config->mMP4},
         {nsCString(VIDEO_WEBM), EME_CODEC_VP8, java::MediaDrmProxy::VP8,
-         &aConfig.mWebM},
+         &config->mWebM},
         {nsCString(VIDEO_WEBM), EME_CODEC_VP9, java::MediaDrmProxy::VP9,
-         &aConfig.mWebM},
+         &config->mWebM},
         {nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, java::MediaDrmProxy::VORBIS,
-         &aConfig.mWebM},
+         &config->mWebM},
         {nsCString(AUDIO_WEBM), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
-         &aConfig.mWebM},
+         &config->mWebM},
     };
 
     for (const auto& data : validationList) {
@@ -160,26 +172,26 @@ bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
     // and reject the MediaKeys request, since we assume Widevine
     // will be used with AAC.
     if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::AAC)) {
-      aConfig.mMP4.SetCanDecrypt(EME_CODEC_AAC);
+      config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
     }
 #  else
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_AAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
 #  endif
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
-    aConfig.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
-    aConfig.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
-    aConfig.mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
-    aConfig.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
-    aConfig.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
-    aConfig.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
-    aConfig.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
+    config->mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
+    config->mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
+    config->mWebM.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
+    config->mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
 #endif
     return true;
   }
 #ifdef MOZ_WMF_CDM
   if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
-    return cdm->GetCapabilities(aConfig);
+    return cdm->GetCapabilities(aOutConfigs);
   }
 #endif
   return false;

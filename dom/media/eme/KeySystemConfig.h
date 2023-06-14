@@ -118,7 +118,8 @@ struct KeySystemConfig {
   };
 
   static bool Supports(const nsAString& aKeySystem);
-  static bool GetConfig(const nsAString& aKeySystem, KeySystemConfig& aConfig);
+  static bool CreateKeySystemConfigs(const nsAString& aKeySystem,
+                                     nsTArray<KeySystemConfig>& aOutConfigs);
 
   KeySystemConfig() = default;
   ~KeySystemConfig() = default;

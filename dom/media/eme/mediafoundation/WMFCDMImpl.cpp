@@ -20,10 +20,9 @@ bool WMFCDMImpl::Supports(const nsAString& aKeySystem) {
   }
 
   RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
-  KeySystemConfig c;
-  bool s = cdm->GetCapabilities(c);
+  nsTArray<KeySystemConfig> configs;
+  bool s = cdm->GetCapabilities(configs);
   supports[key] = s;
-
   return s;
 }
 
@@ -75,7 +74,7 @@ static const char* EncryptionSchemeStr(const CryptoScheme aScheme) {
   }
 }
 
-bool WMFCDMImpl::GetCapabilities(KeySystemConfig& aConfig) {
+bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
   nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
   NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
 
@@ -85,7 +84,7 @@ bool WMFCDMImpl::GetCapabilities(KeySystemConfig& aConfig) {
   media::Await(
       backgroundTaskQueue.forget(),
       mCDM->GetCapabilities(false /* isHWSecured */),
-      [&ok, &aConfig](const MFCDMCapabilitiesIPDL& capabilities) {
+      [&ok, &aOutConfigs](const MFCDMCapabilitiesIPDL& capabilities) {
         EME_LOG("capabilities: keySystem=%s",
                 NS_ConvertUTF16toUTF8(capabilities.keySystem()).get());
         for (const auto& v : capabilities.videoCapabilities()) {
@@ -99,7 +98,8 @@ bool WMFCDMImpl::GetCapabilities(KeySystemConfig& aConfig) {
         for (const auto& v : capabilities.encryptionSchemes()) {
           EME_LOG("capabilities: encryptionScheme=%s", EncryptionSchemeStr(v));
         }
-        MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, aConfig);
+        KeySystemConfig* config = aOutConfigs.AppendElement();
+        MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);
         ok = true;
       },
       [](nsresult rv) {
