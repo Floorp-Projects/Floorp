@@ -22,7 +22,8 @@ enum {
   MOZILLA_HAS_EDSP_FLAG = 1,
   MOZILLA_HAS_ARMV6_FLAG = 2,
   MOZILLA_HAS_ARMV7_FLAG = 4,
-  MOZILLA_HAS_NEON_FLAG = 8
+  MOZILLA_HAS_NEON_FLAG = 8,
+  MOZILLA_HAS_AES_FLAG = 16
 };
 
 static unsigned get_arm_cpu_flags(void) {
@@ -49,6 +50,10 @@ static unsigned get_arm_cpu_flags(void) {
         p = strstr(buf, " neon");
         if (p != nullptr && (p[5] == ' ' || p[5] == '\n'))
           flags |= MOZILLA_HAS_NEON_FLAG;
+        p = strstr(buf, " aes");
+        if (p != nullptr && (p[4] == ' ' || p[4] == '\n')) {
+          flags |= MOZILLA_HAS_AES_FLAG;
+        }
       }
       if (memcmp(buf, "CPU architecture:", 17) == 0) {
         int version;
@@ -109,6 +114,12 @@ static bool check_neon(void) {
 }
 #    endif
 
+#    if !defined(MOZILLA_PRESUME_ARM_AES)
+static bool check_aes(void) {
+  return (arm_cpu_flags & MOZILLA_HAS_AES_FLAG) != 0;
+}
+#    endif
+
 #  endif  // defined(__linux__) || defined(ANDROID)
 
 namespace mozilla {
@@ -124,6 +135,9 @@ bool armv7_enabled = check_armv7();
 #  endif
 #  if !defined(MOZILLA_PRESUME_NEON)
 bool neon_enabled = check_neon();
+#  endif
+#  if !defined(MOZILLA_PRESUME_ARM_AES)
+bool aes_enabled = check_aes();
 #  endif
 }  // namespace arm_private
 }  // namespace mozilla

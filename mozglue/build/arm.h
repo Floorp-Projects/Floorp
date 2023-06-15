@@ -81,6 +81,10 @@
 #  define MOZILLA_PRESUME_NEON 1
 #endif
 
+#if defined(__ARM_FEATURE_CRYPTO)
+#  define MOZILLA_PRESUME_ARM_AES 1
+#endif
+
 namespace mozilla {
 
 namespace arm_private {
@@ -96,6 +100,9 @@ extern bool MFBT_DATA armv7_enabled;
 #  endif
 #  if !defined(MOZILLA_PRESUME_NEON)
 extern bool MFBT_DATA neon_enabled;
+#  endif
+#  if !defined(MOZILLA_PRESUME_ARM_AES)
+extern bool MFBT_DATA aes_enabled;
 #  endif
 #endif
 }  // namespace arm_private
@@ -138,6 +145,13 @@ inline bool supports_neon() { return true; }
 inline bool supports_neon() { return arm_private::neon_enabled; }
 #else
 inline bool supports_neon() { return false; }
+#endif
+#if defined(MOZILLA_PRESUME_ARM_AES)
+inline bool supports_arm_aes() { return true; }
+#elif defined(MOZILLA_ARM_HAVE_CPUID_DETECTION)
+inline bool supports_arm_aes() { return arm_private::aes_enabled; }
+#else
+inline bool supports_arm_aes() { return false; }
 #endif
 
 }  // namespace mozilla
