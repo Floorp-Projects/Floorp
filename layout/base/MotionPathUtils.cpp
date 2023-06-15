@@ -374,25 +374,29 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 }
 
 static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
-  const StyleOffsetPath& path = aFrame->StyleDisplay()->mOffsetPath;
-  switch (path.tag) {
-    case StyleOffsetPath::Tag::Path: {
-      const StyleSVGPathData& pathData = path.AsPath();
-      RefPtr<gfx::Path> gfxPath =
-          aFrame->GetProperty(nsIFrame::OffsetPathCache());
-      MOZ_ASSERT(
-          gfxPath || pathData._0.IsEmpty(),
-          "Should have a valid cached gfx::Path or an empty path string");
-      return OffsetPathData::Path(pathData, gfxPath.forget());
-    }
-    case StyleOffsetPath::Tag::Ray:
-      return OffsetPathData::Ray(*path.AsRay(), RayReferenceData(aFrame));
-    case StyleOffsetPath::Tag::None:
-      return OffsetPathData::None();
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown offset-path");
-      return OffsetPathData::None();
+  const StyleOffsetPath& offsetPath = aFrame->StyleDisplay()->mOffsetPath;
+  if (offsetPath.IsNone()) {
+    return OffsetPathData::None();
   }
+
+  const auto& function = offsetPath.AsOffsetPath().path;
+  if (function->IsRay()) {
+    return OffsetPathData::Ray(function->AsRay(), RayReferenceData(aFrame));
+  }
+
+  MOZ_ASSERT(function->IsShape());
+  const StyleBasicShape& shape = function->AsShape();
+  if (shape.IsPath()) {
+    const StyleSVGPathData& pathData = shape.AsPath().path;
+    RefPtr<gfx::Path> gfxPath =
+        aFrame->GetProperty(nsIFrame::OffsetPathCache());
+    MOZ_ASSERT(gfxPath || pathData._0.IsEmpty(),
+               "Should have a valid cached gfx::Path or an empty path string");
+    return OffsetPathData::Path(pathData, gfxPath.forget());
+  }
+
+  // FIXME: Bug 1598156. Handle other basic shapes.
+  return OffsetPathData::None();
 }
 
 /* static*/
@@ -415,27 +419,34 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 }
 
 static OffsetPathData GenerateOffsetPathData(
-    const StyleOffsetPath& aPath, const RayReferenceData& aRayReferenceData,
-    gfx::Path* aCachedMotionPath) {
-  switch (aPath.tag) {
-    case StyleOffsetPath::Tag::Path: {
-      const StyleSVGPathData& pathData = aPath.AsPath();
-      // If aCachedMotionPath is valid, we have a fixed path.
-      // This means we have pre-built it already and no need to update.
-      RefPtr<gfx::Path> path = aCachedMotionPath;
-      if (!path) {
-        RefPtr<gfx::PathBuilder> builder =
-            MotionPathUtils::GetCompositorPathBuilder();
-        path = MotionPathUtils::BuildPath(pathData, builder);
-      }
-      return OffsetPathData::Path(pathData, path.forget());
-    }
-    case StyleOffsetPath::Tag::Ray:
-      return OffsetPathData::Ray(*aPath.AsRay(), aRayReferenceData);
-    case StyleOffsetPath::Tag::None:
-    default:
-      return OffsetPathData::None();
+    const StyleOffsetPath& aOffsetPath,
+    const RayReferenceData& aRayReferenceData, gfx::Path* aCachedMotionPath) {
+  if (aOffsetPath.IsNone()) {
+    return OffsetPathData::None();
   }
+
+  const auto& function = aOffsetPath.AsOffsetPath().path;
+  if (function->IsRay()) {
+    return OffsetPathData::Ray(function->AsRay(), aRayReferenceData);
+  }
+
+  MOZ_ASSERT(function->IsShape());
+  const StyleBasicShape& shape = function->AsShape();
+  if (shape.IsPath()) {
+    const StyleSVGPathData& pathData = shape.AsPath().path;
+    // If aCachedMotionPath is valid, we have a fixed path.
+    // This means we have pre-built it already and no need to update.
+    RefPtr<gfx::Path> path = aCachedMotionPath;
+    if (!path) {
+      RefPtr<gfx::PathBuilder> builder =
+          MotionPathUtils::GetCompositorPathBuilder();
+      path = MotionPathUtils::BuildPath(pathData, builder);
+    }
+    return OffsetPathData::Path(pathData, path.forget());
+  }
+
+  // FIXME: Bug 1598156. Handle other basic shapes.
+  return OffsetPathData::None();
 }
 
 /* static */

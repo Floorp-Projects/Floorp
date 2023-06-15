@@ -237,7 +237,7 @@ impl BasicShape {
     /// 1. The supported <basic-shape>.
     /// 2. The type of shapes. Should we ignore fill-rule?
     /// 3. The default value of `at <position>`.
-    fn parse<'i, 't>(
+    pub fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         flags: AllowedBasicShapes,
@@ -444,16 +444,6 @@ impl Polygon {
             .into();
 
         Ok(Polygon { fill, coordinates })
-    }
-}
-
-impl Parse for Path {
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        input.expect_function_matching("path")?;
-        input.parse_nested_block(|i| Self::parse_function_arguments(i, ShapeType::Filled))
     }
 }
 

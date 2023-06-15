@@ -8,6 +8,7 @@ use crate::parser::{Parse, ParserContext};
 use crate::values::computed::motion::OffsetRotate as ComputedOffsetRotate;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::motion as generics;
+use crate::values::specified::basic_shape::BasicShape;
 use crate::values::specified::position::{HorizontalPosition, VerticalPosition};
 use crate::values::specified::{Angle, Position};
 use crate::Zero;
@@ -17,8 +18,11 @@ use style_traits::{ParseError, StyleParseErrorKind};
 /// The specified value of ray() function.
 pub type RayFunction = generics::GenericRayFunction<Angle, Position>;
 
+/// The specified value of <offset-path>.
+pub type OffsetPathFunction = generics::GenericOffsetPathFunction<BasicShape, RayFunction>;
+
 /// The specified value of `offset-path`.
-pub type OffsetPath = generics::GenericOffsetPath<RayFunction>;
+pub type OffsetPath = generics::GenericOffsetPath<OffsetPathFunction>;
 
 /// The specified value of `offset-position`.
 pub type OffsetPosition = generics::GenericOffsetPosition<HorizontalPosition, VerticalPosition>;
@@ -28,11 +32,22 @@ impl Parse for RayFunction {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        use crate::values::specified::PositionOrAuto;
-
         if !static_prefs::pref!("layout.css.motion-path-ray.enabled") {
             return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
         }
+
+        input.expect_function_matching("ray")?;
+        input.parse_nested_block(|i| Self::parse_function_arguments(context, i))
+    }
+}
+
+impl RayFunction {
+    /// Parse the inner arguments of a `ray` function.
+    fn parse_function_arguments<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        use crate::values::specified::PositionOrAuto;
 
         let mut angle = None;
         let mut size = None;
@@ -86,33 +101,53 @@ impl Parse for RayFunction {
     }
 }
 
+impl Parse for OffsetPathFunction {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        use crate::values::specified::basic_shape::{
+            AllowedBasicShapes, DefaultPosition, ShapeType,
+        };
+
+        // <offset-path> = <ray()> | <url> | <basic-shape>
+        // https://drafts.fxtf.org/motion-1/#typedef-offset-path
+
+        if static_prefs::pref!("layout.css.motion-path-ray.enabled") {
+            if let Ok(ray) = input.try_parse(|i| RayFunction::parse(context, i)) {
+                return Ok(OffsetPathFunction::Ray(ray));
+            }
+        }
+
+        let allowed_shapes = if static_prefs::pref!("layout.css.motion-path-basic-shapes.enabled") {
+            AllowedBasicShapes::ALL
+        } else {
+            AllowedBasicShapes::PATH
+        };
+
+        BasicShape::parse(
+            context,
+            input,
+            allowed_shapes,
+            ShapeType::Outline,
+            DefaultPosition::Context,
+        )
+        .map(OffsetPathFunction::Shape)
+    }
+}
+
 impl Parse for OffsetPath {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        use crate::values::specified::svg_path::{AllowEmpty, SVGPathData};
-
         // Parse none.
         if input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
             return Ok(OffsetPath::none());
         }
 
-        // Parse possible functions.
-        let location = input.current_source_location();
-        let function = input.expect_function()?.clone();
-        input.parse_nested_block(move |i| {
-            match_ignore_ascii_case! { &function,
-                // Bug 1186329: Implement the parser for <basic-shape>, <geometry-box>,
-                // and <url>.
-                "path" => SVGPathData::parse(i, AllowEmpty::No).map(OffsetPath::Path),
-                "ray" => RayFunction::parse(context, i).map(|v| OffsetPath::Ray(Box::new(v))),
-                _ => {
-                    Err(location.new_custom_error(
-                        StyleParseErrorKind::UnexpectedFunction(function.clone())
-                    ))
-                },
-            }
+        Ok(OffsetPath::OffsetPath {
+            path: Box::new(OffsetPathFunction::parse(context, input)?),
         })
     }
 }

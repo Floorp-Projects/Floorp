@@ -6,7 +6,6 @@
 
 use crate::values::animated::ToAnimatedZero;
 use crate::values::generics::position::{GenericPosition, GenericPositionOrAuto};
-use crate::values::specified::SVGPathData;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
@@ -104,7 +103,40 @@ where
     }
 }
 
-/// The offset-path value.
+/// The <offset-path> value.
+/// <offset-path> = <ray()> | <url> | <basic-shape>
+///
+/// https://drafts.fxtf.org/motion-1/#typedef-offset-path
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C, u8)]
+pub enum GenericOffsetPathFunction<Shapes, RayFunction> {
+    /// ray() function, which defines a path in the polar coordinate system.
+    /// Use Box<> to make sure the size of offset-path is not too large.
+    #[css(function)]
+    Ray(RayFunction),
+    /// The <basic-shape> value.
+    Shape(Shapes),
+    // FIXME: Bug 1598158. Support <url>.
+}
+
+pub use self::GenericOffsetPathFunction as OffsetPathFunction;
+
+/// The offset-path property.
+/// offset-path: none | <offset-path> || <coord-box>
 ///
 /// https://drafts.fxtf.org/motion-1/#offset-path-property
 #[derive(
@@ -123,25 +155,23 @@ where
     ToShmem,
 )]
 #[repr(C, u8)]
-pub enum GenericOffsetPath<RayFunction> {
-    // We could merge SVGPathData into ShapeSource, so we could reuse them. However,
-    // we don't want to support other value for offset-path, so use SVGPathData only for now.
-    /// Path value for path(<string>).
-    #[css(function)]
-    Path(SVGPathData),
-    /// ray() function, which defines a path in the polar coordinate system.
-    /// Use Box<> to make sure the size of offset-path is not too large.
-    #[css(function)]
-    Ray(Box<RayFunction>),
+pub enum GenericOffsetPath<Function> {
+    /// <offset-path> || <coord-box>.
+    OffsetPath {
+        /// <offset-path> part.
+        // Note: Use Box<> to make sure the size of this property doesn't go over the threshold.
+        path: Box<Function>,
+        // TODO: Add <coord-box> in the following patches.
+        // coord_box: CoordBox,
+    },
     /// None value.
     #[animation(error)]
     None,
-    // Bug 1186329: Implement <basic-shape>, <geometry-box>, and <url>.
 }
 
 pub use self::GenericOffsetPath as OffsetPath;
 
-impl<Ray> OffsetPath<Ray> {
+impl<Function> OffsetPath<Function> {
     /// Return None.
     #[inline]
     pub fn none() -> Self {
@@ -149,7 +179,7 @@ impl<Ray> OffsetPath<Ray> {
     }
 }
 
-impl<Ray> ToAnimatedZero for OffsetPath<Ray> {
+impl<Function> ToAnimatedZero for OffsetPath<Function> {
     #[inline]
     fn to_animated_zero(&self) -> Result<Self, ()> {
         Err(())

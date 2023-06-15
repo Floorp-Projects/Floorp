@@ -113,6 +113,7 @@ include = [
   "FontFamilyNameSyntax",
   "OverflowWrap",
   "OffsetPath",
+  "OffsetPathFunction",
   "OffsetPosition",
   "OffsetRotate",
   "RayFunction",
@@ -972,5 +973,14 @@ renaming_overrides_prefixing = true
 "FontPalette" = """
   inline static StyleFontPalette Normal() {
     return StyleFontPalette{StyleAtom(nsGkAtoms::normal->ToAddRefed())};
+  }
+"""
+
+"GenericOffsetPath" = """
+  void UpdateShapePath(const StyleSVGPathData& aPath) {
+    MOZ_ASSERT(IsOffsetPath() && AsOffsetPath().path->IsShape() &&
+                   AsOffsetPath().path->AsShape().IsPath(),
+               "Only for path()");
+    offset_path.path->shape._0.path._0.path = aPath;
   }
 """
