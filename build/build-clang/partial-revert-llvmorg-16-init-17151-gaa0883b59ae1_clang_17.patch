@@ -1,0 +1,13 @@
+diff --git a/lld/MachO/LTO.cpp b/lld/MachO/LTO.cpp
+index fdae7e4bd1b7..ac607cfb1100 100644
+--- a/lld/MachO/LTO.cpp
++++ b/lld/MachO/LTO.cpp
+@@ -64,8 +64,6 @@ static lto::Config createConfig() {
+     pm.add(createObjCARCContractPass());
+   };
+ 
+-  c.AlwaysEmitRegularLTOObj = !config->ltoObjPath.empty();
+-
+   c.TimeTraceEnabled = config->timeTraceEnabled;
+   c.TimeTraceGranularity = config->timeTraceGranularity;
+   c.DebugPassManager = config->ltoDebugPassManager;
