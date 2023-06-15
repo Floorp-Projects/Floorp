@@ -32,8 +32,7 @@ class LockManagerParent final : public PLockManagerParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(LockManagerParent)
 
-  LockManagerParent(const mozilla::ipc::ContentPrincipalInfo& aPrincipalInfo,
-                    const nsID& aClientId);
+  LockManagerParent(NotNull<nsIPrincipal*> aPrincipal, const nsID& aClientId);
 
   void ProcessRequestQueue(nsTArray<RefPtr<LockRequestParent>>& aQueue);
   bool IsGrantableRequest(const IPCLockRequest& aRequest);
@@ -54,7 +53,7 @@ class LockManagerParent final : public PLockManagerParent {
 
   RefPtr<ManagedLocks> mManagedLocks;
   nsString mClientId;
-  mozilla::ipc::ContentPrincipalInfo mPrincipalInfo;
+  NotNull<nsCOMPtr<nsIPrincipal>> mPrincipal;
 };
 
 }  // namespace mozilla::dom::locks

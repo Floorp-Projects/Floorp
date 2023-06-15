@@ -1474,9 +1474,9 @@ bool BackgroundParentImpl::DeallocPMediaTransportParent(
 }
 
 already_AddRefed<dom::locks::PLockManagerParent>
-BackgroundParentImpl::AllocPLockManagerParent(
-    const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
-  return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipalInfo,
+BackgroundParentImpl::AllocPLockManagerParent(NotNull<nsIPrincipal*> aPrincipal,
+                                              const nsID& aClientId) {
+  return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipal,
                                                                aClientId);
 }
 
