@@ -320,7 +320,7 @@ p {
   line-height: 25px;
 }
 
-.info #info-title + p {
+.info #info-title:not([hidden]) + p {
   margin-top: 15px;
 }
 
