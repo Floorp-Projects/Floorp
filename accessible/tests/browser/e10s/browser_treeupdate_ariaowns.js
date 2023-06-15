@@ -419,3 +419,39 @@ addAccessibleTask(
   },
   { chrome: true, iframe: true, remoteIframe: true }
 );
+
+// Verify that we avoid sending unwanted hide events when doing multiple
+// aria-owns relocations in a single tick. Note that we're avoiding testing
+// chrome here since parent process locals don't track moves in the same way,
+// meaning our mechanism for avoiding duplicate hide events doesn't work.
+addAccessibleTask(
+  `
+<div id='b' aria-owns='a'></div>
+<div id='d'></div>
+<dd id='f'>
+  <div id='a' aria-owns='d'></div>
+</dd>
+  `,
+  async function (browser, accDoc) {
+    const b = findAccessibleChildByID(accDoc, "b");
+    const waitFor = {
+      expected: [
+        [EVENT_HIDE, b],
+        [EVENT_SHOW, "d"],
+        [EVENT_REORDER, accDoc],
+      ],
+      unexpected: [
+        [EVENT_HIDE, "d"],
+        [EVENT_REORDER, "a"],
+      ],
+    };
+    info(
+      "Verifying that events are fired properly after doing two aria-owns relocations"
+    );
+    await contentSpawnMutation(browser, waitFor, function () {
+      content.document.querySelector("#b").remove();
+      content.document.querySelector("#f").remove();
+    });
+  },
+  { chrome: false, iframe: true, remoteIframe: true }
+);

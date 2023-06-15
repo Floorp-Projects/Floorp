@@ -139,6 +139,13 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
       return false;
     }
 
+    // Don't queue a hide event on an accessible that's already being moved. It
+    // or an ancestor should already have a hide event queued.
+    if (mDocument &&
+        mDocument->IsAccessibleBeingMoved(aEvent->GetAccessible())) {
+      return false;
+    }
+
     // If this is an additional hide event, the accessible may be hidden, or
     // moved again after a move. Preserve the original hide event since
     // its properties are consistent with the tree that existed before
