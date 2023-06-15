@@ -96,9 +96,16 @@ if __name__ == "__main__":
         type=int,
         help="integer firefox release (example: 110)",
     )
+    parser.add_argument(
+        "--output-path",
+        required=True,
+        help="path name of file to write",
+    )
     args = parser.parse_args()
 
-    print(
-        build_default_config_env(args.bug_number, args.milestone, args.release_target),
-        end="",
-    )
+    with open(args.output_path, "w") as ofile:
+        ofile.write(
+            build_default_config_env(
+                args.bug_number, args.milestone, args.release_target
+            )
+        )
