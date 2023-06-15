@@ -17,7 +17,11 @@ if [ "x" = "x$NEW_BUG_NUMBER" ]; then
   exit
 fi
 
-source dom/media/webrtc/third_party_build/use_config_env.sh
+DEFAULT_CONFIG_PATH=dom/media/webrtc/third_party_build/default_config_env
+
+# use the previous default_config_env to make sure any locally overriden
+# settings don't interfere with the update process.
+MOZ_CONFIG_PATH=$DEFAULT_CONFIG_PATH source dom/media/webrtc/third_party_build/use_config_env.sh
 
 if [ "x$MOZ_NEXT_LIBWEBRTC_MILESTONE" = "x" ]; then
   echo "MOZ_NEXT_LIBWEBRTC_MILESTONE is not defined, see README.md"
@@ -39,8 +43,17 @@ set -eEuo pipefail
 ERROR_HELP=$"
 An error has occurred running $SCRIPT_DIR/write_default_config.py
 "
-./mach python $SCRIPT_DIR/write_default_config.py \
+MOZCONFIG=dom/media/webrtc/third_party_build/default_mozconfig \
+  ./mach python $SCRIPT_DIR/write_default_config.py \
   --bug-number $NEW_BUG_NUMBER \
   --milestone $MOZ_NEXT_LIBWEBRTC_MILESTONE \
   --release-target $MOZ_NEXT_FIREFOX_REL_TARGET \
   --output-path $SCRIPT_DIR/default_config_env
+
+# source our newly updated default_config_env so we can use the new settings
+# to automatically commit the updated file.
+source $DEFAULT_CONFIG_PATH
+
+hg commit -m \
+  "Bug $MOZ_FASTFORWARD_BUG - updated default_config_env for v$MOZ_NEXT_LIBWEBRTC_MILESTONE" \
+  $DEFAULT_CONFIG_PATH
