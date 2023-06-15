@@ -2927,11 +2927,6 @@
 #endif
   mirror: always
 
-- name: dom.ipc.tabs.disabled
-  type: bool
-  value: false
-  mirror: always
-
 # Process launch delay (in milliseconds).
 - name: dom.ipc.processPrelaunch.delayMs
   type: uint32_t
