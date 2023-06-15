@@ -410,9 +410,7 @@ void js::Nursery::disableBigInts() {
 }
 
 void js::Nursery::updateAllZoneAllocFlags() {
-  // The alloc flags are not relevant for the atoms zone, and flushing
-  // jit-related information can be problematic for the atoms zone.
-  for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
+  for (AllZonesIter zone(gc); !zone.done(); zone.next()) {
     updateAllocFlagsForZone(zone);
   }
 }
