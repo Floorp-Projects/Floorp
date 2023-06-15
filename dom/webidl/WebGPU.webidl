@@ -273,6 +273,7 @@ dictionary GPUTextureDescriptor : GPUObjectDescriptorBase {
     GPUTextureDimension dimension = "2d";
     required GPUTextureFormat format;
     required GPUTextureUsageFlags usage;
+    sequence<GPUTextureFormat> viewFormats = [];
 };
 
 enum GPUTextureDimension {
@@ -1153,6 +1154,7 @@ dictionary GPUCanvasConfiguration {
     required GPUDevice device;
     required GPUTextureFormat format;
     GPUTextureUsageFlags usage = 0x10; //GPUTextureUsage.OUTPUT_ATTACHMENT
+    sequence<GPUTextureFormat> viewFormats = [];
     //GPUPredefinedColorSpace colorSpace = "srgb"; //TODO
     GPUCanvasCompositingAlphaMode compositingAlphaMode = "opaque";
 };
