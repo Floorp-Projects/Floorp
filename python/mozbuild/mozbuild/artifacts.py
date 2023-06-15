@@ -558,6 +558,7 @@ class LinuxArtifactJob(ArtifactJob):
         "{product}/plugin-container",
         "{product}/updater",
         "{product}/glxtest",
+        "{product}/v4l2test",
         "{product}/vaapitest",
         "{product}/**/*.so",
         # Preserve signatures when present.

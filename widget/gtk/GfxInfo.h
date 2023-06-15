@@ -119,11 +119,15 @@ class GfxInfo final : public GfxInfoBase {
   bool mGlxTestError;
   mozilla::Maybe<bool> mIsVAAPISupported;
   int mVAAPISupportedCodecs = 0;
+  mozilla::Maybe<bool> mIsV4L2Supported;
+  int mV4L2SupportedCodecs = 0;
 
   static int sGLXTestPipe;
   static pid_t sGLXTestPID;
 
   void GetDataVAAPI();
+  void GetDataV4L2();
+  void V4L2ProbeDevice(nsCString& dev);
   void AddCrashReportAnnotations();
 };
 

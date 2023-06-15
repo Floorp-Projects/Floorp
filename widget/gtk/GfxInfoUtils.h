@@ -79,9 +79,11 @@ static void record_value(const char* format, ...) {
   }
 }
 
-static void record_error(const char* str) { record_value("ERROR\n%s\n", str); }
+[[maybe_unused]] static void record_error(const char* str) {
+  record_value("ERROR\n%s\n", str);
+}
 
-static void record_warning(const char* str) {
+[[maybe_unused]] static void record_warning(const char* str) {
   record_value("WARNING\n%s\n", str);
 }
 
