@@ -107,9 +107,6 @@ pref("browser.cache.disk_cache_ssl",        true);
 // The half life used to re-compute cache entries frecency in hours.
 pref("browser.cache.frecency_half_life_hours", 6);
 
-// offline cache capacity in kilobytes
-pref("browser.cache.offline.capacity",         512000);
-
 // Don't show "Open with" option on download dialog if true.
 pref("browser.download.forbid_open_with", false);
 
