@@ -1975,8 +1975,6 @@ toolbar#nav-bar {
             xrePath=options.xrePath, env=env, debugger=debugger, useLSan=useLSan
         )
 
-        if hasattr(options, "topsrcdir"):
-            browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
         if hasattr(options, "topobjdir"):
             browserEnv["MOZ_DEVELOPER_OBJ_DIR"] = options.topobjdir
 
