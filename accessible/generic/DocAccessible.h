@@ -415,6 +415,13 @@ class DocAccessible : public HyperTextAccessibleWrap,
    */
   std::pair<nsPoint, nsRect> ComputeScrollData(LocalAccessible* aAcc);
 
+  /**
+   * Only works in content process documents.
+   */
+  bool IsAccessibleBeingMoved(LocalAccessible* aAcc) {
+    return mMovedAccessibles.Contains(aAcc);
+  }
+
  protected:
   virtual ~DocAccessible();
 
@@ -534,13 +541,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * sends a cache update with its corresponding CacheDomain.
    */
   void ProcessQueuedCacheUpdates();
-
-  /**
-   * Only works in content process documents.
-   */
-  bool IsAccessibleBeingMoved(LocalAccessible* aAcc) {
-    return mMovedAccessibles.Contains(aAcc);
-  }
 
   /**
    * Called from NotificationController before mutation events are processed to
