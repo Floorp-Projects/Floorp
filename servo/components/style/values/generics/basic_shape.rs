@@ -112,8 +112,6 @@ pub enum GenericClipPath<BasicShape, U> {
     None,
     #[animation(error)]
     Url(U),
-    #[css(function)]
-    Path(Path),
     Shape(
         Box<BasicShape>,
         #[css(skip_if = "is_default")] ShapeGeometryBox,
@@ -154,7 +152,9 @@ pub enum GenericShapeOutside<BasicShape, I> {
 
 pub use self::GenericShapeOutside as ShapeOutside;
 
-#[allow(missing_docs)]
+/// The <basic-shape>.
+///
+/// https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes
 #[derive(
     Animate,
     Clone,
@@ -171,22 +171,32 @@ pub use self::GenericShapeOutside as ShapeOutside;
 )]
 #[repr(C, u8)]
 pub enum GenericBasicShape<H, V, LengthPercentage, NonNegativeLengthPercentage> {
+    /// Defines an inset rectangle via insets from each edge of the reference box.
     Inset(
         #[css(field_bound)]
         #[shmem(field_bound)]
         InsetRect<LengthPercentage, NonNegativeLengthPercentage>,
     ),
+    /// Defines a circle with a center and a radius.
     Circle(
         #[css(field_bound)]
         #[shmem(field_bound)]
         Circle<H, V, NonNegativeLengthPercentage>,
     ),
+    /// Defines an ellipse with a center and x-axis/y-axis radii.
     Ellipse(
         #[css(field_bound)]
         #[shmem(field_bound)]
         Ellipse<H, V, NonNegativeLengthPercentage>,
     ),
+    /// Defines a polygon with pair arguments.
     Polygon(GenericPolygon<LengthPercentage>),
+    /// Defines a path with SVG path syntax.
+    Path(Path),
+    // TODO: Bug 1786160. Add xywh().
+    // TODO: Bug 1786161. Add rect().
+    // TODO: Bug 1823463. Add shape().
+    // https://drafts.csswg.org/css-shapes-2/#shape-function
 }
 
 pub use self::GenericBasicShape as BasicShape;
@@ -380,7 +390,7 @@ pub enum FillRule {
     ToResolvedValue,
     ToShmem,
 )]
-#[css(comma)]
+#[css(comma, function = "path")]
 #[repr(C)]
 pub struct Path {
     /// The filling rule for the svg path.

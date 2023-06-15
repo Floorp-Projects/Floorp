@@ -45,9 +45,8 @@ void CSSClipPathInstance::ApplyBasicShapeOrPathClip(
 RefPtr<Path> CSSClipPathInstance::CreateClipPathForFrame(
     gfx::DrawTarget* aDt, nsIFrame* aFrame, const gfxMatrix& aTransform) {
   const auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
-  MOZ_ASSERT(clipPathStyle.IsShape() || clipPathStyle.IsBox() ||
-                 clipPathStyle.IsPath(),
-             "This is used with basic-shape, geometry-box, and path() only");
+  MOZ_ASSERT(clipPathStyle.IsShape() || clipPathStyle.IsBox(),
+             "This is used with basic-shape, and geometry-box only");
 
   CSSClipPathInstance instance(aFrame, clipPathStyle);
 
@@ -75,8 +74,7 @@ bool CSSClipPathInstance::HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
 /* static */
 Maybe<Rect> CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
     nsIFrame* aFrame, const StyleClipPath& aClipPathStyle) {
-  MOZ_ASSERT(aClipPathStyle.IsShape() || aClipPathStyle.IsBox() ||
-             aClipPathStyle.IsPath());
+  MOZ_ASSERT(aClipPathStyle.IsShape() || aClipPathStyle.IsBox());
 
   CSSClipPathInstance instance(aFrame, aClipPathStyle);
 
@@ -89,7 +87,7 @@ Maybe<Rect> CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
 
 already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
     DrawTarget* aDrawTarget, const gfxMatrix& aTransform) {
-  if (mClipPathStyle.IsPath()) {
+  if (mClipPathStyle.IsShape() && mClipPathStyle.AsShape()._0->IsPath()) {
     return CreateClipPathPath(aDrawTarget);
   }
 
@@ -132,7 +130,6 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
       return CreateClipPathPolygon(aDrawTarget, r);
     case StyleBasicShape::Tag::Inset:
       return CreateClipPathInset(aDrawTarget, r);
-      break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
@@ -229,7 +226,7 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathInset(
 
 already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
     DrawTarget* aDrawTarget) {
-  const auto& path = mClipPathStyle.AsPath();
+  const auto& path = mClipPathStyle.AsShape()._0->AsPath();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(
       path.fill == StyleFillRule::Nonzero ? FillRule::FILL_WINDING
