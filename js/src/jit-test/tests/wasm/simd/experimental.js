@@ -59,10 +59,10 @@ var dxs = [10, 20];
 var dys = [-2, -3];
 var das = [0, 100];
 
-for ( let [opcode, xs, ys, as, operator] of [[F32x4RelaxedFmaCode, fxs, fys, fas, fma],
-                                             [F32x4RelaxedFnmaCode, fxs, fys, fas, fnma],
-                                             [F64x2RelaxedFmaCode, dxs, dys, das, fma],
-                                             [F64x2RelaxedFnmaCode, dxs, dys, das, fnma]] ) {
+for ( let [opcode, xs, ys, as, operator] of [[F32x4RelaxedMaddCode, fxs, fys, fas, fma],
+                                             [F32x4RelaxedNmaddCode, fxs, fys, fas, fnma],
+                                             [F64x2RelaxedMaddCode, dxs, dys, das, fma],
+                                             [F64x2RelaxedNmaddCode, dxs, dys, das, fnma]] ) {
     var k = xs.length;
     var ans = iota(k).map((i) => operator(xs[i], ys[i], as[i]))
 
@@ -325,7 +325,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
         funcBody({locals:[],
                     body: [...V128StoreExpr(0, [...V128Load(16),
                                                 ...V128Load(32),
-                                                SimdPrefix, varU32(I16x8RelaxedQ15MulrS)])]})])]));
+                                                SimdPrefix, varU32(I16x8RelaxedQ15MulrSCode)])]})])]));
 
 var mem16 = new Int16Array(ins.exports.mem.buffer);
 for (let [as, bs] of cross([
@@ -355,7 +355,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
         funcBody({locals:[],
                     body: [...V128StoreExpr(0, [...V128Load(16),
                                                 ...V128Load(32),
-                                                SimdPrefix, varU32(I16x8DotI8x16I7x16S)])]})])]));
+                                                SimdPrefix, varU32(I16x8DotI8x16I7x16SCode)])]})])]));
 var mem8 = new Int8Array(ins.exports.mem.buffer);
 var mem16 = new Int16Array(ins.exports.mem.buffer);
 var test7bit = [1, 2, 3, 4, 5, 64, 65, 127, 127, 0, 0,
@@ -385,7 +385,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
                     body: [...V128StoreExpr(0, [...V128Load(16),
                                                 ...V128Load(32),
                                                 ...V128Load(48),
-                                                SimdPrefix, varU32(I32x4DotI8x16I7x16AddS)])]})])]));
+                                                SimdPrefix, varU32(I32x4DotI8x16I7x16AddSCode)])]})])]));
 var mem8 = new Int8Array(ins.exports.mem.buffer);
 var mem32 = new Int32Array(ins.exports.mem.buffer);
 var test7bit = [1, 2, 3, 4, 5, 64, 65, 127, 127, 0, 0,

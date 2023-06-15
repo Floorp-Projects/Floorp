@@ -627,10 +627,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::V128Store32Lane:
         case SimdOp::V128Store64Lane:
           WASM_SIMD_OP(OpKind::StoreLane);
-        case SimdOp::F32x4RelaxedFma:
-        case SimdOp::F32x4RelaxedFnma:
-        case SimdOp::F64x2RelaxedFma:
-        case SimdOp::F64x2RelaxedFnma:
+        case SimdOp::F32x4RelaxedMadd:
+        case SimdOp::F32x4RelaxedNmadd:
+        case SimdOp::F64x2RelaxedMadd:
+        case SimdOp::F64x2RelaxedNmadd:
         case SimdOp::I8x16RelaxedLaneSelect:
         case SimdOp::I16x8RelaxedLaneSelect:
         case SimdOp::I32x4RelaxedLaneSelect:
