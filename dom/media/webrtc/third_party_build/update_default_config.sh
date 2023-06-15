@@ -43,4 +43,4 @@ An error has occurred running $SCRIPT_DIR/write_default_config.py
   --bug-number $NEW_BUG_NUMBER \
   --milestone $MOZ_NEXT_LIBWEBRTC_MILESTONE \
   --release-target $MOZ_NEXT_FIREFOX_REL_TARGET \
-  > $SCRIPT_DIR/default_config_env
+  --output-path $SCRIPT_DIR/default_config_env
