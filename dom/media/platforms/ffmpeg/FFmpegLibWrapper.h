@@ -76,6 +76,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   int (*avcodec_decode_video2)(AVCodecContext* avctx, AVFrame* picture,
                                int* got_picture_ptr, const AVPacket* avpkt);
   AVCodec* (*avcodec_find_decoder)(int id);
+  AVCodec* (*avcodec_find_decoder_by_name)(const char* name);
   void (*avcodec_flush_buffers)(AVCodecContext* avctx);
   int (*avcodec_open2)(AVCodecContext* avctx, const AVCodec* codec,
                        AVDictionary** options);

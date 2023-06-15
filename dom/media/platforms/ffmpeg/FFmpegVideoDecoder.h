@@ -126,8 +126,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #ifdef MOZ_WAYLAND_USE_HWDECODE
   void InitHWDecodingPrefs();
   MediaResult InitVAAPIDecoder();
+  MediaResult InitV4L2Decoder();
   bool CreateVAAPIDeviceContext();
-  void InitVAAPICodecContext();
+  void InitHWCodecContext(bool aUsingV4L2);
   AVCodec* FindVAAPICodec();
   bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor* aVaDesc);
   void AddAcceleratedFormats(nsTArray<AVCodecID>& aCodecList,
@@ -137,10 +138,13 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
   MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
                                MediaDataDecoder::DecodedData& aResults);
+  MediaResult CreateImageV4L2(int64_t aOffset, int64_t aPts, int64_t aDuration,
+                              MediaDataDecoder::DecodedData& aResults);
 #endif
 
 #ifdef MOZ_WAYLAND_USE_HWDECODE
   AVBufferRef* mVAAPIDeviceContext;
+  bool mUsingV4L2;
   bool mEnableHardwareDecoding;
   VADisplay mDisplay;
   UniquePtr<VideoFramePool<LIBAV_VER>> mVideoFramePool;
