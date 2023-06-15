@@ -709,8 +709,8 @@
   border-bottom-color: hsl(0,0%,50%);
 }
 
-/* @media and @layer rule info element */
-ul.ruleview-rule-ancestor-data {
+/* ancestor rules info element (parent at-rules, parent of nested rules, …) */
+.ruleview-rule-ancestor-data {
   max-width: 100%;
   display: inline-block;
   list-style: none;
