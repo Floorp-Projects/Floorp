@@ -121,6 +121,7 @@ def test_environment(
 
     # Allow non-packaged builds to access symlinked modules in the source dir
     env["MOZ_DEVELOPER_REPO_DIR"] = mozinfo.info.get("topsrcdir")
+    env["MOZ_DEVELOPER_OBJ_DIR"] = mozinfo.info.get("topobjdir")
 
     # crashreporter
     env["GNOME_DISABLE_CRASH_DIALOG"] = "1"

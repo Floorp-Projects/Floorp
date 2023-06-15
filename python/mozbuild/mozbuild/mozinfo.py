@@ -30,6 +30,7 @@ def build_dict(config, env=os.environ):
 
     d = {}
     d["topsrcdir"] = config.topsrcdir
+    d["topobjdir"] = config.topobjdir
 
     if config.mozconfig:
         d["mozconfig"] = config.mozconfig
