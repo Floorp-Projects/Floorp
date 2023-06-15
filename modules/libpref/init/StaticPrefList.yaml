@@ -10990,11 +10990,6 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
-
-- name: media.webrtc.camera.allow-pipewire
-  type: bool
-  value: false
-  mirror: once
 #endif
 
 - name: media.block-autoplay-until-in-foreground

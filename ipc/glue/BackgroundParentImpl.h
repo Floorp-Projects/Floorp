@@ -388,9 +388,6 @@ class BackgroundParentImpl : public PBackgroundParent {
       const RemoteDecodeIn& aLocation,
       EnsureUtilityProcessAndCreateBridgeResolver&& aResolver) override;
 
-  mozilla::ipc::IPCResult RecvRequestCameraAccess(
-      RequestCameraAccessResolver&& aResolver) override;
-
   bool DeallocPEndpointForReportParent(
       PEndpointForReportParent* aActor) override;
 
