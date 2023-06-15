@@ -13,7 +13,7 @@
     <dimen name="mozac_browser_menu2_corner_radius">8dp</dimen>
     <dimen name="library_item_height">56dp</dimen>
     <dimen name="library_item_icon_margin_horizontal">16dp</dimen>
-    <dimen name="history_favicon_width_height">40dp</dimen>
+    <dimen name="history_favicon_width_height">48dp</dimen>
     <dimen name="tab_corner_radius">8dp</dimen>
     <dimen name="preference_icon_drawable_size">24dp</dimen>
     <dimen name="search_bar_search_engine_icon_padding">12dp</dimen>

@@ -29,8 +29,10 @@
                 tools:src="@drawable/ic_folder_icon" />
         <ImageView
                 android:id="@+id/checkmark"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="4dp"
                 android:padding="10dp"
                 android:background="@drawable/favicon_background"
                 android:backgroundTint="?accent"
@@ -78,6 +80,8 @@
             android:id="@+id/overflow_menu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_menu"
             android:padding="12dp"
