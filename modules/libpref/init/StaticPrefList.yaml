@@ -8632,6 +8632,14 @@
   value: true
   mirror: always
 
+# Is support for motion-path <basic-shape> other than path() enabled?
+# https://drafts.fxtf.org/motion-1/#valdef-offset-path-basic-shape
+- name: layout.css.motion-path-basic-shapes.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for motion-path ray() enabled?
 - name: layout.css.motion-path-ray.enabled
   type: RelaxedAtomicBool

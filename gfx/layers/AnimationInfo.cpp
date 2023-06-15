@@ -13,6 +13,7 @@
 #include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/MotionPathUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIContent.h"
@@ -332,14 +333,16 @@ static Maybe<ScrollTimelineOptions> GetScrollTimelineOptions(
   return Some(ScrollTimelineOptions(source, timeline->Axis()));
 }
 
-// FIXME: Bug 1489392: We don't have to normalize the path here if we accept
-// the spec issue which would like to normalize svg paths at computed time.
 static StyleOffsetPath NormalizeOffsetPath(const StyleOffsetPath& aOffsetPath) {
-  if (aOffsetPath.IsPath()) {
-    return StyleOffsetPath::Path(
-        MotionPathUtils::NormalizeSVGPathData(aOffsetPath.AsPath()));
+  // Named Return Value Optimization.
+  StyleOffsetPath result(aOffsetPath);
+  if (aOffsetPath.IsOffsetPath() &&
+      aOffsetPath.AsOffsetPath().path->IsShape() &&
+      aOffsetPath.AsOffsetPath().path->AsShape().IsPath()) {
+    result.UpdateShapePath(MotionPathUtils::NormalizeSVGPathData(
+        aOffsetPath.AsOffsetPath().path->AsShape().AsPath().path));
   }
-  return StyleOffsetPath(aOffsetPath);
+  return result;
 }
 
 static void SetAnimatable(nsCSSPropertyID aProperty,
