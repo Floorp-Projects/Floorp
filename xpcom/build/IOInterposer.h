@@ -260,15 +260,17 @@ void EnteringNextStage();
 
 }  // namespace IOInterposer
 
-class IOInterposerInit {
+class MOZ_RAII AutoIOInterposer {
  public:
-  IOInterposerInit() {
+  AutoIOInterposer() = default;
+
+  void Init() {
 #if defined(EARLY_BETA_OR_EARLIER)
     IOInterposer::Init();
 #endif
   }
 
-  ~IOInterposerInit() {
+  ~AutoIOInterposer() {
 #if defined(EARLY_BETA_OR_EARLIER)
     IOInterposer::Clear();
 #endif

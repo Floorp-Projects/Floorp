@@ -127,7 +127,9 @@ void FileOpAsync(const wchar_t* aPath) {
 
 TEST(PoisonIOInterposer, NormalThread)
 {
-  mozilla::IOInterposerInit ioInterposerGuard;
+  mozilla::AutoIOInterposer ioInterposerGuard;
+  ioInterposerGuard.Init();
+
   TempFile tempFile;
   FileOpSync(tempFile);
   FileOpAsync(tempFile);
@@ -137,7 +139,8 @@ TEST(PoisonIOInterposer, NormalThread)
 TEST(PoisonIOInterposer, NullTlsPointer)
 {
   void* originalTls = mozilla::nt::RtlGetThreadLocalStoragePointer();
-  mozilla::IOInterposerInit ioInterposerGuard;
+  mozilla::AutoIOInterposer ioInterposerGuard;
+  ioInterposerGuard.Init();
 
   // Simulate a loader worker thread (TEB::LoaderWorker = 1)
   // where ThreadLocalStorage is never allocated.

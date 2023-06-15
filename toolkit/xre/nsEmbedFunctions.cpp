@@ -546,7 +546,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     // spurious warnings about XPCOM objects being destroyed from a
     // static context.
 
-    Maybe<IOInterposerInit> ioInterposerGuard;
+    AutoIOInterposer ioInterposerGuard;
 
     // Associate this thread with a UI MessageLoop
     MessageLoop uiMessageLoop(uiLoopType);
@@ -558,7 +558,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
           break;
 
         case GeckoProcessType_Content:
-          ioInterposerGuard.emplace();
+          ioInterposerGuard.Init();
           process = MakeUnique<ContentProcess>(parentPID, messageChannelId);
           break;
 
@@ -589,7 +589,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
           break;
 
         case GeckoProcessType_Socket:
-          ioInterposerGuard.emplace();
+          ioInterposerGuard.Init();
           process =
               MakeUnique<net::SocketProcessImpl>(parentPID, messageChannelId);
           break;
