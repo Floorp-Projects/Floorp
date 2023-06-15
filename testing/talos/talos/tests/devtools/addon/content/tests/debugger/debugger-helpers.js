@@ -217,7 +217,7 @@ async function selectSource(dbg, url) {
 }
 exports.selectSource = selectSource;
 
-function evalInContent(tab, testFunction) {
+function evalInFrame(tab, testFunction) {
   dump(`Run function in content process: ${testFunction}\n`);
   // Load a frame script using a data URI so we can run a script
   // inside of the content process and trigger debugger functionality
@@ -229,12 +229,13 @@ function evalInContent(tab, testFunction) {
         function () {
           const iframe = content.document.querySelector("iframe");
           const win = iframe.contentWindow;
-          win.eval("${testFunction}");
+          win.eval(\`${testFunction}\`);
         }`) +
       ")()",
     true
   );
 }
+exports.evalInFrame = evalInFrame;
 
 async function openDebuggerAndLog(label, expected) {
   const onLoad = async (toolbox, panel) => {
@@ -301,7 +302,7 @@ exports.removeBreakpoints = removeBreakpoints;
 async function pauseDebugger(dbg, tab, testFunction, { line, file }) {
   await addBreakpoint(dbg, line, file);
   const onPaused = waitForPaused(dbg);
-  await evalInContent(tab, testFunction);
+  await evalInFrame(tab, testFunction);
   return onPaused;
 }
 exports.pauseDebugger = pauseDebugger;
