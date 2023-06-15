@@ -366,7 +366,7 @@ enum GPUTextureFormat {
     // Packed 32-bit formats
     "rgb9e5ufloat",
     "rgb10a2unorm",
-    "rg11b10float",
+    "rg11b10ufloat",
 
     // 64-bit formats
     "rg32uint",
