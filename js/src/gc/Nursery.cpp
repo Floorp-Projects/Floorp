@@ -367,7 +367,10 @@ void js::Nursery::disable() {
   position_ = 0;
   gc->storeBuffer().disable();
 
-  updateAllZoneAllocFlags();
+  if (gc->wasInitialized()) {
+    // This assumes there is an atoms zone.
+    updateAllZoneAllocFlags();
+  }
 }
 
 void js::Nursery::enableStrings() {
@@ -399,7 +402,9 @@ void js::Nursery::disableBigInts() {
 }
 
 void js::Nursery::updateAllZoneAllocFlags() {
-  for (AllZonesIter zone(gc); !zone.done(); zone.next()) {
+  // The alloc flags are not relevant for the atoms zone, and flushing
+  // jit-related information can be problematic for the atoms zone.
+  for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
     updateAllocFlagsForZone(zone);
   }
 }
