@@ -14,21 +14,6 @@
 
 pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml");
 
-// If a tab has not been active for this long (seconds), then it may be
-// turned into a zombie tab to preemptively free up memory. -1 disables time-based
-// expiration (but low-memory conditions may still require the tab to be zombified).
-pref("browser.tabs.expireTime", 900);
-
-// Disables zombification of background tabs under memory pressure.
-// Intended for use in testing, where we don't want the tab running the
-// test harness code to be zombified.
-pref("browser.tabs.disableBackgroundZombification", false);
-
-// Control whether tab content should try to load from disk cache when network
-// is offline.
-// Controlled by Switchboard experiment "offline-cache".
-pref("browser.tabs.useCache", false);
-
 pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
 // The default fallback zoom level to render pages at. Set to -1 to fit page; otherwise
