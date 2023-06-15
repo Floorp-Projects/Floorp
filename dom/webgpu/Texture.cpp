@@ -48,7 +48,7 @@ static Maybe<uint8_t> GetBytesPerBlock(dom::GPUTextureFormat format) {
     case dom::GPUTextureFormat::Bgra8unorm_srgb:
     case dom::GPUTextureFormat::Rgb9e5ufloat:
     case dom::GPUTextureFormat::Rgb10a2unorm:
-    case dom::GPUTextureFormat::Rg11b10float:
+    case dom::GPUTextureFormat::Rg11b10ufloat:
       return Some<uint8_t>(4u);
     case dom::GPUTextureFormat::Rg32uint:
     case dom::GPUTextureFormat::Rg32sint:
