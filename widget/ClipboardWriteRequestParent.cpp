@@ -89,7 +89,9 @@ IPCResult ClipboardWriteRequestParent::RecvSetData(
 }
 
 IPCResult ClipboardWriteRequestParent::Recv__delete__(nsresult aReason) {
+#ifndef FUZZING_SNAPSHOT
   MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aReason));
+#endif
   nsCOMPtr<nsIAsyncSetClipboardData> clipboardData =
       std::move(mAsyncSetClipboardData);
   if (clipboardData) {
