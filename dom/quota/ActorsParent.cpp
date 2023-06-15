@@ -9344,7 +9344,7 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
     for (auto&& file : std::exchange(directoriesForRemovalRetry,
                                      nsTArray<nsCOMPtr<nsIFile>>{})) {
       QM_WARNONLY_TRY(
-          QM_TO_RESULT(file->Remove(true)),
+          RemoveOrMoveToDir(*file, toBeRemovedDir),
           ([&directoriesForRemovalRetry, &file](const auto&) {
             directoriesForRemovalRetry.AppendElement(std::move(file));
           }));
