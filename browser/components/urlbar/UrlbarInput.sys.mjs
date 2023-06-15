@@ -2150,7 +2150,8 @@ export class UrlbarInput {
       return Services.uriFixup.getFixupURIInfo(searchString, flags);
     } catch (ex) {
       console.error(
-        `An error occured while trying to fixup "${searchString}": ${ex}`
+        `An error occured while trying to fixup "${searchString}"`,
+        ex
       );
     }
     return null;
@@ -2635,7 +2636,7 @@ export class UrlbarInput {
       );
       value = info.fixedURI.spec;
     } catch (ex) {
-      console.error(`An error occured while trying to fixup "${value}": ${ex}`);
+      console.error(`An error occured while trying to fixup "${value}"`, ex);
     }
 
     this.value = value;

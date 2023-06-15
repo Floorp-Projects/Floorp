@@ -85,7 +85,7 @@ export class GeckoViewPermissionChild extends GeckoViewActorChild {
         }
       }
     } catch (error) {
-      console.error("Permission error: " + error);
+      console.error("Permission error:", error);
       allowOrDeny = Services.perms.DENY_ACTION;
     }
 

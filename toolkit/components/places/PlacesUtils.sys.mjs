@@ -1825,7 +1825,7 @@ export var PlacesUtils = {
           rootItem.itemsCount++;
         } catch (ex) {
           // This is a bogus child, report and skip it.
-          console.error("Failed to fetch the data for an item " + ex);
+          console.error("Failed to fetch the data for an item ", ex);
           continue;
         }
       }

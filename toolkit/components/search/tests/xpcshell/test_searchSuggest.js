@@ -43,7 +43,7 @@ add_task(async function setup() {
   consoleAllowList = consoleAllowList.concat([
     "Non-200 status or empty HTTP response: 404",
     "Non-200 status or empty HTTP response: 500",
-    "Unexpected response, searchString does not match remote response",
+    "SearchSuggestionController found an unexpected string value",
     "HTTP request timeout",
     "HTTP error",
   ]);

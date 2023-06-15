@@ -131,7 +131,8 @@
             })
             .catch(status =>
               console.error(
-                "Cannot initialize search service, bailing out: " + status
+                "Cannot initialize search service, bailing out:",
+                status
               )
             );
         });
@@ -404,9 +405,7 @@
           value: aData,
           source: engine.name,
         }).catch(error =>
-          console.error(
-            "Saving search to form history failed: " + error.message
-          )
+          console.error("Saving search to form history failed:", error)
         );
       }
 

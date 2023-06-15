@@ -336,7 +336,7 @@ export class SearchSuggestionController {
         // Do nothing since this is normal.
         return null;
       }
-      console.error("SearchSuggestionController rejection: " + reason);
+      console.error("SearchSuggestionController rejection:", reason);
       return null;
     }
     return Promise.all(promises).then(
@@ -644,8 +644,8 @@ export class SearchSuggestionController {
       if (typeof resultData === "string") {
         // Failure message
         console.error(
-          "SearchSuggestionController found an unexpected string value: " +
-            resultData
+          "SearchSuggestionController found an unexpected string value:",
+          resultData
         );
       } else if (resultData.localResults) {
         results.formHistoryResults = resultData.localResults;

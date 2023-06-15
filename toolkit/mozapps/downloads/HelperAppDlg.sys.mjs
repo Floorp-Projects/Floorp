@@ -163,8 +163,8 @@ nsUnknownContentTypeDialog.prototype = {
       this._mDownloadDir = new downloadModule.DownloadLastDir(parent);
     } catch (ex) {
       console.error(
-        "Missing window information when showing nsIHelperAppLauncherDialog: " +
-          ex
+        "Missing window information when showing nsIHelperAppLauncherDialog:",
+        ex
       );
     }
 

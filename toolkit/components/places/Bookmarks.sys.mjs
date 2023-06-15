@@ -625,7 +625,8 @@ export var Bookmarks = Object.freeze({
           // This is not critical, regardless the bookmark has been created
           // and we should continue notifying the next ones.
           console.error(
-            `An error occured while handling special bookmark data: ${ex}`
+            "An error occured while handling special bookmark data:",
+            ex
           );
         }
 
@@ -2227,7 +2228,8 @@ async function handleBookmarkItemSpecialData(itemId, item) {
       });
     } catch (ex) {
       console.error(
-        `Failed to insert keyword "${item.keyword} for ${item.url}": ${ex}`
+        `Failed to insert keyword "${item.keyword} for ${item.url}":`,
+        ex
       );
     }
   }
@@ -2241,7 +2243,8 @@ async function handleBookmarkItemSpecialData(itemId, item) {
     } catch (ex) {
       // Invalid tag child, skip it.
       console.error(
-        `Unable to set tags "${item.tags.join(", ")}" for ${item.url}: ${ex}`
+        `Unable to set tags "${item.tags.join(", ")}" for ${item.url}:`,
+        ex
       );
     }
   }
@@ -2260,7 +2263,8 @@ async function handleBookmarkItemSpecialData(itemId, item) {
       });
     } catch (ex) {
       console.error(
-        `Failed to set charset "${item.charset}" for ${item.url}: ${ex}`
+        `Failed to set charset "${item.charset}" for ${item.url}:`,
+        ex
       );
     }
   }

@@ -1052,8 +1052,8 @@ class Preferences {
         this[methodName](scenario);
       } catch (error) {
         console.error(
-          `Error migrating Firefox Suggest prefs to version ${nextVersion}: ` +
-            error
+          `Error migrating Firefox Suggest prefs to version ${nextVersion}:`,
+          error
         );
         break;
       }

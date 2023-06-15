@@ -115,7 +115,8 @@ class SuggestAutoComplete {
       })
       .catch(result =>
         console.error(
-          "Could not initialize search service, bailing out: " + result
+          "Could not initialize search service, bailing out:",
+          result
         )
       );
   }

@@ -452,13 +452,15 @@ export var ChromeMigrationUtils = {
                 }
               } catch (ex) {
                 console.error(
-                  `Failed to process importable url ${url} from ${browserId} ${ex}`
+                  `Failed to process importable url ${url} from ${browserId}`,
+                  ex
                 );
               }
             }
           } catch (ex) {
             console.error(
-              `Failed to get importable logins from ${browserId} ${ex}`
+              `Failed to get importable logins from ${browserId}`,
+              ex
             );
           }
         }

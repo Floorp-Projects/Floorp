@@ -261,7 +261,7 @@ NarrateControls.prototype = {
         this.narrator
           .start(options)
           .catch(err => {
-            console.error(`Narrate failed: ${err}.`);
+            console.error("Narrate failed:", err);
           })
           .then(() => {
             this._updateSpeechControls(false);
