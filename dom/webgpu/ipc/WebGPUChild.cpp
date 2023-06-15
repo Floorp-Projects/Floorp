@@ -308,9 +308,6 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
 
-  // TODO: bug 1773723
-  desc.view_formats = {nullptr, 0};
-
   if (aDesc.mSize.IsRangeEnforcedUnsignedLongSequence()) {
     const auto& seq = aDesc.mSize.GetAsRangeEnforcedUnsignedLongSequence();
     desc.size.width = seq.Length() > 0 ? seq[0] : 1;
@@ -329,6 +326,12 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
   desc.dimension = ffi::WGPUTextureDimension(aDesc.mDimension);
   desc.format = ConvertTextureFormat(aDesc.mFormat);
   desc.usage = aDesc.mUsage;
+
+  AutoTArray<ffi::WGPUTextureFormat, 8> viewFormats;
+  for (auto format : aDesc.mViewFormats) {
+    viewFormats.AppendElement(ConvertTextureFormat(format));
+  }
+  desc.view_formats = {viewFormats.Elements(), viewFormats.Length()};
 
   ByteBuf bb;
   RawId id = ffi::wgpu_client_create_texture(mClient.get(), aSelfId, &desc,
