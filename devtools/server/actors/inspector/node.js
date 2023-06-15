@@ -106,6 +106,7 @@ class NodeActor extends Actor {
     this.currentDisplayType = this.displayType;
     this.wasDisplayed = this.isDisplayed;
     this.wasScrollable = wasScrollable;
+    this.currentContainerType = this.containerType;
 
     if (wasScrollable) {
       this.walker.updateOverflowCausingElements(
@@ -201,6 +202,7 @@ class NodeActor extends Actor {
       isScrollable: this.isScrollable,
       isTopLevelDocument: this.isTopLevelDocument,
       causesOverflow: this.walker.overflowCausingElementsMap.has(this.rawNode),
+      containerType: this.containerType,
 
       // doctype attributes
       name: this.rawNode.name,
@@ -372,6 +374,22 @@ class NodeActor extends Actor {
     }
 
     return display;
+  }
+
+  /**
+   * Returns the computed containerType style property value of the node.
+   */
+  get containerType() {
+    // non-element nodes can't be containers
+    if (
+      isNodeDead(this) ||
+      this.rawNode.nodeType !== Node.ELEMENT_NODE ||
+      !this.computedStyle
+    ) {
+      return null;
+    }
+
+    return this.computedStyle.containerType;
   }
 
   /**
