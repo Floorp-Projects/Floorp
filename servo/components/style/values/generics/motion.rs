@@ -6,6 +6,7 @@
 
 use crate::values::animated::ToAnimatedZero;
 use crate::values::generics::position::{GenericPosition, GenericPositionOrAuto};
+use crate::values::specified::motion::CoordBox;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
@@ -161,9 +162,14 @@ pub enum GenericOffsetPath<Function> {
         /// <offset-path> part.
         // Note: Use Box<> to make sure the size of this property doesn't go over the threshold.
         path: Box<Function>,
-        // TODO: Add <coord-box> in the following patches.
-        // coord_box: CoordBox,
+        /// <coord-box> part.
+        #[css(skip_if = "CoordBox::is_default")]
+        coord_box: CoordBox,
     },
+    /// Only <coord-box>. This represents that <offset-path> is omitted, so we use the default
+    /// value, inset(0 round X), where X is the value of border-radius on the element that
+    /// establishes the containing block for this element.
+    CoordBox(CoordBox),
     /// None value.
     #[animation(error)]
     None,
