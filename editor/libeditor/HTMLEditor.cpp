@@ -2296,7 +2296,8 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.propagateErr();
     }
-    pointToInsert = splitNodeResult.inspect().AtSplitPoint<EditorDOMPoint>();
+    pointToInsert =
+        splitNodeResult.inspect().template AtSplitPoint<EditorDOMPoint>();
     MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
     // Caret should be set by the caller of this method so that we don't
     // need to handle it here.
