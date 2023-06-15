@@ -46,10 +46,13 @@ nsresult nsHttpHeaderArray::SetHeader(
       "Net original headers can only be set using SetHeader_internal().");
 
   nsEntry* entry = nullptr;
-  int32_t index = LookupEntry(header, &entry);
+  int32_t index;
 
-  // If an empty value is received and we aren't merging headers discard it
-  if (value.IsEmpty() && header != nsHttp::X_Frame_Options) {
+  index = LookupEntry(header, &entry);
+
+  // If an empty value is passed in, then delete the header entry...
+  // unless we are merging, in which case this function becomes a NOP.
+  if (value.IsEmpty()) {
     if (!merge && entry) {
       if (entry->variety == eVarietyResponseNetOriginalAndResponse) {
         MOZ_ASSERT(variety == eVarietyResponse);
