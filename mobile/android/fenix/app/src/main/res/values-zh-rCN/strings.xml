@@ -375,13 +375,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">关于</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">选择一个</string>
+    <string name="preferences_category_select_default_search_engine">选择一个</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">管理搜索快捷方式</string>
+    <string name="preferences_manage_search_shortcuts">管理搜索快捷方式</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">编辑在搜索菜单中显示的搜索引擎</string>
+    <string name="preferences_manage_search_shortcuts_summary">编辑在搜索菜单中显示的搜索引擎</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">在搜索菜单中显示的搜索引擎</string>
+    <string name="preferences_category_engines_in_search_menu">在搜索菜单中显示的搜索引擎</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">默认搜索引擎</string>
     <!-- Preference for settings related to Search -->
@@ -1520,7 +1520,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">立即扫码</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">使用相机登录</string>
+    <string name="sign_in_with_camera">相机扫码登录</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">改用电子邮件</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
@@ -1922,7 +1922,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">添加搜索引擎</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">添加新搜索引擎</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">添加新搜索引擎</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">编辑搜索引擎</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1937,17 +1937,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">其他</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">名称</string>
+    <string name="search_add_custom_engine_name_label">名称</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">名称</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">搜索引擎名称</string>
+    <string name="search_add_custom_engine_name_hint_2">搜索引擎名称</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">搜索字符串 URL</string>
+    <string name="search_add_custom_engine_url_label">搜索字符串 URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">搜索字符串</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">用于搜索的 URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">用于搜索的 URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">用“%s”替换查询关键字。示例：\nhttps://www.google.com/search?q=%s</string>
 
@@ -1955,7 +1955,7 @@
     <string name="search_add_custom_engine_form_description">自定义搜索引擎信息</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">保存</string>
+    <string name="search_custom_engine_save_button">保存</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">输入搜索引擎名称</string>

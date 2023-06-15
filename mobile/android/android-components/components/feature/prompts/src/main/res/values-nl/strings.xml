@@ -43,6 +43,8 @@
     <string name="mozac_feature_prompts_content_description_input_label">Label voor het invullen van een tekstinvoerveld</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Kies een kleur</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Kies een aanmeldprovider</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Toestaan</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -117,8 +119,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Het kaartnummer wordt versleuteld. De beveiligingscode wordt niet opgeslagen.</string>
 
     <!-- Address Autofill -->
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">Adressen selecteren</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Adres selecteren</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->

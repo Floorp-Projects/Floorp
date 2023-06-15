@@ -53,6 +53,8 @@
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">選擇一種色彩</string>
 
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">選擇登入資訊服務提供者</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">允許</string>
 
@@ -129,8 +131,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">將加密卡號，也不會儲存安全碼。</string>
 
     <!-- Address Autofill -->
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">選擇地址</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">選擇地址</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->

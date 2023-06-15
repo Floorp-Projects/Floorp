@@ -366,12 +366,14 @@
     <string name="preferences_category_general">Splošno</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Vizitka</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Izberite enega</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Upravljanje bližnjic za iskanje</string>
+    <string name="preferences_manage_search_shortcuts">Upravljanje bližnjic za iskanje</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Uredi iskalnike, vidne v iskalnem meniju</string>
+    <string name="preferences_manage_search_shortcuts_summary">Uredi iskalnike, vidne v iskalnem meniju</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Iskalniki, vidni v iskalnem meniju</string>
+    <string name="preferences_category_engines_in_search_menu">Iskalniki, vidni v iskalnem meniju</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Privzeti iskalnik</string>
     <!-- Preference for settings related to Search -->
@@ -1892,7 +1894,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj iskalnik</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Dodaj nov iskalnik</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Dodaj nov iskalnik</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Urejanje iskalnika</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1907,15 +1909,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Drugo</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Ime</string>
+    <string name="search_add_custom_engine_name_label">Ime</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Ime</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Ime iskalnika</string>
+    <string name="search_add_custom_engine_name_hint_2">Ime iskalnika</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL iskalnega niza</string>
+    <string name="search_add_custom_engine_url_label">URL iskalnega niza</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Iskalni niz za uporabo</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL za uporabo pri iskanju</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Zamenjajte poizvedbo z &quot;%s&quot;. Primer: \nhttps://www.google.com/search?q=%s</string>
 
@@ -1923,7 +1927,7 @@
     <string name="search_add_custom_engine_form_description">Podrobnosti iskalnika po meri</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Shrani</string>
+    <string name="search_custom_engine_save_button">Shrani</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Vnesite ime iskalnika</string>
