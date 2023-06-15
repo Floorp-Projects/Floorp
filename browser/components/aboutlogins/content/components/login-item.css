@@ -346,8 +346,7 @@ input[name="password"] {
   fill-opacity: 0.75;
 }
 
-.vulnerable-alert,
-.breach-alert {
+.vulnerable-alert {
   border-radius: 4px;
   border: 1px solid var(--in-content-border-color);
   box-shadow: 0 2px 8px 0 var(--grey-90-a10);
@@ -359,9 +358,8 @@ input[name="password"] {
   position: relative;
 }
 
-.breach-alert {
-  background-color: var(--red-70);
-  color: #fff;
+login-breach-alert {
+  margin-block-end: 40px;
 }
 
 .vulnerable-alert {
