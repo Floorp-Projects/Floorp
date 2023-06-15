@@ -216,7 +216,7 @@ ${helpers.predefined_type(
     "OffsetPath",
     "computed::OffsetPath::none()",
     engines="gecko",
-    animation_value_type="ComputedValue",
+    animation_value_type="motion::OffsetPath",
     gecko_pref="layout.css.motion-path.enabled",
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.fxtf.org/motion-1/#offset-path-property",

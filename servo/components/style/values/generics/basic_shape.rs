@@ -367,7 +367,9 @@ pub struct PolygonCoord<LengthPercentage>(pub LengthPercentage, pub LengthPercen
 #[allow(missing_docs)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[derive(
+    Animate,
     Clone,
+    ComputeSquaredDistance,
     Copy,
     Debug,
     Deserialize,
@@ -413,7 +415,6 @@ pub enum FillRule {
 pub struct Path {
     /// The filling rule for the svg path.
     #[css(skip_if = "is_default")]
-    #[animation(constant)]
     pub fill: FillRule,
     /// The svg path data.
     pub path: SVGPathData,

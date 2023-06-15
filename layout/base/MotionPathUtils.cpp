@@ -487,14 +487,6 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 }
 
 /* static */
-StyleSVGPathData MotionPathUtils::NormalizeSVGPathData(
-    const StyleSVGPathData& aPath) {
-  StyleSVGPathData n;
-  Servo_SVGPathData_Normalize(&aPath, &n);
-  return n;
-}
-
-/* static */
 already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
     const StyleSVGPathData& aPath, gfx::PathBuilder* aPathBuilder) {
   if (!aPathBuilder) {
