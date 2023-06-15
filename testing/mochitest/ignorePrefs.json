@@ -9,6 +9,7 @@
   "app.update.lastUpdateTime.xpi-signature-verification",
   "browser.bookmarks.restore_default_bookmarks",
   "doh-rollout.doneFirstRun",
+  "extensions.databaseSchema",
   "extensions.dnr.lastStoreUpdateTag.*",
   "extensions.webextensions.ExtensionStorageIDB.migrated.*",
   "extensions.webextensions.uuids",
