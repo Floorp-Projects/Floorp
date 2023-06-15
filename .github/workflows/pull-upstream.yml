@@ -58,6 +58,6 @@ jobs:
     - name: Create Pull Request
       run: |
         cd mozilla-unified
-        gh pr create --repo ${{ github.repository }} --base ESR115 --head upstream-central-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
+        gh pr create --repo ${{ github.repository }} --base ESR115 --head upstream-esr115-${DATE_STR} --title "Pull upstream" --body "Warning: Be sure to create a merge commit and merge it in."
       env:
         GH_TOKEN: ${{ github.token }}

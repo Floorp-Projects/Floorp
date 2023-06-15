@@ -275,18 +275,18 @@
   #category-sync>.category-icon {
     list-style-image: url(chrome://browser/skin/sync.svg) !important;
   }
-  
+
   .category[name="discover"] {
     background-image: url(chrome://browser/skin/star.svg) !important;
   }
-  
+
   .category[name="theme"] {
     background-image: url(chrome://browser/skin/brush.svg) !important;
   }
-  
-  
+
+
   /* Sync Items */
-  
+
   .sync-engine-bookmarks .checkbox-icon, .sync-engine-bookmarks.sync-engine-image {
     list-style-image: url(chrome://browser/skin/bookmark.svg) !important;
   }
@@ -294,12 +294,12 @@
   .sync-engine-history .checkbox-icon, .sync-engine-history.sync-engine-image {
     list-style-image: url(chrome://browser/skin/history.svg) !important;
   }
-  
+
   .sync-engine-tabs .checkbox-icon, .sync-engine-tabs.sync-engine-image {
     list-style-image: url(chrome://browser/skin/new-tab.svg) !important;
   }
-  
-  
+
+
   /* Visual Ajustments */
   
    :root {
@@ -327,11 +327,11 @@
   .content-blocking-category.selected {
     border-color: #0078d4 !important;
   }
-  
+
   .content-blocking-category.expanded:not(.selected) .content-blocking-warning {
     background-color: #f7f7f7 !important;
   }
-  
+
   @media (prefers-color-scheme: dark) {
      :root {
       --in-content-page-background: #333 !important;
@@ -363,8 +363,8 @@
       --in-content-page-background: #333333 !important;
     }
   }
-  
-  
+
+
   /* Cards For Certain Sections */
   
   #fxaGroup, .sync-group, #searchbarGroup, #homeContentsGroup, #permissionsGroup, #httpsOnlyBox, #applicationsGroup, #oneClickSearchProvidersGroup {

@@ -70,5 +70,10 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefy"] += [
     "gesturefy/gesturefy.js",
 ]
 
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["webcompat"] += [
+    "webcompat/fix-addons-mozilla-org.css",
+    "webcompat/fix-addons-mozilla-org.js",
+]
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "floorp-system")
