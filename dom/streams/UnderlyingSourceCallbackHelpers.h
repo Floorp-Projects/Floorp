@@ -237,7 +237,8 @@ class InputToReadableStreamAlgorithms final
 
   void WriteIntoReadRequestBuffer(JSContext* aCx, ReadableStream* aStream,
                                   JS::Handle<JSObject*> aBuffer,
-                                  uint32_t aLength, uint32_t* aByteWritten);
+                                  uint32_t aLength, uint32_t* aByteWritten,
+                                  ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void EnqueueChunkWithSizeIntoStream(
       JSContext* aCx, ReadableStream* aStream, uint64_t aAvailableData,
