@@ -1416,6 +1416,26 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvRequestCameraAccess(
+    RequestCameraAccessResolver&& aResolver) {
+#ifdef MOZ_WEBRTC
+  mozilla::camera::CamerasParent::RequestCameraAccess()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [resolver = std::move(aResolver)](
+          const mozilla::camera::CamerasParent::CameraAccessRequestPromise::
+              ResolveOrRejectValue& aValue) {
+        if (aValue.IsResolve()) {
+          resolver(aValue.ResolveValue());
+        } else {
+          resolver(aValue.RejectValue());
+        }
+      });
+#else
+  aResolver(NS_ERROR_NOT_IMPLEMENTED);
+#endif
+  return IPC_OK();
+}
+
 bool BackgroundParentImpl::DeallocPEndpointForReportParent(
     PEndpointForReportParent* aActor) {
   RefPtr<dom::EndpointForReportParent> actor =

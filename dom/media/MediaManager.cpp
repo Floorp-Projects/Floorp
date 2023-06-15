@@ -41,6 +41,7 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/media/MediaTaskUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -1820,6 +1821,23 @@ class DeviceSetPromiseHolderWithFallback
   }
 };
 
+// Class to hold the promise used to request device access and to resolve
+// even if |task| does not run, which can happen in case there is no
+// observer for the ask-device-permission event.
+class DeviceAccessRequestPromiseHolderWithFallback
+    : public MozPromiseHolder<
+          MozPromise<nsresult, mozilla::ipc::ResponseRejectReason, true>> {
+ public:
+  DeviceAccessRequestPromiseHolderWithFallback() = default;
+  DeviceAccessRequestPromiseHolderWithFallback(
+      DeviceAccessRequestPromiseHolderWithFallback&&) = default;
+  ~DeviceAccessRequestPromiseHolderWithFallback() {
+    if (!IsEmpty()) {
+      Resolve(NS_OK, __func__);
+    }
+  }
+};
+
 }  // anonymous namespace
 
 /**
@@ -1880,10 +1898,61 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
   const bool realDeviceRequested = (!hasFakeCams && hasVideo) ||
                                    (!hasFakeMics && hasAudio) || hasAudioOutput;
 
-  RefPtr<Runnable> task = NewTaskFrom(
+  using NativePromise = MozPromise<nsresult, mozilla::ipc::ResponseRejectReason,
+                                   /* IsExclusive = */ true>;
+  RefPtr<NativePromise> deviceAccessPromise;
+  if (realDeviceRequested &&
+      aFlags.contains(EnumerationFlag::AllowPermissionRequest)) {
+    if (Preferences::GetBool("media.navigator.permission.device", false)) {
+      // Need to ask permission to retrieve list of all devices;
+      // notify frontend observer and wait for callback notification to post
+      // task.
+      const char16_t* const type =
+          (aVideoInputType != MediaSourceEnum::Camera)       ? u"audio"
+          : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
+                                                             : u"all";
+      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+      DeviceAccessRequestPromiseHolderWithFallback deviceAccessPromiseHolder;
+      deviceAccessPromise = deviceAccessPromiseHolder.Ensure(__func__);
+      RefPtr task = NS_NewRunnableFunction(
+          __func__, [holder = std::move(deviceAccessPromiseHolder)]() mutable {
+            holder.Resolve(NS_OK, "getUserMedia:got-device-permission");
+          });
+      obs->NotifyObservers(static_cast<nsIRunnable*>(task),
+                           "getUserMedia:ask-device-permission", type);
+    } else if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
+      ipc::PBackgroundChild* backgroundChild =
+          ipc::BackgroundChild::GetOrCreateForCurrentThread();
+      deviceAccessPromise = backgroundChild->SendRequestCameraAccess();
+    }
+  }
+
+  if (!deviceAccessPromise) {
+    // No device access request needed. Proceed directly.
+    deviceAccessPromise = NativePromise::CreateAndResolve(NS_OK, __func__);
+  }
+
+  deviceAccessPromise->Then(
+      mMediaThread, __func__,
       [holder = std::move(holder), aVideoInputType, aAudioInputType,
        hasFakeCams, hasFakeMics, videoLoopDev, audioLoopDev, hasVideo, hasAudio,
-       hasAudioOutput, realDeviceRequested]() mutable {
+       hasAudioOutput, realDeviceRequested](
+          NativePromise::ResolveOrRejectValue&& aValue) mutable {
+        if (aValue.IsReject()) {
+          // IPC failure probably means we're in shutdown. Resolve with
+          // an empty set, so that callers do not need to handle rejection.
+          holder.Resolve(new MediaDeviceSetRefCnt(),
+                         "EnumerateRawDevices: ipc failure");
+          return;
+        }
+
+        if (nsresult value = aValue.ResolveValue(); NS_FAILED(value)) {
+          holder.Reject(
+              MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+              "EnumerateRawDevices: camera access rejected");
+          return;
+        }
+
         // Only enumerate what's asked for, and only fake cams and mics.
         RefPtr<MediaEngine> fakeBackend, realBackend;
         if (hasFakeCams || hasFakeMics) {
@@ -1970,24 +2039,6 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
 
         holder.Resolve(std::move(devices), __func__);
       });
-
-  if (realDeviceRequested &&
-      aFlags.contains(EnumerationFlag::AllowPermissionRequest) &&
-      Preferences::GetBool("media.navigator.permission.device", false)) {
-    // Need to ask permission to retrieve list of all devices;
-    // notify frontend observer and wait for callback notification to post task.
-    const char16_t* const type =
-        (aVideoInputType != MediaSourceEnum::Camera)       ? u"audio"
-        : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
-                                                           : u"all";
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    obs->NotifyObservers(static_cast<nsIRunnable*>(task),
-                         "getUserMedia:ask-device-permission", type);
-  } else {
-    // Don't need to ask permission to retrieve list of all devices;
-    // post the retrieval task immediately.
-    MediaManager::Dispatch(task.forget());
-  }
 
   return promise;
 }
@@ -3006,8 +3057,9 @@ RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
           [placeholderListener](RefPtr<MediaMgrError>&& aError) {
             // EnumerateDevicesImpl may fail if a new doc has been set, in which
             // case the OnNavigation() method should have removed all previous
-            // active listeners.
-            MOZ_ASSERT(placeholderListener->Stopped());
+            // active listeners, or if a platform device access request was not
+            // granted.
+            placeholderListener->Stop();
             return LocalDeviceSetPromise::CreateAndReject(std::move(aError),
                                                           __func__);
           });
