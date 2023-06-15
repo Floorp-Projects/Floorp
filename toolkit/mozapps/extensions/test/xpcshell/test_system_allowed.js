@@ -5,7 +5,8 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
 // Ensure that only allowed add-ons are loaded.
 add_task(async function test_allowed_addons() {
   // Build the test set
-  var distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
+  var distroDir = FileUtils.getDir("ProfD", ["sysfeatures"]);
+  distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   let xpi = await getSystemAddonXPI(1, "1.0");
   xpi.copyTo(distroDir, "system1@tests.mozilla.org.xpi");
 

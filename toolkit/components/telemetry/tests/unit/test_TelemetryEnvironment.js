@@ -139,7 +139,8 @@ add_task(async function setup() {
   Services.fog.initializeFOG();
 
   // The system add-on must be installed before AddonManager is started.
-  const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
+  const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"]);
+  distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   do_get_file("system.xpi").copyTo(
     distroDir,
     "tel-system-xpi@tests.mozilla.org.xpi"

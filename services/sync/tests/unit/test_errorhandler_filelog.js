@@ -13,7 +13,8 @@ const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
 
-const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"]);
+logsdir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
 // Delay to wait before cleanup, to allow files to age.
 // This is so large because the file timestamp granularity is per-second, and

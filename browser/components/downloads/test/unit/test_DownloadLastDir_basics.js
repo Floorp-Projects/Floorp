@@ -28,13 +28,16 @@ add_task(
       "Untracked URI, no pref set"
     );
 
-    let dir1 = FileUtils.getDir("TmpD", ["dir1"], true);
+    let dir1 = FileUtils.getDir("TmpD", ["dir1"]);
+    dir1.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     let uri1 = Services.io.newURI("https://test1.moz.org");
     downloadLastDir.setFile(uri1, dir1);
-    let dir2 = FileUtils.getDir("TmpD", ["dir2"], true);
+    let dir2 = FileUtils.getDir("TmpD", ["dir2"]);
+    dir2.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     let uri2 = Services.io.newURI("https://test2.moz.org");
     downloadLastDir.setFile(uri2, dir2);
-    let dir3 = FileUtils.getDir("TmpD", ["dir3"], true);
+    let dir3 = FileUtils.getDir("TmpD", ["dir3"]);
+    dir3.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     downloadLastDir.setFile(null, dir3);
     Assert.equal(
       (await downloadLastDir.getFileAsync(uri1)).path,
@@ -76,7 +79,8 @@ add_task(
     // file: URIs should all point to the same folder.
     let fileUri1 = Services.io.newURI("file:///c:/test.txt");
     downloadLastDir.setFile(uri1, dir3);
-    let dir4 = FileUtils.getDir("TmpD", ["dir4"], true);
+    let dir4 = FileUtils.getDir("TmpD", ["dir4"]);
+    dir4.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     let fileUri2 = Services.io.newURI("file:///d:/test.png");
     downloadLastDir.setFile(uri1, dir4);
     Assert.equal(

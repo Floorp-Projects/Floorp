@@ -80,7 +80,8 @@ add_test(function test_getDir_nonexistentDir() {
 });
 
 add_test(function test_getDir_shouldCreate() {
-  let dir = FileUtils.getDir("ProfD", ["c", "d", "foodir"], true);
+  let dir = FileUtils.getDir("ProfD", ["c", "d", "foodir"]);
+  dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   Assert.ok(dir instanceof Ci.nsIFile);
   Assert.ok(dir.exists());
 

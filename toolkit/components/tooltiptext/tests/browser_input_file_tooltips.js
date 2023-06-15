@@ -65,7 +65,7 @@ async function do_test(test) {
     let MockFilePicker = SpecialPowers.MockFilePicker;
     MockFilePicker.init(window);
     MockFilePicker.returnValue = MockFilePicker.returnOK;
-    MockFilePicker.displayDirectory = FileUtils.getDir("TmpD", [], false);
+    MockFilePicker.displayDirectory = FileUtils.getDir("TmpD", []);
     MockFilePicker.setFiles([tempFile]);
     MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
 
@@ -124,7 +124,7 @@ async function do_test(test) {
 }
 
 function createTempFile() {
-  let file = FileUtils.getDir("TmpD", [], false);
+  let file = FileUtils.getDir("TmpD", []);
   file.append("testfile_bug1251809");
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
   return file;

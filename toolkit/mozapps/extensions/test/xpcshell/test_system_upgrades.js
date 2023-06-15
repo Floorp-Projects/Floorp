@@ -13,11 +13,11 @@ AddonTestUtils.createAppInfo(
 BootstrapMonitor.init();
 
 // A test directory for default/builtin system addons.
-const systemDefaults = FileUtils.getDir(
-  "ProfD",
-  ["app-system-defaults", "features"],
-  true
-);
+const systemDefaults = FileUtils.getDir("ProfD", [
+  "app-system-defaults",
+  "features",
+]);
+systemDefaults.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 registerDirectory("XREAppFeat", systemDefaults);
 
 AddonTestUtils.usePrivilegedSignatures = id => "system";

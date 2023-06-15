@@ -190,7 +190,7 @@ update directory:
 
 .. code::
 
-   ChromeUtils.importESModule("resource://gre/modules/FileUtils.sys.mjs").FileUtils.getDir("UpdRootD", [], false).path
+   ChromeUtils.importESModule("resource://gre/modules/FileUtils.sys.mjs").FileUtils.getDir("UpdRootD", []).path
 
 Once you have determined the update directory, close Firefox, browse to
 the directory and remove the subdirectory called ``updates``.
