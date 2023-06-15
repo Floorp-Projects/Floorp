@@ -492,3 +492,15 @@ addAccessibleTask(
   },
   { topLevel: true }
 );
+
+/**
+ * Verify that we don't crash for authoring error like <table role="gridcell">.
+ */
+addAccessibleTask(
+  `<table id="table" role="gridcell">`,
+  async function (browser, docAcc) {
+    const table = findAccessibleChildByID(docAcc, "table");
+    ok(table, "Retrieved table Accessible");
+  },
+  { chrome: true, topLevel: true }
+);

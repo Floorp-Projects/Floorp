@@ -1627,6 +1627,10 @@ void LocalAccessible::ApplyARIAState(uint64_t* aState) const {
   if ((roleMapEntry->Is(nsGkAtoms::gridcell) ||
        roleMapEntry->Is(nsGkAtoms::columnheader) ||
        roleMapEntry->Is(nsGkAtoms::rowheader)) &&
+      // Don't recurse infinitely for an authoring error like
+      // <table role="gridcell">. Without this check, we'd call TableFor(this)
+      // below, which would return this.
+      !IsTable() &&
       !nsAccUtils::HasDefinedARIAToken(mContent, nsGkAtoms::aria_readonly)) {
     if (const LocalAccessible* grid = nsAccUtils::TableFor(this)) {
       uint64_t gridState = 0;
