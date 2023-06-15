@@ -32,6 +32,12 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             if (unifiedSearchUI) R.xml.search_settings_preferences else R.xml.search_preferences,
             rootKey,
         )
+
+        // Visibility should be set before the view has been created, to avoid visual glitches.
+        requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
+            isVisible = !context.settings().showUnifiedSearchFeature
+        }
+
         view?.hideKeyboard()
     }
 
@@ -65,7 +71,6 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         val showSearchShortcuts =
             requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
                 isChecked = context.settings().shouldShowSearchShortcuts
-                isVisible = !context.settings().showUnifiedSearchFeature
             }
 
         val showHistorySuggestions =
