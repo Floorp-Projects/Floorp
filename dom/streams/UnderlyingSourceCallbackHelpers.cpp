@@ -302,7 +302,7 @@ InputToReadableStreamAlgorithms::OnInputStreamReady(
 
 void InputToReadableStreamAlgorithms::WriteIntoReadRequestBuffer(
     JSContext* aCx, ReadableStream* aStream, JS::Handle<JSObject*> aBuffer,
-    uint32_t aLength, uint32_t* aByteWritten) {
+    uint32_t aLength, uint32_t* aByteWritten, ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aBuffer);
   MOZ_DIAGNOSTIC_ASSERT(aByteWritten);
   MOZ_DIAGNOSTIC_ASSERT(mInput);
@@ -329,7 +329,7 @@ void InputToReadableStreamAlgorithms::WriteIntoReadRequestBuffer(
 
     rv = mInput->Read(static_cast<char*>(buffer), aLength, &written);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      ErrorPropagation(aCx, aStream, rv);
+      aRv.Throw(rv);
       return;
     }
   }
@@ -337,7 +337,9 @@ void InputToReadableStreamAlgorithms::WriteIntoReadRequestBuffer(
   *aByteWritten = written;
 
   if (written == 0) {
-    CloseAndReleaseObjects(aCx, aStream);
+    // If bytesWritten is zero, then the stream has been closed; return rather
+    // than enqueueing a chunk filled with zeros.
+    aRv.Throw(NS_BASE_STREAM_CLOSED);
     return;
   }
 
@@ -367,11 +369,9 @@ void InputToReadableStreamAlgorithms::EnqueueChunkWithSizeIntoStream(
   {
     uint32_t bytesWritten = 0;
 
-    WriteIntoReadRequestBuffer(aCx, aStream, chunk, ableToRead, &bytesWritten);
-
-    // If bytesWritten is zero, then the stream has been closed; return
-    // rather than enqueueing a chunk filled with zeros.
-    if (bytesWritten == 0) {
+    WriteIntoReadRequestBuffer(aCx, aStream, chunk, ableToRead, &bytesWritten,
+                               aRv);
+    if (aRv.Failed()) {
       return;
     }
 
