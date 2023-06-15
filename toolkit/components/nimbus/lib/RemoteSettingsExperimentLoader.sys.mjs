@@ -232,7 +232,12 @@ export class _RemoteSettingsExperimentLoader {
     this._updating = false;
   }
 
-  async optInToExperiment({ slug, branch: branchSlug, collection }) {
+  async optInToExperiment({
+    slug,
+    branch: branchSlug,
+    collection,
+    applyTargeting = false,
+  }) {
     lazy.log.debug(`Attempting force enrollment with ${slug} / ${branchSlug}`);
 
     if (!lazy.NIMBUS_DEBUG) {
@@ -281,14 +286,16 @@ export class _RemoteSettingsExperimentLoader {
       recipeValidator,
       {
         validationEnabled: this.validationEnabled,
-        shouldCheckTargeting: false,
+        shouldCheckTargeting: applyTargeting,
       }
     );
 
     if (!(await enrollmentsCtx.checkRecipe(recipe))) {
       const results = enrollmentsCtx.getResults();
 
-      if (results.invalidRecipes.length) {
+      if (results.recipeMismatches.length) {
+        throw new Error(`Recipe ${recipe.slug} did not match targeting`);
+      } else if (results.invalidRecipes.length) {
         console.error(`Recipe ${recipe.slug} did not match recipe schema`);
       } else if (results.invalidBranches.size) {
         // There will only be one entry becuase we only validated a single recipe.
@@ -299,7 +306,7 @@ export class _RemoteSettingsExperimentLoader {
             );
           }
         }
-      } else if (results.invalidFeatures) {
+      } else if (results.invalidFeatures.length) {
         for (const featureIds of results.invalidFeatures.values()) {
           for (const featureId of featureIds) {
             console.error(
@@ -309,7 +316,9 @@ export class _RemoteSettingsExperimentLoader {
         }
       }
 
-      throw new Error(`Recipe ${recipe.slug} failed validation`);
+      throw new Error(
+        `Recipe ${recipe.slug} failed validation: ${JSON.stringify(results)}`
+      );
     }
 
     let branch = recipe.branches.find(b => b.slug === branchSlug);
@@ -317,7 +326,7 @@ export class _RemoteSettingsExperimentLoader {
       throw new Error(`Could not find branch slug ${branchSlug} in ${slug}.`);
     }
 
-    await lazy.ExperimentManager.forceEnroll(recipe, branch);
+    await this.manager.forceEnroll(recipe, branch);
   }
 
   /**

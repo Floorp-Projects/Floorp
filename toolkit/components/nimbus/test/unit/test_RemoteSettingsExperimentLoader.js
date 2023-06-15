@@ -10,6 +10,9 @@ const { RemoteSettingsExperimentLoader, EnrollmentsContext } =
   ChromeUtils.importESModule(
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs"
   );
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
+);
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
@@ -341,4 +344,56 @@ add_task(async function test_enrollment_changed_notification() {
   await loader.init();
   await enrollmentChanged;
   ok(loader.updateRecipes.called, "should call .updateRecipes");
+});
+
+add_task(async function test_experiment_optin_targeting() {
+  Services.prefs.setBoolPref(DEBUG_PREF, true);
+
+  const sandbox = sinon.createSandbox();
+
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  await loader.init();
+  await manager.onStartup();
+  await manager.store.ready();
+
+  const recipe = ExperimentFakes.recipe("foo", { targeting: "false" });
+
+  sandbox.stub(RemoteSettings("nimbus-preview"), "get").resolves([recipe]);
+
+  await Assert.rejects(
+    loader.optInToExperiment({
+      slug: recipe.slug,
+      branch: recipe.branches[0].slug,
+      collection: "nimbus-preview",
+      applyTargeting: true,
+    }),
+    /Recipe foo did not match targeting/,
+    "optInToExperiment should throw"
+  );
+
+  Assert.ok(
+    !manager.store.getExperimentForFeature("testFeature"),
+    "Should not enroll in experiment"
+  );
+
+  await loader.optInToExperiment({
+    slug: recipe.slug,
+    branch: recipe.branches[0].slug,
+    collection: "nimbus-preview",
+  });
+
+  Assert.equal(
+    manager.store.getExperimentForFeature("testFeature").slug,
+    `optin-${recipe.slug}`,
+    "Should enroll in experiment"
+  );
+
+  manager.unenroll(`optin-${recipe.slug}`, "test-cleanup");
+
+  sandbox.restore();
+  Services.prefs.clearUserPref(DEBUG_PREF);
+
+  await assertEmptyStore(manager.store, { cleanup: true });
 });
