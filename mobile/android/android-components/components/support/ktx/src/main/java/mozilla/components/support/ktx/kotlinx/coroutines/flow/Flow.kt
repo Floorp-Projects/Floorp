@@ -6,6 +6,8 @@ package mozilla.components.support.ktx.kotlinx.coroutines.flow
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapConcat
 
@@ -19,7 +21,7 @@ import kotlinx.coroutines.flow.flatMapConcat
  * Returned Flow: A, B, C, A, D, A
  * ```
  */
-fun <T> Flow<T>.ifChanged(): Flow<T> = ifChanged { it }
+fun <T> Flow<T>.ifChanged(): Flow<T> = distinctUntilChanged()
 
 /**
  * Returns a [Flow] containing only values of the original [Flow] where the result of calling
@@ -34,19 +36,7 @@ fun <T> Flow<T>.ifChanged(): Flow<T> = ifChanged { it }
  * ```
  */
 fun <T, R> Flow<T>.ifChanged(transform: (T) -> R): Flow<T> {
-    var observedValueOnce = false
-    var lastMappedValue: R? = null
-
-    return filter { value ->
-        val mapped = transform(value)
-        if (!observedValueOnce || mapped != lastMappedValue) {
-            lastMappedValue = mapped
-            observedValueOnce = true
-            true
-        } else {
-            false
-        }
-    }
+    return distinctUntilChangedBy { transform(it) }
 }
 
 /**
@@ -99,7 +89,7 @@ fun <T, R> Flow<List<T>>.filterChanged(transform: (T) -> R): Flow<T> {
                 !lastMapped.containsKey(it) || lastMapped[it] != transform(it)
             }
         }
-        lastMappedValues = values.map { Pair(it, transform(it)) }.toMap()
+        lastMappedValues = values.associateWith { transform(it) }
         changed.asFlow()
     }
 }
