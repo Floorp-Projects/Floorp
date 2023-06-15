@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Safari",
+      "schema": 1686554697603,
+      "status": "beta",
+      "version": "17",
+      "browserid": "safari",
+      "id": "3e84cb8c-7466-4e59-b5f0-5ca867374529",
+      "last_modified": 1686662872134
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1686662650246,
+      "status": "beta",
+      "version": "17",
+      "browserid": "safari_ios",
+      "id": "d86d2710-e575-435e-b27f-199cb6252b1e",
+      "last_modified": 1686662872131
+    },
+    {
       "name": "Firefox for Android",
       "schema": 1686317041339,
       "status": "nightly",
@@ -379,5 +397,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1686554697510
+  "timestamp": 1686662872134
 }
