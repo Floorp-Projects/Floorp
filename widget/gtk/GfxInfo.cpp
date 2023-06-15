@@ -39,9 +39,11 @@
 // How long we wait for data from glxtest/vaapi test process in milliseconds.
 #define GFX_TEST_TIMEOUT 4000
 #define VAAPI_TEST_TIMEOUT 2000
+#define V4L2_TEST_TIMEOUT 2000
 
 #define GLX_PROBE_BINARY u"glxtest"_ns
 #define VAAPI_PROBE_BINARY u"vaapitest"_ns
+#define V4L2_PROBE_BINARY u"v4l2test"_ns
 
 namespace mozilla::widget {
 
@@ -709,6 +711,118 @@ void GfxInfo::GetDataVAAPI() {
 #endif
 }
 
+// Probe all V4L2 devices and check their capabilities
+void GfxInfo::GetDataV4L2() {
+  if (mIsV4L2Supported.isSome()) {
+    // We have already probed v4l2 support, no need to do it again.
+    return;
+  }
+  mIsV4L2Supported = Some(false);
+
+#ifdef MOZ_ENABLE_V4L2
+  DIR* dir = opendir("/dev");
+  if (!dir) {
+    gfxCriticalNote << "Could not list /dev\n";
+    return;
+  }
+  struct dirent* dir_entry;
+  while ((dir_entry = readdir(dir))) {
+    if (!strncmp(dir_entry->d_name, "video", 5)) {
+      nsCString path = "/dev/"_ns;
+      path += nsDependentCString(dir_entry->d_name);
+      V4L2ProbeDevice(path);
+    }
+  }
+  closedir(dir);
+#endif  // MOZ_ENABLE_V4L2
+}
+
+// Check the capabilities of a single V4L2 device.  If the device doesn't work
+// or doesn't support any codecs we recognise, then we just ignore it.  If it
+// does support recognised codecs then add these codecs to the supported list
+// and mark V4L2 as supported: We only need a single working device to enable
+// V4L2, when we come to decode FFmpeg will probe all the devices and choose
+// the appropriate one.
+void GfxInfo::V4L2ProbeDevice(nsCString& dev) {
+  char* v4l2Data = nullptr;
+  auto free = mozilla::MakeScopeExit([&] { g_free((void*)v4l2Data); });
+
+  int v4l2Pipe = -1;
+  int v4l2PID = 0;
+  const char* args[] = {"-d", dev.get(), nullptr};
+  v4l2PID = FireTestProcess(V4L2_PROBE_BINARY, &v4l2Pipe, args);
+  if (!v4l2PID) {
+    gfxCriticalNote << "Failed to start v4l2test process\n";
+    return;
+  }
+
+  if (!ManageChildProcess("v4l2test", &v4l2PID, &v4l2Pipe, V4L2_TEST_TIMEOUT,
+                          &v4l2Data)) {
+    gfxCriticalNote << "v4l2test: ManageChildProcess failed\n";
+    return;
+  }
+
+  char* bufptr = v4l2Data;
+  char* line;
+  nsTArray<nsCString> capFormats;
+  nsTArray<nsCString> outFormats;
+  bool supported = false;
+
+  while ((line = NS_strtok("\n", &bufptr))) {
+    if (!strcmp(line, "V4L2_SUPPORTED")) {
+      line = NS_strtok("\n", &bufptr);
+      if (!line) {
+        gfxCriticalNote << "v4l2test: Failed to get V4L2 support\n";
+        return;
+      }
+      supported = !strcmp(line, "TRUE");
+    } else if (!strcmp(line, "V4L2_CAPTURE_FMTS")) {
+      line = NS_strtok("\n", &bufptr);
+      if (!line) {
+        gfxCriticalNote << "v4l2test: Failed to get V4L2 CAPTURE formats\n";
+        return;
+      }
+      char* capture_fmt;
+      while ((capture_fmt = NS_strtok(" ", &line))) {
+        capFormats.AppendElement(capture_fmt);
+      }
+    } else if (!strcmp(line, "V4L2_OUTPUT_FMTS")) {
+      line = NS_strtok("\n", &bufptr);
+      if (!line) {
+        gfxCriticalNote << "v4l2test: Failed to get V4L2 OUTPUT formats\n";
+        return;
+      }
+      char* output_fmt;
+      while ((output_fmt = NS_strtok(" ", &line))) {
+        outFormats.AppendElement(output_fmt);
+      }
+    } else if (!strcmp(line, "WARNING") || !strcmp(line, "ERROR")) {
+      line = NS_strtok("\n", &bufptr);
+      if (line) {
+        gfxCriticalNote << "v4l2test: " << line << "\n";
+      }
+      return;
+    }
+  }
+
+  // If overall SUPPORTED flag is not TRUE then stop now
+  if (!supported) {
+    return;
+  }
+
+  // Currently the V4L2 decode platform only supports YUV420 and NV12
+  if (!capFormats.Contains("YV12") && !capFormats.Contains("NV12")) {
+    return;
+  }
+
+  // Supported codecs
+  if (outFormats.Contains("H264")) {
+    mIsV4L2Supported = Some(true);
+    media::MCSInfo::AddSupport(media::MediaCodecsSupport::H264HardwareDecode);
+    mV4L2SupportedCodecs |= CODEC_HW_H264;
+  }
+}
+
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     // Mesa 10.0 provides the GLX_MESA_query_renderer extension, which allows us
@@ -1142,7 +1256,8 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     if (aFeature != pair.mFeature) {
       continue;
     }
-    if (mVAAPISupportedCodecs & pair.mCodec) {
+    if ((mVAAPISupportedCodecs & pair.mCodec) ||
+        (mV4L2SupportedCodecs & pair.mCodec)) {
       *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
     } else {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
@@ -1154,15 +1269,17 @@ nsresult GfxInfo::GetFeatureStatusImpl(
   auto ret = GfxInfoBase::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 
-  // Probe VA-API on supported devices only
+  // Probe VA-API/V4L2 on supported devices only
   if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
       *aStatus == nsIGfxInfo::FEATURE_STATUS_OK) {
     if (mIsAccelerated) {
       GetDataVAAPI();
+      GetDataV4L2();
     } else {
       mIsVAAPISupported = Some(false);
+      mIsV4L2Supported = Some(false);
     }
-    if (!mIsVAAPISupported.value()) {
+    if (!mIsVAAPISupported.value() && !mIsV4L2Supported.value()) {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
       aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
     }
