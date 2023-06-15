@@ -75,15 +75,46 @@ function recordEvent(e) {
       case 1: is(e.type, "mouseover", "Got a mouseover"); break;
       case 2: is(e.type, "mouseenter", "Got a mouseenter"); break;
       case 3: is(e.type, "mousemove", "Got a mousemove"); break;
-      case 4: is(e.type, "contextmenu", "Got a contextmenu"); e.preventDefault(); break;
-      case 5: is(e.type, "touchcancel", "Got a touchcancel"); break;
+      case 4: is(e.type, "contextmenu", "Got a contextmenu");
+        // Do preventDefault() in this content, thus we will not get any
+        // touchcancel event.
+        e.preventDefault();
+        setTimeout(async () => {
+          await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+            dump("Finished synthesizing touch-end, waiting for a touchend event...\n");
+          });
+        }, 0);
+        break;
+      case 5: is(e.type, "touchend", "Got a touchend");
+        // Send another long press.
+        setTimeout(async () => {
+          await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+            dump("Finished synthesizing touch-start, waiting for events...\n");
+          });
+        }, 0);
+        break;
+      case 6: is(e.type, "touchstart", "Got another touchstart"); break;
+      // NOTE: In this another event case, we don't get mouseover or mouseenter
+      // event either since the target element hasn't been changed.
+      case 7: is(e.type, "mousemove", "Got another mousemove"); break;
+      case 8: is(e.type, "contextmenu", "Got another contextmenu");
+        // DON'T DO preventDefault() this time, thus we should get a touchcancel
+        // event.
+        break;
+      case 9: is(e.type, "mouselongtap", "Got a mouselongtap"); break;
+      case 10: is(e.type, "touchcancel", "Got a touchcancel"); break;
       default: ok(false, "Got an unexpected event of type " + e.type); break;
     }
     eventsFired++;
 
-    if (eventsFired == 6) {
+    if (eventsFired == 11) {
       removeMouseEventListeners(target);
+
       setTimeout(async () => {
+        // Ensure the context menu got closed, otherwise in the next test case
+        // events will be consumed by the context menu unfortunately.
+        await ensureContextMenuClosed();
+
         await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
           dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
           promiseOnlyApzControllerFlushed().then(function() {
@@ -91,7 +122,7 @@ function recordEvent(e) {
             subtestDone();
           });
         });
-      }, 0)
+      }, 0);
     }
   } else {
     // On Android we get a contextmenu event once the long-tap has been
@@ -122,7 +153,7 @@ function recordEvent(e) {
         }, 0);
         break;
       case 6: is(e.type, "touchstart", "Got another touchstart"); break;
-      // NOTE: In this another event case, we don't get mouseover or moveenter
+      // NOTE: In this another event case, we don't get mouseover or mouseenter
       // event either since the target element hasn't been changed.
       case 7: is(e.type, "mousemove", "Got another mousemove"); break;
       case 8: is(e.type, "contextmenu", "Got another contextmenu");
