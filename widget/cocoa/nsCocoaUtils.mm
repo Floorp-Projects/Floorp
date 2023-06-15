@@ -33,7 +33,6 @@
 #include "nsToolkit.h"
 #include "nsCRT.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
@@ -300,7 +299,6 @@ BOOL nsCocoaUtils::ShouldRestoreStateDueToLaunchAtLoginImpl() {
 BOOL nsCocoaUtils::ShouldRestoreStateDueToLaunchAtLogin() {
   BOOL shouldRestore = ShouldRestoreStateDueToLaunchAtLoginImpl();
   Telemetry::ScalarSet(Telemetry::ScalarID::STARTUP_IS_RESTORED_BY_MACOS, !!shouldRestore);
-  mozilla::glean::startup::is_restored_by_macos.Set(!!shouldRestore);
   return shouldRestore;
 }
 
@@ -896,16 +894,12 @@ struct KeyConversionData {
 
 static const KeyConversionData gKeyConversions[] = {
 
-#define KEYCODE_ENTRY(aStr, aCode)             \
-  {                                            \
-#    aStr, sizeof(#aStr) - 1, NS_##aStr, aCode \
-  }
+#define KEYCODE_ENTRY(aStr, aCode) \
+  { #aStr, sizeof(#aStr) - 1, NS_##aStr, aCode }
 
 // Some keycodes may have different name in KeyboardEvent from its key name.
-#define KEYCODE_ENTRY2(aStr, aNSName, aCode)      \
-  {                                               \
-#    aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode \
-  }
+#define KEYCODE_ENTRY2(aStr, aNSName, aCode) \
+  { #aStr, sizeof(#aStr) - 1, NS_##aNSName, aCode }
 
     KEYCODE_ENTRY(VK_CANCEL, 0x001B),
     KEYCODE_ENTRY(VK_DELETE, NSDeleteFunctionKey),

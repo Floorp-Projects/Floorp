@@ -9,20 +9,3 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - 'Core :: Widget: Cocoa'
-
-startup:
-  is_restored_by_macos:
-    type: boolean
-    description: >
-      Recorded on every launch of a Firefox install on macOS, with a boolean
-      value indicating whether Firefox was restored by macOS or if it was
-      manually launched by a user.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=639707
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=639707
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - spohl@mozilla.com
-    expires: 116
