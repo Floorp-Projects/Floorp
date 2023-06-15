@@ -10,9 +10,11 @@
 #include "MediaEngine.h"
 #include "VideoFrameUtils.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "modules/video_capture/video_capture_factory.h"
+#include "modules/video_capture/video_capture_options.h"
 #include <memory>
 #include <functional>
 
@@ -65,8 +67,13 @@ class VideoEngine {
 #if defined(ANDROID)
   static int SetAndroidObjects();
 #endif
-  // Returns a non-negative capture identifier or -1 on failure.
-  int32_t CreateVideoCapture(const char* aDeviceUniqueIdUTF8);
+  /** Returns a non-negative capture identifier or -1 on failure.
+   *   @value aOptions can be used to specify options for the new VideoCapture.
+   *   This option is currently used only with PipeWire implementation and
+   *   provides access to PipeWire remote for which we were granted permissions.
+   */
+  int32_t CreateVideoCapture(const char* aDeviceUniqueIdUTF8,
+                             webrtc::VideoCaptureOptions* aOptions = nullptr);
 
   int ReleaseVideoCapture(const int32_t aId);
 
@@ -78,12 +85,16 @@ class VideoEngine {
    *   of the hardware devices.  Other types of capture, e.g. screen share info,
    *   are cached for 1 second. This could be handled in a more elegant way in
    *   the future.
+   *   @value aOptions can be used to specify options for the new DeviceInfo.
+   *   This option is currently used only with PipeWire implementation and
+   *   provides access to PipeWire remote for which we were granted permissions.
    *   @return on failure the shared_ptr will be null, otherwise it will contain
    *   a DeviceInfo.
    *   @see bug 1305212 https://bugzilla.mozilla.org/show_bug.cgi?id=1305212
    */
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
-  GetOrCreateVideoCaptureDeviceInfo();
+  GetOrCreateVideoCaptureDeviceInfo(
+      webrtc::VideoCaptureOptions* aOptions = nullptr);
 
   class CaptureEntry {
    public:

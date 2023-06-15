@@ -50,16 +50,31 @@ class DeliverFrameRunnable;
 
 class CamerasParent final : public PCamerasParent,
                             private webrtc::VideoInputFeedBack {
+ public:
   using ShutdownMozPromise = media::ShutdownBlockingTicket::ShutdownMozPromise;
+  using CameraAccessRequestPromise =
+      MozPromise<nsresult, nsresult, /* IsExclusive = */ false>;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
       CamerasParent, mPBackgroundEventTarget)
 
- public:
   class VideoEngineArray;
   friend DeliverFrameRunnable;
 
   static already_AddRefed<CamerasParent> Create();
+
+  /**
+   * Request camera access
+   *   Currently used only on desktop. This will make an xdg-desktop-portal
+   *   call to request access to camera when PipeWire is used, otherwise it
+   *   automatically grants access for other implementations.
+   *
+   *    1) NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR - access to camera has been
+   *       rejected by the user.
+   *    2) NS_ERROR_FAILURE - generic error, for instance with pipewire most
+   *       likely the xdg-desktop-portal request failed.
+   */
+  static RefPtr<CameraAccessRequestPromise> RequestCameraAccess();
 
   // Messages received from the child. These run on the IPC/PBackground thread.
   mozilla::ipc::IPCResult RecvPCamerasConstructor();

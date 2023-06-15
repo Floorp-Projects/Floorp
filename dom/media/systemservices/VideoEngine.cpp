@@ -43,7 +43,8 @@ int VideoEngine::SetAndroidObjects() {
 }
 #endif
 
-int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8) {
+int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8,
+                                        webrtc::VideoCaptureOptions* aOptions) {
   LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(aDeviceUniqueIdUTF8);
 
@@ -63,8 +64,13 @@ int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8) {
   CaptureEntry entry = {-1, nullptr};
 
   if (mCaptureDevInfo.type == CaptureDeviceType::Camera) {
-    entry = CaptureEntry(
-        id, webrtc::VideoCaptureFactory::Create(aDeviceUniqueIdUTF8));
+    if (aOptions) {
+      entry = CaptureEntry(id, webrtc::VideoCaptureFactory::Create(
+                                   aOptions, aDeviceUniqueIdUTF8));
+    } else {
+      entry = CaptureEntry(
+          id, webrtc::VideoCaptureFactory::Create(aDeviceUniqueIdUTF8));
+    }
     if (entry.VideoCapture()) {
       entry.VideoCapture()->SetApplyRotation(true);
     }
@@ -120,7 +126,8 @@ int VideoEngine::ReleaseVideoCapture(const int32_t aId) {
 }
 
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
-VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
+VideoEngine::GetOrCreateVideoCaptureDeviceInfo(
+    webrtc::VideoCaptureOptions* aOptions) {
   LOG(("%s", __PRETTY_FUNCTION__));
   webrtc::Timestamp currentTime = webrtc::Timestamp::Micros(0);
 
@@ -161,7 +168,13 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
         break;
       }
 #endif
-      mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());
+      if (aOptions) {
+        mDeviceInfo.reset(
+            webrtc::VideoCaptureFactory::CreateDeviceInfo(aOptions));
+      } else {
+        mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());
+      }
+
       LOG(("CaptureDeviceType::Camera: Finished creating new device."));
       break;
     }
