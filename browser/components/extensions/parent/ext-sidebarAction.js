@@ -39,8 +39,8 @@ this.sidebarAction = class extends ExtensionAPI {
     // from that when it is viewed, so we shouldn't need to update that.
     let widgetId = makeWidgetId(extension.id);
     this.id = `${widgetId}-sidebar-action`;
-    this.menuId = `menu_${this.id}`;
-    this.buttonId = `button_${this.id}`;
+    this.menuId = `menubar_menu_${this.id}`;
+    this.switcherMenuId = `sidebarswitcher_menu_${this.id}`;
 
     this.browserStyle = options.browser_style;
 
@@ -106,14 +106,8 @@ this.sidebarAction = class extends ExtensionAPI {
       if (SidebarUI.currentID === this.id) {
         SidebarUI.hide();
       }
-      let menu = document.getElementById(this.menuId);
-      if (menu) {
-        menu.remove();
-      }
-      let button = document.getElementById(this.buttonId);
-      if (button) {
-        button.remove();
-      }
+      document.getElementById(this.menuId)?.remove();
+      document.getElementById(this.switcherMenuId)?.remove();
       let header = document.getElementById("sidebar-switcher-target");
       header.removeEventListener("SidebarShown", this.updateHeader);
       SidebarUI.sidebars.delete(this.id);
@@ -162,7 +156,7 @@ this.sidebarAction = class extends ExtensionAPI {
       title: details.title,
       url: sidebarURL,
       menuId: this.menuId,
-      buttonId: this.buttonId,
+      switcherMenuId: this.switcherMenuId,
       // The following properties are specific to extensions
       extensionId: this.extension.id,
       panel: details.panel,
@@ -183,21 +177,13 @@ this.sidebarAction = class extends ExtensionAPI {
     this.setMenuIcon(menuitem, details);
 
     // Insert a toolbarbutton for the sidebar dropdown selector.
-    let toolbarbutton = document.createXULElement("toolbarbutton");
-    toolbarbutton.setAttribute("id", this.buttonId);
-    toolbarbutton.setAttribute("label", details.title);
-    toolbarbutton.setAttribute("oncommand", `SidebarUI.show("${this.id}");`);
-    toolbarbutton.setAttribute(
-      "class",
-      "subviewbutton subviewbutton-iconic webextension-menuitem"
-    );
-    toolbarbutton.setAttribute("key", keyId);
-    this.setMenuIcon(toolbarbutton, details);
+    let switcherMenuitem = menuitem.cloneNode();
+    switcherMenuitem.setAttribute("id", this.switcherMenuId);
+    switcherMenuitem.removeAttribute("type");
 
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
     let separator = document.getElementById("sidebar-extensions-separator");
-    separator.parentNode.insertBefore(toolbarbutton, separator);
-    SidebarUI.updateShortcut({ button: toolbarbutton });
+    separator.parentNode.insertBefore(switcherMenuitem, separator);
 
     return menuitem;
   }
@@ -241,7 +227,7 @@ this.sidebarAction = class extends ExtensionAPI {
     menu.setAttribute("label", title);
     this.setMenuIcon(menu, tabData);
 
-    let button = document.getElementById(this.buttonId);
+    let button = document.getElementById(this.switcherMenuId);
     button.setAttribute("label", title);
     this.setMenuIcon(button, tabData);
 

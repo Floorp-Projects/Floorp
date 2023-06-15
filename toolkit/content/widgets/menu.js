@@ -286,10 +286,14 @@
         }
         let key = document.getElementById(keyId);
         if (!key) {
-          console.error(
+          let msg =
             `Key ${keyId} of menuitem ${this.getAttribute("label")} ` +
-              `could not be found`
-          );
+            `could not be found`;
+          if (keyId.startsWith("ext-key-id-")) {
+            console.info(msg);
+          } else {
+            console.error(msg);
+          }
           return null;
         }
         return imports.ShortcutUtils.prettifyShortcut(key);

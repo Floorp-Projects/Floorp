@@ -11,16 +11,16 @@ menupopup::part(drop-indicator) {
   margin-inline-start: 5px;
 }
 
-toolbarbutton menupopup[placespopup] {
+.toolbar-menupopup {
   --nested-margin: calc(-1 * (var(--arrowpanel-menuitem-padding-inline) + var(--panel-shadow-margin)));
 }
 
 @media not (-moz-windows-non-native-menus) {
-  toolbarbutton menupopup[placespopup] {
+  .toolbar-menupopup {
     --panel-shadow-margin: 4px;
   }
 
-  toolbarbutton menupopup[placespopup] menupopup[placespopup] {
+  .toolbar-menupopup menupopup {
     margin-inline-start: var(--nested-margin);
   }
 }

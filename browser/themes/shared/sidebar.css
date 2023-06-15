@@ -105,11 +105,11 @@
   outline-offset: 0;
 }
 
-#sidebarMenu-popup .subviewbutton {
-  min-width: 190px;
+#sidebarMenu-popup > menuitem {
+  min-width: 16em;
 }
 
-toolbarseparator + #sidebar-extensions-separator {
+menuseparator + #sidebar-extensions-separator {
   display: none;
 }
 

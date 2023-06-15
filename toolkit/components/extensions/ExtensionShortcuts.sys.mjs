@@ -422,7 +422,7 @@ export class ExtensionShortcuts {
     });
     doc.documentElement.appendChild(keyset);
     if (sidebarKey) {
-      window.SidebarUI.updateShortcut({ key: sidebarKey });
+      window.SidebarUI.updateShortcut({ keyId: sidebarKey.id });
     }
     this.keysetsMap.set(window, keyset);
   }

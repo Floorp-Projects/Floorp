@@ -559,7 +559,7 @@
           <menupopup id="PlacesChevronPopup"
                       is="places-popup"
                       placespopup="true"
-                      type="arrow"
+                      class="toolbar-menupopup"
                       tooltip="bhTooltip" popupsinherittooltip="true"
                       context="placesContext"
                       onpopupshowing="document.getElementById('PlacesToolbar')
@@ -606,11 +606,9 @@
                    ondrop="PlacesMenuDNDHandler.onDrop(event);"
                    oncommand="BookmarkingUI.onCommand(event);">
       <menupopup id="BMB_bookmarksPopup"
-                 type="arrow"
                  is="places-popup-arrow"
-                 class="cui-widget-panel cui-widget-panelview PanelUI-subView"
+                 class="toolbar-menupopup"
                  placespopup="true"
-                 appendclasstochildren="subviewbutton"
                  context="placesContext"
                  openInTabs="children"
                  side="top"
@@ -622,35 +620,30 @@
                                    new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
                  tooltip="bhTooltip" popupsinherittooltip="true">
         <menuitem id="BMB_viewBookmarksSidebar"
-                  class="subviewbutton"
                   data-l10n-id="bookmarks-tools-sidebar-visibility"
                   data-l10n-args='{ "isVisible": false }'
                   oncommand="SidebarUI.toggle('viewBookmarksSidebar');"
                   key="viewBookmarksSidebarKb"/>
         <menuitem id="BMB_searchBookmarks"
-                  class="subviewbutton"
                   data-l10n-id="bookmarks-search"
                   oncommand="PlacesCommandHook.searchBookmarks();"/>
         <!-- NB: temporary solution for bug 985024, this should go away soon. -->
         <menuitem id="BMB_bookmarksShowAllTop"
-                  class="subviewbutton"
                   data-l10n-id="bookmarks-manage-bookmarks"
                   command="Browser:ShowAllBookmarks"
                   key="manBookmarkKb"/>
         <menuseparator/>
         <menu id="BMB_bookmarksToolbar"
-              class="bookmark-item subviewbutton menu-iconic"
+              class="bookmark-item menu-iconic"
               data-l10n-id="bookmarks-toolbar-menu"
               container="true">
           <menupopup id="BMB_bookmarksToolbarPopup"
                      is="places-popup"
                      placespopup="true"
-                     appendclasstochildren="subviewbutton"
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);">
             <menuitem id="BMB_viewBookmarksToolbar"
-                      class="subviewbutton"
                       data-l10n-id="bookmarks-tools-toolbar-visibility-menuitem"
                       data-l10n-args='{ "isVisible": false }'
                       oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmarks-widget');"/>
@@ -659,13 +652,12 @@
           </menupopup>
         </menu>
         <menu id="BMB_unsortedBookmarks"
-              class="bookmark-item subviewbutton menu-iconic"
+              class="bookmark-item menu-iconic"
               data-l10n-id="bookmarks-other-bookmarks-menu"
               container="true">
           <menupopup id="BMB_unsortedBookmarksPopup"
                      is="places-popup"
                      placespopup="true"
-                     appendclasstochildren="subviewbutton"
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`);"/>
@@ -678,7 +670,6 @@
           <menupopup id="BMB_mobileBookmarksPopup"
                      is="places-popup"
                      placespopup="true"
-                     appendclasstochildren="subviewbutton"
                      context="placesContext"
                      onpopupshowing="if (!this.parentNode._placesView)
                                        new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`);"/>
@@ -687,7 +678,6 @@
         <menuseparator/>
         <!-- Bookmarks menu items will go here -->
         <menuitem id="BMB_bookmarksShowAll"
-                  class="subviewbutton"
                   data-l10n-id="bookmarks-manage-bookmarks"
                   afterplacescontent="true"
                   command="Browser:ShowAllBookmarks"
