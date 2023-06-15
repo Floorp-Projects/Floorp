@@ -25,9 +25,11 @@ add_task(async function () {
   await reloadBrowser();
 
   info("Wait until the HAR file is created in the profile directory");
-  await waitUntil(() => FileUtils.getFile("ProfD", HAR_PATH).exists());
+  const harFile = new FileUtils.File(
+    PathUtils.join(PathUtils.profileDir, ...HAR_PATH)
+  );
 
-  const harFile = FileUtils.getFile("ProfD", HAR_PATH);
+  await waitUntil(() => harFile.exists());
   ok(harFile.exists(), "HAR file was automatically created");
 
   await toolbox.destroy();

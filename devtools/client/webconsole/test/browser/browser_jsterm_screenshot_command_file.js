@@ -24,7 +24,9 @@ add_task(async function () {
   });
 
   info("Test :screenshot to file");
-  const file = FileUtils.getFile("TmpD", ["TestScreenshotFile.png"]);
+  const file = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, "TestScreenshotFile.png")
+  );
   const command = `:screenshot ${file.path} ${dpr}`;
   await executeAndWaitForMessageByType(
     hud,

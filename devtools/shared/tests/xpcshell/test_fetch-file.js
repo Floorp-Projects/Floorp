@@ -102,7 +102,7 @@ add_task(async function test_schemeless_files() {
  */
 function createTemporaryFile(extension) {
   const name = "test_fetch-file-" + Math.random() + (extension || "");
-  const file = FileUtils.getFile("TmpD", [name]);
+  const file = new FileUtils.File(PathUtils.join(PathUtils.tempDir, name));
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0755", 8));
 
   registerCleanupFunction(() => {

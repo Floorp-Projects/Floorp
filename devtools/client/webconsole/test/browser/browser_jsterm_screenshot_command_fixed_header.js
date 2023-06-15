@@ -23,7 +23,9 @@ add_task(async function () {
   });
 
   info("Execute :screenshot --fullpage");
-  const file = FileUtils.getFile("TmpD", ["TestScreenshotFile.png"]);
+  const file = new FileUtils.File(
+    PathUtils.join(PathUtils.tempDir, "TestScreenshotFile.png")
+  );
   const command = `:screenshot ${file.path} ${dpr} --fullpage`;
   // `-fullpage` is appended at the end of the provided filename
   const actualFilePath = file.path.replace(".png", "-fullpage.png");
