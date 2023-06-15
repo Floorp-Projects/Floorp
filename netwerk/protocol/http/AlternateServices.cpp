@@ -201,7 +201,7 @@ void AltSvcMapping::ProcessHeader(
   }
 }
 
-AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
+AltSvcMapping::AltSvcMapping(nsIDataStorage* storage, int32_t epoch,
                              const nsACString& originScheme,
                              const nsACString& originHost, int32_t originPort,
                              const nsACString& username, bool privateBrowsing,
@@ -294,8 +294,9 @@ int32_t AltSvcMapping::TTL() { return mExpiresAt - NowInSeconds(); }
 
 void AltSvcMapping::SyncString(const nsCString& str) {
   MOZ_ASSERT(NS_IsMainThread());
-  mStorage->Put(HashKey(), str,
-                mPrivate ? DataStorage_Private : DataStorage_Persistent);
+  (void)mStorage->Put(HashKey(), str,
+                      mPrivate ? nsIDataStorage::DataType::Private
+                               : nsIDataStorage::DataType::Persistent);
 }
 
 void AltSvcMapping::Sync() {
@@ -316,8 +317,9 @@ void AltSvcMapping::Sync() {
     return;
   }
 
-  mStorage->Put(HashKey(), value,
-                mPrivate ? DataStorage_Private : DataStorage_Persistent);
+  (void)mStorage->Put(HashKey(), value,
+                      mPrivate ? nsIDataStorage::DataType::Private
+                               : nsIDataStorage::DataType::Persistent);
 }
 
 void AltSvcMapping::SetValidated(bool val) {
@@ -403,7 +405,7 @@ void AltSvcMapping::Serialize(nsCString& out) {
   // Add code to serialize new members here!
 }
 
-AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
+AltSvcMapping::AltSvcMapping(nsIDataStorage* storage, int32_t epoch,
                              const nsCString& str)
     : mStorage(storage), mStorageEpoch(epoch) {
   mValidated = false;
@@ -869,20 +871,22 @@ void AltSvcCache::EnsureStorageInited() {
   auto initTask = [&]() {
     MOZ_ASSERT(NS_IsMainThread());
 
-    // DataStorage gives synchronous access to a memory based hash table
+    // nsIDataStorage gives synchronous access to a memory based hash table
     // that is backed by disk where those writes are done asynchronously
     // on another thread
-    mStorage = DataStorage::Get(DataStorageClass::AlternateServices);
-    if (!mStorage) {
+    nsCOMPtr<nsIDataStorageManager> dataStorageManager(
+        do_GetService("@mozilla.org/security/datastoragemanager;1"));
+    if (!dataStorageManager) {
+      LOG(("AltSvcCache::EnsureStorageInited WARN NO STORAGE MANAGER\n"));
+      return;
+    }
+    nsresult rv = dataStorageManager->Get(
+        nsIDataStorageManager::AlternateServices, getter_AddRefs(mStorage));
+    if (NS_FAILED(rv) || !mStorage) {
       LOG(("AltSvcCache::EnsureStorageInited WARN NO STORAGE\n"));
       return;
     }
-
-    if (NS_FAILED(mStorage->Init())) {
-      mStorage = nullptr;
-    } else {
-      initialized = true;
-    }
+    initialized = true;
 
     mStorageEpoch = NowInSeconds();
   };
@@ -910,50 +914,70 @@ already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
     return nullptr;
   }
 
-  if (NS_IsMainThread() && !mStorage->IsReady()) {
-    LOG(("AltSvcCache::LookupMapping %p skip when storage is not ready\n",
-         this));
-    return nullptr;
+  if (NS_IsMainThread()) {
+    bool isReady;
+    nsresult rv = mStorage->IsReady(&isReady);
+    if (NS_FAILED(rv)) {
+      LOG(("AltSvcCache::LookupMapping %p mStorage->IsReady failed\n", this));
+      return nullptr;
+    }
+    if (!isReady) {
+      LOG(("AltSvcCache::LookupMapping %p skip when storage is not ready\n",
+           this));
+      return nullptr;
+    }
   }
 
-  nsCString val(mStorage->Get(
-      key, privateBrowsing ? DataStorage_Private : DataStorage_Persistent));
-  if (val.IsEmpty()) {
+  nsAutoCString val;
+  nsresult rv =
+      mStorage->Get(key,
+                    privateBrowsing ? nsIDataStorage::DataType::Private
+                                    : nsIDataStorage::DataType::Persistent,
+                    val);
+  if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) {
+    LOG(("AltSvcCache::LookupMapping %p mStorage->Get failed \n", this));
+    return nullptr;
+  }
+  if (rv == NS_ERROR_NOT_AVAILABLE || val.IsEmpty()) {
     LOG(("AltSvcCache::LookupMapping %p MISS\n", this));
     return nullptr;
   }
-  RefPtr<AltSvcMapping> rv = new AltSvcMapping(mStorage, mStorageEpoch, val);
-  if (!rv->Validated() && (rv->StorageEpoch() != mStorageEpoch)) {
+  RefPtr<AltSvcMapping> mapping =
+      new AltSvcMapping(mStorage, mStorageEpoch, val);
+  if (!mapping->Validated() && (mapping->StorageEpoch() != mStorageEpoch)) {
     // this was an in progress validation abandoned in a different session
     // rare edge case will not detect session change - that's ok as only impact
     // will be loss of alt-svc to this origin for this session.
     LOG(("AltSvcCache::LookupMapping %p invalid hit - MISS\n", this));
-    mStorage->Remove(
-        key, rv->Private() ? DataStorage_Private : DataStorage_Persistent);
+    (void)mStorage->Remove(key, mapping->Private()
+                                    ? nsIDataStorage::DataType::Private
+                                    : nsIDataStorage::DataType::Persistent);
     return nullptr;
   }
 
-  if (rv->IsHttp3() &&
+  if (mapping->IsHttp3() &&
       (!nsHttpHandler::IsHttp3Enabled() ||
-       !gHttpHandler->IsHttp3VersionSupported(rv->NPNToken()) ||
-       gHttpHandler->IsHttp3Excluded(rv->AlternateHost()))) {
+       !gHttpHandler->IsHttp3VersionSupported(mapping->NPNToken()) ||
+       gHttpHandler->IsHttp3Excluded(mapping->AlternateHost()))) {
     // If Http3 is disabled or the version not supported anymore, remove the
     // mapping.
-    mStorage->Remove(
-        key, rv->Private() ? DataStorage_Private : DataStorage_Persistent);
+    (void)mStorage->Remove(key, mapping->Private()
+                                    ? nsIDataStorage::DataType::Private
+                                    : nsIDataStorage::DataType::Persistent);
     return nullptr;
   }
 
-  if (rv->TTL() <= 0) {
+  if (mapping->TTL() <= 0) {
     LOG(("AltSvcCache::LookupMapping %p expired hit - MISS\n", this));
-    mStorage->Remove(
-        key, rv->Private() ? DataStorage_Private : DataStorage_Persistent);
+    (void)mStorage->Remove(key, mapping->Private()
+                                    ? nsIDataStorage::DataType::Private
+                                    : nsIDataStorage::DataType::Persistent);
     return nullptr;
   }
 
-  MOZ_ASSERT(rv->Private() == privateBrowsing);
-  LOG(("AltSvcCache::LookupMapping %p HIT %p\n", this, rv.get()));
-  return rv.forget();
+  MOZ_ASSERT(mapping->Private() == privateBrowsing);
+  LOG(("AltSvcCache::LookupMapping %p HIT %p\n", this, mapping.get()));
+  return mapping.forget();
 }
 
 // This is only used for testing!
@@ -1255,18 +1279,26 @@ void AltSvcCache::ClearHostMapping(nsHttpConnectionInfo* ci) {
 void AltSvcCache::ClearAltServiceMappings() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mStorage) {
-    mStorage->Clear();
+    (void)mStorage->Clear();
   }
 }
 
 nsresult AltSvcCache::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
   MOZ_ASSERT(NS_IsMainThread());
   if (gHttpHandler->AllowAltSvc() && mStorage) {
-    nsTArray<DataStorageItem> items;
-    mStorage->GetAll(&items);
+    nsTArray<RefPtr<nsIDataStorageItem>> items;
+    nsresult rv = mStorage->GetAll(items);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     for (const auto& item : items) {
-      value.AppendElement(item.key);
+      nsAutoCString key;
+      rv = item->GetKey(key);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      value.AppendElement(key);
     }
   }
   return NS_OK;

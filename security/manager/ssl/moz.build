@@ -26,6 +26,7 @@ XPIDL_SOURCES += [
     "nsIClientAuthRememberService.idl",
     "nsIContentSignatureVerifier.idl",
     "nsICryptoHash.idl",
+    "nsIDataStorage.idl",
     "nsINSSComponent.idl",
     "nsINSSErrorsService.idl",
     "nsINSSVersion.idl",
@@ -83,8 +84,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    "DataStorage.h",
-    "DataStorageList.h",
     "PublicSSL.h",
 ]
 

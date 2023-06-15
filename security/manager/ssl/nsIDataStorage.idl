@@ -1,0 +1,64 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDataStorage;
+interface nsIDataStorageItem;
+
+[scriptable, uuid(71b49926-fd4e-43e2-ab8d-d9b049413c0b)]
+interface nsIDataStorageManager : nsISupports {
+  cenum DataStorage : 8 {
+    AlternateServices,
+    ClientAuthRememberList,
+    SiteSecurityServiceState,
+  };
+
+  nsIDataStorage get(in nsIDataStorageManager_DataStorage dataStorage);
+};
+
+[scriptable, uuid(fcbb5ec4-7134-4069-91c6-9378eff51e03)]
+interface nsIDataStorage : nsISupports {
+  /**
+   * Data that is Persistent is saved on disk. Temporary and Private are not
+   * saved. Private is meant to only be set and accessed from private contexts.
+   * It will be cleared upon observing the event "last-pb-context-exited".
+   */
+  cenum DataType : 8 {
+    Persistent,
+    Temporary,
+    Private,
+  };
+
+  // Given a key and a type of data, returns a value. Returns
+  // NS_ERROR_NOT_AVAILABLE if the key is not present for that type of data. If
+  // Get is called before the "data-storage-ready" event is observed, it will
+  // block.
+  ACString get(in ACString key, in nsIDataStorage_DataType type);
+
+  // Give a key, value, and type of data, adds an entry as appropriate.
+  // Updates existing entries.
+  void put(in ACString key, in ACString value, in nsIDataStorage_DataType type);
+
+  // Given a key and type of data, removes an entry if present.
+  void remove(in ACString key, in nsIDataStorage_DataType type);
+
+  // Removes all entries of all types of data.
+  void clear();
+
+  // Returns true if this data storage is ready to be used.
+  bool isReady();
+
+  // Read all of the data items.
+  Array<nsIDataStorageItem> getAll();
+};
+
+[scriptable, uuid(4501f984-0e3a-4199-a67e-7753649e93f1)]
+interface nsIDataStorageItem : nsISupports {
+  readonly attribute ACString key;
+  readonly attribute ACString value;
+  readonly attribute nsIDataStorage_DataType type;
+};
