@@ -27,6 +27,9 @@ class ResourceCommand {
   constructor({ commands }) {
     this.targetCommand = commands.targetCommand;
 
+    // Public attribute set by tests to disable throttling
+    this.throttlingDisabled = false;
+
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
 
@@ -709,7 +712,8 @@ class ResourceCommand {
     if (
       includesDocumentEventWillNavigate ||
       (includesDocumentEventDomLoading &&
-        !this.targetCommand.hasTargetWatcherSupport("service_worker"))
+        !this.targetCommand.hasTargetWatcherSupport("service_worker")) ||
+      this.throttlingDisabled
     ) {
       this._notifyWatchers();
     } else {
