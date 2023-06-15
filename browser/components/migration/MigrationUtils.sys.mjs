@@ -564,12 +564,43 @@ class MigrationUtils {
    *   just after opening the dialog window.
    */
   showMigrationWizard(aOpener, aOptions) {
+    // When migration is kicked off from about:welcome, there are
+    // a few different behaviors that we want to test, controlled
+    // by a preference that is instrumented for Nimbus. The pref
+    // has the following possible states:
+    //
+    // "autoclose":
+    //   The user will be directed to the migration wizard in
+    //   about:preferences, but once the wizard is dismissed,
+    //   the tab will close.
+    //
+    // "standalone":
+    //   The migration wizard will open in a new top-level content
+    //   window.
+    //
+    // "legacy":
+    //   The legacy migration wizard will open, even if the new migration
+    //   wizard is enabled by default.
+    //
+    // "default" / other
+    //   The user will be directed to the migration wizard in
+    //   about:preferences. The tab will not close once the
+    //   user closes the wizard.
+    let aboutWelcomeBehavior = Services.prefs.getCharPref(
+      "browser.migrate.content-modal.about-welcome-behavior",
+      "default"
+    );
+
+    let aboutWelcomeLegacyBehavior =
+      aboutWelcomeBehavior == "legacy" &&
+      aOptions.entrypoint == this.MIGRATION_ENTRYPOINTS.NEWTAB;
+
     if (
       Services.prefs.getBoolPref(
         "browser.migrate.content-modal.enabled",
         false
       ) &&
-      !aOptions?.isStartupMigration
+      !aboutWelcomeLegacyBehavior
     ) {
       let entrypoint =
         aOptions.entrypoint || this.MIGRATION_ENTRYPOINTS.UNKNOWN;
@@ -601,29 +632,6 @@ class MigrationUtils {
 
       if (aOpener?.openPreferences) {
         if (aOptions.entrypoint == this.MIGRATION_ENTRYPOINTS.NEWTAB) {
-          // When migration is kicked off from about:welcome, there are
-          // a few different behaviors that we want to test, controlled
-          // by a preference that is instrumented for Nimbus. The pref
-          // has the following possible states:
-          //
-          // "autoclose":
-          //   The user will be directed to the migration wizard in
-          //   about:preferences, but once the wizard is dismissed,
-          //   the tab will close.
-          //
-          // "standalone":
-          //   The migration wizard will open in a new top-level content
-          //   window.
-          //
-          // "default" / other
-          //   The user will be directed to the migration wizard in
-          //   about:preferences. The tab will not close once the
-          //   user closes the wizard.
-          let aboutWelcomeBehavior = Services.prefs.getCharPref(
-            "browser.migrate.content-modal.about-welcome-behavior",
-            "default"
-          );
-
           if (aboutWelcomeBehavior == "autoclose") {
             return aOpener.openPreferences("general-migrate-autoclose");
           } else if (aboutWelcomeBehavior == "standalone") {

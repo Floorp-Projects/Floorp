@@ -15,6 +15,12 @@ const IMPORT_SCREEN = {
   },
 };
 
+const FORCE_LEGACY =
+  Services.prefs.getCharPref(
+    "browser.migrate.content-modal.about-welcome-behavior",
+    "default"
+  ) === "legacy";
+
 add_task(async function test_wait_import_modal() {
   await setAboutWelcomeMultiStage(
     JSON.stringify([IMPORT_SCREEN, { id: "AW_NEXT", content: {} }])
@@ -32,7 +38,10 @@ add_task(async function test_wait_import_modal() {
     ["main.AW_NEXT"]
   );
 
-  const wizardPromise = BrowserTestUtils.waitForMigrationWizard(window);
+  const wizardPromise = BrowserTestUtils.waitForMigrationWizard(
+    window,
+    FORCE_LEGACY
+  );
   const prefsTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:preferences"
@@ -50,7 +59,7 @@ add_task(async function test_wait_import_modal() {
     ["main.AW_NEXT"]
   );
 
-  await BrowserTestUtils.closeMigrationWizard(wizard);
+  await BrowserTestUtils.closeMigrationWizard(wizard, FORCE_LEGACY);
 
   await test_screen_content(
     browser,
@@ -77,7 +86,10 @@ add_task(async function test_wait_import_spotlight() {
   });
   const [win] = await spotlightPromise;
 
-  const wizardPromise = BrowserTestUtils.waitForMigrationWizard(window);
+  const wizardPromise = BrowserTestUtils.waitForMigrationWizard(
+    window,
+    FORCE_LEGACY
+  );
   const prefsTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:preferences"
@@ -87,7 +99,7 @@ add_task(async function test_wait_import_spotlight() {
     .click();
   const wizard = await wizardPromise;
 
-  await BrowserTestUtils.closeMigrationWizard(wizard);
+  await BrowserTestUtils.closeMigrationWizard(wizard, FORCE_LEGACY);
 
   // cleanup
   BrowserTestUtils.removeTab(prefsTab);

@@ -2802,12 +2802,15 @@ export var BrowserTestUtils = {
    * @param {DOMWindow} window
    *   The top-level window that the about:preferences tab is likely to open
    *   in if the new migration wizard is enabled.
+   * @param {boolean} forceLegacy
+   *   True if, despite the browser.migrate.content-modal.enabled pref value,
+   *   the legacy XUL migration wizard is expected.
    * @returns {Promise<Element>}
    *   Resolves to the dialog window in the legacy case, and the
    *   about:preferences tab otherwise.
    */
-  async waitForMigrationWizard(window) {
-    if (!this._usingNewMigrationWizard) {
+  async waitForMigrationWizard(window, forceLegacy = false) {
+    if (!this._usingNewMigrationWizard || forceLegacy) {
       return this.waitForCondition(() => {
         let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
         if (win?.document?.readyState == "complete") {
@@ -2834,10 +2837,13 @@ export var BrowserTestUtils = {
    *   the about:preferences tab otherwise. In general, it's probably best to
    *   just pass whatever BrowserTestUtils.waitForMigrationWizard resolved to
    *   into this in order to handle both the old and new migration wizard.
+   * @param {boolean} forceLegacy
+   *   True if, despite the browser.migrate.content-modal.enabled pref value,
+   *   the legacy XUL migration wizard is expected.
    * @returns {Promise<undefined>}
    */
-  closeMigrationWizard(wizardWindowOrTab) {
-    if (!this._usingNewMigrationWizard) {
+  closeMigrationWizard(wizardWindowOrTab, forceLegacy = false) {
+    if (!this._usingNewMigrationWizard || forceLegacy) {
       return BrowserTestUtils.closeWindow(wizardWindowOrTab);
     }
 
