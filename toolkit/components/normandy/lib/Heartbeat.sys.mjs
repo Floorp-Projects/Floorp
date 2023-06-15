@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 import { TelemetryController } from "resource://gre/modules/TelemetryController.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { CleanupManager } from "resource://normandy/lib/CleanupManager.sys.mjs";
@@ -209,7 +208,8 @@ export var Heartbeat = class {
       this.handleWindowClosed
     );
 
-    const surveyDuration = Preferences.get(PREF_SURVEY_DURATION, 300) * 1000;
+    const surveyDuration =
+      Services.prefs.getIntPref(PREF_SURVEY_DURATION, 300) * 1000;
     this.surveyEndTimer = setTimeout(() => {
       this.maybeNotifyHeartbeat("SurveyExpired");
       this.close();
