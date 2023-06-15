@@ -384,7 +384,7 @@ add_task(async function test_passwordsNotAvailable() {
     MigrationUtils.resourceTypes.PASSWORDS
   );
   Assert.ok(migrator.exists, "The migrator has to exist");
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(
     logins.length,
     0,
@@ -397,7 +397,7 @@ add_task(async function test_passwordsNotAvailable() {
     // in this test, there is no IE login data in the registry, so after the migration, the number
     // of logins in the store should be 0
     await migrator._migrateURIs(uris);
-    logins = Services.logins.getAllLogins();
+    logins = await Services.logins.getAllLogins();
     Assert.equal(
       logins.length,
       0,
@@ -414,9 +414,9 @@ add_task(async function test_passwordsAvailable() {
   let crypto = new OSCrypto();
   let hashes = []; // the hashes of all migrator websites, this is going to be used for the clean up
 
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     Services.logins.removeAllUserFacingLogins();
-    logins = Services.logins.getAllLogins();
+    logins = await Services.logins.getAllLogins();
     Assert.equal(logins.length, 0, "There are no logins after the cleanup");
     // remove all the values created in this test from the registry
     removeAllValues(Storage2Key, hashes);
@@ -435,7 +435,7 @@ add_task(async function test_passwordsAvailable() {
     MigrationUtils.resourceTypes.PASSWORDS
   );
   Assert.ok(migrator.exists, "The migrator has to exist");
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(
     logins.length,
     0,
@@ -459,7 +459,7 @@ add_task(async function test_passwordsAvailable() {
     hashes.push(website.hash);
 
     await migrator._migrateURIs(uris);
-    logins = Services.logins.getAllLogins();
+    logins = await Services.logins.getAllLogins();
     // check that the number of logins in the password manager has increased as expected which means
     // that all the values for the current website were imported
     loginCount += website.logins.length;

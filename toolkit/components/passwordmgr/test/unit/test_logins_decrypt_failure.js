@@ -34,12 +34,9 @@ add_task(async function test_logins_decrypt_failure() {
   resetPrimaryPassword();
 
   // These functions don't see the non-decryptable entries anymore.
-  Assert.equal(Services.logins.getAllLogins().length, 0);
-  Assert.equal(
-    (await Services.logins.getAllLoginsAsync()).length,
-    0,
-    "getAllLoginsAsync length"
-  );
+  let savedLogins = await Services.logins.getAllLogins();
+  Assert.equal(savedLogins.length, 0);
+  Assert.equal(savedLogins.length, 0, "getAllLogins length");
   Assert.equal(Services.logins.findLogins("", "", "").length, 0);
   Assert.equal(Services.logins.searchLogins(newPropertyBag()).length, 0);
   Assert.throws(
@@ -56,11 +53,11 @@ add_task(async function test_logins_decrypt_failure() {
 
   // Equivalent logins can be added.
   await Services.logins.addLogins(logins);
-  LoginTestUtils.checkLogins(logins);
+  await LoginTestUtils.checkLogins(logins);
   Assert.equal(
-    (await Services.logins.getAllLoginsAsync()).length,
+    (await Services.logins.getAllLogins()).length,
     logins.length,
-    "getAllLoginsAsync length"
+    "getAllLogins length"
   );
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length * 2);
 
@@ -76,12 +73,12 @@ add_task(async function test_logins_decrypt_failure() {
   for (let loginInfo of TestData.loginList()) {
     Services.logins.removeLogin(loginInfo);
   }
-  Assert.equal(Services.logins.getAllLogins().length, 0);
+  Assert.equal((await Services.logins.getAllLogins()).length, 0);
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length);
 
   // Removing all logins removes the non-decryptable entries also.
   Services.logins.removeAllUserFacingLogins();
-  Assert.equal(Services.logins.getAllLogins().length, 0);
+  Assert.equal((await Services.logins.getAllLogins()).length, 0);
   Assert.equal(Services.logins.countLogins("", "", ""), 0);
 });
 

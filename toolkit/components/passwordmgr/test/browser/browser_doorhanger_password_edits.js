@@ -201,7 +201,7 @@ add_task(async function test_edit_password() {
           expectedLogin.usedSince = meta.timeCreated;
           expectedLogin.timeCreated = meta.timePasswordChanged;
         }
-        verifyLogins([expectedLogin]);
+        await verifyLogins([expectedLogin]);
       }
     );
   }

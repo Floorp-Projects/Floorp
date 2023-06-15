@@ -60,7 +60,7 @@ function exportAuthLogin(modifications) {
 
 add_setup(async () => {
   let oldLogins = Services.logins;
-  Services.logins = { getAllLoginsAsync: sinon.stub() };
+  Services.logins = { getAllLogins: sinon.stub() };
   registerCleanupFunction(() => {
     Services.logins = oldLogins;
   });
@@ -120,7 +120,7 @@ add_task(async function test_no_new_properties_to_export() {
 
 add_task(async function test_export_one_form_login() {
   let login = exportFormLogin();
-  Services.logins.getAllLoginsAsync.returns([login]);
+  Services.logins.getAllLogins.returns([login]);
 
   let rows = await exportAsCSVInTmpFile();
 
@@ -138,7 +138,7 @@ add_task(async function test_export_one_form_login() {
 
 add_task(async function test_export_one_auth_login() {
   let login = exportAuthLogin();
-  Services.logins.getAllLoginsAsync.returns([login]);
+  Services.logins.getAllLogins.returns([login]);
 
   let rows = await exportAsCSVInTmpFile();
 
@@ -158,7 +158,7 @@ add_task(async function test_export_escapes_values() {
   let login = exportFormLogin({
     password: "!@#$%^&*()_+,'",
   });
-  Services.logins.getAllLoginsAsync.returns([login]);
+  Services.logins.getAllLogins.returns([login]);
 
   let rows = await exportAsCSVInTmpFile();
 
@@ -173,7 +173,7 @@ add_task(async function test_export_multiple_rows() {
   let logins = await LoginTestUtils.testData.loginList();
   // Note, because we're stubbing this method and avoiding the actual login manager logic,
   // login de-duplication does not occur
-  Services.logins.getAllLoginsAsync.returns(logins);
+  Services.logins.getAllLogins.returns(logins);
 
   let actualRows = await exportAsCSVInTmpFile();
   let expectedRows = [
