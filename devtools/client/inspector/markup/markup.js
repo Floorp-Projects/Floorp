@@ -365,6 +365,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._initShortcuts();
 
   this._walkerEventListener = new WalkerEventListener(this.inspector, {
+    "container-type-change": this._onWalkerNodeStatesChanged,
     "display-change": this._onWalkerNodeStatesChanged,
     "scrollable-change": this._onWalkerNodeStatesChanged,
     "overflow-change": this._onWalkerNodeStatesChanged,
@@ -1009,6 +1010,10 @@ MarkupView.prototype = {
     // this will probably leak.
     // TODO: use resource api listeners?
     if (nodeFront) {
+      nodeFront.walkerFront.on(
+        "container-type-change",
+        this._onWalkerNodeStatesChanged
+      );
       nodeFront.walkerFront.on(
         "display-change",
         this._onWalkerNodeStatesChanged
