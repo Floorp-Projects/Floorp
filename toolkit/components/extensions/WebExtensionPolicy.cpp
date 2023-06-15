@@ -187,9 +187,9 @@ WebExtensionPolicyCore::WebExtensionPolicyCore(GlobalObject& aGlobal,
       mManifestVersion(aInit.mManifestVersion),
       mExtensionPageCSP(aInit.mExtensionPageCSP),
       mIsPrivileged(aInit.mIsPrivileged),
-      mIgnoreQuarantine(aInit.mIsPrivileged || aInit.mIgnoreQuarantine),
       mTemporarilyInstalled(aInit.mTemporarilyInstalled),
       mBackgroundWorkerScript(aInit.mBackgroundWorkerScript),
+      mIgnoreQuarantine(aInit.mIsPrivileged || aInit.mIgnoreQuarantine),
       mPermissions(new AtomSet(aInit.mPermissions)) {
   // In practice this is not necessary, but in tests where the uuid
   // passed in is not lowercased various tests can fail.
@@ -279,7 +279,7 @@ bool WebExtensionPolicyCore::QuarantinedFromDoc(const DocInfo& aDoc) const {
 }
 
 bool WebExtensionPolicyCore::QuarantinedFromURI(const URLInfo& aURI) const {
-  return !mIgnoreQuarantine && WebExtensionPolicy::IsQuarantinedURI(aURI);
+  return !IgnoreQuarantine() && WebExtensionPolicy::IsQuarantinedURI(aURI);
 }
 
 /*****************************************************************************
@@ -443,6 +443,11 @@ Result<nsString, nsresult> WebExtensionPolicy::GetURL(
   MOZ_TRY(uri->Resolve(NS_ConvertUTF16toUTF8(aPath), spec));
 
   return NS_ConvertUTF8toUTF16(spec);
+}
+
+void WebExtensionPolicy::SetIgnoreQuarantine(bool aIgnore) {
+  WebExtensionPolicy_Binding::ClearCachedIgnoreQuarantineValue(this);
+  mCore->SetIgnoreQuarantine(aIgnore);
 }
 
 void WebExtensionPolicy::RegisterContentScript(
