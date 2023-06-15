@@ -80,12 +80,21 @@ enum class AccessKeyType {
  ******************************************************************************/
 
 struct AlternativeCharCode {
-  AlternativeCharCode() : mUnshiftedCharCode(0), mShiftedCharCode(0) {}
+  AlternativeCharCode() = default;
   AlternativeCharCode(uint32_t aUnshiftedCharCode, uint32_t aShiftedCharCode)
       : mUnshiftedCharCode(aUnshiftedCharCode),
         mShiftedCharCode(aShiftedCharCode) {}
-  uint32_t mUnshiftedCharCode;
-  uint32_t mShiftedCharCode;
+
+  uint32_t mUnshiftedCharCode = 0u;
+  uint32_t mShiftedCharCode = 0u;
+
+  bool operator==(const AlternativeCharCode& aOther) const {
+    return mUnshiftedCharCode == aOther.mUnshiftedCharCode &&
+           mShiftedCharCode == aOther.mShiftedCharCode;
+  }
+  bool operator!=(const AlternativeCharCode& aOther) const {
+    return !(*this == aOther);
+  }
 };
 
 /******************************************************************************
