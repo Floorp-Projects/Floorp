@@ -93,7 +93,7 @@ export var MockFilePicker = {
   },
 
   useAnyFile() {
-    var file = lazy.FileUtils.getDir("TmpD", []);
+    var file = lazy.FileUtils.getDir("TmpD", [], false);
     file.append("testfile");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
     let promise = this.window.File.createFromNsIFile(file)

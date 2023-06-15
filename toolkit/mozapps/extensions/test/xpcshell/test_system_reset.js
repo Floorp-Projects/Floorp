@@ -7,24 +7,21 @@ AddonTestUtils.usePrivilegedSignatures = id => "system";
 
 add_task(async function setup() {
   // Build the test sets
-  let dir = FileUtils.getDir("ProfD", ["sysfeatures", "app1"]);
-  dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let dir = FileUtils.getDir("ProfD", ["sysfeatures", "app1"], true);
   let xpi = await getSystemAddonXPI(1, "1.0");
   xpi.copyTo(dir, "system1@tests.mozilla.org.xpi");
 
   xpi = await getSystemAddonXPI(2, "1.0");
   xpi.copyTo(dir, "system2@tests.mozilla.org.xpi");
 
-  dir = FileUtils.getDir("ProfD", ["sysfeatures", "app2"]);
-  dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  dir = FileUtils.getDir("ProfD", ["sysfeatures", "app2"], true);
   xpi = await getSystemAddonXPI(1, "2.0");
   xpi.copyTo(dir, "system1@tests.mozilla.org.xpi");
 
   xpi = await getSystemAddonXPI(3, "1.0");
   xpi.copyTo(dir, "system3@tests.mozilla.org.xpi");
 
-  dir = FileUtils.getDir("ProfD", ["sysfeatures", "app3"]);
-  dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  dir = FileUtils.getDir("ProfD", ["sysfeatures", "app3"], true);
   xpi = await getSystemAddonXPI(1, "1.0");
   xpi.copyTo(dir, "system1@tests.mozilla.org.xpi");
 
@@ -32,8 +29,7 @@ add_task(async function setup() {
   xpi.copyTo(dir, "system3@tests.mozilla.org.xpi");
 });
 
-const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"]);
-distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
 registerDirectory("XREAppFeat", distroDir);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
@@ -207,8 +203,7 @@ add_task(async function test_downgrade() {
 add_task(async function test_updated() {
   // Create a random dir to install into
   let dirname = makeUUID();
-  let dir = FileUtils.getDir("ProfD", ["features", dirname]);
-  dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  FileUtils.getDir("ProfD", ["features", dirname], true);
   updatesDir.append(dirname);
 
   // Copy in the system add-ons
@@ -496,8 +491,7 @@ add_task(async function test_bad_app_cert() {
 add_task(async function test_updated_bad_update_set() {
   // Create a random dir to install into
   let dirname = makeUUID();
-  let dir = FileUtils.getDir("ProfD", ["features", dirname]);
-  dir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  FileUtils.getDir("ProfD", ["features", dirname], true);
   updatesDir.append(dirname);
 
   // Copy in the system add-ons

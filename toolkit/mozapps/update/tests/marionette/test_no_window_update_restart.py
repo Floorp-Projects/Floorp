@@ -142,8 +142,7 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
         # skipped, allowing us to look at the update status file directly.
         update_status_path = self.marionette.execute_script(
             """
-            let statusFile = FileUtils.getDir("UpdRootD", ["updates", "0"]);
-            statusFile.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+            let statusFile = FileUtils.getDir("UpdRootD", ["updates", "0"], true);
             statusFile.append("update.status");
             return statusFile.path;
         """

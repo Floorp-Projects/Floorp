@@ -9,8 +9,11 @@ async function testReturnStatus(expectedStatus) {
     "http://example.net/"
   );
 
-  let saveDir = FileUtils.getDir("TmpD", [`testSaveDir-${Math.random()}`]);
-  saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let saveDir = FileUtils.getDir(
+    "TmpD",
+    [`testSaveDir-${Math.random()}`],
+    true
+  );
 
   let saveFile = saveDir.clone();
   saveFile.append("testSaveFile.pdf");
@@ -116,8 +119,11 @@ async function testFileName(expectedFileName) {
     "http://example.net/"
   );
 
-  let saveDir = FileUtils.getDir("TmpD", [`testSaveDir-${Math.random()}`]);
-  saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let saveDir = FileUtils.getDir(
+    "TmpD",
+    [`testSaveDir-${Math.random()}`],
+    true
+  );
 
   let saveFile = saveDir.clone();
   saveFile.append(expectedFileName);

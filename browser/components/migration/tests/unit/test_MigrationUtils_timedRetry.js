@@ -1,6 +1,6 @@
 "use strict";
 
-let tmpFile = FileUtils.getDir("TmpD", []);
+let tmpFile = FileUtils.getDir("TmpD", [], true);
 let dbConn;
 
 add_task(async function setup() {
