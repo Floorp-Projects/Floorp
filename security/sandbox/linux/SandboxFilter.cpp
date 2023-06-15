@@ -1825,6 +1825,16 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
       case SYS_SHUTDOWN:
         return Some(Allow());
 
+#ifdef MOZ_ENABLE_V4L2
+      case SYS_SOCKET:
+        // Hardware-accelerated decode uses EGL to manage hardware surfaces.
+        // When initialised it tries to connect to the Wayland server over a
+        // UNIX socket. It still works fine if it can't connect to Wayland, so
+        // don't let it create the socket (but don't kill the process for
+        // trying).
+        return Some(Error(EACCES));
+#endif
+
       default:
         return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
     }
@@ -1843,15 +1853,23 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         // Note: 'b' is also the Binder device on Android.
         static constexpr unsigned long kDmaBufType =
             static_cast<unsigned long>('b') << _IOC_TYPESHIFT;
+#ifdef MOZ_ENABLE_V4L2
+        // Type 'V' for V4L2, used for hw accelerated decode
+        static constexpr unsigned long kVideoType =
+            static_cast<unsigned long>('V') << _IOC_TYPESHIFT;
+#endif
         // nvidia uses some ioctls from this range (but not actual
         // fbdev ioctls; nvidia uses values >= 200 for the NR field
         // (low 8 bits))
         static constexpr unsigned long kFbDevType =
             static_cast<unsigned long>('F') << _IOC_TYPESHIFT;
 
-        // Allow DRI and DMA-Buf for VA-API
+        // Allow DRI and DMA-Buf for VA-API. Also allow V4L2 if enabled
         return If(shifted_type == kDrmType, Allow())
             .ElseIf(shifted_type == kDmaBufType, Allow())
+#ifdef MOZ_ENABLE_V4L2
+            .ElseIf(shifted_type == kVideoType, Allow())
+#endif
             // Hack for nvidia, which isn't supported yet:
             .ElseIf(shifted_type == kFbDevType, Error(ENOTTY))
             .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));

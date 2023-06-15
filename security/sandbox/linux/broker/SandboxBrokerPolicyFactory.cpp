@@ -44,6 +44,12 @@
 #  include <glib.h>
 #endif
 
+#ifdef MOZ_ENABLE_V4L2
+#  include <linux/videodev2.h>
+#  include <sys/ioctl.h>
+#  include <fcntl.h>
+#endif  // MOZ_ENABLE_V4L2
+
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
@@ -832,6 +838,59 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   return policy;
 }
 
+#ifdef MOZ_ENABLE_V4L2
+static void AddV4l2Dependencies(SandboxBroker::Policy* policy) {
+  // For V4L2 hardware-accelerated video decode, RDD needs access to certain
+  // /dev/video* devices but don't want to allow it access to webcams etc.
+  // So we only allow it access to M2M video devices (encoders and decoders).
+  DIR* dir = opendir("/dev");
+  if (!dir) {
+    SANDBOX_LOG("Couldn't list /dev");
+    return;
+  }
+
+  struct dirent* dir_entry;
+  while ((dir_entry = readdir(dir))) {
+    if (strncmp(dir_entry->d_name, "video", 5)) {
+      // Not a /dev/video* device, so ignore it
+      continue;
+    }
+
+    nsCString path = "/dev/"_ns;
+    path += nsDependentCString(dir_entry->d_name);
+
+    int fd = open(path.get(), O_RDWR | O_NONBLOCK, 0);
+    if (fd < 0) {
+      // Couldn't open this device, so ignore it.
+      SANDBOX_LOG("Couldn't open video device %s", path.get());
+      continue;
+    }
+
+    // Query device capabilities
+    struct v4l2_capability cap;
+    int result = ioctl(fd, VIDIOC_QUERYCAP, &cap);
+    if (result < 0) {
+      // Couldn't query capabilities of this device, so ignore it
+      SANDBOX_LOG("Couldn't query capabilities of video device %s", path.get());
+      close(fd);
+      continue;
+    }
+
+    if ((cap.device_caps & V4L2_CAP_VIDEO_M2M) ||
+        (cap.device_caps & V4L2_CAP_VIDEO_M2M_MPLANE)) {
+      // This is an M2M device (i.e. not a webcam), so allow access
+      policy->AddPath(rdwr, path.get());
+    }
+
+    close(fd);
+  }
+  closedir(dir);
+
+  // FFmpeg V4L2 needs to list /dev to find V4L2 devices.
+  policy->AddPath(rdonly, "/dev");
+}
+#endif  // MOZ_ENABLE_V4L2
+
 /* static */ UniquePtr<SandboxBroker::Policy>
 SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
   auto policy = MakeUnique<SandboxBroker::Policy>();
@@ -893,6 +952,10 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
   // FFmpeg and GPU drivers may need general-case library loading
   AddLdconfigPaths(policy.get());
   AddLdLibraryEnvPaths(policy.get());
+
+#ifdef MOZ_ENABLE_V4L2
+  AddV4l2Dependencies(policy.get());
+#endif  // MOZ_ENABLE_V4L2
 
   if (policy->IsEmpty()) {
     policy = nullptr;
