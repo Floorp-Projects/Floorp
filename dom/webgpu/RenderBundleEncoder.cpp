@@ -42,15 +42,15 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
 
   ffi::WGPUTextureFormat depthStencilFormat = {ffi::WGPUTextureFormat_Sentinel};
   if (aDesc.mDepthStencilFormat.WasPassed()) {
-    WebGPUChild::ConvertTextureFormatRef(aDesc.mDepthStencilFormat.Value(),
-                                         depthStencilFormat);
+    depthStencilFormat =
+        WebGPUChild::ConvertTextureFormat(aDesc.mDepthStencilFormat.Value());
     desc.depth_stencil_format = &depthStencilFormat;
   }
 
   std::vector<ffi::WGPUTextureFormat> colorFormats = {};
   for (const auto i : IntegerRange(aDesc.mColorFormats.Length())) {
     ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
-    WebGPUChild::ConvertTextureFormatRef(aDesc.mColorFormats[i], format);
+    format = WebGPUChild::ConvertTextureFormat(aDesc.mColorFormats[i]);
     colorFormats.push_back(format);
   }
 

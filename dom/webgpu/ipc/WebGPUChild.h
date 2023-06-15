@@ -114,8 +114,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   void UnregisterDevice(RawId aId);
   void FreeUnregisteredInParentDevice(RawId aId);
 
-  static void ConvertTextureFormatRef(const dom::GPUTextureFormat& aInput,
-                                      ffi::WGPUTextureFormat& aOutput);
+  static ffi::WGPUTextureFormat ConvertTextureFormat(
+      const dom::GPUTextureFormat& aInput);
 
   static void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
 
