@@ -26,7 +26,7 @@ function translateElements(items) {
 }
 
 function renderInfo({
-  infoEnabled,
+  infoEnabled = false,
   infoTitle,
   infoTitleEnabled,
   infoBody,
@@ -35,11 +35,10 @@ function renderInfo({
   infoIcon,
 } = {}) {
   const container = document.querySelector(".info");
-  if (infoEnabled === false) {
-    container.hidden = true;
+  if (!infoEnabled) {
+    container.remove();
     return;
   }
-  container.hidden = false;
 
   const titleEl = document.getElementById("info-title");
   const bodyEl = document.getElementById("info-body");
@@ -49,7 +48,9 @@ function renderInfo({
     container.style.backgroundImage = `url(${infoIcon})`;
   }
 
-  titleEl.hidden = !infoTitleEnabled;
+  if (!infoTitleEnabled) {
+    titleEl.remove();
+  }
 
   translateElements([
     [titleEl, infoTitle],
@@ -57,9 +58,16 @@ function renderInfo({
     [linkEl, infoLinkText],
   ]);
 
-  if (infoLinkUrl) {
-    linkEl.setAttribute("href", infoLinkUrl);
-  }
+  linkEl.setAttribute(
+    "href",
+    infoLinkUrl ||
+      RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
+  );
+  linkEl.setAttribute("target", "_blank");
+
+  linkEl.addEventListener("click", () => {
+    window.PrivateBrowsingRecordClick("info_link");
+  });
 }
 
 async function renderPromo({
@@ -282,17 +290,6 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("about-private-browsing-logo")
     .toggleAttribute("legacy", !newLogoEnabled);
-
-  // The default info content is already in the markup, but we need to use JS to
-  // set up the learn more link, since it's dynamically generated.
-  const linkEl = document.getElementById("private-browsing-myths");
-  linkEl.setAttribute(
-    "href",
-    RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
-  );
-  linkEl.addEventListener("click", () => {
-    window.PrivateBrowsingRecordClick("info_link");
-  });
 
   // We don't do this setup until now, because we don't want to record any impressions until we're
   // sure we're actually running a private window, not just about:privatebrowsing in a normal window.
