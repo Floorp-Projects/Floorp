@@ -7,9 +7,9 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Dafsa.h"
-#include "mozilla/DataStorage.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsIDataStorage.h"
 #include "nsIObserver.h"
 #include "nsISiteSecurityService.h"
 #include "nsString.h"
@@ -126,10 +126,10 @@ class nsSiteSecurityService : public nsISiteSecurityService,
                               nsISiteSecurityService::ResetStateBy aScope);
   void ResetStateForExactDomain(const nsCString& aHostname,
                                 const OriginAttributes& aOriginAttributes);
-  bool HostHasHSTSEntry(const nsAutoCString& aHost,
-                        bool aRequireIncludeSubdomains,
-                        const OriginAttributes& aOriginAttributes,
-                        bool* aResult);
+  nsresult HostHasHSTSEntry(const nsAutoCString& aHost,
+                            bool aRequireIncludeSubdomains,
+                            const OriginAttributes& aOriginAttributes,
+                            bool& aHostHasHSTSEntry, bool* aResult);
   bool GetPreloadStatus(
       const nsACString& aHost,
       /*optional out*/ bool* aIncludeSubdomains = nullptr) const;
@@ -137,21 +137,21 @@ class nsSiteSecurityService : public nsISiteSecurityService,
                         const OriginAttributes& aOriginAttributes,
                         bool* aResult);
 
-  void GetWithMigration(const nsACString& aHostname,
-                        const OriginAttributes& aOriginAttributes,
-                        mozilla::DataStorageType aDataStorageType,
-                        nsCString& aValue);
+  nsresult GetWithMigration(const nsACString& aHostname,
+                            const OriginAttributes& aOriginAttributes,
+                            nsIDataStorage::DataType aDataStorageType,
+                            nsACString& aValue);
   nsresult PutWithMigration(const nsACString& aHostname,
                             const OriginAttributes& aOriginAttributes,
-                            mozilla::DataStorageType aDataStorageType,
-                            const nsCString& aStateString);
-  void RemoveWithMigration(const nsACString& aHostname,
-                           const OriginAttributes& aOriginAttributes,
-                           mozilla::DataStorageType aDataStorageType);
+                            nsIDataStorage::DataType aDataStorageType,
+                            const nsACString& aStateString);
+  nsresult RemoveWithMigration(const nsACString& aHostname,
+                               const OriginAttributes& aOriginAttributes,
+                               nsIDataStorage::DataType aDataStorageType);
 
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
-  RefPtr<mozilla::DataStorage> mSiteStateStorage;
+  nsCOMPtr<nsIDataStorage> mSiteStateStorage;
   const mozilla::Dafsa mDafsa;
 };
 

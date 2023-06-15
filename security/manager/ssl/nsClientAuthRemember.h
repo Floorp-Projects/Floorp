@@ -10,10 +10,10 @@
 #include <utility>
 
 #include "mozilla/Attributes.h"
-#include "mozilla/DataStorage.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIClientAuthRememberService.h"
+#include "nsIDataStorage.h"
 #include "nsIObserver.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
@@ -83,10 +83,10 @@ class nsClientAuthRememberService final : public nsIClientAuthRememberService {
  protected:
   ~nsClientAuthRememberService() = default;
 
-  static mozilla::DataStorageType GetDataStorageType(
+  static nsIDataStorage::DataType GetDataStorageType(
       const OriginAttributes& aOriginAttributes);
 
-  RefPtr<mozilla::DataStorage> mClientAuthRememberList;
+  nsCOMPtr<nsIDataStorage> mClientAuthRememberList;
 
   nsresult AddEntryToList(const nsACString& aHost,
                           const OriginAttributes& aOriginAttributes,
