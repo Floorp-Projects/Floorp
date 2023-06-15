@@ -75,6 +75,7 @@ const intermittently_loaded_scripts = {
 
     // Translations code which may be preffed on.
     "resource://gre/actors/TranslationsChild.sys.mjs",
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
     "chrome://global/content/translations/language-id-engine.sys.mjs",
     "resource://gre/modules/ConsoleAPIStorage.sys.mjs", // Logging related.
 

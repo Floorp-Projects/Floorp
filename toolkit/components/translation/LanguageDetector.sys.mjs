@@ -7,6 +7,20 @@ import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const WORKER_URL = "resource://gre/modules/translation/cld-worker.js";
 
+/**
+ * The length of the substring to pull from the document's text for language
+ * identification.
+ *
+ * This value should ideally be one that is large enough to yield a confident
+ * identification result without being too large or expensive to extract.
+ *
+ * At this time, this value is not driven by statistical data or analysis.
+ *
+ * For the moment, while we investigate which language identification library
+ * we would like to use, keep this logic in sync with language-id-engine.sys.mjs
+ */
+const DOC_TEXT_TO_IDENTIFY_LENGTH = 1024;
+
 export var workerManager = {
   // Since Emscripten can handle heap growth, but not heap shrinkage, we
   // need to refresh the worker after we've processed a particularly large
@@ -149,5 +163,28 @@ export var LanguageDetector = {
     }
 
     return workerManager.detectLanguage(aParams);
+  },
+
+  /**
+   * Attempts to determine the language in which the document's content is written.
+   *
+   * For the moment, while we investigate which language identification library
+   * we would like to use, keep this logic in sync with language-id-engine.sys.mjs
+   * @returns {string | null}
+   */
+  async detectLanguageFromDocument(aDocument) {
+    // Grab a selection of text.
+    let encoder = Cu.createDocumentEncoder("text/plain");
+    encoder.init(aDocument, "text/plain", encoder.SkipInvisibleContent);
+    let text = encoder
+      .encodeToStringWithMaxLength(DOC_TEXT_TO_IDENTIFY_LENGTH)
+      .replaceAll("\r", "")
+      .replaceAll("\n", " ");
+
+    const { language, confident } = await workerManager.detectLanguage({
+      text,
+    });
+
+    return confident ? language : null;
   },
 };
