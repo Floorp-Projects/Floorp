@@ -60,7 +60,7 @@ function getUpdateBaseDirNoCreate() {
     }
   }
 
-  return FileUtils.getDir(KEY_UPDROOT, [], false);
+  return FileUtils.getDir(KEY_UPDROOT, []);
 }
 
 export function UpdateServiceStub() {
@@ -146,8 +146,8 @@ function deactivateUpdateLogFile() {
 function migrateUpdateDirectory() {
   LOG("UpdateServiceStub:migrateUpdateDirectory Performing migration");
 
-  let sourceRootDir = FileUtils.getDir(KEY_OLD_UPDROOT, [], false);
-  let destRootDir = FileUtils.getDir(KEY_UPDROOT, [], false);
+  let sourceRootDir = FileUtils.getDir(KEY_OLD_UPDROOT, []);
+  let destRootDir = FileUtils.getDir(KEY_UPDROOT, []);
   let hash = destRootDir.leafName;
 
   if (!sourceRootDir.exists()) {

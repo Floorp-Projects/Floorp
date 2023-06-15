@@ -131,7 +131,7 @@ add_task(async function test_SharedLogs() {
 // A little helper to test what log files exist.  We expect exactly zero (if
 // prefix is null) or exactly one with the specified prefix.
 function checkLogFile(prefix) {
-  let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+  let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"]);
   let entries = logsdir.directoryEntries;
   if (!prefix) {
     // expecting no files.
@@ -278,7 +278,7 @@ add_task(async function test_logFileError() {
 });
 
 function countLogFiles() {
-  let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+  let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"]);
   let count = 0;
   for (let entry of logsdir.directoryEntries) {
     void entry;

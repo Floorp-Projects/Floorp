@@ -13,7 +13,8 @@ Services.policies; // Load policy engine
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
 
-let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
+let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"]);
+distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 registerDirectory("XREAppFeat", distroDir);
 add_task(() => initSystemAddonDirs());
 
