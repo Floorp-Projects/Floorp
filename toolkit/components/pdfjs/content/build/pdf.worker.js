@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.8.49';
+    const workerVersion = '3.8.58';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -2056,6 +2056,17 @@ class Ref {
     }
     return `${this.num}R${this.gen}`;
   }
+  static fromString(str) {
+    const ref = RefCache[str];
+    if (ref) {
+      return ref;
+    }
+    const m = /^(\d+)R(\d*)$/.exec(str);
+    if (!m || m[1] === "0") {
+      return null;
+    }
+    return RefCache[str] = new Ref(parseInt(m[1]), !m[2] ? 0 : parseInt(m[2]));
+  }
   static get(num, gen) {
     const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
     return RefCache[key] ||= new Ref(num, gen);
@@ -3061,6 +3072,23 @@ class Page {
       bbox: this.xfaFactory.getBoundingBox(this.pageIndex)
     } : null);
   }
+  #replaceIdByRef(annotations, deletedAnnotations) {
+    for (const annotation of annotations) {
+      if (annotation.id) {
+        const ref = _primitives.Ref.fromString(annotation.id);
+        if (!ref) {
+          (0, _util.warn)(`A non-linked annotation cannot be modified: ${annotation.id}`);
+          continue;
+        }
+        if (annotation.deleted) {
+          deletedAnnotations.put(ref);
+          continue;
+        }
+        annotation.ref = ref;
+        delete annotation.id;
+      }
+    }
+  }
   async saveNewAnnotations(handler, task, annotations) {
     if (this.xfaFactory) {
       throw new Error("XFA: Cannot save new annotations.");
@@ -3077,8 +3105,10 @@ class Page {
       systemFontCache: this.systemFontCache,
       options: this.evaluatorOptions
     });
+    const deletedAnnotations = new _primitives.RefSet();
+    this.#replaceIdByRef(annotations, deletedAnnotations);
     const pageDict = this.pageDict;
-    const annotationsArray = this.annotations.slice();
+    const annotationsArray = this.annotations.filter(a => !(a instanceof _primitives.Ref && deletedAnnotations.has(a)));
     const newData = await _annotation.AnnotationFactory.saveNewAnnotations(partialEvaluator, task, annotations);
     for (const {
       ref
@@ -3164,10 +3194,13 @@ class Page {
       options: this.evaluatorOptions
     });
     const newAnnotationsByPage = !this.xfaFactory ? (0, _core_utils.getNewAnnotationsMap)(annotationStorage) : null;
+    let deletedAnnotations = null;
     let newAnnotationsPromise = Promise.resolve(null);
     if (newAnnotationsByPage) {
       const newAnnotations = newAnnotationsByPage.get(this.pageIndex);
       if (newAnnotations) {
+        deletedAnnotations = new _primitives.RefSet();
+        this.#replaceIdByRef(newAnnotations, deletedAnnotations);
         newAnnotationsPromise = _annotation.AnnotationFactory.printNewAnnotations(partialEvaluator, task, newAnnotations);
       }
     }
@@ -3190,6 +3223,18 @@ class Page {
     });
     return Promise.all([pageListPromise, this._parsedAnnotations, newAnnotationsPromise]).then(function ([pageOpList, annotations, newAnnotations]) {
       if (newAnnotations) {
+        annotations = annotations.filter(a => !(a.ref && deletedAnnotations.has(a.ref)));
+        for (let i = 0, ii = newAnnotations.length; i < ii; i++) {
+          const newAnnotation = newAnnotations[i];
+          if (newAnnotation.refToReplace) {
+            const j = annotations.findIndex(a => a.ref && (0, _primitives.isRefsEqual)(a.ref, newAnnotation.refToReplace));
+            if (j >= 0) {
+              annotations.splice(j, 1, newAnnotation);
+              newAnnotations.splice(i--, 1);
+              ii--;
+            }
+          }
+        }
         annotations = annotations.concat(newAnnotations);
       }
       if (annotations.length === 0 || intent & _util.RenderingIntentFlag.ANNOTATIONS_DISABLE) {
@@ -4293,6 +4338,9 @@ class AnnotationFactory {
     const dependencies = [];
     const promises = [];
     for (const annotation of annotations) {
+      if (annotation.deleted) {
+        continue;
+      }
       switch (annotation.annotationType) {
         case _util.AnnotationEditorType.FREETEXT:
           if (!baseFontRef) {
@@ -4334,6 +4382,9 @@ class AnnotationFactory {
     } = evaluator.options;
     const promises = [];
     for (const annotation of annotations) {
+      if (annotation.deleted) {
+        continue;
+      }
       switch (annotation.annotationType) {
         case _util.AnnotationEditorType.FREETEXT:
           promises.push(FreeTextAnnotation.createNewPrintAnnotation(xref, annotation, {
@@ -4442,6 +4493,7 @@ class Annotation {
     const MK = dict.get("MK");
     this.setBorderAndBackgroundColors(MK);
     this.setRotation(MK);
+    this.ref = params.ref instanceof _primitives.Ref ? params.ref : null;
     this._streams = [];
     if (this.appearance) {
       this._streams.push(this.appearance);
@@ -5050,7 +5102,7 @@ class MarkupAnnotation extends Annotation {
     this._streams.push(this.appearance, appearanceStream);
   }
   static async createNewAnnotation(xref, annotation, dependencies, params) {
-    const annotationRef = xref.getNewTemporaryRef();
+    const annotationRef = annotation.ref || xref.getNewTemporaryRef();
     const ap = await this.createNewAppearanceStream(annotation, xref, params);
     const buffer = [];
     let annotationDict;
@@ -5081,11 +5133,15 @@ class MarkupAnnotation extends Annotation {
     const annotationDict = this.createNewDict(annotation, xref, {
       ap
     });
-    return new this.prototype.constructor({
+    const newAnnotation = new this.prototype.constructor({
       dict: annotationDict,
       xref,
       isOffscreenCanvasSupported: params.isOffscreenCanvasSupported
     });
+    if (annotation.ref) {
+      newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
+    }
+    return newAnnotation;
   }
 }
 exports.MarkupAnnotation = MarkupAnnotation;
@@ -5097,7 +5153,6 @@ class WidgetAnnotation extends Annotation {
       xref
     } = params;
     const data = this.data;
-    this.ref = params.ref;
     this._needAppearances = params.needAppearances;
     data.annotationType = _util.AnnotationType.WIDGET;
     if (data.fieldName === undefined) {
@@ -8846,10 +8901,8 @@ class PartialEvaluator {
       }
       return;
     }
-    const softMask = dict.get("SM", "SMask") || false;
-    const mask = dict.get("Mask") || false;
     const SMALL_IMAGE_DIMENSIONS = 200;
-    if (isInline && !softMask && !mask && w + h < SMALL_IMAGE_DIMENSIONS) {
+    if (isInline && !dict.has("SMask") && !dict.has("Mask") && w + h < SMALL_IMAGE_DIMENSIONS) {
       const imageObj = new _image.PDFImage({
         xref: this.xref,
         res: resources,
@@ -24463,9 +24516,9 @@ class CFFCompiler {
       data: [],
       length: 0,
       add(data) {
-        if (data.length <= 65536) {
+        try {
           this.data.push(...data);
-        } else {
+        } catch {
           this.data = this.data.concat(data);
         }
         this.length = this.data.length;
@@ -57657,8 +57710,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.8.49';
-const pdfjsBuild = 'f2a29e858';
+const pdfjsVersion = '3.8.58';
+const pdfjsBuild = '9af50dc35';
 })();
 
 /******/ 	return __webpack_exports__;
