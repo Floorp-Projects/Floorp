@@ -6,12 +6,10 @@ Notes:
 - if you find a better way to do configure Java, let us know!
 
 ## Background
-At the time of writing, Android development seems to work best when using Java 8. By default `brew` and other package managers will install more recent versions that may throw errors during development.
-
-Caveat: Robolectric warns that Java 9 is needed for certain functionality. This seems inconsistent with the rest of the Android ecosystem, however.
+At the time of writing, Android development seems to work best when using Java 17. By default `brew` and other package managers will install more recent versions that may throw errors during development.
 
 ## Methods
-### Method #1: configure Java 8 from Android Studio
+### Method #1: configure Java 17 from Android Studio
 Do the following:
 * Download and install Android Studio
 * Add the following line to your `~/.zshrc` or equivalent shell startup file: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
@@ -21,15 +19,15 @@ That's it! To verify correctness, open a new shell, navigate to a directory with
 
 This works because macOS comes with a `/usr/bin/java` stub which will defer the location of the JDK to the value in the `JAVA_HOME` environment variable.
 
-### Method #2: install Java 11 from Homebrew
+### Method #2: install Java 17 from Homebrew
 You can install Java from [Homebrew]([url](https://brew.sh/)) using the command below.
 
 ```bash
-brew install java11
+brew install openjdk@17
 ```
 
 ### Method #3: install from website
-TODO
+See https://docs.oracle.com/en/java/javase/17/install/installation-jdk-macos.html
 
 ## Troubleshooting
 ### Get Java version
@@ -38,27 +36,9 @@ To see what version of Java you have installed, run:
 java -version
 ```
 
-If you have Java 8 configured, you'll see output like:
+If you have Java 17 configured, you'll see output like:
 ```
-openjdk version "1.8.0_242-release"
-OpenJDK Runtime Environment (build 1.8.0_242-release-1644-b3-6222593)
-OpenJDK 64-Bit Server VM (build 25.242-b3-6222593, mixed mode)
+openjdk 17.0.7 2023-04-18
+OpenJDK Runtime Environment Homebrew (build 17.0.7+0)
+OpenJDK 64-Bit Server VM Homebrew (build 17.0.7+0, mixed mode, sharing)
 ```
-
-### Error running pre-push hooks
-If you encounter this error, particularly when running our recommended pre-push hooks:
-```
-Could not initialize class org.codehaus.groovy.runtime.InvokerHelper
-```
-
-You may be on Java 14: consider installing Java 8 (see above). If preferred, other users have found installing any version of Java, 13 or lower, appears to resolve the issue:
-
-Steps to downgrade Java Version on Mac with Brew:
-1. Install Homebrew (https://brew.sh/)
-2. run ```brew update```
-3. To uninstall your current java version, run ```sudo rm -fr
-   /Library/Java/JavaVirtualMachines/<jdk-version>```
-4. run ```brew tap homebrew/cask-versions```
-5. run ```brew search java```
-6. If you see java11, then run ```brew install java11```
-7. Verify java-version by running ```java -version```
