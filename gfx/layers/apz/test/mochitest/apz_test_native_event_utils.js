@@ -1879,3 +1879,32 @@ async function panLeftToRightEnd(aElement, aX, aY, aMultiplier) {
     NativePanHandler.endPhase
   );
 }
+
+// On desktop platforms, close context menu if it's open.
+async function ensureContextMenuClosed() {
+  if (getPlatform() == "android") {
+    return;
+  }
+
+  const contextmenuClosedPromise = SpecialPowers.spawnChrome([], async () => {
+    const menu = this.browsingContext.topChromeWindow.document.getElementById(
+      "contentAreaContextMenu"
+    );
+    if (menu.state == "closed") {
+      return Promise.resolve();
+    }
+
+    return new Promise(resolve => {
+      menu.addEventListener(
+        "popuphidden",
+        () => {
+          resolve();
+        },
+        { once: true }
+      );
+      menu.hidePopup();
+    });
+  });
+
+  await contextmenuClosedPromise;
+}

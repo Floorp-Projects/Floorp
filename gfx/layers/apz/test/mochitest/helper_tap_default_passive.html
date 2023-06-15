@@ -43,8 +43,13 @@ function recordEvent(e) {
   setTimeout(async () => {
     await synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
       dump("Finished synthesizing touch-end to clear state; finishing test...\n");
-      subtestDone();
     });
+
+    // On Windows above TOUCH_REMOVE event triggers opening a context menu, we
+    // need to make sure the context menu has been closed before starting the
+    // next test.
+    await ensureContextMenuClosed();
+    subtestDone();
   }, 0);
 }
 
