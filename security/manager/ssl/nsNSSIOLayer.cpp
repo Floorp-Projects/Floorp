@@ -60,6 +60,10 @@
 #include "sslexp.h"
 #include "sslproto.h"
 
+#if defined(__arm__)
+#  include "mozilla/arm.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::psm;
 using namespace mozilla::ipc;
@@ -1461,31 +1465,33 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
-#if defined(__arm__) && not defined(__ARM_FEATURE_CRYPTO)
-  unsigned int enabledCiphers = 0;
-  std::vector<uint16_t> ciphers(SSL_GetNumImplementedCiphers());
+#if defined(__arm__)
+  if (!mozilla::supports_arm_aes()) {
+    unsigned int enabledCiphers = 0;
+    std::vector<uint16_t> ciphers(SSL_GetNumImplementedCiphers());
 
-  // Returns only the enabled (reflecting prefs) ciphers, ordered
-  // by their occurence in
-  // https://hg.mozilla.org/projects/nss/file/a75ea4cdacd95282c6c245ebb849c25e84ccd908/lib/ssl/ssl3con.c#l87
-  if (SSL_CipherSuiteOrderGet(fd, ciphers.data(), &enabledCiphers) !=
-      SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
+    // Returns only the enabled (reflecting prefs) ciphers, ordered
+    // by their occurence in
+    // https://hg.mozilla.org/projects/nss/file/a75ea4cdacd95282c6c245ebb849c25e84ccd908/lib/ssl/ssl3con.c#l87
+    if (SSL_CipherSuiteOrderGet(fd, ciphers.data(), &enabledCiphers) !=
+        SECSuccess) {
+      return NS_ERROR_FAILURE;
+    }
 
-  // On ARM, prefer (TLS_CHACHA20_POLY1305_SHA256) over AES when hardware
-  // support for AES isn't available. However, it may be disabled. If enabled,
-  // it will either be element [0] or [1]*. If [0], we're done. If [1], swap it
-  // with [0] (TLS_AES_128_GCM_SHA256).
-  // *(assuming the compile-time order remains unchanged)
-  if (enabledCiphers > 1) {
-    if (ciphers[0] != TLS_CHACHA20_POLY1305_SHA256 &&
-        ciphers[1] == TLS_CHACHA20_POLY1305_SHA256) {
-      std::swap(ciphers[0], ciphers[1]);
+    // On ARM, prefer (TLS_CHACHA20_POLY1305_SHA256) over AES when hardware
+    // support for AES isn't available. However, it may be disabled. If enabled,
+    // it will either be element [0] or [1]*. If [0], we're done. If [1], swap
+    // it with [0] (TLS_AES_128_GCM_SHA256).
+    // *(assuming the compile-time order remains unchanged)
+    if (enabledCiphers > 1) {
+      if (ciphers[0] != TLS_CHACHA20_POLY1305_SHA256 &&
+          ciphers[1] == TLS_CHACHA20_POLY1305_SHA256) {
+        std::swap(ciphers[0], ciphers[1]);
 
-      if (SSL_CipherSuiteOrderSet(fd, ciphers.data(), enabledCiphers) !=
-          SECSuccess) {
-        return NS_ERROR_FAILURE;
+        if (SSL_CipherSuiteOrderSet(fd, ciphers.data(), enabledCiphers) !=
+            SECSuccess) {
+          return NS_ERROR_FAILURE;
+        }
       }
     }
   }
