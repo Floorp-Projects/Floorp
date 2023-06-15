@@ -148,6 +148,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(avcodec_decode_video2, AV_FUNC_53 | AV_FUNC_54 | AV_FUNC_55 |
                                      AV_FUNC_56 | AV_FUNC_57 | AV_FUNC_58)
   AV_FUNC(avcodec_find_decoder, AV_FUNC_AVCODEC_ALL)
+  AV_FUNC(avcodec_find_decoder_by_name, AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
   AV_FUNC(avcodec_flush_buffers, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_open2, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_register_all, AV_FUNC_53 | AV_FUNC_54 | AV_FUNC_55 |

@@ -163,6 +163,22 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
   return AV_PIX_FMT_NONE;
 }
 
+static AVPixelFormat ChooseV4L2PixelFormat(AVCodecContext* aCodecContext,
+                                           const AVPixelFormat* aFormats) {
+  FFMPEG_LOG("Choosing FFmpeg pixel format for V4L2 video decoding.");
+  for (; *aFormats > -1; aFormats++) {
+    switch (*aFormats) {
+      case AV_PIX_FMT_DRM_PRIME:
+        FFMPEG_LOG("Requesting pixel format DRM PRIME");
+        return AV_PIX_FMT_DRM_PRIME;
+      default:
+        break;
+    }
+  }
+  NS_WARNING("FFmpeg does not share any supported V4L2 pixel formats.");
+  return AV_PIX_FMT_NONE;
+}
+
 AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
   AVCodec* decoder = FindHardwareAVCodec(mLib, mCodecID);
   if (!decoder) {
@@ -289,7 +305,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   }
   mCodecContext->opaque = this;
 
-  InitVAAPICodecContext();
+  InitHWCodecContext(false);
 
   auto releaseVAAPIdecoder = MakeScopeExit([&] {
     if (mVAAPIDeviceContext) {
@@ -335,6 +351,87 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
 
   FFMPEG_LOG("  VA-API FFmpeg init successful");
   releaseVAAPIdecoder.release();
+  return NS_OK;
+}
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitV4L2Decoder() {
+  FFMPEG_LOG("Initialising V4L2-DRM FFmpeg decoder");
+
+  StaticMutexAutoLock mon(sMutex);
+
+  // mAcceleratedFormats is already configured so check supported
+  // formats before we do anything.
+  if (mAcceleratedFormats.Length()) {
+    if (!IsFormatAccelerated(mCodecID)) {
+      FFMPEG_LOG("  Format %s is not accelerated",
+                 mLib->avcodec_get_name(mCodecID));
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    FFMPEG_LOG("  Format %s is accelerated", mLib->avcodec_get_name(mCodecID));
+  }
+
+  // Select the appropriate v4l2 codec
+  AVCodec* codec = nullptr;
+  if (mCodecID == AV_CODEC_ID_H264) {
+    codec = mLib->avcodec_find_decoder_by_name("h264_v4l2m2m");
+  }
+  if (!codec) {
+    FFMPEG_LOG("No appropriate v4l2 codec found");
+    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+  }
+  FFMPEG_LOG("  V4L2 codec %s : %s", codec->name, codec->long_name);
+
+  if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
+    FFMPEG_LOG("  couldn't init HW ffmpeg context");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mCodecContext->opaque = this;
+
+  InitHWCodecContext(true);
+
+  // Disable cropping in FFmpeg.  Because our frames are opaque DRM buffers
+  // FFmpeg can't actually crop them and it tries to do so by just modifying
+  // the width and height.  This causes problems because V4L2 outputs a single
+  // buffer/layer/plane with all three planes stored contiguously.  We need to
+  // know the offsets to each plane, and if FFmpeg applies cropping (and then
+  // we can't find out what the original uncropped width/height was) then we
+  // can't work out the offsets.
+  mCodecContext->apply_cropping = 0;
+
+  auto releaseDecoder = MakeScopeExit([&] {
+    if (mCodecContext) {
+      mLib->av_freep(&mCodecContext);
+    }
+  });
+
+  MediaResult ret = AllocateExtraData();
+  if (NS_FAILED(ret)) {
+    mLib->av_freep(&mCodecContext);
+    return ret;
+  }
+
+  if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
+    mLib->av_freep(&mCodecContext);
+    FFMPEG_LOG("  Couldn't initialise V4L2 decoder");
+    return NS_ERROR_DOM_MEDIA_FATAL_ERR;
+  }
+
+  // Set mAcceleratedFormats
+  if (mAcceleratedFormats.IsEmpty()) {
+    // FFmpeg does not correctly report that the V4L2 wrapper decoders are
+    // hardware accelerated, but we know they always are.  If we've gotten
+    // this far then we know this codec has a V4L2 wrapper decoder and so is
+    // accelerateed.
+    mAcceleratedFormats.AppendElement(mCodecID);
+  }
+
+  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
+    mLib->av_log_set_level(AV_LOG_DEBUG);
+  }
+
+  FFMPEG_LOG("  V4L2 FFmpeg init successful");
+  mUsingV4L2 = true;
+  releaseDecoder.release();
   return NS_OK;
 }
 #endif
@@ -427,6 +524,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)),
 #ifdef MOZ_WAYLAND_USE_HWDECODE
       mVAAPIDeviceContext(nullptr),
+      mUsingV4L2(false),
       mEnableHardwareDecoding(!aDisableHardwareDecoding),
       mDisplay(nullptr),
 #endif
@@ -464,13 +562,24 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
 
 #ifdef MOZ_WAYLAND_USE_HWDECODE
   if (mEnableHardwareDecoding) {
+#  ifdef MOZ_ENABLE_VAAPI
     rv = InitVAAPIDecoder();
     if (NS_SUCCEEDED(rv)) {
       return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
     }
+#  endif  // MOZ_ENABLE_VAAPI
+
+#  ifdef MOZ_ENABLE_V4L2
+    // VAAPI didn't work or is disabled, so try V4L2 with DRM
+    rv = InitV4L2Decoder();
+    if (NS_SUCCEEDED(rv)) {
+      return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+    }
+#  endif  // MOZ_ENABLE_V4L2
+
     mEnableHardwareDecoding = false;
   }
-#endif
+#endif  // MOZ_WAYLAND_USE_HWDECODE
 
   rv = InitDecoder();
   if (NS_SUCCEEDED(rv)) {
@@ -822,11 +931,17 @@ nsCString FFmpegVideoDecoder<LIBAV_VER>::GetCodecName() const {
 }
 
 #ifdef MOZ_WAYLAND_USE_HWDECODE
-void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
+void FFmpegVideoDecoder<LIBAV_VER>::InitHWCodecContext(bool aUsingV4L2) {
   mCodecContext->width = mInfo.mImage.width;
   mCodecContext->height = mInfo.mImage.height;
   mCodecContext->thread_count = 1;
-  mCodecContext->get_format = ChooseVAAPIPixelFormat;
+
+  if (aUsingV4L2) {
+    mCodecContext->get_format = ChooseV4L2PixelFormat;
+  } else {
+    mCodecContext->get_format = ChooseVAAPIPixelFormat;
+  }
+
   if (mCodecID == AV_CODEC_ID_H264) {
     mCodecContext->extra_hw_frames =
         H264::ComputeMaxRefFrames(mInfo.mExtraData);
@@ -991,13 +1106,19 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
             NS_ERROR_DOM_MEDIA_DECODE_ERR,
             RESULT_DETAIL("HW decoding is slow, switch back to SW decode"));
       }
-      rv = CreateImageVAAPI(mFrame->pkt_pos, GetFramePts(mFrame),
-                            mFrame->pkt_duration, aResults);
-      // If VA-API playback failed, just quit. Decoder is going to be restarted
-      // without VA-API.
+      if (mUsingV4L2) {
+        rv = CreateImageV4L2(mFrame->pkt_pos, GetFramePts(mFrame),
+                             mFrame->pkt_duration, aResults);
+      } else {
+        rv = CreateImageVAAPI(mFrame->pkt_pos, GetFramePts(mFrame),
+                              mFrame->pkt_duration, aResults);
+      }
+
+      // If VA-API/V4L2 playback failed, just quit. Decoder is going to be
+      // restarted without hardware acceleration
       if (NS_FAILED(rv)) {
         // Explicitly remove dmabuf surface pool as it's configured
-        // for VA-API support.
+        // for VA-API/V4L2 support.
         mVideoFramePool = nullptr;
         return rv;
       }
@@ -1387,6 +1508,55 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   aResults.AppendElement(std::move(vp));
   return NS_OK;
 }
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageV4L2(
+    int64_t aOffset, int64_t aPts, int64_t aDuration,
+    MediaDataDecoder::DecodedData& aResults) {
+  FFMPEG_LOG("V4L2 Got one frame output with pts=%" PRId64 " dts=%" PRId64
+             " duration=%" PRId64 " opaque=%" PRId64,
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
+
+  AVDRMFrameDescriptor* desc = (AVDRMFrameDescriptor*)mFrame->data[0];
+  if (!desc) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("Missing DRM PRIME descriptor in frame"));
+  }
+
+  // Note that the FDs in desc are owned by FFmpeg and it will reuse them
+  // each time the same buffer is dequeued in future.  So we shouldn't close
+  // them and so don't setup a clean-up handler for desc.
+
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  if (!mVideoFramePool) {
+    // With the V4L2 wrapper codec we can't see the capture buffer pool size.
+    // But, this value is only used for deciding when we are running out of
+    // free buffers and so should start copying them.  So a rough estimate
+    // is sufficient, and the codec defaults to 20 capture buffers.
+    mVideoFramePool = MakeUnique<VideoFramePool<LIBAV_VER>>(20);
+  }
+
+  auto surface = mVideoFramePool->GetVideoFrameSurface(
+      *desc, mFrame->width, mFrame->height, mCodecContext, mFrame, mLib);
+  if (!surface) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("V4L2 dmabuf allocation error"));
+  }
+  surface->SetYUVColorSpace(GetFrameColorSpace());
+  surface->SetColorRange(GetFrameColorRange());
+
+  RefPtr<VideoData> vp = VideoData::CreateFromImage(
+      mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
+      TimeUnit::FromMicroseconds(aDuration), surface->GetAsImage(),
+      !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
+
+  if (!vp) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       RESULT_DETAIL("V4L2 image creation error"));
+  }
+
+  aResults.AppendElement(std::move(vp));
+  return NS_OK;
+}
 #endif
 
 RefPtr<MediaDataDecoder::FlushPromise>
@@ -1444,7 +1614,7 @@ void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
 bool FFmpegVideoDecoder<LIBAV_VER>::IsHardwareAccelerated(
     nsACString& aFailureReason) const {
 #ifdef MOZ_WAYLAND_USE_HWDECODE
-  return !!mVAAPIDeviceContext;
+  return mUsingV4L2 || !!mVAAPIDeviceContext;
 #else
   return false;
 #endif
