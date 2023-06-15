@@ -62,6 +62,10 @@ int32_t VideoCaptureModulePipeWire::Init(const char* deviceUniqueId) {
 
   node_id_ = id.value();
 
+  const int len = strlen(deviceUniqueId);
+  _deviceUniqueId = new (std::nothrow) char[len + 1];
+  memcpy(_deviceUniqueId, deviceUniqueId, len + 1);
+
   return 0;
 }
 
