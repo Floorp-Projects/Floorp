@@ -44,6 +44,17 @@ class PlacesStorageTest {
     }
 
     @Test
+    fun `WHEN an unexpected places exception is thrown it is consumed`() {
+        doAnswer {
+            throw PlacesApiException.UnexpectedPlacesException("This should be caught")
+        }.`when`(storage.writer).interrupt()
+
+        storage.interruptCurrentWrites()
+
+        verify(storage.writer).interrupt()
+    }
+
+    @Test
     fun `WHEN a call is made to clean all reads THEN they are cancelled`() {
         storage.readScope = mock {
             doReturn(mock<CoroutineContext>()).`when`(this).coroutineContext

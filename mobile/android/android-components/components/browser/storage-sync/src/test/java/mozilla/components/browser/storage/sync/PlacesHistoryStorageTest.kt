@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.appservices.places.uniffi.InternalException
 import mozilla.appservices.places.uniffi.PlacesApiException
 import mozilla.appservices.places.uniffi.VisitObservation
 import mozilla.components.concept.storage.DocumentType
@@ -785,9 +786,49 @@ class PlacesHistoryStorageTest {
         assertTrue(result is SyncStatus.Error)
     }
 
-    @Test(expected = PlacesApiException::class)
+    @Test
+    fun `storage does not re-throw unexpected places exceptions`() = runTestOnMain {
+        val exception = PlacesApiException.UnexpectedPlacesException("unexpected exception")
+        val conn = object : Connection {
+            override fun reader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
+            override fun newReader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
+            override fun writer(): PlacesWriterConnection {
+                fail()
+                return mock()
+            }
+
+            override fun syncHistory(syncInfo: SyncAuthInfo) {
+                throw exception
+            }
+
+            override fun syncBookmarks(syncInfo: SyncAuthInfo) {
+                fail()
+            }
+
+            override fun close() {
+                fail()
+            }
+
+            override fun registerWithSyncManager() {
+                fail()
+            }
+        }
+        val storage = MockingPlacesHistoryStorage(conn)
+        val result = storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
+        assertTrue(result is SyncStatus.Error)
+    }
+
+    @Test(expected = InternalException::class)
     fun `storage re-throws sync panics`() = runTestOnMain {
-        val exception = PlacesApiException.UnexpectedPlacesException("test panic")
+        val exception = InternalException("sync paniced")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
                 fail()

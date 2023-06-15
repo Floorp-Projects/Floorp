@@ -145,8 +145,6 @@ abstract class PlacesStorage(
     protected inline fun handlePlacesExceptions(operation: String, block: () -> Unit) {
         try {
             block()
-        } catch (e: PlacesApiException.UnexpectedPlacesException) {
-            throw e
         } catch (e: PlacesApiException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
         } catch (e: PlacesApiException.UrlParseFailed) {
@@ -174,8 +172,6 @@ abstract class PlacesStorage(
     ): T {
         return try {
             block()
-        } catch (e: PlacesApiException.UnexpectedPlacesException) {
-            throw e
         } catch (e: PlacesApiException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
             default
@@ -193,6 +189,8 @@ abstract class PlacesStorage(
     /**
      * Runs a [syncBlock], re-throwing any panics that may be encountered.
      * @return [SyncStatus.Ok] on success, or [SyncStatus.Error] on non-panic [PlacesApiException].
+     * (Note that a panic is represented by an mozilla.appservices.places.uniffi.InternalException,
+     * which isn't part of the [PlacesApiException] error hierarchy)
      */
     protected inline fun syncAndHandleExceptions(syncBlock: () -> Unit): SyncStatus {
         return try {
@@ -200,12 +198,8 @@ abstract class PlacesStorage(
             syncBlock()
             logger.debug("Successfully synced.")
             SyncStatus.Ok
-
-            // Order of these catches matters: UnexpectedPlacesException extends PlacesException
-        } catch (e: PlacesApiException.UnexpectedPlacesException) {
-            logger.error("Places panic while syncing", e)
-            throw e
         } catch (e: PlacesApiException) {
+            crashReporter?.submitCaughtException(e)
             logger.error("Places exception while syncing", e)
             SyncStatus.Error(e)
         }
