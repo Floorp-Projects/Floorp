@@ -2,6 +2,80 @@
   "data": [
     {
       "click": {
+        "optIn": "#acceptAllButton",
+        "optOut": "#rejectAllButton",
+        "presence": "#cookiePrefPopup"
+      },
+      "schema": 1686614405615,
+      "cookies": {
+        "optIn": [
+          {
+            "name": "cookieSettings",
+            "value": "%7B%22version%22%3A1%2C%22preference_state%22%3A1%2C%22content_customization%22%3Anull%2C%22valve_analytics%22%3Anull%2C%22third_party_analytics%22%3Anull%2C%22third_party_content%22%3Anull%2C%22utm_enabled%22%3Atrue%7D"
+          }
+        ],
+        "optOut": [
+          {
+            "name": "cookieSettings",
+            "value": "%7B%22version%22%3A1%2C%22preference_state%22%3A2%2C%22content_customization%22%3Anull%2C%22valve_analytics%22%3Anull%2C%22third_party_analytics%22%3Anull%2C%22third_party_content%22%3Anull%2C%22utm_enabled%22%3Atrue%7D"
+          }
+        ]
+      },
+      "domains": [
+        "steamcommunity.com",
+        "steampowered.com"
+      ],
+      "id": "63104024-41b5-4be5-8019-2c59eaaf612c",
+      "last_modified": 1686654909145
+    },
+    {
+      "click": {
+        "optIn": ".js-accept-cookies",
+        "optOut": ".js-reject-cookies",
+        "presence": ".js-consent-banner"
+      },
+      "schema": 1686614405615,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "OptanonAlertBoxClosed",
+            "value": "2030-01-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "domains": [
+        "askubuntu.com",
+        "mathoverflow.net",
+        "serverfault.com",
+        "stackapps.com",
+        "stackexchange.com",
+        "stackoverflow.blog",
+        "stackoverflow.co",
+        "stackoverflow.com",
+        "stackoverflowteams.com",
+        "superuser.com"
+      ],
+      "id": "71443ce9-15b8-4e07-b51b-1f2158521ea9",
+      "last_modified": 1686654909140
+    },
+    {
+      "click": {
+        "optIn": "button[data-cookiebanner=\"accept_button\"]",
+        "optOut": "button[data-cookiebanner=\"accept_only_essential_button\"]",
+        "presence": "div[data-testid=\"cookie-policy-manage-dialog\"]"
+      },
+      "schema": 1686614405615,
+      "cookies": {},
+      "domains": [
+        "facebook.com",
+        "messenger.com",
+        "oculus.com"
+      ],
+      "id": "d1d8ba36-ced7-4453-8b17-2e051e0ab1eb",
+      "last_modified": 1686654909136
+    },
+    {
+      "click": {
         "optIn": "button.accept-all",
         "optOut": "button.reject-all",
         "presence": "div#consent-page"
@@ -185,20 +259,6 @@
       ],
       "id": "d9166ae8-dcc7-4ca2-8b02-0884fb1d6f70",
       "last_modified": 1678276263311
-    },
-    {
-      "click": {
-        "optIn": "button[data-cookiebanner=\"accept_button\"]",
-        "optOut": "button[data-cookiebanner=\"accept_only_essential_button\"]",
-        "presence": "div[data-testid=\"cookie-policy-manage-dialog\"]"
-      },
-      "schema": 1678092903414,
-      "cookies": {},
-      "domains": [
-        "facebook.com"
-      ],
-      "id": "d1d8ba36-ced7-4453-8b17-2e051e0ab1eb",
-      "last_modified": 1678276263306
     },
     {
       "click": {},
@@ -4237,29 +4297,6 @@
     },
     {
       "click": {
-        "optIn": ".js-accept-cookies",
-        "presence": ".js-consent-banner"
-      },
-      "schema": 1674521303759,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "OptanonAlertBoxClosed",
-            "value": "2023-01-04T15:56:30.908Z"
-          }
-        ]
-      },
-      "domains": [
-        "askubuntu.com",
-        "serverfault.com",
-        "stackexchange.com",
-        "stackoverflow.com"
-      ],
-      "id": "71443ce9-15b8-4e07-b51b-1f2158521ea9",
-      "last_modified": 1674560738059
-    },
-    {
-      "click": {
         "optIn": "button.cmp-intro_acceptAll",
         "presence": "div.cmp-popup_popup"
       },
@@ -7737,5 +7774,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1679487994744
+  "timestamp": 1686654909145
 }
