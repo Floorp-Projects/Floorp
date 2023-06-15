@@ -2250,19 +2250,19 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
       masm.bitwiseSelectSimd128(control, lhsDest, rhs, lhsDest, temp);
       break;
     }
-    case wasm::SimdOp::F32x4RelaxedFma:
+    case wasm::SimdOp::F32x4RelaxedMadd:
       masm.fmaFloat32x4(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
                         ToFloatRegister(ins->v2()));
       break;
-    case wasm::SimdOp::F32x4RelaxedFnma:
+    case wasm::SimdOp::F32x4RelaxedNmadd:
       masm.fnmaFloat32x4(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
                          ToFloatRegister(ins->v2()));
       break;
-    case wasm::SimdOp::F64x2RelaxedFma:
+    case wasm::SimdOp::F64x2RelaxedMadd:
       masm.fmaFloat64x2(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
                         ToFloatRegister(ins->v2()));
       break;
-    case wasm::SimdOp::F64x2RelaxedFnma:
+    case wasm::SimdOp::F64x2RelaxedNmadd:
       masm.fnmaFloat64x2(ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
                          ToFloatRegister(ins->v2()));
       break;

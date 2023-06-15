@@ -8489,23 +8489,23 @@ static void BitselectV128(MacroAssembler& masm, RegV128 rhs, RegV128 control,
 #  endif
 
 #  ifdef ENABLE_WASM_RELAXED_SIMD
-static void RelaxedFmaF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
+static void RelaxedMaddF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                             RegV128 rsd) {
   masm.fmaFloat32x4(rs1, rs2, rsd);
 }
 
-static void RelaxedFnmaF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                             RegV128 rsd) {
+static void RelaxedNmaddF32x4(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                              RegV128 rsd) {
   masm.fnmaFloat32x4(rs1, rs2, rsd);
 }
 
-static void RelaxedFmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                            RegV128 rsd) {
+static void RelaxedMaddF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                             RegV128 rsd) {
   masm.fmaFloat64x2(rs1, rs2, rsd);
 }
 
-static void RelaxedFnmaF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
-                             RegV128 rsd) {
+static void RelaxedNmaddF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
+                              RegV128 rsd) {
   masm.fnmaFloat64x2(rs1, rs2, rsd);
 }
 
@@ -10237,26 +10237,26 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::V128Store64Lane):
             CHECK_NEXT(emitStoreLane(8));
 #  ifdef ENABLE_WASM_RELAXED_SIMD
-          case uint32_t(SimdOp::F32x4RelaxedFma):
+          case uint32_t(SimdOp::F32x4RelaxedMadd):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary2(RelaxedFmaF32x4, ValType::V128));
-          case uint32_t(SimdOp::F32x4RelaxedFnma):
+            CHECK_NEXT(dispatchTernary2(RelaxedMaddF32x4, ValType::V128));
+          case uint32_t(SimdOp::F32x4RelaxedNmadd):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary2(RelaxedFnmaF32x4, ValType::V128));
-          case uint32_t(SimdOp::F64x2RelaxedFma):
+            CHECK_NEXT(dispatchTernary2(RelaxedNmaddF32x4, ValType::V128));
+          case uint32_t(SimdOp::F64x2RelaxedMadd):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary2(RelaxedFmaF64x2, ValType::V128));
-          case uint32_t(SimdOp::F64x2RelaxedFnma):
+            CHECK_NEXT(dispatchTernary2(RelaxedMaddF64x2, ValType::V128));
+          case uint32_t(SimdOp::F64x2RelaxedNmadd):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
-            CHECK_NEXT(dispatchTernary2(RelaxedFnmaF64x2, ValType::V128));
+            CHECK_NEXT(dispatchTernary2(RelaxedNmaddF64x2, ValType::V128));
             break;
           case uint32_t(SimdOp::I8x16RelaxedLaneSelect):
           case uint32_t(SimdOp::I16x8RelaxedLaneSelect):
