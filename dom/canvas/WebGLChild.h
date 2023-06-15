@@ -42,6 +42,8 @@ class WebGLChild final : public PWebGLChild, public SupportsWeakPtr {
   void FlushPendingCmds();
   void ActorDestroy(ActorDestroyReason why) override;
 
+  FlushedCmdInfo GetFlushedCmdInfo() const { return mFlushedCmdInfo; }
+
  private:
   friend PWebGLChild;
   virtual ~WebGLChild();
