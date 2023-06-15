@@ -14,6 +14,7 @@ permalink: /changelog/
   * Adds `WebAppContentFeature` to set the "display" mode from the web app manifest on the `EngineSession`.
 * **browser-engine-gecko**:
   * Added support for Printing on the Engine.
+  * Add support for `checkForPdfViewer` API for checking whether a PDF viewer is loaded on the current session or not.
 * **concept-engine**:
   * Added new `requestPrintContent` API in `Engine`. This is currently only supported in the Gecko Engine.
 

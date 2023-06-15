@@ -297,6 +297,11 @@ abstract class EngineSession(
         fun onPrintException(isPrint: Boolean, throwable: Throwable) = Unit
 
         /**
+         * Event to indicate that the PDF was successfully generated.
+         */
+        fun onSaveToPdfComplete() = Unit
+
+        /**
          * Event to indicate that this session needs to be checked for form data.
          *
          * @param containsFormData Indicates if the session has form data.
@@ -814,6 +819,16 @@ abstract class EngineSession(
      * @param onError callback invoked if there was an error getting the response.
      */
     abstract fun hasCookieBannerRuleForSession(onResult: (Boolean) -> Unit, onException: (Throwable) -> Unit)
+
+    /**
+     * Checks if the current session is using a PDF viewer.
+     *
+     * @param onSuccess callback invoked if the engine API returned a valid response. Please note
+     * that the response can be null - which can indicate a bug, a miscommunication
+     * or other unexpected failure.
+     * @param onError callback invoked if there was an error getting the response.
+     */
+    abstract fun checkForPdfViewer(onResult: (Boolean) -> Unit, onException: (Throwable) -> Unit)
 
     /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.

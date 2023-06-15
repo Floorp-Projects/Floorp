@@ -409,6 +409,16 @@ class SystemEngineSession(
         }
     }
 
+    /**
+     * Checks for if PDF Viewer is used.
+     */
+    override fun checkForPdfViewer(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Checking for PDF viewer is not available in this engine")
+    }
+
     override fun hasCookieBannerRuleForSession(
         onResult: (Boolean) -> Unit,
         onException: (Throwable) -> Unit,

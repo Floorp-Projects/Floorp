@@ -265,7 +265,7 @@ class ShareControllerTest {
     }
 
     @Test
-    fun `WHEN handleSaveToPDF THEN send telemetry, close the dialog and save the page to pdf`() {
+    fun `WHEN handleSaveToPDF close the dialog and save the page to pdf`() {
         val testController = DefaultShareController(
             context = mockk(),
             shareSubject = shareSubject,
@@ -286,8 +286,6 @@ class ShareControllerTest {
             saveToPdfUseCase.invoke("tabID")
             dismiss(ShareController.Result.DISMISSED)
         }
-
-        assertNotNull(Events.saveToPdfTapped.testGetValue())
     }
 
     @Test

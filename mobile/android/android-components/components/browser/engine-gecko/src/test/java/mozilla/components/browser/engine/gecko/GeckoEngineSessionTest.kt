@@ -2449,6 +2449,30 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `checkForPdfViewer should correctly process a GV response`() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<Boolean>()
+        whenever(geckoSession.isPdfJs).thenReturn(ruleResult)
+
+        engineSession.checkForPdfViewer(
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.complete(true)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
     fun containsFormData() {
         val engineSession = GeckoEngineSession(runtime = mock(), geckoSessionProvider = geckoSessionProvider)
         var formData = false

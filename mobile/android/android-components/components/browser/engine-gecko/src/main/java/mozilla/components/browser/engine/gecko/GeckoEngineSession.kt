@@ -264,6 +264,10 @@ class GeckoEngineSession(
                     )
                 }
 
+                notifyObservers {
+                    onSaveToPdfComplete()
+                }
+
                 GeckoResult()
             },
             { throwable ->
@@ -608,6 +612,37 @@ class GeckoEngineSession(
                     onCheckForFormDataException(throwable)
                 }
                 GeckoResult<Boolean>()
+            },
+        )
+    }
+
+    /**
+     * Checks if a PDF viewer is being used on the current page or not via GeckoView session.
+     */
+    override fun checkForPdfViewer(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.isPdfJs.then(
+            { response ->
+                if (response == null) {
+                    logger.error(
+                        "Invalid value: No result from GeckoView if a PDF viewer is used.",
+                    )
+                    onException(
+                        IllegalStateException(
+                            "Invalid value: No result from GeckoView if a PDF viewer is used.",
+                        ),
+                    )
+                    return@then GeckoResult()
+                }
+                onResult(response)
+                GeckoResult<Boolean>()
+            },
+            { throwable ->
+                logger.error("Checking for PDF viewer failed.", throwable)
+                onException(throwable)
+                GeckoResult()
             },
         )
     }

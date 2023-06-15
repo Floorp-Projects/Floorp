@@ -146,7 +146,6 @@ class DefaultShareController(
     }
 
     override fun handleSaveToPDF(tabId: String?) {
-        Events.saveToPdfTapped.record(NoExtras())
         handleShareClosed()
         saveToPdfUseCase.invoke(tabId)
     }

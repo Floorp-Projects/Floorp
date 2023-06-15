@@ -485,10 +485,18 @@ events:
     type: event
     description: |
       A user tapped the save to pdf option in the share sheet.
+    extra_keys:
+      source:
+        type: string
+        description: |
+          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          The default is unknown.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/3709
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/27257
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213#c4
     data_sensitivity:
       - interaction
     notification_emails:
@@ -500,12 +508,49 @@ events:
   save_to_pdf_failure:
     type: event
     description: |
-      A user tapped the save pdf but an error ocurred
+      A user tapped the save pdf but an error occurred
       and the process failed.
+    extra_keys:
+      source:
+        type: string
+        description: |
+          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          The default is unknown.
+      reason:
+        type: string
+        description: |
+          An error occurred while setting up for saving a PDF.
+          Default option is unknown, other options are no_settings_service, no_settings, 
+          no_canonical_context, no_activity_context_delegate, no_activity_context, 
+          no_print_delegate, and io_error.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/27635
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/27661#issuecomment-1300505370
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213#c4
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Sharing
+  save_to_pdf_completed:
+    type: event
+    description: |
+      Saving to PDF successfully generated a PDF.
+    extra_keys:
+      source:
+        type: string
+        description: |
+          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          The default is unknown.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1829213#c4
     data_sensitivity:
       - technical
     notification_emails:

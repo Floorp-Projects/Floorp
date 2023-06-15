@@ -1088,6 +1088,13 @@ sealed class EngineAction : BrowserAction() {
     ) : EngineAction(), ActionWithTab
 
     /**
+     * Indicates the given [tabId] was successful in generating a requested PDF page.
+     */
+    data class SaveToPdfCompleteAction(
+        override val tabId: String,
+    ) : EngineAction(), ActionWithTab
+
+    /**
      * Indicates the given [tabId] was unable to generate a requested save to PDF page.
      */
     data class SaveToPdfExceptionAction(
