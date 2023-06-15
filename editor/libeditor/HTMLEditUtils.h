@@ -288,6 +288,36 @@ class HTMLEditUtils final {
   }
 
   /**
+   * Return a point which can insert a node whose name is aTagName scanning
+   * from aPoint to its ancestor points.
+   */
+  template <typename EditorDOMPointType>
+  static EditorDOMPoint GetInsertionPointInInclusiveAncestor(
+      nsAtom& aTagName, const EditorDOMPointType& aPoint,
+      const Element* aAncestorLimit = nullptr) {
+    if (MOZ_UNLIKELY(!aPoint.IsInContentNode())) {
+      return EditorDOMPoint();
+    }
+    Element* lastChild = nullptr;
+    for (Element* containerElement :
+         aPoint.template ContainerAs<nsIContent>()
+             ->template InclusiveAncestorsOfType<Element>()) {
+      if (!HTMLEditUtils::IsSimplyEditableNode(*containerElement)) {
+        return EditorDOMPoint();
+      }
+      if (HTMLEditUtils::CanNodeContain(*containerElement, aTagName)) {
+        return lastChild ? EditorDOMPoint(lastChild)
+                         : aPoint.template To<EditorDOMPoint>();
+      }
+      if (containerElement == aAncestorLimit) {
+        return EditorDOMPoint();
+      }
+      lastChild = containerElement;
+    }
+    return EditorDOMPoint();
+  }
+
+  /**
    * IsContainerNode() returns true if aContent is a container node.
    */
   static bool IsContainerNode(const nsIContent& aContent) {
