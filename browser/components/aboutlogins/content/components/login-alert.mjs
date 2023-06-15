@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  html,
+  ifDefined,
+  guard,
+} from "chrome://global/content/vendor/lit.all.mjs";
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
@@ -50,6 +54,14 @@ export class LoginBreachAlert extends MozLitElement {
     this.hostname = "";
   }
 
+  get displayHostname() {
+    try {
+      return new URL(this.hostname).hostname;
+    } catch (err) {
+      return this.hostname;
+    }
+  }
+
   render() {
     return html`
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
@@ -66,9 +78,11 @@ export class LoginBreachAlert extends MozLitElement {
           <span data-l10n-id="breach-alert-text"></span>
           <a
             data-l10n-id="about-logins-breach-alert-link"
-            data-l10n-args=${JSON.stringify({
-              hostname: this.hostname,
-            })}
+            data-l10n-args=${guard([this.hostname], () =>
+              JSON.stringify({
+                hostname: this.displayHostname,
+              })
+            )}
             href=${this.hostname}
             rel="noreferrer"
             target="_blank"
