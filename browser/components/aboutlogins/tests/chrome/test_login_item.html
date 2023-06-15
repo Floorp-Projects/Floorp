@@ -11,6 +11,7 @@ Test the login-item component
   <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.mjs"></script>
   <script type="module" src="chrome://browser/content/aboutlogins/components/confirmation-dialog.mjs"></script>
   <script type="module" src="chrome://browser/content/aboutlogins/components/login-timeline.mjs"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/login-alert.mjs"></script>
   <script src="aboutlogins_common.js"></script>
 
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
@@ -165,9 +166,9 @@ add_task(async function test_update_breaches() {
   gLoginItem.setBreaches(TEST_BREACHES_MAP);
   await asyncElementRendered();
 
-  let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");
+  let breachAlert = gLoginItem.shadowRoot.querySelector("login-breach-alert");
   ok(!isHidden(breachAlert), "Breach alert should be visible");
-  is(breachAlert.querySelector(".alert-link").href, TEST_LOGIN_1.origin + "/", "Link in the text should point to the login origin");
+  is(breachAlert.hostname, TEST_LOGIN_1.origin, "Link in the text should point to the login origin");
   let vulernableAlert = gLoginItem.shadowRoot.querySelector(".vulnerable-alert");
   ok(isHidden(vulernableAlert), "Vulnerable alert should not be visible on a non-vulnerable login.");
 });
@@ -177,7 +178,7 @@ add_task(async function test_breach_alert_is_correctly_hidden() {
   gLoginItem.setBreaches(TEST_BREACHES_MAP);
   await asyncElementRendered();
 
-  let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");
+  let breachAlert = gLoginItem.shadowRoot.querySelector("login-breach-alert");
   ok(isHidden(breachAlert), "Breach alert should not be visible on login without an associated breach.");
   let vulernableAlert = gLoginItem.shadowRoot.querySelector(".vulnerable-alert");
   ok(isHidden(vulernableAlert), "Vulnerable alert should not be visible on a non-vulnerable login.");
@@ -188,7 +189,7 @@ add_task(async function test_update_vulnerable() {
   gLoginItem.setVulnerableLogins(TEST_VULNERABLE_MAP);
   await asyncElementRendered();
 
-  let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");
+  let breachAlert = gLoginItem.shadowRoot.querySelector("login-breach-alert");
   ok(isHidden(breachAlert), "Breach alert should not be visible on login without an associated breach.");
   let vulernableAlert = gLoginItem.shadowRoot.querySelector(".vulnerable-alert");
   ok(!isHidden(vulernableAlert), "Vulnerable alert should be visible");
@@ -201,7 +202,7 @@ add_task(async function test_vulnerable_alert_is_correctly_hidden() {
   gLoginItem.setBreaches(new Map());
   await asyncElementRendered();
 
-  let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");
+  let breachAlert = gLoginItem.shadowRoot.querySelector("login-breach-alert");
   ok(isHidden(breachAlert), "Breach alert should not be visible on login without an associated breach.");
   let vulernableAlert = gLoginItem.shadowRoot.querySelector(".vulnerable-alert");
   ok(isHidden(vulernableAlert), "Vulnerable alert should not be visible on a non-vulnerable login.");
