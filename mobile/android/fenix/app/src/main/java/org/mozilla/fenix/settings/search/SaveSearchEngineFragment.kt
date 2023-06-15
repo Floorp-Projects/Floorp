@@ -133,18 +133,28 @@ class SaveSearchEngineFragment : Fragment(R.layout.fragment_save_search_engine) 
                 }
 
                 SearchStringValidator.Result.Success -> {
-                    val searchEngine = createSearchEngine(
-                        name,
-                        searchString.toSearchUrl(),
-                        requireComponents.core.icons.loadIcon(IconRequest(searchString))
+                    val update = searchEngine?.copy(
+                        name = name,
+                        resultUrls = listOf(searchString.toSearchUrl()),
+                        icon = requireComponents.core.icons.loadIcon(IconRequest(searchString))
                             .await().bitmap,
-                        isGeneral = true,
-                    )
+                    ) ?: run {
+                        createSearchEngine(
+                            name,
+                            searchString.toSearchUrl(),
+                            requireComponents.core.icons.loadIcon(IconRequest(searchString))
+                                .await().bitmap,
+                            isGeneral = true,
+                        )
+                    }
 
-                    requireComponents.useCases.searchUseCases.addSearchEngine(searchEngine)
+                    requireComponents.useCases.searchUseCases.addSearchEngine(update)
 
-                    val successMessage = resources
-                        .getString(R.string.search_add_custom_engine_success_message, name)
+                    val successMessage = if (searchEngine != null) {
+                        resources.getString(R.string.search_edit_custom_engine_success_message, name)
+                    } else {
+                        resources.getString(R.string.search_add_custom_engine_success_message, name)
+                    }
 
                     view?.also {
                         FenixSnackbar.make(
