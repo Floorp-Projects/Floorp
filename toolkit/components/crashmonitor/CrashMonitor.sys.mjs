@@ -102,9 +102,7 @@ var CrashMonitorInternal = {
       } catch (ex) {
         // Ignore file not found errors, but report all others.
         if (ex.name !== "NotFoundError") {
-          console.error(
-            `Error while loading crash monitor data: ${ex.message}`
-          );
+          console.error("Error while loading crash monitor data:", ex.message);
         }
         return null;
       }

@@ -56,7 +56,7 @@ export class ChromeWindowsLoginCrypto {
         const encryptedKey = withHeader.slice(DPAPI_KEY_PREFIX.length);
         keyData = this.osCrypto.decryptData(encryptedKey, null, "bytes");
       } catch (ex) {
-        console.error(`${userDataPathSuffix} os_crypt key: ${ex}`);
+        console.error(`${userDataPathSuffix} os_crypt key:`, ex);
 
         // Use a generic key that will fail for actually encrypted data, but for
         // testing it'll be consistent for both encrypting and decrypting.

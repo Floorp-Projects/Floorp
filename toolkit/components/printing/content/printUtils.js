@@ -553,7 +553,7 @@ var PrintUtils = {
         );
       }
     } catch (e) {
-      console.error("PrintUtils.getPrintSettings failed: ", e, "\n");
+      console.error("PrintUtils.getPrintSettings failed:", e);
     }
     return printSettings;
   },

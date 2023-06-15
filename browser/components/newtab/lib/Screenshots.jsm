@@ -61,7 +61,7 @@ const Screenshots = {
 
       return { path: imgPath, data: fileContents };
     } catch (err) {
-      console.error(`getScreenshot(${url}) failed: ${err}`);
+      console.error(`getScreenshot(${url}) failed:`, err);
     }
 
     // We must have failed to get the screenshot, so persist the failure by

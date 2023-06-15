@@ -8,9 +8,8 @@ function e10s_init() {
     event => {
       let uri = event.target.currentURI;
       console.error(
-        "remote browser crashed while on " +
-          (uri ? uri.spec : "<unknown>") +
-          "\n"
+        "remote browser crashed while on",
+        uri ? uri.spec : "<unknown>"
       );
     },
     true

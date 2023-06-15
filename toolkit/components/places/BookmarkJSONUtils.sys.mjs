@@ -76,7 +76,7 @@ export var BookmarkJSONUtils = Object.freeze({
 
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
-      console.error("Failed to restore bookmarks from " + aSpec + ": " + ex);
+      console.error(`Failed to restore bookmarks from ${aSpec}:`, ex);
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       throw ex;
     }
@@ -126,9 +126,7 @@ export var BookmarkJSONUtils = Object.freeze({
       }
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aReplace);
     } catch (ex) {
-      console.error(
-        "Failed to restore bookmarks from " + aFilePath + ": " + ex
-      );
+      console.error(`Failed to restore bookmarks from ${aFilePath}:`, ex);
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
       throw ex;
     }
@@ -314,7 +312,7 @@ BookmarkImporter.prototype = {
       try {
         insertFaviconsForTree(node);
       } catch (ex) {
-        console.error(`Failed to insert favicons: ${ex}`);
+        console.error("Failed to insert favicons:", ex);
       }
     }
     return bookmarkCount;
@@ -456,7 +454,7 @@ function translateTreeTypes(node) {
       break;
     default:
       // No need to throw/reject here, insertTree will remove this node automatically.
-      console.error(`Unexpected bookmark type ${node.type}`);
+      console.error("Unexpected bookmark type", node.type);
       break;
   }
 
@@ -541,7 +539,7 @@ function insertFaviconForNode(node) {
         Services.scriptSecurityManager.getSystemPrincipal()
       );
     } catch (ex) {
-      console.error("Failed to import favicon data:" + ex);
+      console.error("Failed to import favicon data:", ex);
     }
   }
 

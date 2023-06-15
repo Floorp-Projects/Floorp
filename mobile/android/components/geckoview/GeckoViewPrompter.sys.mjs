@@ -63,7 +63,7 @@ export class GeckoViewPrompter {
       }
       return true;
     } catch (ex) {
-      console.error("Failed to change modal state: " + ex);
+      console.error("Failed to change modal state:", ex);
     }
     return false;
   }

@@ -63,11 +63,7 @@ let InternalFaviconLoader = {
       request.cancel();
     } catch (ex) {
       console.error(
-        "When cancelling a request for " +
-          uri.spec +
-          " because " +
-          reason +
-          ", it was already canceled!"
+        `When cancelling a request for ${uri.spec} because ${reason}, it was already canceled!`
       );
     }
   },

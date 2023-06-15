@@ -231,7 +231,7 @@ LoginManagerAuthPromptFactory.prototype = {
         // Prompts throw NS_ERROR_NOT_AVAILABLE if they're aborted.
         promptAborted = true;
       } else {
-        console.error("LoginManagerAuthPrompter: _doAsyncPrompt " + e + "\n");
+        console.error("LoginManagerAuthPrompter: _doAsyncPrompt", e);
       }
     }
 
@@ -658,9 +658,7 @@ LoginManagerAuthPrompter.prototype = {
     } catch (e) {
       // Ignore any errors and display the prompt anyway.
       epicfail = true;
-      console.error(
-        "LoginManagerAuthPrompter: Epic fail in promptAuth: " + e + "\n"
-      );
+      console.error("LoginManagerAuthPrompter: Epic fail in promptAuth:", e);
     }
 
     var ok = canAutologin;
@@ -760,7 +758,7 @@ LoginManagerAuthPrompter.prototype = {
         );
       }
     } catch (e) {
-      console.error("LoginManagerAuthPrompter: Fail2 in promptAuth: " + e);
+      console.error("LoginManagerAuthPrompter: Fail2 in promptAuth:", e);
     }
 
     return ok;
@@ -825,12 +823,8 @@ LoginManagerAuthPrompter.prototype = {
 
       this._factory._doAsyncPrompt(asyncPrompt, hashKey);
     } catch (e) {
-      console.error(
-        "LoginManagerAuthPrompter: " +
-          "asyncPromptAuth: " +
-          e +
-          "\nFalling back to promptAuth\n"
-      );
+      console.error("LoginManagerAuthPrompter: asyncPromptAuth:", e);
+      console.error("Falling back to promptAuth");
       // Fail the prompt operation to let the consumer fall back
       // to synchronous promptAuth method
       throw e;

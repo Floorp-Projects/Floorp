@@ -303,7 +303,7 @@ export var UrlbarUtils = {
     try {
       entry = await lazy.PlacesUtils.keywords.fetch(keyword);
     } catch (ex) {
-      console.error(`Unable to fetch Places keyword "${keyword}": ${ex}`);
+      console.error(`Unable to fetch Places keyword "${keyword}":`, ex);
     }
     if (!entry || !entry.url) {
       // This is not a Places keyword.

@@ -331,7 +331,7 @@ export class PromptFactory {
         ].getService(Ci.nsIPromptFactory);
         return pwmgr.getPrompt(aDOMWin, aIID);
       } catch (e) {
-        console.error("Delegation to password manager failed: " + e);
+        console.error("Delegation to password manager failed:", e);
       }
     }
 

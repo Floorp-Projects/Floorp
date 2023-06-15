@@ -416,7 +416,8 @@ export class DownloadCombinedList extends DownloadList {
       );
     } catch (ex) {
       console.error(
-        `DownloadsCommon: error recording telemetry event. ${ex.message}`
+        "DownloadsCommon: error recording telemetry event.",
+        ex.message
       );
     }
 

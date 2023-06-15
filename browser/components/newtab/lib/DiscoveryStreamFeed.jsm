@@ -114,7 +114,8 @@ class DiscoveryStreamFeed {
       this._prefCache.config = {};
       // istanbul ignore next
       console.error(
-        `Could not parse preference. Try resetting ${PREF_CONFIG} in about:config. ${e}`
+        `Could not parse preference. Try resetting ${PREF_CONFIG} in about:config.`,
+        e
       );
     }
     this._prefCache.config.enabled =
@@ -429,7 +430,7 @@ class DiscoveryStreamFeed {
 
       return response.json();
     } catch (error) {
-      console.error(`Failed to fetch ${endpoint}: ${error.message}`);
+      console.error(`Failed to fetch ${endpoint}:`, error.message);
     }
     return null;
   }
@@ -828,7 +829,8 @@ class DiscoveryStreamFeed {
           .catch(
             /* istanbul ignore next */ error => {
               console.error(
-                `Error trying to load component feed ${url}: ${error}`
+                `Error trying to load component feed ${url}:`,
+                error
               );
             }
           );
@@ -1669,7 +1671,7 @@ class DiscoveryStreamFeed {
       // We only make one fetch, and control which to request when we fetch.
       // So for now we only care if we need to make this request at all.
       const spocsPromise = this.loadSpocs(dispatch, isStartup).catch(error =>
-        console.error(`Error trying to load spocs feeds: ${error}`)
+        console.error("Error trying to load spocs feeds:", error)
       );
       promises.push(spocsPromise);
       if (this.showStories) {
@@ -1677,7 +1679,7 @@ class DiscoveryStreamFeed {
           dispatch,
           isStartup
         ).catch(error =>
-          console.error(`Error trying to load component feeds: ${error}`)
+          console.error("Error trying to load component feeds:", error)
         );
         promises.push(storiesPromise);
       }

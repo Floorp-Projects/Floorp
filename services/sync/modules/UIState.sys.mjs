@@ -185,7 +185,7 @@ const UIStateInternal = {
       // The most likely scenario is a user logged out, so reflect that.
       // Bug 995134 calls for better errors so we could retry if we were
       // sure this was the failure reason.
-      console.error("Error updating FxA account info: " + e);
+      console.error("Error updating FxA account info:", e);
       return null;
     }
   },

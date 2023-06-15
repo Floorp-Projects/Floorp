@@ -78,7 +78,8 @@ Bookmarks.prototype = {
               new URL(url);
             } catch (ex) {
               console.error(
-                `Ignoring ${url} when importing from 360se because of exception: ${ex}`
+                `Ignoring ${url} when importing from 360se because of exception:`,
+                ex
               );
               continue;
             }

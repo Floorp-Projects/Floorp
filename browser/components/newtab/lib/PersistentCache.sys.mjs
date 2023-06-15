@@ -69,9 +69,7 @@ export class PersistentCache {
             !(error instanceof DOMException) ||
             error.name !== "NotFoundError"
           ) {
-            console.error(
-              `Failed to parse ${this._filename}: ${error.message}`
-            );
+            console.error(`Failed to parse ${this._filename}:`, error.message);
           }
         }
 

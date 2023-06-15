@@ -423,7 +423,7 @@ export var PageThumbs = {
       let buffer = await TaskUtils.readBlob(blob);
       await this._store(originalURL, url, buffer, channelError);
     } catch (ex) {
-      console.error("Exception thrown during thumbnail capture: '", ex, "'");
+      console.error("Exception thrown during thumbnail capture:", ex);
     }
   },
 

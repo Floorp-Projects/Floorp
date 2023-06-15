@@ -3335,7 +3335,7 @@ async function addDynamicStylesheet(window, stylesheetURL) {
     );
     window.windowUtils.addSheet(sheet, Ci.nsIDOMWindowUtils.AGENT_SHEET);
   } catch (ex) {
-    console.error(`Error adding dynamic stylesheet: ${ex}`);
+    console.error("Error adding dynamic stylesheet:", ex);
   }
 }
 
@@ -3355,6 +3355,6 @@ function removeDynamicStylesheet(window, stylesheetURL) {
       Ci.nsIDOMWindowUtils.AGENT_SHEET
     );
   } catch (ex) {
-    console.error(`Error removing dynamic stylesheet: ${ex}`);
+    console.error("Error removing dynamic stylesheet:", ex);
   }
 }

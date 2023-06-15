@@ -33,9 +33,7 @@ function recordTelemetryEvent(event) {
       extra
     );
   } catch (ex) {
-    console.error(
-      "AboutLoginsChild: error recording telemetry event: " + ex.message
-    );
+    console.error("AboutLoginsChild: error recording telemetry event:", ex);
   }
 }
 

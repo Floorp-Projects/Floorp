@@ -744,7 +744,7 @@ nsBrowserContentHandler.prototype = {
                 return new URL(val);
               } catch (ex) {
                 // Invalid URL, so filter out below
-                console.error(`Invalid once url: ${ex}`);
+                console.error("Invalid once url:", ex);
                 return null;
               }
             })
@@ -766,7 +766,7 @@ nsBrowserContentHandler.prototype = {
         }
       } catch (ex) {
         // Invalid json pref, so ignore (and clear below)
-        console.error(`Invalid once pref: ${ex}`);
+        console.error("Invalid once pref:", ex);
       } finally {
         prefb.clearUserPref(ONCE_PREF);
       }
@@ -1130,7 +1130,8 @@ nsDefaultCommandLineHandler.prototype = {
         handleNotification()
           .catch(e => {
             console.error(
-              `Error handling Windows notification with tag '${tag}': ${e}`
+              `Error handling Windows notification with tag '${tag}':`,
+              e
             );
           })
           .finally(() => {
@@ -1242,9 +1243,7 @@ nsDefaultCommandLineHandler.prototype = {
     for (let i = 0; i < cmdLine.length; ++i) {
       var curarg = cmdLine.getArgument(i);
       if (curarg.match(/^-/)) {
-        console.error(
-          "Warning: unrecognized command line flag " + curarg + "\n"
-        );
+        console.error("Warning: unrecognized command line flag", curarg);
         // To emulate the pre-nsICommandLine behavior, we ignore
         // the argument after an unrecognized flag.
         ++i;
@@ -1253,11 +1252,8 @@ nsDefaultCommandLineHandler.prototype = {
           urilist.push(resolveURIInternal(cmdLine, curarg));
         } catch (e) {
           console.error(
-            "Error opening URI '" +
-              curarg +
-              "' from the command line: " +
-              e +
-              "\n"
+            `Error opening URI ${curarg} from the command line:`,
+            e
           );
         }
       }

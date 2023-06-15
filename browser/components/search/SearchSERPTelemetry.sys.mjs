@@ -251,7 +251,7 @@ class TelemetryHandler {
    */
   handleEvent(event) {
     if (event.type != "TabClose") {
-      console.error(`Received unexpected event type ${event.type}`);
+      console.error("Received unexpected event type", event.type);
       return;
     }
 
