@@ -19,6 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class NetworkEventRecord {
   #channel;
+  #contextId;
   #fromCache;
   #networkListener;
   #redirectCount;
@@ -44,6 +45,10 @@ export class NetworkEventRecord {
     this.#wrappedChannel = ChannelWrapper.get(channel);
 
     this.#networkListener = networkListener;
+
+    // The context ids computed by TabManager have the lifecycle of a navigable
+    // and can be reused for all the events emitted from this record.
+    this.#contextId = this.#getContextId();
 
     // The wrappedChannel id remains identical across redirects, whereas
     // nsIChannel.channelId is different for each and every request.
@@ -223,7 +228,7 @@ export class NetworkEventRecord {
     this.#updateDataFromTimedChannel();
 
     this.#networkListener.emit("before-request-sent", {
-      contextId: this.#getContextId(),
+      contextId: this.#contextId,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       timestamp: Date.now(),
@@ -234,7 +239,7 @@ export class NetworkEventRecord {
     this.#updateDataFromTimedChannel();
 
     this.#networkListener.emit("response-completed", {
-      contextId: this.#getContextId(),
+      contextId: this.#contextId,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       responseData: this.#responseData,
@@ -246,7 +251,7 @@ export class NetworkEventRecord {
     this.#updateDataFromTimedChannel();
 
     this.#networkListener.emit("response-started", {
-      contextId: this.#getContextId(),
+      contextId: this.#contextId,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       responseData: this.#responseData,
@@ -278,9 +283,12 @@ export class NetworkEventRecord {
   }
 
   /**
-   * Retrieve the context id corresponding to the current channel, this could
-   * change dynamically during a cross group navigation for an iframe, so this
-   * should always be retrieved dynamically.
+   * Retrieve the navigable id for the current browsing context associated to
+   * the requests' channel. Network events are recorded in the parent process
+   * so we always expect to be able to use TabManager.getIdForBrowsingContext.
+   *
+   * @returns {string}
+   *     The navigable id corresponding to the given browsing context.
    */
   #getContextId() {
     const id = lazy.NetworkUtils.getChannelBrowsingContextID(this.#channel);
