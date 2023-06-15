@@ -1172,3 +1172,9 @@ pub unsafe extern "C" fn wgpu_queue_write_texture(
     let action = QueueWriteAction::Texture { dst, layout, size };
     *bb = make_byte_buf(&action);
 }
+
+/// Returns the block size or zero if the format has multiple aspects (for example depth+stencil).
+#[no_mangle]
+pub extern "C" fn wgpu_texture_format_block_size_single_aspect(format: wgt::TextureFormat) -> u32 {
+    format.block_size(None).unwrap_or(0)
+}
