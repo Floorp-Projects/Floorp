@@ -212,7 +212,8 @@ add_task(async function test_tab_to_edit_button() {
       const loginSort = loginList.shadowRoot.getElementById("login-sort");
       const loginListbox = loginList.shadowRoot.querySelector("ol");
       const editButton = loginItem.shadowRoot.querySelector(".edit-button");
-      const breachAlert = loginItem.shadowRoot.querySelector(".breach-alert");
+      const breachAlert =
+        loginItem.shadowRoot.querySelector("login-breach-alert");
       const getFocusedElement = () => {
         if (content.document.activeElement == loginList) {
           return loginList.shadowRoot.activeElement;

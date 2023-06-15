@@ -90,7 +90,7 @@ add_task(async function test_added_login_shows_breach_warning() {
       }, "waiting for breached login to get selected");
       Assert.ok(
         !ContentTaskUtils.is_hidden(
-          loginItem.shadowRoot.querySelector(".breach-alert")
+          loginItem.shadowRoot.querySelector("login-breach-alert")
         ),
         "the breach alert should be visible"
       );
@@ -156,7 +156,7 @@ add_task(async function test_added_login_shows_breach_warning() {
 
       Assert.ok(
         ContentTaskUtils.is_hidden(
-          loginItem.shadowRoot.querySelector(".breach-alert")
+          loginItem.shadowRoot.querySelector("login-breach-alert")
         ),
         "the breach alert should be hidden now"
       );
