@@ -66,7 +66,9 @@ async function openTabAndWaitForRender() {
 }
 
 function newDirectory() {
-  let dir = FileUtils.getDir("TmpD", ["testdir"]);
+  let tmpDir = FileUtils.getDir("TmpD", [], true);
+  let dir = tmpDir.clone();
+  dir.append("testdir");
   dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   return dir;
 }

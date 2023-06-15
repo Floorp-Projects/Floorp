@@ -37,8 +37,7 @@ Services.prefs.setIntPref(
 // test_builtin_system_location tests the (isSystem && isBuiltin) combination
 // (i.e. KEY_APP_SYSTEM_DEFAULTS). That location only exists if this directory
 // is found:
-const distroDir = FileUtils.getDir("ProfD", ["sysfeatures"]);
-distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+const distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
 registerDirectory("XREAppFeat", distroDir);
 
 function getInstallLocation({

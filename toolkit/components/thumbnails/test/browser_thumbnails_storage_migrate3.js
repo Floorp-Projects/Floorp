@@ -21,12 +21,10 @@ var { PageThumbsStorageMigrator } = tmp;
  */
 function* runTests() {
   // Prepare a local profile directory.
-  let localProfile = FileUtils.getDir("ProfD", ["local-test"]);
-  localProfile.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let localProfile = FileUtils.getDir("ProfD", ["local-test"], true);
   changeLocation("ProfLD", localProfile);
 
-  let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY]);
-  roaming.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY], true);
 
   // Set up some data in the roaming profile.
   let name = PageThumbsStorageService.getLeafNameForURL(URL);

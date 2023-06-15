@@ -26,7 +26,11 @@ const SERVER_URL =
 function getPendingCrashReportDir() {
   // The fake UAppData directory that makeFakeAppDir provides
   // is just UAppData under the profile directory.
-  return FileUtils.getDir("ProfD", ["UAppData", "Crash Reports", "pending"]);
+  return FileUtils.getDir(
+    "ProfD",
+    ["UAppData", "Crash Reports", "pending"],
+    false
+  );
 }
 
 /**

@@ -53,8 +53,7 @@ async function installTestAddon(addonId, unpacked = false) {
     // in XPInstall.jsm).
     const random = Math.round(Math.random() * 36 ** 3).toString(36);
     const tmpDirName = `mochitest_unpacked_addons_${random}`;
-    let tmpExtPath = FileUtils.getDir("TmpD", [tmpDirName]);
-    tmpExtPath.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    let tmpExtPath = FileUtils.getDir("TmpD", [tmpDirName], true);
     registerCleanupFunction(() => {
       tmpExtPath.remove(true);
     });

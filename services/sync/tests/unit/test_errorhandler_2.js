@@ -22,8 +22,7 @@ registerCleanupFunction(function () {
   });
 });
 
-const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"]);
-logsdir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
 function removeLogFiles() {
   let entries = logsdir.directoryEntries;

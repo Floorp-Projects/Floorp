@@ -4,8 +4,11 @@
 "use strict";
 
 async function testAppliedFilters(ext, expectedFilter, expectedFilterCount) {
-  let tempDir = FileUtils.getDir("TmpD", [`testDownloadDir-${Math.random()}`]);
-  tempDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  let tempDir = FileUtils.getDir(
+    "TmpD",
+    [`testDownloadDir-${Math.random()}`],
+    true
+  );
 
   let filterCount = 0;
 

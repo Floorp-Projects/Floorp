@@ -5,8 +5,7 @@
 // This test verifies that hidden add-ons cannot be user disabled.
 
 // for system add-ons
-const distroDir = FileUtils.getDir("ProfD", ["sysfeatures"]);
-distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+const distroDir = FileUtils.getDir("ProfD", ["sysfeatures"], true);
 registerDirectory("XREAppFeat", distroDir);
 
 const NORMAL_ID = "normal@tests.mozilla.org";
