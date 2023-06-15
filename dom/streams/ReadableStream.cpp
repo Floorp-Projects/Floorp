@@ -29,6 +29,7 @@
 #include "mozilla/dom/ReadRequest.h"
 #include "mozilla/dom/ReadableByteStreamController.h"
 #include "mozilla/dom/ReadableStreamBYOBReader.h"
+#include "mozilla/dom/ReadableStreamBYOBRequest.h"
 #include "mozilla/dom/ReadableStreamBinding.h"
 #include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
@@ -1248,7 +1249,7 @@ void ReadableStream::EnqueueNative(JSContext* aCx, JS::Handle<JS::Value> aChunk,
     MOZ_ASSERT(JS_GetArrayBufferViewByteOffset(chunk) ==
                JS_GetArrayBufferViewByteOffset(byobView));
     // Step 4.2: Assert: chunk.[[ByteLength]] ≤ byobView.[[ByteLength]].
-    MOZ_ASSERT(JS_GetArrayBufferViewByteLength(chunk) ==
+    MOZ_ASSERT(JS_GetArrayBufferViewByteLength(chunk) <=
                JS_GetArrayBufferViewByteLength(byobView));
     // Step 4.3: Perform ?
     // ReadableByteStreamControllerRespond(stream.[[controller]],
@@ -1265,6 +1266,29 @@ void ReadableStream::EnqueueNative(JSContext* aCx, JS::Handle<JS::Value> aChunk,
   // Step 5: Otherwise, perform ?
   // ReadableByteStreamControllerEnqueue(stream.[[controller]], chunk).
   ReadableByteStreamControllerEnqueue(aCx, controller, chunk, aRv);
+}
+
+// https://streams.spec.whatwg.org/#readablestream-current-byob-request-view
+void ReadableStream::GetCurrentBYOBRequestView(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aView, ErrorResult& aRv) {
+  aView.set(nullptr);
+
+  // Step 1: Assert: stream.[[controller]] implements
+  // ReadableByteStreamController.
+  MOZ_ASSERT(mController->IsByte());
+
+  // Step 2: Let byobRequest be !
+  // ReadableByteStreamControllerGetBYOBRequest(stream.[[controller]]).
+  RefPtr<ReadableStreamBYOBRequest> byobRequest =
+      mController->AsByte()->GetByobRequest(aCx, aRv);
+
+  // Step 3: If byobRequest is null, then return null.
+  if (!byobRequest || aRv.Failed()) {
+    return;
+  }
+
+  // Step 4: Return byobRequest.[[view]].
+  byobRequest->GetView(aCx, aView);
 }
 
 // https://streams.spec.whatwg.org/#readablestream-get-a-reader

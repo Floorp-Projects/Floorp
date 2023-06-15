@@ -23,6 +23,7 @@
 namespace mozilla::dom {
 
 class Promise;
+class ReadableStreamBYOBRequest;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReader;
 struct ReadableStreamGetReaderOptions;
@@ -168,6 +169,11 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT void EnqueueNative(JSContext* aCx,
                                         JS::Handle<JS::Value> aChunk,
                                         ErrorResult& aRv);
+
+  // https://streams.spec.whatwg.org/#readablestream-current-byob-request-view
+  void GetCurrentBYOBRequestView(JSContext* aCx,
+                                 JS::MutableHandle<JSObject*> aView,
+                                 ErrorResult& aRv);
 
   // The following algorithms can be used on arbitrary ReadableStream instances,
   // including ones that are created by web developers. They can all fail in
