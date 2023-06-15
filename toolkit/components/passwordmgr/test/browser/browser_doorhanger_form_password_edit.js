@@ -391,7 +391,7 @@ async function testPasswordChange(
     await LoginTestUtils.addLogin(login);
   }
 
-  for (let login of Services.logins.getAllLogins()) {
+  for (let login of await Services.logins.getAllLogins()) {
     info(`Saved login: ${login.username}, ${login.password}, ${login.origin}`);
   }
 

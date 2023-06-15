@@ -86,7 +86,7 @@ void LoginDetectionService::FetchLogins() {
     return;
   }
 
-  Unused << loginManager->GetAllLoginsWithCallbackAsync(this);
+  Unused << loginManager->GetAllLoginsWithCallback(this);
 }
 
 void LoginDetectionService::UnregisterObserver() {

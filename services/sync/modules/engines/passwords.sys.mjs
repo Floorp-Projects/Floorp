@@ -129,7 +129,7 @@ PasswordEngine.prototype = {
   async _getChangedIDs(getAll) {
     let changes = {};
 
-    let logins = await this._store.storage.getAllLoginsAsync(true);
+    let logins = await this._store.storage.getAllLogins(true);
     for (let login of logins) {
       if (getAll || login.syncCounter > 0) {
         if (Utils.getSyncCredentialsHosts().has(login.origin)) {
@@ -306,7 +306,7 @@ PasswordStore.prototype = {
 
   async getAllIDs() {
     let items = {};
-    let logins = await this.storage.getAllLoginsAsync(true);
+    let logins = await this.storage.getAllLogins(true);
 
     for (let i = 0; i < logins.length; i++) {
       // Skip over Weave password/passphrase entries.
@@ -496,8 +496,8 @@ export class PasswordValidator extends CollectionValidator {
     ]);
   }
 
-  getClientItems() {
-    let logins = Services.logins.getAllLogins();
+  async getClientItems() {
+    let logins = await Services.logins.getAllLogins();
     let syncHosts = Utils.getSyncCredentialsHosts();
     let result = logins
       .map(l => l.QueryInterface(Ci.nsILoginMetaInfo))

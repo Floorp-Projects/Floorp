@@ -285,7 +285,7 @@ add_task(async function test_importIntoEmptyDB() {
     "Sanity check the source exists"
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "There are no logins initially");
 
   // Migrate the logins.
@@ -296,7 +296,7 @@ add_task(async function test_importIntoEmptyDB() {
     true
   );
 
-  logins = Services.logins.getAllLogins();
+  logins = await Services.logins.getAllLogins();
   Assert.equal(
     logins.length,
     TEST_LOGINS.length,
@@ -322,7 +322,7 @@ add_task(async function test_importExistingLogins() {
   );
 
   Services.logins.removeAllUserFacingLogins();
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(
     logins.length,
     0,
@@ -337,7 +337,7 @@ add_task(async function test_importExistingLogins() {
     await Services.logins.addLoginAsync(newLogins[i]);
   }
 
-  logins = Services.logins.getAllLogins();
+  logins = await Services.logins.getAllLogins();
   Assert.equal(
     logins.length,
     newLogins.length,
@@ -355,7 +355,7 @@ add_task(async function test_importExistingLogins() {
     true
   );
 
-  logins = Services.logins.getAllLogins();
+  logins = await Services.logins.getAllLogins();
   Assert.equal(
     logins.length,
     TEST_LOGINS.length,

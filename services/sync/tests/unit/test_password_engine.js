@@ -373,8 +373,7 @@ add_task(async function test_sync_outgoing() {
     equal(collection.count(), 1);
     equal(Services.logins.countLogins("", "", ""), 2);
     equal(Services.logins.findLogins("", "", "").length, 2);
-    equal(Services.logins.getAllLogins().length, 2);
-    equal((await Services.logins.getAllLoginsAsync()).length, 2);
+    equal((await Services.logins.getAllLogins()).length, 2);
     ok(await engine._store.itemExists(guid));
 
     ok((await engine._store.getAllIDs())[guid]);
@@ -403,8 +402,7 @@ add_task(async function test_sync_outgoing() {
     // All of these should not include the deleted login. Only the FxA password should exist.
     equal(Services.logins.countLogins("", "", ""), 1);
     equal(Services.logins.findLogins("", "", "").length, 1);
-    equal(Services.logins.getAllLogins().length, 1);
-    equal((await Services.logins.getAllLoginsAsync()).length, 1);
+    equal((await Services.logins.getAllLogins()).length, 1);
     ok(!(await engine._store.itemExists(guid)));
 
     // getAllIDs includes deleted items but skips the FxA login.
