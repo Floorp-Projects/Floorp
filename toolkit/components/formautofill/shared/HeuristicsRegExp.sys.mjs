@@ -33,6 +33,12 @@ export const HeuristicsRegExp = {
     "cc-type": undefined,
   },
 
+  // regular expressions that only apply to label
+  LABEL_RULES: {
+    "address-line1": undefined,
+    "address-line2": undefined,
+  },
+
   RULE_SETS: [
     //=========================================================================
     // Firefox-specific rules
@@ -596,35 +602,76 @@ export const HeuristicsRegExp = {
     },
   ],
 
-  _getRule(name) {
-    let rules = [];
-    this.RULE_SETS.forEach(set => {
-      if (set[name]) {
-        // Add the rule.
-        // We make the regex lower case so that we can match it against the
-        // lower-cased field name and get a rough equivalent of a case-insensitive
-        // match. This avoids a performance cliff with the "iu" flag on regular
-        // expressions.
-        rules.push(`(${set[name].toLowerCase()})`.normalize("NFKC"));
-      }
-    });
+  LABEL_RULE_SETS: [
+    {
+      "address-line1":
+        "(^\\W*address)" +
+        "|(address\\W*$)" +
+        "|(?:shipping|billing|mailing|pick.?up|drop.?off|delivery|sender|postal|" +
+        "recipient|home|work|office|school|business|mail)[\\s\\-]+address" +
+        "|address\\s+(of|for|to|from)" +
+        "|adresse" +                         // fr-FR
+        "|indirizzo" +                       // it-IT
+        "|住所" +                            // ja-JP
+        "|地址" +                            // zh-CN
+        "|(\\b|_)adres(?! tarifi)(\\b|_)" +  // tr
+        "|주소" +                            // ko-KR
+        "|^alamat" +                         // id
+        // Should contain street and any other address component, in any order
+        "|street.*(house|building|apartment|floor)" +  // en
+        "|(house|building|apartment|floor).*street" +
+        "|(sokak|cadde).*(apartman|bina|daire|mahalle)" +  // tr
+        "|(apartman|bina|daire|mahalle).*(sokak|cadde)" +
+        "|улиц.*(дом|корпус|квартир|этаж)|(дом|корпус|квартир|этаж).*улиц",  // ru
+    },
+    {
+      "address-line2":
+        "address|line" +
+        "|adresse" +      // fr-FR
+        "|indirizzo" +    // it-IT
+        "|地址" +         // zh-CN
+        "|주소",          // ko-KR
+    },
+  ],
 
-    const value = new RegExp(rules.join("|"), "gu");
-    Object.defineProperty(this.RULES, name, { get: undefined });
-    Object.defineProperty(this.RULES, name, { value });
-    return value;
-  },
+  _getRules(rules, rulesets) {
+    function computeRule(name) {
+      let regexps = [];
+      rulesets.forEach(set => {
+        if (set[name]) {
+          // Add the rule.
+          // We make the regex lower case so that we can match it against the
+          // lower-cased field name and get a rough equivalent of a case-insensitive
+          // match. This avoids a performance cliff with the "iu" flag on regular
+          // expressions.
+          regexps.push(`(${set[name].toLowerCase()})`.normalize("NFKC"));
+        }
+      });
 
-  getRules() {
-    Object.keys(this.RULES).forEach(field =>
-      Object.defineProperty(this.RULES, field, {
+      const value = new RegExp(regexps.join("|"), "gu");
+
+      Object.defineProperty(rules, name, { get: undefined });
+      Object.defineProperty(rules, name, { value });
+      return value;
+    }
+
+    Object.keys(rules).forEach(field =>
+      Object.defineProperty(rules, field, {
         get() {
-          return HeuristicsRegExp._getRule(field);
+          return computeRule(field);
         },
       })
     );
 
-    return this.RULES;
+    return rules;
+  },
+
+  getLabelRules() {
+    return this._getRules(this.LABEL_RULES, this.LABEL_RULE_SETS);
+  },
+
+  getRules() {
+    return this._getRules(this.RULES, this.RULE_SETS);
   },
 };
 
