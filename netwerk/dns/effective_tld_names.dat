@@ -6273,20 +6273,23 @@ k12.vi
 net.vi
 org.vi
 
-// vn : https://www.dot.vn/vnnic/vnnic/domainregistration.jsp
+// vn : https://www.vnnic.vn/en/domain/cctld-vn
 vn
+ac.vn
+ai.vn
+biz.vn
 com.vn
-net.vn
-org.vn
 edu.vn
 gov.vn
-int.vn
-ac.vn
-biz.vn
-info.vn
-name.vn
-pro.vn
 health.vn
+id.vn
+info.vn
+int.vn
+io.vn
+name.vn
+net.vn
+org.vn
+pro.vn
 
 // vu : https://en.wikipedia.org/wiki/.vu
 // http://www.vunic.vu/
@@ -6650,7 +6653,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-06-10T15:11:57Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-06-14T15:13:06Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7798,7 +7801,7 @@ gap
 // garden : 2014-06-26 Registry Services, LLC
 garden
 
-// gay : 2019-05-23 Top Level Design, LLC
+// gay : 2019-05-23 Registry Services, LLC
 gay
 
 // gbiz : 2014-07-17 Charleston Road Registry Inc.
@@ -8095,7 +8098,7 @@ infiniti
 // ing : 2014-01-23 Charleston Road Registry Inc.
 ing
 
-// ink : 2013-12-05 Top Level Design, LLC
+// ink : 2013-12-05 Registry Services, LLC
 ink
 
 // institute : 2013-11-07 Binky Moon, LLC
@@ -9385,7 +9388,7 @@ tatamotors
 // tatar : 2014-04-24 Limited Liability Company "Coordination Center of Regional Domain of Tatarstan Republic"
 tatar
 
-// tattoo : 2013-08-30 Top Level Design, LLC
+// tattoo : 2013-08-30 Registry Services, LLC
 tattoo
 
 // tax : 2014-03-20 Binky Moon, LLC
@@ -9694,7 +9697,7 @@ whoswho
 // wien : 2013-10-28 punkt.wien GmbH
 wien
 
-// wiki : 2013-11-07 Top Level Design, LLC
+// wiki : 2013-11-07 Registry Services, LLC
 wiki
 
 // williamhill : 2014-03-13 William Hill Organization Limited

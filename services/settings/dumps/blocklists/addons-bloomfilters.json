@@ -3,6 +3,25 @@
     {
       "stash": {
         "blocked": [
+          "{c5fc8c4d-0542-4aa6-8e35-20ce2df46773}:1.1.1",
+          "{f1a0cdeb-9f6d-44de-9e55-32d7b34eae85}:1.1.1",
+          "{c0c4c175-81fb-4d88-a668-ab7f13796052}:1.1.1",
+          "{67b08ecf-32aa-411a-895b-e6e80736b38c}:1.2.2",
+          "{c5fc8c4d-0542-4aa6-8e35-20ce2df46773}:1.1.0",
+          "{67b08ecf-32aa-411a-895b-e6e80736b38c}:1.1.0",
+          "{583999ce-69d9-412f-aaaf-78da4b23ceba}:1.1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1686355204033,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1686746108883,
+      "id": "b077d1c0-57c0-446e-af6c-98cc29c32fb2",
+      "last_modified": 1686746293902
+    },
+    {
+      "stash": {
+        "blocked": [
           "felipe-guanaquinho@felipe.wtf:1.4",
           "felipe-guanaquinho@felipe.wtf:1.5",
           "felipe-guanaquinho@felipe.wtf:1.2",
@@ -1808,5 +1827,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1685731073508
+  "timestamp": 1686746293902
 }
