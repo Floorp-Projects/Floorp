@@ -39,6 +39,13 @@ ITEM_VALUE(JSDateTimeUTC,               1u << 21)
 ITEM_VALUE(JSMathFdlibm,                1u << 22)
 ITEM_VALUE(Gamepad,                     1u << 23)
 ITEM_VALUE(HttpUserAgent,               1u << 24)
+ITEM_VALUE(WindowOuterSize,             1u << 25)
+ITEM_VALUE(WindowScreenXY,              1u << 26)
+ITEM_VALUE(WindowInnerScreenXY,         1u << 27)
+ITEM_VALUE(ScreenPixelDepth,            1u << 28)
+ITEM_VALUE(ScreenRect,                  1u << 29)
+ITEM_VALUE(ScreenAvailRect,             1u << 30)
+
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
