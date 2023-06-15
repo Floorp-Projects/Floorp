@@ -892,10 +892,12 @@ prefs-sync-turn-on-syncing =
 
 prefs-sync-offer-setup-label2 = Synchronize your bookmarks, history, tabs, passwords, add-ons, and settings across all your devices.
 
-prefs-sync-now =
-    .labelnotsyncing = Sync Now
-    .accesskeynotsyncing = N
-    .labelsyncing = Syncing…
+prefs-sync-now-button =
+    .label = Sync Now
+    .accesskey = N
+
+prefs-syncing-button =
+    .label = Syncing…
 
 ## The list of things currently syncing.
 

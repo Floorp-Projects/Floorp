@@ -300,21 +300,15 @@ var gSyncPane = {
 
   _updateSyncNow(syncing) {
     let butSyncNow = document.getElementById("syncNow");
-    if (syncing) {
-      butSyncNow.setAttribute("label", butSyncNow.getAttribute("labelsyncing"));
+    let fluentID = syncing ? "prefs-syncing-button" : "prefs-sync-now-button";
+    if (document.l10n.getAttributes(butSyncNow).id != fluentID) {
+      // Only one of the two strings has an accesskey, and fluent won't
+      // remove it if we switch to the string that doesn't, so just force
+      // removal here.
       butSyncNow.removeAttribute("accesskey");
-      butSyncNow.disabled = true;
-    } else {
-      butSyncNow.setAttribute(
-        "label",
-        butSyncNow.getAttribute("labelnotsyncing")
-      );
-      butSyncNow.setAttribute(
-        "accesskey",
-        butSyncNow.getAttribute("accesskeynotsyncing")
-      );
-      butSyncNow.disabled = false;
+      document.l10n.setAttributes(butSyncNow, fluentID);
     }
+    butSyncNow.disabled = syncing;
   },
 
   updateWeavePrefs() {
