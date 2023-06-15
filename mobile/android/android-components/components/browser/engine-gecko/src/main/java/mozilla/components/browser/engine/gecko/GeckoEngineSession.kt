@@ -278,6 +278,29 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.requestPrintContent]
+     */
+    override fun requestPrintContent() {
+        geckoSession.didPrintPageContent().then(
+            { finishedPrinting ->
+                if (finishedPrinting == true) {
+                    notifyObservers {
+                        onPrintFinish()
+                    }
+                }
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                logger.error("Printing failed.", throwable)
+                notifyObservers {
+                    onPrintException(true, throwable)
+                }
+                GeckoResult()
+            },
+        )
+    }
+
+    /**
      * See [EngineSession.stopLoading]
      */
     override fun stopLoading() {

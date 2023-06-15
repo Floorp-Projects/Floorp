@@ -12,6 +12,10 @@ permalink: /changelog/
 
 * **feature-pwa**
   * Adds `WebAppContentFeature` to set the "display" mode from the web app manifest on the `EngineSession`.
+* **browser-engine-gecko**:
+  * Added support for Printing on the Engine.
+* **concept-engine**:
+  * Added new `requestPrintContent` API in `Engine`. This is currently only supported in the Gecko Engine.
 
 # 115.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v114..releases_v115)

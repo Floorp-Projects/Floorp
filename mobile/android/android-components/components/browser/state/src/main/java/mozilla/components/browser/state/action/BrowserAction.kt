@@ -1057,6 +1057,30 @@ sealed class EngineAction : BrowserAction() {
     ) : EngineAction(), ActionWithTab
 
     /**
+     * Indicates the given [tabId] is to print the page content.
+     */
+    data class PrintContentAction(
+        override val tabId: String,
+    ) : EngineAction(), ActionWithTab
+
+    /**
+     * Indicates the given [tabId] completed printing the page content.
+     */
+    data class PrintContentCompletedAction(
+        override val tabId: String,
+    ) : EngineAction(), ActionWithTab
+
+    /**
+     * Indicates the given [tabId] was unable to print the page content.
+     * [isPrint] indicates if it is in response to a print (true) or PDF saving (false).
+     */
+    data class PrintContentExceptionAction(
+        override val tabId: String,
+        val isPrint: Boolean,
+        val throwable: Throwable,
+    ) : EngineAction(), ActionWithTab
+
+    /**
      * Navigates back in the tab with the given [tabId].
      */
     data class SaveToPdfAction(

@@ -42,6 +42,7 @@ internal class EngineDelegateMiddleware(
             is EngineAction.ToggleDesktopModeAction -> toggleDesktopMode(context.store, action)
             is EngineAction.ExitFullScreenModeAction -> exitFullScreen(context.store, action)
             is EngineAction.SaveToPdfAction -> saveToPdf(context.store, action)
+            is EngineAction.PrintContentAction -> printContent(context.store, action)
             is EngineAction.ClearDataAction -> clearData(context.store, action)
             is EngineAction.PurgeHistoryAction -> purgeHistory(context.state)
             else -> next(action)
@@ -140,6 +141,14 @@ internal class EngineDelegateMiddleware(
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.requestPdfToDownload()
+    }
+
+    private fun printContent(
+        store: Store<BrowserState, BrowserAction>,
+        action: EngineAction.PrintContentAction,
+    ) = scope.launch {
+        getEngineSessionOrDispatch(store, action)
+            ?.requestPrintContent()
     }
 
     private fun clearData(

@@ -61,6 +61,9 @@ internal object EngineStateReducer {
         is EngineAction.ToggleDesktopModeAction,
         is EngineAction.ExitFullScreenModeAction,
         is EngineAction.SaveToPdfAction,
+        is EngineAction.PrintContentAction,
+        is EngineAction.PrintContentCompletedAction,
+        is EngineAction.PrintContentExceptionAction,
         is EngineAction.KillEngineSessionAction,
         is EngineAction.ClearDataAction,
         -> {

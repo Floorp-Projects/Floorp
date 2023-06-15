@@ -284,6 +284,19 @@ abstract class EngineSession(
         fun onSaveToPdfException(throwable: Throwable) = Unit
 
         /**
+         * Event to indicate that printing finished.
+         */
+        fun onPrintFinish() = Unit
+
+        /**
+         * Event to indicate that an exception was thrown while preparing to print or save as pdf.
+         *
+         * @param isPrint true for a true print error or false for a Save as PDF error.
+         * @param throwable The exception throwable. Usually a GeckoPrintException.
+         */
+        fun onPrintException(isPrint: Boolean, throwable: Throwable) = Unit
+
+        /**
          * Event to indicate that this session needs to be checked for form data.
          *
          * @param containsFormData Indicates if the session has form data.
@@ -726,6 +739,13 @@ abstract class EngineSession(
      * A typical implementation would have the same flow that feeds into [EngineSession.Observer.onExternalResource].
      */
     abstract fun requestPdfToDownload()
+
+    /**
+     * Requests the [EngineSession] to print the current session's contents.
+     *
+     * This will open the Android Print Spooler.
+     */
+    abstract fun requestPrintContent()
 
     /**
      * Stops loading the current session.

@@ -84,6 +84,8 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_AU
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_IMAGE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_NONE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ContextElement.TYPE_VIDEO
+import org.mozilla.geckoview.GeckoSession.GeckoPrintException
+import org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS
@@ -3883,6 +3885,48 @@ class GeckoEngineSessionTest {
 
         engineSession.setDisplayMode(WebAppManifest.DisplayMode.BROWSER)
         verify(geckoSetting, atLeastOnce()).setDisplayMode(GeckoSessionSettings.DISPLAY_MODE_BROWSER)
+    }
+
+    fun `WHEN requestPrintContent is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(
+            runtime = mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+        whenever(geckoSession.didPrintPageContent()).thenReturn(GeckoResult.fromValue(true))
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPrintFinish() {
+                assert(true) { "We should notify of a successful print." }
+            }
+
+            override fun onPrintException(isPrint: Boolean, throwable: Throwable) {
+                assert(false) { "We should not notify of an exception." } }
+        })
+        engineSession.requestPrintContent()
+        shadowOf(getMainLooper()).idle()
+    }
+
+    @Test
+    fun `WHEN requestPrintContent has an exception THEN do nothing`() {
+        val engineSession = GeckoEngineSession(
+            runtime = mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+        class MockGeckoPrintException() : GeckoPrintException()
+        whenever(geckoSession.didPrintPageContent()).thenReturn(GeckoResult.fromException(MockGeckoPrintException()))
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPrintFinish() {
+                assert(false) { "We should not notify of a successful print." }
+            }
+
+            override fun onPrintException(isPrint: Boolean, throwable: Throwable) {
+                assert(true) { "An exception should occur." }
+                assertEquals("A GeckoPrintException occurred.", ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE, (throwable as GeckoPrintException).code)
+            }
+        })
+        engineSession.requestPrintContent()
+        shadowOf(getMainLooper()).idle()
     }
 
     private fun mockGeckoSession(): GeckoSession {

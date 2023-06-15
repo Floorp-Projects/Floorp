@@ -106,6 +106,10 @@ class SystemEngineSession(
         throw UnsupportedOperationException("PDF support is not available in this engine")
     }
 
+    override fun requestPrintContent() {
+        throw UnsupportedOperationException("Print support is not available in this engine")
+    }
+
     /**
      * See [EngineSession.stopLoading]
      */

@@ -949,6 +949,8 @@ open class DummyEngineSession : EngineSession() {
 
     override fun requestPdfToDownload() {}
 
+    override fun requestPrintContent() {}
+
     override fun stopLoading() {}
 
     override fun reload(flags: LoadUrlFlags) {}

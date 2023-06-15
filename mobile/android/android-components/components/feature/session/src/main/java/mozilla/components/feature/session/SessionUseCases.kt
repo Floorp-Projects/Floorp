@@ -432,6 +432,35 @@ class SessionUseCases(
         }
     }
 
+    /**
+     * A use case for requesting a given tab to print it's content.
+     */
+    class PrintContentUseCase internal constructor(
+        private val store: BrowserStore,
+    ) {
+        /**
+         * Request that Android print the current [tabId].
+         *
+         * The same caveats in the [SaveToPdfUseCase] apply here because the Engine makes a PDF prior
+         * to sending the print request on to the Android print spooler. This means the session should
+         * have been painted first to successfully make a PDF.
+         *
+         * ⚠️ Make sure to have a middleware that handles the [EngineAction.PrintContentExceptionAction]`
+         * to handle print errors. Handling [EngineAction.PrintContentCompletedAction] is only necessary for
+         * telemetry or if any extra actions need to be completed.
+         *
+         */
+        operator fun invoke(
+            tabId: String? = store.state.selectedTabId,
+        ) {
+            if (tabId == null) {
+                return
+            }
+
+            store.dispatch(EngineAction.PrintContentAction(tabId))
+        }
+    }
+
     val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(store, onNoTab) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(store, onNoTab) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(store) }
@@ -442,6 +471,7 @@ class SessionUseCases(
     val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(store) }
     val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(store) }
     val saveToPdf: SaveToPdfUseCase by lazy { SaveToPdfUseCase(store) }
+    val printContent: PrintContentUseCase by lazy { PrintContentUseCase(store) }
     val crashRecovery: CrashRecoveryUseCase by lazy { CrashRecoveryUseCase(store) }
     val purgeHistory: PurgeHistoryUseCase by lazy { PurgeHistoryUseCase(store) }
     val updateLastAccess: UpdateLastAccessUseCase by lazy { UpdateLastAccessUseCase(store) }

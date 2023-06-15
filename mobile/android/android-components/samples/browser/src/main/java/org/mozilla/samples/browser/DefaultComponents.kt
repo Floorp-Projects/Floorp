@@ -316,6 +316,9 @@ open class DefaultComponents(private val applicationContext: Context) {
             SimpleBrowserMenuItem("Save to PDF") {
                 sessionUseCases.saveToPdf.invoke()
             },
+            SimpleBrowserMenuItem("Print") {
+                sessionUseCases.printContent.invoke()
+            },
             SimpleBrowserMenuItem("Restore after crash") {
                 sessionUseCases.crashRecovery.invoke()
             },
