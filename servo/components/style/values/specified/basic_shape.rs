@@ -54,6 +54,19 @@ pub type ShapeRadius = generic::ShapeRadius<NonNegativeLengthPercentage>;
 /// The specified value of `Polygon`
 pub type Polygon = generic::GenericPolygon<LengthPercentage>;
 
+/// For filled shapes, we use fill-rule, and store it for path() and polygon().
+/// For outline shapes, we should ignore fill-rule.
+///
+/// https://github.com/w3c/fxtf-drafts/issues/512
+/// https://github.com/w3c/csswg-drafts/issues/7390
+/// https://github.com/w3c/csswg-drafts/issues/3468
+pub enum ShapeType {
+    /// The CSS property uses filled shapes. The default behavior.
+    Filled,
+    /// The CSS property uses outline shapes. This is especially useful for offset-path.
+    Outline,
+}
+
 bitflags! {
     /// The flags to represent which basic shapes we would like to support.
     ///
@@ -124,7 +137,7 @@ where
     loop {
         if shape.is_none() {
             shape = input
-                .try_parse(|i| BasicShape::parse(context, i, flags))
+                .try_parse(|i| BasicShape::parse(context, i, flags, ShapeType::Filled))
                 .ok();
         }
 
@@ -204,6 +217,7 @@ impl BasicShape {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         flags: AllowedBasicShapes,
+        shape_type: ShapeType,
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
         let function = input.expect_function()?.clone();
@@ -219,10 +233,11 @@ impl BasicShape {
                     Ellipse::parse_function_arguments(context, i).map(BasicShape::Ellipse)
                 },
                 "polygon" if flags.contains(AllowedBasicShapes::POLYGON) => {
-                    Polygon::parse_function_arguments(context, i).map(BasicShape::Polygon)
+                    Polygon::parse_function_arguments(context, i, shape_type)
+                        .map(BasicShape::Polygon)
                 },
                 "path" if flags.contains(AllowedBasicShapes::PATH) => {
-                    Path::parse_function_arguments(i).map(BasicShape::Path)
+                    Path::parse_function_arguments(i, shape_type).map(BasicShape::Path)
                 },
                 _ => {
                     Err(
@@ -325,8 +340,36 @@ impl Ellipse {
         Ok(generic::Ellipse {
             semiaxis_x: a,
             semiaxis_y: b,
-            position: position,
+            position,
         })
+    }
+}
+
+fn parse_fill_rule<'i, 't>(
+    input: &mut Parser<'i, 't>,
+    shape_type: ShapeType,
+) -> FillRule {
+    match shape_type {
+        // Per [1] and [2], we ignore `<fill-rule>` for outline shapes, so always use a default
+        // value.
+        // [1] https://github.com/w3c/csswg-drafts/issues/3468
+        // [2] https://github.com/w3c/csswg-drafts/issues/7390
+        //
+        // Also, per [3] and [4], we would like the ignore `<file-rule>` from outline shapes, e.g.
+        // offset-path, which means we don't parse it when setting `ShapeType::Outline`.
+        // This should be web compatible because the shipped "offset-path:path()" doesn't have
+        // `<fill-rule>` and "offset-path:polygon()" is a new feature and still behind the
+        // preference.
+        // [3] https://github.com/w3c/fxtf-drafts/issues/512#issuecomment-1545393321
+        // [4] https://github.com/w3c/fxtf-drafts/issues/512#issuecomment-1555330929
+        ShapeType::Outline => Default::default(),
+        ShapeType::Filled => input
+            .try_parse(|i| -> Result<_, ParseError> {
+                let fill = FillRule::parse(i)?;
+                i.expect_comma()?;
+                Ok(fill)
+            })
+            .unwrap_or_default(),
     }
 }
 
@@ -336,7 +379,7 @@ impl Parse for Polygon {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         input.expect_function_matching("polygon")?;
-        input.parse_nested_block(|i| Self::parse_function_arguments(context, i))
+        input.parse_nested_block(|i| Self::parse_function_arguments(context, i, ShapeType::Filled))
     }
 }
 
@@ -345,15 +388,9 @@ impl Polygon {
     fn parse_function_arguments<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
+        shape_type: ShapeType,
     ) -> Result<Self, ParseError<'i>> {
-        let fill = input
-            .try_parse(|i| -> Result<_, ParseError> {
-                let fill = FillRule::parse(i)?;
-                i.expect_comma()?; // only eat the comma if there is something before it
-                Ok(fill)
-            })
-            .unwrap_or_default();
-
+        let fill = parse_fill_rule(input, shape_type);
         let coordinates = input
             .parse_comma_separated(|i| {
                 Ok(PolygonCoord(
@@ -373,7 +410,7 @@ impl Parse for Path {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         input.expect_function_matching("path")?;
-        input.parse_nested_block(Self::parse_function_arguments)
+        input.parse_nested_block(|i| Self::parse_function_arguments(i, ShapeType::Filled))
     }
 }
 
@@ -381,16 +418,11 @@ impl Path {
     /// Parse the inner arguments of a `path` function.
     fn parse_function_arguments<'i, 't>(
         input: &mut Parser<'i, 't>,
+        shape_type: ShapeType,
     ) -> Result<Self, ParseError<'i>> {
         use crate::values::specified::svg_path::AllowEmpty;
 
-        let fill = input
-            .try_parse(|i| -> Result<_, ParseError> {
-                let fill = FillRule::parse(i)?;
-                i.expect_comma()?;
-                Ok(fill)
-            })
-            .unwrap_or_default();
+        let fill = parse_fill_rule(input, shape_type);
         let path = SVGPathData::parse(input, AllowEmpty::No)?;
         Ok(Path { fill, path })
     }
