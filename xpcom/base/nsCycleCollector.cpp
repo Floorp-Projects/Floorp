@@ -3423,7 +3423,12 @@ void nsCycleCollector::ShutdownCollect() {
     ccJSContext->PerformMicroTaskCheckPoint(true);
     ccJSContext->ProcessStableStateQueue();
   }
-  NS_WARNING_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
+
+  // This warning would happen very frequently, so don't do it unless we're
+  // logging this CC, so we might care about how many CCs there are.
+  NS_WARNING_ASSERTION(
+      !mParams.LogThisCC(mShutdownCount) || i < NORMAL_SHUTDOWN_COLLECTIONS,
+      "Extra shutdown CC");
 }
 
 static void PrintPhase(const char* aPhase) {
