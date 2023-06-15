@@ -45,9 +45,9 @@ class ClientInfo final {
 
   ClientInfo& operator=(const ClientInfo& aRight);
 
-  ClientInfo(ClientInfo&& aRight) noexcept;
+  ClientInfo(ClientInfo&& aRight);
 
-  ClientInfo& operator=(ClientInfo&& aRight) noexcept;
+  ClientInfo& operator=(ClientInfo&& aRight);
 
   explicit ClientInfo(const IPCClientInfo& aData);
 

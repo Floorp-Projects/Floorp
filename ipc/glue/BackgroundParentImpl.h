@@ -408,7 +408,7 @@ class BackgroundParentImpl : public PBackgroundParent {
       PWebSocketConnectionParent* actor, const uint32_t& aListenerId) override;
 
   already_AddRefed<PLockManagerParent> AllocPLockManagerParent(
-      NotNull<nsIPrincipal*> aPrincipal, const nsID& aClientId) final;
+      const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) final;
 
   already_AddRefed<PFetchParent> AllocPFetchParent() override;
 };
