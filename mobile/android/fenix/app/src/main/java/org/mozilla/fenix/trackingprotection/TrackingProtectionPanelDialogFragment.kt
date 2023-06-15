@@ -24,6 +24,7 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -36,7 +37,6 @@ import mozilla.components.lib.state.ext.observe
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -221,7 +221,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         consumeFlow(store) { flow ->
             flow.mapNotNull { state ->
                 state.findTabOrCustomTab(provideCurrentTabId())
-            }.ifChanged { tab -> tab.content.url }
+            }.distinctUntilChangedBy { tab -> tab.content.url }
                 .collect {
                     protectionsStore.dispatch(ProtectionsAction.UrlChange(it.content.url))
                 }

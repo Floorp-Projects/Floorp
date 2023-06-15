@@ -7,7 +7,7 @@ package org.mozilla.fenix.crashes
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.normalTabs
@@ -17,7 +17,6 @@ import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.utils.Settings
@@ -53,7 +52,7 @@ class CrashContentIntegration(
 ) : AbstractBinding<BrowserState>(browserStore) {
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(sessionId) }
-            .ifChanged { tab -> tab.engineState.crashed }
+            .distinctUntilChangedBy { tab -> tab.engineState.crashed }
             .collect { tab ->
                 if (tab.engineState.crashed) {
                     toolbar.expand()

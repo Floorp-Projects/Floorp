@@ -8,8 +8,8 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -24,7 +24,6 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.service.fxa.sync.SyncReason
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * A storage that listens to the [BrowserStore] changes to synchronize the local tabs state
@@ -49,7 +48,7 @@ class SyncedTabsStorage(
     @OptIn(FlowPreview::class)
     fun start() {
         scope = store.flowScoped { flow ->
-            flow.ifChanged { it.toSyncTabState() }
+            flow.distinctUntilChangedBy { it.toSyncTabState() }
                 .map { state ->
                     // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179
                     val iconUrl = null

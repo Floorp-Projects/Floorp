@@ -7,10 +7,10 @@ package org.mozilla.focus.navigation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
@@ -35,7 +35,7 @@ class Navigator(
 
     private suspend fun subscribe(flow: Flow<AppState>) {
         flow.map { state -> state.screen }
-            .ifChanged { screen -> screen.id }
+            .distinctUntilChangedBy { screen -> screen.id }
             .collect { screen -> navigateTo(screen) }
     }
 

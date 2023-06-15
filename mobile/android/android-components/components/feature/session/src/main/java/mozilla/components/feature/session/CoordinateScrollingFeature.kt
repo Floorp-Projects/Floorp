@@ -12,7 +12,7 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.selectedTab
@@ -20,7 +20,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation for connecting an [EngineView] with any View that you want to coordinate scrolling
@@ -43,7 +42,7 @@ class CoordinateScrollingFeature(
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.selectedTab }
                 .map { tab -> tab.content.loading }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { onLoadingStateChanged() }
         }
     }

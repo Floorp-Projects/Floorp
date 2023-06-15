@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -20,7 +21,6 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.shareMedia
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * At most time to allow for the file to be downloaded and action to be performed.
@@ -59,7 +59,7 @@ class ShareDownloadFeature(
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
-                .ifChanged { it.content.share }
+                .distinctUntilChangedBy { it.content.share }
                 .collect { state ->
                     state.content.share?.let { shareState ->
                         logger.debug("Starting the sharing process")

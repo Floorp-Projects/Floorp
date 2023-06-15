@@ -17,14 +17,13 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.android.util.dpToPx
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
@@ -50,7 +49,7 @@ class TabsTrayInactiveTabsOnboardingBinding(
 
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.map { state -> state.normalTabs.size }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect {
                 val inactiveTabsList =
                     if (settings.inactiveTabsAreEnabled) { store.state.potentialInactiveTabs } else { emptyList() }

@@ -5,11 +5,10 @@
 package org.mozilla.fenix.tabstray.browser
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -22,7 +21,7 @@ class NormalTabsBinding(
     private val tabsTray: TabsTray,
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
-        flow.ifChanged { it.normalTabs }
+        flow.distinctUntilChangedBy { it.normalTabs }
             .collect {
                 tabsTray.updateTabs(it.normalTabs, null, browserStore.state.selectedTabId)
             }

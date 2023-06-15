@@ -6,10 +6,9 @@ package org.mozilla.fenix.tabstray.browser
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -25,7 +24,7 @@ class SwipeToDeleteBinding(
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.map { it.mode }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { mode ->
                 isSwipeable = mode == TabsTrayState.Mode.Normal
             }

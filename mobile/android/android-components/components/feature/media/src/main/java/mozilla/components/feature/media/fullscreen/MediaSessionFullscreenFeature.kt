@@ -10,7 +10,7 @@ import android.os.Build
 import android.view.WindowManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
@@ -18,7 +18,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature that will auto-rotate the device to the correct orientation for the media aspect ratio.
@@ -37,7 +36,7 @@ class MediaSessionFullscreenFeature(
                 it.tabs + it.customTabs
             }.map { tab ->
                 tab.filter { it.mediaSessionState != null && it.mediaSessionState!!.fullscreen }
-            }.ifChanged().collect { states ->
+            }.distinctUntilChanged().collect { states ->
                 processFullscreen(states)
                 processDeviceSleepMode(states)
             }

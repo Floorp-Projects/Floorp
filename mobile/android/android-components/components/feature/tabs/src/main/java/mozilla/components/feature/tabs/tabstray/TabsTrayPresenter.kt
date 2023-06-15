@@ -7,7 +7,7 @@ package mozilla.components.feature.tabs.tabstray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
@@ -16,7 +16,6 @@ import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.feature.tabs.ext.toTabList
 import mozilla.components.feature.tabs.ext.toTabs
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Presenter implementation for a tabs tray implementation in order to update the tabs tray whenever
@@ -41,7 +40,7 @@ class TabsTrayPresenter(
     }
 
     private suspend fun collect(flow: Flow<BrowserState>) {
-        flow.ifChanged { Pair(it.toTabs(tabsFilter), tabPartitionsFilter(it.tabPartitions)) }
+        flow.distinctUntilChangedBy { Pair(it.toTabs(tabsFilter), tabPartitionsFilter(it.tabPartitions)) }
             .collect { state ->
                 val (tabs, selectedTabId) = state.toTabList(tabsFilter)
                 // Do not invoke the callback on start if this is the initial state.

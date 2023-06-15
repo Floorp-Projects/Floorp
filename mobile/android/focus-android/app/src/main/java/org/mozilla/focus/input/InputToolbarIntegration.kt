@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
@@ -23,7 +24,6 @@ import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
@@ -132,44 +132,46 @@ class InputToolbarIntegration(
     @VisibleForTesting
     internal fun observeStartBrowserCfrVisibility() {
         startBrowsingCfrScope = fragment.components?.appStore?.flowScoped { flow ->
-            flow.mapNotNull { state -> state.showStartBrowsingTabsCfr }.ifChanged().collect { showStartBrowsingCfr ->
-                if (showStartBrowsingCfr) {
-                    CFRPopup(
-                        anchor = toolbar.findViewById<AppCompatEditText>(R.id.mozac_browser_toolbar_background),
-                        properties = CFRPopupProperties(
-                            popupWidth = 256.dp,
-                            popupAlignment = CFRPopup.PopupAlignment.BODY_TO_ANCHOR_START,
-                            popupBodyColors = listOf(
-                                ContextCompat.getColor(
-                                    fragment.requireContext(),
-                                    R.color.cfr_pop_up_shape_end_color,
+            flow.mapNotNull { state -> state.showStartBrowsingTabsCfr }
+                .distinctUntilChanged()
+                .collect { showStartBrowsingCfr ->
+                    if (showStartBrowsingCfr) {
+                        CFRPopup(
+                            anchor = toolbar.findViewById<AppCompatEditText>(R.id.mozac_browser_toolbar_background),
+                            properties = CFRPopupProperties(
+                                popupWidth = 256.dp,
+                                popupAlignment = CFRPopup.PopupAlignment.BODY_TO_ANCHOR_START,
+                                popupBodyColors = listOf(
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_end_color,
+                                    ),
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_start_color,
+                                    ),
                                 ),
-                                ContextCompat.getColor(
+                                dismissButtonColor = ContextCompat.getColor(
                                     fragment.requireContext(),
-                                    R.color.cfr_pop_up_shape_start_color,
+                                    R.color.cardview_light_background,
                                 ),
+                                popupVerticalOffset = 0.dp,
                             ),
-                            dismissButtonColor = ContextCompat.getColor(
-                                fragment.requireContext(),
-                                R.color.cardview_light_background,
-                            ),
-                            popupVerticalOffset = 0.dp,
-                        ),
-                        onDismiss = {
-                            onDismissStartBrowsingCfr()
-                        },
-                        text = {
-                            Text(
-                                style = focusTypography.cfrTextStyle,
-                                text = fragment.resources.getString(R.string.cfr_for_start_browsing),
-                                color = colorResource(R.color.cfr_text_color),
-                            )
-                        },
-                    ).apply {
-                        show()
+                            onDismiss = {
+                                onDismissStartBrowsingCfr()
+                            },
+                            text = {
+                                Text(
+                                    style = focusTypography.cfrTextStyle,
+                                    text = fragment.resources.getString(R.string.cfr_for_start_browsing),
+                                    color = colorResource(R.color.cfr_text_color),
+                                )
+                            },
+                        ).apply {
+                            show()
+                        }
                     }
                 }
-            }
         }
     }
 

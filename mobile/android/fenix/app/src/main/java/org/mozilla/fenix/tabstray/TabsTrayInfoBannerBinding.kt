@@ -10,14 +10,13 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.infobanner.InfoBanner
 import org.mozilla.fenix.utils.Settings
@@ -37,7 +36,7 @@ class TabsTrayInfoBannerBinding(
 
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.map { state -> max(state.normalTabs.size, state.privateTabs.size) }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { tabCount ->
                 if (tabCount >= TAB_COUNT_SHOW_CFR) {
                     displayInfoBannerIfNeeded(settings)

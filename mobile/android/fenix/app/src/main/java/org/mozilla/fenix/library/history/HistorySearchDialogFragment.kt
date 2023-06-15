@@ -29,7 +29,7 @@ import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -37,7 +37,6 @@ import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -186,7 +185,7 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
 
     private fun observeAwesomeBarState() = consumeFlow(store) { flow ->
         flow.map { state -> state.query.isNotBlank() }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { shouldShowAwesomebar ->
                 binding.awesomeBar.visibility = if (shouldShowAwesomebar) {
                     View.VISIBLE

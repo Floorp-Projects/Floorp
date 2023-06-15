@@ -9,6 +9,7 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
@@ -18,7 +19,6 @@ import mozilla.components.concept.menu.Orientation
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentHomeBinding
@@ -63,7 +63,7 @@ class SearchSelectorBinding(
 
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.map { state -> state.search.selectedOrDefaultSearchEngine }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { searchEngine ->
                 val name = searchEngine?.name
                 val icon = searchEngine?.let {

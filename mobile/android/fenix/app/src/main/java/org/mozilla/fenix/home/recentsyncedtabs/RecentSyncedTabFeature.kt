@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.recentsyncedtabs
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import mozilla.components.browser.storage.sync.Tab
@@ -23,7 +24,6 @@ import mozilla.components.service.fxa.store.SyncStore
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.telemetry.glean.GleanTimerId
 import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 import org.mozilla.fenix.components.AppStore
@@ -63,7 +63,7 @@ class RecentSyncedTabFeature(
 
     private fun collectAccountUpdates() {
         syncStore.flow()
-            .ifChanged { state ->
+            .distinctUntilChangedBy { state ->
                 state.account != null
             }.onEach { state ->
                 if (state.account != null) {
@@ -82,7 +82,7 @@ class RecentSyncedTabFeature(
 
     private fun collectStatusUpdates() {
         syncStore.flow()
-            .ifChanged { state ->
+            .distinctUntilChangedBy { state ->
                 state.status
             }.onEach { state ->
                 when (state.status) {

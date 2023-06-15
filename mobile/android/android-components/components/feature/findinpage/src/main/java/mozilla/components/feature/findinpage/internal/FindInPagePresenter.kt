@@ -6,14 +6,13 @@ package mozilla.components.feature.findinpage.internal
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Presenter that will observe [SessionState] changes and update the view whenever
@@ -31,7 +30,7 @@ internal class FindInPagePresenter(
     fun start() {
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> session?.let { state.findTabOrCustomTab(it.id) } }
-                .ifChanged { it.content.findResults }
+                .distinctUntilChangedBy { it.content.findResults }
                 .collect {
                     val results = it.content.findResults
                     if (results.isNotEmpty()) {

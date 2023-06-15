@@ -15,11 +15,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -99,7 +99,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
         scope = requireComponents.core.store.flowScoped(viewLifecycleOwner) { flow ->
             flow.map { state -> state.tabs.size }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { openTabs -> updateTabCount(openTabs) }
         }
     }

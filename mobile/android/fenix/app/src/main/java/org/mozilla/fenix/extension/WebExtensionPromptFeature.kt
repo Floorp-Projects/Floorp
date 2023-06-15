@@ -11,6 +11,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
@@ -19,7 +20,6 @@ import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.components.FenixSnackbar
@@ -50,7 +50,7 @@ class WebExtensionPromptFeature(
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state ->
                 state.webExtensionPromptRequest
-            }.ifChanged().collect { promptRequest ->
+            }.distinctUntilChanged().collect { promptRequest ->
                 if (promptRequest is WebExtensionPromptRequest.Permissions && !hasExistingPermissionDialogFragment()) {
                     val addon = provideAddons().find { addon ->
                         addon.id == promptRequest.extension.id

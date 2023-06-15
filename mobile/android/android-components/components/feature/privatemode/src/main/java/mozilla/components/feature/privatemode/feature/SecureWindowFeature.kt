@@ -8,7 +8,7 @@ import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -16,7 +16,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Prevents screenshots and screen recordings in private tabs.
@@ -39,7 +38,7 @@ class SecureWindowFeature(
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
                 .map { isSecure(it) }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { isSecure ->
                     if (isSecure) {
                         window.addFlags(FLAG_SECURE)

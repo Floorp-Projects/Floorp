@@ -20,6 +20,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.search.SearchEngine
@@ -29,7 +30,6 @@ import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.ktx.android.view.toScope
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.SearchEngineRadioButtonBinding
@@ -64,7 +64,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
     private fun subscribeToSearchEngineUpdates(store: BrowserStore, view: View) = view.toScope().launch {
         store.flow()
             .map { state -> state.search }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { state -> refreshSearchEngineViews(view, state) }
     }
 

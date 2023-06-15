@@ -10,12 +10,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.NoCollectionsMessageBinding
@@ -53,7 +53,7 @@ class NoCollectionsMessageViewHolder(
 
         store.flowScoped(viewLifecycleOwner) { flow ->
             flow.map { state -> state.normalTabs.size }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { tabs ->
                     binding.addTabsToCollectionsButton.isVisible = tabs > 0
                 }
@@ -61,7 +61,7 @@ class NoCollectionsMessageViewHolder(
 
         appStore.flowScoped(viewLifecycleOwner) { flow ->
             flow.map { state -> state.wallpaperState }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { wallpaperState ->
                     val textColor = wallpaperState.currentWallpaper.textColor
                     if (textColor == null) {

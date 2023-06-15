@@ -6,7 +6,7 @@ package mozilla.components.feature.session
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
@@ -14,7 +14,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation for handling fullscreen mode (exiting and back button presses).
@@ -36,7 +35,7 @@ open class FullScreenFeature(
         scope = store.flowScoped { flow ->
             flow.map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .map { tab -> tab.toObservation() }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { observation -> onChange(observation) }
         }
     }

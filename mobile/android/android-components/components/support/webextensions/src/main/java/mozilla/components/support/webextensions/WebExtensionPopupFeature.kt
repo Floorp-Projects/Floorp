@@ -6,13 +6,13 @@ package mozilla.components.support.webextensions
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation that opens popups for web extensions browser actions.
@@ -30,9 +30,9 @@ class WebExtensionPopupFeature(
 
     override fun start() {
         popupScope = store.flowScoped { flow ->
-            flow.ifChanged { it.extensions }
+            flow.distinctUntilChangedBy { it.extensions }
                 .map { it.extensions.filterValues { extension -> extension.popupSession != null } }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { extensionStates ->
                     if (extensionStates.values.isNotEmpty()) {
                         // We currently limit to one active popup session at a time

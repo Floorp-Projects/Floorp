@@ -19,6 +19,7 @@ import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -32,7 +33,6 @@ import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.components.support.utils.ext.stopForegroundCompat
 import java.util.Locale
@@ -140,7 +140,7 @@ abstract class AbstractPrivateNotificationService(
 
         privateTabsScope = store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isEmpty() }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { noPrivateTabs ->
                     if (noPrivateTabs) stopService()
                 }
@@ -148,7 +148,7 @@ abstract class AbstractPrivateNotificationService(
 
         localeScope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.locale }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect {
                     notifyLocaleChanged()
                 }

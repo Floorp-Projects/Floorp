@@ -8,8 +8,8 @@ import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
@@ -25,7 +25,6 @@ import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.net.isInScope
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities.
@@ -70,14 +69,14 @@ class WebAppHideToolbarFeature(
                 // as very little code would be shared.
                 val sessionFlow = store.flow()
                     .map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
-                    .ifChanged()
+                    .distinctUntilChanged()
                 val customTabServiceMapFlow = customTabsStore.flow()
 
                 sessionFlow.combine(customTabServiceMapFlow) { tab, customTabServiceState ->
                     tab to customTabServiceState.getCustomTabStateForTab(tab)
                 }
                     .map { (tab, customTabState) -> shouldToolbarBeVisible(tab, customTabState) }
-                    .ifChanged()
+                    .distinctUntilChanged()
                     .collect { toolbarVisible ->
                         setToolbarVisibility(toolbarVisible)
                     }

@@ -7,13 +7,13 @@ package mozilla.components.feature.toolbar
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Controls how the dynamic toolbar should behave based on the current tab state.
@@ -36,7 +36,7 @@ class ToolbarBehaviorController(
         updatesScope = store.flowScoped { flow ->
             flow.mapNotNull { state ->
                 state.findCustomTabOrSelectedTab(customTabId)
-            }.ifChanged {
+            }.distinctUntilChangedBy {
                 arrayOf(it.content.loading, it.content.showToolbarAsExpanded)
             }.collect { state ->
                 if (state.content.showToolbarAsExpanded) {

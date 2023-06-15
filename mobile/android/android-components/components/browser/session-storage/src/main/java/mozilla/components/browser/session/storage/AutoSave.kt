@@ -18,7 +18,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.normalTabs
@@ -28,7 +28,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.NamedThreadFactory
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -208,7 +207,7 @@ private class StateMonitoring(
                     state.selectedTab?.content?.loading,
                 )
             }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { observation -> onChange(observation) }
     }
 

@@ -16,13 +16,12 @@ import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.UserInteractionHandler
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
@@ -158,7 +157,7 @@ class RecentlyClosedFragment :
 
         requireComponents.core.store.flowScoped(viewLifecycleOwner) { flow ->
             flow.map { state -> state.closedTabs }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { tabs ->
                     recentlyClosedFragmentStore.dispatch(
                         RecentlyClosedFragmentAction.Change(tabs),

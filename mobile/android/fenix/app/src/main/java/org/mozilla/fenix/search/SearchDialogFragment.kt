@@ -43,6 +43,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.search.SearchEngine
@@ -69,7 +70,6 @@ import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BrowserDirection
@@ -331,7 +331,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         consumeFlow(requireComponents.core.store) { flow ->
             flow.map { state -> state.search }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { search ->
                     store.dispatch(
                         SearchFragmentAction.UpdateSearchState(
@@ -540,7 +540,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun observeSuggestionProvidersState() = consumeFlow(store) { flow ->
         flow.map { state -> state.toSearchProviderState() }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { state -> awesomeBarView.updateSuggestionProvidersVisibility(state) }
     }
 
@@ -557,7 +557,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
          * */
 
         flow.map { state -> state.url != state.query && state.query.isNotBlank() || state.showSearchShortcuts }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { shouldShowAwesomebar ->
                 binding.awesomeBar.visibility = if (shouldShowAwesomebar) {
                     View.VISIBLE
@@ -574,7 +574,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 state.clipboardHasUrl && !state.showSearchShortcuts
             Pair(shouldShowView, state.clipboardHasUrl)
         }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { (shouldShowView) ->
                 updateClipboardSuggestion(shouldShowView)
             }

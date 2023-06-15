@@ -8,13 +8,12 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import kotlin.reflect.KClass
 
 /**
@@ -35,7 +34,7 @@ class PrivateNotificationFeature<T : AbstractPrivateNotificationService>(
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isNotEmpty() }
-                .ifChanged()
+                .distinctUntilChanged()
                 .collect { hasPrivateTabs ->
                     if (hasPrivateTabs) {
                         applicationContext.startService(Intent(applicationContext, notificationServiceClass.java))

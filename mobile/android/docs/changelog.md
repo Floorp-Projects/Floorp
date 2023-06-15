@@ -21,6 +21,9 @@ permalink: /changelog/
 * **concept-engine**:
   * Added new `requestPrintContent` API in `Engine`. This is currently only supported in the Gecko Engine.
 
+* **support-ktx**
+  * Removes ifChanged Flow extension functions in favour of `distintUntilChanged` and `distintUntilChangedBy`in `kotlin.coroutines.flow`.
+
 # 115.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v114..releases_v115)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v115/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

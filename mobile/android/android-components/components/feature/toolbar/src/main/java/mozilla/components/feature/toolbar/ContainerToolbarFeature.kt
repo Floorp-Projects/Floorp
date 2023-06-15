@@ -7,7 +7,7 @@ package mozilla.components.feature.toolbar
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
@@ -15,7 +15,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Container toolbar implementation that updates the toolbar with the container page action
@@ -34,7 +33,7 @@ class ContainerToolbarFeature(
 
     override fun start() {
         scope = store.flowScoped { flow ->
-            flow.ifChanged { it.selectedTab }
+            flow.distinctUntilChangedBy { it.selectedTab }
                 .collect { state ->
                     renderContainerAction(state, state.selectedTab)
                 }

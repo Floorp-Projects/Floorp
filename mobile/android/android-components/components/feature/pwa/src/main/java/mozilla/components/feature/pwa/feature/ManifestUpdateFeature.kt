@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -21,7 +21,6 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature used to update the existing web app manifest and web app shortcut.
@@ -72,7 +71,7 @@ class ManifestUpdateFeature(
         store.flow()
             .mapNotNull { state -> state.findCustomTab(sessionId) }
             .map { tab -> tab.content.webAppManifest }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect { manifest -> onWebAppManifestChanged(manifest) }
     }
 

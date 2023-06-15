@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -29,12 +29,10 @@ import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.isSameOriginAs
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.ClassCastException
 import java.net.URL
 
 /**
@@ -83,7 +81,7 @@ class FxaWebChannelFeature(
 
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabSessionId) }
-                .ifChanged { it.engineState.engineSession }
+                .distinctUntilChangedBy { it.engineState.engineSession }
                 .collect {
                     it.engineState.engineSession?.let { engineSession ->
                         registerFxaContentMessageHandler(engineSession)

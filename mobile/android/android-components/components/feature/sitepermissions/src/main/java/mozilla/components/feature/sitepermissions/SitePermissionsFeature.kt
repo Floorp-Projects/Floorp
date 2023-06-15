@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,7 +67,6 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.security.InvalidParameterException
 import mozilla.components.ui.icons.R as iconsR
 
@@ -142,7 +142,7 @@ class SitePermissionsFeature(
         loadingScope = store.flowScoped { flow ->
             flow.mapNotNull { state ->
                 state.findTabOrCustomTabOrSelectedTab(sessionId)
-            }.ifChanged { it.content.loading }.collect { tab ->
+            }.distinctUntilChangedBy { it.content.loading }.collect { tab ->
                 if (tab.content.loading) {
                     // Clears stale permission indicators in the toolbar,
                     // after the session starts loading.

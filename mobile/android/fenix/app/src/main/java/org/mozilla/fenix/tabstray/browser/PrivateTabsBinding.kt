@@ -5,12 +5,11 @@
 package org.mozilla.fenix.tabstray.browser
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -24,7 +23,7 @@ class PrivateTabsBinding(
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.map { it.privateTabs }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect {
                 // Getting the selectedTabId from the BrowserStore at a different time might lead to a race.
                 tray.updateTabs(it, null, browserStore.state.selectedTabId)

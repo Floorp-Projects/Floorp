@@ -6,12 +6,12 @@ package org.mozilla.fenix.home.recenttabs
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.asRecentTabs
@@ -30,7 +30,7 @@ class RecentTabsListFeature(
         // Listen for changes regarding the currently selected tab and in progress media tab.
         flow
             .map { it.asRecentTabs() }
-            .ifChanged()
+            .distinctUntilChanged()
             .collect {
                 appStore.dispatch(AppAction.RecentTabsChange(it))
             }

@@ -6,7 +6,7 @@ package org.mozilla.focus.navigation
 
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -15,7 +15,6 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flow
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
 
@@ -35,14 +34,14 @@ class StoreLink(
 
     private suspend fun observeSelectionChanges(flow: Flow<BrowserState>) {
         flow.map { state -> state.selectedTabId }
-            .ifChanged()
+            .distinctUntilChanged()
             .filterNotNull()
             .collect { tabId -> appStore.dispatch(AppAction.SelectionChanged(tabId)) }
     }
 
     private suspend fun observeTabsClosed(flow: Flow<BrowserState>) {
         flow.map { state -> state.privateTabs.isEmpty() }
-            .ifChanged()
+            .distinctUntilChanged()
             .filter { isEmpty -> isEmpty }
             .collect {
                 appStore.dispatch(AppAction.NoTabs)
