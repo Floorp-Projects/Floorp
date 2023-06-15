@@ -8,8 +8,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://global/content/translations/translations-engine.sys.mjs",
   LanguageIdEngine:
     "chrome://global/content/translations/language-id-engine.sys.mjs",
-  LanguageDetector:
-    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
 
 /**
@@ -83,16 +81,11 @@ export class TranslationsChild extends JSWindowActorChild {
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
         try {
-          if (data.useFastText) {
-            const engine = await this.createLanguageIdEngine();
-            if (!engine) {
-              return null;
-            }
-            return engine.identifyLanguageFromDocument(this.document);
+          const engine = await this.createLanguageIdEngine();
+          if (!engine) {
+            return null;
           }
-          return lazy.LanguageDetector.detectLanguageFromDocument(
-            this.document
-          );
+          return engine.identifyLanguageFromDocument(this.document);
         } catch (error) {
           return null;
         }
@@ -151,7 +144,7 @@ export class TranslationsChild extends JSWindowActorChild {
     });
   }
 
-  getOrCreateLanguageIdEngine() {
+  createLanguageIdEngine() {
     return lazy.LanguageIdEngine.getOrCreate(() => {
       if (this.#isPageHidden) {
         throw new Error("The page was already hidden.");
