@@ -103,10 +103,6 @@ pref("app.update.log.file", false);
 // the failure.
 pref("app.update.backgroundMaxErrors", 10);
 
-// Ids of the links to the "What's new" update documentation
-pref("app.update.link.updateAvailableWhatsNew", "update-available-whats-new");
-pref("app.update.link.updateManualWhatsNew", "update-manual-whats-new");
-
 // How many times we should let downloads fail before prompting the user to
 // download a fresh installer.
 pref("app.update.download.maxAttempts", 2);
