@@ -522,7 +522,7 @@ var TPS = {
         "executing action " + action.toUpperCase() + " on passwords"
       );
     } catch (e) {
-      await lazy.DumpPasswords();
+      lazy.DumpPasswords();
       throw e;
     }
   },

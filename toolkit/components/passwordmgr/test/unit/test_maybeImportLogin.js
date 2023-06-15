@@ -45,7 +45,7 @@ add_task(async function test_invalid_logins() {
       2
     )}`
   );
-  let savedLogins = await Services.logins.getAllLogins();
+  let savedLogins = Services.logins.getAllLogins();
   Assert.equal(
     savedLogins.length,
     0,
@@ -98,7 +98,7 @@ add_task(async function test_new_logins() {
     `There should also be 1 login for ${HOST2}`
   );
   Assert.equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     2,
     "There should be 2 logins in total"
   );

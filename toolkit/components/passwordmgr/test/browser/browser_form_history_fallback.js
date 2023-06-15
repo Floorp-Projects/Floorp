@@ -26,7 +26,7 @@ add_task(
       }
     );
 
-    const loginEntries = (await Services.logins.getAllLogins()).length;
+    const loginEntries = Services.logins.getAllLogins().length;
     const historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
 
     Assert.equal(
@@ -50,7 +50,7 @@ add_task(
 
     await testSubmittingLoginFormHTTP("subtst_notifications_1.html");
 
-    const loginEntries = (await Services.logins.getAllLogins()).length;
+    const loginEntries = Services.logins.getAllLogins().length;
     const historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
 
     Assert.equal(

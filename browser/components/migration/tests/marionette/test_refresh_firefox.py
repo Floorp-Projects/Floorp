@@ -257,10 +257,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.assertEqual(loginInfo[0]["username"], self._username)
         self.assertEqual(loginInfo[0]["password"], self._password)
 
-        loginCount = self.runAsyncCode(
+        loginCount = self.marionette.execute_script(
             """
-          let resolve = arguments[arguments.length - 1];
-          Services.logins.getAllLogins().then(logins => resolve(logins.length));
+          return Services.logins.getAllLogins().length;
         """
         )
         # Note that we expect 2 logins - one from us, one from sync.

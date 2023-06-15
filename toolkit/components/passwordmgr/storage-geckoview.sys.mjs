@@ -74,12 +74,16 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
     );
   }
 
+  getAllLogins() {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
+
   /**
    * Returns a promise resolving to an array of all saved logins that can be decrypted.
    *
    * @resolve {nsILoginInfo[]}
    */
-  getAllLogins(includeDeleted) {
+  getAllLoginsAsync(includeDeleted) {
     return this._getLoginsAsync({}, includeDeleted);
   }
 

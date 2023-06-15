@@ -13,7 +13,7 @@
 
 async function reloadAndCheckLoginsGen(aExpectedLogins) {
   await LoginTestUtils.reloadData();
-  await LoginTestUtils.checkLogins(aExpectedLogins);
+  LoginTestUtils.checkLogins(aExpectedLogins);
   LoginTestUtils.clearData();
 }
 

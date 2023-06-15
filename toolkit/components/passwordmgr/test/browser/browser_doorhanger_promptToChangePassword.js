@@ -165,7 +165,7 @@ async function promptToChangePasswordTest(testData) {
       info(testData.resultDescription);
 
       finalLoginsByGuid.clear();
-      finalLogins = await Services.logins.getAllLogins();
+      finalLogins = Services.logins.getAllLogins();
       finalLogins.sort((a, b) => a.timeCreated > b.timeCreated);
 
       for (let l of finalLogins) {
@@ -173,7 +173,7 @@ async function promptToChangePasswordTest(testData) {
         finalLoginsByGuid.set(l.guid, l);
       }
       info("verifyLogins next");
-      await verifyLogins(testData.expectedResultLogins);
+      verifyLogins(testData.expectedResultLogins);
       if (testData.resultCheck) {
         testData.resultCheck();
       }
