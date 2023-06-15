@@ -29,6 +29,7 @@ function readOptinParams() {
     slug: searchParams.get("optin_slug"),
     branch: searchParams.get("optin_branch"),
     collection: searchParams.get("optin_collection"),
+    applyTargeting: !!searchParams.get("apply_targeting"),
   };
 }
 
