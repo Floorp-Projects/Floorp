@@ -2201,8 +2201,8 @@ pref("browser.migrate.vivaldi.enabled", true);
 pref("browser.migrate.content-modal.enabled", true);
 pref("browser.migrate.content-modal.import-all.enabled", true);
 
-// Values can be: "default", "autoclose", "standalone".
-pref("browser.migrate.content-modal.about-welcome-behavior", "default");
+// Values can be: "default", "autoclose", "standalone", "legacy".
+pref("browser.migrate.content-modal.about-welcome-behavior", "legacy");
 
 // The maximum age of history entries we'll import, in days.
 pref("browser.migrate.history.maxAgeInDays", 180);
