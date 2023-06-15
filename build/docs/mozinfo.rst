@@ -168,6 +168,11 @@ topsrcdir
 
    Always defined.
 
+topobjdir
+   The path to the obj directory the build came from.
+
+   Always defined.
+
 webrender
    Whether or not WebRender is enabled as the Gecko compositor.
 
