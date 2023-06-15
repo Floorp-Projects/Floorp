@@ -233,12 +233,11 @@ export var Policies = {
 
   Authentication: {
     onBeforeAddons(manager, param) {
-      // When Authentication was originally implemented, it was always
-      // locked, so it defaults to locked.
       let locked = true;
       if ("Locked" in param) {
         locked = param.Locked;
       }
+
       if ("SPNEGO" in param) {
         PoliciesUtils.setDefaultPref(
           "network.negotiate-auth.trusted-uris",
@@ -923,22 +922,26 @@ export var Policies = {
 
   DNSOverHTTPS: {
     onBeforeAddons(manager, param) {
+      let locked = false;
+      if ("Locked" in param) {
+        locked = param.Locked;
+      }
       if ("Enabled" in param) {
         let mode = param.Enabled ? 2 : 5;
-        PoliciesUtils.setDefaultPref("network.trr.mode", mode, param.Locked);
+        PoliciesUtils.setDefaultPref("network.trr.mode", mode, locked);
       }
       if ("ProviderURL" in param) {
         PoliciesUtils.setDefaultPref(
           "network.trr.uri",
           param.ProviderURL.href,
-          param.Locked
+          locked
         );
       }
       if ("ExcludedDomains" in param) {
         PoliciesUtils.setDefaultPref(
           "network.trr.excluded-domains",
           param.ExcludedDomains.join(","),
-          param.Locked
+          locked
         );
       }
     },
@@ -1012,11 +1015,15 @@ export var Policies = {
 
   EncryptedMediaExtensions: {
     onBeforeAddons(manager, param) {
+      let locked = false;
+      if ("Locked" in param) {
+        locked = param.Locked;
+      }
       if ("Enabled" in param) {
         PoliciesUtils.setDefaultPref(
           "media.eme.enabled",
           param.Enabled,
-          param.Locked
+          locked
         );
       }
     },
@@ -1218,58 +1225,59 @@ export var Policies = {
 
   FirefoxHome: {
     onBeforeAddons(manager, param) {
+      let locked = param.Locked || false;
       if ("Search" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSearch",
           param.Search,
-          param.Locked
+          locked
         );
       }
       if ("TopSites" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.topsites",
           param.TopSites,
-          param.Locked
+          locked
         );
       }
       if ("SponsoredTopSites" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSponsoredTopSites",
           param.SponsoredTopSites,
-          param.Locked
+          locked
         );
       }
       if ("Highlights" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.section.highlights",
           param.Highlights,
-          param.Locked
+          locked
         );
       }
       if ("Pocket" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.system.topstories",
           param.Pocket,
-          param.Locked
+          locked
         );
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.section.topstories",
           param.Pocket,
-          param.Locked
+          locked
         );
       }
       if ("SponsoredPocket" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSponsored",
           param.SponsoredPocket,
-          param.Locked
+          locked
         );
       }
       if ("Snippets" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.snippets",
           param.Snippets,
-          param.Locked
+          locked
         );
       }
     },
@@ -1747,19 +1755,12 @@ export var Policies = {
             continue;
           }
 
-          let prefBranch;
           if (param[preference].Status == "user") {
-            prefBranch = Services.prefs;
+            var prefBranch = Services.prefs;
           } else {
             prefBranch = Services.prefs.getDefaultBranch("");
           }
 
-          // Prefs that were previously locked should stay locked,
-          // but policy can update the value.
-          let prefWasLocked = Services.prefs.prefIsLocked(preference);
-          if (prefWasLocked) {
-            Services.prefs.unlockPref(preference);
-          }
           try {
             switch (typeof param[preference].Value) {
               case "boolean":
@@ -1813,7 +1814,7 @@ export var Policies = {
             );
           }
 
-          if (param[preference].Status == "locked" || prefWasLocked) {
+          if (param[preference].Status == "locked") {
             Services.prefs.lockPref(preference);
           }
         }
@@ -2252,25 +2253,29 @@ export var Policies = {
 
   UserMessaging: {
     onBeforeAddons(manager, param) {
+      let locked = false;
+      if ("Locked" in param) {
+        locked = param.Locked;
+      }
       if ("WhatsNew" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.messaging-system.whatsNewPanel.enabled",
           param.WhatsNew,
-          param.Locked
+          locked
         );
       }
       if ("ExtensionRecommendations" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
           param.ExtensionRecommendations,
-          param.Locked
+          locked
         );
       }
       if ("FeatureRecommendations" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
           param.FeatureRecommendations,
-          param.Locked
+          locked
         );
       }
       if ("UrlbarInterventions" in param && !param.UrlbarInterventions) {
@@ -2280,14 +2285,14 @@ export var Policies = {
         PoliciesUtils.setDefaultPref(
           "browser.aboutwelcome.enabled",
           !param.SkipOnboarding,
-          param.Locked
+          locked
         );
       }
       if ("MoreFromMozilla" in param) {
         PoliciesUtils.setDefaultPref(
           "browser.preferences.moreFromMozilla",
           param.MoreFromMozilla,
-          param.Locked
+          locked
         );
       }
     },
@@ -2352,9 +2357,8 @@ export function setAndLockPref(prefName, prefValue) {
  */
 
 export var PoliciesUtils = {
-  setDefaultPref(prefName, prefValue, locked) {
-    let prefWasLocked = Services.prefs.prefIsLocked(prefName);
-    if (prefWasLocked) {
+  setDefaultPref(prefName, prefValue, locked = false) {
+    if (Services.prefs.prefIsLocked(prefName)) {
       Services.prefs.unlockPref(prefName);
     }
 
@@ -2391,9 +2395,7 @@ export var PoliciesUtils = {
         break;
     }
 
-    // Prefs can only be unlocked explicitly.
-    // If they were locked before, they stay locked.
-    if (locked || (prefWasLocked && locked !== false)) {
+    if (locked) {
       Services.prefs.lockPref(prefName);
     }
   },
