@@ -333,18 +333,6 @@ static Maybe<ScrollTimelineOptions> GetScrollTimelineOptions(
   return Some(ScrollTimelineOptions(source, timeline->Axis()));
 }
 
-static StyleOffsetPath NormalizeOffsetPath(const StyleOffsetPath& aOffsetPath) {
-  // Named Return Value Optimization.
-  StyleOffsetPath result(aOffsetPath);
-  if (aOffsetPath.IsOffsetPath() &&
-      aOffsetPath.AsOffsetPath().path->IsShape() &&
-      aOffsetPath.AsOffsetPath().path->AsShape().IsPath()) {
-    result.UpdateShapePath(MotionPathUtils::NormalizeSVGPathData(
-        aOffsetPath.AsOffsetPath().path->AsShape().AsPath().path));
-  }
-  return result;
-}
-
 static void SetAnimatable(nsCSSPropertyID aProperty,
                           const AnimationValue& aAnimationValue,
                           nsIFrame* aFrame, TransformReferenceBox& aRefBox,
@@ -383,8 +371,8 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
           aAnimationValue.GetTransformProperty(), aRefBox);
       break;
     case eCSSProperty_offset_path:
-      aAnimatable =
-          NormalizeOffsetPath(aAnimationValue.GetOffsetPathProperty());
+      aAnimatable = StyleOffsetPath::None();
+      aAnimationValue.GetOffsetPathProperty(aAnimatable.get_StyleOffsetPath());
       break;
     case eCSSProperty_offset_distance:
       aAnimatable = aAnimationValue.GetOffsetDistanceProperty();
@@ -866,7 +854,7 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
         break;
       case eCSSProperty_offset_path:
         if (!display->mOffsetPath.IsNone()) {
-          appendFakeAnimation(id, NormalizeOffsetPath(display->mOffsetPath));
+          appendFakeAnimation(id, display->mOffsetPath);
         }
         break;
       case eCSSProperty_offset_distance:

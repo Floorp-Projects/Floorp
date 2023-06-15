@@ -45,6 +45,7 @@ pub type OffsetPosition = generics::GenericOffsetPosition<HorizontalPosition, Ve
     PartialEq,
     Serialize,
     SpecifiedValueInfo,
+    ToAnimatedValue,
     ToComputedValue,
     ToCss,
     ToResolvedValue,

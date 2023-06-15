@@ -87,9 +87,9 @@ const StyleTransform& AnimationValue::GetTransformProperty() const {
   return *Servo_AnimationValue_GetTransform(mServo);
 }
 
-const mozilla::StyleOffsetPath& AnimationValue::GetOffsetPathProperty() const {
+void AnimationValue::GetOffsetPathProperty(StyleOffsetPath& aOffsetPath) const {
   MOZ_ASSERT(mServo);
-  return *Servo_AnimationValue_GetOffsetPath(mServo);
+  Servo_AnimationValue_GetOffsetPath(mServo, &aOffsetPath);
 }
 
 const mozilla::LengthPercentage& AnimationValue::GetOffsetDistanceProperty()
