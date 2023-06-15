@@ -28,6 +28,7 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/widget/nsAutoRollup.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsINamed.h"
@@ -254,14 +255,7 @@ PreventDefaultResult APZEventState::FireContextmenuEvents(
     nsEventStatus status = APZCCallbackHelper::DispatchSynthesizedMouseEvent(
         eMouseLongTap, aPoint * aScale, aModifiers,
         /*clickCount*/ 1, aWidget);
-    if (status == nsEventStatus_eConsumeNoDefault) {
-      // Assuming no JS actor listens eMouseLongTap events.
-      preventDefaultResult = PreventDefaultResult::ByContent;
-    } else {
-      preventDefaultResult = PreventDefaultResult::No;
-    }
-    APZES_LOG("eMouseLongTap event %s\n",
-              ToString(preventDefaultResult).c_str());
+    APZES_LOG("eMouseLongTap event %s\n", ToString(status).c_str());
 #endif
   }
 
@@ -288,13 +282,12 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
   // ProcessLongTapUp function. However, we still fire the eMouseLongTap event
   // at this time, because things like text selection or dragging may want
   // to know about it.
-  nsEventStatus status = APZCCallbackHelper::DispatchSynthesizedMouseEvent(
+  APZCCallbackHelper::DispatchSynthesizedMouseEvent(
       eMouseLongTap, aPoint * aScale, aModifiers, /*clickCount*/ 1, widget);
 
-  PreventDefaultResult preventDefaultResult =
-      (status == nsEventStatus_eConsumeNoDefault)
-          ? PreventDefaultResult::ByContent
-          : PreventDefaultResult::No;
+  // This `preventDefaultResult` variable on Windows will be dropped in bug
+  // 1719855.
+  PreventDefaultResult preventDefaultResult = PreventDefaultResult::No;
 #else
   PreventDefaultResult preventDefaultResult =
       FireContextmenuEvents(aPresShell, aPoint, aScale, aModifiers, widget);
@@ -320,9 +313,8 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
   if (eventHandled) {
     // Also send a touchcancel to content
     //  a) on Android if browser's contextmenu is open
-    //  b) on Windows if the long tap event was consumed
-    //  c) on other platforms if preventDefault() was called for the contextmenu
-    //     event
+    //  b) on desktop platforms other than Windows if preventDefault() was
+    //     called for the contextmenu event
     // so that listeners that might be waiting for a touchend don't trigger.
     WidgetTouchEvent cancelTouchEvent(true, eTouchCancel, widget.get());
     cancelTouchEvent.mModifiers = aModifiers;
