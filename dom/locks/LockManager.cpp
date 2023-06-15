@@ -131,7 +131,13 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
     return nullptr;
   }
 
-  if (mOwner->GetStorageAccess() <= StorageAccess::eDeny) {
+  const StorageAccess access = mOwner->GetStorageAccess();
+  bool allowed =
+      access > StorageAccess::eDeny ||
+      (StaticPrefs::
+           privacy_partition_always_partition_third_party_non_cookie_storage() &&
+       ShouldPartitionStorage(access));
+  if (!allowed) {
     // Step 4: If origin is an opaque origin, then return a promise rejected
     // with a "SecurityError" DOMException.
     // But per https://wicg.github.io/web-locks/#lock-managers this really means
