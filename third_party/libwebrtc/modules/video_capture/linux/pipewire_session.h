@@ -11,7 +11,6 @@
 #ifndef MODULES_VIDEO_CAPTURE_LINUX_PIPEWIRE_SESSION_H_
 #define MODULES_VIDEO_CAPTURE_LINUX_PIPEWIRE_SESSION_H_
 
-#include <gio/gio.h>
 #include <pipewire/core.h>
 #include <pipewire/pipewire.h>
 
@@ -21,6 +20,7 @@
 
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
+#include "modules/video_capture/linux/camera_portal.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_options.h"
 
@@ -66,40 +66,33 @@ class PipeWireNode {
   std::vector<VideoCaptureCapability> capabilities_;
 };
 
+class CameraPortalNotifier : public CameraPortal::PortalNotifier {
+ public:
+  CameraPortalNotifier(PipeWireSession* session);
+  ~CameraPortalNotifier() = default;
+
+  void OnCameraRequestResult(xdg_portal::RequestResponse result,
+                             int fd) override;
+
+ private:
+  PipeWireSession* session_;
+};
+
 class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
  public:
   PipeWireSession();
   ~PipeWireSession();
 
-  void Init(VideoCaptureOptions::Callback* callback);
-  void CancelInit();
+  void Init(VideoCaptureOptions::Callback* callback, int fd = -1);
 
   const std::deque<PipeWireNode>& nodes() const { return nodes_; }
 
+  friend class CameraPortalNotifier;
   friend class PipeWireNode;
   friend class VideoCaptureModulePipeWire;
 
  private:
-  static void OnProxyRequested(GObject* object,
-                               GAsyncResult* result,
-                               gpointer user_data);
-  void ProxyRequested(GDBusProxy* proxy);
-
-  static void OnAccessResponse(GDBusProxy* proxy,
-                               GAsyncResult* result,
-                               gpointer user_data);
-  static void OnResponseSignalEmitted(GDBusConnection* connection,
-                                      const char* sender_name,
-                                      const char* object_path,
-                                      const char* interface_name,
-                                      const char* signal_name,
-                                      GVariant* parameters,
-                                      gpointer user_data);
-  static void OnOpenResponse(GDBusProxy* proxy,
-                             GAsyncResult* result,
-                             gpointer user_data);
-  void StopDBus();
-
+  void InitPipeWire(int fd);
   bool StartPipeWire(int fd);
   void StopPipeWire();
   void PipeWireSync();
@@ -124,13 +117,6 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
 
   VideoCaptureOptions::Callback* callback_ = nullptr;
 
-  GDBusConnection* connection_ = nullptr;
-  GDBusProxy* proxy_ = nullptr;
-  GCancellable* cancellable_ = nullptr;
-  guint access_request_signal_id_ = 0;
-
-  VideoCaptureOptions::Status status_;
-
   struct pw_thread_loop* pw_main_loop_ = nullptr;
   struct pw_context* pw_context_ = nullptr;
   struct pw_core* pw_core_ = nullptr;
@@ -142,6 +128,8 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
   int sync_seq_ = 0;
 
   std::deque<PipeWireNode> nodes_;
+  std::unique_ptr<CameraPortal> portal_;
+  std::unique_ptr<CameraPortalNotifier> portal_notifier_;
 };
 
 }  // namespace videocapturemodule
