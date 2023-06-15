@@ -273,3 +273,15 @@ void nsFilePickerProxy::ActorDestroy(ActorDestroyReason aWhy) {
     mCallback = nullptr;
   }
 }
+
+nsresult nsFilePickerProxy::ResolveSpecialDirectory(
+    const nsAString& aSpecialDirectory) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  // Resolving the special-directory name to a path in both the child and parent
+  // processes is redundant -- and sandboxing may prevent us from doing so in
+  // the child process, anyway. (See bugs 1357846 and 1838244.)
+  //
+  // Unfortunately we can't easily verify that `aSpecialDirectory` is usable or
+  // even meaningful here, so we just accept anything.
+  return NS_OK;
+}
