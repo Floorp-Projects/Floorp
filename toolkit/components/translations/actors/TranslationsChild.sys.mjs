@@ -144,7 +144,7 @@ export class TranslationsChild extends JSWindowActorChild {
     });
   }
 
-  createLanguageIdEngine() {
+  getOrCreateLanguageIdEngine() {
     return lazy.LanguageIdEngine.getOrCreate(() => {
       if (this.#isPageHidden) {
         throw new Error("The page was already hidden.");
