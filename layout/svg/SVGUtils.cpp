@@ -443,7 +443,6 @@ void SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
       break;
     case ClipPathType::Shape:
     case ClipPathType::Box:
-    case ClipPathType::Path:
       aUsage.shouldApplyBasicShapeOrPath = true;
       break;
     case ClipPathType::None:

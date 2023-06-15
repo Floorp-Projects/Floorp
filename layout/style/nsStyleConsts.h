@@ -92,14 +92,6 @@ bool operator<=(const StyleDisplay&, const StyleDisplay&) = delete;
 bool operator>(const StyleDisplay&, const StyleDisplay&) = delete;
 bool operator>=(const StyleDisplay&, const StyleDisplay&) = delete;
 
-// Basic shapes
-enum class StyleBasicShapeType : uint8_t {
-  Polygon,
-  Circle,
-  Ellipse,
-  Inset,
-};
-
 // box-align
 enum class StyleBoxAlign : uint8_t {
   Stretch,

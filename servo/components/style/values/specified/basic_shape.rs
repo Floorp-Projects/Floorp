@@ -54,36 +54,87 @@ pub type ShapeRadius = generic::ShapeRadius<NonNegativeLengthPercentage>;
 /// The specified value of `Polygon`
 pub type Polygon = generic::GenericPolygon<LengthPercentage>;
 
+bitflags! {
+    /// The flags to represent which basic shapes we would like to support.
+    ///
+    /// Different properties may use different subsets of <basic-shape>:
+    /// e.g.
+    /// clip-path: all basic shapes.
+    /// motion-path: all basic shapes (but ignore fill-rule).
+    /// shape-outside: inset(), circle(), ellipse(), polygon().
+    ///
+    /// Also there are some properties we don't support for now:
+    /// shape-inside: inset(), circle(), ellipse(), polygon().
+    /// SVG shape-inside and shape-subtract: circle(), ellipse(), polygon().
+    ///
+    /// The spec issue proposes some better ways to clarify the usage of basic shapes, so for now
+    /// we use the bitflags to choose the supported basic shapes for each property at the parse
+    /// time.
+    /// https://github.com/w3c/csswg-drafts/issues/7390
+    #[derive(Clone, Copy)]
+    #[repr(C)]
+    pub struct AllowedBasicShapes: u8 {
+        /// inset().
+        const INSET = 1 << 0;
+        // TODO: Bug 1786160. Add xywh().
+        // const XYWH = 1 << 1;
+        // TODO: Bug 1786161. Add rect().
+        // const RECT = 1 << 2;
+        /// circle().
+        const CIRCLE = 1 << 3;
+        /// ellipse().
+        const ELLIPSE = 1 << 4;
+        /// polygon().
+        const POLYGON = 1 << 5;
+        /// path().
+        const PATH = 1 << 6;
+        // TODO: Bug 1823463. Add shape().
+        // const SHAPE = 1 << 7;
+
+        /// All flags.
+        const ALL =
+            Self::INSET.bits |
+            Self::CIRCLE.bits |
+            Self::ELLIPSE.bits |
+            Self::POLYGON.bits |
+            Self::PATH.bits;
+
+        /// For shape-outside.
+        const SHAPE_OUTSIDE =
+            Self::INSET.bits |
+            Self::CIRCLE.bits |
+            Self::ELLIPSE.bits |
+            Self::POLYGON.bits;
+    }
+}
+
 /// A helper for both clip-path and shape-outside parsing of shapes.
 fn parse_shape_or_box<'i, 't, R, ReferenceBox>(
     context: &ParserContext,
     input: &mut Parser<'i, 't>,
     to_shape: impl FnOnce(Box<BasicShape>, ReferenceBox) -> R,
     to_reference_box: impl FnOnce(ReferenceBox) -> R,
+    flags: AllowedBasicShapes,
 ) -> Result<R, ParseError<'i>>
 where
     ReferenceBox: Default + Parse,
 {
-    fn parse_component<U: Parse>(
-        context: &ParserContext,
-        input: &mut Parser,
-        component: &mut Option<U>,
-    ) -> bool {
-        if component.is_some() {
-            return false; // already parsed this component
-        }
-
-        *component = input.try_parse(|i| U::parse(context, i)).ok();
-        component.is_some()
-    }
-
     let mut shape = None;
     let mut ref_box = None;
+    loop {
+        if shape.is_none() {
+            shape = input
+                .try_parse(|i| BasicShape::parse(context, i, flags))
+                .ok();
+        }
 
-    while parse_component(context, input, &mut shape) ||
-        parse_component(context, input, &mut ref_box)
-    {
-        //
+        if ref_box.is_none() {
+            ref_box = input.try_parse(|i| ReferenceBox::parse(context, i)).ok();
+            if ref_box.is_some() {
+                continue;
+            }
+        }
+        break;
     }
 
     if let Some(shp) = shape {
@@ -106,15 +157,17 @@ impl Parse for ClipPath {
             return Ok(ClipPath::None);
         }
 
-        if let Ok(p) = input.try_parse(|i| Path::parse(context, i)) {
-            return Ok(ClipPath::Path(p));
-        }
-
         if let Ok(url) = input.try_parse(|i| SpecifiedUrl::parse(context, i)) {
             return Ok(ClipPath::Url(url));
         }
 
-        parse_shape_or_box(context, input, ClipPath::Shape, ClipPath::Box)
+        parse_shape_or_box(
+            context,
+            input,
+            ClipPath::Shape,
+            ClipPath::Box,
+            AllowedBasicShapes::ALL,
+        )
     }
 }
 
@@ -135,27 +188,50 @@ impl Parse for ShapeOutside {
             return Ok(ShapeOutside::Image(image));
         }
 
-        parse_shape_or_box(context, input, ShapeOutside::Shape, ShapeOutside::Box)
+        parse_shape_or_box(
+            context,
+            input,
+            ShapeOutside::Shape,
+            ShapeOutside::Box,
+            AllowedBasicShapes::SHAPE_OUTSIDE,
+        )
     }
 }
 
-impl Parse for BasicShape {
+impl BasicShape {
+    /// Parse supported <basic-shape>.
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
+        flags: AllowedBasicShapes,
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
         let function = input.expect_function()?.clone();
         input.parse_nested_block(move |i| {
-            (match_ignore_ascii_case! { &function,
-                "inset" => return InsetRect::parse_function_arguments(context, i).map(generic::BasicShape::Inset),
-                "circle" => return Circle::parse_function_arguments(context, i).map(generic::BasicShape::Circle),
-                "ellipse" => return Ellipse::parse_function_arguments(context, i).map(generic::BasicShape::Ellipse),
-                "polygon" => return Polygon::parse_function_arguments(context, i).map(generic::BasicShape::Polygon),
-                _ => Err(())
-            }).map_err(|()| {
-                location.new_custom_error(StyleParseErrorKind::UnexpectedFunction(function.clone()))
-            })
+            match_ignore_ascii_case! { &function,
+                "inset" if flags.contains(AllowedBasicShapes::INSET) => {
+                    InsetRect::parse_function_arguments(context, i).map(BasicShape::Inset)
+                },
+                "circle" if flags.contains(AllowedBasicShapes::CIRCLE) => {
+                    Circle::parse_function_arguments(context, i).map(BasicShape::Circle)
+                },
+                "ellipse" if flags.contains(AllowedBasicShapes::ELLIPSE) => {
+                    Ellipse::parse_function_arguments(context, i).map(BasicShape::Ellipse)
+                },
+                "polygon" if flags.contains(AllowedBasicShapes::POLYGON) => {
+                    Polygon::parse_function_arguments(context, i).map(BasicShape::Polygon)
+                },
+                "path" if flags.contains(AllowedBasicShapes::PATH) => {
+                    Path::parse_function_arguments(i).map(BasicShape::Path)
+                },
+                _ => {
+                    Err(
+                        location.new_custom_error(StyleParseErrorKind::UnexpectedFunction(
+                            function.clone(),
+                        )),
+                    )
+                },
+            }
         })
     }
 }
