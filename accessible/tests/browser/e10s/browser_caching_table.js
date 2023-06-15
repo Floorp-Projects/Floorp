@@ -588,3 +588,52 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test ARIA tables in SVG.
+ */
+addAccessibleTask(
+  `
+<svg id="table" role="table">
+  <text id="caption" role="caption">caption</text>
+  <g role="row">
+    <text id="a" role="columnheader">a</text>
+    <text id="b" role="columnheader">b</text>
+  </g>
+  <g role="row">
+    <text id="c" role="cell">c</text>
+    <text id="d" role="cell">d</text>
+  </g>
+</svg>
+  `,
+  async function (browser, docAcc) {
+    const table = findAccessibleChildByID(docAcc, "table", [
+      nsIAccessibleTable,
+    ]);
+    is(table.rowCount, 2, "table rowCount correct");
+    is(table.columnCount, 2, "table columnCount correct");
+    const caption = findAccessibleChildByID(docAcc, "caption");
+    is(table.caption, caption, "table caption correct");
+    testTableIndexes(table, [
+      [0, 1],
+      [2, 3],
+    ]);
+    const cells = {};
+    for (const id of ["a", "b", "c", "d"]) {
+      cells[id] = findAccessibleChildByID(docAcc, id, [nsIAccessibleTableCell]);
+    }
+    testHeaderCells([
+      {
+        cell: cells.c,
+        rowHeaderCells: [],
+        columnHeaderCells: [cells.a],
+      },
+      {
+        cell: cells.d,
+        rowHeaderCells: [],
+        columnHeaderCells: [cells.b],
+      },
+    ]);
+  },
+  { chrome: true, topLevel: true, remoteIframe: true }
+);

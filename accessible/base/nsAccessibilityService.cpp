@@ -1247,26 +1247,24 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     }
   }
 
+  // We should always use OuterDocAccessible for OuterDocs, even if there's a
+  // specific ARIA class we would otherwise use.
+  if (!newAcc && frame->AccessibleType() != eOuterDocType) {
+    newAcc = MaybeCreateSpecificARIAAccessible(roleMapEntry, aContext, content,
+                                               document);
+  }
+
   if (!newAcc && content->IsHTMLElement()) {  // HTML accessibles
-    // We should always use OuterDocAccessible for OuterDocs, even if there's a
-    // specific ARIA class we would otherwise use.
-    if (frame->AccessibleType() != eOuterDocType) {
-      newAcc = MaybeCreateSpecificARIAAccessible(roleMapEntry, aContext,
-                                                 content, document);
+    // Prefer to use markup to decide if and what kind of accessible to
+    // create,
+    const MarkupMapInfo* markupMap =
+        mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
+    if (markupMap && markupMap->new_func) {
+      newAcc = markupMap->new_func(content->AsElement(), aContext);
     }
 
-    if (!newAcc) {
-      // Prefer to use markup to decide if and what kind of accessible to
-      // create,
-      const MarkupMapInfo* markupMap =
-          mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
-      if (markupMap && markupMap->new_func) {
-        newAcc = markupMap->new_func(content->AsElement(), aContext);
-      }
-
-      if (!newAcc) {  // try by frame accessible type.
-        newAcc = CreateAccessibleByFrameType(frame, content, aContext);
-      }
+    if (!newAcc) {  // try by frame accessible type.
+      newAcc = CreateAccessibleByFrameType(frame, content, aContext);
     }
 
     // If table has strong ARIA role then all table descendants shouldn't
