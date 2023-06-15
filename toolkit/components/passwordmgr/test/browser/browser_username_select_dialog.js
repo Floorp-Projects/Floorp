@@ -96,7 +96,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
     }
   );
 
-  let logins = await Services.logins.getAllLogins();
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 2, "Should have 2 logins");
 
   let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
@@ -158,7 +158,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
     }
   );
 
-  let logins = await Services.logins.getAllLogins();
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 2, "Should have 2 logins");
 
   let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);

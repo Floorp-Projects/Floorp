@@ -46,7 +46,7 @@ async function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
   assert.ok(pwmgr != null, "Access LoginManager");
 
   // Check that initial state has no logins
-  var logins = await pwmgr.getAllLogins();
+  var logins = pwmgr.getAllLogins();
   assert.equal(logins.length, 0, "Not expecting logins to be present");
   var disabledHosts = pwmgr.getAllDisabledHosts();
   if (disabledHosts.length) {
@@ -74,7 +74,7 @@ async function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
   }
 
   // Last sanity check
-  logins = await pwmgr.getAllLogins();
+  logins = pwmgr.getAllLogins();
   assert.equal(
     logins.length,
     testDependsOnDeprecatedLogin ? 1 : 0,
@@ -91,8 +91,8 @@ async function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
   sendAsyncMessage("registerRunTests");
 }
 
-async function dumpLogins() {
-  let logins = await Services.logins.getAllLogins();
+function dumpLogins() {
+  let logins = Services.logins.getAllLogins();
   assert.ok(true, "----- dumpLogins: have " + logins.length + " logins. -----");
   for (var i = 0; i < logins.length; i++) {
     dumpLogin("login #" + i + " --- ", logins[i]);
@@ -198,7 +198,7 @@ addMessageListener("getTelemetryEvents", options => {
   sendAsyncMessage("getTelemetryEvents", events);
 });
 
-addMessageListener("proxyLoginManager", async msg => {
+addMessageListener("proxyLoginManager", msg => {
   // Recreate nsILoginInfo objects from vanilla JS objects.
   let recreatedArgs = msg.args.map((arg, index) => {
     if (msg.loginInfoIndices.includes(index)) {
@@ -208,8 +208,7 @@ addMessageListener("proxyLoginManager", async msg => {
     return arg;
   });
 
-  let rv = await Services.logins[msg.methodName](...recreatedArgs);
-
+  let rv = Services.logins[msg.methodName](...recreatedArgs);
   if (rv instanceof Ci.nsILoginInfo) {
     rv = LoginHelper.loginToVanillaObject(rv);
   } else if (
