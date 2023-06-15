@@ -362,8 +362,7 @@ void ProcessPriorityManagerImpl::PrefChangedCallback(const char* aPref,
 
 /* static */
 bool ProcessPriorityManagerImpl::PrefsEnabled() {
-  return StaticPrefs::dom_ipc_processPriorityManager_enabled() &&
-         !StaticPrefs::dom_ipc_tabs_disabled();
+  return StaticPrefs::dom_ipc_processPriorityManager_enabled();
 }
 
 /* static */
@@ -394,13 +393,12 @@ void ProcessPriorityManagerImpl::StaticInit() {
     return;
   }
 
-  // Run StaticInit() again if the prefs change.  We don't expect this to
+  // Run StaticInit() again if the pref changes.  We don't expect this to
   // happen in normal operation, but it happens during testing.
   if (!sPrefListenersRegistered) {
     sPrefListenersRegistered = true;
     Preferences::RegisterCallback(PrefChangedCallback,
                                   "dom.ipc.processPriorityManager.enabled");
-    Preferences::RegisterCallback(PrefChangedCallback, "dom.ipc.tabs.disabled");
   }
 
   sInitialized = true;
