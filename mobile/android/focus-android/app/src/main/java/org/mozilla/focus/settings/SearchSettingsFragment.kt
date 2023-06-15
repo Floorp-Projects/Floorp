@@ -55,7 +55,7 @@ class SearchSettingsFragment :
         return super.onPreferenceTreeClick(preference)
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         when (key) {
             resources.getString(R.string.pref_key_show_search_suggestions) ->
                 ShowSearchSuggestions.changedFromSettings.record(

@@ -38,7 +38,7 @@ class SearchEnginePreference : Preference, SharedPreferences.OnSharedPreferenceC
         super.onPrepareForRemoval()
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
         if (key == context.resources.getString(R.string.pref_key_search_engine)) {
             summary = defaultSearchEngineName
         }

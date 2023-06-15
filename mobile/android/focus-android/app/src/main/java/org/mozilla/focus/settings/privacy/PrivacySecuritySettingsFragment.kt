@@ -98,9 +98,11 @@ class PrivacySecuritySettingsFragment :
         super.onPause()
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        recordTelemetry(key, sharedPreferences.all[key])
-        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+        key?.let {
+            recordTelemetry(it, sharedPreferences.all[key])
+            TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+        }
         updateStealthToggleAvailability()
     }
 

@@ -44,8 +44,8 @@ class AdvancedSettingsFragment :
         super.onPause()
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+        key?.let { TelemetryWrapper.settingsEvent(it, sharedPreferences.all[key].toString()) }
         when (key) {
             getString(R.string.pref_key_remote_debugging) -> {
                 requireComponents.engine.settings.remoteDebuggingEnabled =
