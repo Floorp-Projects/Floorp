@@ -30,7 +30,9 @@
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
 const lazy = {};
-
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 ChromeUtils.defineESModuleGetters(lazy, {
   CrashMonitor: "resource://gre/modules/CrashMonitor.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -101,7 +103,10 @@ export var SessionStartup = {
    */
   init() {
     Services.obs.notifyObservers(null, "sessionstore-init-started");
-    lazy.StartupPerformance.init();
+
+    if (!AppConstants.DEBUG) {
+      lazy.StartupPerformance.init();
+    }
 
     // do not need to initialize anything in auto-started private browsing sessions
     if (lazy.PrivateBrowsingUtils.permanentPrivateBrowsing) {

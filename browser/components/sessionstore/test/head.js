@@ -780,3 +780,27 @@ function promiseSessionStoreLoads(numberOfLoads) {
     }, "sessionstore-debug-tab-restored");
   });
 }
+
+function triggerClickOn(target, options) {
+  let promise = BrowserTestUtils.waitForEvent(target, "click");
+  if (AppConstants.platform == "macosx") {
+    options.metaKey = options.ctrlKey;
+    delete options.ctrlKey;
+  }
+  EventUtils.synthesizeMouseAtCenter(target, options);
+  return promise;
+}
+
+async function openTabMenuFor(tab) {
+  let tabMenu = tab.ownerDocument.getElementById("tabContextMenu");
+
+  let tabMenuShown = BrowserTestUtils.waitForEvent(tabMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(
+    tab,
+    { type: "contextmenu" },
+    tab.ownerGlobal
+  );
+  await tabMenuShown;
+
+  return tabMenu;
+}

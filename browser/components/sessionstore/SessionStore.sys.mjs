@@ -293,6 +293,18 @@ export var SessionStore = {
     return SessionStoreInternal.lastClosedObjectType;
   },
 
+  get lastClosedActions() {
+    return [...SessionStoreInternal._lastClosedActions];
+  },
+
+  get LAST_ACTION_CLOSED_TAB() {
+    return SessionStoreInternal._LAST_ACTION_CLOSED_TAB;
+  },
+
+  get LAST_ACTION_CLOSED_WINDOW() {
+    return SessionStoreInternal._LAST_ACTION_CLOSED_WINDOW;
+  },
+
   get willAutoRestore() {
     return SessionStoreInternal.willAutoRestore;
   },
@@ -376,6 +388,16 @@ export var SessionStore = {
 
   getClosedWindowCount: function ss_getClosedWindowCount() {
     return SessionStoreInternal.getClosedWindowCount();
+  },
+
+  // this should only be used by one caller (currently restoreLastClosedTabOrWindowOrSession in browser.js)
+  popLastClosedAction: function ss_popLastClosedAction() {
+    return SessionStoreInternal._lastClosedActions.pop();
+  },
+
+  // for testing purposes
+  resetLastClosedActions: function ss_resetLastClosedActions() {
+    SessionStoreInternal._lastClosedActions = [];
   },
 
   getClosedWindowData: function ss_getClosedWindowData() {
@@ -697,6 +719,63 @@ var SessionStoreInternal = {
   // number of tabs currently restoring
   _tabsRestoringCount: 0,
 
+  /**
+   * @typedef {Object} CloseAction
+   * @property {string} type
+   *   What the close action acted upon. One of either _LAST_ACTION_CLOSED_TAB or
+   *   _LAST_ACTION_CLOSED_WINDOW
+   * @property {number} closedId
+   *   The unique ID of the item that closed.
+   */
+
+  /**
+   * An in-order stack of close actions for tabs and windows.
+   * @type {CloseAction[]}
+   */
+  _lastClosedActions: [],
+
+  /**
+   * Removes an object from the _lastClosedActions list
+   *
+   * @param closedAction
+   *        Either _LAST_ACTION_CLOSED_TAB or _LAST_ACTION_CLOSED_WINDOW
+   * @param closedId
+   *        The closedId of a tab or window
+   */
+  _removeClosedAction(closedAction, closedId) {
+    let closedActionIndex = this._lastClosedActions.findIndex(
+      obj => obj.type == closedAction && obj.closedId == closedId
+    );
+
+    if (closedActionIndex > -1) {
+      this._lastClosedActions.splice(closedActionIndex, 1);
+    }
+  },
+
+  /**
+   * Add an object to the _lastClosedActions list and truncates the list if needed
+   *
+   * @param closedAction
+   *        Either _LAST_ACTION_CLOSED_TAB or _LAST_ACTION_CLOSED_WINDOW
+   * @param closedId
+   *        The closedId of a tab or window
+   */
+  _addClosedAction(closedAction, closedId) {
+    this._lastClosedActions.push({
+      type: closedAction,
+      closedId,
+    });
+    let maxLength = this._max_tabs_undo * this._max_windows_undo;
+
+    if (this._lastClosedActions.length > maxLength) {
+      this._lastClosedActions.splice(maxLength, this._lastClosedActions.length);
+    }
+  },
+
+  _LAST_ACTION_CLOSED_TAB: "tab",
+
+  _LAST_ACTION_CLOSED_WINDOW: "window",
+
   _log: null,
 
   // When starting Firefox with a single private window, this is the place
@@ -784,10 +863,10 @@ var SessionStoreInternal = {
         !tabTimestamps.length ||
         tabTimestamps.sort((a, b) => b - a)[0] < this._closedWindows[0].closedAt
       ) {
-        return "window";
+        return this._LAST_ACTION_CLOSED_WINDOW;
       }
     }
-    return "tab";
+    return this._LAST_ACTION_CLOSED_TAB;
   },
 
   /**
@@ -2036,6 +2115,13 @@ var SessionStoreInternal = {
           // before our flush, so we need to filter again.
           lazy.PrivacyFilter.filterPrivateTabs(winData);
           this.maybeSaveClosedWindow(winData, isLastWindow);
+
+          if (!isLastWindow && winData.closedId > -1) {
+            this._addClosedAction(
+              this._LAST_ACTION_CLOSED_WINDOW,
+              winData.closedId
+            );
+          }
         }
 
         // Update the tabs data now that we've got the most
@@ -2413,6 +2499,7 @@ var SessionStoreInternal = {
 
     this._clearRestoringWindows();
     this._saveableClosedWindowData = new WeakSet();
+    this._lastClosedActions = [];
   },
 
   /**
@@ -2805,7 +2892,7 @@ var SessionStoreInternal = {
    * @param closedTabs (array)
    *        The list of closed tabs for a window.
    */
-  saveClosedTabData(winData, closedTabs, tabData) {
+  saveClosedTabData(winData, closedTabs, tabData, saveAction = true) {
     // Find the index of the first tab in the list
     // of closed tabs that was closed before our tab.
     let index = closedTabs.findIndex(tab => {
@@ -2835,6 +2922,10 @@ var SessionStoreInternal = {
       }
     } else {
       winData._lastClosedTabGroupCount = -1;
+    }
+
+    if (saveAction) {
+      this._addClosedAction(this._LAST_ACTION_CLOSED_TAB, tabData.closedId);
     }
 
     // Truncate the list of closed tabs, if needed.
@@ -2875,6 +2966,8 @@ var SessionStoreInternal = {
       this._closedWindowTabs.delete(closedTab.permanentKey);
       delete closedTab.permanentKey;
     }
+
+    this._removeClosedAction(this._LAST_ACTION_CLOSED_TAB, closedTab.closedId);
 
     return closedTab;
   },
@@ -5304,6 +5397,18 @@ var SessionStoreInternal = {
    * @returns Array of closed windows.
    */
   _removeClosedWindow(index) {
+    // remove all of the closed tabs from the _lastClosedActions list
+    // before removing the window from it
+    for (let closedTab of this._closedWindows[index]._closedTabs) {
+      this._removeClosedAction(
+        this._LAST_ACTION_CLOSED_TAB,
+        closedTab.closedId
+      );
+    }
+    this._removeClosedAction(
+      this._LAST_ACTION_CLOSED_WINDOW,
+      this._closedWindows[index].closedId
+    );
     let windows = this._closedWindows.splice(index, 1);
     this._closedObjectsChanged = true;
     return windows;
